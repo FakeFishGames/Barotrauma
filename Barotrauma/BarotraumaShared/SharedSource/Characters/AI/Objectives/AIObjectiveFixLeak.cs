@@ -164,7 +164,7 @@ namespace Barotrauma
                     TargetName = Leak.FlowTargetHull?.DisplayName,
                     requiredCondition = () => 
                         Leak.Submarine == character.Submarine &&
-                        (Leak.FlowTargetHull != null && character.CurrentHull == Leak.FlowTargetHull || character.CanSeeTarget(Leak)),
+                        Leak.linkedTo.Any(e => e is Hull h && character.CurrentHull == h),
                     // The Go To objective can be abandoned if the leak is fixed (in which case we don't want to use the dialogue)
                     SpeakCannotReachCondition = () => !CheckObjectiveSpecific()
                 },

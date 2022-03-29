@@ -168,25 +168,34 @@ namespace Barotrauma
                 };
             }));
 
+            void printMapEntityPrefabs<T>(IEnumerable<T> prefabs) where T : MapEntityPrefab
+            {
+                NewMessage("***************", Color.Cyan);
+                foreach (T prefab in prefabs)
+                {
+                    if (prefab.Name.IsNullOrEmpty()) { continue; }
+                    string text = $"- {prefab.Name}";
+                    if (prefab.Tags.Any())
+                    {
+                        text += $" ({string.Join(", ", prefab.Tags)})";
+                    }
+                    if (prefab.AllowedLinks?.Any() ?? false)
+                    {
+                        text += $", Links: {string.Join(", ", prefab.AllowedLinks)}";
+                    }
+                    NewMessage(text, prefab.ContentPackage == ContentPackageManager.VanillaCorePackage ? Color.Cyan : Color.Purple);
+                }
+                NewMessage("***************", Color.Cyan);
+            }
 
             commands.Add(new Command("items|itemlist", "itemlist: List all the item prefabs available for spawning.", (string[] args) =>
             {
-                NewMessage("***************", Color.Cyan);
-                foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
-                {
-                    if (itemPrefab.Name.IsNullOrEmpty()) { continue; }
-                    string text = $"- {itemPrefab.Name}";
-                    if (itemPrefab.Tags.Any())
-                    {
-                        text += $" ({string.Join(", ", itemPrefab.Tags)})";
-                    }
-                    if (itemPrefab.AllowedLinks.Any())
-                    {
-                        text += $", Links: {string.Join(", ", itemPrefab.AllowedLinks)}";
-                    }
-                    NewMessage(text, Color.Cyan);
-                }
-                NewMessage("***************", Color.Cyan);
+                printMapEntityPrefabs(ItemPrefab.Prefabs);
+            }));
+            
+            commands.Add(new Command("itemassemblies", "itemassemblies: List all the item assemblies available for spawning.", (string[] args) =>
+            {
+                printMapEntityPrefabs(ItemAssemblyPrefab.Prefabs);
             }));
 
 
@@ -202,6 +211,7 @@ namespace Barotrauma
                 string[] creatureAndJobNames =
                     CharacterPrefab.Prefabs.Select(p => p.Identifier.Value)
                     .Concat(JobPrefab.Prefabs.Select(p => p.Identifier.Value))
+                    .OrderBy(s => s)
                     .ToArray();
 
                 return new string[][]
@@ -732,9 +742,16 @@ namespace Barotrauma
             {
 #if CLIENT
                 if (Screen.Selected == GameMain.SubEditorScreen) { return; }
-                Character.Controlled = null;
-                GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
-                GameMain.Client?.SendConsoleCommand("freecam");
+
+                if (GameMain.Client == null)
+                {
+                    Character.Controlled = null;
+                    GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
+                }
+                else
+                {
+                    GameMain.Client?.SendConsoleCommand("freecam");
+                }
 #endif
             }, isCheat: true));
 
@@ -1786,15 +1803,26 @@ namespace Barotrauma
             {
                 if (GameMain.GameSession?.Map?.CurrentLocation is Location location)
                 {
-
-                    var msg = "--- Location: " + location.Name + " ---";
-                    msg += "\nBalance: " + location.StoreCurrentBalance;
-                    msg += "\nPrice modifier: " + location.StorePriceModifier + "%";
-                    msg +=  "\nDaily specials:";
-                    location.DailySpecials.ForEach(i => msg += "\n   - " + i.Name.Value);
-                    msg += "\nRequested goods:";
-                    location.RequestedGoods.ForEach(i => msg += "\n   - " + i.Name.Value);
-                    NewMessage(msg);
+                    if (location.Stores != null)
+                    {
+                        var msg = "--- Location: " + location.Name + " ---";
+                        foreach (var store in location.Stores)
+                        {
+                            msg += $"\nStore identifier: {store.Value.Identifier}";
+                            msg += $"\nBalance: {store.Value.Balance}";
+                            msg += $"\nPrice modifier: {store.Value.PriceModifier}%";
+                            msg += "\nDaily specials:";
+                            store.Value.DailySpecials.ForEach(i => msg += $"\n   - {i.Name}");
+                            msg += "\nRequested goods:";
+                            store.Value.RequestedGoods.ForEach(i => msg += $"\n   - {i.Name}");
+                            
+                        }
+                        NewMessage(msg);
+                    }
+                    else
+                    {
+                        NewMessage($"No stores at {location}, can't show store info.");
+                    }
                 }
                 else
                 {
@@ -2382,7 +2410,7 @@ namespace Barotrauma
 
         public static void ThrowError(LocalizedString error, Exception e = null, bool createMessageBox = false, bool appendStackTrace = false)
         {
-            ThrowError(error.Value);
+            ThrowError(error.Value, e, createMessageBox, appendStackTrace);
         }
 
         public static void ThrowError(string error, Exception e = null, bool createMessageBox = false, bool appendStackTrace = false)

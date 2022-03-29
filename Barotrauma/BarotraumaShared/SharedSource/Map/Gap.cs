@@ -739,7 +739,7 @@ namespace Barotrauma
         {
             Rectangle rect = Rectangle.Empty;
 
-            if (element.Attribute("rect") != null)
+            if (element.GetAttribute("rect") != null)
             {
                 rect = element.GetAttributeRect("rect", Rectangle.Empty);
             }
@@ -747,15 +747,15 @@ namespace Barotrauma
             {
                 //backwards compatibility
                 rect = new Rectangle(
-                    int.Parse(element.Attribute("x").Value),
-                    int.Parse(element.Attribute("y").Value),
-                    int.Parse(element.Attribute("width").Value),
-                    int.Parse(element.Attribute("height").Value));
+                    int.Parse(element.GetAttribute("x").Value),
+                    int.Parse(element.GetAttribute("y").Value),
+                    int.Parse(element.GetAttribute("width").Value),
+                    int.Parse(element.GetAttribute("height").Value));
             }
 
             bool isHorizontal = rect.Height > rect.Width;
 
-            var horizontalAttribute = element.Attribute("horizontal");
+            var horizontalAttribute = element.GetAttribute("horizontal");
             if (horizontalAttribute != null)
             {
                 isHorizontal = horizontalAttribute.Value.ToString() == "true";

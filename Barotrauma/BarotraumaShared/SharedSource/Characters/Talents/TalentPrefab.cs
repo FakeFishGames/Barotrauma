@@ -45,7 +45,7 @@ namespace Barotrauma
                 }
             }
 
-            if (element.Attribute("description") != null)
+            if (element.GetAttribute("description") != null)
             {
                 string description = element.GetAttributeString("description", string.Empty);
                 Description = Description.Fallback(TextManager.Get(description)).Fallback(description);

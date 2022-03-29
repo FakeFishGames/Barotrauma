@@ -30,23 +30,21 @@ namespace Barotrauma
         }
 
 #if CLIENT
-        public PurchasedItem(ItemPrefab itemPrefab, int quantity, Client buyer = null)
+        public PurchasedItem(ItemPrefab itemPrefab, int quantity)
+            : this(itemPrefab, quantity, buyer: null) { }
+#endif
+        public PurchasedItem(ItemPrefab itemPrefab, int quantity, Client buyer)
         {
             ItemPrefab = itemPrefab;
             Quantity = quantity;
             IsStoreComponentEnabled = null;
             BuyerCharacterInfoId = buyer?.Character?.Info?.ID ?? Character.Controlled?.Info?.ID ?? 0;
         }
-#elif SERVER
-        public PurchasedItem(ItemPrefab itemPrefab, int quantity, Client buyer)
-        {
-            ItemPrefab = itemPrefab;
-            Quantity = quantity;
-            IsStoreComponentEnabled = null;
-            BuyerCharacterInfoId = buyer?.Character?.Info?.ID ?? 0;
-        }
-#endif
 
+        public override string ToString()
+        {
+            return $"{ItemPrefab.Name} ({Quantity})";
+        }
     }
 
     class SoldItem
@@ -133,11 +131,11 @@ namespace Barotrauma
 
         public const int MaxQuantity = 100;
 
-        public List<PurchasedItem> ItemsInBuyCrate { get; } = new List<PurchasedItem>();
-        public List<PurchasedItem> ItemsInSellCrate { get; } = new List<PurchasedItem>();
-        public List<PurchasedItem> ItemsInSellFromSubCrate { get; } = new List<PurchasedItem>();
-        public List<PurchasedItem> PurchasedItems { get; } = new List<PurchasedItem>();
-        public List<SoldItem> SoldItems { get; } = new List<SoldItem>();
+        public Dictionary<Identifier, List<PurchasedItem>> ItemsInBuyCrate { get; } = new Dictionary<Identifier, List<PurchasedItem>>();
+        public Dictionary<Identifier, List<PurchasedItem>> ItemsInSellCrate { get; } = new Dictionary<Identifier, List<PurchasedItem>>();
+        public Dictionary<Identifier, List<PurchasedItem>> ItemsInSellFromSubCrate { get; } = new Dictionary<Identifier, List<PurchasedItem>>();
+        public Dictionary<Identifier, List<PurchasedItem>> PurchasedItems { get; } = new Dictionary<Identifier, List<PurchasedItem>>();
+        public Dictionary<Identifier, List<SoldItem>> SoldItems { get; } = new Dictionary<Identifier, List<SoldItem>>();
 
         private readonly CampaignMode campaign;
 
@@ -153,6 +151,60 @@ namespace Barotrauma
         {
             this.campaign = campaign;
         }
+
+        private List<T> GetItems<T>(Identifier identifier, Dictionary<Identifier, List<T>> items, bool create = false)
+        {
+            if (items.TryGetValue(identifier, out var storeSpecificItems) && storeSpecificItems != null)
+            {
+                return storeSpecificItems;
+            }
+            else if (create)
+            {
+                storeSpecificItems = new List<T>();
+                items.Add(identifier, storeSpecificItems);
+                return storeSpecificItems;
+            }
+            else
+            {
+                return new List<T>();
+            }
+        }
+
+        public List<PurchasedItem> GetBuyCrateItems(Identifier identifier, bool create = false) => GetItems(identifier, ItemsInBuyCrate, create);
+
+        public List<PurchasedItem> GetBuyCrateItems(Location.StoreInfo store, bool create = false) => GetBuyCrateItems(store?.Identifier ?? Identifier.Empty, create);
+
+        public PurchasedItem GetBuyCrateItem(Identifier identifier, ItemPrefab prefab) => GetBuyCrateItems(identifier)?.FirstOrDefault(i => i.ItemPrefab == prefab);
+
+        public PurchasedItem GetBuyCrateItem(Location.StoreInfo store, ItemPrefab prefab) => GetBuyCrateItem(store?.Identifier ?? Identifier.Empty, prefab);
+
+        public List<PurchasedItem> GetSellCrateItems(Identifier identifier, bool create = false) => GetItems(identifier, ItemsInSellCrate, create);
+
+        public List<PurchasedItem> GetSellCrateItems(Location.StoreInfo store, bool create = false) => GetSellCrateItems(store?.Identifier ?? Identifier.Empty, create);
+
+        public PurchasedItem GetSellCrateItem(Identifier identifier, ItemPrefab prefab) => GetSellCrateItems(identifier)?.FirstOrDefault(i => i.ItemPrefab == prefab);
+
+        public PurchasedItem GetSellCrateItem(Location.StoreInfo store, ItemPrefab prefab) => GetSellCrateItem(store?.Identifier ?? Identifier.Empty, prefab);
+
+        public List<PurchasedItem> GetSubCrateItems(Identifier identifier, bool create = false) => GetItems(identifier, ItemsInSellFromSubCrate, create);
+
+        public List<PurchasedItem> GetSubCrateItems(Location.StoreInfo store, bool create = false) => GetSubCrateItems(store?.Identifier ?? Identifier.Empty, create);
+
+        public PurchasedItem GetSubCrateItem(Identifier identifier, ItemPrefab prefab) => GetSubCrateItems(identifier)?.FirstOrDefault(i => i.ItemPrefab == prefab);
+
+        public PurchasedItem GetSubCrateItem(Location.StoreInfo store, ItemPrefab prefab) => GetSubCrateItem(store?.Identifier ?? Identifier.Empty, prefab);
+
+        public List<PurchasedItem> GetPurchasedItems(Identifier identifier, bool create = false) => GetItems(identifier, PurchasedItems, create);
+
+        public List<PurchasedItem> GetPurchasedItems(Location.StoreInfo store, bool create = false) => GetPurchasedItems(store?.Identifier ?? Identifier.Empty, create);
+
+        public PurchasedItem GetPurchasedItem(Identifier identifier, ItemPrefab prefab) => GetPurchasedItems(identifier)?.FirstOrDefault(i => i.ItemPrefab == prefab);
+
+        public PurchasedItem GetPurchasedItem(Location.StoreInfo store, ItemPrefab prefab) => GetPurchasedItem(store?.Identifier ?? Identifier.Empty, prefab);
+
+        public List<SoldItem> GetSoldItems(Identifier identifier, bool create = false) => GetItems(identifier, SoldItems, create);
+
+        public List<SoldItem> GetSoldItems(Location.StoreInfo store, bool create = false) => GetSoldItems(store?.Identifier ?? Identifier.Empty, create);
 
         public void ClearItemsInBuyCrate()
         {
@@ -172,61 +224,62 @@ namespace Barotrauma
             OnItemsInSellFromSubCrateChanged?.Invoke();
         }
 
-        public void SetPurchasedItems(List<PurchasedItem> items)
+        public void SetPurchasedItems(Dictionary<Identifier, List<PurchasedItem>> purchasedItems)
         {
             PurchasedItems.Clear();
-            PurchasedItems.AddRange(items);
+            foreach (var entry in purchasedItems)
+            {
+                PurchasedItems.Add(entry.Key, entry.Value);
+            }
             OnPurchasedItemsChanged?.Invoke();
         }
 
-        public void ModifyItemQuantityInBuyCrate(ItemPrefab itemPrefab, int changeInQuantity, Client client = null)
+        public void ModifyItemQuantityInBuyCrate(Identifier storeIdentifier, ItemPrefab itemPrefab, int changeInQuantity, Client client = null)
         {
-            var itemInCrate = ItemsInBuyCrate.Find(i => i.ItemPrefab == itemPrefab);
-            if (itemInCrate != null)
+            if (GetBuyCrateItem(storeIdentifier, itemPrefab) is { } item)
             {
-                itemInCrate.Quantity += changeInQuantity;
-                if (itemInCrate.Quantity < 1)
+                item.Quantity += changeInQuantity;
+                if (item.Quantity < 1)
                 {
-                    ItemsInBuyCrate.Remove(itemInCrate);
+                    GetBuyCrateItems(storeIdentifier, create: true).Remove(item);
                 }
             }
             else if (changeInQuantity > 0)
             {
-                itemInCrate = new PurchasedItem(itemPrefab, changeInQuantity, client);
-                ItemsInBuyCrate.Add(itemInCrate);
+                GetBuyCrateItems(storeIdentifier, create: true).Add(new PurchasedItem(itemPrefab, changeInQuantity, client));
             }
             OnItemsInBuyCrateChanged?.Invoke();
         }
 
-        public void ModifyItemQuantityInSubSellCrate(ItemPrefab itemPrefab, int changeInQuantity, Client client = null)
+        public void ModifyItemQuantityInSubSellCrate(Identifier storeIdentifier, ItemPrefab itemPrefab, int changeInQuantity, Client client = null)
         {
-            var itemInCrate = ItemsInSellFromSubCrate.Find(i => i.ItemPrefab == itemPrefab);
-            if (itemInCrate != null)
+            if (GetSubCrateItem(storeIdentifier, itemPrefab) is { } item)
             {
-                itemInCrate.Quantity += changeInQuantity;
-                if (itemInCrate.Quantity < 1)
+                item.Quantity += changeInQuantity;
+                if (item.Quantity < 1)
                 {
-                    ItemsInSellFromSubCrate.Remove(itemInCrate);
+                    GetSubCrateItems(storeIdentifier)?.Remove(item);
                 }
             }
             else if (changeInQuantity > 0)
             {
-                itemInCrate = new PurchasedItem(itemPrefab, changeInQuantity, client);
-                ItemsInSellFromSubCrate.Add(itemInCrate);
+                GetSubCrateItems(storeIdentifier, create: true).Add(new PurchasedItem(itemPrefab, changeInQuantity, client));
             }
             OnItemsInSellFromSubCrateChanged?.Invoke();
         }
 
-        public void PurchaseItems(List<PurchasedItem> itemsToPurchase, bool removeFromCrate, Client client = null)
+        public void PurchaseItems(Identifier storeIdentifier, List<PurchasedItem> itemsToPurchase, bool removeFromCrate, Client client = null)
         {
-            // Check all the prices before starting the transaction
-            // to make sure the modifiers stay the same for the whole transaction
-            Dictionary<ItemPrefab, int> buyValues = GetBuyValuesAtCurrentLocation(itemsToPurchase.Select(i => i.ItemPrefab));
-
+            var store = Location.GetStore(storeIdentifier);
+            if (store == null) { return; }
+            var itemsPurchasedFromStore = GetPurchasedItems(storeIdentifier, create: true);
+            // Check all the prices before starting the transaction to make sure the modifiers stay the same for the whole transaction
+            var buyValues = GetBuyValuesAtCurrentLocation(storeIdentifier, itemsToPurchase.Select(i => i.ItemPrefab));
+            var itemsInStoreCrate = GetBuyCrateItems(storeIdentifier, create: true);
             foreach (PurchasedItem item in itemsToPurchase)
             {
                 // Add to the purchased items
-                var purchasedItem = PurchasedItems.Find(pi => pi.ItemPrefab == item.ItemPrefab);
+                var purchasedItem = itemsPurchasedFromStore.Find(pi => pi.ItemPrefab == item.ItemPrefab);
                 if (purchasedItem != null)
                 {
                     purchasedItem.Quantity += item.Quantity;
@@ -234,53 +287,54 @@ namespace Barotrauma
                 else
                 {
                     purchasedItem = new PurchasedItem(item.ItemPrefab, item.Quantity, client);
-                    PurchasedItems.Add(purchasedItem);
+                    itemsPurchasedFromStore.Add(purchasedItem);
                 }
-
                 // Exchange money
-                var itemValue = item.Quantity * buyValues[item.ItemPrefab];
+                int itemValue = item.Quantity * buyValues[item.ItemPrefab];
                 campaign.GetWallet(client).TryDeduct(itemValue);
                 GameAnalyticsManager.AddMoneySpentEvent(itemValue, GameAnalyticsManager.MoneySink.Store, item.ItemPrefab.Identifier.Value);
-                Location.StoreCurrentBalance += itemValue;
-
+                store.Balance += itemValue;
                 if (removeFromCrate)
                 {
                     // Remove from the shopping crate
-                    var crateItem = ItemsInBuyCrate.Find(pi => pi.ItemPrefab == item.ItemPrefab);
-                    if (crateItem != null)
+                    if (itemsInStoreCrate.Find(pi => pi.ItemPrefab == item.ItemPrefab) is { } crateItem)
                     {
                         crateItem.Quantity -= item.Quantity;
-                        if (crateItem.Quantity < 1) { ItemsInBuyCrate.Remove(crateItem); }
+                        if (crateItem.Quantity < 1) { itemsInStoreCrate.Remove(crateItem); }
                     }
                 }
             }
             OnPurchasedItemsChanged?.Invoke();
         }
 
-        public Dictionary<ItemPrefab, int> GetBuyValuesAtCurrentLocation(IEnumerable<ItemPrefab> items)
+        public Dictionary<ItemPrefab, int> GetBuyValuesAtCurrentLocation(Identifier storeIdentifier, IEnumerable<ItemPrefab> items)
         {
             var buyValues = new Dictionary<ItemPrefab, int>();
+            var store = Location?.GetStore(storeIdentifier);
+            if (store == null) { return buyValues; }
             foreach (var item in items)
             {
                 if (item == null) { continue; }
                 if (!buyValues.ContainsKey(item))
                 {
-                    var buyValue = Location?.GetAdjustedItemBuyPrice(item) ?? 0;
+                    int buyValue = store?.GetAdjustedItemBuyPrice(item) ?? 0;
                     buyValues.Add(item, buyValue);
                 }
             }
             return buyValues;
         }
 
-        public Dictionary<ItemPrefab, int> GetSellValuesAtCurrentLocation(IEnumerable<ItemPrefab> items)
+        public Dictionary<ItemPrefab, int> GetSellValuesAtCurrentLocation(Identifier storeIdentifier, IEnumerable<ItemPrefab> items)
         {
             var sellValues = new Dictionary<ItemPrefab, int>();
+            var store = Location?.GetStore(storeIdentifier);
+            if (store == null) { return sellValues; }
             foreach (var item in items)
             {
                 if (item == null) { continue; }
                 if (!sellValues.ContainsKey(item))
                 {
-                    var sellValue = Location?.GetAdjustedItemSellPrice(item) ?? 0;
+                    int sellValue = store?.GetAdjustedItemSellPrice(item) ?? 0;
                     sellValues.Add(item, sellValue);
                 }
             }
@@ -289,7 +343,13 @@ namespace Barotrauma
 
         public void CreatePurchasedItems()
         {
-            CreateItems(PurchasedItems, Submarine.MainSub);
+            var items = new List<PurchasedItem>();
+            foreach (var storeSpecificItems in PurchasedItems)
+            {
+                items.AddRange(storeSpecificItems.Value);
+            }
+            CreateItems(items, Submarine.MainSub);
+            PurchasedItems.Clear();
             OnPurchasedItemsChanged?.Invoke();
         }
 
@@ -509,33 +569,41 @@ namespace Barotrauma
         public void SavePurchasedItems(XElement parentElement)
         {
             var itemsElement = new XElement("cargo");
-            foreach (PurchasedItem item in PurchasedItems)
+            foreach (var storeSpecificItems in PurchasedItems)
             {
-                if (item?.ItemPrefab == null) { continue; }
-                itemsElement.Add(new XElement("item",
-                    new XAttribute("id", item.ItemPrefab.Identifier),
-                    new XAttribute("qty", item.Quantity),
-                    new XAttribute("buyer", item.BuyerCharacterInfoId)));
+                foreach (var item in storeSpecificItems.Value)
+                {
+                    if (item?.ItemPrefab == null) { continue; }
+                    itemsElement.Add(new XElement("item",
+                        new XAttribute("id", item.ItemPrefab.Identifier),
+                        new XAttribute("qty", item.Quantity),
+                        new XAttribute("storeid", storeSpecificItems.Key),
+                        new XAttribute("buyer", item.BuyerCharacterInfoId)));
+                }
             }
             parentElement.Add(itemsElement);
         }
 
         public void LoadPurchasedItems(XElement element)
         {
-            var purchasedItems = new List<PurchasedItem>();
+            var purchasedItems = new Dictionary<Identifier, List<PurchasedItem>>();
             if (element != null)
             {
                 foreach (XElement itemElement in element.GetChildElements("item"))
                 {
-                    string id = itemElement.GetAttributeString("id", null);
-                    if (string.IsNullOrWhiteSpace(id)) { continue; }
-                    var prefab = ItemPrefab.Prefabs.Find(p => p.Identifier == id);
+                    string prefabId = itemElement.GetAttributeString("id", null);
+                    if (string.IsNullOrWhiteSpace(prefabId)) { continue; }
+                    var prefab = ItemPrefab.Prefabs.Find(p => p.Identifier == prefabId);
                     if (prefab == null) { continue; }
                     int qty = itemElement.GetAttributeInt("qty", 0);
+                    Identifier storeId = itemElement.GetAttributeIdentifier("storeid", "merchant");
                     int buyerId = itemElement.GetAttributeInt("buyer", 0);
-
-                    purchasedItems.Add(new PurchasedItem(prefab, qty, buyerId));
-
+                    if (!purchasedItems.TryGetValue(storeId, out var storeItems))
+                    {
+                        storeItems = new List<PurchasedItem>();
+                        purchasedItems.Add(storeId, storeItems);
+                    }
+                    storeItems.Add(new PurchasedItem(prefab, qty, buyerId));
                 }
             }
             SetPurchasedItems(purchasedItems);

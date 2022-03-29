@@ -553,36 +553,10 @@ namespace Barotrauma
             msg.Write(PurchasedItemRepairs);
             msg.Write(PurchasedLostShuttles);
 
-            msg.Write((UInt16)CargoManager.ItemsInBuyCrate.Count);
-            foreach (PurchasedItem pi in CargoManager.ItemsInBuyCrate)
-            {
-                msg.Write(pi.ItemPrefab.Identifier);
-                msg.WriteRangedInteger(pi.Quantity, 0, CargoManager.MaxQuantity);
-            }
-
-            msg.Write((UInt16)CargoManager.ItemsInSellFromSubCrate.Count);
-            foreach (PurchasedItem pi in CargoManager.ItemsInSellFromSubCrate)
-            {
-                msg.Write(pi.ItemPrefab.Identifier);
-                msg.WriteRangedInteger(pi.Quantity, 0, CargoManager.MaxQuantity);
-            }
-
-            msg.Write((UInt16)CargoManager.PurchasedItems.Count);
-            foreach (PurchasedItem pi in CargoManager.PurchasedItems)
-            {
-                msg.Write(pi.ItemPrefab.Identifier);
-                msg.WriteRangedInteger(pi.Quantity, 0, CargoManager.MaxQuantity);
-            }
-
-            msg.Write((UInt16)CargoManager.SoldItems.Count);
-            foreach (SoldItem si in CargoManager.SoldItems)
-            {
-                msg.Write(si.ItemPrefab.Identifier);
-                msg.Write((UInt16)si.ID);
-                msg.Write(si.Removed);
-                msg.Write(si.SellerID);
-                msg.Write((byte)si.Origin);
-            }
+            WriteItems(msg, CargoManager.ItemsInBuyCrate);
+            WriteItems(msg, CargoManager.ItemsInSellFromSubCrate);
+            WriteItems(msg, CargoManager.PurchasedItems);
+            WriteItems(msg, CargoManager.SoldItems);
 
             msg.Write((ushort)UpgradeManager.PurchasedUpgrades.Count);
             foreach (var (prefab, category, level) in UpgradeManager.PurchasedUpgrades)
@@ -644,50 +618,22 @@ namespace Barotrauma
                 availableMissions.Add((missionIdentifier, connectionIndex));
             }
 
-            UInt16? storeBalance = null;
+            var storeBalances = new Dictionary<Identifier, UInt16>();
             if (msg.ReadBoolean())
             {
-                storeBalance = msg.ReadUInt16();
+                byte storeCount = msg.ReadByte();
+                for (int i = 0; i < storeCount; i++)
+                {
+                    Identifier identifier = msg.ReadIdentifier();
+                    UInt16 storeBalance = msg.ReadUInt16();
+                    storeBalances.Add(identifier, storeBalance);
+                }
             }
 
-            UInt16 buyCrateItemCount = msg.ReadUInt16();
-            List<PurchasedItem> buyCrateItems = new List<PurchasedItem>();
-            for (int i = 0; i < buyCrateItemCount; i++)
-            {
-                Identifier itemPrefabIdentifier = msg.ReadIdentifier();
-                int itemQuantity = msg.ReadRangedInteger(0, CargoManager.MaxQuantity);
-                buyCrateItems.Add(new PurchasedItem(ItemPrefab.Prefabs[itemPrefabIdentifier], itemQuantity));
-            }
-
-            UInt16 subSellCrateItemCount = msg.ReadUInt16();
-            List<PurchasedItem> subSellCrateItems = new List<PurchasedItem>();
-            for (int i = 0; i < subSellCrateItemCount; i++)
-            {
-                string itemPrefabIdentifier = msg.ReadString();
-                int itemQuantity = msg.ReadRangedInteger(0, CargoManager.MaxQuantity);
-                subSellCrateItems.Add(new PurchasedItem(ItemPrefab.Prefabs[itemPrefabIdentifier], itemQuantity));
-            }
-
-            UInt16 purchasedItemCount = msg.ReadUInt16();
-            List<PurchasedItem> purchasedItems = new List<PurchasedItem>();
-            for (int i = 0; i < purchasedItemCount; i++)
-            {
-                Identifier itemPrefabIdentifier = msg.ReadIdentifier();
-                int itemQuantity = msg.ReadRangedInteger(0, CargoManager.MaxQuantity);
-                purchasedItems.Add(new PurchasedItem(ItemPrefab.Prefabs[itemPrefabIdentifier], itemQuantity));
-            }
-
-            UInt16 soldItemCount = msg.ReadUInt16();
-            List<SoldItem> soldItems = new List<SoldItem>();
-            for (int i = 0; i < soldItemCount; i++)
-            {
-                Identifier itemPrefabIdentifier = msg.ReadIdentifier();
-                UInt16 id = msg.ReadUInt16();
-                bool removed = msg.ReadBoolean();
-                byte sellerId = msg.ReadByte();
-                byte origin = msg.ReadByte();
-                soldItems.Add(new SoldItem(ItemPrefab.Prefabs[itemPrefabIdentifier], id, removed, sellerId, (SoldItem.SellOrigin)origin));
-            }
+            var buyCrateItems = ReadPurchasedItems(msg, sender: null);
+            var subSellCrateItems = ReadPurchasedItems(msg, sender: null);
+            var purchasedItems = ReadPurchasedItems(msg, sender: null);
+            var soldItems = ReadSoldItems(msg);
 
             ushort pendingUpgradeCount = msg.ReadUInt16();
             List<PurchasedUpgrade> pendingUpgrades = new List<PurchasedUpgrade>();
@@ -756,7 +702,13 @@ namespace Barotrauma
                     campaign.CargoManager.SetItemsInSubSellCrate(subSellCrateItems);
                     campaign.CargoManager.SetPurchasedItems(purchasedItems);
                     campaign.CargoManager.SetSoldItems(soldItems);
-                    if (storeBalance.HasValue) { campaign.Map.CurrentLocation.StoreCurrentBalance = storeBalance.Value; }
+                    foreach (var balance in storeBalances)
+                    {
+                        if (campaign.Map.CurrentLocation.GetStore(balance.Key) is { } store)
+                        {
+                            store.Balance = balance.Value;
+                        }
+                    }
                     campaign.UpgradeManager.SetPendingUpgrades(pendingUpgrades);
                     campaign.UpgradeManager.PurchasedUpgrades.Clear();
                     foreach (var purchasedItemSwap in purchasedItemSwaps)
@@ -914,7 +866,7 @@ namespace Barotrauma
                 WalletInfo info = transaction.Info;
                 switch (transaction.CharacterID)
                 {
-                    case Some<ushort> { Value: var charID}:
+                    case Some<ushort> { Value: var charID }:
                     {
                         Character targetCharacter = Character.CharacterList?.FirstOrDefault(c => c.ID == charID);
                         if (targetCharacter is null) { break; }

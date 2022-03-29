@@ -106,12 +106,13 @@ namespace Barotrauma
         public readonly Identifier TargetItemPrefabIdentifier;
         public ItemPrefab TargetItem => ItemPrefab.Prefabs[TargetItemPrefabIdentifier];
 
-        private Lazy<LocalizedString> displayName;
+        private readonly Lazy<LocalizedString> displayName;
         public LocalizedString DisplayName
             => ItemPrefab.Prefabs.ContainsKey(TargetItemPrefabIdentifier) ? displayName.Value : "";
         public readonly ImmutableArray<RequiredItem> RequiredItems;
         public readonly ImmutableArray<Identifier> SuitableFabricatorIdentifiers;
         public readonly float RequiredTime;
+        public readonly int RequiredMoney;
         public readonly bool RequiresRecipe;
         public readonly float OutCondition; //Percentage-based from 0 to 1
         public readonly ImmutableArray<Skill> RequiredSkills;
@@ -130,6 +131,7 @@ namespace Barotrauma
 
             var requiredSkills = new List<Skill>();
             RequiredTime = element.GetAttributeFloat("requiredtime", 1.0f);
+            RequiredMoney = element.GetAttributeInt("requiredmoney", 0);
             OutCondition = element.GetAttributeFloat("outcondition", 1.0f);
             if (OutCondition > 1.0f)
             {
@@ -322,8 +324,13 @@ namespace Barotrauma
 
         private PriceInfo defaultPrice;
         public PriceInfo DefaultPrice => defaultPrice;
-
-        private ImmutableDictionary<Identifier, PriceInfo> locationPrices;
+        private ImmutableDictionary<Identifier, PriceInfo> StorePrices { get; set; }
+        public bool CanBeBought => (DefaultPrice != null && DefaultPrice.CanBeBought) ||
+            (StorePrices != null && StorePrices.Any(p => p.Value.CanBeBought));
+        /// <summary>
+        /// Any item with a Price element in the definition can be sold everywhere.
+        /// </summary>
+        public bool CanBeSold => DefaultPrice != null;
 
         /// <summary>
         /// Defines areas where the item can be interacted with. If RequireBodyInsideTrigger is set to true, the character
@@ -392,13 +399,6 @@ namespace Barotrauma
         /// Can the item be chosen as extra cargo in multiplayer. If not set, the item is available if it can be bought from outposts in the campaign.
         /// </summary>
         public bool? AllowAsExtraCargo { get; private set; }
-
-        public bool CanBeBought => (DefaultPrice != null && DefaultPrice.CanBeBought) || (locationPrices != null && locationPrices.Any(p => p.Value.CanBeBought));
-
-        /// <summary>
-        /// Any item with a Price element in the definition can be sold everywhere.
-        /// </summary>
-        public bool CanBeSold => DefaultPrice != null;
 
         public bool RandomDeconstructionOutput { get; private set; }
 
@@ -675,11 +675,11 @@ namespace Barotrauma
             var deconstructItems = new List<DeconstructItem>();
             var fabricationRecipes = new Dictionary<uint, FabricationRecipe>();
             var treatmentSuitability = new Dictionary<Identifier, float>();
-            var locationPrices = new Dictionary<Identifier, PriceInfo>();
+            var storePrices = new Dictionary<Identifier, PriceInfo>();
             var preferredContainers = new List<PreferredContainer>();
             DeconstructTime = 1.0f;
 
-            if (ConfigElement.Attribute("allowasextracargo") != null)
+            if (ConfigElement.GetAttribute("allowasextracargo") != null)
             {
                 AllowAsExtraCargo = ConfigElement.GetAttributeBool("allowasextracargo", false);
             }
@@ -690,7 +690,7 @@ namespace Barotrauma
                 this.tags = ConfigElement.GetAttributeIdentifierArray("Tags", Array.Empty<Identifier>()).ToImmutableHashSet();
             }
 
-            if (ConfigElement.Attribute("cargocontainername") != null)
+            if (ConfigElement.GetAttribute("cargocontainername") != null)
             {
                 DebugConsole.ThrowError($"Error in item prefab \"{ToString()}\" - cargo container should be configured using the item's identifier, not the name.");
             }
@@ -731,39 +731,46 @@ namespace Barotrauma
                         CanSpriteFlipY = subElement.GetAttributeBool("canflipy", true);
 
                         sprite = new Sprite(subElement, spriteFolder, lazyLoad: true);
-                        if (subElement.Attribute("sourcerect") == null &&
-                            subElement.Attribute("sheetindex") == null)
+                        if (subElement.GetAttribute("sourcerect") == null &&
+                            subElement.GetAttribute("sheetindex") == null)
                         {
                             DebugConsole.ThrowError($"Warning - sprite sourcerect not configured for item \"{ToString()}\"!");
                         }
                         Size = Sprite.size;
 
-                        if (subElement.Attribute("name") == null && !Name.IsNullOrWhiteSpace())
+                        if (subElement.GetAttribute("name") == null && !Name.IsNullOrWhiteSpace())
                         {
                             Sprite.Name = Name.Value;
                         }
                         Sprite.EntityIdentifier = Identifier;
                         break;
                     case "price":
-                        if (subElement.Attribute("baseprice") != null)
+                        if (subElement.GetAttribute("baseprice") != null)
                         {
-                            foreach (Tuple<Identifier, PriceInfo> priceInfo in PriceInfo.CreatePriceInfos(subElement, out this.defaultPrice))
+                            foreach (var priceInfo in PriceInfo.CreatePriceInfos(subElement, out defaultPrice))
                             {
-                                if (priceInfo == null) { continue; }
-                                locationPrices.Add(priceInfo.Item1, priceInfo.Item2);
+                                if (priceInfo.StoreIdentifier.IsEmpty) { continue; }
+                                if (storePrices.ContainsKey(priceInfo.StoreIdentifier))
+                                {
+                                    DebugConsole.AddWarning($"Error in item prefab \"{this}\": price for the store \"{priceInfo.StoreIdentifier}\" defined more than once.");
+                                    storePrices[priceInfo.StoreIdentifier] = priceInfo;
+                                }
+                                else
+                                {
+                                    storePrices.Add(priceInfo.StoreIdentifier, priceInfo);
+                                }
                             }
                         }
-                        else if (subElement.Attribute("buyprice") != null)
+                        else if (subElement.GetAttribute("buyprice") != null && subElement.GetAttributeIdentifier("locationtype", "") is { IsEmpty: false } locationType) // Backwards compatibility
                         {
-                            Identifier locationType = subElement.GetAttributeIdentifier("locationtype", "");
-                            if (locationPrices.ContainsKey(locationType))
+                            if (storePrices.ContainsKey(locationType))
                             {
-                                DebugConsole.AddWarning($"Error in item prefab \"{ToString()}\": price for the location type \"{locationType}\" defined more than once.");
-                                locationPrices[locationType] = new PriceInfo(subElement);
+                                DebugConsole.AddWarning($"Error in item prefab \"{this}\": price for the location type \"{locationType}\" defined more than once.");
+                                storePrices[locationType] = new PriceInfo(subElement);
                             }
                             else
                             {
-                                locationPrices.Add(locationType, new PriceInfo(subElement));
+                                storePrices.Add(locationType, new PriceInfo(subElement));
                             }
                         }
                         break;
@@ -851,7 +858,7 @@ namespace Barotrauma
                         }
                         break;
                     case "suitabletreatment":
-                        if (subElement.Attribute("name") != null)
+                        if (subElement.GetAttribute("name") != null)
                         {
                             DebugConsole.ThrowError($"Error in item prefab \"{ToString()}\" - suitable treatments should be defined using item identifiers, not item names.");
                         }
@@ -870,15 +877,15 @@ namespace Barotrauma
             this.DeconstructItems = deconstructItems.ToImmutableArray();
             this.FabricationRecipes = fabricationRecipes.ToImmutableDictionary();
             this.treatmentSuitability = treatmentSuitability.ToImmutableDictionary();
-            this.locationPrices = locationPrices.ToImmutableDictionary();
+            StorePrices = storePrices.ToImmutableDictionary();
             this.PreferredContainers = preferredContainers.ToImmutableArray();
             this.LevelCommonness = levelCommonness.ToImmutableDictionary();
             this.LevelQuantity = levelQuantity.ToImmutableDictionary();
 
             // Backwards compatibility
-            if (locationPrices != null && locationPrices.Any())
+            if (storePrices.Any())
             {
-                this.defaultPrice ??= new PriceInfo(GetMinPrice() ?? 0, false);
+                defaultPrice ??= new PriceInfo(GetMinPrice() ?? 0, false);
             }
 
             HideConditionInTooltip = ConfigElement.GetAttributeBool("hideconditionintooltip", HideConditionBar);
@@ -930,30 +937,108 @@ namespace Barotrauma
             return treatmentSuitability.TryGetValue(treatmentIdentifier, out float suitability) ? suitability : 0.0f;
         }
 
-        public PriceInfo GetPriceInfo(Location location)
+        #region Pricing
+
+        public PriceInfo GetPriceInfo(Location.StoreInfo store)
         {
-            if (location?.Type == null) { return null; }
-            var locationTypeId = location.Type.Identifier;
-            if (locationPrices != null && locationPrices.ContainsKey(locationTypeId))
+            if (!store.Identifier.IsEmpty && StorePrices != null && StorePrices.TryGetValue(store.Identifier, out var storePriceInfo))
             {
-                return locationPrices[locationTypeId];
+                return storePriceInfo;
             }
             else
             {
                 return DefaultPrice;
             }
         }
-
-        public bool CanBeBoughtAtLocation(Location location, out PriceInfo priceInfo)
+        
+        public bool CanBeBoughtFrom(Location.StoreInfo store, out PriceInfo priceInfo)
         {
-            priceInfo = null;
-            if (location?.Type == null) { return false; }
-            priceInfo = GetPriceInfo(location);
-            return 
-                priceInfo != null && 
-                priceInfo.CanBeBought && 
-                (location.LevelData?.Difficulty ?? 0) >= priceInfo.MinLevelDifficulty;
+            priceInfo = GetPriceInfo(store);
+            return priceInfo != null && priceInfo.CanBeBought && (store.Location?.LevelData?.Difficulty ?? 0) >= priceInfo.MinLevelDifficulty;
         }
+
+        public bool CanBeBoughtFrom(Location location)
+        {
+            if (location?.Stores == null) { return false; }
+            foreach (var store in location.Stores)
+            {
+                var priceInfo = GetPriceInfo(store.Value);
+                if (priceInfo == null) { continue; }
+                if (!priceInfo.CanBeBought) { continue; }
+                if ((location.LevelData?.Difficulty ?? 0) < priceInfo.MinLevelDifficulty) { continue; }
+                return true;
+            }
+            return false;
+        }
+
+        public int? GetMinPrice()
+        {
+            int? minPrice = StorePrices.Values.Min(p => p.Price);
+            if (minPrice.HasValue)
+            {
+                if (DefaultPrice != null)
+                {
+                    return minPrice < DefaultPrice.Price ? minPrice : DefaultPrice.Price;
+                }
+                else
+                {
+                    return minPrice.Value;
+                }
+            }
+            else
+            {
+                return DefaultPrice?.Price;
+            }
+        }
+
+        public ImmutableDictionary<Identifier, PriceInfo> GetBuyPricesUnder(int maxCost = 0)
+        {
+            var prices = new Dictionary<Identifier, PriceInfo>();
+            if (StorePrices != null)
+            {
+                foreach (var storePrice in StorePrices)
+                {
+                    var priceInfo = storePrice.Value;
+                    if (priceInfo == null)
+                    {
+                        continue;
+                    }
+                    if (!priceInfo.CanBeBought)
+                    {
+                        continue;
+                    }
+                    if (priceInfo.Price < maxCost || maxCost == 0)
+                    {
+                        prices.Add(storePrice.Key, priceInfo);
+                    }
+                }
+            }
+            return prices.ToImmutableDictionary();
+        }
+
+        public ImmutableDictionary<Identifier, PriceInfo> GetSellPricesOver(int minCost = 0, bool sellingImportant = true)
+        {
+            var prices = new Dictionary<Identifier, PriceInfo>();
+            if (!CanBeSold && sellingImportant)
+            {
+                return prices.ToImmutableDictionary();
+            }
+            foreach (var storePrice in StorePrices)
+            {
+                var priceInfo = storePrice.Value;
+                if (priceInfo == null)
+                {
+                    continue;
+                }
+                if (priceInfo.Price > minCost)
+                {
+                    prices.Add(storePrice.Key, priceInfo);
+                }
+            }
+            return prices.ToImmutableDictionary();
+        }
+
+        #endregion
 
         public static ItemPrefab Find(string name, Identifier identifier)
         {
@@ -986,77 +1071,6 @@ namespace Barotrauma
                 DebugConsole.ThrowError($"Error loading item - item prefab \"{name}\" (identifier \"{identifier}\") not found.");
             }
             return prefab;
-        }
-
-        public int? GetMinPrice()
-        {
-            int? minPrice = locationPrices != null && locationPrices.Values.Any() ? locationPrices?.Values.Min(p => p.Price) : null;
-            if (minPrice.HasValue)
-            {
-                if (DefaultPrice != null)
-                {
-                    return minPrice < DefaultPrice.Price ? minPrice : DefaultPrice.Price;
-                }
-                else
-                {
-                    return minPrice.Value;
-                }
-            }
-            else
-            {
-                return DefaultPrice?.Price;
-            }
-        }
-
-        public ImmutableDictionary<Identifier, PriceInfo> GetBuyPricesUnder(int maxCost = 0)
-        {
-            Dictionary<Identifier, PriceInfo> priceLocations = new Dictionary<Identifier, PriceInfo>();
-            if (locationPrices != null)
-            {
-                foreach (KeyValuePair<Identifier, PriceInfo> locationPrice in locationPrices)
-                {
-                    PriceInfo priceInfo = locationPrice.Value;
-
-                    if (priceInfo == null)
-                    {
-                        continue;
-                    }
-                    if (!priceInfo.CanBeBought)
-                    {
-                        continue;
-                    }
-                    if (priceInfo.Price < maxCost || maxCost == 0)
-                    {
-                        priceLocations.Add(locationPrice.Key, priceInfo);
-                    }
-                }
-            }
-            return priceLocations.ToImmutableDictionary();
-        }
-
-        public ImmutableDictionary<Identifier, PriceInfo> GetSellPricesOver(int minCost = 0, bool sellingImportant = true)
-        {
-            Dictionary<Identifier, PriceInfo> priceLocations = new Dictionary<Identifier, PriceInfo>();
-
-            if (!CanBeSold && sellingImportant)
-            {
-                return priceLocations.ToImmutableDictionary();
-            }
-
-            foreach (KeyValuePair<Identifier, PriceInfo> locationPrice in locationPrices)
-            {
-                PriceInfo priceInfo = locationPrice.Value;
-
-                if (priceInfo == null)
-                {
-                    continue;
-                }
-                if (priceInfo.Price > minCost)
-                {
-                    priceLocations.Add(locationPrice.Key, priceInfo);
-                }
-            }
-            return priceLocations.ToImmutableDictionary();
         }
 
         public bool IsContainerPreferred(Item item, ItemContainer targetContainer, out bool isPreferencesDefined, out bool isSecondary, bool requireConditionRequirement = false)

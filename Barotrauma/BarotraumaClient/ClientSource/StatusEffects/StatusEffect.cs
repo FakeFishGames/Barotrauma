@@ -40,7 +40,7 @@ namespace Barotrauma
                         if (sound?.Sound != null)
                         {
                             loopSound = subElement.GetAttributeBool("loop", false);
-                            if (subElement.Attribute("selectionmode") != null)
+                            if (subElement.GetAttribute("selectionmode") != null)
                             {
                                 if (Enum.TryParse(subElement.GetAttributeString("selectionmode", "Random"), out SoundSelectionMode selectionMode))
                                 {

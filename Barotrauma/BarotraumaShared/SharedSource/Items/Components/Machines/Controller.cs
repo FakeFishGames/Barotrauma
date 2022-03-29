@@ -127,7 +127,7 @@ namespace Barotrauma.Items.Components
             {
                 if (subElement.Name != "limbposition") { continue; }
                 string limbStr = subElement.GetAttributeString("limb", "");
-                if (!Enum.TryParse(subElement.Attribute("limb").Value, out LimbType limbType))
+                if (!Enum.TryParse(subElement.GetAttribute("limb").Value, out LimbType limbType))
                 {
                     DebugConsole.ThrowError($"Error in item \"{item.Name}\" - {limbStr} is not a valid limb type.");
                 }

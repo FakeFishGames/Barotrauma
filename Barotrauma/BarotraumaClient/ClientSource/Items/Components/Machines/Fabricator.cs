@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection.Metadata;
 
@@ -46,9 +47,12 @@ namespace Barotrauma.Items.Components
 
         private GUITextBlock requiredTimeBlock;
 
+        [Serialize("FabricatorCreate", IsPropertySaveable.Yes)]
+        public string CreateButtonText { get; set; }
+
         partial void InitProjSpecific()
         {
-            CreateGUI();
+            //CreateGUI();
         }
 
         protected override void OnResolutionChanged()
@@ -68,9 +72,11 @@ namespace Barotrauma.Items.Components
                 AutoScaleVertical = true
             };
 
-            var mainFrame = new GUILayoutGroup(new RectTransform(new Vector2(1f, 1f), paddedFrame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
+            var mainFrame = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.95f), paddedFrame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
             {
-                RelativeSpacing = 0.02f
+                RelativeSpacing = 0.02f,
+                Stretch = true,
+                CanBeFocused = true
             };
             
             // === TOP AREA ===
@@ -131,41 +137,55 @@ namespace Barotrauma.Items.Components
             // === BOTTOM AREA === //
             var bottomFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.3f), mainFrame.RectTransform), style: null);
 
+            if (inputContainer.Capacity > 0)
+            {
                 // === SEPARATOR === //
                 var separatorArea = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.15f), bottomFrame.RectTransform, Anchor.TopCenter), childAnchor: Anchor.CenterLeft, isHorizontal: true)
                 {
-                    Stretch = true, 
+                    Stretch = true,
                     RelativeSpacing = 0.03f
                 };
-                    var inputLabel = new GUITextBlock(new RectTransform(Vector2.One, separatorArea.RectTransform), TextManager.Get("fabricator.input", "uilabel.input"), font: GUIStyle.SubHeadingFont) { Padding = Vector4.Zero };
-                    inputLabel.RectTransform.Resize(new Point((int) inputLabel.Font.MeasureString(inputLabel.Text).X, inputLabel.RectTransform.Rect.Height));
-                    new GUIFrame(new RectTransform(Vector2.One, separatorArea.RectTransform), style: "HorizontalLine");
+                var inputLabel = new GUITextBlock(new RectTransform(Vector2.One, separatorArea.RectTransform), TextManager.Get("fabricator.input", "uilabel.input"), font: GUIStyle.SubHeadingFont) { Padding = Vector4.Zero };
+                inputLabel.RectTransform.Resize(new Point((int)inputLabel.Font.MeasureString(inputLabel.Text).X, inputLabel.RectTransform.Rect.Height));
+                new GUIFrame(new RectTransform(Vector2.One, separatorArea.RectTransform), style: "HorizontalLine");
 
                 // === INPUT AREA === //
                 var inputArea = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 1f), bottomFrame.RectTransform, Anchor.BottomCenter), isHorizontal: true, childAnchor: Anchor.BottomLeft);
-                    
-                    // === INPUT SLOTS === //
-                    inputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(0.7f, 1f), inputArea.RectTransform), style: null);
-                        new GUICustomComponent(new RectTransform(Vector2.One, inputInventoryHolder.RectTransform), DrawInputOverLay) { CanBeFocused = false };
 
-                    // === ACTIVATE BUTTON === //
-                    var buttonFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.8f), inputArea.RectTransform), childAnchor: Anchor.CenterRight);
-                        activateButton = new GUIButton(new RectTransform(new Vector2(1f, 0.6f), buttonFrame.RectTransform),
-                            TextManager.Get("FabricatorCreate"), style: "DeviceButton")
-                        {
-                            OnClicked = StartButtonClicked,
-                            UserData = selectedItem,
-                            Enabled = false
-                        };
-                            // === POWER WARNING === //
-                            inSufficientPowerWarning = new GUITextBlock(new RectTransform(Vector2.One, activateButton.RectTransform),
-                                TextManager.Get("FabricatorNoPower"), textColor: GUIStyle.Orange, textAlignment: Alignment.Center, color: Color.Black, style: "OuterGlow", wrap: true)
-                            {
-                                HoverColor = Color.Black,
-                                IgnoreLayoutGroups = true,
-                                Visible = false,
-                                CanBeFocused = false
-                            };
+                // === INPUT SLOTS === //
+                inputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(0.7f, 1f), inputArea.RectTransform), style: null);
+                new GUICustomComponent(new RectTransform(Vector2.One, inputInventoryHolder.RectTransform), DrawInputOverLay) { CanBeFocused = false };
+
+                // === ACTIVATE BUTTON === //
+                var buttonFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.8f), inputArea.RectTransform), childAnchor: Anchor.CenterRight);
+                activateButton = new GUIButton(new RectTransform(new Vector2(1f, 0.6f), buttonFrame.RectTransform),
+                    TextManager.Get(CreateButtonText), style: "DeviceButton")
+                {
+                    OnClicked = StartButtonClicked,
+                    UserData = selectedItem,
+                    Enabled = false
+                };
+            }
+            else
+            {
+                bottomFrame.RectTransform.RelativeSize = new Vector2(1.0f, 0.1f);
+                activateButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), bottomFrame.RectTransform, Anchor.CenterRight),
+                    TextManager.Get(CreateButtonText), style: "DeviceButton")
+                {
+                    OnClicked = StartButtonClicked,
+                    UserData = selectedItem,
+                    Enabled = false
+                };
+            }
+            // === POWER WARNING === //
+            inSufficientPowerWarning = new GUITextBlock(new RectTransform(Vector2.One, activateButton.RectTransform),
+                TextManager.Get("FabricatorNoPower"), textColor: GUIStyle.Orange, textAlignment: Alignment.Center, color: Color.Black, style: "OuterGlow", wrap: true)
+            {
+                HoverColor = Color.Black,
+                IgnoreLayoutGroups = true,
+                Visible = false,
+                CanBeFocused = false
+            };
             CreateRecipes();
         }
 
@@ -222,8 +242,12 @@ namespace Barotrauma.Items.Components
 
         partial void OnItemLoadedProjSpecific()
         {
-            inputContainer.AllowUIOverlap = true;
-            inputContainer.Inventory.RectTransform = inputInventoryHolder.RectTransform;
+            CreateGUI();
+            if (inputInventoryHolder != null)
+            {
+                inputContainer.AllowUIOverlap = true;
+                inputContainer.Inventory.RectTransform = inputInventoryHolder.RectTransform;
+            }
             outputContainer.AllowUIOverlap = true;
             outputContainer.Inventory.RectTransform = outputInventoryHolder.RectTransform;
         }
@@ -262,7 +286,7 @@ namespace Barotrauma.Items.Components
 
             var insufficientSkillsText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), itemList.Content.RectTransform),
                 TextManager.Get("fabricatorinsufficientskills"), textColor: Color.Orange, font: GUIStyle.SubHeadingFont)
-                {
+            {
                 AutoScaleHorizontal = true,
                 CanBeFocused = false
             };
@@ -271,10 +295,14 @@ namespace Barotrauma.Items.Components
             {
                 insufficientSkillsText.RectTransform.RepositionChildInHierarchy(itemList.Content.RectTransform.GetChildIndex(firstinSufficient.RectTransform));
             }
+            else
+            {
+                sufficientSkillsText.Visible = false;
+            }
 
             var requiresRecipeText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), itemList.Content.RectTransform),
                 TextManager.Get("fabricatorrequiresrecipe"), textColor: Color.Red, font: GUIStyle.SubHeadingFont)
-                {
+            {
                 AutoScaleHorizontal = true,
                 CanBeFocused = false
             };
@@ -593,14 +621,28 @@ namespace Barotrauma.Items.Components
             float requiredTime = overrideRequiredTime ??
                 (user == null ? selectedItem.RequiredTime : GetRequiredTime(selectedItem, user));
             
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedReqFrame.RectTransform), 
-                TextManager.Get("FabricatorRequiredTime") , textColor: ToolBox.GradientLerp(degreeOfSuccess, GUIStyle.Red, Color.Yellow, GUIStyle.Green), font: GUIStyle.SubHeadingFont)
+            if (requiredTime > 0.0f)
             {
-                AutoScaleHorizontal = true,
-            };
-                
-            requiredTimeBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedReqFrame.RectTransform), ToolBox.SecondsToReadableTime(requiredTime), 
-                font: GUIStyle.SmallFont);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedReqFrame.RectTransform), 
+                    TextManager.Get("FabricatorRequiredTime") , textColor: ToolBox.GradientLerp(degreeOfSuccess, GUIStyle.Red, Color.Yellow, GUIStyle.Green), font: GUIStyle.SubHeadingFont)
+                {
+                    AutoScaleHorizontal = true,
+                };
+                requiredTimeBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedReqFrame.RectTransform), ToolBox.SecondsToReadableTime(requiredTime), 
+                    font: GUIStyle.SmallFont);
+            }
+
+            if (SelectedItem.RequiredMoney > 0)
+            {
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedReqFrame.RectTransform),
+                    TextManager.Get("subeditor.price"), textColor: ToolBox.GradientLerp(degreeOfSuccess, GUIStyle.Red, Color.Yellow, GUIStyle.Green), font: GUIStyle.SubHeadingFont)
+                {
+                    AutoScaleHorizontal = true,
+                };
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedReqFrame.RectTransform), TextManager.FormatCurrency(SelectedItem.RequiredMoney),
+                    font: GUIStyle.SmallFont);
+
+            }
             return true;
         }
 

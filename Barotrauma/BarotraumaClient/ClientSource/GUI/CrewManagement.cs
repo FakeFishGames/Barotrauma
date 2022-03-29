@@ -172,7 +172,7 @@ namespace Barotrauma
             {
                 AutoScaleVertical = true,
                 TextScale = 1.1f,
-                TextGetter = () => FormatCurrency(campaign.Wallet.Balance)
+                TextGetter = () => TextManager.FormatCurrency(campaign.Wallet.Balance)
             };
 
             var pendingAndCrewGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.95f), anchor: Anchor.Center,
@@ -400,7 +400,7 @@ namespace Barotrauma
             if (listBox != crewList)
             {
                 new GUITextBlock(new RectTransform(new Vector2(width, 1.0f), mainGroup.RectTransform),
-                    FormatCurrency(characterInfo.Salary),
+                    TextManager.FormatCurrency(characterInfo.Salary),
                     textAlignment: Alignment.Center)
                 {
                     CanBeFocused = false
@@ -629,7 +629,7 @@ namespace Barotrauma
             {
                 total += ((InfoSkill)c.UserData).CharacterInfo.Salary;
             });
-            totalBlock.Text = FormatCurrency(total);
+            totalBlock.Text = TextManager.FormatCurrency(total);
             bool enoughMoney = campaign == null || campaign.Wallet.CanAfford(total);
             totalBlock.TextColor = enoughMoney ? Color.White : Color.Red;
             validateHiresButton.Enabled = enoughMoney && pendingList.Content.RectTransform.Children.Any();
@@ -925,7 +925,5 @@ namespace Barotrauma
                 GameMain.Client.ClientPeer?.Send(msg, DeliveryMethod.Reliable);
             }
         }
-
-        private LocalizedString FormatCurrency(int currency) =>  TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", currency));
     }
 }

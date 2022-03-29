@@ -104,6 +104,9 @@ namespace Barotrauma
         [Serialize(10f, IsPropertySaveable.Yes, "How frequent the recurring idle and attack sounds are?"), Editable(MinValueFloat = 1f, MaxValueFloat = 100f)]
         public float SoundInterval { get; set; }
 
+        [Serialize(false, IsPropertySaveable.Yes), Editable]
+        public bool DrawLast { get; set; }
+
         public readonly CharacterFile File;
 
         public XDocument VariantFile { get; private set; }
@@ -127,31 +130,36 @@ namespace Barotrauma
 
         public override ContentXElement MainElement => base.MainElement.IsOverride() ? base.MainElement.FirstElement() : base.MainElement;
 
-        public static XElement CreateVariantXml(XElement selfXml, XElement parentXml)
+        public static XElement CreateVariantXml(XElement variantXML, XElement baseXML)
         {
-            XElement newXml = selfXml.CreateVariantXML(parentXml);
-
-            XElement selfAi = selfXml.GetChildElement("ai");
-            XElement parentAi = parentXml.GetChildElement("ai");
-
-            if (parentAi is null || parentAi.Elements().None()
-                || selfAi is null || selfAi.Elements().None())
+            XElement newXml = variantXML.CreateVariantXML(baseXML);
+            XElement variantAi = variantXML.GetChildElement("ai");
+            XElement baseAi = baseXML.GetChildElement("ai");
+            if (baseAi is null || baseAi.Elements().None()
+                || variantAi is null || variantAi.Elements().None())
             {
                 return newXml;
             }
-            
-            //discard the inherited targets, just keep the new ones
+            // CreateVariantXML seems to merge the ai targets so that in the new xml we have both the old and the new target definitions.
             var finalAiElement = newXml.GetChildElement("ai");
-            foreach (var finalTarget in finalAiElement!.Elements().ToArray())
+            var processedTags = new HashSet<string>();
+            foreach (var aiTarget in finalAiElement.Elements().ToArray())
             {
-                finalTarget.Remove();
+                string tag = aiTarget.GetAttributeString("tag", null);
+                if (tag == null) { continue; }
+                if (processedTags.Contains(tag))
+                {
+                    aiTarget.Remove();
+                    continue;
+                }
+                processedTags.Add(tag);
+                var matchInSelf = variantAi.Elements().FirstOrDefault(e => e.GetAttributeString("tag", null) == tag);
+                var matchInParent = baseAi.Elements().FirstOrDefault(e => e.GetAttributeString("tag", null) == tag);
+                if (matchInSelf != null && matchInParent != null)
+                {
+                    aiTarget.ReplaceWith(new XElement(matchInSelf));
+                }
             }
-
-            foreach (var inheritorTarget in selfAi.Elements())
-            {
-                finalAiElement.Add(new XElement(inheritorTarget));
-            }
-            
             return newXml;
         }
         
@@ -574,6 +582,9 @@ namespace Barotrauma
             [Serialize(false, IsPropertySaveable.Yes, description: "The character will flee for a brief moment when being shot at if not performing an attack."), Editable]
             public bool AvoidGunfire { get; private set; }
 
+            [Serialize(0f, IsPropertySaveable.Yes, description: "How much damage is required for single attack to trigger avoiding/releasing targets."), Editable(minValue: 0f, maxValue: 1000f)]
+            public float DamageThreshold { get; private set; }
+
             [Serialize(3f, IsPropertySaveable.Yes, description: "How long the creature avoids gunfire. Also used when the creature is unlatched."), Editable(minValue: 0f, maxValue: 100f)]
             public float AvoidTime { get; private set; }
 
@@ -784,6 +795,9 @@ namespace Barotrauma
 
             [Serialize(AttackPattern.Straight, IsPropertySaveable.Yes), Editable]
             public AttackPattern AttackPattern { get; set; }
+
+            [Serialize(false, IsPropertySaveable.Yes, description: "If enabled, the AI will give more priority to targets close to the horizontal middle of the sub. Only applies to walls, hulls, and items like sonar. Circle and Sweep always does this regardless of this property."), Editable]
+            public bool PrioritizeSubCenter { get; set; }
 
             #region Sweep
             [Serialize(0f, IsPropertySaveable.Yes, description: "Use to define a distance at which the creature starts the sweeping movement."), Editable(MinValueFloat = 0, MaxValueFloat = 10000, ValueStep = 1, DecimalCount = 0)]

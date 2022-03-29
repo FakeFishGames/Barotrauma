@@ -162,7 +162,7 @@ namespace Barotrauma
                 tags.Add(tag.Trim().ToIdentifier());
             }
 
-            if (element.Attribute("ishorizontal") != null)
+            if (element.GetAttribute("ishorizontal") != null)
             {
                 IsHorizontal = element.GetAttributeBool("ishorizontal", false);
             }
@@ -177,8 +177,8 @@ namespace Barotrauma
                 {
                     case "sprite":
                         Sprite = new Sprite(subElement, lazyLoad: true);
-                        if (subElement.Attribute("sourcerect") == null &&
-                            subElement.Attribute("sheetindex") == null)
+                        if (subElement.GetAttribute("sourcerect") == null &&
+                            subElement.GetAttribute("sheetindex") == null)
                         {
                             DebugConsole.ThrowError("Warning - sprite sourcerect not configured for structure \"" + Name + "\"!");
                         }
@@ -191,7 +191,7 @@ namespace Barotrauma
                         CanSpriteFlipX = subElement.GetAttributeBool("canflipx", true);
                         CanSpriteFlipY = subElement.GetAttributeBool("canflipy", true);
 
-                        if (subElement.Attribute("name") == null && !Name.IsNullOrWhiteSpace())
+                        if (subElement.GetAttribute("name") == null && !Name.IsNullOrWhiteSpace())
                         {
                             Sprite.Name = Name.Value;
                         }
@@ -199,7 +199,7 @@ namespace Barotrauma
                         break;
                     case "backgroundsprite":
                         BackgroundSprite = new Sprite(subElement, lazyLoad: true);
-                        if (subElement.Attribute("sourcerect") == null && Sprite != null)
+                        if (subElement.GetAttribute("sourcerect") == null && Sprite != null)
                         {
                             BackgroundSprite.SourceRect = Sprite.SourceRect;
                             BackgroundSprite.size = Sprite.size;
@@ -223,7 +223,7 @@ namespace Barotrauma
 
                         int groupID = 0;
                         DecorativeSprite decorativeSprite = null;
-                        if (subElement.Attribute("texture") == null)
+                        if (subElement.GetAttribute("texture") == null)
                         {
                             groupID = subElement.GetAttributeInt("randomgroupid", 0);
                         }
@@ -284,10 +284,10 @@ namespace Barotrauma
             }
 
             //backwards compatibility
-            if (element.Attribute("size") == null)
+            if (element.GetAttribute("size") == null)
             {
                 Size = Vector2.Zero;
-                if (element.Attribute("width") == null && element.Attribute("height") == null)
+                if (element.GetAttribute("width") == null && element.GetAttribute("height") == null)
                 {
                     Size = Sprite.SourceRect.Size.ToVector2();
                 }
@@ -322,7 +322,7 @@ namespace Barotrauma
 #endif
 
             Tags = tags.ToImmutableHashSet();
-            AllowedLinks = Enumerable.Empty<Identifier>().ToImmutableHashSet();
+            AllowedLinks = ImmutableHashSet<Identifier>.Empty;
         }
 
         protected override void CreateInstance(Rectangle rect)

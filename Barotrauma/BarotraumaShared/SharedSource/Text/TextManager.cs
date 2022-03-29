@@ -8,6 +8,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using System.Globalization;
 
 namespace Barotrauma
 {
@@ -347,6 +348,11 @@ namespace Barotrauma
             }
             if (!(description is RawLString { Value: "" })) { description += "\n"; } //TODO: this is cursed
             description += extraDescriptionLine;
+        }
+
+        public static LocalizedString FormatCurrency(int amount)
+        {
+             return GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", amount));
         }
 
         public static LocalizedString GetServerMessage(string serverMessage)

@@ -1454,9 +1454,9 @@ namespace Barotrauma
                 // omega nesting incoming
                 if (fabricationRecipe != null)
                 {
-                    foreach (KeyValuePair<Identifier, PriceInfo> itemLocationPrice in itemPrefab.GetSellPricesOver(0))
+                    foreach (var priceInfo in itemPrefab.GetSellPricesOver(0))
                     {
-                        NewMessage("    If bought at " + itemLocationPrice.Key + " it costs " + itemLocationPrice.Value.Price);
+                        NewMessage($"    If bought at {GetSeller(priceInfo.Value)} it costs {priceInfo.Value.Price}");
                         int totalPrice = 0;
                         int? totalBestPrice = 0;
                         foreach (var ingredient in fabricationRecipe.RequiredItems)
@@ -1464,31 +1464,33 @@ namespace Barotrauma
                             foreach (ItemPrefab ingredientItemPrefab in ingredient.ItemPrefabs)
                             {
                                 int defaultPrice = ingredientItemPrefab.DefaultPrice?.Price ?? 0;
-                                NewMessage("        Its ingredient " + ingredientItemPrefab.Name + " has base cost " + defaultPrice);
+                                NewMessage($"        Its ingredient {ingredientItemPrefab.Name} has base cost {defaultPrice}");
                                 totalPrice += defaultPrice;
                                 totalBestPrice += ingredientItemPrefab.GetMinPrice();
                                 int basePrice = defaultPrice;
-                                foreach (KeyValuePair<Identifier, PriceInfo> ingredientItemLocationPrice in ingredientItemPrefab.GetBuyPricesUnder())
+                                foreach (var ingredientItemPriceInfo in ingredientItemPrefab.GetBuyPricesUnder())
                                 {
-                                    if (basePrice > ingredientItemLocationPrice.Value.Price)
+                                    if (basePrice > ingredientItemPriceInfo.Value.Price)
                                     {
-                                        NewMessage("            Location " + ingredientItemLocationPrice.Key + " sells ingredient " + ingredientItemPrefab.Name + " for cheaper, " + ingredientItemLocationPrice.Value.Price, Color.Yellow);
+                                        NewMessage($"            {GetSeller(ingredientItemPriceInfo.Value).CapitaliseFirstInvariant()} sells ingredient {ingredientItemPrefab.Name} for cheaper, {ingredientItemPriceInfo.Value.Price}", Color.Yellow);
                                     }
                                     else
                                     {
-                                        NewMessage("            Location " + ingredientItemLocationPrice.Key + " sells ingredient " + ingredientItemPrefab.Name + " for more, " + ingredientItemLocationPrice.Value.Price, Color.Teal);
+                                        NewMessage($"            {GetSeller(ingredientItemPriceInfo.Value).CapitaliseFirstInvariant()} sells ingredient {ingredientItemPrefab.Name} for more, {ingredientItemPriceInfo.Value.Price}", Color.Teal);
                                     }
                                 }
                             }
                         }
                         int costDifference = itemPrefab.DefaultPrice.Price - totalPrice;
-                        NewMessage("    Constructing the item from store-bought items provides " + costDifference + " profit with default values.");
+                        NewMessage($"    Constructing the item from store-bought items provides {costDifference} profit with default values.");
 
                         if (totalBestPrice.HasValue)
                         {
-                            int? bestDifference = itemLocationPrice.Value.Price - totalBestPrice;
-                            NewMessage("    Constructing the item from store-bought items provides " + bestDifference + " profit with best-case scenario values.");
+                            int? bestDifference = priceInfo.Value.Price - totalBestPrice;
+                            NewMessage($"    Constructing the item from store-bought items provides {bestDifference} profit with best-case scenario values.");
                         }
+
+                        static string GetSeller(PriceInfo priceInfo) => $"store with identifier \"{priceInfo.StoreIdentifier}\"";
                     }
                 }
             },
@@ -1763,7 +1765,7 @@ namespace Barotrauma
                     //check missing mission texts
                     foreach (var missionPrefab in MissionPrefab.Prefabs)
                     {
-                        Identifier missionId = (missionPrefab.ConfigElement.Attribute("textidentifier") == null ? missionPrefab.Identifier : missionPrefab.ConfigElement.GetAttributeIdentifier("textidentifier", Identifier.Empty));
+                        Identifier missionId = (missionPrefab.ConfigElement.GetAttribute("textidentifier") == null ? missionPrefab.Identifier : missionPrefab.ConfigElement.GetAttributeIdentifier("textidentifier", Identifier.Empty));
                         addIfMissing($"missionname.{missionId}".ToIdentifier(), language);
                         addIfMissing($"missiondescription.{missionId}".ToIdentifier(), language);
                     }

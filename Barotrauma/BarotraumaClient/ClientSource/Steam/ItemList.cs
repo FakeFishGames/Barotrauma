@@ -533,6 +533,9 @@ namespace Barotrauma.Steam
         private void PopulateFrameWithItemInfo(Steamworks.Ugc.Item workshopItem, GUIFrame parentFrame)
         {
             taskCancelSrc = taskCancelSrc.IsCancellationRequested ? new CancellationTokenSource() : taskCancelSrc;
+
+            var contentPackage
+                = ContentPackageManager.WorkshopPackages.FirstOrDefault(p => p.SteamWorkshopId == workshopItem.Id);
             
             var verticalLayout = new GUILayoutGroup(new RectTransform(Vector2.One, parentFrame.RectTransform));
 
@@ -567,34 +570,74 @@ namespace Barotrauma.Steam
 
             RectTransform rightSideButtonRectT()
                 => new RectTransform(Vector2.One, headerLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight);
+
+            bool reinstallAction(GUIButton button, object o)
+            {
+                TaskPool.Add($"Reinstall{workshopItem.Id}", SteamManager.Workshop.Reinstall(workshopItem), t =>
+                {
+                    ContentPackageManager.WorkshopPackages.Refresh();
+                    ContentPackageManager.EnabledPackages.RefreshUpdatedMods();
+                });
+                return false;
+            }
+
+            var (updateButton, updateSprite) = CreatePaddedButton(
+                rightSideButtonRectT(),
+                "GUIUpdateButton",
+                spriteScale: 0.8f);
+            updateButton.ToolTip = TextManager.Get("WorkshopItemUpdate");
+            updateButton.Visible = false;
+            updateButton.OnClicked = reinstallAction;
+
+            if (contentPackage != null)
+            {
+                TaskPool.Add(
+                    $"DetermineUpdateRequired{contentPackage.SteamWorkshopId}",
+                    contentPackage.IsUpToDate(),
+                    t =>
+                    {
+                        if (!t.TryGetResult(out bool isUpToDate)) { return; }
+
+                        updateButton.Visible = !isUpToDate;
+                    });
+            }
             
             var (reinstallButton, reinstallSprite) = CreatePaddedButton(
                 rightSideButtonRectT(),
                 "GUIReloadButton",
                 spriteScale: 0.8f);
             reinstallButton.ToolTip = TextManager.Get("WorkshopItemReinstall");
-            reinstallButton.OnClicked += (button, o) =>
-            {
-                SteamManager.Workshop.Uninstall(workshopItem);
-                TaskPool.Add($"Reinstall{workshopItem.Id}", SteamManager.Workshop.ForceRedownload(workshopItem), t => { });
-                return false;
-            };
+            reinstallButton.OnClicked = reinstallAction;
             var reinstallButtonUpdater = new GUICustomComponent(
                 new RectTransform(Vector2.Zero, reinstallButton.RectTransform),
                 onUpdate: (f, component) =>
                 {
-                    reinstallButton.Visible = workshopItem.IsSubscribed;
+                    reinstallButton.Visible = workshopItem.IsSubscribed || workshopItem.Owner.Id == SteamManager.GetSteamID();
                     reinstallButton.Enabled = !workshopItem.IsDownloading && !workshopItem.IsDownloadPending &&
                                               !SteamManager.Workshop.IsInstalling(workshopItem);
+
                     reinstallSprite.Color = reinstallButton.Enabled
                         ? reinstallSprite.Style.Color
                         : Color.DimGray;
+                    updateButton.Enabled = reinstallButton.Enabled && contentPackage != null && ContentPackageManager.WorkshopPackages.Contains(contentPackage);
+                    updateSprite.Color = reinstallSprite.Color;
+
+                    if (contentPackage != null
+                        && !ContentPackageManager.WorkshopPackages.Contains(contentPackage)
+                        && ContentPackageManager.WorkshopPackages.Any(p => p.SteamWorkshopId == workshopItem.Id))
+                    {
+                        updateButton.Visible = false;
+                    }
                 });
             CreateSubscribeButton(workshopItem,
                 rightSideButtonRectT(),
                 spriteScale: 0.8f);
+
+            var padding = new GUIFrame(
+                new RectTransform((0.15f, 1.0f), headerLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight),
+                style: null);
             
-            var padding = new GUIFrame(new RectTransform((1.0f, 0.015f), verticalLayout.RectTransform), style: null);
+            padding = new GUIFrame(new RectTransform((1.0f, 0.015f), verticalLayout.RectTransform), style: null);
             
             var horizontalLayout = new GUILayoutGroup(new RectTransform((1.0f, 0.45f), verticalLayout.RectTransform),
                 isHorizontal: true)
@@ -638,7 +681,7 @@ namespace Barotrauma.Steam
                     isHorizontal: true,
                     childAnchor: Anchor.CenterLeft) { Stretch = true };
             var starColor = Color.Lerp(
-                Color.Lerp(Color.Red, Color.Yellow, Math.Min(workshopItem.Score * 2.0f, 1.0f)),
+                Color.Lerp(Color.White, Color.Yellow, Math.Min(workshopItem.Score * 2.0f, 1.0f)),
                 Color.Lime, Math.Max(0.0f, (workshopItem.Score - 0.5f) * 2.0f));
             for (int i = 0; i < 5; i++)
             {
@@ -652,12 +695,23 @@ namespace Barotrauma.Steam
                     star.SelectedColor = starColor;
                 }
             }
-            var scoreVoteCountPadding = new GUIFrame(new RectTransform((0.5f, 1.0f), scoreStarContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight),
+            var scoreTextPadding = new GUIFrame(new RectTransform((0.5f, 1.0f), scoreStarContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight),
                 style: null);
+
+            var scoreTextContainer = new GUIFrame(new RectTransform(Vector2.One, scoreStarContainer.RectTransform),
+                style: null);
+            
             var scoreVoteCount = new GUITextBlock(
-                new RectTransform(Vector2.One, scoreStarContainer.RectTransform),
+                new RectTransform((1.0f, 1.5f), scoreTextContainer.RectTransform, Anchor.Center),
                 TextManager.GetWithVariable("WorkshopItemVotes", "[VoteCount]",
-                    (workshopItem.VotesUp + workshopItem.VotesDown).ToString()), textAlignment: Alignment.CenterLeft)
+                    (workshopItem.VotesUp + workshopItem.VotesDown).ToString()), textAlignment: Alignment.BottomLeft)
+            {
+                Padding = Vector4.Zero
+            };
+            var subscriptionCount = new GUITextBlock(
+                new RectTransform((1.0f, 1.5f), scoreTextContainer.RectTransform, Anchor.Center),
+                TextManager.GetWithVariable("WorkshopItemSubscriptions", "[SubscriptionCount]",
+                    workshopItem.NumUniqueSubscriptions.ToString()), textAlignment: Alignment.TopLeft)
             {
                 Padding = Vector4.Zero
             };

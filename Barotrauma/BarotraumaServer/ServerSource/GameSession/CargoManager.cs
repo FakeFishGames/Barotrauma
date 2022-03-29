@@ -7,51 +7,57 @@ namespace Barotrauma
 {
     partial class CargoManager
     {
-        public void SellBackPurchasedItems(List<PurchasedItem> itemsToSell, Client client = null)
+        public void SellBackPurchasedItems(Identifier storeIdentifier, List<PurchasedItem> itemsToSell, Client client = null)
         {
-            // Check all the prices before starting the transaction
-            // to make sure the modifiers stay the same for the whole transaction
-            Dictionary<ItemPrefab, int> buyValues = GetBuyValuesAtCurrentLocation(itemsToSell.Select(i => i.ItemPrefab));
-            foreach (PurchasedItem item in itemsToSell)
+            // Check all the prices before starting the transaction to make sure the modifiers stay the same for the whole transaction
+            var buyValues = GetBuyValuesAtCurrentLocation(storeIdentifier, itemsToSell.Select(i => i.ItemPrefab));
+            var store = Location.GetStore(storeIdentifier);
+            if (store == null) { return; }
+            var storeSpecificItems = GetPurchasedItems(storeIdentifier);
+            foreach (var item in itemsToSell)
             {
                 var itemValue = item.Quantity * buyValues[item.ItemPrefab];
-                Location.StoreCurrentBalance -= itemValue;
+                store.Balance -= itemValue;
                 campaign.GetWallet(client).Give(itemValue);
-                PurchasedItems.Remove(item);
+                storeSpecificItems?.Remove(item);
             }
         }
 
-        public void BuyBackSoldItems(List<SoldItem> itemsToBuy, Client client)
+        public void BuyBackSoldItems(Identifier storeIdentifier, List<SoldItem> itemsToBuy)
         {
-            // Check all the prices before starting the transaction
-            // to make sure the modifiers stay the same for the whole transaction
-            var sellValues = GetSellValuesAtCurrentLocation(itemsToBuy.Select(i => i.ItemPrefab));
+            var store = Location.GetStore(storeIdentifier);
+            if (store == null) { return; }
+            var storeSpecificItems = SoldItems.GetValueOrDefault(storeIdentifier);
+            // Check all the prices before starting the transaction to make sure the modifiers stay the same for the whole transaction
+            var sellValues = GetSellValuesAtCurrentLocation(storeIdentifier, itemsToBuy.Select(i => i.ItemPrefab));
             foreach (var item in itemsToBuy)
             {
                 int itemValue = sellValues[item.ItemPrefab];
-                if (Location.StoreCurrentBalance < itemValue || item.Removed) { continue; }
-                Location.StoreCurrentBalance += itemValue;
+                if (store.Balance < itemValue || item.Removed) { continue; }
+                store.Balance += itemValue;
                 campaign.Bank.TryDeduct(itemValue);
-                SoldItems.Remove(item);
+                storeSpecificItems.Remove(item);
             }
         }
 
-        public void SellItems(List<SoldItem> itemsToSell, Client client)
+        public void SellItems(Identifier storeIdentifier, List<SoldItem> itemsToSell, Client client)
         {
+            var store = Location.GetStore(storeIdentifier);
+            if (store == null) { return; }
             bool canAddToRemoveQueue = (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer) && Entity.Spawner != null;
             IEnumerable<Item> sellableItemsInSub = Enumerable.Empty<Item>();
             if (canAddToRemoveQueue && itemsToSell.Any(i => i.Origin == SoldItem.SellOrigin.Submarine && i.ID == Entity.NullEntityID && !i.Removed))
             {
                 sellableItemsInSub = GetSellableItemsFromSub();
             }
-            // Check all the prices before starting the transaction
-            // to make sure the modifiers stay the same for the whole transaction
-            var sellValues = GetSellValuesAtCurrentLocation(itemsToSell.Select(i => i.ItemPrefab));
+            var itemsSoldAtStore = SoldItems.GetValueOrDefault(storeIdentifier);
+            // Check all the prices before starting the transaction to make sure the modifiers stay the same for the whole transaction
+            var sellValues = GetSellValuesAtCurrentLocation(storeIdentifier, itemsToSell.Select(i => i.ItemPrefab));
             foreach (var item in itemsToSell)
             {
                 int itemValue = sellValues[item.ItemPrefab];
                 // check if the store can afford the item and if the item hasn't been removed already
-                if (Location.StoreCurrentBalance < itemValue || item.Removed) { continue; }
+                if (store.Balance < itemValue || item.Removed) { continue; }
                 // Server determines the items that are sold from the sub in multiplayer
                 if (item.Origin == SoldItem.SellOrigin.Submarine && item.ID == Entity.NullEntityID && !item.Removed)
                 {
@@ -66,8 +72,8 @@ namespace Barotrauma
                     item.Removed = true;
                     Entity.Spawner.AddItemToRemoveQueue(entity);
                 }
-                SoldItems.Add(item);
-                Location.StoreCurrentBalance -= itemValue;
+                itemsSoldAtStore?.Add(item);
+                store.Balance -= itemValue;
                 campaign.Bank.Give(itemValue);
                 GameAnalyticsManager.AddMoneyGainedEvent(itemValue, GameAnalyticsManager.MoneySource.Store, item.ItemPrefab.Identifier.Value);
             }

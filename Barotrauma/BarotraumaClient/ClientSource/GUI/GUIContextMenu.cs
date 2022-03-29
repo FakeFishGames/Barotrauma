@@ -16,8 +16,8 @@ namespace Barotrauma
         public LocalizedString Tooltip;
 
 
-        public ContextMenuOption(string labelTag, bool isEnabled, Action onSelected)
-            : this(TextManager.Get(labelTag), isEnabled, onSelected) { }
+        public ContextMenuOption(string label, bool isEnabled, Action onSelected)
+            : this(TextManager.Get(label).Fallback(label), isEnabled, onSelected) { }
         
         public ContextMenuOption(Identifier labelTag, bool isEnabled, Action onSelected)
             : this(TextManager.Get(labelTag), isEnabled, onSelected) { }

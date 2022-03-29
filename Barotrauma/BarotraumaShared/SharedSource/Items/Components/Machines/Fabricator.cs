@@ -186,8 +186,19 @@ namespace Barotrauma.Items.Components
             if (!isClient)
             {
                 MoveIngredientsToInputContainer(selectedItem);
+                if (selectedItem.RequiredMoney > 0)
+                {
+                    if (GameMain.GameSession?.GameMode is MultiPlayerCampaign)
+                    {
+                        user.Wallet.Deduct(selectedItem.RequiredMoney);
+                    }
+                    else if (GameMain.GameSession?.GameMode is CampaignMode campaign)
+                    {
+                        campaign.Bank.Deduct(selectedItem.RequiredMoney);
+                    }
+                }
             }
-            
+
             requiredTime = GetRequiredTime(fabricatedItem, user);
             timeUntilReady = requiredTime;
             
@@ -507,6 +518,22 @@ namespace Barotrauma.Items.Components
         {
             if (fabricableItem == null) { return false; }
             if (fabricableItem.RequiresRecipe && (character == null || !character.HasRecipeForItem(fabricableItem.TargetItem.Identifier))) { return false; }
+
+            if (fabricableItem.RequiredMoney > 0)
+            {
+                if (GameMain.GameSession?.GameMode is MultiPlayerCampaign)
+                {
+                    if (character?.Wallet == null || character.Wallet.Balance < fabricableItem.RequiredMoney) { return false; }
+                }
+                else if (GameMain.GameSession?.GameMode is CampaignMode campaign)
+                {
+                    if (campaign.Bank.Balance < fabricableItem.RequiredMoney) { return false; }
+                }
+                else
+                {
+                    return false;
+                }
+            }
 
             return fabricableItem.RequiredItems.All(requiredItem =>
             {

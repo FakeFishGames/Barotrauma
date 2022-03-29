@@ -28,7 +28,11 @@ namespace Barotrauma.Networking
         public static string GetCompressedModPath(ContentPackage mod)
         {
             string dir = mod.Dir;
-            string resultFileName = dir.Replace('\\', '_').Replace('/', '_');
+            string resultFileName
+                = dir.StartsWith(ContentPackage.LocalModsDir)
+                    ? $"Local_{mod.Name}"
+                    : $"Workshop_{mod.Name}";
+            resultFileName = ToolBox.RemoveInvalidFileNameChars(resultFileName.Replace('\\', '_').Replace('/', '_'));
             resultFileName = $"{resultFileName}{Extension}";
             return Path.Combine(UploadFolder, resultFileName);
         }

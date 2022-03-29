@@ -147,7 +147,7 @@ namespace Barotrauma.Tutorials
             return new CharacterInfo(
                 CharacterPrefab.HumanSpeciesName,
                 jobOrJobPrefab: new Job(
-                    JobPrefab.Prefabs["medicaldoctor"], Rand.RandSync.Unsynced, 0,
+                    JobPrefab.Prefabs["mechanic"], Rand.RandSync.Unsynced, 0,
                     new Skill("medical".ToIdentifier(), 0),
                     new Skill("weapons".ToIdentifier(), 0),
                     new Skill("mechanical".ToIdentifier(), 50),

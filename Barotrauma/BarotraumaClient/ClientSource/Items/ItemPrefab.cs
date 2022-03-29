@@ -173,7 +173,7 @@ namespace Barotrauma
 
                         int groupID = 0;
                         DecorativeSprite decorativeSprite = null;
-                        if (subElement.Attribute("texture") == null)
+                        if (subElement.GetAttribute("texture") == null)
                         {
                             groupID = subElement.GetAttributeInt("randomgroupid", 0);
                         }

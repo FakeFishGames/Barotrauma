@@ -235,7 +235,7 @@ namespace Barotrauma
             UseNetworkSyncing = element.GetAttributeBool("networksyncing", false);
 
             unrotatedForce = 
-                element.Attribute("force") != null && element.Attribute("force").Value.Contains(',') ?
+                element.GetAttribute("force") != null && element.GetAttribute("force").Value.Contains(',') ?
                 element.GetAttributeVector2("force", Vector2.Zero) :
                 new Vector2(element.GetAttributeFloat("force", 0.0f), 0.0f);
 

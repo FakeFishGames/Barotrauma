@@ -47,22 +47,24 @@ namespace Barotrauma
                             HighlightSprite = new Sprite(subElement);
                             break;
                         case "vitalitymultiplier":
-                            if (subElement.Attribute("name") != null)
+                            if (subElement.GetAttribute("name") != null)
                             {
                                 DebugConsole.ThrowError("Error in character health config (" + characterHealth.Character.Name + ") - define vitality multipliers using affliction identifiers or types instead of names.");
                                 continue;
                             }
-
-                            Identifier afflictionIdentifier = subElement.GetAttributeIdentifier("identifier", "");
-                            Identifier afflictionType = subElement.GetAttributeIdentifier("type", "");
-                            float multiplier = subElement.GetAttributeFloat("multiplier", 1.0f);
-                            if (!afflictionIdentifier.IsEmpty)
+                            var vitalityMultipliers = subElement.GetAttributeIdentifierArray("identifier", null) ?? subElement.GetAttributeIdentifierArray("identifiers", null);
+                            if (vitalityMultipliers == null)
                             {
-                                VitalityMultipliers.Add(afflictionIdentifier, multiplier);
+                                vitalityMultipliers = subElement.GetAttributeIdentifierArray("type", null) ?? subElement.GetAttributeIdentifierArray("types", null);
+                            }
+                            if (vitalityMultipliers != null)
+                            {
+                                float multiplier = subElement.GetAttributeFloat("multiplier", 1.0f);
+                                vitalityMultipliers.ForEach(i => VitalityMultipliers.Add(i, multiplier));
                             }
                             else
                             {
-                                VitalityTypeMultipliers.Add(afflictionType, multiplier);
+                                DebugConsole.ThrowError($"Error in character health config {characterHealth.Character.Name}: affliction identifier(s) or type(s) not defined in the \"VitalityMultiplier\" elements!");
                             }
                             break;
                     }

@@ -31,7 +31,7 @@ namespace Barotrauma
         private readonly List<SubmarineInfo> subsToShow;
         private readonly SubmarineDisplayContent[] submarineDisplays = new SubmarineDisplayContent[submarinesPerPage];
         private SubmarineInfo selectedSubmarine = null;
-        private LocalizedString purchaseAndSwitchText, purchaseOnlyText, deliveryText, currentSubText, deliveryFeeText, priceText, switchText, missingPreviewText, currencyShorthandText, currencyLongText;
+        private LocalizedString purchaseAndSwitchText, purchaseOnlyText, deliveryText, currentSubText, deliveryFeeText, priceText, switchText, missingPreviewText, currencyName;
         private readonly RectTransform parent;
         private readonly Action closeAction;
         private Sprite pageIndicator;
@@ -99,8 +99,7 @@ namespace Barotrauma
                 priceText = TextManager.Get("price");
             }
 
-            currencyShorthandText = TextManager.Get("currencyformat");
-            currencyLongText = TextManager.Get("credit").Value.ToLowerInvariant();
+            currencyName = TextManager.Get("credit").Value.ToLowerInvariant();
 
             UpdateSubmarines();
             missingPreviewText = TextManager.Get("SubPreviewImageNotFound");
@@ -335,7 +334,7 @@ namespace Barotrauma
 
                     if (!GameMain.GameSession.IsSubmarineOwned(subToDisplay))
                     {
-                        LocalizedString amountString = currencyShorthandText.Replace("[credits]", subToDisplay.Price.ToString());
+                        LocalizedString amountString = TextManager.FormatCurrency(subToDisplay.Price);
                         submarineDisplays[i].submarineFee.Text = priceText.Replace("[amount]", amountString).Replace("[currencyname]", string.Empty).TrimEnd();
                     }
                     else
@@ -344,7 +343,7 @@ namespace Barotrauma
                         {
                             if (deliveryFee > 0)
                             {
-                                LocalizedString amountString = currencyShorthandText.Replace("[credits]", deliveryFee.ToString());
+                                LocalizedString amountString = TextManager.FormatCurrency(deliveryFee);
                                 submarineDisplays[i].submarineFee.Text = deliveryFeeText.Replace("[amount]", amountString).Replace("[currencyname]", string.Empty).TrimEnd();
                             }
                             else
@@ -584,7 +583,7 @@ namespace Barotrauma
             if (!GameMain.GameSession.Campaign.Wallet.CanAfford(deliveryFee) && deliveryFee > 0)
             {
                 new GUIMessageBox(TextManager.Get("deliveryrequestheader"), TextManager.GetWithVariables("notenoughmoneyfordeliverytext",
-                    ("[currencyname]", currencyLongText),
+                    ("[currencyname]", currencyName),
                     ("[submarinename]", selectedSubmarine.DisplayName),
                     ("[location1]", deliveryLocationName),
                     ("[location2]", GameMain.GameSession.Map.CurrentLocation.Name)));
@@ -601,7 +600,7 @@ namespace Barotrauma
                     ("[location2]", GameMain.GameSession.Map.CurrentLocation.Name),
                     ("[submarinename2]", CurrentOrPendingSubmarine().DisplayName),
                     ("[amount]", deliveryFee.ToString()),
-                    ("[currencyname]", currencyLongText)), messageBoxOptions);
+                    ("[currencyname]", currencyName)), messageBoxOptions);
             }
             else
             {
@@ -632,7 +631,7 @@ namespace Barotrauma
             if (!GameMain.GameSession.Campaign.Wallet.CanAfford(selectedSubmarine.Price))
             {
                 new GUIMessageBox(TextManager.Get("purchasesubmarineheader"), TextManager.GetWithVariables("notenoughmoneyforpurchasetext",
-                    ("[currencyname]", currencyLongText),
+                    ("[currencyname]", currencyName),
                     ("[submarinename]", selectedSubmarine.DisplayName)));
                 return;
             }
@@ -644,7 +643,7 @@ namespace Barotrauma
                 msgBox = new GUIMessageBox(TextManager.Get("purchaseandswitchsubmarineheader"), TextManager.GetWithVariables("purchaseandswitchsubmarinetext",
                     ("[submarinename1]", selectedSubmarine.DisplayName),
                     ("[amount]", selectedSubmarine.Price.ToString()),
-                    ("[currencyname]", currencyLongText),
+                    ("[currencyname]", currencyName),
                     ("[submarinename2]", CurrentOrPendingSubmarine().DisplayName)), messageBoxOptions);
 
                 msgBox.Buttons[0].OnClicked = (applyButton, obj) =>
@@ -667,7 +666,7 @@ namespace Barotrauma
                 msgBox = new GUIMessageBox(TextManager.Get("purchasesubmarineheader"), TextManager.GetWithVariables("purchasesubmarinetext",
                     ("[submarinename]", selectedSubmarine.DisplayName),
                     ("[amount]", selectedSubmarine.Price.ToString()),
-                    ("[currencyname]", currencyLongText)), messageBoxOptions);
+                    ("[currencyname]", currencyName)), messageBoxOptions);
 
                 msgBox.Buttons[0].OnClicked = (applyButton, obj) =>
                 {

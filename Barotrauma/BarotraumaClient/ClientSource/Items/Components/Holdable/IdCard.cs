@@ -56,7 +56,7 @@ namespace Barotrauma.Items.Components
                     ContentXElement spriteElement = limbElement.GetChildElement("sprite");
                     if (spriteElement == null) { continue; }
 
-                    string spritePath = spriteElement.Attribute("texture").Value;
+                    string spritePath = spriteElement.GetAttribute("texture").Value;
 
                     spritePath = characterInfo.ReplaceVars(spritePath);
 

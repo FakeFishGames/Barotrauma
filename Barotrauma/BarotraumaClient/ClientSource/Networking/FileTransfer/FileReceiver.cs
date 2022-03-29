@@ -155,8 +155,13 @@ namespace Barotrauma.Networking
                 Dispose(true);
             }
         }
-        
-        const int MaxFileSize = 50000000; //50 MB
+
+        private static int GetMaxFileSizeInBytes(FileTransferType fileTransferType) =>
+            fileTransferType switch
+            {
+                FileTransferType.Mod => 500 * 1024 * 1024, //500 MiB should be good enough, right?
+                _ => 50 * 1024 * 1024 //50 MiB for everything other than mods
+            };
         
         public delegate void TransferInDelegate(FileTransferIn fileStreamReceiver);
         public TransferInDelegate OnFinished;
@@ -410,15 +415,15 @@ namespace Barotrauma.Networking
         {
             errorMessage = "";
 
-            if (fileSize > MaxFileSize)
-            {
-                errorMessage = "File too large (" + MathUtils.GetBytesReadable(fileSize) + ")";
-                return false;
-            }
-
             if (!Enum.IsDefined(typeof(FileTransferType), (int)type))
             {
                 errorMessage = "Unknown file type";
+                return false;
+            }
+
+            if (fileSize > GetMaxFileSizeInBytes((FileTransferType)type))
+            {
+                errorMessage = $"File too large ({MathUtils.GetBytesReadable(fileSize)} > {MathUtils.GetBytesReadable(GetMaxFileSizeInBytes((FileTransferType)type))})";
                 return false;
             }
 

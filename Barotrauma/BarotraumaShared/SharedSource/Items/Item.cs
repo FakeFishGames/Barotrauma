@@ -1389,7 +1389,10 @@ namespace Barotrauma
         /// </summary>
         public static void UpdateHulls()
         {
-            foreach (Item item in ItemList) item.FindHull();
+            foreach (Item item in ItemList)
+            {
+                item.FindHull();
+            }
         }
         
         public Hull FindHull()
@@ -1677,10 +1680,15 @@ namespace Barotrauma
             if (!(GameMain.NetworkMember is { IsServer: true })) { return; }
             if (!conditionUpdatePending) { return; }
 
-            GameMain.NetworkMember.CreateEntityEvent(this, new StatusEventData());
+            CreateStatusEvent();
             lastSentCondition = condition;
             sendConditionUpdateTimer = NetConfig.ItemConditionUpdateInterval;
             conditionUpdatePending = false;
+        }
+
+        public void CreateStatusEvent()
+        {
+            GameMain.NetworkMember.CreateEntityEvent(this, new ItemStatusEventData());
         }
 
         private bool isActive = true;
@@ -2955,7 +2963,7 @@ namespace Barotrauma
         /// <returns></returns>
         public static Item Load(ContentXElement element, Submarine submarine, bool createNetworkEvent, IdRemap idRemap)
         {
-            string name = element.Attribute("name").Value;
+            string name = element.GetAttribute("name").Value;
             Identifier identifier = element.GetAttributeIdentifier("identifier", Identifier.Empty);
 
             if (string.IsNullOrWhiteSpace(name) && identifier.IsEmpty)

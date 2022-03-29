@@ -112,6 +112,13 @@ namespace Barotrauma
                 }
                 foreach (FireSource fs in targetHull.FireSources)
                 {
+                    if (fs == null) { continue; }
+                    if (fs.Removed) { continue; }
+                    if (character.CurrentHull == null)
+                    {
+                        Abandon = true;
+                        break;
+                    }
                     float xDist = Math.Abs(character.WorldPosition.X - fs.WorldPosition.X) - fs.DamageRange;
                     float yDist = Math.Abs(character.WorldPosition.Y - fs.WorldPosition.Y);
                     bool inRange = xDist + yDist < extinguisher.Range;
@@ -153,7 +160,7 @@ namespace Barotrauma
                                 onAbandon: () =>  Abandon = true, 
                                 onCompleted: () => RemoveSubObjective(ref gotoObjective)))
                         {
-                            gotoObjective.requiredCondition = () => targetHull == null || character.CanSeeTarget(targetHull);
+                            gotoObjective.requiredCondition = () => character.CanSeeTarget(targetHull);
                         }
                     }
                     else

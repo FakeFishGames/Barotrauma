@@ -1374,7 +1374,7 @@ namespace Barotrauma
 
         public static Structure Load(ContentXElement element, Submarine submarine, IdRemap idRemap)
         {
-            string name = element.Attribute("name").Value;
+            string name = element.GetAttribute("name").Value;
             Identifier identifier = element.GetAttributeIdentifier("identifier", "");
 
             StructurePrefab prefab = FindPrefab(name, identifier);
@@ -1440,12 +1440,12 @@ namespace Barotrauma
             if (element.GetAttributeBool("flippedy", false)) { s.FlipY(false); }
 
             //structures with a body drop a shadow by default
-            if (element.Attribute("usedropshadow") == null)
+            if (element.GetAttribute("usedropshadow") == null)
             {
                 s.UseDropShadow = prefab.Body;
             }
 
-            if (element.Attribute("noaitarget") == null)
+            if (element.GetAttribute("noaitarget") == null)
             {
                 s.NoAITarget = prefab.NoAITarget;
             }

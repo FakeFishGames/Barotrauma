@@ -253,7 +253,7 @@ namespace Barotrauma
             get { return subBody == null ? Vector2.Zero : subBody.Velocity; }
             set
             {
-                if (subBody == null) return;
+                if (subBody == null) { return; }
                 subBody.Velocity = value;
             }
         }
@@ -969,8 +969,6 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
-            //if (PlayerInput.KeyHit(InputType.Crouch) && (this == MainSub)) FlipX();
-
             if (Info.IsWreck)
             {
                 WreckAI?.Update(deltaTime);

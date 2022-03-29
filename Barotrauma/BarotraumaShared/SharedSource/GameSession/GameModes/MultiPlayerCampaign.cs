@@ -1,4 +1,5 @@
 ﻿using Barotrauma.IO;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -211,7 +212,6 @@ namespace Barotrauma
 #endif
         }
         
-        
         public static List<SubmarineInfo> GetCampaignSubs()
         {
             bool isSubmarineVisible(SubmarineInfo s)
@@ -242,5 +242,78 @@ namespace Barotrauma
             return availableSubs;
         }
 
+        private static void WriteItems(IWriteMessage msg, Dictionary<Identifier, List<PurchasedItem>> purchasedItems)
+        {
+            msg.Write((byte)purchasedItems.Count);
+            foreach (var storeItems in purchasedItems)
+            {
+                msg.Write(storeItems.Key);
+                msg.Write((UInt16)storeItems.Value.Count);
+                foreach (var item in storeItems.Value)
+                {
+                    msg.Write(item.ItemPrefab.Identifier);
+                    msg.WriteRangedInteger(item.Quantity, 0, CargoManager.MaxQuantity);
+                }
+            }
+        }
+
+        private static Dictionary<Identifier, List<PurchasedItem>> ReadPurchasedItems(IReadMessage msg, Client sender)
+        {
+            var items = new Dictionary<Identifier, List<PurchasedItem>>();
+            byte storeCount = msg.ReadByte();
+            for (int i = 0; i < storeCount; i++)
+            {
+                Identifier storeId = msg.ReadIdentifier();
+                items.Add(storeId, new List<PurchasedItem>());
+                UInt16 itemCount = msg.ReadUInt16();
+                for (int j = 0; j < itemCount; j++)
+                {
+                    Identifier itemId = msg.ReadIdentifier();
+                    int quantity = msg.ReadRangedInteger(0, CargoManager.MaxQuantity);
+                    items[storeId].Add(new PurchasedItem(ItemPrefab.Prefabs[itemId], quantity, sender));
+                }
+            }
+            return items;
+        }
+
+        private static void WriteItems(IWriteMessage msg, Dictionary<Identifier, List<SoldItem>> soldItems)
+        {
+            msg.Write((byte)soldItems.Count);
+            foreach (var storeItems in soldItems)
+            {
+                msg.Write(storeItems.Key);
+                msg.Write((UInt16)storeItems.Value.Count);
+                foreach (var item in storeItems.Value)
+                {
+                    msg.Write(item.ItemPrefab.Identifier);
+                    msg.Write((UInt16)item.ID);
+                    msg.Write(item.Removed);
+                    msg.Write(item.SellerID);
+                    msg.Write((byte)item.Origin);
+                }
+            }
+        }
+
+        private static Dictionary<Identifier, List<SoldItem>> ReadSoldItems(IReadMessage msg)
+        {
+            var soldItems = new Dictionary<Identifier, List<SoldItem>>();
+            byte storeCount = msg.ReadByte();
+            for (int i = 0; i < storeCount; i++)
+            {
+                Identifier storeId = msg.ReadIdentifier();
+                soldItems.Add(storeId, new List<SoldItem>());
+                UInt16 itemCount = msg.ReadUInt16();
+                for (int j = 0; j < storeCount; j++)
+                {
+                    Identifier prefabId = msg.ReadIdentifier();
+                    UInt16 itemId = msg.ReadUInt16();
+                    bool removed = msg.ReadBoolean();
+                    byte sellerId = msg.ReadByte();
+                    byte origin = msg.ReadByte();
+                    soldItems[storeId].Add(new SoldItem(ItemPrefab.Prefabs[prefabId], itemId, removed, sellerId, (SoldItem.SellOrigin)origin));
+                }
+            }
+            return soldItems;
+        }
     }
 }

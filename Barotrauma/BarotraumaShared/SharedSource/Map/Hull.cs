@@ -1564,7 +1564,7 @@ namespace Barotrauma
         public static Hull Load(ContentXElement element, Submarine submarine, IdRemap idRemap)
         {
             Rectangle rect;
-            if (element.Attribute("rect") != null)
+            if (element.GetAttribute("rect") != null)
             {
                 rect = element.GetAttributeRect("rect", Rectangle.Empty);
             }
@@ -1572,10 +1572,10 @@ namespace Barotrauma
             {
                 //backwards compatibility
                 rect = new Rectangle(
-                    int.Parse(element.Attribute("x").Value),
-                    int.Parse(element.Attribute("y").Value),
-                    int.Parse(element.Attribute("width").Value),
-                    int.Parse(element.Attribute("height").Value));
+                    int.Parse(element.GetAttribute("x").Value),
+                    int.Parse(element.GetAttribute("y").Value),
+                    int.Parse(element.GetAttribute("width").Value),
+                    int.Parse(element.GetAttribute("height").Value));
             }
 
             var hull = new Hull(MapEntityPrefab.Find(null, "hull"), rect, submarine, idRemap.GetOffsetId(element))
@@ -1639,7 +1639,7 @@ namespace Barotrauma
             }
 
             SerializableProperty.DeserializeProperties(hull, element);
-            if (element.Attribute("oxygen") == null) { hull.Oxygen = hull.Volume; }
+            if (element.GetAttribute("oxygen") == null) { hull.Oxygen = hull.Volume; }
 
             return hull;
         }

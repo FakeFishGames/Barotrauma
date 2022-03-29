@@ -130,7 +130,7 @@ namespace Barotrauma
                         UISprite newSprite = new UISprite(subElement);
 
                         GUIComponent.ComponentState spriteState = GUIComponent.ComponentState.None;
-                        if (subElement.Attribute("state") != null)
+                        if (subElement.GetAttribute("state") != null)
                         {
                             string stateStr = subElement.GetAttributeString("state", "None");
                             Enum.TryParse(stateStr, out spriteState);

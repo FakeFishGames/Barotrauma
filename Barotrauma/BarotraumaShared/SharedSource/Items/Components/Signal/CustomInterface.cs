@@ -66,7 +66,7 @@ namespace Barotrauma.Items.Components
                 HasPropertyName = !PropertyName.IsEmpty;
                 IsIntegerInput = HasPropertyName && element.Name.ToString().ToLowerInvariant() == "integerinput";
 
-                if (element.Attribute("signal") is XAttribute attribute)
+                if (element.GetAttribute("signal") is XAttribute attribute)
                 {
                     Signal = attribute.Value;
                     ShouldSetProperty = HasPropertyName;

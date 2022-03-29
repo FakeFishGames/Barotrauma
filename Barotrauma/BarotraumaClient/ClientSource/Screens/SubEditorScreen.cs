@@ -9,11 +9,7 @@ using System.Linq;
 using System.Threading;
 using System.Xml.Linq;
 using Microsoft.Xna.Framework.Input;
-#if DEBUG
-using System.IO;
-#else
 using Barotrauma.IO;
-#endif
 
 namespace Barotrauma
 {
@@ -1262,7 +1258,9 @@ namespace Barotrauma
             }
             textBlock.Text = ToolBox.LimitString(textBlock.Text, textBlock.Font, textBlock.Rect.Width);
 
-            if (ep.Category == MapEntityCategory.ItemAssembly)
+            if (ep.Category == MapEntityCategory.ItemAssembly
+                && ep.ContentPackage?.Files.Length == 1
+                && ContentPackageManager.LocalPackages.Contains(ep.ContentPackage))
             {
                 var deleteButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform, Anchor.BottomCenter) { MinSize = new Point(0, 20) },
                     TextManager.Get("Delete"), style: "GUIButtonSmall")
@@ -1978,6 +1976,7 @@ namespace Barotrauma
                     if (newPackage is RegularPackage regular)
                     {
                         ContentPackageManager.EnabledPackages.EnableRegular(regular);
+                        GameSettings.SaveCurrentConfig();
                     }
                 }
                 SubmarineInfo.RefreshSavedSub(savePath);
@@ -2164,12 +2163,12 @@ namespace Barotrauma
 
             var allowAttachDropDown = new GUIDropDown(new RectTransform(new Vector2(0.5f, 1f), allowAttachGroup.RectTransform),
                 text: LocalizedString.Join(", ", MainSub?.Info?.OutpostModuleInfo?.AllowAttachToModules.Select(s => TextManager.Capitalize(s.Value)) ?? ((LocalizedString)"Any").ToEnumerable()), selectMultiple: true);
-            allowAttachDropDown.AddItem(TextManager.Capitalize("any"), "any");
+            allowAttachDropDown.AddItem(TextManager.Capitalize("any"), "any".ToIdentifier());
             if (MainSub.Info.OutpostModuleInfo == null ||
                 !MainSub.Info.OutpostModuleInfo.AllowAttachToModules.Any() ||
                 MainSub.Info.OutpostModuleInfo.AllowAttachToModules.All(s => s == "any"))
             {
-                allowAttachDropDown.SelectItem("any");
+                allowAttachDropDown.SelectItem("any".ToIdentifier());
             }
             foreach (Identifier flag in availableFlags)
             {
@@ -2211,7 +2210,7 @@ namespace Barotrauma
                     locationTypeDropDown.SelectItem(locationType);
                 }
             }
-            if (!MainSub.Info?.OutpostModuleInfo?.AllowedLocationTypes?.Any() ?? true) { locationTypeDropDown.SelectItem("any"); }
+            if (!MainSub.Info?.OutpostModuleInfo?.AllowedLocationTypes?.Any() ?? true) { locationTypeDropDown.SelectItem("any".ToIdentifier()); }
 
             locationTypeDropDown.OnSelected += (_, __) =>
             {
@@ -2225,9 +2224,7 @@ namespace Barotrauma
             // gap positions ---------------------
 
             var gapPositionGroup = new GUILayoutGroup(new RectTransform(new Vector2(.975f, 0.1f), outpostSettingsContainer.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
-
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), gapPositionGroup.RectTransform), TextManager.Get("outpostmodulegappositions"), textAlignment: Alignment.CenterLeft);
-
             var gapPositionDropDown = new GUIDropDown(new RectTransform(new Vector2(0.5f, 1f), gapPositionGroup.RectTransform),
                 text: "", selectMultiple: true);
 
@@ -2238,11 +2235,11 @@ namespace Barotrauma
                 {
                     outpostModuleInfo.DetermineGapPositions(MainSub);
                 }
-                foreach (var gapPos in Enum.GetValues(typeof(OutpostModuleInfo.GapPosition)))
+                foreach (OutpostModuleInfo.GapPosition gapPos in Enum.GetValues(typeof(OutpostModuleInfo.GapPosition)))
                 {
-                    if ((OutpostModuleInfo.GapPosition)gapPos == OutpostModuleInfo.GapPosition.None) { continue; }
+                    if (gapPos == OutpostModuleInfo.GapPosition.None) { continue; }
                     gapPositionDropDown.AddItem(TextManager.Capitalize(gapPos.ToString()), gapPos);
-                    if (outpostModuleInfo.GapPositions.HasFlag((OutpostModuleInfo.GapPosition)gapPos))
+                    if (outpostModuleInfo.GapPositions.HasFlag(gapPos))
                     {
                         gapPositionDropDown.SelectItem(gapPos);
                     }
@@ -2270,6 +2267,49 @@ namespace Barotrauma
                 return true;
             };
             gapPositionGroup.RectTransform.MinSize = new Point(0, gapPositionGroup.RectTransform.Children.Max(c => c.MinSize.Y));
+
+            var canAttachToPrevGroup = new GUILayoutGroup(new RectTransform(new Vector2(.975f, 0.1f), outpostSettingsContainer.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), canAttachToPrevGroup.RectTransform), TextManager.Get("canattachtoprevious"), textAlignment: Alignment.CenterLeft)
+            {
+                ToolTip = TextManager.Get("canattachtoprevious.tooltip")
+            };
+            var canAttachToPrevDropDown = new GUIDropDown(new RectTransform(new Vector2(0.5f, 1f), canAttachToPrevGroup.RectTransform),
+                text: "", selectMultiple: true);
+            if (outpostModuleInfo != null)
+            {
+                foreach (OutpostModuleInfo.GapPosition gapPos in Enum.GetValues(typeof(OutpostModuleInfo.GapPosition)))
+                {
+                    if (gapPos == OutpostModuleInfo.GapPosition.None) { continue; }
+                    canAttachToPrevDropDown.AddItem(TextManager.Capitalize(gapPos.ToString()), gapPos);
+                    if (outpostModuleInfo.CanAttachToPrevious.HasFlag(gapPos))
+                    {
+                        canAttachToPrevDropDown.SelectItem(gapPos);
+                    }
+                }
+            }
+
+            canAttachToPrevDropDown.OnSelected += (_, __) =>
+            {
+                if (Submarine.MainSub.Info?.OutpostModuleInfo == null) { return false; }
+                Submarine.MainSub.Info.OutpostModuleInfo.CanAttachToPrevious = OutpostModuleInfo.GapPosition.None;
+                if (canAttachToPrevDropDown.SelectedDataMultiple.Any())
+                {
+                    List<string> gapPosTexts = new List<string>();
+                    foreach (OutpostModuleInfo.GapPosition gapPos in canAttachToPrevDropDown.SelectedDataMultiple)
+                    {
+                        Submarine.MainSub.Info.OutpostModuleInfo.CanAttachToPrevious |= gapPos;
+                        gapPosTexts.Add(TextManager.Capitalize(gapPos.ToString()).Value);
+                    }
+                    canAttachToPrevDropDown.Text = ToolBox.LimitString(string.Join(", ", gapPosTexts), canAttachToPrevDropDown.Font, canAttachToPrevDropDown.Rect.Width);
+                }
+                else
+                {
+                    canAttachToPrevDropDown.Text = ToolBox.LimitString("None", canAttachToPrevDropDown.Font, canAttachToPrevDropDown.Rect.Width);
+                }
+                return true;
+            };
+            canAttachToPrevGroup.RectTransform.MinSize = new Point(0, gapPositionGroup.RectTransform.Children.Max(c => c.MinSize.Y));
+
 
             // -------------------
 
@@ -2583,7 +2623,18 @@ namespace Barotrauma
                     //don't show content packages that only define submarine files
                     //(it doesn't make sense to require another sub to be installed to install this one)
                     if (contentPack.Files.All(f => f is SubmarineFile)) { continue; }
-                    if (!contentPacks.Contains(contentPack.Name)) { contentPacks.Add(contentPack.Name); }
+
+                    if (!contentPacks.Contains(contentPack.Name))
+                    {
+                        string altName = contentPack.AltNames.FirstOrDefault(n => contentPacks.Contains(n));
+                        if (!string.IsNullOrEmpty(altName))
+                        {
+                            MainSub.Info.RequiredContentPackages.Remove(altName);
+                            MainSub.Info.RequiredContentPackages.Add(contentPack.Name);
+                            contentPacks.Remove(altName);
+                        }
+                        contentPacks.Add(contentPack.Name);
+                    }
                 }
 
                 foreach (string contentPackageName in contentPacks)
@@ -2749,11 +2800,7 @@ namespace Barotrauma
             }
 
             bool hideInMenus = nameBox.Parent.GetChildByUserData("hideinmenus") is GUITickBox hideInMenusTickBox && hideInMenusTickBox.Selected;
-#if DEBUG
-            string saveFolder = ItemAssemblyPrefab.VanillaSaveFolder;
-#else
             string saveFolder = Path.Combine(ContentPackage.LocalModsDir, nameBox.Text);
-#endif
             string filePath = Path.Combine(saveFolder, $"{nameBox.Text}.xml").CleanUpPathCrossPlatform();
             if (File.Exists(filePath))
             {
@@ -2782,26 +2829,27 @@ namespace Barotrauma
 
             void Save()
             {
-                XDocument doc = new XDocument(ItemAssemblyPrefab.Save(MapEntity.SelectedList.ToList(), nameBox.Text, descriptionBox.Text, hideInMenus));
-#if DEBUG
-                doc.Save(filePath);
-#else
-                doc.SaveSafe(filePath);
-#endif
-                ContentPackage existingContentPackage = ContentPackageManager.LocalPackages.FirstOrDefault(p => p.Files.Any(f => f.Path == filePath));
+                ContentPackage existingContentPackage = ContentPackageManager.LocalPackages.Regular.FirstOrDefault(p => p.Files.Any(f => f.Path == filePath));
                 if (existingContentPackage == null)
                 {
                     //content package doesn't exist, create one
                     ModProject modProject = new ModProject() { Name = nameBox.Text };
-                    var newFile = ModProject.File.FromPath<ItemAssemblyFile>(filePath);
+                    var newFile = ModProject.File.FromPath<ItemAssemblyFile>(Path.Combine(ContentPath.ModDirStr, $"{nameBox.Text}.xml"));
                     modProject.AddFile(newFile);
-                    ContentPackageManager.LocalPackages.SaveAndEnableRegularMod(modProject);
-                }
-                else
-                {
-                    EnqueueForReload(existingContentPackage);
+                    string newPackagePath = ContentPackageManager.LocalPackages.SaveRegularMod(modProject);
+                    existingContentPackage = ContentPackageManager.LocalPackages.GetRegularModByPath(newPackagePath);
                 }
                 
+                XDocument doc = new XDocument(ItemAssemblyPrefab.Save(MapEntity.SelectedList.ToList(), nameBox.Text, descriptionBox.Text, hideInMenus));
+                doc.SaveSafe(filePath);
+                
+                var resultPackage = ContentPackageManager.ReloadContentPackage(existingContentPackage) as RegularPackage;
+                if (!ContentPackageManager.EnabledPackages.Regular.Contains(resultPackage))
+                {
+                    ContentPackageManager.EnabledPackages.EnableRegular(resultPackage);
+                    GameSettings.SaveCurrentConfig();
+                }
+
                 UpdateEntityList();
             }
 
@@ -2884,11 +2932,8 @@ namespace Barotrauma
                 {
                     if (deleteButtonHolder.FindChild("delete") is GUIButton deleteBtn)
                     {
-#if DEBUG
-                        deleteBtn.Enabled = true;
-#else
-                        deleteBtn.Enabled = userData is SubmarineInfo subInfo && !subInfo.IsVanillaSubmarine();
-#endif
+                        deleteBtn.Enabled = userData is SubmarineInfo subInfo
+                                            && (GetContentPackageIntrinsicallyTiedToSub(subInfo) != null || Path.GetDirectoryName(subInfo.FilePath) == SubmarineInfo.SavePath);
                     }
                     return true;
                 }
@@ -3141,18 +3186,10 @@ namespace Barotrauma
             ReconstructLayers();
         }
 
-        private RegularPackage GetContentPackageIntrinsicallyTiedToSub(SubmarineInfo sub)
-        {
-            foreach (RegularPackage regularPackage in ContentPackageManager.RegularPackages)
-            {
-                if (regularPackage.Files.Length == 1 && regularPackage.Files[0].Path == sub.FilePath)
-                {
-                    return regularPackage;
-                }
-            }
-
-            return null;
-        }
+        private static RegularPackage GetContentPackageIntrinsicallyTiedToSub(SubmarineInfo sub)
+            => ContentPackageManager.LocalPackages.Regular
+                .Where(p => p.Files.Length == 1)
+                .FirstOrDefault(regularPackage => regularPackage.Files[0].Path == sub.FilePath);
 
         private void TryDeleteSub(SubmarineInfo sub)
         {
@@ -3160,8 +3197,10 @@ namespace Barotrauma
 
             //If the sub is included in a content package that only defines that one sub,
             //check that it's a local content package and only allow deletion if it is.
+            //(deleting from the Submarines folder is also currently allowed, but this is temporary)
             var subPackage = GetContentPackageIntrinsicallyTiedToSub(sub);
-            if (!ContentPackageManager.LocalPackages.Regular.Contains(subPackage)) { return; }
+            bool isInOldSavePath = Path.GetDirectoryName(sub.FilePath) == SubmarineInfo.SavePath;
+            if (!ContentPackageManager.LocalPackages.Regular.Contains(subPackage) && !isInOldSavePath) { return; }
             
             var msgBox = new GUIMessageBox(
                 TextManager.Get("DeleteDialogLabel"),
@@ -3171,10 +3210,18 @@ namespace Barotrauma
             {
                 try
                 {
-                    Directory.Delete(Path.GetDirectoryName(subPackage.Path), true);
+                    if (subPackage != null)
+                    {
+                        Directory.Delete(Path.GetDirectoryName(subPackage.Path), recursive: true);
+                        ContentPackageManager.LocalPackages.Refresh();
+                        ContentPackageManager.EnabledPackages.DisableRemovedMods();
+                    }
+                    else if (isInOldSavePath && File.Exists(sub.FilePath))
+                    {
+                        File.Delete(sub.FilePath);
+                    }
                     
                     sub.Dispose();
-                    File.Delete(sub.FilePath);
                     SubmarineInfo.RefreshSavedSubs();
                     CreateLoadScreen();
                 }

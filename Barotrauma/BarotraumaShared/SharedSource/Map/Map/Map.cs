@@ -182,8 +182,7 @@ namespace Barotrauma
             {
                 for (int i = 0; i < Connections.Count; i++)
                 {
-                    float maxHuntingGroundsProbability = 0.3f;
-                    Connections[i].LevelData.HasHuntingGrounds = Rand.Range(0.0f, 1.0f) < Connections[i].Difficulty / 100.0f * maxHuntingGroundsProbability;
+                    Connections[i].LevelData.HasHuntingGrounds = Rand.Range(0.0f, 1.0f) < Connections[i].Difficulty / 100.0f * LevelData.MaxHuntingGroundsProbability;
                     connectionElements[i].SetAttributeValue("hashuntinggrounds", true);
                 }
             }
@@ -232,7 +231,7 @@ namespace Barotrauma
             System.Diagnostics.Debug.Assert(StartLocation != null, "Start location not assigned after level generation.");
 
             CurrentLocation.Discover(true);
-            CurrentLocation.CreateStore();
+            CurrentLocation.CreateStores();
 
             InitProjectSpecific();
         }
@@ -680,7 +679,7 @@ namespace Barotrauma
             CurrentLocation.Discover();
             SelectedLocation = null;
 
-            CurrentLocation.CreateStore();
+            CurrentLocation.CreateStores();
             OnLocationChanged?.Invoke(prevLocation, CurrentLocation);
 
             if (GameMain.GameSession is { Campaign: { CampaignMetadata: { } metadata } })
@@ -719,7 +718,7 @@ namespace Barotrauma
                 }
             }
 
-            CurrentLocation.CreateStore();
+            CurrentLocation.CreateStores();
             OnLocationChanged?.Invoke(prevLocation, CurrentLocation);
         }
 
@@ -857,16 +856,14 @@ namespace Barotrauma
 
                 if (location == CurrentLocation || location == SelectedLocation || location.IsGateBetweenBiomes) { continue; }
 
-                ProgressLocationTypeChanges(location);
-
-                if (location.Discovered)
+                if (!ProgressLocationTypeChanges(location) && location.Discovered)
                 {
-                    location.UpdateStore();
+                    location.UpdateStores();
                 }
             }
         }
 
-        private void ProgressLocationTypeChanges(Location location)
+        private bool ProgressLocationTypeChanges(Location location)
         {
             location.TimeSinceLastTypeChange++;
             location.LocationTypeChangeCooldown--;
@@ -886,9 +883,8 @@ namespace Barotrauma
                         location.PendingLocationTypeChange.Value.parentMission);
                     if (location.PendingLocationTypeChange.Value.delay <= 0)
                     {
-                        ChangeLocationType(location, location.PendingLocationTypeChange.Value.typeChange);
+                        return ChangeLocationType(location, location.PendingLocationTypeChange.Value.typeChange);
                     }
-                    return;
                 }
             }
 
@@ -920,9 +916,9 @@ namespace Barotrauma
                     }
                     else
                     {
-                        ChangeLocationType(location, selectedTypeChange);
+                        return ChangeLocationType(location, selectedTypeChange);
                     }
-                    return;
+                    return false;
                 }
             }
 
@@ -941,6 +937,8 @@ namespace Barotrauma
                     }
                 }
             }
+
+            return false;
         }
 
         public int DistanceToClosestLocationWithOutpost(Location startingLocation, out Location endingLocation)
@@ -988,7 +986,7 @@ namespace Barotrauma
             return distance;
         }
 
-        private void ChangeLocationType(Location location, LocationTypeChange change)
+        private bool ChangeLocationType(Location location, LocationTypeChange change)
         {
             string prevName = location.Name;
 
@@ -996,7 +994,7 @@ namespace Barotrauma
             if (newType == null)
             {
                 DebugConsole.ThrowError($"Failed to change the type of the location \"{location.Name}\". Location type \"{change.ChangeToType}\" not found.");
-                return;
+                return false;
             }
 
             if (newType.OutpostTeam != location.Type.OutpostTeam ||
@@ -1013,6 +1011,7 @@ namespace Barotrauma
             location.TimeSinceLastTypeChange = 0;
             location.LocationTypeChangeCooldown = change.CooldownAfterChange;
             location.PendingLocationTypeChange = null;
+            return true;
         }
 
         partial void ChangeLocationTypeProjSpecific(Location location, string prevName, LocationTypeChange change);
@@ -1091,7 +1090,7 @@ namespace Barotrauma
                             }
                         }
 
-                        location.LoadStore(subElement);
+                        location.LoadStores(subElement);
                         location.LoadMissions(subElement);
 
                         break;

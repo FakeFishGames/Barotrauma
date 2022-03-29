@@ -344,7 +344,7 @@ namespace Barotrauma.Items.Components
                         break;
                     case "requiredskill":
                     case "requiredskills":
-                        if (subElement.Attribute("name") != null)
+                        if (subElement.GetAttribute("name") != null)
                         {
                             DebugConsole.ThrowError("Error in item config \"" + item.ConfigFilePath + "\" - skill requirement in component " + GetType().ToString() + " should use a skill identifier instead of the name of the skill.");
                             continue;

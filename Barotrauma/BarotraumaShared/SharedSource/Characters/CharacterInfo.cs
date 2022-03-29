@@ -852,6 +852,19 @@ namespace Barotrauma
 #if CLIENT
         public void RecreateHead(MultiplayerPreferences characterSettings)
         {
+            if (characterSettings.HairIndex == -1 && 
+                characterSettings.BeardIndex == -1 && 
+                characterSettings.MoustacheIndex == -1 && 
+                characterSettings.FaceAttachmentIndex == -1)
+            {
+                //randomize if nothing is set
+                SetAttachments(Rand.RandSync.Unsynced);
+                characterSettings.HairIndex = Head.HairIndex;
+                characterSettings.BeardIndex = Head.BeardIndex;
+                characterSettings.MoustacheIndex = Head.MoustacheIndex;
+                characterSettings.FaceAttachmentIndex = Head.FaceAttachmentIndex;
+            }
+
             RecreateHead(
                 characterSettings.TagSet.ToImmutableHashSet(),
                 characterSettings.HairIndex,
@@ -859,9 +872,14 @@ namespace Barotrauma
                 characterSettings.MoustacheIndex,
                 characterSettings.FaceAttachmentIndex);
 
-            Head.SkinColor = characterSettings.SkinColor;
-            Head.HairColor = characterSettings.HairColor;
-            Head.FacialHairColor = characterSettings.FacialHairColor;
+            Head.SkinColor = ChooseColor(SkinColors, characterSettings.SkinColor);
+            Head.HairColor = ChooseColor(HairColors, characterSettings.HairColor);
+            Head.FacialHairColor = ChooseColor(FacialHairColors, characterSettings.FacialHairColor);
+
+            Color ChooseColor(in ImmutableArray<(Color Color, float Commonness)> availableColors, Color chosenColor)
+            {
+                return availableColors.Any(c => c.Color == chosenColor) ? chosenColor : SelectRandomColor(availableColors, Rand.RandSync.Unsynced);
+            }
         }
 #endif
         

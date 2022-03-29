@@ -680,7 +680,7 @@ namespace Barotrauma
             //locationInfoPanel?.UpdateAuto(1.0f);
         }
 
-        public void SelectTab(CampaignMode.InteractionType tab)
+        public void SelectTab(CampaignMode.InteractionType tab, Identifier storeIdentifier = default)
         {
             if (Campaign.ShowCampaignUI || (Campaign.ForceMapUI && tab == CampaignMode.InteractionType.Map))
             {
@@ -724,8 +724,7 @@ namespace Barotrauma
                     }
                     break;
                 case CampaignMode.InteractionType.Store:
-                    Store.RefreshItemsToSell();
-                    Store.Refresh();
+                    Store.SelectStore(storeIdentifier);
                     break;
                 case CampaignMode.InteractionType.Crew:
                     CrewManagement.UpdateCrew();

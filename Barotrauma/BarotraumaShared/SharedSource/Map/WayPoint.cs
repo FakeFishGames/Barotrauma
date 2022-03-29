@@ -987,8 +987,8 @@ namespace Barotrauma
         public static WayPoint Load(ContentXElement element, Submarine submarine, IdRemap idRemap)
         {
             Rectangle rect = new Rectangle(
-                int.Parse(element.Attribute("x").Value),
-                int.Parse(element.Attribute("y").Value),
+                int.Parse(element.GetAttribute("x").Value),
+                int.Parse(element.GetAttribute("y").Value),
                 (int)Submarine.GridSize.X, (int)Submarine.GridSize.Y);
 
 
@@ -1024,9 +1024,9 @@ namespace Barotrauma
             w.gapId = idRemap.GetOffsetId(element.GetAttributeInt("gap", 0));
 
             int i = 0;
-            while (element.Attribute("linkedto" + i) != null)
+            while (element.GetAttribute("linkedto" + i) != null)
             {
-                int srcId = int.Parse(element.Attribute("linkedto" + i).Value);
+                int srcId = int.Parse(element.GetAttribute("linkedto" + i).Value);
                 int destId = idRemap.GetOffsetId(srcId);
                 if (destId > 0)
                 {

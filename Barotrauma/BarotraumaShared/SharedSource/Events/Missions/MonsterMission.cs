@@ -228,7 +228,7 @@ namespace Barotrauma
             }
             GiveReward();
             completed = true;
-            if (level?.LevelData != null && Prefab.Tags.Any(t => t.Equals("huntinggrounds", StringComparison.OrdinalIgnoreCase) || t.Equals("huntinggroundsnoreward", StringComparison.OrdinalIgnoreCase)))
+            if (level?.LevelData != null && Prefab.Tags.Any(t => t.Equals("huntinggrounds", StringComparison.OrdinalIgnoreCase)))
             {
                 level.LevelData.HasHuntingGrounds = false;
             }

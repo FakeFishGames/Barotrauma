@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Globalization;
 using Barotrauma.IO;
@@ -975,18 +976,33 @@ namespace Barotrauma.Networking
         private void InitMonstersEnabled()
         {
             //monster spawn settings
-            MonsterEnabled ??= CharacterPrefab.Prefabs.Select(p => (p.Identifier, true)).ToDictionary();
+            if (MonsterEnabled is null || MonsterEnabled.Count != CharacterPrefab.Prefabs.Count())
+            {
+                MonsterEnabled = CharacterPrefab.Prefabs.Select(p => (p.Identifier, true)).ToDictionary();
+            }
         }
 
+        private static IReadOnlyList<Identifier> ExtractAndSortKeys(IReadOnlyDictionary<Identifier, bool> monsterEnabled)
+            => monsterEnabled.Keys
+                .OrderBy(k => CharacterPrefab.Prefabs[k].UintIdentifier)
+                .ToImmutableArray();
+        
         public void ReadMonsterEnabled(IReadMessage inc)
         {
             InitMonstersEnabled();
-            List<Identifier> monsterNames = MonsterEnabled.Keys
-                .OrderBy(k => CharacterPrefab.Prefabs[k].UintIdentifier)
-                .ToList();
-            foreach (Identifier s in monsterNames)
+            var monsterNames = ExtractAndSortKeys(MonsterEnabled);
+            uint receivedMonsterCount = inc.ReadVariableUInt32();
+            if (monsterNames.Count != receivedMonsterCount)
             {
-                MonsterEnabled[s] = inc.ReadBoolean();
+                inc.BitPosition += (int)receivedMonsterCount;
+                DebugConsole.AddWarning($"Expected monster count {monsterNames.Count}, got {receivedMonsterCount}");
+            }
+            else
+            {
+                foreach (Identifier s in monsterNames)
+                {
+                    MonsterEnabled[s] = inc.ReadBoolean();
+                }
             }
             inc.ReadPadBits();
         }
@@ -994,11 +1010,10 @@ namespace Barotrauma.Networking
         public void WriteMonsterEnabled(IWriteMessage msg, Dictionary<Identifier, bool> monsterEnabled = null)
         {
             //monster spawn settings
-            if (monsterEnabled == null) { monsterEnabled = MonsterEnabled; }
-
-            List<Identifier> monsterNames = monsterEnabled.Keys
-                .OrderBy(k => CharacterPrefab.Prefabs[k].UintIdentifier)
-                .ToList();
+            InitMonstersEnabled();
+            monsterEnabled ??= MonsterEnabled;
+            var monsterNames = ExtractAndSortKeys(monsterEnabled);
+            msg.WriteVariableUInt32((uint)monsterNames.Count);
             foreach (Identifier s in monsterNames)
             {
                 msg.Write(monsterEnabled[s]);

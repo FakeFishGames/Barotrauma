@@ -173,10 +173,13 @@ namespace Barotrauma.Steam
                 private InstallTaskCounter(UInt64 id) { itemId = id; }
 
                 public static bool IsInstalling(Steamworks.Ugc.Item item)
+                    => IsInstalling(item.Id);
+                
+                public static bool IsInstalling(ulong itemId)
                 {
                     lock (mutex)
                     {
-                        return installers.Any(i => i.itemId == item.Id);
+                        return installers.Any(i => i.itemId == itemId);
                     }
                 }
                 
@@ -193,9 +196,9 @@ namespace Barotrauma.Steam
                     }
                 }
 
-                public static async Task<InstallTaskCounter> Create(Steamworks.Ugc.Item item)
+                public static async Task<InstallTaskCounter> Create(ulong itemId)
                 {
-                    var retVal = new InstallTaskCounter(item.Id);
+                    var retVal = new InstallTaskCounter(itemId);
                     await retVal.Init();
                     return retVal;
                 }
@@ -260,19 +263,15 @@ namespace Barotrauma.Steam
 
             public static bool IsInstalling(Steamworks.Ugc.Item item)
                 => InstallTaskCounter.IsInstalling(item);
-            
+
             private static async Task InstallMod(ulong id)
             {
-                var item = await GetItem(id);
-                if (item is null) { return; }
-                await InstallMod(item.Value);
-            }
-            
-            private static async Task InstallMod(Steamworks.Ugc.Item item)
-            {
-                await Task.Yield();
-                using var installCounter = await InstallTaskCounter.Create(item);
+                using var installCounter = await InstallTaskCounter.Create(id);
 
+                var itemNullable = await GetItem(id);
+                if (!(itemNullable is { } item)) { return; }
+                await Task.Yield();
+                
                 string itemTitle = item.Title.Trim();
                 UInt64 itemId = item.Id;
                 string itemDirectory = item.Directory;

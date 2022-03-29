@@ -242,30 +242,30 @@ namespace Barotrauma.Particles
             }
 
             //if velocity change in water is not given, it defaults to the normal velocity change
-            if (element.Attribute("velocitychangewater") == null)
+            if (element.GetAttribute("velocitychangewater") == null)
             {
                 VelocityChangeWater = VelocityChange;
             }
 
-            if (element.Attribute("angularvelocity") != null)
+            if (element.GetAttribute("angularvelocity") != null)
             {
                 AngularVelocityMin = element.GetAttributeFloat("angularvelocity", 0.0f);
                 AngularVelocityMax = AngularVelocityMin;
             }
 
-            if (element.Attribute("startsize") != null)
+            if (element.GetAttribute("startsize") != null)
             {
                 StartSizeMin = element.GetAttributeVector2("startsize", Vector2.One);
                 StartSizeMax = StartSizeMin;
             }
 
-            if (element.Attribute("sizechange") != null)
+            if (element.GetAttribute("sizechange") != null)
             {
                 SizeChangeMin = element.GetAttributeVector2("sizechange", Vector2.Zero);
                 SizeChangeMax = SizeChangeMin;
             }
 
-            if (element.Attribute("startrotation") != null)
+            if (element.GetAttribute("startrotation") != null)
             {
                 StartRotationMin = element.GetAttributeFloat("startrotation", 0.0f);
                 StartRotationMax = StartRotationMin;

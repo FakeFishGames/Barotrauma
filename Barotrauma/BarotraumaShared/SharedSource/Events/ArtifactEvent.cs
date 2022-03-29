@@ -32,7 +32,7 @@ namespace Barotrauma
         public ArtifactEvent(EventPrefab prefab)
             : base(prefab)
         {
-            if (prefab.ConfigElement.Attribute("itemname") != null)
+            if (prefab.ConfigElement.GetAttribute("itemname") != null)
             {
                 DebugConsole.ThrowError("Error in ArtifactEvent - use item identifier instead of the name of the item.");
                 string itemName = prefab.ConfigElement.GetAttributeString("itemname", "");

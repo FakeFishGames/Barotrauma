@@ -153,6 +153,13 @@ namespace Barotrauma
 
                 swarmSpawned = true;
             }
+#if DEBUG || UNSTABLE
+            if (State == 1 && !level.CheckBeaconActive())
+            {
+                DebugConsole.ThrowError("Beacon became inactive!");
+                State = 2;
+            }
+#endif
         }
 
         public override void End()

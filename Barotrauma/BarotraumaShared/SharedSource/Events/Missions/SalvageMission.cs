@@ -48,7 +48,7 @@ namespace Barotrauma
         {
             containerTag = prefab.ConfigElement.GetAttributeString("containertag", "");
 
-            if (prefab.ConfigElement.Attribute("itemname") != null)
+            if (prefab.ConfigElement.GetAttribute("itemname") != null)
             {
                 DebugConsole.ThrowError("Error in SalvageMission - use item identifier instead of the name of the item.");
                 string itemName = prefab.ConfigElement.GetAttributeString("itemname", "");

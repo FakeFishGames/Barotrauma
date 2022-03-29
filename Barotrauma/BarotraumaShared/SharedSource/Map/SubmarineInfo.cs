@@ -266,7 +266,7 @@ namespace Barotrauma
             GameVersion = original.GameVersion;
             Type = original.Type;
             SubmarineClass = original.SubmarineClass;
-            hash = !string.IsNullOrEmpty(original.FilePath) ? original.MD5Hash : null;
+            hash = !string.IsNullOrEmpty(original.FilePath) && File.Exists(original.FilePath) ? original.MD5Hash : null;
             Dimensions = original.Dimensions;
             CargoCapacity = original.CargoCapacity;
             FilePath = original.FilePath;
@@ -299,7 +299,7 @@ namespace Barotrauma
                 DebugConsole.NewMessage("Opening submarine file \"" + FilePath + "\" failed, retrying in 250 ms...");
                 Thread.Sleep(250);
             }
-            if (doc == null || doc.Root == null)
+            if (doc?.Root == null)
             {
                 IsFileCorrupted = true;
                 return;

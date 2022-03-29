@@ -8,6 +8,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Barotrauma.Extensions;
 
 namespace Barotrauma.Steam
 {
@@ -117,7 +118,7 @@ namespace Barotrauma.Steam
                     if (thumbnailUrl.IsNullOrWhiteSpace()) { return null; }
                     var client = new RestClient(thumbnailUrl);
                     var request = new RestRequest(".", Method.GET);
-                    IRestResponse response = await client.ExecuteTaskAsync(request, cancellationToken);
+                    IRestResponse response = await client.ExecuteAsync(request, cancellationToken);
                     if (response is { StatusCode: System.Net.HttpStatusCode.OK, ResponseStatus: ResponseStatus.Completed })
                     {
                         using var dataStream = new System.IO.MemoryStream();
@@ -209,6 +210,11 @@ namespace Barotrauma.Steam
                 string newPath = $"{ContentPackage.LocalModsDir}/{sanitizedName}";
                 if (File.Exists(newPath) || Directory.Exists(newPath))
                 {
+                    newPath += $"_{contentPackage.SteamWorkshopId}";
+                }
+
+                if (File.Exists(newPath) || Directory.Exists(newPath))
+                {
                     throw new Exception($"{newPath} already exists");
                 }
 
@@ -256,6 +262,18 @@ namespace Barotrauma.Steam
                 }
             }
 
+            public static async Task Reinstall(Steamworks.Ugc.Item workshopItem)
+            {
+                NukeDownload(workshopItem);
+                var toUninstall
+                    = ContentPackageManager.WorkshopPackages.Where(p => p.SteamWorkshopId == workshopItem.Id)
+                        .ToHashSet();
+                toUninstall.Select(p => p.Dir).ForEach(d => Directory.Delete(d));
+                CrossThread.RequestExecutionOnMainThread(() => ContentPackageManager.WorkshopPackages.Refresh());
+                DownloadModThenEnqueueInstall(workshopItem);
+                await WaitForInstall(workshopItem);
+            }
+
             public static async Task WaitForInstall(Steamworks.Ugc.Item item)
                 => await WaitForInstall(item.Id);
             
@@ -263,6 +281,7 @@ namespace Barotrauma.Steam
             {
                 var installWaiter = new InstallWaiter(item);
                 while (installWaiter.Waiting) { await Task.Delay(500); }
+                await Task.Delay(500);
             }
             
             public static void OnItemDownloadComplete(ulong id, bool forceInstall = false)
@@ -276,7 +295,8 @@ namespace Barotrauma.Steam
                     return;
                 }
                 else if (CanBeInstalled(id)
-                    && !ContentPackageManager.WorkshopPackages.Any(p => p.SteamWorkshopId == id))
+                    && !ContentPackageManager.WorkshopPackages.Any(p => p.SteamWorkshopId == id)
+                    && !InstallTaskCounter.IsInstalling(id))
                 {
                     TaskPool.Add($"InstallItem{id}", InstallMod(id), t => InstallWaiter.StopWaiting(id));
                 }

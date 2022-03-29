@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
 using Barotrauma.IO;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
@@ -29,10 +30,19 @@ namespace Barotrauma
             currentDownload = null;
             confirmDownload = false;
         }
+
+        private void DeletePrevDownloads()
+        {
+            if (Directory.Exists(ModReceiver.DownloadFolder))
+            {
+                Directory.Delete(ModReceiver.DownloadFolder, recursive: true);
+            }
+        }
         
         public override void Select()
         {
             base.Select();
+            DeletePrevDownloads();
             Reset();
             
             Frame.ClearChildren();
@@ -67,6 +77,18 @@ namespace Barotrauma
                 .Where(sp => sp.ContentPackage is null).ToArray();
             if (!missingPackages.Any())
             {
+                if (!GameMain.Client.IsServerOwner)
+                {
+                    ContentPackageManager.EnabledPackages.BackUp();
+                    ContentPackageManager.EnabledPackages.SetCore(
+                        GameMain.Client.ClientPeer.ServerContentPackages
+                            .Select(p => p.CorePackage)
+                            .First(p => p != null));
+                    ContentPackageManager.EnabledPackages.SetRegular(
+                        GameMain.Client.ClientPeer.ServerContentPackages
+                            .Select(p => p.RegularPackage)
+                            .Where(p => p != null).ToArray());
+                }
                 GameMain.NetLobbyScreen.Select();
                 return;
             }
@@ -201,7 +223,7 @@ namespace Barotrauma
 
                     if (!pendingDownloads.Contains(p))
                     {
-                        downloadProgress.ClearChildren();
+                        downloadProgress.GetAllChildren<GUITextBlock>().ToArray().ForEach(c => downloadProgress.RemoveChild(c));
                         return 1.0f;
                     }
 

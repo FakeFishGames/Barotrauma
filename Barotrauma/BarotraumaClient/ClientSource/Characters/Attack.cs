@@ -15,7 +15,7 @@ namespace Barotrauma
 
         partial void InitProjSpecific(ContentXElement element)
         {
-            if (element.Attribute("sound") != null)
+            if (element.GetAttribute("sound") != null)
             {
                 DebugConsole.ThrowError("Error in attack ("+element+") - sounds should be defined as child elements, not as attributes.");
                 return;

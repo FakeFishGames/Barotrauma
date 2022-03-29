@@ -323,7 +323,7 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "sprite":
-                        if (subElement.Attribute("texture") == null)
+                        if (subElement.GetAttribute("texture") == null)
                         {
                             DebugConsole.ThrowError("Item \"" + item.Name + "\" doesn't have a texture specified!");
                             return;

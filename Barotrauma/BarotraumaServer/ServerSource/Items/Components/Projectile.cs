@@ -42,8 +42,8 @@ namespace Barotrauma.Items.Components
                 msg.Write(item.CurrentHull?.ID ?? Entity.NullEntityID);
                 msg.Write(item.SimPosition.X);
                 msg.Write(item.SimPosition.Y);
-                msg.Write(stickJoint.Axis.X);
-                msg.Write(stickJoint.Axis.Y);
+                msg.Write(jointAxis.X);
+                msg.Write(jointAxis.Y);
                 if (StickTarget.UserData is Structure structure)
                 {
                     msg.Write(structure.ID);

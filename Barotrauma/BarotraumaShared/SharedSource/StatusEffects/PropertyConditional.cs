@@ -72,6 +72,8 @@ namespace Barotrauma
                 case "targetitemcomponent":
                 case "targetself":
                 case "targetcontainer":
+                case "targetgrandparent":
+                case "targetcontaineditem":
                     return false;
                 default:
                     return true;

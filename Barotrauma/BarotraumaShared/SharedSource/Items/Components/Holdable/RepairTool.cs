@@ -129,7 +129,7 @@ namespace Barotrauma.Items.Components
         {
             this.item = item;
 
-            if (element.Attribute("limbfixamount") != null)
+            if (element.GetAttribute("limbfixamount") != null)
             {
                 DebugConsole.ThrowError("Error in item \"" + item.Name + "\" - RepairTool damage should be configured using a StatusEffect with Afflictions, not the limbfixamount attribute.");
             }
@@ -140,10 +140,10 @@ namespace Barotrauma.Items.Components
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "fixable":
-                        if (subElement.Attribute("name") != null)
+                        if (subElement.GetAttribute("name") != null)
                         {
                             DebugConsole.ThrowError("Error in RepairTool " + item.Name + " - use identifiers instead of names to configure fixable entities.");
-                            fixableEntities.Add(subElement.Attribute("name").Value.ToIdentifier());
+                            fixableEntities.Add(subElement.GetAttribute("name").Value.ToIdentifier());
                         }
                         else
                         {

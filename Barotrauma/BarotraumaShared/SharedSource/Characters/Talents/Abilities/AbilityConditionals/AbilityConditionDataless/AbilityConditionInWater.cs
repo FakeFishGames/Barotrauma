@@ -1,7 +1,4 @@
-﻿
-using System.Xml.Linq;
-
-namespace Barotrauma.Abilities
+﻿namespace Barotrauma.Abilities
 {
     class AbilityConditionInWater : AbilityConditionDataless
     {

@@ -1038,9 +1038,9 @@ namespace Barotrauma
                 // Update store stock when saving and quitting in an outpost (normally updated when CampaignMode.End() is called)
                 if (GameSession?.Campaign is SinglePlayerCampaign spCampaign && Level.IsLoadedOutpost && spCampaign.Map?.CurrentLocation != null && spCampaign.CargoManager != null)
                 {
-                    spCampaign.Map.CurrentLocation.AddToStock(spCampaign.CargoManager.SoldItems);
+                    spCampaign.Map.CurrentLocation.AddStock(spCampaign.CargoManager.SoldItems);
                     spCampaign.CargoManager.ClearSoldItemsProjSpecific();
-                    spCampaign.Map.CurrentLocation.RemoveFromStock(spCampaign.CargoManager.PurchasedItems);
+                    spCampaign.Map.CurrentLocation.RemoveStock(spCampaign.CargoManager.PurchasedItems);
                 }
 
                 SaveUtil.SaveGame(GameSession.SavePath);

@@ -380,7 +380,7 @@ namespace Barotrauma
                 string spriteFolder = "";
                 ContentPath texturePath = null;
                 
-                if (element.Attribute("texture") != null)
+                if (element.GetAttribute("texture") != null)
                 {
                     texturePath = element.GetAttributeContentPath("texture");
                 }

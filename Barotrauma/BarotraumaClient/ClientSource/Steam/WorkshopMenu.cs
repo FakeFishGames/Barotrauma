@@ -31,6 +31,7 @@ namespace Barotrauma.Steam
         private readonly GUIListBox enabledRegularModsList;
         private readonly GUIListBox disabledRegularModsList;
         private readonly Action<ItemOrPackage> onInstalledInfoButtonHit;
+        private readonly GUITextBox modsListFilter;
 
         private CancellationTokenSource taskCancelSrc = new CancellationTokenSource();
         private readonly HashSet<SteamManager.Workshop.ItemThumbnail> itemThumbnails = new HashSet<SteamManager.Workshop.ItemThumbnail>();
@@ -47,7 +48,12 @@ namespace Barotrauma.Steam
 
             contentFrame = new GUIFrame(new RectTransform((1.0f, 0.95f), mainLayout.RectTransform), style: null);
 
-            CreateInstalledModsTab(out enabledCoreDropdown, out enabledRegularModsList, out disabledRegularModsList, out onInstalledInfoButtonHit);
+            CreateInstalledModsTab(
+                out enabledCoreDropdown,
+                out enabledRegularModsList,
+                out disabledRegularModsList,
+                out onInstalledInfoButtonHit,
+                out modsListFilter);
             CreatePopularModsTab(out popularModsList);
             CreatePublishTab(out selfModsList);
 
@@ -176,7 +182,8 @@ namespace Barotrauma.Steam
             out GUIDropDown enabledCoreDropdown,
             out GUIListBox enabledRegularModsList,
             out GUIListBox disabledRegularModsList,
-            out Action<ItemOrPackage> onInstalledInfoButtonHit)
+            out Action<ItemOrPackage> onInstalledInfoButtonHit,
+            out GUITextBox modsListFilter)
         {
             GUIFrame content = CreateNewContentFrame(Tab.InstalledMods);
             
@@ -287,7 +294,7 @@ namespace Barotrauma.Steam
             var searchRectT = NewItemRectT(mainLayout, heightScale: 1.0f);
             searchRectT.RelativeSize = (0.5f, searchRectT.RelativeSize.Y);
             var searchHolder = new GUIFrame(searchRectT, style: null);
-            var searchBox = new GUITextBox(new RectTransform(Vector2.One, searchHolder.RectTransform), "");
+            var searchBox = new GUITextBox(new RectTransform(Vector2.One, searchHolder.RectTransform), "", createClearButton: true);
             var searchTitle = new GUITextBlock(new RectTransform(Vector2.One, searchHolder.RectTransform) {Anchor = Anchor.TopLeft},
                 textColor: Color.DarkGray * 0.6f,
                 text: TextManager.Get("Search") + "...",
@@ -300,12 +307,10 @@ namespace Barotrauma.Steam
 
             searchBox.OnTextChanged += (sender, str) =>
             {
-                enabledModsList.Content.Children.Concat(disabledModsList.Content.Children)
-                    .ForEach(c => c.Visible = str.IsNullOrWhiteSpace()
-                                              || (c.UserData is ContentPackage p
-                                                  && p.Name.Contains(str, StringComparison.OrdinalIgnoreCase)));
+                UpdateModListItemVisibility();
                 return true;
             };
+            modsListFilter = searchBox;
 
             new GUICustomComponent(new RectTransform(Vector2.Zero, content.RectTransform),
                 onUpdate: (f, component) =>
@@ -318,6 +323,15 @@ namespace Barotrauma.Steam
                     enabledModsList.DraggedElement?.DrawManually(spriteBatch, true, true);
                     disabledModsList.DraggedElement?.DrawManually(spriteBatch, true, true);
                 });
+        }
+
+        private void UpdateModListItemVisibility()
+        {
+            string str = modsListFilter.Text;
+            enabledRegularModsList.Content.Children.Concat(disabledRegularModsList.Content.Children)
+                .ForEach(c => c.Visible = str.IsNullOrWhiteSpace()
+                                          || (c.UserData is ContentPackage p
+                                              && p.Name.Contains(str, StringComparison.OrdinalIgnoreCase)));
         }
 
         private void PopulateInstalledModLists()
@@ -344,15 +358,21 @@ namespace Barotrauma.Steam
                     RelativeSpacing = 0.02f
                 };
                 
-                var dragIndicator = new GUIButton(new RectTransform((0.1f, 0.5f), frameContent.RectTransform, scaleBasis: ScaleBasis.BothHeight),
+                var dragIndicator = new GUIButton(new RectTransform((0.5f, 0.5f), frameContent.RectTransform, scaleBasis: ScaleBasis.BothHeight),
                     style: "GUIDragIndicator")
                 {
                     CanBeFocused = false
                 };
 
-                var modNameScissor
-                    = new GUIScissorComponent(new RectTransform((0.8f, 1.0f), frameContent.RectTransform));
-                var modName = new GUITextBlock(new RectTransform(Vector2.One, modNameScissor.Content.RectTransform), text: mod.Name);
+                var modNameScissor = new GUIScissorComponent(new RectTransform((0.8f, 1.0f), frameContent.RectTransform))
+                {
+                    CanBeFocused = false
+                };
+                var modName = new GUITextBlock(new RectTransform(Vector2.One, modNameScissor.Content.RectTransform),
+                    text: mod.Name)
+                {
+                    CanBeFocused = false
+                };
                 if (ContentPackageManager.LocalPackages.Contains(mod))
                 {
                     var editButton = new GUIButton(new RectTransform(Vector2.One, frameContent.RectTransform, scaleBasis: ScaleBasis.Smallest), "",
@@ -418,6 +438,8 @@ namespace Barotrauma.Steam
                 if (ContentPackageManager.EnabledPackages.Regular.Contains(mod)) { continue; }
                 addRegularModToList(mod, disabledRegularModsList);
             }
+
+            UpdateModListItemVisibility();
         }
 
         private void CreatePopularModsTab(out GUIListBox popularModsList)

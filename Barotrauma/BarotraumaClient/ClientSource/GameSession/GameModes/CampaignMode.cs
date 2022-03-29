@@ -63,6 +63,10 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Gets the current personal wallet
+        /// In singleplayer this is the campaign bank and in multiplayer this is the personal wallet
+        /// </summary>
         public virtual Wallet Wallet => GetWallet();
 
         public override void ShowStartMessage()
@@ -301,7 +305,7 @@ namespace Barotrauma
                     goto default;
                 default:
                     ShowCampaignUI = true;
-                    CampaignUI.SelectTab(npc.CampaignInteractionType);
+                    CampaignUI.SelectTab(npc.CampaignInteractionType, storeIdentifier: npc.MerchantIdentifier);
                     CampaignUI.UpgradeStore?.RefreshAll();
                     break;
             }

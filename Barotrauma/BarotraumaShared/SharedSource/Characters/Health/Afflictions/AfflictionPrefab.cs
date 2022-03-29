@@ -287,7 +287,7 @@ namespace Barotrauma
                     StatusEffects.Add(StatusEffect.Load(subElement, parentDebugName));
                 }
 
-                if (element.Attribute("interval") != null)
+                if (element.GetAttribute("interval") != null)
                 {
                     MinInterval = MaxInterval = Math.Max(element.GetAttributeFloat("interval", 1.0f), 1.0f);
                 }
@@ -409,7 +409,7 @@ namespace Barotrauma
             HealCostMultiplier = element.GetAttributeFloat(nameof(HealCostMultiplier).ToLowerInvariant(), 1f);
             BaseHealCost = element.GetAttributeInt(nameof(BaseHealCost).ToLowerInvariant(), 0);
 
-            if (element.Attribute("nameidentifier") != null)
+            if (element.GetAttribute("nameidentifier") != null)
             {
                 Name = TextManager.Get(element.GetAttributeString("nameidentifier", string.Empty)).Fallback(Name);
             }

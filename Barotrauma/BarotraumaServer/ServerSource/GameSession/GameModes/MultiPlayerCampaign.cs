@@ -616,8 +616,17 @@ namespace Barotrauma
                 }
 
                 // Store balance
-                msg.Write(true);
-                msg.Write((UInt16)map.CurrentLocation.StoreCurrentBalance);
+                bool hasStores = map.CurrentLocation.Stores != null && map.CurrentLocation.Stores.Any();
+                msg.Write(hasStores);
+                if (hasStores)
+                {
+                    msg.Write((byte)map.CurrentLocation.Stores.Count);
+                    foreach (var store in map.CurrentLocation.Stores.Values)
+                    {
+                        msg.Write(store.Identifier);
+                        msg.Write((UInt16)store.Balance);
+                    }
+                }
             }
             else
             {
@@ -626,36 +635,10 @@ namespace Barotrauma
                 msg.Write(false);
             }
 
-            msg.Write((UInt16)CargoManager.ItemsInBuyCrate.Count);
-            foreach (PurchasedItem pi in CargoManager.ItemsInBuyCrate)
-            {
-                msg.Write(pi.ItemPrefab.Identifier);
-                msg.WriteRangedInteger(pi.Quantity, 0, CargoManager.MaxQuantity);
-            }
-
-            msg.Write((UInt16)CargoManager.ItemsInSellFromSubCrate.Count);
-            foreach (PurchasedItem pi in CargoManager.ItemsInSellFromSubCrate)
-            {
-                msg.Write(pi.ItemPrefab.Identifier);
-                msg.WriteRangedInteger(pi.Quantity, 0, CargoManager.MaxQuantity);
-            }
-
-            msg.Write((UInt16)CargoManager.PurchasedItems.Count);
-            foreach (PurchasedItem pi in CargoManager.PurchasedItems)
-            {
-                msg.Write(pi.ItemPrefab.Identifier);
-                msg.WriteRangedInteger(pi.Quantity, 0, CargoManager.MaxQuantity);
-            }
-
-            msg.Write((UInt16)CargoManager.SoldItems.Count);
-            foreach (SoldItem si in CargoManager.SoldItems)
-            {
-                msg.Write(si.ItemPrefab.Identifier);
-                msg.Write((UInt16)si.ID);
-                msg.Write(si.Removed);
-                msg.Write(si.SellerID);
-                msg.Write((byte)si.Origin);
-            }
+            WriteItems(msg, CargoManager.ItemsInBuyCrate);
+            WriteItems(msg, CargoManager.ItemsInSellFromSubCrate);
+            WriteItems(msg, CargoManager.PurchasedItems);
+            WriteItems(msg, CargoManager.SoldItems);
 
             msg.Write((ushort)UpgradeManager.PendingUpgrades.Count);
             foreach (var (prefab, category, level) in UpgradeManager.PendingUpgrades)
@@ -700,44 +683,10 @@ namespace Barotrauma
             bool purchasedItemRepairs = msg.ReadBoolean();
             bool purchasedLostShuttles = msg.ReadBoolean();
 
-            UInt16 buyCrateItemCount = msg.ReadUInt16();
-            List<PurchasedItem> buyCrateItems = new List<PurchasedItem>();
-            for (int i = 0; i < buyCrateItemCount; i++)
-            {
-                string itemPrefabIdentifier = msg.ReadString();
-                int itemQuantity = msg.ReadRangedInteger(0, CargoManager.MaxQuantity);
-                buyCrateItems.Add(new PurchasedItem(ItemPrefab.Prefabs[itemPrefabIdentifier], itemQuantity, sender));
-            }
-
-            UInt16 subSellCrateItemCount = msg.ReadUInt16();
-            List<PurchasedItem> subSellCrateItems = new List<PurchasedItem>();
-            for (int i = 0; i < subSellCrateItemCount; i++)
-            {
-                string itemPrefabIdentifier = msg.ReadString();
-                int itemQuantity = msg.ReadRangedInteger(0, CargoManager.MaxQuantity);
-                subSellCrateItems.Add(new PurchasedItem(ItemPrefab.Prefabs[itemPrefabIdentifier], itemQuantity, sender));
-            }
-
-            UInt16 purchasedItemCount = msg.ReadUInt16();
-            List<PurchasedItem> purchasedItems = new List<PurchasedItem>();
-            for (int i = 0; i < purchasedItemCount; i++)
-            {
-                string itemPrefabIdentifier = msg.ReadString();
-                int itemQuantity = msg.ReadRangedInteger(0, CargoManager.MaxQuantity);
-                purchasedItems.Add(new PurchasedItem(ItemPrefab.Prefabs[itemPrefabIdentifier], itemQuantity, sender));
-            }
-
-            UInt16 soldItemCount = msg.ReadUInt16();
-            List<SoldItem> soldItems = new List<SoldItem>();
-            for (int i = 0; i < soldItemCount; i++)
-            {
-                string itemPrefabIdentifier = msg.ReadString();
-                UInt16 id = msg.ReadUInt16();
-                bool removed = msg.ReadBoolean();
-                byte sellerId = msg.ReadByte();
-                byte origin = msg.ReadByte();
-                soldItems.Add(new SoldItem(ItemPrefab.Prefabs[itemPrefabIdentifier], id, removed, sellerId, (SoldItem.SellOrigin)origin));
-            }
+            var buyCrateItems = ReadPurchasedItems(msg, sender);
+            var subSellCrateItems = ReadPurchasedItems(msg, sender);
+            var purchasedItems = ReadPurchasedItems(msg, sender);
+            var soldItems = ReadSoldItems(msg);
 
             ushort purchasedUpgradeCount = msg.ReadUInt16();
             List<PurchasedUpgrade> purchasedUpgrades = new List<PurchasedUpgrade>();
@@ -839,42 +788,83 @@ namespace Barotrauma
             bool allowedToUseStore = AllowedToManageCampaign(sender, ClientPermissions.CampaignStore);
             if (allowedToManageCampaign || allowedToUseStore || AllowedToManageCampaign(sender, ClientPermissions.BuyItems))
             {
-                var currentBuyCrateItems = new List<PurchasedItem>(CargoManager.ItemsInBuyCrate);
-                currentBuyCrateItems.ForEach(i => CargoManager.ModifyItemQuantityInBuyCrate(i.ItemPrefab, -i.Quantity, sender));
-                buyCrateItems.ForEach(i => CargoManager.ModifyItemQuantityInBuyCrate(i.ItemPrefab, i.Quantity, sender));
-                CargoManager.SellBackPurchasedItems(new List<PurchasedItem>(CargoManager.PurchasedItems));
-                CargoManager.PurchaseItems(purchasedItems, false, sender);
+                var prevBuyCrateItems = new Dictionary<Identifier, List<PurchasedItem>>(CargoManager.ItemsInBuyCrate);
+                foreach (var store in prevBuyCrateItems)
+                {
+                    foreach (var item in store.Value)
+                    {
+                        CargoManager.ModifyItemQuantityInBuyCrate(store.Key, item.ItemPrefab, -item.Quantity, sender);
+                    }
+                }
+                foreach (var store in buyCrateItems)
+                {
+                    foreach (var item in store.Value)
+                    {
+                        CargoManager.ModifyItemQuantityInBuyCrate(store.Key, item.ItemPrefab, item.Quantity, sender);
+                    }
+                }
+                var prevPurchasedItems = new Dictionary<Identifier, List<PurchasedItem>>(CargoManager.PurchasedItems);
+                foreach (var store in prevPurchasedItems)
+                {
+                    CargoManager.SellBackPurchasedItems(store.Key, store.Value);
+                }
+                foreach (var store in purchasedItems)
+                {
+                    CargoManager.PurchaseItems(store.Key, store.Value, false, sender);
+                }
             }
 
             bool allowedToSellSubItems = AllowedToManageCampaign(sender, ClientPermissions.SellSubItems);
             if (allowedToManageCampaign || allowedToUseStore || allowedToSellSubItems)
             {
-                var currentSubSellCrateItems = new List<PurchasedItem>(CargoManager.ItemsInSellFromSubCrate);
-                currentSubSellCrateItems.ForEach(i => CargoManager.ModifyItemQuantityInSubSellCrate(i.ItemPrefab, -i.Quantity, sender));
-                subSellCrateItems.ForEach(i => CargoManager.ModifyItemQuantityInSubSellCrate(i.ItemPrefab, i.Quantity, sender));
+                var prevSubSellCrateItems = new Dictionary<Identifier, List<PurchasedItem>>(CargoManager.ItemsInSellFromSubCrate);
+                foreach (var store in prevSubSellCrateItems)
+                {
+                    foreach (var item in store.Value)
+                    {
+                        CargoManager.ModifyItemQuantityInSubSellCrate(store.Key, item.ItemPrefab, -item.Quantity, sender);
+                    }
+                }
+                foreach (var store in subSellCrateItems)
+                {
+                    foreach (var item in store.Value)
+                    {
+                        CargoManager.ModifyItemQuantityInSubSellCrate(store.Key, item.ItemPrefab, item.Quantity, sender);
+                    }
+                }
             }
-
             bool allowedToSellInventoryItems = AllowedToManageCampaign(sender, ClientPermissions.SellInventoryItems);
             if (allowedToManageCampaign || allowedToUseStore || (allowedToSellInventoryItems && allowedToSellSubItems))
             {
                 // for some reason CargoManager.SoldItem is never cleared by the server, I've added a check to SellItems that ignores all
                 // sold items that are removed so they should be discarded on the next message
-                CargoManager.BuyBackSoldItems(new List<SoldItem>(CargoManager.SoldItems), sender);
-                CargoManager.SellItems(soldItems, sender);
+                var prevSoldItems = new Dictionary<Identifier, List<SoldItem>>(CargoManager.SoldItems);
+                foreach (var store in prevSoldItems)
+                {
+                    CargoManager.BuyBackSoldItems(store.Key, store.Value);
+                }
+                foreach (var store in soldItems)
+                {
+                    CargoManager.SellItems(store.Key, store.Value, sender);
+                }
             }
             else if (allowedToSellInventoryItems || allowedToSellSubItems)
             {
-                if (allowedToSellInventoryItems)
+                var prevSoldItems = new Dictionary<Identifier, List<SoldItem>>(CargoManager.SoldItems);
+                foreach (var store in prevSoldItems)
                 {
-                    CargoManager.BuyBackSoldItems(new List<SoldItem>(CargoManager.SoldItems.Where(i => i.Origin == SoldItem.SellOrigin.Character)), sender);
-                    soldItems.RemoveAll(i => i.Origin != SoldItem.SellOrigin.Character);
+                    store.Value.RemoveAll(predicate);
+                    CargoManager.BuyBackSoldItems(store.Key, store.Value);
                 }
-                else
+                foreach (var store in soldItems)
                 {
-                    CargoManager.BuyBackSoldItems(new List<SoldItem>(CargoManager.SoldItems.Where(i => i.Origin == SoldItem.SellOrigin.Submarine)), sender);
-                    soldItems.RemoveAll(i => i.Origin != SoldItem.SellOrigin.Submarine);
+                    store.Value.RemoveAll(predicate);
                 }
-                CargoManager.SellItems(soldItems, sender);
+                foreach (var store in soldItems)
+                {
+                    CargoManager.SellItems(store.Key, store.Value, sender);
+                }
+                bool predicate(SoldItem i) => allowedToSellInventoryItems != (i.Origin == SoldItem.SellOrigin.Character);
             }
 
             if (allowedToManageCampaign)
@@ -960,7 +950,7 @@ namespace Barotrauma
 
         public void ServerReadRewardDistribution(IReadMessage msg, Client sender)
         {
-            NetWalletSalaryUpdate update = INetSerializableStruct.Read<NetWalletSalaryUpdate>(msg);
+            NetWalletSetSalaryUpdate update = INetSerializableStruct.Read<NetWalletSetSalaryUpdate>(msg);
 
             if (!AllowedToManageCampaign(sender)) { return; }
 

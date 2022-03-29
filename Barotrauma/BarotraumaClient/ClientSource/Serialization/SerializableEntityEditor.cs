@@ -390,13 +390,13 @@ namespace Barotrauma
             }
 
             GUIComponent propertyField = null;
-            if (value is bool)
+            if (value is bool boolVal)
             {
-                propertyField = CreateBoolField(entity, property, (bool)value, displayName, toolTip);
+                propertyField = CreateBoolField(entity, property, boolVal, displayName, toolTip);
             }
-            else if (value is string)
+            else if (value is string stringVal)
             {
-                propertyField = CreateStringField(entity, property, (string)value, displayName, toolTip);
+                propertyField = CreateStringField(entity, property, stringVal, displayName, toolTip);
             }
             else if (value.GetType().IsEnum)
             {
@@ -1277,7 +1277,7 @@ namespace Barotrauma
 
         public void CreateTextPicker(string textTag, ISerializableEntity entity, SerializableProperty property, GUITextBox textBox)
         {
-            var msgBox = new GUIMessageBox("", "", new LocalizedString[] { TextManager.Get("Cancel") }, new Vector2(0.2f, 0.5f), new Point(300, 400));
+            var msgBox = new GUIMessageBox("", "", new LocalizedString[] { TextManager.Get("Ok") }, new Vector2(0.2f, 0.5f), new Point(300, 400));
             msgBox.Buttons[0].OnClicked = msgBox.Close;
 
             var textList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.8f), msgBox.Content.RectTransform, Anchor.TopCenter))
@@ -1306,6 +1306,18 @@ namespace Barotrauma
                 {
                     UserData = tagTextPair.Key.ToString()
                 };
+            }
+
+            if (entity is IHasExtraTextPickerEntries hasExtraTextPickerEntries)
+            {
+                foreach (string extraEntry in hasExtraTextPickerEntries.GetExtraTextPickerEntries())
+                {
+                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), textList.Content.RectTransform) { MinSize = new Point(0, 20) },
+                        ToolBox.LimitString(extraEntry, GUIStyle.Font, textList.Content.Rect.Width), GUIStyle.Green)
+                    {
+                        UserData = extraEntry
+                    };
+                }
             }
         }
         
@@ -1444,5 +1456,13 @@ namespace Barotrauma
                 affected.Add(entity, obj);
             }
         }
+    }
+
+    /// <summary>
+    /// Implement this interface to insert extra entires to the text pickers created for the SerializableEntityEditors of the entity
+    /// </summary>
+    interface IHasExtraTextPickerEntries
+    {
+        public IEnumerable<string> GetExtraTextPickerEntries();
     }
 }

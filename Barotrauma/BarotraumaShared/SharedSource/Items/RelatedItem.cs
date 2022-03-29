@@ -167,7 +167,7 @@ namespace Barotrauma
         public static RelatedItem Load(ContentXElement element, bool returnEmpty, string parentDebugName)
         {
             Identifier[] identifiers;
-            if (element.Attribute("name") != null)
+            if (element.GetAttribute("name") != null)
             {
                 //backwards compatibility + a console warning
                 DebugConsole.ThrowError("Error in RelatedItem config (" + (string.IsNullOrEmpty(parentDebugName) ? element.ToString() : parentDebugName) + ") - use item tags or identifiers instead of names.");

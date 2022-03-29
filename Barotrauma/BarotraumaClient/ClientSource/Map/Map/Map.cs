@@ -217,8 +217,8 @@ namespace Barotrauma
             Vector2 mapTileSize = mapTile.size * generationParams.MapTileScale;
             int startX = (int)Math.Max(Math.Floor(location.MapPosition.X / mapTileSize.X - 0.25f), 0);
             int startY = (int)Math.Max(Math.Floor(location.MapPosition.Y / mapTileSize.Y - 0.25f), 0);
-            int endX = (int)Math.Min(Math.Floor(location.MapPosition.X / mapTileSize.X + 0.25f), mapTiles.GetLength(0));
-            int endY = (int)Math.Min(Math.Floor(location.MapPosition.Y / mapTileSize.Y + 0.25f), mapTiles.GetLength(1));
+            int endX = (int)Math.Min(Math.Floor(location.MapPosition.X / mapTileSize.X + 0.25f), mapTiles.GetLength(0) - 1);
+            int endY = (int)Math.Min(Math.Floor(location.MapPosition.Y / mapTileSize.Y + 0.25f), mapTiles.GetLength(1) - 1);
             for (int x = startX; x <= endX; x++)
             {
                 for (int y = startY; y <= endY; y++)
@@ -451,7 +451,7 @@ namespace Barotrauma
                         SelectLocation(-1);
                         if (GameMain.Client == null)
                         {
-                            CurrentLocation.CreateStore();
+                            CurrentLocation.CreateStores();
                             ProgressWorld();
                             Radiation?.OnStep(1);
                         }

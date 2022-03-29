@@ -5,7 +5,7 @@ namespace Barotrauma
 {
     partial class Character
     {
-        public static Character Controlled = null;
+        public static Character Controlled => null;
 
         partial void OnAttackedProjSpecific(Character attacker, AttackResult attackResult, float stun)
         {

@@ -11,7 +11,7 @@ namespace Barotrauma.Abilities
 
         public AbilityConditionLocation(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
-            if (conditionElement.Attribute("hasoutpost") != null)
+            if (conditionElement.GetAttribute("hasoutpost") != null)
             {
                 hasOutpost = conditionElement.GetAttributeBool("hasoutpost", false);
             }

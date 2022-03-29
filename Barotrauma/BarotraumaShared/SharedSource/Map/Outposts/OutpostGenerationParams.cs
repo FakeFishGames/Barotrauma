@@ -156,6 +156,8 @@ namespace Barotrauma
 
         public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; private set; }
 
+        private ImmutableHashSet<Identifier> StoreIdentifiers { get; set; }
+
         #warning TODO: this shouldn't really accept any ContentFile, issue is that RuinConfigFile and OutpostConfigFile are separate derived classes
         public OutpostGenerationParams(ContentXElement element, ContentFile file) : base(file, element.GetAttributeIdentifier("identifier", ""))
         {
@@ -228,6 +230,26 @@ namespace Barotrauma
         {
             if (!humanPrefabCollections.Any()) { return Array.Empty<HumanPrefab>(); }
             return humanPrefabCollections.GetRandom(randSync);
+        }
+
+        public ImmutableHashSet<Identifier> GetStoreIdentifiers()
+        {
+            if (StoreIdentifiers == null)
+            {
+                var storeIdentifiers = new HashSet<Identifier>();
+                foreach (var collection in humanPrefabCollections)
+                {
+                    foreach (var prefab in collection)
+                    {
+                        if (prefab?.CampaignInteractionType == CampaignMode.InteractionType.Store)
+                        {
+                            storeIdentifiers.Add(prefab.Identifier);
+                        }
+                    }
+                }
+                StoreIdentifiers = storeIdentifiers.ToImmutableHashSet();
+            }
+            return StoreIdentifiers;
         }
 
         public override void Dispose() { }

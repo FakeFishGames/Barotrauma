@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Xml.Linq;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 #if CLIENT
@@ -151,20 +150,6 @@ namespace Barotrauma.Items.Components
             }
             set
             {
-                if (powerIn != null)
-                {
-                    if (powerIn.Grid != null)
-                    {
-                        powerIn.Grid.Voltage = Math.Max(0.0f, value);
-                    }
-                }
-                else if (powerOut != null)
-                {
-                    if (powerOut.Grid != null)
-                    {
-                        powerOut.Grid.Voltage = Math.Max(0.0f, value);
-                    }
-                }
                 voltage = Math.Max(0.0f, value);
             }
         }
@@ -213,11 +198,6 @@ namespace Barotrauma.Items.Components
                 powerOnSoundPlayed = false;
             }
 #endif
-            if (powerIn == null)
-            {
-                //power down the device here if it has no power connection (= receives power from contained battery cells instead of the "normal" power logic)
-                Voltage -= deltaTime;
-            }
         }
 
         public override void Update(float deltaTime, Camera cam)
@@ -470,6 +450,11 @@ namespace Barotrauma.Items.Components
             //Determine if devices are adding a load or providing power, also resolve solo nodes
             foreach (Powered powered in poweredList)
             {
+                //Make voltage decay to ensure the device powers down.
+                //This only effects devices with no power input (whose voltage is set by other means, e.g. status effects from a contained battery)
+                //or devices that have been disconnected from the power grid - other devices use the voltage of the grid instead.
+                powered.Voltage -= deltaTime;
+
                 //Handle the device if it's got a power connection
                 if (powered.powerIn != null && powered.powerOut != powered.powerIn)
                 {
@@ -500,7 +485,7 @@ namespace Barotrauma.Items.Components
                     }
                     else
                     {
-                        powered.CurrPowerConsumption = powered.GetConnectionPowerOut(powered.powerIn, 0, powered.MinMaxPowerOut(powered.powerIn, 0), 0);
+                        powered.CurrPowerConsumption = -powered.GetConnectionPowerOut(powered.powerIn, 0, powered.MinMaxPowerOut(powered.powerIn, 0), 0);
                         powered.GridResolved(powered.powerIn);
                     }
                 }
@@ -541,7 +526,7 @@ namespace Barotrauma.Items.Components
                     else
                     {
                         //Perform power calculations for the singular connection
-                        float loadOut = powered.GetConnectionPowerOut(powered.powerOut, 0, powered.MinMaxPowerOut(powered.powerOut, 0), 0);
+                        float loadOut = -powered.GetConnectionPowerOut(powered.powerOut, 0, powered.MinMaxPowerOut(powered.powerOut, 0), 0);
                         if (powered is PowerTransfer pt2)
                         {
                             pt2.PowerLoad = loadOut;
@@ -667,7 +652,7 @@ namespace Barotrauma.Items.Components
 
         public static bool ValidPowerConnection(Connection conn1, Connection conn2)
         {
-            return conn1.IsPower && conn2.IsPower && (conn1.Item.HasTag("junctionbox") || conn2.Item.HasTag("junctionbox") || conn1.IsOutput != conn2.IsOutput || (conn1.Item.HasTag("dock") && conn2.Item.HasTag("dock")));
+            return conn1.IsPower && conn2.IsPower && (conn1.Item.HasTag("junctionbox") || conn2.Item.HasTag("junctionbox") || conn1.Item.HasTag("dock") || conn2.Item.HasTag("dock") || conn1.IsOutput != conn2.IsOutput);
         }
 
         /// <summary>

@@ -40,7 +40,7 @@ namespace Barotrauma
 
         public IEnumerable<T> GetAllChildren<T>() where T : GUIComponent
         {
-            return GetAllChildren().Where(c => c is T).Select(c => c as T);
+            return GetAllChildren().OfType<T>();
         }
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace Barotrauma
         {
             foreach (GUIComponent child in Children)
             {
-                if (child.UserData == obj || (child.UserData != null && child.UserData.Equals(obj))) { return child; }
+                if (Equals(child.UserData, obj)) { return child; }
             }
             return null;
         }
@@ -108,7 +108,7 @@ namespace Barotrauma
         }
         public GUIComponent FindChild(object userData, bool recursive = false)
         {
-            var matchingChild = Children.FirstOrDefault(c => c.UserData == userData);
+            var matchingChild = Children.FirstOrDefault(c => Equals(c.UserData, userData));
             if (recursive && matchingChild == null)
             {
                 foreach (GUIComponent child in Children)
@@ -123,7 +123,7 @@ namespace Barotrauma
 
         public IEnumerable<GUIComponent> FindChildren(object userData)
         {
-            return Children.Where(c => c.UserData == userData);
+            return Children.Where(c => Equals(c.UserData, userData));
         }
 
         public IEnumerable<GUIComponent> FindChildren(Func<GUIComponent, bool> predicate)

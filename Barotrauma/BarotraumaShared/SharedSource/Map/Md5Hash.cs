@@ -59,8 +59,19 @@ namespace Barotrauma
         }
 
         public static readonly Md5Hash Blank = new Md5Hash(new string('0', 32));
-        
-        private static readonly Regex removeWhitespaceRegex = new Regex(@"\s+", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+
+        private static string RemoveWhitespace(string s)
+        {
+            StringBuilder sb = new StringBuilder(s.Length / 2); // Reserve half the size of the original string because
+                                                                // that's probably close enough to the size of the result
+            for (int i = 0; i < s.Length; i++)
+            {
+                if (char.IsWhiteSpace(s[i])) { continue; }
+                sb.Append(s[i]);
+            }
+            return sb.ToString();
+        }
+
         //thanks to Jlobblet for this regex
         private static readonly Regex stringHashRegex = new Regex(@"^[0-9a-fA-F]{7,32}$", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
@@ -175,7 +186,7 @@ namespace Barotrauma
             }
             if (options.HasFlag(StringHashOptions.IgnoreWhitespace))
             {
-                str = removeWhitespaceRegex.Replace(str, "");
+                str = RemoveWhitespace(str);
             }
             byte[] bytes = Encoding.UTF8.GetBytes(str);
             return CalculateForBytes(bytes);

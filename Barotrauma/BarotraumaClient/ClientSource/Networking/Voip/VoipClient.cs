@@ -54,7 +54,17 @@ namespace Barotrauma.Networking
             }
             else
             {
-                if (VoipCapture.Instance == null) { VoipCapture.Create(GameSettings.CurrentConfig.Audio.VoiceCaptureDevice, storedBufferID); }
+                try
+                {
+                    if (VoipCapture.Instance == null) { VoipCapture.Create(GameSettings.CurrentConfig.Audio.VoiceCaptureDevice, storedBufferID); }
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError($"VoipCature.Create failed: {e.Message} {e.StackTrace.CleanupStackTrace()}");
+                    var config = GameSettings.CurrentConfig;
+                    config.Audio.VoiceSetting = VoiceMode.Disabled;
+                    GameSettings.SetCurrentConfig(config);
+                }
                 if (VoipCapture.Instance == null || VoipCapture.Instance.EnqueuedTotalLength <= 0) { return; }
             }
 
@@ -146,7 +156,7 @@ namespace Barotrauma.Networking
             {
                 var soundIconStyle = GUIStyle.GetComponentStyle("GUISoundIcon");
                 Rectangle sourceRect = soundIconStyle.Sprites.First().Value.First().Sprite.SourceRect;
-                var indexPieces = soundIconStyle.Element.Attribute("sheetindices").Value.Split(';');
+                var indexPieces = soundIconStyle.Element.GetAttribute("sheetindices").Value.Split(';');
                 voiceIconSheetRects = new Rectangle[indexPieces.Length];
                 for (int i = 0; i < indexPieces.Length; i++)
                 {

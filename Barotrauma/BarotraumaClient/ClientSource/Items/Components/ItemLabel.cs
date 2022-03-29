@@ -2,12 +2,14 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class ItemLabel : ItemComponent, IDrawableComponent
+    partial class ItemLabel : ItemComponent, IDrawableComponent, IHasExtraTextPickerEntries
     {
         private GUITextBlock textBlock;
 
@@ -94,7 +96,15 @@ namespace Barotrauma.Items.Components
             get { return textBlock == null ? 1.0f : textBlock.TextScale; }
             set
             {
-                if (textBlock != null) { textBlock.TextScale = MathHelper.Clamp(value, 0.1f, 10.0f); }
+                if (textBlock != null) 
+                {
+                    float prevScale = TextBlock.TextScale;
+                    textBlock.TextScale = MathHelper.Clamp(value, 0.1f, 10.0f); 
+                    if (!MathUtils.NearlyEqual(prevScale, TextBlock.TextScale))
+                    {
+                        SetScrollingText();
+                    }
+                }
             }
         }
 
@@ -106,7 +116,7 @@ namespace Barotrauma.Items.Components
             set
             {
                 scrollable = value;
-                IsActive = value;
+                IsActive = value || parseSpecialTextTagOnStart;
                 TextBlock.Wrap = !scrollable;
                 TextBlock.TextAlignment = scrollable ? Alignment.CenterLeft : Alignment.Center;
             }
@@ -136,18 +146,23 @@ namespace Barotrauma.Items.Components
         {            
         }
 
+        public IEnumerable<string> GetExtraTextPickerEntries()
+        {
+            return SpecialTextTags;
+        }
+
         private void SetScrollingText()
         {
             if (!scrollable) { return; }
 
-            float totalWidth = textBlock.Font.MeasureString(DisplayText).X;
+            float totalWidth = textBlock.Font.MeasureString(DisplayText).X * TextBlock.TextScale;
             float textAreaWidth = Math.Max(textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z, 0);
             if (totalWidth >= textAreaWidth)
             {
                 //add enough spaces to fill the rect
                 //(so the text can scroll entirely out of view before we reset it back to start)
                 needsScrolling = true;
-                float spaceWidth = textBlock.Font.MeasureChar(' ').X;
+                float spaceWidth = textBlock.Font.MeasureChar(' ').X * TextBlock.TextScale;
                 scrollingText = new string(' ', (int)Math.Ceiling(textAreaWidth / spaceWidth)) + DisplayText.Value;
             }
             else
@@ -166,7 +181,7 @@ namespace Barotrauma.Items.Components
             charWidths = new float[scrollingText.Length];
             for (int i = 0; i < scrollingText.Length; i++)
             {
-                float charWidth = TextBlock.Font.MeasureChar(scrollingText[i]).X;
+                float charWidth = TextBlock.Font.MeasureChar(scrollingText[i]).X * TextBlock.TextScale;
                 scrollPadding = Math.Max(charWidth, scrollPadding);
                 charWidths[i] = charWidth;
             }
@@ -174,9 +189,18 @@ namespace Barotrauma.Items.Components
             scrollIndex = MathHelper.Clamp(scrollIndex, 0, DisplayText.Length);
         }
 
+        private static readonly string[] SpecialTextTags = new string[] { "[CurrentLocationName]", "[CurrentBiomeName]", "[CurrentSubName]" };
+        private bool parseSpecialTextTagOnStart;
         private void SetDisplayText(string value)
         {
+            if (SpecialTextTags.Contains(value))
+            {
+                parseSpecialTextTagOnStart = true;
+                IsActive = true;
+            }
+
             DisplayText = IgnoreLocalization ? value : TextManager.Get(value).Fallback(value);
+
             TextBlock.Text = DisplayText;
             if (Screen.Selected == GameMain.SubEditorScreen && Scrollable)
             {
@@ -198,9 +222,37 @@ namespace Barotrauma.Items.Components
             };
         }
 
+        private void ParseSpecialTextTag()
+        {
+            switch (text)
+            {
+                case "[CurrentLocationName]":
+                    SetDisplayText(Level.Loaded?.StartLocation?.Name ?? string.Empty);
+                    break;
+                case "[CurrentBiomeName]":
+                    SetDisplayText(Level.Loaded?.LevelData?.Biome?.DisplayName.Value ?? string.Empty);
+                    break;
+                case "[CurrentSubName]":
+                    SetDisplayText(item.Submarine?.Info?.DisplayName.Value ?? string.Empty);
+                    break;
+                default:
+                    break;
+            }
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
-            if (!scrollable) { return; }
+            if (parseSpecialTextTagOnStart)
+            {
+                ParseSpecialTextTag();
+                parseSpecialTextTagOnStart = false;
+            }
+
+            if (!scrollable) 
+            {
+                IsActive = false;
+                return; 
+            }
 
             if (scrollingText == null)
             {
@@ -286,5 +338,6 @@ namespace Barotrauma.Items.Components
         {
             Text = msg.ReadString();
         }
+
     }
 }

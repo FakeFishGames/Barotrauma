@@ -402,8 +402,7 @@ namespace Barotrauma
             int i = 0;
             foreach (GUIComponent child in children)
             {
-                if ((child.UserData != null && child.UserData.Equals(userData)) ||
-                    (child.UserData == null && userData == null))
+                if (Equals(child.UserData, userData))
                 {
                     Select(i, force, autoScroll);
                     if (!SelectMultiple) { return; }
@@ -1219,6 +1218,20 @@ namespace Barotrauma
                 i++;
             }
 
+            if (isDraggingElement && CurrentDragMode == DragMode.DragOutsideBox && HideDraggedElement)
+            {
+                Rectangle drawRect = DraggedElement.Rect;
+                int draggedElementIndex = Content.GetChildIndex(DraggedElement);
+                CalculateChildrenOffsets((index, point) =>
+                {
+                    if (draggedElementIndex == index)
+                    {
+                        drawRect.Location = Content.Rect.Location + point;
+                    }
+                });
+                GUI.DrawRectangle(spriteBatch, drawRect, Color.White * 0.5f, thickness: 2f);
+            }
+            
             if (HideChildrenOutsideFrame)
             {
                 spriteBatch.End();

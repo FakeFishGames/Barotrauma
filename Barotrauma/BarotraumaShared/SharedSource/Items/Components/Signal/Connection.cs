@@ -99,7 +99,7 @@ namespace Barotrauma.Items.Components
 
             string displayNameTag = "", fallbackTag = "";
             //if displayname is not present, attempt to find it from the prefab
-            if (element.Attribute("displayname") == null)
+            if (element.GetAttribute("displayname") == null)
             {
                 foreach (var subElement in item.Prefab.ConfigElement.Elements())
                 {

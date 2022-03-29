@@ -7,7 +7,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 using Voronoi2;
 
 namespace Barotrauma.Items.Components
@@ -49,9 +48,8 @@ namespace Barotrauma.Items.Components
         //continuous collision detection is used while the projectile is moving faster than this
         const float ContinuousCollisionThreshold = 5.0f;
 
-        //a duration during which the projectile won't drop from the body it's stuck to
-        private const float PersistentStickJointDuration = 1.0f;
-        private PrismaticJoint stickJoint;
+        private Joint stickJoint;
+        private Vector2 jointAxis;
 
         public Attack Attack { get; private set; }
 
@@ -86,8 +84,6 @@ namespace Barotrauma.Items.Components
             get { return hits; }
         }
 
-        private float persistentStickJointTimer;
-
         [Serialize(10.0f, IsPropertySaveable.No, description: "The impulse applied to the physics body of the item when it's launched. Higher values make the projectile faster.")]
         public float LaunchImpulse { get; set; }
 
@@ -116,13 +112,6 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(false, IsPropertySaveable.No, description: "When set to true, the item won't fall of a target it's stuck to unless removed.")]
-        public bool StickPermanently
-        {
-            get;
-            set;
-        }
-
         [Serialize(false, IsPropertySaveable.No, description: "Can the item stick to the character it hits.")]
         public bool StickToCharacters
         {
@@ -146,6 +135,13 @@ namespace Barotrauma.Items.Components
 
         [Serialize(false, IsPropertySaveable.No, description: "Can the item stick even to deflective targets.")]
         public bool StickToDeflective
+        {
+            get;
+            set;
+        }
+
+        [Serialize(false, IsPropertySaveable.No, description: "")]
+        public bool StickToLightTargets
         {
             get;
             set;
@@ -212,16 +208,36 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        private float stickTimer;
+        [Serialize(0f, IsPropertySaveable.No)]
+        public float StickDuration
+        {
+            get;
+            set;
+        }
+
+        [Serialize(-1f, IsPropertySaveable.No)]
+        public float MaxJointTranslation
+        {
+            get;
+            set;
+        }
+        private float maxJointTranslationInSimUnits = -1;
+
+        [Serialize(true, IsPropertySaveable.No)]
+        public bool Prismatic
+        {
+            get;
+            set;
+        }
+
         public Body StickTarget 
         { 
             get; 
             private set; 
         }
 
-        public bool IsStuckToTarget
-        {
-            get { return StickTarget != null; }
-        }
+        public bool IsStuckToTarget => StickTarget != null;
 
         private Category originalCollisionCategories;
         private Category originalCollisionTargets;
@@ -660,23 +676,22 @@ namespace Barotrauma.Items.Components
 
             if (stickJoint == null) { return; }
 
-            if (persistentStickJointTimer > 0.0f && !StickPermanently)
+            if (StickDuration > 0 && stickTimer > 0)
             {
-                persistentStickJointTimer -= deltaTime;
+                stickTimer -= deltaTime;
                 return;
             }
 
+            float absoluteMaxTranslation = 100;
             // Update the item's transform to make sure it's inside the same sub as the target (or outside)
-            if (StickTarget?.UserData is Limb target && target.Submarine != item.Submarine || Math.Abs(stickJoint.JointTranslation) > 100.0f)
+            if (StickTarget?.UserData is Limb target && target.Submarine != item.Submarine || stickJoint is PrismaticJoint prismaticJoint && Math.Abs(prismaticJoint.JointTranslation) > absoluteMaxTranslation)
             {
                 item.UpdateTransform();
             }
 
             if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
             {
-                if (StickTargetRemoved() ||
-                    (!StickPermanently && (stickJoint.JointTranslation < stickJoint.LowerLimit * 0.9f || stickJoint.JointTranslation > stickJoint.UpperLimit * 0.9f)) ||
-                    Math.Abs(stickJoint.JointTranslation) > 100.0f) //failsafe unstick if the target is still extremely far
+                if (StickTargetRemoved() || stickJoint is PrismaticJoint pJoint && Math.Abs(pJoint.JointTranslation) > maxJointTranslationInSimUnits)
                 {
                     Unstick();
 #if SERVER
@@ -706,7 +721,7 @@ namespace Barotrauma.Items.Components
             if (hits.Contains(target.Body)) { return false; }
             if (target.Body.UserData is Submarine)
             {
-                if (ShouldIgnoreSubmarineCollision(ref target, contact)) { return false; }       
+                if (ShouldIgnoreSubmarineCollision(ref target, contact)) { return false; }
             }
             else if (target.Body.UserData is Limb limb)
             {
@@ -778,7 +793,10 @@ namespace Barotrauma.Items.Components
                     Vector2.Dot(item.body.SimPosition - launchPos, dir) > 0)
                 {
                     target = wallBody.FixtureList.First();
-                    if (hits.Contains(target.Body)) { return true; }
+                    if (hits.Contains(target.Body))
+                    {
+                        return true;
+                    }
                 }
                 else
                 {
@@ -936,14 +954,12 @@ namespace Barotrauma.Items.Components
             {
                 item.body.LinearVelocity *= deflectedSpeedMultiplier;
             }
-            else if (   // When hitting characters the collision normal seems to sometimes point into wrong direction, resulting in a failed attempt to stick
-                        //Vector2.Dot(Vector2.Normalize(velocity), collisionNormal) < 0.0f && 
-                        hits.Count() >= MaxTargetsToHit &&
-                        target.Body.Mass > item.body.Mass * 0.5f &&
+            else if (   stickJoint == null && StickTarget == null &&
+                        StickToStructures && target.Body.UserData is Structure ||
+                        ((StickToLightTargets || target.Body.Mass > item.body.Mass * 0.5f) &&
                         (DoesStick ||
                         (StickToCharacters && (target.Body.UserData is Limb || target.Body.UserData is Character)) ||
-                        (StickToStructures && target.Body.UserData is Structure) ||
-                        (StickToItems && target.Body.UserData is Item)))
+                        (StickToItems && target.Body.UserData is Item))))
             {
                 Vector2 dir = new Vector2(
                     (float)Math.Cos(item.body.Rotation),
@@ -1025,30 +1041,39 @@ namespace Barotrauma.Items.Components
         private void StickToTarget(Body targetBody, Vector2 axis)
         {
             if (stickJoint != null) { return; }
-
-            stickJoint = new PrismaticJoint(targetBody, item.body.FarseerBody, item.body.SimPosition, axis, true)
+            jointAxis = axis;
+            item.body.ResetDynamics();
+            if (Prismatic)
             {
-                MotorEnabled = true,
-                MaxMotorForce = 30.0f,
-                LimitEnabled = true,
-                Breakpoint = 1000.0f
-            };
+                stickJoint = new PrismaticJoint(targetBody, item.body.FarseerBody, item.body.SimPosition, axis, useWorldCoordinates: true)
+                {
+                    MotorEnabled = true,
+                    MaxMotorForce = 30.0f,
+                    LimitEnabled = true,
+                    Breakpoint = 1000.0f
+                };
 
-            if (StickPermanently)
-            {
-                stickJoint.LowerLimit = stickJoint.UpperLimit = 0.0f;
-                item.body.ResetDynamics();
+                if (maxJointTranslationInSimUnits == -1)
+                {
+                    if (item.Sprite != null && MaxJointTranslation < 0)
+                    {
+                        MaxJointTranslation = item.Sprite.size.X / 2 * item.Scale;
+                    }
+                    MaxJointTranslation = Math.Min(MaxJointTranslation, 1000);
+                    maxJointTranslationInSimUnits = ConvertUnits.ToSimUnits(MaxJointTranslation);
+                }
             }
-            else if (item.Sprite != null)
+            else
             {
-                stickJoint.LowerLimit = ConvertUnits.ToSimUnits(item.Sprite.size.X * -0.3f * item.Scale);
-                stickJoint.UpperLimit = ConvertUnits.ToSimUnits(item.Sprite.size.X * 0.3f * item.Scale);
+                stickJoint = new WeldJoint(targetBody, item.body.FarseerBody, item.body.SimPosition, item.body.SimPosition, useWorldCoordinates: true)
+                {
+                    FrequencyHz = 10.0f,
+                    DampingRatio = 0.5f
+                };
             }
-
-            persistentStickJointTimer = PersistentStickJointDuration;
+            stickTimer = StickDuration;
             StickTarget = targetBody;
             GameMain.World.Add(stickJoint);
-
             IsActive = true;
             if (targetBody.UserData is Limb limb)
             {

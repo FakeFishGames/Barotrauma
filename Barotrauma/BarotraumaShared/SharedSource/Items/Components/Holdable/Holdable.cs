@@ -200,7 +200,7 @@ namespace Barotrauma.Items.Components
             {
                 int index = i - 1;
                 string attributeName = "handle" + i;
-                var attribute = element.Attribute(attributeName);
+                var attribute = element.GetAttribute(attributeName);
                 // If no value is defind for handle2, use the value of handle1.
                 var value = attribute != null ? ConvertUnits.ToSimUnits(XMLExtensions.ParseVector2(attribute.Value)) : previousValue;
                 handlePos[index] = value;

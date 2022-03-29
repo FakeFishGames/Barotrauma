@@ -88,7 +88,7 @@ namespace Barotrauma
 
             flash           = element.GetAttributeBool("flash", showEffects);
             flashDuration   = element.GetAttributeFloat("flashduration", 0.05f);
-            if (element.Attribute("flashrange") != null) { flashRange = element.GetAttributeFloat("flashrange", 100.0f); }
+            if (element.GetAttribute("flashrange") != null) { flashRange = element.GetAttributeFloat("flashrange", 100.0f); }
             flashColor = element.GetAttributeColor("flashcolor", Color.LightYellow);
 
             EmpStrength = element.GetAttributeFloat("empstrength", 0.0f);

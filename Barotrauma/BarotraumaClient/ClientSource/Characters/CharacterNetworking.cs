@@ -152,7 +152,7 @@ namespace Barotrauma
                 case TreatmentEventData _:
                     msg.Write(AnimController.Anim == AnimController.Animation.CPR);
                     break;
-                case StatusEventData _:
+                case CharacterStatusEventData _:
                     //do nothing
                     break;
                 case UpdateTalentsEventData _:
@@ -343,8 +343,12 @@ namespace Barotrauma
                         if (controlled == this)
                         {
                             Controlled = null;
-                            IsRemotePlayer = ownerID > 0;
                         }
+                        if (GameMain.Client?.Character == this)
+                        {
+                            GameMain.Client.Character = null;
+                        }
+                        IsRemotePlayer = ownerID > 0;
                     }
                     break;
                 case EventType.Status:
@@ -371,7 +375,9 @@ namespace Barotrauma
                     if (attackLimbIndex == 255 || Removed) { break; }
                     if (attackLimbIndex >= AnimController.Limbs.Length)
                     {
-                        DebugConsole.ThrowError($"Received invalid {(eventType == EventType.SetAttackTarget ? "SetAttackTarget" : "ExecuteAttack")} message. Limb index out of bounds (character: {Name}, limb index: {attackLimbIndex}, limb count: {AnimController.Limbs.Length})");
+                        string errorMsg = $"Received invalid {(eventType == EventType.SetAttackTarget ? "SetAttackTarget" : "ExecuteAttack")} message. Limb index out of bounds (character: {Name}, limb index: {attackLimbIndex}, limb count: {AnimController.Limbs.Length})";
+                        DebugConsole.ThrowError(errorMsg);
+                        GameAnalyticsManager.AddErrorEventOnce("Character.ClientEventRead:AttackLimbOutOfBounds", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                         break;
                     }
                     Limb attackLimb = AnimController.Limbs[attackLimbIndex];
@@ -380,13 +386,16 @@ namespace Barotrauma
                     if (targetEntity == null && eventType == EventType.SetAttackTarget)
                     {
                         DebugConsole.ThrowError($"Received invalid SetAttackTarget message. Target entity not found (ID {targetEntityID})");
+                        GameAnalyticsManager.AddErrorEventOnce("Character.ClientEventRead:TargetNotFound", GameAnalyticsManager.ErrorSeverity.Error, "Received invalid SetAttackTarget message. Target entity not found.");
                         break;
                     }
-                    if (targetEntity is Character targetCharacter)
+                    if (targetEntity is Character targetCharacter && targetLimbIndex != 255)
                     {
                         if (targetLimbIndex >= targetCharacter.AnimController.Limbs.Length)
                         {
                             DebugConsole.ThrowError($"Received invalid {(eventType == EventType.SetAttackTarget ? "SetAttackTarget" : "ExecuteAttack")} message. Target limb index out of bounds (target character: {targetCharacter.Name}, limb index: {targetLimbIndex}, limb count: {targetCharacter.AnimController.Limbs.Length})");
+                            string errorMsgWithoutName = $"Received invalid {(eventType == EventType.SetAttackTarget ? "SetAttackTarget" : "ExecuteAttack")} message. Target limb index out of bounds (target character: {targetCharacter.SpeciesName}, limb index: {targetLimbIndex}, limb count: {targetCharacter.AnimController.Limbs.Length})";
+                            GameAnalyticsManager.AddErrorEventOnce("Character.ClientEventRead:TargetLimbOutOfBounds", GameAnalyticsManager.ErrorSeverity.Error, errorMsgWithoutName);                            
                             break;
                         }
                         targetLimb = targetCharacter.AnimController.Limbs[targetLimbIndex];
@@ -560,6 +569,10 @@ namespace Barotrauma
                 }
                 character.TeamID = (CharacterTeamType)teamID;
                 character.CampaignInteractionType = (CampaignMode.InteractionType)inc.ReadByte();
+                if (character.CampaignInteractionType == CampaignMode.InteractionType.Store)
+                {
+                    character.MerchantIdentifier = inc.ReadIdentifier();
+                }
                 character.Wallet.Balance = balance;
                 character.Wallet.RewardDistribution = rewardDistribution;
                 if (character.CampaignInteractionType != CampaignMode.InteractionType.None)

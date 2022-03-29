@@ -68,15 +68,21 @@ namespace Barotrauma
 
         public bool IsTriggered { get; private set; }
 
-        public float Timer { get; private set; } = -1;
+        public float Timer { get; private set; }
 
         public bool IsActive { get; private set; }
+
+        public bool IsPermanent { get; private set; }
 
         public void Launch()
         {
             IsTriggered = true;
             IsActive = true;
-            Timer = Duration;
+            IsPermanent = Duration <= 0;
+            if (!IsPermanent)
+            {
+                Timer = Duration;
+            }
         }
 
         public void Reset()
@@ -88,6 +94,7 @@ namespace Barotrauma
 
         public void UpdateTimer(float deltaTime)
         {
+            if (IsPermanent) { return; }
             Timer -= deltaTime;
             if (Timer < 0)
             {
@@ -410,7 +417,7 @@ namespace Barotrauma
 
         public static StatusEffect Load(ContentXElement element, string parentDebugName)
         {
-            if (element.Attribute("delay") != null || element.Attribute("delaytype") != null)
+            if (element.GetAttribute("delay") != null || element.GetAttribute("delaytype") != null)
             {
                 return new DelayedEffect(element, parentDebugName);
             }
@@ -642,7 +649,7 @@ namespace Barotrauma
                         break;
                     case "affliction":
                         AfflictionPrefab afflictionPrefab;
-                        if (subElement.Attribute("name") != null)
+                        if (subElement.GetAttribute("name") != null)
                         {
                             DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - define afflictions using identifiers instead of names.");
                             string afflictionName = subElement.GetAttributeString("name", "");
@@ -670,7 +677,7 @@ namespace Barotrauma
 
                         break;
                     case "reduceaffliction":
-                        if (subElement.Attribute("name") != null)
+                        if (subElement.GetAttribute("name") != null)
                         {
                             DebugConsole.ThrowError("Error in StatusEffect (" + parentDebugName + ") - define afflictions using identifiers or types instead of names.");
                             ReduceAffliction.Add((
@@ -1243,23 +1250,26 @@ namespace Barotrauma
             {
                 for (int i = 0; i < targets.Count; i++)
                 {
-                    if (targets[i] is Character character)
+                    var target = targets[i];
+                    Limb targetLimb = target as Limb;
+                    if (targetLimb == null && target is Character character)
                     {
                         foreach (Limb limb in character.AnimController.Limbs)
                         {
                             if (limb.body == sourceBody)
                             {
+                                targetLimb = limb;
                                 if (breakLimb)
                                 {
                                     character.TrySeverLimbJoints(limb, severLimbsProbability: 100, damage: 100, allowBeheading: true, attacker: user);
                                 }
-                                else
-                                {
-                                    limb.HideAndDisable(hideLimbTimer);
-                                }
                                 break;
                             }
                         }
+                    }
+                    if (hideLimb)
+                    {
+                        targetLimb?.HideAndDisable(hideLimbTimer);
                     }
                 }
             }

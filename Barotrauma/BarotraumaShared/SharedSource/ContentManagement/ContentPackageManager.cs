@@ -51,7 +51,7 @@ namespace Barotrauma
                 Core?.UnloadPackage();
                 Core = newCore;
                 foreach (var p in newCore.LoadPackageEnumerable()) { yield return p; }
-                ThrowIfDuplicates(All);
+                SortContent();
                 yield return new LoadProgress(1.0f);
             }
 
@@ -60,7 +60,7 @@ namespace Barotrauma
                 if (Core == null) { return; }
                 Core.UnloadPackage();
                 Core.LoadPackage();
-                ThrowIfDuplicates(All);
+                SortContent();
             }
 
             public static void EnableRegular(RegularPackage p)
@@ -133,7 +133,7 @@ namespace Barotrauma
                 }
             }
 
-            public static void SortContent()
+            private static void SortContent()
             {
                 ThrowIfDuplicates(All);
                 All
@@ -163,6 +163,20 @@ namespace Barotrauma
                     SetCore(ContentPackageManager.CorePackages.First());
                 }
                 SetRegular(Regular.Where(p => ContentPackageManager.RegularPackages.Contains(p)).ToArray());
+            }
+
+            public static void RefreshUpdatedMods()
+            {
+                if (Core != null && !ContentPackageManager.CorePackages.Contains(Core))
+                {
+                    SetCore(ContentPackageManager.WorkshopPackages.Core.FirstOrDefault(p => p.SteamWorkshopId == Core.SteamWorkshopId) ??
+                        ContentPackageManager.CorePackages.First());
+                }
+                SetRegular(Regular
+                    .Select(p => ContentPackageManager.RegularPackages.Contains(p)
+                        ? p
+                        : ContentPackageManager.WorkshopPackages.Regular.FirstOrDefault(p2 => p2.SteamWorkshopId == p.SteamWorkshopId))
+                    .ToArray());
             }
 
             public static void BackUp()
@@ -327,7 +341,8 @@ namespace Barotrauma
             => LocalPackages.Regular.CollectionConcat(WorkshopPackages.Regular);
 
         public static IEnumerable<ContentPackage> AllPackages
-            => LocalPackages.CollectionConcat(WorkshopPackages);
+            => VanillaCorePackage.ToEnumerable().CollectionConcat(LocalPackages).CollectionConcat(WorkshopPackages)
+                .OfType<ContentPackage>();
 
         public static void UpdateContentPackageList()
         {
@@ -447,13 +462,13 @@ namespace Barotrauma
 
             int pkgCount = 1 + enabledRegularPackages.Count; //core + regular
 
-            loadingRange = new Range<float>(0.01f, 1.0f / pkgCount);
+            loadingRange = new Range<float>(0.01f, 0.01f + (0.99f / pkgCount));
             foreach (var p in EnabledPackages.SetCoreEnumerable(enabledCorePackage))
             {
                 yield return p.Transform(loadingRange);
             }
 
-            loadingRange = new Range<float>(1.0f / pkgCount, 1.0f);
+            loadingRange = new Range<float>(0.01f + (0.99f / pkgCount), 1.0f);
             foreach (var p in EnabledPackages.SetRegularEnumerable(enabledRegularPackages))
             {
                 yield return p.Transform(loadingRange);

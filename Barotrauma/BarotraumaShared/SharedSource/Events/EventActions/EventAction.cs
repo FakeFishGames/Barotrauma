@@ -30,7 +30,7 @@ namespace Barotrauma
 
             public SubactionGroup(ScriptedEvent scriptedEvent, ContentXElement elem)
             {
-                Text = elem.Attribute("text")?.Value ?? "";
+                Text = elem.GetAttribute("text")?.Value ?? "";
                 Actions = new List<EventAction>();
                 EndConversation = elem.GetAttributeBool("endconversation", false);
                 foreach (var e in elem.Elements())

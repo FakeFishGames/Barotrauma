@@ -287,7 +287,7 @@ namespace Barotrauma
             GUILayoutGroup rightLayout = new GUILayoutGroup(rectT(0.5f, 1, topHeaderLayout), childAnchor: Anchor.TopRight);
                 GUILayoutGroup priceLayout = new GUILayoutGroup(rectT(1, 0.8f, rightLayout), childAnchor: Anchor.Center) { RelativeSpacing = 0.08f };
                     new GUITextBlock(rectT(1f, 0f, priceLayout), TextManager.Get("CampaignStore.Balance"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Right);
-                    new GUITextBlock(rectT(1f, 0f, priceLayout), FormatCurrency(PlayerWallet.Balance, format: true), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Right) { TextGetter = () => FormatCurrency(PlayerWallet.Balance, format: true) };
+                    new GUITextBlock(rectT(1f, 0f, priceLayout), TextManager.FormatCurrency(PlayerWallet.Balance), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Right) { TextGetter = () => TextManager.FormatCurrency(PlayerWallet.Balance) };
             new GUIFrame(rectT(0.5f, 0.1f, rightLayout, Anchor.BottomRight), style: "HorizontalLine") { IgnoreLayoutGroups = true };
 
             repairButton.OnClicked = upgradeButton.OnClicked = (button, o) =>
@@ -571,7 +571,7 @@ namespace Barotrauma
                 var repairIcon = new GUIFrame(rectT(new Point(contentLayout.Rect.Height, contentLayout.Rect.Height), contentLayout), style: imageStyle);
                 GUILayoutGroup textLayout = new GUILayoutGroup(rectT(0.8f - repairIcon.RectTransform.RelativeSize.X, 1, contentLayout)) { Stretch = true };
                     new GUITextBlock(rectT(1, 0, textLayout), title, font: GUIStyle.SubHeadingFont) { CanBeFocused = false, AutoScaleHorizontal = true };
-                    new GUITextBlock(rectT(1, 0, textLayout), FormatCurrency(price));
+                    new GUITextBlock(rectT(1, 0, textLayout), TextManager.FormatCurrency(price));
                 GUILayoutGroup buyButtonLayout = new GUILayoutGroup(rectT(0.2f, 1, contentLayout), childAnchor: Anchor.Center) { UserData = "buybutton" };
                     new GUIButton(rectT(0.7f, 0.5f, buyButtonLayout), string.Empty, style: "RepairBuyButton") { ClickSound = GUISoundType.HireRepairClick, Enabled = PlayerWallet.Balance >= price && !isDisabled, OnClicked = onPressed };
             contentLayout.Recalculate();
@@ -1094,7 +1094,7 @@ namespace Barotrauma
 
             if (addBuyButton)
             {
-                var formattedPrice = FormatCurrency(Math.Abs(price));
+                var formattedPrice = TextManager.FormatCurrency(Math.Abs(price));
                 //negative price = refund
                 if (price < 0) { formattedPrice = "+" + formattedPrice; }
                 buyButtonLayout = new GUILayoutGroup(rectT(0.2f, 1, prefabLayout), childAnchor: Anchor.TopCenter) { UserData = "buybutton" };
@@ -1577,7 +1577,7 @@ namespace Barotrauma
 
                 if (priceLabel != null && !WaitForServerUpdate)
                 {
-                    priceLabel.Text = FormatCurrency(price);
+                    priceLabel.Text = TextManager.FormatCurrency(price);
                     if (currentLevel >= prefab.MaxLevel)
                     {
                         priceLabel.Text = TextManager.Get("Upgrade.MaxedUpgrade");
@@ -1694,11 +1694,6 @@ namespace Barotrauma
         }
 
         private bool HasPermission => campaignUI.Campaign.AllowedToManageCampaign();
-
-        public static LocalizedString FormatCurrency(int money, bool format = true)
-        {
-            return TextManager.GetWithVariable("CurrencyFormat", "[credits]", format ? string.Format(CultureInfo.InvariantCulture, "{0:N0}", money) : money.ToString());
-        }
 
         // just a shortcut to create new RectTransforms since all the new RectTransform and new Vector2 confuses my IDE (and me)
         private static RectTransform rectT(float x, float y, GUIComponent parentComponent, Anchor anchor = Anchor.TopLeft, ScaleBasis scaleBasis = ScaleBasis.Normal)

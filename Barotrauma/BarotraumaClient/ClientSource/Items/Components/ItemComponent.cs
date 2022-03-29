@@ -462,7 +462,7 @@ namespace Barotrauma.Items.Components
             switch (subElement.Name.ToString().ToLowerInvariant())
             {
                 case "guiframe":
-                    if (subElement.Attribute("rect") != null)
+                    if (subElement.GetAttribute("rect") != null)
                     {
                         DebugConsole.ThrowError($"Error in item config \"{item.ConfigFilePath}\" - GUIFrame defined as rect, use RectTransform instead.");
                         break;

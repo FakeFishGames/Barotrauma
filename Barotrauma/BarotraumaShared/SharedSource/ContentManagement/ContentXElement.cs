@@ -53,8 +53,6 @@ namespace Barotrauma
         public IEnumerable<ContentXElement> GetChildElements(string name)
             => Elements().Where(e => string.Equals(name, e.Name.LocalName, StringComparison.CurrentCultureIgnoreCase));
 
-        public XAttribute? Attribute(string name) => Element.Attribute(name);
-        
         public XAttribute? GetAttribute(string name) => Element.GetAttribute(name);
         
         public IEnumerable<XAttribute> Attributes() => Element.Attributes();

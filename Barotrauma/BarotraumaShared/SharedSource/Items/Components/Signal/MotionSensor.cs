@@ -154,7 +154,7 @@ namespace Barotrauma.Items.Components
             IsActive = true;
 
             //backwards compatibility
-            if (element.Attribute("range") != null)
+            if (element.GetAttribute("range") != null)
             {
                 rangeX = rangeY = element.GetAttributeFloat("range", 0.0f);
             }

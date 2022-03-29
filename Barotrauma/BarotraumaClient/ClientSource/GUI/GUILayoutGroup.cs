@@ -96,15 +96,11 @@ namespace Barotrauma
                     switch (child.ScaleBasis)
                     {
                         case ScaleBasis.BothHeight:
-                            child.MinSize = new Point(child.Rect.Height, child.MinSize.Y);
-                            break;
                         case ScaleBasis.Smallest when Rect.Height <= Rect.Width:
                         case ScaleBasis.Largest when Rect.Height > Rect.Width:
                             child.MinSize = new Point((int)((child.Rect.Height * child.RelativeSize.X) / child.RelativeSize.Y), child.MinSize.Y);
                             break;
                         case ScaleBasis.BothWidth:
-                            child.MinSize = new Point(child.MinSize.X, child.Rect.Width);
-                            break;
                         case ScaleBasis.Smallest when Rect.Width <= Rect.Height:
                         case ScaleBasis.Largest when Rect.Width > Rect.Height:
                             child.MinSize = new Point(child.MinSize.X, (int)((child.Rect.Width * child.RelativeSize.Y) / child.RelativeSize.X));

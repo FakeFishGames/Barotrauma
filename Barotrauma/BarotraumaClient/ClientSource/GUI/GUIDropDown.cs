@@ -314,13 +314,12 @@ namespace Barotrauma
                 foreach (GUIComponent child in ListBox.Content.Children)
                 {
                     var tickBox = child.GetChild<GUITickBox>();
-                    if (obj == child.UserData) { tickBox.Selected = true; }
+                    if (Equals(obj, child.UserData)) { tickBox.Selected = true; }
                 }
             }
             else
             {
-                GUITextBlock textBlock = component as GUITextBlock;
-                if (textBlock == null)
+                if (!(component is GUITextBlock textBlock))
                 {
                     textBlock = component.GetChild<GUITextBlock>();
                     if (textBlock is null && !AllowNonText) { return false; }

@@ -268,7 +268,7 @@ namespace Barotrauma
             }
 
             int totalCost = medicalClinic.GetTotalCost();
-            healList.PriceBlock.Text = UpgradeStore.FormatCurrency(totalCost);
+            healList.PriceBlock.Text = TextManager.FormatCurrency(totalCost);
             healList.PriceBlock.TextColor = GUIStyle.Red;
             healList.HealButton.Enabled = false;
             if (medicalClinic.GetWallet().CanAfford(totalCost))
@@ -288,7 +288,7 @@ namespace Barotrauma
             {
                 if (element.FindAfflictionElement(affliction) is { } existingAffliction)
                 {
-                    existingAffliction.Price.Text = UpgradeStore.FormatCurrency(affliction.Strength);
+                    existingAffliction.Price.Text = TextManager.FormatCurrency(affliction.Strength);
                     continue;
                 }
 
@@ -467,7 +467,7 @@ namespace Barotrauma
 
             GUITextBlock moneyLabel = new GUITextBlock(new RectTransform(new Vector2(1f, 0.5f), balanceLayout.RectTransform), string.Empty, textAlignment: Alignment.TopRight, font: GUIStyle.SubHeadingFont)
             {
-                TextGetter = () => UpgradeStore.FormatCurrency(medicalClinic.GetWallet().Balance),
+                TextGetter = () => TextManager.FormatCurrency(medicalClinic.GetWallet().Balance),
                 AutoScaleVertical = true,
                 TextScale = 1.1f
             };
@@ -571,7 +571,7 @@ namespace Barotrauma
 
             GUILayoutGroup priceLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.5f), footerLayout.RectTransform), isHorizontal: true);
             GUITextBlock priceLabelBlock = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), priceLayout.RectTransform), TextManager.Get("campaignstore.total"));
-            GUITextBlock priceBlock = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), priceLayout.RectTransform), UpgradeStore.FormatCurrency(medicalClinic.GetTotalCost()), font: GUIStyle.SubHeadingFont,
+            GUITextBlock priceBlock = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), priceLayout.RectTransform), TextManager.FormatCurrency(medicalClinic.GetTotalCost()), font: GUIStyle.SubHeadingFont,
                 textAlignment: Alignment.Right);
 
             GUILayoutGroup buttonLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.5f), footerLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterRight);
@@ -684,7 +684,7 @@ namespace Barotrauma
             GUIFrame textContainer = new GUIFrame(new RectTransform(new Vector2(0.6f, 1f), textLayout.RectTransform), style: null);
             GUITextBlock afflictionName = new GUITextBlock(new RectTransform(Vector2.One, textContainer.RectTransform), name, font: GUIStyle.SubHeadingFont);
 
-            GUITextBlock healCost = new GUITextBlock(new RectTransform(new Vector2(0.2f, 1f), textLayout.RectTransform), UpgradeStore.FormatCurrency(affliction.Price), textAlignment: Alignment.Center, font: GUIStyle.LargeFont)
+            GUITextBlock healCost = new GUITextBlock(new RectTransform(new Vector2(0.2f, 1f), textLayout.RectTransform), TextManager.FormatCurrency(affliction.Price), textAlignment: Alignment.Center, font: GUIStyle.LargeFont)
             {
                 Padding = Vector4.Zero
             };
@@ -876,7 +876,7 @@ namespace Barotrauma
                 ToolTip = prefab.Description
             };
 
-            GUITextBlock priceBlock = new GUITextBlock(new RectTransform(new Vector2(1f, 0.5f), bottomTextLayout.RectTransform), UpgradeStore.FormatCurrency(affliction.Price), font: GUIStyle.LargeFont);
+            GUITextBlock priceBlock = new GUITextBlock(new RectTransform(new Vector2(1f, 0.5f), bottomTextLayout.RectTransform), TextManager.FormatCurrency(affliction.Price), font: GUIStyle.LargeFont);
 
             GUIButton buyButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.75f), bottomLayout.RectTransform), style: "CrewManagementAddButton");
 
@@ -931,7 +931,7 @@ namespace Barotrauma
             });
         }
 
-        private static void EnsureTextDoesntOverflow(string? text, GUITextBlock textBlock, Rectangle bounds, ImmutableArray<GUILayoutGroup>? layoutGroups = null)
+        public static void EnsureTextDoesntOverflow(string? text, GUITextBlock textBlock, Rectangle bounds, ImmutableArray<GUILayoutGroup>? layoutGroups = null)
         {
             if (string.IsNullOrWhiteSpace(text)) { return; }
 

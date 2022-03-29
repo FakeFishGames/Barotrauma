@@ -56,7 +56,6 @@ namespace Barotrauma
                     if (containerIndex < 0)
                     {
                         throw error($"container index out of range ({containerIndex})");
-                        break;
                     }
                     if (!(components[containerIndex] is ItemContainer itemContainer))
                     {
@@ -66,7 +65,7 @@ namespace Barotrauma
                     msg.Write(GameMain.Server.EntityEventManager.Events.Last()?.ID ?? (ushort)0);
                     itemContainer.Inventory.ServerEventWrite(msg, c);
                     break;
-                case StatusEventData _:
+                case ItemStatusEventData _:
                     msg.Write(condition);
                     break;
                 case AssignCampaignInteractionEventData _:

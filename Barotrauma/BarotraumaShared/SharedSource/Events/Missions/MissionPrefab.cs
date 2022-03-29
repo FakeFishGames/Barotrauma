@@ -209,7 +209,7 @@ namespace Barotrauma
                         break;
                     case "locationtype":
                     case "connectiontype":
-                        if (subElement.Attribute("identifier") != null)
+                        if (subElement.GetAttribute("identifier") != null)
                         {
                             AllowedLocationTypes.Add(subElement.GetAttributeIdentifier("identifier", ""));
                         }

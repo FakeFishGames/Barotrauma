@@ -321,15 +321,32 @@ namespace Barotrauma
                 }
                 if (levelData.HasHuntingGrounds)
                 {
-                    var huntingGroundsMissionPrefabs = MissionPrefab.Prefabs.Where(m => m.Tags.Any(t => t.Equals("huntinggroundsnoreward", StringComparison.OrdinalIgnoreCase)));
+                    var huntingGroundsMissionPrefabs = MissionPrefab.Prefabs.Where(m => m.Tags.Any(t => t.Equals("huntinggrounds", StringComparison.OrdinalIgnoreCase)));
                     if (!huntingGroundsMissionPrefabs.Any())
                     {
-                        DebugConsole.AddWarning("Could not find a hunting grounds mission for the level. No mission with the tag \"huntinggroundsnoreward\" found.");
+                        DebugConsole.AddWarning("Could not find a hunting grounds mission for the level. No mission with the tag \"huntinggrounds\" found.");
                     }
                     else
                     {
                         Random rand = new MTRandom(ToolBox.StringToInt(levelData.Seed));
-                        var huntingGroundsMissionPrefab = ToolBox.SelectWeightedRandom(huntingGroundsMissionPrefabs, p => (float)Math.Max(p.Commonness, 0.1f), rand);
+                        // Adjust the prefab commonness based on the difficulty tag
+                        var prefabs = huntingGroundsMissionPrefabs.ToList();
+                        var weights = prefabs.Select(p => (float)Math.Max(p.Commonness, 1)).ToList();
+                        for (int i = 0; i < prefabs.Count; i++)
+                        {
+                            var prefab = prefabs[i];
+                            var weight = weights[i];
+                            if (prefab.Tags.Contains("easy"))
+                            {
+                                weight *= MathHelper.Lerp(0.2f, 2f, MathUtils.InverseLerp(80, LevelData.HuntingGroundsDifficultyThreshold, levelData.Difficulty));
+                            }
+                            else if (prefab.Tags.Contains("hard"))
+                            {
+                                weight *= MathHelper.Lerp(0.5f, 1.5f, MathUtils.InverseLerp(LevelData.HuntingGroundsDifficultyThreshold + 10, 80, levelData.Difficulty));
+                            }
+                            weights[i] = weight;
+                        }
+                        var huntingGroundsMissionPrefab = ToolBox.SelectWeightedRandom(prefabs, weights, rand);
                         if (!Missions.Any(m => m.Prefab.Tags.Any(t => t.Equals("huntinggrounds", StringComparison.OrdinalIgnoreCase))))
                         {
                             extraMissions.Add(huntingGroundsMissionPrefab.Instantiate(Map.SelectedConnection.Locations, Submarine.MainSub));
@@ -596,22 +613,22 @@ namespace Barotrauma
             if (map != null && CargoManager != null)
             {
                 map.CurrentLocation.RegisterTakenItems(takenItems);
-                map.CurrentLocation.AddToStock(CargoManager.SoldItems);
+                map.CurrentLocation.AddStock(CargoManager.SoldItems);
                 CargoManager.ClearSoldItemsProjSpecific();
-                map.CurrentLocation.RemoveFromStock(CargoManager.PurchasedItems);
+                map.CurrentLocation.RemoveStock(CargoManager.PurchasedItems);
             }
             if (GameMain.NetworkMember == null)
             {
-                CargoManager.ClearItemsInBuyCrate();
-                CargoManager.ClearItemsInSellCrate();
-                CargoManager.ClearItemsInSellFromSubCrate();
+                CargoManager?.ClearItemsInBuyCrate();
+                CargoManager?.ClearItemsInSellCrate();
+                CargoManager?.ClearItemsInSellFromSubCrate();
             }
             else
             {
                 if (GameMain.NetworkMember.IsServer)
                 {
                     CargoManager?.ClearItemsInBuyCrate();
-                    // TODO: CargoManager?.ClearItemsInSellFromSubCrate();
+                    CargoManager?.ClearItemsInSellFromSubCrate();
                 }
                 else if (GameMain.NetworkMember.IsClient)
                 {
@@ -772,6 +789,11 @@ namespace Barotrauma
         public void AssignNPCMenuInteraction(Character character, InteractionType interactionType)
         {
             character.CampaignInteractionType = interactionType;
+            if (character.CampaignInteractionType == InteractionType.Store &&
+                character.HumanPrefab is { Identifier: var merchantId })
+            {
+                character.MerchantIdentifier = merchantId;
+            }
             character.DisableHealthWindow =
                 interactionType != InteractionType.None &&
                 interactionType != InteractionType.Examine &&

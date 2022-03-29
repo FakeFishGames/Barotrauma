@@ -966,7 +966,7 @@ namespace Barotrauma
                 }
                 else if (character.HeldItems.Any(i => 
                     i.OwnInventory != null && 
-                    (i.OwnInventory.CanBePut(item) || (i.OwnInventory.Capacity == 1 && i.OwnInventory.AllowSwappingContainedItems && i.OwnInventory.Container.CanBeContained(item)))))
+                    ((i.OwnInventory.CanBePut(item) && allowInventorySwap) || (i.OwnInventory.Capacity == 1 && i.OwnInventory.AllowSwappingContainedItems && i.OwnInventory.Container.CanBeContained(item)))))
                 {
                     return QuickUseAction.PutToEquippedItem;
                 }

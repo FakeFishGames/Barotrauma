@@ -3786,7 +3786,7 @@ namespace Barotrauma
                     RelativeSpacing = 0.02f
                 };
                 
-                var dragIndicator = new GUIButton(new RectTransform(new Vector2(0.1f, 0.5f), frameContent.RectTransform, scaleBasis: ScaleBasis.BothHeight),
+                var dragIndicator = new GUIButton(new RectTransform(new Vector2(0.5f, 0.5f), frameContent.RectTransform, scaleBasis: ScaleBasis.BothHeight),
                     style: "GUIDragIndicator")
                 {
                     CanBeFocused = false

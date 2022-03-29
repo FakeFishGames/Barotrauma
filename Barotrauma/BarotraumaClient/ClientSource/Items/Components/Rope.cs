@@ -34,6 +34,13 @@ namespace Barotrauma.Items.Components
         [Serialize("0.5,0.5)", IsPropertySaveable.No)]
         public Vector2 Origin { get; set; } = new Vector2(0.5f, 0.5f);
 
+        [Serialize(true, IsPropertySaveable.No, description: "")]
+        public bool BreakFromMiddle
+        {
+            get;
+            set;
+        }
+
         public Vector2 DrawSize
         {
             get 
@@ -124,9 +131,14 @@ namespace Barotrauma.Items.Components
 
                 int width = (int)(SpriteWidth * snapState);
                 if (width > 0.0f) 
-                { 
-                    DrawRope(spriteBatch, endPos - diff * snapState * 0.5f, endPos, width);
-                    DrawRope(spriteBatch, startPos, startPos + diff * snapState * 0.5f, width);
+                {
+                    float positionMultiplier = snapState;
+                    if (BreakFromMiddle)
+                    {
+                        positionMultiplier /= 2;
+                        DrawRope(spriteBatch, endPos - diff * positionMultiplier, endPos, width);
+                    }
+                    DrawRope(spriteBatch, startPos, startPos + diff * positionMultiplier, width);
                 }
             }
             else
@@ -143,7 +155,7 @@ namespace Barotrauma.Items.Components
                     float depth = Math.Min(item.GetDrawDepth() + (startSprite.Depth - item.Sprite.Depth), 0.999f);
                     startSprite?.Draw(spriteBatch, startPos, SpriteColor, angle, depth: depth);
                 }
-                if (endSprite != null)
+                if (endSprite != null && (!Snapped || BreakFromMiddle))
                 {
                     float depth = Math.Min(item.GetDrawDepth() + (endSprite.Depth - item.Sprite.Depth), 0.999f);
                     endSprite?.Draw(spriteBatch, endPos, SpriteColor, angle, depth: depth);
