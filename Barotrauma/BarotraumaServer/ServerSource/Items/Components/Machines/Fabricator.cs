@@ -1,9 +1,6 @@
 ﻿using Barotrauma.Networking;
-using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -15,7 +12,7 @@ namespace Barotrauma.Items.Components
 
             item.CreateServerEvent(this);
 
-            if (!item.CanClientAccess(c)) return;
+            if (!item.CanClientAccess(c)) { return; }
 
             if (recipeHash == 0)
             {
@@ -64,6 +61,13 @@ namespace Barotrauma.Items.Components
             msg.Write(recipeHash);
             UInt16 userID = fabricatedItem is null || user is null ? (UInt16)0 : user.ID;
             msg.Write(userID);
+
+            var reachedLimits = fabricationLimits.Where(kvp => kvp.Value <= 0);
+            msg.Write((ushort)reachedLimits.Count());
+            foreach (var kvp in reachedLimits)
+            {
+                msg.Write(kvp.Key);
+            }
         }
     }
 }

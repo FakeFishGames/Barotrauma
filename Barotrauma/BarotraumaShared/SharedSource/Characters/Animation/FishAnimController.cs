@@ -193,7 +193,7 @@ namespace Barotrauma
                 strongestImpact = 0.0f;
             }
 
-            if (aiming)
+            if (Aiming)
             {
                 TargetMovement = TargetMovement.ClampLength(2);
             }
@@ -233,7 +233,7 @@ namespace Barotrauma
             //don't flip when simply physics is enabled
             if (SimplePhysicsEnabled) { return; }
             
-            if (!character.IsRemotelyControlled && (character.AIController == null || character.AIController.CanFlip) && !aiming)
+            if (!character.IsRemotelyControlled && (character.AIController == null || character.AIController.CanFlip) && !Aiming)
             {
                 if (!inWater || (CurrentSwimParams != null && CurrentSwimParams.Mirror))
                 {

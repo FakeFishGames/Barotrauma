@@ -99,11 +99,22 @@ namespace Steamworks
 					onDownloadStarted = (r, id) => downloadStarted = true;
 					OnDownloadItemResult += onDownloadStarted;
 
+					int iters = 0;
 					while ( downloadStarted == false )
 					{
-						if ( ct.IsCancellationRequested )
-							break;
+						ct.ThrowIfCancellationRequested();
 
+						iters++;
+						if (iters >= 1000 / milisecondsUpdateDelay)
+						{
+							if (!item.IsDownloading && !item.IsInstalled)
+							{
+								//force download to start if it's not started
+								if ( Download( fileId, highPriority: true ) == false )
+									return item.IsInstalled;
+							}
+							iters = 0;
+						}
 						await Task.Delay( milisecondsUpdateDelay );
 					}
 				}
@@ -120,8 +131,7 @@ namespace Steamworks
 			{
 				while ( true )
 				{
-					if ( ct.IsCancellationRequested )
-						break;
+					ct.ThrowIfCancellationRequested();
 
 					progress?.Invoke( 0.2f + item.DownloadAmount * 0.8f );
 

@@ -343,7 +343,7 @@ namespace Barotrauma
                         foreach (string childKey in GameMain.PerformanceCounter.GetSavedPartialIdentifiers(key))
                         {
                             elapsedMillisecs = GameMain.PerformanceCounter.GetPartialAverageElapsedMillisecs(key, childKey);
-                            DrawString(spriteBatch, new Vector2(315, y),
+                            DrawString(spriteBatch, new Vector2(x + 15, y),
                                 childKey + ": " + elapsedMillisecs.ToString("0.00"),
                                 Color.Lerp(Color.LightGreen, GUIStyle.Red, elapsedMillisecs / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
                             y += 15;
@@ -1422,8 +1422,9 @@ namespace Barotrauma
 
         public static void DrawString(SpriteBatch sb, Vector2 pos, string text, Color color, Color? backgroundColor = null, int backgroundPadding = 0, GUIFont font = null, ForceUpperCase forceUpperCase = ForceUpperCase.Inherit)
         {
-            if (font == null) font = GUIStyle.Font;
-            if (backgroundColor != null)
+            if (color.A == 0) { return; }
+            if (font == null) { font = GUIStyle.Font; }
+            if (backgroundColor != null && backgroundColor.Value.A > 0)
             {
                 Vector2 textSize = font.MeasureString(text);
                 DrawRectangle(sb, pos - Vector2.One * backgroundPadding, textSize + Vector2.One * 2.0f * backgroundPadding, (Color)backgroundColor, true);

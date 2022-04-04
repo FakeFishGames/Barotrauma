@@ -592,6 +592,13 @@ namespace Barotrauma
                 selectedMissionIndices.Add(msg.ReadByte());
             }
 
+            ushort ownedSubCount = msg.ReadUInt16();
+            List<ushort> ownedSubIndices = new List<ushort>();
+            for (int i = 0; i < ownedSubCount; i++)
+            {
+                ownedSubIndices.Add(msg.ReadUInt16());
+            }
+
             bool allowDebugTeleport = msg.ReadBoolean();
             float? reputation = null;
             if (msg.ReadBoolean()) { reputation = msg.ReadSingle(); }
@@ -697,6 +704,17 @@ namespace Barotrauma
                     campaign.Map.SetLocation(currentLocIndex == UInt16.MaxValue ? -1 : currentLocIndex);
                     campaign.Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
                     campaign.Map.SelectMission(selectedMissionIndices);
+
+                    GameMain.GameSession.OwnedSubmarines.Clear();
+                    foreach (int ownedSubIndex in ownedSubIndices)
+                    {
+                        SubmarineInfo sub = GameMain.Client.ServerSubmarines[ownedSubIndex];
+                        if (GameMain.NetLobbyScreen.CheckIfCampaignSubMatches(sub, NetLobbyScreen.SubmarineDeliveryData.Owned))
+                        {
+                            GameMain.GameSession.OwnedSubmarines.Add(sub);
+                        }
+                    }
+
                     campaign.Map.AllowDebugTeleport = allowDebugTeleport;
                     campaign.CargoManager.SetItemsInBuyCrate(buyCrateItems);
                     campaign.CargoManager.SetItemsInSubSellCrate(subSellCrateItems);

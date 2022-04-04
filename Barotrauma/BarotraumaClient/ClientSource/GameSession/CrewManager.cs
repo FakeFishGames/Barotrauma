@@ -55,15 +55,17 @@ namespace Barotrauma
             {
                 if (_isCrewMenuOpen == value) { return; }
                 _isCrewMenuOpen = value;
-                #warning TODO: update GameSettings.CurrentConfig.CrewMenuOpen when round ends
+                PreferCrewMenuOpen = value;
             }
         }
+
+        public static bool PreferCrewMenuOpen = true;
 
         public bool AutoShowCrewList() => _isCrewMenuOpen = true;
 
         public void AutoHideCrewList() => _isCrewMenuOpen = false;
 
-        public void ResetCrewList() => _isCrewMenuOpen = GameSettings.CurrentConfig.CrewMenuOpen;
+        public void ResetCrewList() => _isCrewMenuOpen = PreferCrewMenuOpen;
 
         const float CommandNodeAnimDuration = 0.2f;
 
@@ -217,7 +219,7 @@ namespace Barotrauma
 
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
             prevUIScale = GUI.Scale;
-            _isCrewMenuOpen = GameSettings.CurrentConfig.CrewMenuOpen;
+            _isCrewMenuOpen = PreferCrewMenuOpen = GameSettings.CurrentConfig.CrewMenuOpen;
         }
 
         public static void CreateReportButtons(CrewManager crewManager, GUIComponent parent, IReadOnlyList<OrderPrefab> reports, bool isHorizontal)

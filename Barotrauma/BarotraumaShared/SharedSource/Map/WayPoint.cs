@@ -313,7 +313,16 @@ namespace Barotrauma
                         for (float x = hull.Rect.X + diffFromHullEdge; x <= hull.Rect.Right - diffFromHullEdge; x += minDist)
                         {
                             var wayPoint = new WayPoint(new Vector2(x, hull.Rect.Y - hull.Rect.Height + waypointHeight), SpawnType.Path, submarine);
-                            if (previousWaypoint != null) { wayPoint.ConnectTo(previousWaypoint); }
+                            // Too close to stairs, will be assigned as a stair point -> remove
+                            if (wayPoint.FindStairs() != null)
+                            {
+                                removals.Add(wayPoint);
+                                continue;
+                            }
+                            if (previousWaypoint != null)
+                            {
+                                wayPoint.ConnectTo(previousWaypoint);
+                            }
                             previousWaypoint = wayPoint;
                         }
                         if (previousWaypoint == null)
@@ -510,25 +519,29 @@ namespace Barotrauma
                     }
                 }
             }
+            removals.ForEach(wp => wp.Remove());
+            removals.Clear();
+            // Stairs
             foreach (MapEntity mapEntity in mapEntityList.ToList())
             {
                 if (!(mapEntity is Structure structure)) { continue; }
                 if (structure.StairDirection == Direction.None) { continue; }
                 WayPoint[] stairPoints = new WayPoint[3];
+                float margin = -32;
 
-                stairPoints[0] = new WayPoint(
-                    new Vector2(structure.Rect.X - 32.0f,
-                        structure.Rect.Y - (structure.StairDirection == Direction.Left ? 80 : structure.Rect.Height) + heightFromFloor), SpawnType.Path, submarine);
+                stairPoints[0] = new WayPoint(new Vector2(
+                        structure.Rect.X + 5,
+                        structure.Rect.Y - (structure.StairDirection == Direction.Left ? margin : structure.Rect.Height - 100)), SpawnType.Path, submarine);
 
-                stairPoints[1] = new WayPoint(
-                    new Vector2(structure.Rect.Right + 32.0f,
-                        structure.Rect.Y - (structure.StairDirection == Direction.Left ? structure.Rect.Height : 80) + heightFromFloor), SpawnType.Path, submarine);
+                stairPoints[1] = new WayPoint(new Vector2(
+                        structure.Rect.Right - 5,
+                        structure.Rect.Y - (structure.StairDirection == Direction.Left ? structure.Rect.Height - 100 : margin)), SpawnType.Path, submarine);
 
                 for (int i = 0; i < 2; i++)
                 {
                     for (int dir = -1; dir <= 1; dir += 2)
                     {
-                        WayPoint closest = stairPoints[i].FindClosest(dir, horizontalSearch: true, new Vector2(100, 70));
+                        WayPoint closest = stairPoints[i].FindClosest(dir, horizontalSearch: true, new Vector2(minDist * 1.5f, minDist / 2));
                         if (closest == null) { continue; }
                         stairPoints[i].ConnectTo(closest);
                     }
@@ -537,9 +550,8 @@ namespace Barotrauma
                 stairPoints[2] = new WayPoint((stairPoints[0].Position + stairPoints[1].Position) / 2, SpawnType.Path, submarine);
                 stairPoints[0].ConnectTo(stairPoints[2]);
                 stairPoints[2].ConnectTo(stairPoints[1]);
+                stairPoints.ForEach(wp => wp.FindStairs());
             }
-            removals.ForEach(wp => wp.Remove());
-            removals.Clear();
 
             foreach (Item item in Item.ItemList)
             {
@@ -840,7 +852,11 @@ namespace Barotrauma
                     var body = Submarine.CheckVisibility(SimPosition, wp.SimPosition, ignoreLevel: true, ignoreSubs: true, ignoreSensors: false);
                     if (body != null && body != ignoredBody && !(body.UserData is Submarine))
                     {
-                        if (body.UserData is Structure || body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall))
+                        if (body.UserData is Structure)
+                        {
+                            continue;
+                        }
+                        if (body.FixtureList[0].CollisionCategories.HasFlag(Physics.CollisionWall) && body.UserData is Item i && i.GetComponent<Door>() != null)
                         {
                             continue;
                         }
@@ -960,14 +976,15 @@ namespace Barotrauma
             FindStairs();
         }
 
-        private void FindStairs()
+        private Structure FindStairs()
         {
             Stairs = null;
-            Body pickedBody = Submarine.PickBody(SimPosition, SimPosition - Vector2.UnitY * 2.0f, null, Physics.CollisionStairs);
+            Body pickedBody = Submarine.PickBody(SimPosition, SimPosition - new Vector2(0, 1.2f), null, Physics.CollisionStairs);
             if (pickedBody != null && pickedBody.UserData is Structure structure && structure.StairDirection != Direction.None)
             {
-                Stairs = structure;                
+                Stairs = structure;
             }
+            return Stairs;
         }
 
         public void InitializeLinks()

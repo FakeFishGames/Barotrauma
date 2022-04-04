@@ -5,6 +5,7 @@ using System.Linq;
 using Barotrauma.Extensions;
 using Barotrauma.IO;
 using Barotrauma.Networking;
+using Barotrauma.Steam;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Steamworks.Data;
@@ -94,7 +95,7 @@ namespace Barotrauma
             }
 
             GUIMessageBox msgBox = new GUIMessageBox(
-                TextManager.Get("WorkshopItemDownloadTitle"),
+                TextManager.Get("ModDownloadTitle"),
                 "",
                 Array.Empty<LocalizedString>(),
                 relativeSize: (0.5f, 0.75f));
@@ -122,8 +123,6 @@ namespace Barotrauma
                 return tb;
             }
 
-            var title = textBlock(TextManager.Get("ModDownloadTitle"), GUIStyle.SubHeadingFont, Alignment.Center);
-            innerLayoutSpacing(0.05f);
             var header = textBlock(TextManager.Get("ModDownloadHeader"), GUIStyle.Font);
             innerLayoutSpacing(0.05f);
 
@@ -138,8 +137,8 @@ namespace Barotrauma
             void buttonContainerSpacing(float width)
                 => new GUIFrame(new RectTransform((width, 1.0f), buttonContainer.RectTransform), style: null);
 
-            void button(LocalizedString text, Action action)
-                => new GUIButton(new RectTransform((0.3f, 1.0f), buttonContainer.RectTransform), text)
+            void button(LocalizedString text, Action action, float width = 0.3f)
+                => new GUIButton(new RectTransform((width, 1.0f), buttonContainer.RectTransform), text)
                 {
                     OnClicked = (_, __) =>
                     {
@@ -158,6 +157,28 @@ namespace Barotrauma
                 GameMain.MainMenuScreen.Select();
             });
             buttonContainerSpacing(0.1f);
+
+            var missingIds = missingPackages.Where(
+                mp => mp.WorkshopId != 0
+                   && ContentPackageManager.WorkshopPackages.All(wp
+                       => wp.SteamWorkshopId != mp.WorkshopId))
+                .Select(mp => mp.WorkshopId)
+                .ToArray();
+            if (missingIds.Any())
+            {
+                buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), innerLayout.RectTransform), isHorizontal: true);
+                buttonContainerSpacing(0.15f);
+                button(TextManager.Get("SubscribeToAllOnWorkshop"), () =>
+                {
+                    BulkDownloader.SubscribeToServerMods(missingIds,
+                        rejoinEndpoint: GameMain.Client.ClientPeer.ServerConnection.EndPointString,
+                        rejoinLobby: SteamManager.CurrentLobbyID,
+                        rejoinServerName: GameMain.NetLobbyScreen.ServerName.Text);
+                    GameMain.Client.Disconnect();
+                    GameMain.MainMenuScreen.Select();
+                }, width: 0.7f);
+                buttonContainerSpacing(0.15f);
+            }
 
             foreach (var p in missingPackages)
             {

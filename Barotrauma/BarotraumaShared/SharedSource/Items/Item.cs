@@ -1196,7 +1196,7 @@ namespace Barotrauma
                 drawableComponents.Add(drawable);
                 hasComponentsToDraw = true;
 #if CLIENT
-                cachedVisibleSize = null;
+                cachedVisibleExtents = null;
 #endif
             }
         }
@@ -1208,7 +1208,7 @@ namespace Barotrauma
                 drawableComponents.Remove(drawable);
                 hasComponentsToDraw = drawableComponents.Count > 0;
 #if CLIENT
-                cachedVisibleSize = null;
+                cachedVisibleExtents = null;
 #endif
             }
         }

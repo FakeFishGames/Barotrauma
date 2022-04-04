@@ -105,5 +105,29 @@ namespace Barotrauma.Steam
         protected GUIComponent CreateActionCarrier(GUIComponent parent, Identifier id, Action action)
             => new GUIFrame(new RectTransform(Vector2.Zero, parent.RectTransform), style: null)
                 { UserData = new ActionCarrier(id, action) };
+
+        protected GUITextBox CreateSearchBox(GUILayoutGroup mainLayout, float width = 1.0f, float heightScale = 1.0f)
+        {
+            var searchRectT = NewItemRectT(mainLayout, heightScale: heightScale);
+            searchRectT.RelativeSize = (width, searchRectT.RelativeSize.Y);
+            var searchHolder = new GUIFrame(searchRectT, style: null);
+            var searchBox = new GUITextBox(new RectTransform(Vector2.One, searchHolder.RectTransform), "", createClearButton: true);
+            var searchTitle = new GUITextBlock(new RectTransform(Vector2.One, searchHolder.RectTransform) {Anchor = Anchor.TopLeft},
+                textColor: Color.DarkGray * 0.6f,
+                text: TextManager.Get("Search") + "...",
+                textAlignment: Alignment.CenterLeft)
+            {
+                CanBeFocused = false
+            };
+            searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
+            searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = searchBox.Text.IsNullOrWhiteSpace(); };
+
+            searchBox.OnTextChanged += (sender, str) =>
+            {
+                UpdateModListItemVisibility();
+                return true;
+            };
+            return searchBox;
+        }
     }
 }

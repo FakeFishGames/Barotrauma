@@ -1116,14 +1116,13 @@ namespace Barotrauma
 
             public AttackParams(ContentXElement element, RagdollParams ragdoll) : base(element, ragdoll)
             {
-                var prefab = CharacterPrefab.Prefabs[ragdoll.SpeciesName];
                 Attack = new Attack(element, ragdoll.SpeciesName.Value);
             }
 
             public override bool Deserialize(XElement element = null, bool recursive = true)
             {
                 base.Deserialize(element, recursive);
-                Attack.Deserialize(element ?? Element);
+                Attack.Deserialize(element ?? Element, parentDebugName: Ragdoll?.SpeciesName.ToString() ?? "null");
                 return SerializableProperties != null;
             }
 
@@ -1137,8 +1136,8 @@ namespace Barotrauma
             public override void Reset()
             {
                 base.Reset();
-                Attack.Deserialize(OriginalElement);
-                Attack.ReloadAfflictions(OriginalElement);
+                Attack.Deserialize(OriginalElement, parentDebugName: Ragdoll?.SpeciesName.ToString() ?? "null");
+                Attack.ReloadAfflictions(OriginalElement, parentDebugName: Ragdoll?.SpeciesName.ToString() ?? "null");
             }
 
             public bool AddNewAffliction()
@@ -1149,7 +1148,7 @@ namespace Barotrauma
                     new XAttribute("strength", 0f),
                     new XAttribute("probability", 1.0f));
                 Element.Add(subElement);
-                Attack.ReloadAfflictions(Element);
+                Attack.ReloadAfflictions(Element, parentDebugName: Ragdoll?.SpeciesName.ToString() ?? "null");
                 Serialize();
                 return true;
             }
@@ -1158,7 +1157,7 @@ namespace Barotrauma
             {
                 Serialize();
                 affliction.Remove();
-                Attack.ReloadAfflictions(Element);
+                Attack.ReloadAfflictions(Element, parentDebugName: Ragdoll?.SpeciesName.ToString() ?? "null");
                 return Serialize();
             }
         }

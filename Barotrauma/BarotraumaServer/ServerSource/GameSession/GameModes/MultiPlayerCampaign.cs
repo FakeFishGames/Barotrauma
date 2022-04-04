@@ -564,6 +564,21 @@ namespace Barotrauma
                 msg.Write((byte)selectedMissionIndex);
             }
 
+            var subList = GameMain.NetLobbyScreen.GetSubList();
+            List<int> ownedSubmarineIndices = new List<int>();
+            for (int i = 0; i < subList.Count; i++)
+            {
+                if (GameMain.GameSession.OwnedSubmarines.Any(s => s.Name == subList[i].Name))
+                {
+                    ownedSubmarineIndices.Add(i);
+                }
+            }
+            msg.Write((ushort)ownedSubmarineIndices.Count);
+            foreach (int index in ownedSubmarineIndices)
+            {
+                msg.Write((ushort)index);
+            }
+
             msg.Write(map.AllowDebugTeleport);
             msg.Write(reputation != null);
             if (reputation != null) { msg.Write(reputation.Value); }
@@ -768,8 +783,12 @@ namespace Barotrauma
                 if (Map.SelectedConnection != null) { Map.SelectMission(selectedMissionIndices); }
                 CheckTooManyMissions(Map.CurrentLocation, sender);
             }
-     
-            var prevBuyCrateItems = new Dictionary<Identifier, List<PurchasedItem>>(CargoManager.ItemsInBuyCrate);
+
+            var prevBuyCrateItems = new Dictionary<Identifier, List<PurchasedItem>>();
+            foreach (var kvp in CargoManager.ItemsInBuyCrate)
+            {
+                prevBuyCrateItems.Add(kvp.Key, new List<PurchasedItem>(kvp.Value));
+            }
             foreach (var store in prevBuyCrateItems)
             {
                 foreach (var item in store.Value)
@@ -784,10 +803,15 @@ namespace Barotrauma
                     CargoManager.ModifyItemQuantityInBuyCrate(store.Key, item.ItemPrefab, item.Quantity, sender);
                 }
             }
-            var prevPurchasedItems = new Dictionary<Identifier, List<PurchasedItem>>(CargoManager.PurchasedItems);
+
+            var prevPurchasedItems = new Dictionary<Identifier, List<PurchasedItem>>();
+            foreach (var kvp in CargoManager.PurchasedItems)
+            {
+                prevPurchasedItems.Add(kvp.Key, new List<PurchasedItem>(kvp.Value));
+            }
             foreach (var store in prevPurchasedItems)
             {
-                CargoManager.SellBackPurchasedItems(store.Key, store.Value);
+                CargoManager.SellBackPurchasedItems(store.Key, store.Value, sender);
             }
             foreach (var store in purchasedItems)
             {
@@ -813,6 +837,7 @@ namespace Barotrauma
                     }
                 }
             }
+
             bool allowedToSellInventoryItems = AllowedToManageCampaign(sender, ClientPermissions.SellInventoryItems);
             if (allowedToSellInventoryItems && allowedToSellSubItems)
             {
@@ -825,7 +850,7 @@ namespace Barotrauma
                 }
                 foreach (var store in soldItems)
                 {
-                    CargoManager.SellItems(store.Key, store.Value, sender);
+                    CargoManager.SellItems(store.Key, store.Value);
                 }
             }
             else if (allowedToSellInventoryItems || allowedToSellSubItems)
@@ -842,7 +867,7 @@ namespace Barotrauma
                 }
                 foreach (var store in soldItems)
                 {
-                    CargoManager.SellItems(store.Key, store.Value, sender);
+                    CargoManager.SellItems(store.Key, store.Value);
                 }
                 bool predicate(SoldItem i) => allowedToSellInventoryItems != (i.Origin == SoldItem.SellOrigin.Character);
             }

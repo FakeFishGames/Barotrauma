@@ -239,7 +239,7 @@ namespace Barotrauma
             }
 
             if (min.X > worldView.Right || max.X < worldView.X) { return false; }
-            if ( min.Y > worldView.Y || max.Y < worldView.Y - worldView.Height) { return false; }
+            if (min.Y > worldView.Y || max.Y < worldView.Y - worldView.Height) { return false; }
 
             return true;
         }

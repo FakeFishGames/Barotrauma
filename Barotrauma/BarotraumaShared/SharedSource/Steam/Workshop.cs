@@ -112,15 +112,17 @@ namespace Barotrauma.Steam
                 var toUninstall
                     = ContentPackageManager.WorkshopPackages.Where(p => p.SteamWorkshopId == workshopItem.Id)
                         .ToHashSet();
+                ContentPackageManager.EnabledPackages.DisableMods(toUninstall);
                 toUninstall.Select(p => p.Dir).ForEach(d => Directory.Delete(d));
                 ContentPackageManager.WorkshopPackages.Refresh();
                 ContentPackageManager.EnabledPackages.DisableRemovedMods();
             }
             
-            public static async Task ForceRedownload(Steamworks.Ugc.Item item)
+            public static async Task ForceRedownload(Steamworks.Ugc.Item item, CancellationTokenSource? cancellationTokenSrc = null)
             {
                 NukeDownload(item);
-                await item.DownloadAsync();
+                cancellationTokenSrc ??= new CancellationTokenSource();
+                await item.DownloadAsync(ct: cancellationTokenSrc.Token);
             }
 
             /// <summary>

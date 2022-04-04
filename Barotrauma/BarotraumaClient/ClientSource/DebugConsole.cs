@@ -3310,11 +3310,7 @@ namespace Barotrauma
             }
 
             depth += "   ";
-
-            if (newPrice > 0)
-            {
-                newPrices.TryAdd(materialPrefab, newPrice);
-            }
+            newPrices.TryAdd(materialPrefab, newPrice);
 
             int componentCost = 0;
             int newComponentCost = 0;

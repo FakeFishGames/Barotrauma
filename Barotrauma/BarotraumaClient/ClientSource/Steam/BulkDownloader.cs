@@ -1,0 +1,125 @@
+﻿#nullable enable
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Barotrauma.Extensions;
+using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
+
+namespace Barotrauma.Steam
+{
+    public static class BulkDownloader
+    {
+        public static void PrepareUpdates()
+        {
+            GUIMessageBox msgBox = new GUIMessageBox(headerText: "", text: TextManager.Get("DeterminingRequiredModUpdates"),
+                    buttons: Array.Empty<LocalizedString>());
+            TaskPool.Add(
+                "BulkDownloader.PrepareUpdates > GetItemsThatNeedUpdating",
+                GetItemsThatNeedUpdating(),
+                t =>
+                {
+                    msgBox.Close();
+                    if (!t.TryGetResult(out IReadOnlyList<Steamworks.Ugc.Item> items)) { return; }
+                    
+                    InitiateDownloads(items);
+                });
+        }
+
+        internal static void SubscribeToServerMods(IEnumerable<UInt64> missingIds, string rejoinEndpoint, ulong rejoinLobby, string rejoinServerName)
+        {
+            GUIMessageBox msgBox = new GUIMessageBox(headerText: "", text: TextManager.Get("PreparingWorkshopDownloads"),
+                buttons: Array.Empty<LocalizedString>());
+            TaskPool.Add(
+                "BulkDownloader.SubscribeToServerMods > GetItems",
+                Task.WhenAll(missingIds.Select(SteamManager.Workshop.GetItem)),
+                t =>
+                {
+                    msgBox.Close();
+                    if (!t.TryGetResult(out Steamworks.Ugc.Item?[] itemsNullable)) { return; }
+
+                    var items = itemsNullable
+                        .Where(it => it.HasValue)
+                        .Select(it => it ?? default)
+                        .ToArray();
+                    
+                    items.ForEach(it => it.Subscribe());
+                    InitiateDownloads(items, onComplete: () =>
+                    {
+                        ContentPackageManager.UpdateContentPackageList();
+                        GameMain.Instance.ConnectEndpoint = rejoinEndpoint;
+                        GameMain.Instance.ConnectLobby = rejoinLobby;
+                        GameMain.Instance.ConnectName = rejoinServerName;
+                    });
+                });
+        }
+
+        private static async Task<IReadOnlyList<Steamworks.Ugc.Item>> GetItemsThatNeedUpdating()
+        {
+            var determiningTasks = ContentPackageManager.WorkshopPackages.Select(async p => (p, await p.IsUpToDate()));
+            (ContentPackage Package, bool IsUpToDate)[] outOfDatePackages = await Task.WhenAll(determiningTasks);
+
+            return (await Task.WhenAll(outOfDatePackages.Where(p => !p.IsUpToDate)
+                    .Select(async p => await SteamManager.Workshop.GetItem(p.Package.SteamWorkshopId))))
+                .Where(p => p.HasValue).Select(p => p ?? default).ToArray();
+        }
+
+        public static void InitiateDownloads(IReadOnlyList<Steamworks.Ugc.Item> itemsToDownload, Action? onComplete = null)
+        {
+            var msgBox = new GUIMessageBox(TextManager.Get("WorkshopItemDownloading"), "", relativeSize: (0.5f, 0.6f),
+                buttons: new LocalizedString[] { TextManager.Get("Cancel") });
+            msgBox.Buttons[0].OnClicked = msgBox.Close;
+            var modsList = new GUIListBox(new RectTransform((1.0f, 0.8f), msgBox.Content.RectTransform))
+            {
+                HoverCursor = CursorState.Default
+            };
+            foreach (var item in itemsToDownload)
+            {
+                var itemFrame = new GUIFrame(new RectTransform((1.0f, 0.08f), modsList.Content.RectTransform),
+                    style: null)
+                {
+                    CanBeFocused = false
+                };
+                var itemTitle = new GUITextBlock(new RectTransform(Vector2.One, itemFrame.RectTransform),
+                    text: item.Title);
+                var itemDownloadProgress
+                    = new GUIProgressBar(new RectTransform((0.5f, 0.75f),
+                            itemFrame.RectTransform, Anchor.CenterRight), 0.0f)
+                    {
+                        Color = GUIStyle.Green
+                    };
+                itemDownloadProgress.ProgressGetter = () =>
+                {
+                    float progress = 0.0f;
+                    if (item.IsDownloading) { progress = item.DownloadAmount; }
+                    else if (itemDownloadProgress.BarSize > 0.0f) { progress = 1.0f; }
+
+                    return Math.Max(itemDownloadProgress.BarSize,
+                        MathHelper.Lerp(itemDownloadProgress.BarSize, progress, 0.05f));
+                };
+            }
+            TaskPool.Add("DownloadItems", DownloadItems(itemsToDownload, msgBox), _ =>
+            {
+                if (GUIMessageBox.MessageBoxes.Contains(msgBox))
+                {
+                    onComplete?.Invoke();
+                }
+                msgBox.Close();
+                if (SettingsMenu.Instance?.WorkshopMenu is MutableWorkshopMenu mutableWorkshopMenu)
+                {
+                    mutableWorkshopMenu.PopulateInstalledModLists();
+                }
+            });
+        }
+
+        private static async Task DownloadItems(IReadOnlyList<Steamworks.Ugc.Item> itemsToDownload, GUIMessageBox msgBox)
+        {
+            foreach (var item in itemsToDownload)
+            {
+                await SteamManager.Workshop.Reinstall(item);
+                if (!GUIMessageBox.MessageBoxes.Contains(msgBox)) { break; }
+            }
+        }
+    }
+}

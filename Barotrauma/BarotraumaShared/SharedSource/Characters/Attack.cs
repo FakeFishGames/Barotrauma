@@ -349,7 +349,6 @@ namespace Barotrauma
             DamageRange = range;
             StructureDamage = LevelWallDamage = structureDamage;
             ItemDamage = itemDamage;
-            Penetration = Penetration;
         }
 
         public Attack(ContentXElement element, string parentDebugName, Item sourceItem) : this(element, parentDebugName)
@@ -359,7 +358,7 @@ namespace Barotrauma
         
         public Attack(ContentXElement element, string parentDebugName)
         {
-            Deserialize(element);
+            Deserialize(element, parentDebugName);
 
             if (element.GetAttribute("damage") != null ||
                 element.GetAttribute("bluntdamage") != null ||
@@ -423,7 +422,7 @@ namespace Barotrauma
         }
         partial void InitProjSpecific(ContentXElement element);
 
-        public void ReloadAfflictions(XElement element)
+        public void ReloadAfflictions(XElement element, string parentDebugName)
         {
             Afflictions.Clear();
             foreach (var subElement in element.GetChildElements("affliction"))
@@ -431,6 +430,11 @@ namespace Barotrauma
                 AfflictionPrefab afflictionPrefab;
                 Affliction affliction;
                 Identifier afflictionIdentifier = subElement.GetAttributeIdentifier("identifier", "");
+                if (!AfflictionPrefab.Prefabs.ContainsKey(afflictionIdentifier))
+                {
+                    DebugConsole.ThrowError($"Error in an Attack defined in \"{parentDebugName}\" - could not find an affliction with the identifier \"{afflictionIdentifier}\".");
+                    continue;
+                }
                 afflictionPrefab = AfflictionPrefab.Prefabs[afflictionIdentifier];
                 affliction = afflictionPrefab.Instantiate(0.0f);
                 affliction.Deserialize(subElement);
@@ -456,10 +460,10 @@ namespace Barotrauma
             }
         }
 
-        public void Deserialize(XElement element)
+        public void Deserialize(XElement element, string parentDebugName)
         {
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
-            ReloadAfflictions(element);
+            ReloadAfflictions(element, parentDebugName);
         }
         
         public AttackResult DoDamage(Character attacker, IDamageable target, Vector2 worldPosition, float deltaTime, bool playSound = true, PhysicsBody sourceBody = null, Limb sourceLimb = null)

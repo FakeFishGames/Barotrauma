@@ -53,16 +53,18 @@ namespace Barotrauma
                                 continue;
                             }
                             var vitalityMultipliers = subElement.GetAttributeIdentifierArray("identifier", null) ?? subElement.GetAttributeIdentifierArray("identifiers", null);
-                            if (vitalityMultipliers == null)
-                            {
-                                vitalityMultipliers = subElement.GetAttributeIdentifierArray("type", null) ?? subElement.GetAttributeIdentifierArray("types", null);
-                            }
                             if (vitalityMultipliers != null)
                             {
                                 float multiplier = subElement.GetAttributeFloat("multiplier", 1.0f);
                                 vitalityMultipliers.ForEach(i => VitalityMultipliers.Add(i, multiplier));
                             }
-                            else
+                            var vitalityTypeMultipliers = subElement.GetAttributeIdentifierArray("type", null) ?? subElement.GetAttributeIdentifierArray("types", null);
+                            if (vitalityTypeMultipliers != null)
+                            {
+                                float multiplier = subElement.GetAttributeFloat("multiplier", 1.0f);
+                                vitalityTypeMultipliers.ForEach(i => VitalityTypeMultipliers.Add(i, multiplier));
+                            }
+                            if (vitalityMultipliers == null && VitalityTypeMultipliers == null)
                             {
                                 DebugConsole.ThrowError($"Error in character health config {characterHealth.Character.Name}: affliction identifier(s) or type(s) not defined in the \"VitalityMultiplier\" elements!");
                             }

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Barotrauma.Extensions;
 using Barotrauma.Steam;
 using Microsoft.Xna.Framework;
@@ -26,9 +27,9 @@ namespace Barotrauma.Transition
         {
             TaskPool.Add("UgcTransition.Prepare", DetermineItemsToTransition(), t =>
             {
-                if (!t.TryGetResult(out (OldSubs, OldMods) pair)) { return; }
-                var (subs, mods) = pair;
-                if (!subs.FilePaths.Any() && !mods.Mods.Any()) { return; }
+                if (!t.TryGetResult(out (OldSubs, OldItemAssemblies, OldMods) result)) { return; }
+                var (subs, itemAssemblies, mods) = result;
+                if (!subs.FilePaths.Any() && !itemAssemblies.FilePaths.Any() && !mods.Mods.Any()) { return; }
 
                 var msgBox = new GUIMessageBox(TextManager.Get("Ugc.TransferTitle"), "", relativeSize: (0.5f, 0.8f),
                     buttons: new LocalizedString[] { TextManager.Get("Ugc.TransferButton") });
@@ -63,19 +64,45 @@ namespace Barotrauma.Transition
                     };
                     pathTickboxMap.Add(dir, tickbox);
                 }
-                
-                addHeader(TextManager.Get("WorkshopLabelSubmarines"));
-                foreach (var sub in subs.FilePaths)
+
+                bool firstHeader = true;
+
+                void addSpacer()
                 {
-                    var subName = Path.GetFileNameWithoutExtension(sub);
-                    addTickbox(sub, subName, ticked: !ContentPackageManager.LocalPackages.Any(p => p.NameMatches(subName)));
+                    if (firstHeader) { firstHeader = false; return; }
+                    addHeader("");
                 }
 
-                addHeader("");
-                addHeader(TextManager.Get("SubscribedMods"));
-                foreach (var mod in mods.Mods)
+                if (subs.FilePaths.Any())
                 {
-                    addTickbox(mod.Dir, mod.Name, ticked: !ContentPackageManager.LocalPackages.Any(p => p.SteamWorkshopId != 0 && p.SteamWorkshopId == mod.Item?.Id));
+                    addSpacer();
+                    addHeader(TextManager.Get("WorkshopLabelSubmarines"));
+                    foreach (var sub in subs.FilePaths)
+                    {
+                        var subName = Path.GetFileNameWithoutExtension(sub);
+                        addTickbox(sub, subName, ticked: !ContentPackageManager.LocalPackages.Any(p => p.NameMatches(subName)));
+                    }
+                }
+
+                if (itemAssemblies.FilePaths.Any())
+                {
+                    addSpacer();
+                    addHeader(TextManager.Get("ItemAssemblies"));
+                    foreach (var itemAssembly in itemAssemblies.FilePaths)
+                    {
+                        var assemblyName = Path.GetFileNameWithoutExtension(itemAssembly);
+                        addTickbox(itemAssembly, assemblyName, ticked: !ContentPackageManager.LocalPackages.Any(p => p.NameMatches(assemblyName)));
+                    }
+                }
+
+                if (mods.Mods.Any())
+                {
+                    addSpacer();
+                    addHeader(TextManager.Get("SubscribedMods"));
+                    foreach (var mod in mods.Mods)
+                    {
+                        addTickbox(mod.Dir, mod.Name, ticked: !ContentPackageManager.LocalPackages.Any(p => p.SteamWorkshopId != 0 && p.SteamWorkshopId == mod.Item?.Id));
+                    }
                 }
 
                 GUIMessageBox? subMsgBox = null;
@@ -119,6 +146,16 @@ namespace Barotrauma.Transition
             }
         }
 
+        private struct OldItemAssemblies
+        {
+            public readonly IReadOnlyList<string> FilePaths;
+
+            public OldItemAssemblies(IReadOnlyList<string> filePaths)
+            {
+                FilePaths = filePaths;
+            }
+        }
+
         private struct OldMods
         {
             public readonly IReadOnlyList<(string Dir, string Name, Steamworks.Ugc.Item? Item, DateTime InstallTime)> Mods;
@@ -131,15 +168,24 @@ namespace Barotrauma.Transition
 
         private const string oldSubsPath = "Submarines";
         private const string oldModsPath = "Mods";
+        private const string oldItemAssembliesPath = "ItemAssemblies";
 
-        private static async Task<(OldSubs Subs, OldMods Mods)> DetermineItemsToTransition()
+        private static async Task<(OldSubs Subs, OldItemAssemblies ItemAssemblies, OldMods Mods)> DetermineItemsToTransition()
         {
             string[] subs = Array.Empty<string>();
+            string[] itemAssemblies = Array.Empty<string>();
             List<(string Dir, string Name, Steamworks.Ugc.Item? Item, DateTime InstallTime)> mods
                 = new List<(string Dir, string Name, Steamworks.Ugc.Item? Item, DateTime InstallTime)>();
             if (FolderShouldBeTransitioned(oldModsPath))
             {
-                subs = Directory.GetFiles(oldSubsPath, "*.sub", SearchOption.TopDirectoryOnly);
+                string[] getFiles(string path, string pattern)
+                    => Directory.Exists(path)
+                        ? Directory.GetFiles(path, pattern, SearchOption.TopDirectoryOnly)
+                        : Array.Empty<string>();
+                
+                subs = getFiles(oldSubsPath, "*.sub");
+                itemAssemblies = getFiles(oldItemAssembliesPath, "*.xml");
+                
                 string[] allOldMods = Directory.GetDirectories(oldModsPath, "*", SearchOption.TopDirectoryOnly);
 
                 var publishedItems = await SteamManager.Workshop.GetPublishedItems();
@@ -160,9 +206,9 @@ namespace Barotrauma.Transition
                 }
             }
 
-            while (!(Screen.Selected is MainMenuScreen)) { await Task.Delay(500); }
+            while (!(Screen.Selected is MainMenuScreen)) { await Task.Delay(50); }
             
-            return (new OldSubs(subs), new OldMods(mods));
+            return (new OldSubs(subs), new OldItemAssemblies(itemAssemblies), new OldMods(mods));
         }
         
         private static bool FolderShouldBeTransitioned(string folderName)
@@ -173,45 +219,71 @@ namespace Barotrauma.Transition
 
         private static async Task TransferMods(Dictionary<string, GUITickBox> pathTickboxMap)
         {
-            //WriteReadme(oldSubsPath); //can't do this because the submarine discovery code is borked
+            //WriteReadme(oldSubsPath); //can't do this because the old submarine discovery code is borked
             WriteReadme(oldModsPath);
-            foreach (var (path, tickbox) in pathTickboxMap)
-            {
-                if (!tickbox.Selected) { continue; }
-                string dirName = Path.GetFileNameWithoutExtension(path);
-                string destPath = Path.Combine(ContentPackage.LocalModsDir, dirName);
-                
-                //find unique path to save in
-                for (int i = 0;;i++)
-                {
-                    if (!Directory.Exists(destPath)) { break; }
-                    destPath = Path.Combine(ContentPackage.LocalModsDir, $"{dirName}.{i}");
-                }
-                
-                if (path.StartsWith(oldSubsPath, StringComparison.OrdinalIgnoreCase))
-                {
-                    //copying a sub: manually create filelist.xml
-                    ModProject modProject = new ModProject
-                    {
-                        Name = dirName,
-                        ModVersion = ContentPackage.DefaultModVersion
-                    };
-                    modProject.AddFile(ModProject.File.FromPath<SubmarineFile>(Path.Combine(ContentPath.ModDirStr, $"{dirName}.sub")));
+            await Task.WhenAll(pathTickboxMap.Select(TransferMod));
+        }
 
-                    Directory.CreateDirectory(destPath);
-                    File.Copy(path, Path.Combine(destPath, $"{dirName}.sub"));
-                    modProject.Save(Path.Combine(destPath, ContentPackage.FileListFileName));
-                    
-                    await Task.Yield();
+        private static Task TransferMod(KeyValuePair<string, GUITickBox> kvp)
+            => TransferMod(kvp.Key, kvp.Value);
+
+        private static async Task TransferMod(string path, GUITickBox tickbox)
+        {
+            if (!tickbox.Selected) { return; }
+            string dirName = Path.GetFileNameWithoutExtension(path);
+            string destPath = Path.Combine(ContentPackage.LocalModsDir, dirName);
+                
+            //find unique path to save in
+            for (int i = 0;;i++)
+            {
+                if (!Directory.Exists(destPath)) { break; }
+                destPath = Path.Combine(ContentPackage.LocalModsDir, $"{dirName}.{i}");
+            }
+
+            bool isSub = path.StartsWith(oldSubsPath, StringComparison.OrdinalIgnoreCase);
+            bool isItemAssembly = path.StartsWith(oldItemAssembliesPath, StringComparison.OrdinalIgnoreCase);
+            if (isSub || isItemAssembly)
+            {
+                //copying a sub or item assembly: manually create filelist.xml
+                ModProject modProject = new ModProject
+                {
+                    Name = dirName,
+                    ModVersion = ContentPackage.DefaultModVersion
+                };
+
+                Type fileType;
+                if (isSub)
+                {
+                    fileType = typeof(SubmarineFile);
+                    XDocument? doc = SubmarineInfo.OpenFile(path, out _);
+                    if (doc?.Root != null)
+                    {
+                        SubmarineType subType = doc.Root.GetAttributeEnum("type", SubmarineType.Player);
+                        fileType = SubEditorScreen.DetermineSubFileType(subType);
+                    }
                 }
                 else
                 {
-                    //copying a mod: we have a neat method for that!
-                    await SteamManager.Workshop.CopyDirectory(path, Path.GetFileName(path), path, destPath);
+                    fileType = typeof(ItemAssemblyFile);
                 }
+                
+                modProject.AddFile(ModProject.File.FromPath(
+                    Path.Combine(ContentPath.ModDirStr, $"{dirName}.{(isSub ? "sub" : "xml")}"),
+                    fileType));
+
+                Directory.CreateDirectory(destPath);
+                File.Copy(path, Path.Combine(destPath, $"{dirName}.{(isSub ? "sub" : "xml")}"));
+                modProject.Save(Path.Combine(destPath, ContentPackage.FileListFileName));
+                
+                await Task.Yield();
+            }
+            else
+            {
+                //copying a mod: we have a neat method for that!
+                await SteamManager.Workshop.CopyDirectory(path, Path.GetFileName(path), path, destPath);
             }
         }
-        
+
         private static void WriteReadme(string folderName)
         {
             if (!Directory.Exists(folderName)) { return; }

@@ -4,9 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Reflection.Metadata;
 
 namespace Barotrauma.Items.Components
 {
@@ -53,15 +51,12 @@ namespace Barotrauma.Items.Components
         [Serialize("vendingmachine.outofstock", IsPropertySaveable.Yes)]
         public string FabricationLimitReachedText { get; set; }
 
-        partial void InitProjSpecific()
-        {
-            //CreateGUI();
-        }
-
         protected override void OnResolutionChanged()
         {
-            base.OnResolutionChanged();
-            OnItemLoadedProjSpecific();
+            if (GuiFrame != null)
+            {
+                OnItemLoadedProjSpecific();
+            }
         }
 
         protected override void CreateGUI()
@@ -162,7 +157,7 @@ namespace Barotrauma.Items.Components
                 // === ACTIVATE BUTTON === //
                 var buttonFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.8f), inputArea.RectTransform), childAnchor: Anchor.CenterRight);
                 activateButton = new GUIButton(new RectTransform(new Vector2(1f, 0.6f), buttonFrame.RectTransform),
-                    TextManager.Get(CreateButtonText), style: "DeviceButton")
+                    TextManager.Get(CreateButtonText), style: "DeviceButtonFixedSize")
                 {
                     OnClicked = StartButtonClicked,
                     UserData = selectedItem,
@@ -173,7 +168,7 @@ namespace Barotrauma.Items.Components
             {
                 bottomFrame.RectTransform.RelativeSize = new Vector2(1.0f, 0.1f);
                 activateButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), bottomFrame.RectTransform, Anchor.CenterRight),
-                    TextManager.Get(CreateButtonText), style: "DeviceButton")
+                    TextManager.Get(CreateButtonText), style: "DeviceButtonFixedSize")
                 {
                     OnClicked = StartButtonClicked,
                     UserData = selectedItem,
@@ -566,7 +561,7 @@ namespace Barotrauma.Items.Components
             LocalizedString itemName = GetRecipeNameAndAmount(selectedItem);
             LocalizedString name = itemName;
 
-            float quality = GetFabricatedItemQuality(selectedItem, user);
+            float quality = selectedItem.Quality ?? GetFabricatedItemQuality(selectedItem, user);
             if (quality > 0)
             {
                 name = TextManager.GetWithVariable("itemname.quality" + (int)quality, "[itemname]", itemName + '\n')
@@ -636,7 +631,7 @@ namespace Barotrauma.Items.Components
             float requiredTime = overrideRequiredTime ??
                 (user == null ? selectedItem.RequiredTime : GetRequiredTime(selectedItem, user));
             
-            if (requiredTime > 0.0f)
+            if ((int)requiredTime > 0)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedReqFrame.RectTransform), 
                     TextManager.Get("FabricatorRequiredTime") , textColor: ToolBox.GradientLerp(degreeOfSuccess, GUIStyle.Red, Color.Yellow, GUIStyle.Green), font: GUIStyle.SubHeadingFont)
@@ -777,6 +772,12 @@ namespace Barotrauma.Items.Components
             uint recipeHash = msg.ReadUInt32();
             UInt16 userID = msg.ReadUInt16();
             Character user = Entity.FindEntityByID(userID) as Character;
+
+            ushort reachedLimitCount = msg.ReadUInt16();
+            for (int i = 0; i < reachedLimitCount; i++)
+            {
+                fabricationLimits[msg.ReadUInt32()] = 0;
+            }
 
             State = newState;
             if (newState == FabricatorState.Stopped || recipeHash == 0)

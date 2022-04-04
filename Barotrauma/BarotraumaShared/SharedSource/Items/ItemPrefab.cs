@@ -118,6 +118,7 @@ namespace Barotrauma
         public readonly ImmutableArray<Skill> RequiredSkills;
         public readonly uint RecipeHash;
         public readonly int Amount;
+        public readonly int? Quality;
 
         /// <summary>
         /// How many of this item the fabricator can create (< 0 = unlimited)
@@ -149,6 +150,11 @@ namespace Barotrauma
             int limitDefault = element.GetAttributeInt("fabricationlimit", -1);
             FabricationLimitMin = element.GetAttributeInt(nameof(FabricationLimitMin), limitDefault);
             FabricationLimitMax = element.GetAttributeInt(nameof(FabricationLimitMax), limitDefault);
+
+            if (element.GetAttribute(nameof(Quality)) != null)
+            {
+                Quality = element.GetAttributeInt(nameof(Quality), 0);
+            }
 
             foreach (var subElement in element.Elements())
             {

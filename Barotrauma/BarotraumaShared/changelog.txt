@@ -1,4 +1,66 @@
 ---------------------------------------------------------------------------------------------------------
+v0.17.6.0
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Buffed ethanol's and tobacco's effects.
+- Renamed "details" to "manage" and "permissions" to "rank" in the client management context menu to make them a little more clear.
+- Added an indicator for when players are downloading files from the server to the player list in the lobby.
+- Adjustments, tweaks, and polish for the new abyss monster, now called "Latcher". Updated texture.
+- Adjusted the kill hammerhead missions.
+- Changes to character aiming behavior.
+- Giant Spineling doesn't flee anymore when being shot with coilgun, chaingun, or small arms.
+
+Changes (unstable only):
+- Added separate icons for mods that you've published and mods that you've subscribed to.
+- Added a button to the prompt asking you to download mods from the server that will subscribe to missing Workshop items.
+- Added a context menu to the items in the Installed Mods tab.
+- Added a button to update all mods that are out of date.
+- Added a search box to the locked mods list.
+- Added a search box to the required mods list in the submarine editor.
+- Double-clicking now enables/disables items in the Installed Mods tab.
+
+Fixes:
+- Fixed swimming characters sometimes being unable to stand up on stairs/platforms even if the water is shallow enough.
+- Fixed guitar and harmonica being rendered on top of the water effect.
+- Fixed guitar, harmonica, accordion and captains pipe having neutral buoyancy.
+- Fixed mid-round joining clients not seeing subs purchased during that round.
+- Fixed research station being repairable by clicking on it instead of pressing E.
+- Fixed medical curtains disappearing before they're off-screen.
+- Fixed karma preset being forced to default when starting a new server.
+- Fixed calyxanide not damaging the "naturally spawning" husks.
+- Fixed Herja's rear motion detector being connected to an incorrect display, and the bottom turret display having an incorrect text.
+- Fixed crash caused by selection not being cleared when autocompleting or running a console command.
+- Waypointfixes on abandoned outpost modules, some regular outpost modules, and Winterhalter.
+- Fixed bots occasionally getting stuck while climbing ladders connecting outpost modules.
+- Fixes to waypoint generator, mainly on stairs.
+- Fixed a null reference exception when a bot is dismissed while being told to follow the player and still in the combat state.
+- Fixed Giant Spineling targeting doors after being attacked, which it shouldn't do by design. Might affect other creatures too.
+
+Fixes (unstable only):
+- Fixes and improvements to colony modules.
+- Fixed items in vending machines not being displayed as "out of stock" client-side, fixed money getting deducted when trying to buy an item that's out of stock.
+- Fixed crashing on startup if the selected language cannot be found (e.g. if you've previously used a modded language and no longer have that mod installed).
+- Fixed chat messages about money transfer votes not showing up.
+- Fixed voting not finishing until the timer has elapsed even if there's already enough yes/no votes.
+- Fixed vitality multipliers not working (e.g. damage to the head not having a bigger effect than damage to the limbs).
+- Fixed "create level object" crashing the level editor.
+- Fixed crashing when trying to save a sub with whitespace at the end of the name.
+- Fixed sub editor's tag picker not working.
+- Fixed event sprites not appearing.
+- Fixed submarine switching not working.
+- Fixed crew list and chatbox refusing to stay closed.
+- Fixed character names being in upper case when using the health scanner.
+- Fixed explosive coilgun ammo not being sold by armory merchants.
+- Fixed physicorium not being sold at research outposts.
+- Fixed issues with store interface displaying incorrect information.
+- Fixed issues with buying items in multiplayer campaign.
+- Fixed issues with generating daily specials and requested goods for campaign stores.
+- Fixed double title in mod download prompt.
+- Fixed mod transfer skipping item assemblies.
+- Waypoint fixes on new colony modules.
+
+---------------------------------------------------------------------------------------------------------
 v0.17.5.0
 ---------------------------------------------------------------------------------------------------------
 

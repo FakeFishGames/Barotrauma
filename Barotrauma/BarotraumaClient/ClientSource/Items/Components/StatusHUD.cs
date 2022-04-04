@@ -320,7 +320,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            GUI.DrawString(spriteBatch, hudPos, texts[0], textColors[0] * alpha, Color.Black * 0.7f * alpha, 2, GUIStyle.SubHeadingFont);
+            GUI.DrawString(spriteBatch, hudPos, texts[0].Value, textColors[0] * alpha, Color.Black * 0.7f * alpha, 2, GUIStyle.SubHeadingFont, ForceUpperCase.No);
             hudPos.X += 5.0f;
             hudPos.Y += 24.0f * GameSettings.CurrentConfig.Graphics.TextScale;
 

@@ -282,7 +282,7 @@ namespace Barotrauma
         private void PlaceObject(LevelObjectPrefab prefab, SpawnPosition spawnPosition, Level level, Level.Cave parentCave = null)
         {
             float rotation = 0.0f;
-            if (prefab.AlignWithSurface && spawnPosition.Normal.LengthSquared() > 0.001f && spawnPosition != null)
+            if (prefab.AlignWithSurface && spawnPosition != null && spawnPosition.Normal.LengthSquared() > 0.001f)
             {
                 rotation = MathUtils.VectorToAngle(new Vector2(spawnPosition.Normal.Y, spawnPosition.Normal.X));
             }

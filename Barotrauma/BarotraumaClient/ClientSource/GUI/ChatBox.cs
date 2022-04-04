@@ -25,11 +25,13 @@ namespace Barotrauma
             get { return _toggleOpen; }
             set
             {
-                _toggleOpen = value;
-                if (value) hideableElements.Visible = true;
+                _toggleOpen = PreferChatBoxOpen = value;
+                if (value) { hideableElements.Visible = true; }
             }
         }
         private float openState;
+
+        public static bool PreferChatBoxOpen = true;
 
         public bool CloseAfterMessageSent;
 
@@ -99,6 +101,7 @@ namespace Barotrauma
             var channelSettingsContent = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), channelSettingsFrame.RectTransform, Anchor.Center), isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
                 Stretch = true,
+                CanBeFocused = true,
                 RelativeSpacing = 0.01f
             };
 
@@ -119,7 +122,7 @@ namespace Barotrauma
                 Color = new Color(51, 59, 46),
                 SpriteEffects = Microsoft.Xna.Framework.Graphics.SpriteEffects.FlipHorizontally
             };
-            arrowIcon.HoverColor = arrowIcon.PressedColor = arrowIcon.PressedColor = arrowIcon.Color;
+            arrowIcon.HoverColor = arrowIcon.PressedColor = arrowIcon.SelectedColor = arrowIcon.Color;
 
             channelText = new GUITextBox(new RectTransform(new Vector2(0.25f, 0.8f), channelSettingsContent.RectTransform), style: "DigitalFrameLight", textAlignment: Alignment.Center, font: GUIStyle.DigitalFont)
             {
@@ -265,7 +268,7 @@ namespace Barotrauma
             };
 
             showNewMessagesButton.Visible = false;
-            ToggleOpen = GameSettings.CurrentConfig.ChatOpen;
+            ToggleOpen = PreferChatBoxOpen = GameSettings.CurrentConfig.ChatOpen;
         }
 
         public bool TypingChatMessage(GUITextBox textBox, string text)

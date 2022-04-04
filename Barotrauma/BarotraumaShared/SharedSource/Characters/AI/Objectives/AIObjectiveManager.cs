@@ -630,7 +630,7 @@ namespace Barotrauma
         public bool IsActiveObjective<T>() where T : AIObjective => GetActiveObjective() is T;
 
         public AIObjective GetActiveObjective() => CurrentObjective?.GetActiveObjective();
-        public T GetOrder<T>() where T : AIObjective => CurrentOrders.FirstOrDefault(o => o.Objective is T).Objective as T;
+        public T GetOrder<T>() where T : AIObjective => CurrentOrders.FirstOrDefault(o => o.Objective is T)?.Objective as T;
 
         /// <summary>
         /// Returns the last active objective of the specific type.

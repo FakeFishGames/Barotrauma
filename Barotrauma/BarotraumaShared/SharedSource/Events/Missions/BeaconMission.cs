@@ -172,7 +172,7 @@ namespace Barotrauma
                     ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
                 }
                 GiveReward();
-                if (level?.LevelData != null)
+                if (level.LevelData != null)
                 {
                     level.LevelData.IsBeaconActive = true;
                 }

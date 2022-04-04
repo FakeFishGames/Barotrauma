@@ -24,6 +24,8 @@ namespace Barotrauma
         public bool IsAiming => wasAiming;
         public bool IsAimingMelee => wasAimingMelee;
 
+        protected bool Aiming => aiming || aimingMelee;
+
         public float ArmLength => upperArmLength + forearmLength;
 
         public abstract GroundedMovementParams WalkParams { get; set; }

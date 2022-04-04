@@ -7,7 +7,7 @@ namespace Barotrauma
 {
     partial class CargoManager
     {
-        public void SellBackPurchasedItems(Identifier storeIdentifier, List<PurchasedItem> itemsToSell, Client client = null)
+        public void SellBackPurchasedItems(Identifier storeIdentifier, List<PurchasedItem> itemsToSell, Client client)
         {
             // Check all the prices before starting the transaction to make sure the modifiers stay the same for the whole transaction
             var buyValues = GetBuyValuesAtCurrentLocation(storeIdentifier, itemsToSell.Select(i => i.ItemPrefab));
@@ -40,7 +40,7 @@ namespace Barotrauma
             }
         }
 
-        public void SellItems(Identifier storeIdentifier, List<SoldItem> itemsToSell, Client client)
+        public void SellItems(Identifier storeIdentifier, List<SoldItem> itemsToSell)
         {
             var store = Location.GetStore(storeIdentifier);
             if (store == null) { return; }

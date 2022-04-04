@@ -376,19 +376,17 @@ namespace Barotrauma
             {
                 Vector2 diff = currentPath.CurrentNode.WorldPosition - pos;
                 bool nextLadderSameAsCurrent = IsNextLadderSameAsCurrent;
-                if (nextLadderSameAsCurrent)
+                if (nextLadderSameAsCurrent || currentLadder != null && nextLadder != null && Math.Abs(currentLadder.Item.Position.X - nextLadder.Item.Position.X) < 50)
                 {
                     //climbing ladders -> don't move horizontally
                     diff.X = 0.0f;
                 }
                 //at the same height as the waypoint
-                if (Math.Abs(collider.SimPosition.Y - currentPath.CurrentNode.SimPosition.Y) < (collider.height / 2 + collider.radius) * 1.25f)
+                float heightDiff = Math.Abs(collider.SimPosition.Y - currentPath.CurrentNode.SimPosition.Y);
+                float colliderSize = (collider.height / 2 + collider.radius) * 1.25f;
+                if (heightDiff < colliderSize)
                 {
                     float heightFromFloor = character.AnimController.GetHeightFromFloor();
-                    if (heightFromFloor <= 0.0f)
-                    {
-                        diff.Y = Math.Max(diff.Y, 100);
-                    }
                     // We need some margin, because if a hatch has closed, it's possible that the height from floor is slightly negative.
                     bool isAboveFloor = heightFromFloor > -0.1f;
                     // If the next waypoint is horizontally far, we don't want to keep holding the ladders
@@ -402,7 +400,10 @@ namespace Barotrauma
                         // Try to change the ladder (hatches between two submarines)
                         if (character.SelectedConstruction != nextLadder.Item && nextLadder.Item.IsInsideTrigger(character.WorldPosition))
                         {
-                            nextLadder.Item.TryInteract(character, forceSelectKey: true);
+                            if (nextLadder.Item.TryInteract(character, forceSelectKey: true))
+                            {
+                                NextNode(!doorsChecked);
+                            }
                         }
                     }
                     if (isAboveFloor || nextLadderSameAsCurrent)
@@ -461,12 +462,16 @@ namespace Barotrauma
                 bool isTargetTooLow = currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y;
                 var door = currentPath.CurrentNode.ConnectedDoor;
                 float margin = MathHelper.Lerp(1, 10, MathHelper.Clamp(Math.Abs(velocity.X) / 5, 0, 1));
-                if (currentPath.CurrentNode.Stairs != null && currentPath.NextNode?.Stairs == null)
+                if (currentPath.CurrentNode.Stairs != null)
                 {
-                    margin = 1;
-                    if (currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + character.AnimController.ColliderHeightFromFloor * 0.25f)
+                    bool isNextNodeInSameStairs = currentPath.NextNode?.Stairs == currentPath.CurrentNode.Stairs;
+                    if (!isNextNodeInSameStairs)
                     {
-                        isTargetTooLow = true;
+                        margin = 1;
+                        if (currentPath.CurrentNode.SimPosition.Y < colliderBottom.Y + character.AnimController.ColliderHeightFromFloor * 0.25f)
+                        {
+                            isTargetTooLow = true;
+                        }
                     }
                 }
                 float targetDistance = Math.Max(colliderSize.X / 2 * margin, minWidth / 2);

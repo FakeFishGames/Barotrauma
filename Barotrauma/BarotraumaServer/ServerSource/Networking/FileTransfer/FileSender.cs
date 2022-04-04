@@ -173,13 +173,14 @@ namespace Barotrauma.Networking
             }
 
             OnStarted(transfer);
+            GameMain.Server.LastClientListUpdateID++;
 
             return transfer;
         }
 
         public void Update(float deltaTime)
         {
-            activeTransfers.RemoveAll(t => t.Connection.Status != NetworkConnectionStatus.Connected);
+            int numRemoved = activeTransfers.RemoveAll(t => t.Connection.Status != NetworkConnectionStatus.Connected);
 
             var endedTransfers = activeTransfers.FindAll(t => 
                 t.Connection.Status != NetworkConnectionStatus.Connected ||
@@ -201,6 +202,11 @@ namespace Barotrauma.Networking
                     if (transfer.WaitTimer > 0.0f) { break; }
                     Send(transfer);
                 }
+            }
+
+            if (numRemoved > 0 || endedTransfers.Count > 0)
+            {
+                GameMain.Server.LastClientListUpdateID++;
             }
         }
 

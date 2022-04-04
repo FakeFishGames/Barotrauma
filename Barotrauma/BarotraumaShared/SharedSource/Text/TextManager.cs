@@ -57,6 +57,20 @@ namespace Barotrauma
             return isCJK.IsMatch(text);
         }
 
+        /// <summary>
+        /// Check if the currently selected language is available, and switch to English if not
+        /// </summary>
+        public static void VerifyLanguageAvailable()
+        {
+            if (!TextPacks.ContainsKey(GameSettings.CurrentConfig.Language))
+            {
+                DebugConsole.ThrowError($"Could not find the language \"{GameSettings.CurrentConfig.Language}\". Trying to switch to English...");
+                var config = GameSettings.CurrentConfig;
+                config.Language = "English".ToLanguageIdentifier();;
+                GameSettings.SetCurrentConfig(config);
+            }
+        }
+
         public static bool ContainsTag(string tag)
         {
             return ContainsTag(tag.ToIdentifier());

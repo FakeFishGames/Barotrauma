@@ -156,6 +156,19 @@ namespace Barotrauma
                 return -1;
             }
 
+            public static void DisableMods(IReadOnlyCollection<ContentPackage> mods)
+            {
+                if (Core != null && mods.Contains(Core))
+                {
+                    var newCore = ContentPackageManager.CorePackages.FirstOrDefault(p => !mods.Contains(p));
+                    if (newCore != null)
+                    {
+                        SetCore(newCore);
+                    }
+                }
+                SetRegular(Regular.Where(p => !mods.Contains(p)).ToArray());
+            }
+            
             public static void DisableRemovedMods()
             {
                 if (Core != null && !ContentPackageManager.CorePackages.Contains(Core))

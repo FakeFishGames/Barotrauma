@@ -95,14 +95,21 @@ namespace Barotrauma
             // Construct the GUI elements
             //----------------------------------------------------------------------------------
 
-            GUILayoutGroup background = new GUILayoutGroup(new RectTransform(Vector2.One, RectTransform, Anchor.Center));
+            GUILayoutGroup background = new GUILayoutGroup(new RectTransform(Vector2.One, RectTransform, Anchor.Center))
+            {
+                Stretch = true
+            };
 
+            Point listSize = estimatedSize;
             if (hasHeader)
             {
-                HeaderLabel = new GUITextBlock(new RectTransform(new Vector2(1f, 0.2f), background.RectTransform), header, font: headerFont) { Padding = headerPadding };
+                Point sz = Point.Zero;
+                InflateSize(ref sz, header, headerFont);
+                listSize.Y -= sz.Y;
+                HeaderLabel = new GUITextBlock(new RectTransform(sz, background.RectTransform), header, font: headerFont) { Padding = headerPadding };
             }
 
-            GUIListBox optionList = new GUIListBox(new RectTransform(new Vector2(1f, hasHeader ? 0.8f : 1f), background.RectTransform), style: null)
+            GUIListBox optionList = new GUIListBox(new RectTransform(listSize, background.RectTransform), style: null)
             {
                 AutoHideScrollBar = false,
                 ScrollBarVisible = false,

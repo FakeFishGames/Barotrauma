@@ -95,23 +95,10 @@ namespace Barotrauma
 
         partial void InitProjSpecific();
 
-        private GameSession(SubmarineInfo submarineInfo, List<SubmarineInfo>? ownedSubmarines = null)
+        private GameSession(SubmarineInfo submarineInfo)
         {
             InitProjSpecific();
             SubmarineInfo = submarineInfo;
-
-#if CLIENT
-            if (ownedSubmarines == null && GameMode is MultiPlayerCampaign && GameMain.NetLobbyScreen.ServerOwnedSubmarines != null)
-            {
-                ownedSubmarines = GameMain.NetLobbyScreen.ServerOwnedSubmarines;
-            }
-#endif
-
-            OwnedSubmarines = ownedSubmarines ?? new List<SubmarineInfo>();
-            if (!OwnedSubmarines.Any(s => s.Name == submarineInfo.Name))
-            {
-                OwnedSubmarines.Add(submarineInfo);
-            }
             GameMain.GameSession = this;
             EventManager = new EventManager();
         }
@@ -125,6 +112,7 @@ namespace Barotrauma
             this.SavePath = savePath;
             CrewManager = new CrewManager(gameModePreset.IsSinglePlayer);
             GameMode = InstantiateGameMode(gameModePreset, seed, submarineInfo, settings, missionType: missionType);
+            InitOwnedSubs(submarineInfo);
         }
 
         /// <summary>
@@ -135,12 +123,13 @@ namespace Barotrauma
         {
             CrewManager = new CrewManager(gameModePreset.IsSinglePlayer);
             GameMode = InstantiateGameMode(gameModePreset, seed, submarineInfo, CampaignSettings.Empty, missionPrefabs: missionPrefabs);
+            InitOwnedSubs(submarineInfo);
         }
 
         /// <summary>
         /// Load a game session from the specified XML document. The session will be saved to the specified path.
         /// </summary>
-        public GameSession(SubmarineInfo submarineInfo, List<SubmarineInfo> ownedSubmarines, XDocument doc, string saveFile) : this(submarineInfo, ownedSubmarines)
+        public GameSession(SubmarineInfo submarineInfo, List<SubmarineInfo> ownedSubmarines, XDocument doc, string saveFile) : this(submarineInfo)
         {
             this.SavePath = saveFile;
             GameMain.GameSession = this;
@@ -172,6 +161,16 @@ namespace Barotrauma
                         }
                         break;
                 }
+            }
+            InitOwnedSubs(submarineInfo);
+        }
+
+        private void InitOwnedSubs(SubmarineInfo submarineInfo, List<SubmarineInfo>? ownedSubmarines = null)
+        {
+            OwnedSubmarines = ownedSubmarines ?? new List<SubmarineInfo>();
+            if (submarineInfo != null && !OwnedSubmarines.Any(s => s.Name == submarineInfo.Name))
+            {
+                OwnedSubmarines.Add(submarineInfo);
             }
         }
 
@@ -295,7 +294,8 @@ namespace Barotrauma
                 Campaign!.GetWallet(client).TryDeduct(cost);
             }
             GameAnalyticsManager.AddMoneySpentEvent(cost, GameAnalyticsManager.MoneySink.SubmarineSwitch, newSubmarine.Name);
-
+            Campaign!.PendingSubmarineSwitch = newSubmarine;
+            
             return newSubmarine;
         }
 

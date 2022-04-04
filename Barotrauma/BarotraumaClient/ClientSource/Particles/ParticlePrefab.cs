@@ -271,7 +271,10 @@ namespace Barotrauma.Particles
                 StartRotationMax = StartRotationMin;
             }
 
-            if (CollisionRadius <= 0.0f) CollisionRadius = Sprites.Count > 0 ? 1 : Sprites[0].SourceRect.Width / 2.0f;
+            if (CollisionRadius <= 0.0f && UseCollision)
+            {
+                CollisionRadius = Sprites.Count > 0 ? Sprites[0].SourceRect.Width / 2.0f : 1;
+            }
         }
 
         public Vector2 CalculateEndPosition(Vector2 startPosition, Vector2 velocity)

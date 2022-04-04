@@ -40,22 +40,25 @@ namespace Barotrauma
 
         public readonly static PrefabCollection<EventSet> Prefabs = new PrefabCollection<EventSet>();
 #if CLIENT
-        private static readonly Dictionary<string, Sprite> EventSprites = new Dictionary<string, Sprite>();
-
         public static Sprite GetEventSprite(string identifier)
         {
             if (string.IsNullOrWhiteSpace(identifier)) { return null; }
 
-            foreach (var (key, value) in EventSprites)
+            if (EventSprite.Prefabs.TryGet(identifier.ToIdentifier(), out EventSprite sprite))
             {
-                if (key.Equals(identifier, StringComparison.OrdinalIgnoreCase)) { return value; }
+                return sprite.Sprite;
             }
 
+#if DEBUG || UNSTABLE
+            DebugConsole.ThrowError($"Could not find the event sprite \"{identifier}\"");
+#else
+            DebugConsole.AddWarning($"Could not find the event sprite \"{identifier}\"");
+#endif
             return null;
         }
 #endif
 
-        public static List<EventPrefab> GetAllEventPrefabs()
+            public static List<EventPrefab> GetAllEventPrefabs()
         {
             List<EventPrefab> eventPrefabs = EventPrefab.Prefabs.ToList();
             foreach (var eventSet in Prefabs)

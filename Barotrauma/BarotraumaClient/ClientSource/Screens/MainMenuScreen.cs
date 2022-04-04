@@ -828,7 +828,6 @@ namespace Barotrauma
                                    " -playstyle " + ((PlayStyle)playstyleBanner.UserData).ToString()  +
                                    " -banafterwrongpassword " + wrongPasswordBanBox.Selected.ToString() +
                                    " -karmaenabled " + (!karmaBox.Selected).ToString() +
-                                   " -karmapreset default" +
                                    " -maxplayers " + maxPlayersBox.Text;
 
                 if (!string.IsNullOrWhiteSpace(passwordBox.Text))

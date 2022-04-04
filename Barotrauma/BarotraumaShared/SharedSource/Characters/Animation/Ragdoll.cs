@@ -1193,13 +1193,9 @@ namespace Barotrauma
                 headInWater = false;
                 inWater = false;
                 RefreshFloorY(ignoreStairs: Stairs == null);
-                if (currentHull.WaterVolume > currentHull.Volume * 0.95f)
+                if (currentHull.WaterPercentage > 0.001f)
                 {
-                    inWater = true;
-                }
-                else
-                {
-                    float waterSurface = ConvertUnits.ToSimUnits(currentHull.Surface);
+                    float waterSurface = ConvertUnits.ToSimUnits(GetSurfaceY());
                     if (targetMovement.Y < 0.0f)
                     {
                         Vector2 colliderBottom = GetColliderBottom();
@@ -1212,11 +1208,8 @@ namespace Barotrauma
                             if (lowerHull != null) floorY = ConvertUnits.ToSimUnits(lowerHull.Rect.Y - lowerHull.Rect.Height);
                         }
                     }
-                    float standHeight =
-                        HeadPosition.HasValue ? HeadPosition.Value :
-                        TorsoPosition.HasValue ? TorsoPosition.Value :
-                        Collider.GetMaxExtent() * 0.5f;
-                    if (Collider.SimPosition.Y < waterSurface && waterSurface - floorY > standHeight * 0.95f)
+                    float standHeight = HeadPosition ?? TorsoPosition ?? Collider.GetMaxExtent() * 0.5f;
+                    if (Collider.SimPosition.Y < waterSurface && waterSurface - floorY > standHeight * 0.8f)
                     {
                         inWater = true;
                     }
@@ -1521,7 +1514,6 @@ namespace Barotrauma
             }
         }
 
-
         private float GetFloorY(Vector2 simPosition, bool ignoreStairs = false)
         {
             onGround = false;
@@ -1638,6 +1630,51 @@ namespace Barotrauma
             {
                 return rayStart.Y + (rayEnd.Y - rayStart.Y) * closestFraction;
             }
+        }
+
+        public float GetSurfaceY()
+        {
+            //check both hulls: the hull whose coordinate space the ragdoll is in, and the hull whose bounds the character's origin actually is inside
+            if (currentHull == null || character.CurrentHull == null)
+            {
+                return float.PositiveInfinity;
+            }
+            
+            float surfacePos = currentHull.Surface;
+            float surfaceThreshold = ConvertUnits.ToDisplayUnits(Collider.SimPosition.Y + 1.0f);
+            //if the hull is almost full of water, check if there's a water-filled hull above it
+            //and use its water surface instead of the current hull's 
+            if (currentHull.Rect.Y - currentHull.Surface < 5.0f)
+            {
+                GetSurfacePos(currentHull, ref surfacePos);
+                void GetSurfacePos(Hull hull, ref float prevSurfacePos)
+                {
+                    if (prevSurfacePos > surfaceThreshold) { return; }
+                    foreach (Gap gap in hull.ConnectedGaps)
+                    {
+                        if (gap.IsHorizontal || gap.Open <= 0.0f || gap.WorldPosition.Y < hull.WorldPosition.Y) { continue; }
+                        if (Collider.SimPosition.X < ConvertUnits.ToSimUnits(gap.Rect.X) || Collider.SimPosition.X > ConvertUnits.ToSimUnits(gap.Rect.Right)) { continue; }
+
+                        //if the gap is above us and leads outside, there's no surface to limit the movement
+                        if (!gap.IsRoomToRoom && gap.Position.Y > hull.Position.Y)
+                        {
+                            prevSurfacePos += 100000.0f;
+                            return;
+                        }
+
+                        foreach (var linkedTo in gap.linkedTo)
+                        {
+                            if (linkedTo is Hull otherHull && otherHull != hull && otherHull != currentHull)
+                            {
+                                prevSurfacePos = Math.Max(surfacePos, otherHull.Surface);
+                                GetSurfacePos(otherHull, ref prevSurfacePos);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            return surfacePos;            
         }
 
         public void SetPosition(Vector2 simPosition, bool lerp = false, bool ignorePlatforms = true, bool forceMainLimbToCollider = false, bool detachProjectiles = true)

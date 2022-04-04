@@ -1899,44 +1899,6 @@ namespace Barotrauma.Networking
             
             if (gameStarted)
             {
-                string ownedSubmarineIndexes = inc.ReadString();
-                if (ownedSubmarineIndexes != string.Empty)
-                {
-                    string[] ownedIndexes = ownedSubmarineIndexes.Split(';');
-
-                    if (GameMain.GameSession != null)
-                    {
-                        GameMain.GameSession.OwnedSubmarines = new List<SubmarineInfo>();
-                        for (int i = 0; i < ownedIndexes.Length; i++)
-                        {
-                            if (int.TryParse(ownedIndexes[i], out int index))
-                            {
-                                SubmarineInfo sub = GameMain.Client.ServerSubmarines[index];
-                                if (GameMain.NetLobbyScreen.CheckIfCampaignSubMatches(sub, NetLobbyScreen.SubmarineDeliveryData.Owned))
-                                {
-                                    GameMain.GameSession.OwnedSubmarines.Add(sub);
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        GameMain.NetLobbyScreen.ServerOwnedSubmarines = new List<SubmarineInfo>();
-                        for (int i = 0; i < ownedIndexes.Length; i++)
-                        {
-                            int index;
-                            if (int.TryParse(ownedIndexes[i], out index))
-                            {
-                                SubmarineInfo sub = GameMain.Client.ServerSubmarines[index];
-                                if (GameMain.NetLobbyScreen.CheckIfCampaignSubMatches(sub, NetLobbyScreen.SubmarineDeliveryData.Owned))
-                                {
-                                    GameMain.NetLobbyScreen.ServerOwnedSubmarines.Add(sub);
-                                }
-                            }
-                        }
-                    }
-                }
-
                 if (Screen.Selected != GameMain.GameScreen)
                 {
                     new GUIMessageBox(TextManager.Get("PleaseWait"), TextManager.Get(allowSpectating ? "RoundRunningSpectateEnabled" : "RoundRunningSpectateDisabled"));
@@ -1953,37 +1915,8 @@ namespace Barotrauma.Networking
             int clientCount = inc.ReadByte();
             for (int i = 0; i < clientCount; i++)
             {
-                byte id             = inc.ReadByte();
-                UInt64 steamId      = inc.ReadUInt64();
-                UInt16 nameId       = inc.ReadUInt16();
-                string name         = inc.ReadString();
-                Identifier preferredJob = inc.ReadIdentifier();
-                byte preferredTeam  = inc.ReadByte();
-                UInt16 characterID  = inc.ReadUInt16();
-                float karma         = inc.ReadSingle();
-                bool muted          = inc.ReadBoolean();
-                bool inGame         = inc.ReadBoolean();
-                bool hasPermissions = inc.ReadBoolean();
-                bool isOwner        = inc.ReadBoolean();
-                bool allowKicking   = inc.ReadBoolean() || IsServerOwner;
+                tempClients.Add(INetSerializableStruct.Read<TempClient>(inc));
                 inc.ReadPadBits();
-
-                tempClients.Add(new TempClient
-                {
-                    ID = id,
-                    NameID = nameId,
-                    SteamID = steamId,
-                    Name = name,
-                    PreferredJob = preferredJob,
-                    PreferredTeam = (CharacterTeamType)preferredTeam,
-                    CharacterID = characterID,
-                    Karma = karma,
-                    Muted = muted,
-                    InGame = inGame,
-                    HasPermissions = hasPermissions,
-                    IsOwner = isOwner,
-                    AllowKicking = allowKicking
-                });
             }
 
             if (NetIdUtils.IdMoreRecent(listId, LastClientListUpdateID))
@@ -2018,6 +1951,7 @@ namespace Barotrauma.Networking
                     existingClient.InGame = tc.InGame;
                     existingClient.IsOwner = tc.IsOwner;
                     existingClient.AllowKicking = tc.AllowKicking;
+                    existingClient.IsDownloading = tc.IsDownloading;
                     GameMain.NetLobbyScreen.SetPlayerNameAndJobPreference(existingClient);
                     if (Screen.Selected != GameMain.NetLobbyScreen && tc.CharacterID > 0)
                     {
@@ -2584,7 +2518,7 @@ namespace Barotrauma.Networking
             switch (transfer.FileType)
             {
                 case FileTransferType.Submarine:
-                    new GUIMessageBox(TextManager.Get("ServerDownloadFinished"), TextManager.GetWithVariable("FileDownloadedNotification", "[filename]", transfer.FileName));
+                    //new GUIMessageBox(TextManager.Get("ServerDownloadFinished"), TextManager.GetWithVariable("FileDownloadedNotification", "[filename]", transfer.FileName));
                     var newSub = new SubmarineInfo(transfer.FilePath);
                     if (newSub.IsFileCorrupted) { return; }
 
@@ -2644,7 +2578,6 @@ namespace Barotrauma.Networking
                     NetLobbyScreen.FailedSubInfo failedOwnedSub = GameMain.NetLobbyScreen.FailedOwnedSubs.Find(s => s.Name == newSub.Name && s.Hash == newSub.MD5Hash.StringRepresentation);
                     if (failedOwnedSub != default)
                     {
-                        GameMain.NetLobbyScreen.ServerOwnedSubmarines.Add(newSub);
                         GameMain.NetLobbyScreen.FailedOwnedSubs.Remove(failedOwnedSub);
                     }
 

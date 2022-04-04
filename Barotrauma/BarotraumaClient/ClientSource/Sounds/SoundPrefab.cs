@@ -121,6 +121,7 @@ namespace Barotrauma
                     }
                     if (prefabSelectors.ContainsKey(p.ElementName)) { prefabSelectors[p.ElementName].RemoveIfContains(p); }
                     UpdateSoundsWithTag();
+                    SoundPlayer.DisposeDisabledMusic();
                 },
                 onSort: () =>
                 {

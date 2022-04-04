@@ -77,7 +77,7 @@ namespace Barotrauma
             get { return base.Rect; }
             set
             {
-                cachedVisibleSize = null;
+                cachedVisibleExtents = null;
                 base.Rect = value;
             }
         }
@@ -213,11 +213,11 @@ namespace Barotrauma
             UpdateSpriteStates(0.0f);
         }
 
-        private Vector2? cachedVisibleSize;
+        private Rectangle? cachedVisibleExtents;
 
         public void ResetCachedVisibleSize()
         {
-            cachedVisibleSize = null;
+            cachedVisibleExtents = null;
         }
 
         public override bool IsVisible(Rectangle worldView)
@@ -234,28 +234,39 @@ namespace Barotrauma
                 return false;
             }
 
-            Vector2 size;
-            if (cachedVisibleSize.HasValue)
+            Rectangle extents;
+            if (cachedVisibleExtents.HasValue)
             {
-                size = cachedVisibleSize.Value;
+                extents = cachedVisibleExtents.Value;
             }
             else
             {
-                float padding = 100.0f;
-                size = new Vector2(rect.Width + padding, rect.Height + padding);
+                int padding = 100;
+
+                Vector2 min = new Vector2(-rect.Width / 2 - padding, -rect.Height / 2 - padding);
+                Vector2 max = -min;
+
                 foreach (IDrawableComponent drawable in drawableComponents)
                 {
-                    size.X = Math.Max(drawable.DrawSize.X, size.X);
-                    size.Y = Math.Max(drawable.DrawSize.Y, size.Y);
+                    min.X = Math.Min(min.X, -drawable.DrawSize.X / 2);
+                    min.Y = Math.Min(min.Y, -drawable.DrawSize.Y / 2);
+                    max.X = Math.Max(max.X, drawable.DrawSize.X / 2);
+                    max.Y = Math.Max(max.Y, drawable.DrawSize.Y / 2);
                 }
-                size *= 0.5f;
-                cachedVisibleSize = size;
+                foreach (DecorativeSprite decorativeSprite in Prefab.DecorativeSprites)
+                {
+                    float scale = decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale;
+                    min.X = Math.Min(-decorativeSprite.Sprite.size.X * decorativeSprite.Sprite.RelativeOrigin.X * scale, min.X);
+                    min.Y = Math.Min(-decorativeSprite.Sprite.size.Y * (1.0f - decorativeSprite.Sprite.RelativeOrigin.Y) * scale, min.Y);
+                    max.X = Math.Max(decorativeSprite.Sprite.size.X * (1.0f - decorativeSprite.Sprite.RelativeOrigin.X) * scale, max.X);
+                    max.Y = Math.Max(decorativeSprite.Sprite.size.Y * decorativeSprite.Sprite.RelativeOrigin.Y * scale, max.Y);
+                }
+                cachedVisibleExtents = extents = new Rectangle(min.ToPoint(), max.ToPoint());
             }
 
-            //cache world position so we don't need to calculate it 4 times
             Vector2 worldPosition = WorldPosition;
-            if (worldPosition.X - size.X > worldView.Right || worldPosition.X + size.X < worldView.X) return false;
-            if (worldPosition.Y + size.Y < worldView.Y - worldView.Height || worldPosition.Y - size.Y > worldView.Y) return false;
+            if (worldPosition.X + extents.X > worldView.Right || worldPosition.X + extents.Width < worldView.X) { return false; }
+            if (worldPosition.Y + extents.Height < worldView.Y - worldView.Height || worldPosition.Y + extents.Y > worldView.Y) { return false; }
 
             return true;
         }
@@ -934,8 +945,8 @@ namespace Barotrauma
             {
                 OnSelected = (component, userData) =>
                 {
-                    string text = userData as string ?? "";
-                    AddTag(text);
+                    if (!(userData is Identifier)) { return true; }
+                    AddTag((Identifier)userData);
                     textBox.Text = Tags;
                     msgBox.Close();
                     return true;

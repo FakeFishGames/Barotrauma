@@ -58,10 +58,13 @@ namespace Barotrauma
                 cam.Position = Submarine.MainSub.WorldPosition;
                 cam.UpdateTransform(true);
             }
+            GameMain.GameSession?.CrewManager?.AutoShowCrewList();
 #endif
 
             foreach (MapEntity entity in MapEntity.mapEntityList)
+            {
                 entity.IsHighlighted = false;
+            }
 
 #if RUN_PHYSICS_IN_SEPARATE_THREAD
             var physicsThread = new Thread(ExecutePhysics)
@@ -78,6 +81,10 @@ namespace Barotrauma
             base.Deselect();
 
 #if CLIENT
+            var config = GameSettings.CurrentConfig;
+            config.CrewMenuOpen = CrewManager.PreferCrewMenuOpen;
+            config.ChatOpen = ChatBox.PreferChatBoxOpen;
+            GameSettings.SetCurrentConfig(config);
             GameSettings.SaveCurrentConfig();
             GameMain.SoundManager.SetCategoryMuffle("default", false);
             GUI.ClearMessages();

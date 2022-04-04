@@ -15,7 +15,6 @@ namespace Barotrauma
         public static readonly PrefabCollection<ItemAssemblyPrefab> Prefabs = new PrefabCollection<ItemAssemblyPrefab>();
 
         public static readonly string VanillaSaveFolder = Path.Combine("Content", "Items", "Assemblies");
-        public static readonly string SaveFolder = "ItemAssemblies";
 
         private readonly XElement configElement;
 

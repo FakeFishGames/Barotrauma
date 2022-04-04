@@ -1,10 +1,15 @@
 #nullable enable
+using System;
+using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 
 namespace Barotrauma.Steam
 {
     sealed class ImmutableWorkshopMenu : WorkshopMenu
     {
+        private readonly GUIListBox regularList;
+        private readonly GUITextBox filterBox;
+        
         public ImmutableWorkshopMenu(GUIFrame parent) : base(parent)
         {
             var mainLayout
@@ -20,8 +25,8 @@ namespace Barotrauma.Steam
             coreBox.TextBlock.Padding = new Vector4(10.0f, 0.0f, 10.0f, 0.0f);
             
             Label(mainLayout, TextManager.Get("enabledregular"), GUIStyle.SubHeadingFont);
-            var regularList = new GUIListBox(
-                NewItemRectT(mainLayout, heightScale: 12f))
+            regularList = new GUIListBox(
+                NewItemRectT(mainLayout, heightScale: 11f))
             {
                 OnSelected = (component, o) => false,
                 HoverCursor = CursorState.Default
@@ -31,11 +36,22 @@ namespace Barotrauma.Steam
                 var regularBox = new GUITextBlock(
                     new RectTransform((1.0f, 0.07f), regularList.Content.RectTransform), text: p.Name)
                 {
-                    CanBeFocused = false
+                    CanBeFocused = false,
+                    UserData = p
                 };
             }
+            filterBox = CreateSearchBox(mainLayout, width: 1.0f);
 
             Label(mainLayout, TextManager.Get("CannotChangeMods"), GUIStyle.Font);
+        }
+
+        protected override void UpdateModListItemVisibility()
+        {
+            string str = filterBox.Text;
+            regularList.Content.Children
+                .ForEach(c => c.Visible = str.IsNullOrWhiteSpace()
+                                          || (c.UserData is ContentPackage p
+                                              && p.Name.Contains(str, StringComparison.OrdinalIgnoreCase)));
         }
     }
 }

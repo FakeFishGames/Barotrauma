@@ -316,6 +316,7 @@ namespace Barotrauma
             }
             if (Text == text) { return false; }
             textBlock.Text = text;
+            ClearSelection();
             if (Text == null) textBlock.Text = "";
             if (Text != "" && !Wrap)
             {
@@ -808,10 +809,10 @@ namespace Barotrauma
         {
             if (selectedText.Length == 0) { return; }
 
-            selectionStartIndex = Math.Max(0, Math.Min(selectionEndIndex, Math.Min(selectionStartIndex, Text.Length - 1)));
-            int selectionLength = Math.Min(Text.Length - selectionStartIndex, selectedText.Length);
-            SetText(Text.Remove(selectionStartIndex, selectionLength));
-            CaretIndex = Math.Min(Text.Length, selectionStartIndex);
+            int targetCaretIndex = Math.Max(0, Math.Min(selectionEndIndex, Math.Min(selectionStartIndex, Text.Length - 1)));
+            int selectionLength = Math.Min(Text.Length - targetCaretIndex, selectedText.Length);
+            SetText(Text.Remove(targetCaretIndex, selectionLength));
+            CaretIndex = targetCaretIndex;
 
             ClearSelection();
             OnTextChanged?.Invoke(this, Text);

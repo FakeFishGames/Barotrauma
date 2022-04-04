@@ -556,6 +556,12 @@ namespace Barotrauma
 
 #if CLIENT
                 CharacterHealth.SetHealthBarVisibility(value == null);
+#elif SERVER
+                if (value is { IsDead: true, Wallet: { Balance: var balance } grabbedWallet })
+                {
+                    Wallet.Give(balance);
+                    grabbedWallet.Deduct(balance);
+                }
 #endif
             }
         }
@@ -1180,7 +1186,7 @@ namespace Barotrauma
                 CharacterHealth = new CharacterHealth(selectedHealthElement, this, limbHealthElement);
             }
 
-            if (Params.Husk)
+            if (Params.Husk && speciesName != "husk")
             {
                 // Get the non husked name and find the ragdoll with it
                 var matchingAffliction = AfflictionPrefab.List
@@ -1764,26 +1770,44 @@ namespace Barotrauma
             }
 
             if (!aiControlled &&
-                AnimController.OnGround &&
-                !AnimController.InWater &&
                 AnimController.Anim != AnimController.Animation.UsingConstruction &&
                 AnimController.Anim != AnimController.Animation.CPR &&
-                (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient || Controlled == this))
+                (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient || Controlled == this) &&
+                (AnimController.OnGround && !AnimController.InWater || IsKeyDown(InputType.Aim) && HeldItems.None(i => i.RequireAimToUse)))
             {
-                //Limb head = AnimController.GetLimb(LimbType.Head);
-                // Values lower than this seem to cause constantious flipping when the mouse is near the player and the player is running, because the root collider moves after flipping.
-                float followMargin = 40;
                 if (dontFollowCursor)
                 {
                     AnimController.TargetDir = Direction.Right;
                 }
-                else if (cursorPosition.X < AnimController.Collider.Position.X - followMargin)
+                else
                 {
-                    AnimController.TargetDir = Direction.Left;
-                }
-                else if (cursorPosition.X > AnimController.Collider.Position.X + followMargin)
-                {
-                    AnimController.TargetDir = Direction.Right;
+                    // Values lower than this seem to cause constantious flipping when the mouse is near the player and the player is running, because the root collider moves after flipping.
+                    float followMargin = 40;
+                    Vector2 diff = CursorPosition - AnimController.Collider.Position;
+                    if (InWater)
+                    {
+                        followMargin = 80;
+                        diff = Vector2.Transform(diff, Matrix.CreateRotationZ(-AnimController.Collider.Rotation));
+                        if (diff.X < followMargin)
+                        {
+                            AnimController.TargetDir = Direction.Left;
+                        }
+                        else if (diff.X > followMargin)
+                        {
+                            AnimController.TargetDir = Direction.Right;
+                        }
+                    }
+                    else
+                    {
+                        if (CursorPosition.X < AnimController.Collider.Position.X - followMargin)
+                        {
+                            AnimController.TargetDir = Direction.Left;
+                        }
+                        else if (CursorPosition.X > AnimController.Collider.Position.X + followMargin)
+                        {
+                            AnimController.TargetDir = Direction.Right;
+                        }
+                    }
                 }
             }
 

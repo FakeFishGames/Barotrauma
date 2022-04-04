@@ -305,10 +305,10 @@ namespace Barotrauma
         public static LocalizedString GetMoneyTransferVoteResultMessage(Client from, Client to, int transferAmount, int yesVoteCount, int noVoteCount, bool votePassed)
         {
             LocalizedString result = string.Empty;
-            if (from != null)
+            if (from == null && to != null)
             {
                 result = TextManager.GetWithVariables(votePassed ? "crewwallet.banktoplayer.votepassed" : "crewwallet.banktoplayer.votefailed",
-                    ("[playername]", from.Name),
+                    ("[playername]", to.Name),
                     ("[amount]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", transferAmount)),
                     ("[yesvotecount]", yesVoteCount.ToString()),
                     ("[novotecount]", noVoteCount.ToString()));

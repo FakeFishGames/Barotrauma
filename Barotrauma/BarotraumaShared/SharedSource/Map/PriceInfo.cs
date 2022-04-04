@@ -89,22 +89,18 @@ namespace Barotrauma
                 {
                     backwardsCompatibleIdentifier = $"merchant{backwardsCompatibleIdentifier}";
                 }
-                string[] storeIdentifiers = childElement.GetAttributeStringArray("storeidentifiers", new string[1] { backwardsCompatibleIdentifier });
-                foreach (string id in storeIdentifiers)
-                {
-                    if (string.IsNullOrEmpty(id)) { continue; }
-                    // TODO: Add some error messages if we have defined the min or max amount while the item is not sold
-                    var priceInfo = new PriceInfo((int)(priceMultiplier * basePrice),
-                        sold,
-                        sold ? GetMinAmount(childElement, minAmount) : 0,
-                        sold ? GetMaxAmount(childElement, maxAmount) : 0,
-                        canBeSpecial,
-                        storeMinLevelDifficulty,
-                        storeBuyingMultiplier,
-                        displayNonEmpty,
-                        id);
-                    priceInfos.Add(priceInfo);
-                }
+                string storeIdentifier = childElement.GetAttributeString("storeidentifier", backwardsCompatibleIdentifier);
+                // TODO: Add some error messages if we have defined the min or max amount while the item is not sold
+                var priceInfo = new PriceInfo((int)(priceMultiplier * basePrice),
+                    sold,
+                    sold ? GetMinAmount(childElement, minAmount) : 0,
+                    sold ? GetMaxAmount(childElement, maxAmount) : 0,
+                    canBeSpecial,
+                    storeMinLevelDifficulty,
+                    storeBuyingMultiplier,
+                    displayNonEmpty,
+                    storeIdentifier);
+                priceInfos.Add(priceInfo);
             }
             bool soldElsewhere = soldByDefault && element.GetAttributeBool("soldelsewhere", element.GetAttributeBool("soldeverywhere", false));
             defaultPrice = new PriceInfo(basePrice,

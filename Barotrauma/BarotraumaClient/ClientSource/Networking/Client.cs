@@ -6,23 +6,6 @@ using System.Linq;
 
 namespace Barotrauma.Networking
 {
-    struct TempClient
-    {
-        public string Name;
-        public Identifier PreferredJob;
-        public CharacterTeamType PreferredTeam;
-        public UInt16 NameID;
-        public UInt64 SteamID;
-        public byte ID;
-        public UInt16 CharacterID;
-        public float Karma;
-        public bool Muted;
-        public bool InGame;
-        public bool HasPermissions;
-        public bool IsOwner;
-        public bool AllowKicking;
-    }
-
     partial class Client : IDisposable
     {
         public VoipSound VoipSound
@@ -49,6 +32,8 @@ namespace Barotrauma.Networking
         public bool IsOwner;
 
         public bool AllowKicking;
+
+        public bool IsDownloading;
 
         public float Karma;
 

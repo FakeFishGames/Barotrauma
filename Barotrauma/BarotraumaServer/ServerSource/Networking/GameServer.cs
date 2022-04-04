@@ -1587,25 +1587,6 @@ namespace Barotrauma.Networking
             outmsg.Write(serverSettings.AllowSpectating);
 
             c.WritePermissions(outmsg);
-
-            if (gameStarted)
-            {
-                string ownedSubmarineIndexes = string.Empty;
-                for (int i = 0; i < subList.Count; i++)
-                {
-                    if (GameMain.GameSession.OwnedSubmarines.Contains(subList[i]))
-                    {
-                        ownedSubmarineIndexes += i.ToString();
-                        ownedSubmarineIndexes += ";";
-                    }
-                }
-
-                if (ownedSubmarineIndexes.Length > 0)
-                {
-                    ownedSubmarineIndexes.Trim(';');
-                }
-                outmsg.Write(ownedSubmarineIndexes);
-            }
         }
 
         private void ClientWriteIngame(Client c)
@@ -1807,29 +1788,30 @@ namespace Barotrauma.Networking
             outmsg.Write((byte)connectedClients.Count);
             foreach (Client client in connectedClients)
             {
-                outmsg.Write(client.ID);
-                outmsg.Write(client.SteamID);
-                outmsg.Write(client.NameID);
-                outmsg.Write(client.Name);
-                outmsg.Write(client.Character?.Info?.Job != null && gameStarted ? client.Character.Info.Job.Prefab.Identifier : client.PreferredJob);
-                outmsg.Write((byte)client.PreferredTeam);
-                outmsg.Write(client.Character == null || !gameStarted ? (ushort)0 : client.Character.ID);
-                if (c.HasPermission(ClientPermissions.ServerLog))
+                var tempClientData = new TempClient
                 {
-                    outmsg.Write(client.Karma);
-                }
-                else
-                {
-                    outmsg.Write(100.0f);
-                }
-                outmsg.Write(client.Muted);
-                outmsg.Write(client.InGame);
-                outmsg.Write(client.Permissions != ClientPermissions.None);
-                outmsg.Write(client.Connection == OwnerConnection);
-                outmsg.Write(client.Connection != OwnerConnection &&
-                    !client.HasPermission(ClientPermissions.Ban) &&
-                    !client.HasPermission(ClientPermissions.Kick) &&
-                    !client.HasPermission(ClientPermissions.Unban)); //is kicking the player allowed
+                    ID = client.ID,
+                    SteamID = client.SteamID,
+                    NameID = client.NameID,
+                    Name = client.Name,
+                    PreferredJob = client.Character?.Info?.Job != null && gameStarted
+                        ? client.Character.Info.Job.Prefab.Identifier
+                        : client.PreferredJob,
+                    PreferredTeam = client.PreferredTeam,
+                    CharacterID = client.Character == null || !gameStarted ? (ushort)0 : client.Character.ID,
+                    Karma = c.HasPermission(ClientPermissions.ServerLog) ? client.Karma : 100.0f,
+                    Muted = client.Muted,
+                    InGame = client.InGame,
+                    HasPermissions = client.Permissions != ClientPermissions.None,
+                    IsOwner = client.Connection == OwnerConnection,
+                    AllowKicking = client.Connection != OwnerConnection &&
+                                   !client.HasPermission(ClientPermissions.Ban) &&
+                                   !client.HasPermission(ClientPermissions.Kick) &&
+                                   !client.HasPermission(ClientPermissions.Unban),
+                    IsDownloading = FileSender.ActiveTransfers.Any(t => t.Connection == client.Connection)
+                };
+                
+                outmsg.Write(tempClientData);
                 outmsg.WritePadBits();
             }
         }
@@ -3218,7 +3200,7 @@ namespace Barotrauma.Networking
                 {
                     Voting.ActiveVote.Finish(Voting, passed: false);
                 }
-                else if (yes / max >= serverSettings.VoteRequiredRatio)
+                else if (yes / (float)max >= serverSettings.VoteRequiredRatio)
                 {
                     Voting.ActiveVote.Finish(Voting, passed: true);
                 }                

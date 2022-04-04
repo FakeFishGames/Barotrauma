@@ -1116,7 +1116,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        GameMain.Server.SendTraitorMessage(client, string.Format("- Traitor {0} has no current objective.", "", t.Character.Name), Identifier.Empty, TraitorMessageType.Console);
+                        GameMain.Server.SendTraitorMessage(client, string.Format("- Traitor {0} has no current objective.", t.Character.Name), Identifier.Empty, TraitorMessageType.Console);
                     }
                 }
                 //GameMain.Server.SendTraitorMessage(client, "The code words are: " + traitorManager.CodeWords + ", response: " + traitorManager.CodeResponse + ".", TraitorMessageType.Console);
@@ -2234,11 +2234,6 @@ namespace Barotrauma
                     if (args.Length < 2)
                     {
                         GameMain.Server.SendConsoleMessage("Invalid parameters. The command should be formatted as \"setclientcharacter [client] [character]\". If the names consist of multiple words, you should surround them with quotation marks.", senderClient, Color.Red);
-                        return;
-                    }
-
-                    if (args.Length < 2)
-                    {
                         ThrowError("Invalid parameters. The command should be formatted as \"setclientcharacter [client] [character]\". If the names consist of multiple words, you should surround them with quotation marks.");
                         return;
                     }

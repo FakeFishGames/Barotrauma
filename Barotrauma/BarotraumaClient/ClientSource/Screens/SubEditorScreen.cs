@@ -793,7 +793,7 @@ namespace Barotrauma
 
             showEntitiesPanel.RectTransform.NonScaledSize =
                 new Point(
-                    (int)(paddedShowEntitiesPanel.RectTransform.Children.Max(c => (int)((c.GUIComponent as GUITickBox)?.TextBlock.TextSize.X ?? 0)) / paddedShowEntitiesPanel.RectTransform.RelativeSize.X),
+                    (int)Math.Max(showEntitiesPanel.RectTransform.NonScaledSize.X, paddedShowEntitiesPanel.RectTransform.Children.Max(c => (int)((c.GUIComponent as GUITickBox)?.TextBlock.TextSize.X ?? 0)) / paddedShowEntitiesPanel.RectTransform.RelativeSize.X),
                     (int)(paddedShowEntitiesPanel.RectTransform.Children.Sum(c => c.MinSize.Y) / paddedShowEntitiesPanel.RectTransform.RelativeSize.Y));
             GUITextBlock.AutoScaleAndNormalize(paddedShowEntitiesPanel.Children.Where(c => c is GUITickBox).Select(c => ((GUITickBox)c).TextBlock));
 
@@ -1700,43 +1700,12 @@ namespace Barotrauma
                 return false;
             }
 
-            string specialSavePath = "";
             if (MainSub.Info.Type != SubmarineType.Player)
             {
-                Identifier typeIdentifier = MainSub.Info.Type.ToString().ToIdentifier();
-                Type contentType = ContentFile.Types.FirstOrDefault(t
-                                       => !t.Type.IsAbstract
-                                          && t.Type.IsSubclassOf(typeof(BaseSubFile))
-                                          && t.Names.Contains(typeIdentifier))
-                                   ?.Type ??
-                                   typeof(SubmarineFile);
                 if (MainSub.Info.Type == SubmarineType.OutpostModule &&
                     MainSub.Info.OutpostModuleInfo != null)
                 {
-                    contentType = typeof(OutpostModuleFile);
                     MainSub.Info.PreviewImage = null;
-                }
-
-                if (contentType != typeof(SubmarineFile))
-                {
-#if DEBUG
-                    var existingFiles = GameMain.VanillaContent.GetFiles(contentType);
-                    if (contentType == typeof(OutpostModuleFile))
-                    {
-                        existingFiles = existingFiles.Where(f => f.Path.Value.Contains("Ruin") == MainSub.Info.OutpostModuleInfo.ModuleFlags.Contains("ruin".ToIdentifier()));
-                    }
-#else
-                    var existingFiles = ContentPackageManager.EnabledPackages.All
-                        .Where(c => c != GameMain.VanillaContent)
-                        .SelectMany(c => c.GetFiles(contentType));
-#endif
-                    specialSavePath = existingFiles.FirstOrDefault(f => 
-                        ContentPackage.PathAllowedAsLocalModFile(f.Path.Value))?.Path.Value;
-
-                    if (!string.IsNullOrEmpty(specialSavePath))
-                    {
-                        specialSavePath = Path.GetDirectoryName(specialSavePath);
-                    }
                 }
             }
             else if (MainSub.Info.SubmarineClass == SubmarineClass.Undefined && !MainSub.Info.HasTag(SubmarineTag.Shuttle))
@@ -1758,35 +1727,7 @@ namespace Barotrauma
                 return true;
             }
 
-            if (!string.IsNullOrEmpty(specialSavePath) &&
-                (string.IsNullOrEmpty(MainSub?.Info.FilePath) || Path.GetFileNameWithoutExtension(MainSub.Info.Name) != nameBox.Text || Path.GetDirectoryName(MainSub?.Info.FilePath) != specialSavePath))
-            {
-                string submarineTypeTag = $"SubmarineType.{MainSub.Info.Type}";
-                if (MainSub.Info.Type == SubmarineType.EnemySubmarine && !TextManager.ContainsTag(submarineTypeTag))
-                {
-                    submarineTypeTag = "MissionType.Pirate";
-                }
-                var msgBox = new GUIMessageBox("", TextManager.GetWithVariables("savesubtospecialfolderprompt",
-                    ("[type]", TextManager.Get(submarineTypeTag)), ("[outpostpath]", specialSavePath)),
-                    new LocalizedString[] { TextManager.Get("yes"), TextManager.Get("no") });
-                msgBox.Buttons[0].OnClicked = (bt, userdata) =>
-                {
-                    SaveSubToFile(nameBox.Text, specialSavePath);
-                    saveFrame = null;
-                    msgBox.Close();
-                    return true;
-                };
-                msgBox.Buttons[1].OnClicked = (bt, userdata) =>
-                {
-                    SaveSubToFile(nameBox.Text);
-                    saveFrame = null;
-                    msgBox.Close();
-                    return true;
-                };
-                return true;
-            }
-
-            var result = SaveSubToFile(nameBox.Text, specialSavePath);
+            var result = SaveSubToFile(nameBox.Text);
             saveFrame = null;
             return result;
         }
@@ -1798,13 +1739,9 @@ namespace Barotrauma
             if (p is null) { return; }
             if (!packageReloadQueue.Contains(p)) { packageReloadQueue.Enqueue(p); }
         }
-        
-        private bool SaveSubToFile(string name, string specialSavePath = null)
-        {
-            bool canModifyPackage(ContentPackage p)
-                => p != null && ContentPackageManager.LocalPackages.Contains(p) && p != ContentPackageManager.VanillaCorePackage;
 
-            Type subFileType = MainSub?.Info.Type switch
+        public static Type DetermineSubFileType(SubmarineType type)
+            => type switch
             {
                 SubmarineType.Outpost => typeof(OutpostFile),
                 SubmarineType.OutpostModule => typeof(OutpostModuleFile),
@@ -1812,8 +1749,16 @@ namespace Barotrauma
                 SubmarineType.Wreck => typeof(WreckFile),
                 SubmarineType.BeaconStation => typeof(BeaconStationFile),
                 SubmarineType.EnemySubmarine => typeof(EnemySubmarineFile),
-                SubmarineType.Player => typeof(SubmarineFile)
+                SubmarineType.Player => typeof(SubmarineFile),
+                _ => null
             };
+        
+        private bool SaveSubToFile(string name)
+        {
+            bool canModifyPackage(ContentPackage p)
+                => p != null && ContentPackageManager.LocalPackages.Contains(p) && p != ContentPackageManager.VanillaCorePackage;
+
+            Type subFileType = DetermineSubFileType(MainSub?.Info.Type ?? SubmarineType.Player);
 
             void addSubAndSaveModProject(ModProject modProject, string filePath, string packagePath) 
             {
@@ -1858,10 +1803,12 @@ namespace Barotrauma
 
             foreach (var illegalChar in Path.GetInvalidFileNameChars())
             {
-                if (!name.Contains(illegalChar)) continue;
+                if (!name.Contains(illegalChar)) { continue; }
                 GUI.AddMessage(TextManager.GetWithVariable("SubNameIllegalCharsWarning", "[illegalchar]", illegalChar.ToString()), GUIStyle.Red);
                 return false;
             }
+
+            name = name.Trim();
 
             string newLocalModDir = $"{ContentPackage.LocalModsDir}/{name}";
             
@@ -1871,33 +1818,7 @@ namespace Barotrauma
 
             string savePath = name + ".sub";
             string prevSavePath = null;
-            if (!string.IsNullOrEmpty(specialSavePath))
-            {
-                string directoryName = specialSavePath;
-                savePath = Path.Combine(directoryName, savePath);
-                ContentPackage contentPackage = ContentPackageManager.EnabledPackages.All.FirstOrDefault(cp => cp.Files.Any(f => Path.GetDirectoryName(f.Path.Value) == directoryName));
-
-                if (!contentPackage.Files.Any(f => f.Path == savePath) && canModifyPackage(contentPackage))
-                {
-                    var msgBox = new GUIMessageBox("", TextManager.GetWithVariable("addtocontentpackageprompt", "[packagename]", contentPackage.Name),
-                        new LocalizedString[] { TextManager.Get("yes"), TextManager.Get("no") });
-                    msgBox.Buttons[0].OnClicked = (bt, userdata) =>
-                    {
-                        ModProject modProject = new ModProject(contentPackage);
-                        addSubAndSaveModProject(modProject, savePath, contentPackage.Path);
-                        EnqueueForReload(contentPackage);
-                        
-                        msgBox.Close();
-                        return true;
-                    };
-                    msgBox.Buttons[1].OnClicked = (bt, userdata) =>
-                    {
-                        msgBox.Close();
-                        return true;
-                    };
-                }
-            }
-            else if (!string.IsNullOrEmpty(MainSub?.Info.FilePath) &&
+            if (!string.IsNullOrEmpty(MainSub?.Info.FilePath) &&
                 MainSub.Info.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
             {
                 prevSavePath = MainSub.Info.FilePath.CleanUpPath();
@@ -2515,7 +2436,7 @@ namespace Barotrauma
             
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), rightColumn.RectTransform), TextManager.Get("SubPreviewImage"), font: GUIStyle.SubHeadingFont);
 
-            var previewImageHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), rightColumn.RectTransform), style: null) { Color = Color.Black, CanBeFocused = false };
+            var previewImageHolder = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.4f), rightColumn.RectTransform), style: null) { Color = Color.Black, CanBeFocused = false };
             previewImage = new GUIImage(new RectTransform(Vector2.One, previewImageHolder.RectTransform), MainSub?.Info.PreviewImage, scaleToFit: true);
 
             previewImageButtonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), rightColumn.RectTransform), isHorizontal: true) { Stretch = true, RelativeSpacing = 0.05f };
@@ -2567,7 +2488,7 @@ namespace Barotrauma
 
             previewImageButtonHolder.RectTransform.MinSize = new Point(0, previewImageButtonHolder.RectTransform.Children.Max(c => c.MinSize.Y));
 
-            var horizontalArea = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.35f), rightColumn.RectTransform), style: null);
+            var horizontalArea = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.45f), rightColumn.RectTransform), style: null);
 
             var settingsLabel = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), horizontalArea.RectTransform),
                 TextManager.Get("SaveSubDialogSettings"), wrap: true, font: GUIStyle.SmallFont);
@@ -2613,11 +2534,30 @@ namespace Barotrauma
                 };
             }
 
-            var contentPackagesLabel = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.0f), horizontalArea.RectTransform, Anchor.TopRight),
+            var contentPackagesLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f),
+                horizontalArea.RectTransform, Anchor.BottomRight))
+            {
+                Stretch = true
+            };
+            
+            var contentPackagesLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), contentPackagesLayout.RectTransform),
                 TextManager.Get("RequiredContentPackages"), wrap: true, font: GUIStyle.SmallFont);
+            contentPackagesLabel.RectTransform.MinSize
+                = GUIStyle.SmallFont.MeasureString(contentPackagesLabel.WrappedText).ToPoint();
 
-            var contentPackList = new GUIListBox(new RectTransform(new Vector2(0.5f, 1.0f - contentPackagesLabel.RectTransform.RelativeSize.Y),
-                horizontalArea.RectTransform, Anchor.BottomRight));
+            var contentPackList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f),
+                contentPackagesLayout.RectTransform));
+
+            var contentPackFilter
+                = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.0f), contentPackagesLayout.RectTransform),
+                    createClearButton: true);
+            contentPackFilter.OnTextChanged += (box, text) =>
+            {
+                contentPackList.Content.Children.ForEach(c
+                    => c.Visible = !(c is GUITickBox tb &&
+                                     !tb.Text.Contains(text, StringComparison.OrdinalIgnoreCase)));
+                return true;
+            };
 
             if (MainSub != null)
             {

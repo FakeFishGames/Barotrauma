@@ -166,9 +166,12 @@ namespace Barotrauma
                     int votes = inc.ReadByte();
                     string subName = inc.ReadString();
                     List<SubmarineInfo> serversubs = new List<SubmarineInfo>();
-                    foreach (GUIComponent item in GameMain.NetLobbyScreen?.SubList?.Content?.Children)
+                    if (GameMain.NetLobbyScreen?.SubList?.Content != null)
                     {
-                        if (item.UserData != null && item.UserData is SubmarineInfo) { serversubs.Add(item.UserData as SubmarineInfo); }
+                        foreach (GUIComponent item in GameMain.NetLobbyScreen.SubList.Content.Children)
+                        {
+                            if (item.UserData != null && item.UserData is SubmarineInfo) { serversubs.Add(item.UserData as SubmarineInfo); }
+                        }
                     }
                     SubmarineInfo sub = serversubs.FirstOrDefault(s => s.Name == subName);
                     SetVoteText(GameMain.NetLobbyScreen.SubList, sub, votes);

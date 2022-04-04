@@ -3450,7 +3450,7 @@ namespace Barotrauma
                         {
                             ChangeParams("wall", state, priority / 2);
                         }
-                        if (canAttackDoors)
+                        if (canAttackDoors && IsAggressiveBoarder)
                         {
                             ChangeParams("door", state, priority / 2);
                         }

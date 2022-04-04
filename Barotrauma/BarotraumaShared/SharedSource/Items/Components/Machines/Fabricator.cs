@@ -116,8 +116,6 @@ namespace Barotrauma.Items.Components
             this.fabricationRecipes = fabricationRecipes.ToImmutableDictionary();
 
             state = FabricatorState.Stopped;
-
-            InitProjSpecific();
         }
 
         public override void OnItemLoaded()
@@ -145,9 +143,6 @@ namespace Barotrauma.Items.Components
         }
 
         partial void OnItemLoadedProjSpecific();
-
-
-        partial void InitProjSpecific();
 
         public override bool Select(Character character)
         {
@@ -192,7 +187,7 @@ namespace Barotrauma.Items.Components
             if (!isClient)
             {
                 MoveIngredientsToInputContainer(selectedItem);
-                if (selectedItem.RequiredMoney > 0)
+                if (selectedItem.RequiredMoney > 0 && CanBeFabricated(fabricatedItem, availableIngredients, user))
                 {
                     if (GameMain.GameSession?.GameMode is MultiPlayerCampaign)
                     {
@@ -395,14 +390,17 @@ namespace Barotrauma.Items.Components
                 var fabricationitemAmount = new AbilityFabricationItemAmount(fabricatedItem.TargetItem, fabricatedItem.Amount);
 
                 int quality = 0;
-                if (user?.Info != null)
+                if (fabricatedItem.Quality.HasValue)
+                {
+                    quality = fabricatedItem.Quality.Value;
+                }
+                else if (user?.Info != null)
                 {
                     foreach (Character character in Character.GetFriendlyCrew(user))
                     {
                         character.CheckTalents(AbilityEffectType.OnAllyItemFabricatedAmount, fabricationitemAmount);
                     }
-                    user.CheckTalents(AbilityEffectType.OnItemFabricatedAmount, fabricationitemAmount);
-                    
+                    user.CheckTalents(AbilityEffectType.OnItemFabricatedAmount, fabricationitemAmount);                    
                     quality = GetFabricatedItemQuality(fabricatedItem, user);
                 }
 

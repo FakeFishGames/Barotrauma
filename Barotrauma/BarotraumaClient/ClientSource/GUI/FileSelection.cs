@@ -415,9 +415,9 @@ namespace Barotrauma
             if (dir.EndsWith("/")) { dir = dir.Substring(0, dir.Length - 1); }
             int index = dir.LastIndexOf("/");
             if (index < 0) { return false; }
-            CurrentDirectory = CurrentDirectory.Substring(0, index+1);
+            CurrentDirectory = CurrentDirectory.Substring(0, index + 1);
 
-            return false;
+            return true;
         }
 
         public static void AddToGUIUpdateList()

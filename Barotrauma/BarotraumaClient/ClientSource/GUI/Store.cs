@@ -570,7 +570,7 @@ namespace Barotrauma
                 AutoHideScrollBar = false,
                 Visible = false
             };
-            storeDailySpecialsGroup = CreateDealsGroup(storeBuyList);
+            storeDailySpecialsGroup = CreateDealsGroup(storeBuyList, CurrentLocation?.DailySpecialsCount ?? 1);
             tabLists.Add(StoreTab.Buy, storeBuyList);
 
             storeSellList = new GUIListBox(new RectTransform(Vector2.One, storeItemListContainer.RectTransform))
@@ -578,7 +578,7 @@ namespace Barotrauma
                 AutoHideScrollBar = false,
                 Visible = false
             };
-            storeRequestedGoodGroup = CreateDealsGroup(storeSellList);
+            storeRequestedGoodGroup = CreateDealsGroup(storeSellList, CurrentLocation?.RequestedGoodsCount ?? 1);
             tabLists.Add(StoreTab.Sell, storeSellList);
 
             storeSellFromSubList = new GUIListBox(new RectTransform(Vector2.One, storeItemListContainer.RectTransform))
@@ -586,7 +586,7 @@ namespace Barotrauma
                 AutoHideScrollBar = false,
                 Visible = false
             };
-            storeRequestedSubGoodGroup = CreateDealsGroup(storeSellFromSubList);
+            storeRequestedSubGoodGroup = CreateDealsGroup(storeSellFromSubList, CurrentLocation?.RequestedGoodsCount ?? 1);
             tabLists.Add(StoreTab.SellSub, storeSellFromSubList);
 
             // Shopping Crate ------------------------------------------------------------------------------------------------------------------------------------------
@@ -713,8 +713,10 @@ namespace Barotrauma
 
         private LocalizedString GetPlayerBalanceText() => TextManager.FormatCurrency(PlayerWallet.Balance);
 
-        private GUILayoutGroup CreateDealsGroup(GUIListBox parentList, int elementCount = 4)
+        private GUILayoutGroup CreateDealsGroup(GUIListBox parentList, int elementCount)
         {
+            // Add 1 for the header
+            elementCount++;
             var elementHeight = (int)(GUI.yScale * 80);
             var frame = new GUIFrame(new RectTransform(new Point(parentList.Content.Rect.Width, elementCount * elementHeight + 3), parent: parentList.Content.RectTransform), style: null)
             {
@@ -852,24 +854,20 @@ namespace Barotrauma
             FilterStoreItems(category, searchBox.Text);
         }
 
-        int prevDailySpecialCount;
+        int prevDailySpecialCount, prevRequestedGoodsCount, prevSubRequestedGoodsCount;
 
         private void RefreshStoreBuyList()
         {
             float prevBuyListScroll = storeBuyList.BarScroll;
             float prevShoppingCrateScroll = shoppingCrateBuyList.BarScroll;
 
-            bool hasPermissions = HasBuyPermissions;
-            HashSet<GUIComponent> existingItemFrames = new HashSet<GUIComponent>();
-
             int dailySpecialCount = ActiveStore.DailySpecials.Count;
-
             if ((storeDailySpecialsGroup != null) != ActiveStore.DailySpecials.Any() || dailySpecialCount != prevDailySpecialCount)
             {
                 if (storeDailySpecialsGroup == null || dailySpecialCount != prevDailySpecialCount)
                 {
                     storeBuyList.RemoveChild(storeDailySpecialsGroup?.Parent);
-                    storeDailySpecialsGroup = CreateDealsGroup(storeBuyList, 1 + dailySpecialCount);
+                    storeDailySpecialsGroup = CreateDealsGroup(storeBuyList, dailySpecialCount);
                     storeDailySpecialsGroup.Parent.SetAsFirstChild();
                 }
                 else
@@ -881,6 +879,8 @@ namespace Barotrauma
                 prevDailySpecialCount = dailySpecialCount;
             }
 
+            bool hasPermissions = HasTabPermissions(StoreTab.Sell);
+            var existingItemFrames = new HashSet<GUIComponent>();
             foreach (PurchasedItem item in ActiveStore.Stock)
             {
                 CreateOrUpdateItemFrame(item.ItemPrefab, item.Quantity);
@@ -942,29 +942,30 @@ namespace Barotrauma
         {
             float prevSellListScroll = storeSellList.BarScroll;
             float prevShoppingCrateScroll = shoppingCrateSellList.BarScroll;
-            bool hasPermissions = HasTabPermissions(StoreTab.Sell);
-            HashSet<GUIComponent> existingItemFrames = new HashSet<GUIComponent>();
 
-            if ((storeRequestedGoodGroup != null) != ActiveStore.RequestedGoods.Any())
+            int requestedGoodsCount = ActiveStore.RequestedGoods.Count;
+            if ((storeRequestedGoodGroup != null) != ActiveStore.RequestedGoods.Any() || requestedGoodsCount != prevRequestedGoodsCount)
             {
-                if (storeRequestedGoodGroup == null)
+                storeSellList.RemoveChild(storeRequestedGoodGroup?.Parent);
+                if (storeRequestedGoodGroup == null || requestedGoodsCount != prevRequestedGoodsCount)
                 {
-                    storeRequestedGoodGroup = CreateDealsGroup(storeSellList);
+                    storeRequestedGoodGroup = CreateDealsGroup(storeSellList, requestedGoodsCount);
                     storeRequestedGoodGroup.Parent.SetAsFirstChild();
                 }
                 else
                 {
-                    storeSellList.RemoveChild(storeRequestedGoodGroup.Parent);
                     storeRequestedGoodGroup = null;
                 }
                 storeSellList.RecalculateChildren();
+                prevRequestedGoodsCount = requestedGoodsCount;
             }
 
+            bool hasPermissions = HasTabPermissions(StoreTab.Sell);
+            var existingItemFrames = new HashSet<GUIComponent>();
             foreach (PurchasedItem item in itemsToSell)
             {
                 CreateOrUpdateItemFrame(item.ItemPrefab, item.Quantity);
             }
-
             foreach (var requestedGood in ActiveStore.RequestedGoods)
             {
                 if (itemsToSell.Any(pi => pi.ItemPrefab == requestedGood)) { continue; }
@@ -1009,6 +1010,7 @@ namespace Barotrauma
                 removedItemFrames.AddRange(storeRequestedGoodGroup.Children.Where(c => c.UserData is PurchasedItem).Except(existingItemFrames).ToList());
             }
             removedItemFrames.ForEach(f => f.RectTransform.Parent = null);
+
             if (activeTab == StoreTab.Sell) { FilterStoreItems(); }
             SortItems(StoreTab.Sell);
 
@@ -1020,29 +1022,30 @@ namespace Barotrauma
         {
             float prevSellListScroll = storeSellFromSubList.BarScroll;
             float prevShoppingCrateScroll = shoppingCrateSellFromSubList.BarScroll;
-            bool hasPermissions = HasSellSubPermissions;
-            HashSet<GUIComponent> existingItemFrames = new HashSet<GUIComponent>();
 
-            if ((storeRequestedSubGoodGroup != null) != ActiveStore.RequestedGoods.Any())
+            int requestedGoodsCount = ActiveStore.RequestedGoods.Count;
+            if ((storeRequestedSubGoodGroup != null) != ActiveStore.RequestedGoods.Any() || requestedGoodsCount != prevSubRequestedGoodsCount)
             {
-                if (storeRequestedSubGoodGroup == null)
+                storeSellFromSubList.RemoveChild(storeRequestedSubGoodGroup?.Parent);
+                if (storeRequestedSubGoodGroup == null || requestedGoodsCount != prevSubRequestedGoodsCount)
                 {
-                    storeRequestedSubGoodGroup = CreateDealsGroup(storeSellList);
+                    storeRequestedSubGoodGroup = CreateDealsGroup(storeSellFromSubList, requestedGoodsCount);
                     storeRequestedSubGoodGroup.Parent.SetAsFirstChild();
                 }
                 else
                 {
-                    storeSellFromSubList.RemoveChild(storeRequestedSubGoodGroup.Parent);
                     storeRequestedSubGoodGroup = null;
                 }
                 storeSellFromSubList.RecalculateChildren();
+                prevSubRequestedGoodsCount = requestedGoodsCount;
             }
 
+            bool hasPermissions = HasSellSubPermissions;
+            var existingItemFrames = new HashSet<GUIComponent>();
             foreach (PurchasedItem item in itemsToSellFromSub)
             {
                 CreateOrUpdateItemFrame(item.ItemPrefab, item.Quantity);
             }
-
             foreach (var requestedGood in ActiveStore.RequestedGoods)
             {
                 if (itemsToSellFromSub.Any(pi => pi.ItemPrefab == requestedGood)) { continue; }
@@ -1087,6 +1090,7 @@ namespace Barotrauma
                 removedItemFrames.AddRange(storeRequestedSubGoodGroup.Children.Where(c => c.UserData is PurchasedItem).Except(existingItemFrames).ToList());
             }
             removedItemFrames.ForEach(f => f.RectTransform.Parent = null);
+
             if (activeTab == StoreTab.SellSub) { FilterStoreItems(); }
             SortItems(StoreTab.SellSub);
 
@@ -2163,6 +2167,10 @@ namespace Barotrauma
             if (needsItemsToSellFromSubRefresh)
             {
                 RefreshItemsToSellFromSub();
+            }
+            if (needsRefresh)
+            {
+                Refresh(updateOwned: ownedItemsUpdateTimer > 0.0f);
             }
             if (needsBuyingRefresh || HavePermissionsChanged(StoreTab.Buy))
             {

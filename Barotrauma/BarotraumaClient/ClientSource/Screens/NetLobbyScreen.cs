@@ -218,9 +218,6 @@ namespace Barotrauma
 
         public MultiPlayerCampaignSetupUI CampaignSetupUI;
 
-        // Passed onto the gamesession when created
-        public List<SubmarineInfo> ServerOwnedSubmarines = new List<SubmarineInfo>();
-
         public bool UsingShuttle
         {
             get { return shuttleTickBox.Selected; }
@@ -2007,7 +2004,7 @@ namespace Barotrauma
                 SelectedTextColor = Color.Black,
                 UserData = client
             };
-            var soundIcon = new GUIImage(new RectTransform(new Point((int)(textBlock.Rect.Height * 0.8f)), textBlock.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(5, 0) },
+            var soundIcon = new GUIImage(new RectTransform(Vector2.One * 0.8f, textBlock.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.BothHeight) { AbsoluteOffset = new Point(5, 0) },
                 sprite: GUIStyle.GetComponentStyle("GUISoundIcon").GetDefaultSprite(), scaleToFit: true)
             {
                 UserData = new Pair<string, float>("soundicon", 0.0f),
@@ -2017,7 +2014,7 @@ namespace Barotrauma
                 HoverColor = Color.White
             };
 
-            new GUIImage(new RectTransform(new Point((int)(textBlock.Rect.Height * 0.8f)), textBlock.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(5, 0) },
+            var soundIconDisabled = new GUIImage(new RectTransform(Vector2.One * 0.8f, textBlock.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.BothHeight) { AbsoluteOffset = new Point(5, 0) },
                 "GUISoundIconDisabled")
             {
                 UserData = "soundicondisabled",
@@ -2026,15 +2023,55 @@ namespace Barotrauma
                 OverrideState = GUIComponent.ComponentState.None,
                 HoverColor = Color.White
             };
-            new GUIFrame(new RectTransform(new Vector2(0.6f, 0.6f), textBlock.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.BothHeight) { AbsoluteOffset = new Point(10 + soundIcon.Rect.Width, 0) }, style: "GUIReadyToStart")
+            
+            var readyTick = new GUIFrame(new RectTransform(new Vector2(0.6f, 0.6f), textBlock.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.BothHeight) { AbsoluteOffset = new Point(10 + soundIcon.Rect.Width, 0) }, style: "GUIReadyToStart")
             {
                 Visible = false,
                 CanBeFocused = false,
                 ToolTip = TextManager.Get("ReadyToStartTickBox"),
                 UserData = "clientready"
             };
+
+            var downloadingThrobber = new GUICustomComponent(
+                new RectTransform(Vector2.One, textBlock.RectTransform, scaleBasis: ScaleBasis.BothHeight),
+                onUpdate: null,
+                onDraw: DrawDownloadThrobber(client, soundIcon, soundIconDisabled, readyTick));
         }
 
+        private Action<SpriteBatch, GUICustomComponent> DrawDownloadThrobber(Client client, params GUIComponent[] otherComponents)
+            => (sb, c) => DrawDownloadThrobber(client, otherComponents, sb, c); //poor man's currying
+
+        private void DrawDownloadThrobber(Client client, GUIComponent[] otherComponents, SpriteBatch spriteBatch, GUICustomComponent component)
+        {
+            if (!client.IsDownloading)
+            {
+                component.ToolTip = "";
+                return;
+            }
+
+            component.HideElementsOutsideFrame = false;
+            int drawRectX = otherComponents.Where(c => c.Visible)
+                .Select(c => c.Rect)
+                .Concat(new Rectangle(component.Parent.Rect.Right, component.Parent.Rect.Y, 0, component.Parent.Rect.Height).ToEnumerable())
+                .Min(r => r.X) - component.Parent.Rect.Height - 10;
+            Rectangle drawRect
+                = new Rectangle(drawRectX, component.Rect.Y, component.Parent.Rect.Height, component.Parent.Rect.Height);
+            component.RectTransform.AbsoluteOffset = drawRect.Location - component.Parent.Rect.Location;
+            component.RectTransform.NonScaledSize = drawRect.Size;
+            var sheet = GUIStyle.GenericThrobber;
+            sheet.Draw(
+                spriteBatch,
+                pos: drawRect.Location.ToVector2(),
+                spriteIndex: (int)Math.Floor(Timing.TotalTime * 24.0f) % sheet.FrameCount,
+                color: Color.White,
+                origin: Vector2.Zero, rotate: 0.0f,
+                scale: Vector2.One * component.Parent.Rect.Height / sheet.FrameSize.ToVector2());
+            if (component.ToolTip.IsNullOrEmpty())
+            {
+                component.ToolTip = TextManager.Get("PlayerIsDownloadingFiles");
+            }
+        }
+        
         public void SetPlayerNameAndJobPreference(Client client)
         {
             var playerFrame = (GUITextBlock)PlayerList.Content.FindChild(client);
@@ -2160,17 +2197,16 @@ namespace Barotrauma
                 Steamworks.SteamFriends.OpenWebOverlay($"https://steamcommunity.com/profiles/{client.SteamID}");
             }));
 
-            options.Add(new ContextMenuOption("ModerationMenu.UserDetails", isEnabled: true, onSelected: delegate
+            options.Add(new ContextMenuOption("ModerationMenu.ManagePlayer", isEnabled: true, onSelected: delegate
             {
                 GameMain.NetLobbyScreen?.SelectPlayer(client);
             }));
 
-
             // Creates sub context menu options for all the ranks
-            List<ContextMenuOption> permissionOptions = new List<ContextMenuOption>();
+            List<ContextMenuOption> rankOptions = new List<ContextMenuOption>();
             foreach (PermissionPreset rank in PermissionPreset.List)
             {
-                permissionOptions.Add(new ContextMenuOption(rank.Name, isEnabled: true, onSelected: () =>
+                rankOptions.Add(new ContextMenuOption(rank.Name, isEnabled: true, onSelected: () =>
                 {
                     LocalizedString label = TextManager.GetWithVariables(rank.Permissions == ClientPermissions.None ?  "clearrankprompt" : "giverankprompt", ("[user]", client.Name), ("[rank]", rank.Name));
                     GUIMessageBox msgBox = new GUIMessageBox(string.Empty, label, new[] { TextManager.Get("Yes"), TextManager.Get("Cancel") });
@@ -2190,7 +2226,7 @@ namespace Barotrauma
                 }) { Tooltip = rank.Description });
             }
 
-            options.Add(new ContextMenuOption("Permissions", isEnabled: canPromo, options: permissionOptions.ToArray()));
+            options.Add(new ContextMenuOption("Rank", isEnabled: canPromo, options: rankOptions.ToArray()));
 
             Color clientColor = client.Character?.Info?.Job.Prefab.UIColor ?? Color.White;
 
@@ -3552,12 +3588,6 @@ namespace Barotrauma
                     ("[subname]", sub.Name),
                     ("[myhash]", sub.MD5Hash.ShortRepresentation),
                     ("[serverhash]", Md5Hash.GetShortHash(md5Hash))) + " ";
-            }
-
-            //already showing a message about the same sub
-            if (GUIMessageBox.MessageBoxes.Any(mb => mb.UserData as string == "request" + subName))
-            {
-                return false;
             }
 
             if (GameMain.Client.ServerSettings.AllowFileTransfers)

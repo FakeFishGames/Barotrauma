@@ -1048,7 +1048,7 @@ namespace Barotrauma
                 box.Content.ChildAnchor = Anchor.TopCenter;
                 box.Content.AbsoluteSpacing = 20;
                 int elementSize = 30;
-                var listBox = new GUIListBox(new RectTransform(new Vector2(1, 0.9f), box.Content.RectTransform));
+                var listBox = new GUIListBox(new RectTransform(new Vector2(1, 0.75f), box.Content.RectTransform));
 
                 new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform), 
                     TextManager.Get("leveleditor.levelobjname")) { CanBeFocused = false };
@@ -1059,13 +1059,13 @@ namespace Barotrauma
                 var texturePathBox = new GUITextBox(new RectTransform(new Point(listBox.Content.Rect.Width, elementSize), listBox.Content.RectTransform));
                 foreach (LevelObjectPrefab prefab in LevelObjectPrefab.Prefabs)
                 {
-                    if (prefab.Sprites.FirstOrDefault() == null) continue;
+                    if (prefab.Sprites.FirstOrDefault() == null) { continue; }
                     texturePathBox.Text = Path.GetDirectoryName(prefab.Sprites.FirstOrDefault().FilePath.Value);
                     break;
                 }
 
                 //this is nasty :(
-                newPrefab = new LevelObjectPrefab(null, null, Identifier.Empty);
+                newPrefab = new LevelObjectPrefab(null, null, new Identifier("No identifier"));
 
                 new SerializableEntityEditor(listBox.Content.RectTransform, newPrefab, false, false);
                 

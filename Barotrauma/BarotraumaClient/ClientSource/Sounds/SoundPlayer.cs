@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using Barotrauma.IO;
 using System.Linq;
+using System.Threading;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -479,6 +480,36 @@ namespace Barotrauma
             return sound.Play(volume ?? sound.BaseGain, far, freqMult ?? 1.0f, position, muffle: muffle);            
         }
 
+        public static void DisposeDisabledMusic()
+        {
+            bool musicDisposed = false;
+            for (int i = 0; i < currentMusic.Length; i++)
+            {
+                var music = currentMusic[i];
+                if (music is null) { continue; }
+
+                if (!SoundPrefab.Prefabs.Contains(music))
+                {
+                    musicChannel[i].Dispose();
+                    musicDisposed = true;
+                    currentMusic[i] = null;
+                }
+            }
+
+            for (int i = 0; i < targetMusic.Length; i++)
+            {
+                var music = targetMusic[i];
+                if (music is null) { continue; }
+
+                if (!SoundPrefab.Prefabs.Contains(music))
+                {
+                    targetMusic[i] = null;
+                }
+            }
+            
+            if (musicDisposed) { Thread.Sleep(60); }
+        }
+        
         private static void UpdateMusic(float deltaTime)
         {
             if (musicClips == null || (GameMain.SoundManager?.Disabled ?? true)) { return; }

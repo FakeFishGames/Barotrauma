@@ -84,19 +84,16 @@ namespace Barotrauma
         private void Initialize()
         {
             initialized = true;
+            currentSubText = TextManager.Get("currentsub");
+            deliveryFeeText = TextManager.Get("deliveryfee");
+            deliveryText = TextManager.Get("requestdeliverybutton");
+            switchText = TextManager.Get("switchtosubmarinebutton");
+            purchaseAndSwitchText = TextManager.Get("purchaseandswitch");
+            purchaseOnlyText = TextManager.Get("purchase");
+            priceText = TextManager.Get("price");
             if (transferService)
             {
                 deliveryFee = CalculateDeliveryFee();
-                currentSubText = TextManager.Get("currentsub");
-                deliveryFeeText = TextManager.Get("deliveryfee");
-                deliveryText = TextManager.Get("requestdeliverybutton");
-                switchText = TextManager.Get("switchtosubmarinebutton");
-            }
-            else
-            {
-                purchaseAndSwitchText = TextManager.Get("purchaseandswitch");
-                purchaseOnlyText = TextManager.Get("purchase");
-                priceText = TextManager.Get("price");
             }
 
             currencyName = TextManager.Get("credit").Value.ToLowerInvariant();

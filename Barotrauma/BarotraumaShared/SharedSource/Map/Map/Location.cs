@@ -359,8 +359,8 @@ namespace Barotrauma
         /// How many map progress steps it takes before the discounts should be updated.
         /// </summary>
         private const int SpecialsUpdateInterval = 3;
-        private int DailySpecialsCount => Type.DailySpecialsCount;
-        private int RequestedGoodsCount => Type.RequestedGoodsCount;
+        public int DailySpecialsCount => Type.DailySpecialsCount;
+        public int RequestedGoodsCount => Type.RequestedGoodsCount;
         private int StepsSinceSpecialsUpdated { get; set; }
         public HashSet<Identifier> StoreIdentifiers { get; } = new HashSet<Identifier>();
 
@@ -1138,7 +1138,7 @@ namespace Barotrauma
                 {
                     store.Balance = Math.Min(store.Balance + (int)(StoreInitialBalance / 10.0f), StoreInitialBalance);
                 }
-                var stock = store.Stock;
+                var stock = new List<PurchasedItem>(store.Stock);
                 var stockToRemove = new List<PurchasedItem>();
                 foreach (var item in stock)
                 {

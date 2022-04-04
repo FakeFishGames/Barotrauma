@@ -472,7 +472,9 @@ namespace Barotrauma
                 TitleScreen.LoadState = MathHelper.Lerp(min, max, progress.Value);
                 yield return CoroutineStatus.Running;
             }
-            
+
+            TextManager.VerifyLanguageAvailable();
+
             DebugConsole.Init();
 
 #if !DEBUG && !OSX
