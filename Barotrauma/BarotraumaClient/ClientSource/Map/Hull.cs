@@ -358,9 +358,9 @@ namespace Barotrauma
                             WorldRect.Width, WorldRect.Height);
 
                     GUI.DrawLine(spriteBatch,
-                    new Vector2(currentHullRect.X, -currentHullRect.Y),
-                    new Vector2(connectedHullRect.X, -connectedHullRect.Y),
-                    GUIStyle.Green, width: 2);
+                        new Vector2(currentHullRect.X, -currentHullRect.Y),
+                        new Vector2(connectedHullRect.X, -connectedHullRect.Y),
+                        GUIStyle.Green, width: 2);
                 }
             }
         }
@@ -378,7 +378,7 @@ namespace Barotrauma
 
                 if (section.ColorStrength < 0.01f || section.Color.A < 1) { continue; }
 
-                if (DecalManager.GrimeSprites.None())
+                if (section.GrimeSprite == null)
                 {
                     GUI.DrawRectangle(spriteBatch,
                         new Vector2(drawOffset.X + rect.X + section.Rect.X, -(drawOffset.Y + rect.Y + section.Rect.Y)),
@@ -389,8 +389,7 @@ namespace Barotrauma
                 {
                     Vector2 sectionPos = new Vector2(drawPos.X + section.Rect.Location.X, -(drawPos.Y + section.Rect.Location.Y));
                     Vector2 randomOffset = new Vector2(section.Noise.X - 0.5f, section.Noise.Y - 0.5f) * 15.0f;
-                    var sprite = DecalManager.GrimeSprites[$"{nameof(GrimeSprite)}{i % DecalManager.GrimeSpriteCount}"].Sprite;
-                    sprite.Draw(spriteBatch, sectionPos + randomOffset, section.GetStrengthAdjustedColor(), scale: 1.25f);
+                    section.GrimeSprite.Draw(spriteBatch, sectionPos + randomOffset, section.GetStrengthAdjustedColor(), scale: 1.25f);
                 }
             }
         }

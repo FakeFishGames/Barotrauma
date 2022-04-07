@@ -251,7 +251,7 @@ namespace Barotrauma
                 return true;
             }
 #endif
-
+            if (HiddenInGame) { return false; }
             if (character != null && character.IsOnPlayerTeam)
             {
                 return IsPlayerTeamInteractable;
@@ -1438,7 +1438,6 @@ namespace Barotrauma
         
         public bool HasAccess(Character character)
         {
-            if (HiddenInGame) { return false; }
             if (character.IsBot && IgnoreByAI(character)) { return false; }
             if (!IsInteractable(character)) { return false; }
             var itemContainer = GetComponent<ItemContainer>();
@@ -1834,10 +1833,29 @@ namespace Barotrauma
             Submarine prevSub = Submarine;
 
             var projectile = GetComponent<Projectile>();
-            if (projectile?.StickTarget?.UserData is Limb limb && limb.character != null)
+            if (projectile?.StickTarget != null)
             {
-                Submarine = body.Submarine = limb.character.Submarine;
-                currentHull = limb.character.CurrentHull;
+                if (projectile?.StickTarget.UserData is Limb limb && limb.character != null)
+                {
+                    Submarine = body.Submarine = limb.character.Submarine;
+                    currentHull = limb.character.CurrentHull;
+                }
+                else if (projectile.StickTarget.UserData is Structure structure)
+                {
+                    Submarine = body.Submarine = structure.Submarine;
+                    currentHull = Hull.FindHull(WorldPosition, CurrentHull);
+                }
+                else if (projectile.StickTarget.UserData is Item targetItem)
+                {
+                    Submarine = body.Submarine = targetItem.Submarine;
+                    currentHull = targetItem.CurrentHull;
+                }
+                else if (projectile.StickTarget.UserData is Submarine)
+                {
+                    //attached to a sub from the outside -> don't move inside the sub
+                    Submarine = body.Submarine = null;
+                    currentHull = null;
+                }
             }
             else
             {

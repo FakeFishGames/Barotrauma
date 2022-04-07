@@ -1562,17 +1562,24 @@ namespace Barotrauma
             commands.Add(new Command("money", "money [amount] [character]: Gives the specified amount of money to the crew when a campaign is active.", args =>
             {
                 if (args.Length == 0) { return; }
-                if (GameMain.GameSession?.GameMode is CampaignMode campaign)
+
+                if (!(GameMain.GameSession?.GameMode is CampaignMode campaign)) { return; }
+                Character targetCharacter = null;
+
+                if (args.Length >= 2)
                 {
-                    if (int.TryParse(args[0], out int money))
-                    {
-                        campaign.Bank.Give(money);
-                        GameAnalyticsManager.AddMoneyGainedEvent(money, GameAnalyticsManager.MoneySource.Cheat, "console");
-                    }
-                    else
-                    {
-                        ThrowError($"\"{args[0]}\" is not a valid numeric value.");
-                    }
+                    targetCharacter = FindMatchingCharacter(args.Skip(1).ToArray());
+                }
+
+                if (int.TryParse(args[0], out int money))
+                {
+                    Wallet wallet = targetCharacter is null || GameMain.IsSingleplayer ? campaign.Bank : targetCharacter.Wallet;
+                    wallet.Give(money);
+                    GameAnalyticsManager.AddMoneyGainedEvent(money, GameAnalyticsManager.MoneySource.Cheat, "console");
+                }
+                else
+                {
+                    ThrowError($"\"{args[0]}\" is not a valid numeric value.");
                 }
             }, isCheat: true, getValidArgs: () => new []
             {

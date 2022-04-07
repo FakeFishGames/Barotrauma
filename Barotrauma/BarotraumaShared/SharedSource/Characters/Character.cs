@@ -308,6 +308,10 @@ namespace Barotrauma
         public bool IsHumanoid => Params.Humanoid;
         public bool IsHusk => Params.Husk;
 
+        public bool IsMale => info?.IsMale ?? false;
+
+        public bool IsFemale => info?.IsFemale ?? false;
+
         public string BloodDecalName => Params.BloodDecal;
 
         public bool CanSpeak
@@ -557,10 +561,11 @@ namespace Barotrauma
 #if CLIENT
                 CharacterHealth.SetHealthBarVisibility(value == null);
 #elif SERVER
-                if (value is { IsDead: true, Wallet: { Balance: var balance } grabbedWallet })
+                if (value is { IsDead: true, Wallet: { Balance: var balance } grabbedWallet } && balance > 0)
                 {
                     Wallet.Give(balance);
                     grabbedWallet.Deduct(balance);
+                    GameServer.Log($"{Name} grabbed {value.Name}'s body and received {grabbedWallet.Balance} mk.", ServerLog.MessageType.Money);
                 }
 #endif
             }
@@ -3587,21 +3592,8 @@ namespace Barotrauma
 
             float attackImpulse = attack.TargetImpulse + attack.TargetForce  * attack.ImpactMultiplier * deltaTime;
 
-            AbilityAttackData attackData = new AbilityAttackData(attack, this);
-            if (attacker != null)
-            {
-                attackData.Attacker = attacker;
-                attacker.CheckTalents(AbilityEffectType.OnAttack, attackData);
-                CheckTalents(AbilityEffectType.OnAttacked, attackData);
-                attackData.DamageMultiplier *= 1 + attacker.GetStatValue(StatTypes.AttackMultiplier);
-                if (attacker.TeamID == TeamID)
-                {
-                    attackData.DamageMultiplier *= 1 + attacker.GetStatValue(StatTypes.TeamAttackMultiplier);
-                }
-            }
-
+            AbilityAttackData attackData = new AbilityAttackData(attack, this, attacker);
             IEnumerable<Affliction> attackAfflictions;
-
             if (attackData.Afflictions != null)
             {
                 attackAfflictions = attackData.Afflictions.Union(attack.Afflictions.Keys);
@@ -4916,10 +4908,21 @@ namespace Barotrauma
         public Character Character { get; set; }
         public Character Attacker { get; set; }
 
-        public AbilityAttackData(Attack sourceAttack, Character character)
+        public AbilityAttackData(Attack sourceAttack, Character target, Character attacker)
         {
             SourceAttack = sourceAttack;
-            Character = character;
+            Character = target;
+            if (attacker != null)
+            {
+                Attacker = attacker;
+                attacker.CheckTalents(AbilityEffectType.OnAttack, this);
+                target.CheckTalents(AbilityEffectType.OnAttacked, this);
+                DamageMultiplier *= 1 + attacker.GetStatValue(StatTypes.AttackMultiplier);
+                if (attacker.TeamID == target.TeamID)
+                {
+                    DamageMultiplier *= 1 + attacker.GetStatValue(StatTypes.TeamAttackMultiplier);
+                }
+            }
         }
     }
 

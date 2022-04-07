@@ -2841,6 +2841,7 @@ namespace Barotrauma
         private void CreateLoadScreen()
         {
             CloseItem();
+            SubmarineInfo.RefreshSavedSubs();
             SetMode(Mode.Default);
 
             loadFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: null)
@@ -3162,7 +3163,6 @@ namespace Barotrauma
                     }
                     
                     sub.Dispose();
-                    SubmarineInfo.RefreshSavedSubs();
                     CreateLoadScreen();
                 }
                 catch (Exception e)

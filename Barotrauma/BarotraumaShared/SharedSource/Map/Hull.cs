@@ -23,6 +23,10 @@ namespace Barotrauma
         public readonly Vector2 Noise;
         public readonly Color DirtColor;
 
+#if CLIENT
+        public Sprite GrimeSprite;
+#endif
+
         public float ColorStrength
         {
             get;
@@ -51,6 +55,9 @@ namespace Barotrauma
                 PerlinNoise.GetPerlin(Rect.Y / 1000.0f + 0.5f, Rect.X / 1000.0f + 0.5f));
 
             Color = DirtColor = Color.Lerp(new Color(10, 10, 10, 100), new Color(54, 57, 28, 200), Noise.X);
+#if CLIENT
+            GrimeSprite = DecalManager.GrimeSprites[$"{nameof(GrimeSprite)}{index % DecalManager.GrimeSpriteCount}"].Sprite;
+#endif
         }
 
         public BackgroundSection(Rectangle rect, ushort index, float colorStrength, Color color, ushort rowIndex)
@@ -68,6 +75,9 @@ namespace Barotrauma
                 PerlinNoise.GetPerlin(Rect.Y / 1000.0f + 0.5f, Rect.X / 1000.0f + 0.5f));
             
             DirtColor = Color.Lerp(new Color(10, 10, 10, 100), new Color(54, 57, 28, 200), Noise.X);
+#if CLIENT
+            GrimeSprite = DecalManager.GrimeSprites[$"{nameof(GrimeSprite)}{index % DecalManager.GrimeSpriteCount}"].Sprite;
+#endif
         }
 
         public bool SetColor(Color color)
@@ -274,33 +284,17 @@ namespace Barotrauma
             get { return Submarine == null ? surface : surface + Submarine.Position.Y; }
         }
 
-        private float dirtiedVolume = 0.0f;
-
         public float WaterVolume
         {
             get { return waterVolume; }
             set
             {
-                if (!MathUtils.IsValid(value)) return;
+                if (!MathUtils.IsValid(value)) { return; }
                 waterVolume = MathHelper.Clamp(value, 0.0f, Volume * MaxCompress);
                 if (waterVolume < Volume) { Pressure = rect.Y - rect.Height + waterVolume / rect.Width; }
                 if (waterVolume > 0.0f)
                 {
                     update = true;
-                    if (BackgroundSections != null)
-                    {
-                        float volumeMultiplier = Math.Clamp(waterVolume / Volume, 0f, 1f);
-                        if (Math.Abs(volumeMultiplier - dirtiedVolume) > 0.075f)
-                        {
-                            RefreshSubmergedSections(new Rectangle(new Point(0, -rect.Height), new Point(rect.Width, (int)(rect.Height * volumeMultiplier))));
-                            dirtiedVolume = volumeMultiplier;
-                        }
-                    }
-                }
-                else
-                {
-                    submergedSections.Clear();
-                    dirtiedVolume = 0.0f;
                 }
             }
         }
@@ -390,8 +384,6 @@ namespace Barotrauma
         }
 
         private readonly HashSet<int> pendingSectionUpdates = new HashSet<int>();
-
-        private readonly List<BackgroundSection> submergedSections = new List<BackgroundSection>();
 
         public int xBackgroundMax, yBackgroundMax;
 
@@ -664,7 +656,6 @@ namespace Barotrauma
             }
 
             BackgroundSections?.Clear();
-            submergedSections?.Clear();
 
             List<FireSource> fireSourcesToRemove = new List<FireSource>(FireSources);
             foreach (FireSource fireSource in fireSourcesToRemove)
@@ -971,12 +962,6 @@ namespace Barotrauma
                     waveY[i - 1] += leftDelta[i];
                     waveY[i + 1] += rightDelta[i];
                 }
-            }
-
-            //0.016 increase every ~2000 frames = reaches full dirtiness in ~35 minutes
-            if (submergedSections.Count > 0 && Submarine != null && Submarine.Info.Type == SubmarineType.Player && Rand.Int(2000) == 1)
-            {
-                DirtySections(submergedSections, deltaTime);
             }
 
             if (waterVolume < Volume)
@@ -1451,17 +1436,6 @@ namespace Barotrauma
             }
         }
 
-        public void RefreshSubmergedSections(Rectangle waterArea)
-        {
-            if (BackgroundSections == null) { return; }
-
-            submergedSections.Clear();
-            foreach (var section in GetBackgroundSectionsViaContaining(waterArea))
-            {
-                submergedSections.Add(section);
-            }
-        }
-
         public bool DoesSectionMatch(int index, int row)
         {
             return index >= 0 && row >= 0 && BackgroundSections.Count > index && BackgroundSections[index] != null && BackgroundSections[index].RowIndex == row;
@@ -1525,15 +1499,6 @@ namespace Barotrauma
                     paintAmount = Math.Max(0, paintAmount + (section.ColorStrength - previous) / BackgroundSections.Count);
 #endif
                 }
-            }
-        }
-
-        public void DirtySections(List<BackgroundSection> sections, float dirtyVal)
-        {
-            if (sections == null) { return; }
-            for (int i = 0; i < sections.Count; i++)
-            {
-                IncreaseSectionColorOrStrength(sections[i], sections[i].DirtColor, dirtyVal, false, false);
             }
         }
 

@@ -178,6 +178,7 @@ namespace Barotrauma
                 SoundChannel chn = waterAmbienceChannels.FirstOrDefault(c => c.Sound == sound);
                 if (chn is null || !chn.IsPlaying)
                 {
+                    if (volume < 0.01f) { return; }
                     if (!(chn is null)) { waterAmbienceChannels.Remove(chn); }
                     chn = sound.Play(volume, "waterambience");
                     chn.Looping = true;

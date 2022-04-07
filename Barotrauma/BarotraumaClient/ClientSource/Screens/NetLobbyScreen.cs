@@ -2298,7 +2298,7 @@ namespace Barotrauma
                 text: selectedClient.Name, font: GUIStyle.LargeFont);
             nameText.Text = ToolBox.LimitString(nameText.Text, nameText.Font, (int)(nameText.Rect.Width * 0.95f));
 
-            if (hasManagePermissions)
+            if (hasManagePermissions && !selectedClient.IsOwner)
             {
                 PlayerFrame.UserData = selectedClient;
 

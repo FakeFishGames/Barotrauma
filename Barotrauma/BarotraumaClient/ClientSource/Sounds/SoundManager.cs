@@ -372,13 +372,10 @@ namespace Barotrauma.Sounds
             }
 
             var newSound = new OggSound(this, filePath, stream, xElement: element);
-            if (newSound != null)
-            {
-                newSound.BaseGain = element.GetAttributeFloat("volume", 1.0f);
-                float range = element.GetAttributeFloat("range", 1000.0f);
-                newSound.BaseNear = range * 0.4f;
-                newSound.BaseFar = range;
-            }
+            newSound.BaseGain = element.GetAttributeFloat("volume", 1.0f);
+            float range = element.GetAttributeFloat("range", 1000.0f);
+            newSound.BaseNear = range * 0.4f;
+            newSound.BaseFar = range;
 
             lock (loadedSounds)
             {

@@ -106,6 +106,7 @@ namespace Barotrauma
             GameModePreset.Init();
 
             ContentPackageManager.Init().Consume();
+            ContentPackageManager.LogEnabledRegularPackageErrors();
 
             SubmarineInfo.RefreshSavedSubs();
 

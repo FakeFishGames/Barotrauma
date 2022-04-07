@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using Barotrauma.Networking;
 
 namespace Barotrauma.IO
 {
@@ -23,9 +24,15 @@ namespace Barotrauma.IO
 
         public static bool CanWrite(string path, bool isDirectory)
         {
-            path = System.IO.Path.GetFullPath(path).CleanUpPath();
-            string localModsDir = System.IO.Path.GetFullPath(ContentPackage.LocalModsDir).CleanUpPath();
-            string workshopModsDir = System.IO.Path.GetFullPath(ContentPackage.WorkshopModsDir).CleanUpPath();
+            string getFullPath(string p)
+                => System.IO.Path.GetFullPath(p).CleanUpPath();
+            
+            path = getFullPath(path);
+            string localModsDir = getFullPath(ContentPackage.LocalModsDir);
+            string workshopModsDir = getFullPath(ContentPackage.WorkshopModsDir);
+#if CLIENT
+            string tempDownloadDir = getFullPath(ModReceiver.DownloadFolder);
+#endif
 
             if (!isDirectory)
             {
@@ -34,8 +41,15 @@ namespace Barotrauma.IO
                 {
                     return false;
                 }
-                if (!path.StartsWith(workshopModsDir, StringComparison.OrdinalIgnoreCase)
-                    && !path.StartsWith(localModsDir, StringComparison.OrdinalIgnoreCase)
+
+                bool pathStartsWith(string prefix)
+                    => path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
+                
+                if (!pathStartsWith(workshopModsDir)
+                    && !pathStartsWith(localModsDir)
+#if CLIENT
+                    && !pathStartsWith(tempDownloadDir)
+#endif
                     && (extension == ".dll" || extension == ".exe" || extension == ".json"))
                 {
                     return false;

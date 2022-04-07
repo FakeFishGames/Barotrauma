@@ -168,7 +168,10 @@ namespace Barotrauma
         {
             var dropdown = new GUIDropDown(NewItemRectT(parent));
             values.ForEach(v => dropdown.AddItem(text: textFunc(v), userData: v, toolTip: tooltipFunc?.Invoke(v) ?? null));
-            dropdown.Select(values.IndexOf(currentValue));
+            int childIndex = values.IndexOf(currentValue);
+            dropdown.Select(childIndex);
+            dropdown.ListBox.ForceLayoutRecalculation();
+            dropdown.ListBox.ScrollToElement(dropdown.ListBox.Content.GetChild(childIndex), playSound: false);
             dropdown.OnSelected = (dd, obj) =>
             {
                 setter((T)obj);
@@ -231,6 +234,8 @@ namespace Barotrauma
                 GameMain.GraphicsDeviceManager.GraphicsDevice.Adapter.SupportedDisplayModes
                     .Where(m => m.Format == SurfaceFormat.Color)
                     .Select(m => (m.Width, m.Height))
+                    .Where(m => m.Width >= GameSettings.Config.GraphicsSettings.MinSupportedResolution.X
+                        && m.Height >= GameSettings.Config.GraphicsSettings.MinSupportedResolution.Y)
                     .ToList();
             var currentResolution = (unsavedConfig.Graphics.Width, unsavedConfig.Graphics.Height);
             if (!supportedResolutions.Contains(currentResolution))

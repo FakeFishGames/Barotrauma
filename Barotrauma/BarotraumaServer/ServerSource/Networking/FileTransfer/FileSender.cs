@@ -46,7 +46,7 @@ namespace Barotrauma.Networking
                     {
                         //setting a wait timer means that network conditions
                         //aren't ideal, slow down the packet rate
-                        PacketsPerUpdate = Math.Max(PacketsPerUpdate / 2.0f, 1.0f);
+                        PacketsPerUpdate = Math.Max(PacketsPerUpdate / 4.0f, 1.0f);
                     }
                     waitTimer = value;
                 }
@@ -130,7 +130,7 @@ namespace Barotrauma.Networking
         public FileSender(ServerPeer serverPeer, int mtu)
         {
             peer = serverPeer;
-            chunkLen = mtu - 100;
+            chunkLen = mtu - 200;
 
             activeTransfers = new List<FileTransferOut>();
         }
@@ -197,11 +197,8 @@ namespace Barotrauma.Networking
             foreach (FileTransferOut transfer in activeTransfers)
             {
                 transfer.WaitTimer -= deltaTime;
-                for (int i = 0; i < 10; i++)
-                {
-                    if (transfer.WaitTimer > 0.0f) { break; }
-                    Send(transfer);
-                }
+                if (transfer.WaitTimer > 0.0f) { continue; }
+                Send(transfer);
             }
 
             if (numRemoved > 0 || endedTransfers.Count > 0)
@@ -281,7 +278,7 @@ namespace Barotrauma.Networking
                     if (transfer.SentOffset >= transfer.Data.Length)
                     {
                         transfer.SentOffset = transfer.KnownReceivedOffset;
-                        transfer.WaitTimer = 0.5f;
+                        transfer.WaitTimer = 1.0f;
                     }
 
                     peer.Send(message, transfer.Connection, DeliveryMethod.Unreliable, compressPastThreshold: false);
@@ -356,7 +353,7 @@ namespace Barotrauma.Networking
                         matchingTransfer.SentOffset >= matchingTransfer.Data.Length)
                     {
                         matchingTransfer.SentOffset = matchingTransfer.KnownReceivedOffset;
-                        matchingTransfer.WaitTimer = 0.5f;
+                        matchingTransfer.WaitTimer = 1.0f;
                     }
 
                     if (matchingTransfer.KnownReceivedOffset >= matchingTransfer.Data.Length)
@@ -364,6 +361,7 @@ namespace Barotrauma.Networking
                         matchingTransfer.Status = FileTransferStatus.Finished;
                     }
                 }
+                return;
             }
 
             FileTransferType fileType = (FileTransferType)inc.ReadByte();

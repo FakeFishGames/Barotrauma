@@ -131,7 +131,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            connection.OverrideValue = Convert.ChangeType(overrideValue, type);
+                            connection.OverrideValue = EventEditorScreen.ChangeType(overrideValue, type);
                         }
                     }
                 }
@@ -513,7 +513,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        newNode.Value = Convert.ChangeType(value, type);
+                        newNode.Value = EventEditorScreen.ChangeType(value, type);
                     }
                 }
 

@@ -512,23 +512,36 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Scrolls the list to the specific element, currently only works when smooth scrolling and PadBottom are enabled.
+        /// Scrolls the list to the specific element.
         /// </summary>
         /// <param name="component"></param>
-        public void ScrollToElement(GUIComponent component)
+        public void ScrollToElement(GUIComponent component, bool playSound = true)
         {
-            SoundPlayer.PlayUISound(GUISoundType.Click);
+            if (playSound) { SoundPlayer.PlayUISound(GUISoundType.Click); }
             List<GUIComponent> children = Content.Children.ToList();
             int index = children.IndexOf(component);
             if (index < 0) { return; }
 
+            void performScroll(GUIComponent c)
+            {
+                if (SmoothScroll && PadBottom)
+                {
+                    scrollToElement = c;
+                }
+                else
+                {
+                    float diff = isHorizontal ? c.Rect.X - Content.Rect.X : c.Rect.Y - Content.Rect.Y;
+                    ScrollBar.BarScroll += diff / TotalSize;
+                }
+            }
+            
             if (!Content.Children.Contains(component) || !component.Visible)
             {
-                scrollToElement = null;
+                performScroll(null);
             }
             else
             {
-                scrollToElement = component;
+                performScroll(component);
             }
         }
 

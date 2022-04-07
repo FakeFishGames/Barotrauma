@@ -13,7 +13,7 @@ using System.Text.RegularExpressions;
 
 namespace Barotrauma
 {
-    partial class SaveUtil
+    static class SaveUtil
     {
         private static readonly string LegacySaveFolder = Path.Combine("Data", "Saves");
         private static readonly string LegacyMultiplayerSaveFolder = Path.Combine(LegacySaveFolder, "Multiplayer");

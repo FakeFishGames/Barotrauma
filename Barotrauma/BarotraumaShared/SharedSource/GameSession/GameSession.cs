@@ -147,22 +147,23 @@ namespace Barotrauma
                         var campaign = SinglePlayerCampaign.Load(subElement);
                         campaign.LoadNewLevel();
                         GameMode = campaign;
+                        InitOwnedSubs(submarineInfo, ownedSubmarines);
                         break;
 #endif
                     case "multiplayercampaign":
                         CrewManager = new CrewManager(false);
                         var mpCampaign = MultiPlayerCampaign.LoadNew(subElement);
                         GameMode = mpCampaign;
-                        if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer) 
+                        if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
                         {
-                            mpCampaign.LoadNewLevel(); 
+                            mpCampaign.LoadNewLevel();
+                            InitOwnedSubs(submarineInfo, ownedSubmarines);
                             //save to ensure the campaign ID in the save file matches the one that got assigned to this campaign instance
                             SaveUtil.SaveGame(saveFile);
                         }
                         break;
                 }
             }
-            InitOwnedSubs(submarineInfo);
         }
 
         private void InitOwnedSubs(SubmarineInfo submarineInfo, List<SubmarineInfo>? ownedSubmarines = null)
@@ -409,14 +410,16 @@ namespace Barotrauma
 
             if (GameMain.NetworkMember?.ServerSettings?.LockAllDefaultWires ?? false)
             {
-                foreach (Item item in Item.ItemList)
+                List<Item> items = new List<Item>();
+                items.AddRange(Submarine.MainSubs[0].GetItems(alsoFromConnectedSubs: true));
+                if (Submarine.MainSubs[1] != null)
                 {
-                    if (item.Submarine == Submarine.MainSubs[0] ||
-                        (Submarine.MainSubs[1] != null && item.Submarine == Submarine.MainSubs[1]))
-                    {
-                        Wire wire = item.GetComponent<Wire>();
-                        if (wire != null && !wire.NoAutoLock && wire.Connections.Any(c => c != null)) { wire.Locked = true; }
-                    }
+                    items.AddRange(Submarine.MainSubs[1].GetItems(alsoFromConnectedSubs: true));
+                }
+                foreach (Item item in items)
+                {
+                    Wire wire = item.GetComponent<Wire>();
+                    if (wire != null && !wire.NoAutoLock && wire.Connections.Any(c => c != null)) { wire.Locked = true; }                    
                 }
             }
 

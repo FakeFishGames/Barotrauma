@@ -139,7 +139,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public bool HasPermissions = false;
+        public bool HasPermissions => Permissions != ClientPermissions.None;
 
         public VoipQueue VoipQueue
         {

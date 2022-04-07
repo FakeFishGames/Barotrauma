@@ -212,10 +212,14 @@ namespace Barotrauma
 
         protected override bool CheckObjectiveSpecific()
         {
-            if (sqrDistance > maxDistance * maxDistance)
+            if (character.Submarine == null || character.Submarine.TeamID != CharacterTeamType.FriendlyNPC)
             {
-                // The target escaped from us.
-                return true;
+                // Can't lose the target in friendly outposts.
+                if (sqrDistance > maxDistance * maxDistance)
+                {
+                    // The target escaped from us.
+                    return true;
+                }
             }
             return IsEnemyDisabled || (AllowCoolDown && coolDownTimer <= 0);
         }

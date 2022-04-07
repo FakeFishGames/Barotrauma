@@ -270,8 +270,9 @@ namespace Barotrauma.Steam
                         .ToHashSet();
                 toUninstall.Select(p => p.Dir).ForEach(d => Directory.Delete(d));
                 CrossThread.RequestExecutionOnMainThread(() => ContentPackageManager.WorkshopPackages.Refresh());
+                var installWaiter = WaitForInstall(workshopItem);
                 DownloadModThenEnqueueInstall(workshopItem);
-                await WaitForInstall(workshopItem);
+                await installWaiter;
             }
 
             public static async Task WaitForInstall(Steamworks.Ugc.Item item)

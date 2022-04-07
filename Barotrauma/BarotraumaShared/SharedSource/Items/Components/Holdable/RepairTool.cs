@@ -228,9 +228,12 @@ namespace Barotrauma.Items.Components
                 {
                     if (MathUtils.GetLineRectangleIntersection(ConvertUnits.ToDisplayUnits(sourcePos), ConvertUnits.ToDisplayUnits(rayStart), item.CurrentHull.Rect, out Vector2 hullIntersection))
                     {
-                        Vector2 rayDir = rayStart.NearlyEquals(sourcePos) ? Vector2.Zero : Vector2.Normalize(rayStart - sourcePos);
-                        rayStartWorld = ConvertUnits.ToSimUnits(hullIntersection - rayDir * 5.0f);
-                        if (item.Submarine != null) { rayStartWorld += item.Submarine.SimPosition; }
+                        if (!item.CurrentHull.ConnectedGaps.Any(g => g.Open > 0.0f && Submarine.RectContains(g.Rect, hullIntersection))) 
+                        { 
+                            Vector2 rayDir = rayStart.NearlyEquals(sourcePos) ? Vector2.Zero : Vector2.Normalize(rayStart - sourcePos);
+                            rayStartWorld = ConvertUnits.ToSimUnits(hullIntersection - rayDir * 5.0f);
+                            if (item.Submarine != null) { rayStartWorld += item.Submarine.SimPosition; }
+                        }
                     }
                 }
             }

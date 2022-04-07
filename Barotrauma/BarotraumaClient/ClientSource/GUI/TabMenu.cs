@@ -50,19 +50,23 @@ namespace Barotrauma
             private const ushort lowPingThreshold = 100;
             private const ushort mediumPingThreshold = 200;
 
+            public readonly Client Client;
+
             private ushort currentPing;
-            private readonly Client client;
             private readonly Character character;
             private readonly bool hasCharacter;
             private readonly GUITextBlock textBlock;
             private readonly GUIFrame frame;
 
-            public LinkedGUI(Client client, GUIFrame frame, bool hasCharacter, GUITextBlock textBlock)
+            private readonly GUIImage permissionIcon;
+
+            public LinkedGUI(Client client, GUIFrame frame, bool hasCharacter, GUITextBlock textBlock, GUIImage permissionIcon)
             {
-                this.client = client;
+                this.Client = client;
                 this.textBlock = textBlock;
                 this.frame = frame;
                 this.hasCharacter = hasCharacter;
+                this.permissionIcon = permissionIcon;
             }
 
             public LinkedGUI(Character character, GUIFrame frame, bool hasCharacter, GUITextBlock textBlock)
@@ -75,31 +79,37 @@ namespace Barotrauma
 
             public bool HasMultiplayerCharacterChanged()
             {
-                if (client == null) return false;
-                bool characterState = client.Character != null;
-                if (characterState && client.Character.IsDead) characterState = false;
+                if (Client == null) { return false; }
+                bool characterState = Client.Character != null;
+                if (characterState && Client.Character.IsDead) characterState = false;
                 return hasCharacter != characterState;
             }
 
             public bool HasMultiplayerCharacterDied()
             {
-                if (client == null || !hasCharacter || client.Character == null) return false;
-                return client.Character.IsDead;
+                if (Client == null || !hasCharacter || Client.Character == null) { return false; }
+                return Client.Character.IsDead;
             }
 
             public bool HasAICharacterDied()
             {
-                if (character == null) return false;
+                if (character == null) { return false; }
                 return character.IsDead;
             }
 
             public void TryPingRefresh()
             {
-                if (client == null) return;
-                if (currentPing == client.Ping) return;
-                currentPing = client.Ping;
+                if (Client == null) { return; }
+                if (currentPing == Client.Ping) { return; }
+                currentPing = Client.Ping;
                 textBlock.Text = currentPing.ToString();
                 textBlock.TextColor = GetPingColor();
+            }
+
+            public void TryPermissionIconRefresh(Sprite icon)
+            {
+                if (Client == null || permissionIcon == null) { return; }
+                permissionIcon.Sprite = icon;
             }
 
             private Color GetPingColor()
@@ -196,6 +206,7 @@ namespace Barotrauma
                 for (int i = 0; i < linkedGUIList.Count; i++)
                 {
                     linkedGUIList[i].TryPingRefresh();
+                    linkedGUIList[i].TryPermissionIconRefresh(GetPermissionIcon(linkedGUIList[i].Client));
                     if (linkedGUIList[i].HasMultiplayerCharacterChanged() || linkedGUIList[i].HasMultiplayerCharacterDied() || linkedGUIList[i].HasAICharacterDied())
                     {
                         RemoveCurrentElements();
@@ -549,31 +560,42 @@ namespace Barotrauma
             GUITextBlock characterNameBlock = new GUITextBlock(new RectTransform(new Point(characterColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform),
                 ToolBox.LimitString(character.Info.Name, GUIStyle.Font, characterColumnWidth), textAlignment: Alignment.Center, textColor: character.Info.Job.Prefab.UIColor);
 
-            linkedGUIList.Add(new LinkedGUI(character, frame, !character.IsDead, null));
+            linkedGUIList.Add(new LinkedGUI(character, frame, !character.IsDead, textBlock: null));
         }
 
         private void CreateMultiPlayerListContentHolder(GUILayoutGroup headerFrame)
         {
+            bool isCampaign = GameMain.GameSession?.Campaign is MultiPlayerCampaign;
             GUIButton jobButton = new GUIButton(new RectTransform(new Vector2(0f, 1f), headerFrame.RectTransform), TextManager.Get("tabmenu.job"), style: "GUIButtonSmallFreeScale");
             GUIButton characterButton = new GUIButton(new RectTransform(new Vector2(0f, 1f), headerFrame.RectTransform), TextManager.Get("name"), style: "GUIButtonSmallFreeScale");
             GUIButton pingButton = new GUIButton(new RectTransform(new Vector2(0f, 1f), headerFrame.RectTransform), TextManager.Get("serverlistping"), style: "GUIButtonSmallFreeScale");
-            GUIButton walletButton = new GUIButton(new RectTransform(new Vector2(0f, 1f), headerFrame.RectTransform), TextManager.Get("crewwallet.wallet"), style: "GUIButtonSmallFreeScale");
+            if (isCampaign)
+            {
+                GUIButton walletButton = new GUIButton(new RectTransform(new Vector2(0f, 1f), headerFrame.RectTransform)
+                {
+                    RelativeSize = new Vector2(walletColumnWidthPercentage * sizeMultiplier, 1f)
+                }, TextManager.Get("crewwallet.wallet"), style: "GUIButtonSmallFreeScale")
+                {
+                    TextBlock = { Font = GUIStyle.HotkeyFont },
+                    CanBeFocused = false,
+                    ForceUpperCase = ForceUpperCase.Yes
+                };
+                walletColumnWidth = walletButton.Rect.Width;
+            }
 
             sizeMultiplier = (headerFrame.Rect.Width - headerFrame.AbsoluteSpacing * (headerFrame.CountChildren - 1)) / (float)headerFrame.Rect.Width;
 
             jobButton.RectTransform.RelativeSize = new Vector2(jobColumnWidthPercentage * sizeMultiplier, 1f);
-            characterButton.RectTransform.RelativeSize = new Vector2(characterColumnWidthPercentage * sizeMultiplier, 1f);
+            characterButton.RectTransform.RelativeSize = new Vector2((characterColumnWidthPercentage + (isCampaign ? 0 : walletColumnWidthPercentage)) * sizeMultiplier, 1f);
             pingButton.RectTransform.RelativeSize = new Vector2(pingColumnWidthPercentage * sizeMultiplier, 1f);
-            walletButton.RectTransform.RelativeSize = new Vector2(walletColumnWidthPercentage * sizeMultiplier, 1f);
 
-            jobButton.TextBlock.Font = characterButton.TextBlock.Font = pingButton.TextBlock.Font = walletButton.TextBlock.Font = GUIStyle.HotkeyFont;
-            jobButton.CanBeFocused = characterButton.CanBeFocused = pingButton.CanBeFocused = walletButton.CanBeFocused = false;
-            jobButton.TextBlock.ForceUpperCase = characterButton.TextBlock.ForceUpperCase = pingButton.ForceUpperCase = walletButton.ForceUpperCase = ForceUpperCase.Yes;
+            jobButton.TextBlock.Font = characterButton.TextBlock.Font = pingButton.TextBlock.Font = GUIStyle.HotkeyFont;
+            jobButton.CanBeFocused = characterButton.CanBeFocused = pingButton.CanBeFocused = false;
+            jobButton.TextBlock.ForceUpperCase = characterButton.TextBlock.ForceUpperCase = pingButton.ForceUpperCase = ForceUpperCase.Yes;
 
             jobColumnWidth = jobButton.Rect.Width;
             characterColumnWidth = characterButton.Rect.Width;
             pingColumnWidth = pingButton.Rect.Width;
-            walletColumnWidth = walletButton.Rect.Width;
         }
 
         private void CreateMultiPlayerList(bool refresh)
@@ -634,8 +656,10 @@ namespace Barotrauma
 
             if (client != null)
             {
-                CreateNameWithPermissionIcon(client, paddedFrame);
-                linkedGUIList.Add(new LinkedGUI(client, frame, true, new GUITextBlock(new RectTransform(new Point(pingColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform), client.Ping.ToString(), textAlignment: Alignment.Center)));
+                CreateNameWithPermissionIcon(client, paddedFrame, out GUIImage permissionIcon);
+                linkedGUIList.Add(new LinkedGUI(client, frame, true, 
+                    new GUITextBlock(new RectTransform(new Point(pingColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform), client.Ping.ToString(), textAlignment: Alignment.Center),
+                    permissionIcon));
             }
             else
             {
@@ -644,11 +668,12 @@ namespace Barotrauma
 
                 if (character is AICharacter)
                 {
-                    linkedGUIList.Add(new LinkedGUI(character, frame, !character.IsDead, new GUITextBlock(new RectTransform(new Point(pingColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform), TextManager.Get("tabmenu.bot"), textAlignment: Alignment.Center) { ForceUpperCase = ForceUpperCase.Yes }));
+                    linkedGUIList.Add(new LinkedGUI(character, frame, !character.IsDead, 
+                        new GUITextBlock(new RectTransform(new Point(pingColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform), TextManager.Get("tabmenu.bot"), textAlignment: Alignment.Center) { ForceUpperCase = ForceUpperCase.Yes }));
                 }
                 else
                 {
-                    linkedGUIList.Add(new LinkedGUI(client: null, frame, true, null));
+                    linkedGUIList.Add(new LinkedGUI(client: null, frame, true, textBlock: null, permissionIcon: null));
 
                     new GUICustomComponent(new RectTransform(new Point(pingColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform, Anchor.Center), onDraw: (sb, component) => DrawDisconnectedIcon(sb, component.Rect))
                     {
@@ -686,12 +711,15 @@ namespace Barotrauma
                 SelectedColor = Color.White
             };
 
-            CreateNameWithPermissionIcon(client, paddedFrame);
+            CreateNameWithPermissionIcon(client, paddedFrame, out GUIImage permissionIcon);
+            linkedGUIList.Add(new LinkedGUI(client, frame, false,
+                new GUITextBlock(new RectTransform(new Point(pingColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform), client.Ping.ToString(), textAlignment: Alignment.Center),
+                permissionIcon));
+
             if (client.Character is { } character)
             {
                 CreateWalletCrewFrame(character, paddedFrame);
             }
-            linkedGUIList.Add(new LinkedGUI(client, frame, false, new GUITextBlock(new RectTransform(new Point(pingColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform), client.Ping.ToString(), textAlignment: Alignment.Center)));
         }
 
         private int GetTeamIndex(Client client)
@@ -729,21 +757,47 @@ namespace Barotrauma
 
         private void CreateWalletCrewFrame(Character character, GUILayoutGroup paddedFrame)
         {
+            if (!(GameMain.GameSession?.Campaign is MultiPlayerCampaign)) { return; }
+
             GUILayoutGroup walletLayout = new GUILayoutGroup(new RectTransform(new Point(walletColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform, Anchor.Center), childAnchor: Anchor.Center)
             {
                 CanBeFocused = false
             };
-
-            if (character.IsBot) { return; }
 
             GUILayoutGroup paddedLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 1f), walletLayout.RectTransform, Anchor.Center), isHorizontal: true)
             {
                 Stretch = true
             };
 
-            GUIImage icon = new GUIImage(new RectTransform(Vector2.One, paddedLayoutGroup.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "StoreTradingIcon", scaleToFit: true);
-            GUITextBlock walletBlock = new GUITextBlock(new RectTransform(Vector2.One, paddedLayoutGroup.RectTransform), string.Empty, textAlignment: Alignment.Right, font: GUIStyle.SubHeadingFont);
-            SetWalletText(walletBlock, character.Wallet);
+            if (character.IsBot) { return; }
+
+            Sprite walletSprite = GUIStyle.CrewWalletIconSmall.Value.Sprite;
+
+            GUIImage icon = new GUIImage(new RectTransform(Vector2.One, paddedLayoutGroup.RectTransform, scaleBasis: ScaleBasis.BothHeight), walletSprite, scaleToFit: true);
+            GUITextBlock walletBlock = new GUITextBlock(new RectTransform(Vector2.One, paddedLayoutGroup.RectTransform), string.Empty, textAlignment: Alignment.Right, font: GUIStyle.Font)
+            {
+                AutoScaleHorizontal = true,
+                Padding = Vector4.Zero
+            };
+
+            GUIImage largeIcon = new GUIImage(new RectTransform(Vector2.One, paddedLayoutGroup.RectTransform), walletSprite, scaleToFit: true)
+            {
+                IgnoreLayoutGroups = true,
+                Visible = false
+            };
+
+            if (character.IsBot)
+            {
+                largeIcon.Visible = true;
+                icon.Visible = false;
+                walletBlock.Visible = false;
+                largeIcon.Enabled = false;
+                return;
+            }
+
+            walletLayout.Recalculate();
+            paddedLayoutGroup.Recalculate();
+            SetWalletText(walletBlock, character.Wallet, icon, largeIcon);
 
             if (GameMain.GameSession?.Campaign is MultiPlayerCampaign campaign)
             {
@@ -751,47 +805,56 @@ namespace Barotrauma
                 campaign.OnMoneyChanged.RegisterOverwriteExisting(eventIdentifier, e =>
                 {
                     if (!(e.Owner is Some<Character> { Value: var owner }) || owner != character) { return; }
-                    SetWalletText(walletBlock, e.Wallet);
+                    SetWalletText(walletBlock, e.Wallet, icon, largeIcon);
                 });
                 registeredEvents.Add(eventIdentifier);
             }
 
-            static void SetWalletText(GUITextBlock block, Wallet wallet)
+            static void SetWalletText(GUITextBlock block, Wallet wallet, GUIImage icon, GUIImage largeIcon)
             {
+                const int million = 1000000,
+                          tooSmallPixelTreshold = 50; // 50 pixels is just not enough to see any meaningful info
+
                 block.Text = TextManager.FormatCurrency(wallet.Balance);
                 block.ToolTip = string.Empty;
-                if (block.TextSize.X + block.Padding.X + block.Padding.Z > block.Rect.Width)
+
+                if (wallet.Balance >= million)
                 {
-                    block.ToolTip = block.Text;
                     block.Text = TextManager.Get("crewwallet.balance.toomuchtoshow");
+                    block.ToolTip = block.Text;
+                }
+
+                largeIcon.Visible = false;
+                icon.Visible = true;
+                block.Visible = true;
+
+                if (tooSmallPixelTreshold > block.Rect.Width)
+                {
+                    largeIcon.Visible = true;
+                    icon.Visible = false;
+                    block.Visible = false;
+                    largeIcon.ToolTip = block.Text;
                 }
             }
         }
 
-        private void CreateNameWithPermissionIcon(Client client, GUILayoutGroup paddedFrame)
+        private void CreateNameWithPermissionIcon(Client client, GUILayoutGroup paddedFrame, out GUIImage permissionIcon)
         {
             GUITextBlock characterNameBlock;
-            Sprite permissionIcon = GetPermissionIcon(client);
+            Sprite permissionIconSprite = GetPermissionIcon(client);
             JobPrefab prefab = client.Character?.Info?.Job?.Prefab;
             Color nameColor = prefab != null ? prefab.UIColor : Color.White;
 
-            if (permissionIcon != null)
-            {
-                Point iconSize = permissionIcon.SourceRect.Size;
-                float characterNameWidthAdjustment = (iconSize.X + paddedFrame.AbsoluteSpacing) / characterColumnWidth;
+            Point iconSize = new Point((int)(paddedFrame.Rect.Height * 0.8f));
+            float characterNameWidthAdjustment = (iconSize.X + paddedFrame.AbsoluteSpacing) / characterColumnWidth;
 
-                characterNameBlock = new GUITextBlock(new RectTransform(new Point(characterColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform),
-                    ToolBox.LimitString(client.Name, GUIStyle.Font, (int)(characterColumnWidth - paddedFrame.Rect.Width * characterNameWidthAdjustment)), textAlignment: Alignment.Center, textColor: nameColor);
+            characterNameBlock = new GUITextBlock(new RectTransform(new Point(characterColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform),
+                ToolBox.LimitString(client.Name, GUIStyle.Font, (int)(characterColumnWidth - paddedFrame.Rect.Width * characterNameWidthAdjustment)), textAlignment: Alignment.Center, textColor: nameColor);
 
-                float iconWidth = iconSize.X / (float)characterColumnWidth;
-                int xOffset = (int)(jobColumnWidth + characterNameBlock.TextPos.X - GUIStyle.Font.MeasureString(characterNameBlock.Text).X / 2f - paddedFrame.AbsoluteSpacing - iconWidth * paddedFrame.Rect.Width);
-                new GUIImage(new RectTransform(new Vector2(iconWidth, 1f), paddedFrame.RectTransform) { AbsoluteOffset = new Point(xOffset + 2, 0) }, permissionIcon) { IgnoreLayoutGroups = true };
-            }
-            else
-            {
-                characterNameBlock = new GUITextBlock(new RectTransform(new Point(characterColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform),
-                    ToolBox.LimitString(client.Name, GUIStyle.Font, characterColumnWidth), textAlignment: Alignment.Center, textColor: nameColor);
-            }
+            float iconWidth = iconSize.X / (float)characterColumnWidth;
+            int xOffset = (int)(jobColumnWidth + characterNameBlock.TextPos.X - GUIStyle.Font.MeasureString(characterNameBlock.Text).X / 2f - paddedFrame.AbsoluteSpacing - iconWidth * paddedFrame.Rect.Width);
+            permissionIcon = new GUIImage(new RectTransform(new Vector2(iconWidth, 1f), paddedFrame.RectTransform) { AbsoluteOffset = new Point(xOffset + 2, 0) }, permissionIconSprite) { IgnoreLayoutGroups = true };
+       
 
             if (client.Character != null && client.Character.IsDead)
             {
@@ -801,7 +864,7 @@ namespace Barotrauma
 
         private Sprite GetPermissionIcon(Client client)
         {
-            if (GameMain.NetworkMember == null || client == null || !client.HasPermissions) return null;
+            if (GameMain.NetworkMember == null || client == null || !client.HasPermissions) { return null; }
 
             if (client.IsOwner) // Owner cannot be kicked
             {
@@ -898,7 +961,7 @@ namespace Barotrauma
             GUILayoutGroup walletLayout = new GUILayoutGroup(new RectTransform(ToolBox.PaddingSizeParentRelative(walletFrame.RectTransform, 0.9f), walletFrame.RectTransform, anchor: Anchor.Center));
 
             GUILayoutGroup headerLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.33f), walletLayout.RectTransform), isHorizontal: true);
-            GUIImage icon = new GUIImage(new RectTransform(Vector2.One, headerLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "StoreTradingIcon", scaleToFit: true);
+            GUIImage icon = new GUIImage(new RectTransform(Vector2.One, headerLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "CrewWalletIconLarge", scaleToFit: true);
             float relativeX =  icon.RectTransform.NonScaledSize.X / (float)icon.Parent.RectTransform.NonScaledSize.X;
             GUILayoutGroup headerTextLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f - relativeX, 1f), headerLayout.RectTransform), isHorizontal: true) { Stretch = true };
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), headerTextLayout.RectTransform), TextManager.Get("crewwallet.wallet"), font: GUIStyle.LargeFont);
@@ -950,7 +1013,7 @@ namespace Barotrauma
                             GUITextBlock rightBalance = new GUITextBlock(new RectTransform(new Vector2(1f, 0.5f), rightLayout.RectTransform), string.Empty, textAlignment: Alignment.Right) { TextColor = GUIStyle.Red };
                         GUILayoutGroup centerLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.9f), mainLayout.RectTransform, Anchor.Center), childAnchor: Anchor.Center) { IgnoreLayoutGroups = true };
                             new GUIFrame(new RectTransform(new Vector2(0f, 1f), centerLayout.RectTransform, Anchor.Center), style: "VerticalLine") { IgnoreLayoutGroups = true };
-                            GUIButton centerButton = new GUIButton(new RectTransform(new Vector2(0.6f), centerLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight, anchor: Anchor.Center), style: "GUIButtonTransferArrow");
+                            GUIButton centerButton = new GUIButton(new RectTransform(new Vector2(1f), centerLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight, anchor: Anchor.Center), style: "GUIButtonTransferArrow");
 
                     GUILayoutGroup inputLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.25f), paddedTransferMenuLayout.RectTransform), childAnchor: Anchor.Center);
                         GUINumberInput transferAmountInput = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1f), inputLayout.RectTransform), GUINumberInput.NumberType.Int, hidePlusMinusButtons: true)

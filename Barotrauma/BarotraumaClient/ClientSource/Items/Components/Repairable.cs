@@ -59,6 +59,7 @@ namespace Barotrauma.Items.Components
 
         public override bool ShouldDrawHUD(Character character)
         {
+            if (item.HiddenInGame) { return false; }
             if (!HasRequiredItems(character, false) || character.SelectedConstruction != item) { return false; }
             if (character.IsTraitor && item.ConditionPercentage > MinSabotageCondition) { return true; }
 
@@ -222,6 +223,7 @@ namespace Barotrauma.Items.Components
 
         partial void UpdateProjSpecific(float deltaTime)
         {
+            if (item.HiddenInGame) { return; }
             if (FakeBrokenTimer > 0.0f)
             {
                 item.FakeBroken = true;

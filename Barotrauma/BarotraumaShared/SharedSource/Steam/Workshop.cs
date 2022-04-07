@@ -309,6 +309,11 @@ namespace Barotrauma.Steam
 
                 XDocument fileListSrc = XMLExtensions.TryLoadXml(Path.Combine(itemDirectory, ContentPackage.FileListFileName));
                 string modName = fileListSrc.Root.GetAttributeString("name", item.Title).Trim();
+                string[] modPathSplit = fileListSrc.Root.GetAttributeString("path", "")
+                    .CleanUpPathCrossPlatform(correctFilenameCase: false).Split("/");
+                string? modPathDirName = modPathSplit.Length > 1 && modPathSplit[0] == "Mods"
+                    ? modPathSplit[1]
+                    : null;
                 string modVersion = fileListSrc.Root.GetAttributeString("modversion", ContentPackage.DefaultModVersion);
                 Version gameVersion = fileListSrc.Root.GetAttributeVersion("gameversion", GameMain.Version);
                 bool isCorePackage = fileListSrc.Root.GetAttributeBool("corepackage", false);
@@ -316,7 +321,7 @@ namespace Barotrauma.Steam
 
                 using (var copyIndicator = new CopyIndicator(copyIndicatorPath))
                 {
-                    await CopyDirectory(itemDirectory, modName, itemDirectory, installDir);
+                    await CopyDirectory(itemDirectory, modPathDirName ?? modName, itemDirectory, installDir);
 
                     string fileListDestPath = Path.Combine(installDir, ContentPackage.FileListFileName);
                     XDocument fileListDest = XMLExtensions.TryLoadXml(fileListDestPath);
@@ -330,9 +335,9 @@ namespace Barotrauma.Steam
                         new XAttribute("modversion", modVersion),
                         new XAttribute("gameversion", gameVersion),
                         new XAttribute("installtime", ToolBox.Epoch.FromDateTime(updateTime)));
-                    if (modName.ToIdentifier() != itemTitle)
+                    if ((modPathDirName ?? modName).ToIdentifier() != itemTitle)
                     {
-                        root.Add(new XAttribute("altnames", modName));
+                        root.Add(new XAttribute("altnames", modPathDirName ?? modName));
                     }
                     if (!expectedHash.IsNullOrEmpty())
                     {

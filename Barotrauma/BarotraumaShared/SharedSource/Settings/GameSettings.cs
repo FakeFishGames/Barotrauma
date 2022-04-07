@@ -148,6 +148,8 @@ namespace Barotrauma
 
             public struct GraphicsSettings
             {
+                public static readonly Point MinSupportedResolution = new Point(1024, 540);
+                
                 public static GraphicsSettings GetDefault()
                 {
                     GraphicsSettings gfxSettings = new GraphicsSettings

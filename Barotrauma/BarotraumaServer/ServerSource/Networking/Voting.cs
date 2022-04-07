@@ -91,13 +91,16 @@ namespace Barotrauma
 
         private void StartSubmarineVote(SubmarineInfo subInfo, VoteType voteType, Client sender)
         {
+            if (ActiveVote == null)
+            {
+                sender.SetVote(voteType, 2);
+            }
             var subVote = new SubmarineVote(
                 sender,
                 subInfo,
                 voteType == VoteType.SwitchSub ? GameMain.GameSession.Map.DistanceToClosestLocationWithOutpost(GameMain.GameSession.Map.CurrentLocation, out Location endLocation) : 0,
                 voteType);
             StartOrEnqueueVote(subVote);
-            sender.SetVote(voteType, 2);
             GameMain.Server.UpdateVoteStatus(checkActiveVote: false);
         }
 
@@ -127,13 +130,17 @@ namespace Barotrauma
             if (pendingVotes.Any())
             {
                 ActiveVote = pendingVotes.Dequeue();
+                ActiveVote.VoteStarter?.SetVote(ActiveVote.VoteType, 2);
             }
         }
 
         public void StartTransferVote(Client starter, Client from, int transferAmount, Client to)
         {
+            if (ActiveVote == null)
+            {
+                starter.SetVote(VoteType.TransferMoney, 2);
+            }
             StartOrEnqueueVote(new TransferVote(starter, from, transferAmount, to));
-            starter.SetVote(VoteType.TransferMoney, 2);
             GameMain.Server.UpdateVoteStatus(checkActiveVote: false);
         }
 

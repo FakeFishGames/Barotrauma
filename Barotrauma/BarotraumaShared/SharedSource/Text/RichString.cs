@@ -83,7 +83,7 @@ namespace Barotrauma
                 if (Debugger.IsAttached) { Debugger.Break(); }
             }
 #endif
-            return Plain(lStr);
+            return Plain(lStr ?? string.Empty);
         }
         public static implicit operator RichString(string str) => (LocalizedString)str;
 

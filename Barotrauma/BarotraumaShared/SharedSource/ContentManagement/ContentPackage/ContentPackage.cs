@@ -1,6 +1,6 @@
 #nullable enable
 using Barotrauma.Extensions;
-using Microsoft.Xna.Framework;
+using Barotrauma.Steam;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -9,7 +9,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using Barotrauma.Steam;
 
 namespace Barotrauma
 {
@@ -39,7 +38,7 @@ namespace Barotrauma
         public readonly DateTime? InstallTime;
 
         public readonly ImmutableArray<ContentFile> Files;
-        public readonly ImmutableArray<string> Errors;
+        public readonly ImmutableArray<(string error, string? stackTrace)> Errors;
 
         public async Task<bool> IsUpToDate()
         {
@@ -92,7 +91,7 @@ namespace Barotrauma
 
             Errors = fileResults
                 .OfType<Failure<ContentFile, string>>()
-                .Select(f => f.Error)
+                .Select(f => (f.Error, f.StackTrace))
                 .ToImmutableArray();
 
             HasMultiplayerSyncedContent = Files.Any(f => !f.NotSyncedInMultiplayer);
@@ -303,6 +302,25 @@ namespace Barotrauma
                 path = temp;
             }
             return path == LocalModsDir;
+        }
+
+        public void LogErrors()
+        {
+            if (Errors.Any())
+            {
+                DebugConsole.AddWarning(
+                    $"The following errors occurred while loading the content package\"{Name}\". The package might not work correctly.\n" +
+                    string.Join('\n', Errors.Select(e => errorToStr(e.error, e.stackTrace))));
+                static string errorToStr(string error, string? stackTrace)
+                {
+                    string str = error;
+                    if (stackTrace != null)
+                    {
+                        str += '\n' + stackTrace;
+                    }
+                    return str;
+                }
+            }
         }
     }
 }

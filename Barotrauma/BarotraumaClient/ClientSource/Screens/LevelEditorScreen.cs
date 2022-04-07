@@ -883,12 +883,17 @@ namespace Barotrauma
 
         private void SerializeAll()
         {
+            IEnumerable<ContentPackage> packages = ContentPackageManager.LocalPackages;
+#if DEBUG
+            packages = packages.Union(ContentPackageManager.VanillaCorePackage.ToEnumerable());
+#endif
+
             System.Xml.XmlWriterSettings settings = new System.Xml.XmlWriterSettings
             {
                 Indent = true,
                 NewLineOnAttributes = true
             };
-            foreach (var configFile in ContentPackageManager.AllPackages.SelectMany(p => p.GetFiles<LevelGenerationParametersFile>()))
+            foreach (var configFile in packages.SelectMany(p => p.GetFiles<LevelGenerationParametersFile>()))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(configFile.Path);
                 if (doc == null) { continue; }
@@ -922,7 +927,7 @@ namespace Barotrauma
                 }
             }
 
-            foreach (var configFile in ContentPackageManager.AllPackages.SelectMany(p => p.GetFiles<CaveGenerationParametersFile>()))
+            foreach (var configFile in packages.SelectMany(p => p.GetFiles<CaveGenerationParametersFile>()))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(configFile.Path);
                 if (doc == null) { continue; }
@@ -957,7 +962,7 @@ namespace Barotrauma
             }
 
             settings.NewLineOnAttributes = false;
-            foreach (var configFile in ContentPackageManager.AllPackages.SelectMany(p => p.GetFiles<LevelObjectPrefabsFile>()))
+            foreach (var configFile in packages.SelectMany(p => p.GetFiles<LevelObjectPrefabsFile>()))
             {
                 XDocument doc = XMLExtensions.TryLoadXml(configFile.Path);
                 if (doc == null) { continue; }

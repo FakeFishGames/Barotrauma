@@ -188,6 +188,14 @@ namespace Steamworks
 		public static Action<ulong> GlobalOnItemInstalled;
 
 		public static uint NumSubscribedItems { get { return Internal.GetNumSubscribedItems(); } }
+
+		public static PublishedFileId[] GetSubscribedItems()
+		{
+			uint numSubscribed = NumSubscribedItems;
+			PublishedFileId[] ids = new PublishedFileId[numSubscribed];
+			Internal.GetSubscribedItems(ids, numSubscribed);
+			return ids;
+		}
 	}
 }
 

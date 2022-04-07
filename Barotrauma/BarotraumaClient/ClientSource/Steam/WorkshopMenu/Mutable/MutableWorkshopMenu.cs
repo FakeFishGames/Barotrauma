@@ -20,10 +20,10 @@ namespace Barotrauma.Steam
             Publish
         }
 
-        protected readonly GUILayoutGroup tabber;
-        protected readonly Dictionary<Tab, (GUIButton Button, GUIFrame Content)> tabContents;
+        private readonly GUILayoutGroup tabber;
+        private readonly Dictionary<Tab, (GUIButton Button, GUIFrame Content)> tabContents;
 
-        protected readonly GUIFrame contentFrame;
+        private readonly GUIFrame contentFrame;
 
         private CorePackage EnabledCorePackage => enabledCoreDropdown.SelectedData as CorePackage ?? throw new Exception("Valid core package not selected");
 
@@ -40,6 +40,8 @@ namespace Barotrauma.Steam
         private readonly GUIListBox popularModsList;
         private readonly GUIListBox selfModsList;
 
+        private uint memSubscribedModCount = 0;
+        
         public MutableWorkshopMenu(GUIFrame parent) : base(parent)
         {
             var mainLayout
@@ -50,6 +52,9 @@ namespace Barotrauma.Steam
             tabContents = new Dictionary<Tab, (GUIButton Button, GUIFrame Content)>();
 
             contentFrame = new GUIFrame(new RectTransform((1.0f, 0.95f), mainLayout.RectTransform), style: null);
+
+            new GUICustomComponent(new RectTransform(Vector2.Zero, mainLayout.RectTransform),
+                onUpdate: (f, component) => UpdateSubscribedModInstalls());
             
             CreateInstalledModsTab(
                 out enabledCoreDropdown,
@@ -64,6 +69,38 @@ namespace Barotrauma.Steam
             SelectTab(Tab.InstalledMods);
         }
 
+        private void UpdateSubscribedModInstalls()
+        {
+            if (!SteamManager.IsInitialized) { return; }
+
+            uint numSubscribedMods = Steamworks.SteamUGC.NumSubscribedItems;
+            if (numSubscribedMods == memSubscribedModCount) { return; }
+            memSubscribedModCount = numSubscribedMods;
+
+            var subscribedIds = Steamworks.SteamUGC.GetSubscribedItems().ToHashSet();
+            var installedIds = ContentPackageManager.WorkshopPackages.Select(p => p.SteamWorkshopId).ToHashSet();
+            foreach (var id in subscribedIds.Where(id2 => !installedIds.Contains(id2)))
+            {
+                Steamworks.Ugc.Item item = new Steamworks.Ugc.Item(id);
+                if (!item.IsDownloading && !SteamManager.Workshop.IsInstalling(item))
+                {
+                    SteamManager.Workshop.DownloadModThenEnqueueInstall(item);
+                }
+            }
+
+            TaskPool.Add("RemoveUnsubscribedItems", SteamManager.Workshop.GetPublishedItems(), t =>
+            {
+                if (!t.TryGetResult(out ISet<Steamworks.Ugc.Item> publishedItems)) { return; }
+
+                var allRequiredInstalled = subscribedIds.Union(publishedItems.Select(it => it.Id)).ToHashSet();
+                foreach (var id in installedIds.Where(id2 => !allRequiredInstalled.Contains(id2)))
+                {
+                    Steamworks.Ugc.Item item = new Steamworks.Ugc.Item(id);
+                    SteamManager.Workshop.Uninstall(item);
+                }
+            });
+        }
+        
         private void SwitchContent(GUIFrame newContent)
         {
             contentFrame.Children.ForEach(c => c.Visible = false);
@@ -462,6 +499,10 @@ namespace Barotrauma.Steam
                 {
                     CanBeFocused = false
                 };
+                if (mod.Errors.Any())
+                {
+                    CreateModErrorInfo(mod, modFrame, modName);
+                }
                 if (ContentPackageManager.LocalPackages.Contains(mod))
                 {
                     var editButton = new GUIButton(new RectTransform(Vector2.One, frameContent.RectTransform, scaleBasis: ScaleBasis.Smallest), "",
@@ -593,6 +634,7 @@ namespace Barotrauma.Steam
             ContentPackageManager.EnabledPackages.SetRegular(enabledRegularModsList.Content.Children
                 .Select(c => c.UserData as RegularPackage).OfType<RegularPackage>().ToArray());
             PopulateInstalledModLists(forceRefreshEnabled: true, refreshDisabled: true);
+            ContentPackageManager.LogEnabledRegularPackageErrors();
         }
     }
 }

@@ -299,7 +299,7 @@ namespace Barotrauma
                 };
                 new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), spawnTypeContainer.RectTransform), TextManager.Get("SpawnType"));
 
-                var button = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), spawnTypeContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIMinusButton")
+                var button = new GUIButton(new RectTransform(Vector2.One, spawnTypeContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIMinusButton")
                 {
                     UserData = -1,
                     OnClicked = ChangeSpawnType
@@ -308,7 +308,7 @@ namespace Barotrauma
                 {
                     UserData = "spawntypetext"
                 };
-                button = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), spawnTypeContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIPlusButton")
+                button = new GUIButton(new RectTransform(Vector2.One, spawnTypeContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIPlusButton")
                 {
                     UserData = 1,
                     OnClicked = ChangeSpawnType

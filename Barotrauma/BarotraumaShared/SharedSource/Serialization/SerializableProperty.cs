@@ -1007,6 +1007,19 @@ namespace Barotrauma
                             }
                         }
                     }
+                    else if (attributeName == "move")
+                    {
+                        Vector2 moveAmount = subElement.GetAttributeVector2("move", Vector2.Zero);
+                        if (entity is Structure structure)
+                        {
+                            structure.Move(moveAmount);
+                        }
+                        else if (entity is Item item)
+                        {
+                            item.Move(moveAmount);
+                        }
+                        continue;
+                    }
 
                     if (entity.SerializableProperties.TryGetValue(attributeName, out SerializableProperty property))
                     {

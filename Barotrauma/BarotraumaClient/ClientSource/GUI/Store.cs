@@ -50,6 +50,7 @@ namespace Barotrauma
         private GUIImage sellValueChangeArrow;
         private GUIDropDown sortingDropDown;
         private GUITextBox searchBox;
+        private GUILayoutGroup categoryButtonContainer;
         private GUIListBox storeBuyList, storeSellList, storeSellFromSubList;
         /// <summary>
         /// Can be null when there are no deals at the current location
@@ -482,7 +483,7 @@ namespace Barotrauma
             };
 
             // Item category buttons ------------------------------------------------
-            var categoryButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.08f, 1.0f), storeInventoryContainer.RectTransform))
+            categoryButtonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.08f, 1.0f), storeInventoryContainer.RectTransform))
             {
                 RelativeSpacing = 0.02f
             };
@@ -765,6 +766,34 @@ namespace Barotrauma
             }
         }
 
+        private void UpdateCategoryButtons()
+        {
+            var tabItems = activeTab switch
+            {
+                StoreTab.Buy => ActiveStore?.Stock,
+                StoreTab.Sell => itemsToSell,
+                StoreTab.SellSub => itemsToSellFromSub,
+                _ => null
+            } ?? Enumerable.Empty<PurchasedItem>();
+            foreach (var button in itemCategoryButtons)
+            {
+                if (!(button.UserData is MapEntityCategory category))
+                {
+                    continue;
+                }
+                bool isButtonEnabled = false;
+                foreach (var item in tabItems)
+                {
+                    if (item.ItemPrefab.Category.HasFlag(category))
+                    {
+                        isButtonEnabled = true;
+                        break;
+                    }
+                }
+                button.Enabled = isButtonEnabled;
+            }
+        }
+
         private void ChangeStoreTab(StoreTab tab)
         {
             activeTab = tab;
@@ -774,6 +803,7 @@ namespace Barotrauma
             }
             sortingDropDown.SelectItem(tabSortingMethods[tab]);
             relevantBalanceName.Text = IsBuying ? TextManager.Get("campaignstore.balance") : TextManager.Get("campaignstore.storebalance");
+            UpdateCategoryButtons();
             SetShoppingCrateTotalText();
             SetClearAllButtonStatus();
             SetConfirmButtonBehavior();
@@ -879,7 +909,7 @@ namespace Barotrauma
                 prevDailySpecialCount = dailySpecialCount;
             }
 
-            bool hasPermissions = HasTabPermissions(StoreTab.Sell);
+            bool hasPermissions = HasTabPermissions(StoreTab.Buy);
             var existingItemFrames = new HashSet<GUIComponent>();
             foreach (PurchasedItem item in ActiveStore.Stock)
             {
@@ -931,7 +961,11 @@ namespace Barotrauma
                 removedItemFrames.AddRange(storeDailySpecialsGroup.Children.Where(c => c.UserData is PurchasedItem).Except(existingItemFrames).ToList());
             }
             removedItemFrames.ForEach(f => f.RectTransform.Parent = null);
-            if (activeTab == StoreTab.Buy) { FilterStoreItems(); }
+            if (activeTab == StoreTab.Buy)
+            {
+                UpdateCategoryButtons();
+                FilterStoreItems();
+            }
             SortItems(StoreTab.Buy);
 
             storeBuyList.BarScroll = prevBuyListScroll;
@@ -1011,7 +1045,11 @@ namespace Barotrauma
             }
             removedItemFrames.ForEach(f => f.RectTransform.Parent = null);
 
-            if (activeTab == StoreTab.Sell) { FilterStoreItems(); }
+            if (activeTab == StoreTab.Sell)
+            {
+                UpdateCategoryButtons();
+                FilterStoreItems();
+            }
             SortItems(StoreTab.Sell);
 
             storeSellList.BarScroll = prevSellListScroll;
@@ -1091,7 +1129,11 @@ namespace Barotrauma
             }
             removedItemFrames.ForEach(f => f.RectTransform.Parent = null);
 
-            if (activeTab == StoreTab.SellSub) { FilterStoreItems(); }
+            if (activeTab == StoreTab.SellSub)
+            {
+                UpdateCategoryButtons();
+                FilterStoreItems();
+            }
             SortItems(StoreTab.SellSub);
 
             storeSellFromSubList.BarScroll = prevSellListScroll;

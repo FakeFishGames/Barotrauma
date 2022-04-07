@@ -64,6 +64,8 @@ namespace Barotrauma
         public readonly static GUISprite UIGlowSolidCircular = new GUISprite("UIGlowSolidCircular");
         public readonly static GUISprite UIThermalGlow = new GUISprite("UIGlowSolidCircular");
         public readonly static GUISprite ButtonPulse = new GUISprite("ButtonPulse");
+        public readonly static GUISprite WalletPortraitBG = new GUISprite("WalletPortraitBG");
+        public readonly static GUISprite CrewWalletIconSmall = new GUISprite("CrewWalletIconSmall");
 
         public readonly static GUISprite EndRoundButtonPulse = new GUISprite("EndRoundButtonPulse");
 
@@ -95,6 +97,11 @@ namespace Barotrauma
         /// General yellow color used for elements whose colors are set from code
         /// </summary>
         public readonly static GUIColor Yellow = new GUIColor("Yellow");
+
+        /// <summary>
+        /// Color to display the name of modded servers in the server list.
+        /// </summary>
+        public readonly static GUIColor ModdedServerColor = new GUIColor("ModdedServerColor");
 
         public readonly static GUIColor ColorInventoryEmpty = new GUIColor("ColorInventoryEmpty");
         public readonly static GUIColor ColorInventoryHalf = new GUIColor("ColorInventoryHalf");

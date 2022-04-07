@@ -210,6 +210,13 @@ namespace Barotrauma
             };
         }
 
+        public string GetOwnerLogName() => Owner switch
+        {
+            Some<Character> { Value: var character } => character.Name,
+            None<Character> _ => "the bank",
+            _ => throw new ArgumentOutOfRangeException(nameof(Owner))
+        };
+
         partial void SettingsChanged(Option<int> balanceChanged, Option<int> rewardChanged);
 
         private static int ClampBalance(int value) => Math.Clamp(value, 0, CampaignMode.MaxMoney);

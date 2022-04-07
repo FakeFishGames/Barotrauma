@@ -186,9 +186,8 @@ namespace Barotrauma
                     {
                         if (predicate != null)
                         {
-                            if (!predicate(e)) continue;
+                            if (!predicate(e)) { continue; }
                         }
-
                         hull.DrawSectionColors(spriteBatch);
                     }
                 }

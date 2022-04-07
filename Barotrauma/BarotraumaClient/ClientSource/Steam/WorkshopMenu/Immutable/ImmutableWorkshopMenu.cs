@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Linq;
 using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 
@@ -39,6 +40,11 @@ namespace Barotrauma.Steam
                     CanBeFocused = false,
                     UserData = p
                 };
+                if (p.Errors.Any())
+                {
+                    CreateModErrorInfo(p, regularBox, regularBox);
+                    regularBox.CanBeFocused = true;
+                }
             }
             filterBox = CreateSearchBox(mainLayout, width: 1.0f);
 

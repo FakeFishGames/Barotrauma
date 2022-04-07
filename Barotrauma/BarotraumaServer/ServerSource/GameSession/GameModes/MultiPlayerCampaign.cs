@@ -917,18 +917,17 @@ namespace Barotrauma
                     TransferMoney(wallet);
                     break;
                 case None<ushort> _:
-                    if (!AllowedToManageCampaign(sender, ClientPermissions.ManageMoney)) 
+                    if (!AllowedToManageCampaign(sender, ClientPermissions.ManageMoney))
                     {
                         if (transfer.Receiver is Some<ushort> { Value: var receiverId } && receiverId == sender.CharacterID)
                         {
                             GameMain.Server?.Voting.StartTransferVote(sender, null, transfer.Amount, sender);
+                            GameServer.Log($"{sender.Name} started a vote to transfer {transfer.Amount} mk from the bank.", ServerLog.MessageType.Money);
                         }
-                        return; 
+                        return;
                     }
-                    else
-                    {
-                        TransferMoney(Bank);
-                    }
+
+                    TransferMoney(Bank);
                     break;
             }
 
@@ -943,9 +942,11 @@ namespace Barotrauma
                         if (wallet is InvalidWallet) { return; }
 
                         wallet.Give(transfer.Amount);
+                        GameServer.Log($"{sender.Name} transferred {transfer.Amount} mk to {wallet.GetOwnerLogName()} from {from.GetOwnerLogName()}.", ServerLog.MessageType.Money);
                         break;
                     case None<ushort> _:
                         Bank.Give(transfer.Amount);
+                        GameServer.Log($"{sender.Name} transferred {transfer.Amount} mk to {Bank.GetOwnerLogName()} from {from.GetOwnerLogName()}.", ServerLog.MessageType.Money);
                         break;
                 }
             }
@@ -965,6 +966,7 @@ namespace Barotrauma
 
             Character targetCharacter = Character.CharacterList.FirstOrDefault(c => c.ID == update.Target);
             targetCharacter?.Wallet.SetRewardDistribution(update.NewRewardDistribution);
+            GameServer.Log($"{sender.Name} changed the salary of {targetCharacter?.Name ?? "the bank"} to {update.NewRewardDistribution}%.", ServerLog.MessageType.Money);
         }
 
         public void ServerReadCrew(IReadMessage msg, Client sender)

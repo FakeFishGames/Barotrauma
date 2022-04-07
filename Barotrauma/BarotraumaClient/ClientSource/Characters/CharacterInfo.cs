@@ -309,6 +309,32 @@ namespace Barotrauma
                     HUDLayoutSettings.BottomRightInfoArea.Height / (float)infoAreaPortraitBG.SourceRect.Height));
         }
 
+        public void DrawForeground(SpriteBatch spriteBatch)
+        {
+            if (Character is null || GameMain.IsSingleplayer) { return; }
+            const int million = 1000000;
+            int xfraction = (int)(HUDLayoutSettings.BottomRightInfoArea.Width * 0.2f);
+            int yoffset = GUI.IntScale(6);
+
+            int walletAmount = Character.Wallet.Balance;
+
+            LocalizedString str = walletAmount >= million ? TextManager.Get("crewwallet.balance.toomuchtoshow") : TextManager.FormatCurrency(walletAmount);
+            Vector2 size = GUIStyle.Font.MeasureString(str);
+            int barHeight = GUI.IntScale(18);
+
+            Rectangle barRect = new Rectangle((int)(HUDLayoutSettings.BottomRightInfoArea.X + xfraction / 2.5f), HUDLayoutSettings.BottomRightInfoArea.Bottom - barHeight - yoffset, HUDLayoutSettings.BottomRightInfoArea.Width - xfraction, barHeight);
+            float textScale = Math.Max(0.1f, Math.Min(barRect.Width / size.X, barRect.Height / size.Y)) - 0.01f;
+
+            GUIStyle.WalletPortraitBG.Draw(spriteBatch, barRect, Color.White);
+
+            int iconSize = GUI.IntScale(28);
+            int iconXOffset = iconSize / 2;
+            Rectangle iconRect = new Rectangle(barRect.Right - iconXOffset, barRect.Top - iconSize / 4, iconSize, iconSize);
+            GUIStyle.CrewWalletIconSmall.Draw(spriteBatch, iconRect, Color.White);
+            var (scaledTextSizeX, scaledTextSizeY) = size * textScale;
+            GUIStyle.Font.DrawString(spriteBatch, str, new Vector2(barRect.Right - iconXOffset - scaledTextSizeX - GUI.IntScale(4), barRect.Center.Y - scaledTextSizeY / 2), GUIStyle.TextColorNormal, 0f, Vector2.Zero, textScale, SpriteEffects.None, 0f);
+        }
+
         public void DrawPortrait(SpriteBatch spriteBatch, Vector2 screenPos, Vector2 offset, float targetWidth, bool flip = false, bool evaluateDisguise = false)
         {
             if (evaluateDisguise && IsDisguised) { return; }

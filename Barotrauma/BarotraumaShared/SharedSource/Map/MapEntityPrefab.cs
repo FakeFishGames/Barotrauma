@@ -3,8 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Reflection;
-using System.Xml.Linq;
 using Barotrauma.Extensions;
 
 namespace Barotrauma
@@ -13,16 +11,20 @@ namespace Barotrauma
     enum MapEntityCategory
     {
         Structure = 1, 
-        Decorative = 2, 
-        Machine = 4, 
-        Equipment = 8, 
-        Electrical = 16, 
-        Material = 32, 
-        Misc = 64, 
-        Alien = 128, 
-        Wrecked = 256, 
-        ItemAssembly = 512,
-        Legacy = 1024
+        Decorative = 2,
+        Machine = 4,
+        Medical = 8,
+        Weapon = 16,
+        Diving = 32,
+        Equipment = 64,
+        Fuel = 128,
+        Electrical = 256,
+        Material = 1024,
+        Alien = 2048,
+        Wrecked = 4096,
+        ItemAssembly = 8192,
+        Legacy = 16384,
+        Misc = 32768
     }
 
     abstract partial class MapEntityPrefab : PrefabWithUintIdentifier

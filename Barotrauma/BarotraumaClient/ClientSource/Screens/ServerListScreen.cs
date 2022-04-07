@@ -557,7 +557,9 @@ namespace Barotrauma
             };
             serverPreview = new GUIListBox(new RectTransform(Vector2.One, serverPreviewContainer.RectTransform, Anchor.Center))
             {
-                Padding = Vector4.One * 10 * GUI.Scale
+                Padding = Vector4.One * 10 * GUI.Scale,
+                HoverCursor = CursorState.Default,
+                OnSelected = (component, o) => false
             };
 
             // Spacing
@@ -915,12 +917,7 @@ namespace Barotrauma
                 {
                     case "ServerListCompatible":                        
                         bool? s1Compatible = NetworkMember.IsCompatible(GameMain.Version.ToString(), s1.GameVersion);
-                        if (!s1.ContentPackageHashes.Any()) { s1Compatible = null; }
-                        if (s1Compatible.HasValue) { s1Compatible = s1Compatible.Value && s1.ContentPackagesMatch(); };
-
                         bool? s2Compatible = NetworkMember.IsCompatible(GameMain.Version.ToString(), s2.GameVersion);
-                        if (!s2.ContentPackageHashes.Any()) { s2Compatible = null; }
-                        if (s2Compatible.HasValue) { s2Compatible = s2Compatible.Value && s2.ContentPackagesMatch(); };
 
                         //convert to int to make sorting easier
                         //1 Compatible
@@ -1028,8 +1025,7 @@ namespace Barotrauma
             
             foreach (GUIComponent child in serverList.Content.Children)
             {
-                if (!(child.UserData is ServerInfo)) continue;
-                ServerInfo serverInfo = (ServerInfo)child.UserData;
+                if (!(child.UserData is ServerInfo serverInfo)) { continue; }
 
                 Version remoteVersion = null;
                 if (!string.IsNullOrEmpty(serverInfo.GameVersion))
@@ -1047,8 +1043,7 @@ namespace Barotrauma
                 else
                 {
                     bool incompatible =
-                        (serverInfo.ContentPackageHashes.Any() && !serverInfo.ContentPackagesMatch()) ||
-                        (remoteVersion != null && !NetworkMember.IsCompatible(GameMain.Version, remoteVersion));
+                        remoteVersion != null && !NetworkMember.IsCompatible(GameMain.Version, remoteVersion);
 
                     var karmaFilterPassed = filterKarmaValue == TernaryOption.Any|| (filterKarmaValue == TernaryOption.Enabled) == serverInfo.KarmaEnabled;
                     var friendlyFireFilterPassed = filterFriendlyFireValue == TernaryOption.Any || (filterFriendlyFireValue == TernaryOption.Enabled) == serverInfo.FriendlyFireEnabled;
@@ -1798,8 +1793,7 @@ namespace Barotrauma
             {
                 CanBeFocused = false,
                 Selected =
-                    (NetworkMember.IsCompatible(GameMain.Version.ToString(), serverInfo.GameVersion) ?? true) &&
-                    serverInfo.ContentPackagesMatch(),
+                    (NetworkMember.IsCompatible(GameMain.Version.ToString(), serverInfo.GameVersion) ?? true),
                 UserData = "compatible"
             };
             
@@ -1826,9 +1820,9 @@ namespace Barotrauma
 
             if (serverInfo.ContentPackageNames.Any())
             {
-                if (serverInfo.ContentPackageNames.Any(cp => !cp.Equals(GameMain.VanillaContent.Name, StringComparison.OrdinalIgnoreCase)))
+                if (serverInfo.ContentPackageNames.Any(p => !GameMain.VanillaContent.NameMatches(p)))
                 {
-                    serverName.TextColor = new Color(219, 125, 217);
+                    serverName.TextColor = GUIStyle.ModdedServerColor;
                 }
             }
 

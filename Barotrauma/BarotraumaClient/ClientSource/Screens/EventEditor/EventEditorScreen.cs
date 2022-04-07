@@ -440,7 +440,7 @@ namespace Barotrauma
                                     }
                                     else
                                     {
-                                        connection.OverrideValue = Convert.ChangeType(attribute.Value, connection.ValueType);
+                                        connection.OverrideValue = ChangeType(attribute.Value, connection.ValueType);
                                     }
                                 }
                             }
@@ -522,6 +522,18 @@ namespace Barotrauma
         public override void AddToGUIUpdateList()
         {
             GuiFrame.AddToGUIUpdateList();
+        }
+
+        public static object? ChangeType(string value, Type type)
+        {
+            if (type == typeof(Identifier))
+            {
+                return value.ToIdentifier();
+            }
+            else
+            {
+                return Convert.ChangeType(value, type);
+            }
         }
 
         private XElement? ExportXML()

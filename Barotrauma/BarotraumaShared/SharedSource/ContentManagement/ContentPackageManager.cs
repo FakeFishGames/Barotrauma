@@ -430,9 +430,9 @@ namespace Barotrauma
         public static void LoadVanillaFileList()
         {
             VanillaCorePackage = new CorePackage(XDocument.Load(VanillaFileList), VanillaFileList);
-            foreach (string error in VanillaCorePackage.Errors)
+            foreach ((string error, string? stackTrace) in VanillaCorePackage.Errors)
             {
-                DebugConsole.ThrowError(error);
+                DebugConsole.ThrowError(error + (stackTrace == null ? string.Empty : '\n' + stackTrace));
             }
         }
 
@@ -469,8 +469,17 @@ namespace Barotrauma
                 }
                 
                 var corePackageElement = contentPackagesElement.GetChildElement(CorePackageElementName);
-                enabledCorePackage = findPackage(CorePackages, corePackageElement) ?? VanillaCorePackage!;
-
+                var configEnabledCorePackage = findPackage(CorePackages, corePackageElement);
+                if (configEnabledCorePackage == null)
+                {
+                    string packageStr = corePackageElement.GetAttributeString("name", null) ?? corePackageElement.GetAttributeStringUnrestricted("path", "UNKNOWN");
+                    DebugConsole.ThrowError($"Could not find the selected core package \"{packageStr}\". Switching to the \"{enabledCorePackage.Name}\" package.");
+                }
+                else
+                {
+                    enabledCorePackage = configEnabledCorePackage;
+                }
+                
                 var regularPackagesElement = contentPackagesElement.GetChildElement(RegularPackagesElementName);
                 if (regularPackagesElement != null)
                 {
@@ -498,6 +507,14 @@ namespace Barotrauma
             }
 
             yield return new LoadProgress(1.0f);
+        }
+
+        public static void LogEnabledRegularPackageErrors()
+        {
+            foreach (var p in EnabledPackages.Regular)
+            {
+                p.LogErrors();
+            }
         }
     }
 }

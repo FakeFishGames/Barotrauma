@@ -302,7 +302,7 @@ namespace Barotrauma
         }
 
         // used for talents/ability conditions
-        public Item SourceItem { get; }
+        public Item SourceItem { get; set; }
         
         public List<Affliction> GetMultipliedAfflictions(float multiplier)
         {

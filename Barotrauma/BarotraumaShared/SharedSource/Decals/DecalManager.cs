@@ -1,10 +1,8 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Xml.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -33,11 +31,11 @@ namespace Barotrauma
         public static int GrimeSpriteCount { get; private set; } = 0;
 
         public static readonly PrefabCollection<GrimeSprite> GrimeSprites = new PrefabCollection<GrimeSprite>(
-            onAdd: (sprite, b) => GrimeSpriteCount = Math.Max(GrimeSpriteCount, sprite.IndexInFile+1),
+            onAdd: (sprite, b) => GrimeSpriteCount = Math.Max(GrimeSpriteCount, sprite.IndexInFile + 1),
             onRemove: (s) =>
                 GrimeSpriteCount = GrimeSprites.AllPrefabs
                     .SelectMany(kvp => kvp.Value)
-                    .Where(p => p != s).Select(p => p.IndexInFile+1).MaxOrNull() ?? 0,
+                    .Where(p => p != s).Select(p => p.IndexInFile + 1).MaxOrNull() ?? 0,
             onSort: null, onAddOverrideFile: null, onRemoveOverrideFile: null);
 
         public static void LoadFromFile(DecalsFile configFile)

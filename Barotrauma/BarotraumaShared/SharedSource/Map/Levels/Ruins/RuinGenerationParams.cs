@@ -37,10 +37,14 @@ namespace Barotrauma.RuinGeneration
                 Indent = true,
                 NewLineOnAttributes = true
             };
-            
+
+            IEnumerable<ContentPackage> packages = ContentPackageManager.LocalPackages;
+#if DEBUG
+            packages = packages.Union(ContentPackageManager.VanillaCorePackage.ToEnumerable());
+#endif
             foreach (RuinGenerationParams generationParams in RuinParams)
             {
-                foreach (RuinConfigFile configFile in ContentPackageManager.AllPackages.SelectMany(p => p.GetFiles<RuinConfigFile>()))
+                foreach (RuinConfigFile configFile in packages.SelectMany(p => p.GetFiles<RuinConfigFile>()))
                 {
                     if (configFile.Path != generationParams.ContentFile.Path) { continue; }
 

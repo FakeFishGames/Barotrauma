@@ -130,16 +130,21 @@ namespace Barotrauma
                     head = value;
                     HeadSprite = null;
                     AttachmentSprites = null;
+                    IsMale = value.Preset?.TagSet?.Contains("Male".ToIdentifier()) ?? false;
+                    IsFemale = value.Preset?.TagSet?.Contains("Female".ToIdentifier()) ?? false;
                 }
             }
         }
+
+        public bool IsMale { get; private set; }
+
+        public bool IsFemale { get; private set; }
 
         public CharacterInfoPrefab Prefab => CharacterPrefab.Prefabs[SpeciesName].CharacterInfoPrefab;
         public class HeadPreset : ISerializableEntity
         {
             private readonly CharacterInfoPrefab characterInfoPrefab;
             public Identifier MenuCategory => TagSet.First(t => characterInfoPrefab.VarTags[characterInfoPrefab.MenuCategoryVar].Contains(t));
-
 
             public ImmutableHashSet<Identifier> TagSet { get; private set; }
 

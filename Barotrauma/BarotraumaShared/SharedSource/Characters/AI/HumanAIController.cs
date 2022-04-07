@@ -62,9 +62,9 @@ namespace Barotrauma
         private float enemycheckTimer;
 
         /// <summary>
-        /// How far other characters can hear reports done by this character (e.g. reports for fires, intruders).
+        /// How far other characters can hear reports done by this character (e.g. reports for fires, intruders). Defaults to infinity.
         /// </summary>
-        public float ReportRange { get; set; }
+        public float ReportRange { get; set; } = float.PositiveInfinity;
 
         private float _aimSpeed = 1;
         public float AimSpeed
@@ -166,7 +166,6 @@ namespace Barotrauma
             objectiveManager = new AIObjectiveManager(c);
             reactTimer = GetReactionTime();
             SortTimer = Rand.Range(0f, sortObjectiveInterval);
-            ReportRange = Character.IsOnPlayerTeam ? float.PositiveInfinity : 1000;
         }
 
         public override void Update(float deltaTime)

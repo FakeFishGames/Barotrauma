@@ -102,7 +102,7 @@ namespace Barotrauma
                         item.GetComponent<PowerContainer>() != null ||
                         item.GetComponent<Reactor>() != null)
                     {
-                        item.Indestructible = true;
+                        item.InvulnerableToDamage = true;
                     }
                 }
 

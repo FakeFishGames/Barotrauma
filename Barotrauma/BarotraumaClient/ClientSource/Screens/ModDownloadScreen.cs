@@ -8,7 +8,6 @@ using Barotrauma.Networking;
 using Barotrauma.Steam;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Steamworks.Data;
 using Color = Microsoft.Xna.Framework.Color;
 using ServerContentPackage = Barotrauma.Networking.ClientPeer.ServerContentPackage;
 
@@ -164,7 +163,7 @@ namespace Barotrauma
                        => wp.SteamWorkshopId != mp.WorkshopId))
                 .Select(mp => mp.WorkshopId)
                 .ToArray();
-            if (missingIds.Any())
+            if (missingIds.Any() && SteamManager.IsInitialized)
             {
                 buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), innerLayout.RectTransform), isHorizontal: true);
                 buttonContainerSpacing(0.15f);
@@ -208,7 +207,7 @@ namespace Barotrauma
                 {
                     if (currentDownload == p)
                     {
-                        FileReceiver.FileTransferIn? getTransfer() => GameMain.Client.FileReceiver.ActiveTransfers.FirstOrDefault(t => t.FileType == FileTransferType.Mod);
+                        FileReceiver.FileTransferIn? getTransfer() => GameMain.Client?.FileReceiver.ActiveTransfers.FirstOrDefault(t => t.FileType == FileTransferType.Mod);
                         
                         if (downloadProgress.GetAnyChild<GUITextBlock>() is null)
                         {

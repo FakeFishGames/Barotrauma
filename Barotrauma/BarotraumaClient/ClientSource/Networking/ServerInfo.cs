@@ -78,24 +78,6 @@ namespace Barotrauma.Networking
             get;
             private set;
         } = new List<ulong>();
-        
-        public bool ContentPackagesMatch()
-        {
-            //make sure we have all the packages the server requires
-            if (ContentPackageHashes.Count != ContentPackageWorkshopIds.Count) { return false; }
-            for (int i = 0; i < ContentPackageWorkshopIds.Count; i++)
-            {
-                string hash = ContentPackageHashes[i];
-                UInt64 id = ContentPackageWorkshopIds[i];
-                if (!GameMain.ServerListScreen.ContentPackagesByHash.ContainsKey(hash))
-                {
-                    if (GameMain.ServerListScreen.ContentPackagesByWorkshopId.ContainsKey(id)) { return false; }
-                    if (id == 0) { return false; }
-                }
-            }
-
-            return true;
-        }
 
         public void CreatePreviewWindow(GUIFrame frame)
         {
@@ -105,7 +87,8 @@ namespace Barotrauma.Networking
 
             var title = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), frame.RectTransform), ServerName, font: GUIStyle.LargeFont)
             {
-                ToolTip = ServerName
+                ToolTip = ServerName,
+                CanBeFocused = false
             };
             title.Text = ToolBox.LimitString(title.Text, title.Font, (int)(title.Rect.Width * 0.85f));
 
@@ -130,7 +113,11 @@ namespace Barotrauma.Networking
             };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), frame.RectTransform),
-                TextManager.AddPunctuation(':', TextManager.Get("ServerListVersion"), string.IsNullOrEmpty(GameVersion) ? TextManager.Get("Unknown") : GameVersion));
+                TextManager.AddPunctuation(':', TextManager.Get("ServerListVersion"),
+                    string.IsNullOrEmpty(GameVersion) ? TextManager.Get("Unknown") : GameVersion))
+            {
+                CanBeFocused = false
+            };
 
             bool hidePlaystyleBanner = !PlayStyle.HasValue;
             if (!hidePlaystyleBanner)
@@ -141,15 +128,23 @@ namespace Barotrauma.Networking
                 var playStyleBanner = new GUIImage(new RectTransform(new Point(frame.Rect.Width, (int)(frame.Rect.Width / playStyleBannerAspectRatio)), frame.RectTransform),
                                                    playStyleBannerSprite, null, true);
 
-                var playStyleName = new GUITextBlock(new RectTransform(new Vector2(0.15f, 0.0f), playStyleBanner.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.06f) },
-                    TextManager.AddPunctuation(':', TextManager.Get("serverplaystyle"), TextManager.Get("servertag."+ playStyle)), textColor: Color.White, 
-                    font: GUIStyle.SmallFont, textAlignment: Alignment.Center, 
+                var playStyleName = new GUITextBlock(
+                    new RectTransform(new Vector2(0.15f, 0.0f), playStyleBanner.RectTransform)
+                        { RelativeOffset = new Vector2(0.0f, 0.06f) },
+                    TextManager.AddPunctuation(':', TextManager.Get("serverplaystyle"),
+                        TextManager.Get("servertag." + playStyle)), textColor: Color.White,
+                    font: GUIStyle.SmallFont, textAlignment: Alignment.Center,
                     color: ServerListScreen.PlayStyleColors[(int)playStyle], style: "GUISlopedHeader");
                 playStyleName.RectTransform.NonScaledSize = (playStyleName.Font.MeasureString(playStyleName.Text) + new Vector2(20, 5) * GUI.Scale).ToPoint();
                 playStyleName.RectTransform.IsFixedSize = true;
             }
+
             var serverType = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), frame.RectTransform),
-                TextManager.Get((OwnerID != 0 || LobbyID != 0) ? "SteamP2PServer" : "DedicatedServer"), textAlignment: Alignment.TopLeft);
+                TextManager.Get((OwnerID != 0 || LobbyID != 0) ? "SteamP2PServer" : "DedicatedServer"),
+                textAlignment: Alignment.TopLeft)
+            {
+                CanBeFocused = false
+            };
             serverType.RectTransform.MinSize = new Point(0, (int)(serverType.Rect.Height * 1.5f));
 
             var content = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.6f), frame.RectTransform))
@@ -270,7 +265,11 @@ namespace Barotrauma.Networking
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform),
                 TextManager.Get("ServerListContentPackages"), textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont);
 
-            var contentPackageList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.3f), frame.RectTransform)) { ScrollBarVisible = true };
+            var contentPackageList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.3f), frame.RectTransform))
+            {
+                ScrollBarVisible = true,
+                OnSelected = (component, o) => false
+            };
             if (ContentPackageNames.Count == 0)
             {
                 new GUITextBlock(new RectTransform(Vector2.One, contentPackageList.Content.RectTransform), TextManager.Get("Unknown"), textAlignment: Alignment.Center)
@@ -282,28 +281,30 @@ namespace Barotrauma.Networking
             {
                 for (int i = 0; i < ContentPackageNames.Count; i++)
                 {
-                    var packageText = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.15f), contentPackageList.Content.RectTransform) { MinSize = new Point(0, 15) },
+                    var packageText = new GUITickBox(
+                        new RectTransform(new Vector2(1.0f, 0.15f), contentPackageList.Content.RectTransform)
+                            { MinSize = new Point(0, 15) },
                         ContentPackageNames[i])
                     {
-                        CanBeFocused = false
+                        Enabled = false
                     };
+                    packageText.Box.Enabled = true;
+                    packageText.TextBlock.Enabled = true;
                     if (i < ContentPackageHashes.Count)
                     {
                         if (ContentPackageManager.AllPackages.Any(contentPackage => contentPackage.Hash.StringRepresentation == ContentPackageHashes[i]))
                         {
+                            packageText.TextColor = GUIStyle.Green;
                             packageText.Selected = true;
-                            continue;
                         }
-
                         //workshop download link found
-                        if (i < ContentPackageWorkshopIds.Count && ContentPackageWorkshopIds[i] != 0)
+                        else if (i < ContentPackageWorkshopIds.Count && ContentPackageWorkshopIds[i] != 0)
                         {
-                            packageText.TextColor = GUIStyle.Yellow;
                             packageText.ToolTip = TextManager.GetWithVariable("ServerListIncompatibleContentPackageWorkshopAvailable", "[contentpackage]", ContentPackageNames[i]);
                         }
-                        else //no package or workshop download link found, tough luck
+                        else //no package or workshop download link found (TODO: update text to say that they could be downloaded through the server)
                         {
-                            packageText.TextColor = GUIStyle.Red;
+                            packageText.TextColor = GameMain.VanillaContent.NameMatches(ContentPackageNames[i]) ? GUIStyle.Red : GUIStyle.Yellow;
                             packageText.ToolTip = TextManager.GetWithVariables("ServerListIncompatibleContentPackage",
                                 ("[contentpackage]", ContentPackageNames[i]), ("[hash]", ContentPackageHashes[i]));
                         }
@@ -342,7 +343,7 @@ namespace Barotrauma.Networking
             }
             if (ContentPackageNames.Count > 0)
             {
-                tags.Add(ContentPackageNames.Count > 1 || ContentPackageNames[0] != GameMain.VanillaContent?.Name ? "modded.true" : "modded.false");
+                tags.Add(ContentPackageNames.Count > 1 || !GameMain.VanillaContent.NameMatches(ContentPackageNames[0]) ? "modded.true" : "modded.false");
             }
             return tags;
         }

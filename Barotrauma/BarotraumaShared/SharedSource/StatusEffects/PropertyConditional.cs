@@ -167,16 +167,9 @@ namespace Barotrauma
             var type = Type;
             if (type == ConditionType.Uncertain)
             {
-                if (AfflictionPrefab.Prefabs.ContainsKey(AttributeName))
-                {
-                    type = ConditionType.Affliction;
-                }
-                else
-                {
-                    type = (target?.SerializableProperties?.ContainsKey(AttributeName) ?? false)
-                        ? ConditionType.PropertyValue
-                        : ConditionType.HasSpecifierTag;
-                }
+                type = AfflictionPrefab.Prefabs.ContainsKey(AttributeName)
+                    ? ConditionType.Affliction
+                    : ConditionType.PropertyValue;
             }
             
             if (checkContained)
@@ -250,6 +243,14 @@ namespace Barotrauma
                         }
                     }
                     return Operator == OperatorType.Equals ? matches >= SplitAttributeValue.Length : matches <= 0;
+                case ConditionType.HasSpecifierTag:
+                    {
+                        if (target == null) { return Operator == OperatorType.NotEquals; }
+                        if (!(target is Character { Info: { } characterInfo })) { return false; }
+
+                        return (Operator == OperatorType.Equals) ==
+                               SplitAttributeValue.All(v => characterInfo.Head.Preset.TagSet.Contains(v));
+                    }
                 case ConditionType.SpeciesName:
                     {
                         if (target == null) { return Operator == OperatorType.NotEquals; }

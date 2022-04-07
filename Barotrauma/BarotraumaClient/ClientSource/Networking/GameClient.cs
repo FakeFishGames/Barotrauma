@@ -1947,7 +1947,6 @@ namespace Barotrauma.Networking
                     existingClient.Character = null;
                     existingClient.Karma = tc.Karma;
                     existingClient.Muted = tc.Muted;
-                    existingClient.HasPermissions = tc.HasPermissions;
                     existingClient.InGame = tc.InGame;
                     existingClient.IsOwner = tc.IsOwner;
                     existingClient.AllowKicking = tc.AllowKicking;
@@ -2493,12 +2492,18 @@ namespace Barotrauma.Networking
             CancelFileTransfer(transfer.ID);
         }
 
-        public void UpdateFileTransfer(int id, int expecting, int lastSeen, bool reliable = false)
+        public void UpdateFileTransfer(FileReceiver.FileTransferIn transfer, int expecting, int lastSeen, bool reliable = false)
         {
+            if (!reliable && (DateTime.Now - transfer.LastOffsetAckTime).TotalSeconds < 1)
+            {
+                return;
+            }
+            transfer.RecordOffsetAckTime();
+            
             IWriteMessage msg = new WriteOnlyMessage();
             msg.Write((byte)ClientPacketHeader.FILE_REQUEST);
             msg.Write((byte)FileTransferMessageType.Data);
-            msg.Write((byte)id);
+            msg.Write((byte)transfer.ID);
             msg.Write(expecting);
             msg.Write(lastSeen);
             clientPeer.Send(msg, reliable ? DeliveryMethod.Reliable : DeliveryMethod.Unreliable);
@@ -2784,7 +2789,9 @@ namespace Barotrauma.Networking
 
         public void ShowSubmarineChangeVoteInterface(Client starter, SubmarineInfo info, VoteType type, float timeOut)
         {
-            if (info == null || votingInterface != null) { return; }
+            if (info == null) { return; }
+            if (votingInterface != null && votingInterface.VoteRunning) { return; }
+            votingInterface?.Remove();
             votingInterface = VotingInterface.CreateSubmarineVotingInterface(starter, info, type, timeOut);
         }
         #endregion
@@ -2792,12 +2799,13 @@ namespace Barotrauma.Networking
         #region Money Transfer Voting
         public void ShowMoneyTransferVoteInterface(Client starter, Client from, int amount, Client to, float timeOut)
         {
-            if (votingInterface != null) { return; }
+            if (votingInterface != null && votingInterface.VoteRunning) { return; }
             if (from == null && to == null) 
             {
                 DebugConsole.ThrowError("Tried to initiate a vote for transferring from null to null!");
                 return; 
             }
+            votingInterface?.Remove();
             votingInterface = VotingInterface.CreateMoneyTransferVotingInterface(starter, from, to, amount, timeOut);
         }
         #endregion

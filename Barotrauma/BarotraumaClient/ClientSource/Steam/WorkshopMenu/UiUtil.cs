@@ -129,5 +129,20 @@ namespace Barotrauma.Steam
             };
             return searchBox;
         }
+
+        protected void CreateModErrorInfo(ContentPackage mod, GUIComponent uiElement, GUITextBlock nameText)
+        {
+            if (mod.Errors.Any())
+            {
+                const int maxErrorsToShow = 5;
+                nameText.TextColor = GUIStyle.Red;
+                uiElement.ToolTip =
+                    TextManager.GetWithVariable("contentpackagehaserrors", "[packagename]", mod.Name) + '\n' + string.Join('\n', mod.Errors.Take(maxErrorsToShow).Select(e => e.error));
+                if (mod.Errors.Count() > maxErrorsToShow)
+                {
+                    uiElement.ToolTip += '\n' + TextManager.GetWithVariable("workshopitemdownloadprompttruncated", "[number]", (mod.Errors.Count() - maxErrorsToShow).ToString());
+                }
+            }
+        }
     }
 }

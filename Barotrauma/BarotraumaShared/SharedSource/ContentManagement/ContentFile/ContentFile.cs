@@ -71,8 +71,8 @@ namespace Barotrauma
 
         public static Result<ContentFile, string> CreateFromXElement(ContentPackage contentPackage, XElement element)
         {
-            static Result<ContentFile, string> fail(string error)
-                => Result<ContentFile, string>.Failure(error);
+            static Result<ContentFile, string> fail(string error, string? stackTrace = null)
+                => Result<ContentFile, string>.Failure(error, stackTrace);
             
             Identifier elemName = element.NameAsIdentifier();
             var type = Types.FirstOrDefault(t => t.Names.Contains(elemName));
@@ -99,10 +99,10 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                return fail($"Failed to load file \"{filePath}\" of type \"{elemName}\": {e.Message}\n{e.StackTrace.CleanupStackTrace()}");
+                return fail($"Failed to load file \"{filePath}\" of type \"{elemName}\": {e.Message}", e.StackTrace.CleanupStackTrace());
             }
         }
-        
+
         protected ContentFile(ContentPackage contentPackage, ContentPath path)
         {
             ContentPackage = contentPackage;

@@ -51,6 +51,17 @@ namespace Barotrauma.Networking
                 set;
             }
 
+            public DateTime LastOffsetAckTime
+            {
+                get;
+                private set;
+            }
+
+            public void RecordOffsetAckTime()
+            {
+                LastOffsetAckTime = DateTime.Now;
+            }
+
             public float BytesPerSecond
             {
                 get;
@@ -91,6 +102,8 @@ namespace Barotrauma.Networking
                 Connection = connection;               
 
                 Status = FileTransferStatus.NotStarted;
+
+                LastOffsetAckTime = DateTime.Now - new TimeSpan(days: 0, hours: 0, minutes: 5, seconds: 0);
             }
 
             public void OpenStream()
@@ -214,11 +227,11 @@ namespace Barotrauma.Networking
                                 fileName != existingTransfer.FileName)
                             {
                                 GameMain.Client.CancelFileTransfer(transferId);
-                                DebugConsole.ThrowError("File transfer error: file transfer initiated with an ID that's already in use");
+                                DebugConsole.AddWarning("File transfer error: file transfer initiated with an ID that's already in use");
                             }
                             else //resend acknowledgement packet
                             {
-                                GameMain.Client.UpdateFileTransfer(transferId, existingTransfer.Received, existingTransfer.LastSeen);
+                                GameMain.Client.UpdateFileTransfer(existingTransfer, existingTransfer.Received, existingTransfer.LastSeen);
                             }
                             return;
                         }
@@ -285,7 +298,7 @@ namespace Barotrauma.Networking
                         }
                         activeTransfers.Add(newTransfer);
 
-                        GameMain.Client.UpdateFileTransfer(transferId, 0, 0); //send acknowledgement packet
+                        GameMain.Client.UpdateFileTransfer(newTransfer, 0, 0); //send acknowledgement packet
                     }
                     break;
                 case (byte)FileTransferMessageType.TransferOnSameMachine:
@@ -333,7 +346,7 @@ namespace Barotrauma.Networking
                             if (!finishedTransfers.Any(t => t.transferId == transferId))
                             {
                                 GameMain.Client.CancelFileTransfer(transferId);
-                                DebugConsole.ThrowError("File transfer error: received data without a transfer initiation message");
+                                DebugConsole.AddWarning("File transfer error: received data without a transfer initiation message");
                             }
                             return;
                         }
@@ -344,7 +357,7 @@ namespace Barotrauma.Networking
                         {
                             activeTransfer.LastSeen = Math.Max(offset, activeTransfer.LastSeen);
                             DebugConsole.Log($"Received {bytesToRead} bytes of the file {activeTransfer.FileName} (ignoring: offset {offset}, waiting for {activeTransfer.Received})");
-                            GameMain.Client.UpdateFileTransfer(activeTransfer.ID, activeTransfer.Received, activeTransfer.LastSeen);
+                            GameMain.Client.UpdateFileTransfer(activeTransfer, activeTransfer.Received, activeTransfer.LastSeen);
                             return;
                         }
                         activeTransfer.LastSeen = offset;
@@ -375,7 +388,7 @@ namespace Barotrauma.Networking
                             return;
                         }
 
-                        GameMain.Client.UpdateFileTransfer(activeTransfer.ID, activeTransfer.Received, activeTransfer.LastSeen,  reliable: activeTransfer.Status == FileTransferStatus.Finished);
+                        GameMain.Client.UpdateFileTransfer(activeTransfer, activeTransfer.Received, activeTransfer.LastSeen,  reliable: activeTransfer.Status == FileTransferStatus.Finished);
                         if (activeTransfer.Status == FileTransferStatus.Finished)
                         {
                             activeTransfer.Dispose();

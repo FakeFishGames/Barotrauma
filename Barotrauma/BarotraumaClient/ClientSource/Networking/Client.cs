@@ -108,7 +108,7 @@ namespace Barotrauma.Networking
             {
                 return;
             }
-            if (!Permissions.HasFlag(permission)) Permissions |= permission;
+            if (!Permissions.HasFlag(permission)) { Permissions |= permission; }
         }
 
         public void RemovePermission(ClientPermissions permission)
@@ -117,7 +117,7 @@ namespace Barotrauma.Networking
             {
                 return;
             }
-            if (Permissions.HasFlag(permission)) Permissions &= ~permission;
+            if (Permissions.HasFlag(permission)) { Permissions &= ~permission; }
         }
 
         public bool HasPermission(ClientPermissions permission)

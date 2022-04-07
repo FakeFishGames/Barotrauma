@@ -101,7 +101,7 @@ namespace Barotrauma
             {
                 if (InWater || !CanWalk)
                 {
-                    return TargetMovement.LengthSquared() > SwimSlowParams.MovementSpeed;
+                    return TargetMovement.LengthSquared() > MathUtils.Pow2(SwimSlowParams.MovementSpeed);
                 }
                 else
                 {

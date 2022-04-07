@@ -17,6 +17,7 @@ namespace Barotrauma
             Hull.EditFire = false;
             Hull.EditWater = false;
 #endif
+            HumanAIController.DisableCrewAI = false;
         }
 
         protected virtual void DeselectEditorSpecific() { }

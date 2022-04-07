@@ -1540,8 +1540,10 @@ namespace Barotrauma
             List<HumanPrefab> killedCharacters = new List<HumanPrefab>();
             List<(HumanPrefab HumanPrefab, CharacterInfo CharacterInfo)> selectedCharacters
                 = new List<(HumanPrefab HumanPrefab, CharacterInfo CharacterInfo)>();
-            foreach (HumanPrefab humanPrefab in outpost.Info.OutpostGenerationParams.GetHumanPrefabs(Rand.RandSync.ServerAndClient))
+            var humanPrefabs = outpost.Info.OutpostGenerationParams.GetHumanPrefabs(Rand.RandSync.ServerAndClient);
+            foreach (HumanPrefab humanPrefab in humanPrefabs)
             {
+                if (humanPrefab is null) { continue; }
                 var characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: humanPrefab.GetJobPrefab(Rand.RandSync.ServerAndClient), randSync: Rand.RandSync.ServerAndClient);
                 if (location != null && location.KilledCharacterIdentifiers.Contains(characterInfo.GetIdentifier())) 
                 {

@@ -149,22 +149,34 @@ namespace Barotrauma
         {
             StringBuilder sb = new StringBuilder();
 
-            for (int i = 0; i < Texts.Count; i++)
+            XDocument doc = XMLExtensions.TryLoadXml(ContentFile.Path);
+            if (doc == null) { return; }
+
+            List<(string key, string value)> texts = new List<(string key, string value)>();
+
+            foreach (var element in doc.Root.Elements())
             {
-                Identifier key = Texts.Keys.ElementAt(i);
-                Texts.TryGetValue(key, out ImmutableArray<string> infoList);
+                string text = element.ElementInnerText()
+                    .Replace("&amp;", "&")
+                    .Replace("&lt;", "<")
+                    .Replace("&gt;", ">")
+                    .Replace("&quot;", "\"")
+                    .Replace("&apos;", "'");
+
+                texts.Add((element.Name.ToString(), text));
+            }
+
+            foreach ((string key, string value) in texts)
+            {
+                sb.Append(key); // ID
+                sb.Append('*');
+                sb.Append(value); // Original
+                sb.Append('*');
+                // Translated
+                sb.Append('*');
+                // Comments
+                sb.AppendLine();
                 
-                for (int j = 0; j < infoList.Length; j++)
-                {
-                    sb.Append(key); // ID
-                    sb.Append('*');
-                    sb.Append(infoList[j]); // Original
-                    sb.Append('*');
-                    // Translated
-                    sb.Append('*');
-                    // Comments
-                    sb.AppendLine();
-                }
             }
 
             Barotrauma.IO.File.WriteAllText($"csv_{Language.ToString().ToLower()}_{index}.csv", sb.ToString());

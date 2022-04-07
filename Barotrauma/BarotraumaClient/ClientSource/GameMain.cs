@@ -477,6 +477,8 @@ namespace Barotrauma
 
             DebugConsole.Init();
 
+            ContentPackageManager.LogEnabledRegularPackageErrors();
+
 #if !DEBUG && !OSX
             GameAnalyticsManager.InitIfConsented();
 #endif

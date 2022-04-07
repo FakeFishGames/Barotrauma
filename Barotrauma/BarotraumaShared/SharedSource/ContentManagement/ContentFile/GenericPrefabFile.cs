@@ -34,7 +34,15 @@ namespace Barotrauma
             else if (MatchesSingular(elemName))
             {
                 T prefab = CreatePrefab(parentElement);
-                prefabs.Add(prefab, overriding);
+                try
+                {
+                    prefabs.Add(prefab, overriding);
+                }
+                catch
+                {
+                    prefab.Dispose(); //clean up before rethrowing, since some prefab types might lock resources
+                    throw;
+                }
             }
             else if (MatchesPlural(elemName))
             {

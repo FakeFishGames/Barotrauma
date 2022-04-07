@@ -1,4 +1,59 @@
 ---------------------------------------------------------------------------------------------------------
+v0.17.7.0
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Water no longer dirties up walls.
+- New store (and sub editor) categories: weapon, medical, diving, and fuel. Reorganized the items into categories.
+- Disabled store category buttons for categories that contain no items.
+
+Changes (unstable only):
+- Content package errors are logged in the debug console when enabling a mod that has errors, + listed in tooltips in the Mods tab.
+- Updated sprites for the wallet related features.
+- Personal wallet balance now shows in the bottom right character portrait.
+- Latcher: new sounds and minor tweaks.
+
+Fixes (unstable only):
+- Fixed crashing when pressing the "retry" button in the pause menu when the outpost store interface is open.
+- Fixed crashing when opening the Mods tab when not connected to Steam.
+- Fixed structures not using the name defined in xml when the name can't be found in loca files.
+- Fixed inability to start additional votes when another vote is running.
+- Fixed buying from outpost vendors requiring sell permissions.
+- Fixed clients with the ManagePermissions being able to edit the host's permissions (didn't actually do anything, but the menu still showed up).
+- Fixed inability to repair beacon station devices after the beacon is activated.
+- Fixed tiny plus/minus buttons in spawnpoint editing menu.
+- Fixed vomiting sounds not playing.
+- Fixed some mods failing to extract after being downloaded from the server.
+- Fixed crashing when deleting a Workshop item that has music-related errors.
+- Fixed submarine editor listing recently disabled subs in the Load menu.
+- Fixed certain old mods not having their paths corrected properly when installed through the Workshop or transferred from the Mods folder.
+- Optimized file transfers.
+- Disabled unsupported resolutions in the settings menu.
+- Fixed crashing in event editor when loading prefabs or projects.
+- Fixed ping and wallet columns switching places in tab menu when a character dies.
+- Fixed "Lots!" text appearing too eagerly when playing on lower resolutions.
+- Fixed monsters using fast swim parameters when they swim slowly.
+- Fixed human head sometimes shaking while aiming.
+
+Fixes:
+- Fixed occasional performance dips when spineling spikes get stuck to the sub's exterior walls.
+- Fixed item assemblies getting misaligned with the grid after saving.
+- Fixed "Shell A 18" not aligning with the other shell pieces.
+- Fixed "Deep Sea Slayer" talent not affecting explosive harpoons.
+- Fixed welding tool's, plasma cutter's and watering can's particle effects getting "clamped" to the edges of the hull they're inside.
+- Fixed permission icon in the client list not updating mid-round.
+- Fixed "lock default wires" server setting not affecting docked subs.
+- Fixed Dugong's small pumps working without power.
+- Fixed buttons in structure editing menu using a different style than other types of entities in the sub editor.
+- Fixed items flagged as "HiddenInGame" being considered interactable and therefore e.g. valid repair targets.
+- Fixed some (hopefully for good) issues bots still had with ladders.
+- Fixed outpost guards not arresting the offender when it's very far from them.
+- Fixed bots sometimes failing to navigate back to the sub (when they are on the other side of the sub than where the hatch is).
+
+Modding:
+- Level editor no longer attempts to save the vanilla content.
+
+---------------------------------------------------------------------------------------------------------
 v0.17.6.0
 ---------------------------------------------------------------------------------------------------------
 
@@ -105,6 +160,8 @@ Fixes (unstable only):
 - Fixed flashlights emitting sparks.
 - Flipped the confirm and reset buttons in wallet UI.
 - Added a new column to multiplayer tab menu that shows the amount of money the player has in their wallet.
+- Added psychosis and hallucination reduction to pipe tobacco, cigars and ethanol, rather than just giving psychosis resistance.
+- Reduced base price of tobacco products (pipe tobacco and cigars)
 
 Modding:
 - Option to make missions force a ruin in the level if there isn't one.
