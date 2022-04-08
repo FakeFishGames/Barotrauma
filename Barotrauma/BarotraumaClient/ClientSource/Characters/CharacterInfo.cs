@@ -151,8 +151,9 @@ namespace Barotrauma
                     Stretch = true
                 };
 
-                LocalizedString deadDescription = TextManager.AddPunctuation(':', TextManager.Get("deceased") + "\n" + Character.CauseOfDeath.Affliction?.CauseOfDeathDescription ?? 
-                    TextManager.AddPunctuation(':', TextManager.Get("CauseOfDeath"), TextManager.Get("CauseOfDeath." + Character.CauseOfDeath.Type.ToString())));
+                LocalizedString deadDescription = 
+                    TextManager.Get("deceased") + "\n" + 
+                   (Character.CauseOfDeath.Affliction?.CauseOfDeathDescription ?? TextManager.Get("CauseOfDeath." + Character.CauseOfDeath.Type.ToString()));
 
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), deadArea.RectTransform), deadDescription, textColor: GUIStyle.Red, font: font, textAlignment: Alignment.TopLeft) { Padding = Vector4.Zero };
             }

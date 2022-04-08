@@ -1308,17 +1308,8 @@ namespace Barotrauma
                     }
                     break;
                 case EventType.Status:
-                    float prevCondition = condition;
-                    condition = msg.ReadSingle();
-                    if (prevCondition > 0.0f && condition <= 0.0f)
-                    {
-                        ApplyStatusEffects(ActionType.OnBroken, 1.0f);
-                        foreach (ItemComponent ic in components)
-                        {
-                            ic.PlaySound(ActionType.OnBroken);
-                        }
-                    }
-                    SetActiveSprite();
+                    float newCondition = msg.ReadSingle();
+                    SetCondition(newCondition, isNetworkEvent: true);
                     break;
                 case EventType.AssignCampaignInteraction:
                     CampaignInteractionType = (CampaignMode.InteractionType)msg.ReadByte();

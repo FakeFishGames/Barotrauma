@@ -21,7 +21,7 @@ namespace Barotrauma
 
         public override void UnloadFile()
         {
-            SubmarineInfo.RefreshSavedSub(Path.Value);
+            SubmarineInfo.RemoveSavedSub(Path.Value);
         }
 
         public override void Sort()

@@ -1,6 +1,9 @@
+using Barotrauma.IO;
+using Barotrauma.Media;
 using Barotrauma.Networking;
 using Barotrauma.Particles;
 using Barotrauma.Steam;
+using Barotrauma.Transition;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
@@ -11,13 +14,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using Barotrauma.IO;
 using System.Threading;
-using Barotrauma.Tutorials;
-using Barotrauma.Media;
-using Barotrauma.Extensions;
-using System.Threading.Tasks;
-using Barotrauma.Transition;
 
 namespace Barotrauma
 {
@@ -430,7 +427,7 @@ namespace Barotrauma
             if (TitleScreen.WaitForLanguageSelection)
             {
                 ContentPackageManager.VanillaCorePackage.LoadFilesOfType<TextFile>();
-                TitleScreen.AvailableLanguages = TextManager.AvailableLanguages.ToArray();
+                TitleScreen.AvailableLanguages = TextManager.AvailableLanguages.OrderBy(l => l.Value != "english".ToIdentifier()).ThenBy(l => l.Value).ToArray();
                 while (TitleScreen.WaitForLanguageSelection)
                 {
                     yield return CoroutineStatus.Running;

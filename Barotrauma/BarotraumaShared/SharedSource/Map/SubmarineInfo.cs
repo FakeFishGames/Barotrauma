@@ -545,7 +545,7 @@ namespace Barotrauma
             savedSubmarines.Add(subInfo);
         }
 
-        public static void RefreshSavedSub(string filePath)
+        public static void RemoveSavedSub(string filePath)
         {
             string fullPath = Path.GetFullPath(filePath);
             for (int i = savedSubmarines.Count - 1; i >= 0; i--)
@@ -555,7 +555,11 @@ namespace Barotrauma
                     savedSubmarines[i].Dispose();
                 }
             }
+        }
 
+        public static void RefreshSavedSub(string filePath)
+        {
+            RemoveSavedSub(filePath);
             if (File.Exists(filePath))
             {
                 var subInfo = new SubmarineInfo(filePath);

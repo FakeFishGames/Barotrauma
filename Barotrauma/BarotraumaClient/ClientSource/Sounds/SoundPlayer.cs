@@ -280,6 +280,7 @@ namespace Barotrauma
                 }
                 else
                 {
+                    if (FlowSounds[i] == null) { continue; }
                     Vector2 soundPos = new Vector2(GameMain.SoundManager.ListenerPosition.X + (flowVolumeRight[i] - flowVolumeLeft[i]) * 100, GameMain.SoundManager.ListenerPosition.Y);
                     if (flowSoundChannels[i] == null || !flowSoundChannels[i].IsPlaying)
                     {

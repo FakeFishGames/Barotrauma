@@ -719,6 +719,9 @@ namespace Barotrauma.Networking
                     case ServerPacketHeader.CHEATS_ENABLED:
                         //allow interpreting this packet
                         break;
+                    case ServerPacketHeader.STARTGAME:
+                        GameMain.NetLobbyScreen.ShowSpectateButton();
+                        return;
                     default:
                         return; //ignore any other packets
                 }

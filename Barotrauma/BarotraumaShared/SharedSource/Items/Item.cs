@@ -109,7 +109,7 @@ namespace Barotrauma
             set { defaultRect = value; }
         }
 
-        private Dictionary<string, Connection> connections;
+        private readonly Dictionary<string, Connection> connections;
 
         private readonly List<Repairable> repairables;
 
@@ -516,74 +516,7 @@ namespace Barotrauma
             get { return condition; }
             set 
             {
-                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
-                if (!MathUtils.IsValid(value)) { return; }
-                if (Indestructible) { return; }
-                if (InvulnerableToDamage && value <= condition) { return; }
-
-                float prev = condition;
-                bool wasInFullCondition = IsFullCondition;
-
-                condition = MathHelper.Clamp(value, 0.0f, MaxCondition);
-                if (condition == 0.0f && prev > 0.0f)
-                {
-                    //Flag connections to be updated as device is broken
-                    flagChangedConnections(connections);
-#if CLIENT
-                    foreach (ItemComponent ic in components)
-                    {
-                        ic.PlaySound(ActionType.OnBroken);
-                    }
-                    if (Screen.Selected == GameMain.SubEditorScreen) { return; }
-#endif
-                    ApplyStatusEffects(ActionType.OnBroken, 1.0f, null);
-                }
-                else if (condition > 0.0f && prev <= 0.0f)
-                {
-                    //Flag connections to be updated as device is now working again
-                    flagChangedConnections(connections);
-                }
-                
-                SetActiveSprite();
-
-                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
-                {
-                    if (Math.Abs(lastSentCondition - condition) > 1.0f)
-                    {
-                        conditionUpdatePending = true;
-                        isActive = true;
-                    }
-                    else if (wasInFullCondition != IsFullCondition)
-                    {
-                        conditionUpdatePending = true;
-                        isActive = true;
-                    }
-                    else if (!MathUtils.NearlyEqual(lastSentCondition, condition) && (condition <= 0.0f || condition >= MaxCondition))
-                    {
-                        sendConditionUpdateTimer = 0.0f;
-                        conditionUpdatePending = true;
-                        isActive = true;
-                    }
-                }
-
-                LastConditionChange = condition - prev;
-                ConditionLastUpdated = Timing.TotalTime;
-
-                static void flagChangedConnections(Dictionary<string, Connection> connections)
-                {
-                    if (connections == null) { return; }                    
-                    foreach (Connection c in connections.Values)
-                    {
-                        if (c.IsPower)
-                        {
-                            Powered.ChangedConnections.Add(c);
-                            foreach (Connection conn in c.Recipients)
-                            {
-                                Powered.ChangedConnections.Add(conn);
-                            }
-                        }
-                    }                    
-                }
+                SetCondition(value, isNetworkEvent: false);
             }
         }
 
@@ -1665,6 +1598,81 @@ namespace Barotrauma
             }
 
             return new AttackResult(damageAmount, null);
+        }
+
+        private void SetCondition(float value, bool isNetworkEvent)
+        {
+            if (!isNetworkEvent)
+            {
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+            }
+            if (!MathUtils.IsValid(value)) { return; }
+            if (Indestructible) { return; }
+            if (InvulnerableToDamage && value <= condition) { return; }
+
+            float prev = condition;
+            bool wasInFullCondition = IsFullCondition;
+
+            condition = MathHelper.Clamp(value, 0.0f, MaxCondition);
+            if (condition == 0.0f && prev > 0.0f)
+            {
+                //Flag connections to be updated as device is broken
+                flagChangedConnections(connections);
+#if CLIENT
+                foreach (ItemComponent ic in components)
+                {
+                    ic.PlaySound(ActionType.OnBroken);
+                }
+                if (Screen.Selected == GameMain.SubEditorScreen) { return; }
+#endif
+                ApplyStatusEffects(ActionType.OnBroken, 1.0f, null);
+            }
+            else if (condition > 0.0f && prev <= 0.0f)
+            {
+                //Flag connections to be updated as device is now working again
+                flagChangedConnections(connections);
+            }
+
+            SetActiveSprite();
+
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+            {
+                if (Math.Abs(lastSentCondition - condition) > 1.0f)
+                {
+                    conditionUpdatePending = true;
+                    isActive = true;
+                }
+                else if (wasInFullCondition != IsFullCondition)
+                {
+                    conditionUpdatePending = true;
+                    isActive = true;
+                }
+                else if (!MathUtils.NearlyEqual(lastSentCondition, condition) && (condition <= 0.0f || condition >= MaxCondition))
+                {
+                    sendConditionUpdateTimer = 0.0f;
+                    conditionUpdatePending = true;
+                    isActive = true;
+                }
+            }
+
+            LastConditionChange = condition - prev;
+            ConditionLastUpdated = Timing.TotalTime;
+
+            static void flagChangedConnections(Dictionary<string, Connection> connections)
+            {
+                if (connections == null) { return; }
+                foreach (Connection c in connections.Values)
+                {
+                    if (c.IsPower)
+                    {
+                        Powered.ChangedConnections.Add(c);
+                        foreach (Connection conn in c.Recipients)
+                        {
+                            Powered.ChangedConnections.Add(conn);
+                        }
+                    }
+                }
+            }
         }
 
         private bool IsInWater()

@@ -14,7 +14,7 @@ namespace Barotrauma
         public override bool Loaded => left.Loaded || right.Loaded;
         public override void RetrieveValue()
         {
-            cachedValue = left.Value + right.Value;
+            cachedValue = (left.Value ?? string.Empty) + (right.Value ?? string.Empty);
             UpdateLanguage();
         }
     }

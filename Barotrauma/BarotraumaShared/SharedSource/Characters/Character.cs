@@ -1778,7 +1778,7 @@ namespace Barotrauma
                 AnimController.Anim != AnimController.Animation.UsingConstruction &&
                 AnimController.Anim != AnimController.Animation.CPR &&
                 (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient || Controlled == this) &&
-                (AnimController.OnGround && !AnimController.InWater || IsKeyDown(InputType.Aim) && HeldItems.None(i => i.RequireAimToUse)))
+                AnimController.OnGround && !AnimController.InWater)
             {
                 if (dontFollowCursor)
                 {
@@ -1788,30 +1788,13 @@ namespace Barotrauma
                 {
                     // Values lower than this seem to cause constantious flipping when the mouse is near the player and the player is running, because the root collider moves after flipping.
                     float followMargin = 40;
-                    Vector2 diff = CursorPosition - AnimController.Collider.Position;
-                    if (InWater)
+                    if (CursorPosition.X < AnimController.Collider.Position.X - followMargin)
                     {
-                        followMargin = 80;
-                        diff = Vector2.Transform(diff, Matrix.CreateRotationZ(-AnimController.Collider.Rotation));
-                        if (diff.X < followMargin)
-                        {
-                            AnimController.TargetDir = Direction.Left;
-                        }
-                        else if (diff.X > followMargin)
-                        {
-                            AnimController.TargetDir = Direction.Right;
-                        }
+                        AnimController.TargetDir = Direction.Left;
                     }
-                    else
+                    else if (CursorPosition.X > AnimController.Collider.Position.X + followMargin)
                     {
-                        if (CursorPosition.X < AnimController.Collider.Position.X - followMargin)
-                        {
-                            AnimController.TargetDir = Direction.Left;
-                        }
-                        else if (CursorPosition.X > AnimController.Collider.Position.X + followMargin)
-                        {
-                            AnimController.TargetDir = Direction.Right;
-                        }
+                        AnimController.TargetDir = Direction.Right;
                     }
                 }
             }

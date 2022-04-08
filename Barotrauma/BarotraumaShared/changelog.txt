@@ -1,4 +1,19 @@
 ---------------------------------------------------------------------------------------------------------
+v0.17.8.0
+---------------------------------------------------------------------------------------------------------
+
+Changes (unstable only):
+- Remove flipping in water while aiming (with the changes introduced to aiming in the previous versions, aiming works even better without it).
+
+Fixes (unstable only):
+- Fixed languages being in random order in the initial language selection screen.
+- Fixed power grid going crazy client-side when junction boxes break.
+- Fixed crashing when clicking on a dead player in the tab menu.
+- Fixed spectate button not appearing if the round starts while waiting for mods to download.
+- Fixed disabling a submarine mod not actually disabling the sub.
+- Fixed host server menu layout changing every time you open it, and the server exe dropdown having a different size than the rest of the elements.
+
+---------------------------------------------------------------------------------------------------------
 v0.17.7.0
 ---------------------------------------------------------------------------------------------------------
 

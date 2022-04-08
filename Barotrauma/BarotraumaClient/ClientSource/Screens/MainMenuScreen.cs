@@ -583,17 +583,17 @@ namespace Barotrauma
                         c.ForceLayoutRecalculation();
                     });
                     bool serverExePickable = serverExecutableDropdown.ListBox.Content.CountChildren > 1;
-                    serverExecutableDropdown.Parent.Visible
-                        = serverExePickable;
-                    serverExecutableDropdown.Parent.RectTransform.RelativeSize
-                        = (1.0f, serverExePickable ? 0.1f : 0.0f);
-                    serverExecutableDropdown.Parent.ForceLayoutRecalculation();
-                    (serverExecutableDropdown.Parent.Parent as GUILayoutGroup)?.Recalculate();
-                    if (serverExecutableDropdown.SelectedComponent is null)
+                    bool wasPickable = serverExecutableDropdown.Parent.Visible;
+                    if (wasPickable != serverExePickable)
                     {
-                        serverExecutableDropdown.Select(0);
+                        serverExecutableDropdown.Parent.Visible = serverExePickable;
+                        serverExecutableDropdown.Parent.IgnoreLayoutGroups = !serverExePickable;
+                        (serverExecutableDropdown.Parent.Parent as GUILayoutGroup)?.Recalculate();
+                        if (serverExecutableDropdown.SelectedComponent is null)
+                        {
+                            serverExecutableDropdown.Select(0);
+                        }
                     }
-                    
                     break;
                 case Tab.Tutorials:
                     if (!GameSettings.CurrentConfig.CampaignDisclaimerShown)
@@ -1132,18 +1132,19 @@ namespace Barotrauma
                 }
             }
 
-            Vector2 textLabelSize = new Vector2(1.0f, 0.1f);
+            Vector2 textLabelSize = new Vector2(1.0f, 0.05f);
             Alignment textAlignment = Alignment.CenterLeft;
             Vector2 textFieldSize = new Vector2(0.5f, 1.0f);
-            Vector2 tickBoxSize = new Vector2(0.4f, 0.07f);
+            Vector2 tickBoxSize = new Vector2(0.4f, 0.04f);
             var content = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 0.9f), menuTabs[Tab.HostServer].RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
             {
-                RelativeSpacing = 0.02f,
+                RelativeSpacing = 0.01f,
                 Stretch = true
             };
             GUIComponent parent = content;
 
-            new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("HostServerButton"), textAlignment: Alignment.Center, font: GUIStyle.LargeFont) { ForceUpperCase = ForceUpperCase.Yes };
+            var header = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("HostServerButton"), textAlignment: Alignment.Center, font: GUIStyle.LargeFont) { ForceUpperCase = ForceUpperCase.Yes };
+            header.RectTransform.IsFixedSize = true;
 
             //play style -----------------------------------------------------
 
@@ -1221,7 +1222,7 @@ namespace Barotrauma
                 MaxTextLength = NetConfig.ServerNameMaxLength,
                 OverflowClip = true
             };
-            label.RectTransform.MaxSize = serverNameBox.RectTransform.MaxSize;
+            label.RectTransform.IsFixedSize = true;
 
             var maxPlayersLabel = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("MaxPlayers"), textAlignment: textAlignment);
             var buttonContainer = new GUILayoutGroup(new RectTransform(textFieldSize, maxPlayersLabel.RectTransform, Anchor.CenterRight), isHorizontal: true, childAnchor: Anchor.CenterLeft)
@@ -1254,14 +1255,14 @@ namespace Barotrauma
                 UserData = 1,
                 OnClicked = ChangeMaxPlayers
             };
-            maxPlayersLabel.RectTransform.MaxSize = maxPlayersBox.RectTransform.MaxSize;
+            maxPlayersLabel.RectTransform.IsFixedSize = true;
 
             label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("Password"), textAlignment: textAlignment);
             passwordBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), text: password, textAlignment: textAlignment)
             {
                 Censor = true
             };
-            label.RectTransform.MaxSize = passwordBox.RectTransform.MaxSize;
+            label.RectTransform.IsFixedSize = true;
 
             var serverExecutableLabel = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform),
                 TextManager.Get("ServerExecutable"), textAlignment: textAlignment);
@@ -1297,7 +1298,8 @@ namespace Barotrauma
 
                 return true;
             };
-            
+            serverExecutableLabel.RectTransform.IsFixedSize = true;
+
             // tickbox upper ---------------
 
             var tickboxAreaUpper = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, tickBoxSize.Y), parent.RectTransform), isHorizontal: true);
@@ -1313,7 +1315,7 @@ namespace Barotrauma
                 Selected = banAfterWrongPassword
             };
 
-            tickboxAreaUpper.RectTransform.MaxSize = isPublicBox.RectTransform.MaxSize;
+            tickboxAreaUpper.RectTransform.IsFixedSize = true;
 
             // tickbox lower ---------------
 
@@ -1325,7 +1327,7 @@ namespace Barotrauma
                 ToolTip = TextManager.Get("hostserverkarmasettingtooltip")
             };
 
-            tickboxAreaLower.RectTransform.MaxSize = karmaBox.RectTransform.MaxSize;
+            tickboxAreaLower.RectTransform.IsFixedSize = true;
 
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform), style: null);

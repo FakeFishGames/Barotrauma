@@ -469,15 +469,22 @@ namespace Barotrauma
                 }
                 
                 var corePackageElement = contentPackagesElement.GetChildElement(CorePackageElementName);
-                var configEnabledCorePackage = findPackage(CorePackages, corePackageElement);
-                if (configEnabledCorePackage == null)
+                if (corePackageElement == null)
                 {
-                    string packageStr = corePackageElement.GetAttributeString("name", null) ?? corePackageElement.GetAttributeStringUnrestricted("path", "UNKNOWN");
-                    DebugConsole.ThrowError($"Could not find the selected core package \"{packageStr}\". Switching to the \"{enabledCorePackage.Name}\" package.");
+                    DebugConsole.AddWarning($"No core package selected. Switching to the \"{enabledCorePackage.Name}\" package.");
                 }
                 else
                 {
-                    enabledCorePackage = configEnabledCorePackage;
+                    var configEnabledCorePackage = findPackage(CorePackages, corePackageElement);
+                    if (configEnabledCorePackage == null)
+                    {
+                        string packageStr = corePackageElement.GetAttributeString("name", null) ?? corePackageElement.GetAttributeStringUnrestricted("path", "UNKNOWN");
+                        DebugConsole.ThrowError($"Could not find the selected core package \"{packageStr}\". Switching to the \"{enabledCorePackage.Name}\" package.");
+                    }
+                    else
+                    {
+                        enabledCorePackage = configEnabledCorePackage;
+                    }
                 }
                 
                 var regularPackagesElement = contentPackagesElement.GetChildElement(RegularPackagesElementName);
