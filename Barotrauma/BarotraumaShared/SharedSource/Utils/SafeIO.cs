@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Barotrauma.Networking;
+using Barotrauma.Steam;
 
 namespace Barotrauma.IO
 {
@@ -31,6 +32,7 @@ namespace Barotrauma.IO
             string localModsDir = getFullPath(ContentPackage.LocalModsDir);
             string workshopModsDir = getFullPath(ContentPackage.WorkshopModsDir);
 #if CLIENT
+            string workshopStagingDir = getFullPath(SteamManager.Workshop.PublishStagingDir);
             string tempDownloadDir = getFullPath(ModReceiver.DownloadFolder);
 #endif
 
@@ -49,6 +51,7 @@ namespace Barotrauma.IO
                     && !pathStartsWith(localModsDir)
 #if CLIENT
                     && !pathStartsWith(tempDownloadDir)
+                    && !pathStartsWith(workshopStagingDir)
 #endif
                     && (extension == ".dll" || extension == ".exe" || extension == ".json"))
                 {
@@ -283,6 +286,11 @@ namespace Barotrauma.IO
             }
             //TODO: validate recursion?
             System.IO.Directory.Delete(path, recursive);
+        }
+        
+        public static DateTime GetLastWriteTime(string path)
+        {
+            return System.IO.Directory.GetLastWriteTime(path);
         }
     }
 

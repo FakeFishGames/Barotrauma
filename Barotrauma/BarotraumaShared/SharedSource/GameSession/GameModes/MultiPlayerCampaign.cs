@@ -251,7 +251,7 @@ namespace Barotrauma
                 msg.Write((UInt16)storeItems.Value.Count);
                 foreach (var item in storeItems.Value)
                 {
-                    msg.Write(item.ItemPrefab.Identifier);
+                    msg.Write(item.ItemPrefabIdentifier);
                     msg.WriteRangedInteger(item.Quantity, 0, CargoManager.MaxQuantity);
                 }
             }
@@ -270,7 +270,7 @@ namespace Barotrauma
                 {
                     Identifier itemId = msg.ReadIdentifier();
                     int quantity = msg.ReadRangedInteger(0, CargoManager.MaxQuantity);
-                    items[storeId].Add(new PurchasedItem(ItemPrefab.Prefabs[itemId], quantity, sender));
+                    items[storeId].Add(new PurchasedItem(itemId, quantity, sender));
                 }
             }
             return items;
@@ -303,7 +303,7 @@ namespace Barotrauma
                 Identifier storeId = msg.ReadIdentifier();
                 soldItems.Add(storeId, new List<SoldItem>());
                 UInt16 itemCount = msg.ReadUInt16();
-                for (int j = 0; j < storeCount; j++)
+                for (int j = 0; j < itemCount; j++)
                 {
                     Identifier prefabId = msg.ReadIdentifier();
                     UInt16 itemId = msg.ReadUInt16();

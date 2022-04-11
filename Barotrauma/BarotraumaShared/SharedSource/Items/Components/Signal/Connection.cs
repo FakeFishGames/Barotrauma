@@ -108,7 +108,8 @@ namespace Barotrauma.Items.Components
                     foreach (XElement connectionElement in subElement.Elements())
                     {
                         string prefabConnectionName = connectionElement.GetAttributeString("name", null);
-                        if (prefabConnectionName == Name)
+                        string[] aliases = connectionElement.GetAttributeStringArray("aliases", Array.Empty<string>());
+                        if (prefabConnectionName == Name || aliases.Contains(Name))
                         {
                             displayNameTag = connectionElement.GetAttributeString("displayname", "");
                             fallbackTag = connectionElement.GetAttributeString("fallbackdisplayname", "");

@@ -563,9 +563,13 @@ namespace Barotrauma
 #elif SERVER
                 if (value is { IsDead: true, Wallet: { Balance: var balance } grabbedWallet } && balance > 0)
                 {
-                    Wallet.Give(balance);
+                    if (GameMain.GameSession.Campaign is MultiPlayerCampaign mpCampaign)
+                    {
+                        mpCampaign.Bank.Give(balance);
+                    }
+
                     grabbedWallet.Deduct(balance);
-                    GameServer.Log($"{Name} grabbed {value.Name}'s body and received {grabbedWallet.Balance} mk.", ServerLog.MessageType.Money);
+                    GameServer.Log($"{GameServer.CharacterLogName(this)} grabbed {value.Name}'s body and received {grabbedWallet.Balance} mk.", ServerLog.MessageType.Money);
                 }
 #endif
             }

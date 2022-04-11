@@ -11,8 +11,18 @@ namespace Barotrauma.Steam
 {
     public static class BulkDownloader
     {
+        private static void CloseAllMessageBoxes()
+        {
+            GUIMessageBox.MessageBoxes.ForEachMod(b =>
+            {
+                if (b is GUIMessageBox m) { m.Close(); }
+                else { GUIMessageBox.MessageBoxes.Remove(b); }
+            });
+        }
+        
         public static void PrepareUpdates()
         {
+            CloseAllMessageBoxes();
             GUIMessageBox msgBox = new GUIMessageBox(headerText: "", text: TextManager.Get("DeterminingRequiredModUpdates"),
                     buttons: Array.Empty<LocalizedString>());
             TaskPool.Add(
@@ -29,6 +39,7 @@ namespace Barotrauma.Steam
 
         internal static void SubscribeToServerMods(IEnumerable<UInt64> missingIds, string rejoinEndpoint, ulong rejoinLobby, string rejoinServerName)
         {
+            CloseAllMessageBoxes();
             GUIMessageBox msgBox = new GUIMessageBox(headerText: "", text: TextManager.Get("PreparingWorkshopDownloads"),
                 buttons: Array.Empty<LocalizedString>());
             TaskPool.Add(

@@ -167,7 +167,13 @@ namespace Barotrauma
                 Texture2D newTexture = TextureLoader.FromFile(file, compress);
                 lock (list)
                 {
-                    textureRefCounts.Add(fullPath, new TextureRefCounter { RefCount = 1, Texture = newTexture });
+                    if (!textureRefCounts.TryAdd(fullPath,
+                            new TextureRefCounter { RefCount = 1, Texture = newTexture }))
+                    {
+                        CrossThread.RequestExecutionOnMainThread(() => newTexture.Dispose());
+                        textureRefCounts[fullPath].RefCount++;
+                        return textureRefCounts[fullPath].Texture;
+                    }
                 }
                 return newTexture;
             }

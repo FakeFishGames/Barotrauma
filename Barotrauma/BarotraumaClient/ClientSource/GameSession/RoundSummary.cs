@@ -703,7 +703,7 @@ namespace Barotrauma
                 AbsoluteSpacing = GUI.IntScale(10),
                 Stretch = true
             };
-            var factionIcon = new GUIImage(new RectTransform(new Point((int)(factionInfoHorizontal.Rect.Height * 0.7f)), factionInfoHorizontal.RectTransform, scaleBasis: ScaleBasis.Smallest), icon, scaleToFit: true)
+            var factionIcon = new GUIImage(new RectTransform(Vector2.One * 0.7f, factionInfoHorizontal.RectTransform, scaleBasis: ScaleBasis.Smallest), icon, scaleToFit: true)
             {
                 Color = iconColor
             };

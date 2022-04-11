@@ -415,7 +415,7 @@ namespace Barotrauma.Networking
                 GameMain.ServerListScreen.Select();
             }
 
-            GUIMessageBox.MessageBoxes.RemoveAll(m => true);
+            GUIMessageBox.MessageBoxes.Clear();
 
             return true;
         }
@@ -720,7 +720,10 @@ namespace Barotrauma.Networking
                         //allow interpreting this packet
                         break;
                     case ServerPacketHeader.STARTGAME:
-                        GameMain.NetLobbyScreen.ShowSpectateButton();
+                        gameStarted = true;
+                        return;
+                    case ServerPacketHeader.ENDGAME:
+                        gameStarted = false;
                         return;
                     default:
                         return; //ignore any other packets
@@ -2110,11 +2113,11 @@ namespace Barotrauma.Networking
 
                                 serverSettings.ServerLog.ServerName = serverSettings.ServerName;
 
-                                if (!GameMain.NetLobbyScreen.ServerName.Selected) GameMain.NetLobbyScreen.ServerName.Text = serverSettings.ServerName;
-                                if (!GameMain.NetLobbyScreen.ServerMessage.Selected) GameMain.NetLobbyScreen.ServerMessage.Text = serverSettings.ServerMessageText;
+                                if (!GameMain.NetLobbyScreen.ServerName.Selected) { GameMain.NetLobbyScreen.ServerName.Text = serverSettings.ServerName; }
+                                if (!GameMain.NetLobbyScreen.ServerMessage.Selected) { GameMain.NetLobbyScreen.ServerMessage.Text = serverSettings.ServerMessageText; }
                                 GameMain.NetLobbyScreen.UsingShuttle = usingShuttle;
 
-                                if (!allowSubVoting) GameMain.NetLobbyScreen.TrySelectSub(selectSubName, selectSubHash, GameMain.NetLobbyScreen.SubList);
+                                if (!allowSubVoting) { GameMain.NetLobbyScreen.TrySelectSub(selectSubName, selectSubHash, GameMain.NetLobbyScreen.SubList); }
                                 GameMain.NetLobbyScreen.TrySelectSub(selectShuttleName, selectShuttleHash, GameMain.NetLobbyScreen.ShuttleList.ListBox);
 
                                 GameMain.NetLobbyScreen.SetTraitorsEnabled(traitorsEnabled);

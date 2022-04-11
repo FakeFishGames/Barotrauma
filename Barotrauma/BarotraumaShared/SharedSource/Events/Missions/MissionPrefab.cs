@@ -165,10 +165,14 @@ namespace Barotrauma
                               TextManager.Get("missionfailed")).Fallback(
                               GameSettings.CurrentConfig.Language == TextManager.DefaultLanguage ? element.GetAttributeString("failuremessage", "") : "");
 
-            SonarLabel          = 
-                TextManager.Get($"MissionSonarLabel.{TextIdentifier}").Fallback(
-                TextManager.Get($"MissionSonarLabel.{element.GetAttributeString("sonarlabel", "")}")).Fallback( 
-                element.GetAttributeString("sonarlabel", ""));
+            string sonarLabelTag = element.GetAttributeString("sonarlabel", "");
+
+            SonarLabel = 
+                TextManager.Get($"MissionSonarLabel.{sonarLabelTag}")
+                .Fallback(TextManager.Get(sonarLabelTag))
+                .Fallback(TextManager.Get($"MissionSonarLabel.{TextIdentifier}"))
+                .Fallback(element.GetAttributeString("sonarlabel", ""));
+
             SonarIconIdentifier = element.GetAttributeIdentifier("sonaricon", "");
 
             MultiplayerOnly     = element.GetAttributeBool("multiplayeronly", false);

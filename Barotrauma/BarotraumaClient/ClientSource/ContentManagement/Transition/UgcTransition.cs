@@ -22,6 +22,12 @@ namespace Barotrauma.Transition
     public static class UgcTransition
     {
         private const string readmeName = "LOCALMODS_README.txt";
+
+        private enum ModsListChildType
+        {
+            Header,
+            Entry
+        }
         
         public static void Prepare()
         {
@@ -34,6 +40,17 @@ namespace Barotrauma.Transition
                 var msgBox = new GUIMessageBox(TextManager.Get("Ugc.TransferTitle"), "", relativeSize: (0.5f, 0.8f),
                     buttons: new LocalizedString[] { TextManager.Get("Ugc.TransferButton") });
 
+                var closeBtn = new GUIButton(
+                    new RectTransform(Vector2.One * 1.5f, msgBox.Header.RectTransform, anchor: Anchor.CenterRight, scaleBasis: ScaleBasis.BothHeight),
+                    style: "GUICancelButton")
+                {
+                    OnClicked = (button, o) =>
+                    {
+                        msgBox.Close();
+                        return false;
+                    }
+                };
+
                 var desc = new GUITextBlock(new RectTransform((1.0f, 0.24f), msgBox.Content.RectTransform),
                     text: TextManager.Get("Ugc.TransferDesc"), wrap: true, textAlignment: Alignment.CenterLeft);
                 
@@ -45,20 +62,73 @@ namespace Barotrauma.Transition
 
                 void addHeader(LocalizedString str)
                 {
-                    var itemFrame = new GUITextBlock(new RectTransform((1.0f, 0.08f), modsList.Content.RectTransform),
-                        text: str, font: GUIStyle.SubHeadingFont)
+                    var itemFrame = new GUIFrame(new RectTransform((1.0f, 0.08f), modsList.Content.RectTransform),
+                        style: null)
                     {
-                        CanBeFocused = false
+                        CanBeFocused = false,
+                        UserData = ModsListChildType.Header
                     };
+                    if (str is RawLString { Value: "" }) { return; }
+
+                    bool clicked = true;
+                    var tickBox = new GUITickBox(new RectTransform(Vector2.One, itemFrame.RectTransform),
+                        label: str, font: GUIStyle.SubHeadingFont)
+                    {
+                        Selected = false,
+                        OnSelected = box =>
+                        {
+                            if (!clicked) { return true; }
+                            bool toggleTickbox = false;
+                            foreach (var child in modsList.Content.Children)
+                            {
+                                if (child == itemFrame) { toggleTickbox = true; }
+                                else if (child.UserData is ModsListChildType.Header) { toggleTickbox = false; }
+                                else if (toggleTickbox)
+                                {
+                                    var tb = child.GetAnyChild<GUITickBox>();
+                                    if (tb is null) { continue; }
+
+                                    tb.Selected = box.Selected;
+                                }
+                            }
+                            return true;
+                        }
+                    };
+                    new GUICustomComponent(new RectTransform(Vector2.Zero, itemFrame.RectTransform),
+                        onUpdate: (f, component) =>
+                        {
+                            clicked = false;
+                            bool shouldBeSelected = true;
+                            bool toggleTickbox = false;
+                            foreach (var child in modsList.Content.Children)
+                            {
+                                if (child == itemFrame) { toggleTickbox = true; }
+                                else if (child.UserData is ModsListChildType.Header) { toggleTickbox = false; }
+                                else if (toggleTickbox)
+                                {
+                                    var tb = child.GetAnyChild<GUITickBox>();
+                                    if (tb is null) { continue; }
+
+                                    if (!tb.Selected)
+                                    {
+                                        shouldBeSelected = false;
+                                        break;
+                                    }
+                                }
+                            }
+                            tickBox.Selected = shouldBeSelected;
+                            clicked = true;
+                        });
                 }
                 void addTickbox(string dir, string name, bool ticked)
                 {
                     var itemFrame = new GUIFrame(new RectTransform((1.0f, 0.07f), modsList.Content.RectTransform),
                         style: null)
                     {
-                        CanBeFocused = false
+                        CanBeFocused = false,
+                        UserData = ModsListChildType.Entry
                     };
-                    var tickbox = new GUITickBox(new RectTransform(Vector2.One, itemFrame.RectTransform), name)
+                    var tickbox = new GUITickBox(new RectTransform((0.97f, 1.0f), itemFrame.RectTransform, Anchor.CenterRight), name)
                     {
                         Selected = ticked
                     };

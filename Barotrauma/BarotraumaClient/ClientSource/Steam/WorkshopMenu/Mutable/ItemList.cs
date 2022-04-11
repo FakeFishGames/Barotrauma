@@ -202,7 +202,22 @@ namespace Barotrauma.Steam
             }
 
             DateTime getEditTime(ContentPackage p)
-                => File.GetLastWriteTime(Path.GetDirectoryName(p.Path)!);
+            {
+                DateTime writeTime = File.GetLastWriteTime(p.Dir);
+                
+                //File.GetLastWriteTime on the directory is not good enough;
+                //it's possible to update a file in a directory without
+                //updating its parent directories' write time, so let's
+                //look at all of those files
+                var files = Directory.GetFiles(p.Dir, "*", System.IO.SearchOption.AllDirectories);
+                foreach (var file in files)
+                {
+                    DateTime newTime = File.GetLastWriteTime(file);
+                    if (newTime > writeTime) { writeTime = newTime; }
+                }
+
+                return writeTime;
+            }
 
             //Find local packages associated with the Workshop items if available
             (Steamworks.Ugc.Item WorkshopItem, ContentPackage? LocalPackage)[] publishedItems = workshopItems

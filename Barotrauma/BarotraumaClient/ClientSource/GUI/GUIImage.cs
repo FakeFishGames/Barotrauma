@@ -151,8 +151,13 @@ namespace Barotrauma
                     loadingTextures = true;
                     loading = true;
                     TaskPool.Add("LoadTextureAsync",
-                        LoadTextureAsync(), (Task) =>
+                        LoadTextureAsync(), task =>
                     {
+                        if (task.Exception != null)
+                        {
+                            var innerMost = task.Exception.GetInnermost();
+                            DebugConsole.ThrowError($"Failed to load \"{Sprite.FilePath}\"", innerMost);
+                        }
                         loading = false;
                         lazyLoaded = true;
                         RectTransform.SizeChanged += RecalculateScale;
@@ -232,7 +237,7 @@ namespace Barotrauma
                     {
                         wait = activeTextureLoads.Contains(Sprite.FullPath);
                     }
-                }                
+                }
             }
             try
             {

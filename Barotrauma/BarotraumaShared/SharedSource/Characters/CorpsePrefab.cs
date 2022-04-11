@@ -40,6 +40,12 @@ namespace Barotrauma
         [Serialize(Level.PositionType.Wreck, IsPropertySaveable.No)]
         public Level.PositionType SpawnPosition { get; private set; }
 
+        [Serialize(0, IsPropertySaveable.No)]
+        public int MinMoney { get; private set; }
+
+        [Serialize(0, IsPropertySaveable.No)]
+        public int MaxMoney { get; private set; }
+
         public CorpsePrefab(ContentXElement element, CorpsesFile file) : base(element, file) { }
 
         public static CorpsePrefab Random(Rand.RandSync sync = Rand.RandSync.Unsynced) => Prefabs.GetRandom(sync);

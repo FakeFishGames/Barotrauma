@@ -4170,6 +4170,12 @@ namespace Barotrauma
                     selectedPrefab.GiveItems(corpse, wreck);
                     corpse.Kill(CauseOfDeathType.Unknown, causeOfDeathAffliction: null, log: false);
                     corpse.GiveIdCardTags(sp);
+#if SERVER
+                    if (selectedPrefab.MinMoney >= 0 && selectedPrefab.MaxMoney > 0)
+                    {
+                        corpse.Wallet.Give(Rand.Range(selectedPrefab.MinMoney, selectedPrefab.MaxMoney, Rand.RandSync.Unsynced));
+                    }
+#endif
                     spawnCounter++;
 
                     static CorpsePrefab GetCorpsePrefab(Func<CorpsePrefab, bool> predicate)

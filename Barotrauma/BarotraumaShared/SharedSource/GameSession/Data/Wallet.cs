@@ -32,7 +32,7 @@ namespace Barotrauma
     /// </summary>
     internal struct NetWalletUpdate : INetSerializableStruct
     {
-        [NetworkSerialize(ArrayMaxSize = NetConfig.MaxPlayers + 1)]
+        [NetworkSerialize(ArrayMaxSize = 256)]
         public NetWalletTransaction[] Transactions;
     }
 
@@ -73,6 +73,9 @@ namespace Barotrauma
         {
             other.BalanceChanged = AddOptionalInt(other.BalanceChanged, BalanceChanged);
             other.RewardDistributionChanged = AddOptionalInt(other.RewardDistributionChanged, RewardDistributionChanged);
+
+            other.BalanceChanged = TurnToNoneIfZero(other.BalanceChanged);
+            other.RewardDistributionChanged = TurnToNoneIfZero(other.RewardDistributionChanged);
             return other;
 
             static Option<int> AddOptionalInt(Option<int> a, Option<int> b)
@@ -92,6 +95,16 @@ namespace Barotrauma
                         _ => throw new ArgumentOutOfRangeException(nameof(b))
                     },
                     _ => throw new ArgumentOutOfRangeException(nameof(a))
+                };
+            }
+
+            static Option<int> TurnToNoneIfZero(Option<int> option)
+            {
+                return option switch
+                {
+                    Some<int> s => s.Value == 0 ? Option<int>.None() : option,
+                    None<int> _ => option,
+                    _ => throw new ArgumentOutOfRangeException(nameof(option))
                 };
             }
         }

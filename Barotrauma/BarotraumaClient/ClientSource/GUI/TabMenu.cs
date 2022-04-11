@@ -981,17 +981,19 @@ namespace Barotrauma
                 BarSize = 0.1f,
                 OnMoved = (bar, scroll) =>
                 {
-                    SetRewardText((int)(scroll * 100), rewardBlock);
+                    int rewardDistribution = RoundRewardDistribution(scroll, bar.Step);
+                    SetRewardText(rewardDistribution, rewardBlock);
                     return true;
                 },
                 OnReleased = (bar, scroll) =>
                 {
-                    int newRewardDistribution = (int)(scroll * 100);
+                    int newRewardDistribution = RoundRewardDistribution(scroll, bar.Step);
                     if (newRewardDistribution == targetWallet.RewardDistribution) { return false; }
                     SetRewardDistribution(character, newRewardDistribution);
                     return true;
                 }
             };
+            int RoundRewardDistribution(float scroll, float step) => (int)MathUtils.RoundTowardsClosest(scroll * 100, step * 100);
 
             SetRewardText(targetWallet.RewardDistribution, rewardBlock);
 

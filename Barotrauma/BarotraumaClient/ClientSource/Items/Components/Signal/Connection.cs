@@ -208,7 +208,7 @@ namespace Barotrauma.Items.Components
 
         private void DrawConnection(SpriteBatch spriteBatch, ConnectionPanel panel, Vector2 position, Vector2 labelPos, Vector2 scale)
         {
-            string text = DisplayName.Value.ToUpper();
+            string text = DisplayName.Value.ToUpperInvariant();
 
             //nasty
             if (GUIStyle.GetComponentStyle("ConnectionPanelLabel")?.Sprites.Values.First().First() is UISprite labelSprite)
@@ -401,13 +401,13 @@ namespace Barotrauma.Items.Components
                 {
                     if (c.IsOutput)
                     {
-                        var labelArea = GetLabelArea(GetOutputLabelPosition(rightPos, panel, c), c.DisplayName.Value.ToUpper(), scale);
+                        var labelArea = GetLabelArea(GetOutputLabelPosition(rightPos, panel, c), c.DisplayName.Value.ToUpperInvariant(), scale);
                         labelAreas.Add(labelArea);
                         rightPos.Y += connectorIntervalLeft;
                     }
                     else
                     {
-                        var labelArea = GetLabelArea(GetInputLabelPosition(leftPos, panel, c), c.DisplayName.Value.ToUpper(), scale);
+                        var labelArea = GetLabelArea(GetInputLabelPosition(leftPos, panel, c), c.DisplayName.Value.ToUpperInvariant(), scale);
                         labelAreas.Add(labelArea);
                         leftPos.Y += connectorIntervalRight;
                     }

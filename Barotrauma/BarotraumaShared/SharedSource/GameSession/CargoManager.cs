@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Xml.Linq;
 using Barotrauma.Networking;
 #if SERVER
@@ -15,7 +16,9 @@ namespace Barotrauma
 {
     class PurchasedItem
     {
-        public ItemPrefab ItemPrefab { get; }
+        public ItemPrefab ItemPrefab => ItemPrefab.Prefabs[ItemPrefabIdentifier];
+        public Identifier ItemPrefabIdentifier { get; }
+        
         public int Quantity { get; set; }
         public bool? IsStoreComponentEnabled { get; set; }
 
@@ -23,7 +26,7 @@ namespace Barotrauma
 
         public PurchasedItem(ItemPrefab itemPrefab, int quantity, int buyerCharacterInfoId)
         {
-            ItemPrefab = itemPrefab;
+            ItemPrefabIdentifier = itemPrefab.Identifier;
             Quantity = quantity;
             IsStoreComponentEnabled = null;
             BuyerCharacterInfoId = buyerCharacterInfoId;
@@ -34,8 +37,11 @@ namespace Barotrauma
             : this(itemPrefab, quantity, buyer: null) { }
 #endif
         public PurchasedItem(ItemPrefab itemPrefab, int quantity, Client buyer)
+            : this(itemPrefab.Identifier, quantity, buyer) { }
+        
+        public PurchasedItem(Identifier itemPrefabId, int quantity, Client buyer)
         {
-            ItemPrefab = itemPrefab;
+            ItemPrefabIdentifier = itemPrefabId;
             Quantity = quantity;
             IsStoreComponentEnabled = null;
             BuyerCharacterInfoId = buyer?.Character?.Info?.ID ?? Character.Controlled?.Info?.ID ?? 0;
@@ -268,6 +274,24 @@ namespace Barotrauma
             }
             OnItemsInSellFromSubCrateChanged?.Invoke();
         }
+
+#if SERVER
+        public void OnNewItemsPurchased(Identifier storeIdentifier, List<PurchasedItem> newItems, Client client)
+        {
+            StringBuilder sb = new StringBuilder();
+            int price = 0;
+            Dictionary<ItemPrefab, int> buyValues = GetBuyValuesAtCurrentLocation(storeIdentifier, newItems.Select(i => i.ItemPrefab));
+            foreach (PurchasedItem item in newItems)
+            {
+                int itemValue = item.Quantity * buyValues[item.ItemPrefab];
+                sb.Append($"\n - {item.ItemPrefab.Name} x{item.Quantity}");
+                price += itemValue;
+
+            }
+
+            GameServer.Log($"{NetworkMember.ClientLogName(client, client?.Name ?? "Unknown")} purchased {newItems.Count} item(s) for {TextManager.FormatCurrency(price)}{sb.ToString()}", ServerLog.MessageType.Money);
+        }
+#endif
 
         public void PurchaseItems(Identifier storeIdentifier, List<PurchasedItem> itemsToPurchase, bool removeFromCrate, Client client = null)
         {

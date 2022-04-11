@@ -1,4 +1,37 @@
 ---------------------------------------------------------------------------------------------------------
+v0.17.9.0
+---------------------------------------------------------------------------------------------------------
+
+Changes (unstable only):
+- Added tickboxes to select/deselect items in bulk in the mod transfer screen + added button to skip the mod transfer screen.
+- Move grabbed body wallet funds to the campaign bank instead of the personal wallet.
+- Made items sold go into the personal wallet instead of campaign bank.
+- Added a server log line for buying items from the store.
+
+Fixes (unstable only):
+- Fixed local mod write time not always being correct.
+- Fixed new outpost events using the same event sprite.
+- Fixed "captive souls" event not giving a reward.
+- Fixed conversation hanging on an option in the "explosive mishap" event.
+- Spawn mudraptor eggs instead of an adult mudraptor in the "occupational hazards" event.
+- Fixed latter half of the "occupational hazards" event not triggering correctly. 
+- Fixed vending machines stealing your money if you don't have x2 of the price of the item.
+- Fixed some missions that spawn multiple monsters having incorrect/inaccurate sonar labels (e.g. giant spineling mission displaying "giant spineling" on the small ones too, same for the crawler broodmother mission).
+- Fixed wallet failing to sync when the server has been modified to support more than 16 players per server.
+- Fixed error when receiving a multiplayer campaign sync message while downloading mods.
+- Fixed sub editor's wiring panel listing the wires in a random order.
+- Fixed z-fighting plants in colonies.
+- Fixed "-0 mk" popup when someone adds something to the store cart.
+- Fixed "Failed to parse the string "GUI.ITEMQUALITYCOLORGOOD" to Color" errors.
+- 2nd attempt to fix a null reference exception when a client joins a server where a round is running with respawns disabled.
+- Fixed errors when attempting to publish a mod with exe files.
+- Fixed inability to set the salary distribution to certain values (e.g. 5%, 10%, 15%).
+- Fixed spectate button still not appearing if the round starts while you're downloading mods from the server, and the other way around, spectate button still being visible if the round ends.
+- Fixed stores becoming unusable after items have been sold in multiplayer.
+- Fixed tiny faction icons in the round summary.
+- Fixed some structure/item sprites sometimes failing to load, making them appear invisible in-game.
+
+---------------------------------------------------------------------------------------------------------
 v0.17.8.0
 ---------------------------------------------------------------------------------------------------------
 

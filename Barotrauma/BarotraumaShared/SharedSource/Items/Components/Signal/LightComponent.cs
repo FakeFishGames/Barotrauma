@@ -2,6 +2,7 @@
 using System;
 using System.Xml.Linq;
 using Barotrauma.Networking;
+using Barotrauma.Extensions;
 #if CLIENT
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Lights;
@@ -173,7 +174,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                 if (Light != null)
                 {
-                    Light.Color = IsOn ? lightColor : Color.Transparent;
+                    Light.Color = IsOn ? lightColor.Multiply(currentBrightness) : Color.Transparent;
                 }
 #endif
             }

@@ -23,7 +23,7 @@ namespace Barotrauma
             }
         }
 
-        public void BuyBackSoldItems(Identifier storeIdentifier, List<SoldItem> itemsToBuy)
+        public void BuyBackSoldItems(Identifier storeIdentifier, List<SoldItem> itemsToBuy, Client client)
         {
             var store = Location.GetStore(storeIdentifier);
             if (store == null) { return; }
@@ -35,12 +35,12 @@ namespace Barotrauma
                 int itemValue = sellValues[item.ItemPrefab];
                 if (store.Balance < itemValue || item.Removed) { continue; }
                 store.Balance += itemValue;
-                campaign.Bank.TryDeduct(itemValue);
+                campaign.GetWallet(client).TryDeduct(itemValue);
                 storeSpecificItems.Remove(item);
             }
         }
 
-        public void SellItems(Identifier storeIdentifier, List<SoldItem> itemsToSell)
+        public void SellItems(Identifier storeIdentifier, List<SoldItem> itemsToSell, Client client)
         {
             var store = Location.GetStore(storeIdentifier);
             if (store == null) { return; }
@@ -74,7 +74,7 @@ namespace Barotrauma
                 }
                 itemsSoldAtStore?.Add(item);
                 store.Balance -= itemValue;
-                campaign.Bank.Give(itemValue);
+                campaign.GetWallet(client).Give(itemValue);
                 GameAnalyticsManager.AddMoneyGainedEvent(itemValue, GameAnalyticsManager.MoneySource.Store, item.ItemPrefab.Identifier.Value);
             }
             OnSoldItemsChanged?.Invoke();

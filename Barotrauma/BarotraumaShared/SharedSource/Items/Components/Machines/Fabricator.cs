@@ -187,17 +187,6 @@ namespace Barotrauma.Items.Components
             if (!isClient)
             {
                 MoveIngredientsToInputContainer(selectedItem);
-                if (selectedItem.RequiredMoney > 0 && CanBeFabricated(fabricatedItem, availableIngredients, user))
-                {
-                    if (GameMain.GameSession?.GameMode is MultiPlayerCampaign)
-                    {
-                        user.Wallet.Deduct(selectedItem.RequiredMoney);
-                    }
-                    else if (GameMain.GameSession?.GameMode is CampaignMode campaign)
-                    {
-                        campaign.Bank.Deduct(selectedItem.RequiredMoney);
-                    }
-                }
             }
 
             requiredTime = GetRequiredTime(fabricatedItem, user);
@@ -211,9 +200,16 @@ namespace Barotrauma.Items.Components
                 State = FabricatorState.Active;
             }
 #if SERVER
-            if (user != null && addToServerLog)
+            if (user != null && addToServerLog && selectedItem.RequiredMoney == 0)
             {
-                GameServer.Log(GameServer.CharacterLogName(user) + " started fabricating " + selectedItem.DisplayName.Value + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
+                if (selectedItem.RequiredMoney > 0)
+                {
+                    GameServer.Log($"{GameServer.CharacterLogName(user)} bought {selectedItem.DisplayName.Value} for {selectedItem.RequiredMoney} mk from {item.Name}", ServerLog.MessageType.Money);
+                }
+                else
+                {
+                    GameServer.Log($"{GameServer.CharacterLogName(user)} started fabricating {selectedItem.DisplayName.Value} in {item.Name}", ServerLog.MessageType.ItemInteraction);
+                }
             }
 #endif
         }
@@ -326,6 +322,19 @@ namespace Barotrauma.Items.Components
             {
                 CancelFabricating();
                 return;
+            }
+
+            if (fabricatedItem.RequiredMoney > 0)
+            {
+                if (user == null) { return; }
+                if (GameMain.GameSession?.GameMode is MultiPlayerCampaign)
+                {
+                    user.Wallet.Deduct(fabricatedItem.RequiredMoney);
+                }
+                else if (GameMain.GameSession?.GameMode is CampaignMode campaign)
+                {
+                    campaign.Bank.Deduct(fabricatedItem.RequiredMoney);
+                }
             }
 
             bool ingredientsStolen = false;

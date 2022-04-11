@@ -13,7 +13,7 @@ namespace Barotrauma
         public override bool Loaded => nestedStr.Loaded;
         public override void RetrieveValue()
         {
-            cachedValue = nestedStr.Value.ToUpper();
+            cachedValue = nestedStr.Value.ToUpperInvariant();
             UpdateLanguage();
         }
 

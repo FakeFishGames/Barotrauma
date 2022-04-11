@@ -182,7 +182,10 @@ namespace Barotrauma
                 }
                 // Exchange money
                 store.Balance -= itemValue;
-                campaign.Bank.Give(itemValue);
+                if (GameMain.IsSingleplayer)
+                {
+                    campaign.Bank.Give(itemValue);
+                }
                 GameAnalyticsManager.AddMoneyGainedEvent(itemValue, GameAnalyticsManager.MoneySource.Store, item.ItemPrefab.Identifier.Value);
 
                 // Remove from the sell crate

@@ -3791,20 +3791,27 @@ namespace Barotrauma
                 OnSelected = SelectWire
             };
 
+            List<ItemPrefab> wirePrefabs = new List<ItemPrefab>();
+
             foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
             {
-                if (itemPrefab.Name.IsNullOrEmpty()) { continue; }
+                if (itemPrefab.Name.IsNullOrEmpty() || itemPrefab.HideInMenus) { continue; }
                 if (!itemPrefab.Tags.Contains("wire")) { continue; }
+                wirePrefabs.Add(itemPrefab);
+            }
 
+            foreach (ItemPrefab itemPrefab in wirePrefabs.OrderBy(w => !w.CanBeBought).ThenBy(w => w.UintIdentifier))
+            {
                 GUIFrame imgFrame = new GUIFrame(new RectTransform(new Point(listBox.Content.Rect.Width, listBox.Rect.Width / 2), listBox.Content.RectTransform), style: "ListBoxElement")
                 {
                     UserData = itemPrefab
                 };
-
                 var img = new GUIImage(new RectTransform(new Vector2(0.9f), imgFrame.RectTransform, Anchor.Center), itemPrefab.Sprite, scaleToFit: true)
                 {
                     UserData = itemPrefab,
-                    Color = itemPrefab.SpriteColor
+                    Color = itemPrefab.SpriteColor,
+                    HoverColor = Color.Lerp(itemPrefab.SpriteColor, Color.White, 0.3f),
+                    SelectedColor = Color.Lerp(itemPrefab.SpriteColor, Color.White, 0.6f)
                 };
             }
 

@@ -501,8 +501,8 @@ namespace Barotrauma
         private string ApplyUpperCase(string text, ForceUpperCase forceUpperCase)
             => forceUpperCase switch
             {
-                Barotrauma.ForceUpperCase.Inherit => ForceUpperCase ? text.ToUpper() : text,
-                Barotrauma.ForceUpperCase.Yes => text.ToUpper(),
+                Barotrauma.ForceUpperCase.Inherit => ForceUpperCase ? text.ToUpperInvariant() : text,
+                Barotrauma.ForceUpperCase.Yes => text.ToUpperInvariant(),
                 Barotrauma.ForceUpperCase.No => text
             };
         

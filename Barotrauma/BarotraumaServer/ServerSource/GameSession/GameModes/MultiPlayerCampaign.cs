@@ -516,7 +516,9 @@ namespace Barotrauma
             {
                 if (wallet.HasTransactions())
                 {
-                    transactions.Add(wallet.DequeueAndMergeTransactions(id));
+                    NetWalletTransaction transaction = wallet.DequeueAndMergeTransactions(id);
+                    if (transaction.ChangedData.BalanceChanged.IsNone() && transaction.ChangedData.RewardDistributionChanged.IsNone()) { continue; }
+                    transactions.Add(transaction);
                 }
             }
 
@@ -791,14 +793,14 @@ namespace Barotrauma
             }
             foreach (var store in prevBuyCrateItems)
             {
-                foreach (var item in store.Value)
+                foreach (var item in store.Value.ToList())
                 {
                     CargoManager.ModifyItemQuantityInBuyCrate(store.Key, item.ItemPrefab, -item.Quantity, sender);
                 }
             }
             foreach (var store in buyCrateItems)
             {
-                foreach (var item in store.Value)
+                foreach (var item in store.Value.ToList())
                 {
                     CargoManager.ModifyItemQuantityInBuyCrate(store.Key, item.ItemPrefab, item.Quantity, sender);
                 }
@@ -816,7 +818,40 @@ namespace Barotrauma
             foreach (var store in purchasedItems)
             {
                 CargoManager.PurchaseItems(store.Key, store.Value, false, sender);
-            }            
+            }
+
+            foreach (var (storeIdentifier, items) in CargoManager.PurchasedItems)
+            {
+                if (!prevPurchasedItems.ContainsKey(storeIdentifier))
+                {
+                    CargoManager.OnNewItemsPurchased(storeIdentifier, items, sender);
+                    continue;
+                }
+
+                List<PurchasedItem> newItems = new List<PurchasedItem>();
+                List<PurchasedItem> prevItems = prevPurchasedItems[storeIdentifier];
+
+                foreach (PurchasedItem item in items)
+                {
+                    PurchasedItem matching = prevItems.FirstOrDefault(ppi => ppi.ItemPrefab == item.ItemPrefab);
+                    if (matching is null)
+                    {
+                        newItems.Add(item);
+                        continue;
+                    }
+
+                    if (matching.Quantity < item.Quantity)
+                    {
+                        newItems.Add(new PurchasedItem(item.ItemPrefab, item.Quantity - matching.Quantity, sender));
+                    }
+                }
+
+                if (newItems.Any())
+                {
+                    CargoManager.OnNewItemsPurchased(storeIdentifier, newItems, sender);
+                }
+            }
+
 
             bool allowedToSellSubItems = AllowedToManageCampaign(sender, ClientPermissions.SellSubItems);
             if (allowedToSellSubItems)
@@ -824,14 +859,14 @@ namespace Barotrauma
                 var prevSubSellCrateItems = new Dictionary<Identifier, List<PurchasedItem>>(CargoManager.ItemsInSellFromSubCrate);
                 foreach (var store in prevSubSellCrateItems)
                 {
-                    foreach (var item in store.Value)
+                    foreach (var item in store.Value.ToList())
                     {
                         CargoManager.ModifyItemQuantityInSubSellCrate(store.Key, item.ItemPrefab, -item.Quantity, sender);
                     }
                 }
                 foreach (var store in subSellCrateItems)
                 {
-                    foreach (var item in store.Value)
+                    foreach (var item in store.Value.ToList())
                     {
                         CargoManager.ModifyItemQuantityInSubSellCrate(store.Key, item.ItemPrefab, item.Quantity, sender);
                     }
@@ -846,11 +881,11 @@ namespace Barotrauma
                 var prevSoldItems = new Dictionary<Identifier, List<SoldItem>>(CargoManager.SoldItems);
                 foreach (var store in prevSoldItems)
                 {
-                    CargoManager.BuyBackSoldItems(store.Key, store.Value);
+                    CargoManager.BuyBackSoldItems(store.Key, store.Value.ToList(), sender);
                 }
                 foreach (var store in soldItems)
                 {
-                    CargoManager.SellItems(store.Key, store.Value);
+                    CargoManager.SellItems(store.Key, store.Value.ToList(), sender);
                 }
             }
             else if (allowedToSellInventoryItems || allowedToSellSubItems)
@@ -859,7 +894,7 @@ namespace Barotrauma
                 foreach (var store in prevSoldItems)
                 {
                     store.Value.RemoveAll(predicate);
-                    CargoManager.BuyBackSoldItems(store.Key, store.Value);
+                    CargoManager.BuyBackSoldItems(store.Key, store.Value.ToList(), sender);
                 }
                 foreach (var store in soldItems)
                 {
@@ -867,7 +902,7 @@ namespace Barotrauma
                 }
                 foreach (var store in soldItems)
                 {
-                    CargoManager.SellItems(store.Key, store.Value);
+                    CargoManager.SellItems(store.Key, store.Value.ToList(), sender);
                 }
                 bool predicate(SoldItem i) => allowedToSellInventoryItems != (i.Origin == SoldItem.SellOrigin.Character);
             }
@@ -899,7 +934,7 @@ namespace Barotrauma
                     UpgradeManager.CancelItemSwap(item);
                     item.PendingItemSwap = null;
                 }
-            }            
+            }
         }
 
         public void ServerReadMoney(IReadMessage msg, Client sender)

@@ -1852,7 +1852,9 @@ namespace Barotrauma.Networking
                 outmsg.Write(GameMain.NetLobbyScreen.SelectedSub.Name);
                 outmsg.Write(GameMain.NetLobbyScreen.SelectedSub.MD5Hash.ToString());
                 outmsg.Write(IsUsingRespawnShuttle());
-                var selectedShuttle = gameStarted && respawnManager.UsingShuttle ? respawnManager.RespawnShuttle.Info : GameMain.NetLobbyScreen.SelectedShuttle;
+                var selectedShuttle = gameStarted && respawnManager != null && respawnManager.UsingShuttle ? 
+                    respawnManager.RespawnShuttle.Info : 
+                    GameMain.NetLobbyScreen.SelectedShuttle;
                 outmsg.Write(selectedShuttle.Name);
                 outmsg.Write(selectedShuttle.MD5Hash.ToString());
 
