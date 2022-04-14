@@ -25,20 +25,17 @@ namespace Barotrauma.Tutorials
         private LightComponent engineer_firstDoorLight;
 
         // Room 3
-        private MotionSensor engineer_reactorObjectiveSensor;
         private Powered tutorial_oxygenGenerator;
         private Reactor engineer_reactor;
         private Door engineer_secondDoor;
         private LightComponent engineer_secondDoorLight;
 
         // Room 4
-        private MotionSensor engineer_repairJunctionBoxObjectiveSensor;
         private Item engineer_brokenJunctionBox;
         private Door engineer_thirdDoor;
         private LightComponent engineer_thirdDoorLight;
 
         // Room 5
-        private MotionSensor engineer_disconnectedJunctionBoxObjectiveSensor;
         private PowerTransfer[] engineer_disconnectedJunctionBoxes;
         private ConnectionPanel[] engineer_disconnectedConnectionPanels;
         private Item engineer_wire_1;
@@ -169,7 +166,6 @@ namespace Barotrauma.Tutorials
             SetDoorAccess(engineer_firstDoor, engineer_firstDoorLight, false);
 
             // Room 3
-            engineer_reactorObjectiveSensor = Item.ItemList.Find(i => i.HasTag("engineer_reactorobjectivesensor")).GetComponent<MotionSensor>();
             tutorial_oxygenGenerator = Item.ItemList.Find(i => i.HasTag("tutorial_oxygengenerator")).GetComponent<OxygenGenerator>();
             engineer_reactor = Item.ItemList.Find(i => i.HasTag("engineer_reactor")).GetComponent<Reactor>();
             engineer_reactor.FireDelay = engineer_reactor.MeltdownDelay = float.PositiveInfinity;
@@ -183,7 +179,6 @@ namespace Barotrauma.Tutorials
             SetDoorAccess(engineer_secondDoor, engineer_secondDoorLight, false);
 
             // Room 4
-            engineer_repairJunctionBoxObjectiveSensor = Item.ItemList.Find(i => i.HasTag("engineer_repairjunctionboxobjectivesensor")).GetComponent<MotionSensor>();
             engineer_brokenJunctionBox = Item.ItemList.Find(i => i.HasTag("engineer_brokenjunctionbox"));
             engineer_thirdDoor = Item.ItemList.Find(i => i.HasTag("engineer_thirddoor")).GetComponent<Door>();
             engineer_thirdDoorLight = Item.ItemList.Find(i => i.HasTag("engineer_thirddoorlight")).GetComponent<LightComponent>();
@@ -194,8 +189,6 @@ namespace Barotrauma.Tutorials
             SetDoorAccess(engineer_thirdDoor, engineer_thirdDoorLight, false);
 
             // Room 5
-            engineer_disconnectedJunctionBoxObjectiveSensor = Item.ItemList.Find(i => i.HasTag("engineer_disconnectedjunctionboxobjectivesensor")).GetComponent<MotionSensor>();
-
             engineer_disconnectedJunctionBoxes = new PowerTransfer[4];
             engineer_disconnectedConnectionPanels = new ConnectionPanel[4];
 
@@ -255,7 +248,7 @@ namespace Barotrauma.Tutorials
 
         public override IEnumerable<CoroutineStatus> UpdateState()
         {
-            while (GameMain.Instance.LoadingScreenOpen) yield return null;
+            while (GameMain.Instance.LoadingScreenOpen) { yield return null; }
 
             // Room 1
             SoundPlayer.PlayDamageSound("StructureBlunt", 10, Character.Controlled.WorldPosition);
@@ -519,10 +512,10 @@ namespace Barotrauma.Tutorials
                 tutorial_oxygenGenerator.PowerConsumption = reactorLoads[i];
                 while (timer > 0)
                 {
-                    yield return new WaitForSeconds(0.1f, false);
-                    if (IsReactorPoweredUp(engineer_reactor))
+                    yield return CoroutineStatus.Running;
+                    if (CoroutineManager.DeltaTime > 0.0f && IsReactorPoweredUp(engineer_reactor))
                     {
-                        timer -= 0.1f;
+                        timer -= CoroutineManager.DeltaTime;
                     }                   
                 }
             }

@@ -206,7 +206,7 @@ namespace Barotrauma
                 var campaign = MultiPlayerCampaign.StartNew(seed ?? ToolBox.RandomSeed(8), selectedSub, settings);
                 if (selectedSub != null)
                 {
-                    campaign.Bank.TryDeduct(selectedSub.Price);
+                    campaign.Bank.Deduct(selectedSub.Price);
                     campaign.Bank.Balance = Math.Max(campaign.Bank.Balance, MultiPlayerCampaign.MinimumInitialMoney);
                 }
                 return campaign;

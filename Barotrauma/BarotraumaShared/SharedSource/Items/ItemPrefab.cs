@@ -75,7 +75,8 @@ namespace Barotrauma
         public class RequiredItemByIdentifier : RequiredItem
         {
             public readonly Identifier ItemPrefabIdentifier;
-            public ItemPrefab ItemPrefab => ItemPrefab.Prefabs[ItemPrefabIdentifier];
+            public ItemPrefab ItemPrefab => ItemPrefab.Prefabs.TryGet(ItemPrefabIdentifier, out var prefab) ? prefab
+                : MapEntityPrefab.FindByName(ItemPrefabIdentifier.Value) as ItemPrefab ?? throw new Exception($"No ItemPrefab with identifier or name \"{ItemPrefabIdentifier}\"");
             public override UInt32 UintIdentifier { get; }
 
             public override IEnumerable<ItemPrefab> ItemPrefabs => ItemPrefab.ToEnumerable();

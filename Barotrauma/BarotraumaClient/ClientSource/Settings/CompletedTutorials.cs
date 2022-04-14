@@ -1,10 +1,6 @@
 ﻿#nullable enable
-using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -31,7 +27,10 @@ namespace Barotrauma
 
         public void SaveTo(XElement element)
         {
-            identifiers.ForEach(id => new XElement("Tutorial", new XAttribute("name", id.Value)));
+            foreach (var id in identifiers)
+            {
+                element.Add(new XElement("Tutorial", new XAttribute("name", id.Value)));
+            }
         }
 
         public bool Contains(Identifier identifier) => identifiers.Contains(identifier);

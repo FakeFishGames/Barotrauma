@@ -197,6 +197,14 @@ namespace Barotrauma.Transition
                             DebugConsole.ThrowError("There was an error transferring mods", t2.Exception.GetInnermost());
                         }
                         ContentPackageManager.LocalPackages.Refresh();
+                        if (t2.TryGetResult(out string[] modsToEnable))
+                        {
+                            var newRegular = ContentPackageManager.EnabledPackages.Regular.ToList();
+                            newRegular.AddRange(ContentPackageManager.LocalPackages.Regular
+                                .Where(r => modsToEnable.Contains(r.Dir.CleanUpPathCrossPlatform(correctFilenameCase: false))));
+                            newRegular = newRegular.Distinct().ToList();
+                            ContentPackageManager.EnabledPackages.SetRegular(newRegular);
+                        }
                         createSubMsgBox(TextManager.Get("Ugc.TransferComplete"), closable: true);
                     });
                     msgBox.Close();
@@ -287,19 +295,20 @@ namespace Barotrauma.Transition
                    && !File.Exists(Path.Combine(folderName, readmeName));
         }
 
-        private static async Task TransferMods(Dictionary<string, GUITickBox> pathTickboxMap)
+        private static async Task<string[]> TransferMods(Dictionary<string, GUITickBox> pathTickboxMap)
         {
             //WriteReadme(oldSubsPath); //can't do this because the old submarine discovery code is borked
             WriteReadme(oldModsPath);
-            await Task.WhenAll(pathTickboxMap.Select(TransferMod));
+            var modsToEnable = (await Task.WhenAll(pathTickboxMap.Select(TransferMod))).OfType<string>().ToArray();
+            return modsToEnable;
         }
 
-        private static Task TransferMod(KeyValuePair<string, GUITickBox> kvp)
+        private static Task<string?> TransferMod(KeyValuePair<string, GUITickBox> kvp)
             => TransferMod(kvp.Key, kvp.Value);
 
-        private static async Task TransferMod(string path, GUITickBox tickbox)
+        private static async Task<string?> TransferMod(string path, GUITickBox tickbox)
         {
-            if (!tickbox.Selected) { return; }
+            if (!tickbox.Selected) { return null; }
             string dirName = Path.GetFileNameWithoutExtension(path);
             string destPath = Path.Combine(ContentPackage.LocalModsDir, dirName);
                 
@@ -344,13 +353,15 @@ namespace Barotrauma.Transition
                 Directory.CreateDirectory(destPath);
                 File.Copy(path, Path.Combine(destPath, $"{dirName}.{(isSub ? "sub" : "xml")}"));
                 modProject.Save(Path.Combine(destPath, ContentPackage.FileListFileName));
-                
-                await Task.Yield();
+
+                return destPath.CleanUpPathCrossPlatform(correctFilenameCase: false);
             }
             else
             {
                 //copying a mod: we have a neat method for that!
                 await SteamManager.Workshop.CopyDirectory(path, Path.GetFileName(path), path, destPath);
+
+                return null;
             }
         }
 

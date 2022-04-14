@@ -161,7 +161,7 @@ namespace Barotrauma.Items.Components
         /// </summary>
         public override float GetCurrentPowerConsumption(Connection connection = null)
         {
-            if (connection != this.powerIn)
+            if (connection != this.powerIn || !IsActive)
             {
                 return 0;
             }

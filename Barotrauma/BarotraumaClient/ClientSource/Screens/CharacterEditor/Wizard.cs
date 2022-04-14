@@ -262,11 +262,32 @@ namespace Barotrauma.CharacterEditor
                                         FileSelection.OnFileSelected = (file) =>
                                         {
                                             string relativePath = Path.GetRelativePath(Environment.CurrentDirectory, Path.GetFullPath(file));
+                                            
+                                            if (relativePath.StartsWith(ContentPackage.LocalModsDir))
+                                            {
+                                                string[] pathSplit = relativePath.Split('/', '\\');
+                                                string modDirName = $"{ContentPackage.LocalModsDir}/{pathSplit[1]}";
+                                                string selectedModDir
+                                                    = (contentPackageDropDown.ListBox.SelectedData as ContentPackage)?.Dir.CleanUpPathCrossPlatform(correctFilenameCase: false)
+                                                      ?? "";
+                                                if (modDirName == selectedModDir)
+                                                {
+                                                    relativePath = ContentPath.ModDirStr + "/" +
+                                                                   string.Join("/", pathSplit[2..]);
+                                                }
+                                                else
+                                                {
+                                                    relativePath = string.Format(ContentPath.OtherModDirFmt,
+                                                        pathSplit[1]) + "/" +
+                                                        string.Join("/", pathSplit[2..]);
+                                                }
+                                            }
+                                            
                                             string destinationPath = relativePath;
 
-                                        //copy file to XML path if it's not located relative to the game's files
-                                        if (relativePath.StartsWith("..") ||
-                                                Path.GetPathRoot(Environment.CurrentDirectory) != Path.GetPathRoot(file))
+                                            //copy file to XML path if it's not located relative to the game's files
+                                            if (relativePath.StartsWith("..") ||
+                                                    Path.GetPathRoot(Environment.CurrentDirectory) != Path.GetPathRoot(file))
                                             {
                                                 destinationPath = Path.Combine(Path.GetDirectoryName(XMLPath), Path.GetFileName(file));
 
@@ -387,16 +408,20 @@ namespace Barotrauma.CharacterEditor
                         contentPackageDropDown.Flash();
                         return false;
                     }
+
+                    string evaluatedTexturePath = ContentPath.FromRaw(
+                        contentPackageDropDown.SelectedData as ContentPackage,
+                        TexturePath).Value;
                     if (SourceCharacter?.SpeciesName != CharacterPrefab.HumanSpeciesName)
                     {
-                        if (!File.Exists(TexturePath))
+                        if (!File.Exists(evaluatedTexturePath))
                         {
                             GUI.AddMessage(GetCharacterEditorTranslation("TextureDoesNotExist"), GUIStyle.Red);
                             texturePathElement.Flash(GUIStyle.Red);
                             return false;
                         }
                     }
-                    var path = Path.GetFileName(TexturePath);
+                    var path = Path.GetFileName(evaluatedTexturePath);
                     if (!path.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
                     {
                         GUI.AddMessage(TextManager.Get("WrongFileType"), GUIStyle.Red);
@@ -405,7 +430,7 @@ namespace Barotrauma.CharacterEditor
                     }
                     if (IsCopy)
                     {
-                        SourceRagdoll.Texture = TexturePath;
+                        SourceRagdoll.Texture = evaluatedTexturePath;
                         SourceRagdoll.CanEnterSubmarine = CanEnterSubmarine;
                         SourceRagdoll.CanWalk = CanWalk;
                         SourceRagdoll.Serialize();

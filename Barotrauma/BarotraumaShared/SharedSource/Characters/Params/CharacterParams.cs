@@ -481,16 +481,16 @@ namespace Barotrauma
             public bool UseHealthWindow { get; set; }
 
             [Serialize(0f, IsPropertySaveable.Yes, description: "How easily the character heals from the bleeding wounds. Default 0 (no extra healing)."), Editable(MinValueFloat = 0, MaxValueFloat = 100, DecimalCount = 2)]
-            public float BleedingReduction { get; private set; }
+            public float BleedingReduction { get; set; }
 
             [Serialize(0f, IsPropertySaveable.Yes, description: "How easily the character heals from the burn wounds. Default 0 (no extra healing)."), Editable(MinValueFloat = 0, MaxValueFloat = 100, DecimalCount = 2)]
-            public float BurnReduction { get; private set; }
+            public float BurnReduction { get; set; }
 
             [Serialize(0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0, MaxValueFloat = 10, DecimalCount = 2)]
-            public float ConstantHealthRegeneration { get; private set; }
+            public float ConstantHealthRegeneration { get; set; }
 
             [Serialize(0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0, MaxValueFloat = 100, DecimalCount = 2)]
-            public float HealthRegenerationWhenEating { get; private set; }
+            public float HealthRegenerationWhenEating { get; set; }
 
             [Serialize(false, IsPropertySaveable.Yes), Editable]
             public bool StunImmunity { get; set; }

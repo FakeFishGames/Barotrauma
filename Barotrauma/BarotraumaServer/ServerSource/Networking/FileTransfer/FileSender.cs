@@ -275,11 +275,6 @@ namespace Barotrauma.Networking
                     Array.Copy(transfer.Data, transfer.SentOffset, message.Buffer, chunkDestPos, sendByteCount);
 
                     transfer.SentOffset += sendByteCount;
-                    if (transfer.SentOffset >= transfer.Data.Length)
-                    {
-                        transfer.SentOffset = transfer.KnownReceivedOffset;
-                        transfer.WaitTimer = 1.0f;
-                    }
 
                     peer.Send(message, transfer.Connection, DeliveryMethod.Unreliable, compressPastThreshold: false);
 
@@ -288,6 +283,12 @@ namespace Barotrauma.Networking
                         DebugConsole.Log($"Sending {sendByteCount} bytes of the file {transfer.FileName} ({transfer.SentOffset / 1000}/{transfer.Data.Length / 1000} kB sent)");
                     }
                     
+                    if (transfer.SentOffset >= transfer.Data.Length)
+                    {
+                        transfer.SentOffset = transfer.KnownReceivedOffset;
+                        transfer.WaitTimer = 1.0f;
+                    }
+
                     //try to increase the packet rate so large files get sent faster,
                     //this gets reset when packet loss or disorder sets in
                     transfer.PacketsPerUpdate = Math.Min(FileTransferOut.MaxPacketsPerUpdate,
@@ -330,7 +331,6 @@ namespace Barotrauma.Networking
                 byte transferId = inc.ReadByte();
                 var matchingTransfer = activeTransfers.Find(t => t.Connection == inc.Sender && t.ID == transferId);
                 if (matchingTransfer != null) CancelTransfer(matchingTransfer);
-
                 return;
             }
             else if (messageType == FileTransferMessageType.Data)
@@ -372,15 +372,22 @@ namespace Barotrauma.Networking
                     string fileHash = inc.ReadString();
                     var requestedSubmarine = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == fileName && s.MD5Hash.StringRepresentation == fileHash);
 
+                    DebugConsole.Log($"Received a submarine file request from \"{client.Name}\" ({fileName}).");
+
                     if (requestedSubmarine != null)
                     {
+                        if (activeTransfers.Any(t => t.Connection == inc.Sender && t.FilePath == requestedSubmarine.FilePath))
+                        {
+                            DebugConsole.Log($"Ignoring a submarine file request from \"{client.Name}\" ({fileName}) - already transferring.");
+                            return;
+                        }
                         StartTransfer(inc.Sender, FileTransferType.Submarine, requestedSubmarine.FilePath);
                     }
                     break;
                 case FileTransferType.CampaignSave:
                     if (GameMain.GameSession != null &&
                         !ActiveTransfers.Any(t => t.Connection == inc.Sender && t.FileType == FileTransferType.CampaignSave))
-                    {                       
+                    {
                         StartTransfer(inc.Sender, FileTransferType.CampaignSave, GameMain.GameSession.SavePath);
                         if (GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign)
                         {
@@ -392,6 +399,8 @@ namespace Barotrauma.Networking
                     string modName = inc.ReadString();
                     Md5Hash modHash = Md5Hash.StringAsHash(inc.ReadString());
 
+                    DebugConsole.Log($"Received a mod file request from \"{client.Name}\" ({modName}).");
+
                     if (!GameMain.Server.ServerSettings.AllowModDownloads) { return; }
                     if (!(GameMain.Server.ModSender is { Ready: true })) { return; }
                     
@@ -401,6 +410,12 @@ namespace Barotrauma.Networking
                     
                     string modCompressedPath = ModSender.GetCompressedModPath(mod);
                     if (!File.Exists(modCompressedPath)) { return; }
+
+                    if (activeTransfers.Any(t => t.Connection == inc.Sender && t.FilePath == modCompressedPath))
+                    {
+                        DebugConsole.Log($"Ignoring a mod file request from \"{client.Name}\" ({modName}) - already transferring.");
+                        return;
+                    }
 
                     StartTransfer(inc.Sender, FileTransferType.Mod, modCompressedPath);
                     

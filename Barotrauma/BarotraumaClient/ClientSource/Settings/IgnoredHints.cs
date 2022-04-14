@@ -34,8 +34,10 @@ namespace Barotrauma
         public bool Contains(Identifier identifier) => identifiers.Contains(identifier);
 
         public void Add(Identifier identifier) => identifiers.Add(identifier);
-        
+
         public void Remove(Identifier identifier) => identifiers.Remove(identifier);
+
+        public void Clear() => identifiers.Clear();
 
         public static IgnoredHints Instance { get; private set; } = new IgnoredHints();
     }

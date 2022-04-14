@@ -614,8 +614,18 @@ namespace Barotrauma.Steam
             if (!SteamManager.IsInitialized)
             {
                 tabContents[Tab.PopularMods].Button.Enabled = false;
-            }            
-            CreateWorkshopItemList(content, out _, out popularModsList, onSelected: PopulateFrameWithItemInfo);
+            }
+            GUIFrame listFrame = new GUIFrame(new RectTransform((1.0f, 0.95f), content.RectTransform), style: null);
+            CreateWorkshopItemList(listFrame, out _, out popularModsList, onSelected: PopulateFrameWithItemInfo);
+            new GUIButton(new RectTransform((1.0f, 0.05f), content.RectTransform, Anchor.BottomLeft),
+                style: "GUIButtonSmall", text: TextManager.Get("FindModsButton"))
+            {
+                OnClicked = (button, o) =>
+                {
+                    SteamManager.OverlayCustomURL($"https://steamcommunity.com/app/{SteamManager.AppID}/workshop/");
+                    return false;
+                }
+            };
         }
 
         private void CreatePublishTab(out GUIListBox selfModsList)

@@ -92,6 +92,7 @@ namespace Barotrauma
         public static int IntScale(float f) => (int)(f * Scale);
         public static int IntScaleFloor(float f) => (int)Math.Floor(f * Scale);
         public static int IntScaleCeiling(float f) => (int)Math.Ceiling(f * Scale);
+        public static float AdjustForTextScale(float f) => f * GameSettings.CurrentConfig.Graphics.TextScale;
         public static float HorizontalAspectRatio => GameMain.GraphicsWidth / (float)GameMain.GraphicsHeight;
         public static float VerticalAspectRatio => GameMain.GraphicsHeight / (float)GameMain.GraphicsWidth;
         public static float RelativeHorizontalAspectRatio => HorizontalAspectRatio / (ReferenceResolution.X / ReferenceResolution.Y);
@@ -299,15 +300,16 @@ namespace Barotrauma
                     return;
                 }
 
+                float startY = 10.0f;
                 if (GameMain.ShowFPS || GameMain.DebugDraw || GameMain.ShowPerf)
                 {
-                    float y = 10.0f;
+                    float y = startY;
                     DrawString(spriteBatch, new Vector2(10, y),
                         "FPS: " + Math.Round(GameMain.PerformanceCounter.AverageFramesPerSecond),
                         Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
                     if (GameMain.GameSession != null && Timing.TotalTime > GameMain.GameSession.RoundStartTime + 1.0)
                     {
-                        y += GameSettings.CurrentConfig.Graphics.TextScale * 15.0f;
+                        y += AdjustForTextScale(15) * yScale;
                         DrawString(spriteBatch, new Vector2(10, y),
                             $"Physics: {GameMain.CurrentUpdateRate}",
                             (GameMain.CurrentUpdateRate < Timing.FixedUpdateRate) ? Color.Red : Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
@@ -316,83 +318,88 @@ namespace Barotrauma
 
                 if (GameMain.ShowPerf)
                 {
-                    int x = 400;
-                    int y = 10;
+                    float x = 400;
+                    float y = startY;
                     DrawString(spriteBatch, new Vector2(x, y),
                         "Draw - Avg: " + GameMain.PerformanceCounter.DrawTimeGraph.Average().ToString("0.00") + " ms" +
                         " Max: " + GameMain.PerformanceCounter.DrawTimeGraph.LargestValue().ToString("0.00") + " ms",
                         GUIStyle.Green, Color.Black * 0.8f, font: GUIStyle.SmallFont);
-                        y += 15;
-                    GameMain.PerformanceCounter.DrawTimeGraph.Draw(spriteBatch, new Rectangle(x, y, 170, 50), color: GUIStyle.Green);
-                    y += 50;
+                        y += 15 * yScale;
+                    GameMain.PerformanceCounter.DrawTimeGraph.Draw(spriteBatch, new Rectangle((int)x, (int)y, 170, 50), color: GUIStyle.Green);
+                    y += 50 * yScale;
 
                     DrawString(spriteBatch, new Vector2(x, y),
                         "Update - Avg: " + GameMain.PerformanceCounter.UpdateTimeGraph.Average().ToString("0.00") + " ms" +
                         " Max: " + GameMain.PerformanceCounter.UpdateTimeGraph.LargestValue().ToString("0.00") + " ms",
                         Color.LightBlue, Color.Black * 0.8f, font: GUIStyle.SmallFont);
-                    y += 15;
-                    GameMain.PerformanceCounter.UpdateTimeGraph.Draw(spriteBatch, new Rectangle(x, y, 170, 50), color: Color.LightBlue);
-                    y += 50;
+                    y += 15 * yScale;
+                    GameMain.PerformanceCounter.UpdateTimeGraph.Draw(spriteBatch, new Rectangle((int)x, (int)y, 170, 50), color: Color.LightBlue);
+                    y += 50 * yScale;
                     foreach (string key in GameMain.PerformanceCounter.GetSavedIdentifiers)
                     {
                         float elapsedMillisecs = GameMain.PerformanceCounter.GetAverageElapsedMillisecs(key);
                         DrawString(spriteBatch, new Vector2(x, y),
                             key + ": " + elapsedMillisecs.ToString("0.00"),
                             Color.Lerp(Color.LightGreen, GUIStyle.Red, elapsedMillisecs / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                        y += 15;
+                        y += 15 * yScale;
                         foreach (string childKey in GameMain.PerformanceCounter.GetSavedPartialIdentifiers(key))
                         {
                             elapsedMillisecs = GameMain.PerformanceCounter.GetPartialAverageElapsedMillisecs(key, childKey);
                             DrawString(spriteBatch, new Vector2(x + 15, y),
                                 childKey + ": " + elapsedMillisecs.ToString("0.00"),
                                 Color.Lerp(Color.LightGreen, GUIStyle.Red, elapsedMillisecs / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                            y += 15;
+                            y += 15 * yScale;
                         }
                     }
 
                     if (Powered.Grids != null)
                     {
                         DrawString(spriteBatch, new Vector2(x, y), "Grids: " + Powered.Grids.Count, Color.LightGreen, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                        y += 15;
+                        y += 15 * yScale;
                     }
 
                     if (Settings.EnableDiagnostics)
                     {
-                        x += 20;
+                        x += 20 * xScale;
                         DrawString(spriteBatch, new Vector2(x, y), "ContinuousPhysicsTime: " + GameMain.World.ContinuousPhysicsTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.ContinuousPhysicsTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                        DrawString(spriteBatch, new Vector2(x, y + 15), "ControllersUpdateTime: " + GameMain.World.ControllersUpdateTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.ControllersUpdateTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                        DrawString(spriteBatch, new Vector2(x, y + 30), "AddRemoveTime: " + GameMain.World.AddRemoveTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.AddRemoveTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                        DrawString(spriteBatch, new Vector2(x, y + 45), "NewContactsTime: " + GameMain.World.NewContactsTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.NewContactsTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                        DrawString(spriteBatch, new Vector2(x, y + 60), "ContactsUpdateTime: " + GameMain.World.ContactsUpdateTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.ContactsUpdateTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                        DrawString(spriteBatch, new Vector2(x, y + 75), "SolveUpdateTime: " + GameMain.World.SolveUpdateTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.SolveUpdateTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
+                        DrawString(spriteBatch, new Vector2(x, y + 15 * yScale), "ControllersUpdateTime: " + GameMain.World.ControllersUpdateTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.ControllersUpdateTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
+                        DrawString(spriteBatch, new Vector2(x, y + 30 * yScale), "AddRemoveTime: " + GameMain.World.AddRemoveTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.AddRemoveTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
+                        DrawString(spriteBatch, new Vector2(x, y + 45 * yScale), "NewContactsTime: " + GameMain.World.NewContactsTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.NewContactsTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
+                        DrawString(spriteBatch, new Vector2(x, y + 60 * yScale), "ContactsUpdateTime: " + GameMain.World.ContactsUpdateTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.ContactsUpdateTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
+                        DrawString(spriteBatch, new Vector2(x, y + 75 * yScale), "SolveUpdateTime: " + GameMain.World.SolveUpdateTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.SolveUpdateTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
                     }
                 }
 
                 if (GameMain.DebugDraw && !Submarine.Unloading && !(Screen.Selected is RoundSummaryScreen))
                 {
-                    DrawString(spriteBatch, new Vector2(10, 25),
+                    float y = startY + 15 * yScale;
+                    DrawString(spriteBatch, new Vector2(10, y),
                         "Physics: " + GameMain.World.UpdateTime,
                         Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
 
-                    DrawString(spriteBatch, new Vector2(10, 40),
+                    y += 15 * yScale;
+                    DrawString(spriteBatch, new Vector2(10, y),
                         $"Bodies: {GameMain.World.BodyList.Count} ({GameMain.World.BodyList.Count(b => b != null && b.Awake && b.Enabled)} awake, {GameMain.World.BodyList.Count(b => b != null && b.Awake && b.BodyType == BodyType.Dynamic && b.Enabled)} dynamic)",
                         Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
 
                     if (Screen.Selected.Cam != null)
                     {
-                        DrawString(spriteBatch, new Vector2(10, 55),
+                        y += 15 * yScale;
+                        DrawString(spriteBatch, new Vector2(10, y),
                             "Camera pos: " + Screen.Selected.Cam.Position.ToPoint() + ", zoom: " + Screen.Selected.Cam.Zoom,
                             Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
                     }
 
                     if (Submarine.MainSub != null)
                     {
-                        DrawString(spriteBatch, new Vector2(10, 70),
+                        y += 15 * yScale;
+                        DrawString(spriteBatch, new Vector2(10, y),
                             "Sub pos: " + Submarine.MainSub.Position.ToPoint(),
                             Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
                     }
 
-                    DrawString(spriteBatch, new Vector2(10, 90),
+                    y += 20 * yScale;
+                    DrawString(spriteBatch, new Vector2(10, y),
                         "Particle count: " + GameMain.ParticleManager.ParticleCount + "/" + GameMain.ParticleManager.MaxParticles,
                         Color.Lerp(GUIStyle.Green, GUIStyle.Red, (GameMain.ParticleManager.ParticleCount / (float)GameMain.ParticleManager.MaxParticles)), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
 
@@ -401,28 +408,29 @@ namespace Barotrauma
                         loadedSpritesText = "Loaded sprites: " + Sprite.LoadedSprites.Count() + "\n(" + Sprite.LoadedSprites.Select(s => s.FilePath).Distinct().Count() + " unique textures)";
                         loadedSpritesUpdateTime = DateTime.Now + new TimeSpan(0, 0, seconds: 5);
                     }
-                    DrawString(spriteBatch, new Vector2(10, 115), loadedSpritesText, Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
+                    y += 25 * yScale;
+                    DrawString(spriteBatch, new Vector2(10, y), loadedSpritesText, Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
 
                     if (debugDrawSounds)
                     {
-                        int y = 0;
-                        DrawString(spriteBatch, new Vector2(500, y),
+                        float soundTextY = 0;
+                        DrawString(spriteBatch, new Vector2(500, soundTextY),
                             "Sounds (Ctrl+S to hide): ", Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                        y += 15;
+                        soundTextY += 15 * yScale;
 
-                        DrawString(spriteBatch, new Vector2(500, y),
+                        DrawString(spriteBatch, new Vector2(500, soundTextY),
                             "Current playback amplitude: " + GameMain.SoundManager.PlaybackAmplitude.ToString(), Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
 
-                        y += 15;
+                        soundTextY += 15 * yScale;
 
-                        DrawString(spriteBatch, new Vector2(500, y),
+                        DrawString(spriteBatch, new Vector2(500, soundTextY),
                             "Compressed dynamic range gain: " + GameMain.SoundManager.CompressionDynamicRangeGain.ToString(), Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
 
-                        y += 15;
+                        soundTextY += 15 * yScale;
 
-                        DrawString(spriteBatch, new Vector2(500, y),
+                        DrawString(spriteBatch, new Vector2(500, soundTextY),
                             "Loaded sounds: " + GameMain.SoundManager.LoadedSoundCount + " (" + GameMain.SoundManager.UniqueLoadedSoundCount + " unique)", Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                        y += 15;
+                        soundTextY += 15 * yScale;
 
                         for (int i = 0; i < SoundManager.SOURCE_COUNT; i++)
                         {
@@ -441,7 +449,7 @@ namespace Barotrauma
 #if DEBUG
                                 if (PlayerInput.GetKeyboardState.IsKeyDown(Keys.G))
                                 {
-                                    if (PlayerInput.MousePosition.Y >= y && PlayerInput.MousePosition.Y <= y + 12)
+                                    if (PlayerInput.MousePosition.Y >= soundTextY && PlayerInput.MousePosition.Y <= soundTextY + 12)
                                     {
                                         GameMain.SoundManager.DebugSource(i);
                                     }
@@ -470,8 +478,8 @@ namespace Barotrauma
                                 }
                             }
 
-                            DrawString(spriteBatch, new Vector2(500, y), soundStr, clr, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                            y += 15;
+                            DrawString(spriteBatch, new Vector2(500, soundTextY), soundStr, clr, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
+                            soundTextY += 15 * yScale;
                         }
                     }
                     else
@@ -481,20 +489,22 @@ namespace Barotrauma
                     }
 
 
+                    y += 185 * yScale;
                     if (debugDrawEvents)
                     {
-                        DrawString(spriteBatch, new Vector2(10, 300),
+                        DrawString(spriteBatch, new Vector2(10, y),
                             "Ctrl+E to hide EventManager debug info", Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                        GameMain.GameSession?.EventManager?.DebugDrawHUD(spriteBatch, 315);
+                        GameMain.GameSession?.EventManager?.DebugDrawHUD(spriteBatch, y + 15 * yScale);
                     }
                     else
                     {
-                        DrawString(spriteBatch, new Vector2(10, 300),
+                        DrawString(spriteBatch, new Vector2(10, y),
                             "Ctrl+E to show EventManager debug info", Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
                     }
 
                     if (GameMain.GameSession?.GameMode is CampaignMode campaignMode)
                     {
+                        // TODO: TEST THIS
                         if (debugDrawMetadata)
                         {
                             string text = "Ctrl+M to hide campaign metadata debug info\n\n" +
@@ -502,10 +512,10 @@ namespace Barotrauma
                                           $"Ctrl+2 to {(string.IsNullOrWhiteSpace(ignoredMetadataInfo[1]) ? "hide" : "show")} faction reputations, \n" +
                                           $"Ctrl+3 to {(string.IsNullOrWhiteSpace(ignoredMetadataInfo[2]) ? "hide" : "show")} upgrade levels, \n" +
                                           $"Ctrl+4 to {(string.IsNullOrWhiteSpace(ignoredMetadataInfo[3]) ? "hide" : "show")} upgrade prices";
-                            var (x, y) = GUIStyle.SmallFont.MeasureString(text);
-                            Vector2 pos = new Vector2(GameMain.GraphicsWidth - (x + 10), 300);
+                            Vector2 textSize = GUIStyle.SmallFont.MeasureString(text);
+                            Vector2 pos = new Vector2(GameMain.GraphicsWidth - (textSize.X + 10), 300);
                             DrawString(spriteBatch, pos, text, Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                            pos.Y += y + 8;
+                            pos.Y += textSize.Y + 8;
                             campaignMode.CampaignMetadata?.DebugDraw(spriteBatch, pos, debugDrawMetadataOffset, ignoredMetadataInfo);
                         }
                         else

@@ -2561,27 +2561,30 @@ namespace Barotrauma
 
             if (MainSub != null)
             {
-                List<string> contentPacks = MainSub.Info.RequiredContentPackages.ToList();
+                List<string> allContentPacks = MainSub.Info.RequiredContentPackages.ToList();
                 foreach (ContentPackage contentPack in ContentPackageManager.AllPackages)
                 {
                     //don't show content packages that only define submarine files
                     //(it doesn't make sense to require another sub to be installed to install this one)
-                    if (contentPack.Files.All(f => f is SubmarineFile)) { continue; }
+                    if (contentPack.Files.All(f => f is SubmarineFile || f is ItemAssemblyFile)) { continue; }
 
-                    if (!contentPacks.Contains(contentPack.Name))
+                    if (!allContentPacks.Contains(contentPack.Name))
                     {
-                        string altName = contentPack.AltNames.FirstOrDefault(n => contentPacks.Contains(n));
+                        string altName = contentPack.AltNames.FirstOrDefault(n => allContentPacks.Contains(n));
                         if (!string.IsNullOrEmpty(altName))
                         {
-                            MainSub.Info.RequiredContentPackages.Remove(altName);
-                            MainSub.Info.RequiredContentPackages.Add(contentPack.Name);
-                            contentPacks.Remove(altName);
+                            if (MainSub.Info.RequiredContentPackages.Contains(altName))
+                            {
+                                MainSub.Info.RequiredContentPackages.Remove(altName);
+                                MainSub.Info.RequiredContentPackages.Add(contentPack.Name);
+                            }
+                            allContentPacks.Remove(altName);
                         }
-                        contentPacks.Add(contentPack.Name);
+                        allContentPacks.Add(contentPack.Name);
                     }
                 }
 
-                foreach (string contentPackageName in contentPacks)
+                foreach (string contentPackageName in allContentPacks)
                 {
                     var cpTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 0.2f), contentPackList.Content.RectTransform), contentPackageName, font: GUIStyle.SmallFont)
                     {

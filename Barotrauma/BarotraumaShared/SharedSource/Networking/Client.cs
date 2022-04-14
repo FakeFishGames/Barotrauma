@@ -1,4 +1,3 @@
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -257,7 +256,7 @@ namespace Barotrauma.Networking
         public void WritePermissions(IWriteMessage msg)
         {
             msg.Write(ID);
-            msg.Write((UInt16)Permissions);
+            msg.WriteRangedInteger((int)Permissions, 0, (int)ClientPermissions.All);
             if (HasPermission(ClientPermissions.ConsoleCommands))
             {
                 msg.Write((UInt16)PermittedConsoleCommands.Count);
@@ -269,8 +268,7 @@ namespace Barotrauma.Networking
         }
         public static void ReadPermissions(IReadMessage inc, out ClientPermissions permissions, out List<DebugConsole.Command> permittedCommands)
         {
-            UInt16 permissionsInt = inc.ReadUInt16();
-
+            int permissionsInt = inc.ReadRangedInteger(0, (int)ClientPermissions.All);
             permissions = ClientPermissions.None;
             permittedCommands = new List<DebugConsole.Command>();
             try
@@ -298,9 +296,7 @@ namespace Barotrauma.Networking
 
         public void ReadPermissions(IReadMessage inc)
         {
-            ClientPermissions permissions = ClientPermissions.None;
-            List<DebugConsole.Command> permittedCommands = new List<DebugConsole.Command>();
-            ReadPermissions(inc, out permissions, out permittedCommands);
+            ReadPermissions(inc, out ClientPermissions permissions, out List<DebugConsole.Command> permittedCommands);
             SetPermissions(permissions, permittedCommands);
         }
 

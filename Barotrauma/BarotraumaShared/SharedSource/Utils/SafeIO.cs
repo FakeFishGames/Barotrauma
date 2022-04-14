@@ -14,7 +14,7 @@ namespace Barotrauma.IO
         private static readonly ImmutableArray<Identifier> unwritableDirs = new[] { "Content".ToIdentifier() }.ToImmutableArray();
         private static readonly ImmutableArray<Identifier> unwritableExtensions = new[]
         {
-            ".pdb", ".com", ".scr", ".dylib", ".so", ".a", ".app", //executables and libraries (.exe, .dll and .json handled separately in CanWrite)
+            ".exe", ".dll", ".json", ".pdb", ".com", ".scr", ".dylib", ".so", ".a", ".app", //executables and libraries
             ".bat", ".sh", //shell scripts
         }.ToIdentifiers().ToImmutableArray();
 
@@ -39,10 +39,6 @@ namespace Barotrauma.IO
             if (!isDirectory)
             {
                 Identifier extension = System.IO.Path.GetExtension(path).Replace(" ", "").ToIdentifier();
-                if (unwritableExtensions.Any(e => e == extension))
-                {
-                    return false;
-                }
 
                 bool pathStartsWith(string prefix)
                     => path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
@@ -53,7 +49,7 @@ namespace Barotrauma.IO
                     && !pathStartsWith(tempDownloadDir)
                     && !pathStartsWith(workshopStagingDir)
 #endif
-                    && (extension == ".dll" || extension == ".exe" || extension == ".json"))
+                    && unwritableExtensions.Any(e => e == extension))
                 {
                     return false;
                 }

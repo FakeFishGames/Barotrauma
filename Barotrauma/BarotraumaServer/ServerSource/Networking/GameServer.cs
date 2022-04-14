@@ -319,6 +319,12 @@ namespace Barotrauma.Networking
             }
 
             UpdateClientPermissions(newClient);
+            //notify the client of everyone else's permissions
+            foreach (Client otherClient in connectedClients)
+            {
+                if (otherClient == newClient) { continue; }
+                CoroutineManager.StartCoroutine(SendClientPermissionsAfterClientListSynced(newClient, otherClient));
+            }
         }
 
         private void OnClientDisconnect(NetworkConnection connection, string disconnectMsg)

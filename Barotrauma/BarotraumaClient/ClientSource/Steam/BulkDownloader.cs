@@ -100,15 +100,17 @@ namespace Barotrauma.Steam
                     {
                         Color = GUIStyle.Green
                     };
-                itemDownloadProgress.ProgressGetter = () =>
-                {
-                    float progress = 0.0f;
-                    if (item.IsDownloading) { progress = item.DownloadAmount; }
-                    else if (itemDownloadProgress.BarSize > 0.0f) { progress = 1.0f; }
+                var itemDownloadProgressUpdater = new GUICustomComponent(
+                    new RectTransform(Vector2.Zero, msgBox.Content.RectTransform),
+                    onUpdate: (f, component) =>
+                    {
+                        float progress = 0.0f;
+                        if (item.IsDownloading) { progress = item.DownloadAmount; }
+                        else if (itemDownloadProgress.BarSize > 0.0f) { progress = 1.0f; }
 
-                    return Math.Max(itemDownloadProgress.BarSize,
-                        MathHelper.Lerp(itemDownloadProgress.BarSize, progress, 0.05f));
-                };
+                        itemDownloadProgress.BarSize = Math.Max(itemDownloadProgress.BarSize,
+                            MathHelper.Lerp(itemDownloadProgress.BarSize, progress, 0.1f));
+                    });
             }
             TaskPool.Add("DownloadItems", DownloadItems(itemsToDownload, msgBox), _ =>
             {

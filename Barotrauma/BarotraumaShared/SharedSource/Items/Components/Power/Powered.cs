@@ -138,7 +138,11 @@ namespace Barotrauma.Items.Components
         {
             get
             {
-                if (powerIn != null)
+                if (PoweredByTinkering)
+                {
+                    return 1.0f;
+                }
+                else if (powerIn != null)
                 {
                     if (powerIn?.Grid != null) { return powerIn.Grid.Voltage; }
                 }
@@ -151,6 +155,22 @@ namespace Barotrauma.Items.Components
             set
             {
                 voltage = Math.Max(0.0f, value);
+            }
+        }
+
+        public bool PoweredByTinkering
+        {
+            get
+            {
+                if (this is PowerContainer) { return false; }
+                foreach (Repairable repairable in Item.Repairables)
+                {
+                    if (repairable.IsTinkering && repairable.TinkeringPowersDevices)
+                    {
+                        return true;
+                    }
+                }
+                return false;
             }
         }
 
@@ -459,19 +479,12 @@ namespace Barotrauma.Items.Components
                 if (powered.powerIn != null && powered.powerOut != powered.powerIn)
                 {
                     //Get the new load for the connection
-                    float currLoad;
-                    if (powered.Item.GetComponent<Repairable>() is Repairable repairable && repairable.IsTinkering && repairable.TinkeringPowersDevices && !(powered is PowerContainer))
-                    {
-                        currLoad = 0.0f;
-                    }
-                    else
-                    {
-                        currLoad = powered.GetCurrentPowerConsumption(powered.powerIn);
-                    }
+                    float currLoad = powered.GetCurrentPowerConsumption(powered.powerIn);
 
                     //If its a load update its grid load
                     if (currLoad >= 0)
                     {
+                        if (powered.PoweredByTinkering) { currLoad = 0.0f; }
                         powered.CurrPowerConsumption = currLoad;
                         if (powered.powerIn.Grid != null)
                         {

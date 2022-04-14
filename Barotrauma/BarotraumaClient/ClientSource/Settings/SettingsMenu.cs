@@ -655,7 +655,20 @@ namespace Barotrauma
                 new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), layout.RectTransform),
                     TextManager.Get("ResetInGameHints"), style: "GUIButtonSmall")
                 {
-                    ToolTip = TextManager.Get("ResetInGameHintsTooltip")
+                    OnClicked = (button, o) =>
+                    {
+                        var msgBox = new GUIMessageBox(TextManager.Get("ResetInGameHints"),
+                            TextManager.Get("ResetInGameHintsTooltip"),
+                            buttons: new[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                        msgBox.Buttons[0].OnClicked = (guiButton, o1) =>
+                        {
+                            IgnoredHints.Instance.Clear();
+                            msgBox.Close();
+                            return false;
+                        };
+                        msgBox.Buttons[1].OnClicked = msgBox.Close;
+                        return false;
+                    }
                 };
             Spacer(layout);
             

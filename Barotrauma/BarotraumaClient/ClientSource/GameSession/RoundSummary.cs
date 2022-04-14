@@ -437,7 +437,12 @@ namespace Barotrauma
             foreach (GUIComponent child in reputationList.Content.Children)
             {
                 var descriptionElement = child.FindChild("description", recursive: true) as GUITextBlock;
-                maxDescriptionHeight = Math.Max(maxDescriptionHeight, descriptionElement.TextSize.Y * 1.1f);
+                float descriptionHeight = descriptionElement.TextSize.Y * 1.1f;
+                if (child.FindChild("unlockinfo") is GUIComponent unlockInfoComponent)
+                {
+                    descriptionHeight += 1.25f * unlockInfoComponent.Rect.Height;
+                }
+                maxDescriptionHeight = Math.Max(maxDescriptionHeight, descriptionHeight);
             }
             foreach (GUIComponent child in reputationList.Content.Children)
             {
@@ -488,6 +493,7 @@ namespace Barotrauma
                             var unlockInfoPanel = new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.0f), reputationFrame.RectTransform, Anchor.BottomCenter) { MinSize = new Point(0, GUI.IntScale(30)), AbsoluteOffset = new Point(0, GUI.IntScale(3)) },
                                 unlockText, style: "GUIButtonRound", textAlignment: Alignment.Center, textColor: GUIStyle.TextColorNormal);
                             unlockInfoPanel.Color = Color.Lerp(unlockInfoPanel.Color, Color.Black, 0.8f);
+                            unlockInfoPanel.UserData = "unlockinfo";
                             if (unlockInfoPanel.TextSize.X > unlockInfoPanel.Rect.Width * 0.7f)
                             {
                                 unlockInfoPanel.Font = GUIStyle.SmallFont;

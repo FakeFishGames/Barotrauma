@@ -1,9 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
-using Barotrauma.Items.Components;
+﻿using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Barotrauma.Tutorials
 {
@@ -14,8 +13,6 @@ namespace Barotrauma.Tutorials
         private float shakeAmount = 20f;
 
         // Room 2
-        private MotionSensor captain_equipmentObjectiveSensor;
-        private ItemContainer captain_equipmentCabinet;
         private Door captain_firstDoor;
         private LightComponent captain_firstDoorLight;
 
@@ -29,7 +26,6 @@ namespace Barotrauma.Tutorials
         // Submarine
         private MotionSensor captain_enteredSubmarineSensor;
         private Steering captain_navConsole;
-        private CustomInterface captain_navConsoleCustomInterface;
         private Sonar captain_sonar;
         private Item captain_statusMonitor;
         private Character captain_security;
@@ -136,8 +132,6 @@ namespace Barotrauma.Tutorials
             captain_steerIconColor = steerOrder.Color;
 
             // Room 2
-            captain_equipmentObjectiveSensor = Item.ItemList.Find(i => i.HasTag("captain_equipmentobjectivesensor")).GetComponent<MotionSensor>();
-            captain_equipmentCabinet = Item.ItemList.Find(i => i.HasTag("captain_equipmentcabinet")).GetComponent<ItemContainer>();
             captain_firstDoor = Item.ItemList.Find(i => i.HasTag("captain_firstdoor")).GetComponent<Door>();
             captain_firstDoorLight = Item.ItemList.Find(i => i.HasTag("captain_firstdoorlight")).GetComponent<LightComponent>();
 
@@ -148,9 +142,11 @@ namespace Barotrauma.Tutorials
             captain_medicSpawnPos = Item.ItemList.Find(i => i.HasTag("captain_medicspawnpos")).WorldPosition;
             tutorial_submarineDoor = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoor")).GetComponent<Door>();
             tutorial_submarineDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_submarinedoorlight")).GetComponent<LightComponent>();
-            var medicInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: JobPrefab.Get("medicaldoctor"));
+            var medicInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: JobPrefab.Get("medicaldoctor"))
+            {
+                TeamID = CharacterTeamType.Team1
+            };
             captain_medic = Character.Create(medicInfo, captain_medicSpawnPos, "medicaldoctor");
-            captain_medic.TeamID = CharacterTeamType.Team1;
             captain_medic.GiveJobItems(null);
             captain_medic.CanSpeak = captain_medic.AIController.Enabled = false;
             SetDoorAccess(tutorial_submarineDoor, tutorial_submarineDoorLight, false);
@@ -159,7 +155,6 @@ namespace Barotrauma.Tutorials
             captain_enteredSubmarineSensor = Item.ItemList.Find(i => i.HasTag("captain_enteredsubmarinesensor")).GetComponent<MotionSensor>();
             tutorial_submarineReactor = Item.ItemList.Find(i => i.HasTag("engineer_submarinereactor")).GetComponent<Reactor>();
             captain_navConsole = Item.ItemList.Find(i => i.HasTag("command")).GetComponent<Steering>();
-            captain_navConsoleCustomInterface = Item.ItemList.Find(i => i.HasTag("command")).GetComponent<CustomInterface>();
             captain_sonar = captain_navConsole.Item.GetComponent<Sonar>();
             captain_statusMonitor = Item.ItemList.Find(i => i.HasTag("captain_statusmonitor"));
 
@@ -171,19 +166,25 @@ namespace Barotrauma.Tutorials
             SetDoorAccess(tutorial_lockedDoor_1, null, false);
             SetDoorAccess(tutorial_lockedDoor_2, null, false);
 
-            var mechanicInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: JobPrefab.Get("mechanic"));
+            var mechanicInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: JobPrefab.Get("mechanic"))
+            {
+                TeamID = CharacterTeamType.Team1
+            };
             captain_mechanic = Character.Create(mechanicInfo, WayPoint.GetRandom(SpawnType.Human, mechanicInfo.Job?.Prefab, Submarine.MainSub).WorldPosition, "mechanic");
-            captain_mechanic.TeamID = CharacterTeamType.Team1;
             captain_mechanic.GiveJobItems();
 
-            var securityInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: JobPrefab.Get("securityofficer"));
+            var securityInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: JobPrefab.Get("securityofficer"))
+            {
+                TeamID = CharacterTeamType.Team1
+            };
             captain_security = Character.Create(securityInfo, WayPoint.GetRandom(SpawnType.Human, securityInfo.Job?.Prefab, Submarine.MainSub).WorldPosition, "securityofficer");
-            captain_security.TeamID = CharacterTeamType.Team1;
             captain_security.GiveJobItems();
 
-            var engineerInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: JobPrefab.Get("engineer"));
+            var engineerInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: JobPrefab.Get("engineer"))
+            {
+                TeamID = CharacterTeamType.Team1
+            };
             captain_engineer = Character.Create(engineerInfo, WayPoint.GetRandom(SpawnType.Human, engineerInfo.Job?.Prefab, Submarine.MainSub).WorldPosition, "engineer");
-            captain_engineer.TeamID = CharacterTeamType.Team1;
             captain_engineer.GiveJobItems();
 
             captain_mechanic.CanSpeak = captain_security.CanSpeak = captain_engineer.CanSpeak = false;
@@ -252,6 +253,9 @@ namespace Barotrauma.Tutorials
             yield return new WaitForSeconds(4f, false);
             TriggerTutorialSegment(3, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Command));
             GameMain.GameSession.CrewManager.AddCharacter(captain_engineer);
+            tutorial_submarineReactor.CanBeSelected = true;
+            //recreate autonomous objectives to make sure the engineer didn't abandon the operate reactor objective because it was not selectable
+            (captain_engineer.AIController as HumanAIController).ObjectiveManager.CreateAutonomousObjectives();
             do
             {
                 yield return null;
@@ -261,7 +265,6 @@ namespace Barotrauma.Tutorials
             }
             while (!HasOrder(captain_engineer, "operatereactor", "powerup"));
             RemoveCompletedObjective(3);
-            tutorial_submarineReactor.CanBeSelected = true;
             do { yield return null; } while (!tutorial_submarineReactor.IsActive); // Wait until reactor on      
             TriggerTutorialSegment(4);
             while (ContentRunning) yield return null;            

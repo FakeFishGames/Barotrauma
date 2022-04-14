@@ -22,7 +22,15 @@ namespace Barotrauma.Networking
                     ContentPackageManager.EnabledPackages.All
                         .Where(p => p != ContentPackageManager.VanillaCorePackage && p.HasMultiplayerSyncedContent)
                         .Select(CompressMod)),
-                (t) => Ready = true);
+                t =>
+                {
+                    var innermostException = t.Exception?.GetInnermost();
+                    if (innermostException != null)
+                    {
+                        DebugConsole.ThrowError($"An error occurred when compressing mods", innermostException);
+                    }
+                    Ready = true;
+                });
         }
 
         public static string GetCompressedModPath(ContentPackage mod)

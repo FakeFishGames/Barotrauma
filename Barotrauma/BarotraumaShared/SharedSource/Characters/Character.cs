@@ -360,7 +360,7 @@ namespace Barotrauma
         public List<Order> CurrentOrders => Info?.CurrentOrders;
         public bool IsDismissed => GetCurrentOrderWithTopPriority() == null;
 
-        private readonly List<StatusEffect> statusEffects = new List<StatusEffect>();
+        private readonly Dictionary<ActionType, List<StatusEffect>> statusEffects = new Dictionary<ActionType, List<StatusEffect>>();
 
         public Entity ViewTarget
         {
@@ -1033,34 +1033,6 @@ namespace Barotrauma
                 newCharacter = new Character(prefab, position, seed, characterInfo, id, isRemotePlayer, ragdoll);
             }
 
-            float healthRegen = newCharacter.Params.Health.ConstantHealthRegeneration;
-            if (healthRegen > 0)
-            {
-                AddDamageReduction("damage", healthRegen);
-            }
-            float eatingRegen = newCharacter.Params.Health.HealthRegenerationWhenEating;
-            if (eatingRegen > 0)
-            {
-                AddDamageReduction("damage", eatingRegen, ActionType.OnEating);
-            }
-            float burnReduction = newCharacter.Params.Health.BurnReduction;
-            if (burnReduction > 0)
-            {
-                AddDamageReduction("burn", burnReduction);
-            }
-            float bleedReduction = newCharacter.Params.Health.BleedingReduction;
-            if (bleedReduction > 0)
-            {
-                AddDamageReduction("bleeding", bleedReduction);
-            }
-
-            void AddDamageReduction(string affliction, float amount, ActionType actionType = ActionType.Always)
-            {
-                newCharacter.statusEffects.Add(StatusEffect.Load(
-                    new XElement("StatusEffect", new XAttribute("type", actionType), new XAttribute("target", "Character"),
-                        new XElement("ReduceAffliction", new XAttribute("identifier", affliction), new XAttribute("amount", amount))).FromPackage(null), $"automatic damage reduction ({affliction})"));
-            }
-
 #if SERVER
             if (GameMain.Server != null && Spawner != null && createNetworkEvent)
             {
@@ -1138,7 +1110,15 @@ namespace Barotrauma
                         healthCommonness.Add(subElement.GetAttributeFloat("commonness", 1.0f));
                         break;
                     case "statuseffect":
-                        statusEffects.Add(StatusEffect.Load(subElement, Name));
+                        var statusEffect = StatusEffect.Load(subElement, Name);
+                        if (statusEffect != null)
+                        {
+                            if (!statusEffects.ContainsKey(statusEffect.type))
+                            {
+                                statusEffects.Add(statusEffect.type, new List<StatusEffect>());
+                            }
+                            statusEffects[statusEffect.type].Add(statusEffect);
+                        }
                         break;
                 }
             }
@@ -3681,13 +3661,19 @@ namespace Barotrauma
                     otherLimb.body.ApplyLinearImpulse(targetLimb.LinearVelocity * targetLimb.Mass, maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.5f);
                     if (attacker != null)
                     {
-                        foreach (var statusEffect in statusEffects)
+                        if (statusEffects.TryGetValue(ActionType.OnSevered, out var statusEffectList))
                         {
-                            if (statusEffect.type == ActionType.OnSevered) { statusEffect.SetUser(attacker); }
+                            foreach (var statusEffect in statusEffectList)
+                            {
+                                statusEffect.SetUser(attacker);
+                            }
                         }
-                        foreach (var statusEffect in targetLimb.StatusEffects)
+                        if (targetLimb.StatusEffects.TryGetValue(ActionType.OnSevered, out var limbStatusEffectList))
                         {
-                            if (statusEffect.type == ActionType.OnSevered) { statusEffect.SetUser(attacker); }
+                            foreach (var statusEffect in limbStatusEffectList)
+                            {
+                                statusEffect.SetUser(attacker);
+                            }
                         }
                     }
                     ApplyStatusEffects(ActionType.OnSevered, 1.0f);
@@ -3889,9 +3875,17 @@ namespace Barotrauma
         private readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
         public void ApplyStatusEffects(ActionType actionType, float deltaTime)
         {
-            foreach (StatusEffect statusEffect in statusEffects)
+            if (actionType == ActionType.OnEating)
             {
-                if (statusEffect.type != actionType) { continue; }
+                float eatingRegen = Params.Health.HealthRegenerationWhenEating;
+                if (eatingRegen > 0)
+                {
+                    CharacterHealth.ReduceAfflictionOnAllLimbs("damage".ToIdentifier(), eatingRegen * deltaTime);
+                }
+            }
+            if (!statusEffects.TryGetValue(actionType, out var statusEffectList)) { return; }
+            foreach (StatusEffect statusEffect in statusEffectList)
+            {
                 if (statusEffect.type == ActionType.OnDamaged)
                 {
                     if (!statusEffect.HasRequiredAfflictions(LastDamage)) { continue; }

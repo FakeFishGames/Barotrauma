@@ -249,6 +249,8 @@ namespace Barotrauma
                 }
             }
 
+            MoveDiscardedCharacterBalancesToBank();
+
             characterData.ForEach(cd => cd.HasSpawned = false);
 
             petsElement = new XElement("pets");
@@ -275,6 +277,21 @@ namespace Barotrauma
 
                 c.Inventory.DeleteAllItems();
             }
+        }
+
+        public void MoveDiscardedCharacterBalancesToBank()
+        {
+            foreach (var discardedCharacter in discardedCharacters)
+            {
+                if (discardedCharacter.WalletData != null)
+                {
+                    var wallet = 
+                        Character.CharacterList.Find(c => c.Info == discardedCharacter.CharacterInfo)?.Wallet ?? 
+                        new Wallet(Option<Character>.None(), discardedCharacter.WalletData);
+                    Bank.Give(wallet.Balance);
+                }
+            }
+            discardedCharacters.Clear();
         }
 
         protected override IEnumerable<CoroutineStatus> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror, List<TraitorMissionResult> traitorResults)
@@ -415,9 +432,20 @@ namespace Barotrauma
         public bool CanPurchaseSub(SubmarineInfo info, Client client)
             => GetWallet(client).CanAfford(info.Price) && GetCampaignSubs().Contains(info);
 
+        private readonly List<CharacterCampaignData> discardedCharacters = new List<CharacterCampaignData>();
         public void DiscardClientCharacterData(Client client)
         {
-            characterData.RemoveAll(cd => cd.MatchesClient(client));
+            foreach (var data in characterData.ToList())
+            {
+                if (data.MatchesClient(client))
+                {
+                    if (!discardedCharacters.Any(d => d.MatchesClient(client)))
+                    {
+                        discardedCharacters.Add(data);
+                    }
+                    characterData.Remove(data);
+                }
+            }
         }
 
         public CharacterCampaignData GetClientCharacterData(Client client)

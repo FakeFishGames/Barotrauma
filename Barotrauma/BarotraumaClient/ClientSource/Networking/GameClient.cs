@@ -667,7 +667,7 @@ namespace Barotrauma.Networking
                     if (ChildServerRelay.Process?.HasExited ?? true)
                     {
                         Disconnect();
-                        if (!GUIMessageBox.MessageBoxes.Any(mb => (mb as GUIMessageBox).Text.Text == ChildServerRelay.CrashMessage))
+                        if (!GUIMessageBox.MessageBoxes.Any(mb => (mb as GUIMessageBox)?.Text.Text == ChildServerRelay.CrashMessage))
                         {
                             var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), ChildServerRelay.CrashMessage);
                             msgBox.Buttons[0].OnClicked += ReturnToPreviousMenu;
@@ -2484,12 +2484,20 @@ namespace Barotrauma.Networking
 
         public void RequestFile(FileTransferType fileType, string file, string fileHash)
         {
+            DebugConsole.Log(
+                fileType == FileTransferType.CampaignSave ?
+                $"Sending a campaign file request to the server." :
+                $"Sending a file request to the server (type: {fileType}, path: {file ?? "null"}");
+
             IWriteMessage msg = new WriteOnlyMessage();
             msg.Write((byte)ClientPacketHeader.FILE_REQUEST);
             msg.Write((byte)FileTransferMessageType.Initiate);
             msg.Write((byte)fileType);
-            msg.Write(file ?? throw new ArgumentNullException(nameof(file)));
-            msg.Write(fileHash ?? throw new ArgumentNullException(nameof(fileHash)));
+            if (fileType != FileTransferType.CampaignSave)
+            {
+                msg.Write(file ?? throw new ArgumentNullException(nameof(file)));
+                msg.Write(fileHash ?? throw new ArgumentNullException(nameof(fileHash)));
+            }
             clientPeer.Send(msg, DeliveryMethod.Reliable);
         }
 

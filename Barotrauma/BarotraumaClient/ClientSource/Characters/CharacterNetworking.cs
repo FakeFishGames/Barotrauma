@@ -551,8 +551,8 @@ namespace Barotrauma
             {
                 bool hasOwner = inc.ReadBoolean();
                 int ownerId = hasOwner ? inc.ReadByte() : -1;
-                int balance = hasOwner ? inc.ReadInt32() : -1;
-                int rewardDistribution = hasOwner ? inc.ReadRangedInteger(0, 100) : -1;
+                int balance = inc.ReadInt32();
+                int rewardDistribution = inc.ReadRangedInteger(0, 100);
                 byte teamID = inc.ReadByte();
                 bool hasAi = inc.ReadBoolean();
                 Identifier infoSpeciesName = inc.ReadIdentifier();

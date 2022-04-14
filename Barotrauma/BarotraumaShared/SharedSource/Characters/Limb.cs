@@ -584,9 +584,9 @@ namespace Barotrauma
             private set;
         }
 
-        private readonly List<StatusEffect> statusEffects = new List<StatusEffect>();
+        private readonly Dictionary<ActionType, List<StatusEffect>> statusEffects = new Dictionary<ActionType, List<StatusEffect>>();
 
-        public IEnumerable<StatusEffect> StatusEffects { get { return statusEffects; } }
+        public Dictionary<ActionType, List<StatusEffect>> StatusEffects { get { return statusEffects; } }
 
         public Limb(Ragdoll ragdoll, Character character, LimbParams limbParams)
         {
@@ -662,7 +662,15 @@ namespace Barotrauma
                         DamageModifiers.Add(new DamageModifier(subElement, character.Name));
                         break;
                     case "statuseffect":
-                        statusEffects.Add(StatusEffect.Load(subElement, Name));
+                        var statusEffect = StatusEffect.Load(subElement, Name);
+                        if (statusEffect != null)
+                        {
+                            if (!statusEffects.ContainsKey(statusEffect.type))
+                            {
+                                statusEffects.Add(statusEffect.type, new List<StatusEffect>());
+                            }
+                            statusEffects[statusEffect.type].Add(statusEffect);
+                        }
                         break;
                 }
             }
@@ -1159,9 +1167,9 @@ namespace Barotrauma
         private readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
         public void ApplyStatusEffects(ActionType actionType, float deltaTime)
         {
-            foreach (StatusEffect statusEffect in statusEffects)
+            if (!statusEffects.TryGetValue(actionType, out var statusEffectList)) { return; }
+            foreach (StatusEffect statusEffect in statusEffectList)
             {
-                if (statusEffect.type != actionType) { continue; }
                 if (statusEffect.type == ActionType.OnDamaged)
                 {
                     if (!statusEffect.HasRequiredAfflictions(character.LastDamage)) { continue; }

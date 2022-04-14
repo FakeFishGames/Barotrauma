@@ -250,9 +250,9 @@ namespace Barotrauma
                 }
             }
 
-            //Load the UI files first. This is to allow the game to render
-            //the text in the loading screen as soon as possible.
-            var priorityFiles = getFilesToLoad(f => f is UIStyleFile);
+            //Load the UI and text files first. This is to allow the game
+            //to render the text in the loading screen as soon as possible.
+            var priorityFiles = getFilesToLoad(f => f is UIStyleFile || f is TextFile);
 
             var remainder = getFilesToLoad(f => !priorityFiles.Contains(f));
 

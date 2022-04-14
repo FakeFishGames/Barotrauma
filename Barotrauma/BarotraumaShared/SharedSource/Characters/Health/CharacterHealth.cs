@@ -327,16 +327,13 @@ namespace Barotrauma
 
         public Limb GetAfflictionLimb(Affliction affliction)
         {
-            foreach (KeyValuePair<Affliction, LimbHealth> kvp in afflictions)
+            if (afflictions.TryGetValue(affliction, out LimbHealth limbHealth))
             {
-                if (kvp.Key == affliction) 
+                if (limbHealth == null) { return null; }
+                int limbHealthIndex = limbHealths.IndexOf(limbHealth);
+                foreach (Limb limb in Character.AnimController.Limbs)
                 {
-                    int limbHealthIndex = limbHealths.IndexOf(kvp.Value);
-                    foreach (Limb limb in Character.AnimController.Limbs)
-                    {
-                        if (limb.HealthIndex == limbHealthIndex) { return limb; }
-                    }
-                    return null;
+                    if (limb.HealthIndex == limbHealthIndex) { return limb; }
                 }
             }
             return null;
@@ -508,8 +505,8 @@ namespace Barotrauma
                     amount -= matchingAffliction.Strength;
                     matchingAffliction.Strength = 0.0f;
                     matchingAfflictions.RemoveAt(i);
-                    if (i == 0) i = matchingAfflictions.Count;
-                    if (i > 0) reduceAmount += surplus / i;
+                    if (i == 0) { i = matchingAfflictions.Count; }
+                    if (i > 0) { reduceAmount += surplus / i; }
                     SteamAchievementManager.OnAfflictionRemoved(matchingAffliction, Character);
                 }
                 else
@@ -786,6 +783,8 @@ namespace Barotrauma
                 Character.StackSpeedMultiplier(1f + Character.GetStatValue(StatTypes.WalkingSpeed));
             }
 
+            UpdateDamageReductions(deltaTime);
+
             if (!Character.GodMode)
             {
                 UpdateLimbAfflictionOverlays();
@@ -813,6 +812,25 @@ namespace Barotrauma
                 if (faceTint.A > FaceTint.A) { FaceTint = faceTint; }
                 Color bodyTint = affliction.GetBodyTint();
                 if (bodyTint.A > BodyTint.A) { BodyTint = bodyTint; }
+            }
+        }
+
+        private void UpdateDamageReductions(float deltaTime)
+        {
+            float healthRegen = Character.Params.Health.ConstantHealthRegeneration;
+            if (healthRegen > 0)
+            {
+                ReduceAfflictionOnAllLimbs("damage".ToIdentifier(), healthRegen * deltaTime);
+            }
+            float burnReduction = Character.Params.Health.BurnReduction;
+            if (burnReduction > 0)
+            {
+                ReduceAfflictionOnAllLimbs("burn".ToIdentifier(), burnReduction * deltaTime);
+            }
+            float bleedingReduction = Character.Params.Health.BleedingReduction;
+            if (bleedingReduction > 0)
+            {
+                ReduceAfflictionOnAllLimbs("bleeding".ToIdentifier(), bleedingReduction * deltaTime);
             }
         }
 
@@ -897,28 +915,14 @@ namespace Barotrauma
 
         // We need to use another list of the afflictions when we call the status effects triggered by afflictions,
         // because those status effects may add or remove other afflictions while iterating the collection.
-        private readonly List<(Affliction affliction, Limb limb)> afflictionsCopy = new List<(Affliction affliction, Limb limb)>();
+        private readonly List<Affliction> afflictionsCopy = new List<Affliction>();
         public void ApplyAfflictionStatusEffects(ActionType type)
         {
             afflictionsCopy.Clear();
-            foreach (KeyValuePair<Affliction, LimbHealth> kvp in afflictions)
+            afflictionsCopy.AddRange(afflictions.Keys);
+            foreach (Affliction affliction in afflictionsCopy)
             {
-                var affliction = kvp.Key;
-                var limbHealth = kvp.Value;
-                Limb targetLimb = null;
-                if (limbHealth != null)
-                {
-                    int healthIndex = limbHealths.IndexOf(limbHealth);
-                    targetLimb =
-                        Character.AnimController.Limbs.LastOrDefault(l => !l.IsSevered && !l.Hidden && l.HealthIndex == healthIndex) ??
-                        Character.AnimController.MainLimb;
-                }
-                afflictionsCopy.Add((affliction, GetAfflictionLimb(affliction)));
-            }
-
-            foreach ((Affliction affliction, Limb limb) in afflictionsCopy)
-            {
-                affliction.ApplyStatusEffects(type, 1.0f, this, targetLimb: limb);
+                affliction.ApplyStatusEffects(type, 1.0f, this, targetLimb: GetAfflictionLimb(affliction));
             }
         }
 

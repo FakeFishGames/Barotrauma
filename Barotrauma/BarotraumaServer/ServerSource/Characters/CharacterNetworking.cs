@@ -636,8 +636,6 @@ namespace Barotrauma
             {
                 msg.Write(true);
                 msg.Write(ownerClient.ID);
-                msg.Write(Wallet.Balance);
-                msg.WriteRangedInteger(Wallet.RewardDistribution, 0, 100);
             }
             else if (GameMain.Server.Character == this)
             {
@@ -648,7 +646,8 @@ namespace Barotrauma
             {
                 msg.Write(false);
             }
-
+            msg.Write(Wallet.Balance);
+            msg.WriteRangedInteger(Wallet.RewardDistribution, 0, 100);
             msg.Write((byte)TeamID);
             msg.Write(this is AICharacter);
             msg.Write(info.SpeciesName);
