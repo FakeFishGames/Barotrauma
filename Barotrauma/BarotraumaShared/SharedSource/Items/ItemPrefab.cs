@@ -957,7 +957,18 @@ namespace Barotrauma
 
         public PriceInfo GetPriceInfo(Location.StoreInfo store)
         {
-            if (!store.Identifier.IsEmpty && StorePrices != null && StorePrices.TryGetValue(store.Identifier, out var storePriceInfo))
+            if (store == null)
+            {
+                string message = $"Tried to get price info for \"{Identifier}\" with a null store parameter!\n{Environment.StackTrace.CleanupStackTrace()}";
+#if DEBUG
+                DebugConsole.ShowError(message);
+#else
+                DebugConsole.AddWarning(message);
+                GameAnalyticsManager.AddErrorEventOnce("ItemPrefab.GetPriceInfo:StoreParameterNull", GameAnalyticsManager.ErrorSeverity.Error, message);
+#endif
+                return null;
+            }
+            else if (!store.Identifier.IsEmpty && StorePrices != null && StorePrices.TryGetValue(store.Identifier, out var storePriceInfo))
             {
                 return storePriceInfo;
             }

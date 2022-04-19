@@ -341,7 +341,7 @@ namespace Barotrauma
 
                 if (levelData.HasBeaconStation && !levelData.IsBeaconActive)
                 {
-                    var beaconMissionPrefabs = MissionPrefab.Prefabs.Where(m => m.Tags.Any(t => t.Equals("beaconnoreward", StringComparison.OrdinalIgnoreCase)));
+                    var beaconMissionPrefabs = MissionPrefab.Prefabs.Where(m => m.Tags.Any(t => t.Equals("beaconnoreward", StringComparison.OrdinalIgnoreCase))).OrderBy(m => m.UintIdentifier);
                     if (beaconMissionPrefabs.Any())
                     {
                         Random rand = new MTRandom(ToolBox.StringToInt(levelData.Seed));
@@ -354,7 +354,7 @@ namespace Barotrauma
                 }
                 if (levelData.HasHuntingGrounds)
                 {
-                    var huntingGroundsMissionPrefabs = MissionPrefab.Prefabs.Where(m => m.Tags.Any(t => t.Equals("huntinggrounds", StringComparison.OrdinalIgnoreCase)));
+                    var huntingGroundsMissionPrefabs = MissionPrefab.Prefabs.Where(m => m.Tags.Any(t => t.Equals("huntinggrounds", StringComparison.OrdinalIgnoreCase))).OrderBy(m => m.UintIdentifier);
                     if (!huntingGroundsMissionPrefabs.Any())
                     {
                         DebugConsole.AddWarning("Could not find a hunting grounds mission for the level. No mission with the tag \"huntinggrounds\" found.");

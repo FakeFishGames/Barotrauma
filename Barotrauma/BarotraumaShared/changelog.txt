@@ -1,4 +1,16 @@
 ---------------------------------------------------------------------------------------------------------
+v0.17.11.0
+---------------------------------------------------------------------------------------------------------
+
+Fixes:
+- Fixed occasional crash when talking to an outpost merchant.
+- Fixed cargo missions putting cargo in non-interactable and hidden-in-game containers.
+- Don't show wallet info on character portrait in other multiplayer game modes than the campaign.
+- Fixed certainstructure names not showing up properly in the submarine editor in languages other than English.
+- Fixed relays that have "can be overloaded" set to true breaking when overloaded (should never happen because relays can't be repaired).
+- Fixed occasional mission mismatch errors in multiplayer when there's a hunting grounds or beacon mission in the level.
+
+---------------------------------------------------------------------------------------------------------
 v0.17.10.0
 ---------------------------------------------------------------------------------------------------------
 

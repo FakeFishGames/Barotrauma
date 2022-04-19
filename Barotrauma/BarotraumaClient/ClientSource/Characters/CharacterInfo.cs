@@ -312,7 +312,7 @@ namespace Barotrauma
 
         public void DrawForeground(SpriteBatch spriteBatch)
         {
-            if (Character is null || GameMain.IsSingleplayer) { return; }
+            if (Character is null || !(GameMain.GameSession?.Campaign is MultiPlayerCampaign)) { return; }
             const int million = 1000000;
             int xfraction = (int)(HUDLayoutSettings.BottomRightInfoArea.Width * 0.2f);
             int yoffset = GUI.IntScale(6);

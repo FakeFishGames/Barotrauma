@@ -153,7 +153,10 @@ namespace Barotrauma
             {
                 Name = TextManager.GetWithVariable("wreckeditemformat", "[name]", Name);
             }
-            Name = Name.Fallback(OriginalName);
+            if (!string.IsNullOrEmpty(OriginalName))
+            {
+                Name = Name.Fallback(OriginalName);
+            }
 
             var tags = new HashSet<Identifier>();
             string joinedTags = element.GetAttributeString("tags", "");

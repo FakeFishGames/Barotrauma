@@ -141,7 +141,7 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
-            if (Voltage > OverloadVoltage && CanBeOverloaded)
+            if (Voltage > OverloadVoltage && CanBeOverloaded && item.Repairables.Any())
             {
                 item.Condition = 0.0f;
             }

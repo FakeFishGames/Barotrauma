@@ -397,11 +397,6 @@ namespace Barotrauma.Items.Components
                     //Only add valid connections
                     if (otherC.Grid != grid && (otherC.Grid == null || !Grids.ContainsKey(otherC.Grid.ID)) && ValidPowerConnection(c, otherC))
                     {
-                        if (otherC.Item.Condition <= 0.0f)
-                        {
-                            continue;
-                        }
-
                         otherC.Grid = grid; //Assigning ID early prevents unncessary adding to stack
                         probeStack.Push(otherC);
                     }
@@ -665,7 +660,10 @@ namespace Barotrauma.Items.Components
 
         public static bool ValidPowerConnection(Connection conn1, Connection conn2)
         {
-            return conn1.IsPower && conn2.IsPower && (conn1.Item.HasTag("junctionbox") || conn2.Item.HasTag("junctionbox") || conn1.Item.HasTag("dock") || conn2.Item.HasTag("dock") || conn1.IsOutput != conn2.IsOutput);
+            return 
+                conn1.IsPower && conn2.IsPower && 
+                conn1.Item.Condition > 0.0f && conn2.Item.Condition > 0.0f &&
+                (conn1.Item.HasTag("junctionbox") || conn2.Item.HasTag("junctionbox") || conn1.Item.HasTag("dock") || conn2.Item.HasTag("dock") || conn1.IsOutput != conn2.IsOutput);
         }
 
         /// <summary>
