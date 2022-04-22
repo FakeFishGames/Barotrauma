@@ -2391,7 +2391,7 @@ namespace Barotrauma
                         if (isMax) { level = 100; }
                         if (skillIdentifier == "all")
                         {
-                            foreach (Skill skill in character.Info.Job.Skills)
+                            foreach (Skill skill in character.Info.Job.GetSkills())
                             {
                                 character.Info.SetSkillLevel(skill.Identifier, level);
                             }

@@ -213,7 +213,7 @@ namespace Barotrauma
             if (!force)
             {
                 if (IsOutpostInCombat()) { return HealRequestResult.Refused; }
-                if (!GetWallet(client).TryDeduct(totalCost)) { return HealRequestResult.InsufficientFunds; }
+                if (!(campaign?.TryPurchase(client, totalCost) ?? false)) { return HealRequestResult.InsufficientFunds; }
             }
 
             ImmutableArray<CharacterInfo> crew = GetCrewCharacters();
@@ -314,10 +314,7 @@ namespace Barotrauma
 
         private int GetAdjustedPrice(int price) => campaign?.Map?.CurrentLocation is { Type: { HasOutpost: true } } currentLocation ? currentLocation.GetAdjustedHealCost(price) : int.MaxValue;
 
-        public Wallet GetWallet(Client? c = null)
-        {
-            return campaign?.GetWallet(c) ?? Wallet.Invalid;
-        }
+        public int GetBalance() => campaign?.GetBalance() ?? 0;
 
         public static ImmutableArray<CharacterInfo> GetCrewCharacters()
         {

@@ -1454,7 +1454,7 @@ namespace Barotrauma
 
                                 Identifier GetRandomSkill()
                                 {
-                                    return targetCharacter.Info?.Job?.Skills.Select(s => s.Identifier).GetRandomUnsynced() ?? Identifier.Empty;
+                                    return targetCharacter.Info?.Job?.GetSkills().GetRandomUnsynced()?.Identifier ?? Identifier.Empty;
                                 }
                             }
                         }

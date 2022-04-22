@@ -116,7 +116,7 @@ namespace Barotrauma
                     Stretch = true
                 };
 
-                var skills = Job.Skills;
+                var skills = Job.GetSkills().ToList();
                 skills.Sort((s1, s2) => -s1.Level.CompareTo(s2.Level));
 
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillsArea.RectTransform), TextManager.AddPunctuation(':', TextManager.Get("skills"), string.Empty), font: font) { Padding = Vector4.Zero };
@@ -560,17 +560,7 @@ namespace Barotrauma
             ch.SetPersonalityTrait();
             if (ch.Job != null)
             {
-                foreach (KeyValuePair<Identifier, float> skill in skillLevels)
-                {
-                    Skill matchingSkill = ch.Job.Skills.Find(s => s.Identifier == skill.Key);
-                    if (matchingSkill == null)
-                    {
-                        ch.Job.Skills.Add(new Skill(skill.Key, skill.Value));
-                        continue;
-                    }
-                    matchingSkill.Level = skill.Value;
-                }
-                ch.Job.Skills.RemoveAll(s => !skillLevels.ContainsKey(s.Identifier));
+                ch.Job.OverrideSkills(skillLevels);
             }
 
             ch.ExperiencePoints = inc.ReadUInt16();

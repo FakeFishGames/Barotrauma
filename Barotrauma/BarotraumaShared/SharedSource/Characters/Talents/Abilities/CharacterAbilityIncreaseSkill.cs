@@ -47,7 +47,7 @@ namespace Barotrauma.Abilities
         {
             if (skillIdentifier == "random")
             {
-                var skill = character.Info?.Job?.Skills?.GetRandomUnsynced();
+                var skill = character.Info?.Job?.GetSkills()?.GetRandomUnsynced();
                 if (skill == null) { return; }
                 character.Info?.IncreaseSkillLevel(skill.Identifier, skillIncrease, gainedFromAbility: true);
             }

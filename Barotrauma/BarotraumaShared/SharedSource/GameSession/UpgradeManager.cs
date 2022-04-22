@@ -216,7 +216,7 @@ namespace Barotrauma
                 price = 0;
             }
 
-            if (Campaign.GetWallet(client).TryDeduct(price))
+            if (Campaign.TryPurchase(client, price))
             {
                 if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
                 {
@@ -313,7 +313,7 @@ namespace Barotrauma
                 price = 0;
             }
 
-            if (Campaign.GetWallet(client).TryDeduct(price))
+            if (Campaign.TryPurchase(client, price))
             {
                 PurchasedItemSwaps.RemoveAll(p => linkedItems.Contains(p.ItemToRemove));
                 if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)

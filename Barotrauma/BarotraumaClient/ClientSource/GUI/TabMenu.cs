@@ -698,6 +698,12 @@ namespace Barotrauma
                 Color = Color.Transparent
             };
 
+            frame.OnSecondaryClicked += (component, data) =>
+            {
+                NetLobbyScreen.CreateModerationContextMenu(client);
+                return true;
+            };
+
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.9f), frame.RectTransform, Anchor.Center), isHorizontal: true)
             {
                 AbsoluteSpacing = 2
@@ -1057,7 +1063,7 @@ namespace Barotrauma
                 return;
             }
 
-            bool hasMoneyPermissions = campaign.AllowedToManageCampaign(ClientPermissions.ManageMoney);
+            bool hasMoneyPermissions = CampaignMode.AllowedToManageWallets();
             salarySlider.Enabled = hasMoneyPermissions;
             Wallet otherWallet;
 
@@ -1402,6 +1408,12 @@ namespace Barotrauma
 
         private void CreateMissionInfo(GUIFrame infoFrame)
         {
+            if (Level.Loaded?.LevelData == null)
+            {
+                DebugConsole.ThrowError("Failed to display mission info in the tab menu (no level loaded).\n" + Environment.StackTrace);
+                return;
+            }
+
             infoFrame.ClearChildren();
             GUIFrame missionFrame = new GUIFrame(new RectTransform(Vector2.One, infoFrame.RectTransform, Anchor.TopCenter), style: "GUIFrameListBox");
             int padding = (int)(0.0245f * missionFrame.Rect.Height);
@@ -2016,7 +2028,7 @@ namespace Barotrauma
         {
             parent.Content.ClearChildren();
             List<GUITextBlock> skillNames = new List<GUITextBlock>();
-            foreach (Skill skill in character.Info.Job.Skills)
+            foreach (Skill skill in character.Info.Job.GetSkills())
             {
                 GUILayoutGroup skillContainer = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.2f), parent.Content.RectTransform), isHorizontal: true) { CanBeFocused = false };
 

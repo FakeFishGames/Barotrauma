@@ -1550,9 +1550,10 @@ namespace Barotrauma
 
             DebugConsole.Log($"Received entity spawn message for item \"{itemName}\" (identifier: {itemIdentifier}, id: {itemId})");
 
-            var itemPrefab = string.IsNullOrEmpty(itemIdentifier) ?
-                MapEntityPrefab.Find(itemName, null, showErrorMessages: false) as ItemPrefab :
-                MapEntityPrefab.Find(itemName, itemIdentifier, showErrorMessages: false) as ItemPrefab;
+            ItemPrefab itemPrefab = 
+                string.IsNullOrEmpty(itemIdentifier) ?
+                ItemPrefab.Find(itemName, Identifier.Empty) :
+                ItemPrefab.Find(itemName, itemIdentifier.ToIdentifier());
 
             Vector2 pos = Vector2.Zero;
             Submarine sub = null;

@@ -443,24 +443,7 @@ namespace Barotrauma
 
             if (CaretEnabled)
             {
-                if (textBlock.OverflowClipActive)
-                {
-                    float left = textBlock.Rect.X + textBlock.Padding.X;
-                    if (CaretScreenPos.X < left)
-                    {
-                        float diff = left - CaretScreenPos.X;
-                        textBlock.TextPos = new Vector2(textBlock.TextPos.X + diff, textBlock.TextPos.Y);
-                        CalculateCaretPos();
-                    }
-
-                    float right = textBlock.Rect.Right - textBlock.Padding.Z;
-                    if (CaretScreenPos.X > right)
-                    {
-                        float diff = CaretScreenPos.X - right;
-                        textBlock.TextPos = new Vector2(textBlock.TextPos.X - diff, textBlock.TextPos.Y);
-                        CalculateCaretPos();
-                    }
-                }
+                HandleCaretBoundsOverflow();
                 caretTimer += deltaTime;
                 caretVisible = ((caretTimer * 1000.0f) % 1000) < 500;
                 if (caretVisible && caretPosDirty)
@@ -484,6 +467,29 @@ namespace Barotrauma
             }
 
             textBlock.State = State;
+        }
+
+        private void HandleCaretBoundsOverflow()
+        {
+            if (textBlock.OverflowClipActive)
+            {
+                CalculateCaretPos();
+                float left = textBlock.Rect.X + textBlock.Padding.X;
+                if (CaretScreenPos.X < left)
+                {
+                    float diff = left - CaretScreenPos.X;
+                    textBlock.TextPos = new Vector2(textBlock.TextPos.X + diff, textBlock.TextPos.Y);
+                    CalculateCaretPos();
+                }
+
+                float right = textBlock.Rect.Right - textBlock.Padding.Z;
+                if (CaretScreenPos.X > right)
+                {
+                    float diff = CaretScreenPos.X - right;
+                    textBlock.TextPos = new Vector2(textBlock.TextPos.X - diff, textBlock.TextPos.Y);
+                    CalculateCaretPos();
+                }
+            }
         }
 
         private void DrawCaretAndSelection(SpriteBatch spriteBatch, GUICustomComponent customComponent)
@@ -554,15 +560,33 @@ namespace Barotrauma
             {
                 RemoveSelectedText();
             }
-            Vector2 textPos = textBlock.TextPos;
-            bool wasOverflowClipActive = textBlock.OverflowClipActive;
+            using var _ = new TextPosPreservation(this);
             if (SetText(Text.Insert(CaretIndex, input)))
             {
                 CaretIndex = Math.Min(Text.Length, CaretIndex + input.Length);
                 OnTextChanged?.Invoke(this, Text);
+            }
+        }
+
+        private readonly ref struct TextPosPreservation
+        {
+            private readonly GUITextBox textBox;
+            private GUITextBlock textBlock => textBox.TextBlock;
+            private readonly bool wasOverflowClipActive;
+            private readonly Vector2 textPos;
+
+            public TextPosPreservation(GUITextBox tb)
+            {
+                textBox = tb;
+                wasOverflowClipActive = tb.TextBlock.OverflowClipActive;
+                textPos = tb.TextBlock.TextPos;
+            }
+            
+            public void Dispose()
+            {
                 if (textBlock.OverflowClipActive && wasOverflowClipActive && !MathUtils.NearlyEqual(textBlock.TextPos, textPos))
                 {
-                    textBlock.TextPos = textPos + Vector2.UnitX * Font.MeasureString(input).X * TextBlock.TextScale;
+                    textBlock.TextPos = textPos;
                 }
             }
         }
@@ -577,6 +601,8 @@ namespace Barotrauma
             switch (command)
             {
                 case '\b' when !Readonly: //backspace
+                {
+                    using var _ = new TextPosPreservation(this);
                     if (PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl))
                     {
                         SetText(string.Empty, false);
@@ -595,6 +621,7 @@ namespace Barotrauma
                     }
                     OnTextChanged?.Invoke(this, Text);
                     break;
+                }
                 case (char)0x3: // ctrl-c
                     CopySelectedText();
                     break;

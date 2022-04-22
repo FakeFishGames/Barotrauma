@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Barotrauma
@@ -27,6 +28,8 @@ namespace Barotrauma
 
         protected GUIFrame campaignUIContainer;
         public CampaignUI CampaignUI;
+
+        public static CancellationTokenSource StartRoundCancellationToken { get; private set; }
 
         public bool ForceMapUI
         {
@@ -97,6 +100,16 @@ namespace Barotrauma
                 GameMain.Client.ConnectedClients.Count == 1 ||
                 GameMain.Client.IsServerOwner ||
                 GameMain.Client.ConnectedClients.None(c => c.InGame && (c.IsOwner || c.HasPermission(permissions)));
+        }
+
+        public static bool AllowedToManageWallets()
+        {
+            if (GameMain.Client == null) { return true; }
+
+            return
+                GameMain.Client.HasPermission(ClientPermissions.ManageMoney) ||
+                GameMain.Client.HasPermission(ClientPermissions.ManageCampaign) ||
+                GameMain.Client.IsServerOwner;
         }
 
         public override void Draw(SpriteBatch spriteBatch)
@@ -245,10 +258,11 @@ namespace Barotrauma
 
             GUI.ClearCursorWait();
 
+            StartRoundCancellationToken = new CancellationTokenSource();
             var loadTask = Task.Run(async () =>
             {
                 await Task.Yield();
-                Rand.ThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
+                Rand.ThreadId = Thread.CurrentThread.ManagedThreadId;
                 try
                 {
                     GameMain.GameSession.StartRound(newLevel, mirrorLevel: mirror);
@@ -258,7 +272,7 @@ namespace Barotrauma
                     roundSummaryScreen.LoadException = e;
                 }
                 Rand.ThreadId = 0;
-            });
+            }, StartRoundCancellationToken.Token);
             TaskPool.Add("AsyncCampaignStartRound", loadTask, (t) =>
             {
                 overlayColor = Color.Transparent;

@@ -172,7 +172,7 @@ namespace Barotrauma
             {
                 AutoScaleVertical = true,
                 TextScale = 1.1f,
-                TextGetter = () => TextManager.FormatCurrency(campaign.Wallet.Balance)
+                TextGetter = () => TextManager.FormatCurrency(campaign.GetBalance())
             };
 
             var pendingAndCrewGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.95f), anchor: Anchor.Center,
@@ -344,7 +344,7 @@ namespace Barotrauma
             Color? jobColor = null;
             if (characterInfo.Job != null)
             {
-                skill = characterInfo.Job?.PrimarySkill ?? characterInfo.Job.Skills.OrderByDescending(s => s.Level).FirstOrDefault();
+                skill = characterInfo.Job?.PrimarySkill ?? characterInfo.Job.GetSkills().OrderByDescending(s => s.Level).FirstOrDefault();
                 jobColor = characterInfo.Job.Prefab.UIColor;
             }
 
@@ -547,8 +547,8 @@ namespace Barotrauma
             GUILayoutGroup skillGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.475f), mainGroup.RectTransform), isHorizontal: true);
             GUILayoutGroup skillNameGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 1.0f), skillGroup.RectTransform));
             GUILayoutGroup skillLevelGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.2f, 1.0f), skillGroup.RectTransform));
-            List<Skill> characterSkills = characterInfo.Job.Skills;
-            blockHeight = 1.0f / characterSkills.Count;
+            var characterSkills = characterInfo.Job.GetSkills();
+            blockHeight = 1.0f / characterSkills.Count();
             foreach (Skill skill in characterSkills)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, blockHeight), skillNameGroup.RectTransform), TextManager.Get("SkillName." + skill.Identifier));
@@ -630,7 +630,7 @@ namespace Barotrauma
                 total += ((InfoSkill)c.UserData).CharacterInfo.Salary;
             });
             totalBlock.Text = TextManager.FormatCurrency(total);
-            bool enoughMoney = campaign == null || campaign.Wallet.CanAfford(total);
+            bool enoughMoney = campaign == null || campaign.CanAfford(total);
             totalBlock.TextColor = enoughMoney ? Color.White : Color.Red;
             validateHiresButton.Enabled = enoughMoney && HasPermission && pendingList.Content.RectTransform.Children.Any();
         }
@@ -652,7 +652,7 @@ namespace Barotrauma
 
             int total = nonDuplicateHires.Aggregate(0, (total, info) => total + info.Salary);
 
-            if (!campaign.Wallet.CanAfford(total)) { return false; }
+            if (!campaign.CanAfford(total)) { return false; }
 
             bool atLeastOneHired = false;
             foreach (CharacterInfo ci in nonDuplicateHires)

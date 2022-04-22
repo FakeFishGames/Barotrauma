@@ -520,7 +520,7 @@ namespace Barotrauma.Networking
         public static void ReduceCharacterSkills(CharacterInfo characterInfo)
         {
             if (characterInfo?.Job == null) { return; }
-            foreach (Skill skill in characterInfo.Job.Skills)
+            foreach (Skill skill in characterInfo.Job.GetSkills())
             {
                 var skillPrefab = characterInfo.Job.Prefab.Skills.Find(s => skill.Identifier == s.Identifier);
                 if (skillPrefab == null) { continue; }

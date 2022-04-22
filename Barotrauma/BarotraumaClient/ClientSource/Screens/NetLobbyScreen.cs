@@ -1559,7 +1559,7 @@ namespace Barotrauma
                 };
 
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContainer.RectTransform), TextManager.Get("Skills"), font: GUIStyle.SubHeadingFont);
-                foreach (Skill skill in characterInfo.Job.Skills)
+                foreach (Skill skill in characterInfo.Job.GetSkills())
                 {
                     Color textColor = Color.White * (0.5f + skill.Level / 200.0f);
                     var skillText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContainer.RectTransform),
@@ -2190,17 +2190,17 @@ namespace Barotrauma
                 canKick = canBan = canPromo = false;
             }
 
-            List<ContextMenuOption> options = new List<ContextMenuOption>();
-            
-            options.Add(new ContextMenuOption("ViewSteamProfile", isEnabled: hasSteam, onSelected: delegate
-            { 
-                Steamworks.SteamFriends.OpenWebOverlay($"https://steamcommunity.com/profiles/{client.SteamID}");
-            }));
-
-            options.Add(new ContextMenuOption("ModerationMenu.ManagePlayer", isEnabled: true, onSelected: delegate
+            List<ContextMenuOption> options = new List<ContextMenuOption>
             {
-                GameMain.NetLobbyScreen?.SelectPlayer(client);
-            }));
+                new ContextMenuOption("ViewSteamProfile", isEnabled: hasSteam, onSelected: delegate
+                {
+                    Steamworks.SteamFriends.OpenWebOverlay($"https://steamcommunity.com/profiles/{client.SteamID}");
+                }),
+                new ContextMenuOption("ModerationMenu.ManagePlayer", isEnabled: true, onSelected: delegate
+                {
+                    GameMain.NetLobbyScreen?.SelectPlayer(client);
+                })
+            };
 
             // Creates sub context menu options for all the ranks
             List<ContextMenuOption> rankOptions = new List<ContextMenuOption>();

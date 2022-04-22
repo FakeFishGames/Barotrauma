@@ -79,6 +79,7 @@ namespace Barotrauma
                         Vector2? worldPosition = applyStatusEffectEventData.WorldPosition;
 
                         Character targetCharacter = applyStatusEffectEventData.TargetCharacter;
+                        if (targetCharacter != null && targetCharacter.Removed) { targetCharacter = null; }
                         byte targetLimbIndex = targetLimb != null && targetCharacter != null ? (byte)Array.IndexOf(targetCharacter.AnimController.Limbs, targetLimb) : (byte)255;
 
                         msg.WriteRangedInteger((int)actionType, 0, Enum.GetValues(typeof(ActionType)).Length - 1);

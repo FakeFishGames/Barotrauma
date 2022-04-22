@@ -214,9 +214,9 @@ namespace Barotrauma
             //try to place commands of the same texture
             //contiguously for optimal buffer generation
             //while maintaining the same visual result
-            for (int i=1;i<commandList.Count;i++)
+            for (int i = 1; i < commandList.Count; i++)
             {
-                if (commandList[i].Texture != commandList[i-1].Texture)
+                if (commandList[i].Texture != commandList[i - 1].Texture)
                 {
                     for (int j = i - 1; j >= 0; j--)
                     {
@@ -244,6 +244,7 @@ namespace Barotrauma
             //requires a vertex buffer to be rendered
             CrossThread.RequestExecutionOnMainThread(() =>
             {
+                if (isDisposed) { return; }
                 if (commandList.Count == 0) { return; }
                 int startIndex = 0;
                 for (int i = 1; i < commandList.Count; i++)

@@ -1,4 +1,39 @@
 ---------------------------------------------------------------------------------------------------------
+v0.17.13.0
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Players who are allowed to manage money in the multiplayer campaign can use money directly from the bank without having to transfer it to their wallet first.
+- Managing money always requires permissions: unlike other campaign-related permissions, not having anyone with permissions on the server doesn't give everyone permissions.
+
+Fixes:
+- Fixed deconstructors, fabricators and research stations not being powered in some colony modules.
+- Fixed power connections not getting recalculated server-side when disconnecting and reconnecting a wire.
+- Fixed client context menu not working in the tab menu if the client's not controlling a character.
+- Fixed preview image disappearing when saving a sub.
+- Fixed custom jobid tags not working on ID cards.
+- Fixed crashing with the error "Coroutine Barotrauma.SinglePlayerCampaign+<DoLoadInitialLevel>d__16 threw an exception" when trying to give items to a human prefab instance that has no item sets configured.
+- Fixed installed mods list not refreshing when uninstalling an unsubscribed mod.
+- Fixed outpost reactors using mechanical skill for repairs instead of electrical.
+- Fixed outdated Dugong preview image.
+- Fixed Deadeye Carbine firing an inconsistent number of rounds per burst in multiplayer.
+- Fixed crashing when launching the server with a fresh config file due to the language being set to None.
+- Fixed crashing on startup if the workshop mod directory doesn't exist.
+- Fixed "Canned Heat" not having an effect on oxygenite tanks.
+- Fixed entity list's search results being in a random order in the sub editor.
+- Fixed crashing when trying to view an item assembly that contains entities that can't be found in the sub editor.
+- Fixed bots not taking medical items' negative effects into account when determining which meds to use, often leading to overdoses/suffocation when using opiates.
+- Fixed bots trying to clean up items into deconstructors.
+- Fixed clients failing to spawn items with console commands when there's a structure prefab with the same identifier (e.g. ladders).
+- Fixed characters being unable to gain skills added by a mod if the job doesn't initially have those skills defined.
+- Automatically correct linked submarine paths in the submarine editor.
+- Fixed electrical discharge coils sometimes working with insufficient power.
+- Fixed crashing when creating a humanoid character in character editor.
+- Fixed cargo missions putting cargo in non-interactable and hidden-in-game containers.
+- Fixed only the first Powered component being considered when determining how much power an item is supplying to the grid. Prevented alien generators from working.
+- Fixed textbox's text position breaking when there's overflow and you're editing in the middle of the string.
+
+---------------------------------------------------------------------------------------------------------
 v0.17.12.0
 ---------------------------------------------------------------------------------------------------------
 

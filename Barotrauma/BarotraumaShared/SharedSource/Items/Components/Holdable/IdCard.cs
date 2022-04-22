@@ -98,6 +98,7 @@ namespace Barotrauma.Items.Components
 
             OwnerName = info.Name;
             OwnerJobId = info.Job?.Prefab.Identifier ?? Identifier.Empty;
+            item.AddTag($"jobid:{OwnerJobId}");
             OwnerTagSet = info.Head.Preset.TagSet;
             OwnerHairIndex = head.HairIndex;
             OwnerBeardIndex = head.BeardIndex;

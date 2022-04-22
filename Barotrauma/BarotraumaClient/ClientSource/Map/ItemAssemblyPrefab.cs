@@ -18,8 +18,8 @@ namespace Barotrauma
 
             foreach ((Identifier identifier, Rectangle rect) in DisplayEntities)
             {
-                var entityPrefab = MapEntityPrefab.FindByIdentifier(identifier);
-                if (entityPrefab is CoreEntityPrefab) { continue; }
+                var entityPrefab = FindByIdentifier(identifier);
+                if (entityPrefab is CoreEntityPrefab || entityPrefab == null) { continue; }
                 var drawRect = new Rectangle(
                     (int)(rect.X * scale) + drawArea.Center.X, (int)((rect.Y) * scale) - drawArea.Center.Y, 
                     (int)(rect.Width * scale), (int)(rect.Height * scale));

@@ -41,7 +41,7 @@ namespace Barotrauma
 
         private readonly CampaignUI campaignUI;
         private CampaignMode? Campaign => campaignUI.Campaign;
-        private Wallet PlayerWallet => Campaign?.Wallet ?? Wallet.Invalid;
+        private int PlayerBalance => Campaign?.GetBalance() ?? 0;
         private UpgradeTab selectedUpgradeTab = UpgradeTab.Upgrade;
 
         private GUIMessageBox? currectConfirmation;
@@ -295,7 +295,7 @@ namespace Barotrauma
             GUILayoutGroup rightLayout = new GUILayoutGroup(rectT(0.5f, 1, topHeaderLayout), childAnchor: Anchor.TopRight);
                 GUILayoutGroup priceLayout = new GUILayoutGroup(rectT(1, 0.8f, rightLayout), childAnchor: Anchor.Center) { RelativeSpacing = 0.08f };
                     new GUITextBlock(rectT(1f, 0f, priceLayout), TextManager.Get("CampaignStore.Balance"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Right);
-                    new GUITextBlock(rectT(1f, 0f, priceLayout), TextManager.FormatCurrency(PlayerWallet.Balance), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Right) { TextGetter = () => TextManager.FormatCurrency(PlayerWallet.Balance) };
+                    new GUITextBlock(rectT(1f, 0f, priceLayout), TextManager.FormatCurrency(PlayerBalance), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Right) { TextGetter = () => TextManager.FormatCurrency(PlayerBalance) };
             new GUIFrame(rectT(0.5f, 0.1f, rightLayout, Anchor.BottomRight), style: "HorizontalLine") { IgnoreLayoutGroups = true };
 
             repairButton.OnClicked = upgradeButton.OnClicked = (button, o) =>
@@ -435,14 +435,14 @@ namespace Barotrauma
                     return false;
                 }
 
-                if (PlayerWallet.CanAfford(hullRepairCost))
+                if (PlayerBalance >= hullRepairCost)
                 {
                     LocalizedString body = TextManager.GetWithVariable("WallRepairs.PurchasePromptBody", "[amount]", hullRepairCost.ToString());
                     currectConfirmation = EventEditorScreen.AskForConfirmation(TextManager.Get("Upgrades.PurchasePromptTitle"), body, () =>
                     {
-                        if (PlayerWallet.Balance >= hullRepairCost)
+                        if (PlayerBalance >= hullRepairCost)
                         {
-                            PlayerWallet.TryDeduct(hullRepairCost);
+                            Campaign.TryPurchase(null, hullRepairCost);
                             GameAnalyticsManager.AddMoneySpentEvent(hullRepairCost, GameAnalyticsManager.MoneySink.Service, "hullrepairs");
                             Campaign.PurchasedHullRepairs = true;
                             button.Enabled = false;
@@ -470,14 +470,14 @@ namespace Barotrauma
 
             CreateRepairEntry(currentStoreLayout.Content, TextManager.Get("repairallitems"), "RepairItemsButton", itemRepairCost, (button, o) =>
             {
-                if (PlayerWallet.Balance >= itemRepairCost && !Campaign.PurchasedItemRepairs)
+                if (PlayerBalance >= itemRepairCost && !Campaign.PurchasedItemRepairs)
                 {
                     LocalizedString body = TextManager.GetWithVariable("ItemRepairs.PurchasePromptBody", "[amount]", itemRepairCost.ToString());
                     currectConfirmation = EventEditorScreen.AskForConfirmation(TextManager.Get("Upgrades.PurchasePromptTitle"), body, () =>
                     {
-                        if (PlayerWallet.Balance >= itemRepairCost && !Campaign.PurchasedItemRepairs)
+                        if (PlayerBalance >= itemRepairCost && !Campaign.PurchasedItemRepairs)
                         {
-                            PlayerWallet.TryDeduct(itemRepairCost);
+                            Campaign.TryPurchase(null, itemRepairCost);
                             GameAnalyticsManager.AddMoneySpentEvent(hullRepairCost, GameAnalyticsManager.MoneySink.Service, "devicerepairs");
                             Campaign.PurchasedItemRepairs = true;
                             button.Enabled = false;
@@ -516,14 +516,14 @@ namespace Barotrauma
                     return false;
                 }
 
-                if (PlayerWallet.CanAfford(shuttleRetrieveCost) && !Campaign.PurchasedLostShuttles)
+                if (PlayerBalance >= shuttleRetrieveCost && !Campaign.PurchasedLostShuttles)
                 {
                     LocalizedString body = TextManager.GetWithVariable("ReplaceLostShuttles.PurchasePromptBody", "[amount]", shuttleRetrieveCost.ToString());
                     currectConfirmation = EventEditorScreen.AskForConfirmation(TextManager.Get("Upgrades.PurchasePromptTitle"), body, () =>
                     {
-                        if (PlayerWallet.Balance >= shuttleRetrieveCost && !Campaign.PurchasedLostShuttles)
+                        if (PlayerBalance >= shuttleRetrieveCost && !Campaign.PurchasedLostShuttles)
                         {
-                            PlayerWallet.TryDeduct(shuttleRetrieveCost);
+                            Campaign.TryPurchase(null, shuttleRetrieveCost);
                             GameAnalyticsManager.AddMoneySpentEvent(hullRepairCost, GameAnalyticsManager.MoneySink.Service, "retrieveshuttle");
                             Campaign.PurchasedLostShuttles = true;
                             button.Enabled = false;
@@ -581,13 +581,13 @@ namespace Barotrauma
                     new GUITextBlock(rectT(1, 0, textLayout), title, font: GUIStyle.SubHeadingFont) { CanBeFocused = false, AutoScaleHorizontal = true };
                     new GUITextBlock(rectT(1, 0, textLayout), TextManager.FormatCurrency(price));
                 GUILayoutGroup buyButtonLayout = new GUILayoutGroup(rectT(0.2f, 1, contentLayout), childAnchor: Anchor.Center) { UserData = "buybutton" };
-                    new GUIButton(rectT(0.7f, 0.5f, buyButtonLayout), string.Empty, style: "RepairBuyButton") { ClickSound = GUISoundType.HireRepairClick, Enabled = PlayerWallet.Balance >= price && !isDisabled, OnClicked = onPressed };
+                    new GUIButton(rectT(0.7f, 0.5f, buyButtonLayout), string.Empty, style: "RepairBuyButton") { ClickSound = GUISoundType.HireRepairClick, Enabled = PlayerBalance >= price && !isDisabled, OnClicked = onPressed };
             contentLayout.Recalculate();
             buyButtonLayout.Recalculate();
 
             if (disableElement)
             {
-                frameChild.Enabled = PlayerWallet.Balance >= price && !isDisabled;
+                frameChild.Enabled = PlayerBalance >= price && !isDisabled;
             }
 
             if (!HasPermission)
@@ -972,7 +972,7 @@ namespace Barotrauma
                     buttonStyle: isPurchased ? "WeaponInstallButton" : "StoreAddToCrateButton"));
 
                 if (!(frames.Last().FindChild(c => c is GUIButton, recursive: true) is GUIButton buyButton)) { continue; }
-                if (PlayerWallet.CanAfford(price))
+                if (PlayerBalance >= price)
                 {
                     buyButton.Enabled = true;
                     buyButton.OnClicked += (button, o) =>
@@ -1602,7 +1602,7 @@ namespace Barotrauma
                 if (button != null)
                 {
                     button.Enabled = currentLevel < prefab.MaxLevel;
-                    if (WaitForServerUpdate || !campaign.Wallet.CanAfford(price))
+                    if (WaitForServerUpdate || campaign.GetBalance() < price)
                     {
                         button.Enabled = false;
                     }

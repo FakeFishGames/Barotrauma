@@ -63,8 +63,9 @@ namespace Barotrauma
             {
                 msg.Write(Job.Prefab.Identifier);
                 msg.Write((byte)Job.Variant);
-                msg.Write((byte)Job.Skills.Count);
-                foreach (Skill skill in Job.Skills)
+                var skills = Job.GetSkills();
+                msg.Write((byte)skills.Count());
+                foreach (Skill skill in skills)
                 {
                     msg.Write(skill.Identifier);
                     msg.Write(skill.Level);

@@ -384,7 +384,7 @@ namespace Barotrauma
                 foreach (var itemPrefab in ItemPrefab.Prefabs)
                 {
                     float suitability = Math.Max(itemPrefab.GetTreatmentSuitability(Identifier), itemPrefab.GetTreatmentSuitability(AfflictionType));
-                    if (suitability > 0.0f)
+                    if (!MathUtils.NearlyEqual(suitability, 0.0f))
                     {
                         yield return new KeyValuePair<Identifier, float>(itemPrefab.Identifier, suitability);
                     }

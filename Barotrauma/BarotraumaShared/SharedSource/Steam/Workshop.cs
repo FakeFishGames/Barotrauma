@@ -250,12 +250,15 @@ namespace Barotrauma.Steam
 
             public static void DeleteFailedCopies()
             {
-                foreach (var dir in Directory.EnumerateDirectories(ContentPackage.WorkshopModsDir, "**"))
+                if (Directory.Exists(ContentPackage.WorkshopModsDir))
                 {
-                    string copyingIndicatorPath = Path.Combine(dir, ContentPackageManager.CopyIndicatorFileName);
-                    if (File.Exists(copyingIndicatorPath))
+                    foreach (var dir in Directory.EnumerateDirectories(ContentPackage.WorkshopModsDir, "**"))
                     {
-                        Directory.Delete(dir, recursive: true);
+                        string copyingIndicatorPath = Path.Combine(dir, ContentPackageManager.CopyIndicatorFileName);
+                        if (File.Exists(copyingIndicatorPath))
+                        {
+                            Directory.Delete(dir, recursive: true);
+                        }
                     }
                 }
             }

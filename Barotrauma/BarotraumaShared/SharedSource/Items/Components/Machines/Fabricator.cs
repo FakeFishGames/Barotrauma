@@ -315,6 +315,15 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private Client GetUsingClient()
+        {
+#if SERVER
+            return GameMain.Server.ConnectedClients.Find(c => c.Character == user);
+#elif CLIENT
+            return null;
+#endif
+        }
+
         private void Fabricate()
         {
             RefreshAvailableIngredients();
@@ -327,9 +336,20 @@ namespace Barotrauma.Items.Components
             if (fabricatedItem.RequiredMoney > 0)
             {
                 if (user == null) { return; }
-                if (GameMain.GameSession?.GameMode is MultiPlayerCampaign)
+                if (GameMain.GameSession?.GameMode is MultiPlayerCampaign mpCampaign)
                 {
-                    user.Wallet.Deduct(fabricatedItem.RequiredMoney);
+#if CLIENT
+                    mpCampaign.TryPurchase(null, fabricatedItem.RequiredMoney);
+#elif SERVER
+                    if (GetUsingClient() is { } client)
+                    {
+                        mpCampaign.TryPurchase(client, fabricatedItem.RequiredMoney);
+                    }
+                    else
+                    {
+                        user.Wallet.Deduct(fabricatedItem.RequiredMoney);
+                    }
+#endif
                 }
                 else if (GameMain.GameSession?.GameMode is CampaignMode campaign)
                 {
@@ -530,6 +550,10 @@ namespace Barotrauma.Items.Components
             {
                 floatQuality += user.Info.GetSavedStatValue(StatTypes.IncreaseFabricationQuality, tag);
             }
+            if (!fabricatedItem.TargetItem.Tags.Contains(fabricatedItem.TargetItem.Identifier))
+            {
+                floatQuality += user.Info.GetSavedStatValue(StatTypes.IncreaseFabricationQuality, fabricatedItem.TargetItem.Identifier);
+            }
             quality = (int)floatQuality;
 
             const int MaxCraftingSkill = 100;
@@ -548,17 +572,22 @@ namespace Barotrauma.Items.Components
 
             if (fabricableItem.RequiredMoney > 0)
             {
-                if (GameMain.GameSession?.GameMode is MultiPlayerCampaign)
+                switch (GameMain.GameSession?.GameMode)
                 {
-                    if (character?.Wallet == null || character.Wallet.Balance < fabricableItem.RequiredMoney) { return false; }
-                }
-                else if (GameMain.GameSession?.GameMode is CampaignMode campaign)
-                {
-                    if (campaign.Bank.Balance < fabricableItem.RequiredMoney) { return false; }
-                }
-                else
-                {
-                    return false;
+                    case MultiPlayerCampaign mpCampaign:
+                    {
+                        if (!mpCampaign.CanAfford(fabricableItem.RequiredMoney, GetUsingClient())) { return false; }
+
+                        break;
+                    }
+                    case CampaignMode campaign:
+                    {
+                        if (campaign.Bank.Balance < fabricableItem.RequiredMoney) { return false; }
+
+                        break;
+                    }
+                    default:
+                        return false;
                 }
             }
 

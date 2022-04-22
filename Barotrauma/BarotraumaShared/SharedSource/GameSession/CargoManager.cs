@@ -316,7 +316,7 @@ namespace Barotrauma
                 }
                 // Exchange money
                 int itemValue = item.Quantity * buyValues[item.ItemPrefab];
-                campaign.GetWallet(client).TryDeduct(itemValue);
+                campaign.TryPurchase(client, itemValue);
                 GameAnalyticsManager.AddMoneySpentEvent(itemValue, GameAnalyticsManager.MoneySink.Store, item.ItemPrefab.Identifier.Value);
                 store.Balance += itemValue;
                 if (removeFromCrate)

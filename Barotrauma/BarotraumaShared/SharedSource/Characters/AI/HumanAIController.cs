@@ -838,7 +838,7 @@ namespace Barotrauma
                 if (container == null) { return 0; }
                 if (!container.Inventory.CanBePut(containableItem)) { return 0; }
                 var rootContainer = container.Item.GetRootContainer();
-                if (rootContainer?.GetComponent<Fabricator>() != null || rootContainer?.GetComponent<Fabricator>() != null) { return 0; }
+                if (rootContainer?.GetComponent<Fabricator>() != null || rootContainer?.GetComponent<Deconstructor>() != null) { return 0; }
                 if (container.ShouldBeContained(containableItem, out bool isRestrictionsDefined))
                 {
                     if (isRestrictionsDefined)

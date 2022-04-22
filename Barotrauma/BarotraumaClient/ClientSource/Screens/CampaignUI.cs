@@ -149,7 +149,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        if (Campaign.Wallet.TryDeduct(CampaignMode.HullRepairCost))
+                        if (Campaign.TryPurchase(null, CampaignMode.HullRepairCost))
                         {
                             GameAnalyticsManager.AddMoneySpentEvent(CampaignMode.HullRepairCost, GameAnalyticsManager.MoneySink.Service, "hullrepairs");
                             Campaign.PurchasedHullRepairs = true;
@@ -194,7 +194,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        if (Campaign.Wallet.TryDeduct(CampaignMode.ItemRepairCost))
+                        if (Campaign.TryPurchase(null, CampaignMode.ItemRepairCost))
                         {
                             GameAnalyticsManager.AddMoneySpentEvent(CampaignMode.ItemRepairCost, GameAnalyticsManager.MoneySink.Service, "devicerepairs");
                             Campaign.PurchasedItemRepairs = true;
@@ -246,7 +246,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        if (Campaign.Wallet.TryDeduct(CampaignMode.ShuttleReplaceCost))
+                        if (Campaign.TryPurchase(null, CampaignMode.ShuttleReplaceCost))
                         {
                             GameAnalyticsManager.AddMoneySpentEvent(CampaignMode.ShuttleReplaceCost, GameAnalyticsManager.MoneySink.Service, "retrieveshuttle");
                             Campaign.PurchasedLostShuttles = true;
@@ -736,7 +736,7 @@ namespace Barotrauma
 
         public static LocalizedString GetMoney()
         {
-            return TextManager.GetWithVariable("PlayerCredits", "[credits]", (GameMain.GameSession?.Campaign == null) ? "0" : string.Format(CultureInfo.InvariantCulture, "{0:N0}", GameMain.GameSession.Campaign.Wallet.Balance));
+            return TextManager.GetWithVariable("PlayerCredits", "[credits]", (GameMain.GameSession?.Campaign == null) ? "0" : string.Format(CultureInfo.InvariantCulture, "{0:N0}", GameMain.GameSession.Campaign.GetBalance()));
         }
 
         private void UpdateMaxMissions(Location location)

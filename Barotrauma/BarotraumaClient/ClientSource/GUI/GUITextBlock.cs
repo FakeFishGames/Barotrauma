@@ -395,14 +395,13 @@ namespace Barotrauma
             origin = TextSize * 0.5f;
 
             origin.X = 0;
-            if (textAlignment.HasFlag(Alignment.Left) && !overflowClipActive)
+            if (textAlignment.HasFlag(Alignment.Left))
             {
                 textPos.X = padding.X;
             }            
-            if (textAlignment.HasFlag(Alignment.Right) || overflowClipActive)
+            if (textAlignment.HasFlag(Alignment.Right))
             {
                 textPos.X = rect.Width - padding.Z;
-                //origin.X = TextSize.X;
             }
             if (textAlignment.HasFlag(Alignment.Top))
             {

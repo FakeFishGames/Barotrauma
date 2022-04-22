@@ -293,6 +293,10 @@ namespace Barotrauma
             {
                 return Create<HumanSwimFastParams>(fullPath, speciesName, animationType);
             }
+            if (type == typeof(HumanCrouchParams))
+            {
+                return Create<HumanCrouchParams>(fullPath, speciesName, animationType);
+            }
             if (type == typeof(FishWalkParams))
             {
                 return Create<FishWalkParams>(fullPath, speciesName, animationType);

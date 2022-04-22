@@ -154,10 +154,14 @@ namespace Barotrauma
 
         public void GiveItems(Character character, Submarine submarine, Rand.RandSync randSync = Rand.RandSync.Unsynced, bool createNetworkEvents = true)
         {
+            if (ItemSets == null || !ItemSets.Any()) { return; }
             var spawnItems = ToolBox.SelectWeightedRandom(ItemSets.Keys.ToList(), ItemSets.Values.ToList(), randSync);
-            foreach (XElement itemElement in spawnItems.GetChildElements("item"))
+            if (spawnItems != null)
             {
-                InitializeItem(character, itemElement, submarine, this, createNetworkEvents: createNetworkEvents);
+                foreach (XElement itemElement in spawnItems.GetChildElements("item"))
+                {
+                    InitializeItem(character, itemElement, submarine, this, createNetworkEvents: createNetworkEvents);
+                }
             }
         }
 

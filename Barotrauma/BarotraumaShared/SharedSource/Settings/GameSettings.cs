@@ -43,7 +43,7 @@ namespace Barotrauma
             {
                 Config config = new Config
                 {
-                    Language = LanguageIdentifier.None,
+                    Language = TextManager.DefaultLanguage,
                     SubEditorUndoBuffer = 32,
                     MaxAutoSaves = 8,
                     AutoSaveIntervalSeconds = 300,
@@ -99,6 +99,10 @@ namespace Barotrauma
                 Config retVal = fallback ?? GetDefault();
                 
                 retVal.DeserializeElement(element);
+                if (retVal.Language == LanguageIdentifier.None)
+                {
+                    retVal.Language = TextManager.DefaultLanguage;
+                }
 
                 retVal.Graphics = GraphicsSettings.FromElements(element.GetChildElements("graphicsmode", "graphicssettings"), retVal.Graphics);
                 retVal.Audio = AudioSettings.FromElements(element.GetChildElements("audio"), retVal.Audio);

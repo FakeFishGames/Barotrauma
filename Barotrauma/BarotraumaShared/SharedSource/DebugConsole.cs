@@ -824,7 +824,7 @@ namespace Barotrauma
                     if (isMax) { level = 100; }
                     if (skillIdentifier == "all")
                     {
-                        foreach (Skill skill in character.Info.Job.Skills)
+                        foreach (Skill skill in character.Info.Job.GetSkills())
                         {
                             character.Info.SetSkillLevel(skill.Identifier, level);
                         }
@@ -844,7 +844,7 @@ namespace Barotrauma
             {
                 return new[]
                 {
-                    Character.Controlled?.Info?.Job?.Skills?.Select(skill => skill.Identifier.Value).ToArray() ?? Array.Empty<string>(),
+                    Character.Controlled?.Info?.Job?.GetSkills()?.Select(skill => skill.Identifier.Value).ToArray() ?? Array.Empty<string>(),
                     new[]{ "max" },
                     Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n).ToArray(),
                 };

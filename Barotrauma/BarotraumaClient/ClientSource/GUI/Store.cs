@@ -71,7 +71,8 @@ namespace Barotrauma
 
         private CargoManager CargoManager => campaignUI.Campaign.CargoManager;
         private Location CurrentLocation => campaignUI.Campaign.Map?.CurrentLocation;
-        private Wallet PlayerWallet => campaignUI.Campaign.Wallet;
+        private int Balance => campaignUI.Campaign.GetBalance();
+
         private bool IsBuying => activeTab switch
         {
             StoreTab.Buy => true,
@@ -207,7 +208,7 @@ namespace Barotrauma
         {
             if (CurrentLocation?.Stores != null)
             {
-                if (CurrentLocation.GetStore(identifier) is { } store)
+                if (!identifier.IsEmpty && CurrentLocation.GetStore(identifier) is { } store)
                 {
                     ActiveStore = store;
                     if (storeNameBlock != null)
@@ -223,14 +224,45 @@ namespace Barotrauma
                 else
                 {
                     ActiveStore = null;
-                    string msg = $"Error selecting store with identifier \"{identifier}\" at {CurrentLocation}: store with the identifier doesn't exist at the location.";
+                    string errorId, msg;
+                    if (identifier.IsEmpty)
+                    {
+                        errorId = "Store.SelectStore:IdentifierEmpty";
+                        msg = $"Error selecting store at {CurrentLocation}: identifier is empty.";
+                    }
+                    else
+                    {
+                        errorId = "Store.SelectStore:StoreDoesntExist";
+                        msg = $"Error selecting store with identifier \"{identifier}\" at {CurrentLocation}: store with the identifier doesn't exist at the location.";
+                    }
                     DebugConsole.ShowError(msg);
-                    GameAnalyticsManager.AddErrorEventOnce("Store.SelectStore:StoreDoesntExist", GameAnalyticsManager.ErrorSeverity.Error, msg);
+                    GameAnalyticsManager.AddErrorEventOnce(errorId, GameAnalyticsManager.ErrorSeverity.Error, msg);
                 }
             }
             else
             {
                 ActiveStore = null;
+                string errorId = "", msg = "";
+                if (campaignUI.Campaign.Map == null)
+                {
+                    errorId = "Store.SelectStore:MapNull";
+                    msg = $"Error selecting store with identifier \"{identifier}\": Map is null.";
+                }
+                else if (CurrentLocation == null)
+                {
+                    errorId = "Store.SelectStore:CurrentLocationNull";
+                    msg = $"Error selecting store with identifier \"{identifier}\": CurrentLocation is null.";
+                }
+                else if (CurrentLocation.Stores == null)
+                {
+                    errorId = "Store.SelectStore:StoresNull";
+                    msg = $"Error selecting store with identifier \"{identifier}\": CurrentLocation.Stores is null.";
+                }
+                if (!msg.IsNullOrEmpty())
+                {
+                    DebugConsole.ShowError(msg);
+                    GameAnalyticsManager.AddErrorEventOnce(errorId, GameAnalyticsManager.ErrorSeverity.Error, msg);
+                }
             }
             RefreshItemsToSell();
             Refresh();
@@ -712,7 +744,7 @@ namespace Barotrauma
 
         private LocalizedString GetMerchantBalanceText() => TextManager.FormatCurrency(ActiveStore?.Balance ?? 0);
 
-        private LocalizedString GetPlayerBalanceText() => TextManager.FormatCurrency(PlayerWallet.Balance);
+        private LocalizedString GetPlayerBalanceText() => TextManager.FormatCurrency(Balance);
 
         private GUILayoutGroup CreateDealsGroup(GUIListBox parentList, int elementCount)
         {
@@ -2037,7 +2069,7 @@ namespace Barotrauma
                 totalPrice += item.Quantity * ActiveStore.GetAdjustedItemBuyPrice(item.ItemPrefab, priceInfo: priceInfo);
             }
             itemsToRemove.ForEach(i => itemsToPurchase.Remove(i));
-            if (itemsToPurchase.None() || !PlayerWallet.CanAfford(totalPrice)) { return false; }
+            if (itemsToPurchase.None() || Balance < totalPrice) { return false; }
             CargoManager.PurchaseItems(ActiveStore.Identifier, itemsToPurchase, true);
             GameMain.Client?.SendCampaignState();
             var dialog = new GUIMessageBox(
@@ -2091,7 +2123,7 @@ namespace Barotrauma
             if (IsBuying)
             {
                 shoppingCrateTotal.Text = TextManager.FormatCurrency(buyTotal);
-                shoppingCrateTotal.TextColor = !PlayerWallet.CanAfford(buyTotal) ? Color.Red : Color.White;
+                shoppingCrateTotal.TextColor = Balance < buyTotal ? Color.Red : Color.White;
             }
             else
             {
@@ -2137,7 +2169,7 @@ namespace Barotrauma
                 ActiveShoppingCrateList.Content.RectTransform.Children.Any() &&
                 activeTab switch
                 {
-                    StoreTab.Buy => PlayerWallet.CanAfford(buyTotal),
+                    StoreTab.Buy => Balance >= buyTotal,
                     StoreTab.Sell => CurrentLocation != null && sellTotal <= ActiveStore.Balance,
                     StoreTab.SellSub => CurrentLocation != null && sellFromSubTotal <= ActiveStore.Balance,
                     _ => false

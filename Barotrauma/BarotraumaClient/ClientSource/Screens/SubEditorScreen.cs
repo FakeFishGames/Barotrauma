@@ -1167,6 +1167,9 @@ namespace Barotrauma
 #endif
                 CreateEntityElement(ep, entitiesPerRow, allEntityList.Content);
             }
+            allEntityList.Content.RectTransform.SortChildren((i1, i2) =>
+               string.Compare(((MapEntityPrefab)i1.GUIComponent.UserData)?.Name.Value, (i2.GUIComponent.UserData as MapEntityPrefab)?.Name.Value, StringComparison.Ordinal));
+
         }
 
         private void CreateEntityElement(MapEntityPrefab ep, int entitiesPerRow, GUIComponent parent)
@@ -1906,6 +1909,7 @@ namespace Barotrauma
                 }
                 SubmarineInfo.RefreshSavedSub(savePath);
                 if (prevSavePath != null && prevSavePath != savePath) { SubmarineInfo.RefreshSavedSub(prevSavePath); }
+                MainSub.Info.PreviewImage = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.FilePath == savePath)?.PreviewImage; 
 
                 string downloadFolder = Path.GetFullPath(SaveUtil.SubmarineDownloadFolder);
                 linkedSubBox.ClearChildren();

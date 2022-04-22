@@ -188,11 +188,10 @@ namespace Barotrauma.Items.Components
                     //already connected, no need to do anything
                     if (Connections[i].Wires.Contains(newWire)) { continue; }
 
-                    Connections[i].TryAddLink(newWire);
                     newWire.Connect(Connections[i], true, true);
+                    Connections[i].TryAddLink(newWire);
 
                     var otherConnection = newWire.OtherConnection(Connections[i]);
-
                     if (otherConnection == null)
                     {
                         GameServer.Log(GameServer.CharacterLogName(c.Character) + " connected a wire to " +

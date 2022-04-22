@@ -292,7 +292,7 @@ namespace Barotrauma
 
             if ((GameMain.NetworkMember is null || GameMain.NetworkMember is { IsServer: true }) && cost > 0)
             {
-                Campaign!.GetWallet(client).TryDeduct(cost);
+                Campaign!.TryPurchase(client, cost);
             }
             GameAnalyticsManager.AddMoneySpentEvent(cost, GameAnalyticsManager.MoneySink.SubmarineSwitch, newSubmarine.Name);
             Campaign!.PendingSubmarineSwitch = newSubmarine;
@@ -303,7 +303,7 @@ namespace Barotrauma
         public void PurchaseSubmarine(SubmarineInfo newSubmarine, Client? client = null)
         {
             if (Campaign is null) { return; }
-            if ((GameMain.NetworkMember is null || GameMain.NetworkMember is { IsServer: true }) && !Campaign.GetWallet(client).TryDeduct(newSubmarine.Price)) { return; }
+            if ((GameMain.NetworkMember is null || GameMain.NetworkMember is { IsServer: true }) && !Campaign.TryPurchase(client, newSubmarine.Price)) { return; }
             if (!OwnedSubmarines.Any(s => s.Name == newSubmarine.Name))
             {
                 GameAnalyticsManager.AddMoneySpentEvent(newSubmarine.Price, GameAnalyticsManager.MoneySink.SubmarinePurchase, newSubmarine.Name);

@@ -93,10 +93,17 @@ namespace Barotrauma.Steam
                 if (!t.TryGetResult(out ISet<Steamworks.Ugc.Item> publishedItems)) { return; }
 
                 var allRequiredInstalled = subscribedIds.Union(publishedItems.Select(it => it.Id)).ToHashSet();
+                bool needsRefresh = false;
                 foreach (var id in installedIds.Where(id2 => !allRequiredInstalled.Contains(id2)))
                 {
                     Steamworks.Ugc.Item item = new Steamworks.Ugc.Item(id);
                     SteamManager.Workshop.Uninstall(item);
+                    needsRefresh = true;
+                }
+
+                if (needsRefresh)
+                {
+                    PopulateInstalledModLists();
                 }
             });
         }

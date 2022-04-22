@@ -35,7 +35,7 @@ namespace Barotrauma
                 int itemValue = sellValues[item.ItemPrefab];
                 if (store.Balance < itemValue || item.Removed) { continue; }
                 store.Balance += itemValue;
-                campaign.GetWallet(client).TryDeduct(itemValue);
+                campaign.TryPurchase(client, itemValue);
                 storeSpecificItems.Remove(item);
             }
         }

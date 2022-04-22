@@ -30,11 +30,12 @@ namespace Barotrauma.Abilities
 
                 if (useAll && Character.Info?.Job != null)
                 {
-                    foreach (Skill skill in Character.Info.Job.Skills)
+                    var skills = Character.Info.Job.GetSkills();
+                    foreach (Skill skill in skills)
                     {
                         skillTotal += Character.GetSkillLevel(skill.Identifier);
                     }
-                    skillTotal /= Character.Info.Job.Skills.Count;
+                    skillTotal /= skills.Count();
                 }
                 else
                 {

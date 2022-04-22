@@ -2709,6 +2709,8 @@ namespace Barotrauma.Networking
                 SteamManager.LeaveLobby();
             }
 
+            CampaignMode.StartRoundCancellationToken?.Cancel();
+
             clientPeer?.Close();
             clientPeer = null;
 

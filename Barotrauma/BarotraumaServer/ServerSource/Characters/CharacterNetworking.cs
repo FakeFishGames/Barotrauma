@@ -434,8 +434,9 @@ namespace Barotrauma
                     }
                     else
                     {
-                        msg.Write((byte)Info.Job.Skills.Count);
-                        foreach (Skill skill in Info.Job.Skills)
+                        var skills = Info.Job.GetSkills();
+                        msg.Write((byte)skills.Count());
+                        foreach (Skill skill in skills)
                         {
                             msg.Write(skill.Identifier);
                             msg.Write(skill.Level);

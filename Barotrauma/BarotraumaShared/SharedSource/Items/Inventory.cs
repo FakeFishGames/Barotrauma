@@ -758,8 +758,11 @@ namespace Barotrauma
                 {
                     for (int j = 0; j < capacity; j++)
                     {
-                        if (slots[j].Contains(item)) { visualSlots[j].ShowBorderHighlight(GUIStyle.Green, 0.1f, 0.9f); }                       
+                        if (slots[j].Contains(item)) { visualSlots[j].ShowBorderHighlight(GUIStyle.Green, 0.1f, 0.9f); }
                     }
+                }
+                if (otherInventory.visualSlots != null)
+                {
                     for (int j = 0; j < otherInventory.capacity; j++)
                     {
                         if (otherInventory.slots[j].Contains(existingItems.FirstOrDefault())) { otherInventory.visualSlots[j].ShowBorderHighlight(GUIStyle.Green, 0.1f, 0.9f); }                          

@@ -178,6 +178,14 @@ namespace Barotrauma
                 GameMain.Server.ConnectedClients.None(c => c.InGame && (IsOwner(c) || c.HasPermission(permissions)));
         }
 
+        public bool AllowedToManageWallets(Client client)
+        {
+            return
+                client.HasPermission(ClientPermissions.ManageCampaign) ||
+                client.HasPermission(ClientPermissions.ManageMoney) ||
+                IsOwner(client);
+        }
+
         public void SaveExperiencePoints(Client client)
         {
             ClearSavedExperiencePoints(client);
@@ -430,7 +438,7 @@ namespace Barotrauma
         }
 
         public bool CanPurchaseSub(SubmarineInfo info, Client client)
-            => GetWallet(client).CanAfford(info.Price) && GetCampaignSubs().Contains(info);
+            => CanAfford(info.Price, client) && GetCampaignSubs().Contains(info);
 
         private readonly List<CharacterCampaignData> discardedCharacters = new List<CharacterCampaignData>();
         public void DiscardClientCharacterData(Client client)
@@ -755,8 +763,8 @@ namespace Barotrauma
             {
                 switch (purchasedHullRepairs)
                 {
-                    case true when personalWallet.CanAfford(hullRepairCost):
-                        personalWallet.Deduct(hullRepairCost);
+                    case true when GetBalance(sender) >= hullRepairCost:
+                        TryPurchase(sender, hullRepairCost);
                         PurchasedHullRepairs = true;
                         GameAnalyticsManager.AddMoneySpentEvent(hullRepairCost, GameAnalyticsManager.MoneySink.Service, "hullrepairs");
                         break;
@@ -771,8 +779,8 @@ namespace Barotrauma
             {
                 switch (purchasedItemRepairs)
                 {
-                    case true when personalWallet.CanAfford(itemRepairCost):
-                        personalWallet.Deduct(itemRepairCost);
+                    case true when GetBalance(sender) >= itemRepairCost:
+                        TryPurchase(sender, itemRepairCost);
                         PurchasedItemRepairs = true;
                         GameAnalyticsManager.AddMoneySpentEvent(itemRepairCost, GameAnalyticsManager.MoneySink.Service, "devicerepairs");
                         break;
@@ -789,7 +797,7 @@ namespace Barotrauma
                 {
                     GameMain.Server.SendDirectChatMessage(TextManager.FormatServerMessage("ReplaceShuttleDockingPortOccupied"), sender, ChatMessageType.MessageBox);
                 }
-                else if (purchasedLostShuttles && personalWallet.TryDeduct(shuttleRetrieveCost))
+                else if (purchasedLostShuttles && TryPurchase(sender, shuttleRetrieveCost))
                 {
                     PurchasedLostShuttles = true;
                     GameAnalyticsManager.AddMoneySpentEvent(shuttleRetrieveCost, GameAnalyticsManager.MoneySink.Service, "retrieveshuttle");
@@ -972,7 +980,7 @@ namespace Barotrauma
             switch (transfer.Sender)
             {
                 case Some<ushort> { Value: var id }:
-                    if (id != sender.CharacterID && !AllowedToManageCampaign(sender, ClientPermissions.ManageMoney)) { return; }
+                    if (id != sender.CharacterID && !AllowedToManageWallets(sender)) { return; }
 
                     Wallet wallet = GetWalletByID(id);
                     if (wallet is InvalidWallet) { return; }
@@ -980,7 +988,7 @@ namespace Barotrauma
                     TransferMoney(wallet);
                     break;
                 case None<ushort> _:
-                    if (!AllowedToManageCampaign(sender, ClientPermissions.ManageMoney))
+                    if (!AllowedToManageWallets(sender))
                     {
                         if (transfer.Receiver is Some<ushort> { Value: var receiverId } && receiverId == sender.CharacterID)
                         {
@@ -1025,7 +1033,7 @@ namespace Barotrauma
         {
             NetWalletSetSalaryUpdate update = INetSerializableStruct.Read<NetWalletSetSalaryUpdate>(msg);
 
-            if (!AllowedToManageCampaign(sender, ClientPermissions.ManageMoney)) { return; }
+            if (!AllowedToManageWallets(sender)) { return; }
 
             Character targetCharacter = Character.CharacterList.FirstOrDefault(c => c.ID == update.Target);
             targetCharacter?.Wallet.SetRewardDistribution(update.NewRewardDistribution);
@@ -1229,6 +1237,45 @@ namespace Barotrauma
 
                 GameMain.Server.ServerPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
             }
+        }
+
+        public override bool TryPurchase(Client client, int price)
+        {
+            Wallet wallet = GetWallet(client);
+            if (!AllowedToManageWallets(client))
+            {
+                return wallet.TryDeduct(price);
+            }
+
+            int balance = wallet.Balance;
+
+            if (balance >= price)
+            {
+                return wallet.TryDeduct(price);
+            }
+
+            if (balance + Bank.Balance >= price)
+            {
+                int remainder = price - balance;
+                if (balance > 0) { wallet.Deduct(balance); }
+                Bank.Deduct(remainder);
+                return true ;
+            }
+
+            return false;
+        }
+
+        public override int GetBalance(Client client = null)
+        {
+            if (client is null) { return 0; }
+
+            Wallet wallet = GetWallet(client);
+            if (!AllowedToManageWallets(client))
+            {
+                return wallet.Balance;
+            }
+
+            return wallet.Balance + Bank.Balance;
         }
 
         public override void Save(XElement element)

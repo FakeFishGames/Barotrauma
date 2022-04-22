@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -17,6 +16,8 @@ namespace Barotrauma.Items.Components
 
         const int MaxNodes = 100;
         const float MaxNodeDistance = 150.0f;
+
+        private bool waitForVoltageRecalculation;
 
         public struct Node
         {
@@ -120,6 +121,7 @@ namespace Barotrauma.Items.Components
             CurrPowerConsumption = powerConsumption;
             Voltage = 0.0f;
 
+            waitForVoltageRecalculation = true;
             charging = true;
             timer = Duration;
             IsActive = true;
@@ -134,6 +136,12 @@ namespace Barotrauma.Items.Components
 #if CLIENT
             frameOffset = Rand.Int(electricitySprite.FrameCount);
 #endif
+            if (waitForVoltageRecalculation)
+            {
+                waitForVoltageRecalculation = false;
+                return;
+            }
+
             if (timer <= 0.0f)
             {
                 IsActive = false;

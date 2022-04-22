@@ -227,6 +227,21 @@ namespace Barotrauma
             return Bank;
         }
 
+        public virtual bool TryPurchase(Client client, int price)
+        {
+            return GetWallet(client).TryDeduct(price);
+        }
+
+        public virtual int GetBalance(Client client = null)
+        {
+            return GetWallet(client).Balance;
+        }
+
+        public bool CanAfford(int cost, Client client = null)
+        {
+            return GetBalance(client) >= cost;
+        }
+
         /// <summary>
         /// The location that's displayed as the "current one" in the map screen. Normally the current outpost or the location at the start of the level,
         /// but when selecting the next destination at the end of the level at an uninhabited location we use the location at the end
@@ -766,7 +781,7 @@ namespace Barotrauma
         public bool TryHireCharacter(Location location, CharacterInfo characterInfo, Client client = null)
         {
             if (characterInfo == null) { return false; }
-            if (!GetWallet(client).TryDeduct(characterInfo.Salary)) { return false; }
+            if (!TryPurchase(client, characterInfo.Salary)) { return false; }
             characterInfo.IsNewHire = true;
             location.RemoveHireableCharacter(characterInfo);
             CrewManager.AddCharacterInfo(characterInfo);

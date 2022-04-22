@@ -37,6 +37,16 @@ namespace Barotrauma
         public Wallet PersonalWallet => Character.Controlled?.Wallet ?? Wallet.Invalid;
         public override Wallet Wallet => GetWallet();
 
+        public override int GetBalance(Client client = null)
+        {
+            if (!AllowedToManageWallets())
+            {
+                return PersonalWallet.Balance;
+            }
+
+            return PersonalWallet.Balance + Bank.Balance;
+        }
+
         public override Wallet GetWallet(Client client = null)
         {
             return PersonalWallet;
@@ -911,6 +921,31 @@ namespace Barotrauma
                     OnMoneyChanged.Invoke(new WalletChangedEvent(wallet, data, info));
                 }
             }
+        }
+
+        public override bool TryPurchase(Client client, int price)
+        {
+            if (!AllowedToManageCampaign(ClientPermissions.ManageCampaign))
+            {
+                return PersonalWallet.TryDeduct(price);
+            }
+
+            int balance = PersonalWallet.Balance;
+
+            if (balance >= price)
+            {
+                return PersonalWallet.TryDeduct(price);
+            }
+
+            if (balance + Bank.Balance >= price)
+            {
+                int remainder = price - balance;
+                if (balance > 0) { PersonalWallet.Deduct(balance); }
+                Bank.Deduct(remainder);
+                return true ;
+            }
+
+            return false;
         }
 
         public override void Save(XElement element)

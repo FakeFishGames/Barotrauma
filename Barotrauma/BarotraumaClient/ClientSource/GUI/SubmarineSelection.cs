@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using System.Linq;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System.Globalization;
 
 namespace Barotrauma
 {
@@ -31,7 +32,7 @@ namespace Barotrauma
         private readonly List<SubmarineInfo> subsToShow;
         private readonly SubmarineDisplayContent[] submarineDisplays = new SubmarineDisplayContent[submarinesPerPage];
         private SubmarineInfo selectedSubmarine = null;
-        private LocalizedString purchaseAndSwitchText, purchaseOnlyText, deliveryText, currentSubText, deliveryFeeText, priceText, switchText, missingPreviewText, currencyName;
+        private LocalizedString purchaseAndSwitchText, purchaseOnlyText, deliveryText, currentSubText, switchText, missingPreviewText, currencyName;
         private readonly RectTransform parent;
         private readonly Action closeAction;
         private Sprite pageIndicator;
@@ -85,12 +86,10 @@ namespace Barotrauma
         {
             initialized = true;
             currentSubText = TextManager.Get("currentsub");
-            deliveryFeeText = TextManager.Get("deliveryfee");
             deliveryText = TextManager.Get("requestdeliverybutton");
             switchText = TextManager.Get("switchtosubmarinebutton");
             purchaseAndSwitchText = TextManager.Get("purchaseandswitch");
             purchaseOnlyText = TextManager.Get("purchase");
-            priceText = TextManager.Get("price");
             if (transferService)
             {
                 deliveryFee = CalculateDeliveryFee();
@@ -327,12 +326,12 @@ namespace Barotrauma
                     };
 
                     submarineDisplays[i].submarineName.Text = subToDisplay.DisplayName;
-                    submarineDisplays[i].submarineClass.Text = $"{TextManager.GetWithVariable("submarineclass.classsuffixformat", "[type]", TextManager.Get($"submarineclass.{subToDisplay.SubmarineClass}"))}";
+                    submarineDisplays[i].submarineClass.Text = TextManager.GetWithVariable("submarineclass.classsuffixformat", "[type]", TextManager.Get($"submarineclass.{subToDisplay.SubmarineClass}"));
 
                     if (!GameMain.GameSession.IsSubmarineOwned(subToDisplay))
                     {
                         LocalizedString amountString = TextManager.FormatCurrency(subToDisplay.Price);
-                        submarineDisplays[i].submarineFee.Text = priceText.Replace("[amount]", amountString).Replace("[currencyname]", string.Empty).TrimEnd();
+                        submarineDisplays[i].submarineFee.Text = TextManager.GetWithVariable("price", "[amount]", amountString);
                     }
                     else
                     {
@@ -341,7 +340,7 @@ namespace Barotrauma
                             if (deliveryFee > 0)
                             {
                                 LocalizedString amountString = TextManager.FormatCurrency(deliveryFee);
-                                submarineDisplays[i].submarineFee.Text = deliveryFeeText.Replace("[amount]", amountString).Replace("[currencyname]", string.Empty).TrimEnd();
+                                submarineDisplays[i].submarineFee.Text = TextManager.GetWithVariable("deliveryfee", "[amount]", amountString);
                             }
                             else
                             {
@@ -577,7 +576,7 @@ namespace Barotrauma
 
         private void ShowTransferPrompt()
         {
-            if (!GameMain.GameSession.Campaign.Wallet.CanAfford(deliveryFee) && deliveryFee > 0)
+            if (!GameMain.GameSession.Campaign.CanAfford(deliveryFee) && deliveryFee > 0)
             {
                 new GUIMessageBox(TextManager.Get("deliveryrequestheader"), TextManager.GetWithVariables("notenoughmoneyfordeliverytext",
                     ("[currencyname]", currencyName),
@@ -625,7 +624,7 @@ namespace Barotrauma
 
         private void ShowBuyPrompt(bool purchaseOnly)
         {
-            if (!GameMain.GameSession.Campaign.Wallet.CanAfford(selectedSubmarine.Price))
+            if (!GameMain.GameSession.Campaign.CanAfford(selectedSubmarine.Price))
             {
                 new GUIMessageBox(TextManager.Get("purchasesubmarineheader"), TextManager.GetWithVariables("notenoughmoneyforpurchasetext",
                     ("[currencyname]", currencyName),

@@ -565,16 +565,20 @@ namespace Barotrauma.Items.Components
                     //Iterate through all connections in the group to get their minmax power and sum them
                     foreach (Connection c in scrGroup.Connections)
                     {
-                        Powered device = c.Item.GetComponent<Powered>();
-                        scrGroup.MinMaxPower += device.MinMaxPowerOut(c, grid.Load);
+                        foreach (var device in c.Item.GetComponents<Powered>())
+                        {
+                            scrGroup.MinMaxPower += device.MinMaxPowerOut(c, grid.Load);
+                        }
                     }
 
                     //Iterate through all connections to get their final power out provided the min max information
                     float addedPower = 0;
                     foreach (Connection c in scrGroup.Connections)
                     {
-                        Powered device = c.Item.GetComponent<Powered>();
-                        addedPower += device.GetConnectionPowerOut(c, grid.Power, scrGroup.MinMaxPower, grid.Load);
+                        foreach (var device in c.Item.GetComponents<Powered>())
+                        {
+                            addedPower += device.GetConnectionPowerOut(c, grid.Power, scrGroup.MinMaxPower, grid.Load);
+                        }
                     }
 
                     //Add the power to the grid
@@ -591,10 +595,12 @@ namespace Barotrauma.Items.Components
                 grid.Voltage = newVoltage;
 
                 //Iterate through all connections on that grid and run their gridResolved function
-                foreach (Connection con in grid.Connections)
+                foreach (Connection c in grid.Connections)
                 {
-                    Powered device = con.Item.GetComponent<Powered>();
-                    device?.GridResolved(con);
+                    foreach (var device in c.Item.GetComponents<Powered>())
+                    {
+                        device?.GridResolved(c);
+                    }
                 }
             }
 

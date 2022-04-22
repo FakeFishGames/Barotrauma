@@ -1,10 +1,12 @@
-﻿using Barotrauma.IO;
+﻿using System;
+using Barotrauma.IO;
 using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -107,6 +109,25 @@ namespace Barotrauma
             }
 
             var pathContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), isHorizontal: true);
+
+            string filePath = this.filePath;
+            if (filePath.StartsWith("Submarines"))
+            {
+                //this is the old submarines path, try to find a local mod that has a submarine with this name
+                string subName = Path.GetFileNameWithoutExtension(filePath);
+                string foundPath = ContentPackageManager.LocalPackages.Concat(ContentPackageManager.VanillaCorePackage.ToEnumerable())
+                    .SelectMany(p => p.GetFiles<SubmarineFile>())
+                    .FirstOrDefault(f => Path.GetFileNameWithoutExtension(f.Path.Value).Equals(subName, StringComparison.OrdinalIgnoreCase))
+                    ?.Path.Value;
+                if (foundPath.IsNullOrEmpty())
+                {
+                    //no such sub found among the local mods, just guess the correct path
+                    foundPath = Path.Combine(ContentPackage.LocalModsDir, subName, $"{subName}.sub");
+                }
+
+                filePath = foundPath;
+            }
+            
             var pathBox = new GUITextBox(new RectTransform(new Vector2(0.75f, 1.0f), pathContainer.RectTransform), filePath, font: GUIStyle.SmallFont);
             var reloadButton = new GUIButton(new RectTransform(new Vector2(0.25f / pathBox.RectTransform.RelativeSize.X, 1.0f), pathBox.RectTransform, Anchor.CenterRight, Pivot.CenterLeft), 
                                              TextManager.Get("ReloadLinkedSub"), style: "GUIButtonSmall")
