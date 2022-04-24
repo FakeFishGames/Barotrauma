@@ -457,7 +457,7 @@ namespace Barotrauma.MapCreatures.Behavior
                 int parentBranchId = branchElement.GetAttributeInt("parentbranch", -1);
 
                 BallastFloraBranch? parentBranch = null;
-                if (parentBranchId > -1)
+                if (parentBranchId > -1 && parentBranchId < Branches.Count)
                 {
                     parentBranch = Branches[parentBranchId];
                 }
