@@ -164,18 +164,14 @@ namespace Barotrauma.Networking
         }
         public bool HasSpawned; //has the client spawned as a character during the current round
         
-        private List<Client> kickVoters;
+        private readonly List<Client> kickVoters;
 
         public HashSet<Identifier> GivenAchievements = new HashSet<Identifier>();
 
         public ClientPermissions Permissions = ClientPermissions.None;
-        public List<DebugConsole.Command> PermittedConsoleCommands
-        {
-            get;
-            private set;
-        }
+        public readonly HashSet<DebugConsole.Command> PermittedConsoleCommands = new HashSet<DebugConsole.Command>();
 
-        private object[] votes;
+        private readonly object[] votes;
 
         public int KickVoteCount
         {
@@ -195,7 +191,6 @@ namespace Barotrauma.Networking
             this.Name = name;
             this.ID = ID;
 
-            PermittedConsoleCommands = new List<DebugConsole.Command>();
             kickVoters = new List<Client>();
 
             votes = new object[Enum.GetNames(typeof(VoteType)).Length];

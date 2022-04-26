@@ -597,7 +597,7 @@ namespace Barotrauma.Items.Components
                 else if (ic is PowerTransfer pt)
                 {
                     //power transfer items (junction boxes, relays) don't deteriorate if they're no carrying any power
-                    if (Math.Abs(pt.CurrPowerConsumption) > 0.1f) { return true; }
+                    if (pt.Voltage > 0.1f) { return true; }
                 }
                 else if (ic is PowerContainer pc)
                 {

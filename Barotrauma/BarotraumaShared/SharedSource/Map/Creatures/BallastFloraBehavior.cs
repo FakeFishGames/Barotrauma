@@ -51,11 +51,26 @@ namespace Barotrauma.MapCreatures.Behavior
         private bool inflate;
         private float pulseDelay = Rand.Range(0f, 3f);
 
-        public readonly BallastFloraBranch? ParentBranch;
+        private BallastFloraBranch? parentBranch;
+        public BallastFloraBranch? ParentBranch
+        {
+            get { return parentBranch; }
+            set
+            {
+                if (value != parentBranch)
+                {
+                    parentBranch = value;
+                    if (parentBranch != null)
+                    {
+                        BranchDepth = parentBranch.BranchDepth + 1;
+                    }
+                }
+            }
+        }
         /// <summary>
         /// How far from the root this branch is
         /// </summary>
-        public readonly int BranchDepth;
+        public int BranchDepth { get; private set; }
 
         public float AccumulatedDamage;
         public float DamageVisualizationTimer;
@@ -71,10 +86,6 @@ namespace Barotrauma.MapCreatures.Behavior
         {
             ParentBranch = parentBranch;
             ParentBallastFlora = parent;
-            if (parentBranch != null)
-            {
-                BranchDepth = parentBranch.BranchDepth + 1;
-            }
         }
 
         public void UpdateHealth()
@@ -319,6 +330,7 @@ namespace Barotrauma.MapCreatures.Behavior
 
             foreach (BallastFloraBranch branch in Branches)
             {
+                SetHull(branch);
                 if (branch.ClaimedItemId > -1)
                 {
                     if (Entity.FindEntityByID((ushort)branch.ClaimedItemId) is Item item)
@@ -422,6 +434,7 @@ namespace Barotrauma.MapCreatures.Behavior
 
         public void LoadSave(XElement element, IdRemap idRemap)
         {
+            List<(BallastFloraBranch branch, int parentBranchId)> branches = new List<(BallastFloraBranch branch, int parentBranchId)>();
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
             Offset = element.GetAttributeVector2("offset", Vector2.Zero);
             foreach (var subElement in element.Elements())
@@ -442,6 +455,14 @@ namespace Barotrauma.MapCreatures.Behavior
                 }
             }
 
+            foreach ((BallastFloraBranch branch, int parentBranchId) in branches)
+            {
+                if (parentBranchId > -1 && parentBranchId < Branches.Count)
+                {
+                    branch.ParentBranch = Branches[parentBranchId];
+                }
+            }
+
             void LoadBranch(XElement branchElement, IdRemap idRemap)
             {
                 Vector2 pos = branchElement.GetAttributeVector2("pos", Vector2.Zero);
@@ -456,13 +477,7 @@ namespace Barotrauma.MapCreatures.Behavior
                 int claimedId = branchElement.GetAttributeInt("claimed", -1);
                 int parentBranchId = branchElement.GetAttributeInt("parentbranch", -1);
 
-                BallastFloraBranch? parentBranch = null;
-                if (parentBranchId > -1)
-                {
-                    parentBranch = Branches[parentBranchId];
-                }
-
-                BallastFloraBranch newBranch = new BallastFloraBranch(this, parentBranch, pos, VineTileType.CrossJunction, FoliageConfig.Deserialize(flowerConfig), FoliageConfig.Deserialize(leafconfig))
+                BallastFloraBranch newBranch = new BallastFloraBranch(this, null, pos, VineTileType.CrossJunction, FoliageConfig.Deserialize(flowerConfig), FoliageConfig.Deserialize(leafconfig))
                 {
                     ID = id,
                     Health = health,
@@ -471,6 +486,8 @@ namespace Barotrauma.MapCreatures.Behavior
                     BlockedSides = (TileSide) blockedSides,
                     IsRoot = isRoot
                 };
+                branches.Add((newBranch, parentBranchId));
+
                 if (newBranch.IsRoot) { root = newBranch; }
 
                 if (claimedId > -1)
@@ -731,7 +748,7 @@ namespace Barotrauma.MapCreatures.Behavior
         }
 
         // could probably be moved to the branch constructor
-        private void SetHull(BallastFloraBranch branch)
+        public void SetHull(BallastFloraBranch branch)
         {
             branch.CurrentHull = Hull.FindHull(GetWorldPosition() + branch.Position, Parent, true);
         }
@@ -1204,7 +1221,7 @@ namespace Barotrauma.MapCreatures.Behavior
 
             _entityList.Remove(this);
 #if SERVER
-            CreateNetworkMessage(new KillEventData());
+            CreateNetworkMessage(new RemoveEventData());
 #endif
         }
 

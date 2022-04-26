@@ -19,6 +19,11 @@ namespace Barotrauma.MapCreatures.Behavior
             public NetworkHeader NetworkHeader => NetworkHeader.Kill;
         }
 
+        private readonly struct RemoveEventData : IEventData
+        {
+            public NetworkHeader NetworkHeader => NetworkHeader.Remove;
+        }
+
         private readonly struct BranchCreateEventData : IEventData
         {
             public NetworkHeader NetworkHeader => NetworkHeader.BranchCreate;

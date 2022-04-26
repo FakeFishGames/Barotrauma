@@ -443,6 +443,9 @@ namespace Barotrauma
         {
             removeQueue.Clear();
             spawnQueue.Clear();
+#if CLIENT
+            receivedEvents.Clear();
+#endif
         }
     }
 }

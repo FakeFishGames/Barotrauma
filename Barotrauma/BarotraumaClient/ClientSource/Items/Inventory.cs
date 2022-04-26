@@ -273,10 +273,16 @@ namespace Barotrauma
                         foreach (string tag in readTags)
                         {
                             string[] s = tag.Split(':');
-                            if (s[0] == "name")
-                                idName = s[1];
-                            if (s[0] == "job")
-                                idJob = s[1];
+                            switch (s[0])
+                            {
+                                case "name":
+                                    idName = s[1];
+                                    break;
+                                case "job":
+                                case "jobid":
+                                    idJob = s[1];
+                                    break;
+                            }
                         }
                         if (idName != null)
                         {

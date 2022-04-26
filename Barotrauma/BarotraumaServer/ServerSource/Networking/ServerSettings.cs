@@ -466,7 +466,7 @@ namespace Barotrauma.Networking
                 }
 
                 ClientPermissions permissions = Networking.ClientPermissions.None;
-                List<DebugConsole.Command> permittedCommands = new List<DebugConsole.Command>();
+                HashSet<DebugConsole.Command> permittedCommands = new HashSet<DebugConsole.Command>();
 
                 if (clientElement.Attribute("preset") == null)
                 {
@@ -496,7 +496,7 @@ namespace Barotrauma.Networking
                     else
                     {
                         permissions = preset.Permissions;
-                        permittedCommands = preset.PermittedCommands.ToList();
+                        permittedCommands = preset.PermittedCommands.ToHashSet();
                     }
                 }
 
@@ -560,15 +560,15 @@ namespace Barotrauma.Networking
             foreach (string line in lines)
             {
                 string[] separatedLine = line.Split('|');
-                if (separatedLine.Length < 3) continue;
+                if (separatedLine.Length < 3) { continue; }
 
                 string name = string.Join("|", separatedLine.Take(separatedLine.Length - 2));
                 string ip = separatedLine[separatedLine.Length - 2];
 
-                ClientPermissions permissions = Networking.ClientPermissions.None;
+                ClientPermissions permissions;
                 if (Enum.TryParse(separatedLine.Last(), out permissions))
                 {
-                    ClientPermissions.Add(new SavedClientPermission(name, ip, permissions, new List<DebugConsole.Command>()));
+                    ClientPermissions.Add(new SavedClientPermission(name, ip, permissions, new HashSet<DebugConsole.Command>()));
                 }
             }
         }

@@ -79,12 +79,13 @@ namespace Barotrauma.Networking
             Starting,
             WaitingForStartGameFinalize,
             Started,
-            TimedOut,
             Error,
             Interrupted
         }
 
         private RoundInitStatus roundInitStatus = RoundInitStatus.NotStarted;
+
+        public bool RoundStarting => roundInitStatus == RoundInitStatus.Starting || roundInitStatus == RoundInitStatus.WaitingForStartGameFinalize;
 
         private byte myID;
 
@@ -690,11 +691,8 @@ namespace Barotrauma.Networking
         {
             ServerPacketHeader header = (ServerPacketHeader)inc.ReadByte();
 
-            if (roundInitStatus != RoundInitStatus.Started &&
-                roundInitStatus != RoundInitStatus.NotStarted &&
-                roundInitStatus != RoundInitStatus.Error &&
-                roundInitStatus != RoundInitStatus.Interrupted &&
-                header != ServerPacketHeader.STARTGAMEFINALIZE &&
+            if (roundInitStatus == RoundInitStatus.WaitingForStartGameFinalize &&
+                roundInitStatus == RoundInitStatus.Started &&
                 header != ServerPacketHeader.ENDGAME &&
                 header != ServerPacketHeader.PING_REQUEST &&
                 header != ServerPacketHeader.FILE_TRANSFER)
@@ -1686,11 +1684,14 @@ namespace Barotrauma.Networking
             roundInitStatus = RoundInitStatus.WaitingForStartGameFinalize;
 
             DateTime? timeOut = null;
+            TimeSpan timeOutDuration = new TimeSpan(0, 0, seconds: 30);
             DateTime requestFinalizeTime = DateTime.Now;
             TimeSpan requestFinalizeInterval = new TimeSpan(0, 0, 2);
             IWriteMessage msg = new WriteOnlyMessage();
             msg.Write((byte)ClientPacketHeader.REQUEST_STARTGAMEFINALIZE);
             clientPeer.Send(msg, DeliveryMethod.Unreliable);
+
+            GUIMessageBox interruptPrompt = null;
 
             while (true)
             {
@@ -1705,11 +1706,30 @@ namespace Barotrauma.Networking
                             clientPeer.Send(msg, DeliveryMethod.Unreliable);
                             requestFinalizeTime = DateTime.Now + requestFinalizeInterval;
                         }
-                        if (DateTime.Now > timeOut)
+                        if (DateTime.Now > timeOut && interruptPrompt == null)
                         {
-                            DebugConsole.ThrowError("Error while starting the round (did not receive STARTGAMEFINALIZE message from the server). Stopping the round...");
-                            roundInitStatus = RoundInitStatus.TimedOut;
-                            break;
+                            interruptPrompt = new GUIMessageBox(string.Empty, TextManager.Get("WaitingForStartGameFinalizeTakingTooLong"),
+                                new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") })
+                            {
+                                DisplayInLoadingScreens = true
+                            };
+                            interruptPrompt.Buttons[0].OnClicked += (btn, userData) =>
+                            {
+                                roundInitStatus = RoundInitStatus.Interrupted;
+                                DebugConsole.ThrowError("Error while starting the round (did not receive STARTGAMEFINALIZE message from the server). Returning to the lobby...");
+                                gameStarted = true;
+                                GameMain.NetLobbyScreen.Select();
+                                interruptPrompt.Close();
+                                interruptPrompt = null;
+                                return true;
+                            };
+                            interruptPrompt.Buttons[1].OnClicked += (btn, userData) =>
+                            {
+                                timeOut = DateTime.Now + timeOutDuration;
+                                interruptPrompt.Close();
+                                interruptPrompt = null;
+                                return true;
+                            };
                         }
                     }
                     else
@@ -1721,7 +1741,7 @@ namespace Barotrauma.Networking
                         }
 
                         //wait for up to 30 seconds for the server to send the STARTGAMEFINALIZE message
-                        timeOut = DateTime.Now + new TimeSpan(0, 0, seconds: 30);
+                        timeOut = DateTime.Now + timeOutDuration;
                     }
 
                     if (!connected)
@@ -1742,6 +1762,9 @@ namespace Barotrauma.Networking
                 //waiting for a STARTGAMEFINALIZE message
                 yield return CoroutineStatus.Running;
             }
+
+            interruptPrompt?.Close();
+            interruptPrompt = null;
 
             if (roundInitStatus != RoundInitStatus.Started)
             {
@@ -3093,7 +3116,31 @@ namespace Barotrauma.Networking
 
         protected GUIFrame inGameHUD;
         protected ChatBox chatBox;
+
         public GUIButton ShowLogButton; //TODO: move to NetLobbyScreen
+        private bool hasPermissionToUseLogButton;
+
+        public void UpdateLogButtonPermissions()
+        {
+            hasPermissionToUseLogButton = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
+            UpdateLogButtonVisibility();
+        }
+
+        private void UpdateLogButtonVisibility()
+        {
+            if (ShowLogButton != null)
+            {
+                if (Screen.Selected != GameMain.GameScreen)
+                {
+                    ShowLogButton.Visible = hasPermissionToUseLogButton;
+                }
+                else
+                {
+                    var campaign = GameMain.GameSession?.Campaign;
+                    ShowLogButton.Visible = hasPermissionToUseLogButton && (campaign == null || !campaign.ShowCampaignUI);
+                }
+            }
+        }
         
         public GUIFrame InGameHUD
         {
@@ -3172,6 +3219,8 @@ namespace Barotrauma.Networking
             {
                 msgBox = GameMain.NetLobbyScreen.ChatInput;
             }
+
+            UpdateLogButtonVisibility();
 
             if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
@@ -3646,6 +3695,19 @@ namespace Barotrauma.Networking
             foreach (Entity e in sortedEntities)
             {
                 errorLines.Add(e.ErrorLine);
+            }
+
+            if (Entity.Spawner != null)
+            {
+                errorLines.Add("");
+                errorLines.Add("EntitySpawner events:");
+                foreach ((Entity entity, bool isRemoval) in Entity.Spawner.receivedEvents)
+                {
+                    errorLines.Add(
+                        (isRemoval ? "Remove " : "Create ") +
+                        entity.ToString() +
+                        " (" + entity.ID + ")");
+                }
             }
 
             errorLines.Add("");

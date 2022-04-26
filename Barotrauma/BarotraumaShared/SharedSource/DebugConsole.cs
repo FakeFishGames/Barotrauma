@@ -1746,20 +1746,12 @@ namespace Barotrauma
                     ThrowError(args[1] + " is not a valid latency value.");
                     return;
                 }
-#if CLIENT
-                if (GameMain.Client != null)
+                if (GameMain.NetworkMember != null)
                 {
-                    GameMain.Client.SimulatedMinimumLatency = minimumLatency;
-                    GameMain.Client.SimulatedRandomLatency = randomLatency;
+                    GameMain.NetworkMember.SimulatedMinimumLatency = minimumLatency;
+                    GameMain.NetworkMember.SimulatedRandomLatency = randomLatency;
                 }
-#elif SERVER
-                if (GameMain.Server != null)
-                {
-                    GameMain.Server.SimulatedMinimumLatency = minimumLatency;
-                    GameMain.Server.SimulatedRandomLatency = randomLatency;
-                }
-#endif
-                NewMessage("Set simulated minimum latency to " + minimumLatency + " and random latency to " + randomLatency + ".", Color.White);
+                NewMessage("Set simulated minimum latency to " + minimumLatency.ToString(CultureInfo.InvariantCulture) + " and random latency to " + randomLatency.ToString(CultureInfo.InvariantCulture) + ".", Color.White);
             }));
 
             commands.Add(new Command("simulatedloss", "simulatedloss [lossratio]: applies simulated packet loss to network messages. For example, a value of 0.1 would mean 10% of the packets are dropped. Useful for simulating real network conditions when testing the multiplayer locally.", (string[] args) =>
@@ -1770,17 +1762,10 @@ namespace Barotrauma
                     ThrowError(args[0] + " is not a valid loss ratio.");
                     return;
                 }
-#if CLIENT
-                if (GameMain.Client != null)
+                if (GameMain.NetworkMember != null)
                 {
-                    GameMain.Client.SimulatedLoss = loss;
+                    GameMain.NetworkMember.SimulatedLoss = loss;
                 }
-#elif SERVER
-                if (GameMain.Server != null)
-                {
-                    GameMain.Server.SimulatedLoss = loss;
-                }
-#endif
                 NewMessage("Set simulated packet loss to " + (int)(loss * 100) + "%.", Color.White);
             }));
             commands.Add(new Command("simulatedduplicateschance", "simulatedduplicateschance [duplicateratio]: simulates packet duplication in network messages. For example, a value of 0.1 would mean there's a 10% chance a packet gets sent twice. Useful for simulating real network conditions when testing the multiplayer locally.", (string[] args) =>
@@ -1791,21 +1776,27 @@ namespace Barotrauma
                     ThrowError(args[0] + " is not a valid duplicate ratio.");
                     return;
                 }
-#if CLIENT
-                if (GameMain.Client != null)
+                if (GameMain.NetworkMember != null)
                 {
-                    GameMain.Client.SimulatedDuplicatesChance = duplicates;
+                    GameMain.NetworkMember.SimulatedDuplicatesChance = duplicates;
                 }
-#elif SERVER
-                if (GameMain.Server != null)
-                {
-                    GameMain.Server.SimulatedDuplicatesChance = duplicates;
-                }
-#endif
                 NewMessage("Set packet duplication to " + (int)(duplicates * 100) + "%.", Color.White);
             }));
 
 #if DEBUG
+
+            commands.Add(new Command("simulatedlongloadingtime", "simulatedlongloadingtime [minimum loading time]: forces loading a round to take at least the specified amount of seconds.", (string[] args) =>
+            {
+                if (args.Count() < 1 || (GameMain.NetworkMember == null)) return;
+                if (!float.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out float time))
+                {
+                    ThrowError(args[0] + " is not a valid duration ratio.");
+                    return;
+                }
+                GameSession.MinimumLoadingTime = time;                
+                NewMessage("Set minimum loading time to " + time + " seconds.", Color.White);
+            }));
+
             commands.Add(new Command("storeinfo", "", (string[] args) =>
             {
                 if (GameMain.GameSession?.Map?.CurrentLocation is Location location)

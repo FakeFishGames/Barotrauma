@@ -7,6 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
+using PlayerBalanceElement = Barotrauma.CampaignUI.PlayerBalanceElement;
 
 namespace Barotrauma
 {
@@ -179,6 +180,8 @@ namespace Barotrauma
         private bool isWaitingForServer;
         private const float refreshTimerMax = 3f;
         private float refreshTimer = 0;
+
+        private PlayerBalanceElement? playerBalanceElement;
 
         public MedicalClinicUI(MedicalClinic clinic, GUIComponent parent)
         {
@@ -428,6 +431,7 @@ namespace Barotrauma
         {
             container.ClearChildren();
             pendingHealList = null;
+            playerBalanceElement = null;
             int panelMaxWidth = (int)(GUI.xScale * (GUI.HorizontalAspectRatio < 1.4f ? 650 : 560));
 
             GUIFrame paddedParent = new GUIFrame(new RectTransform(new Vector2(0.95f), container.RectTransform, Anchor.Center), style: null);
@@ -458,19 +462,7 @@ namespace Barotrauma
                 RelativeSpacing = 0.01f
             };
 
-            GUILayoutGroup balanceLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.1f), crewContent.RectTransform));
-            GUITextBlock balanceLabel = new GUITextBlock(new RectTransform(new Vector2(1f, 0.5f), balanceLayout.RectTransform), TextManager.Get("campaignstore.balance"), textAlignment: Alignment.BottomRight, font: GUIStyle.Font)
-            {
-                AutoScaleVertical = true,
-                ForceUpperCase = ForceUpperCase.Yes
-            };
-
-            GUITextBlock moneyLabel = new GUITextBlock(new RectTransform(new Vector2(1f, 0.5f), balanceLayout.RectTransform), string.Empty, textAlignment: Alignment.TopRight, font: GUIStyle.SubHeadingFont)
-            {
-                TextGetter = () => TextManager.FormatCurrency(medicalClinic.GetBalance()),
-                AutoScaleVertical = true,
-                TextScale = 1.1f
-            };
+            playerBalanceElement = CampaignUI.AddBalanceElement(crewContent, new Vector2(1f, 0.1f));
 
             GUIFrame crewBackground = new GUIFrame(new RectTransform(Vector2.One, crewContent.RectTransform));
 
@@ -1049,6 +1041,10 @@ namespace Barotrauma
             if (prevResolution.X != GameMain.GraphicsWidth || prevResolution.Y != GameMain.GraphicsHeight)
             {
                 CreateUI();
+            }
+            else
+            {
+                playerBalanceElement = CampaignUI.UpdateBalanceElement(playerBalanceElement);
             }
 
             refreshTimer += deltaTime;

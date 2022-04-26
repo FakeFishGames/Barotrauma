@@ -11,6 +11,7 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using PlayerBalanceElement = Barotrauma.CampaignUI.PlayerBalanceElement;
 
 // ReSharper disable UnusedVariable
 
@@ -74,6 +75,8 @@ namespace Barotrauma
         private Point screenResolution;
 
         private bool needsRefresh = true;
+
+        private PlayerBalanceElement? playerBalanceElement;
 
         /// <summary>
         /// While set to true any call to <see cref="RefreshUpgradeList"/> will cause the buy button to be disabled and to not update the prices.
@@ -293,9 +296,14 @@ namespace Barotrauma
              * |---------------------------------------------------------------------------------------------------|
              */
             GUILayoutGroup rightLayout = new GUILayoutGroup(rectT(0.5f, 1, topHeaderLayout), childAnchor: Anchor.TopRight);
-                GUILayoutGroup priceLayout = new GUILayoutGroup(rectT(1, 0.8f, rightLayout), childAnchor: Anchor.Center) { RelativeSpacing = 0.08f };
-                    new GUITextBlock(rectT(1f, 0f, priceLayout), TextManager.Get("CampaignStore.Balance"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Right);
-                    new GUITextBlock(rectT(1f, 0f, priceLayout), TextManager.FormatCurrency(PlayerBalance), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Right) { TextGetter = () => TextManager.FormatCurrency(PlayerBalance) };
+            playerBalanceElement = CampaignUI.AddBalanceElement(rightLayout, new Vector2(1.0f, 0.8f));
+            if (playerBalanceElement is { } balanceElement)
+            {
+                balanceElement.TotalBalanceContainer.OnAddedToGUIUpdateList += (_) =>
+                {
+                    playerBalanceElement = CampaignUI.UpdateBalanceElement(playerBalanceElement);
+                };
+            }
             new GUIFrame(rectT(0.5f, 0.1f, rightLayout, Anchor.BottomRight), style: "HorizontalLine") { IgnoreLayoutGroups = true };
 
             repairButton.OnClicked = upgradeButton.OnClicked = (button, o) =>

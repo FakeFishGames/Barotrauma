@@ -37,7 +37,7 @@ namespace Barotrauma.Networking
         public readonly LocalizedString Name;
         public readonly LocalizedString Description;
         public readonly ClientPermissions Permissions;
-        public readonly List<DebugConsole.Command> PermittedCommands;
+        public readonly HashSet<DebugConsole.Command> PermittedCommands;
         
         public PermissionPreset(XElement element)
         {
@@ -51,7 +51,7 @@ namespace Barotrauma.Networking
                 DebugConsole.ThrowError("Error in permission preset \"" + Name + "\" - " + permissionsStr + " is not a valid permission!");
             }
 
-            PermittedCommands = new List<DebugConsole.Command>();
+            PermittedCommands = new HashSet<DebugConsole.Command>();
             if (Permissions.HasFlag(ClientPermissions.ConsoleCommands))
             {
                 foreach (var subElement in element.Elements())
@@ -87,7 +87,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public bool MatchesPermissions(ClientPermissions permissions, List<DebugConsole.Command> permittedConsoleCommands)
+        public bool MatchesPermissions(ClientPermissions permissions, HashSet<DebugConsole.Command> permittedConsoleCommands)
         {
             return permissions == this.Permissions && PermittedCommands.SequenceEqual(permittedConsoleCommands);
         }

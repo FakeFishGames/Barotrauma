@@ -33,9 +33,6 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        private JobPrefab cachedJobPrefab;
-        private string cachedName;
-
         public ImmutableHashSet<Identifier> OwnerTagSet { get; set; }
 
         [Serialize("", IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]

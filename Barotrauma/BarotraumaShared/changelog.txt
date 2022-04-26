@@ -1,4 +1,27 @@
 ---------------------------------------------------------------------------------------------------------
+v0.17.14.0
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Display both wallet and bank balance on campaign interfaces when the player has access to the bank funds.
+
+Fixes:
+- Hopefully fixed the frequent "SteamP2P connection timed out" errors during loading screens.
+- Fixed "missing entity" error when a character who's stats have been modified by a talent gets removed (e.g. eaten by a monster, despawning).
+- If starting a multiplayer round takes a long time, instead of throwing the "did not receive STARTGAMEFINALIZE message" error, you're asked whether you want to keep waiting or return to the lobby.
+- Fixed "failed to parse the string 'COLOR.GUI.GREEN' to Color" errors when using the submarine upgrade interface in Spanish.
+- Fixed junction boxes not deteriorating over time.
+- Fixed turrets being able to fire without consuming power when the power is wired to some other connection than power_in.
+- Fixed broken supercapacitors providing unlimited power to turrets.
+- Fixed IsMale/IsFemale properties resetting when saving and reloading (not used by the vanilla game).
+- Fixed haloperidol not healing psychosis.
+- Fixed ballast flora sometimes becoming unkillable client-side when entering a new level.
+- Fixed the Server Log button overlapping campaign interfaces by hiding it whenever a campaign interface is open.
+- Fixed an inconsistency in the assault rifle mag recipe.
+- Fixed job not showing up in ID card description.
+- Fixed store interface not being updated when the player balance changes.
+
+---------------------------------------------------------------------------------------------------------
 v0.17.13.0
 ---------------------------------------------------------------------------------------------------------
 

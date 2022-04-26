@@ -966,7 +966,15 @@ namespace Barotrauma
             {
                 OnClicked = (_, __) =>
                 {
-                    GameMain.Client?.RequestSelectMode(ModeList.Content.GetChildIndex(ModeList.Content.GetChildByUserData(GameModePreset.Sandbox)));
+                    if (GameMain.Client == null) { return false; }
+                    if (GameMain.Client.GameStarted)
+                    {
+                        GameMain.Client.RequestRoundEnd(save: false);
+                    }
+                    else
+                    {
+                        GameMain.Client.RequestSelectMode(ModeList.Content.GetChildIndex(ModeList.Content.GetChildByUserData(GameModePreset.Sandbox)));
+                    }
                     return true;
                 }
             };
@@ -1344,9 +1352,9 @@ namespace Barotrauma
             shuttleTickBox.Enabled = GameMain.Client.HasPermission(ClientPermissions.ManageSettings) && !GameMain.Client.GameStarted;
             SubList.Enabled = !CampaignFrame.Visible && (GameMain.Client.ServerSettings.AllowSubVoting || GameMain.Client.HasPermission(ClientPermissions.SelectSub));
             ShuttleList.Enabled = ShuttleList.ButtonEnabled = GameMain.Client.HasPermission(ClientPermissions.SelectSub) && !GameMain.Client.GameStarted;
-            ModeList.Enabled = GameMain.Client.ServerSettings.AllowModeVoting || GameMain.Client.HasPermission(ClientPermissions.SelectMode);
+            ModeList.Enabled = !GameMain.Client.GameStarted && (GameMain.Client.ServerSettings.AllowModeVoting || GameMain.Client.HasPermission(ClientPermissions.SelectMode));
             LogButtons.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
-            GameMain.Client.ShowLogButton.Visible = GameMain.Client.HasPermission(ClientPermissions.ServerLog);
+            GameMain.Client.UpdateLogButtonPermissions();
             roundControlsHolder.Children.ForEach(c => c.IgnoreLayoutGroups = !c.Visible);
             roundControlsHolder.Children.ForEach(c => c.RectTransform.RelativeSize = Vector2.One);
             roundControlsHolder.Recalculate();

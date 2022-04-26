@@ -1,13 +1,11 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Media;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
-using System.Xml.Linq;
-using Barotrauma.Media;
 using System.Linq;
-using Barotrauma.Extensions;
-using System.Collections.Immutable;
 
 namespace Barotrauma
 {
@@ -16,7 +14,7 @@ namespace Barotrauma
         private readonly Texture2D defaultBackgroundTexture, overlay;
         private readonly SpriteSheet decorativeGraph, decorativeMap;
         private Texture2D currentBackgroundTexture;
-        private Sprite noiseSprite;
+        private readonly Sprite noiseSprite;
 
         private string randText = "";
 
@@ -250,8 +248,8 @@ namespace Barotrauma
                         }
                     }
                 }
-
             }
+            GUI.DrawMessageBoxesOnly(spriteBatch);
             spriteBatch.End();
 
             spriteBatch.Begin(blendState: BlendState.Additive);

@@ -739,9 +739,112 @@ namespace Barotrauma
             return TextManager.GetWithVariable("PlayerCredits", "[credits]", (GameMain.GameSession?.Campaign == null) ? "0" : string.Format(CultureInfo.InvariantCulture, "{0:N0}", GameMain.GameSession.Campaign.GetBalance()));
         }
 
+        public static LocalizedString GetTotalBalance()
+        {
+            return TextManager.FormatCurrency(GameMain.GameSession?.Campaign is { } campaign ? campaign.GetBalance() : 0);
+        }
+
+        public static LocalizedString GetBankBalance()
+        {
+            return TextManager.FormatCurrency(GameMain.GameSession?.Campaign is { } campaign ? campaign.Bank.Balance : 0);
+        }
+
+        public static LocalizedString GetWalletBalance()
+        {
+            return TextManager.FormatCurrency(GameMain.GameSession?.Campaign is { } campaign ? campaign.Wallet.Balance : 0);
+        }
+
         private void UpdateMaxMissions(Location location)
         {
             hasMaxMissions = Campaign.NumberOfMissionsAtLocation(location) >= Campaign.Settings.TotalMaxMissionCount;
+        }
+
+        public readonly struct PlayerBalanceElement
+        {
+            public readonly bool DisplaySeparateBalances;
+            public readonly GUILayoutGroup ParentComponent;
+            public readonly GUILayoutGroup TotalBalanceContainer;
+            public readonly GUILayoutGroup BankBalanceContainer;
+
+            public PlayerBalanceElement(bool displaySeparateBalances, GUILayoutGroup parentComponent, GUILayoutGroup totalBalanceContainer, GUILayoutGroup bankBalanceContainer)
+            {
+                DisplaySeparateBalances = displaySeparateBalances;
+                ParentComponent = parentComponent;
+                TotalBalanceContainer = totalBalanceContainer;
+                BankBalanceContainer = bankBalanceContainer;
+            }
+
+            public PlayerBalanceElement(PlayerBalanceElement element, bool displaySeparateBalances)
+            {
+                DisplaySeparateBalances = displaySeparateBalances;
+                ParentComponent = element.ParentComponent;
+                TotalBalanceContainer = element.TotalBalanceContainer;
+                BankBalanceContainer = element.BankBalanceContainer;
+            }
+        }
+
+        public static PlayerBalanceElement? AddBalanceElement(GUIComponent elementParent, Vector2 relativeSize)
+        {
+            var parent = new GUILayoutGroup(new RectTransform(relativeSize, elementParent.RectTransform), isHorizontal: true, childAnchor: Anchor.TopRight);
+            if (GameMain.IsSingleplayer)
+            {
+                AddBalance(parent, true, TextManager.Get("campaignstore.balance"), GetTotalBalance);
+                return null;
+            }
+            else
+            {
+                bool displaySeparateBalances = CampaignMode.AllowedToManageWallets();
+                var totalBalanceContainer = AddBalance(parent, displaySeparateBalances, TextManager.Get("campaignstore.total"), GetTotalBalance);
+                var bankBalanceContainer = AddBalance(parent, displaySeparateBalances, TextManager.Get("crewwallet.bank"), GetBankBalance);
+                AddBalance(parent, true, TextManager.Get("crewwallet.wallet"), GetWalletBalance);
+                var playerBalanceElement = new PlayerBalanceElement(displaySeparateBalances, parent, totalBalanceContainer, bankBalanceContainer);
+                parent.Recalculate();
+                return playerBalanceElement;
+            }
+
+            static GUILayoutGroup AddBalance(GUIComponent parent, bool visible, LocalizedString text, GUITextBlock.TextGetterHandler textGetter)
+            {
+                float balanceContainerWidth = GameMain.IsSingleplayer ? 1 : 1 / 3f;
+                var rt = new RectTransform(new Vector2(balanceContainerWidth, 1.0f), parent.RectTransform)
+                {
+                    MaxSize = new Point(120, int.MaxValue)
+                };
+                var balanceContainer = new GUILayoutGroup(rt, childAnchor: Anchor.TopRight)
+                {
+                    RelativeSpacing = 0.005f,
+                    Visible = visible
+                };
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), balanceContainer.RectTransform), text,
+                    font: GUIStyle.Font, textAlignment: Alignment.BottomRight)
+                {
+                    AutoScaleVertical = true,
+                    ForceUpperCase = ForceUpperCase.Yes
+                };
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), balanceContainer.RectTransform), "",
+                    textColor: Color.White, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.TopRight)
+                {
+                    AutoScaleVertical = true,
+                    TextScale = 1.1f,
+                    TextGetter = textGetter
+                };
+                return balanceContainer;
+            }
+        }
+
+        public static PlayerBalanceElement? UpdateBalanceElement(PlayerBalanceElement? playerBalanceElement)
+        {
+            if (playerBalanceElement is { } balanceElement)
+            {
+                bool displaySeparateBalances = CampaignMode.AllowedToManageWallets();
+                if (displaySeparateBalances != balanceElement.DisplaySeparateBalances)
+                {
+                    balanceElement.TotalBalanceContainer.Visible = displaySeparateBalances;
+                    balanceElement.BankBalanceContainer.Visible = displaySeparateBalances;
+                    playerBalanceElement = new PlayerBalanceElement(balanceElement, displaySeparateBalances);
+                    balanceElement.ParentComponent.Recalculate();
+                }
+            }
+            return playerBalanceElement;
         }
     }
 }

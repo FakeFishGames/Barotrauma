@@ -32,11 +32,10 @@ namespace Barotrauma
             base.DrawPlacing(spriteBatch, cam);
             foreach ((Identifier identifier, Rectangle rect) in DisplayEntities)
             {
-                var entityPrefab = MapEntityPrefab.Find(p => p.Identifier == identifier);
+                var entityPrefab = FindByIdentifier(identifier);
+                if (entityPrefab == null) { continue; }
                 Rectangle drawRect = rect;
-
-                drawRect.Location += placePosition != Vector2.Zero ? placePosition.ToPoint() : Submarine.MouseToWorldGrid(cam, Submarine.MainSub).ToPoint();
-                
+                drawRect.Location += placePosition != Vector2.Zero ? placePosition.ToPoint() : Submarine.MouseToWorldGrid(cam, Submarine.MainSub).ToPoint();                
                 entityPrefab.DrawPlacing(spriteBatch, drawRect, entityPrefab.Scale);
             }
         }

@@ -584,19 +584,16 @@ namespace Barotrauma.Items.Components
         {
             availableCharge = 0.0f;
             availableCapacity = 0.0f;
-            if (item.Connections == null) { return; }
-            foreach (Connection c in item.Connections)
+            if (item.Connections == null || powerIn == null) { return; }       
+            var recipients = powerIn.Recipients;
+            foreach (Connection recipient in recipients)
             {
-                var recipients = c.Recipients;
-                foreach (Connection recipient in recipients)
-                {
-                    if (!recipient.IsPower || !recipient.IsOutput) { continue; }
-                    var battery = recipient.Item?.GetComponent<PowerContainer>();
-                    if (battery == null) { continue; }
-                    availableCharge += battery.Charge;
-                    availableCapacity += battery.Capacity;
-                }
-            }
+                if (!recipient.IsPower || !recipient.IsOutput) { continue; }
+                var battery = recipient.Item?.GetComponent<PowerContainer>();
+                if (battery == null || battery.Item.Condition <= 0.0f) { continue; }
+                availableCharge += battery.Charge;
+                availableCapacity += battery.Capacity;
+            }            
         }
 
         /// <summary>

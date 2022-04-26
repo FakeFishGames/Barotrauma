@@ -694,6 +694,7 @@ namespace Barotrauma
             AssignRelayToServer("simulatedlatency", false);
             AssignRelayToServer("simulatedloss", false);
             AssignRelayToServer("simulatedduplicateschance", false);
+            AssignRelayToServer("simulatedlongloadingtime", false);
             AssignRelayToServer("storeinfo", false);
 #endif
 

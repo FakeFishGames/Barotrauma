@@ -153,7 +153,10 @@ namespace Barotrauma.Networking
         {
             if (!isActive) { return; }
 
-            timeout -= deltaTime;
+            if (GameMain.Client == null || !GameMain.Client.RoundStarting)
+            {
+                timeout -= deltaTime;
+            }
             heartbeatTimer -= deltaTime;
 
             if (initializationStep != ConnectionInitialization.Password &&

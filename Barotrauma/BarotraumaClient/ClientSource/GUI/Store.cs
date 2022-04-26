@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using PlayerBalanceElement = Barotrauma.CampaignUI.PlayerBalanceElement;
 
 namespace Barotrauma
 {
@@ -65,6 +66,8 @@ namespace Barotrauma
         private bool needsRefresh, needsBuyingRefresh, needsSellingRefresh, needsItemsToSellRefresh, needsSellingFromSubRefresh, needsItemsToSellFromSubRefresh;
 
         private Point resolutionWhenCreated;
+
+        private PlayerBalanceElement? playerBalanceElement;
 
         private Dictionary<ItemPrefab, ItemQuantity> OwnedItems { get; } = new Dictionary<ItemPrefab, ItemQuantity>();
         private Location.StoreInfo ActiveStore { get; set; }
@@ -647,23 +650,7 @@ namespace Barotrauma
             };
 
             // Player balance ------------------------------------------------
-            var playerBalanceContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.75f / 14.0f), shoppingCrateContent.RectTransform), childAnchor: Anchor.TopRight)
-            {
-                RelativeSpacing = 0.005f
-            };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), playerBalanceContainer.RectTransform),
-                TextManager.Get("campaignstore.balance"), font: GUIStyle.Font, textAlignment: Alignment.BottomRight)
-            {
-                AutoScaleVertical = true,
-                ForceUpperCase = ForceUpperCase.Yes
-            };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), playerBalanceContainer.RectTransform),
-                "", textColor: Color.White, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.TopRight)
-            {
-                AutoScaleVertical = true,
-                TextScale = 1.1f,
-                TextGetter = GetPlayerBalanceText
-            };
+            playerBalanceElement = CampaignUI.AddBalanceElement(shoppingCrateContent, new Vector2(1.0f, 0.75f / 14.0f));
 
             // Divider ------------------------------------------------
             var dividerFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.6f / 14.0f), shoppingCrateContent.RectTransform), style: null);
@@ -695,7 +682,7 @@ namespace Barotrauma
             {
                 CanBeFocused = false,
                 TextScale = 1.1f,
-                TextGetter = () => IsBuying ? GetPlayerBalanceText() : GetMerchantBalanceText()
+                TextGetter = () => IsBuying ? CampaignUI.GetTotalBalance() : GetMerchantBalanceText()
             };
 
             var totalContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), shoppingCrateInventoryContainer.RectTransform), isHorizontal: true)
@@ -743,8 +730,6 @@ namespace Barotrauma
         }
 
         private LocalizedString GetMerchantBalanceText() => TextManager.FormatCurrency(ActiveStore?.Balance ?? 0);
-
-        private LocalizedString GetPlayerBalanceText() => TextManager.FormatCurrency(Balance);
 
         private GUILayoutGroup CreateDealsGroup(GUIListBox parentList, int elementCount)
         {
@@ -2183,6 +2168,7 @@ namespace Barotrauma
                 ActiveShoppingCrateList.Content.RectTransform.Children.Any();
         }
 
+        private int prevBalance;
         private float ownedItemsUpdateTimer = 0.0f, sellableItemsFromSubUpdateTimer = 0.0f;
         private const float timerUpdateInterval = 1.5f;
         private readonly Stopwatch updateStopwatch = new Stopwatch();
@@ -2198,6 +2184,8 @@ namespace Barotrauma
             }
             else
             {
+                playerBalanceElement = CampaignUI.UpdateBalanceElement(playerBalanceElement);
+
                 // Update the owned items at short intervals and check if the interface should be refreshed
                 ownedItemsUpdateTimer += deltaTime;
                 if (ownedItemsUpdateTimer >= timerUpdateInterval)
@@ -2232,6 +2220,16 @@ namespace Barotrauma
                             itemsToSellFromSub.Any(i => !(prevSubItems.FirstOrDefault(prev => prev.ItemPrefab == i.ItemPrefab) is PurchasedItem prev) || i.Quantity != prev.Quantity) ||
                             prevSubItems.Any(prev => itemsToSellFromSub.None(i => i.ItemPrefab == prev.ItemPrefab));
                     }
+                }
+            }
+            // Refresh the interface if balance changes and the buy tab is open
+            if (activeTab == StoreTab.Buy)
+            {
+                int currBalance = Balance;
+                if (prevBalance != currBalance)
+                {
+                    needsBuyingRefresh = true;
+                    prevBalance = currBalance;
                 }
             }
             if (needsItemsToSellRefresh)

@@ -677,21 +677,18 @@ namespace Barotrauma.Items.Components
         /// </summary>
         protected float GetAvailableInstantaneousBatteryPower()
         {
-            if (item.Connections == null) { return 0.0f; }
+            if (item.Connections == null || powerIn == null) { return 0.0f; }
             float availablePower = 0.0f;
-            foreach (Connection c in item.Connections)
+            var recipients = powerIn.Recipients;
+            foreach (Connection recipient in recipients)
             {
-                var recipients = c.Recipients;
-                foreach (Connection recipient in recipients)
-                {
-                    if (!recipient.IsPower || !recipient.IsOutput) { continue; }
-                    var battery = recipient.Item?.GetComponent<PowerContainer>();
-                    if (battery == null) { continue; }
-                    float maxOutputPerFrame = battery.MaxOutPut / 60.0f;
-                    float framesPerMinute = 3600.0f;
-                    availablePower += Math.Min(battery.Charge * framesPerMinute, maxOutputPerFrame);
-                }
-            }
+                if (!recipient.IsPower || !recipient.IsOutput) { continue; }
+                var battery = recipient.Item?.GetComponent<PowerContainer>();
+                if (battery == null || battery.Item.Condition <= 0.0f) { continue; }
+                float maxOutputPerFrame = battery.MaxOutPut / 60.0f;
+                float framesPerMinute = 3600.0f;
+                availablePower += Math.Min(battery.Charge * framesPerMinute, maxOutputPerFrame);
+            }            
             return availablePower;
         }
 

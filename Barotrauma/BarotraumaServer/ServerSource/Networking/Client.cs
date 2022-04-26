@@ -160,10 +160,14 @@ namespace Barotrauma.Networking
             return Connection.EndpointMatches(endPoint);
         }
 
-        public void SetPermissions(ClientPermissions permissions, List<DebugConsole.Command> permittedConsoleCommands)
+        public void SetPermissions(ClientPermissions permissions, IEnumerable<DebugConsole.Command> permittedConsoleCommands)
         {
             this.Permissions = permissions;
-            this.PermittedConsoleCommands = new List<DebugConsole.Command>(permittedConsoleCommands);
+            this.PermittedConsoleCommands.Clear();
+            foreach (var command in permittedConsoleCommands)
+            {
+                this.PermittedConsoleCommands.Add(command);
+            }
         }
 
         public void GivePermission(ClientPermissions permission)

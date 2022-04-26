@@ -567,9 +567,9 @@ namespace Barotrauma
 
                 GameMain.GameSession?.EventManager?.DrawPinnedEvent(spriteBatch);
 
-                if (HUDLayoutSettings.DebugDraw) HUDLayoutSettings.Draw(spriteBatch);
+                if (HUDLayoutSettings.DebugDraw) { HUDLayoutSettings.Draw(spriteBatch); }
 
-                if (GameMain.Client != null) GameMain.Client.Draw(spriteBatch);
+                GameMain.Client?.Draw(spriteBatch);
 
                 if (Character.Controlled?.Inventory != null)
                 {
@@ -616,25 +616,43 @@ namespace Barotrauma
                 }
 
                 DrawSavingIndicator(spriteBatch);
-
-                if (GameMain.WindowActive && !HideCursor)
-                {
-                    spriteBatch.End();
-                    spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: SamplerStateClamp, rasterizerState: GameMain.ScissorTestEnable);
-                    
-                    if (GameMain.GameSession?.CrewManager is { DraggedOrderPrefab: { SymbolSprite: { } orderSprite, Color: var color }, DragOrder: true })
-                    {
-                        float spriteSize = Math.Max(orderSprite.size.X, orderSprite.size.Y);
-                        orderSprite.Draw(spriteBatch, PlayerInput.LatestMousePosition, color, orderSprite.size / 2f, scale: 32f / spriteSize * Scale);
-                    }
-
-                    var sprite = MouseCursorSprites[MouseCursor] ?? MouseCursorSprites[CursorState.Default];
-                    sprite.Draw(spriteBatch, PlayerInput.LatestMousePosition, Color.White, sprite.Origin, 0f, Scale / 1.5f);
-
-                    spriteBatch.End();
-                    spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: SamplerState, rasterizerState: GameMain.ScissorTestEnable);
-                }
+                DrawCursor(spriteBatch);
                 HideCursor = false;
+            }
+        }
+
+        public static void DrawMessageBoxesOnly(SpriteBatch spriteBatch)
+        {
+            bool anyDrawn = false;
+            foreach (var component in updateList)
+            {
+                component.DrawAuto(spriteBatch);
+                anyDrawn = true;                
+            }
+            if (anyDrawn)
+            {
+                DrawCursor(spriteBatch);
+            }
+        }
+
+        private static void DrawCursor(SpriteBatch spriteBatch)
+        {
+            if (GameMain.WindowActive && !HideCursor && MouseCursorSprites.Prefabs.Any())
+            {
+                spriteBatch.End();
+                spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: SamplerStateClamp, rasterizerState: GameMain.ScissorTestEnable);
+
+                if (GameMain.GameSession?.CrewManager is { DraggedOrderPrefab: { SymbolSprite: { } orderSprite, Color: var color }, DragOrder: true })
+                {
+                    float spriteSize = Math.Max(orderSprite.size.X, orderSprite.size.Y);
+                    orderSprite.Draw(spriteBatch, PlayerInput.LatestMousePosition, color, orderSprite.size / 2f, scale: 32f / spriteSize * Scale);
+                }
+
+                var sprite = MouseCursorSprites[MouseCursor] ?? MouseCursorSprites[CursorState.Default];
+                sprite.Draw(spriteBatch, PlayerInput.LatestMousePosition, Color.White, sprite.Origin, 0f, Scale / 1.5f);
+
+                spriteBatch.End();
+                spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             }
         }
 
@@ -1201,6 +1219,17 @@ namespace Barotrauma
                 }
                 UpdateMessages(deltaTime);
                 UpdateSavingIndicator(deltaTime);
+            }
+        }
+
+        public static void UpdateGUIMessageBoxesOnly(float deltaTime)
+        {
+            GUIMessageBox.AddActiveToGUIUpdateList();
+            RefreshUpdateList();
+            UpdateMouseOn(); 
+            foreach (var c in updateList)
+            {
+                c.UpdateAuto(deltaTime);
             }
         }
 

@@ -72,18 +72,18 @@ namespace Barotrauma.Networking
             public readonly string EndPoint;
             public readonly ulong SteamID;
             public readonly string Name;
-            public List<DebugConsole.Command> PermittedCommands;
+            public HashSet<DebugConsole.Command> PermittedCommands;
 
             public ClientPermissions Permissions;
 
-            public SavedClientPermission(string name, string endpoint, ClientPermissions permissions, List<DebugConsole.Command> permittedCommands)
+            public SavedClientPermission(string name, string endpoint, ClientPermissions permissions, HashSet<DebugConsole.Command> permittedCommands)
             {
                 this.Name = name;
                 this.EndPoint = endpoint;
                 this.Permissions = permissions;
                 this.PermittedCommands = permittedCommands;
             }
-            public SavedClientPermission(string name, ulong steamID, ClientPermissions permissions, List<DebugConsole.Command> permittedCommands)
+            public SavedClientPermission(string name, ulong steamID, ClientPermissions permissions, HashSet<DebugConsole.Command> permittedCommands)
             {
                 this.Name = name;
                 this.SteamID = steamID;

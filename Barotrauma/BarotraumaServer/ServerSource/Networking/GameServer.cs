@@ -282,7 +282,10 @@ namespace Barotrauma.Networking
             if (newClient.Connection == OwnerConnection && OwnerConnection != null)
             {
                 newClient.GivePermission(ClientPermissions.All);
-                newClient.PermittedConsoleCommands.AddRange(DebugConsole.Commands);
+                foreach (var command in DebugConsole.Commands)
+                {
+                    newClient.PermittedConsoleCommands.Add(command);
+                }
                 SendConsoleMessage("Granted all permissions to " + newClient.Name + ".", newClient);
             }
 
@@ -1226,16 +1229,6 @@ namespace Barotrauma.Networking
             }
         }
 
-        #warning TODO: remove this later
-        /*private IEnumerable<object> RoundRestartLoop()
-        {
-            yield return new WaitForSeconds(8.0f);
-            EndGame();
-            yield return new WaitForSeconds(8.0f);
-            StartGame();
-            yield return CoroutineStatus.Success;
-        }*/
-
         private void ReadCrewMessage(IReadMessage inc, Client sender)
         {
             if (GameMain.GameSession?.Campaign is MultiPlayerCampaign mpCampaign)
@@ -1394,10 +1387,16 @@ namespace Barotrauma.Networking
                         bool continueCampaign = inc.ReadBoolean();
                         if (mpCampaign != null && mpCampaign.GameOver || continueCampaign)
                         {
-                            if (mpCampaign.AllowedToManageCampaign(sender, ClientPermissions.ManageCampaign) || mpCampaign.AllowedToManageCampaign(sender, ClientPermissions.ManageMap))
+                            if (gameStarted)
+                            {
+                                SendDirectChatMessage("Cannot continue the campaign from the previous save (round already running).", sender, ChatMessageType.Error);
+                                break;
+                            }
+                            else if (mpCampaign.AllowedToManageCampaign(sender, ClientPermissions.ManageCampaign) || mpCampaign.AllowedToManageCampaign(sender, ClientPermissions.ManageMap))
                             {
                                 MultiPlayerCampaign.LoadCampaign(GameMain.GameSession.SavePath);
                             }
+
                         }
                         else if (!gameStarted && !initiatedStartGame)
                         {

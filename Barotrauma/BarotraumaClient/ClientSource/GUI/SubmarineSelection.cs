@@ -5,6 +5,7 @@ using System.Linq;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Globalization;
+using PlayerBalanceElement = Barotrauma.CampaignUI.PlayerBalanceElement;
 
 namespace Barotrauma
 {
@@ -44,6 +45,8 @@ namespace Barotrauma
 
         private static readonly Color indicatorColor = new Color(112, 149, 129);
         private Point createdForResolution;
+
+        private PlayerBalanceElement? playerBalanceElement;
 
         private struct SubmarineDisplayContent
         {
@@ -125,10 +128,7 @@ namespace Barotrauma
             content = new GUILayoutGroup(new RectTransform(new Point(background.Rect.Width - HUDLayoutSettings.Padding * 4, background.Rect.Height - HUDLayoutSettings.Padding * 4), background.RectTransform, Anchor.Center)) { AbsoluteSpacing = (int)(HUDLayoutSettings.Padding * 1.5f) };
             GUITextBlock header = new GUITextBlock(new RectTransform(new Vector2(1f, 0.0f), content.RectTransform), transferService ? TextManager.Get("switchsubmarineheader") : TextManager.GetWithVariable("outpostshipyard", "[location]", GameMain.GameSession.Map.CurrentLocation.Name), font: GUIStyle.LargeFont);
             header.CalculateHeightFromText(0, true);
-            GUITextBlock credits = new GUITextBlock(new RectTransform(Vector2.One, header.RectTransform), "", font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterRight)
-            {
-                TextGetter = CampaignUI.GetMoney
-            };
+            playerBalanceElement = CampaignUI.AddBalanceElement(header, new Vector2(1.0f, 1.5f));
 
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), content.RectTransform), style: "HorizontalLine");
 
@@ -256,6 +256,10 @@ namespace Barotrauma
             {
                 RefreshSubmarineDisplay(true);
             }
+            else
+            {
+                playerBalanceElement = CampaignUI.UpdateBalanceElement(playerBalanceElement);
+            }
 
             // Input
             if (PlayerInput.KeyHit(Keys.Left))
@@ -270,9 +274,22 @@ namespace Barotrauma
 
         public void RefreshSubmarineDisplay(bool updateSubs)
         {
-            if (!initialized) Initialize();
-            if (GameMain.GraphicsWidth != createdForResolution.X || GameMain.GraphicsHeight != createdForResolution.Y) CreateGUI();
-            if (updateSubs) UpdateSubmarines();
+            if (!initialized)
+            {
+                Initialize();
+            }
+            if (GameMain.GraphicsWidth != createdForResolution.X || GameMain.GraphicsHeight != createdForResolution.Y)
+            {
+                CreateGUI();
+            }
+            else
+            {
+                playerBalanceElement = CampaignUI.UpdateBalanceElement(playerBalanceElement);
+            }
+            if (updateSubs)
+            {
+                UpdateSubmarines();
+            }
 
             if (pageIndicators != null)
             {

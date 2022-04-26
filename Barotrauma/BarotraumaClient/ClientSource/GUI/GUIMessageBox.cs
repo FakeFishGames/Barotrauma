@@ -36,6 +36,8 @@ namespace Barotrauma
         public string Tag { get; private set; }
         public bool Closed { get; private set; }
 
+        public bool DisplayInLoadingScreens;
+
         public GUIImage Icon
         {
             get;
@@ -451,6 +453,10 @@ namespace Barotrauma
                         continue;
                     }
                     if (messageBox.type != type) { continue; }
+                    if (!messageBox.DisplayInLoadingScreens && GameMain.Instance.LoadingScreenOpen)
+                    {
+                        continue;
+                    }
 
                     // These are handled separately in GUI.HandlePersistingElements()
                     if (MessageBoxes[i].UserData as string == "verificationprompt") { continue; }

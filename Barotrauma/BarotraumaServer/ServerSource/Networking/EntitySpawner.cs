@@ -15,11 +15,14 @@ namespace Barotrauma
             if (GameMain.Server == null || spawnOrRemove?.Entity == null) { return; }
 
             GameMain.Server.CreateEntityEvent(this, spawnOrRemove);
-            if (spawnOrRemove.Entity is Character { Info: { } } character)
+            if (spawnOrRemove is SpawnEntity)
             {
-                foreach (var statKey in character.Info.SavedStatValues.Keys)
+                if (spawnOrRemove.Entity is Character { Info: { } } character && !character.Removed)
                 {
-                    GameMain.NetworkMember.CreateEntityEvent(character, new Character.UpdatePermanentStatsEventData(statKey));
+                    foreach (var statKey in character.Info.SavedStatValues.Keys)
+                    {
+                        GameMain.NetworkMember.CreateEntityEvent(character, new Character.UpdatePermanentStatsEventData(statKey));
+                    }
                 }
             }
         }

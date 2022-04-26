@@ -78,7 +78,7 @@ namespace Barotrauma.Networking
             VoipSound = null;
         }
 
-        public void SetPermissions(ClientPermissions permissions, List<string> permittedConsoleCommands)
+        public void SetPermissions(ClientPermissions permissions, IEnumerable<string> permittedConsoleCommands)
         {
             List<DebugConsole.Command> permittedCommands = new List<DebugConsole.Command>();
             foreach (string commandName in permittedConsoleCommands)
@@ -92,14 +92,18 @@ namespace Barotrauma.Networking
             SetPermissions(permissions, permittedCommands);
         }
 
-        public void SetPermissions(ClientPermissions permissions, List<DebugConsole.Command> permittedConsoleCommands)
+        public void SetPermissions(ClientPermissions permissions, IEnumerable<DebugConsole.Command> permittedConsoleCommands)
         {
             if (GameMain.Client == null)
             {
                 return;
             }
             Permissions = permissions;
-            PermittedConsoleCommands.Clear(); PermittedConsoleCommands.AddRange(permittedConsoleCommands);
+            PermittedConsoleCommands.Clear();
+            foreach (var command in permittedConsoleCommands)
+            {
+                PermittedConsoleCommands.Add(command);
+            }
         }
 
         public void GivePermission(ClientPermissions permission)

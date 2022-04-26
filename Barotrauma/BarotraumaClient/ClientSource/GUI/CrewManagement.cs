@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using PlayerBalanceElement = Barotrauma.CampaignUI.PlayerBalanceElement;
 
 namespace Barotrauma
 {
@@ -20,6 +21,8 @@ namespace Barotrauma
         private GUITextBlock totalBlock;
         private GUIButton validateHiresButton;
         private GUIButton clearAllButton;
+
+        private PlayerBalanceElement? playerBalanceElement;
 
         private List<CharacterInfo> PendingHires => campaign.Map?.CurrentLocation?.HireManager?.PendingHires;
         private bool HasPermission => campaignUI.Campaign.AllowedToManageCampaign(ClientPermissions.ManageHires);
@@ -157,23 +160,7 @@ namespace Barotrauma
                 RelativeSpacing = 0.02f
             };
 
-            var playerBalanceContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.75f / 14.0f), pendingAndCrewMainGroup.RectTransform), childAnchor: Anchor.TopRight)
-            {
-                RelativeSpacing = 0.005f
-            };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), playerBalanceContainer.RectTransform),
-                TextManager.Get("campaignstore.balance"), font: GUIStyle.Font, textAlignment: Alignment.BottomRight)
-            {
-                AutoScaleVertical = true,
-                ForceUpperCase = ForceUpperCase.Yes
-            };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), playerBalanceContainer.RectTransform),
-                "", font: GUIStyle.SubHeadingFont, textAlignment: Alignment.TopRight)
-            {
-                AutoScaleVertical = true,
-                TextScale = 1.1f,
-                TextGetter = () => TextManager.FormatCurrency(campaign.GetBalance())
-            };
+            playerBalanceElement = CampaignUI.AddBalanceElement(pendingAndCrewMainGroup, new Vector2(1.0f, 0.75f / 14.0f));
 
             var pendingAndCrewGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.95f), anchor: Anchor.Center,
                 parent: new GUIFrame(new RectTransform(new Vector2(1.0f, 13.25f / 14.0f), pendingAndCrewMainGroup.RectTransform)
@@ -791,6 +778,10 @@ namespace Barotrauma
             {
                 CreateUI();
                 UpdateLocationView(campaign.Map.CurrentLocation, false);
+            }
+            else
+            {
+                playerBalanceElement = CampaignUI.UpdateBalanceElement(playerBalanceElement);
             }
 
             (GUIComponent highlightedFrame, CharacterInfo highlightedInfo) = FindHighlightedCharacter(GUI.MouseOn);

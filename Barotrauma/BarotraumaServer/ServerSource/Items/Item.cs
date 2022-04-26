@@ -373,5 +373,20 @@ namespace Barotrauma
             if (!ic.ValidateEventData(eventData)) { throw new Exception($"Component event creation failed: {typeof(T).Name}.{nameof(ItemComponent.ValidateEventData)} returned false"); }
             GameMain.Server.CreateEntityEvent(this, eventData);
         }
+
+#if DEBUG
+        public void TryCreateServerEventSpam()
+        {
+            if (GameMain.Server == null) { return; }
+
+            foreach (ItemComponent ic in components)
+            {
+                if (!(ic is IServerSerializable)) { continue; }
+                var eventData = new ComponentStateEventData(ic, ic.ServerGetEventData());
+                if (!ic.ValidateEventData(eventData)) { continue; }
+                GameMain.Server.CreateEntityEvent(this, eventData);
+            }
+        }
+#endif
     }
 }

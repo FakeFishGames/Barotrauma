@@ -662,6 +662,8 @@ namespace Barotrauma
                     if (!TitleScreen.PlayingSplashScreen)
                     {
                         SoundPlayer.Update((float)Timing.Step);
+                        GUI.ClearUpdateList();
+                        GUI.UpdateGUIMessageBoxesOnly((float)Timing.Step);
                     }
 
                     if (TitleScreen.LoadState >= 100.0f && !TitleScreen.PlayingSplashScreen &&
