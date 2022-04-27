@@ -40,7 +40,7 @@ namespace Barotrauma
             visibleSubs.Clear();
             foreach (Submarine sub in Loaded)
             {
-                if (sub.WorldPosition.Y < Level.MaxEntityDepth) { continue; }
+                if (Level.Loaded != null && sub.WorldPosition.Y < Level.MaxEntityDepth) { continue; }
 
                 int margin = 500;
                 Rectangle worldBorders = new Rectangle(

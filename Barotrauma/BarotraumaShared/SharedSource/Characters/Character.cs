@@ -2729,12 +2729,15 @@ namespace Barotrauma
 
             if (!Enabled) { return; }
 
-            if (Level.Loaded != null && WorldPosition.Y < Level.MaxEntityDepth ||
-                (Submarine != null && Submarine.WorldPosition.Y < Level.MaxEntityDepth))
+            if (Level.Loaded != null)
             {
-                Enabled = false;
-                Kill(CauseOfDeathType.Pressure, null);
-                return;
+                if (WorldPosition.Y < Level.MaxEntityDepth ||
+                    (Submarine != null && Submarine.WorldPosition.Y < Level.MaxEntityDepth))
+                {
+                    Enabled = false;
+                    Kill(CauseOfDeathType.Pressure, null);
+                    return;
+                }
             }
 
             ApplyStatusEffects(ActionType.Always, deltaTime);

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -12,7 +11,7 @@ namespace Barotrauma
 
         public readonly List<string> AllowedDialogTags;
 
-        private float commonness;
+        private readonly float commonness;
         public float Commonness
         {
             get { return commonness; }
@@ -20,12 +19,22 @@ namespace Barotrauma
 
         public static IEnumerable<NPCPersonalityTrait> GetAll(LanguageIdentifier language)
         {
+            if (language != TextManager.DefaultLanguage && !NPCConversationCollection.Collections.ContainsKey(language))
+            {
+                DebugConsole.AddWarning($"Could not find NPC personality traits for the language \"{language}\". Using \"{TextManager.DefaultLanguage}\" instead..");
+                language = TextManager.DefaultLanguage;
+            }
             return NPCConversationCollection.Collections[language]
                 .SelectMany(cc => cc.PersonalityTraits.Values);
         }
 
         public static NPCPersonalityTrait Get(LanguageIdentifier language, Identifier traitName)
         {
+            if (language != TextManager.DefaultLanguage && !NPCConversationCollection.Collections.ContainsKey(language))
+            {
+                DebugConsole.AddWarning($"Could not find NPC personality traits for the language \"{language}\". Using \"{TextManager.DefaultLanguage}\" instead..");
+                language = TextManager.DefaultLanguage;
+            }
             return NPCConversationCollection.Collections[language]
                 .FirstOrDefault(cc => cc.PersonalityTraits.ContainsKey(traitName))
                 .PersonalityTraits[traitName];

@@ -8,10 +8,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
-using System.Xml.Linq;
-using Barotrauma.IO;
 using Voronoi2;
 
 namespace Barotrauma
@@ -25,7 +22,7 @@ namespace Barotrauma
         }
 
         //all entities are disabled after they reach this depth
-        public const int MaxEntityDepth = -300000;
+        public const int MaxEntityDepth = -1000000;
         public const float ShaftHeight = 1000.0f;
         /// <summary>
         /// The level generator won't try to adjust the width of the main path above this limit.

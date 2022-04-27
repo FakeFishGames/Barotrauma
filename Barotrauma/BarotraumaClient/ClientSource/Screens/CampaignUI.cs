@@ -807,7 +807,7 @@ namespace Barotrauma
                 float balanceContainerWidth = GameMain.IsSingleplayer ? 1 : 1 / 3f;
                 var rt = new RectTransform(new Vector2(balanceContainerWidth, 1.0f), parent.RectTransform)
                 {
-                    MaxSize = new Point(120, int.MaxValue)
+                    MaxSize = new Point(GUI.IntScale(GUI.AdjustForTextScale(120)), int.MaxValue)
                 };
                 var balanceContainer = new GUILayoutGroup(rt, childAnchor: Anchor.TopRight)
                 {

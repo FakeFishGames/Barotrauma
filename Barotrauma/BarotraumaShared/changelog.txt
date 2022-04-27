@@ -1,4 +1,13 @@
 ---------------------------------------------------------------------------------------------------------
+v0.17.15.0
+---------------------------------------------------------------------------------------------------------
+
+Fixes:
+- Fixed crashing if a custom language doesn't configure NPC personality traits or conversations.
+- Fixed crashing when you try to disguise as someone else when using a mod that overrides the vanilla human config.
+- Fixed characters getting instakilled if you dive too deep in the sub editor test mode.
+
+---------------------------------------------------------------------------------------------------------
 v0.17.14.0
 ---------------------------------------------------------------------------------------------------------
 

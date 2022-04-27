@@ -73,11 +73,11 @@ namespace Barotrauma.Steam
         {
             if (!SteamManager.IsInitialized) { return; }
 
-            uint numSubscribedMods = Steamworks.SteamUGC.NumSubscribedItems;
+            uint numSubscribedMods = SteamManager.GetNumSubscribedItems();
             if (numSubscribedMods == memSubscribedModCount) { return; }
             memSubscribedModCount = numSubscribedMods;
 
-            var subscribedIds = Steamworks.SteamUGC.GetSubscribedItems().ToHashSet();
+            var subscribedIds = SteamManager.GetSubscribedItems().ToHashSet();
             var installedIds = ContentPackageManager.WorkshopPackages.Select(p => p.SteamWorkshopId).ToHashSet();
             foreach (var id in subscribedIds.Where(id2 => !installedIds.Contains(id2)))
             {

@@ -57,8 +57,6 @@ namespace Barotrauma
         private readonly int speakerIndex;
         private readonly ImmutableHashSet<Identifier> allowedSpeakerTags;
         private readonly bool requireNextLine;
-        // used primarily for team1 characters interacting with escorted personnel (TODO: not used anywhere)
-        private readonly bool requireSight;
 
         public NPCConversation(XElement element)
         {
@@ -75,7 +73,6 @@ namespace Barotrauma
 
             Responses = element.Elements().Select(s => new NPCConversation(s)).ToImmutableArray();
             requireNextLine = element.GetAttributeBool("requirenextline", false);
-            requireSight = element.GetAttributeBool("requiresight", false);
         }
 
         private static List<Identifier> GetCurrentFlags(Character speaker)
@@ -162,23 +159,38 @@ namespace Barotrauma
             return currentFlags;
         }
 
-        private static List<NPCConversation> previousConversations = new List<NPCConversation>();
+        private static readonly List<NPCConversation> previousConversations = new List<NPCConversation>();
         
-        public static List<Pair<Character, string>> CreateRandom(List<Character> availableSpeakers)
+        public static List<(Character speaker, string line)> CreateRandom(List<Character> availableSpeakers)
         {
             Dictionary<int, Character> assignedSpeakers = new Dictionary<int, Character>();
-            List<Pair<Character, string>> lines = new List<Pair<Character, string>>();
+            List<(Character speaker, string line)> lines = new List<(Character speaker, string line)>();
+
+            var language = GameSettings.CurrentConfig.Language;
+            if (language != TextManager.DefaultLanguage && !NPCConversationCollection.Collections.ContainsKey(language))
+            {
+                DebugConsole.AddWarning($"Could not find NPC conversations for the language \"{language}\". Using \"{TextManager.DefaultLanguage}\" instead..");
+                language = TextManager.DefaultLanguage;
+            }
 
             CreateConversation(availableSpeakers, assignedSpeakers, null, lines,
-                availableConversations: NPCConversationCollection.Collections[GameSettings.CurrentConfig.Language].SelectMany(cc => cc.Conversations).ToList());
+                availableConversations: NPCConversationCollection.Collections[language].SelectMany(cc => cc.Conversations).ToList());
             return lines;
         }
 
-        public static List<Pair<Character, string>> CreateRandom(List<Character> availableSpeakers, IEnumerable<Identifier> requiredFlags)
+        public static List<(Character speaker, string line)> CreateRandom(List<Character> availableSpeakers, IEnumerable<Identifier> requiredFlags)
         {
             Dictionary<int, Character> assignedSpeakers = new Dictionary<int, Character>();
-            List<Pair<Character, string>> lines = new List<Pair<Character, string>>();
-            var availableConversations = NPCConversationCollection.Collections[GameSettings.CurrentConfig.Language]
+            List<(Character speaker, string line)> lines = new List<(Character speaker, string line)>();
+
+            var language = GameSettings.CurrentConfig.Language;
+            if (language != TextManager.DefaultLanguage && !NPCConversationCollection.Collections.ContainsKey(language))
+            {
+                DebugConsole.AddWarning($"Could not find NPC conversations for the language \"{language}\". Using \"{TextManager.DefaultLanguage}\" instead..");
+                language = TextManager.DefaultLanguage;
+            }
+
+            var availableConversations = NPCConversationCollection.Collections[language]
                 .SelectMany(cc => cc.Conversations.Where(c => requiredFlags.All(f => c.Flags.Contains(f)))).ToList();
             if (availableConversations.Count > 0)
             {
@@ -191,7 +203,7 @@ namespace Barotrauma
             List<Character> availableSpeakers, 
             Dictionary<int, Character> assignedSpeakers, 
             NPCConversation baseConversation, 
-            IList<Pair<Character, string>> lineList,
+            IList<(Character speaker, string line)> lineList,
             IList<NPCConversation> availableConversations,
             bool ignoreFlags = false)
         {
@@ -271,7 +283,7 @@ namespace Barotrauma
                 previousConversations.Insert(0, selectedConversation);
                 if (previousConversations.Count > MaxPreviousConversations) previousConversations.RemoveAt(MaxPreviousConversations);
             }
-            lineList.Add(new Pair<Character, string>(speaker, selectedConversation.Line));
+            lineList.Add((speaker, selectedConversation.Line));
             CreateConversation(availableSpeakers, assignedSpeakers, selectedConversation, lineList, availableConversations);
         }
 

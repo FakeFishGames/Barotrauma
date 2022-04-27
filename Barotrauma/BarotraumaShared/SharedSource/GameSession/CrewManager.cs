@@ -13,7 +13,7 @@ namespace Barotrauma
         const float ConversationIntervalMax = 180.0f;
         const float ConversationIntervalMultiplierMultiplayer = 5.0f;
         private float conversationTimer, conversationLineTimer;
-        private readonly List<Pair<Character, string>> pendingConversationLines = new List<Pair<Character, string>>();
+        private readonly List<(Character speaker, string line)> pendingConversationLines = new List<(Character speaker, string line)>();
 
         public const int MaxCrewSize = 16;
 
@@ -339,7 +339,7 @@ namespace Barotrauma
 
         #region Dialog
 
-        public void AddConversation(List<Pair<Character, string>> conversationLines)
+        public void AddConversation(List<(Character speaker, string line)> conversationLines)
         {
             if (conversationLines == null || conversationLines.Count == 0) { return; }
             pendingConversationLines.AddRange(conversationLines);
@@ -428,16 +428,16 @@ namespace Barotrauma
                 if (conversationLineTimer <= 0.0f)
                 {
                     //speaker of the next line can't speak, interrupt the conversation
-                    if (pendingConversationLines[0].First.SpeechImpediment >= 100.0f)
+                    if (pendingConversationLines[0].speaker.SpeechImpediment >= 100.0f)
                     {
                         pendingConversationLines.Clear();
                         return;
                     }
 
-                    pendingConversationLines[0].First.Speak(pendingConversationLines[0].Second, null);
+                    pendingConversationLines[0].speaker.Speak(pendingConversationLines[0].line, null);
                     if (pendingConversationLines.Count > 1)
                     {
-                        conversationLineTimer = MathHelper.Clamp(pendingConversationLines[0].Second.Length * 0.1f, 1.0f, 5.0f);
+                        conversationLineTimer = MathHelper.Clamp(pendingConversationLines[0].line.Length * 0.1f, 1.0f, 5.0f);
                     }
                     pendingConversationLines.RemoveAt(0);
                 }

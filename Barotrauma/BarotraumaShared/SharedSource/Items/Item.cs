@@ -1789,7 +1789,7 @@ namespace Barotrauma
                 if (Math.Abs(body.LinearVelocity.X) > 0.01f || Math.Abs(body.LinearVelocity.Y) > 0.01f || transformDirty)
                 {
                     UpdateTransform();
-                    if (CurrentHull == null && body.SimPosition.Y < ConvertUnits.ToSimUnits(Level.MaxEntityDepth))
+                    if (CurrentHull == null && Level.Loaded != null && body.SimPosition.Y < ConvertUnits.ToSimUnits(Level.MaxEntityDepth))
                     {
                         Spawner?.AddItemToRemoveQueue(this);
                         return;

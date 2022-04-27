@@ -80,7 +80,7 @@ namespace Barotrauma
 #if DEBUG
             if (!lStr.IsNullOrEmpty() && lStr.Contains("‖"))
             {
-                if (Debugger.IsAttached) { Debugger.Break(); }
+                //if (Debugger.IsAttached) { Debugger.Break(); }
             }
 #endif
             return Plain(lStr ?? string.Empty);

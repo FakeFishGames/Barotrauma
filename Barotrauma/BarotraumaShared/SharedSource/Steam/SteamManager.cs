@@ -1,3 +1,4 @@
+using Steamworks.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -72,6 +73,24 @@ namespace Barotrauma.Steam
                 return "";
             }
             return Steamworks.SteamClient.Name;
+        }
+
+        public static uint GetNumSubscribedItems()
+        {
+            if (!IsInitialized || !Steamworks.SteamClient.IsValid)
+            {
+                return 0;
+            }
+            return Steamworks.SteamUGC.NumSubscribedItems;
+        }
+
+        public static PublishedFileId[] GetSubscribedItems()
+        {
+            if (!IsInitialized || !Steamworks.SteamClient.IsValid)
+            {
+                return new PublishedFileId[0];
+            }
+            return Steamworks.SteamUGC.GetSubscribedItems();
         }
 
         public static bool UnlockAchievement(string achievementIdentifier) =>

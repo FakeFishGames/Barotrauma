@@ -56,10 +56,9 @@ namespace Barotrauma.Items.Components
                     ContentXElement spriteElement = limbElement.GetChildElement("sprite");
                     if (spriteElement == null) { continue; }
 
-                    string spritePath = spriteElement.GetAttribute("texture").Value;
+                    ContentPath contentPath = spriteElement.GetAttributeContentPath("texture");
 
-                    spritePath = characterInfo.ReplaceVars(spritePath);
-
+                    string spritePath = characterInfo.ReplaceVars(contentPath.Value);
                     string fileName = Path.GetFileNameWithoutExtension(spritePath);
 
                     //go through the files in the directory to find a matching sprite
