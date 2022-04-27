@@ -26,7 +26,7 @@ namespace Barotrauma
         {
             get
             {
-                if (world == null) { world = new World(new Vector2(0, -9.82f)); }
+                if (world == null) { world = new World(new Vector2(0, -1.314f)); }
                 return world;
             }
             set { world = value; }
@@ -74,7 +74,7 @@ namespace Barotrauma
 
             CommandLineArgs = args;
 
-            World = new World(new Vector2(0, -9.82f));
+            World = new World(new Vector2(0, -1.314f));
             FarseerPhysics.Settings.AllowSleep = true;
             FarseerPhysics.Settings.ContinuousPhysics = false;
             FarseerPhysics.Settings.VelocityIterations = 1;

@@ -95,7 +95,7 @@ namespace Barotrauma
         {
             get
             {
-                if (world == null) { world = new World(new Vector2(0, -9.82f)); }
+                if (world == null) { world = new World(new Vector2(0, -1.314f)); }
                 return world;
             }
             set { world = value; }
