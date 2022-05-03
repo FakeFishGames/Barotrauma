@@ -15,7 +15,7 @@ namespace Microsoft.Xna.Framework.Input
         {
             return PrimaryWindow.Handle;
         }
-        
+
         private static void PlatformSetWindowHandle(IntPtr windowHandle)
         {
         }
@@ -24,7 +24,7 @@ namespace Microsoft.Xna.Framework.Input
         {
             int x, y;
             var winFlags = Sdl.Window.GetWindowFlags(window.Handle);
-            var state = Sdl.Mouse.GetGlobalState(out x, out y);
+            var state = Sdl.Mouse.GetState(out x, out y);
 
             if ((winFlags & Sdl.Window.State.MouseFocus) != 0)
             {
@@ -53,7 +53,7 @@ namespace Microsoft.Xna.Framework.Input
         {
             PrimaryWindow.MouseState.X = x;
             PrimaryWindow.MouseState.Y = y;
-            
+
             Sdl.Mouse.WarpInWindow(PrimaryWindow.Handle, x, y);
         }
 
