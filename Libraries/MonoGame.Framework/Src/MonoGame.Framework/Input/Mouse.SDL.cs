@@ -53,7 +53,6 @@ namespace Microsoft.Xna.Framework.Input
         {
             PrimaryWindow.MouseState.X = x;
             PrimaryWindow.MouseState.Y = y;
-
             Sdl.Mouse.WarpInWindow(PrimaryWindow.Handle, x, y);
         }
 
