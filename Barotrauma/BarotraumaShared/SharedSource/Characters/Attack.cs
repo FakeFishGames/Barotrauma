@@ -100,6 +100,9 @@ namespace Barotrauma
         [Serialize(false, IsPropertySaveable.Yes, description: "Should the AI try to turn around when aiming with this attack?"), Editable]
         public bool Reverse { get; private set; }
 
+        [Serialize(true, IsPropertySaveable.Yes, description: "Should the rope attached to this limb snap upon choosing a new attack?"), Editable]
+        public bool SnapRopeOnNewAttack { get; private set; }
+
         [Serialize(false, IsPropertySaveable.Yes, description: "Should the AI try to steer away from the target when aiming with this attack? Best combined with PassiveAggressive behavior."), Editable]
         public bool Retreat { get; private set; }
 
