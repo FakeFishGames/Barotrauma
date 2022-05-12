@@ -92,6 +92,7 @@ namespace Barotrauma
                         break;
                     case "crew":
                         GameMain.GameSession.CrewManager = new CrewManager(subElement, true);
+                        ActiveOrdersElement = element.GetChildElement("activeorders");
                         break;
                     case "map":
                         map = Map.Load(this, subElement, Settings);
@@ -242,11 +243,10 @@ namespace Barotrauma
             crewDead = false;
             endTimer = 5.0f;
             CrewManager.InitSinglePlayerRound();
-            if (petsElement != null)
-            {
-                PetBehavior.LoadPets(petsElement);
-            }
-            CrewManager.LoadActiveOrders();
+            LoadPets();
+            LoadActiveOrders();
+
+            CargoManager.InitPurchasedIDCards();
 
             GUI.DisableSavingIndicatorDelayed();
         }
@@ -461,41 +461,7 @@ namespace Barotrauma
 
             if (success)
             {
-                if (leavingSub != Submarine.MainSub && !leavingSub.DockedTo.Contains(Submarine.MainSub))
-                {
-                    Submarine.MainSub = leavingSub;
-                    GameMain.GameSession.Submarine = leavingSub;
-                    GameMain.GameSession.SubmarineInfo = leavingSub.Info;
-                    leavingSub.Info.FilePath = System.IO.Path.Combine(SaveUtil.TempPath, leavingSub.Info.Name + ".sub");
-                    var subsToLeaveBehind = GetSubsToLeaveBehind(leavingSub);
-                    GameMain.GameSession.OwnedSubmarines.Add(leavingSub.Info);
-                    foreach (Submarine sub in subsToLeaveBehind)
-                    {
-                        GameMain.GameSession.OwnedSubmarines.RemoveAll(s => s != leavingSub.Info && s.Name == sub.Info.Name);
-                        MapEntity.mapEntityList.RemoveAll(e => e.Submarine == sub && e is LinkedSubmarine);
-                        LinkedSubmarine.CreateDummy(leavingSub, sub);
-                    }
-                }
-
-                GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);
-
-                if (PendingSubmarineSwitch != null)
-                {
-                    SubmarineInfo previousSub = GameMain.GameSession.SubmarineInfo;
-                    GameMain.GameSession.SubmarineInfo = PendingSubmarineSwitch;
-
-                    for (int i = 0; i < GameMain.GameSession.OwnedSubmarines.Count; i++)
-                    {
-                        if (GameMain.GameSession.OwnedSubmarines[i].Name == previousSub.Name)
-                        {
-                            GameMain.GameSession.OwnedSubmarines[i] = previousSub;
-                            break;
-                        }
-                    }
-                }
-
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
-                PendingSubmarineSwitch = null;
             }
             else
             {
@@ -766,11 +732,10 @@ namespace Barotrauma
                 c.Info.SaveOrderData();
             }
 
-            petsElement = new XElement("pets");
-            PetBehavior.SavePets(petsElement);
-            modeElement.Add(petsElement);
+            SavePets(modeElement);
+            var crewManagerElement = CrewManager.Save(modeElement);
+            SaveActiveOrders(crewManagerElement);
 
-            CrewManager.Save(modeElement);
             CampaignMetadata.Save(modeElement);
             Map.Save(modeElement);
             CargoManager?.SavePurchasedItems(modeElement);

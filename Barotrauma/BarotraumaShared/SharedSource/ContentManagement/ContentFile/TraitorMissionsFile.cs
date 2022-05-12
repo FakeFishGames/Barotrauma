@@ -17,7 +17,7 @@ namespace Barotrauma
 
         protected override bool MatchesSingular(Identifier identifier) => identifier == "TraitorMission";
         protected override bool MatchesPlural(Identifier identifier) => identifier == "TraitorMissions";
-        protected override PrefabCollection<PrefabType> prefabs => PrefabType.Prefabs;
+        protected override PrefabCollection<PrefabType> Prefabs => PrefabType.Prefabs;
         protected override PrefabType CreatePrefab(ContentXElement element)
         {
             return new PrefabType(element, this);

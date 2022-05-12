@@ -99,8 +99,8 @@ namespace Barotrauma.Items.Components
             {
                 if (!docked && value)
                 {
-                    if (DockingTarget == null) AttemptDock();
-                    if (DockingTarget == null) return;
+                    if (DockingTarget == null) { AttemptDock(); }
+                    if (DockingTarget == null) { return; }
 
                     docked = true;
                 }
@@ -125,6 +125,14 @@ namespace Barotrauma.Items.Components
         /// Automatically cleared after undocking -> no need to unregister
         /// </summary>
         public event Action OnUnDocked;
+
+        private bool outpostAutoDockingPromptShown;
+
+        enum AllowOutpostAutoDocking
+        {
+            Ask, Yes, No
+        }
+        private AllowOutpostAutoDocking allowOutpostAutoDocking = AllowOutpostAutoDocking.Ask;
 
         public DockingPort(Item item, ContentXElement element)
             : base(item, element)
@@ -622,7 +630,8 @@ namespace Barotrauma.Items.Components
                     {
                         bodies[i + j * 2] = GameMain.World.CreateEdge(
                             ConvertUnits.ToSimUnits(new Vector2(hullRects[i].X, hullRects[i].Y - hullRects[i].Height * j)),
-                            ConvertUnits.ToSimUnits(new Vector2(hullRects[i].Right, hullRects[i].Y - hullRects[i].Height * j)));
+                            ConvertUnits.ToSimUnits(new Vector2(hullRects[i].Right, hullRects[i].Y - hullRects[i].Height * j)),
+                            BodyType.Static);
                     }
                 }
 
@@ -632,7 +641,9 @@ namespace Barotrauma.Items.Components
                         ConvertUnits.ToSimUnits(hullRects[0].Width + hullRects[1].Width),
                         ConvertUnits.ToSimUnits(hullRects[0].Height),
                         density: 0.0f,
-                        offset: ConvertUnits.ToSimUnits(new Vector2(hullRects[0].Right, hullRects[0].Y - hullRects[0].Height / 2) - hulls[0].Submarine.HiddenSubPosition));
+                        offset: ConvertUnits.ToSimUnits(new Vector2(hullRects[0].Right, hullRects[0].Y - hullRects[0].Height / 2) - hulls[0].Submarine.HiddenSubPosition),
+                        Physics.CollisionWall,
+                        Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionCharacter | Physics.CollisionItemBlocking | Physics.CollisionProjectile);
                     outsideBlocker.UserData = this;
                 }
 
@@ -742,7 +753,8 @@ namespace Barotrauma.Items.Components
                     {
                         bodies[i + j * 2] = GameMain.World.CreateEdge(
                             ConvertUnits.ToSimUnits(new Vector2(hullRects[i].X + hullRects[i].Width * j, hullRects[i].Y)),
-                            ConvertUnits.ToSimUnits(new Vector2(hullRects[i].X + hullRects[i].Width * j, hullRects[i].Y - hullRects[i].Height)));
+                            ConvertUnits.ToSimUnits(new Vector2(hullRects[i].X + hullRects[i].Width * j, hullRects[i].Y - hullRects[i].Height)),
+                            BodyType.Static);
                     }
                 }
 
@@ -752,7 +764,9 @@ namespace Barotrauma.Items.Components
                         ConvertUnits.ToSimUnits(hullRects[0].Width),
                         ConvertUnits.ToSimUnits(hullRects[0].Height + hullRects[1].Height),
                         density: 0.0f,
-                        offset: ConvertUnits.ToSimUnits(new Vector2(hullRects[0].Center.X, hullRects[0].Y) - hulls[0].Submarine.HiddenSubPosition));
+                        offset: ConvertUnits.ToSimUnits(new Vector2(hullRects[0].Center.X, hullRects[0].Y) - hulls[0].Submarine.HiddenSubPosition),
+                        Physics.CollisionWall,
+                        Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionCharacter | Physics.CollisionItemBlocking | Physics.CollisionProjectile);
                     outsideBlocker.UserData = this;
                 }
 
@@ -778,8 +792,6 @@ namespace Barotrauma.Items.Components
                 if (body == null) { continue; }
                 body.BodyType = BodyType.Static;
                 body.Friction = 0.5f;
-
-                body.CollisionCategories = Physics.CollisionWall;
             }
         }
 
@@ -947,7 +959,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach (Body body in bodies)
                 {
-                    if (body == null) continue;
+                    if (body == null) { continue; }
                     GameMain.World.Remove(body);
                 }
                 bodies = null;
@@ -961,6 +973,9 @@ namespace Barotrauma.Items.Components
             {
                 item.CreateServerEvent(this);
             }
+#elif CLIENT
+            autodockingVerification?.Close();
+            autodockingVerification = null;
 #endif
             OnUnDocked?.Invoke();
             OnUnDocked = null;
@@ -1140,25 +1155,84 @@ namespace Barotrauma.Items.Components
 
         public override void ReceiveSignal(Signal signal, Connection connection)
         {
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+#if CLIENT
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && 
+                !(GameMain.GameSession?.Campaign?.AllowedToManageCampaign(ClientPermissions.ManageMap) ?? false)) 
+            { 
+                return; 
+            }
+#endif
 
             if (dockingCooldown > 0.0f) { return; }
 
             bool wasDocked = docked;
             DockingPort prevDockingTarget = DockingTarget;
 
+            bool newDockedState = wasDocked;
             switch (connection.Name)
             {
                 case "toggle":
                     if (signal.value != "0")
                     {
-                        Docked = !docked;
+                        newDockedState = !docked;
                     }
                     break;
                 case "set_active":
                 case "set_state":
-                    Docked = signal.value != "0";
+                    newDockedState = signal.value != "0";
                     break;
+            }
+
+            if (newDockedState != wasDocked)
+            {
+                bool tryingToToggleOutpostDocking = docked ? 
+                    DockingTarget?.Item?.Submarine?.Info?.IsOutpost ?? false :
+                    FindAdjacentPort()?.Item?.Submarine?.Info?.IsOutpost ?? false;
+                //trying to dock/undock from an outpost and the signal was sent by some automated system instead of a character
+                // -> ask if the player really wants to dock/undock to prevent a softlock if someone's wired the docking port
+                //    in a way that makes always makes it dock/undock immediately at the start of the roun
+                if (tryingToToggleOutpostDocking && signal.sender == null)
+                {
+                    if (allowOutpostAutoDocking == AllowOutpostAutoDocking.Ask)
+                    {
+#if CLIENT
+                        if (!outpostAutoDockingPromptShown)
+                        {
+                            autodockingVerification = new GUIMessageBox(string.Empty,
+                                 TextManager.Get(newDockedState ? "autodockverification" : "autoundockverification"),
+                                 new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                            autodockingVerification.Buttons[0].OnClicked += (btn, userdata) =>
+                            {
+                                autodockingVerification?.Close();
+                                autodockingVerification = null;
+                                if (item.Removed || GameMain.Client == null) { return false; }
+                                allowOutpostAutoDocking = AllowOutpostAutoDocking.Yes;
+                                item.CreateClientEvent(this);
+                                return true;
+                            };
+                            autodockingVerification.Buttons[1].OnClicked += (btn, userdata) =>
+                            {
+                                autodockingVerification?.Close();
+                                autodockingVerification = null;
+                                if (item.Removed || GameMain.Client == null) { return false; }
+                                allowOutpostAutoDocking = AllowOutpostAutoDocking.No;
+                                item.CreateClientEvent(this);
+                                return true;
+                            };
+                        }
+#endif
+                        outpostAutoDockingPromptShown = true;
+                        return;
+                    }
+                    else if (allowOutpostAutoDocking == AllowOutpostAutoDocking.No)
+                    {
+                        return;
+                    }
+                }
+
+                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+
+                Docked = newDockedState;                
             }
 
 #if SERVER

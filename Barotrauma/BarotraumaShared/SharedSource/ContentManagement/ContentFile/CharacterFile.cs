@@ -77,7 +77,7 @@ namespace Barotrauma
             {
                 HashSet<string> texturePaths = new HashSet<string>
                 {
-                    ragdollParams.Texture
+                    ContentPath.FromRaw(CharacterPrefab.Prefabs[speciesName].ContentPackage, ragdollParams.Texture).Value
                 };
                 foreach (RagdollParams.LimbParams limb in ragdollParams.Limbs)
                 {

@@ -233,16 +233,18 @@ namespace Barotrauma
 
                     float dist = diff.Length();
                     float distFallOff = dist / FlowSoundRange;
-                    if (distFallOff >= 0.99f) continue;
+                    if (distFallOff >= 0.99f) { continue; }
+
+                    float gain = MathHelper.Clamp(gapFlow / 100.0f, 0.0f, 1.0f);
 
                     //flow at the left side
                     if (diff.X < 0)
                     {
-                        targetFlowLeft[flowSoundIndex] += 1.0f - distFallOff;
+                        targetFlowLeft[flowSoundIndex] += gain - distFallOff;
                     }
                     else
                     {
-                        targetFlowRight[flowSoundIndex] += 1.0f - distFallOff;
+                        targetFlowRight[flowSoundIndex] += gain - distFallOff;
                     }
                 }
             }
@@ -287,7 +289,7 @@ namespace Barotrauma
                         flowSoundChannels[i] = FlowSounds[i].Sound.Play(1.0f, FlowSoundRange, soundPos);
                         flowSoundChannels[i].Looping = true;
                     }
-                    flowSoundChannels[i].Gain = Math.Min(Math.Max(flowVolumeRight[i], flowVolumeLeft[i]), 1.0f);
+                    flowSoundChannels[i].Gain = Math.Max(flowVolumeRight[i], flowVolumeLeft[i]);
                     flowSoundChannels[i].Position = new Vector3(soundPos, 0.0f);
                 }
             }
@@ -853,7 +855,7 @@ namespace Barotrauma
             if (SplashSounds.Count == 0) { return; }
             int splashIndex = MathHelper.Clamp((int)(strength + Rand.Range(-2.0f, 2.0f)), 0, SplashSounds.Count - 1);
             float range = 800.0f;
-            var channel = SplashSounds[splashIndex].Sound.Play(1.0f, range, worldPosition, muffle: ShouldMuffleSound(Character.Controlled, worldPosition, range, null));
+            SplashSounds[splashIndex].Sound?.Play(1.0f, range, worldPosition, muffle: ShouldMuffleSound(Character.Controlled, worldPosition, range, null));
         }
 
         public static void PlayDamageSound(string damageType, float damage, PhysicsBody body)

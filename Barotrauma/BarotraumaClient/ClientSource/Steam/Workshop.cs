@@ -16,6 +16,8 @@ namespace Barotrauma.Steam
     {
         public static partial class Workshop
         {
+            public const int MaxThumbnailSize = 1024 * 1024;
+
             public static readonly ImmutableArray<Identifier> Tags = new []
             {
                 "submarine",
@@ -177,7 +179,7 @@ namespace Barotrauma.Steam
 
                 DeletePublishStagingCopy();
                 Directory.CreateDirectory(PublishStagingDir);
-                await CopyDirectory(contentPackage.Dir, contentPackage.Name, Path.GetDirectoryName(contentPackage.Path)!, PublishStagingDir);
+                await CopyDirectory(contentPackage.Dir, contentPackage.Name, Path.GetDirectoryName(contentPackage.Path)!, PublishStagingDir, ShouldCorrectPaths.No);
 
                 //Load filelist.xml and write the hash into it so anyone downloading this mod knows what it should be
                 ModProject modProject = new ModProject(contentPackage)
@@ -218,7 +220,7 @@ namespace Barotrauma.Steam
                     throw new Exception($"{newPath} already exists");
                 }
 
-                await CopyDirectory(contentPackage.Dir, contentPackage.Name, Path.GetDirectoryName(contentPackage.Path)!, newPath);
+                await CopyDirectory(contentPackage.Dir, contentPackage.Name, Path.GetDirectoryName(contentPackage.Path)!, newPath, ShouldCorrectPaths.Yes);
 
                 ModProject modProject = new ModProject(contentPackage);
                 modProject.DiscardHashAndInstallTime();

@@ -155,7 +155,7 @@ namespace Barotrauma
                     case "bots" when GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer:
                         CrewManager.HasBots = subElement.GetAttributeBool("hasbots", false);
                         CrewManager.AddCharacterElements(subElement);
-                        CrewManager.ActiveOrdersElement = subElement.GetChildElement("activeorders");
+                        ActiveOrdersElement = subElement.GetChildElement("activeorders");
                         break;
                     case "cargo":
                         CargoManager?.LoadPurchasedItems(subElement);

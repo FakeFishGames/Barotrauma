@@ -330,7 +330,7 @@ namespace Barotrauma.Tutorials
             yield return new WaitForSeconds(0.0f, false);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Equipment"), ChatMessageType.Radio, null);
             do { yield return null; } while (!mechanic_equipmentObjectiveSensor.MotionDetected);
-            TriggerTutorialSegment(1, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Select), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Deselect), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.ToggleInventory)); // Equipment & inventory objective
+            TriggerTutorialSegment(1, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Select), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Deselect)); // Equipment & inventory objective
             SetHighlight(mechanic_equipmentCabinet.Item, true);
             bool firstSlotRemoved = false;
             bool secondSlotRemoved = false;
@@ -372,7 +372,7 @@ namespace Barotrauma.Tutorials
 
             // Room 3
             do { yield return null; } while (!mechanic_weldingObjectiveSensor.MotionDetected);
-            TriggerTutorialSegment(2, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Aim), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Shoot), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.ToggleInventory)); // Welding objective
+            TriggerTutorialSegment(2, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Aim), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Shoot)); // Welding objective
             do
             {
                 if (!mechanic.HasEquippedItem("divingmask".ToIdentifier()))

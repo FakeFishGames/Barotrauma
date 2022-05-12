@@ -42,7 +42,7 @@ namespace Barotrauma.MapCreatures.Behavior
             foreach (BallastFloraBranch branch in Branches)
             {
                 //don't notify about minuscule amounts of damage (<= 1.0f)
-                if (branch.AccumulatedDamage > 1.0f)
+                if (Math.Abs(branch.AccumulatedDamage) > 1.0f)
                 {
                     CreateNetworkMessage(new BranchDamageEventData(branch));
                     branch.AccumulatedDamage = 0.0f;

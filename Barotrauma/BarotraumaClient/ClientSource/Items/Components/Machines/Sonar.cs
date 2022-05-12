@@ -1367,6 +1367,15 @@ namespace Barotrauma.Items.Components
                         pingRadius, prevPingRadius,
                         250.0f, 150.0f, range, pingStrength, passive);
                 }
+                if (pingSource.Y - Level.Loaded.BottomPos < range)
+                {
+                    CreateBlipsForLine(
+                        new Vector2(pingSource.X - range, Level.Loaded.BottomPos),
+                        new Vector2(pingSource.X + range, Level.Loaded.BottomPos),
+                        pingSource, transducerPos,
+                        pingRadius, prevPingRadius,
+                        250.0f, 150.0f, range, pingStrength, passive);
+                }
 
                 List<Voronoi2.VoronoiCell> cells = Level.Loaded.GetCells(pingSource, 7);
                 foreach (Voronoi2.VoronoiCell cell in cells)

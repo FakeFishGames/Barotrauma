@@ -23,10 +23,10 @@ namespace Barotrauma.Items.Components
         }
 #endif
 
-        private List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
-        private List<ParticleEmitter> particleEmitterHitStructure = new List<ParticleEmitter>();
-        private List<ParticleEmitter> particleEmitterHitCharacter = new List<ParticleEmitter>();
-        private List<Pair<RelatedItem, ParticleEmitter>> particleEmitterHitItem = new List<Pair<RelatedItem, ParticleEmitter>>();
+        private readonly List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
+        private readonly List<ParticleEmitter> particleEmitterHitStructure = new List<ParticleEmitter>();
+        private readonly List<ParticleEmitter> particleEmitterHitCharacter = new List<ParticleEmitter>();
+        private readonly List<(RelatedItem relatedItem, ParticleEmitter emitter)> particleEmitterHitItem = new List<(RelatedItem relatedItem, ParticleEmitter emitter)>();
 
         private float prevProgressBarState;
         private Item prevProgressBarTarget = null;
@@ -46,10 +46,7 @@ namespace Barotrauma.Items.Components
                         Identifier[] excludedIdentifiers = subElement.GetAttributeIdentifierArray("excludedidentifiers", Array.Empty<Identifier>());
                         if (excludedIdentifiers.Length == 0) { excludedIdentifiers = subElement.GetAttributeIdentifierArray("excludedidentifier", Array.Empty<Identifier>()); }
                         
-                        particleEmitterHitItem.Add(
-                            new Pair<RelatedItem, ParticleEmitter>(
-                                new RelatedItem(identifiers, excludedIdentifiers), 
-                                new ParticleEmitter(subElement)));
+                        particleEmitterHitItem.Add((new RelatedItem(identifiers, excludedIdentifiers), new ParticleEmitter(subElement)));
                         break;
                     case "particleemitterhitstructure":
                         particleEmitterHitStructure.Add(new ParticleEmitter(subElement));
@@ -139,11 +136,11 @@ namespace Barotrauma.Items.Components
 
             Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);
             if (targetItem.Submarine != null) particlePos += targetItem.Submarine.DrawPosition;
-            foreach (var emitter in particleEmitterHitItem)
+            foreach ((RelatedItem relatedItem, ParticleEmitter emitter) in particleEmitterHitItem)
             {
-                if (!emitter.First.MatchesItem(targetItem)) { continue; }
+                if (!relatedItem.MatchesItem(targetItem)) { continue; }
                 float particleAngle = item.body.Rotation + MathHelper.ToRadians(BarrelRotation) + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
-                emitter.Second.Emit(deltaTime, particlePos, item.CurrentHull, particleAngle + MathHelper.Pi, -particleAngle + MathHelper.Pi);
+                emitter.Emit(deltaTime, particlePos, item.CurrentHull, particleAngle + MathHelper.Pi, -particleAngle + MathHelper.Pi);
             }            
         }
 #if DEBUG

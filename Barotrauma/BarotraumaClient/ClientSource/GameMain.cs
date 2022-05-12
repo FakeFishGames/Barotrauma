@@ -546,6 +546,10 @@ namespace Barotrauma
 
         yield return CoroutineStatus.Running;
 
+#if DEBUG
+            LevelGenerationParams.CheckValidity();
+#endif
+
             MainMenuScreen.Select();
 
             foreach (Identifier steamError in SteamManager.InitializationErrors)
@@ -1032,11 +1036,6 @@ namespace Barotrauma
             if (save)
             {
                 GUI.SetSavingIndicatorState(true);
-
-                if (GameSession.Submarine != null && !GameSession.Submarine.Removed)
-                {
-                    GameSession.SubmarineInfo = new SubmarineInfo(GameSession.Submarine);
-                }
 
                 // Update store stock when saving and quitting in an outpost (normally updated when CampaignMode.End() is called)
                 if (GameSession?.Campaign is SinglePlayerCampaign spCampaign && Level.IsLoadedOutpost && spCampaign.Map?.CurrentLocation != null && spCampaign.CargoManager != null)

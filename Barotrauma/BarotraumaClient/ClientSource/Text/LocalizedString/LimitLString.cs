@@ -8,7 +8,6 @@ namespace Barotrauma
         private readonly int maxWidth;
 
         private ScalableFont? cachedFont = null;
-        private uint cachedFontSize = 0;
         
         public LimitLString(LocalizedString text, GUIFont font, int maxWidth)
         {
@@ -27,7 +26,6 @@ namespace Barotrauma
         {
             cachedValue = ToolBox.LimitString(nestedStr.Value, font.Value, maxWidth);
             cachedFont = font.Value;
-            cachedFontSize = font.Size;
             UpdateLanguage();
         }
     }

@@ -58,21 +58,19 @@ namespace Barotrauma
 
         public class OutfitPreview
         {
-            /// <summary>
-            /// Pair.First = sprite, Pair.Second = draw offset
-            /// </summary>
-            public readonly List<Pair<Sprite, Vector2>> Sprites;
+            public readonly List<(Sprite sprite, Vector2 drawOffset)> Sprites;
+
             public Vector2 Dimensions;
 
             public OutfitPreview()
             {
-                Sprites = new List<Pair<Sprite, Vector2>>();
+                Sprites = new List<(Sprite sprite, Vector2 drawOffset)>();
                 Dimensions = Vector2.One;
             }
 
             public void AddSprite(Sprite sprite, Vector2 drawOffset)
             {
-                Sprites.Add(new Pair<Sprite, Vector2>(sprite, drawOffset));
+                Sprites.Add((sprite, drawOffset));
             }
         }
 

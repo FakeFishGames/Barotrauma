@@ -197,6 +197,11 @@ namespace Barotrauma.Steam
 
                             FileSelection.OnFileSelected = (fn) =>
                             {
+                                if (new FileInfo(fn).Length > SteamManager.Workshop.MaxThumbnailSize)
+                                {
+                                    new GUIMessageBox(TextManager.Get("Error"), TextManager.Get("WorkshopItemPreviewImageTooLarge"));
+                                    return;
+                                }
                                 thumbnailPath = fn;
                                 CreateLocalThumbnail(thumbnailPath, thumbnailContainer);
                             };

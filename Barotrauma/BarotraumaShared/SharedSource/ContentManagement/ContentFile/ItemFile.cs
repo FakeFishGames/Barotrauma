@@ -9,7 +9,7 @@ namespace Barotrauma
 
         protected override bool MatchesSingular(Identifier identifier) => !MatchesPlural(identifier);
         protected override bool MatchesPlural(Identifier identifier) => identifier == "items";
-        protected override PrefabCollection<ItemPrefab> prefabs => ItemPrefab.Prefabs;
+        protected override PrefabCollection<ItemPrefab> Prefabs => ItemPrefab.Prefabs;
         protected override ItemPrefab CreatePrefab(ContentXElement element)
         {
             return new ItemPrefab(element, this);

@@ -66,6 +66,9 @@ namespace Barotrauma.Items.Components
                 rect.Height = (int)(rect.Height * (1.0f - openState));
             }
 
+            //only merge the door's convex hull with overlapping wall segments if it's fully open or fully closed
+            //it's the heaviest part of changing the convex hull, and doesn't need to be done while the door is still in motion
+            bool mergeOverlappingSegments = openState <= 0.0f || openState >= 1.0f;
             if (Window.Height > 0 && Window.Width > 0)
             {
                 if (IsHorizontal)
@@ -88,7 +91,7 @@ namespace Barotrauma.Items.Components
                         else
                         {
                             convexHull2.Enabled = true;
-                            convexHull2.SetVertices(GetConvexHullCorners(rect2));
+                            convexHull2.SetVertices(GetConvexHullCorners(rect2), mergeOverlappingSegments);
                         }
                     }
                 }
@@ -112,7 +115,7 @@ namespace Barotrauma.Items.Components
                         else
                         {
                             convexHull2.Enabled = true;
-                            convexHull2.SetVertices(GetConvexHullCorners(rect2));
+                            convexHull2.SetVertices(GetConvexHullCorners(rect2), mergeOverlappingSegments);
                         }
                     }
                 }
@@ -127,7 +130,7 @@ namespace Barotrauma.Items.Components
             else
             {
                 convexHull.Enabled = true;
-                convexHull.SetVertices(GetConvexHullCorners(rect));
+                convexHull.SetVertices(GetConvexHullCorners(rect), mergeOverlappingSegments);
             }
         }
 

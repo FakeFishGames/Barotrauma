@@ -265,7 +265,7 @@ namespace Barotrauma
                 else
                 {
                     LocalizedString description = item.Description;
-                    if (item.Prefab.Identifier == "idcard" || item.Tags.Contains("despawncontainer"))
+                    if (item.HasTag("identitycard") || item.HasTag("despawncontainer"))
                     {
                         string[] readTags = item.Tags.Split(',');
                         string idName = null;

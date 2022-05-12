@@ -300,6 +300,7 @@ namespace Barotrauma
         }
 
         public static AfflictionPrefab InternalDamage => Prefabs["internaldamage"];
+        public static AfflictionPrefab BiteWounds => Prefabs["bitewounds"];
         public static AfflictionPrefab ImpactDamage => Prefabs["blunttrauma"];
         public static AfflictionPrefab Bleeding => Prefabs["bleeding"];
         public static AfflictionPrefab Burn => Prefabs["burn"];

@@ -39,9 +39,8 @@ namespace Barotrauma
             get { return texture != null && !cannotBeLoaded; }
         }
 
-        public Sprite(Sprite other) : this(other.texture, other.sourceRect, other.offset, other.rotation)
+        public Sprite(Sprite other) : this(other.texture, other.sourceRect, other.offset, other.rotation, other.FilePath.Value)
         {
-            FilePath = other.FilePath;
             Compress = other.Compress;
             size = other.size;
             effects = other.effects;
@@ -58,6 +57,17 @@ namespace Barotrauma
             rotation = newRotation;
             FilePath = ContentPath.FromRaw(path);
             AddToList(this);
+            if (!string.IsNullOrEmpty(path))
+            {
+                Identifier fullPath = Path.GetFullPath(path).CleanUpPathCrossPlatform(correctFilenameCase: false).ToIdentifier();
+                lock (list)
+                {
+                    if (!textureRefCounts.TryAdd(fullPath, new TextureRefCounter { RefCount = 1, Texture = texture }))
+                    {
+                        textureRefCounts[fullPath].RefCount++;
+                    }
+                }
+            }
         }
 
         partial void LoadTexture(ref Vector4 sourceVector, ref bool shouldReturn)

@@ -278,12 +278,12 @@ namespace Barotrauma
 
             static bool isValid(Item item)
             {
-                return item.Prefab.Identifier == "idcard" || item.GetComponent<RangedWeapon>() != null || item.GetComponent<MeleeWeapon>() != null;
+                return item.GetComponent<IdCard>() != null || item.GetComponent<RangedWeapon>() != null || item.GetComponent<MeleeWeapon>() != null;
             }
 
             if (foundItem == null) { return; }
 
-            bool isIdCard = ((MapEntity)foundItem).Prefab.Identifier == "idcard";
+            bool isIdCard = foundItem.GetComponent<IdCard>() != null;
             bool isWeapon = foundItem.GetComponent<RangedWeapon>() != null || foundItem.GetComponent<MeleeWeapon>() != null;
 
             if (isIdCard)

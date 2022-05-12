@@ -9,7 +9,7 @@ namespace Barotrauma
 
         protected override bool MatchesSingular(Identifier identifier) => identifier == "faction";
         protected override bool MatchesPlural(Identifier identifier) => identifier == "factions";
-        protected override PrefabCollection<FactionPrefab> prefabs => FactionPrefab.Prefabs;
+        protected override PrefabCollection<FactionPrefab> Prefabs => FactionPrefab.Prefabs;
         protected override FactionPrefab CreatePrefab(ContentXElement element)
         {
             return new FactionPrefab(element, this);

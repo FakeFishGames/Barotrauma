@@ -2008,8 +2008,27 @@ namespace Barotrauma
             DisplayedVitality = Vitality;
         }
 
+        partial void UpdateSkinTint()
+        {
+            if (!Character.IsVisible) { return; }
+            FaceTint = DefaultFaceTint;
+            BodyTint = Color.TransparentBlack;
+
+            if (!(Character?.Params?.Health.ApplyAfflictionColors ?? false)) { return; }
+
+            foreach (KeyValuePair<Affliction, LimbHealth> kvp in afflictions)
+            {
+                var affliction = kvp.Key;
+                Color faceTint = affliction.GetFaceTint();
+                if (faceTint.A > FaceTint.A) { FaceTint = faceTint; }
+                Color bodyTint = affliction.GetBodyTint();
+                if (bodyTint.A > BodyTint.A) { BodyTint = bodyTint; }
+            }            
+        }
+
         partial void UpdateLimbAfflictionOverlays()
         {
+            if (!Character.IsVisible) { return; }
             foreach (Limb limb in Character.AnimController.Limbs)
             {
                 if (limb.HealthIndex < 0 || limb.HealthIndex >= limbHealths.Count) { continue; }

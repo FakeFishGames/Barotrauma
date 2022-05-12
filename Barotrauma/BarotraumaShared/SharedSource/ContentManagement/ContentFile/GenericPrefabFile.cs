@@ -9,7 +9,7 @@ namespace Barotrauma
 
         protected abstract bool MatchesSingular(Identifier identifier);
         protected abstract bool MatchesPlural(Identifier identifier);
-        protected abstract PrefabCollection<T> prefabs { get; }
+        protected abstract PrefabCollection<T> Prefabs { get; }
         protected abstract T CreatePrefab(ContentXElement element);
         
         private void LoadFromXElement(ContentXElement parentElement, bool overriding)
@@ -29,14 +29,14 @@ namespace Barotrauma
             }
             else if (elemName == "clear")
             {
-                prefabs.AddOverrideFile(this);
+                Prefabs.AddOverrideFile(this);
             }
             else if (MatchesSingular(elemName))
             {
                 T prefab = CreatePrefab(parentElement);
                 try
                 {
-                    prefabs.Add(prefab, overriding);
+                    Prefabs.Add(prefab, overriding);
                 }
                 catch
                 {
@@ -53,7 +53,7 @@ namespace Barotrauma
             }
             else
             {
-                DebugConsole.ThrowError($"Invalid {GetType().Name} element: {parentElement.Name} in {Path}");
+                DebugConsole.ThrowError($"GenericPrefabFile: Invalid {GetType().Name} element: {parentElement.Name} in {Path}");
             }
         }
 
@@ -68,12 +68,12 @@ namespace Barotrauma
 
         public override sealed void UnloadFile()
         {
-            prefabs.RemoveByFile(this);
+            Prefabs.RemoveByFile(this);
         }
 
         public sealed override void Sort()
         {
-            prefabs.SortAll();
+            Prefabs.SortAll();
         }
     }
 }

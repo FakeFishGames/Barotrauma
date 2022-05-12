@@ -257,7 +257,7 @@ namespace Barotrauma.Tutorials
                 yield return new WaitForSeconds(2.0f);
             }*/
 
-            TriggerTutorialSegment(0, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Select), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Deselect), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.ToggleInventory)); // Medical supplies objective
+            TriggerTutorialSegment(0, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Select), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Deselect)); // Medical supplies objective
 
             do
             {

@@ -153,12 +153,12 @@ namespace Barotrauma
         protected ActiveTeamChange currentTeamChange;
         const string OriginalTeamIdentifier = "original";
 
-        public static void ThrowIfAccessingWalletsInSingleplayer()
+        private void ThrowIfAccessingWalletsInSingleplayer()
         {
 #if CLIENT && DEBUG
             if (Screen.Selected is TestScreen) { return; }
 #endif
-            if (GameMain.NetworkMember is null || GameMain.IsSingleplayer)
+            if ((GameMain.NetworkMember is null || GameMain.IsSingleplayer) && IsPlayer)
             {
                 throw new InvalidOperationException($"Tried to access crew wallets in singleplayer. Use {nameof(CampaignMode)}.{nameof(CampaignMode.Bank)} or {nameof(CampaignMode)}.{nameof(CampaignMode.GetWallet)} instead.");
             }
@@ -560,18 +560,35 @@ namespace Barotrauma
 
 #if CLIENT
                 CharacterHealth.SetHealthBarVisibility(value == null);
-#elif SERVER
-                if (value is { IsDead: true, Wallet: { Balance: var balance } grabbedWallet } && balance > 0)
+#endif
+                bool isServerOrSingleplayer = GameMain.IsSingleplayer || GameMain.NetworkMember is { IsServer: true };
+                if (IsPlayer && isServerOrSingleplayer && value is { IsDead: true, Wallet: { Balance: var balance } grabbedWallet } && balance > 0)
                 {
-                    if (GameMain.GameSession.Campaign is MultiPlayerCampaign mpCampaign)
+#if SERVER
+                    if (GameMain.GameSession.Campaign is MultiPlayerCampaign mpCampaign && GameMain.Server is { ServerSettings: { } settings })
                     {
-                        mpCampaign.Bank.Give(balance);
+                        switch (settings.LootedMoneyDestination)
+                        {
+                            case LootedMoneyDestination.Wallet when IsPlayer:
+                                Wallet.Give(balance);
+                                break;
+                             default:
+                                mpCampaign.Bank.Give(balance);
+                                break;
+
+                        }
                     }
 
-                    grabbedWallet.Deduct(balance);
                     GameServer.Log($"{GameServer.CharacterLogName(this)} grabbed {value.Name}'s body and received {grabbedWallet.Balance} mk.", ServerLog.MessageType.Money);
-                }
+#elif CLIENT
+                    if (GameMain.GameSession.Campaign is SinglePlayerCampaign spCampaign)
+                    {
+                        spCampaign.Bank.Give(balance);
+                    }
 #endif
+
+                    grabbedWallet.Deduct(balance);
+                }
             }
         }
 
@@ -1443,7 +1460,7 @@ namespace Barotrauma
 
             foreach (Item item in Inventory.AllItems)
             {
-                if (item?.Prefab.Identifier != "idcard") { continue; }
+                if (item?.GetComponent<IdCard>() == null) { continue; }
                 foreach (string s in spawnPoint.IdCardTags)
                 {
                     item.AddTag(s);
@@ -3954,7 +3971,10 @@ namespace Barotrauma
             if (actionType != ActionType.OnDamaged && actionType != ActionType.OnSevered)
             {
                 // OnDamaged is called only for the limb that is hit.
-                AnimController.Limbs.ForEach(l => l.ApplyStatusEffects(actionType, deltaTime));
+                foreach (Limb limb in AnimController.Limbs)
+                {
+                    limb.ApplyStatusEffects(actionType, deltaTime);
+                }
             }
             //OnActive effects are handled by the afflictions themselves
             if (actionType != ActionType.OnActive)

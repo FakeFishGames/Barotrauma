@@ -416,7 +416,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public virtual void Move(Vector2 amount) { }
+        public virtual void Move(Vector2 amount, bool ignoreContacts = false) { }
 
         /// <summary>a Character has picked the item</summary>
         public virtual bool Pick(Character picker)

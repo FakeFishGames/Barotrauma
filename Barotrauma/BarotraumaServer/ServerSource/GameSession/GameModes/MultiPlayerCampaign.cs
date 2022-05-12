@@ -163,29 +163,6 @@ namespace Barotrauma
 
         private static bool IsOwner(Client client) => client != null && client.Connection == GameMain.Server.OwnerConnection;
 
-        /// <summary>
-        /// There is a client-side implementation of the method in <see cref="CampaignMode"/>
-        /// </summary>
-        public bool AllowedToManageCampaign(Client client, ClientPermissions permissions)
-        {
-            //allow managing the campaign if the client has permissions, is the owner, or the only client in the server,
-            //or if no-one has management permissions
-            return
-                client.HasPermission(permissions) ||
-                client.HasPermission(ClientPermissions.ManageCampaign) ||
-                GameMain.Server.ConnectedClients.Count == 1 ||
-                IsOwner(client) ||
-                GameMain.Server.ConnectedClients.None(c => c.InGame && (IsOwner(c) || c.HasPermission(permissions)));
-        }
-
-        public bool AllowedToManageWallets(Client client)
-        {
-            return
-                client.HasPermission(ClientPermissions.ManageCampaign) ||
-                client.HasPermission(ClientPermissions.ManageMoney) ||
-                IsOwner(client);
-        }
-
         public void SaveExperiencePoints(Client client)
         {
             ClearSavedExperiencePoints(client);
@@ -198,14 +175,6 @@ namespace Barotrauma
         public void ClearSavedExperiencePoints(Client client)
         {
             savedExperiencePoints.RemoveAll(s => s.SteamID != 0 && client.SteamID == s.SteamID || client.EndpointMatches(s.EndPoint));
-        }
-
-        public void LoadPets()
-        {
-            if (petsElement != null)
-            {
-                PetBehavior.LoadPets(petsElement);
-            }
         }
 
         public void SavePlayers()
@@ -261,8 +230,7 @@ namespace Barotrauma
 
             characterData.ForEach(cd => cd.HasSpawned = false);
 
-            petsElement = new XElement("pets");
-            PetBehavior.SavePets(petsElement);
+            SavePets();
 
             //remove all items that are in someone's inventory
             foreach (Character c in Character.CharacterList)
@@ -285,6 +253,8 @@ namespace Barotrauma
 
                 c.Inventory.DeleteAllItems();
             }
+
+            SaveActiveOrders();
         }
 
         public void MoveDiscardedCharacterBalancesToBank()
@@ -348,44 +318,10 @@ namespace Barotrauma
             if (success)
             {
                 SavePlayers();
-
                 yield return CoroutineStatus.Running;
-
-                if (leavingSub != Submarine.MainSub && !leavingSub.DockedTo.Contains(Submarine.MainSub))
-                {
-                    Submarine.MainSub = leavingSub;
-                    GameMain.GameSession.Submarine = leavingSub;
-                    GameMain.GameSession.SubmarineInfo = leavingSub.Info;
-                    leavingSub.Info.FilePath = System.IO.Path.Combine(SaveUtil.TempPath, leavingSub.Info.Name + ".sub");
-                    var subsToLeaveBehind = GetSubsToLeaveBehind(leavingSub);
-                    GameMain.GameSession.OwnedSubmarines.Add(leavingSub.Info);
-                    foreach (Submarine sub in subsToLeaveBehind)
-                    {
-                        GameMain.GameSession.OwnedSubmarines.RemoveAll(s => s != leavingSub.Info && s.Name == sub.Info.Name);
-                        MapEntity.mapEntityList.RemoveAll(e => e.Submarine == sub && e is LinkedSubmarine);
-                        LinkedSubmarine.CreateDummy(leavingSub, sub);
-                    }
-                }
+                LeaveUnconnectedSubs(leavingSub);
                 NextLevel = newLevel;
-                GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);
-
-                if (PendingSubmarineSwitch != null)
-                {
-                    SubmarineInfo previousSub = GameMain.GameSession.SubmarineInfo;
-                    GameMain.GameSession.SubmarineInfo = PendingSubmarineSwitch;
-
-                    for (int i = 0; i < GameMain.GameSession.OwnedSubmarines.Count; i++)
-                    {
-                        if (GameMain.GameSession.OwnedSubmarines[i].Name == previousSub.Name)
-                        {
-                            GameMain.GameSession.OwnedSubmarines[i] = previousSub;
-                            break;
-                        }
-                    }
-                }
-
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
-                PendingSubmarineSwitch = null;
             }
             else
             {
@@ -977,6 +913,8 @@ namespace Barotrauma
         {
             NetWalletTransfer transfer = INetSerializableStruct.Read<NetWalletTransfer>(msg);
 
+            if (GameMain.Server is null) { return; }
+
             switch (transfer.Sender)
             {
                 case Some<ushort> { Value: var id }:
@@ -992,7 +930,8 @@ namespace Barotrauma
                     {
                         if (transfer.Receiver is Some<ushort> { Value: var receiverId } && receiverId == sender.CharacterID)
                         {
-                            GameMain.Server?.Voting.StartTransferVote(sender, null, transfer.Amount, sender);
+                            if (transfer.Amount > GameMain.Server.ServerSettings.MaximumTransferRequest) { return; }
+                            GameMain.Server.Voting.StartTransferVote(sender, null, transfer.Amount, sender);
                             GameServer.Log($"{sender.Name} started a vote to transfer {transfer.Amount} mk from the bank.", ServerLog.MessageType.Money);
                         }
                         return;
@@ -1301,7 +1240,11 @@ namespace Barotrauma
             }
 
             // save bots
-            CrewManager.SaveMultiplayer(modeElement);
+            var crewManagerElement = CrewManager.SaveMultiplayer(modeElement);
+            if (ActiveOrdersElement != null)
+            {
+                crewManagerElement.Add(ActiveOrdersElement);
+            }
 
             XElement savedExperiencePointsElement = new XElement("SavedExperiencePoints");
             foreach (var savedExperiencePoint in savedExperiencePoints)

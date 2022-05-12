@@ -22,14 +22,14 @@ namespace Barotrauma
         public int Quantity { get; set; }
         public bool? IsStoreComponentEnabled { get; set; }
 
-        public readonly int BuyerCharacterInfoId;
+        public readonly int BuyerCharacterInfoIdentifier;
 
         public PurchasedItem(ItemPrefab itemPrefab, int quantity, int buyerCharacterInfoId)
         {
             ItemPrefabIdentifier = itemPrefab.Identifier;
             Quantity = quantity;
             IsStoreComponentEnabled = null;
-            BuyerCharacterInfoId = buyerCharacterInfoId;
+            BuyerCharacterInfoIdentifier = buyerCharacterInfoId;
         }
 
 #if CLIENT
@@ -44,7 +44,7 @@ namespace Barotrauma
             ItemPrefabIdentifier = itemPrefabId;
             Quantity = quantity;
             IsStoreComponentEnabled = null;
-            BuyerCharacterInfoId = buyer?.Character?.Info?.ID ?? Character.Controlled?.Info?.ID ?? 0;
+            BuyerCharacterInfoIdentifier = buyer?.Character?.Info?.GetIdentifier() ?? Character.Controlled?.Info?.GetIdentifier() ?? 0;
         }
 
         public override string ToString()
@@ -284,11 +284,10 @@ namespace Barotrauma
             foreach (PurchasedItem item in newItems)
             {
                 int itemValue = item.Quantity * buyValues[item.ItemPrefab];
+                GameAnalyticsManager.AddMoneySpentEvent(itemValue, GameAnalyticsManager.MoneySink.Store, item.ItemPrefab.Identifier.Value);
                 sb.Append($"\n - {item.ItemPrefab.Name} x{item.Quantity}");
                 price += itemValue;
-
             }
-
             GameServer.Log($"{NetworkMember.ClientLogName(client, client?.Name ?? "Unknown")} purchased {newItems.Count} item(s) for {TextManager.FormatCurrency(price)}{sb.ToString()}", ServerLog.MessageType.Money);
         }
 #endif
@@ -317,7 +316,10 @@ namespace Barotrauma
                 // Exchange money
                 int itemValue = item.Quantity * buyValues[item.ItemPrefab];
                 campaign.TryPurchase(client, itemValue);
-                GameAnalyticsManager.AddMoneySpentEvent(itemValue, GameAnalyticsManager.MoneySink.Store, item.ItemPrefab.Identifier.Value);
+                if (GameMain.IsSingleplayer)
+                {
+                    GameAnalyticsManager.AddMoneySpentEvent(itemValue, GameAnalyticsManager.MoneySink.Store, item.ItemPrefab.Identifier.Value);
+                }
                 store.Balance += itemValue;
                 if (removeFromCrate)
                 {
@@ -368,12 +370,13 @@ namespace Barotrauma
 
         public void CreatePurchasedItems()
         {
+            purchasedIDCards.Clear();
             var items = new List<PurchasedItem>();
             foreach (var storeSpecificItems in PurchasedItems)
             {
                 items.AddRange(storeSpecificItems.Value);
             }
-            CreateItems(items, Submarine.MainSub);
+            CreateItems(items, Submarine.MainSub, this);
             PurchasedItems.Clear();
             OnPurchasedItemsChanged?.Invoke();
         }
@@ -407,7 +410,7 @@ namespace Barotrauma
                 if (!item.Components.All(c => !(c is Holdable h) || !h.Attachable || !h.Attached)) { return false; }
                 if (!item.Components.All(c => !(c is Wire w) || w.Connections.All(c => c == null))) { return false; }
                 if (!ItemAndAllContainersInteractable(item)) { return false; }
-                if (item.GetRootContainer() is Item rootContainer && rootContainer.HasTag("donttakeitems")) { return false; }
+                if (item.GetRootContainer() is Item rootContainer && rootContainer.HasTag("dontsellitems")) { return false; }
                 return true;
             }).Distinct();
 
@@ -428,7 +431,7 @@ namespace Barotrauma
             if (!item.Prefab.CanBeSold) { return false; }
             if (item.SpawnedInCurrentOutpost) { return false; }
             if (!item.Prefab.AllowSellingWhenBroken && item.ConditionPercentage < 90.0f) { return false; }
-            if (confirmedItems.Any(ci => ci.Item == item)) { return false; }
+            if (confirmedItems != null && confirmedItems.Any(ci => ci.Item == item)) { return false; }
             if (UndeterminedSoldEntities.TryGetValue(item.Prefab, out int count))
             {
                 int newCount = count - 1;
@@ -448,13 +451,58 @@ namespace Barotrauma
                 if (containedItems.None()) { return true; }
                 // Allow selling the item if contained items are unsellable and set to be removed on deconstruct
                 if (itemContainer.RemoveContainedItemsOnDeconstruct && containedItems.All(it => !it.Prefab.CanBeSold)) { return true; }
-                // Otherwise there must be no contained items or the contained items must be confirmed as sold
-                if (!containedItems.All(it => confirmedItems.Any(ci => ci.Item == it))) { return false; }
+                if (confirmedItems != null)
+                {
+                    // Otherwise there must be no contained items or the contained items must be confirmed as sold
+                    if (!containedItems.All(it => confirmedItems.Any(ci => ci.Item == it))) { return false; }
+                }
             }
             return true;
         }
 
-        public static void CreateItems(List<PurchasedItem> itemsToSpawn, Submarine sub)
+        public static ItemContainer GetOrCreateCargoContainerFor(ItemPrefab item, ISpatialEntity cargoRoomOrSpawnPoint, ref List<ItemContainer> availableContainers)
+        {
+            ItemContainer itemContainer = null;
+            if (!string.IsNullOrEmpty(item.CargoContainerIdentifier))
+            {
+                itemContainer = availableContainers.Find(ac =>
+                    ac.Inventory.CanBePut(item) &&
+                    (ac.Item.Prefab.Identifier == item.CargoContainerIdentifier ||
+                    ac.Item.Prefab.Tags.Contains(item.CargoContainerIdentifier)));
+
+                if (itemContainer == null)
+                {
+                    ItemPrefab containerPrefab = ItemPrefab.Prefabs.Find(ep =>
+                        ep.Identifier == item.CargoContainerIdentifier ||
+                        (ep.Tags != null && ep.Tags.Contains(item.CargoContainerIdentifier)));
+
+                    if (containerPrefab == null)
+                    {
+                        DebugConsole.AddWarning($"CargoManager: could not find the item prefab for container {item.CargoContainerIdentifier}!");
+                        return null;
+                    }
+
+                    Vector2 containerPosition = cargoRoomOrSpawnPoint is Hull cargoRoom ?  GetCargoPos(cargoRoom, containerPrefab) : cargoRoomOrSpawnPoint.Position;
+                    Item containerItem = new Item(containerPrefab, containerPosition, cargoRoomOrSpawnPoint.Submarine);
+                    itemContainer = containerItem.GetComponent<ItemContainer>();
+                    if (itemContainer == null)
+                    {
+                        DebugConsole.AddWarning($"CargoManager: No ItemContainer component found in {containerItem.Prefab.Identifier}!");
+                        return null;
+                    }
+                    availableContainers.Add(itemContainer);
+#if SERVER
+                    if (GameMain.Server != null)
+                    {
+                        Entity.Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(itemContainer.Item));
+                    }
+#endif
+                }
+            }
+            return itemContainer;
+        }
+
+        public static void CreateItems(List<PurchasedItem> itemsToSpawn, Submarine sub, CargoManager cargoManager)
         {
             if (itemsToSpawn.Count == 0) { return; }
 
@@ -496,60 +544,26 @@ namespace Barotrauma
             }
 
             List<ItemContainer> availableContainers = new List<ItemContainer>();
-            ItemPrefab containerPrefab = null;
             foreach (PurchasedItem pi in itemsToSpawn)
             {
                 Vector2 position = GetCargoPos(cargoRoom, pi.ItemPrefab);
 
                 for (int i = 0; i < pi.Quantity; i++)
                 {
-                    ItemContainer itemContainer = null;
-                    if (!string.IsNullOrEmpty(pi.ItemPrefab.CargoContainerIdentifier))
-                    {
-                        itemContainer = availableContainers.Find(ac => 
-                            ac.Inventory.CanBePut(pi.ItemPrefab) &&
-                            (ac.Item.Prefab.Identifier == pi.ItemPrefab.CargoContainerIdentifier || 
-                            ac.Item.Prefab.Tags.Contains(pi.ItemPrefab.CargoContainerIdentifier.ToLowerInvariant())));
-
-                        if (itemContainer == null)
-                        {
-                            containerPrefab = ItemPrefab.Prefabs.Find(ep => 
-                                ep.Identifier == pi.ItemPrefab.CargoContainerIdentifier || 
-                                (ep.Tags != null && ep.Tags.Contains(pi.ItemPrefab.CargoContainerIdentifier.ToLowerInvariant())));
-
-                            if (containerPrefab == null)
-                            {
-                                DebugConsole.ThrowError("Cargo spawning failed - could not find the item prefab for container \"" + pi.ItemPrefab.CargoContainerIdentifier + "\"!");
-                                continue;
-                            }
-
-                            Vector2 containerPosition = GetCargoPos(cargoRoom, containerPrefab);
-                            Item containerItem = new Item(containerPrefab, containerPosition, wp.Submarine);
-                            itemContainer = containerItem.GetComponent<ItemContainer>();
-                            if (itemContainer == null)
-                            {
-                                DebugConsole.ThrowError("Cargo spawning failed - container \"" + containerItem.Name + "\" does not have an ItemContainer component!");
-                                continue;
-                            }
-                            availableContainers.Add(itemContainer);
-#if SERVER
-                            if (GameMain.Server != null)
-                            {
-                                Entity.Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(itemContainer.Item));
-                            }
-#endif
-                        }
-                    }
-
                     var item = new Item(pi.ItemPrefab, position, wp.Submarine);
-                    itemContainer?.Inventory.TryPutItem(item, null);            
-
-                    itemSpawned(item);    
+                    var itemContainer = GetOrCreateCargoContainerFor(pi.ItemPrefab, cargoRoom, ref availableContainers);
+                    itemContainer?.Inventory.TryPutItem(item, null);
+                    var idCard = item.GetComponent<IdCard>();
+                    if (cargoManager != null && idCard != null && pi.BuyerCharacterInfoIdentifier != 0)
+                    {
+                        cargoManager.purchasedIDCards.Add((pi, idCard));
+                    }
+                    itemSpawned(pi, item);    
 #if SERVER
                     Entity.Spawner?.CreateNetworkEvent(new EntitySpawner.SpawnEntity(item));
 #endif
                     (itemContainer?.Item ?? item).CampaignInteractionType = CampaignMode.InteractionType.Cargo;    
-                    static void itemSpawned(Item item)
+                    static void itemSpawned(PurchasedItem purchased, Item item)
                     {
                         Submarine sub = item.Submarine ?? item.GetRootContainer()?.Submarine;
                         if (sub != null)
@@ -563,6 +577,23 @@ namespace Barotrauma
                 }
             }
             itemsToSpawn.Clear();
+        }
+
+        private readonly List<(PurchasedItem purchaseInfo, IdCard idCard)> purchasedIDCards = new List<(PurchasedItem purchaseInfo, IdCard idCard)>();
+        public void InitPurchasedIDCards()
+        {
+            foreach ((PurchasedItem purchased, IdCard idCard) in purchasedIDCards)
+            {
+                if (idCard != null && purchased.BuyerCharacterInfoIdentifier != 0)
+                {
+                    var owner = Character.CharacterList.Find(c => c.Info?.GetIdentifier() == purchased.BuyerCharacterInfoIdentifier);
+                    if (owner?.Info != null)
+                    {
+                        var mainSubSpawnPoints = WayPoint.SelectCrewSpawnPoints(new List<CharacterInfo>() { owner.Info }, Submarine.MainSub);
+                        idCard.Initialize(mainSubSpawnPoints.FirstOrDefault(), owner);
+                    }
+                }
+            }
         }
 
         public static Vector2 GetCargoPos(Hull hull, ItemPrefab itemPrefab)
@@ -603,7 +634,7 @@ namespace Barotrauma
                         new XAttribute("id", item.ItemPrefab.Identifier),
                         new XAttribute("qty", item.Quantity),
                         new XAttribute("storeid", storeSpecificItems.Key),
-                        new XAttribute("buyer", item.BuyerCharacterInfoId)));
+                        new XAttribute("buyer", item.BuyerCharacterInfoIdentifier)));
                 }
             }
             parentElement.Add(itemsElement);

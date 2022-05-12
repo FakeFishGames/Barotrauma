@@ -214,7 +214,7 @@ namespace Barotrauma.MapCreatures.Behavior
         [Serialize(400, IsPropertySaveable.Yes, "How much health the root has.")]
         public int RootHealth { get; set; }
 
-        [Serialize(0.0005f, IsPropertySaveable.Yes, "How fast the root's health regenerates per each grown branch.")]
+        [Serialize(0.00025f, IsPropertySaveable.Yes, "How fast the root's health regenerates per each grown branch.")]
         public float HealthRegenPerBranch { get; set; }
 
         [Serialize(30, IsPropertySaveable.Yes, "How far away from the root branches can regenerate health (in number of branches). The amount of regen decreases lineary further from the root.")]
@@ -1148,7 +1148,7 @@ namespace Barotrauma.MapCreatures.Behavior
                 return;
             }
 #if SERVER
-            if (!wasRemoved)
+            if (!wasRemoved && Parent != null && !Parent.Removed)
             {
                 CreateNetworkMessage(new BranchRemoveEventData(branch));
             }
@@ -1199,7 +1199,10 @@ namespace Barotrauma.MapCreatures.Behavior
 
             StateMachine?.State?.Exit();
 #if SERVER
-            CreateNetworkMessage(new KillEventData());
+            if (Parent != null && !Parent.Removed)
+            {
+                CreateNetworkMessage(new KillEventData());
+            }
 #endif
         }
 
@@ -1220,8 +1223,11 @@ namespace Barotrauma.MapCreatures.Behavior
             }
 
             _entityList.Remove(this);
-#if SERVER
-            CreateNetworkMessage(new RemoveEventData());
+#if SERVER            
+            if (Parent != null && !Parent.Removed)
+            {
+                CreateNetworkMessage(new RemoveEventData());
+            }
 #endif
         }
 

@@ -270,7 +270,7 @@ namespace Barotrauma
 
                     foreach (Item item in spawnedCharacter.Inventory.AllItems)
                     {
-                        if (item?.Prefab.Identifier == "idcard")
+                        if (item?.GetComponent<IdCard>() != null)
                         {
                             item.AddTag("id_pirate");
                         }

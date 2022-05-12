@@ -590,7 +590,7 @@ namespace Barotrauma
             return index;
         }
 
-        public override void Move(Vector2 amount)
+        public override void Move(Vector2 amount, bool ignoreContacts = false)
         {
             if (!MathUtils.IsValid(amount))
             {

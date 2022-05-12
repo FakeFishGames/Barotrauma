@@ -125,7 +125,7 @@ namespace Barotrauma
         {
             if (isOpen)
             {
-                frame.AddToGUIUpdateList();
+                frame.AddToGUIUpdateList(order: 1);
             }
         }
 
@@ -1714,9 +1714,47 @@ namespace Barotrauma
                     //check missing mission texts
                     foreach (var missionPrefab in MissionPrefab.Prefabs)
                     {
-                        Identifier missionId = (missionPrefab.ConfigElement.GetAttribute("textidentifier") == null ? missionPrefab.Identifier : missionPrefab.ConfigElement.GetAttributeIdentifier("textidentifier", Identifier.Empty));
-                        addIfMissing($"missionname.{missionId}".ToIdentifier(), language);
-                        addIfMissing($"missiondescription.{missionId}".ToIdentifier(), language);
+                        Identifier missionId = missionPrefab.ConfigElement.GetAttribute("textidentifier") == null ? 
+                            missionPrefab.Identifier : 
+                            missionPrefab.ConfigElement.GetAttributeIdentifier("textidentifier", Identifier.Empty);
+                        
+                        if (!tags[language].Contains(missionPrefab.ConfigElement.GetAttributeIdentifier("name", Identifier.Empty)))
+                        {
+                            addIfMissing($"missionname.{missionId}".ToIdentifier(), language);
+                        }
+
+                        if (missionPrefab.Type == MissionType.Combat)
+                        {
+                            addIfMissing($"MissionDescriptionNeutral.{missionId}".ToIdentifier(), language);
+                            addIfMissing($"MissionDescription1.{missionId}".ToIdentifier(), language);
+                            addIfMissing($"MissionDescription2.{missionId}".ToIdentifier(), language);
+                            addIfMissing($"MissionTeam1.{missionId}".ToIdentifier(), language);
+                            addIfMissing($"MissionTeam2.{missionId}".ToIdentifier(), language);
+                        }
+                        else
+                        {
+                            if (!tags[language].Contains(missionPrefab.ConfigElement.GetAttributeIdentifier("description", Identifier.Empty)))
+                            {
+                                addIfMissing($"missiondescription.{missionId}".ToIdentifier(), language);
+                            }
+                            if (!tags[language].Contains(missionPrefab.ConfigElement.GetAttributeIdentifier("successmessage", Identifier.Empty)))
+                            {
+                                addIfMissing($"missionsuccess.{missionId}".ToIdentifier(), language);
+                            }
+                            //only check failure message if there's something defined in the xml (otherwise we just use the generic "missionfailed" text)
+                            if (missionPrefab.ConfigElement.GetAttribute("failuremessage") != null &&
+                                !tags[language].Contains(missionPrefab.ConfigElement.GetAttributeIdentifier("failuremessage", Identifier.Empty)))
+                            {
+                                addIfMissing($"missionfailure.{missionId}".ToIdentifier(), language);
+                            }
+                        }
+                        for (int i = 0; i<missionPrefab.Messages.Length; i++)
+                        {
+                            if (missionPrefab.Messages[i].IsNullOrWhiteSpace())
+                            {
+                                addIfMissing($"MissionMessage{i}.{missionId}".ToIdentifier(), language);
+                            }
+                        }
                     }
 
                     foreach (Type itemComponentType in typeof(ItemComponent).Assembly.GetTypes().Where(type => type.IsSubclassOf(typeof(ItemComponent))))
@@ -2503,7 +2541,7 @@ namespace Barotrauma
                     var entity = MapEntity.mapEntityList[i] as ISerializableEntity;
                     if (entity != null)
                     {
-                        List<Pair<object, SerializableProperty>> allProperties = new List<Pair<object, SerializableProperty>>();
+                        List<(object obj, SerializableProperty property)> allProperties = new List<(object obj, SerializableProperty property)>();
 
                         if (entity is Item item)
                         {
@@ -2518,14 +2556,14 @@ namespace Barotrauma
 
                             for (int k = 0; k < properties.Count; k++)
                             {
-                                allProperties.Add(new Pair<object, SerializableProperty>(entity, properties[k]));
+                                allProperties.Add((entity, properties[k]));
                             }
                         }
 
                         for (int j = 0; j < allProperties.Count; j++)
                         {
-                            var property = allProperties[j].Second;
-                            string propertyName = (allProperties[j].First.GetType().Name + "." + property.PropertyInfo.Name).ToLowerInvariant();
+                            var property = allProperties[j].property;
+                            string propertyName = (allProperties[j].obj.GetType().Name + "." + property.PropertyInfo.Name).ToLowerInvariant();
                             LocalizedString displayName = TextManager.Get($"sp.{propertyName}.name");
                             if (displayName.IsNullOrEmpty())
                             {

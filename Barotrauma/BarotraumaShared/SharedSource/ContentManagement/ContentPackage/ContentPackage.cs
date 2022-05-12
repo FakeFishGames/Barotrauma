@@ -14,8 +14,7 @@ namespace Barotrauma
 {
     public abstract class ContentPackage
     {
-        #warning TODO: make this independent of the current version
-        public static readonly Version MinimumHashCompatibleVersion = GameMain.Version;
+        public static readonly Version MinimumHashCompatibleVersion = new Version(0, 17, 16, 0);
         
         public const string LocalModsDir = "LocalMods";
         public static readonly string WorkshopModsDir = Barotrauma.IO.Path.Combine(

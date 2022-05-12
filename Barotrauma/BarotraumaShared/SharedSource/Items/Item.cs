@@ -115,7 +115,7 @@ namespace Barotrauma
 
         private readonly Quality qualityComponent;
 
-        private readonly ConcurrentQueue<float> impactQueue = new ConcurrentQueue<float>();
+        private ConcurrentQueue<float> impactQueue;
 
         //a dictionary containing lists of the status effects in all the components of the item
         private readonly bool[] hasStatusEffectsOfType;
@@ -835,33 +835,35 @@ namespace Barotrauma
                             var rand = new Random(ID);
                             density = MathHelper.Lerp(minDensity, maxDensity, (float)rand.NextDouble());
                         }
-                        body = new PhysicsBody(subElement, ConvertUnits.ToSimUnits(Position), Scale, density);
 
-                        string collisionCategory = subElement.GetAttributeString("collisioncategory", null);
+                        string collisionCategoryStr = subElement.GetAttributeString("collisioncategory", null);
+
+                        Category collisionCategory = Physics.CollisionItem;
+                        Category collidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform;
                         if ((Prefab.DamagedByProjectiles || Prefab.DamagedByMeleeWeapons) && Condition > 0)
                         {
                             //force collision category to Character to allow projectiles and weapons to hit
                             //(we could also do this by making the projectiles and weapons hit CollisionItem
                             //and check if the collision should be ignored in the OnCollision callback, but
                             //that'd make the hit detection more expensive because every item would be included)
-                            body.CollisionCategories = Physics.CollisionCharacter;
-                            body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform | Physics.CollisionProjectile;
+                            collisionCategory = Physics.CollisionCharacter;
                         }
-                        if (collisionCategory != null)
+                        if (collisionCategoryStr != null)
                         {                            
-                            if (!Physics.TryParseCollisionCategory(collisionCategory, out Category cat))
+                            if (!Physics.TryParseCollisionCategory(collisionCategoryStr, out Category cat))
                             {
-                                DebugConsole.ThrowError("Invalid collision category in item \"" + Name+"\" (" + collisionCategory + ")");
+                                DebugConsole.ThrowError("Invalid collision category in item \"" + Name+"\" (" + collisionCategoryStr + ")");
                             }
                             else
                             {
-                                body.CollisionCategories = cat;
+                                collisionCategory = cat;
                                 if (cat.HasFlag(Physics.CollisionCharacter))
                                 {
-                                    body.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform | Physics.CollisionProjectile;
+                                    collisionCategory |= Physics.CollisionProjectile;
                                 }
                             }
                         }
+                        body = new PhysicsBody(subElement, ConvertUnits.ToSimUnits(Position), Scale, density, collisionCategory, collidesWith, findNewContacts: false);
                         body.FarseerBody.AngularDamping = subElement.GetAttributeFloat("angulardamping", 0.2f);
                         body.FarseerBody.LinearDamping = subElement.GetAttributeFloat("lineardamping", 0.1f);
                         body.UserData = this;
@@ -1261,12 +1263,7 @@ namespace Barotrauma
 
         partial void SetActiveSpriteProjSpecific();
 
-        public override void Move(Vector2 amount)
-        {
-            Move(amount, ignoreContacts: false);
-        }
-
-        public void Move(Vector2 amount, bool ignoreContacts)
+        public override void Move(Vector2 amount, bool ignoreContacts = false)
         {
             if (!MathUtils.IsValid(amount))
             {
@@ -1289,7 +1286,7 @@ namespace Barotrauma
             }
             foreach (ItemComponent ic in components)
             {
-                ic.Move(amount);
+                ic.Move(amount, ignoreContacts);
             }
 
             if (body != null && (Submarine == null || !Submarine.Loading)) { FindHull(); }
@@ -1703,9 +1700,12 @@ namespace Barotrauma
 
         public override void Update(float deltaTime, Camera cam)
         {
-            while (impactQueue.TryDequeue(out float impact))
+            if (impactQueue != null)
             {
-                HandleCollision(impact);
+                while (impactQueue.TryDequeue(out float impact))
+                {
+                    HandleCollision(impact);
+                }
             }
 
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && (!Submarine?.Loading ?? true))
@@ -1959,6 +1959,7 @@ namespace Barotrauma
             if (contact.FixtureA.Body == f1.Body) { normal = -normal; }
             float impact = Vector2.Dot(f1.Body.LinearVelocity, -normal);
 
+            impactQueue ??= new ConcurrentQueue<float>();
             impactQueue.Enqueue(impact);
 
             return true;
@@ -2680,21 +2681,21 @@ namespace Barotrauma
             foreach (ItemComponent ic in components) { ic.Unequip(character); }
         }
 
-        public List<Pair<object, SerializableProperty>> GetProperties<T>()
+        public List<(object obj, SerializableProperty property)> GetProperties<T>()
         {
-            List<Pair<object, SerializableProperty>> allProperties = new List<Pair<object, SerializableProperty>>();
+            List<(object obj, SerializableProperty property)> allProperties = new List<(object obj, SerializableProperty property)>();
 
             List<SerializableProperty> itemProperties = SerializableProperty.GetProperties<T>(this);
             foreach (var itemProperty in itemProperties)
             {
-                allProperties.Add(new Pair<object, SerializableProperty>(this, itemProperty));
+                allProperties.Add((this, itemProperty));
             }            
             foreach (ItemComponent ic in components)
             {
                 List<SerializableProperty> componentProperties = SerializableProperty.GetProperties<T>(ic);
                 foreach (var componentProperty in componentProperties)
                 {
-                    allProperties.Add(new Pair<object, SerializableProperty>(ic, componentProperty));
+                    allProperties.Add((ic, componentProperty));
                 }
             }
             return allProperties;
@@ -2708,13 +2709,13 @@ namespace Barotrauma
             SerializableProperty property = extraData.SerializableProperty;
             if (property != null)
             {
-                var propertyOwner = allProperties.Find(p => p.Second == property);
+                var propertyOwner = allProperties.Find(p => p.property == property);
                 if (allProperties.Count > 1)
                 {
-                    msg.Write((byte)allProperties.FindIndex(p => p.Second == property));
+                    msg.Write((byte)allProperties.FindIndex(p => p.property == property));
                 }
 
-                object value = property.GetValue(propertyOwner.First);
+                object value = property.GetValue(propertyOwner.obj);
                 if (value is string stringVal)
                 {
                     msg.Write(stringVal);
@@ -2795,7 +2796,7 @@ namespace Barotrauma
             }
         }
 
-        private List<Pair<object, SerializableProperty>> GetInGameEditableProperties(bool ignoreConditions = false)
+        private List<(object obj, SerializableProperty property)> GetInGameEditableProperties(bool ignoreConditions = false)
         {
             if (ignoreConditions)
             {
@@ -2804,7 +2805,7 @@ namespace Barotrauma
             else
             {
                 return GetProperties<ConditionallyEditable>()
-                    .Where(ce => ce.Second.GetAttribute<ConditionallyEditable>().IsEditable(this))
+                    .Where(ce => ce.property.GetAttribute<ConditionallyEditable>().IsEditable(this))
                     .Union(GetProperties<InGameEditable>()).ToList();
             }
         }
@@ -2823,8 +2824,8 @@ namespace Barotrauma
             }
 
             bool allowEditing = true;
-            object parentObject = allProperties[propertyIndex].First;
-            SerializableProperty property = allProperties[propertyIndex].Second;
+            object parentObject = allProperties[propertyIndex].obj;
+            SerializableProperty property = allProperties[propertyIndex].property;
             if (inGameEditableOnly && parentObject is ItemComponent ic)
             {
                 if (!ic.AllowInGameEditing) { allowEditing = false; }

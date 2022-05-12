@@ -955,7 +955,9 @@ namespace Barotrauma.Networking
             }
             if (Level.Loaded != null)
             {
-                errorLines.Add("Level: " + Level.Loaded.Seed + ", " + string.Join(", ", Level.Loaded.EqualityCheckValues.Select(cv => cv.ToString("X"))));
+                errorLines.Add("Level: " + Level.Loaded.Seed + ", "
+                               + string.Join("; ", Level.Loaded.EqualityCheckValues.Select(cv
+                                   => cv.Key + "=" + cv.Value.ToString("X"))));
                 errorLines.Add("Entity count before generating level: " + Level.Loaded.EntityCountBeforeGenerate);
                 errorLines.Add("Entities:");
                 foreach (Entity e in Level.Loaded.EntitiesBeforeGenerate.OrderBy(e => e.CreationIndex))
@@ -1548,11 +1550,11 @@ namespace Barotrauma.Networking
                 NetIdUtils.IdMoreRecent(campaign.LastSaveID, c.LastRecvCampaignSave))
             {
                 //already sent an up-to-date campaign save
-                if (c.LastCampaignSaveSendTime != null && campaign.LastSaveID == c.LastCampaignSaveSendTime.First)
+                if (c.LastCampaignSaveSendTime != default && campaign.LastSaveID == c.LastCampaignSaveSendTime.saveId)
                 {
                     //the save was sent less than 5 second ago, don't attempt to resend yet
                     //(the client may have received it but hasn't acked us yet)
-                    if (c.LastCampaignSaveSendTime.Second > NetTime.Now - 5.0f)
+                    if (c.LastCampaignSaveSendTime.time > NetTime.Now - 5.0f)
                     {
                         return;
                     }
@@ -1561,7 +1563,7 @@ namespace Barotrauma.Networking
                 if (!FileSender.ActiveTransfers.Any(t => t.Connection == c.Connection && t.FileType == FileTransferType.CampaignSave))
                 {
                     FileSender.StartTransfer(c.Connection, FileTransferType.CampaignSave, GameMain.GameSession.SavePath);
-                    c.LastCampaignSaveSendTime = new Pair<ushort, float>(campaign.LastSaveID, (float)NetTime.Now);
+                    c.LastCampaignSaveSendTime = (campaign.LastSaveID, (float)NetTime.Now);
                 }
             }
         }
@@ -2193,7 +2195,7 @@ namespace Barotrauma.Networking
             Level.Loaded?.SpawnNPCs();
             Level.Loaded?.SpawnCorpses();
             Level.Loaded?.PrepareBeaconStation();
-            AutoItemPlacer.PlaceIfNeeded();
+            AutoItemPlacer.SpawnItems();
 
             CrewManager crewManager = campaign?.CrewManager;
 
@@ -2388,7 +2390,9 @@ namespace Barotrauma.Networking
             }
 
             campaign?.LoadPets();
-            crewManager?.LoadActiveOrders();
+            campaign?.LoadActiveOrders();
+
+            campaign?.CargoManager.InitPurchasedIDCards();
 
             foreach (Submarine sub in Submarine.MainSubs)
             {
@@ -2400,7 +2404,7 @@ namespace Barotrauma.Networking
                     spawnList.Add(new PurchasedItem(kvp.Key, kvp.Value, buyer: null));
                 }
 
-                CargoManager.CreateItems(spawnList, sub);
+                CargoManager.CreateItems(spawnList, sub, cargoManager: null);
             }
 
             TraitorManager = null;
@@ -2531,10 +2535,9 @@ namespace Barotrauma.Networking
             {
                 msg.Write(mission.Prefab.Identifier);
             }
-            msg.Write((byte)GameMain.GameSession.Level.EqualityCheckValues.Count);
-            foreach (int equalityCheckValue in GameMain.GameSession.Level.EqualityCheckValues)
+            foreach (Level.LevelGenStage stage in Enum.GetValues(typeof(Level.LevelGenStage)).OfType<Level.LevelGenStage>().OrderBy(s => s))
             {
-                msg.Write(equalityCheckValue);
+                msg.Write(GameMain.GameSession.Level.EqualityCheckValues[stage]);
             }
             foreach (Mission mission in GameMain.GameSession.Missions)
             {
@@ -3178,9 +3181,9 @@ namespace Barotrauma.Networking
             Client recipient = connectedClients.Find(c => c.Connection == transfer.Connection);
             if (transfer.FileType == FileTransferType.CampaignSave &&
                 (transfer.Status == FileTransferStatus.Sending || transfer.Status == FileTransferStatus.Finished) &&
-                recipient.LastCampaignSaveSendTime != null)
+                recipient.LastCampaignSaveSendTime != default)
             {
-                recipient.LastCampaignSaveSendTime.Second = (float)Lidgren.Network.NetTime.Now;
+                recipient.LastCampaignSaveSendTime.time = (float)NetTime.Now;
             }
         }
 

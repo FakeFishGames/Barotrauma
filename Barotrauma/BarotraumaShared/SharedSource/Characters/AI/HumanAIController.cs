@@ -59,7 +59,11 @@ namespace Barotrauma
         private readonly float enemyCheckInterval = 0.2f;
         private readonly float enemySpotDistanceOutside = 800;
         private readonly float enemySpotDistanceInside = 1000;
-        private float enemycheckTimer;
+        private float enemyCheckTimer;
+
+        private readonly float reportProblemsInterval = 1.0f;
+        private float reportProblemsTimer;
+
 
         /// <summary>
         /// How far other characters can hear reports done by this character (e.g. reports for fires, intruders). Defaults to infinity.
@@ -166,6 +170,7 @@ namespace Barotrauma
             objectiveManager = new AIObjectiveManager(c);
             reactTimer = GetReactionTime();
             SortTimer = Rand.Range(0f, sortObjectiveInterval);
+            reportProblemsTimer = Rand.Range(0f, reportProblemsInterval);
         }
 
         public override void Update(float deltaTime)
@@ -309,10 +314,10 @@ namespace Barotrauma
             {
                 // Spot enemies while staying outside or inside an enemy ship.
                 // does not apply for escorted characters, such as prisoners or terrorists who have their own behavior
-                enemycheckTimer -= deltaTime;
-                if (enemycheckTimer < 0)
+                enemyCheckTimer -= deltaTime;
+                if (enemyCheckTimer < 0)
                 {
-                    enemycheckTimer = enemyCheckInterval * Rand.Range(0.75f, 1.25f);
+                    enemyCheckTimer = enemyCheckInterval * Rand.Range(0.75f, 1.25f);
                     if (!objectiveManager.IsCurrentObjective<AIObjectiveCombat>())
                     {
                         float closestDistance = 0;
@@ -407,19 +412,29 @@ namespace Barotrauma
                 {
                     if (Character.IsOnPlayerTeam)
                     {
-                        VisibleHulls.ForEach(h => PropagateHullSafety(Character, h));
+                        foreach (Hull h in VisibleHulls)
+                        {
+                            PropagateHullSafety(Character, h);
+                        }
                     }
                     else
                     {
-                        // Outpost npcs don't inform each other about threats, like crew members do.
-                        VisibleHulls.ForEach(h => RefreshHullSafety(h));
+                        foreach (Hull h in VisibleHulls)
+                        {
+                            RefreshHullSafety(h);
+                        }
                     }
                 }
                 if (Character.SpeechImpediment < 100.0f)
                 {
-                    if (Character.Submarine != null && (Character.Submarine.TeamID == Character.TeamID || Character.IsEscorted) && !Character.Submarine.Info.IsWreck)
+                    reportProblemsTimer -= deltaTime;
+                    if (reportProblemsTimer <= 0.0f)
                     {
-                        ReportProblems();
+                        if (Character.Submarine != null && (Character.Submarine.TeamID == Character.TeamID || Character.IsEscorted) && !Character.Submarine.Info.IsWreck)
+                        {
+                            ReportProblems();
+                        }
+                        reportProblemsTimer = reportProblemsInterval;
                     }
                     UpdateSpeaking();
                 }
@@ -785,9 +800,10 @@ namespace Barotrauma
                 if (item == null || item.Removed) { return; }
                 if (!itemsToRelocate.Contains(item)) { return; }
                 var mainSub = Submarine.MainSub;
-                if (item.ParentInventory != null)
+                Entity owner = item.GetRootInventoryOwner();
+                if (owner != null)
                 {
-                    if (item.ParentInventory.Owner is Character c)
+                    if (owner is Character c)
                     {
                         if (c.TeamID == CharacterTeamType.Team1 || c.TeamID == CharacterTeamType.Team2)
                         {
@@ -795,24 +811,37 @@ namespace Barotrauma
                             return;
                         }
                     }
-                    else if (item.ParentInventory.Owner.Submarine == mainSub)
+                    else if (owner.Submarine == mainSub)
                     {
                         // Placed inside an inventory that's already in the main sub.
                         return;
                     }
                 }
-                // Laying on ground inside the main sub.
+                // Laying on the ground inside the main sub.
                 if (item.Submarine == mainSub)
                 {
                     return;
                 }
-                WayPoint wp = WayPoint.GetRandom(SpawnType.Cargo, null, mainSub);
-                if (wp != null)
+                if (owner != null && owner != item)
                 {
-                    item.Submarine = mainSub;
-                    item.SetTransform(wp.SimPosition, 0.0f);
+                    item.Drop(null);
+                }
+                item.Submarine = mainSub;
+                Item newContainer = mainSub.FindContainerFor(item, onlyPrimary: false);
+                if (newContainer == null || !newContainer.OwnInventory.TryPutItem(item, user: null))
+                {
+                    WayPoint wp = WayPoint.GetRandom(SpawnType.Cargo, null, mainSub) ?? WayPoint.GetRandom(SpawnType.Path, null, mainSub);
+                    if (wp != null)
+                    {
+                        item.SetTransform(wp.SimPosition, 0.0f, findNewHull: false, setPrevTransform: false);
+                    }
+                    else
+                    {
+                        DebugConsole.AddWarning($"Failed to relocate item {item.Prefab.Identifier} ({item.ID}), because no cargo spawn point could be found!");
+                    }
                 }
                 itemsToRelocate.Remove(item);
+                DebugConsole.Log($"Relocated item {item.Prefab.Identifier} ({item.ID}) back to the main sub.");
             }
         }
 
@@ -1149,7 +1178,7 @@ namespace Barotrauma
             bool isAttackerFightingEnemy = false;
             float minorDamageThreshold = 1;
             float majorDamageThreshold = 20;
-            if (attacker.TeamID == Character.TeamID)
+            if (attacker.TeamID == Character.TeamID && !attacker.IsInstigator)
             {
                 minorDamageThreshold = 10;
                 majorDamageThreshold = 40;
@@ -1356,6 +1385,10 @@ namespace Barotrauma
 
                     Character FindInstigator()
                     {
+                        if (Character.IsInstigator)
+                        {
+                            return Character;
+                        }
                         if (attacker.IsInstigator)
                         {
                             return attacker;
@@ -1545,7 +1578,7 @@ namespace Barotrauma
                 (!requireEquipped || character.HasEquippedItem(i)) &&
                 (predicate == null || predicate(i)), recursive, matchingItems);
             items = matchingItems;
-            return matchingItems.Any(i => i != null && (containedTag.IsEmpty || i.ContainedItems.Any(it => it.HasTag(containedTag) && it.ConditionPercentage > conditionPercentage)));
+            return matchingItems.Any(i => i != null && (containedTag.IsEmpty || i.OwnInventory == null || i.ContainedItems.Any(it => it.HasTag(containedTag) && it.ConditionPercentage > conditionPercentage)));
         }
 
         public static void StructureDamaged(Structure structure, float damageAmount, Character character)
@@ -1889,7 +1922,7 @@ namespace Barotrauma
             float fireFactor = 1;
             if (!ignoreFire)
             {
-                float calculateFire(Hull h) => h.FireSources.Count * 0.5f + h.FireSources.Sum(fs => fs.DamageRange) / h.Size.X;
+                static float calculateFire(Hull h) => h.FireSources.Count * 0.5f + h.FireSources.Sum(fs => fs.DamageRange) / h.Size.X;
                 // Even the smallest fire reduces the safety by 50%
                 float fire = visibleHulls == null ? calculateFire(hull) : visibleHulls.Sum(h => calculateFire(h));
                 fireFactor = MathHelper.Lerp(1, 0, MathHelper.Clamp(fire, 0, 1));
@@ -1897,10 +1930,22 @@ namespace Barotrauma
             float enemyFactor = 1;
             if (!ignoreEnemies)
             {
-                bool isValidTarget(Character e) => IsActive(e) && !IsFriendly(character, e) && !e.IsArrested;
-                int enemyCount = visibleHulls == null ?
-                    Character.CharacterList.Count(e => isValidTarget(e) && e.CurrentHull == hull) :
-                    Character.CharacterList.Count(e => isValidTarget(e) && visibleHulls.Contains(e.CurrentHull));
+                int enemyCount = 0;                
+                foreach (Character c in Character.CharacterList)
+                {
+                    if (visibleHulls == null)
+                    {
+                        if (c.CurrentHull != hull) { continue; }
+                    }
+                    else
+                    {
+                        if (!visibleHulls.Contains(c.CurrentHull)) { continue; }
+                    }
+                    if (IsActive(c) && !IsFriendly(character, c) && !c.IsArrested)
+                    {
+                        enemyCount++;
+                    }
+                }
                 // The hull safety decreases 90% per enemy up to 100% (TODO: test smaller percentages)
                 enemyFactor = MathHelper.Lerp(1, 0, MathHelper.Clamp(enemyCount * 0.9f, 0, 1));
             }
@@ -1911,6 +1956,7 @@ namespace Barotrauma
                 if (item.Prefab != null && item.Prefab.IsDangerous)
                 {
                     dangerousItemsFactor = 0;
+                    break;
                 }
             }
             float safety = oxygenFactor * waterFactor * fireFactor * enemyFactor * dangerousItemsFactor;

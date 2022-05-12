@@ -359,7 +359,7 @@ namespace Barotrauma.Transition
             else
             {
                 //copying a mod: we have a neat method for that!
-                await SteamManager.Workshop.CopyDirectory(path, Path.GetFileName(path), path, destPath);
+                await SteamManager.Workshop.CopyDirectory(path, Path.GetFileName(path), path, destPath, SteamManager.Workshop.ShouldCorrectPaths.Yes);
 
                 return null;
             }

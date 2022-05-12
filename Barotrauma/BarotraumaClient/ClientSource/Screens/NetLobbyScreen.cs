@@ -1400,7 +1400,7 @@ namespace Barotrauma
         public void CreatePlayerFrame(GUIComponent parent, bool createPendingText = true, bool alwaysAllowEditing = false)
         {
             UpdatePlayerFrame(
-                Character.Controlled?.Info ?? playerInfoContainer.Children?.First().UserData as CharacterInfo,
+                Character.Controlled?.Info ?? playerInfoContainer.Children?.First().UserData as CharacterInfo ?? GameMain.Client.CharacterInfo,
                 allowEditing: alwaysAllowEditing || campaignCharacterInfo == null,
                 parent: parent,
                 createPendingText: createPendingText);
@@ -3131,10 +3131,11 @@ namespace Barotrauma
                     retVal[i] = new GUIImage[outfitPreview.Sprites.Count];
                     for (int j = 0; j < outfitPreview.Sprites.Count; j++)
                     {
-                        Pair<Sprite, Vector2> sprite = outfitPreview.Sprites[j];
+                        Sprite sprite = outfitPreview.Sprites[j].sprite;
+                        Vector2 drawOffset = outfitPreview.Sprites[j].drawOffset;
                         float aspectRatio = outfitPreview.Dimensions.Y / outfitPreview.Dimensions.X;
                         retVal[i][j] = new GUIImage(new RectTransform(new Vector2(0.7f / aspectRatio, 0.7f), innerFrame.RectTransform, Anchor.Center)
-                            { RelativeOffset = sprite.Second / outfitPreview.Dimensions }, sprite.First, scaleToFit: true)
+                            { RelativeOffset = drawOffset / outfitPreview.Dimensions }, sprite, scaleToFit: true)
                         {
                             PressedColor = Color.White,
                             CanBeFocused = false

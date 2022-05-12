@@ -661,6 +661,7 @@ namespace Barotrauma.Items.Components
                     while (neededPower > 0.0001f && batteries.Count > 0)
                     {
                         batteries.RemoveAll(b => b.Charge <= 0.0001f || b.MaxOutPut <= 0.0001f);
+                        if (!batteries.Any()) { break; }
                         float takePower = neededPower / batteries.Count;
                         takePower = Math.Min(takePower, batteries.Min(b => Math.Min(b.Charge * 3600.0f, b.MaxOutPut)));
                         foreach (PowerContainer battery in batteries)
@@ -1151,8 +1152,12 @@ namespace Barotrauma.Items.Components
                 foreach (Character enemy in Character.CharacterList)
                 {
                     // Ignore dead, friendly, and those that are inside the same sub
-                    if (enemy.IsDead || !enemy.Enabled || enemy.Submarine == character.Submarine) { continue; }
-                    if (enemy.Submarine != null && enemy.Submarine.TeamID == character.Submarine.TeamID) { continue; }
+                    if (enemy.IsDead || !enemy.Enabled) { continue; } 
+                    if (character.Submarine != null)
+                    {
+                        if (enemy.Submarine == character.Submarine) { continue; }
+                        if (enemy.Submarine != null && enemy.Submarine.TeamID == character.Submarine.TeamID) { continue; }
+                    }
                     // Don't aim monsters that are inside any submarine.
                     if (!enemy.IsHuman && enemy.CurrentHull != null) { continue; }
                     if (HumanAIController.IsFriendly(character, enemy)) { continue; }       

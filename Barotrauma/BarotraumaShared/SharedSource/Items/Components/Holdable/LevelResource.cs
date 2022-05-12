@@ -79,11 +79,18 @@ namespace Barotrauma.Items.Components
             IsActive = true;
         }
 
-        public override void Move(Vector2 amount)
+        public override void Move(Vector2 amount, bool ignoreContacts = false)
         {
             if (trigger != null && amount.LengthSquared() > 0.00001f)
             {
-                trigger.SetTransform(item.SimPosition, 0.0f);
+                if (ignoreContacts)
+                {
+                    trigger.SetTransformIgnoreContacts(item.SimPosition, 0.0f);
+                }
+                else
+                {
+                    trigger.SetTransform(item.SimPosition, 0.0f);
+                }
             }
         }
 
@@ -119,17 +126,19 @@ namespace Barotrauma.Items.Components
             }
 
             var body = item.body ?? holdable.Body;
-            
+
             if (body != null)
             {
-                trigger = new PhysicsBody(body.width, body.height, body.radius, body.Density)
+                trigger = new PhysicsBody(body.width, body.height, body.radius, 
+                    body.Density,
+                    BodyType.Static,
+                    Physics.CollisionWall,
+                    Physics.CollisionNone,
+                    findNewContacts: false)
                 {
                     UserData = item
                 };
                 trigger.FarseerBody.SetIsSensor(true);
-                trigger.FarseerBody.BodyType = BodyType.Static;
-                trigger.FarseerBody.CollisionCategories = Physics.CollisionWall;
-                trigger.FarseerBody.CollidesWith = Physics.CollisionNone;
             }
         }
 

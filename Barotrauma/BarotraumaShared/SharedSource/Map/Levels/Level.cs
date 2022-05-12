@@ -299,11 +299,41 @@ namespace Barotrauma
         /// Random integers generated during the level generation. If these values differ between clients/server,
         /// it means the levels aren't identical for some reason and there will most likely be major ID mismatches.
         /// </summary>
-        public List<int> EqualityCheckValues
+        public enum LevelGenStage
         {
-            get;
-            private set;
-        } = new List<int>();
+            GenStart,
+            TunnelGen,
+            VoronoiGen,
+            VoronoiGen2,
+            VoronoiGen3,
+            Ruins,
+            FloatingIce,
+            LevelBodies,
+            IceSpires,
+            TopAndBottom,
+            PlaceLevelObjects,
+            GenerateItems,
+            Finish
+        }
+
+        private readonly Dictionary<LevelGenStage, int> equalityCheckValues = Enum.GetValues(typeof(LevelGenStage))
+            .Cast<LevelGenStage>()
+            .Select(k => (k, 0))
+            .ToDictionary();
+        public IReadOnlyDictionary<LevelGenStage, int> EqualityCheckValues => equalityCheckValues;
+
+        private void GenerateEqualityCheckValue(LevelGenStage stage)
+        {
+            equalityCheckValues[stage] = Rand.Int(int.MaxValue, Rand.RandSync.ServerAndClient);
+        }
+
+        private void ClearEqualityCheckValues()
+        {
+            foreach (LevelGenStage stage in Enum.GetValues(typeof(LevelGenStage)))
+            {
+                equalityCheckValues[stage] = 0;
+            }
+        }
 
         public List<Entity> EntitiesBeforeGenerate { get; private set; } = new List<Entity>();
         public int EntityCountBeforeGenerate { get; private set; }
@@ -404,7 +434,7 @@ namespace Barotrauma
             Loaded = this;
             Generating = true;
 
-            EqualityCheckValues.Clear();
+            ClearEqualityCheckValues();
             EntitiesBeforeGenerate = GetEntities().ToList();
             EntityCountBeforeGenerate = EntitiesBeforeGenerate.Count();
 
@@ -414,7 +444,7 @@ namespace Barotrauma
                 EndLocation = GameMain.GameSession?.EndLocation;
             }
 
-            EqualityCheckValues.Add(Rand.Int(int.MaxValue, Rand.RandSync.ServerAndClient));
+            GenerateEqualityCheckValue(LevelGenStage.GenStart);
 
             LevelObjectManager = new LevelObjectManager();
 
@@ -477,7 +507,7 @@ namespace Barotrauma
                (int)MathHelper.Lerp(borders.Bottom - Math.Max(minMainPathWidth, ExitDistance * 1.5f), borders.Y + minMainPathWidth, GenerationParams.EndPosition.Y));
             endExitPosition = new Point(endPosition.X, borders.Bottom);
 
-            EqualityCheckValues.Add(Rand.Int(int.MaxValue, Rand.RandSync.ServerAndClient));
+            GenerateEqualityCheckValue(LevelGenStage.TunnelGen);
 
             //----------------------------------------------------------------------------------
             //generate the initial nodes for the main path and smaller tunnels
@@ -573,7 +603,7 @@ namespace Barotrauma
             GenerateAbyssArea();
             GenerateCaves(mainPath);
 
-            EqualityCheckValues.Add(Rand.Int(int.MaxValue, Rand.RandSync.ServerAndClient));
+            GenerateEqualityCheckValue(LevelGenStage.VoronoiGen);
 
             //----------------------------------------------------------------------------------
             //generate voronoi sites
@@ -678,7 +708,7 @@ namespace Barotrauma
                 }
             }
 
-            EqualityCheckValues.Add(Rand.Int(int.MaxValue, Rand.RandSync.ServerAndClient));
+            GenerateEqualityCheckValue(LevelGenStage.VoronoiGen2);
 
             //----------------------------------------------------------------------------------
             // construct the voronoi graph and cells
@@ -796,7 +826,7 @@ namespace Barotrauma
             startPosition.X = (int)pathCells[0].Site.Coord.X;
             startExitPosition.X = startPosition.X;
 
-            EqualityCheckValues.Add(Rand.Int(int.MaxValue, Rand.RandSync.ServerAndClient));
+            GenerateEqualityCheckValue(LevelGenStage.VoronoiGen3);
 
             //----------------------------------------------------------------------------------
             // remove unnecessary cells and create some holes at the bottom of the level
@@ -1025,7 +1055,7 @@ namespace Barotrauma
                 }
             }
 
-            EqualityCheckValues.Add(Rand.Int(int.MaxValue, Rand.RandSync.ServerAndClient));
+            GenerateEqualityCheckValue(LevelGenStage.Ruins);
 
             //----------------------------------------------------------------------------------
             // create some ruins
@@ -1038,7 +1068,7 @@ namespace Barotrauma
                 GenerateRuin(ruinPositions[i], mirror);
             }
 
-            EqualityCheckValues.Add(Rand.Int(int.MaxValue, Rand.RandSync.ServerAndClient));
+            GenerateEqualityCheckValue(LevelGenStage.FloatingIce);
 
             //----------------------------------------------------------------------------------
             // create floating ice chunks
@@ -1070,7 +1100,7 @@ namespace Barotrauma
                 }
             }
 
-            EqualityCheckValues.Add(Rand.Int(int.MaxValue, Rand.RandSync.ServerAndClient));
+            GenerateEqualityCheckValue(LevelGenStage.LevelBodies);
 
             //----------------------------------------------------------------------------------
             // generate the bodies and rendered triangles of the cells
@@ -1175,7 +1205,7 @@ namespace Barotrauma
             }
 #endif
 
-            EqualityCheckValues.Add(Rand.Int(int.MaxValue, Rand.RandSync.ServerAndClient));
+            GenerateEqualityCheckValue(LevelGenStage.IceSpires);
 
             //----------------------------------------------------------------------------------
             // create ice spires
@@ -1210,7 +1240,7 @@ namespace Barotrauma
 
             CreateOutposts();
 
-            EqualityCheckValues.Add(Rand.Int(int.MaxValue, Rand.RandSync.ServerAndClient));
+            GenerateEqualityCheckValue(LevelGenStage.TopAndBottom);
 
             //----------------------------------------------------------------------------------
             // top barrier & sea floor
@@ -1252,15 +1282,15 @@ namespace Barotrauma
             CreateWrecks();
             CreateBeaconStation();
 
-            EqualityCheckValues.Add(Rand.Int(int.MaxValue, Rand.RandSync.ServerAndClient));
+            GenerateEqualityCheckValue(LevelGenStage.PlaceLevelObjects);
 
             LevelObjectManager.PlaceObjects(this, GenerationParams.LevelObjectAmount);
 
-            EqualityCheckValues.Add(Rand.Int(int.MaxValue, Rand.RandSync.ServerAndClient));
+            GenerateEqualityCheckValue(LevelGenStage.GenerateItems);
 
             GenerateItems();
 
-            EqualityCheckValues.Add(Rand.Int(int.MaxValue, Rand.RandSync.ServerAndClient));
+            GenerateEqualityCheckValue(LevelGenStage.Finish);
 
 #if CLIENT
             backgroundCreatureManager.SpawnCreatures(this, GenerationParams.BackgroundCreatureAmount);
@@ -2606,7 +2636,7 @@ namespace Barotrauma
 #if DEBUG
             DebugConsole.NewMessage("Level resources spawned: " + itemCount + "\n" +
                 "   Spawn points containing resources: " + PathPoints.Where(p => p.ClusterLocations.Any()).Count() + "/" + PathPoints.Count + "\n" +
-                "   Total value: "+ PathPoints.Sum(p => p.ClusterLocations.Sum(c => c.Resources.Sum(r => r.Prefab.DefaultPrice?.Price ?? 0)))+" mk");
+                "   Total value: " + PathPoints.Sum(p => p.ClusterLocations.Sum(c => c.Resources.Sum(r => r.Prefab.DefaultPrice?.Price ?? 0))) + " mk");
             if (AbyssResources.Count > 0)
             {
 
@@ -3688,6 +3718,7 @@ namespace Barotrauma
             if (wreckFiles.None())
             {
                 DebugConsole.ThrowError("No wreck files found in the selected content packages!");
+                Wrecks = new List<Submarine>();
                 return;
             }
             wreckFiles.Shuffle(Rand.RandSync.ServerAndClient);
@@ -4112,12 +4143,12 @@ namespace Barotrauma
                 int corpseCount = Rand.Range(Loaded.GenerationParams.MinCorpseCount, Loaded.GenerationParams.MaxCorpseCount + 1);
                 var allSpawnPoints = WayPoint.WayPointList.FindAll(wp => wp.Submarine == wreck && wp.CurrentHull != null);
                 var pathPoints = allSpawnPoints.FindAll(wp => wp.SpawnType == SpawnType.Path);
-                pathPoints.Shuffle(Rand.RandSync.Unsynced);
                 var corpsePoints = allSpawnPoints.FindAll(wp => wp.SpawnType == SpawnType.Corpse);
-                corpsePoints.Shuffle(Rand.RandSync.Unsynced);
-
                 if (!corpsePoints.Any() && !pathPoints.Any()) { continue; }
-
+                pathPoints.Shuffle(Rand.RandSync.Unsynced);
+                // Sort by job so that we first spawn those with a predefined job (might have special id cards)
+                corpsePoints = corpsePoints.OrderBy(p => p.AssignedJob == null).ThenBy(p => Rand.Value()).ToList();
+                var usedJobs = new HashSet<JobPrefab>();
                 int spawnCounter = 0;
                 for (int j = 0; j < corpseCount; j++)
                 {
@@ -4126,18 +4157,18 @@ namespace Barotrauma
                     CorpsePrefab selectedPrefab;
                     if (job == null)
                     {
-                        selectedPrefab = GetCorpsePrefab(p => p.SpawnPosition == PositionType.Wreck);
+                        selectedPrefab = GetCorpsePrefab(usedJobs);
                     }
                     else
                     {
-                        selectedPrefab = GetCorpsePrefab(p => p.SpawnPosition == PositionType.Wreck && (p.Job == "any" || p.Job == job.Identifier));
+                        selectedPrefab = GetCorpsePrefab(usedJobs, p => p.Job == "any" || p.Job == job.Identifier);
                         if (selectedPrefab == null)
                         {
                             corpsePoints.Remove(sp);
                             pathPoints.Remove(sp);
                             sp = corpsePoints.FirstOrDefault(sp => sp.AssignedJob == null) ?? pathPoints.FirstOrDefault(sp => sp.AssignedJob == null);
                             // Deduce the job from the selected prefab
-                            selectedPrefab = GetCorpsePrefab(p => p.SpawnPosition == PositionType.Wreck);
+                            selectedPrefab = GetCorpsePrefab(usedJobs);
                         }
                     }
                     if (selectedPrefab == null) { continue; }
@@ -4156,28 +4187,65 @@ namespace Barotrauma
                         pathPoints.Remove(sp);
                     }
 
-                    job ??= selectedPrefab.GetJobPrefab();
+                    job ??= selectedPrefab.GetJobPrefab(predicate: p => !usedJobs.Contains(p));
                     if (job == null) { continue; }
-
+                    if (job.Identifier == "captain" || job.Identifier == "engineer" || job.Identifier == "medicaldoctor" || job.Identifier == "securityofficer")
+                    {
+                        // Only spawn one of these jobs per wreck
+                        usedJobs.Add(job);
+                    }
                     var characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: job, randSync: Rand.RandSync.ServerAndClient);
                     var corpse = Character.Create(CharacterPrefab.HumanSpeciesName, worldPos, ToolBox.RandomSeed(8), characterInfo, hasAi: true, createNetworkEvent: true);
                     corpse.AnimController.FindHull(worldPos, setSubmarine: true);
                     corpse.TeamID = CharacterTeamType.None;
                     corpse.EnableDespawn = false;
                     selectedPrefab.GiveItems(corpse, wreck);
+                    corpse.CharacterHealth.ApplyAffliction(corpse.AnimController.MainLimb, AfflictionPrefab.OxygenLow.Instantiate(200));
+                    bool applyBurns = Rand.Value() < 0.1f;
+                    bool applyDamage = Rand.Value() < 0.3f;
+                    foreach (var limb in corpse.AnimController.Limbs)
+                    {
+                        if (applyDamage && (limb.type == LimbType.Head || Rand.Value() < 0.5f))
+                        {
+                            var prefab = AfflictionPrefab.BiteWounds;
+                            float max = prefab.MaxStrength / prefab.DamageOverlayAlpha;
+                            corpse.CharacterHealth.ApplyAffliction(limb, prefab.Instantiate(GetStrength(limb, max)));
+                        }
+                        if (applyBurns)
+                        {
+                            var prefab = AfflictionPrefab.Burn;
+                            float max = prefab.MaxStrength / prefab.BurnOverlayAlpha;
+                            corpse.CharacterHealth.ApplyAffliction(limb, prefab.Instantiate(GetStrength(limb, max)));
+                        }
+
+                        static float GetStrength(Limb limb, float max)
+                        {
+                            float strength = Rand.Range(0, max);
+                            if (limb.type != LimbType.Head)
+                            {
+                                strength = Math.Min(strength, Rand.Range(0, max));
+                            }
+                            return strength;
+                        }
+                    }
                     corpse.Kill(CauseOfDeathType.Unknown, causeOfDeathAffliction: null, log: false);
                     corpse.GiveIdCardTags(sp);
-#if SERVER
-                    if (selectedPrefab.MinMoney >= 0 && selectedPrefab.MaxMoney > 0)
+
+                    bool isServerOrSingleplayer = GameMain.IsSingleplayer || GameMain.NetworkMember is { IsServer: true };
+                    if (isServerOrSingleplayer && selectedPrefab.MinMoney >= 0 && selectedPrefab.MaxMoney > 0)
                     {
                         corpse.Wallet.Give(Rand.Range(selectedPrefab.MinMoney, selectedPrefab.MaxMoney, Rand.RandSync.Unsynced));
                     }
-#endif
+
                     spawnCounter++;
 
-                    static CorpsePrefab GetCorpsePrefab(Func<CorpsePrefab, bool> predicate)
+                    static CorpsePrefab GetCorpsePrefab(HashSet<JobPrefab> usedJobs, Func<CorpsePrefab, bool> predicate = null)
                     {
-                        IEnumerable<CorpsePrefab> filteredPrefabs = CorpsePrefab.Prefabs.Where(predicate);
+                        IEnumerable<CorpsePrefab> filteredPrefabs = CorpsePrefab.Prefabs.Where(p =>
+                            usedJobs.None(j => j.Identifier == p.Job.ToIdentifier()) &&
+                            p.SpawnPosition == PositionType.Wreck &&
+                            (predicate == null || predicate(p)));
+
                         return ToolBox.SelectWeightedRandom(filteredPrefabs.ToList(), filteredPrefabs.Select(p => p.Commonness).ToList(), Rand.RandSync.Unsynced);
                     }
                 }
@@ -4270,7 +4338,7 @@ namespace Barotrauma
             blockedRects?.Clear();
 
             EntitiesBeforeGenerate?.Clear();
-            EqualityCheckValues?.Clear();
+            ClearEqualityCheckValues();
 
             if (Ruins != null)
             {

@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
@@ -106,6 +107,8 @@ namespace Barotrauma
         public CampaignMetadata CampaignMetadata;
 
         protected XElement petsElement;
+
+        protected XElement ActiveOrdersElement { get; set; }
 
         public CampaignSettings Settings;
 
@@ -739,8 +742,10 @@ namespace Barotrauma
             foreach (LocationConnection connection in Map.Connections)
             {
                 connection.Difficulty = MathHelper.Lerp(connection.Difficulty, 100.0f, 0.25f);
-                connection.LevelData.Difficulty = connection.Difficulty;
-                connection.LevelData.IsBeaconActive = false;
+                connection.LevelData = new LevelData(connection)
+                {
+                    IsBeaconActive = false
+                };
                 connection.LevelData.HasHuntingGrounds = connection.LevelData.OriginallyHadHuntingGrounds;
             }
             foreach (Location location in Map.Locations)
@@ -1032,5 +1037,184 @@ namespace Barotrauma
             }
         }
 
+        protected void LeaveUnconnectedSubs(Submarine leavingSub)
+        {
+            if (leavingSub != Submarine.MainSub && !leavingSub.DockedTo.Contains(Submarine.MainSub))
+            {
+                Submarine.MainSub = leavingSub;
+                GameMain.GameSession.Submarine = leavingSub;
+                GameMain.GameSession.SubmarineInfo = leavingSub.Info;
+                leavingSub.Info.FilePath = System.IO.Path.Combine(SaveUtil.TempPath, leavingSub.Info.Name + ".sub");
+                var subsToLeaveBehind = GetSubsToLeaveBehind(leavingSub);
+                GameMain.GameSession.OwnedSubmarines.Add(leavingSub.Info);
+                foreach (Submarine sub in subsToLeaveBehind)
+                {
+                    GameMain.GameSession.OwnedSubmarines.RemoveAll(s => s != leavingSub.Info && s.Name == sub.Info.Name);
+                    MapEntity.mapEntityList.RemoveAll(e => e.Submarine == sub && e is LinkedSubmarine);
+                    LinkedSubmarine.CreateDummy(leavingSub, sub);
+                }
+            }
+        }
+
+        public SubmarineInfo SwitchSubs()
+        {
+            TransferItemsBetweenSubs();
+            RefreshOwnedSubmarines();
+            PendingSubmarineSwitch = null;
+            return GameMain.GameSession.SubmarineInfo;
+        }
+
+        /// <summary>
+        /// Also serializes the current sub.
+        /// </summary>
+        protected void TransferItemsBetweenSubs()
+        {
+            Submarine currentSub = GameMain.GameSession.Submarine;
+            if (currentSub == null || currentSub.Removed)
+            {
+                DebugConsole.ThrowError("Cannot transfer items between subs, because the current sub is null or removed!");
+                return;
+            }
+            var itemsToTransfer = new List<(Item item, Item container)>();
+            if (PendingSubmarineSwitch != null)
+            {
+                // Remove items from the old sub
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.Removed) { continue; }
+                    if (item.NonInteractable) { continue; }
+                    if (item.HiddenInGame) { continue; }
+                    if (item.Submarine != currentSub) { continue; }
+                    if (item.Prefab.DontTransferBetweenSubs) { continue; }
+                    if (item.GetRootInventoryOwner() is Character) { continue; }
+                    if (item.GetComponent<Holdable>() == null && item.GetComponent<Wearable>() == null && item.GetComponent<Projectile>() == null) { continue; }
+                    if (item.Components.Any(c => c is Holdable h && h.Attached)) { continue; }
+                    if (item.Components.Any(c => c is Wire w && w.Connections.Any(c => c != null))) { continue; }
+                    itemsToTransfer.Add((item, item.Container));
+                    item.Submarine = null;
+                }
+                foreach (var (item, container) in itemsToTransfer)
+                {
+                    if (container?.Submarine != null)
+                    {
+                        // Drop the item if it's not inside another item set to be transferred.
+                        item.Drop(null, createNetworkEvent: false, setTransform: false);
+                    }
+                }
+            }
+            // Serialize the current sub
+            GameMain.GameSession.SubmarineInfo = new SubmarineInfo(currentSub);
+            if (PendingSubmarineSwitch != null && itemsToTransfer.Any())
+            {
+                // Load the new sub
+                var newSub = new Submarine(PendingSubmarineSwitch);
+                // Move the transferred items
+                List<ItemContainer> availableContainers = Item.ItemList
+                    .Where(it => it.Submarine == newSub && it.HasTag("crate") && !it.NonInteractable && !it.HiddenInGame && !it.Removed)
+                    .Select(it => it.GetComponent<ItemContainer>())
+                    .Where(c => c != null)
+                    .ToList();
+                foreach (var (item, oldContainer) in itemsToTransfer)
+                {
+                    Item newContainer = null;
+                    item.Submarine = newSub;
+                    if (item.Container == null)
+                    {
+                        newContainer = newSub.FindContainerFor(item, onlyPrimary: true, checkTransferConditions: true);
+                    }
+                    if (item.Container == null && (newContainer == null || !newContainer.OwnInventory.TryPutItem(item, user: null, createNetworkEvent: false)))
+                    {
+                        WayPoint wp = WayPoint.GetRandom(SpawnType.Cargo, null, newSub);
+                        Hull spawnHull = wp?.CurrentHull ?? Hull.HullList.Where(h => h.Submarine == newSub && !h.IsWetRoom).GetRandomUnsynced();
+                        if (spawnHull == null)
+                        {
+                            DebugConsole.AddWarning($"Failed to transfer items between subs. No cargo waypoint or dry hulls found in the new sub.");
+                            return;
+                        }
+                        if (spawnHull != null)
+                        {
+                            var cargoContainer = CargoManager.GetOrCreateCargoContainerFor(item.Prefab, spawnHull, ref availableContainers);
+                            if (cargoContainer == null || !cargoContainer.Inventory.TryPutItem(item, user: null, createNetworkEvent: false))
+                            {
+                                item.SetTransform(wp.SimPosition, 0.0f, findNewHull: false, setPrevTransform: false);
+                            }
+                        }
+                        else
+                        {
+                            DebugConsole.AddWarning($"Failed to transfer item {item.Prefab.Identifier} ({item.ID}), because no cargo spawn point could be found!");
+                        }
+                    }
+                    string newContainerName = newContainer == null ? "(null)" : $"{newContainer.Prefab.Identifier} ({newContainer.Tags})";
+                    string msg = "Item transfer log error.";
+                    if (oldContainer != null)
+                    {
+                        if (newContainer == null && oldContainer == item.Container)
+                        {
+                            msg = $"Transferred {item.Prefab.Identifier} ({item.ID}) contained inside {oldContainer.Prefab.Identifier} ({oldContainer.ID})";
+                        }
+                        else
+                        {
+                            msg = $"Transferred {item.Prefab.Identifier} ({item.ID}) from {oldContainer.Prefab.Identifier} ({oldContainer.Tags}) to {newContainerName}";
+                        }
+                    }
+                    else
+                    {
+                        msg = $"Transferred {item.Prefab.Identifier} ({item.ID}) to {newContainerName}";
+                    }
+#if DEBUG
+                    DebugConsole.NewMessage(msg);
+#else
+                    DebugConsole.Log(msg);
+#endif
+                }
+                // Serialize the new sub
+                PendingSubmarineSwitch = new SubmarineInfo(newSub);
+            }
+        }
+
+        protected void RefreshOwnedSubmarines()
+        {
+            if (PendingSubmarineSwitch != null)
+            {
+                SubmarineInfo previousSub = GameMain.GameSession.SubmarineInfo;
+                GameMain.GameSession.SubmarineInfo = PendingSubmarineSwitch;
+
+                for (int i = 0; i < GameMain.GameSession.OwnedSubmarines.Count; i++)
+                {
+                    if (GameMain.GameSession.OwnedSubmarines[i].Name == previousSub.Name)
+                    {
+                        GameMain.GameSession.OwnedSubmarines[i] = previousSub;
+                        break;
+                    }
+                }
+            }
+        }
+
+        public void SavePets(XElement parentElement = null)
+        {
+            petsElement = new XElement("pets");
+            PetBehavior.SavePets(petsElement);
+            parentElement?.Add(petsElement);
+        }
+
+        public void LoadPets()
+        {
+            if (petsElement != null)
+            {
+                PetBehavior.LoadPets(petsElement);
+            }
+        }
+
+        public void SaveActiveOrders(XElement parentElement = null)
+        {
+            ActiveOrdersElement = new XElement("activeorders");
+            CrewManager?.SaveActiveOrders(ActiveOrdersElement);
+            parentElement?.Add(ActiveOrdersElement);
+        }
+
+        public void LoadActiveOrders()
+        {
+            CrewManager?.LoadActiveOrders(ActiveOrdersElement);
+        }
     }
 }

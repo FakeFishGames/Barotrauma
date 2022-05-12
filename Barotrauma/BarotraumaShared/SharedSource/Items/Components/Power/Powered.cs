@@ -150,7 +150,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (powerOut?.Grid != null) { return powerOut.Grid.Voltage; }
                 }
-                return voltage;
+                return currPowerConsumption <= 0.0f ? 1.0f : voltage;
             }
             set
             {

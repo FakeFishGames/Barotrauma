@@ -275,7 +275,7 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!engineer_equipmentObjectiveSensor.MotionDetected);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.Equipment"), ChatMessageType.Radio, null);
             yield return new WaitForSeconds(0.5f, false);
-            TriggerTutorialSegment(0, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Select), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Deselect), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.ToggleInventory)); // Retrieve equipment
+            TriggerTutorialSegment(0, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Select), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Deselect)); // Retrieve equipment
             bool firstSlotRemoved = false;
             bool secondSlotRemoved = false;
             bool thirdSlotRemoved = false;

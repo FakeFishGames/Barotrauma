@@ -46,9 +46,7 @@ namespace Barotrauma
         private int buyTotal, sellTotal, sellFromSubTotal;
 
         private GUITextBlock storeNameBlock;
-        private GUITextBlock merchantBalanceBlock;
-        private GUITextBlock currentSellValueBlock, newSellValueBlock;
-        private GUIImage sellValueChangeArrow;
+        private GUITextBlock reputationEffectBlock;
         private GUIDropDown sortingDropDown;
         private GUITextBox searchBox;
         private GUILayoutGroup categoryButtonContainer;
@@ -376,41 +374,29 @@ namespace Barotrauma
                 AutoScaleVertical = true,
                 ForceUpperCase = ForceUpperCase.Yes
             };
-            merchantBalanceBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), merchantBalanceContainer.RectTransform),
-                "", font: GUIStyle.SubHeadingFont)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), merchantBalanceContainer.RectTransform), "",
+                color: Color.White, font: GUIStyle.SubHeadingFont)
             {
                 AutoScaleVertical = true,
                 TextScale = 1.1f,
-                TextGetter = () =>
-                {
-                    merchantBalanceBlock.TextColor = ActiveStore?.BalanceColor ?? Color.Red;
-                    return GetMerchantBalanceText();
-                } 
+                TextGetter = () => GetMerchantBalanceText()
             };
 
             // Item sell value ------------------------------------------------
-            var sellValueContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), balanceAndValueGroup.RectTransform))
+            var reputationEffectContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), balanceAndValueGroup.RectTransform))
             {
                 CanBeFocused = true,
-                RelativeSpacing = 0.005f
+                RelativeSpacing = 0.005f,
+                ToolTip = TextManager.Get("campaignstore.reputationtooltip")
             };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), sellValueContainer.RectTransform),
-                TextManager.Get("campaignstore.sellvalue"), font: GUIStyle.Font, textAlignment: Alignment.BottomLeft)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), reputationEffectContainer.RectTransform),
+                TextManager.Get("reputation"), font: GUIStyle.Font, textAlignment: Alignment.BottomLeft)
             {
                 AutoScaleVertical = true,
                 CanBeFocused = false,
-                ForceUpperCase = ForceUpperCase.Yes
+                ForceUpperCase = ForceUpperCase.Yes,
             };
-
-            var valueChangeGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), sellValueContainer.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
-            {
-                CanBeFocused = false,
-                RelativeSpacing = 0.02f
-            };
-            float blockWidth = GUI.IsFourByThree() ? 0.32f : 0.28f;
-            Point blockMaxSize = new Point((int)(GameSettings.CurrentConfig.Graphics.TextScale * 60), valueChangeGroup.Rect.Height);
-            currentSellValueBlock = new GUITextBlock(new RectTransform(new Vector2(blockWidth, 1.0f), valueChangeGroup.RectTransform) { MaxSize = blockMaxSize },
-                "", font: GUIStyle.SubHeadingFont)
+            reputationEffectBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), reputationEffectContainer.RectTransform), "", font: GUIStyle.SubHeadingFont)
             {
                 AutoScaleVertical = true,
                 CanBeFocused = false,
@@ -419,64 +405,27 @@ namespace Barotrauma
                 {
                     if (CurrentLocation != null)
                     {
-                        int balanceAfterTransaction = activeTab switch
+                        Color textColor = GUIStyle.ColorReputationNeutral;
+                        string sign = "";
+                        int reputationModifier = (int)MathF.Round((CurrentLocation.GetStoreReputationModifier(activeTab == StoreTab.Buy) - 1) * 100);
+                        if (reputationModifier > 0)
                         {
-                            StoreTab.Buy => ActiveStore.Balance + buyTotal,
-                            StoreTab.Sell => ActiveStore.Balance - sellTotal,
-                            StoreTab.SellSub => ActiveStore.Balance - sellFromSubTotal,
-                            _ => throw new NotImplementedException(),
-                        };
-                        if (balanceAfterTransaction != ActiveStore.Balance)
-                        {
-                            var newStatus = CurrentLocation.GetStoreBalanceStatus(balanceAfterTransaction);
-                            if (ActiveStore.ActiveBalanceStatus.SellPriceModifier != newStatus.SellPriceModifier)
-                            {
-                                string tooltipTag = newStatus.SellPriceModifier > ActiveStore.ActiveBalanceStatus.SellPriceModifier ?
-                                    "campaingstore.valueincreasetooltip" : "campaingstore.valuedecreasetooltip";
-                                sellValueContainer.ToolTip = TextManager.Get(tooltipTag);
-                                currentSellValueBlock.TextColor = newStatus.Color;
-                                sellValueChangeArrow.Color = newStatus.Color;
-                                sellValueChangeArrow.Visible = true;
-                                newSellValueBlock.TextColor = newStatus.Color;
-                                newSellValueBlock.Text = $"{(newStatus.SellPriceModifier * 100).FormatZeroDecimal()} %";
-                                return $"{(ActiveStore.ActiveBalanceStatus.SellPriceModifier * 100).FormatZeroDecimal()} %";
-                            }
+                            textColor = IsBuying ? GUIStyle.ColorReputationLow : GUIStyle.ColorReputationHigh;
+                            sign = "+";
                         }
-                        sellValueContainer.ToolTip = TextManager.Get("campaignstore.sellvaluetooltip");
-                        currentSellValueBlock.TextColor = ActiveStore.BalanceColor;
-                        sellValueChangeArrow.Visible = false;
-                        newSellValueBlock.Text = null;
-                        return $"{(ActiveStore.ActiveBalanceStatus.SellPriceModifier * 100).FormatZeroDecimal()} %";
+                        else if (reputationModifier < 0)
+                        {
+                            textColor = IsBuying ? GUIStyle.ColorReputationHigh : GUIStyle.ColorReputationLow;
+                        }
+                        reputationEffectBlock.TextColor = textColor;
+                        return $"{sign}{reputationModifier}%";
                     }
                     else
                     {
-                        sellValueContainer.ToolTip = null;
-                        sellValueChangeArrow.Visible = false;
-                        newSellValueBlock.Text = null;
-                        return null;
+                        return "";
                     }
                 }
             };
-            Vector4 newPadding = currentSellValueBlock.Padding;
-            newPadding.Z = 0;
-            currentSellValueBlock.Padding = newPadding;
-            float relativeHeight = 0.45f;
-            float relativeWidth = (relativeHeight * valueChangeGroup.Rect.Height) / valueChangeGroup.Rect.Width;
-            sellValueChangeArrow = new GUIImage(new RectTransform(new Vector2(relativeWidth, relativeHeight), valueChangeGroup.RectTransform), "StoreArrow", scaleToFit: true)
-            {
-                CanBeFocused = false,
-                Visible = false
-            };
-            newSellValueBlock = new GUITextBlock(new RectTransform(new Vector2(blockWidth, 1.0f), valueChangeGroup.RectTransform) { MaxSize = blockMaxSize },
-                "", font: GUIStyle.SubHeadingFont)
-            {
-                AutoScaleVertical = true,
-                CanBeFocused = false,
-                TextScale = 1.1f
-            };
-            newPadding = newSellValueBlock.Padding;
-            newPadding.X = 0;
-            newSellValueBlock.Padding = newPadding;
 
             // Store mode buttons ------------------------------------------------
             var modeButtonFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.4f / 14.0f), storeContent.RectTransform), style: null);

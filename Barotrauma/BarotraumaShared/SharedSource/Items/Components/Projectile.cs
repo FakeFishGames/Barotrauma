@@ -231,6 +231,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(false, IsPropertySaveable.No, description:"Enable only if you want to make the projectile ignore collisions with other projectiles when it's shot. Doesn't have any effect, if the item is not set to be damaged by projectiles.")]
+        public bool IgnoreProjectilesWhileActive
+        {
+            get;
+            set;
+        }
+
         public Body StickTarget 
         { 
             get; 
@@ -405,6 +412,10 @@ namespace Barotrauma.Items.Components
 
             item.body.CollisionCategories = Physics.CollisionProjectile;
             item.body.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking;
+            if (item.Prefab.DamagedByProjectiles && !IgnoreProjectilesWhileActive)
+            {
+                item.body.CollidesWith |= Physics.CollisionProjectile;
+            }
 
             IsActive = true;
 

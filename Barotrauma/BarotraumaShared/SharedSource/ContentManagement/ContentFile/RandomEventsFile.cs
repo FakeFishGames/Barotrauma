@@ -57,7 +57,7 @@ namespace Barotrauma
             }
             else
             {
-                DebugConsole.ThrowError($"Invalid {GetType().Name} element: {parentElement.Name} in {Path}");
+                DebugConsole.ThrowError($"RandomEventsFile: Invalid {GetType().Name} element: {parentElement.Name} in {Path}");
             }
         }
 

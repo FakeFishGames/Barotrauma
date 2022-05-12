@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
-using StoreBalanceStatus = Barotrauma.LocationType.StoreBalanceStatus;
 
 namespace Barotrauma
 {
@@ -92,21 +91,8 @@ namespace Barotrauma
 
         public class StoreInfo
         {
-            private int balance;
-
             public Identifier Identifier { get; }
-            public int Balance
-            {
-                get
-                {
-                    return balance;
-                }
-                set
-                {
-                    balance = value;
-                    ActiveBalanceStatus = Location.GetStoreBalanceStatus(value);
-                }
-            }
+            public int Balance { get; set; }
             public List<PurchasedItem> Stock { get; } = new List<PurchasedItem>();
             public List<ItemPrefab> DailySpecials { get; } = new List<ItemPrefab>();
             public List<ItemPrefab> RequestedGoods { get; } = new List<ItemPrefab>();
@@ -114,8 +100,6 @@ namespace Barotrauma
             /// In percentages. Larger values make buying more expensive and selling less profitable, and vice versa.
             /// </summary>
             public int PriceModifier { get; set; }
-            public StoreBalanceStatus ActiveBalanceStatus { get; private set; }
-            public Color BalanceColor => ActiveBalanceStatus.Color;
             public Location Location { get; }
 
             private StoreInfo(Location location)
@@ -298,14 +282,7 @@ namespace Barotrauma
                     price = Location.DailySpecialPriceModifier * price;
                 }
                 // Adjust by current location reputation
-                if (Location.Reputation.Value > 0.0f)
-                {
-                    price = MathHelper.Lerp(1.0f, 1.0f - Location.StoreMaxReputationModifier, Location.Reputation.Value / Location.Reputation.MaxReputation) * price;
-                }
-                else
-                {
-                    price = MathHelper.Lerp(1.0f, 1.0f + Location.StoreMaxReputationModifier, Location.Reputation.Value / Location.Reputation.MinReputation) * price;
-                }
+                price *= Location.GetStoreReputationModifier(true);
                 // Price should never go below 1 mk
                 return Math.Max((int)price, 1);
             }
@@ -319,22 +296,13 @@ namespace Barotrauma
                 float price = Location.StoreSellPriceModifier * priceInfo.Price;
                 // Adjust by random price modifier
                 price = (100 - PriceModifier) / 100.0f * price;
-                // Adjust by current store balance
-                price = ActiveBalanceStatus.SellPriceModifier * price;
                 // Adjust by requested good status
                 if (considerRequestedGoods && RequestedGoods.Contains(item))
                 {
                     price = Location.RequestGoodPriceModifier * price;
                 }
                 // Adjust by current location reputation
-                if (Location.Reputation.Value > 0.0f)
-                {
-                    price = MathHelper.Lerp(1.0f, 1.0f + Location.StoreMaxReputationModifier, Location.Reputation.Value / Location.Reputation.MaxReputation) * price;
-                }
-                else
-                {
-                    price = MathHelper.Lerp(1.0f, 1.0f - Location.StoreMaxReputationModifier, Location.Reputation.Value / Location.Reputation.MinReputation) * price;
-                }
+                price *= Location.GetStoreReputationModifier(false);
                 // Price should never go below 1 mk
                 return Math.Max((int)price, 1);
             }
@@ -353,7 +321,6 @@ namespace Barotrauma
         private float RequestGoodPriceModifier => Type.RequestGoodPriceModifier;
         public int StoreInitialBalance => Type.StoreInitialBalance;
         private int StorePriceModifierRange => Type.StorePriceModifierRange;
-        private List<StoreBalanceStatus> StoreBalanceStatuses => Type.StoreBalanceStatuses;
 
         /// <summary>
         /// How many map progress steps it takes before the discounts should be updated.
@@ -1224,26 +1191,37 @@ namespace Barotrauma
             }
         }
 
+        public float GetStoreReputationModifier(bool buying)
+        {
+            if (buying)
+            {
+                if (Reputation.Value > 0.0f)
+                {
+                    return MathHelper.Lerp(1.0f, 1.0f - StoreMaxReputationModifier, Reputation.Value / Reputation.MaxReputation);
+                }
+                else
+                {
+                    return MathHelper.Lerp(1.0f, 1.0f + StoreMaxReputationModifier, Reputation.Value / Reputation.MinReputation);
+                }
+            }
+            else
+            {
+                if (Reputation.Value > 0.0f)
+                {
+                    return MathHelper.Lerp(1.0f, 1.0f + StoreMaxReputationModifier, Reputation.Value / Reputation.MaxReputation);
+                }
+                else
+                {
+                    return MathHelper.Lerp(1.0f, 1.0f - StoreMaxReputationModifier, Reputation.Value / Reputation.MinReputation);
+                }
+            }
+        }
+
         public int GetExtraSpecialSalesCount()
         {
             var characters = GameSession.GetSessionCrewCharacters(CharacterType.Both);
             if (!characters.Any()) { return 0; }
             return characters.Max(c => (int)c.GetStatValue(StatTypes.ExtraSpecialSalesCount));
-        }
-
-        public StoreBalanceStatus GetStoreBalanceStatus(int balance)
-        {
-            StoreBalanceStatus nextStatus = StoreBalanceStatuses[0];
-            for (int i = 1; i < StoreBalanceStatuses.Count; i++)
-            {
-                var status = StoreBalanceStatuses[i];
-                if (status.PercentageOfInitialBalance < nextStatus.PercentageOfInitialBalance &&
-                    ((float)balance / StoreInitialBalance) < status.PercentageOfInitialBalance)
-                {
-                    nextStatus = status;
-                }
-            }
-            return nextStatus;
         }
 
         public void Discover(bool checkTalents = true)

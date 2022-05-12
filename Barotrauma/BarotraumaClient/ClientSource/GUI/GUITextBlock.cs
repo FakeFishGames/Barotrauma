@@ -35,7 +35,6 @@ namespace Barotrauma
         public TextGetterHandler TextGetter;
 
         public bool Wrap;
-        private bool playerInput;
 
         public bool RoundToNearestPixel = true;
 
@@ -287,8 +286,7 @@ namespace Barotrauma
         /// If the rectT height is set 0, the height is calculated from the text.
         /// </summary>
         public GUITextBlock(RectTransform rectT, RichString text, Color? textColor = null, GUIFont font = null, 
-            Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null,
-            bool playerInput = false) 
+            Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null) 
             : base(style, rectT)
         {
             if (color.HasValue)
@@ -307,7 +305,6 @@ namespace Barotrauma
             this.textAlignment = textAlignment;
             this.Wrap = wrap;
             this.Text = text ?? "";
-            this.playerInput = playerInput;
             if (rectT.Rect.Height == 0 && !text.IsNullOrEmpty())
             {
                 CalculateHeightFromText();

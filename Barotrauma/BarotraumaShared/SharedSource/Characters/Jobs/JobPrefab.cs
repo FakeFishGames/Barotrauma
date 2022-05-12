@@ -293,6 +293,6 @@ namespace Barotrauma
             //ClothingElement = element.GetChildElement("PortraitClothing");
         }
 
-        public static JobPrefab Random(Rand.RandSync sync) => Prefabs.GetRandom(p => !p.HiddenJob, sync);
+        public static JobPrefab Random(Rand.RandSync sync, Func<JobPrefab, bool> predicate = null) => Prefabs.GetRandom(p => !p.HiddenJob && (predicate == null || predicate(p)), sync);
     }
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using System;
 
 namespace Barotrauma.Networking
@@ -183,6 +184,11 @@ namespace Barotrauma.Networking
                         break;
                     default:
                         GameMain.Client.AddChatMessage(txt, type, senderName, senderClient, senderCharacter, changeType, textColor: textColor);
+                        if (type == ChatMessageType.Radio && CanUseRadio(senderCharacter, out WifiComponent radio))
+                        {
+                            Signal s = new Signal(txt, sender: senderCharacter, source: radio.Item);
+                            radio.TransmitSignal(s, sentFromChat: true);
+                        }
                         break;
                 }
                 LastID = id;

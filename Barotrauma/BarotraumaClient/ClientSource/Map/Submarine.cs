@@ -525,7 +525,7 @@ namespace Barotrauma
                         Item.ItemList.Count(it2 => it2.linkedTo.Contains(item) && !item.linkedTo.Contains(it2));
                     for (int i = 0; i < item.Connections.Count; i++)
                     {
-                        int wireCount = item.Connections[i].Wires.Count(w => w != null);
+                        int wireCount = item.Connections[i].Wires.Count;
                         if (doorLinks + wireCount > item.Connections[i].MaxWires)
                         {
                             errorMsgs.Add(TextManager.GetWithVariables("InsufficientFreeConnectionsWarning",

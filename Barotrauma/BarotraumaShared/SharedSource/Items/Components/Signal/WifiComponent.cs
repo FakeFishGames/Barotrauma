@@ -135,7 +135,7 @@ namespace Barotrauma.Items.Components
             // = no point in receiving
             if (!LinkToChat)
             {
-                if (signalOutConnection == null || !signalOutConnection.Wires.Any(w => w != null))
+                if (signalOutConnection == null || signalOutConnection.Wires.Count <= 0)
                 {
                     return false;
                 }

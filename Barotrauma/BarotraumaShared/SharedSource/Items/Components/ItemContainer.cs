@@ -315,7 +315,7 @@ namespace Barotrauma.Items.Components
             IsActive = activeContainedItems.Count > 0 || Inventory.AllItems.Any(it => it.body != null);
         }
 
-        public override void Move(Vector2 amount)
+        public override void Move(Vector2 amount, bool ignoreContacts = false)
         {
             SetContainedItemPositions();
         }
@@ -751,7 +751,11 @@ namespace Barotrauma.Items.Components
                 return;
             }
 #endif
-            Inventory.AllItemsMod.ForEach(it => it.Drop(null));
+            //if we're unloading the whole sub, no need to drop anything (everything's going to be removed anyway)
+            if (!Submarine.Unloading)
+            {
+                Inventory.AllItemsMod.ForEach(it => it.Drop(null));
+            }
         }
 
         public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)

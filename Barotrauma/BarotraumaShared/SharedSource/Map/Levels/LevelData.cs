@@ -20,7 +20,7 @@ namespace Barotrauma
 
         public readonly string Seed;
 
-        public float Difficulty;
+        public readonly float Difficulty;
 
         public readonly Biome Biome;
 
@@ -141,8 +141,8 @@ namespace Barotrauma
             Seed = locationConnection.Locations[0].BaseName + locationConnection.Locations[1].BaseName;
             Biome = locationConnection.Biome;
             Type = LevelType.LocationConnection;
-            GenerationParams = LevelGenerationParams.GetRandom(Seed, LevelType.LocationConnection, Biome.Identifier);
             Difficulty = locationConnection.Difficulty;
+            GenerationParams = LevelGenerationParams.GetRandom(Seed, LevelType.LocationConnection, Difficulty, Biome.Identifier);
 
             float sizeFactor = MathUtils.InverseLerp(
                 MapGenerationParams.Instance.SmallLevelConnectionLength,
@@ -171,13 +171,13 @@ namespace Barotrauma
         /// <summary>
         /// Instantiates level data using the properties of the location
         /// </summary>
-        public LevelData(Location location)
+        public LevelData(Location location, float difficulty)
         {
             Seed = location.BaseName;
             Biome = location.Biome;
             Type = LevelType.Outpost;
-            GenerationParams = LevelGenerationParams.GetRandom(Seed, LevelType.Outpost, Biome.Identifier);
-            Difficulty = 0.0f;
+            Difficulty = difficulty;
+            GenerationParams = LevelGenerationParams.GetRandom(Seed, LevelType.Outpost, Difficulty, Biome.Identifier);
 
             var rand = new MTRandom(ToolBox.StringToInt(Seed));
             int width = (int)MathHelper.Lerp(GenerationParams.MinWidth, GenerationParams.MaxWidth, (float)rand.NextDouble());
@@ -200,14 +200,16 @@ namespace Barotrauma
                 (requireOutpost ? LevelType.Outpost : LevelType.LocationConnection) :
                  generationParams.Type;
 
-            if (generationParams == null) { generationParams = LevelGenerationParams.GetRandom(seed, type); }
+            float selectedDifficulty = difficulty ?? Rand.Range(30.0f, 80.0f, Rand.RandSync.ServerAndClient);
+
+            if (generationParams == null) { generationParams = LevelGenerationParams.GetRandom(seed, type, selectedDifficulty); }
             var biome =
                 Biome.Prefabs.FirstOrDefault(b => generationParams?.AllowedBiomeIdentifiers.Contains(b.Identifier) ?? false) ??
                 Biome.Prefabs.GetRandom(Rand.RandSync.ServerAndClient);
 
             var levelData = new LevelData(
                 seed,
-                difficulty ?? Rand.Range(30.0f, 80.0f, Rand.RandSync.ServerAndClient),
+                selectedDifficulty,
                 Rand.Range(0.0f, 1.0f, Rand.RandSync.ServerAndClient),
                 generationParams,
                 biome);

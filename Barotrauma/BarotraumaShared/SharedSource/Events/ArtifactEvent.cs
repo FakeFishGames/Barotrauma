@@ -53,8 +53,9 @@ namespace Barotrauma
             }
         }
 
-        public override void Init(bool affectSubImmediately)
+        public override void Init(EventSet parentSet)
         {
+            base.Init(parentSet);
             spawnPos = Level.Loaded.GetRandomItemPos(
                 (Rand.Value(Rand.RandSync.ServerAndClient) < 0.5f) ? 
                 Level.PositionType.MainPath | Level.PositionType.SidePath : 
@@ -111,7 +112,7 @@ namespace Barotrauma
                 case 1:
                     if (!Submarine.MainSub.AtEndExit && !Submarine.MainSub.AtStartExit) return;
 
-                    Finished();
+                    Finish();
                     state = 2;
                     break;
             }    

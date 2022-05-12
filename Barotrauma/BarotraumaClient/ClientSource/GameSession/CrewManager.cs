@@ -81,7 +81,6 @@ namespace Barotrauma
             : this(isSinglePlayer)
         {
             AddCharacterElements(element);
-            ActiveOrdersElement = element.GetChildElement("activeorders");
         }
 
         partial void InitProjectSpecific()
@@ -3661,9 +3660,9 @@ namespace Barotrauma
             crewList.ClearChildren();
         }
 
-        public void Save(XElement parentElement)
+        public XElement Save(XElement parentElement)
         {
-            XElement element = new XElement("crew");
+            var element = new XElement("crew");
             for (int i = 0; i < characterInfos.Count; i++)
             {
                 var ci = characterInfos[i];
@@ -3674,8 +3673,8 @@ namespace Barotrauma
                 infoElement.Add(new XAttribute("crewlistindex", ci.CrewListIndex));
                 if (ci.LastControlled) { infoElement.Add(new XAttribute("lastcontrolled", true)); }
             }
-            SaveActiveOrders(element);
-            parentElement.Add(element);
+            parentElement?.Add(element);
+            return element;
         }
 
         public static void ClientReadActiveOrders(IReadMessage inc)

@@ -51,8 +51,6 @@ namespace Barotrauma
 
         public ReadyCheck ActiveReadyCheck;
 
-        public XElement ActiveOrdersElement { get; set; }
-
         public CrewManager(bool isSinglePlayer)
         {
             IsSinglePlayer = isSinglePlayer;
@@ -493,9 +491,8 @@ namespace Barotrauma
 
         partial void UpdateProjectSpecific(float deltaTime);
 
-        private void SaveActiveOrders(XElement parentElement)
+        public void SaveActiveOrders(XElement element)
         {
-            ActiveOrdersElement = new XElement("activeorders");
             // Only save orders with no fade out time (e.g. ignore orders)
             var ordersToSave = new List<Order>();
             foreach (var activeOrder in ActiveOrders)
@@ -504,14 +501,13 @@ namespace Barotrauma
                 if (order == null || activeOrder.FadeOutTime.HasValue) { continue; }
                 ordersToSave.Add(order.WithManualPriority(CharacterInfo.HighestManualOrderPriority));
             }
-            CharacterInfo.SaveOrders(ActiveOrdersElement, ordersToSave.ToArray());
-            parentElement?.Add(ActiveOrdersElement);
+            CharacterInfo.SaveOrders(element, ordersToSave.ToArray());
         }
 
-        public void LoadActiveOrders()
+        public void LoadActiveOrders(XElement element)
         {
-            if (ActiveOrdersElement == null) { return; }
-            foreach (var orderInfo in CharacterInfo.LoadOrders(ActiveOrdersElement))
+            if (element == null) { return; }
+            foreach (var orderInfo in CharacterInfo.LoadOrders(element))
             {
                 IIgnorable ignoreTarget = null;
                 if (orderInfo.IsIgnoreOrder)

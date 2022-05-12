@@ -24,7 +24,7 @@ namespace Barotrauma.Networking
         public UInt16 LastRecvCampaignUpdate = 0;
         public UInt16 LastRecvCampaignSave = 0;
 
-        public Pair<UInt16, float> LastCampaignSaveSendTime;
+        public (UInt16 saveId, float time) LastCampaignSaveSendTime;
 
         public readonly List<ChatMessage> ChatMsgQueue = new List<ChatMessage>();
         public UInt16 LastChatMsgQueueID;

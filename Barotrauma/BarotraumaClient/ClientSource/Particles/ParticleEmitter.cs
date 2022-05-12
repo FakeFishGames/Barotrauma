@@ -85,6 +85,9 @@ namespace Barotrauma.Particles
         [Editable, Serialize("1,1,1,1", IsPropertySaveable.Yes)]
         public Color ColorMultiplier { get; set; }
 
+        [Editable, Serialize(1f, IsPropertySaveable.Yes)]
+        public float LifeTimeMultiplier { get; set; }
+
         [Editable, Serialize(false, IsPropertySaveable.Yes)]
         public bool DrawOnTop { get; set; }
 
@@ -197,7 +200,7 @@ namespace Barotrauma.Particles
                 position += dir * Rand.Range(Prefab.Properties.DistanceMin, Prefab.Properties.DistanceMax);
             }
 
-            var particle = GameMain.ParticleManager.CreateParticle(particlePrefab, position, velocity, particleRotation, hullGuess, Prefab.DrawOnTop, tracerPoints: tracerPoints);
+            var particle = GameMain.ParticleManager.CreateParticle(particlePrefab, position, velocity, particleRotation, hullGuess, Prefab.DrawOnTop, lifeTimeMultiplier: Prefab.Properties.LifeTimeMultiplier, tracerPoints: tracerPoints);
 
             if (particle != null)
             {

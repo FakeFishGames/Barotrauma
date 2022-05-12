@@ -1190,18 +1190,23 @@ namespace Barotrauma
             frame.RectTransform.MaxSize = new Point(int.MaxValue, frame.Rect.Width);
 
             LocalizedString name = legacy ? TextManager.GetWithVariable("legacyitemformat", "[name]", ep.Name) : ep.Name;
-            frame.ToolTip = ep.Description.IsNullOrEmpty() ? name : name + '\n' + ep.Description;
+            frame.ToolTip = $"{frame.ToolTip}\n‖color:{XMLExtensions.ToStringHex(GUIStyle.TextColorBright)}‖{name}‖color:end‖";
+            if (!ep.Description.IsNullOrEmpty())
+            {
+                frame.ToolTip += '\n' + ep.Description;
+            }
 
             if (ep.ContentPackage != GameMain.VanillaContent && ep.ContentPackage != null)
             {
                 frame.Color = Color.Magenta;
-                frame.ToolTip = RichString.Rich($"{frame.ToolTip}\n‖color:{XMLExtensions.ToStringHex(Color.MediumPurple)}‖{ep.ContentPackage?.Name}‖color:end‖");
+                frame.ToolTip = $"{frame.ToolTip}\n‖color:{XMLExtensions.ToStringHex(Color.MediumPurple)}‖{ep.ContentPackage?.Name}‖color:end‖";
             }
             if (ep.HideInMenus)
             {
                 frame.Color = Color.Red;
                 name = "[HIDDEN] " + name;
             }
+            frame.ToolTip = RichString.Rich(frame.ToolTip);
 
             GUILayoutGroup paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.8f), frame.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
             {
@@ -1976,7 +1981,7 @@ namespace Barotrauma
                 return true;
             };
 
-            nameBox.Text = subNameLabel?.Text?.SanitizedValue ?? "";
+            nameBox.Text = MainSub?.Info.Name ?? "";
 
             submarineNameCharacterCount.Text = nameBox.Text.Length + " / " + submarineNameLimit;
 
@@ -2750,6 +2755,8 @@ namespace Barotrauma
                 }
             }
 
+            nameBox.Text = nameBox.Text.Trim();
+
             bool hideInMenus = nameBox.Parent.GetChildByUserData("hideinmenus") is GUITickBox hideInMenusTickBox && hideInMenusTickBox.Selected;
             string saveFolder = Path.Combine(ContentPackage.LocalModsDir, nameBox.Text);
             string filePath = Path.Combine(saveFolder, $"{nameBox.Text}.xml").CleanUpPathCrossPlatform();
@@ -2884,8 +2891,30 @@ namespace Barotrauma
                 {
                     if (deleteButtonHolder.FindChild("delete") is GUIButton deleteBtn)
                     {
-                        deleteBtn.Enabled = userData is SubmarineInfo subInfo
-                                            && GetContentPackageIntrinsicallyTiedToSub(subInfo) != null;
+                        deleteBtn.ToolTip = string.Empty;
+                        if (!(userData is SubmarineInfo subInfo))
+                        {
+                            deleteBtn.Enabled = false;
+                            return true;
+                        }
+
+                        var package = GetContentPackageIntrinsicallyTiedToSub(subInfo);
+                        if (package != null)
+                        {
+                            deleteBtn.Enabled = true;
+                        }
+                        else
+                        {
+                            deleteBtn.Enabled = false;
+                            if (ContentPackageManager.VanillaCorePackage?.Files.Any(f => f.Path == subInfo.FilePath) ?? false)
+                            {
+                                deleteBtn.ToolTip = TextManager.Get("cantdeletevanillasub");
+                            }
+                            else if (ContentPackageManager.AllPackages.FirstOrDefault(p => p.Files.Any(f => f.Path == subInfo.FilePath)) is ContentPackage subPackage)
+                            {
+                                deleteBtn.ToolTip = TextManager.GetWithVariable("cantdeletemodsub", "[modname]", subPackage.Name);
+                            }
+                        }
                     }
                     return true;
                 }
@@ -2924,6 +2953,21 @@ namespace Barotrauma
                     UserData = sub,
                     ToolTip = sub.FilePath
                 };
+
+                if (!(ContentPackageManager.VanillaCorePackage?.Files.Any(f => f.Path == sub.FilePath) ?? false))
+                {
+                    if (GetContentPackageIntrinsicallyTiedToSub(sub) == null &&
+                        ContentPackageManager.AllPackages.FirstOrDefault(p => p.Files.Any(f => f.Path == sub.FilePath)) is ContentPackage subPackage)
+                    {
+                        //workshop mod
+                        textBlock.OverrideTextColor(Color.MediumPurple);
+                    }
+                    else
+                    {
+                        //local mod
+                        textBlock.OverrideTextColor(GUIStyle.TextColorBright);
+                    }
+                }
 
                 if (sub.HasTag(SubmarineTag.Shuttle))
                 {
@@ -3036,6 +3080,24 @@ namespace Barotrauma
             {
                 if (!(child.UserData is SubmarineInfo sub)) { continue; }
                 child.Visible = string.IsNullOrEmpty(filter) || sub.Name.ToLower().Contains(filter.ToLower());
+            }
+
+            //go through the elements backwards, and disable the labels for sub categories if there's no subs visible in them
+            bool subVisibleInCategory = false;
+            foreach (GUIComponent child in subList.Content.Children.Reverse())
+            {
+                if (!(child.UserData is SubmarineInfo sub)) 
+                { 
+                    if (child.Enabled)
+                    {
+                        child.Visible = subVisibleInCategory;
+                    }
+                    subVisibleInCategory = false;
+                }
+                else
+                {
+                    subVisibleInCategory |= child.Visible;
+                }
             }
         }
 
@@ -4828,7 +4890,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (GameSettings.CurrentConfig.KeyMap.Bindings[InputType.ToggleInventory].IsHit() && mode == Mode.Default)
+                if (PlayerInput.KeyHit(Keys.Q) && mode == Mode.Default)
                 {
                     toggleEntityMenuButton.OnClicked?.Invoke(toggleEntityMenuButton, toggleEntityMenuButton.UserData);
                 }

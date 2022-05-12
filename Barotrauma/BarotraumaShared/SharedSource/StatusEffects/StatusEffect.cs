@@ -320,7 +320,7 @@ namespace Barotrauma
 
         private readonly int useItemCount;
 
-        private readonly bool removeItem, removeCharacter, breakLimb, hideLimb;
+        private readonly bool removeItem, dropContainedItems, removeCharacter, breakLimb, hideLimb;
         private readonly float hideLimbTimer;
 
         public readonly ActionType type = ActionType.OnActive;
@@ -607,6 +607,9 @@ namespace Barotrauma
                     case "remove":
                     case "removeitem":
                         removeItem = true;
+                        break;
+                    case "dropcontaineditems":
+                        dropContainedItems = true;
                         break;
                     case "removecharacter":
                         removeCharacter = true;
@@ -1224,6 +1227,22 @@ namespace Barotrauma
                 }
             }
 
+            if (dropContainedItems)
+            {
+                for (int i = 0; i < targets.Count; i++)
+                {
+                    if (targets[i] is Item item) 
+                    { 
+                        foreach (var itemContainer in item.GetComponents<ItemContainer>())
+                        {
+                            foreach (var containedItem in itemContainer.Inventory.AllItemsMod)
+                            {
+                                containedItem.Drop(dropper: null);
+                            }
+                        }
+                    }
+                }
+            }
             if (removeItem)
             {
                 for (int i = 0; i < targets.Count; i++)

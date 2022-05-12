@@ -23,7 +23,7 @@ namespace Barotrauma
         /*missionTypes.Any(t => identifier == t.Name)
             || identifier == "OutpostDestroyMission" || identifier == "OutpostRescueMission";*/
         protected override bool MatchesPlural(Identifier identifier) => identifier == "missions";
-        protected override PrefabCollection<MissionPrefab> prefabs => MissionPrefab.Prefabs;
+        protected override PrefabCollection<MissionPrefab> Prefabs => MissionPrefab.Prefabs;
         protected override MissionPrefab CreatePrefab(ContentXElement element)
         {
             return new MissionPrefab(element, this);

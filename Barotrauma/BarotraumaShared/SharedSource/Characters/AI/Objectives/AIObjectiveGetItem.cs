@@ -471,7 +471,8 @@ namespace Barotrauma
                 {
                     if (spawnItemIfNotFound)
                     {
-                        if (!(MapEntityPrefab.List.FirstOrDefault(me => me is ItemPrefab ip && IdentifiersOrTags.Any(id => id == ip.Identifier || ip.Tags.Contains(id))) is ItemPrefab prefab))
+                        ItemPrefab prefab = FindItemToSpawn();
+                        if (prefab == null)
                         {
 #if DEBUG
                             DebugConsole.NewMessage($"{character.Name}: Cannot find an item with the following identifier(s) or tag(s): {string.Join(", ", IdentifiersOrTags)}, tried to spawn the item but no matching item prefabs were found.", Color.Yellow);
@@ -499,6 +500,33 @@ namespace Barotrauma
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns the "best" item to spawn when using <see cref="spawnItemIfNotFound"/> and there's multiple suitable items.
+        /// Best in this context is the one that's sold at the lowest price in stores (usually the most "basic" item)
+        /// </summary>
+        /// <returns></returns>
+        private ItemPrefab FindItemToSpawn()
+        {
+            ItemPrefab bestItem = null;
+            float lowestCost = float.MaxValue;
+            foreach (MapEntityPrefab prefab in MapEntityPrefab.List)
+            {
+                if (!(prefab is ItemPrefab itemPrefab)) { continue; }
+                if (IdentifiersOrTags.Any(id => id == prefab.Identifier || prefab.Tags.Contains(id)))
+                {
+                    float cost = itemPrefab.DefaultPrice != null && itemPrefab.CanBeBought ?
+                        itemPrefab.DefaultPrice.Price :
+                        float.MaxValue;
+                    if (cost < lowestCost || bestItem == null)
+                    {
+                        bestItem = itemPrefab;
+                        lowestCost = cost;
+                    }
+                }
+            }
+            return bestItem;
         }
 
         protected override bool CheckObjectiveSpecific()

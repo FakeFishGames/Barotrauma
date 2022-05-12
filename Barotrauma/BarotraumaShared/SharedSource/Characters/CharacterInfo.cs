@@ -252,12 +252,11 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Endocrine boosters can unlock talents outside the user's talent tree. This method is used to specifically get them
+        /// Returns unlocked talents that aren't part of the character's talent tree (which can be unlocked e.g. with an endocrine booster)
         /// </summary>
-        public IEnumerable<Identifier> GetEndocrineTalents()
+        public IEnumerable<Identifier> GetUnlockedTalentsOutsideTree()
         {
             if (!TalentTree.JobTalentTrees.TryGet(Job.Prefab.Identifier, out TalentTree talentTree)) { return Enumerable.Empty<Identifier>(); }
-
             return UnlockedTalents.Where(t => !talentTree.TalentIsInTree(t));
         }
 
@@ -1182,7 +1181,7 @@ namespace Barotrauma
             // Replace the name tag of any existing id cards or duffel bags
             foreach (var item in Item.ItemList)
             {
-                if (item.Prefab.Identifier != "idcard" && !item.Tags.Contains("despawncontainer")) { continue; }
+                if (!item.HasTag("identitycard") && !item.HasTag("despawncontainer")) { continue; }
                 foreach (var tag in item.Tags.Split(','))
                 {
                     var splitTag = tag.Split(":");

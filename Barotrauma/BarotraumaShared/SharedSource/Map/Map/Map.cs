@@ -238,6 +238,16 @@ namespace Barotrauma
             }
             System.Diagnostics.Debug.Assert(StartLocation != null, "Start location not assigned after level generation.");
 
+            //ensure all paths from the starting location have 0 difficulty to make the 1st campaign round very easy
+            foreach (var locationConnection in StartLocation.Connections)
+            {
+                if (locationConnection.Difficulty > 0.0f)
+                {
+                    locationConnection.Difficulty = 0.0f;
+                    locationConnection.LevelData = new LevelData(locationConnection);
+                }
+            }
+
             CurrentLocation.Discover(true);
             CurrentLocation.CreateStores();
 
@@ -509,24 +519,12 @@ namespace Barotrauma
             
             foreach (Location location in Locations)
             {
-                location.LevelData = new LevelData(location)
-                {
-                    Difficulty = MathHelper.Clamp(location.MapPosition.X / Width * 100, 0.0f, 100.0f)
-                    //Difficulty = MathHelper.Clamp(GetLevelDifficulty(location.MapPosition.X / Width), 0.0f, 100.0f)
-                };
+                location.LevelData = new LevelData(location, MathHelper.Clamp(location.MapPosition.X / Width * 100, 0.0f, 100.0f));
                 location.UnlockInitialMissions();
             }
             foreach (LocationConnection connection in Connections) 
             { 
                 connection.LevelData = new LevelData(connection);
-            }
-
-            float GetLevelDifficulty(float areaDifficulty)
-            {
-                const float CurveModifier = 1.5f;
-                const float DifficultyMultiplier = 1.14f;
-                const float BaseDifficulty = -3f;
-                return (float)(1 - Math.Pow(1 - areaDifficulty, CurveModifier)) * DifficultyMultiplier * 100f + BaseDifficulty;
             }
         }
 
@@ -1015,8 +1013,7 @@ namespace Barotrauma
         {
             string prevName = location.Name;
 
-            var newType = LocationType.Prefabs[change.ChangeToType];
-            if (newType == null)
+            if (!LocationType.Prefabs.TryGet(change.ChangeToType, out var newType))
             {
                 DebugConsole.ThrowError($"Failed to change the type of the location \"{location.Name}\". Location type \"{change.ChangeToType}\" not found.");
                 return false;

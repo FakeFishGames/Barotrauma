@@ -1077,7 +1077,7 @@ namespace Barotrauma
                         {
                             foreach (Connection c in gapToRemove.ConnectedDoor.Item.Connections)
                             {
-                                c.Wires.ForEach(w => w?.Item.Remove());
+                                c.Wires.ToArray().ForEach(w => w?.Item.Remove());
                             }
                         }
 
@@ -1428,7 +1428,7 @@ namespace Barotrauma
                 {
                     foreach (Connection connection in linkedItem.Connections)
                     {
-                        foreach (Wire w in connection.Wires)
+                        foreach (Wire w in connection.Wires.ToArray())
                         {
                             w?.Item.Remove();
                         }

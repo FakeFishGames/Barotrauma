@@ -354,7 +354,7 @@ namespace Barotrauma
             private set;
         }
 
-        public override void Move(Vector2 amount)
+        public override void Move(Vector2 amount, bool ignoreContacts = false)
         {
             if (!MathUtils.IsValid(amount))
             {
@@ -377,7 +377,15 @@ namespace Barotrauma
                 Vector2 simAmount = ConvertUnits.ToSimUnits(amount);
                 foreach (Body b in Bodies)
                 {
-                    b.SetTransform(b.Position + simAmount, b.Rotation);
+                    Vector2 pos = b.Position + simAmount;
+                    if (ignoreContacts)
+                    {
+                        b.SetTransformIgnoreContacts(ref pos, b.Rotation);
+                    }
+                    else
+                    {
+                        b.SetTransform(pos, b.Rotation);
+                    }
                 }
             }
 
@@ -1208,7 +1216,7 @@ namespace Barotrauma
 
         private void UpdateSections()
         {
-            if (Bodies == null) return;
+            if (Bodies == null) { return; }
             foreach (Body b in Bodies)
             {
                 GameMain.World.Remove(b);
@@ -1281,9 +1289,9 @@ namespace Barotrauma
             Body newBody = GameMain.World.CreateRectangle(
                 ConvertUnits.ToSimUnits(rect.Width),
                 ConvertUnits.ToSimUnits(rect.Height),
-                1.5f);
-            newBody.BodyType = BodyType.Static;
-            //newBody.Position = ConvertUnits.ToSimUnits(new Vector2(rect.X + rect.Width / 2.0f, rect.Y - rect.Height / 2.0f));
+                1.5f, 
+                bodyType: BodyType.Static,
+                findNewContacts: false);
             newBody.Friction = 0.5f;
             newBody.OnCollision += OnWallCollision;
             newBody.CollisionCategories = (Prefab.Platform) ? Physics.CollisionPlatform : Physics.CollisionWall;
@@ -1292,15 +1300,16 @@ namespace Barotrauma
             Vector2 structureCenter = ConvertUnits.ToSimUnits(Position);
             if (BodyRotation != 0.0f)
             {
-                newBody.Position = structureCenter + bodyOffset + new Vector2(
+                Vector2 pos = structureCenter + bodyOffset + new Vector2(
                     (float)Math.Cos(IsHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation),
                     (float)Math.Sin(IsHorizontal ? -BodyRotation : MathHelper.PiOver2 - BodyRotation))
                         * ConvertUnits.ToSimUnits(diffFromCenter);
-                newBody.Rotation = -BodyRotation;
+                newBody.SetTransformIgnoreContacts(ref pos, -BodyRotation);
             }
             else
             {
-                newBody.Position = structureCenter + (IsHorizontal ? Vector2.UnitX : Vector2.UnitY) * ConvertUnits.ToSimUnits(diffFromCenter) + bodyOffset;
+                Vector2 pos = structureCenter + (IsHorizontal ? Vector2.UnitX : Vector2.UnitY) * ConvertUnits.ToSimUnits(diffFromCenter) + bodyOffset;
+                newBody.SetTransformIgnoreContacts(ref pos, newBody.Rotation);
             }
 
             if (createConvexHull)

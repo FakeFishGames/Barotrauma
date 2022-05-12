@@ -44,6 +44,7 @@ namespace Barotrauma
             MainPath = 64,
             LevelStart = 128,
             LevelEnd = 256,
+            OutpostWall = 512,
             Wall = MainPathWall | SidePathWall | CaveWall,
         }
 

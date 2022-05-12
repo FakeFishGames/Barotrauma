@@ -39,6 +39,12 @@ namespace Barotrauma.Networking
         SomethingDifferent = 4
     }
 
+    internal enum LootedMoneyDestination
+    {
+        Bank,
+        Wallet
+    }
+
     partial class ServerSettings : ISerializableEntity
     {
         public const string SettingsFile = "serversettings.xml";
@@ -901,10 +907,16 @@ namespace Barotrauma.Networking
             set;
         }
 
+        [Serialize(LootedMoneyDestination.Bank, IsPropertySaveable.Yes)]
+        public LootedMoneyDestination LootedMoneyDestination { get; set; }
+
+        [Serialize(999999, IsPropertySaveable.Yes)]
+        public int MaximumTransferRequest { get; set; }
+
         private int maxMissionCount = CampaignSettings.DefaultMaxMissionCount;
 
         [Serialize(CampaignSettings.DefaultMaxMissionCount, IsPropertySaveable.Yes)]
-        public int MaxMissionCount 
+        public int MaxMissionCount
         {
             get { return maxMissionCount; }
             set { maxMissionCount = MathHelper.Clamp(value, CampaignSettings.MinMissionCountLimit, CampaignSettings.MaxMissionCountLimit); }            

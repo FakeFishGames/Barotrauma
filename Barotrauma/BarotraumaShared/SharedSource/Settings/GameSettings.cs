@@ -301,7 +301,6 @@ namespace Barotrauma
                         { InputType.Down, Keys.S },
                         { InputType.Left, Keys.A },
                         { InputType.Right, Keys.D },
-                        { InputType.ToggleInventory, Keys.Q },
 
                         { InputType.SelectNextCharacter, Keys.Z },
                         { InputType.SelectPreviousCharacter, Keys.X },
@@ -452,18 +451,18 @@ namespace Barotrauma
 
         public static void SetCurrentConfig(in Config newConfig)
         {
-            bool setGraphicsMode =
-                currentConfig.Graphics.Width != newConfig.Graphics.Width
-                || currentConfig.Graphics.Height != newConfig.Graphics.Height
-                || currentConfig.Graphics.VSync != newConfig.Graphics.VSync
-                || currentConfig.Graphics.DisplayMode != newConfig.Graphics.DisplayMode;
-
+            bool resolutionChanged = 
+                currentConfig.Graphics.Width != newConfig.Graphics.Width || 
+                currentConfig.Graphics.Height != newConfig.Graphics.Height;
             bool languageChanged = currentConfig.Language != newConfig.Language;
-
             bool audioOutputChanged = currentConfig.Audio.AudioOutputDevice != newConfig.Audio.AudioOutputDevice;
             bool voiceCaptureChanged = currentConfig.Audio.VoiceCaptureDevice != newConfig.Audio.VoiceCaptureDevice;
-
             bool textScaleChanged = Math.Abs(currentConfig.Graphics.TextScale - newConfig.Graphics.TextScale) > MathF.Pow(2.0f, -7);
+
+            bool setGraphicsMode =
+                resolutionChanged ||
+                currentConfig.Graphics.VSync != newConfig.Graphics.VSync ||
+                currentConfig.Graphics.DisplayMode != newConfig.Graphics.DisplayMode;
 
             currentConfig = newConfig;
 
@@ -483,7 +482,7 @@ namespace Barotrauma
                 VoipCapture.ChangeCaptureDevice(currentConfig.Audio.VoiceCaptureDevice);
             }
 
-            if (textScaleChanged)
+            if (textScaleChanged || resolutionChanged)
             {
                 foreach (var font in GUIStyle.Fonts.Values)
                 {
@@ -504,23 +503,11 @@ namespace Barotrauma
 
             XElement graphicsElement = new XElement("graphicssettings"); root.Add(graphicsElement);
             currentConfig.Graphics.SerializeElement(graphicsElement);
-            
-#region Backwards compatibility crap
-#warning TODO: remove once modding refactor ships in a stable release
-            XElement backwardsCompatibilityGraphicsMode = new XElement(graphicsElement); root.Add(backwardsCompatibilityGraphicsMode);
-            backwardsCompatibilityGraphicsMode.Name = "graphicsmode";
-#endregion
-            
+
             XElement audioElement = new XElement("audio"); root.Add(audioElement);
             currentConfig.Audio.SerializeElement(audioElement);
 
             XElement contentPackagesElement = new XElement("contentpackages"); root.Add(contentPackagesElement);
-#region More backwards compatibility crap
-            XComment backwardsCompatibleComment = new XComment("Backwards compatibility"); contentPackagesElement.Add(backwardsCompatibleComment);
-#warning TODO: remove once modding refactor ships in a stable release
-            XElement backwardsCompatibleCoreElement = new XElement("core"); contentPackagesElement.Add(backwardsCompatibleCoreElement);
-            backwardsCompatibleCoreElement.SetAttributeValue("name", "Vanilla 0.9");
-#endregion
             XComment corePackageComment = new XComment(ContentPackageManager.EnabledPackages.Core?.Name ?? "Vanilla"); contentPackagesElement.Add(corePackageComment);
             XElement corePackageElement = new XElement(ContentPackageManager.CorePackageElementName); contentPackagesElement.Add(corePackageElement);
             corePackageElement.SetAttributeValue("path", ContentPackageManager.EnabledPackages.Core?.Path ?? ContentPackageManager.VanillaFileList);

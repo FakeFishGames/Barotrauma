@@ -7,9 +7,14 @@ namespace Barotrauma
 {
     public static class ReflectionUtils
     {
+        private static Type[] cachedNonAbstractTypes;
         public static IEnumerable<Type> GetDerivedNonAbstract<T>()
         {
-            return Assembly.GetEntryAssembly().GetTypes().Where(t => t.IsSubclassOf(typeof(T)) && !t.IsAbstract);
+            if (cachedNonAbstractTypes == null)
+            {
+                cachedNonAbstractTypes = Assembly.GetEntryAssembly().GetTypes().Where(t => !t.IsAbstract).ToArray();
+            }
+            return cachedNonAbstractTypes.Where(t => t.IsSubclassOf(typeof(T)));
         }
     }
 }

@@ -525,6 +525,7 @@ namespace Barotrauma
             if (!AccessibleWhenAlive && !character.IsDead && !AccessibleByOwner)
             {
                 syncItemsDelay = Math.Max(syncItemsDelay - deltaTime, 0.0f);
+                doubleClickedItems.Clear();
                 return;
             }
 
@@ -931,7 +932,7 @@ namespace Barotrauma
                             // Move the item from the subinventory to the selected container
                             return QuickUseAction.PutToContainer;
                         }
-                        else
+                        else if (character.Inventory.AccessibleWhenAlive || character.Inventory.AccessibleByOwner)
                         {
                             // Take from the subinventory and place it in the character's main inventory if no target container is selected
                             return QuickUseAction.TakeFromContainer;
@@ -959,7 +960,8 @@ namespace Barotrauma
                 }
                 else if (character.SelectedBy?.Inventory != null && 
                     Character.Controlled == character.SelectedBy &&
-                    !character.SelectedBy.Inventory.Locked && 
+                    !character.SelectedBy.Inventory.Locked &&
+                    (character.SelectedBy.Inventory.AccessibleWhenAlive || character.SelectedBy.Inventory.AccessibleByOwner) &&
                     allowInventorySwap)
                 {
                     return QuickUseAction.TakeFromCharacter;

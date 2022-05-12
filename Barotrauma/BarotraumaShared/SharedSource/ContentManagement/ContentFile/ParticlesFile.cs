@@ -14,7 +14,7 @@ namespace Barotrauma
 
         protected override bool MatchesSingular(Identifier identifier) => !MatchesPlural(identifier);
         protected override bool MatchesPlural(Identifier identifier) => identifier == "prefabs" || identifier == "particles";
-        protected override PrefabCollection<ParticlePrefab> prefabs => ParticlePrefab.Prefabs;
+        protected override PrefabCollection<ParticlePrefab> Prefabs => ParticlePrefab.Prefabs;
         protected override ParticlePrefab CreatePrefab(ContentXElement element)
         {
             return new ParticlePrefab(element, this);

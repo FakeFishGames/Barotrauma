@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using FarseerPhysics.Dynamics;
+using static Barotrauma.AIObjectiveFindSafety;
 
 namespace Barotrauma
 {
@@ -775,7 +776,13 @@ namespace Barotrauma
                 }
                 else
                 {
-                    retreatTarget = findSafety.FindBestHull(HumanAIController.VisibleHulls, allowChangingTheSubmarine: character.TeamID != CharacterTeamType.FriendlyNPC);
+                    HullSearchStatus hullSearchStatus = findSafety.FindBestHull(out Hull potentialSafeHull, HumanAIController.VisibleHulls, allowChangingSubmarine: character.TeamID != CharacterTeamType.FriendlyNPC);
+                    if (hullSearchStatus != HullSearchStatus.Finished)
+                    {
+                        findSafety.UpdateSimpleEscape(deltaTime);
+                        return;
+                    }
+                    retreatTarget = potentialSafeHull;
                     findHullTimer = findHullInterval * Rand.Range(0.9f, 1.1f);
                 }
             }
@@ -785,21 +792,21 @@ namespace Barotrauma
                 {
                     UsePathingOutside = false
                 },
-                    onAbandon: () =>
+                onAbandon: () =>
+                {
+                    if (Enemy != null && HumanAIController.VisibleHulls.Contains(Enemy.CurrentHull))
                     {
-                        if (Enemy != null && HumanAIController.VisibleHulls.Contains(Enemy.CurrentHull))
-                        {
-                            // If in the same room with an enemy -> don't try to escape because we'd want to fight it
-                            SteeringManager.Reset();
-                            RemoveSubObjective(ref retreatObjective);
-                        }
-                        else
-                        {
-                            // else abandon and fall back to find safety mode
-                            Abandon = true;
-                        }
-                    }, 
-                    onCompleted: () => RemoveSubObjective(ref retreatObjective));
+                        // If in the same room with an enemy -> don't try to escape because we'd want to fight it
+                        SteeringManager.Reset();
+                        RemoveSubObjective(ref retreatObjective);
+                    }
+                    else
+                    {
+                        // else abandon and fall back to find safety mode
+                        Abandon = true;
+                    }
+                }, 
+                onCompleted: () => RemoveSubObjective(ref retreatObjective));
             }
         }
 

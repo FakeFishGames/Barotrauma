@@ -6,8 +6,10 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma.Items.Components
 {
-    partial class DockingPort : ItemComponent, IDrawableComponent, IServerSerializable
+    partial class DockingPort : ItemComponent, IDrawableComponent, IServerSerializable, IClientSerializable
     {
+        private GUIMessageBox autodockingVerification;
+
         public Vector2 DrawSize
         {
             //use the extents of the item as the draw size
@@ -179,6 +181,11 @@ namespace Barotrauma.Items.Components
             {
                 Undock();
             }
+        }
+
+        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
+        {
+            msg.Write((byte)allowOutpostAutoDocking);
         }
     }
 }

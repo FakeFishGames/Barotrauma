@@ -58,7 +58,7 @@ namespace Barotrauma
         }
 #endif
 
-            public static List<EventPrefab> GetAllEventPrefabs()
+        public static List<EventPrefab> GetAllEventPrefabs()
         {
             List<EventPrefab> eventPrefabs = EventPrefab.Prefabs.ToList();
             foreach (var eventSet in Prefabs)
@@ -117,6 +117,8 @@ namespace Barotrauma
             
         public readonly float DefaultCommonness;
         public readonly ImmutableDictionary<Identifier, float> OverrideCommonness;
+
+        public readonly float ResetTime;
 
         public readonly struct SubEventPrefab
         {
@@ -244,6 +246,7 @@ namespace Barotrauma
             OncePerOutpost = element.GetAttributeBool("onceperoutpost", false);
             TriggerEventCooldown = element.GetAttributeBool("triggereventcooldown", true);
             IsCampaignSet = element.GetAttributeBool("campaign", LevelType == LevelData.LevelType.Outpost || (parentSet?.IsCampaignSet ?? false));
+            ResetTime = element.GetAttributeFloat("resettime", 0);
 
             DefaultCommonness = 1.0f;
             foreach (var subElement in element.Elements())
@@ -454,7 +457,6 @@ namespace Barotrauma
             {
                 childSet.Dispose();
             }
-
         }
     }
 }

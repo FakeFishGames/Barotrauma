@@ -621,7 +621,7 @@ namespace Barotrauma.Networking
                 {
                     Stretch = true
                 };
-            
+
             var losModeRadioButtonGroup = new GUIRadioButtonGroup();
             LosMode[] losModes = (LosMode[])Enum.GetValues(typeof(LosMode));
             for (int i = 0; i < losModes.Length; i++)
@@ -633,6 +633,14 @@ namespace Barotrauma.Networking
 
             var traitorsMinPlayerCount = CreateLabeledNumberInput(roundsTab, "ServerSettingsTraitorsMinPlayerCount", 1, 16, "ServerSettingsTraitorsMinPlayerCountToolTip");
             GetPropertyData(nameof(TraitorsMinPlayerCount)).AssignGUIComponent(traitorsMinPlayerCount);
+
+            var maximumTransferAmount = CreateLabeledNumberInput(roundsTab, "serversettingsmaximumtransferrequest", 0, CampaignMode.MaxMoney, "serversettingsmaximumtransferrequesttooltip");
+            GetPropertyData(nameof(MaximumTransferRequest)).AssignGUIComponent(maximumTransferAmount);
+
+            var lootedMoneyDestination = CreateLabeledDropdown(roundsTab, "serversettingslootedmoneydestination", numElements: 2, "serversettingslootedmoneydestinationtooltip");
+            lootedMoneyDestination.AddItem(TextManager.Get("lootedmoneydestination.bank"), LootedMoneyDestination.Bank);
+            lootedMoneyDestination.AddItem(TextManager.Get("lootedmoneydestination.wallet"), LootedMoneyDestination.Wallet);
+            GetPropertyData(nameof(LootedMoneyDestination)).AssignGUIComponent(lootedMoneyDestination);
 
             var ragdollButtonBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), TextManager.Get("ServerSettingsAllowRagdollButton"));
             GetPropertyData(nameof(AllowRagdollButton)).AssignGUIComponent(ragdollButtonBox);
@@ -984,6 +992,32 @@ namespace Barotrauma.Networking
                 MinValueInt = min,
                 MaxValueInt = max
             };
+
+            container.RectTransform.MinSize = new Point(0, input.RectTransform.MinSize.Y);
+            container.RectTransform.MaxSize = new Point(int.MaxValue, input.RectTransform.MaxSize.Y);
+
+            return input;
+        }
+
+        private GUIDropDown CreateLabeledDropdown(GUIComponent parent, string labelTag, int numElements, string toolTipTag = null)
+        {
+            var container = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), parent.RectTransform), isHorizontal: true)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f,
+                ToolTip = TextManager.Get(labelTag)
+            };
+
+            var label = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), container.RectTransform),
+                TextManager.Get(labelTag), textAlignment: Alignment.CenterLeft, font: GUIStyle.SmallFont)
+            {
+                AutoScaleHorizontal = true
+            };
+            if (!string.IsNullOrEmpty(toolTipTag))
+            {
+                label.ToolTip = TextManager.Get(toolTipTag);
+            }
+            var input = new GUIDropDown(new RectTransform(new Vector2(0.3f, 1.0f), container.RectTransform), elementCount: numElements);
 
             container.RectTransform.MinSize = new Point(0, input.RectTransform.MinSize.Y);
             container.RectTransform.MaxSize = new Point(int.MaxValue, input.RectTransform.MaxSize.Y);

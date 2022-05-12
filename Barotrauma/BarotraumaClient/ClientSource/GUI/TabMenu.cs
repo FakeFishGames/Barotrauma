@@ -54,47 +54,65 @@ namespace Barotrauma
 
             private ushort currentPing;
             private readonly Character character;
-            private readonly bool hasCharacter;
+            private readonly bool wasCharacterAlive;
             private readonly GUITextBlock textBlock;
             private readonly GUIFrame frame;
 
             private readonly GUIImage permissionIcon;
 
-            public LinkedGUI(Client client, GUIFrame frame, bool hasCharacter, GUITextBlock textBlock, GUIImage permissionIcon)
+            public LinkedGUI(Client client, GUIFrame frame, GUITextBlock textBlock, GUIImage permissionIcon)
             {
                 this.Client = client;
                 this.textBlock = textBlock;
                 this.frame = frame;
-                this.hasCharacter = hasCharacter;
                 this.permissionIcon = permissionIcon;
+                character = client?.Character;
+                wasCharacterAlive = client.Character != null && !client.Character.IsDead;
             }
 
-            public LinkedGUI(Character character, GUIFrame frame, bool hasCharacter, GUITextBlock textBlock)
+            public LinkedGUI(Character character, GUIFrame frame, GUITextBlock textBlock)
             {
                 this.character = character;
                 this.textBlock = textBlock;
                 this.frame = frame;
-                this.hasCharacter = hasCharacter;
+                wasCharacterAlive = character != null && !character.IsDead;
             }
 
             public bool HasMultiplayerCharacterChanged()
             {
                 if (Client == null) { return false; }
-                bool characterState = Client.Character != null;
-                if (characterState && Client.Character.IsDead) characterState = false;
-                return hasCharacter != characterState;
+
+                if (GameSettings.CurrentConfig.VerboseLogging)
+                {
+                    if (Client.Character != character)
+                    {
+                        DebugConsole.Log($"Refreshing tab menu crew list (client \"{Client.Name}\"'s character changed from \"{character?.Name ?? "null"}\" to \"{Client.Character?.Name ?? "null"}\")");
+                    }
+                }
+                return Client.Character != character;
             }
 
-            public bool HasMultiplayerCharacterDied()
-            {
-                if (Client == null || !hasCharacter || Client.Character == null) { return false; }
-                return Client.Character.IsDead;
-            }
-
-            public bool HasAICharacterDied()
+            public bool HasCharacterDied()
             {
                 if (character == null) { return false; }
-                return character.IsDead;
+                bool isAlive = !(character?.IsDead ?? true);
+                if (GameSettings.CurrentConfig.VerboseLogging)
+                {
+                    if (wasCharacterAlive && !isAlive)
+                    {
+                        DebugConsole.Log(Client == null ?
+                            $"Refreshing tab menu crew list (character \"{character?.Name ?? "null"}\" died)" :
+                            $"Refreshing tab menu crew list (client \"{Client.Name}\"'s character \"{character?.Name ?? "null"}\" died)");
+                    }
+                    else if (!wasCharacterAlive && isAlive)
+                    {
+                        DebugConsole.Log(Client == null ?
+
+                            $"Refreshing tab menu crew list (character \"{character?.Name ?? "null"}\" came back to life)" :
+                            $"Refreshing tab menu crew list (client \"{Client.Name}\"'s character \"{character?.Name ?? "null"}\" came back to life)");
+                    }
+                }
+                return isAlive != wasCharacterAlive;
             }
 
             public void TryPingRefresh()
@@ -207,7 +225,7 @@ namespace Barotrauma
                 {
                     linkedGUIList[i].TryPingRefresh();
                     linkedGUIList[i].TryPermissionIconRefresh(GetPermissionIcon(linkedGUIList[i].Client));
-                    if (linkedGUIList[i].HasMultiplayerCharacterChanged() || linkedGUIList[i].HasMultiplayerCharacterDied() || linkedGUIList[i].HasAICharacterDied())
+                    if (linkedGUIList[i].HasMultiplayerCharacterChanged() || linkedGUIList[i].HasCharacterDied())
                     {
                         RemoveCurrentElements();
                         CreateMultiPlayerList(true);
@@ -219,10 +237,11 @@ namespace Barotrauma
             {
                 for (int i = 0; i < linkedGUIList.Count; i++)
                 {
-                    if (linkedGUIList[i].HasAICharacterDied())
+                    if (linkedGUIList[i].HasCharacterDied())
                     {
                         RemoveCurrentElements();
                         CreateSinglePlayerList(true);
+                        return;
                     }
                 }
             }
@@ -297,6 +316,10 @@ namespace Barotrauma
 
                 var balanceFrame = new GUIFrame(new RectTransform(new Point(innerLayoutGroup.Rect.Width, innerLayoutGroup.Rect.Height - infoFrameHolderHeight), parent: innerLayoutGroup.RectTransform), style: "InnerFrame");
                 GUITextBlock balanceText = new GUITextBlock(new RectTransform(Vector2.One, balanceFrame.RectTransform), string.Empty, textAlignment: Alignment.Right);
+                if (GameMain.IsMultiplayer)
+                {
+                    balanceText.ToolTip = TextManager.Get("bankdescription");
+                }
                 GUIFrame bottomDisclaimerFrame = new GUIFrame(new RectTransform(new Vector2(contentFrameSize.X, 0.1f), infoFrame.RectTransform)
                 {
                     AbsoluteOffset = new Point(contentFrame.Rect.X, contentFrame.Rect.Bottom + GUI.IntScale(8))
@@ -337,7 +360,7 @@ namespace Barotrauma
             var talentsButton = createTabButton(InfoFrameTab.Talents, "tabmenu.character");
             talentsButton.OnAddedToGUIUpdateList += (component) =>
             {
-                talentsButton.Enabled = Character.Controlled?.Info != null;
+                talentsButton.Enabled = Character.Controlled?.Info != null || (GameMain.Client?.CharacterInfo != null && GameMain.GameSession?.GameMode is MultiPlayerCampaign);
                 if (!talentsButton.Enabled && selectedTab == InfoFrameTab.Talents)
                 {
                     SelectInfoFrameTab(InfoFrameTab.Crew);
@@ -560,7 +583,7 @@ namespace Barotrauma
             GUITextBlock characterNameBlock = new GUITextBlock(new RectTransform(new Point(characterColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform),
                 ToolBox.LimitString(character.Info.Name, GUIStyle.Font, characterColumnWidth), textAlignment: Alignment.Center, textColor: character.Info.Job.Prefab.UIColor);
 
-            linkedGUIList.Add(new LinkedGUI(character, frame, !character.IsDead, textBlock: null));
+            linkedGUIList.Add(new LinkedGUI(character, frame, textBlock: null));
         }
 
         private void CreateMultiPlayerListContentHolder(GUILayoutGroup headerFrame)
@@ -657,7 +680,7 @@ namespace Barotrauma
             if (client != null)
             {
                 CreateNameWithPermissionIcon(client, paddedFrame, out GUIImage permissionIcon);
-                linkedGUIList.Add(new LinkedGUI(client, frame, true, 
+                linkedGUIList.Add(new LinkedGUI(client, frame, 
                     new GUITextBlock(new RectTransform(new Point(pingColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform), client.Ping.ToString(), textAlignment: Alignment.Center),
                     permissionIcon));
             }
@@ -668,12 +691,12 @@ namespace Barotrauma
 
                 if (character is AICharacter)
                 {
-                    linkedGUIList.Add(new LinkedGUI(character, frame, !character.IsDead, 
+                    linkedGUIList.Add(new LinkedGUI(character, frame, 
                         new GUITextBlock(new RectTransform(new Point(pingColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform), TextManager.Get("tabmenu.bot"), textAlignment: Alignment.Center) { ForceUpperCase = ForceUpperCase.Yes }));
                 }
                 else
                 {
-                    linkedGUIList.Add(new LinkedGUI(client: null, frame, true, textBlock: null, permissionIcon: null));
+                    linkedGUIList.Add(new LinkedGUI(client: null, frame, textBlock: null, permissionIcon: null));
 
                     new GUICustomComponent(new RectTransform(new Point(pingColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform, Anchor.Center), onDraw: (sb, component) => DrawDisconnectedIcon(sb, component.Rect))
                     {
@@ -718,7 +741,7 @@ namespace Barotrauma
             };
 
             CreateNameWithPermissionIcon(client, paddedFrame, out GUIImage permissionIcon);
-            linkedGUIList.Add(new LinkedGUI(client, frame, false,
+            linkedGUIList.Add(new LinkedGUI(client, frame,
                 new GUITextBlock(new RectTransform(new Point(pingColumnWidth, paddedFrame.Rect.Height), paddedFrame.RectTransform), client.Ping.ToString(), textAlignment: Alignment.Center),
                 permissionIcon));
 
@@ -775,19 +798,27 @@ namespace Barotrauma
                 Stretch = true
             };
 
+            new GUIFrame(new RectTransform(Vector2.One, paddedLayoutGroup.RectTransform), style: null)
+            {
+                IgnoreLayoutGroups = true,
+                ToolTip = TextManager.Get("walletdescription")
+            };
+
             if (character.IsBot) { return; }
 
             Sprite walletSprite = GUIStyle.CrewWalletIconSmall.Value.Sprite;
 
-            GUIImage icon = new GUIImage(new RectTransform(Vector2.One, paddedLayoutGroup.RectTransform, scaleBasis: ScaleBasis.BothHeight), walletSprite, scaleToFit: true);
+            GUIImage icon = new GUIImage(new RectTransform(Vector2.One, paddedLayoutGroup.RectTransform, scaleBasis: ScaleBasis.BothHeight), walletSprite, scaleToFit: true) { CanBeFocused =  false };
             GUITextBlock walletBlock = new GUITextBlock(new RectTransform(Vector2.One, paddedLayoutGroup.RectTransform), string.Empty, textAlignment: Alignment.Right, font: GUIStyle.Font)
             {
                 AutoScaleHorizontal = true,
-                Padding = Vector4.Zero
+                Padding = Vector4.Zero,
+                CanBeFocused = false
             };
 
             GUIImage largeIcon = new GUIImage(new RectTransform(Vector2.One, paddedLayoutGroup.RectTransform), walletSprite, scaleToFit: true)
             {
+                CanBeFocused = false,
                 IgnoreLayoutGroups = true,
                 Visible = false
             };
@@ -971,16 +1002,25 @@ namespace Barotrauma
             float relativeX =  icon.RectTransform.NonScaledSize.X / (float)icon.Parent.RectTransform.NonScaledSize.X;
             GUILayoutGroup headerTextLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f - relativeX, 1f), headerLayout.RectTransform), isHorizontal: true) { Stretch = true };
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), headerTextLayout.RectTransform), TextManager.Get("crewwallet.wallet"), font: GUIStyle.LargeFont);
+            GUIFrame walletTooltipFrame = new GUIFrame(new RectTransform(Vector2.One, headerLayout.RectTransform), style: null)
+            {
+                IgnoreLayoutGroups = true,
+                ToolTip = TextManager.Get("walletdescription")
+            };
             GUITextBlock moneyBlock = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), headerTextLayout.RectTransform), TextManager.FormatCurrency(targetWallet.Balance), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Right);
 
             GUILayoutGroup middleLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.66f), walletLayout.RectTransform));
             GUILayoutGroup salaryTextLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.5f), middleLayout.RectTransform), isHorizontal: true);
             GUITextBlock salaryTitle = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), salaryTextLayout.RectTransform), TextManager.Get("crewwallet.salary"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.BottomLeft);
             GUITextBlock rewardBlock = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), salaryTextLayout.RectTransform), string.Empty, textAlignment: Alignment.BottomRight);
+            GUIFrame salaryTooltipFrame = new GUIFrame(new RectTransform(Vector2.One, middleLayout.RectTransform), style: null)
+            {
+                IgnoreLayoutGroups = true,
+                ToolTip = TextManager.Get("crewwallet.salary.tooltip")
+            };
             GUILayoutGroup sliderLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.5f), middleLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.Center);
             GUIScrollBar salarySlider = new GUIScrollBar(new RectTransform(new Vector2(0.9f, 1f), sliderLayout.RectTransform), style: "GUISlider", barSize: 0.03f)
             {
-                ToolTip = TextManager.Get("crewwallet.salary.tooltip"),
                 Range = new Vector2(0, 1),
                 BarScrollValue = targetWallet.RewardDistribution / 100f,
                 Step = 0.01f,
@@ -1050,149 +1090,195 @@ namespace Barotrauma
                     return true;
                 }
             };
+
+            Identifier eventIdentifier = nameof(CreateWalletFrame).ToIdentifier();
+
             ToggleTransferMenuIcon(transferMenuButton, open: isTransferMenuOpen);
             ToggleCenterButton(centerButton, isSending);
 
-
-            if (!(Character.Controlled is { } myCharacter))
-            {
-                salarySlider.Enabled = false;
-                transferAmountInput.Enabled = false;
-                centerButton.Enabled = false;
-                confirmButton.Enabled = false;
-                return;
-            }
-
-            bool hasMoneyPermissions = CampaignMode.AllowedToManageWallets();
-            salarySlider.Enabled = hasMoneyPermissions;
             Wallet otherWallet;
+            GameMain.Client?.OnPermissionChanged.RegisterOverwriteExisting(eventIdentifier, e => UpdateWalletInterface(registerEvents: false));
+            UpdateWalletInterface(registerEvents: true);
 
-            switch (hasMoneyPermissions)
+            void UpdateWalletInterface(bool registerEvents)
             {
-                case true:
-                    rightName.Text = TextManager.Get("crewwallet.bank");
-                    otherWallet = campaign.Bank;
-                    break;
-                case false when character == myCharacter:
-                    rightName.Text =  TextManager.Get("crewwallet.bank");
-                    otherWallet = campaign.Bank;
-                    isSending = true;
-                    ToggleCenterButton(centerButton, isSending);
-                    break;
-                default:
-                    rightName.Text = myCharacter.Name;
-                    otherWallet = campaign.PersonalWallet;
-                    break;
-            }
-
-            MedicalClinicUI.EnsureTextDoesntOverflow(rightName.Text.ToString(), rightName, rightLayout.Rect, layoutGroups);
-            updateButtonText();
-            if (!hasMoneyPermissions)
-            {
-                if (character != Character.Controlled)
+                if (!(Character.Controlled is { } myCharacter))
                 {
-                    centerButton.Enabled = centerButton.CanBeFocused = false;
+                    salarySlider.Enabled = false;
+                    transferAmountInput.Enabled = false;
+                    centerButton.Enabled = false;
+                    confirmButton.Enabled = false;
+                    return;
                 }
-                salarySlider.Enabled = salarySlider.CanBeFocused = false;
-            }
 
-            leftBalance.Text = TextManager.FormatCurrency(otherWallet.Balance);
+                bool hasMoneyPermissions = CampaignMode.AllowedToManageWallets();
+                salarySlider.Enabled = hasMoneyPermissions;
 
-            UpdateAllInputs();
+                switch (hasMoneyPermissions)
+                {
+                    case true:
+                        rightName.Text = TextManager.Get("crewwallet.bank");
+                        otherWallet = campaign.Bank;
+                        break;
+                    case false when character == myCharacter:
+                        rightName.Text = TextManager.Get("crewwallet.bank");
+                        otherWallet = campaign.Bank;
+                        isSending = true;
+                        ToggleCenterButton(centerButton, isSending);
+                        break;
+                    default:
+                        rightName.Text = myCharacter.Name;
+                        otherWallet = campaign.PersonalWallet;
+                        break;
+                }
 
-            centerButton.OnClicked = (btn, o) =>
-            {
-                isSending = !isSending;
-                updateButtonText();
-                ToggleCenterButton(btn, isSending);
+                MedicalClinicUI.EnsureTextDoesntOverflow(rightName.Text.ToString(), rightName, rightLayout.Rect, layoutGroups);
+
+                UpdatedConfirmButtonText();
+
+                if (!hasMoneyPermissions)
+                {
+                    if (character != Character.Controlled)
+                    {
+                        centerButton.Enabled = centerButton.CanBeFocused = false;
+                    }
+
+                    salarySlider.Enabled = salarySlider.CanBeFocused = false;
+                }
+
+                leftBalance.Text = TextManager.FormatCurrency(otherWallet.Balance);
+
                 UpdateAllInputs();
-                return true;
-            };
 
-            void updateButtonText()
-            {
-                confirmButton.Text = TextManager.Get(hasMoneyPermissions || isSending ? "confirm" : "crewwallet.requestmoney");
+                if (!registerEvents) { return; }
+
+                centerButton.OnClicked = (btn, o) =>
+                {
+                    isSending = !isSending;
+                    UpdatedConfirmButtonText();
+                    ToggleCenterButton(btn, isSending);
+                    UpdateAllInputs();
+                    return true;
+                };
+
+                transferAmountInput.OnValueChanged = input =>
+                {
+                    UpdateInputs();
+                };
+
+                transferAmountInput.OnValueEntered = input =>
+                {
+                    UpdateAllInputs();
+                };
+
+                resetButton.OnClicked = (button, o) =>
+                {
+                    transferAmountInput.IntValue = 0;
+                    UpdateAllInputs();
+                    return true;
+                };
+
+                confirmButton.OnClicked = (button, o) =>
+                {
+                    int amount = transferAmountInput.IntValue;
+                    if (amount == 0) { return false; }
+
+                    Option<Character> target1 = Option<Character>.Some(character),
+                                      target2 = otherWallet == campaign.Bank ? Option<Character>.None() : Option<Character>.Some(myCharacter);
+                    if (isSending) { (target1, target2) = (target2, target1); }
+
+                    SendTransaction(target1, target2, amount);
+                    isTransferMenuOpen = false;
+                    ToggleTransferMenuIcon(transferMenuButton, isTransferMenuOpen);
+                    return true;
+                };
+
+                campaign.OnMoneyChanged.RegisterOverwriteExisting(eventIdentifier, e =>
+                {
+                    if (e.Wallet == targetWallet)
+                    {
+                        moneyBlock.Text = TextManager.FormatCurrency(e.Info.Balance);
+                        salarySlider.BarScrollValue = e.Info.RewardDistribution / 100f;
+                    }
+
+                    UpdateAllInputs();
+                });
+
+                registeredEvents.Add(eventIdentifier);
+
+                void UpdatedConfirmButtonText()
+                {
+                    confirmButton.Text = TextManager.Get(hasMoneyPermissions || isSending ? "confirm" : "crewwallet.requestmoney");
+                }
+
+                void UpdateAllInputs()
+                {
+                    UpdateInputs();
+                    UpdateMaxInput();
+                }
+
+                void UpdateInputs()
+                {
+                    confirmButton.Enabled = resetButton.Enabled = transferAmountInput.IntValue > 0;
+                    if (transferAmountInput.IntValue == 0)
+                    {
+                        rightBalance.Text = TextManager.FormatCurrency(otherWallet.Balance);
+                        rightBalance.TextColor = GUIStyle.TextColorNormal;
+                        leftBalance.Text = TextManager.FormatCurrency(targetWallet.Balance);
+                        leftBalance.TextColor = GUIStyle.TextColorNormal;
+                    }
+                    else if (isSending)
+                    {
+                        rightBalance.Text = TextManager.FormatCurrency(otherWallet.Balance + transferAmountInput.IntValue);
+                        rightBalance.TextColor = GUIStyle.Blue;
+                        leftBalance.Text = TextManager.FormatCurrency(targetWallet.Balance - transferAmountInput.IntValue);
+                        leftBalance.TextColor = GUIStyle.Red;
+                    }
+                    else
+                    {
+                        rightBalance.Text = TextManager.FormatCurrency(otherWallet.Balance - transferAmountInput.IntValue);
+                        rightBalance.TextColor = GUIStyle.Red;
+                        leftBalance.Text = TextManager.FormatCurrency(targetWallet.Balance + transferAmountInput.IntValue);
+                        leftBalance.TextColor = GUIStyle.Blue;
+                    }
+                }
+
+                void UpdateMaxInput()
+                {
+                    int maxValue = isSending ? targetWallet.Balance : otherWallet.Balance;
+                    transferAmountInput.MaxValueInt = maxValue;
+
+                    transferAmountInput.Enabled = true;
+                    transferAmountInput.ToolTip = string.Empty;
+
+                    if (!hasMoneyPermissions && GameMain.Client?.ServerSettings is { } serverSettings)
+                    {
+                        transferAmountInput.MaxValueInt = Math.Min(maxValue, serverSettings.MaximumTransferRequest);
+                        if (serverSettings.MaximumTransferRequest <= 0)
+                        {
+                            transferAmountInput.Enabled = false;
+                            transferAmountInput.ToolTip = TextManager.Get("wallettransferrequestdisabled");
+                        }
+                    }
+                }
             }
 
-            transferAmountInput.OnValueChanged = input =>
+            void SetRewardText(int value, GUITextBlock block)
             {
-                UpdateInputs();
-            };
+                var (_, percentage, sum) = Mission.GetRewardShare(value, salaryCrew, Option<int>.None());
+                LocalizedString tooltip = string.Empty;
+                block.TextColor = GUIStyle.TextColorNormal;
 
-            transferAmountInput.OnValueEntered = input =>
-            {
-                UpdateAllInputs();
-            };
-
-            Identifier eventIdentifier = nameof(CreateWalletFrame).ToIdentifier();
-            campaign.OnMoneyChanged.RegisterOverwriteExisting(eventIdentifier, e =>
-            {
-                if (e.Wallet == targetWallet)
+                if (sum > 100)
                 {
-                    moneyBlock.Text = TextManager.FormatCurrency(e.Info.Balance);
-                    salarySlider.BarScrollValue = e.Info.RewardDistribution / 100f;
+                    tooltip = TextManager.GetWithVariables("crewwallet.salary.over100toolitp", ("[sum]", $"{(int)sum}"), ("[newvalue]", $"{percentage}"));
+                    block.TextColor = GUIStyle.Orange;
                 }
-                UpdateAllInputs();
-            });
-            registeredEvents.Add(eventIdentifier);
 
-            resetButton.OnClicked = (button, o) =>
-            {
-                transferAmountInput.IntValue = 0;
-                UpdateAllInputs();
-                return true;
-            };
+                LocalizedString text = TextManager.GetWithVariable("percentageformat", "[value]", $"{value}");
 
-            confirmButton.OnClicked = (button, o) =>
-            {
-                int amount = transferAmountInput.IntValue;
-                if (amount == 0) { return false; }
-
-                Option<Character> target1 = Option<Character>.Some(character),
-                                  target2 = otherWallet == campaign.Bank ? Option<Character>.None() : Option<Character>.Some(myCharacter);
-                if (isSending) { (target1, target2) = (target2, target1); }
-
-                SendTransaction(target1, target2, amount);
-                isTransferMenuOpen = false;
-                ToggleTransferMenuIcon(transferMenuButton, isTransferMenuOpen);
-                return true;
-            };
-
-            void UpdateAllInputs()
-            {
-                UpdateInputs();
-                UpdateMaxInput();
-            }
-
-            void UpdateInputs()
-            {
-                confirmButton.Enabled = resetButton.Enabled = transferAmountInput.IntValue > 0;
-                if (transferAmountInput.IntValue == 0)
-                {
-                    rightBalance.Text = TextManager.FormatCurrency(otherWallet.Balance);
-                    rightBalance.TextColor = GUIStyle.TextColorNormal;
-                    leftBalance.Text = TextManager.FormatCurrency(targetWallet.Balance);
-                    leftBalance.TextColor = GUIStyle.TextColorNormal;
-                }
-                else if (isSending)
-                {
-                    rightBalance.Text = TextManager.FormatCurrency(otherWallet.Balance + transferAmountInput.IntValue);
-                    rightBalance.TextColor = GUIStyle.Blue;
-                    leftBalance.Text = TextManager.FormatCurrency(targetWallet.Balance - transferAmountInput.IntValue);
-                    leftBalance.TextColor = GUIStyle.Red;
-                }
-                else
-                {
-                    rightBalance.Text = TextManager.FormatCurrency(otherWallet.Balance - transferAmountInput.IntValue);
-                    rightBalance.TextColor = GUIStyle.Red;
-                    leftBalance.Text = TextManager.FormatCurrency(targetWallet.Balance + transferAmountInput.IntValue);
-                    leftBalance.TextColor = GUIStyle.Blue;
-                }
-            }
-
-            void UpdateMaxInput()
-            {
-                transferAmountInput.MaxValueInt = isSending ? targetWallet.Balance : otherWallet.Balance;
+                block.Text = text;
+                block.ToolTip = RichString.Rich(tooltip);
             }
 
             static void ToggleTransferMenuIcon(GUIButton btn, bool open)
@@ -1234,24 +1320,6 @@ namespace Barotrauma
                 IWriteMessage msg = new WriteOnlyMessage().WithHeader(ClientPacketHeader.REWARD_DISTRIBUTION);
                 transfer.Write(msg);
                 GameMain.Client?.ClientPeer?.Send(msg, DeliveryMethod.Reliable);
-            }
-
-            void SetRewardText(int value, GUITextBlock block)
-            {
-                var (_, percentage, sum) = Mission.GetRewardShare(value, salaryCrew, Option<int>.None());
-                LocalizedString tooltip = string.Empty;
-                block.TextColor = GUIStyle.TextColorNormal;
-
-                if (sum > 100)
-                {
-                    tooltip = TextManager.GetWithVariables("crewwallet.salary.over100toolitp", ("[sum]", $"{(int)sum}"), ("[newvalue]", $"{percentage}"));
-                    block.TextColor = GUIStyle.Orange;
-                }
-
-                LocalizedString text = TextManager.GetWithVariable("percentageformat", "[value]", $"{value}");
-
-                block.Text = text;
-                block.ToolTip = RichString.Rich(tooltip);
             }
         }
 
@@ -1740,9 +1808,6 @@ namespace Barotrauma
             talentButtons.Clear();
             talentCornerIcons.Clear();
 
-            Character controlledCharacter = Character.Controlled;
-            if (controlledCharacter == null) { return; }
-
             GUIFrame talentFrameBackground = new GUIFrame(new RectTransform(Vector2.One, infoFrame.RectTransform, Anchor.TopCenter), style: "GUIFrameListBox");
             int padding = GUI.IntScale(15);
             GUIFrame talentFrameContent = new GUIFrame(new RectTransform(new Point(talentFrameBackground.Rect.Width - padding, talentFrameBackground.Rect.Height - padding), infoFrame.RectTransform, Anchor.Center), style: null);
@@ -1762,13 +1827,20 @@ namespace Barotrauma
                 GameMain.NetLobbyScreen.CreatePlayerFrame(playerFrame, alwaysAllowEditing: true, createPendingText: false);
             }
 
+            /*Character controlledCharacter = Character.Controlled;
+            if (controlledCharacter == null) { return; }
+
             if (controlledCharacter.Info is null)
             {
                 DebugConsole.ThrowError("No character info found for talent UI");
                 return;
-            }
+            }*/
 
-            selectedTalents = controlledCharacter.Info.GetUnlockedTalentsInTree().ToList();
+            Character controlledCharacter = Character.Controlled;
+            CharacterInfo info = controlledCharacter?.Info ?? GameMain.Client?.CharacterInfo;
+            if (info == null) { return; }
+
+            Job job = info.Job;
 
             GUILayoutGroup talentFrameLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), talentFrameMain.RectTransform, anchor: Anchor.Center), childAnchor: Anchor.TopCenter)
             {
@@ -1776,9 +1848,7 @@ namespace Barotrauma
             };
             
             GUILayoutGroup talentInfoLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), talentFrameLayoutGroup.RectTransform, Anchor.Center), isHorizontal: true);
-
-            CharacterInfo info = controlledCharacter.Info;
-            Job job = info.Job;
+            
 
             new GUICustomComponent(new RectTransform(new Vector2(0.25f, 1f), talentInfoLayoutGroup.RectTransform), onDraw: (batch, component) =>
             {
@@ -1801,11 +1871,11 @@ namespace Barotrauma
             GUITextBlock traitBlock = new GUITextBlock(new RectTransform(Vector2.One, nameLayout.RectTransform), traitString, font: GUIStyle.SmallFont);
             traitBlock.RectTransform.NonScaledSize = traitSize.Pad(traitBlock.Padding).ToPoint();
 
-            GUIFrame endocrineFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.35f), nameLayout.RectTransform, Anchor.BottomCenter), style: null);
+            GUIFrame talentsOutsideTreeFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.35f), nameLayout.RectTransform, Anchor.BottomCenter), style: null);
 
             if (!(GameMain.NetworkMember is null))
             {
-                GUIButton newCharacterBox = new GUIButton(new RectTransform(new Vector2(0.675f, 1f), endocrineFrame.RectTransform, Anchor.TopLeft), text: GameMain.NetLobbyScreen.CampaignCharacterDiscarded ? TextManager.Get("settings") : TextManager.Get("createnew"))
+                GUIButton newCharacterBox = new GUIButton(new RectTransform(new Vector2(0.675f, 1f), talentsOutsideTreeFrame.RectTransform, Anchor.TopLeft), text: GameMain.NetLobbyScreen.CampaignCharacterDiscarded ? TextManager.Get("settings") : TextManager.Get("createnew"))
                 {
                     IgnoreLayoutGroups = true
                 };
@@ -1852,13 +1922,14 @@ namespace Barotrauma
                 }
             }
 
-            IEnumerable<TalentPrefab> endocrineTalents = info.GetEndocrineTalents().Select(e => TalentPrefab.TalentPrefabs.Find(c => c.Identifier == e));
+            IEnumerable<TalentPrefab> talentsOutsideTree = info.GetUnlockedTalentsOutsideTree().Select(e => TalentPrefab.TalentPrefabs.Find(c => c.Identifier == e));
 
-            if (endocrineTalents.Count() > 0)
+            if (talentsOutsideTree.Count() > 0)
             {
-                GUIImage endocrineIcon = new GUIImage(new RectTransform(new Vector2(0.275f, 1f), endocrineFrame.RectTransform, anchor: Anchor.TopRight, scaleBasis: ScaleBasis.Normal), style: "EndocrineReminderIcon")
+                //TODO: replace with something more generic
+                GUIImage endocrineIcon = new GUIImage(new RectTransform(new Vector2(0.275f, 1f), talentsOutsideTreeFrame.RectTransform, anchor: Anchor.TopRight, scaleBasis: ScaleBasis.Normal), style: "EndocrineReminderIcon")
                 {
-                    ToolTip = $"{TextManager.Get("afflictionname.endocrineboost")}\n\n{string.Join(", ", endocrineTalents.Select(e => e.DisplayName))}"
+                    ToolTip = $"{TextManager.Get("afflictionname.endocrineboost")}\n\n{string.Join(", ", talentsOutsideTree.Select(e => e.DisplayName))}"
                 };
             }
 
@@ -1870,49 +1941,55 @@ namespace Barotrauma
             skillBlock.RectTransform.NonScaledSize = skillSize.Pad(skillBlock.Padding).ToPoint();
 
             skillListBox = new GUIListBox(new RectTransform(new Vector2(1f, 1f - skillBlock.RectTransform.RelativeSize.Y), skillLayout.RectTransform), style: null);
-            CreateTalentSkillList(controlledCharacter, skillListBox);
+            CreateTalentSkillList(controlledCharacter, info, skillListBox);
 
-            if (!TalentTree.JobTalentTrees.TryGet(controlledCharacter.Info.Job.Prefab.Identifier, out TalentTree talentTree)) { return; }
-
-            new GUIFrame(new RectTransform(new Vector2(1f, 1f), talentFrameLayoutGroup.RectTransform), style: "HorizontalLine");
-
-            GUIListBox talentTreeListBox = new GUIListBox(new RectTransform(new Vector2(1f, 0.7f), talentFrameLayoutGroup.RectTransform, Anchor.TopCenter), isHorizontal: true, style: null);
-
-            List<GUITextBlock> subTreeNames = new List<GUITextBlock>();
-            foreach (var subTree in talentTree.TalentSubTrees)
+            if (controlledCharacter != null)
             {
-                GUIFrame subTreeFrame = new GUIFrame(new RectTransform(new Vector2(0.333f, 1f), talentTreeListBox.Content.RectTransform, anchor: Anchor.TopLeft), style: null);
-                GUILayoutGroup subTreeLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(1f, 1f), subTreeFrame.RectTransform, Anchor.Center), false, childAnchor: Anchor.TopCenter);
+                if (!TalentTree.JobTalentTrees.TryGet(info.Job.Prefab.Identifier, out TalentTree talentTree)) { return; }
 
-                GUIFrame subtreeTitleFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.111f), subTreeLayoutGroup.RectTransform, anchor: Anchor.TopCenter), style: null);
-                int elementPadding = GUI.IntScale(8);
-                Point headerSize = subtreeTitleFrame.RectTransform.NonScaledSize;
-                GUIFrame subTreeTitleBackground = new GUIFrame(new RectTransform(new Point(headerSize.X - elementPadding, headerSize.Y), subtreeTitleFrame.RectTransform, anchor: Anchor.Center), style: "SubtreeHeader");
-                subTreeNames.Add(new GUITextBlock(new RectTransform(Vector2.One, subTreeTitleBackground.RectTransform, anchor: Anchor.TopCenter), subTree.DisplayName, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Center));
+                new GUIFrame(new RectTransform(new Vector2(1f, 1f), talentFrameLayoutGroup.RectTransform), style: "HorizontalLine");
 
-                for (int i = 0; i < 4; i++)
+                GUIListBox talentTreeListBox = new GUIListBox(new RectTransform(new Vector2(1f, 0.7f), talentFrameLayoutGroup.RectTransform, Anchor.TopCenter), isHorizontal: true, style: null);
+
+                selectedTalents = info.GetUnlockedTalentsInTree().ToList();
+
+                List<GUITextBlock> subTreeNames = new List<GUITextBlock>();
+                foreach (var subTree in talentTree.TalentSubTrees)
                 {
-                    GUIFrame talentOptionFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.222f), subTreeLayoutGroup.RectTransform, anchor: Anchor.TopCenter), style: null);
+                    GUIFrame subTreeFrame = new GUIFrame(new RectTransform(new Vector2(0.333f, 1f), talentTreeListBox.Content.RectTransform, anchor: Anchor.TopLeft), style: null);
+                    GUILayoutGroup subTreeLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(1f, 1f), subTreeFrame.RectTransform, Anchor.Center), false, childAnchor: Anchor.TopCenter);
 
-                    Point talentFrameSize = talentOptionFrame.RectTransform.NonScaledSize;
+                    GUIFrame subtreeTitleFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.111f), subTreeLayoutGroup.RectTransform, anchor: Anchor.TopCenter), style: null);
+                    int elementPadding = GUI.IntScale(8);
+                    Point headerSize = subtreeTitleFrame.RectTransform.NonScaledSize;
+                    GUIFrame subTreeTitleBackground = new GUIFrame(new RectTransform(new Point(headerSize.X - elementPadding, headerSize.Y), subtreeTitleFrame.RectTransform, anchor: Anchor.Center), style: "SubtreeHeader");
+                    subTreeNames.Add(new GUITextBlock(new RectTransform(Vector2.One, subTreeTitleBackground.RectTransform, anchor: Anchor.TopCenter), subTree.DisplayName, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Center));
 
-                    GUIFrame talentBackground = new GUIFrame(new RectTransform(new Point(talentFrameSize.X - elementPadding, talentFrameSize.Y - elementPadding), talentOptionFrame.RectTransform, anchor: Anchor.Center), style: "TalentBackground");
-                    GUIFrame talentBackgroundHighlight = new GUIFrame(new RectTransform(Vector2.One, talentBackground.RectTransform, anchor: Anchor.Center), style: "TalentBackgroundGlow") { Visible = false };
-
-                    GUIImage cornerIcon = new GUIImage(new RectTransform(new Vector2(0.2f), talentOptionFrame.RectTransform, anchor: Anchor.BottomRight, scaleBasis: ScaleBasis.BothHeight) { MaxSize = new Point(16) }, style: null)
+                    for (int i = 0; i < 4; i++)
                     {
-                        CanBeFocused = false
-                    };
+                        GUIFrame talentOptionFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.222f), subTreeLayoutGroup.RectTransform, anchor: Anchor.TopCenter), style: null);
 
-                    Point iconSize = cornerIcon.RectTransform.NonScaledSize;
-                    cornerIcon.RectTransform.AbsoluteOffset = new Point(iconSize.X / 2, iconSize.Y / 2);
+                        Point talentFrameSize = talentOptionFrame.RectTransform.NonScaledSize;
 
-                    if (subTree.TalentOptionStages.Count > i)
-                    {
+                        GUIFrame talentBackground = new GUIFrame(new RectTransform(new Point(talentFrameSize.X - elementPadding, talentFrameSize.Y - elementPadding), talentOptionFrame.RectTransform, anchor: Anchor.Center), style: "TalentBackground")
+                        {
+                            Color = talentStageBackgroundColors[TalentTree.TalentTreeStageState.Locked]
+                        };
+                        GUIFrame talentBackgroundHighlight = new GUIFrame(new RectTransform(Vector2.One, talentBackground.RectTransform, anchor: Anchor.Center), style: "TalentBackgroundGlow") { Visible = false };
+
+                        GUIImage cornerIcon = new GUIImage(new RectTransform(new Vector2(0.2f), talentOptionFrame.RectTransform, anchor: Anchor.BottomRight, scaleBasis: ScaleBasis.BothHeight) { MaxSize = new Point(16) }, style: null)
+                        {
+                            CanBeFocused = false,
+                            Color = talentStageBackgroundColors[TalentTree.TalentTreeStageState.Locked]
+                        };
+
+                        Point iconSize = cornerIcon.RectTransform.NonScaledSize;
+                        cornerIcon.RectTransform.AbsoluteOffset = new Point(iconSize.X / 2, iconSize.Y / 2);
+
+                        if (subTree.TalentOptionStages.Count <= i) { continue; }
+
                         TalentOption talentOption = subTree.TalentOptionStages[i];
-
                         GUILayoutGroup talentOptionCenterGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 0.7f), talentOptionFrame.RectTransform, Anchor.Center), childAnchor: Anchor.CenterLeft);
-
                         GUILayoutGroup talentOptionLayoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, talentOptionCenterGroup.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { Stretch = true };
 
                         foreach (TalentPrefab talent in talentOption.Talents.OrderBy(t => t.Identifier))
@@ -1929,6 +2006,7 @@ namespace Barotrauma
                                 ToolTip = RichString.Rich(talent.DisplayName + "\n\n" + talent.Description),
                                 UserData = talent.Identifier,
                                 PressedColor = pressedColor,
+                                Enabled = controlledCharacter != null,
                                 OnClicked = (button, userData) =>
                                 {
                                     // deselect other buttons in tier by removing their selected talents from pool
@@ -1961,7 +2039,7 @@ namespace Barotrauma
                                 },
                             };
 
-                            talentButton.Color = talentButton.HoverColor = talentButton.PressedColor = talentButton.SelectedColor = Color.Transparent;
+                            talentButton.Color = talentButton.HoverColor = talentButton.PressedColor = talentButton.SelectedColor = talentButton.DisabledColor = Color.Transparent;
 
                             GUIComponent iconImage;
                             if (talent.Icon is null)
@@ -1971,6 +2049,7 @@ namespace Barotrauma
                                     OutlineColor = GUIStyle.Red,
                                     TextColor = GUIStyle.Red,
                                     PressedColor = unselectableColor,
+                                    DisabledColor = unselectableColor,
                                     CanBeFocused = false,
                                 };
                             }
@@ -1979,63 +2058,63 @@ namespace Barotrauma
                                 iconImage = new GUIImage(new RectTransform(Vector2.One, talentButton.RectTransform, anchor: Anchor.Center), sprite: talent.Icon, scaleToFit: true)
                                 {
                                     PressedColor = unselectableColor,
+                                    DisabledColor =  unselectableColor * 0.5f,
                                     CanBeFocused = false,
                                 };
                             }
-
+                            iconImage.Enabled = talentButton.Enabled;
                             talentButtons.Add((talentButton, iconImage));
                         }
-
-                        talentCornerIcons.Add((subTree.Identifier, i, cornerIcon, talentBackground, talentBackgroundHighlight));
+                        talentCornerIcons.Add((subTree.Identifier, i, cornerIcon, talentBackground, talentBackgroundHighlight));                    
                     }
                 }
-            }
-            GUITextBlock.AutoScaleAndNormalize(subTreeNames);
+                GUITextBlock.AutoScaleAndNormalize(subTreeNames);
 
-            GUILayoutGroup talentBottomFrame = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.07f), talentFrameLayoutGroup.RectTransform, Anchor.TopCenter), isHorizontal: true) { RelativeSpacing = 0.01f };
+                GUILayoutGroup talentBottomFrame = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.07f), talentFrameLayoutGroup.RectTransform, Anchor.TopCenter), isHorizontal: true) { RelativeSpacing = 0.01f };
 
-            GUILayoutGroup experienceLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.59f, 1f), talentBottomFrame.RectTransform));
-            GUIFrame experienceBarFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.5f), experienceLayout.RectTransform), style: null);
+                GUILayoutGroup experienceLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.59f, 1f), talentBottomFrame.RectTransform));
+                GUIFrame experienceBarFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.5f), experienceLayout.RectTransform), style: null);
 
-            experienceBar = new GUIProgressBar(new RectTransform(new Vector2(1f, 1f), experienceBarFrame.RectTransform, Anchor.CenterLeft),
-                barSize: controlledCharacter.Info.GetProgressTowardsNextLevel(), color: GUIStyle.Green)
-            {
-                IsHorizontal = true,
-            };
+                experienceBar = new GUIProgressBar(new RectTransform(new Vector2(1f, 1f), experienceBarFrame.RectTransform, Anchor.CenterLeft),
+                    barSize: info.GetProgressTowardsNextLevel(), color: GUIStyle.Green)
+                {
+                    IsHorizontal = true,
+                };
             
-            experienceText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), experienceBarFrame.RectTransform, anchor: Anchor.Center), "", font: GUIStyle.Font, textAlignment: Alignment.CenterRight)
-            {
-                Shadow = true,
-                ToolTip = TextManager.Get("experiencetooltip")
-            };
+                experienceText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), experienceBarFrame.RectTransform, anchor: Anchor.Center), "", font: GUIStyle.Font, textAlignment: Alignment.CenterRight)
+                {
+                    Shadow = true,
+                    ToolTip = TextManager.Get("experiencetooltip")
+                };
 
-            talentPointText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), experienceLayout.RectTransform, anchor: Anchor.Center), "", font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterRight) { AutoScaleVertical = true };
+                talentPointText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), experienceLayout.RectTransform, anchor: Anchor.Center), "", font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterRight) { AutoScaleVertical = true };
 
-            talentResetButton = new GUIButton(new RectTransform(new Vector2(0.19f, 1f), talentBottomFrame.RectTransform), text: TextManager.Get("reset"), style: "GUIButtonFreeScale")
-            {
-                OnClicked = ResetTalentSelection
-            };
-            talentApplyButton = new GUIButton(new RectTransform(new Vector2(0.19f, 1f), talentBottomFrame.RectTransform), text: TextManager.Get("applysettingsbutton"), style: "GUIButtonFreeScale")
-            {
-                OnClicked = ApplyTalentSelection,
-            };
-            GUITextBlock.AutoScaleAndNormalize(talentResetButton.TextBlock, talentApplyButton.TextBlock);
+                talentResetButton = new GUIButton(new RectTransform(new Vector2(0.19f, 1f), talentBottomFrame.RectTransform), text: TextManager.Get("reset"), style: "GUIButtonFreeScale")
+                {
+                    OnClicked = ResetTalentSelection
+                };
+                talentApplyButton = new GUIButton(new RectTransform(new Vector2(0.19f, 1f), talentBottomFrame.RectTransform), text: TextManager.Get("applysettingsbutton"), style: "GUIButtonFreeScale")
+                {
+                    OnClicked = ApplyTalentSelection,
+                };
+                GUITextBlock.AutoScaleAndNormalize(talentResetButton.TextBlock, talentApplyButton.TextBlock);
+            }
 
             UpdateTalentInfo();
         }
 
-        private void CreateTalentSkillList(Character character, GUIListBox parent)
+        private void CreateTalentSkillList(Character character, CharacterInfo info, GUIListBox parent)
         {
             parent.Content.ClearChildren();
             List<GUITextBlock> skillNames = new List<GUITextBlock>();
-            foreach (Skill skill in character.Info.Job.GetSkills())
+            foreach (Skill skill in info.Job.GetSkills())
             {
                 GUILayoutGroup skillContainer = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.2f), parent.Content.RectTransform), isHorizontal: true) { CanBeFocused = false };
 
                 skillNames.Add(new GUITextBlock(new RectTransform(new Vector2(0.7f, 1f), skillContainer.RectTransform), TextManager.Get($"skillname.{skill.Identifier}").Fallback(skill.Identifier.Value)));
                 new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), skillContainer.RectTransform), Math.Floor(skill.Level).ToString("F0"), textAlignment: Alignment.CenterRight) { Padding = new Vector4(0, 0, 4, 0) };
 
-                float modifiedSkillLevel = character.GetSkillLevel(skill.Identifier);
+                float modifiedSkillLevel = character?.GetSkillLevel(skill.Identifier) ?? skill.Level;
                 if (!MathUtils.NearlyEqual(MathF.Floor(modifiedSkillLevel), MathF.Floor(skill.Level)))
                 {
                     int skillChange = (int)MathF.Floor(modifiedSkillLevel - skill.Level);
@@ -2129,7 +2208,7 @@ namespace Barotrauma
                 talentButton.icon.HoverColor = hoverColor;
             }
 
-            CreateTalentSkillList(controlledCharacter, skillListBox);
+            CreateTalentSkillList(controlledCharacter, controlledCharacter.Info, skillListBox);
         }
 
         private void ApplyTalents(Character controlledCharacter)
@@ -2157,6 +2236,7 @@ namespace Barotrauma
         private bool ResetTalentSelection(GUIButton guiButton, object userData)
         {
             Character controlledCharacter = Character.Controlled;
+            if (controlledCharacter?.Info == null) { return false; }
             selectedTalents = controlledCharacter.Info.GetUnlockedTalentsInTree().ToList();
             UpdateTalentInfo();
             return true;

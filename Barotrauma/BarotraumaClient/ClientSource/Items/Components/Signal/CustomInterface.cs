@@ -205,7 +205,7 @@ namespace Barotrauma.Items.Components
             foreach (var uiElement in uiElements)
             {
                 if (!(uiElement.UserData is CustomInterfaceElement element)) { continue; }
-                bool visible = Screen.Selected == GameMain.SubEditorScreen || element.StatusEffects.Any() || element.HasPropertyName || (element.Connection != null && element.Connection.Wires.Any(w => w != null));
+                bool visible = Screen.Selected == GameMain.SubEditorScreen || element.StatusEffects.Any() || element.HasPropertyName || (element.Connection != null && element.Connection.Wires.Count > 0);
                 if (visible) { visibleElementCount++; }
                 if (uiElement.Visible != visible)
                 {

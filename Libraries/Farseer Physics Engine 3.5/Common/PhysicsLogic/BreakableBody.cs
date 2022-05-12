@@ -56,7 +56,7 @@ namespace FarseerPhysics.Common.PhysicsLogic
             foreach (Vertices part in vertices)
             {
                 PolygonShape polygonShape = new PolygonShape(part, density);
-                Fixture fixture = MainBody.CreateFixture(polygonShape);
+                Fixture fixture = MainBody.CreateFixture(polygonShape, Category.Cat1, Category.All);
                 Parts.Add(fixture);
             }
         }
@@ -67,7 +67,7 @@ namespace FarseerPhysics.Common.PhysicsLogic
 
             foreach (Shape part in shapes)
             {
-                Fixture fixture = MainBody.CreateFixture(part);
+                Fixture fixture = MainBody.CreateFixture(part, Category.Cat1, Category.All);
                 Parts.Add(fixture);
             }
         }
@@ -82,7 +82,7 @@ namespace FarseerPhysics.Common.PhysicsLogic
             foreach (Vertices part in triangles)
             {
                 PolygonShape polygonShape = new PolygonShape(part, density);
-                Fixture fixture = MainBody.CreateFixture(polygonShape);
+                Fixture fixture = MainBody.CreateFixture(polygonShape, Category.Cat1, Category.All);
                 Parts.Add(fixture);
             }
         }
@@ -161,7 +161,7 @@ namespace FarseerPhysics.Common.PhysicsLogic
                 Body body = World.CreateBody(MainBody.Position, MainBody.Rotation, BodyType.Dynamic);
                 body.UserData = MainBody.UserData;
                 
-                Fixture newFixture = body.CreateFixture(shape);
+                Fixture newFixture = body.CreateFixture(shape, Category.Cat1, Category.All);
                 newFixture.UserData = fixtureTag;
                 Parts[i] = newFixture;
 

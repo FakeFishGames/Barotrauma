@@ -20,9 +20,9 @@ namespace Barotrauma
         {
             if (!potentialCallFromConstructor) { return; }
             StackTrace st = new StackTrace(skipFrames: 2, fNeedFileInfo: false);
-            for (int i = st.FrameCount-1; i >= 0; i--)
+            for (int i = st.FrameCount - 1; i >= 0; i--)
             {
-                if (st.GetFrame(i)?.GetMethod() is {IsConstructor: true, DeclaringType: { } declaringType}
+                if (st.GetFrame(i)?.GetMethod() is { IsConstructor: true, DeclaringType: { } declaringType }
                     && Types.Contains(declaringType))
                 {
                     throw new Exception("Called disallowed method from within a prefab's constructor!");

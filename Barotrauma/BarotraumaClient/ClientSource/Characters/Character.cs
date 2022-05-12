@@ -400,7 +400,7 @@ namespace Barotrauma
 
         partial void UpdateControlled(float deltaTime, Camera cam)
         {
-            if (controlled != this) return;
+            if (controlled != this) { return; }
             
             ControlLocalPlayer(deltaTime, cam);
 

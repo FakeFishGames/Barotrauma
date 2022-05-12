@@ -119,6 +119,11 @@ namespace Barotrauma.Steam
             {
                 CanBeFocused = false
             };
+            new GUICustomComponent(new RectTransform(Vector2.Zero, searchHolder.RectTransform), onUpdate:
+                (f, component) =>
+                {
+                    searchTitle.RectTransform.NonScaledSize = searchBox.Frame.RectTransform.NonScaledSize;
+                });
             searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
             searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = searchBox.Text.IsNullOrWhiteSpace(); };
 

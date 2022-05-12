@@ -11,7 +11,7 @@ namespace Barotrauma
     {
         public SoundsFile(ContentPackage contentPackage, ContentPath path) : base(contentPackage, path) { }
 
-        protected override PrefabCollection<SoundPrefab> prefabs => SoundPrefab.Prefabs;
+        protected override PrefabCollection<SoundPrefab> Prefabs => SoundPrefab.Prefabs;
 
         protected override SoundPrefab CreatePrefab(ContentXElement element)
         {

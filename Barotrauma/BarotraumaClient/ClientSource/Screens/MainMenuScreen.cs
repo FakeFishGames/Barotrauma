@@ -77,9 +77,20 @@ namespace Barotrauma
                 if (remoteContentDoc?.Root != null)
                 {
                     remoteContentContainer.ClearChildren();
-                    foreach (var subElement in remoteContentDoc.Root.Elements())
+                    try
                     {
-                        GUIComponent.FromXML(subElement.FromPackage(null), remoteContentContainer.RectTransform);
+                        foreach (var subElement in remoteContentDoc.Root.Elements())
+                        {
+                            GUIComponent.FromXML(subElement.FromPackage(null), remoteContentContainer.RectTransform);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+#if DEBUG
+                        DebugConsole.ThrowError("Reading received remote main menu content failed.", e);
+#endif
+                        GameAnalyticsManager.AddErrorEventOnce("MainMenuScreen.RemoteContentParse:Exception", GameAnalyticsManager.ErrorSeverity.Error,
+                            "Reading received remote main menu content failed. " + e.Message);
                     }
                 }
             };

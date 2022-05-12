@@ -1,4 +1,6 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
+using Barotrauma.MapCreatures.Behavior;
 using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
@@ -6,13 +8,8 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using Barotrauma.Extensions;
-using Barotrauma.MapCreatures.Behavior;
-using FarseerPhysics.Dynamics;
-using FarseerPhysics.Dynamics.Contacts;
 using System.Collections.Immutable;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -720,7 +717,7 @@ namespace Barotrauma
                         //remove identifiers from the available container tags
                         //(otherwise the list will include many irrelevant options,
                         //e.g. "weldingtool" because a welding fuel tank can be placed inside the container, etc)
-                        .Where(t => !ItemPrefab.Prefabs.Any(ip => ip.Identifier == t))
+                        .Where(t => !ItemPrefab.Prefabs.ContainsKey(t))
                         .ToImmutableHashSet();
                     new GUIButton(new RectTransform(new Vector2(0.1f, 1), tagsField.RectTransform, Anchor.TopRight), "...")
                     {
@@ -1174,7 +1171,7 @@ namespace Barotrauma
             texts.Clear();
 
             string nameText = Name;
-            if (Prefab.Identifier == "idcard" || Tags.Contains("despawncontainer"))
+            if (Prefab.Tags.Contains("identitycard") || Tags.Contains("despawncontainer"))
             {
                 string[] readTags = Tags.Split(',');
                 string idName = null;

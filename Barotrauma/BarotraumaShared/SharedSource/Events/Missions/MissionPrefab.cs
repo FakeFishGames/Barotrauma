@@ -146,8 +146,15 @@ namespace Barotrauma
 
             tags = element.GetAttributeStringArray("tags", Array.Empty<string>(), convertToLowerInvariant: true);
 
-            Name        = TextManager.Get($"MissionName.{TextIdentifier}").Fallback(element.GetAttributeString("name", ""));
-            Description = TextManager.Get($"MissionDescription.{TextIdentifier}").Fallback(element.GetAttributeString("description", ""));
+            Name = 
+                TextManager.Get($"MissionName.{TextIdentifier}")
+                .Fallback(TextManager.Get(element.GetAttributeString("name", "")))
+                .Fallback(element.GetAttributeString("name", ""));
+            Description = 
+                TextManager.Get($"MissionDescription.{TextIdentifier}")
+                .Fallback(TextManager.Get(element.GetAttributeString("description", "")))
+                .Fallback(element.GetAttributeString("description", ""));
+
             Reward      = element.GetAttributeInt("reward", 1);
             AllowRetry  = element.GetAttributeBool("allowretry", false);
             IsSideObjective = element.GetAttributeBool("sideobjective", false);
@@ -160,10 +167,15 @@ namespace Barotrauma
                 Difficulty = Math.Clamp(difficulty, MinDifficulty, MaxDifficulty);
             }
 
-            SuccessMessage  = TextManager.Get($"MissionSuccess.{TextIdentifier}").Fallback(element.GetAttributeString("successmessage", "Mission completed successfully"));
-            FailureMessage  = TextManager.Get($"MissionFailure.{TextIdentifier}").Fallback(
-                              TextManager.Get("missionfailed")).Fallback(
-                              GameSettings.CurrentConfig.Language == TextManager.DefaultLanguage ? element.GetAttributeString("failuremessage", "") : "");
+            SuccessMessage  = 
+                TextManager.Get($"MissionSuccess.{TextIdentifier}")
+                .Fallback(TextManager.Get(element.GetAttributeString("successmessage", "")))
+                .Fallback(element.GetAttributeString("successmessage", "Mission completed successfully"));
+            FailureMessage  = 
+                TextManager.Get($"MissionFailure.{TextIdentifier}")
+                .Fallback(TextManager.Get(element.GetAttributeString("missionfailed", "")))
+                .Fallback(TextManager.Get("missionfailed"))
+                .Fallback(GameSettings.CurrentConfig.Language == TextManager.DefaultLanguage ? element.GetAttributeString("failuremessage", "") : "");
 
             string sonarLabelTag = element.GetAttributeString("sonarlabel", "");
 
@@ -208,8 +220,14 @@ namespace Barotrauma
                             headers.Add(string.Empty);
                             messages.Add(string.Empty);
                         }
-                        headers[messageIndex] = TextManager.Get($"MissionHeader{messageIndex}.{TextIdentifier}").Fallback(subElement.GetAttributeString("header", ""));
-                        messages[messageIndex] = TextManager.Get($"MissionMessage{messageIndex}.{TextIdentifier}").Fallback(subElement.GetAttributeString("text", ""));
+                        headers[messageIndex] = 
+                            TextManager.Get($"MissionHeader{messageIndex}.{TextIdentifier}")
+                            .Fallback(TextManager.Get(subElement.GetAttributeString("header", "")))
+                            .Fallback(subElement.GetAttributeString("header", ""));
+                        messages[messageIndex] = 
+                            TextManager.Get($"MissionMessage{messageIndex}.{TextIdentifier}")
+                            .Fallback(TextManager.Get(subElement.GetAttributeString("text", "")))
+                            .Fallback(subElement.GetAttributeString("text", ""));
                         messageIndex++;
                         break;
                     case "locationtype":

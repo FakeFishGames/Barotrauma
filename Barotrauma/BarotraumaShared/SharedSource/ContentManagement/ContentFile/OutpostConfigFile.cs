@@ -9,7 +9,7 @@ namespace Barotrauma
 
         protected override bool MatchesSingular(Identifier identifier) => identifier == "OutpostConfig";
         protected override bool MatchesPlural(Identifier identifier) => identifier == "OutpostGenerationParameters";
-        protected override PrefabCollection<OutpostGenerationParams> prefabs => OutpostGenerationParams.OutpostParams;
+        protected override PrefabCollection<OutpostGenerationParams> Prefabs => OutpostGenerationParams.OutpostParams;
         protected override OutpostGenerationParams CreatePrefab(ContentXElement element)
         {
             return new OutpostGenerationParams(element, this);

@@ -275,7 +275,7 @@ namespace Barotrauma
         /// <summary>
         /// Switch to another submarine. The sub is loaded when the next round starts.
         /// </summary>
-        public SubmarineInfo SwitchSubmarine(SubmarineInfo newSubmarine, int cost, Client? client = null)
+        public void SwitchSubmarine(SubmarineInfo newSubmarine, int cost, Client? client = null)
         {
             if (!OwnedSubmarines.Any(s => s.Name == newSubmarine.Name))
             {
@@ -293,15 +293,12 @@ namespace Barotrauma
                     }
                 }
             }
-
             if ((GameMain.NetworkMember is null || GameMain.NetworkMember is { IsServer: true }) && cost > 0)
             {
                 Campaign!.TryPurchase(client, cost);
             }
             GameAnalyticsManager.AddMoneySpentEvent(cost, GameAnalyticsManager.MoneySink.SubmarineSwitch, newSubmarine.Name);
             Campaign!.PendingSubmarineSwitch = newSubmarine;
-            
-            return newSubmarine;
         }
 
         public void PurchaseSubmarine(SubmarineInfo newSubmarine, Client? client = null)
@@ -600,10 +597,13 @@ namespace Barotrauma
                 {
                     //only place items and corpses here in single player
                     //the server does this after loading the respawn shuttle
-                    Level?.SpawnNPCs();
-                    Level?.SpawnCorpses();
-                    Level?.PrepareBeaconStation();
-                    AutoItemPlacer.PlaceIfNeeded();
+                    if (Level != null)
+                    {
+                        Level.SpawnNPCs();
+                        Level.SpawnCorpses();
+                        Level.PrepareBeaconStation();
+                    }
+                    AutoItemPlacer.SpawnItems();
                 }
                 if (GameMode is MultiPlayerCampaign mpCampaign)
                 {
@@ -836,6 +836,11 @@ namespace Barotrauma
                 {
                     GUI.TogglePauseMenu();
                 }
+                if (IsTabMenuOpen)
+                {
+                    ToggleTabMenu();
+                }
+
                 GUI.PreventPauseMenuToggle = true;
 
                 if (!(GameMode is TestGameMode) && Screen.Selected == GameMain.GameScreen && RoundSummary != null)
@@ -1072,8 +1077,21 @@ namespace Barotrauma
 
             rootElement.Add(new XAttribute("savetime", ToolBox.Epoch.NowLocal));
             rootElement.Add(new XAttribute("version", GameMain.Version));
-            var submarineInfo = Campaign?.PendingSubmarineSwitch ?? SubmarineInfo;
-            rootElement.Add(new XAttribute("submarine", submarineInfo == null ? "" : submarineInfo.Name));
+            if (Submarine?.Info != null && !Submarine.Removed && Campaign != null)
+            {
+                bool hasNewPendingSub = Campaign.PendingSubmarineSwitch != null &&
+                    Campaign.PendingSubmarineSwitch.MD5Hash.StringRepresentation != Submarine.Info.MD5Hash.StringRepresentation;
+
+                if (hasNewPendingSub)
+                {
+                    Campaign.SwitchSubs();
+                }
+                else
+                {
+                    SubmarineInfo = new SubmarineInfo(Submarine);
+                }
+            }
+            rootElement.Add(new XAttribute("submarine", SubmarineInfo == null ? "" : SubmarineInfo.Name));
             if (OwnedSubmarines != null)
             {
                 List<string> ownedSubmarineNames = new List<string>();

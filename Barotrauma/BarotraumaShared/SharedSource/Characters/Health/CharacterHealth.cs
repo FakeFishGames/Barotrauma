@@ -124,7 +124,18 @@ namespace Barotrauma
 
         public float PressureKillDelay { get; private set; } = 5.0f;
 
-        public float Vitality { get; private set; }
+        private float vitality;
+        public float Vitality 
+        {
+            get 
+            { 
+                return Character.IsDead ? minVitality : vitality; 
+            }
+            private set
+            {
+                vitality = value;
+            }
+        }
 
         public float HealthPercentage => MathUtils.Percentage(Vitality, MaxVitality);
 
@@ -725,6 +736,8 @@ namespace Barotrauma
             AddLimbAffliction(limbHealth: null, newAffliction, allowStacking);
         }
 
+        partial void UpdateSkinTint();
+
         partial void UpdateLimbAfflictionOverlays();
 
         public void Update(float deltaTime)
@@ -788,30 +801,13 @@ namespace Barotrauma
             if (!Character.GodMode)
             {
                 UpdateLimbAfflictionOverlays();
-                UpdateSkinTint();
+                UpdateSkinTint();                
                 CalculateVitality();
 
                 if (Vitality <= MinVitality)
                 {
                     Kill();
                 }
-            }
-        }
-
-        private void UpdateSkinTint()
-        {
-            FaceTint = DefaultFaceTint;
-            BodyTint = Color.TransparentBlack;
-
-            if (!(Character?.Params?.Health.ApplyAfflictionColors ?? false)) { return; }
-
-            foreach (KeyValuePair<Affliction, LimbHealth> kvp in afflictions)
-            {
-                var affliction = kvp.Key;
-                Color faceTint = affliction.GetFaceTint();
-                if (faceTint.A > FaceTint.A) { FaceTint = faceTint; }
-                Color bodyTint = affliction.GetBodyTint();
-                if (bodyTint.A > BodyTint.A) { BodyTint = bodyTint; }
             }
         }
 
@@ -905,6 +901,7 @@ namespace Barotrauma
             if (Unkillable || Character.GodMode) { return; }
             
             var (type, affliction) = GetCauseOfDeath();
+            UpdateLimbAfflictionOverlays();
             UpdateSkinTint();
             Character.Kill(type, affliction);
 #if CLIENT

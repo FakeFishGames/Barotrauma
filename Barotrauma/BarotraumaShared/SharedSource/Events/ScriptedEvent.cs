@@ -173,14 +173,14 @@ namespace Barotrauma
             
             if (!Actions.Any())
             {
-                Finished();
+                Finish();
                 return;
             }
 
             var currentAction = Actions[CurrentActionIndex];
             if (!currentAction.CanBeFinished())
             {
-                Finished();
+                Finish();
                 return;
             }
 
@@ -207,7 +207,7 @@ namespace Barotrauma
 
                 if (CurrentActionIndex >= Actions.Count || CurrentActionIndex < 0)
                 {
-                    Finished();
+                    Finish();
                 }
             }
             else
@@ -232,9 +232,9 @@ namespace Barotrauma
             return false;
         }
 
-        public override void Finished()
+        public override void Finish()
         {
-            base.Finished();
+            base.Finish();
             GameAnalyticsManager.AddDesignEvent($"ScriptedEvent:{prefab.Identifier}:Finished:{CurrentActionIndex}");
         }
     }

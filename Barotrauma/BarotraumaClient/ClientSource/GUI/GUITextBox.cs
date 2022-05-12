@@ -261,7 +261,7 @@ namespace Barotrauma
             this.color = color ?? Color.White;
             frame = new GUIFrame(new RectTransform(Vector2.One, rectT, Anchor.Center), style, color);
             GUIStyle.Apply(frame, style == "" ? "GUITextBox" : style);
-            textBlock = new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.CenterLeft), text ?? "", textColor, font, textAlignment, wrap, playerInput: true);
+            textBlock = new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.CenterLeft), text ?? "", textColor, font, textAlignment, wrap);
             GUIStyle.Apply(textBlock, "", this);
             if (font != null) { textBlock.Font = font; }
             CaretEnabled = true;

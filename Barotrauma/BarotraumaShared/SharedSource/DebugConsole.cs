@@ -780,7 +780,7 @@ namespace Barotrauma
                             return;
                         }
                         GameMain.GameSession.EventManager.ActiveEvents.Add(newEvent);
-                        newEvent.Init(true);
+                        newEvent.Init();
                         NewMessage($"Initialized event {eventPrefab.Identifier}", Color.Aqua);
                         return;
                     }
@@ -1828,6 +1828,17 @@ namespace Barotrauma
                 }
             }));
 #endif
+
+            commands.Add(new Command("startitems|startitemset", "start item set identifier", (string[] args) =>
+            {
+                if (args.Length == 0)
+                {
+                    ThrowError($"No start item set identifier defined!");
+                    return;
+                }
+                AutoItemPlacer.StartItemSet = args[0].ToIdentifier();
+                NewMessage($"Start item set changed to \"{AutoItemPlacer.StartItemSet}\"");
+            }, isCheat: false));
 
             //"dummy commands" that only exist so that the server can give clients permissions to use them
             //TODO: alphabetical order?

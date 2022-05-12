@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -63,6 +62,27 @@ namespace Barotrauma
 
         [Serialize(LevelData.LevelType.LocationConnection, IsPropertySaveable.Yes), Editable]
         public LevelData.LevelType Type
+        {
+            get;
+            set;
+        }
+
+        [Serialize(1.0f, IsPropertySaveable.Yes, "If there are multiple level generation parameters available for a level in a given biome, their commonness determines how likely it is for one to get selected."), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
+        public float Commonness
+        {
+            get;
+            set;
+        }
+
+        [Serialize(0.0f, IsPropertySaveable.Yes, "The difficulty of the level has to be above or equal to this for these parameters to get chosen for the level."), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
+        public float MinLevelDifficulty
+        {
+            get;
+            set;
+        }
+
+        [Serialize(100.0f, IsPropertySaveable.Yes, "The difficulty of the level has to be below or equal to this for these parameters to get chosen for the level."), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
+        public float MaxLevelDifficulty
         {
             get;
             set;
@@ -536,7 +556,26 @@ namespace Barotrauma
         public Sprite WallSpriteDestroyed { get; private set; }
         public Sprite WaterParticles { get; private set; }
 
-        public static LevelGenerationParams GetRandom(string seed, LevelData.LevelType type, Identifier biome = default)
+        #warning TODO: this should be in the unit test project (#3164)
+        public static void CheckValidity()
+        {
+            foreach (Biome biome in Biome.Prefabs)
+            {
+                for (float i = 0.0f; i <= 100.0f; i += 0.5f)
+                {
+                    if (GetRandom("test", LevelData.LevelType.LocationConnection, i, biome.Identifier) == null)
+                    {
+                        DebugConsole.ThrowError($"No suitable level generation parameters found for a specific type of level (level type: LocationConnection, difficulty: {i}, biome: {biome.Identifier})");
+                    }
+                    if (GetRandom("test", LevelData.LevelType.Outpost, i, biome.Identifier) == null)
+                    {
+                        DebugConsole.ThrowError($"No suitable level generation parameters found for a specific type of level (level type: Outpost, difficulty: {i}, biome: {biome.Identifier})");
+                    }
+                }
+            }
+        }
+
+        public static LevelGenerationParams GetRandom(string seed, LevelData.LevelType type, float difficulty, Identifier biome = default)
         {
             Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
 
@@ -568,7 +607,16 @@ namespace Barotrauma
                 }
             }
 
-            return matchingLevelParams.GetRandom(Rand.RandSync.ServerAndClient);
+            if (!matchingLevelParams.Any(lp => difficulty >= lp.MinLevelDifficulty && difficulty <= lp.MaxLevelDifficulty))
+            {
+                DebugConsole.ThrowError($"Suitable level generation presets not found (biome \"{biome.IfEmpty("null".ToIdentifier())}\", type: \"{type}\", difficulty: {difficulty})");
+            }
+            else
+            {
+                matchingLevelParams = matchingLevelParams.Where(lp => difficulty >= lp.MinLevelDifficulty && difficulty <= lp.MaxLevelDifficulty);
+            }
+
+            return ToolBox.SelectWeightedRandom(matchingLevelParams, p => p.Commonness, Rand.RandSync.ServerAndClient);
         }
 
         public LevelGenerationParams(ContentXElement element, LevelGenerationParametersFile file) : base(file, element.GetAttributeIdentifier("identifier", element.Name.LocalName))

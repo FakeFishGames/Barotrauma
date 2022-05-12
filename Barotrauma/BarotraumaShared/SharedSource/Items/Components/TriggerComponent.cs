@@ -3,9 +3,8 @@ using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
 using Microsoft.Xna.Framework;
 using System;
-using System.Linq;
 using System.Collections.Generic;
-using System.Xml.Linq;
+using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -93,13 +92,11 @@ namespace Barotrauma.Items.Components
             base.OnItemLoaded();
             float radiusAttribute = originalElement.GetAttributeFloat("radius", 10.0f);
             Radius = ConvertUnits.ToSimUnits(radiusAttribute * item.Scale);
-            PhysicsBody = new PhysicsBody(0.0f, 0.0f, Radius, 1.5f)
+            PhysicsBody = new PhysicsBody(0.0f, 0.0f, Radius, 1.5f, BodyType.Static, Physics.CollisionWall, LevelTrigger.GetCollisionCategories(triggeredBy))
             {
-                BodyType = BodyType.Static,
-                CollidesWith = LevelTrigger.GetCollisionCategories(triggeredBy),
-                CollisionCategories = Physics.CollisionWall,
                 UserData = item
             };
+            PhysicsBody.SetTransformIgnoreContacts(item.SimPosition, 0.0f);
             PhysicsBody.FarseerBody.SetIsSensor(true);
             PhysicsBody.FarseerBody.OnCollision += OnCollision;
             PhysicsBody.FarseerBody.OnSeparation += OnSeparation;
@@ -215,12 +212,18 @@ namespace Barotrauma.Items.Components
             body.ApplyForce(force);
         }
 
-        public override void Move(Vector2 amount)
+        public override void Move(Vector2 amount, bool ignoreContacts = false)
         {
-            base.Move(amount);
             if (PhysicsBody != null)
             {
-                PhysicsBody.SetTransform(PhysicsBody.SimPosition + ConvertUnits.ToSimUnits(amount), 0.0f);
+                if (ignoreContacts)
+                {
+                    PhysicsBody.SetTransformIgnoreContacts(PhysicsBody.SimPosition + ConvertUnits.ToSimUnits(amount), 0.0f);
+                }
+                else
+                {
+                    PhysicsBody.SetTransform(PhysicsBody.SimPosition + ConvertUnits.ToSimUnits(amount), 0.0f);
+                }
                 PhysicsBody.Submarine = item.Submarine;
             }
         }

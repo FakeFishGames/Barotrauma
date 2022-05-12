@@ -25,9 +25,9 @@ namespace Barotrauma
         /// <summary>
         /// Saves bots in multiplayer
         /// </summary>
-        public void SaveMultiplayer(XElement root)
+        public XElement SaveMultiplayer(XElement parentElement)
         {
-            XElement saveElement = new XElement("bots", new XAttribute("hasbots", HasBots));
+            var element = new XElement("bots", new XAttribute("hasbots", HasBots));
             foreach (CharacterInfo info in characterInfos)
             {
                 if (Level.Loaded != null)
@@ -35,13 +35,13 @@ namespace Barotrauma
                     if (!info.IsNewHire && (info.Character == null || info.Character.IsDead)) { continue; }
                 }
 
-                XElement characterElement = info.Save(saveElement);
+                XElement characterElement = info.Save(element);
                 if (info.InventoryData != null) { characterElement.Add(info.InventoryData); }
                 if (info.HealthData != null) { characterElement.Add(info.HealthData); }
                 if (info.OrderData != null) { characterElement.Add(info.OrderData); }
             }
-            SaveActiveOrders(saveElement);
-            root.Add(saveElement);
+            parentElement?.Add(element);
+            return element;
         }
 
         public void ServerWriteActiveOrders(IWriteMessage msg)

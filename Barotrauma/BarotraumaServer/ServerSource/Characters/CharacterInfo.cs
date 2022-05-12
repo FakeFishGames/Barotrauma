@@ -37,7 +37,7 @@ namespace Barotrauma
         partial void OnPermanentStatChanged(StatTypes statType)
         {
             if (Character == null || Character.Removed) { return; }
-            GameMain.NetworkMember.CreateEntityEvent(Character, new Character.UpdatePermanentStatsEventData());
+            GameMain.NetworkMember.CreateEntityEvent(Character, new Character.UpdatePermanentStatsEventData(statType));
         }
 
         public void ServerWrite(IWriteMessage msg)

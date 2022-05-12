@@ -323,7 +323,7 @@ namespace Barotrauma
             {
                 var newEvent = eventPrefab.CreateInstance();
                 GameMain.GameSession.EventManager.ActiveEvents.Add(newEvent);
-                newEvent.Init(true);
+                newEvent.Init();
             }
         }
 
@@ -382,7 +382,8 @@ namespace Barotrauma
 #if SERVER
             totalReward = DistributeRewardsToCrew(GameSession.GetSessionCrewCharacters(CharacterType.Player), totalReward);
 #endif
-            if (totalReward > 0)
+            bool isSingleplayerOrServer = GameMain.IsSingleplayer || GameMain.NetworkMember is { IsServer: true };
+            if (isSingleplayerOrServer && totalReward > 0)
             {
                 campaign.Bank.Give(totalReward);
             }

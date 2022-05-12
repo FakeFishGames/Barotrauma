@@ -113,7 +113,7 @@ namespace Barotrauma
             else
             {
                 var connectionPanel = item.GetComponent<ConnectionPanel>();
-                if (connectionPanel != null && connectionPanel.Connections.Any(c => c.Wires.Any(w => w != null)))
+                if (connectionPanel != null && connectionPanel.Connections.Any(c => c.Wires.Count > 0))
                 {
                     return false;
                 }

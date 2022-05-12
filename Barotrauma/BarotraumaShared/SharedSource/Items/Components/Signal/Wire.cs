@@ -143,12 +143,11 @@ namespace Barotrauma.Items.Components
             {
                 if (connections[i] == null || connections[i].Item != item) { continue; }
 
-                foreach (Wire wire in connections[i].Wires)
+                if (connections[i].Wires.Contains(this))
                 {
-                    if (wire != this) continue;
                     SetConnectedDirty();
 
-                    connections[i].SetWire(connections[i].FindWireIndex(wire), null);
+                    connections[i].DisconnectWire(this);
                 }
 
                 connections[i] = null;
@@ -597,15 +596,16 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < 2; i++)
             {
                 if (connections[i] == null) { continue; }
-                int wireIndex = connections[i].FindWireIndex(item);
-                if (wireIndex == -1) { continue; }
+
+                var wire = connections[i].FindWireByItem(item);
+                if (wire is null) { continue; }
 #if SERVER
                 if (!connections[i].Item.Removed && (!connections[i].Item.Submarine?.Loading ?? true) && (!Level.Loaded?.Generating ?? true))
                 {
                     connections[i].Item.CreateServerEvent(connections[i].Item.GetComponent<ConnectionPanel>());
                 }
 #endif
-                connections[i].SetWire(wireIndex, null);
+                connections[i].DisconnectWire(wire);
                 connections[i] = null;
             }
 
