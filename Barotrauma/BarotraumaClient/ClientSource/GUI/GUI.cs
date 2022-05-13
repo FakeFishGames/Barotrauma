@@ -2425,7 +2425,8 @@ namespace Barotrauma
                         verificationTextTag: GameMain.GameSession == null ? "PauseMenuQuitVerificationEditor" : "PauseMenuQuitVerification",
                         action: () =>
                         {
-                            GameMain.QuitToMainMenu(save: false);
+                            // In the first campaign round we need to save the start items.
+                            GameMain.QuitToMainMenu(save: GameMain.GameSession.GameMode is SinglePlayerCampaign campaign && campaign.IsFirstRound);
                         });
                 }
                 else

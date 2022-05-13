@@ -584,7 +584,9 @@ namespace Barotrauma
                 throw new InvalidOperationException("Level generation presets not found - using default presets");
             }
 
-            var matchingLevelParams = LevelParams.Where(lp =>
+            var levelParamsOrdered = LevelParams.OrderBy(l => l.UintIdentifier);
+
+            var matchingLevelParams = levelParamsOrdered.Where(lp =>
                 lp.Type == type &&
                 (lp.AnyBiomeAllowed || lp.AllowedBiomeIdentifiers.Any()) &&
                 !lp.AllowedBiomeIdentifiers.Contains("None".ToIdentifier()));
@@ -598,11 +600,11 @@ namespace Barotrauma
                 if (!biome.IsEmpty)
                 {
                     //try to find params that at least have a suitable type
-                    matchingLevelParams = LevelParams.Where(lp => lp.Type == type);
+                    matchingLevelParams = levelParamsOrdered.Where(lp => lp.Type == type);
                     if (!matchingLevelParams.Any())
                     {
                         //still not found, give up and choose some params randomly
-                        matchingLevelParams = LevelParams;
+                        matchingLevelParams = levelParamsOrdered;
                     }
                 }
             }

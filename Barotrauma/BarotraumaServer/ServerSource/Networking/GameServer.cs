@@ -2465,6 +2465,7 @@ namespace Barotrauma.Networking
             msg.Write(serverSettings.LockAllDefaultWires);
             msg.Write(serverSettings.AllowRagdollButton);
             msg.Write(serverSettings.AllowLinkingWifiToChat);
+            msg.Write(serverSettings.MaximumMoneyTransferRequest);
             msg.Write(IsUsingRespawnShuttle());
             msg.Write((byte)serverSettings.LosMode);
             msg.Write(includesFinalize); msg.WritePadBits();

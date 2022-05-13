@@ -18,11 +18,14 @@ namespace Barotrauma
             bool skipMainSubs = GameMain.GameSession.GameMode is CampaignMode { IsFirstRound: false };
             if (!skipMainSubs)
             {
+                if (Submarine.MainSub is Submarine mainSub && mainSub.Info.IsPlayer)
+                {
+                    SpawnStartItems(mainSub);
+                }
                 for (int i = 0; i < Submarine.MainSubs.Length; i++)
                 {
                     var sub = Submarine.MainSubs[i];
                     if (sub == null || sub.Info.InitialSuppliesSpawned) { continue; }
-                    SpawnStartItems(sub);
                     var subs = sub.GetConnectedSubs().Where(s => s.TeamID == sub.TeamID);
                     CreateAndPlace(subs);
                     subs.ForEach(s => s.Info.InitialSuppliesSpawned = true);
@@ -79,7 +82,6 @@ namespace Barotrauma
                     return;
                 }
                 initialSpawnPos = spawnHull;
-                
             }
             else
             {

@@ -1107,7 +1107,7 @@ namespace Barotrauma
                                 itemComponent.requiredItems.Clear();
                                 itemComponent.DisabledRequiredItems.Clear();
 
-                                itemComponent.SetRequiredItems(element);
+                                itemComponent.SetRequiredItems(element, allowEmpty: true);
                                 break;
                         }
                     }                   

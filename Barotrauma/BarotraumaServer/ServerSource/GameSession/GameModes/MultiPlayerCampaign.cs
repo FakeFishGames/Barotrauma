@@ -930,7 +930,7 @@ namespace Barotrauma
                     {
                         if (transfer.Receiver is Some<ushort> { Value: var receiverId } && receiverId == sender.CharacterID)
                         {
-                            if (transfer.Amount > GameMain.Server.ServerSettings.MaximumTransferRequest) { return; }
+                            if (transfer.Amount > GameMain.Server.ServerSettings.MaximumMoneyTransferRequest) { return; }
                             GameMain.Server.Voting.StartTransferVote(sender, null, transfer.Amount, sender);
                             GameServer.Log($"{sender.Name} started a vote to transfer {transfer.Amount} mk from the bank.", ServerLog.MessageType.Money);
                         }

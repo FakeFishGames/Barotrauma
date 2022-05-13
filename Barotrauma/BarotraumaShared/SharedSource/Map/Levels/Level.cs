@@ -301,8 +301,12 @@ namespace Barotrauma
         /// </summary>
         public enum LevelGenStage
         {
+            LevelGenParams,
+            Size,
             GenStart,
             TunnelGen,
+            AbyssGen,
+            CaveGen,
             VoronoiGen,
             VoronoiGen2,
             VoronoiGen3,
@@ -325,6 +329,11 @@ namespace Barotrauma
         private void GenerateEqualityCheckValue(LevelGenStage stage)
         {
             equalityCheckValues[stage] = Rand.Int(int.MaxValue, Rand.RandSync.ServerAndClient);
+        }
+
+        private void SetEqualityCheckValue(LevelGenStage stage, int value)
+        {
+            equalityCheckValues[stage] = value;
         }
 
         private void ClearEqualityCheckValues()
@@ -445,6 +454,9 @@ namespace Barotrauma
             }
 
             GenerateEqualityCheckValue(LevelGenStage.GenStart);
+            SetEqualityCheckValue(LevelGenStage.LevelGenParams, unchecked((int)GenerationParams.UintIdentifier));
+            SetEqualityCheckValue(LevelGenStage.Size, borders.Width ^ borders.Height << 16);
+            GenerateEqualityCheckValue(LevelGenStage.TunnelGen);
 
             LevelObjectManager = new LevelObjectManager();
 
@@ -582,10 +594,12 @@ namespace Barotrauma
             }
 
             int sideTunnelCount = Rand.Range(GenerationParams.SideTunnelCount.X, GenerationParams.SideTunnelCount.Y + 1, Rand.RandSync.ServerAndClient);
+
             for (int j = 0; j < sideTunnelCount; j++)
             {
                 if (mainPath.Nodes.Count < 4) { break; }
                 var validTunnels = Tunnels.FindAll(t => t.Type != TunnelType.Cave && t != startPath && t != endPath && t != endHole && t != abyssTunnel);
+
                 Tunnel tunnelToBranchOff = validTunnels[Rand.Int(validTunnels.Count, Rand.RandSync.ServerAndClient)];
                 if (tunnelToBranchOff == null) { tunnelToBranchOff = mainPath; }
 
@@ -600,7 +614,13 @@ namespace Barotrauma
 
             CalculateTunnelDistanceField(null);
             GenerateSeaFloorPositions();
+
+            GenerateEqualityCheckValue(LevelGenStage.AbyssGen);
+
             GenerateAbyssArea();
+
+            GenerateEqualityCheckValue(LevelGenStage.CaveGen);
+
             GenerateCaves(mainPath);
 
             GenerateEqualityCheckValue(LevelGenStage.VoronoiGen);

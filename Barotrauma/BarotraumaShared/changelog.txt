@@ -1,4 +1,16 @@
 ---------------------------------------------------------------------------------------------------------
+v0.18.1.0
+---------------------------------------------------------------------------------------------------------
+
+Unstable only:
+- Fixed crashing when someone respawns while the tab menu is open.
+- Fixed level equality errors in multiplayer game modes other than the campaign.
+- Fixed headsets from pre-0.18 saves being unusable due to still having the battery requirement but no inventory to hold one.
+- Fixed inability to put disposable diving suits in diving suit lockers.
+- Fixed clients without money management permissions not being able to request money.
+- Fixed context menus rendering behind the debug console.
+
+---------------------------------------------------------------------------------------------------------
 v0.18.0.0
 ---------------------------------------------------------------------------------------------------------
 
@@ -43,7 +55,7 @@ Changes and additions:
 - Improved tooltips in the wallet menu to make their function more clear.
 - Corpses can now be grabbed in singleplayer to loot money.
 - Made the crew wallet menu update when the players permissions change.
-- Prevented selling items from submarine containers tagged with "donttakeitems", instead of "donttakeitems".
+- Prevented selling items from submarine containers tagged with "dontsellitems", instead of "donttakeitems".
 - Removed merchant balance effect on item prices.
 - Replaced "item sell value" with the location reputation effect on the store interface.
 

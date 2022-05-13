@@ -635,7 +635,7 @@ namespace Barotrauma.Networking
             GetPropertyData(nameof(TraitorsMinPlayerCount)).AssignGUIComponent(traitorsMinPlayerCount);
 
             var maximumTransferAmount = CreateLabeledNumberInput(roundsTab, "serversettingsmaximumtransferrequest", 0, CampaignMode.MaxMoney, "serversettingsmaximumtransferrequesttooltip");
-            GetPropertyData(nameof(MaximumTransferRequest)).AssignGUIComponent(maximumTransferAmount);
+            GetPropertyData(nameof(MaximumMoneyTransferRequest)).AssignGUIComponent(maximumTransferAmount);
 
             var lootedMoneyDestination = CreateLabeledDropdown(roundsTab, "serversettingslootedmoneydestination", numElements: 2, "serversettingslootedmoneydestinationtooltip");
             lootedMoneyDestination.AddItem(TextManager.Get("lootedmoneydestination.bank"), LootedMoneyDestination.Bank);

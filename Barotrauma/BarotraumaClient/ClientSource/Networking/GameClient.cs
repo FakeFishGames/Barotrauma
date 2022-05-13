@@ -1519,6 +1519,7 @@ namespace Barotrauma.Networking
             serverSettings.LockAllDefaultWires = inc.ReadBoolean();
             serverSettings.AllowRagdollButton = inc.ReadBoolean();
             serverSettings.AllowLinkingWifiToChat = inc.ReadBoolean();
+            serverSettings.MaximumMoneyTransferRequest = inc.ReadInt32();
             bool usingShuttle = GameMain.NetLobbyScreen.UsingShuttle = inc.ReadBoolean();
             GameMain.LightManager.LosMode = (LosMode)inc.ReadByte();
             bool includesFinalize = inc.ReadBoolean(); inc.ReadPadBits();

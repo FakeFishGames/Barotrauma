@@ -244,6 +244,9 @@ namespace Barotrauma.Tutorials
             engineer_submarineJunctionBox_2.Condition = 0f;
             engineer_submarineJunctionBox_3.Indestructible = false;
             engineer_submarineJunctionBox_3.Condition = 0f;
+
+            GameAnalyticsManager.AddDesignEvent("Tutorial:EngineerTutorial:Started");
+            GameAnalyticsManager.AddDesignEvent("Tutorial:Started");
         }
 
         public override IEnumerable<CoroutineStatus> UpdateState()
@@ -317,6 +320,7 @@ namespace Barotrauma.Tutorials
                 yield return null;
             } while (!engineer_equipmentCabinet.Inventory.IsEmpty()); // Wait until looted
             RemoveCompletedObjective(0);
+            GameAnalyticsManager.AddDesignEvent("Tutorial:EngineerTutorial:Objective0");
             SetHighlight(engineer_equipmentCabinet.Item, false);
             SetHighlight(engineer_reactor.Item, true);
             SetDoorAccess(engineer_firstDoor, engineer_firstDoorLight, true);
@@ -352,6 +356,7 @@ namespace Barotrauma.Tutorials
                 yield return null;
             } while (engineer_reactor.AvailableFuel == 0);
             RemoveCompletedObjective(1);
+            GameAnalyticsManager.AddDesignEvent("Tutorial:EngineerTutorial:Objective1");
             TriggerTutorialSegment(2);
             CoroutineManager.StartCoroutine(ReactorOperatedProperly());
             do
@@ -395,6 +400,7 @@ namespace Barotrauma.Tutorials
             engineer.SelectedConstruction = null;
             engineer_reactor.CanBeSelected = false;
             RemoveCompletedObjective(2);
+            GameAnalyticsManager.AddDesignEvent("Tutorial:EngineerTutorial:Objective2");
             SetHighlight(engineer_reactor.Item, false);
             SetHighlight(engineer_brokenJunctionBox, true);
             SetDoorAccess(engineer_secondDoor, engineer_secondDoorLight, true);
@@ -421,6 +427,7 @@ namespace Barotrauma.Tutorials
             } while (repairableJunctionBoxComponent.IsBelowRepairThreshold); // Wait until repaired
             SetHighlight(engineer_brokenJunctionBox, false);
             RemoveCompletedObjective(3);
+            GameAnalyticsManager.AddDesignEvent("Tutorial:EngineerTutorial:Objective3");
             SetDoorAccess(engineer_thirdDoor, engineer_thirdDoorLight, true);
             for (int i = 0; i < engineer_disconnectedJunctionBoxes.Length; i++)
             {
@@ -439,6 +446,7 @@ namespace Barotrauma.Tutorials
                 SetHighlight(engineer_disconnectedJunctionBoxes[i].Item, false);
             }
             RemoveCompletedObjective(4);
+            GameAnalyticsManager.AddDesignEvent("Tutorial:EngineerTutorial:Objective4");
             do { yield return null; } while (engineer_workingPump.Item.CurrentHull.WaterPercentage > waterVolumeBeforeOpening); // Wait until drained
             wiringActive = false;
             SetDoorAccess(engineer_fourthDoor, engineer_fourthDoorLight, true);
@@ -465,6 +473,7 @@ namespace Barotrauma.Tutorials
             do { CheckJunctionBoxHighlights(repairableJunctionBoxComponent1, repairableJunctionBoxComponent2, repairableJunctionBoxComponent3); yield return null; } while (repairableJunctionBoxComponent1.IsBelowRepairThreshold || repairableJunctionBoxComponent2.IsBelowRepairThreshold || repairableJunctionBoxComponent3.IsBelowRepairThreshold);
             CheckJunctionBoxHighlights(repairableJunctionBoxComponent1, repairableJunctionBoxComponent2, repairableJunctionBoxComponent3);
             RemoveCompletedObjective(5);
+            GameAnalyticsManager.AddDesignEvent("Tutorial:EngineerTutorial:Objective5");
             yield return new WaitForSeconds(2f, false);
 
             TriggerTutorialSegment(6); // Powerup reactor
@@ -474,10 +483,12 @@ namespace Barotrauma.Tutorials
             engineer.RemoveActiveObjectiveEntity(engineer_submarineReactor.Item);
             SetHighlight(engineer_submarineReactor.Item, false);
             RemoveCompletedObjective(6);
+            GameAnalyticsManager.AddDesignEvent("Tutorial:EngineerTutorial:Objective6");
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.Complete"), ChatMessageType.Radio, null);
 
             yield return new WaitForSeconds(4f, false);
 
+            GameAnalyticsManager.AddDesignEvent("Tutorial:EngineerTutorial:Completed");
             CoroutineManager.StartCoroutine(TutorialCompleted());
         }
 

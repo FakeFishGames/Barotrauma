@@ -911,7 +911,7 @@ namespace Barotrauma.Networking
         public LootedMoneyDestination LootedMoneyDestination { get; set; }
 
         [Serialize(999999, IsPropertySaveable.Yes)]
-        public int MaximumTransferRequest { get; set; }
+        public int MaximumMoneyTransferRequest { get; set; }
 
         private int maxMissionCount = CampaignSettings.DefaultMaxMissionCount;
 

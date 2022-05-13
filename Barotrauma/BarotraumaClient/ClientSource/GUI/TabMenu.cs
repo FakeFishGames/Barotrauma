@@ -67,7 +67,7 @@ namespace Barotrauma
                 this.frame = frame;
                 this.permissionIcon = permissionIcon;
                 character = client?.Character;
-                wasCharacterAlive = client.Character != null && !client.Character.IsDead;
+                wasCharacterAlive = client?.Character != null && !client.Character.IsDead;
             }
 
             public LinkedGUI(Character character, GUIFrame frame, GUITextBlock textBlock)
@@ -1253,8 +1253,8 @@ namespace Barotrauma
 
                     if (!hasMoneyPermissions && GameMain.Client?.ServerSettings is { } serverSettings)
                     {
-                        transferAmountInput.MaxValueInt = Math.Min(maxValue, serverSettings.MaximumTransferRequest);
-                        if (serverSettings.MaximumTransferRequest <= 0)
+                        transferAmountInput.MaxValueInt = Math.Min(maxValue, serverSettings.MaximumMoneyTransferRequest);
+                        if (serverSettings.MaximumMoneyTransferRequest <= 0)
                         {
                             transferAmountInput.Enabled = false;
                             transferAmountInput.ToolTip = TextManager.Get("wallettransferrequestdisabled");

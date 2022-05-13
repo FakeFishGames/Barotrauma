@@ -290,7 +290,7 @@ namespace Barotrauma
         public override void AddToGUIUpdateList(bool ignoreChildren = false, int order = 0)
         {
             base.AddToGUIUpdateList(ignoreChildren, order);
-            SubMenu?.AddToGUIUpdateList();
+            SubMenu?.AddToGUIUpdateList(order: 2);
         }
 
         public static void AddActiveToGUIUpdateList()
@@ -300,7 +300,7 @@ namespace Barotrauma
                 CurrentContextMenu = null;
             }
 
-            CurrentContextMenu?.AddToGUIUpdateList();
+            CurrentContextMenu?.AddToGUIUpdateList(order: 2);
         }
     }
 }
