@@ -308,7 +308,7 @@ namespace Barotrauma
                 AlwaysOverrideCursor = true
             };
 
-            LocalizedString translatedText = TextManager.Get(text);
+            LocalizedString translatedText = TextManager.Get(text).Fallback(text);
 
             if (speaker?.Info != null && drawChathead)
             {
@@ -335,7 +335,7 @@ namespace Barotrauma
             {
                 foreach (string option in options)
                 {
-                    var btn = new GUIButton(new RectTransform(new Vector2(0.9f, 0.01f), textContent.RectTransform), TextManager.Get(option), style: "ListBoxElement");
+                    var btn = new GUIButton(new RectTransform(new Vector2(0.9f, 0.01f), textContent.RectTransform), TextManager.Get(option).Fallback(option), style: "ListBoxElement");
                     btn.TextBlock.TextAlignment = Alignment.CenterLeft;
                     btn.TextColor = btn.HoverTextColor = GUIStyle.Green;
                     btn.TextBlock.Wrap = true;
