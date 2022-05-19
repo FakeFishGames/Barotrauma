@@ -6,7 +6,7 @@ using System;
 
 namespace Barotrauma
 {
-    public class Camera
+    public class Camera : IDisposable
     {
         public static bool FollowSub = true;
 
@@ -147,15 +147,19 @@ namespace Barotrauma
             position = Vector2.Zero;
 
             CreateMatrices();
-            // TODO: Needs to unregister if ever destroy cameras.
+            // TODO: this has the potential to cause a resource leak
+            // by sneakily creating a reference to cameras that we might
+            // fail to release.
             GameMain.Instance.ResolutionChanged += CreateMatrices;
 
             UpdateTransform(false);
         }
 
-        ~Camera()
+        private bool disposed = false;
+        public void Dispose()
         {
-            GameMain.Instance.ResolutionChanged -= CreateMatrices;
+            if (!disposed) { GameMain.Instance.ResolutionChanged -= CreateMatrices; }
+            disposed = true;
         }
 
         public Vector2 TargetPos { get; set; }

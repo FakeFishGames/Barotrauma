@@ -1,4 +1,58 @@
 ---------------------------------------------------------------------------------------------------------
+v0.18.2.0
+---------------------------------------------------------------------------------------------------------
+
+Unstable only:
+- Fixed "submarine equality check failed" errors in non-campaign multiplayer game modes.
+- Fixed occasional crashes when exiting the sub editor.
+- Fixed diving suit lights being on when not worn.
+- Fixed research stations not working.
+- Adjusted the layout of server settings gameplay tab to prevent overlaps on small resolutions.
+- Fixed ignore orders not being loaded correctly in singleplayer.
+
+Changes:
+- Lighting optimization: now some unimportant (dim and small) lights are hidden when there's lots of light sources visible on the screen at the same time. The maximum number of visible lights can be adjusted in the game settings.
+- Lighting optimization: the number of light recalculations per frame is limited, meaning that when there's lots of moving, shadow-casting lights visible, the game doesn't try to recalculate the shadows all at the same time.
+- Lighting optimization: simplify the light rendering when zoomed very far out (e.g. when looking through a periscope).
+- Optimized status effects that modify items' conditions every frame (for example, oxygen tank shelves that fill up oxygen tanks).
+- Hide AppData path from tooltips in the sub editor to prevent exposing the user's name.
+- Reduce nausea chance of energy drink to 25%.
+- Changes to the campaign progression in general.
+- Changes to the level generation parameters, especially in Cold Caverns and the Ridge.
+- Changes to the level resources distribution.
+- Changes to the event manager settings (that affect the monster spawns).
+- Adjusted and normalized the item loadouts for all the jobs.
+- Changes to the items that always spawn with the sub at the beginning of the game (start items).
+- Adjustments to the preferred containers (= where things are spawned and where they should be placed).
+- Changes to the existing missions and how they are distributed. Added new missions.
+- Reduced the costs for unlocking the biomes.
+- Minor adjustments to the monster spawns.
+- Changes to the item "gating". Some items don't appear early in the game anymore.
+- Adjustments to the mission specific variants of the monsters.
+- Added a large Crawler variant for some missions (removed the Swarmcrawler that was used for crawler missions).
+- Halved Mudraptors' priority for eating dead bodies.
+
+Fixes:
+- Fixed abyss area being very small in the Aphotic Plateau, preventing the abyss monster from reaching you if you go deep enough.
+- Fixed status monitor displaying small amounts of water as 1% even though water detectors output 0%.
+- Fixed autopilot conflicting with VELOCITY_IN inputs (now signals override the autopilot for 1 second). 
+- Fixed ConversationAction getting interrupted when opening an input-blocking menu in single player.
+- Fixed sprite bleed in chaingun ammunition boxes.
+- Fixed appearance of specific named NPCs being inconsistent (e.g. Captain Hognose sometimes being a woman or not having an eyepatch).
+- Fixed certain scripted events getting stuck if you switch characters in single player (e.g. the events that require you to interact with fliers on the wall).
+- Fixed crashing when the source of a rope is removed (e.g. when a latcher despawns while latched on to the sub).
+- Fixed votes always going through if no-one votes.
+- Fixed energy drink giving x10 more haste when used via the health interface.
+- Fixed the monster spawns for the new game plus not working (currently a placeholder set).
+- Fixed monsters spawning from missions not avoiding the engines.
+
+Modding:
+- Level object, cave and mineral commonness can be defined based on the biome instead of the level generation parameters (= no need to define commonness for "coldcavernsbasic", "coldcavernsmaze" etc separately).
+- Option to define ConversationAction texts directly in the event xml (instead of having to always define them in a spearate text file).
+- Extended CustomInterface functionality with NumberInput elements that allow using float values ("numbertype") and defining the increment size ("step") the number of decimal places ("decimalplaces"). (Thanks, mLuby!)
+- Implemented <clear/> element for removing all the child elements of an element in a variant file.
+
+---------------------------------------------------------------------------------------------------------
 v0.18.1.0
 ---------------------------------------------------------------------------------------------------------
 

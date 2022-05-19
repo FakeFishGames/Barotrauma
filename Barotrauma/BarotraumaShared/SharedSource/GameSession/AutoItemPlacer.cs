@@ -1,9 +1,8 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Barotrauma.Extensions;
-using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -15,29 +14,29 @@ namespace Barotrauma
         {
             if (GameMain.NetworkMember != null && !GameMain.NetworkMember.IsServer) { return; }
 
-            bool skipMainSubs = GameMain.GameSession.GameMode is CampaignMode { IsFirstRound: false };
-            if (!skipMainSubs)
+            //player has more than one sub = we must have given the start items already
+            bool startItemsGiven = GameMain.GameSession?.OwnedSubmarines != null && GameMain.GameSession.OwnedSubmarines.Count > 1;
+            if (!startItemsGiven)
             {
-                if (Submarine.MainSub is Submarine mainSub && mainSub.Info.IsPlayer)
-                {
-                    SpawnStartItems(mainSub);
-                }
                 for (int i = 0; i < Submarine.MainSubs.Length; i++)
                 {
                     var sub = Submarine.MainSubs[i];
-                    if (sub == null || sub.Info.InitialSuppliesSpawned) { continue; }
+                    if (sub == null || sub.Info.InitialSuppliesSpawned || !sub.Info.IsPlayer) { continue; }
+                    //1st pass: items defined in the start item set, only spawned in the main sub (not drones/shuttles or other linked subs)
+                    SpawnStartItems(sub);
+                    //2nd pass: items defined using preferred containers, spawned in the main sub and all the linked subs (drones, shuttles etc)
                     var subs = sub.GetConnectedSubs().Where(s => s.TeamID == sub.TeamID);
                     CreateAndPlace(subs);
                     subs.ForEach(s => s.Info.InitialSuppliesSpawned = true);
                 }
             }
 
+            //spawn items in wrecks, beacon stations and pirate subs
             foreach (var sub in Submarine.Loaded)
             {
                 if (sub.Info.Type == SubmarineType.Player || 
                     sub.Info.Type == SubmarineType.Outpost || 
-                    sub.Info.Type == SubmarineType.OutpostModule ||
-                    sub.Info.Type == SubmarineType.EnemySubmarine)
+                    sub.Info.Type == SubmarineType.OutpostModule)
                 {
                     continue;
                 }
@@ -64,6 +63,10 @@ namespace Barotrauma
         }
 
         public static Identifier StartItemSet = new Identifier("normal");
+
+        /// <summary>
+        /// Spawns the items defined in the start item set in the specified sub.
+        /// </summary>
         private static void SpawnStartItems(Submarine sub)
         {
             if (!Barotrauma.StartItemSet.Sets.TryGet(StartItemSet, out StartItemSet itemSet))

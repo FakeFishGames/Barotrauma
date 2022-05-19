@@ -3571,13 +3571,13 @@ namespace Barotrauma.Networking
                     return true;
                 };
 
-                durationInputDays = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1.0f), durationContainer.RectTransform), GUINumberInput.NumberType.Int)
+                durationInputDays = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1.0f), durationContainer.RectTransform), NumberType.Int)
                 {
                     MinValueInt = 0,
                     MaxValueFloat = 1000
                 };
                 new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), durationContainer.RectTransform), TextManager.Get("Days"));
-                durationInputHours = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1.0f), durationContainer.RectTransform), GUINumberInput.NumberType.Int)
+                durationInputHours = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1.0f), durationContainer.RectTransform), NumberType.Int)
                 {
                     MinValueInt = 0,
                     MaxValueFloat = 24

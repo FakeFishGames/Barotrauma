@@ -33,13 +33,13 @@ namespace Barotrauma
     public enum AbilityEffectType
     {
         Undefined,
-        None, 
+        None,
         OnAttack,
         OnAttackResult,
         OnAttacked,
         OnAttackedResult,
-        OnGainSkillPoint, 
-        OnAllyGainSkillPoint, 
+        OnGainSkillPoint,
+        OnAllyGainSkillPoint,
         OnRepairComplete,
         OnItemFabricationSkillGain,
         OnItemFabricatedAmount,
@@ -154,5 +154,11 @@ namespace Barotrauma
         Bot = 0b01,
         Player = 0b10,
         Both = Bot | Player
+    }
+
+    public enum NumberType
+    {
+        Int,
+        Float
     }
 }

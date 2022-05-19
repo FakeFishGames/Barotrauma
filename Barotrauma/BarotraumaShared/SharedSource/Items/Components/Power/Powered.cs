@@ -150,7 +150,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (powerOut?.Grid != null) { return powerOut.Grid.Voltage; }
                 }
-                return currPowerConsumption <= 0.0f ? 1.0f : voltage;
+                return PowerConsumption <= 0.0f ? 1.0f : voltage;
             }
             set
             {
@@ -158,21 +158,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public bool PoweredByTinkering
-        {
-            get
-            {
-                if (this is PowerContainer) { return false; }
-                foreach (Repairable repairable in Item.Repairables)
-                {
-                    if (repairable.IsTinkering && repairable.TinkeringPowersDevices)
-                    {
-                        return true;
-                    }
-                }
-                return false;
-            }
-        }
+        public bool PoweredByTinkering { get; set; }
 
         [Editable, Serialize(true, IsPropertySaveable.Yes, description: "Can the item be damaged by electomagnetic pulses.")]
         public bool VulnerableToEMP

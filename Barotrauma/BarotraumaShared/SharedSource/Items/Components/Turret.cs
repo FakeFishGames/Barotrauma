@@ -350,7 +350,7 @@ namespace Barotrauma.Items.Components
             if (lightComponent != null) 
             {
                 lightComponent.Parent = null;
-                lightComponent.Rotation = Rotation - MathHelper.ToRadians(item.Rotation);
+                lightComponent.Rotation = Rotation - item.RotationRad;
                 lightComponent.Light.Rotation = -rotation;
             }
 #endif
@@ -516,7 +516,7 @@ namespace Barotrauma.Items.Components
         {
             if (lightComponent != null)
             {
-                lightComponent.Rotation = Rotation - MathHelper.ToRadians(item.Rotation);
+                lightComponent.Rotation = Rotation - item.RotationRad;
             }
         }
 

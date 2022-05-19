@@ -396,29 +396,20 @@ namespace Barotrauma
             return 1;
         }
 
-        private void Dispose(bool disposing)
+        public override void Dispose()
         {
             if (!disposed)
             {
-                if (disposing)
-                {
-                    Prefabs.Remove(this);
+                Prefabs.Remove(this);
 #if CLIENT
-                    Sprite?.Remove();
-                    Sprite = null;
-                    DecorativeSprites.ForEach(sprite => sprite.Remove());
-                    targetProperties.Clear();
+                Sprite?.Remove();
+                Sprite = null;
+                DecorativeSprites.ForEach(sprite => sprite.Remove());
+                targetProperties.Clear();
 #endif
-                }
             }
 
             disposed = true;
-        }
-
-        public override void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
         }
     }
 }

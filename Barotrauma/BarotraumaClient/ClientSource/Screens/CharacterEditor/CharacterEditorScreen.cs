@@ -2280,7 +2280,7 @@ namespace Barotrauma.CharacterEditor
                 var colorLabel = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), colorComponentLabels[i],
                     font: GUIStyle.SmallFont, textAlignment: Alignment.CenterLeft);
                 GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight),
-                    GUINumberInput.NumberType.Int, relativeButtonAreaWidth: 0.25f)
+                    NumberType.Int, relativeButtonAreaWidth: 0.25f)
                 {
                     Font = GUIStyle.SmallFont
                 };

@@ -91,11 +91,6 @@ namespace Barotrauma.Steam
                     }
                 }
 
-                ~ItemThumbnail()
-                {
-                    Dispose();
-                }
-
                 public void Dispose()
                 {
                     if (ItemId == 0) { return; }

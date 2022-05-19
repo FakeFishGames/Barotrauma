@@ -313,10 +313,14 @@ namespace Barotrauma
             bool isValid = e is Character character && !character.Removed && !character.IsDead && !character.IsIncapacitated &&
                 (e == Character.Controlled || character.IsRemotePlayer);
 #if SERVER
-            UpdateIgnoredClients();
-            isValid &= !ignoredClients.Keys.Any(c => c.Character == e);
+            if (!dialogOpened)
+            {
+                UpdateIgnoredClients();
+                isValid &= !ignoredClients.Keys.Any(c => c.Character == e);
+            }
 #elif CLIENT
-            isValid &= (e != Character.Controlled || !GUI.InputBlockingMenuOpen);
+            bool block = GUI.InputBlockingMenuOpen && !dialogOpened;
+            isValid &= (e != Character.Controlled || !block);
 #endif
             return isValid;
         }

@@ -965,7 +965,8 @@ namespace Barotrauma.Items.Components
             {
                 item.body.LinearVelocity *= deflectedSpeedMultiplier;
             }
-            else if (   stickJoint == null && StickTarget == null &&
+            else if (   remainingHits <= 0 &&
+                        stickJoint == null && StickTarget == null &&
                         StickToStructures && target.Body.UserData is Structure ||
                         ((StickToLightTargets || target.Body.Mass > item.body.Mass * 0.5f) &&
                         (DoesStick ||

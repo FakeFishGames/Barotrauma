@@ -291,7 +291,7 @@ namespace Barotrauma
                 }, style: null, color: Color.Black * 0.6f);
                 var colorLabel = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), colorComponentLabels[i],
                     font: GUIStyle.SmallFont, textAlignment: Alignment.CenterLeft);
-                var numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight), GUINumberInput.NumberType.Int)
+                var numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight), NumberType.Int)
                 {
                     Font = GUIStyle.SmallFont
                 };

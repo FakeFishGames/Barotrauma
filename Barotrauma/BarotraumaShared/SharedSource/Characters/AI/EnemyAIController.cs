@@ -275,7 +275,11 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "chooserandom":
-                        LoadSubElement(subElement.Elements().ToArray().GetRandom(random));
+                        var subElements = subElement.Elements();
+                        if (subElements.Any())
+                        {
+                            LoadSubElement(subElements.ToArray().GetRandom(random));
+                        }
                         break;
                     default:
                         LoadSubElement(subElement);

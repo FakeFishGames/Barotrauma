@@ -170,7 +170,7 @@ namespace Barotrauma
             for (int i = 0; i < amount; i++)
             {
                 //get a random prefab and find a place to spawn it
-                LevelObjectPrefab prefab = GetRandomPrefab(level.GenerationParams, availablePrefabs);
+                LevelObjectPrefab prefab = GetRandomPrefab(level, availablePrefabs);
                 if (prefab == null) { continue; }
                 if (!suitableSpawnPositions.ContainsKey(prefab))
                 {
@@ -595,12 +595,12 @@ namespace Barotrauma
             }
         }
 
-        private LevelObjectPrefab GetRandomPrefab(LevelGenerationParams generationParams, IList<LevelObjectPrefab> availablePrefabs)
+        private LevelObjectPrefab GetRandomPrefab(Level level, IList<LevelObjectPrefab> availablePrefabs)
         {
-            if (availablePrefabs.Sum(p => p.GetCommonness(generationParams)) <= 0.0f) { return null; }
+            if (availablePrefabs.Sum(p => p.GetCommonness(level.LevelData)) <= 0.0f) { return null; }
             return ToolBox.SelectWeightedRandom(
                 availablePrefabs,
-                availablePrefabs.Select(p => p.GetCommonness(generationParams)).ToList(), Rand.RandSync.ServerAndClient);
+                availablePrefabs.Select(p => p.GetCommonness(level.LevelData)).ToList(), Rand.RandSync.ServerAndClient);
         }
 
         private LevelObjectPrefab GetRandomPrefab(CaveGenerationParams caveParams, IList<LevelObjectPrefab> availablePrefabs, bool requireCaveSpecificOverride)

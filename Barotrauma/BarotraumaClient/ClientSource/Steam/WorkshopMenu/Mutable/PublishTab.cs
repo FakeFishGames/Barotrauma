@@ -44,12 +44,7 @@ namespace Barotrauma.Steam
                         }
                     });
             }
-            
-            ~LocalThumbnail()
-            {
-                Dispose();
-            }
-            
+
             private bool disposed = false;
             public void Dispose()
             {

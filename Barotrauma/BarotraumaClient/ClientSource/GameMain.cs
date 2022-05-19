@@ -1037,6 +1037,11 @@ namespace Barotrauma
             {
                 GUI.SetSavingIndicatorState(true);
 
+                if (GameSession.Submarine != null && !GameSession.Submarine.Removed)
+                {
+                    GameSession.SubmarineInfo = new SubmarineInfo(GameSession.Submarine);
+                }
+
                 // Update store stock when saving and quitting in an outpost (normally updated when CampaignMode.End() is called)
                 if (GameSession?.Campaign is SinglePlayerCampaign spCampaign && Level.IsLoadedOutpost && spCampaign.Map?.CurrentLocation != null && spCampaign.CargoManager != null)
                 {
@@ -1163,7 +1168,7 @@ namespace Barotrauma
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), linkHolder.RectTransform), TextManager.Get("bugreportgithubform"), style: "MainMenuGUIButton", textAlignment: Alignment.Left)
             {
-                UserData = "https://github.com/Regalis11/Barotrauma/issues/new?template=bug_report.md",
+                UserData = "https://github.com/Regalis11/Barotrauma/issues/new/choose",
                 OnClicked = (btn, userdata) =>
                 {
                     ShowOpenUrlInWebBrowserPrompt(userdata as string);

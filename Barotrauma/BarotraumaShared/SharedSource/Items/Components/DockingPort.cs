@@ -621,7 +621,7 @@ namespace Barotrauma.Items.Components
                     hullRects[i].X -= expand;
                     hullRects[i].Width += expand * 2;
                     hullRects[i].Location -= MathUtils.ToPoint(subs[i].WorldPosition - subs[i].HiddenSubPosition);
-                    hulls[i] = new Hull(MapEntityPrefab.Find(null, "hull"), hullRects[i], subs[i]);
+                    hulls[i] = new Hull(hullRects[i], subs[i]);
                     hulls[i].RoomName = IsHorizontal ? "entityname.dockingport" : "entityname.dockinghatch";
                     hulls[i].AddToGrid(subs[i]);
                     hulls[i].FreeID();
@@ -744,7 +744,7 @@ namespace Barotrauma.Items.Components
                     hullRects[i].Y += expand;
                     hullRects[i].Height += expand * 2;
                     hullRects[i].Location -= MathUtils.ToPoint(subs[i].WorldPosition - subs[i].HiddenSubPosition);
-                    hulls[i] = new Hull(MapEntityPrefab.Find(null, "hull"), hullRects[i], subs[i]);
+                    hulls[i] = new Hull(hullRects[i], subs[i]);
                     hulls[i].RoomName = IsHorizontal ? "entityname.dockingport" : "entityname.dockinghatch";
                     hulls[i].AddToGrid(subs[i]);
                     hulls[i].FreeID();

@@ -92,6 +92,8 @@ namespace Barotrauma.Items.Components
         {
             if (target == null || target.Removed) { return; }
             if (target.ParentInventory != null) { return; }
+            if (source is Limb limb && limb.Removed) { return; }
+            if (source is Entity e && e.Removed) { return; }
 
             Vector2 startPos = GetSourcePos();
             startPos.Y = -startPos.Y;

@@ -352,7 +352,7 @@ namespace Barotrauma
 
         public Vector2 Position
         {
-            get { return ConvertUnits.ToDisplayUnits(body.SimPosition); }
+            get { return ConvertUnits.ToDisplayUnits(body?.SimPosition ?? Vector2.Zero); }
         }
 
         public Vector2 SimPosition

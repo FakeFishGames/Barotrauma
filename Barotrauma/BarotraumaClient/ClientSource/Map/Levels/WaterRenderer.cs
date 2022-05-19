@@ -230,14 +230,6 @@ namespace Barotrauma
 
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposing) return;
-
             if (WaterEffect != null)
             {
                 WaterEffect.Dispose();
@@ -250,6 +242,5 @@ namespace Barotrauma
                 basicEffect = null;
             }
         }
-
     }
 }

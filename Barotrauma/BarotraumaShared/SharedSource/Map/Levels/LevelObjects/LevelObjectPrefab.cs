@@ -426,15 +426,21 @@ namespace Barotrauma
             return requireCaveSpecificOverride ? 0.0f : Commonness;
         }
 
-        public float GetCommonness(LevelGenerationParams generationParams)
-        {
-            if (generationParams != null &&
-                generationParams.Identifier != Identifier.Empty && 
-                (OverrideCommonness.TryGetValue(generationParams.Identifier, out float commonness) || 
-                (!generationParams.OldIdentifier.IsEmpty && OverrideCommonness.TryGetValue(generationParams.OldIdentifier, out commonness))))
+        public float GetCommonness(LevelData levelData)
+        {   
+            if (levelData.GenerationParams != null && levelData.GenerationParams.Identifier != Identifier.Empty &&
+                OverrideCommonness.TryGetValue(levelData.GenerationParams.Identifier, out float commonness) ||
+                (!levelData.GenerationParams.OldIdentifier.IsEmpty && OverrideCommonness.TryGetValue(levelData.GenerationParams.OldIdentifier, out commonness)))
             {
                 return commonness;
             }
+            if (levelData?.Biome != null)
+            {
+                if (OverrideCommonness.TryGetValue(levelData.Biome.Identifier, out float biomeCommonness))
+                {
+                    return biomeCommonness;
+                }
+            }            
             return Commonness;
         }
 

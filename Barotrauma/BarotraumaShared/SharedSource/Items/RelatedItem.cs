@@ -36,6 +36,11 @@ namespace Barotrauma
         /// </summary>
         public bool ExcludeBroken { get; private set; }
 
+        /// <summary>
+        /// Should full condition (100%) items be excluded
+        /// </summary>
+        public bool ExcludeFullCondition { get; private set; }
+
         public bool AllowVariants { get; private set; } = true;
 
         public RelationType Type
@@ -102,14 +107,14 @@ namespace Barotrauma
                     return CheckContained(parentItem);
                 case RelationType.Container:
                     if (parentItem == null || parentItem.Container == null) { return MatchOnEmpty; }
-                    return (!ExcludeBroken || parentItem.Container.Condition > 0.0f) && MatchesItem(parentItem.Container);
+                    return (!ExcludeBroken || parentItem.Container.Condition > 0.0f) && (!ExcludeFullCondition || !parentItem.Container.IsFullCondition) && MatchesItem(parentItem.Container);
                 case RelationType.Equipped:
                     if (character == null) { return false; }
                     if (MatchOnEmpty && !character.HeldItems.Any()) { return true; }
                     foreach (Item equippedItem in character.HeldItems)
                     {
                         if (equippedItem == null) { continue; }
-                        if ((!ExcludeBroken || equippedItem.Condition > 0.0f) && MatchesItem(equippedItem)) { return true; }
+                        if ((!ExcludeBroken || equippedItem.Condition > 0.0f) && (!ExcludeFullCondition || !equippedItem.IsFullCondition) && MatchesItem(equippedItem)) { return true; }
                     }
                     break;
                 case RelationType.Picked:
@@ -138,8 +143,7 @@ namespace Barotrauma
             foreach (Item contained in parentItem.ContainedItems)
             {
                 if (TargetSlot > -1 && parentItem.OwnInventory.FindIndex(contained) != TargetSlot) { continue; }
-                if ((!ExcludeBroken || contained.Condition > 0.0f) && MatchesItem(contained)) { return true; }
-
+                if ((!ExcludeBroken || contained.Condition > 0.0f) && (!ExcludeFullCondition || !contained.IsFullCondition) && MatchesItem(contained)) { return true; }
                 if (CheckContained(contained)) { return true; }
             }
             return false;
@@ -153,6 +157,7 @@ namespace Barotrauma
                 new XAttribute("optional", IsOptional),
                 new XAttribute("ignoreineditor", IgnoreInEditor),
                 new XAttribute("excludebroken", ExcludeBroken),
+                new XAttribute("excludefullcondition", ExcludeFullCondition),
                 new XAttribute("targetslot", TargetSlot),
                 new XAttribute("allowvariants", AllowVariants));
 
@@ -212,12 +217,12 @@ namespace Barotrauma
                 }
             }
 
-
             if (identifiers.Length == 0 && excludedIdentifiers.Length == 0 && !returnEmpty) { return null; }
 
             RelatedItem ri = new RelatedItem(identifiers, excludedIdentifiers)
             {
                 ExcludeBroken = element.GetAttributeBool("excludebroken", true),
+                ExcludeFullCondition = element.GetAttributeBool("excludefullcondition", false),
                 AllowVariants = element.GetAttributeBool("allowvariants", true)
             };
             string typeStr = element.GetAttributeString("type", "");

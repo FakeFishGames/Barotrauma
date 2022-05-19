@@ -2902,6 +2902,7 @@ namespace Barotrauma
             appearanceFrame.ClearChildren();
 
             var info = GameMain.Client.CharacterInfo ?? Character.Controlled?.Info;
+            CharacterAppearanceCustomizationMenu?.Dispose();
             CharacterAppearanceCustomizationMenu = new CharacterInfo.AppearanceCustomizationMenu(info, appearanceFrame)
             {
                 OnHeadSwitch = menu =>

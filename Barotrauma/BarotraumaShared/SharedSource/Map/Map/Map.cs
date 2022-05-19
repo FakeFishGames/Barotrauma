@@ -131,16 +131,25 @@ namespace Barotrauma
                         };
                         Locations[locationIndices.X].Connections.Add(connection);
                         Locations[locationIndices.Y].Connections.Add(connection);
-                        connection.LevelData = new LevelData(subElement.Element("Level"));
                         string biomeId = subElement.GetAttributeString("biome", "");
                         connection.Biome =
                             Biome.Prefabs.FirstOrDefault(b => b.Identifier == biomeId) ??
                             Biome.Prefabs.FirstOrDefault(b => !b.OldIdentifier.IsEmpty && b.OldIdentifier == biomeId) ??
                             Biome.Prefabs.First();
+                        connection.Difficulty = MathHelper.Clamp(connection.Difficulty, connection.Biome.MinDifficulty, connection.Biome.MaxDifficulty);
+                        connection.LevelData = new LevelData(subElement.Element("Level"), connection.Difficulty);
                         Connections.Add(connection);
                         connectionElements.Add(subElement);
                         break;
                 }
+            }
+
+            //backwards compatibility: location biomes weren't saved (or used for anything) previously,
+            //assign them if they haven't been assigned
+            Random rand = new MTRandom(ToolBox.StringToInt(Seed));
+            if (Locations.First().Biome == null)
+            {
+                AssignBiomes(rand);
             }
 
             int startLocationindex = element.GetAttributeInt("startlocation", -1);
@@ -237,6 +246,10 @@ namespace Barotrauma
                 }
             }
             System.Diagnostics.Debug.Assert(StartLocation != null, "Start location not assigned after level generation.");
+            if (StartLocation?.LevelData != null)
+            {
+                StartLocation.LevelData.Difficulty = 0;
+            }
 
             //ensure all paths from the starting location have 0 difficulty to make the 1st campaign round very easy
             foreach (var locationConnection in StartLocation.Connections)
@@ -250,6 +263,11 @@ namespace Barotrauma
 
             CurrentLocation.Discover(true);
             CurrentLocation.CreateStores();
+
+            foreach (var location in Locations)
+            {
+                location.UnlockInitialMissions();
+            }
 
             InitProjectSpecific();
         }
@@ -505,22 +523,31 @@ namespace Barotrauma
             //remove orphans
             Locations.RemoveAll(l => !Connections.Any(c => c.Locations.Contains(l)));
 
+            AssignBiomes(new MTRandom(ToolBox.StringToInt(Seed)));
+
             foreach (LocationConnection connection in Connections)
             {
-                //float difficulty = GetLevelDifficulty(connection.CenterPos.X / Width);
-                //connection.Difficulty = MathHelper.Clamp(difficulty + Rand.Range(-10.0f, 0.0f, Rand.RandSync.ServerAndClient), 1.2f, 100.0f);
                 float difficulty = connection.CenterPos.X / Width * 100;
-                float random = difficulty > 10 ? 5 : 0;
-                connection.Difficulty = MathHelper.Clamp(difficulty + Rand.Range(-random, random, Rand.RandSync.ServerAndClient), 1.0f, 100.0f);
+                float minDifficulty = 0;
+                float maxDifficulty = 100;
+                var biome = connection.Biome;
+                if (biome != null)
+                {
+                    minDifficulty = connection.Biome.MinDifficulty;
+                    maxDifficulty = connection.Biome.MaxDifficulty;
+                    if (connection.Locked)
+                    {
+                        connection.Difficulty = maxDifficulty;
+                    }
+                }
+                connection.Difficulty = MathHelper.Clamp(difficulty, minDifficulty, maxDifficulty);
             }
 
-            AssignBiomes();
             CreateEndLocation();
             
             foreach (Location location in Locations)
             {
                 location.LevelData = new LevelData(location, MathHelper.Clamp(location.MapPosition.X / Width * 100, 0.0f, 100.0f));
-                location.UnlockInitialMissions();
             }
             foreach (LocationConnection connection in Connections) 
             { 
@@ -549,7 +576,7 @@ namespace Barotrauma
             return Biome.Prefabs.FirstOrDefault(b => b.AllowedZones.Contains(zoneIndex));
         }
 
-        private void AssignBiomes()
+        private void AssignBiomes(Random rand)
         {
             var biomes = Biome.Prefabs;
             float zoneWidth = Width / generationParams.DifficultyZones;
@@ -565,7 +592,7 @@ namespace Barotrauma
                 {
                     if (location.MapPosition.X < zoneX)
                     {
-                        location.Biome = allowedBiomes[Rand.Range(0, allowedBiomes.Count, Rand.RandSync.ServerAndClient)];
+                        location.Biome = allowedBiomes[rand.Next() % allowedBiomes.Count];
                     }
                 }
             }

@@ -208,7 +208,8 @@ namespace Barotrauma
                 // Do not take unanswered into account for total
                 int yes = GameMain.Server.ConnectedClients.Count(c => c.InGame && c.GetVote<int>(ActiveVote.VoteType) == 2);
                 int no = GameMain.Server.ConnectedClients.Count(c => c.InGame && c.GetVote<int>(ActiveVote.VoteType) == 1);
-                ActiveVote.Finish(this, passed: yes / (float)(yes + no) >= GameMain.NetworkMember.ServerSettings.VoteRequiredRatio);
+                int total = Math.Max(yes + no, 1);
+                ActiveVote.Finish(this, passed: yes / (float)(total) >= GameMain.NetworkMember.ServerSettings.VoteRequiredRatio);
             }
         }
 

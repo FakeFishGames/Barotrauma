@@ -94,11 +94,67 @@ namespace Barotrauma
 
             public Vector2 SheetIndex => Preset.SheetIndex;
 
-            public ContentXElement HairElement => CharacterInfo.Hairs?.ElementAtOrDefault(HairIndex);
-            public ContentXElement HairWithHatElement => CharacterInfo.Hairs?.ElementAtOrDefault(HairWithHatIndex);
-            public ContentXElement BeardElement => CharacterInfo.Beards?.ElementAtOrDefault(BeardIndex);
-            public ContentXElement MoustacheElement => CharacterInfo.Moustaches?.ElementAtOrDefault(MoustacheIndex);
-            public ContentXElement FaceAttachment => CharacterInfo.FaceAttachments?.ElementAtOrDefault(FaceAttachmentIndex);
+            public ContentXElement HairElement
+            {
+                get
+                {
+                    if (CharacterInfo.Hairs == null) { return null; }
+                    if (hairIndex >= CharacterInfo.Hairs.Count)
+                    {
+                        DebugConsole.AddWarning($"Hair index out of range (character: {CharacterInfo?.Name ?? "null"}, index: {hairIndex})");
+                    }
+                    return CharacterInfo.Hairs.ElementAtOrDefault(hairIndex);
+                }
+            }
+            public ContentXElement HairWithHatElement
+            {
+                get
+                {
+                    if (CharacterInfo.Hairs == null) { return null; }
+                    if (HairWithHatIndex >= CharacterInfo.Hairs.Count)
+                    {
+                        DebugConsole.AddWarning($"Hair with hat index out of range (character: {CharacterInfo?.Name ?? "null"}, index: {HairWithHatIndex})");
+                    }
+                    return CharacterInfo.Hairs.ElementAtOrDefault(HairWithHatIndex);
+                }
+            }            
+
+            public ContentXElement BeardElement
+            {
+                get
+                {
+                    if (CharacterInfo.Beards == null) { return null; }
+                    if (BeardIndex >= CharacterInfo.Beards.Count)
+                    {
+                        DebugConsole.AddWarning($"Beard index out of range (character: {CharacterInfo?.Name ?? "null"}, index: {BeardIndex})");
+                    }
+                    return CharacterInfo.Beards.ElementAtOrDefault(BeardIndex);
+                }
+            }
+            public ContentXElement MoustacheElement
+            {
+                get
+                {
+                    if (CharacterInfo.Moustaches == null) { return null; }
+                    if (MoustacheIndex >= CharacterInfo.Moustaches.Count)
+                    {
+                        DebugConsole.AddWarning($"Moustache index out of range (character: {CharacterInfo?.Name ?? "null"}, index: {MoustacheIndex})");
+                    }
+                    return CharacterInfo.Moustaches.ElementAtOrDefault(MoustacheIndex);
+                }
+            }
+            public ContentXElement FaceAttachment
+            {
+                get
+                {
+                    if (CharacterInfo.FaceAttachments == null) { return null; }
+                    if (FaceAttachmentIndex >= CharacterInfo.FaceAttachments.Count)
+                    {
+                        DebugConsole.AddWarning($"Face attachment index out of range (character: {CharacterInfo?.Name ?? "null"}, index: {FaceAttachmentIndex})");
+                    }
+                    return CharacterInfo.FaceAttachments.ElementAtOrDefault(FaceAttachmentIndex);
+                }
+            }
 
             public HeadInfo(CharacterInfo characterInfo, HeadPreset headPreset, int hairIndex = 0, int beardIndex = 0, int moustacheIndex = 0, int faceAttachmentIndex = 0)
             {
@@ -130,6 +186,10 @@ namespace Barotrauma
                     head = value;
                     HeadSprite = null;
                     AttachmentSprites = null;
+                    hairs = null;
+                    beards = null;
+                    moustaches = null;
+                    faceAttachments = null;
                 }
             }
         }
@@ -843,7 +903,14 @@ namespace Barotrauma
         public void RecreateHead(ImmutableHashSet<Identifier> tags, int hairIndex, int beardIndex, int moustacheIndex, int faceAttachmentIndex)
         {
             HeadPreset headPreset = Prefab.Heads.FirstOrDefault(h => h.TagSet.SetEquals(tags));
-            if (headPreset == null) { headPreset = Prefab.Heads.GetRandomUnsynced(); }
+            if (headPreset == null) 
+            {
+                if (tags.Count == 1)
+                {
+                    headPreset = Prefab.Heads.FirstOrDefault(h => h.TagSet.Contains(tags.First()));
+                }
+                headPreset ??= Prefab.Heads.GetRandomUnsynced(); 
+            }
             head = new HeadInfo(this, headPreset, hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
             ReloadHeadAttachments();
         }

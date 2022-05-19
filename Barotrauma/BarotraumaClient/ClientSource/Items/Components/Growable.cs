@@ -321,7 +321,7 @@ namespace Barotrauma.Items.Components
         {
             GUILayoutGroup layout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.08f), parent), isHorizontal: true);
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), layout.RectTransform), label);
-            GUINumberInput input = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1f), layout.RectTransform), GUINumberInput.NumberType.Int) { IntValue = defaultValue };
+            GUINumberInput input = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1f), layout.RectTransform), NumberType.Int) { IntValue = defaultValue };
             return input;
         }
 
@@ -329,7 +329,7 @@ namespace Barotrauma.Items.Components
         {
             GUILayoutGroup layout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.08f), parent), isHorizontal: true);
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), layout.RectTransform), label);
-            GUINumberInput input = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1f), layout.RectTransform), GUINumberInput.NumberType.Float) { FloatValue = defaultValue, DecimalsToDisplay = 2 };
+            GUINumberInput input = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1f), layout.RectTransform), NumberType.Float) { FloatValue = defaultValue, DecimalsToDisplay = 2 };
             return input;
         }
 
@@ -341,7 +341,7 @@ namespace Barotrauma.Items.Components
             for (var i = 0; i < values.Length; i++)
             {
                 float value = values[i];
-                GUINumberInput input = new GUINumberInput(new RectTransform(new Vector2(0.5f / values.Length, 1f), layout.RectTransform), GUINumberInput.NumberType.Float)
+                GUINumberInput input = new GUINumberInput(new RectTransform(new Vector2(0.5f / values.Length, 1f), layout.RectTransform), NumberType.Float)
                 {
                     FloatValue = value, DecimalsToDisplay = 2,
                     MinValueFloat = min,

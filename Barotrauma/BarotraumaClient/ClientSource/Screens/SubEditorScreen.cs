@@ -2256,7 +2256,7 @@ namespace Barotrauma
             {
                 ToolTip = TextManager.Get("OutPostModuleMaxCountToolTip")
             };
-            new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), maxModuleCountGroup.RectTransform), GUINumberInput.NumberType.Int)
+            new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), maxModuleCountGroup.RectTransform), NumberType.Int)
             {
                 ToolTip = TextManager.Get("OutPostModuleMaxCountToolTip"),
                 IntValue = MainSub?.Info?.OutpostModuleInfo?.MaxCount ?? 1000,
@@ -2274,7 +2274,7 @@ namespace Barotrauma
             };
             new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), commonnessGroup.RectTransform),
                 TextManager.Get("subeditor.outpostcommonness"), textAlignment: Alignment.CenterLeft, wrap: true);
-            new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), commonnessGroup.RectTransform), GUINumberInput.NumberType.Float)
+            new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), commonnessGroup.RectTransform), NumberType.Float)
             {
                 FloatValue = MainSub?.Info?.OutpostModuleInfo?.Commonness ?? 10,
                 MinValueFloat = 0,
@@ -2304,8 +2304,9 @@ namespace Barotrauma
             new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), priceGroup.RectTransform),
                 TextManager.Get("subeditor.price"), textAlignment: Alignment.CenterLeft, wrap: true);
 
+
             int basePrice = (GameMain.DebugDraw ? 0 : MainSub?.CalculateBasePrice()) ?? 1000;
-            new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), priceGroup.RectTransform), GUINumberInput.NumberType.Int, hidePlusMinusButtons: true)
+            new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), priceGroup.RectTransform), NumberType.Int, hidePlusMinusButtons: true)
             {
                 IntValue = Math.Max(MainSub?.Info?.Price ?? basePrice, basePrice),
                 MinValueInt = basePrice,
@@ -2350,13 +2351,13 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), crewSizeArea.RectTransform),
                 TextManager.Get("RecommendedCrewSize"), textAlignment: Alignment.CenterLeft, wrap: true, font: GUIStyle.SmallFont);
-            var crewSizeMin = new GUINumberInput(new RectTransform(new Vector2(0.17f, 1.0f), crewSizeArea.RectTransform), GUINumberInput.NumberType.Int, relativeButtonAreaWidth: 0.25f)
+            var crewSizeMin = new GUINumberInput(new RectTransform(new Vector2(0.17f, 1.0f), crewSizeArea.RectTransform), NumberType.Int, relativeButtonAreaWidth: 0.25f)
             {
                 MinValueInt = 1,
                 MaxValueInt = 128
             };
             new GUITextBlock(new RectTransform(new Vector2(0.06f, 1.0f), crewSizeArea.RectTransform), "-", textAlignment: Alignment.Center);
-            var crewSizeMax = new GUINumberInput(new RectTransform(new Vector2(0.17f, 1.0f), crewSizeArea.RectTransform), GUINumberInput.NumberType.Int, relativeButtonAreaWidth: 0.25f)
+            var crewSizeMax = new GUINumberInput(new RectTransform(new Vector2(0.17f, 1.0f), crewSizeArea.RectTransform), NumberType.Int, relativeButtonAreaWidth: 0.25f)
             {
                 MinValueInt = 1,
                 MaxValueInt = 128
@@ -2947,11 +2948,22 @@ namespace Barotrauma
                     prevSub = sub;
                 }
 
+                string pathWithoutUserName = Path.GetFullPath(sub.FilePath);
+                string saveFolder = Path.GetFullPath(SaveUtil.SaveFolder);
+                if (pathWithoutUserName.StartsWith(saveFolder))
+                {
+                    pathWithoutUserName = "..." + pathWithoutUserName[saveFolder.Length..];
+                }
+                else
+                {
+                    pathWithoutUserName = sub.FilePath;
+                }
+
                 GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), subList.Content.RectTransform) { MinSize = new Point(0, 30) },
                     ToolBox.LimitString(sub.Name, GUIStyle.Font, subList.Rect.Width - 80))
                 {
                     UserData = sub,
-                    ToolTip = sub.FilePath
+                    ToolTip = pathWithoutUserName
                 };
 
                 if (!(ContentPackageManager.VanillaCorePackage?.Files.Any(f => f.Path == sub.FilePath) ?? false))
@@ -3667,17 +3679,17 @@ namespace Barotrauma
             GUILayoutGroup hueSliderLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.25f), sliderLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
             new GUITextBlock(new RectTransform(new Vector2(0.1f, 0.2f), hueSliderLayout.RectTransform), text: "H:", font: GUIStyle.SubHeadingFont) { Padding = Vector4.Zero, ToolTip = "Hue" };
             GUIScrollBar hueScrollBar = new GUIScrollBar(new RectTransform(new Vector2(0.7f, 1f), hueSliderLayout.RectTransform), style: "GUISlider", barSize: 0.05f) { BarScroll = currentHue };
-            GUINumberInput hueTextBox = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1f), hueSliderLayout.RectTransform), inputType: GUINumberInput.NumberType.Float) { FloatValue = currentHue, MaxValueFloat = 1f, MinValueFloat = 0f, DecimalsToDisplay = 2 };
+            GUINumberInput hueTextBox = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1f), hueSliderLayout.RectTransform), inputType: NumberType.Float) { FloatValue = currentHue, MaxValueFloat = 1f, MinValueFloat = 0f, DecimalsToDisplay = 2 };
 
             GUILayoutGroup satSliderLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.2f), sliderLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
             new GUITextBlock(new RectTransform(new Vector2(0.1f, 0.2f), satSliderLayout.RectTransform), text: "S:", font: GUIStyle.SubHeadingFont) { Padding = Vector4.Zero, ToolTip = "Saturation"};
             GUIScrollBar satScrollBar = new GUIScrollBar(new RectTransform(new Vector2(0.7f, 1f), satSliderLayout.RectTransform), style: "GUISlider", barSize: 0.05f) { BarScroll = colorPicker.SelectedSaturation };
-            GUINumberInput satTextBox = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1f), satSliderLayout.RectTransform), inputType: GUINumberInput.NumberType.Float) { FloatValue = colorPicker.SelectedSaturation, MaxValueFloat = 1f, MinValueFloat = 0f, DecimalsToDisplay = 2 };
+            GUINumberInput satTextBox = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1f), satSliderLayout.RectTransform), inputType: NumberType.Float) { FloatValue = colorPicker.SelectedSaturation, MaxValueFloat = 1f, MinValueFloat = 0f, DecimalsToDisplay = 2 };
 
             GUILayoutGroup valueSliderLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.2f), sliderLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
             new GUITextBlock(new RectTransform(new Vector2(0.1f, 0.2f), valueSliderLayout.RectTransform), text: "V:", font: GUIStyle.SubHeadingFont) { Padding = Vector4.Zero, ToolTip = "Value"};
             GUIScrollBar valueScrollBar = new GUIScrollBar(new RectTransform(new Vector2(0.7f, 1f), valueSliderLayout.RectTransform), style: "GUISlider", barSize: 0.05f) { BarScroll = colorPicker.SelectedValue };
-            GUINumberInput valueTextBox = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1f), valueSliderLayout.RectTransform), inputType: GUINumberInput.NumberType.Float) { FloatValue = colorPicker.SelectedValue, MaxValueFloat = 1f, MinValueFloat = 0f, DecimalsToDisplay = 2 };
+            GUINumberInput valueTextBox = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1f), valueSliderLayout.RectTransform), inputType: NumberType.Float) { FloatValue = colorPicker.SelectedValue, MaxValueFloat = 1f, MinValueFloat = 0f, DecimalsToDisplay = 2 };
 
             GUILayoutGroup colorInfoLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.3f), sliderLayout.RectTransform), childAnchor: Anchor.CenterLeft, isHorizontal: true) { RelativeSpacing = 0.15f };
 
@@ -4439,8 +4451,7 @@ namespace Barotrauma
             {
                 Rectangle hullRect = rect;
                 hullRect.Y = -hullRect.Y;
-                Hull newHull = new Hull(MapEntityPrefab.FindByIdentifier("hull".ToIdentifier()),
-                                        hullRect,
+                Hull newHull = new Hull(hullRect,
                                         MainSub);
             }
 
@@ -4452,7 +4463,7 @@ namespace Barotrauma
                 Rectangle gapRect = e.WorldRect;
                 gapRect.Y -= 8;
                 gapRect.Height = 16;
-                Gap newGap = new Gap(MapEntityPrefab.FindByIdentifier("gap".ToIdentifier()), gapRect);
+                new Gap(gapRect);
             }
         }
 

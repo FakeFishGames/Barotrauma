@@ -107,7 +107,7 @@ namespace Barotrauma.Networking
                     return -1;
                 }
 
-                //FIXME workaround for crash when closing the server under .NET 6.0, not sure if this is the proper way to fix it but it prevents it from crashing the client. - Markus
+                // BUG workaround for crash when closing the server under .NET 6.0, not sure if this is the proper way to fix it but it prevents it from crashing the client. - Markus
 #if NET6_0
                 try
                 {

@@ -32,7 +32,7 @@ namespace Barotrauma.Networking
                     else if (GUIComponent is GUIDropDown dropdown) return dropdown.SelectedData;
                     else if (GUIComponent is GUINumberInput numInput)
                     {
-                        if (numInput.InputType == GUINumberInput.NumberType.Int) { return numInput.IntValue; } else { return numInput.FloatValue; }
+                        if (numInput.InputType == NumberType.Int) { return numInput.IntValue; } else { return numInput.FloatValue; }
                     }
                     return null;
                 }
@@ -56,7 +56,7 @@ namespace Barotrauma.Networking
                     else if (GUIComponent is GUIDropDown dropdown) dropdown.SelectItem(value);
                     else if (GUIComponent is GUINumberInput numInput)
                     {
-                        if (numInput.InputType == GUINumberInput.NumberType.Int)
+                        if (numInput.InputType == NumberType.Int)
                         {
                             numInput.IntValue = (int)value;
                         }
@@ -480,15 +480,12 @@ namespace Barotrauma.Networking
             //                              game settings 
             //--------------------------------------------------------------------------------
 
-            var roundsTab = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), settingsTabs[(int)SettingsTab.Rounds].RectTransform, Anchor.Center))
-            {
-                Stretch = true,
-                RelativeSpacing = 0.02f
-            };
+            var roundsTab = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), settingsTabs[(int)SettingsTab.Rounds].RectTransform, Anchor.Center)) { };
 
+            GUILayoutGroup playStyleLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.2f), roundsTab.RectTransform));
             // Play Style Selection
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), TextManager.Get("ServerSettingsPlayStyle"), font: GUIStyle.SubHeadingFont);
-            var playstyleList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.16f), roundsTab.RectTransform))
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), playStyleLayout.RectTransform), TextManager.Get("ServerSettingsPlayStyle"), font: GUIStyle.SubHeadingFont);
+            var playstyleList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.7f), playStyleLayout.RectTransform))
             {                
                 AutoHideScrollBar = true,
                 UseGridLayout = true
@@ -510,11 +507,16 @@ namespace Barotrauma.Networking
             GUITextBlock.AutoScaleAndNormalize(playStyleTickBoxes.Select(t => t.TextBlock));
             playstyleList.RectTransform.MinSize = new Point(0, (int)(playstyleList.Content.Children.First().Rect.Height * 2.0f + playstyleList.Padding.Y + playstyleList.Padding.W));
 
-            var endVoteBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform),
+            GUILayoutGroup sliderLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.35f), roundsTab.RectTransform))
+            {
+                Stretch = true
+            };
+
+            var endVoteBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), sliderLayout.RectTransform),
                 TextManager.Get("ServerSettingsEndRoundVoting"));
             GetPropertyData(nameof(AllowEndVoting)).AssignGUIComponent(endVoteBox);
 
-            CreateLabeledSlider(roundsTab, "ServerSettingsEndRoundVotesRequired", out slider, out sliderLabel);
+            CreateLabeledSlider(sliderLayout, "ServerSettingsEndRoundVotesRequired", out slider, out sliderLabel);
 
             LocalizedString endRoundLabel = sliderLabel.Text;
             slider.Step = 0.2f;
@@ -527,11 +529,11 @@ namespace Barotrauma.Networking
             };
             slider.OnMoved(slider, slider.BarScroll);
 
-            var respawnBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform),
+            var respawnBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), sliderLayout.RectTransform),
                 TextManager.Get("ServerSettingsAllowRespawning"));
             GetPropertyData(nameof(AllowRespawn)).AssignGUIComponent(respawnBox);
 
-            CreateLabeledSlider(roundsTab, "ServerSettingsRespawnInterval", out slider, out sliderLabel);
+            CreateLabeledSlider(sliderLayout, "ServerSettingsRespawnInterval", out slider, out sliderLabel);
             LocalizedString intervalLabel = sliderLabel.Text;
             slider.Range = new Vector2(10.0f, 600.0f);
             slider.StepValue = 10.0f;
@@ -544,7 +546,7 @@ namespace Barotrauma.Networking
             };
             slider.OnMoved(slider, slider.BarScroll);
 
-            var respawnLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), roundsTab.RectTransform),
+            var respawnLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), sliderLayout.RectTransform),
                 isHorizontal: true);
 
             var minRespawnLayout
@@ -611,12 +613,13 @@ namespace Barotrauma.Networking
             };
             slider.OnMoved(slider, slider.BarScroll);
 
+            GUILayoutGroup losModeLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.14f), roundsTab.RectTransform));
 
-            var losModeLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform),
+            var losModeLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), losModeLayout.RectTransform),
                 TextManager.Get("LosEffect"));
 
             var losModeRadioButtonLayout
-                = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), roundsTab.RectTransform),
+                = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.6f), losModeLayout.RectTransform),
                     isHorizontal: true)
                 {
                     Stretch = true
@@ -631,24 +634,29 @@ namespace Barotrauma.Networking
             }
             GetPropertyData(nameof(LosMode)).AssignGUIComponent(losModeRadioButtonGroup);
 
-            var traitorsMinPlayerCount = CreateLabeledNumberInput(roundsTab, "ServerSettingsTraitorsMinPlayerCount", 1, 16, "ServerSettingsTraitorsMinPlayerCountToolTip");
+            GUILayoutGroup numberLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.3f), roundsTab.RectTransform))
+            {
+                Stretch = true
+            };
+
+            var traitorsMinPlayerCount = CreateLabeledNumberInput(numberLayout, "ServerSettingsTraitorsMinPlayerCount", 1, 16, "ServerSettingsTraitorsMinPlayerCountToolTip");
             GetPropertyData(nameof(TraitorsMinPlayerCount)).AssignGUIComponent(traitorsMinPlayerCount);
 
-            var maximumTransferAmount = CreateLabeledNumberInput(roundsTab, "serversettingsmaximumtransferrequest", 0, CampaignMode.MaxMoney, "serversettingsmaximumtransferrequesttooltip");
+            var maximumTransferAmount = CreateLabeledNumberInput(numberLayout, "serversettingsmaximumtransferrequest", 0, CampaignMode.MaxMoney, "serversettingsmaximumtransferrequesttooltip");
             GetPropertyData(nameof(MaximumMoneyTransferRequest)).AssignGUIComponent(maximumTransferAmount);
 
-            var lootedMoneyDestination = CreateLabeledDropdown(roundsTab, "serversettingslootedmoneydestination", numElements: 2, "serversettingslootedmoneydestinationtooltip");
+            var lootedMoneyDestination = CreateLabeledDropdown(numberLayout, "serversettingslootedmoneydestination", numElements: 2, "serversettingslootedmoneydestinationtooltip");
             lootedMoneyDestination.AddItem(TextManager.Get("lootedmoneydestination.bank"), LootedMoneyDestination.Bank);
             lootedMoneyDestination.AddItem(TextManager.Get("lootedmoneydestination.wallet"), LootedMoneyDestination.Wallet);
             GetPropertyData(nameof(LootedMoneyDestination)).AssignGUIComponent(lootedMoneyDestination);
 
-            var ragdollButtonBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), TextManager.Get("ServerSettingsAllowRagdollButton"));
+            var ragdollButtonBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), numberLayout.RectTransform), TextManager.Get("ServerSettingsAllowRagdollButton"));
             GetPropertyData(nameof(AllowRagdollButton)).AssignGUIComponent(ragdollButtonBox);
 
-            var disableBotConversationsBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), roundsTab.RectTransform), TextManager.Get("ServerSettingsDisableBotConversations"));
+            var disableBotConversationsBox = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.05f), numberLayout.RectTransform), TextManager.Get("ServerSettingsDisableBotConversations"));
             GetPropertyData(nameof(DisableBotConversations)).AssignGUIComponent(disableBotConversationsBox);
 
-            var buttonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.07f), roundsTab.RectTransform), isHorizontal: true)
+            GUILayoutGroup buttonHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.1f), roundsTab.RectTransform), isHorizontal: true)
             {
                 Stretch = true,
                 RelativeSpacing = 0.05f
@@ -755,7 +763,7 @@ namespace Barotrauma.Networking
 
                 ExtraCargo.TryGetValue(ip, out int cargoVal);
                 var amountInput = new GUINumberInput(new RectTransform(new Vector2(0.35f, 1.0f), itemFrame.RectTransform),
-                    GUINumberInput.NumberType.Int, textAlignment: Alignment.CenterLeft)
+                    NumberType.Int, textAlignment: Alignment.CenterLeft)
                 {
                     MinValueInt = 0,
                     MaxValueInt = MaxExtraCargoItemsOfType,
@@ -987,7 +995,7 @@ namespace Barotrauma.Networking
             {
                 label.ToolTip = TextManager.Get(toolTipTag);
             }
-            var input = new GUINumberInput(new RectTransform(new Vector2(0.3f, 1.0f), container.RectTransform), GUINumberInput.NumberType.Int)
+            var input = new GUINumberInput(new RectTransform(new Vector2(0.3f, 1.0f), container.RectTransform), NumberType.Int)
             {
                 MinValueInt = min,
                 MaxValueInt = max

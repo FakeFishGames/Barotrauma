@@ -106,7 +106,25 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public bool IsTinkering { get; private set; } = false;
+        private bool isTinkering;
+        public bool IsTinkering
+        {
+            get { return isTinkering; }
+            private set
+            {
+                if (isTinkering == value) { return; }
+                isTinkering = value;
+
+                if (tinkeringPowersDevices)
+                {
+                    foreach (Powered powered in item.GetComponents<Powered>())
+                    {
+                        if (powered is PowerContainer) { continue; }
+                        powered.PoweredByTinkering = isTinkering;
+                    }
+                }
+            }
+        }
 
         public Character CurrentFixer { get; private set; }
         private Item currentRepairItem;

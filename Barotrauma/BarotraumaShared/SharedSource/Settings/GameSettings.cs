@@ -161,6 +161,7 @@ namespace Barotrauma
                         RadialDistortion = true,
                         InventoryScale = 1.0f,
                         LightMapScale = 1.0f,
+                        VisibleLightLimit = 50,
                         TextScale = 1.0f,
                         HUDScale = 1.0f,
                         Specularity = true,
@@ -200,6 +201,7 @@ namespace Barotrauma
                 public float HUDScale;
                 public float InventoryScale;
                 public float LightMapScale;
+                public int VisibleLightLimit;
                 public float TextScale;
                 public bool RadialDistortion;
             }

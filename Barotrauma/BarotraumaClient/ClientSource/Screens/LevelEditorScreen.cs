@@ -40,6 +40,8 @@ namespace Barotrauma
 
         private readonly Color[] tunnelDebugColors = new Color[] { Color.White, Color.Cyan, Color.LightGreen, Color.Red, Color.LightYellow, Color.LightSeaGreen };
 
+        private LevelData currentLevelData;
+
         public LevelEditorScreen()
         {
             Cam = new Camera()
@@ -59,8 +61,9 @@ namespace Barotrauma
             paramsList.OnSelected += (GUIComponent component, object obj) =>
             {
                 selectedParams = obj as LevelGenerationParams;
+                currentLevelData = LevelData.CreateRandom(seedBox.Text, generationParams: selectedParams);
                 editorContainer.ClearChildren();
-                SortLevelObjectsList(selectedParams);
+                SortLevelObjectsList(currentLevelData);
                 new SerializableEntityEditor(editorContainer.Content.RectTransform, selectedParams, false, true, elementHeight: 20);
                 return true;
             };
@@ -149,7 +152,7 @@ namespace Barotrauma
             {
                 OnClicked = (button, userData) =>
                 {
-                    if(seedBox == null) { return false; }
+                    if (seedBox == null) { return false; }
                     seedBox.Text = GetLevelSeed();
                     return true;
                 }
@@ -184,10 +187,10 @@ namespace Barotrauma
                     bool wasLevelLoaded = Level.Loaded != null;
                     Submarine.Unload();
                     GameMain.LightManager.ClearLights();
-                    LevelData levelData = LevelData.CreateRandom(seedBox.Text, generationParams: selectedParams);
-                    levelData.ForceOutpostGenerationParams = outpostParamsList.SelectedData as OutpostGenerationParams;
-                    levelData.AllowInvalidOutpost = allowInvalidOutpost.Selected;
-                    Level.Generate(levelData, mirror: mirrorLevel.Selected);
+                    currentLevelData = LevelData.CreateRandom(seedBox.Text, generationParams: selectedParams);
+                    currentLevelData.ForceOutpostGenerationParams = outpostParamsList.SelectedData as OutpostGenerationParams;
+                    currentLevelData.AllowInvalidOutpost = allowInvalidOutpost.Selected;
+                    Level.Generate(currentLevelData, mirror: mirrorLevel.Selected);
                     GameMain.LightManager.AddLight(pointerLightSource);
                     if (!wasLevelLoaded || Cam.Position.X < 0 || Cam.Position.Y < 0 || Cam.Position.Y > Level.Loaded.Size.X || Cam.Position.Y > Level.Loaded.Size.Y)
                     {
@@ -417,11 +420,11 @@ namespace Barotrauma
                 };
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), commonnessContainer.RectTransform),
                     TextManager.GetWithVariable("leveleditor.levelobjcommonness", "[leveltype]", selectedParams.Identifier.Value), textAlignment: Alignment.Center);
-                new GUINumberInput(new RectTransform(new Vector2(0.5f, 0.4f), commonnessContainer.RectTransform), GUINumberInput.NumberType.Float)
+                new GUINumberInput(new RectTransform(new Vector2(0.5f, 0.4f), commonnessContainer.RectTransform), NumberType.Float)
                 {
                     MinValueFloat = 0,
                     MaxValueFloat = 100,
-                    FloatValue = caveGenerationParams.GetCommonness(selectedParams, abyss: false),
+                    FloatValue = caveGenerationParams.GetCommonness(currentLevelData, abyss: false),
                     OnValueChanged = (numberInput) =>
                     {
                         caveGenerationParams.OverrideCommonness[selectedParams.Identifier] = numberInput.FloatValue;
@@ -482,7 +485,7 @@ namespace Barotrauma
             {
                 var moduleCountGroup = new GUILayoutGroup(new RectTransform(new Point(editorContainer.Content.Rect.Width, (int)(25 * GUI.Scale))), isHorizontal: true, childAnchor: Anchor.CenterLeft);
                 new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), moduleCountGroup.RectTransform), TextManager.Capitalize(moduleCount.Key.Value), textAlignment: Alignment.CenterLeft);
-                new GUINumberInput(new RectTransform(new Vector2(0.5f, 1f), moduleCountGroup.RectTransform), GUINumberInput.NumberType.Int)
+                new GUINumberInput(new RectTransform(new Vector2(0.5f, 1f), moduleCountGroup.RectTransform), NumberType.Int)
                 {
                     MinValueInt = 0,
                     MaxValueInt = 100,
@@ -542,7 +545,7 @@ namespace Barotrauma
                 if (selectedParams != null) { availableIdentifiers.Add(selectedParams.Identifier); }
                 foreach (var caveParam in CaveGenerationParams.CaveParams)
                 {
-                    if (selectedParams != null && caveParam.GetCommonness(selectedParams, abyss: false) <= 0.0f) { continue; }
+                    if (selectedParams != null && caveParam.GetCommonness(currentLevelData, abyss: false) <= 0.0f) { continue; }
                     availableIdentifiers.Add(caveParam.Identifier);
                 }
                 availableIdentifiers.Reverse();
@@ -557,11 +560,11 @@ namespace Barotrauma
                     };
                     new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), commonnessContainer.RectTransform),
                         TextManager.GetWithVariable("leveleditor.levelobjcommonness", "[leveltype]", paramsId.Value), textAlignment: Alignment.Center);
-                    new GUINumberInput(new RectTransform(new Vector2(0.5f, 0.4f), commonnessContainer.RectTransform), GUINumberInput.NumberType.Float)
+                    new GUINumberInput(new RectTransform(new Vector2(0.5f, 0.4f), commonnessContainer.RectTransform), NumberType.Float)
                     {
                         MinValueFloat = 0,
                         MaxValueFloat = 100,
-                        FloatValue = selectedParams.Identifier == paramsId ? levelObjectPrefab.GetCommonness(selectedParams) : levelObjectPrefab.GetCommonness(CaveGenerationParams.CaveParams.Find(p => p.Identifier == paramsId)),
+                        FloatValue = selectedParams.Identifier == paramsId ? levelObjectPrefab.GetCommonness(currentLevelData) : levelObjectPrefab.GetCommonness(CaveGenerationParams.CaveParams.Find(p => p.Identifier == paramsId)),
                         OnValueChanged = (numberInput) =>
                         {
                             levelObjectPrefab.OverrideCommonness[paramsId] = numberInput.FloatValue;
@@ -620,7 +623,7 @@ namespace Barotrauma
                     childObj.AllowedNames = dropdown.SelectedDataMultiple.Select(d => ((LevelObjectPrefab)d).Name).ToList();
                     return true;
                 };
-                new GUINumberInput(new RectTransform(new Vector2(0.2f, 1.0f), paddedFrame.RectTransform), GUINumberInput.NumberType.Int)
+                new GUINumberInput(new RectTransform(new Vector2(0.2f, 1.0f), paddedFrame.RectTransform), NumberType.Int)
                 {
                     MinValueInt = 0,
                     MaxValueInt = 10,
@@ -630,7 +633,7 @@ namespace Barotrauma
                         selectedChildObj.MaxCount = Math.Max(selectedChildObj.MaxCount, selectedChildObj.MinCount);
                     }
                 }.IntValue = childObj.MinCount;
-                new GUINumberInput(new RectTransform(new Vector2(0.2f, 1.0f), paddedFrame.RectTransform), GUINumberInput.NumberType.Int)
+                new GUINumberInput(new RectTransform(new Vector2(0.2f, 1.0f), paddedFrame.RectTransform), NumberType.Int)
                 {
                     MinValueInt = 0,
                     MaxValueInt = 10,
@@ -689,13 +692,13 @@ namespace Barotrauma
             buttonContainer.RectTransform.MinSize = buttonContainer.RectTransform.Children.First().MinSize;
         }
 
-        private void SortLevelObjectsList(LevelGenerationParams selectedParams)
+        private void SortLevelObjectsList(LevelData levelData)
         {
             //fade out levelobjects that don't spawn in this type of level
             foreach (GUIComponent levelObjFrame in levelObjectList.Content.Children)
             {
                 var levelObj = levelObjFrame.UserData as LevelObjectPrefab;
-                float commonness = levelObj.GetCommonness(selectedParams);
+                float commonness = levelObj.GetCommonness(levelData);
                 levelObjFrame.Color = commonness > 0.0f ? GUIStyle.Green * 0.4f : Color.Transparent;
                 levelObjFrame.SelectedColor = commonness > 0.0f ? GUIStyle.Green * 0.6f : Color.White * 0.5f;
                 levelObjFrame.HoverColor = commonness > 0.0f ? GUIStyle.Green * 0.7f : Color.White * 0.6f;
@@ -712,7 +715,7 @@ namespace Barotrauma
             {
                 var levelObj1 = c1.GUIComponent.UserData as LevelObjectPrefab;
                 var levelObj2 = c2.GUIComponent.UserData as LevelObjectPrefab;
-                return Math.Sign(levelObj2.GetCommonness(selectedParams) - levelObj1.GetCommonness(selectedParams));
+                return Math.Sign(levelObj2.GetCommonness(levelData) - levelObj1.GetCommonness(levelData));
             });
         }
 

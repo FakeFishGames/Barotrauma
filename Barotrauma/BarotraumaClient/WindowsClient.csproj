@@ -6,7 +6,7 @@
     <RootNamespace>Barotrauma</RootNamespace>
     <Authors>FakeFish, Undertow Games</Authors>
     <Product>Barotrauma</Product>
-    <Version>0.18.1.0</Version>
+    <Version>0.18.2.0</Version>
     <Copyright>Copyright © FakeFish 2018-2022</Copyright>
     <Platforms>AnyCPU;x64</Platforms>
     <AssemblyName>Barotrauma</AssemblyName>
@@ -61,19 +61,20 @@
     <Optimize>true</Optimize>
   </PropertyGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(Configuration)'!='Debug'">
+    <Content Include="..\BarotraumaShared\**\*" CopyToOutputDirectory="PreserveNewest" Exclude="..\BarotraumaShared\Data\Saves\*.save" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)'=='Debug'">
     <Content Include="..\BarotraumaShared\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  
+  <ItemGroup>
     <Content Remove="..\BarotraumaShared\**\*.cs" />
     <Content Remove="..\BarotraumaShared\**\*.props" />
     <Compile Include="..\BarotraumaShared\**\*.cs" />
-    <Compile Update="..\BarotraumaShared\SharedSource\Steam\AuthTicket.cs">
-      <Link>SharedSource\Steam\AuthTicket.cs</Link>
-    </Compile>
-    <Compile Update="..\BarotraumaShared\SharedSource\Utils\Result.cs">
-      <Link>SharedSource\Utils\Result.cs</Link>
-    </Compile>
+    <Compile Remove="..\BarotraumaShared\Content\**\*.cs" />
   </ItemGroup>
-
+  
   <ItemGroup>
     <None Remove="freetype6.dll" />
     <None Remove="soft_oal_x64.dll" />

@@ -240,7 +240,7 @@ namespace Barotrauma.Items.Components
         private bool OnActivateButtonClicked(GUIButton button, object obj)
         {
             var disallowedItem = inputContainer.Inventory.FindItem(i => !i.AllowDeconstruct, recursive: false);
-            if (disallowedItem != null)
+            if (disallowedItem != null && !DeconstructItemsSimultaneously)
             {
                 int index = inputContainer.Inventory.FindIndex(disallowedItem);
                 if (index >= 0 && index < inputContainer.Inventory.visualSlots.Length)

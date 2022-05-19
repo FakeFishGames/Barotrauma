@@ -410,8 +410,8 @@ namespace Barotrauma
 
         public BallastFloraBehavior BallastFlora { get; set; }
 
-        public Hull(MapEntityPrefab prefab, Rectangle rectangle)
-            : this (prefab, rectangle, Submarine.MainSub)
+        public Hull(Rectangle rectangle)
+            : this (rectangle, Submarine.MainSub)
         {
 #if CLIENT
             if (SubEditorScreen.IsSubEditor())
@@ -421,8 +421,8 @@ namespace Barotrauma
 #endif
         }
 
-        public Hull(MapEntityPrefab prefab, Rectangle rectangle, Submarine submarine, ushort id = Entity.NullEntityID)
-            : base (prefab, submarine, id)
+        public Hull(Rectangle rectangle, Submarine submarine, ushort id = Entity.NullEntityID)
+            : base (CoreEntityPrefab.HullPrefab, submarine, id)
         {
             rect = rectangle;
 
@@ -500,7 +500,7 @@ namespace Barotrauma
 
         public override MapEntity Clone()
         {
-            var clone = new Hull(MapEntityPrefab.FindByIdentifier("hull".ToIdentifier()), rect, Submarine);
+            var clone = new Hull(rect, Submarine);
             foreach (KeyValuePair<Identifier, SerializableProperty> property in SerializableProperties)
             {
                 if (!property.Value.Attributes.OfType<Editable>().Any()) { continue; }
@@ -1543,7 +1543,7 @@ namespace Barotrauma
                     int.Parse(element.GetAttribute("height").Value));
             }
 
-            var hull = new Hull(MapEntityPrefab.Find(null, "hull"), rect, submarine, idRemap.GetOffsetId(element))
+            var hull = new Hull(rect, submarine, idRemap.GetOffsetId(element))
             {
                 WaterVolume = element.GetAttributeFloat("pressure", 0.0f)
             };

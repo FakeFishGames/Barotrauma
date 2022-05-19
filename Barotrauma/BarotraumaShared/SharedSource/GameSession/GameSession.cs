@@ -1081,14 +1081,9 @@ namespace Barotrauma
             {
                 bool hasNewPendingSub = Campaign.PendingSubmarineSwitch != null &&
                     Campaign.PendingSubmarineSwitch.MD5Hash.StringRepresentation != Submarine.Info.MD5Hash.StringRepresentation;
-
                 if (hasNewPendingSub)
                 {
                     Campaign.SwitchSubs();
-                }
-                else
-                {
-                    SubmarineInfo = new SubmarineInfo(Submarine);
                 }
             }
             rootElement.Add(new XAttribute("submarine", SubmarineInfo == null ? "" : SubmarineInfo.Name));

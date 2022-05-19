@@ -1546,7 +1546,7 @@ namespace Barotrauma
                 {
                     RelativeSpacing = 0.02f
                 };
-                amountInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), shoppingCrateAmountGroup.RectTransform), GUINumberInput.NumberType.Int)
+                amountInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), shoppingCrateAmountGroup.RectTransform), NumberType.Int)
                 {
                     MinValueInt = 0,
                     MaxValueInt = GetMaxAvailable(pi.ItemPrefab, containingTab),

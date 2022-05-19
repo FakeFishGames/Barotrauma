@@ -133,7 +133,6 @@ namespace Barotrauma.Items.Components
         
         partial void UpdateProjSpecific(float deltaTime)
         {
-            float rotationRad = MathHelper.ToRadians(item.Rotation);
             if (FlowPercentage < 0.0f)
             {
                 foreach (var (position, emitter) in pumpOutEmitters)
@@ -142,8 +141,8 @@ namespace Barotrauma.Items.Components
 
                     //only emit "pump out" particles when underwater
                     Vector2 relativeParticlePos = (item.WorldRect.Location.ToVector2() + position * item.Scale) - item.WorldPosition;
-                    relativeParticlePos = MathUtils.RotatePoint(relativeParticlePos, item.FlippedX ? rotationRad : -rotationRad);
-                    float angle = -rotationRad;
+                    relativeParticlePos = MathUtils.RotatePoint(relativeParticlePos, item.FlippedX ? item.RotationRad : -item.RotationRad);
+                    float angle = -item.RotationRad;
                     if (item.FlippedX)
                     {
                         relativeParticlePos.X = -relativeParticlePos.X;
@@ -163,8 +162,8 @@ namespace Barotrauma.Items.Components
                 foreach (var (position, emitter) in pumpInEmitters)
                 {
                     Vector2 relativeParticlePos = (item.WorldRect.Location.ToVector2() + position * item.Scale) - item.WorldPosition;
-                    relativeParticlePos = MathUtils.RotatePoint(relativeParticlePos, item.FlippedX ? rotationRad : -rotationRad);
-                    float angle = -rotationRad;
+                    relativeParticlePos = MathUtils.RotatePoint(relativeParticlePos, item.FlippedX ? item.RotationRad : -item.RotationRad);
+                    float angle = -item.RotationRad;
                     if (item.FlippedX)
                     {
                         relativeParticlePos.X = -relativeParticlePos.X;

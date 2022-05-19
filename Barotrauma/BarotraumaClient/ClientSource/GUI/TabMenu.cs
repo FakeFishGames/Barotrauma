@@ -1064,7 +1064,7 @@ namespace Barotrauma
                             GUIButton centerButton = new GUIButton(new RectTransform(new Vector2(1f), centerLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight, anchor: Anchor.Center), style: "GUIButtonTransferArrow");
 
                     GUILayoutGroup inputLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.25f), paddedTransferMenuLayout.RectTransform), childAnchor: Anchor.Center);
-                        GUINumberInput transferAmountInput = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1f), inputLayout.RectTransform), GUINumberInput.NumberType.Int, hidePlusMinusButtons: true)
+                        GUINumberInput transferAmountInput = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1f), inputLayout.RectTransform), NumberType.Int, hidePlusMinusButtons: true)
                         {
                             MinValueInt = 0
                         };

@@ -34,23 +34,6 @@ namespace Barotrauma
             return prefab;
         }
 
-        private void Dispose(bool disposing)
-        {
-            if (!Disposed)
-            {
-                if (disposing)
-                {
-                    Humans.Clear();
-                }
-            }
-
-            Disposed = true;
-        }
-
-        public override void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
+        public override void Dispose() { }
     }
 }

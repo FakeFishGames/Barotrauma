@@ -17,11 +17,13 @@ namespace Barotrauma.Items.Components
             public readonly Item Item;
             public readonly StatusEffect StatusEffect;
             public readonly bool ExcludeBroken;
-            public ActiveContainedItem(Item item, StatusEffect statusEffect, bool excludeBroken)
+            public readonly bool ExcludeFullCondition;
+            public ActiveContainedItem(Item item, StatusEffect statusEffect, bool excludeBroken, bool excludeFullCondition)
             {
                 Item = item;
                 StatusEffect = statusEffect;
                 ExcludeBroken = excludeBroken;
+                ExcludeFullCondition = excludeFullCondition;
             }
         }
 
@@ -300,7 +302,7 @@ namespace Barotrauma.Items.Components
                         if (!containableItem.MatchesItem(containedItem)) { continue; }
                         foreach (StatusEffect effect in containableItem.statusEffects)
                         {
-                            activeContainedItems.Add(new ActiveContainedItem(containedItem, effect, containableItem.ExcludeBroken));
+                            activeContainedItems.Add(new ActiveContainedItem(containedItem, effect, containableItem.ExcludeBroken, containableItem.ExcludeFullCondition));
                         }
                     }
                 }
@@ -408,6 +410,7 @@ namespace Barotrauma.Items.Components
                 Item contained = activeContainedItem.Item;
 
                 if (activeContainedItem.ExcludeBroken && contained.Condition <= 0.0f) { continue; }
+                if (activeContainedItem.ExcludeFullCondition && contained.IsFullCondition) { continue; }
                 StatusEffect effect = activeContainedItem.StatusEffect;
 
                 if (effect.HasTargetType(StatusEffect.TargetType.This))                 
@@ -569,7 +572,7 @@ namespace Barotrauma.Items.Components
                     transformedItemPos += new Vector2(item.Rect.X, item.Rect.Y);
                     if (Math.Abs(item.Rotation) > 0.01f)
                     {
-                        Matrix transform = Matrix.CreateRotationZ(MathHelper.ToRadians(-item.Rotation));
+                        Matrix transform = Matrix.CreateRotationZ(-item.RotationRad);
                         transformedItemPos = Vector2.Transform(transformedItemPos - item.Position, transform) + item.Position;
                         transformedItemInterval = Vector2.Transform(transformedItemInterval, transform);
                         transformedItemIntervalHorizontal = Vector2.Transform(transformedItemIntervalHorizontal, transform);
@@ -600,7 +603,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                currentRotation += MathHelper.ToRadians(-item.Rotation);
+                currentRotation += -item.RotationRad;
             }
 
             int i = 0;

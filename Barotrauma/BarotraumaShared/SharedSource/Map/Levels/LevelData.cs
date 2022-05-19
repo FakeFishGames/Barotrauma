@@ -20,7 +20,7 @@ namespace Barotrauma
 
         public readonly string Seed;
 
-        public readonly float Difficulty;
+        public float Difficulty;
 
         public readonly Biome Biome;
 
@@ -90,10 +90,10 @@ namespace Barotrauma
                 (int)MathUtils.Round(generationParams.Height, Level.GridCellSize));
         }
 
-        public LevelData(XElement element)
+        public LevelData(XElement element, float? forceDifficulty = null)
         {
             Seed = element.GetAttributeString("seed", "");
-            Difficulty = element.GetAttributeFloat("difficulty", 0.0f);
+            Difficulty = forceDifficulty ?? element.GetAttributeFloat("difficulty", 0.0f);
             Size = element.GetAttributePoint("size", new Point(1000));
             Enum.TryParse(element.GetAttributeString("type", "LocationConnection"), out Type);
 

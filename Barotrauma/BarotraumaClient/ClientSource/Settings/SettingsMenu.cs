@@ -182,7 +182,7 @@ namespace Barotrauma
         private void Slider(GUILayoutGroup parent, Vector2 range, int steps, Func<float, string> labelFunc, float currentValue, Action<float> setter, LocalizedString? tooltip = null)
         {
             var layout = new GUILayoutGroup(NewItemRectT(parent), isHorizontal: true);
-            var slider = new GUIScrollBar(new RectTransform((0.82f, 1.0f), layout.RectTransform), style: "GUISlider")
+            var slider = new GUIScrollBar(new RectTransform((0.72f, 1.0f), layout.RectTransform), style: "GUISlider")
             {
                 Range = range,
                 BarScrollValue = currentValue,
@@ -193,7 +193,7 @@ namespace Barotrauma
             {
                 slider.ToolTip = tooltip;
             }
-            var label = new GUITextBlock(new RectTransform((0.18f, 1.0f), layout.RectTransform),
+            var label = new GUITextBlock(new RectTransform((0.28f, 1.0f), layout.RectTransform),
                 labelFunc(currentValue), wrap: false, textAlignment: Alignment.Center);
             slider.OnMoved = (sb, val) =>
             {
@@ -216,9 +216,6 @@ namespace Barotrauma
                 }
             };
         }
-
-        private string ScaleResolution(float scale) =>
-            $"{Round(unsavedConfig.Graphics.Width * scale)}\nx\n{Round(unsavedConfig.Graphics.Height * scale)}";
 
         private string Percentage(float v) => $"{Round(v * 100)}%";
 
@@ -259,22 +256,27 @@ namespace Barotrauma
             Tickbox(left, TextManager.Get("EnableVSync"), TextManager.Get("EnableVSyncTooltip"), unsavedConfig.Graphics.VSync, (v) => unsavedConfig.Graphics.VSync = v);
             Tickbox(left, TextManager.Get("EnableTextureCompression"), TextManager.Get("EnableTextureCompressionTooltip"), unsavedConfig.Graphics.CompressTextures, (v) => unsavedConfig.Graphics.CompressTextures = v);
             
-            Label(right, TextManager.Get("ParticleLimit"), GUIStyle.SubHeadingFont);
-            Slider(right, (100, 1500), 15, (v) => Round(v).ToString(), unsavedConfig.Graphics.ParticleLimit, (v) => unsavedConfig.Graphics.ParticleLimit = Round(v));
-            Spacer(right);
-
             Label(right, TextManager.Get("LOSEffect"), GUIStyle.SubHeadingFont);
             DropdownEnum(right, (m) => TextManager.Get($"LosMode{m}"), null, unsavedConfig.Graphics.LosMode, (v) => unsavedConfig.Graphics.LosMode = v);
             Spacer(right);
-            
+
             Label(right, TextManager.Get("LightMapScale"), GUIStyle.SubHeadingFont);
-            Slider(right, (0.5f, 1.0f), 10, ScaleResolution, unsavedConfig.Graphics.LightMapScale, (v) => unsavedConfig.Graphics.LightMapScale = v, TextManager.Get("LightMapScaleTooltip"));
+            Slider(right, (0.5f, 1.0f), 11, (v) => TextManager.GetWithVariable("percentageformat", "[value]", Round(v * 100).ToString()).Value, unsavedConfig.Graphics.LightMapScale, (v) => unsavedConfig.Graphics.LightMapScale = v, TextManager.Get("LightMapScaleTooltip"));
             Spacer(right);
-            
+
+            Label(right, TextManager.Get("VisibleLightLimit"), GUIStyle.SubHeadingFont);
+            Slider(right, (10, 210), 21, (v) => v > 200 ? TextManager.Get("unlimited").Value : Round(v).ToString(), unsavedConfig.Graphics.VisibleLightLimit, 
+                (v) =>  unsavedConfig.Graphics.VisibleLightLimit = v > 200 ? int.MaxValue : Round(v), TextManager.Get("VisibleLightLimitTooltip"));
+            Spacer(right);
+
             Tickbox(right, TextManager.Get("RadialDistortion"), TextManager.Get("RadialDistortionTooltip"), unsavedConfig.Graphics.RadialDistortion, (v) => unsavedConfig.Graphics.RadialDistortion = v);
             Tickbox(right, TextManager.Get("ChromaticAberration"), TextManager.Get("ChromaticAberrationTooltip"), unsavedConfig.Graphics.ChromaticAberration, (v) => unsavedConfig.Graphics.ChromaticAberration = v);
+
+            Label(right, TextManager.Get("ParticleLimit"), GUIStyle.SubHeadingFont);
+            Slider(right, (100, 1500), 15, (v) => Round(v).ToString(), unsavedConfig.Graphics.ParticleLimit, (v) => unsavedConfig.Graphics.ParticleLimit = Round(v));
+            Spacer(right);
         }
-        
+
         private static string TrimAudioDeviceName(string name)
         {
             if (string.IsNullOrWhiteSpace(name)) { return string.Empty; }

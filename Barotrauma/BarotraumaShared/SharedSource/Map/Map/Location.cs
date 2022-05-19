@@ -485,6 +485,19 @@ namespace Barotrauma
             TurnsInRadiation            = element.GetAttributeInt(nameof(TurnsInRadiation).ToLower(), 0);
             StepsSinceSpecialsUpdated   = element.GetAttributeInt("stepssincespecialsupdated", 0);
 
+            Identifier biomeId = element.GetAttributeIdentifier("biome", Identifier.Empty);
+            if (biomeId != Identifier.Empty)
+            {
+                if (Biome.Prefabs.TryGet(biomeId, out Biome biome))
+                {
+                    Biome = biome;
+                }
+                else
+                {
+                    DebugConsole.ThrowError($"Error while loading the campaign map: could not find a biome with the identifier \"{biomeId}\".");
+                }
+            }
+
             if (!typeNotFound)
             {
                 for (int i = 0; i < Type.CanChangeTo.Count; i++)
@@ -773,22 +786,41 @@ namespace Barotrauma
             
             static float GetConnectionWeight(Location location, LocationConnection c)
             {
-                float weight = c.Passed ? 1.0f : 5.0f;
                 Location destination = c.OtherLocation(location);
-                if (destination != null)
+                if (destination == null) { return 0; }
+                float minWeight = 0.0001f;
+                float lowWeight = 0.2f;
+                float normalWeight = 1.0f;
+                float maxWeight = 2.0f;
+                float weight = c.Passed ? lowWeight : normalWeight;
+                if (location.Biome.AllowedZones.Contains(1))
                 {
-                    if (destination.MapPosition.X > location.MapPosition.X) { weight *= 2.0f; }
-                    int missionCount = location.availableMissions.Count(m => m.Locations.Contains(destination));
-                    if (missionCount > 0) 
-                    { 
-                        weight /= missionCount * 2;
-                    }
-                    if (destination.IsRadiated())
+                    // In the first biome, give a stronger preference for locations that are farther to the right)
+                    float diff = destination.MapPosition.X - location.MapPosition.X;
+                    if (diff < 0)
                     {
-                        weight *= 0.001f;
+                        weight *= 0.1f;
+                    }
+                    else
+                    {
+                        float maxRelevantDiff = 300;
+                        weight = MathHelper.Lerp(weight, maxWeight, MathUtils.InverseLerp(0, maxRelevantDiff, diff));
                     }
                 }
-                return weight;
+                else if (destination.MapPosition.X > location.MapPosition.X)
+                {
+                    weight *= 2.0f;
+                }
+                int missionCount = location.availableMissions.Count(m => m.Locations.Contains(destination));
+                if (missionCount > 0) 
+                { 
+                    weight /= missionCount * 2;
+                }
+                if (destination.IsRadiated())
+                {
+                    weight *= 0.001f;
+                }
+                return MathHelper.Clamp(weight, minWeight, maxWeight);
             }
 
             return InstantiateMission(prefab, connection);
@@ -1255,6 +1287,7 @@ namespace Barotrauma
                 new XAttribute("originaltype", (Type ?? OriginalType).Identifier),
                 new XAttribute("basename", BaseName),
                 new XAttribute("name", Name),
+                new XAttribute("biome", Biome?.Identifier.Value ?? string.Empty),
                 new XAttribute("discovered", Discovered),
                 new XAttribute("position", XMLExtensions.Vector2ToString(MapPosition)),
                 new XAttribute("pricemultiplier", PriceMultiplier),

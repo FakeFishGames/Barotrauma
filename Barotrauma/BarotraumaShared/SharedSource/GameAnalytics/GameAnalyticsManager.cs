@@ -339,11 +339,6 @@ namespace Barotrauma
                 loadContext = null;
                 assembly = null;
             }
-
-            ~Implementation()
-            {
-                OnQuit();
-            }
         }
         private static Implementation? loadedImplementation;
 

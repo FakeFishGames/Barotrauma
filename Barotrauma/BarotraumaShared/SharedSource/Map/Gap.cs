@@ -120,7 +120,7 @@ namespace Barotrauma
             }
         }
 
-        public Gap(MapEntityPrefab prefab, Rectangle rectangle)
+        public Gap(Rectangle rectangle)
             : this(rectangle, Submarine.MainSub)
         {
 #if CLIENT
@@ -136,7 +136,7 @@ namespace Barotrauma
         { }
 
         public Gap(Rectangle rect, bool isHorizontal, Submarine submarine, ushort id = Entity.NullEntityID)
-            : base(MapEntityPrefab.FindByIdentifier("gap".ToIdentifier()), submarine, id)
+            : base(CoreEntityPrefab.GapPrefab, submarine, id)
         {
             this.rect = rect;
             flowForce = Vector2.Zero;

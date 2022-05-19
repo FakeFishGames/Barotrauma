@@ -92,7 +92,7 @@ namespace Barotrauma
                         break;
                     case "crew":
                         GameMain.GameSession.CrewManager = new CrewManager(subElement, true);
-                        ActiveOrdersElement = element.GetChildElement("activeorders");
+                        ActiveOrdersElement = subElement.GetChildElement("activeorders");
                         break;
                     case "map":
                         map = Map.Load(this, subElement, Settings);
@@ -461,6 +461,7 @@ namespace Barotrauma
 
             if (success)
             {
+                GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
             else

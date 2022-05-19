@@ -442,6 +442,11 @@ namespace Barotrauma
             Loaded?.Remove();
             Loaded = this;
             Generating = true;
+#if CLIENT
+            Debug.Assert(GenerationParams.Identifier != "coldcavernstutorial" || GameMain.GameSession?.GameMode == null || GameMain.GameSession.GameMode is TutorialMode);
+#endif
+            Debug.Assert(GenerationParams.AnyBiomeAllowed || GenerationParams.AllowedBiomeIdentifiers.Contains(LevelData.Biome.Identifier));
+            DebugConsole.NewMessage("Level identifier: " + GenerationParams.Identifier);
 
             ClearEqualityCheckValues();
             EntitiesBeforeGenerate = GetEntities().ToList();
@@ -1711,7 +1716,8 @@ namespace Barotrauma
             else
             {
                 //if the bottom of the abyss area is below crush depth, try to move it up to keep (most) of the abyss content above crush depth
-                if (abyssEndY + CrushDepth < 0)
+                //but only if start of the abyss is above crush depth (no point in doing this if all of it is below crush depth)
+                if (abyssEndY + CrushDepth < 0 && abyssStartY > -CrushDepth)
                 {
                     abyssEndY += Math.Min(-(abyssEndY + (int)CrushDepth), abyssHeight / 2);
                 }
@@ -1820,7 +1826,7 @@ namespace Barotrauma
                     }
                 }
 
-                var caveParams = CaveGenerationParams.GetRandom(GenerationParams, abyss: true, rand: Rand.RandSync.ServerAndClient);
+                var caveParams = CaveGenerationParams.GetRandom(this, abyss: true, rand: Rand.RandSync.ServerAndClient);
 
                 float caveScaleRelativeToIsland = 0.7f;
                 GenerateCave(
@@ -1889,7 +1895,7 @@ namespace Barotrauma
         {
             for (int i = 0; i < GenerationParams.CaveCount; i++)
             {
-                var caveParams = CaveGenerationParams.GetRandom(GenerationParams, abyss: false, rand: Rand.RandSync.ServerAndClient);
+                var caveParams = CaveGenerationParams.GetRandom(this, abyss: false, rand: Rand.RandSync.ServerAndClient);
                 Point caveSize = new Point(
                     Rand.Range(caveParams.MinWidth, caveParams.MaxWidth, Rand.RandSync.ServerAndClient),
                     Rand.Range(caveParams.MinHeight, caveParams.MaxHeight, Rand.RandSync.ServerAndClient));
@@ -2479,6 +2485,7 @@ namespace Barotrauma
             foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs.OrderBy(p => p.UintIdentifier))
             {
                 if (itemPrefab.LevelCommonness.TryGetValue(levelName, out float commonness) || 
+                    itemPrefab.LevelCommonness.TryGetValue(LevelData.Biome.Identifier, out commonness) ||
                     itemPrefab.LevelCommonness.TryGetValue(Identifier.Empty, out commonness))
                 {
                     if (commonness <= 0.0f) { continue; }
@@ -3237,7 +3244,8 @@ namespace Barotrauma
             if (index < 0 || index >= bottomPositions.Count - 1) { return new Vector2(xPosition, BottomPos); }
 
             float t = (xPosition - bottomPositions[index].X) / (bottomPositions[index + 1].X - bottomPositions[index].X);
-            Debug.Assert(t <= 1.0f);
+            //t can go slightly outside the 0-1 due to rounding, safe to ignore
+            Debug.Assert(t <= 1.001f && t >= -0.001f);
             t = MathHelper.Clamp(t, 0.0f, 1.0f);
 
             float yPos = MathHelper.Lerp(bottomPositions[index].Y, bottomPositions[index + 1].Y, t);

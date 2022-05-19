@@ -16,7 +16,7 @@ namespace Barotrauma
     class SubmarinePreview : IDisposable
     {
         private SpriteRecorder spriteRecorder;
-        private SubmarineInfo submarineInfo;
+        private readonly SubmarineInfo submarineInfo;
         private Camera camera;
         private Task loadTask;
         private volatile bool isDisposed;
@@ -66,7 +66,7 @@ namespace Barotrauma
 
         public static void Close()
         {
-            instance?.Dispose();
+            instance?.Dispose(); instance = null;
         }
 
         private SubmarinePreview(SubmarineInfo subInfo)
@@ -655,7 +655,8 @@ namespace Barotrauma
                 previewFrame.RectTransform.Parent = null;
                 previewFrame = null;
             }
-            spriteRecorder?.Dispose();
+            spriteRecorder?.Dispose(); spriteRecorder = null;
+            camera?.Dispose(); camera = null;
             isDisposed = true;
         }
     }

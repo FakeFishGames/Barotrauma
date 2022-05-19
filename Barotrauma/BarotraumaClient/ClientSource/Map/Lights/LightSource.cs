@@ -205,7 +205,7 @@ namespace Barotrauma.Lights
         private VertexPositionColorTexture[] vertices;
         private short[] indices;
 
-        private List<ConvexHullList> hullsInRange;
+        private readonly List<ConvexHullList> hullsInRange;
 
         public Texture2D texture;
 
@@ -246,9 +246,9 @@ namespace Barotrauma.Lights
         }
 
         //when were the vertices of the light volume last calculated
-        private float lastRecalculationTime;
+        public float LastRecalculationTime { get; private set; }
 
-        private Dictionary<Submarine, Vector2> diffToSub;
+        private readonly Dictionary<Submarine, Vector2> diffToSub;
 
         private DynamicVertexBuffer lightVolumeBuffer;
         private DynamicIndexBuffer lightVolumeIndexBuffer;
@@ -376,6 +376,8 @@ namespace Barotrauma.Lights
             }
         }
 
+        public float Priority;
+
         private Vector2 lightTextureTargetSize;
 
         public Vector2 LightTextureTargetSize
@@ -423,7 +425,7 @@ namespace Barotrauma.Lights
 
         public bool Enabled = true;
 
-        private ISerializableEntity conditionalTarget;
+        private readonly ISerializableEntity conditionalTarget;
         private readonly PropertyConditional.Comparison comparison;
         private readonly List<PropertyConditional> conditionals = new List<PropertyConditional>();
 
@@ -561,7 +563,7 @@ namespace Barotrauma.Lights
 
             foreach (var ch in chList.List)
             {
-                if (ch.LastVertexChangeTime > lastRecalculationTime && !chList.IsHidden.Contains(ch))
+                if (ch.LastVertexChangeTime > LastRecalculationTime && !chList.IsHidden.Contains(ch))
                 {
                     NeedsRecalculation = true;
                     break;
@@ -1289,7 +1291,7 @@ namespace Barotrauma.Lights
                 }
 
                 //visualize light recalculations
-                float timeSinceRecalculation = (float)Timing.TotalTime - lastRecalculationTime;
+                float timeSinceRecalculation = (float)Timing.TotalTime - LastRecalculationTime;
                 if (timeSinceRecalculation < 0.1f)
                 {
                     GUI.DrawRectangle(spriteBatch, drawPos - Vector2.One * 10, Vector2.One * 20, GUIStyle.Red * (1.0f - timeSinceRecalculation * 10.0f), isFilled: true);
@@ -1313,7 +1315,7 @@ namespace Barotrauma.Lights
             }
         }
 
-        public void DrawLightVolume(SpriteBatch spriteBatch, BasicEffect lightEffect, Matrix transform)
+        public void DrawLightVolume(SpriteBatch spriteBatch, BasicEffect lightEffect, Matrix transform, bool allowRecalculation, ref int recalculationCount)
         {
             if (Range < 1.0f || Color.A < 1 || CurrentBrightness <= 0.0f) { return; }
 
@@ -1338,8 +1340,9 @@ namespace Barotrauma.Lights
 
             CheckHullsInRange();
 
-            if (NeedsRecalculation)
+            if (NeedsRecalculation && allowRecalculation)
             {
+                recalculationCount++;
                 var verts = FindRaycastHits();
                 if (verts == null)
                 {
@@ -1352,7 +1355,7 @@ namespace Barotrauma.Lights
 
                 CalculateLightVertices(verts);
 
-                lastRecalculationTime = (float)Timing.TotalTime;
+                LastRecalculationTime = (float)Timing.TotalTime;
                 NeedsRecalculation = false;
             }
 

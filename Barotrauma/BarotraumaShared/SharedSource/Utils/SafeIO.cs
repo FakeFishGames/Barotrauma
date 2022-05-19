@@ -429,8 +429,8 @@ namespace Barotrauma.IO
 
     public class FileStream : System.IO.Stream
     {
-        private System.IO.FileStream innerStream;
-        private string fileName;
+        private readonly System.IO.FileStream innerStream;
+        private readonly string fileName;
 
         public FileStream(string fn, System.IO.FileStream stream)
         {
@@ -496,9 +496,9 @@ namespace Barotrauma.IO
             innerStream.Flush();
         }
 
-        protected override void Dispose(bool disposing)
+        protected override void Dispose(bool notCalledByFinalizer)
         {
-            innerStream.Dispose();
+            if (notCalledByFinalizer) { innerStream.Dispose(); }
         }
     }
 

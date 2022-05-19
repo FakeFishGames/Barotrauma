@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -14,6 +11,8 @@ namespace Barotrauma
         public readonly LocalizedString Description;
 
         public readonly bool IsEndBiome;
+        public readonly float MinDifficulty;
+        public readonly float MaxDifficulty;
 
         public readonly ImmutableHashSet<int> AllowedZones;
 
@@ -30,8 +29,9 @@ namespace Barotrauma
                 element.GetAttributeString("description", ""));
 
             IsEndBiome = element.GetAttributeBool("endbiome", false);
-
             AllowedZones = element.GetAttributeIntArray("AllowedZones", new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 }).ToImmutableHashSet();
+            MinDifficulty = element.GetAttributeFloat("MinDifficulty", 0);
+            MaxDifficulty = element.GetAttributeFloat("MaxDifficulty", 100);
         }
 
         public static Identifier ParseIdentifier(ContentXElement element)

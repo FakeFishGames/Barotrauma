@@ -373,12 +373,6 @@ namespace Barotrauma.Networking
             OnDisconnect?.Invoke(disableReconnect);
         }
 
-        ~SteamP2PClientPeer()
-        {
-            OnDisconnect = null;
-            Close();
-        }
-
         protected override void SendMsgInternal(DeliveryMethod deliveryMethod, IWriteMessage msg)
         {
             Steamworks.P2PSend sendType;

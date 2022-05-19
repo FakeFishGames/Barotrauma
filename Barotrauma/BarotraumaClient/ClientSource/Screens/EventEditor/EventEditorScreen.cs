@@ -818,7 +818,7 @@ namespace Barotrauma
                 }
                 else if (type == typeof(float) || type == typeof(int))
                 {
-                    GUINumberInput valueInput = new GUINumberInput(new RectTransform(Vector2.One, layout.RectTransform), GUINumberInput.NumberType.Float) { FloatValue = (float) (newValue ?? 0.0f) };
+                    GUINumberInput valueInput = new GUINumberInput(new RectTransform(Vector2.One, layout.RectTransform), NumberType.Float) { FloatValue = (float) (newValue ?? 0.0f) };
                     valueInput.OnValueChanged += component => { newValue = component.FloatValue; };
                 }
                 else if (type == typeof(bool))

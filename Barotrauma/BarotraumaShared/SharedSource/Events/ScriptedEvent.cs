@@ -12,6 +12,7 @@ namespace Barotrauma
         private readonly Dictionary<Identifier, List<Entity>> cachedTargets = new Dictionary<Identifier, List<Entity>>();
         private int prevEntityCount;
         private int prevPlayerCount, prevBotCount;
+        private Character prevControlled;
 
         private readonly string[] requiredDestinationTypes;
         public readonly bool RequireBeaconStation;
@@ -163,12 +164,13 @@ namespace Barotrauma
                     botCount++;
                 }
             }
-            if (Entity.EntityCount != prevEntityCount || botCount != prevBotCount || playerCount != prevPlayerCount)
+            if (Entity.EntityCount != prevEntityCount || botCount != prevBotCount || playerCount != prevPlayerCount || prevControlled != Character.Controlled)
             {
                 cachedTargets.Clear();
                 prevEntityCount = Entity.EntityCount;
                 prevBotCount = botCount;
                 prevPlayerCount = playerCount;
+                prevControlled = Character.Controlled;
             }
             
             if (!Actions.Any())

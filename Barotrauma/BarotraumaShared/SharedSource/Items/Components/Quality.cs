@@ -56,7 +56,8 @@ namespace Barotrauma.Items.Components
                 if (value == qualityLevel) { return; }
 
                 bool wasInFullCondition = item.IsFullCondition;
-                qualityLevel = MathHelper.Clamp(value, 0, MaxQuality); 
+                qualityLevel = MathHelper.Clamp(value, 0, MaxQuality);
+                item.RecalculateConditionValues();
                 //set the condition to the new max condition
                 if (wasInFullCondition && statValues.ContainsKey(StatType.Condition))
                 {

@@ -414,7 +414,7 @@ namespace Barotrauma
             set;
         }
 
-        [Serialize(50, IsPropertySaveable.Yes, description: "Maximum number of resource clusters in the abyss (the actual number is picked between min and max according to the level difficulty)"), Editable(MinValueInt = 0, MaxValueInt = 1000)]
+        [Serialize(40, IsPropertySaveable.Yes, description: "Maximum number of resource clusters in the abyss (the actual number is picked between min and max according to the level difficulty)"), Editable(MinValueInt = 0, MaxValueInt = 1000)]
         public int AbyssResourceClustersMax
         {
             get;

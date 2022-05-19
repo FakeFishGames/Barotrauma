@@ -988,11 +988,6 @@ namespace Barotrauma
                     HeadSelectionList = null;
                 }
             }
-
-            ~AppearanceCustomizationMenu()
-            {
-                Dispose();
-            }
         }
     }
 }

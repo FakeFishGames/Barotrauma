@@ -61,12 +61,6 @@ namespace Barotrauma
 
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
             IsDisposed = true;
             WallEdgeBuffer?.Dispose();
             WallBuffer?.Dispose();
@@ -482,12 +476,6 @@ namespace Barotrauma
         }
 
         public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
         {
             foreach (var vertexBuffer in vertexBuffers)
             {

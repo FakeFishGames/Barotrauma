@@ -7,11 +7,6 @@ namespace Barotrauma
 {
     class GUINumberInput : GUIComponent
     {
-        public enum NumberType
-        {
-            Int, Float
-        }
-
         public delegate void OnValueEnteredHandler(GUINumberInput numberInput);
         public OnValueEnteredHandler OnValueEntered;
 

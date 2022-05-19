@@ -202,11 +202,6 @@ namespace Barotrauma
         {
             Sound?.Dispose(); Sound = null;
         }
-
-        ~SoundPrefab()
-        {
-            Dispose();
-        }
     }
 
     [TagNames("damagesound")]

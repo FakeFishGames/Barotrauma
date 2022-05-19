@@ -262,19 +262,19 @@ namespace Barotrauma
             }
         }
 
-        private float rotationRad;
+        public float RotationRad { get; private set; } 
 
         [ConditionallyEditable(ConditionallyEditable.ConditionType.AllowRotating, MinValueFloat = 0.0f, MaxValueFloat = 360.0f, DecimalCount = 1, ValueStep = 1f), Serialize(0.0f, IsPropertySaveable.Yes)]
         public float Rotation
         {
             get
             {
-                return MathHelper.ToDegrees(rotationRad);
+                return MathHelper.ToDegrees(RotationRad);
             }
             set
             {
                 if (!Prefab.AllowRotatingInEditor) { return; }
-                rotationRad = MathHelper.ToRadians(value);
+                RotationRad = MathHelper.ToRadians(value);
 #if CLIENT
                 if (Screen.Selected == GameMain.SubEditorScreen)
                 {
@@ -472,9 +472,9 @@ namespace Barotrauma
             get { return spriteColor; }
         }
 
-        public bool IsFullCondition => MathUtils.NearlyEqual(Condition, MaxCondition);
-        public float MaxCondition => Prefab.Health * healthMultiplier * maxRepairConditionMultiplier * (1.0f + GetQualityModifier(Items.Components.Quality.StatType.Condition));
-        public float ConditionPercentage => MathUtils.Percentage(Condition, MaxCondition);
+        public bool IsFullCondition { get; private set; }
+        public float MaxCondition { get; private set; }
+        public float ConditionPercentage { get; private set; }
 
         private float offsetOnSelectedMultiplier = 1.0f;
 
@@ -495,7 +495,8 @@ namespace Barotrauma
             {
                 float prevConditionPercentage = ConditionPercentage;
                 healthMultiplier = MathHelper.Clamp(value, 0.0f, float.PositiveInfinity);
-                Condition = MaxCondition * prevConditionPercentage / 100.0f;
+                condition = MaxCondition * prevConditionPercentage / 100.0f;
+                RecalculateConditionValues();
             }
         }
 
@@ -505,7 +506,11 @@ namespace Barotrauma
         public float MaxRepairConditionMultiplier
         {
             get => maxRepairConditionMultiplier;
-            set { maxRepairConditionMultiplier = MathHelper.Clamp(value, 0.0f, float.PositiveInfinity); }
+            set 
+            { 
+                maxRepairConditionMultiplier = MathHelper.Clamp(value, 0.0f, float.PositiveInfinity);
+                RecalculateConditionValues();
+            }
         }
         
         //the default value should be Prefab.Health, but because we can't use it in the attribute, 
@@ -806,7 +811,9 @@ namespace Barotrauma
             defaultRect = newRect;
             rect = newRect;
 
-            condition = MaxCondition;
+            condition = MaxCondition =  Prefab.Health;
+            ConditionPercentage = 100.0f;
+           
             lastSentCondition = condition;
 
             AllowDeconstruct = itemPrefab.AllowDeconstruct;
@@ -1002,6 +1009,7 @@ namespace Barotrauma
 
             ApplyStatusEffects(ActionType.OnSpawn, 1.0f);
             Components.ForEach(c => c.ApplyStatusEffects(ActionType.OnSpawn, 1.0f));
+            RecalculateConditionValues();
         }
 
         partial void InitProjSpecific();
@@ -1184,7 +1192,6 @@ namespace Barotrauma
         public void RemoveContained(Item contained)
         {
             ownInventory?.RemoveItem(contained);
-
             contained.Container = null;            
         }
 
@@ -1611,6 +1618,10 @@ namespace Barotrauma
             bool wasInFullCondition = IsFullCondition;
 
             condition = MathHelper.Clamp(value, 0.0f, MaxCondition);
+            if (MathUtils.NearlyEqual(prev, condition, epsilon: 0.000001f)) { return; }
+
+            RecalculateConditionValues();
+
             if (condition == 0.0f && prev > 0.0f)
             {
                 //Flag connections to be updated as device is broken
@@ -1670,6 +1681,17 @@ namespace Barotrauma
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Recalculates the item's maximum condition, condition percentage and whether it's in full condition. 
+        /// You generally never need to call this manually - done automatically when any of the factors that affect the values change.
+        /// </summary>
+        public void RecalculateConditionValues()
+        {
+            MaxCondition = Prefab.Health * healthMultiplier * maxRepairConditionMultiplier * (1.0f + GetQualityModifier(Items.Components.Quality.StatType.Condition));
+            IsFullCondition = MathUtils.NearlyEqual(Condition, MaxCondition);
+            ConditionPercentage = MathUtils.Percentage(Condition, MaxCondition);
         }
 
         private bool IsInWater()
@@ -1999,7 +2021,7 @@ namespace Barotrauma
 
             if (Prefab.AllowRotatingInEditor)
             {
-                rotationRad = MathUtils.WrapAngleTwoPi(-rotationRad);
+                RotationRad = MathUtils.WrapAngleTwoPi(-RotationRad);
             }
 #if CLIENT
             if (Prefab.CanSpriteFlipX)
@@ -3153,12 +3175,12 @@ namespace Barotrauma
                 {
                     Vector2 oldRelativeOrigin = (oldPrefab.SwappableItem.SwapOrigin - oldPrefab.Size / 2) * element.GetAttributeFloat(item.scale, "scale", "Scale");
                     oldRelativeOrigin.Y = -oldRelativeOrigin.Y;
-                    oldRelativeOrigin = MathUtils.RotatePoint(oldRelativeOrigin, -item.rotationRad);
+                    oldRelativeOrigin = MathUtils.RotatePoint(oldRelativeOrigin, -item.RotationRad);
                     Vector2 oldOrigin = centerPos + oldRelativeOrigin;
 
                     Vector2 relativeOrigin = (prefab.SwappableItem.SwapOrigin - prefab.Size / 2) * item.Scale;
                     relativeOrigin.Y = -relativeOrigin.Y;
-                    relativeOrigin = MathUtils.RotatePoint(relativeOrigin, -item.rotationRad);
+                    relativeOrigin = MathUtils.RotatePoint(relativeOrigin, -item.RotationRad);
                     Vector2 origin = new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2) + relativeOrigin;
 
                     item.rect.Location -= (origin - oldOrigin).ToPoint();
@@ -3194,6 +3216,7 @@ namespace Barotrauma
             item.condition = MathHelper.Clamp(condition, 0, item.MaxCondition);
             item.lastSentCondition = item.condition;
 
+            item.RecalculateConditionValues();
             item.SetActiveSprite();
 
             if (submarine?.Info.GameVersion != null)

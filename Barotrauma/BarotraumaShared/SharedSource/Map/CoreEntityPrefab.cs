@@ -25,6 +25,7 @@ namespace Barotrauma
             IEnumerable<string> aliases = null)
             : base(identifier)
         {
+            System.Diagnostics.Debug.Assert(constructor != null);
             this.constructor = constructor;
             this.Name = TextManager.Get($"EntityName.{identifier}");
             this.Description = TextManager.Get($"EntityDescription.{identifier}");
@@ -35,40 +36,52 @@ namespace Barotrauma
             this.Aliases = (aliases ?? Enumerable.Empty<string>()).Concat(identifier.Value.ToEnumerable()).ToImmutableHashSet();
         }
 
+        public static CoreEntityPrefab HullPrefab { get; private set; }
+        public static CoreEntityPrefab GapPrefab { get; private set; }
+        public static CoreEntityPrefab WayPointPrefab { get; private set; }
+        public static CoreEntityPrefab SpawnPointPrefab { get; private set; }
+        
         public static void InitCorePrefabs()
         {
-            CoreEntityPrefab ep = new CoreEntityPrefab(
+            HullPrefab = new CoreEntityPrefab(
                 "hull".ToIdentifier(),
-                typeof(Hull).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) }),
+                typeof(Hull).GetConstructor(new Type[] { typeof(Rectangle) }),
                 resizeHorizontal: true,
                 resizeVertical: true,
                 linkable: true,
                 allowedLinks: new Identifier[] { "hull".ToIdentifier() });
-            Prefabs.Add(ep, false);
+            Prefabs.Add(HullPrefab, false);
 
-            ep = new CoreEntityPrefab(
+            GapPrefab = new CoreEntityPrefab(
                 "gap".ToIdentifier(),
-                typeof(Gap).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) }),
+                typeof(Gap).GetConstructor(new Type[] { typeof(Rectangle) }),
                 resizeHorizontal: true,
                 resizeVertical: true);
-            Prefabs.Add(ep, false);
+            Prefabs.Add(GapPrefab, false);
 
-            ep = new CoreEntityPrefab(
+            WayPointPrefab = new CoreEntityPrefab(
                 "waypoint".ToIdentifier(),
                 typeof(WayPoint).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) }));
-            Prefabs.Add(ep, false);
+            Prefabs.Add(WayPointPrefab, false);
 
-            ep = new CoreEntityPrefab(
+            SpawnPointPrefab = new CoreEntityPrefab(
                 "spawnpoint".ToIdentifier(),
                 typeof(WayPoint).GetConstructor(new Type[] { typeof(MapEntityPrefab), typeof(Rectangle) }));
-            Prefabs.Add(ep, false);
+            Prefabs.Add(SpawnPointPrefab, false);
         }
 
         protected override void CreateInstance(Rectangle rect)
         {
-            if (constructor == null) return;
-            object[] lobject = new object[] { this, rect };
-            constructor.Invoke(lobject);
+            if (this == WayPointPrefab || this == SpawnPointPrefab)
+            {
+                object[] lobject = new object[] { this, rect };
+                constructor.Invoke(lobject);
+            }
+            else
+            {
+                object[] lobject = new object[] { rect };
+                constructor.Invoke(lobject);
+            }
         }
 
         private bool disposed = false;

@@ -479,7 +479,7 @@ namespace Barotrauma
         {
             int read = 0;
 
-            // FIXME workaround for .NET6 causing save decompression to fail
+            // BUG workaround for .NET6 causing save decompression to fail
 #if NET6_0
             for (int i = 0; i < amount; i++)
             {

@@ -1122,7 +1122,7 @@ namespace Barotrauma
                 {
                     var gamesession = new GameSession(
                         SubmarineInfo.SavedSubmarines.GetRandomUnsynced(s => s.Type == SubmarineType.Player && !s.HasTag(SubmarineTag.HideInMenus)),
-                        GameModePreset.DevSandbox);
+                        GameModePreset.DevSandbox ?? GameModePreset.Sandbox);
                     string seed = ToolBox.RandomSeed(16);
                     gamesession.StartRound(seed);
 
