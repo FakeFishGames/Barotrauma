@@ -72,7 +72,7 @@ namespace Barotrauma
         {
             Damage = damage;
             HitLimb = null;
-            Afflictions = null;
+            Afflictions = new List<Affliction>();
             AppliedDamageModifiers = appliedDamageModifiers;
         }
     }
