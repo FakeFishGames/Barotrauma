@@ -155,7 +155,7 @@ namespace Barotrauma.Networking
                 else
                 {
                     Log("Using SteamP2P networking.", ServerLog.MessageType.ServerMessage);
-                    serverPeer = new SteamP2PServerPeer(ownerSteamId.Value, serverSettings);
+                    serverPeer = new SteamP2PServerPeer(ownerSteamId.Value, ownerKey.Value, serverSettings);
                 }
 
                 serverPeer.OnInitializationComplete = OnInitializationComplete;

@@ -839,16 +839,12 @@ namespace Barotrauma
                     arguments += " -nopassword";
                 }
 
-                int ownerKey = 0;
                 if (Steam.SteamManager.GetSteamID() != 0)
                 {
                     arguments += " -steamid " + Steam.SteamManager.GetSteamID();
                 }
-                else
-                {
-                    ownerKey = Math.Max(CryptoRandom.Instance.Next(), 1);
-                    arguments += " -ownerkey " + ownerKey;
-                }
+                int ownerKey = Math.Max(CryptoRandom.Instance.Next(), 1);
+                arguments += " -ownerkey " + ownerKey;
 
                 string filename = Path.Combine(
                     Path.GetDirectoryName(exeName),

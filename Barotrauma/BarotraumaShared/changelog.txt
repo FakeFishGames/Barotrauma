@@ -1,4 +1,15 @@
 ---------------------------------------------------------------------------------------------------------
+v0.17.16.0
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Added some tutorial information to the data sent to GameAnalytics.
+
+Fixes:
+- Fixed an exploit that allowed modified clients to execute console commands server-side without the appropriate permissions.
+- Fixed NPCs spawning without any items when the system language is set to Turkish.
+
+---------------------------------------------------------------------------------------------------------
 v0.17.15.0
 ---------------------------------------------------------------------------------------------------------
 

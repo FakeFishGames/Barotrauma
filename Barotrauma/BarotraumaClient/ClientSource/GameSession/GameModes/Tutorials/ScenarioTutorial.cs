@@ -252,6 +252,8 @@ namespace Barotrauma.Tutorials
             Character.Controlled = character = null;
             Stop();
 
+            GameAnalyticsManager.AddDesignEvent("Tutorial:Died");
+
             yield return new WaitForSeconds(3.0f);
 
             var messageBox = new GUIMessageBox(TextManager.Get("Tutorial.TryAgainHeader"), TextManager.Get("Tutorial.TryAgain"), new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") });
@@ -272,6 +274,8 @@ namespace Barotrauma.Tutorials
 
             Character.Controlled.ClearInputs();
             Character.Controlled = null;
+
+            GameAnalyticsManager.AddDesignEvent("Tutorial:Completed");
 
             yield return new WaitForSeconds(waitBeforeFade);
 

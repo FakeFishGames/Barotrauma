@@ -143,7 +143,7 @@ namespace Barotrauma.Networking
         
         private static void UpdateRead()
         {
-            Span<byte> msgLengthSpan = stackalloc byte[3];
+            Span<byte> msgLengthSpan = stackalloc byte[4 + 1];
             while (!shutDown)
             {
                 CheckPipeConnected(nameof(readStream), readStream);
@@ -167,8 +167,11 @@ namespace Barotrauma.Networking
 
                 if (!readBytes(msgLengthSpan)) { shutDown = true; break; }
 
-                int msgLength = msgLengthSpan[0] | (msgLengthSpan[1] << 8);
-                WriteStatus writeStatus = (WriteStatus)msgLengthSpan[2];
+                int msgLength = msgLengthSpan[0]
+                                | (msgLengthSpan[1] << 8)
+                                | (msgLengthSpan[2] << 16)
+                                | (msgLengthSpan[3] << 24);
+                WriteStatus writeStatus = (WriteStatus)msgLengthSpan[4];
 
                 if (msgLength > 0)
                 {
@@ -210,12 +213,15 @@ namespace Barotrauma.Networking
                     // when the function returns; placing it in the loop
                     // this method is based around would lead to a stack
                     // overflow real quick!
-                    Span<byte> bytesToWrite = stackalloc byte[3 + msg.Length];
+                    Span<byte> bytesToWrite = stackalloc byte[4 + 1 + msg.Length];
 
                     bytesToWrite[0] = (byte)(msg.Length & 0xFF);
                     bytesToWrite[1] = (byte)((msg.Length >> 8) & 0xFF);
-                    bytesToWrite[2] = (byte)writeStatus;
-                    Span<byte> msgSlice = bytesToWrite.Slice(3, msg.Length);
+                    bytesToWrite[2] = (byte)((msg.Length >> 16) & 0xFF);
+                    bytesToWrite[3] = (byte)((msg.Length >> 24) & 0xFF);
+                    
+                    bytesToWrite[4] = (byte)writeStatus;
+                    Span<byte> msgSlice = bytesToWrite.Slice(4 + 1, msg.Length);
 
                     msg.AsSpan().CopyTo(msgSlice);
 
@@ -269,6 +275,12 @@ namespace Barotrauma.Networking
         {
             if (shutDown) { return; }
 
+            if (msg.Length > 0x1fff_ffff)
+            {
+                //This message is extremely long and is close to breaking
+                //ChildServerRelay, so let's not allow this to go through!
+                return;
+            }
             msgsToWrite.Enqueue(msg);
             writeManualResetEvent.Set();
         }
