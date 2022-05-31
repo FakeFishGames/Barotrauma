@@ -418,7 +418,7 @@ namespace Barotrauma
             }
             else
             {
-                if (!Level.IsLoadedOutpost && Character.Controlled?.CurrentHull?.Submarine is Submarine sub &&
+                if (!Level.IsLoadedFriendlyOutpost && Character.Controlled?.CurrentHull?.Submarine is Submarine sub &&
                     sub.Info != null && !sub.Info.IsOutpost)
                 {
                     hullSoundSource = Character.Controlled.CurrentHull;
@@ -888,6 +888,14 @@ namespace Barotrauma
             GUISound.GUISoundPrefabs
                 .Where(s => s.Type == soundType)
                 .GetRandomUnsynced()?.Sound?.Play(null, "ui");
+        }
+
+        public static void PlayUISound(GUISoundType? soundType)
+        {
+            if (soundType.HasValue)
+            {
+                PlayUISound(soundType.Value);
+            }
         }
     }
 }

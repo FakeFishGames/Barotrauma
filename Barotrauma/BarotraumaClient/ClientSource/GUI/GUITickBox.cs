@@ -1,15 +1,13 @@
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Collections.Generic;
 
 namespace Barotrauma
 {
     public class GUITickBox : GUIComponent
     {
-        private GUILayoutGroup layoutGroup;
-        private GUIFrame box;
-        private GUITextBlock text;
+        private readonly GUILayoutGroup layoutGroup;
+        private readonly GUIFrame box;
+        private readonly GUITextBlock text;
 
         public delegate bool OnSelectedHandler(GUITickBox obj);
         public OnSelectedHandler OnSelected;
@@ -129,6 +127,12 @@ namespace Barotrauma
             set { text.Text = value; }
         }
 
+        public float ContentWidth { get; private set; }
+
+        public GUISoundType SoundType { private get; set; } = GUISoundType.TickBox;
+
+        public override bool PlaySoundOnSelect { get; set; } = true;
+
         public GUITickBox(RectTransform rectT, LocalizedString label, GUIFont font = null, string style = "") : base(null, rectT)
         {
             CanBeFocused = true;
@@ -180,6 +184,7 @@ namespace Barotrauma
             box.RectTransform.MinSize = new Point(Rect.Height);
             box.RectTransform.Resize(box.RectTransform.MinSize);
             text.SetTextPos();
+            ContentWidth = box.Rect.Width + text.Padding.X + text.TextSize.X + text.Padding.Z;
         }
         
         protected override void Update(float deltaTime)
@@ -208,6 +213,10 @@ namespace Barotrauma
                     else if (!isSelected)
                     {
                         Selected = true;
+                    }
+                    if (PlaySoundOnSelect)
+                    {
+                        SoundPlayer.PlayUISound(SoundType);
                     }
                 }
             }

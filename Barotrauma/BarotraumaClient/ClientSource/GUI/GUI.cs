@@ -24,15 +24,17 @@ namespace Barotrauma
         ChatMessage,
         RadioMessage,
         DeadMessage,
-        Click,
+        Select,
         PickItem,
         PickItemFail,
         DropItem,
         PopupMenu,
-        DecreaseQuantity,
-        IncreaseQuantity,
-        HireRepairClick,
-        UISwitch
+        Decrease,
+        Increase,
+        UISwitch,
+        TickBox,
+        ConfirmTransaction,
+        Cart,
     }
 
     public enum CursorState
@@ -2384,7 +2386,7 @@ namespace Barotrauma
                 CreateButton("PauseMenuResume", buttonContainer, null);
                 CreateButton("PauseMenuSettings", buttonContainer, () => SettingsMenuOpen = true);
 
-                bool IsOutpostLevel() => GameMain.GameSession != null && Level.IsLoadedOutpost;
+                bool IsFriendlyOutpostLevel() => GameMain.GameSession != null && Level.IsLoadedFriendlyOutpost;
                 if (Screen.Selected == GameMain.GameScreen && GameMain.GameSession != null)
                 {
                     if (GameMain.GameSession.GameMode is SinglePlayerCampaign spMode)
@@ -2399,11 +2401,11 @@ namespace Barotrauma
                             GameMain.GameSession.LoadPreviousSave();
                         });
 
-                        if (IsOutpostLevel())
+                        if (IsFriendlyOutpostLevel())
                         {
                             CreateButton("PauseMenuSaveQuit", buttonContainer, verificationTextTag: "PauseMenuSaveAndReturnToMainMenuVerification", action: () =>
                             {
-                                if (IsOutpostLevel()) { GameMain.QuitToMainMenu(save: true); }
+                                if (IsFriendlyOutpostLevel()) { GameMain.QuitToMainMenu(save: true); }
                             });
                         }
                     }
@@ -2416,7 +2418,7 @@ namespace Barotrauma
                     }
                     else if (!GameMain.GameSession.GameMode.IsSinglePlayer && GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.ManageRound))
                     {
-                        bool canSave = GameMain.GameSession.GameMode is CampaignMode && IsOutpostLevel();
+                        bool canSave = GameMain.GameSession.GameMode is CampaignMode && IsFriendlyOutpostLevel();
                         if (canSave)
                         {
                             CreateButton("PauseMenuSaveQuit", buttonContainer, verificationTextTag: "PauseMenuSaveAndReturnToServerLobbyVerification", action: () =>

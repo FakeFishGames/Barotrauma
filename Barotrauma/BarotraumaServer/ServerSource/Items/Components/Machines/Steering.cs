@@ -102,6 +102,7 @@ namespace Barotrauma.Items.Components
         {
             msg.Write(autoPilot);
             msg.Write(TryExtractEventData<EventData>(extraData, out var eventData) && eventData.DockingButtonClicked);
+            msg.Write(user?.ID ?? Entity.NullEntityID);
 
             if (!autoPilot)
             {

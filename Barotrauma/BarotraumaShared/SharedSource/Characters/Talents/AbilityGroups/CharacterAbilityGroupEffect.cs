@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Xml.Linq;
-
-namespace Barotrauma.Abilities
+﻿namespace Barotrauma.Abilities
 {
     class CharacterAbilityGroupEffect : CharacterAbilityGroup
     {
@@ -30,7 +24,14 @@ namespace Barotrauma.Abilities
         private bool IsApplicable(AbilityObject abilityObject)
         {
             if (timesTriggered >= maxTriggerCount) { return false; }
-            return abilityConditions.All(c => c.MatchesCondition(abilityObject));
+            foreach (var abilityCondition in abilityConditions)
+            {
+                if (!abilityCondition.MatchesCondition(abilityObject))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }

@@ -309,6 +309,45 @@ namespace Barotrauma
             }
         }
 
+        public override bool PlaySoundOnSelect { get; set; } = false;
+
+        public bool PlaySoundOnDragStop { get; set; } = false;
+
+        public GUISoundType? SoundOnDragStart { get; set; } = null;
+
+        public GUISoundType? SoundOnDragStop { get; set; } = null;
+
+        #region enums
+        public enum Force
+        {
+            Yes,
+            No
+        }
+
+        public enum AutoScroll
+        {
+            Enabled,
+            Disabled
+        }
+
+        public enum TakeKeyBoardFocus
+        {
+            Yes,
+            No
+        }
+
+        public enum PlaySelectSound
+        {
+            Yes,
+            No
+        }
+
+        private AutoScroll GetAutoScroll(bool b)
+        {
+            return b ? AutoScroll.Enabled : AutoScroll.Disabled;
+        }
+        #endregion
+
         /// <param name="isScrollBarOnDefaultSide">For horizontal listbox, default side is on the bottom. For vertical, it's on the right.</param>
         public GUIListBox(RectTransform rectT, bool isHorizontal = false, Color? color = null, string style = "", bool isScrollBarOnDefaultSide = true, bool useMouseDownToSelect = false) : base(style, rectT)
         {
@@ -396,7 +435,7 @@ namespace Barotrauma
             UpdateScrollBarSize();
         }
 
-        public void Select(object userData, bool force = false, bool autoScroll = true)
+        public void Select(object userData, Force force = Force.No, AutoScroll autoScroll = AutoScroll.Enabled)
         {
             var children = Content.Children;
             int i = 0;
@@ -515,9 +554,12 @@ namespace Barotrauma
         /// Scrolls the list to the specific element.
         /// </summary>
         /// <param name="component"></param>
-        public void ScrollToElement(GUIComponent component, bool playSound = true)
+        public void ScrollToElement(GUIComponent component, PlaySelectSound playSelectSound = PlaySelectSound.No)
         {
-            if (playSound) { SoundPlayer.PlayUISound(GUISoundType.Click); }
+            if (playSelectSound == PlaySelectSound.Yes)
+            {
+                SoundPlayer.PlayUISound(GUISoundType.Select);
+            }
             List<GUIComponent> children = Content.Children.ToList();
             int index = children.IndexOf(component);
             if (index < 0) { return; }
@@ -573,9 +615,16 @@ namespace Barotrauma
             }
         }
 
+        private double lastDragStartTime;
+
         private void StartDraggingElement(GUIComponent child)
         {
             DraggedElement = child;
+            if (Timing.TotalTime > lastDragStartTime + 0.2f)
+            {
+                lastDragStartTime = Timing.TotalTime;
+                SoundPlayer.PlayUISound(SoundOnDragStart);
+            }
         }
 
         private bool UpdateDragging()
@@ -586,6 +635,10 @@ namespace Barotrauma
                 var draggedElem = draggedElement;
                 OnRearranged?.Invoke(this, draggedElem.UserData);
                 DraggedElement = null;
+                if (PlaySoundOnDragStop)
+                {
+                    SoundPlayer.PlayUISound(SoundOnDragStop);
+                }
                 RepositionChildren();
                 if (AllSelected.Contains(draggedElem)) { return true; }
             }
@@ -710,7 +763,7 @@ namespace Barotrauma
                     int index = Content.Children.ToList().IndexOf(component);
                     if (index >= 0)
                     {
-                        Select(index, false, false, takeKeyBoardFocus: true);
+                        Select(index, autoScroll: AutoScroll.Disabled, takeKeyBoardFocus: TakeKeyBoardFocus.Yes);
                     }
                 }
             }
@@ -733,7 +786,7 @@ namespace Barotrauma
                         {
                             ScrollToElement(child);
                         }
-                        Select(i, autoScroll: false, takeKeyBoardFocus: true);
+                        Select(i, autoScroll: AutoScroll.Disabled, takeKeyBoardFocus: TakeKeyBoardFocus.Yes, playSelectSound: PlaySelectSound.Yes);
                     }
 
                     if (CurrentDragMode != DragMode.NoDragging
@@ -929,14 +982,13 @@ namespace Barotrauma
                     if (ClampScrollToElements)
                     {
                         bool scrollDown = Math.Clamp(PlayerInput.ScrollWheelSpeed, 0, 1) > 0;
-
                         if (scrollDown)
                         {
-                            SelectPrevious(takeKeyBoardFocus: true);
+                            SelectPrevious(takeKeyBoardFocus: TakeKeyBoardFocus.Yes, playSelectSound: PlaySelectSound.Yes);
                         }
                         else
                         {
-                            SelectNext(takeKeyBoardFocus: true);
+                            SelectNext(takeKeyBoardFocus: TakeKeyBoardFocus.Yes, playSelectSound: PlaySelectSound.Yes);
                         }
                     }
                 }
@@ -964,7 +1016,7 @@ namespace Barotrauma
             return FindScrollableParentListBox(target.Parent);
         }
 
-        public void SelectNext(bool force = false, bool autoScroll = true, bool takeKeyBoardFocus = false)
+        public void SelectNext(Force force = Force.No, AutoScroll autoScroll = AutoScroll.Enabled, TakeKeyBoardFocus takeKeyBoardFocus = TakeKeyBoardFocus.No, PlaySelectSound playSelectSound = PlaySelectSound.No)
         {
             int index = SelectedIndex + 1;
             while (index < Content.CountChildren)
@@ -972,10 +1024,10 @@ namespace Barotrauma
                 GUIComponent child = Content.GetChild(index);
                 if (child.Visible)
                 {
-                    Select(index, force, !SmoothScroll && autoScroll, takeKeyBoardFocus: takeKeyBoardFocus);
+                    Select(index, force, GetAutoScroll(!SmoothScroll && autoScroll == AutoScroll.Enabled), takeKeyBoardFocus, playSelectSound);
                     if (SmoothScroll)
                     {
-                        ScrollToElement(child);
+                        ScrollToElement(child, playSelectSound);
                     }
                     break;
                 }
@@ -983,7 +1035,7 @@ namespace Barotrauma
             }
         }
 
-        public void SelectPrevious(bool force = false, bool autoScroll = true, bool takeKeyBoardFocus = false)
+        public void SelectPrevious(Force force = Force.No, AutoScroll autoScroll = AutoScroll.Enabled, TakeKeyBoardFocus takeKeyBoardFocus = TakeKeyBoardFocus.No, PlaySelectSound playSelectSound = PlaySelectSound.No)
         {
             int index = SelectedIndex - 1;
             while (index >= 0)
@@ -991,10 +1043,10 @@ namespace Barotrauma
                 GUIComponent child = Content.GetChild(index);
                 if (child.Visible)
                 {
-                    Select(index, force, !SmoothScroll && autoScroll, takeKeyBoardFocus: takeKeyBoardFocus);
+                    Select(index, force, GetAutoScroll(!SmoothScroll && autoScroll == AutoScroll.Enabled), takeKeyBoardFocus, playSelectSound);
                     if (SmoothScroll)
                     {
-                        ScrollToElement(child);
+                        ScrollToElement(child, playSelectSound);
                     }
                     break;
                 }
@@ -1002,7 +1054,7 @@ namespace Barotrauma
             }
         }
 
-        public void Select(int childIndex, bool force = false, bool autoScroll = true, bool takeKeyBoardFocus = false)
+        public void Select(int childIndex, Force force = Force.No, AutoScroll autoScroll = AutoScroll.Enabled, TakeKeyBoardFocus takeKeyBoardFocus = TakeKeyBoardFocus.No, PlaySelectSound playSelectSound = PlaySelectSound.No)
         {
             if (childIndex >= Content.CountChildren || childIndex < 0) { return; }
 
@@ -1013,7 +1065,7 @@ namespace Barotrauma
             if (OnSelected != null)
             {
                 // TODO: The callback is called twice, fix this!
-                wasSelected = force || OnSelected(child, child.UserData);
+                wasSelected = force == Force.Yes || OnSelected(child, child.UserData);
             }
 
             if (!wasSelected) { return; }
@@ -1055,7 +1107,7 @@ namespace Barotrauma
 
             // Ensure that the selected element is visible. This may not be the case, if the selection is run from code. (e.g. if we have two list boxes that are synced)
             // TODO: This method only works when moving one item up/down (e.g. when using the up and down arrows)
-            if (autoScroll)
+            if (autoScroll == AutoScroll.Enabled)
             {
                 if (ScrollBar.IsHorizontal)
                 {
@@ -1086,10 +1138,18 @@ namespace Barotrauma
             }
 
             // If one of the children is the subscriber, we don't want to register, because it will unregister the child.
-            if (takeKeyBoardFocus && CanTakeKeyBoardFocus && RectTransform.GetAllChildren().None(rt => rt.GUIComponent == GUI.KeyboardDispatcher.Subscriber))
+            if (takeKeyBoardFocus == TakeKeyBoardFocus.Yes && CanTakeKeyBoardFocus && RectTransform.GetAllChildren().None(rt => rt.GUIComponent == GUI.KeyboardDispatcher.Subscriber))
             {
                 Selected = true;
                 GUI.KeyboardDispatcher.Subscriber = this;
+            }
+
+            // List box child components can be parents to other components that can play sounds when selected (e.g. store elements)
+            // so the list box shouldn't play the Select sound if the GUI.MouseOn component has a sound to play
+            if (playSelectSound == PlaySelectSound.Yes && PlaySoundOnSelect && !child.PlaySoundOnSelect &&
+                (GUI.MouseOn == null || GUI.MouseOn.Parent == Content || !GUI.MouseOn.PlaySoundOnSelect))
+            {
+                SoundPlayer.PlayUISound(GUISoundType.Select);
             }
         }
 
@@ -1293,16 +1353,16 @@ namespace Barotrauma
             switch (key)
             {
                 case Keys.Down:
-                    if (!isHorizontal && AllowArrowKeyScroll) { SelectNext(); }
+                    if (!isHorizontal && AllowArrowKeyScroll) { SelectNext(playSelectSound: PlaySelectSound.Yes); }
                     break;
                 case Keys.Up:
-                    if (!isHorizontal && AllowArrowKeyScroll) { SelectPrevious(); }
+                    if (!isHorizontal && AllowArrowKeyScroll) { SelectPrevious(playSelectSound: PlaySelectSound.Yes); }
                     break;
                 case Keys.Left:
-                    if (isHorizontal && AllowArrowKeyScroll) { SelectPrevious(); }
+                    if (isHorizontal && AllowArrowKeyScroll) { SelectPrevious(playSelectSound: PlaySelectSound.Yes); }
                     break;
                 case Keys.Right:
-                    if (isHorizontal && AllowArrowKeyScroll) { SelectNext(); }
+                    if (isHorizontal && AllowArrowKeyScroll) { SelectNext(playSelectSound: PlaySelectSound.Yes); }
                     break;
                 case Keys.Enter:
                 case Keys.Space:

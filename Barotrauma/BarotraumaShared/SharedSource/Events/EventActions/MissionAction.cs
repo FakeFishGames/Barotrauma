@@ -80,7 +80,7 @@ namespace Barotrauma
                     }
                     if (campaign is MultiPlayerCampaign mpCampaign)
                     {
-                        mpCampaign.LastUpdateID++;
+                        mpCampaign.IncrementLastUpdateIdForFlag(MultiPlayerCampaign.NetFlags.MapAndMissions);
                     }
                     if (prefab != null)
                     {

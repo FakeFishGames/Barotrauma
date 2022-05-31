@@ -15,6 +15,21 @@ namespace Barotrauma
         public bool IsNone() => this is None<T>;
         public bool IsSome() => this is Some<T>;
 
+        public bool TryUnwrap(out T outValue)
+        {
+            switch (this)
+            {
+                case Some<T> { Value: var value }:
+                    outValue = value;
+                    return true;
+                case None<T> _:
+                    outValue = default;
+                    return false;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
         public Option<TType> Select<TType>(Func<T, TType> selector) =>
             this switch
             {

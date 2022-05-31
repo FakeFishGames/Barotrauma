@@ -182,7 +182,10 @@ namespace Barotrauma
             window = new GUIFrame(new RectTransform(Vector2.One * 0.8f, backgroundFrame.RectTransform, Anchor.Center));
 
             var horizontalLayout = new GUILayoutGroup(new RectTransform(Vector2.One * 0.9f, window.RectTransform, Anchor.Center), true);
-            sidebar = new GUIListBox(new RectTransform(new Vector2(0.29f, 1.0f), horizontalLayout.RectTransform));
+            sidebar = new GUIListBox(new RectTransform(new Vector2(0.29f, 1.0f), horizontalLayout.RectTransform))
+            {
+                PlaySoundOnSelect = true
+            };
 
             var drives = System.IO.DriveInfo.GetDrives();
             foreach (var drive in drives)
@@ -241,6 +244,7 @@ namespace Barotrauma
 
             fileList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.85f), fileListLayout.RectTransform))
             {
+                PlaySoundOnSelect = true,
                 OnSelected = (child, userdata) =>
                 {
                     if (userdata is null) { return false; }

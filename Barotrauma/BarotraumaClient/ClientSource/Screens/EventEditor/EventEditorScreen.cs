@@ -225,7 +225,7 @@ namespace Barotrauma
             return true;
         }
 
-        public static GUIMessageBox AskForConfirmation(LocalizedString header, LocalizedString body, Func<bool> onConfirm)
+        public static GUIMessageBox AskForConfirmation(LocalizedString header, LocalizedString body, Func<bool> onConfirm, GUISoundType? overrideConfirmButtonSound = null)
         {
             LocalizedString[] buttons = { TextManager.Get("Ok"), TextManager.Get("Cancel") };
             GUIMessageBox msgBox = new GUIMessageBox(header, body, buttons);
@@ -244,6 +244,10 @@ namespace Barotrauma
                 msgBox.Close();
                 return true;
             };
+            if (overrideConfirmButtonSound.HasValue)
+            {
+                msgBox.Buttons[0].ClickSound = overrideConfirmButtonSound.Value;
+            }
             return msgBox;
         }
 

@@ -203,7 +203,7 @@ namespace Barotrauma.Items.Components
         private float lastMuffleCheckTime;
         private ItemSound loopingSound;
         private SoundChannel loopingSoundChannel;
-        private List<SoundChannel> playingOneshotSoundChannels = new List<SoundChannel>();
+        private readonly List<SoundChannel> playingOneshotSoundChannels = new List<SoundChannel>();
         public ItemComponent ReplacedBy;
 
         public ItemComponent GetReplacementOrThis()
@@ -211,13 +211,16 @@ namespace Barotrauma.Items.Components
             return ReplacedBy?.GetReplacementOrThis() ?? this;
         }
 
+        public bool NeedsSoundUpdate()
+        {
+            if (hasSoundsOfType[(int)ActionType.Always]) { return true; }
+            if (loopingSoundChannel != null && loopingSoundChannel.IsPlaying) { return true; }
+            if (playingOneshotSoundChannels.Count > 0) { return true; }
+            return false;
+        }
+
         public void UpdateSounds()
         {
-            if (!isActive || item.Condition <= 0.0f)
-            {
-                StopSounds(ActionType.OnActive);
-            }
-
             if (loopingSound != null && loopingSoundChannel != null && loopingSoundChannel.IsPlaying)
             {
                 if (Timing.TotalTime > lastMuffleCheckTime + 0.2f)
@@ -280,6 +283,7 @@ namespace Barotrauma.Items.Components
                         loopingSound.RoundSound.GetRandomFrequencyMultiplier(),
                         SoundPlayer.ShouldMuffleSound(Character.Controlled, item.WorldPosition, loopingSound.Range, Character.Controlled?.CurrentHull));
                     loopingSoundChannel.Looping = true;
+                    item.CheckNeedsSoundUpdate(this);
                     //TODO: tweak
                     loopingSoundChannel.Near = loopingSound.Range * 0.4f;
                     loopingSoundChannel.Far = loopingSound.Range;
@@ -298,7 +302,6 @@ namespace Barotrauma.Items.Components
                         loopingSound = null;
                     }
                 }
-
                 return;
             }
 
@@ -333,6 +336,7 @@ namespace Barotrauma.Items.Components
                 }
 
                 PlaySound(matchingSounds[index], item.WorldPosition);
+                item.CheckNeedsSoundUpdate(this);
             }
         }
         private void PlaySound(ItemSound itemSound, Vector2 position)

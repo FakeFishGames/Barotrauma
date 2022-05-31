@@ -10,7 +10,7 @@ namespace Barotrauma
     {
         public static bool OutputDebugInfo = false;
 
-        public static void SpawnItems()
+        public static void SpawnItems(Identifier? startItemSet = null)
         {
             if (GameMain.NetworkMember != null && !GameMain.NetworkMember.IsServer) { return; }
 
@@ -23,7 +23,7 @@ namespace Barotrauma
                     var sub = Submarine.MainSubs[i];
                     if (sub == null || sub.Info.InitialSuppliesSpawned || !sub.Info.IsPlayer) { continue; }
                     //1st pass: items defined in the start item set, only spawned in the main sub (not drones/shuttles or other linked subs)
-                    SpawnStartItems(sub);
+                    SpawnStartItems(sub, startItemSet);
                     //2nd pass: items defined using preferred containers, spawned in the main sub and all the linked subs (drones, shuttles etc)
                     var subs = sub.GetConnectedSubs().Where(s => s.TeamID == sub.TeamID);
                     CreateAndPlace(subs);
@@ -62,17 +62,23 @@ namespace Barotrauma
             CreateAndPlace(sub.ToEnumerable(), regeneratedContainer: regeneratedContainer);
         }
 
-        public static Identifier StartItemSet = new Identifier("normal");
+        public static Identifier DefaultStartItemSet = new Identifier("normal");
 
         /// <summary>
         /// Spawns the items defined in the start item set in the specified sub.
         /// </summary>
-        private static void SpawnStartItems(Submarine sub)
+        private static void SpawnStartItems(Submarine sub, Identifier? startItemSet)
         {
-            if (!Barotrauma.StartItemSet.Sets.TryGet(StartItemSet, out StartItemSet itemSet))
+            Identifier setIdentifier = startItemSet ?? DefaultStartItemSet;
+            if (!StartItemSet.Sets.TryGet(setIdentifier, out StartItemSet itemSet))
             {
-                DebugConsole.AddWarning($"Couldn't find a start item set matching the identifier \"{StartItemSet}\"!");
-                return;
+                DebugConsole.AddWarning($"Couldn't find a start item set matching the identifier \"{setIdentifier}\"!");
+                if (!StartItemSet.Sets.TryGet(DefaultStartItemSet, out StartItemSet defaultSet))
+                {
+                    DebugConsole.ThrowError($"Couldn't find the default start item set \"{DefaultStartItemSet}\"!");
+                    return;
+                }
+                itemSet = defaultSet;
             }
             WayPoint wp = WayPoint.GetRandom(SpawnType.Cargo, null, sub);
             ISpatialEntity initialSpawnPos;
@@ -164,7 +170,7 @@ namespace Barotrauma
             var itemPrefabs = ItemPrefab.Prefabs.OrderBy(p => p.UintIdentifier);
             foreach (ItemPrefab ip in itemPrefabs)
             {
-                if (!ip.PreferredContainers.Any()) { continue; }
+                if (ip.PreferredContainers.None()) { continue; }
                 if (ip.ConfigElement.Elements().Any(e => string.Equals(e.Name.ToString(), typeof(ItemContainer).Name.ToString(), StringComparison.OrdinalIgnoreCase)) && itemPrefabs.Any(ip2 => CanSpawnIn(ip2, ip)))
                 {
                     prefabsItemsCanSpawnIn.Add(ip);

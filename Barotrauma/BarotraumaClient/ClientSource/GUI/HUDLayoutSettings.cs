@@ -122,7 +122,7 @@ namespace Barotrauma
 
             //horizontal slices at the corners of the screen for health bar and affliction icons
             int afflictionAreaHeight = (int)(50 * GUI.Scale);
-            int healthBarWidth = (int)(BottomRightInfoArea.Width * 1.58f);
+            int healthBarWidth = (int)(BottomRightInfoArea.Width * 1.3f);
             int healthBarHeight = (int)(50f * GUI.Scale);
             HealthBarArea = new Rectangle(BottomRightInfoArea.Right - healthBarWidth + (int)Math.Floor(1 / GUI.Scale), BottomRightInfoArea.Y - healthBarHeight + GUI.IntScale(10), healthBarWidth, healthBarHeight);
             AfflictionAreaLeft = new Rectangle(HealthBarArea.X, HealthBarArea.Y - Padding - afflictionAreaHeight, HealthBarArea.Width, afflictionAreaHeight);            

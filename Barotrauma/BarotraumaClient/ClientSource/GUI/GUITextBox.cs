@@ -251,6 +251,8 @@ namespace Barotrauma
 
         public bool Readonly { get; set; }
 
+        public override bool PlaySoundOnSelect { get; set; } = true;
+
         public GUITextBox(RectTransform rectT, string text = "", Color? textColor = null, GUIFont font = null,
                           Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null, bool createClearButton = false, bool createPenIcon = true)
             : base(style, rectT)
@@ -363,6 +365,10 @@ namespace Barotrauma
             selected = true;
             GUI.KeyboardDispatcher.Subscriber = this;
             OnSelected?.Invoke(this, Keys.None);
+            if (PlaySoundOnSelect)
+            {
+                SoundPlayer.PlayUISound(GUISoundType.Select);
+            }
         }
 
         public void Deselect()

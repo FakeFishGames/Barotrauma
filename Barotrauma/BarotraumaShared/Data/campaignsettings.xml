@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CampaignSettingPresets>
+  <CampaignSettingDefinitions>
+    <StartingBalanceAmount high="10000" medium="8500" low="6000" />
+    <ExtraEventManagerDifficulty easy="-15.0" normal="0.0" hard="20.0" hellish="60.0" />
+    <LevelDifficultyMultiplier easy="0.6" normal="1.0" hard="1.6" hellish="10.0" />
+  </CampaignSettingDefinitions>
+  <CampaignSettings
+    presetname="Easy"
+    RadiationEnabled="false"
+    StartingBalanceAmount="High"
+    StartItemSet="easy"
+    Difficulty="Easy"/>
+  <CampaignSettings
+    presetname="Normal"
+    RadiationEnabled="false"
+    StartingBalanceAmount="Medium"
+    StartItemSet="normal"
+    Difficulty="Medium"/>
+  <CampaignSettings
+    presetname="Hard"
+    RadiationEnabled="true"
+    StartingBalanceAmount="Low"
+    StartItemSet="hard"
+    Difficulty="Hard"/>
+</CampaignSettingPresets>

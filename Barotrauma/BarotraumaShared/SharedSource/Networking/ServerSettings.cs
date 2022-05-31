@@ -900,27 +900,13 @@ namespace Barotrauma.Networking
             private set;
         }
 
-        [Serialize(true, IsPropertySaveable.Yes)]
-        public bool RadiationEnabled
-        {
-            get;
-            set;
-        }
-
         [Serialize(LootedMoneyDestination.Bank, IsPropertySaveable.Yes)]
         public LootedMoneyDestination LootedMoneyDestination { get; set; }
 
         [Serialize(999999, IsPropertySaveable.Yes)]
         public int MaximumMoneyTransferRequest { get; set; }
 
-        private int maxMissionCount = CampaignSettings.DefaultMaxMissionCount;
-
-        [Serialize(CampaignSettings.DefaultMaxMissionCount, IsPropertySaveable.Yes)]
-        public int MaxMissionCount
-        {
-            get { return maxMissionCount; }
-            set { maxMissionCount = MathHelper.Clamp(value, CampaignSettings.MinMissionCountLimit, CampaignSettings.MaxMissionCountLimit); }            
-        }
+        public CampaignSettings CampaignSettings { get; set; } = CampaignSettings.Empty;
 
         private bool allowSubVoting;
         //Don't serialize: the value is set based on SubSelectionMode

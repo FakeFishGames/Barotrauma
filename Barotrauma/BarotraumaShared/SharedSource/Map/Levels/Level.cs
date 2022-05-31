@@ -49,7 +49,7 @@ namespace Barotrauma
             Cave = 0x4,
             Ruin = 0x8,
             Wreck = 0x10,
-            BeaconStation = 0x20, // Not used anywhere
+            BeaconStation = 0x20,
             Abyss = 0x40,
             AbyssCave = 0x80
         }
@@ -395,6 +395,13 @@ namespace Barotrauma
         /// </summary>
         public static bool IsLoadedOutpost => Loaded?.Type == LevelData.LevelType.Outpost;
 
+        /// <summary>
+        /// Is there a loaded level set, and is it a friendly outpost (FriendlyNPC or Team1)
+        /// </summary>
+        public static bool IsLoadedFriendlyOutpost => 
+            loaded?.Type == LevelData.LevelType.Outpost && 
+            (loaded?.StartLocation?.Type?.OutpostTeam == CharacterTeamType.FriendlyNPC || loaded?.StartLocation?.Type?.OutpostTeam == CharacterTeamType.Team1);
+
         public LevelGenerationParams GenerationParams
         {
             get { return LevelData.GenerationParams; }
@@ -421,7 +428,7 @@ namespace Barotrauma
             borders = new Rectangle(Point.Zero, levelData.Size);
         }
 
-        public static Level Generate(LevelData levelData, bool mirror, SubmarineInfo startOutpost = null, SubmarineInfo endOutpost = null)
+        public static Level Generate(LevelData levelData, bool mirror, Location startLocation, Location endLocation, SubmarineInfo startOutpost = null, SubmarineInfo endOutpost = null)
         {
             Debug.Assert(levelData.Biome != null);
             if (levelData.Biome == null) { throw new ArgumentException("Biome was null"); }
@@ -433,11 +440,11 @@ namespace Barotrauma
                 preSelectedStartOutpost = startOutpost,
                 preSelectedEndOutpost = endOutpost
             };
-            level.Generate(mirror);
+            level.Generate(mirror, startLocation, endLocation);
             return level;
         }
 
-        private void Generate(bool mirror)
+        private void Generate(bool mirror, Location startLocation, Location endLocation)
         {
             Loaded?.Remove();
             Loaded = this;
@@ -454,8 +461,8 @@ namespace Barotrauma
 
             if (LevelData.ForceOutpostGenerationParams == null)
             {
-                StartLocation = GameMain.GameSession?.StartLocation;
-                EndLocation = GameMain.GameSession?.EndLocation;
+                StartLocation = startLocation;
+                EndLocation = endLocation;
             }
 
             GenerateEqualityCheckValue(LevelGenStage.GenStart);
@@ -509,7 +516,7 @@ namespace Barotrauma
             Rectangle pathBorders = borders;
             pathBorders.Inflate(
                 -Math.Min(Math.Min(minMainPathWidth * 2, MaxSubmarineWidth), borders.Width / 5), 
-                -Math.Min(minMainPathWidth, borders.Height / 5));
+                -Math.Min(minMainPathWidth * 2, borders.Height / 5));
 
             if (pathBorders.Width <= 0) { throw new InvalidOperationException($"The width of the level's path area is invalid ({pathBorders.Width})"); }
             if (pathBorders.Height <= 0) { throw new InvalidOperationException($"The height of the level's path area is invalid ({pathBorders.Height})"); }
@@ -1713,7 +1720,7 @@ namespace Barotrauma
 #endif
                 }
             }
-            else
+            else if (abyssHeight > 30000)
             {
                 //if the bottom of the abyss area is below crush depth, try to move it up to keep (most) of the abyss content above crush depth
                 //but only if start of the abyss is above crush depth (no point in doing this if all of it is below crush depth)
@@ -3527,6 +3534,8 @@ namespace Barotrauma
                 }
                 else if (type == SubmarineType.BeaconStation)
                 {
+                    PositionsOfInterest.Add(new InterestingPosition(spawnPoint.ToPoint(), PositionType.BeaconStation, submarine: sub));
+
                     sub.ShowSonarMarker = false;
                     sub.DockedTo.ForEach(s => s.ShowSonarMarker = false);
                     sub.PhysicsBody.FarseerBody.BodyType = BodyType.Static;
@@ -3940,7 +3949,7 @@ namespace Barotrauma
                         //the submarine port has to be at the top of the sub
                         if (port.Item.WorldPosition.Y < Submarine.MainSub.WorldPosition.Y) { continue; }
                         float dist = Math.Abs(port.Item.WorldPosition.X - Submarine.MainSub.WorldPosition.X);
-                        if (dist < closestDistance)
+                        if (dist < closestDistance || subPort.MainDockingPort)
                         {
                             subPort = port;
                             closestDistance = dist;
@@ -4023,6 +4032,26 @@ namespace Barotrauma
                 DebugConsole.ThrowError("No BeaconStation files found in the selected content packages!");
                 return;
             }
+
+            var beaconInfos = SubmarineInfo.SavedSubmarines.Where(i => i.IsBeacon);
+            for (int i = beaconStationFiles.Count - 1; i >= 0; i--)
+            {
+                var beaconStationFile = beaconStationFiles[i];
+                var matchingInfo = beaconInfos.SingleOrDefault(info => info.FilePath == beaconStationFile.Path.Value);
+                Debug.Assert(matchingInfo != null);
+                if (matchingInfo?.BeaconStationInfo is BeaconStationInfo beaconInfo)
+                {
+                    if (LevelData.Difficulty < beaconInfo.MinLevelDifficulty || LevelData.Difficulty > beaconInfo.MaxLevelDifficulty)
+                    {
+                        beaconStationFiles.RemoveAt(i);
+                    }
+                }
+            }
+            if (beaconStationFiles.None())
+            {
+                DebugConsole.ThrowError($"No BeaconStation files found for the level difficulty {LevelData.Difficulty}!");
+                return;
+            }
             var contentFile = beaconStationFiles.GetRandom(Rand.RandSync.ServerAndClient);
             string beaconStationName = System.IO.Path.GetFileNameWithoutExtension(contentFile.Path.Value);
 
@@ -4078,24 +4107,22 @@ namespace Barotrauma
             {
                 if (!(GameMain.NetworkMember?.IsClient ?? false))
                 {
-                    //empty the reactor
-                    if (reactorContainer != null)
+                    bool allowDisconnectedWires = true;
+                    bool allowDamagedWalls = true;
+                    if (BeaconStation.Info?.BeaconStationInfo is BeaconStationInfo info)
                     {
-                        foreach (Item item in reactorContainer.Inventory.AllItems)
-                        {
-                            if (item.NonInteractable) { continue; }
-                            Spawner.AddItemToRemoveQueue(item);
-                        }
+                        allowDisconnectedWires = info.AllowDisconnectedWires;
+                        allowDamagedWalls = info.AllowDamagedWalls;
                     }
 
                     //remove wires
                     float removeWireMinDifficulty = 20.0f;
                     float removeWireProbability = MathUtils.InverseLerp(removeWireMinDifficulty, 100.0f, LevelData.Difficulty) * 0.5f;
-                    if (removeWireProbability > 0.0f)
+                    if (removeWireProbability > 0.0f && allowDisconnectedWires)
                     {
                         foreach (Item item in beaconItems.Where(it => it.GetComponent<Wire>() != null).ToList())
                         {
-                            if (item.NonInteractable) { continue; }
+                            if (item.NonInteractable || item.InvulnerableToDamage) { continue; }
                             Wire wire = item.GetComponent<Wire>();
                             if (wire.Locked) { continue; }
                             if (wire.Connections[0] != null && (wire.Connections[0].Item.NonInteractable || wire.Connections[0].Item.GetComponent<ConnectionPanel>().Locked))
@@ -4115,8 +4142,8 @@ namespace Barotrauma
                                         connection.ConnectionPanel.DisconnectedWires.Add(wire);
                                         wire.RemoveConnection(connection.Item);
 #if SERVER
-                                    connection.ConnectionPanel.Item.CreateServerEvent(connection.ConnectionPanel);
-                                    wire.CreateNetworkEvent();
+                                        connection.ConnectionPanel.Item.CreateServerEvent(connection.ConnectionPanel);
+                                        wire.CreateNetworkEvent();
 #endif
                                     }
                                 }
@@ -4124,23 +4151,25 @@ namespace Barotrauma
                         }
                     }
 
-                    //break powered items
-                    foreach (Item item in beaconItems.Where(it => it.Components.Any(c => c is Powered) && it.Components.Any(c => c is Repairable)))
+                    if (allowDamagedWalls)
                     {
-                        if (item.NonInteractable) { continue; }
-                        if (Rand.Range(0f, 1f, Rand.RandSync.Unsynced) < 0.5f)
+                        //break powered items
+                        foreach (Item item in beaconItems.Where(it => it.Components.Any(c => c is Powered) && it.Components.Any(c => c is Repairable)))
                         {
-                            item.Condition *= Rand.Range(0.6f, 0.8f, Rand.RandSync.Unsynced);
+                            if (item.NonInteractable || item.InvulnerableToDamage) { continue; }
+                            if (Rand.Range(0f, 1f, Rand.RandSync.Unsynced) < 0.5f)
+                            {
+                                item.Condition *= Rand.Range(0.6f, 0.8f, Rand.RandSync.Unsynced);
+                            }
                         }
-                    }
-
-                    //poke holes in the walls
-                    foreach (Structure structure in Structure.WallList.Where(s => s.Submarine == BeaconStation))
-                    {
-                        if (Rand.Range(0f, 1f, Rand.RandSync.Unsynced) < 0.25f)
+                        //poke holes in the walls
+                        foreach (Structure structure in Structure.WallList.Where(s => s.Submarine == BeaconStation))
                         {
-                            int sectionIndex = Rand.Range(0, structure.SectionCount - 1, Rand.RandSync.Unsynced);
-                            structure.AddDamage(sectionIndex, Rand.Range(structure.MaxHealth * 0.2f, structure.MaxHealth, Rand.RandSync.Unsynced));
+                            if (Rand.Range(0f, 1f, Rand.RandSync.Unsynced) < 0.25f)
+                            {
+                                int sectionIndex = Rand.Range(0, structure.SectionCount - 1, Rand.RandSync.Unsynced);
+                                structure.AddDamage(sectionIndex, Rand.Range(structure.MaxHealth * 0.2f, structure.MaxHealth, Rand.RandSync.Unsynced));
+                            }
                         }
                     }
                 }

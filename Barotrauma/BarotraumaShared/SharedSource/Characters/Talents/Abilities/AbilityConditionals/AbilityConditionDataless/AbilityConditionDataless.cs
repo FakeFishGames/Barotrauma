@@ -1,6 +1,4 @@
-﻿using System.Xml.Linq;
-
-namespace Barotrauma.Abilities
+﻿namespace Barotrauma.Abilities
 {
     abstract class AbilityConditionDataless : AbilityCondition
     {

@@ -1282,6 +1282,7 @@ namespace Barotrauma
 
             var textList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.8f), msgBox.Content.RectTransform, Anchor.TopCenter))
             {
+                PlaySoundOnSelect = true,
                 OnSelected = (component, userData) =>
                 {
                     string text = userData as string ?? "";

@@ -430,9 +430,9 @@ namespace Barotrauma
         public static void LoadVanillaFileList()
         {
             VanillaCorePackage = new CorePackage(XDocument.Load(VanillaFileList), VanillaFileList);
-            foreach ((string error, string? stackTrace) in VanillaCorePackage.Errors)
+            foreach (ContentFile.LoadError error in VanillaCorePackage.Errors)
             {
-                DebugConsole.ThrowError(error + (stackTrace == null ? string.Empty : '\n' + stackTrace));
+                DebugConsole.ThrowError(error.ToString());
             }
         }
 

@@ -602,7 +602,7 @@ namespace Barotrauma.Items.Components
 
         private bool ShouldDeteriorate()
         {
-            if (Level.IsLoadedOutpost) { return false; }
+            if (Level.IsLoadedFriendlyOutpost) { return false; }
 
             if (LastActiveTime > Timing.TotalTime) { return true; }
             foreach (ItemComponent ic in item.Components)

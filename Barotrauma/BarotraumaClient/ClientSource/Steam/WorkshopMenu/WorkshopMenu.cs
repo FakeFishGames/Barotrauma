@@ -1,3 +1,5 @@
+using System;
+
 #nullable enable
 
 namespace Barotrauma.Steam
@@ -7,5 +9,8 @@ namespace Barotrauma.Steam
         public WorkshopMenu(GUIFrame parent) { }
 
         protected abstract void UpdateModListItemVisibility();
+
+        protected bool ModNameMatches(ContentPackage p, string query)
+            => p.Name.Contains(query, StringComparison.OrdinalIgnoreCase);
     }
 }

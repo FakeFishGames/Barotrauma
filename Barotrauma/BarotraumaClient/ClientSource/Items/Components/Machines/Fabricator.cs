@@ -108,6 +108,7 @@ namespace Barotrauma.Items.Components
 
                         itemList = new GUIListBox(new RectTransform(new Vector2(1f, 0.9f), paddedItemFrame.RectTransform), style: null)
                         {
+                            PlaySoundOnSelect = true,
                             OnSelected = (component, userdata) =>
                             {
                                 selectedItem = userdata as FabricationRecipe;

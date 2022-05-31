@@ -34,6 +34,8 @@ namespace Barotrauma
 
         private readonly GUITickBox lightingEnabled, cursorLightEnabled, allowInvalidOutpost, mirrorLevel;
 
+        private readonly GUIDropDown selectedSubDropDown;
+
         private Sprite editingSprite;
 
         private LightSource pointerLightSource;
@@ -57,7 +59,10 @@ namespace Barotrauma
                 RelativeSpacing = 0.01f
             };
 
-            paramsList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.3f), paddedLeftPanel.RectTransform));
+            paramsList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.3f), paddedLeftPanel.RectTransform))
+            {
+                PlaySoundOnSelect = true
+            };
             paramsList.OnSelected += (GUIComponent component, object obj) =>
             {
                 selectedParams = obj as LevelGenerationParams;
@@ -70,7 +75,10 @@ namespace Barotrauma
 
             var ruinTitle = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedLeftPanel.RectTransform), TextManager.Get("leveleditor.ruinparams"), font: GUIStyle.SubHeadingFont);
 
-            ruinParamsList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.1f), paddedLeftPanel.RectTransform));
+            ruinParamsList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.1f), paddedLeftPanel.RectTransform))
+            {
+                PlaySoundOnSelect = true
+            };
             ruinParamsList.OnSelected += (GUIComponent component, object obj) =>
             {
                 CreateOutpostGenerationParamsEditor(obj as OutpostGenerationParams);
@@ -79,7 +87,10 @@ namespace Barotrauma
 
             var caveTitle = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedLeftPanel.RectTransform), TextManager.Get("leveleditor.caveparams"), font: GUIStyle.SubHeadingFont);
 
-            caveParamsList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.1f), paddedLeftPanel.RectTransform));
+            caveParamsList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.1f), paddedLeftPanel.RectTransform))
+            {
+                PlaySoundOnSelect = true
+            };
             caveParamsList.OnSelected += (GUIComponent component, object obj) =>
             {
                 CreateCaveParamsEditor(obj as CaveGenerationParams);
@@ -89,7 +100,10 @@ namespace Barotrauma
             var outpostTitle = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedLeftPanel.RectTransform), TextManager.Get("leveleditor.outpostparams"), font: GUIStyle.SubHeadingFont);
             GUITextBlock.AutoScaleAndNormalize(ruinTitle, caveTitle, outpostTitle);
 
-            outpostParamsList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.2f), paddedLeftPanel.RectTransform));
+            outpostParamsList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.2f), paddedLeftPanel.RectTransform))
+            {
+                PlaySoundOnSelect = true
+            };
             outpostParamsList.OnSelected += (GUIComponent component, object obj) =>
             {
                 CreateOutpostGenerationParamsEditor(obj as OutpostGenerationParams);
@@ -171,6 +185,16 @@ namespace Barotrauma
             Vector2 GetSeedElementRelativeSize() => new Vector2(0.5f * (1.0f - randomizeButtonRelativeSize.X), 1.0f);
             static string GetLevelSeed() => ToolBox.RandomSeed(8);
 
+            var subDropDownContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.02f), paddedRightPanel.RectTransform), isHorizontal: true);
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), subDropDownContainer.RectTransform), TextManager.Get("submarine"));
+            selectedSubDropDown = new GUIDropDown(new RectTransform(new Vector2(0.5f, 1.0f), subDropDownContainer.RectTransform));
+            foreach (SubmarineInfo sub in SubmarineInfo.SavedSubmarines)
+            {
+                if (sub.Type != SubmarineType.Player) { continue; }
+                selectedSubDropDown.AddItem(sub.DisplayName, userData: sub);
+            }
+            subDropDownContainer.RectTransform.MinSize = new Point(0, selectedSubDropDown.RectTransform.MinSize.Y);
+
             mirrorLevel = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.02f), paddedRightPanel.RectTransform), TextManager.Get("mirrorentityx"));
 
             allowInvalidOutpost = new GUITickBox(new RectTransform(new Vector2(1.0f, 0.025f), paddedRightPanel.RectTransform),
@@ -186,11 +210,18 @@ namespace Barotrauma
                 {
                     bool wasLevelLoaded = Level.Loaded != null;
                     Submarine.Unload();
+
+                    if (selectedSubDropDown.SelectedData is SubmarineInfo subInfo)
+                    {
+                        Submarine.MainSub = new Submarine(subInfo);
+                    }
                     GameMain.LightManager.ClearLights();
                     currentLevelData = LevelData.CreateRandom(seedBox.Text, generationParams: selectedParams);
                     currentLevelData.ForceOutpostGenerationParams = outpostParamsList.SelectedData as OutpostGenerationParams;
                     currentLevelData.AllowInvalidOutpost = allowInvalidOutpost.Selected;
-                    Level.Generate(currentLevelData, mirror: mirrorLevel.Selected);
+                    var dummyLocations = GameSession.CreateDummyLocations(seed: currentLevelData.Seed);
+                    Level.Generate(currentLevelData, mirror: mirrorLevel.Selected, startLocation: dummyLocations[0], endLocation: dummyLocations[1]);
+                    Submarine.MainSub?.SetPosition(Level.Loaded.StartPosition);
                     GameMain.LightManager.AddLight(pointerLightSource);
                     if (!wasLevelLoaded || Cam.Position.X < 0 || Cam.Position.Y < 0 || Cam.Position.Y > Level.Loaded.Size.X || Cam.Position.Y > Level.Loaded.Size.Y)
                     {
@@ -228,7 +259,7 @@ namespace Barotrauma
                     var nonPlayerFiles = ContentPackageManager.EnabledPackages.All.SelectMany(p => p
                         .GetFiles<BaseSubFile>()
                         .Where(f => !(f is SubmarineFile))).ToArray();
-                    SubmarineInfo subInfo = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == GameSettings.CurrentConfig.QuickStartSub);
+                    SubmarineInfo subInfo = selectedSubDropDown.SelectedData as SubmarineInfo;
                     subInfo ??= SubmarineInfo.SavedSubmarines.GetRandomUnsynced(s =>
                         s.IsPlayer && !s.HasTag(SubmarineTag.Shuttle) &&
                         !nonPlayerFiles.Any(f => f.Path == s.FilePath));
@@ -259,6 +290,7 @@ namespace Barotrauma
 
             levelObjectList = new GUIListBox(new RectTransform(new Vector2(0.99f, 0.85f), bottomPanel.RectTransform, Anchor.Center))
             {
+                PlaySoundOnSelect = true,
                 UseGridLayout = true
             };
             levelObjectList.OnSelected += (GUIComponent component, object obj) =>
@@ -866,7 +898,11 @@ namespace Barotrauma
             {
                 foreach (Item item in Item.ItemList)
                 {
-                    item?.GetComponent<Items.Components.LightComponent>()?.Update((float)deltaTime, Cam);
+                    if (item == null) { continue; }
+                    foreach (var light in item.GetComponents<Items.Components.LightComponent>())
+                    {
+                        light.Update((float)deltaTime, Cam);
+                    }
                 }
             }
             GameMain.LightManager?.Update((float)deltaTime);

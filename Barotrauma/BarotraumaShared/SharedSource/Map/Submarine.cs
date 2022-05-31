@@ -1483,8 +1483,10 @@ namespace Barotrauma
                     {
                         if (item.Submarine != this) continue;
                         if (item.ParentInventory != null || item.body != null) continue;
-                        var lightComponent = item.GetComponent<Items.Components.LightComponent>();
-                        if (lightComponent != null) lightComponent.LightColor = new Color(lightComponent.LightColor, lightComponent.LightColor.A / 255.0f * 0.5f);
+                        foreach (var light in item.GetComponents<LightComponent>())
+                        {
+                            light.LightColor = new Color(light.LightColor, light.LightColor.A / 255.0f * 0.5f);
+                        }
                     }
                 }
                 GenerateOutdoorNodes();
@@ -1555,7 +1557,7 @@ namespace Barotrauma
             element.Add(new XAttribute("cargocapacity", cargoCapacity));
             element.Add(new XAttribute("recommendedcrewsizemin", Info.RecommendedCrewSizeMin));
             element.Add(new XAttribute("recommendedcrewsizemax", Info.RecommendedCrewSizeMax));
-            element.Add(new XAttribute("recommendedcrewexperience", Info.RecommendedCrewExperience ?? ""));
+            element.Add(new XAttribute("recommendedcrewexperience", Info.RecommendedCrewExperience.ToString()));
             element.Add(new XAttribute("requiredcontentpackages", string.Join(", ", Info.RequiredContentPackages)));
 
             if (Info.Type == SubmarineType.OutpostModule)
@@ -1632,6 +1634,7 @@ namespace Barotrauma
                 Type = Info.Type,
                 FilePath = filePath,
                 OutpostModuleInfo = Info.OutpostModuleInfo != null ? new OutpostModuleInfo(Info.OutpostModuleInfo) : null,
+                BeaconStationInfo = Info.BeaconStationInfo != null ? new BeaconStationInfo(Info.BeaconStationInfo) : null,
                 Name = Path.GetFileNameWithoutExtension(filePath)
             };
 #if CLIENT

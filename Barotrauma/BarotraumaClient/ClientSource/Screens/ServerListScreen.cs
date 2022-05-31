@@ -504,6 +504,7 @@ namespace Barotrauma
 
             serverList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), serverListContainer.RectTransform, Anchor.Center))
             {
+                PlaySoundOnSelect = true,
                 ScrollBarVisible = true,
                 OnSelected = (btn, obj) =>
                 {
@@ -1473,7 +1474,6 @@ namespace Barotrauma
             {
                 friendsDropdownButton = new GUIButton(new RectTransform(Vector2.One, friendsButtonHolder.RectTransform, Anchor.BottomRight, Pivot.BottomRight, scaleBasis: ScaleBasis.BothHeight), "\u2022 \u2022 \u2022", style: "GUIButtonFriendsDropdown")
                 {
-                    Font = GUIStyle.GlobalFont,
                     OnClicked = (button, udt) =>
                     {
                         friendsDropdown.RectTransform.NonScaledSize = new Point(friendsButtonHolder.Rect.Height * 5 * 166 / 100, friendsButtonHolder.Rect.Height * 4 * 166 / 100);

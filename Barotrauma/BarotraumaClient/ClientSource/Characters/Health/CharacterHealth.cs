@@ -6,7 +6,6 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -1345,6 +1344,7 @@ namespace Barotrauma
                 {
                     UserData = item,
                     DisabledColor = Color.White * 0.1f,
+                    PlaySoundOnSelect = false,
                     OnClicked = (btn, userdata) =>
                     {
                         if (!(userdata is ItemPrefab itemPrefab)) { return false; }
@@ -1352,6 +1352,7 @@ namespace Barotrauma
                         if (item == null) { return false; }
                         Limb targetLimb = Character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == selectedLimbIndex);
                         item.ApplyTreatment(Character.Controlled, Character, targetLimb);
+                        SoundPlayer.PlayUISound(GUISoundType.Select);
                         return true;
                     }
                 };

@@ -400,8 +400,8 @@ namespace Barotrauma.Items.Components
         private void IncreaseSkillLevel(Character user, float deltaTime)
         {
             if (user?.Info == null) { return; }
-            // Do not increase the helm skill when "steering" the sub in an outpost level
-            if (GameMain.GameSession?.Campaign != null && Level.IsLoadedOutpost) { return; }
+            // Do not increase the helm skill when "steering" the sub while docked into something static (e.g. outpost or wreck)
+            if (GameMain.GameSession?.Campaign != null && controlledSub != null && controlledSub.DockedTo.Any(d => d.PhysicsBody.BodyType == BodyType.Static)) { return; }
 
             float userSkill = Math.Max(user.GetSkillLevel("helm"), 1.0f) / 100.0f;
             user.Info.IncreaseSkillLevel(

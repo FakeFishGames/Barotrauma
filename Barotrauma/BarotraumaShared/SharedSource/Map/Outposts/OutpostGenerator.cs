@@ -830,43 +830,44 @@ namespace Barotrauma
 
         private static SubmarineInfo GetRandomModule(OutpostModuleInfo prevModule, IEnumerable<SubmarineInfo> modules, Identifier moduleFlag, OutpostModuleInfo.GapPosition gapPosition, LocationType locationType, bool allowDifferentLocationType)
         {
-            IEnumerable<SubmarineInfo> availableModules = null;
+            IEnumerable<SubmarineInfo> modulesWithCorrectFlags = null;
             if (moduleFlag.IsEmpty || moduleFlag.Equals("none"))
             {
-                availableModules = modules
+                modulesWithCorrectFlags = modules
                     .Where(m => !m.OutpostModuleInfo.ModuleFlags.Any() || (m.OutpostModuleInfo.ModuleFlags.Count() == 1 && m.OutpostModuleInfo.ModuleFlags.Contains("none".ToIdentifier())));
             }
             else
             {
-                availableModules = modules
+                modulesWithCorrectFlags = modules
                     .Where(m => m.OutpostModuleInfo.ModuleFlags.Contains(moduleFlag));
             }
+            modulesWithCorrectFlags = modulesWithCorrectFlags.Where(m => m.OutpostModuleInfo.GapPositions.HasFlag(gapPosition) && m.OutpostModuleInfo.CanAttachToPrevious.HasFlag(gapPosition));
 
-            availableModules = availableModules.Where(m => m.OutpostModuleInfo.GapPositions.HasFlag(gapPosition) && m.OutpostModuleInfo.CanAttachToPrevious.HasFlag(gapPosition));
-
-            if (prevModule != null)
+            var suitableModules = GetSuitable(modulesWithCorrectFlags, requireAllowAttachToPrevious: true, requireCorrectLocationType: true, disallowNonLocationTypeSpecific: true);
+            if (!suitableModules.Any())
             {
-                availableModules = availableModules.Where(m => CanAttachTo(m.OutpostModuleInfo, prevModule));// && CanAttachTo(prevModule, m.OutpostModuleInfo));
+                //no suitable module found, see if we can find a "generic" module that's not meant for any specific type of outpost
+                suitableModules = GetSuitable(modulesWithCorrectFlags, requireAllowAttachToPrevious: true, requireCorrectLocationType: true, disallowNonLocationTypeSpecific: false);                
+                //still not found, see if we can find something that's otherwise suitable but not meant to attach to the previous module
+                if (!suitableModules.Any())
+                {
+                    suitableModules = GetSuitable(modulesWithCorrectFlags, requireAllowAttachToPrevious: false, requireCorrectLocationType: true, disallowNonLocationTypeSpecific: true);
+                }
+                //still not found! Try if we can find a generic module that's not meant to attach to the previous module
+                if (!suitableModules.Any())
+                {
+                    suitableModules = GetSuitable(modulesWithCorrectFlags, requireAllowAttachToPrevious: false, requireCorrectLocationType: true, disallowNonLocationTypeSpecific: false);
+                }
             }
 
-            if (availableModules.Count() == 0) { return null; }
-
-            //try to search for modules made specifically for this location type first
-            var modulesSuitableForLocationType =
-                availableModules.Where(m => m.OutpostModuleInfo.AllowedLocationTypes.Contains(locationType.Identifier));
-
-            //if not found, search for modules suitable for any location type
-            if (allowDifferentLocationType && !modulesSuitableForLocationType.Any())
-            {
-                modulesSuitableForLocationType = availableModules.Where(m => !m.OutpostModuleInfo.AllowedLocationTypes.Any());
-            }
-
-            if (!modulesSuitableForLocationType.Any())
+            if (!suitableModules.Any())
             {
                 if (allowDifferentLocationType)
                 {
+                    if (modulesWithCorrectFlags.Any())
+
                     DebugConsole.NewMessage($"Could not find a suitable module for the location type {locationType}. Module flag: {moduleFlag}.", Color.Orange);
-                    return ToolBox.SelectWeightedRandom(availableModules.ToList(), availableModules.Select(m => m.OutpostModuleInfo.Commonness).ToList(), Rand.RandSync.ServerAndClient);
+                    return ToolBox.SelectWeightedRandom(modulesWithCorrectFlags.ToList(), modulesWithCorrectFlags.Select(m => m.OutpostModuleInfo.Commonness).ToList(), Rand.RandSync.ServerAndClient);
                 }
                 else
                 {
@@ -875,7 +876,28 @@ namespace Barotrauma
             }
             else
             {
-                return ToolBox.SelectWeightedRandom(modulesSuitableForLocationType.ToList(), modulesSuitableForLocationType.Select(m => m.OutpostModuleInfo.Commonness).ToList(), Rand.RandSync.ServerAndClient);
+                return ToolBox.SelectWeightedRandom(suitableModules.ToList(), suitableModules.Select(m => m.OutpostModuleInfo.Commonness).ToList(), Rand.RandSync.ServerAndClient);
+            }
+
+            IEnumerable<SubmarineInfo> GetSuitable(IEnumerable<SubmarineInfo> modules, bool requireAllowAttachToPrevious, bool requireCorrectLocationType, bool disallowNonLocationTypeSpecific)
+            {
+                IEnumerable<SubmarineInfo> suitable = modules;
+                if (requireCorrectLocationType)
+                {
+                    if (disallowNonLocationTypeSpecific)
+                    {
+                        suitable = modules.Where(m => m.OutpostModuleInfo.AllowedLocationTypes.Contains(locationType.Identifier));
+                    }
+                    else
+                    {
+                        suitable = modules.Where(m => m.OutpostModuleInfo.AllowedLocationTypes.Contains(locationType.Identifier) || !m.OutpostModuleInfo.AllowedLocationTypes.Any());
+                    }
+                }
+                if (requireAllowAttachToPrevious && prevModule != null)
+                {
+                    suitable = suitable.Where(m => CanAttachTo(m.OutpostModuleInfo, prevModule));                    
+                }
+                return suitable;
             }
         }
 
@@ -1589,10 +1611,6 @@ namespace Barotrauma
                 if (GameMain.NetworkMember?.ServerSettings != null && !GameMain.NetworkMember.ServerSettings.KillableNPCs)
                 {
                     npc.CharacterHealth.Unkillable = true;
-                }
-                else
-                {
-                    npc.AddStaticHealthMultiplier(humanPrefab.HealthMultiplier);
                 }
                 humanPrefab.GiveItems(npc, outpost, Rand.RandSync.ServerAndClient);
                 foreach (Item item in npc.Inventory.FindAllItems(it => it != null, recursive: true))

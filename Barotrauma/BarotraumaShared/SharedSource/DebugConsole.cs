@@ -1836,8 +1836,8 @@ namespace Barotrauma
                     ThrowError($"No start item set identifier defined!");
                     return;
                 }
-                AutoItemPlacer.StartItemSet = args[0].ToIdentifier();
-                NewMessage($"Start item set changed to \"{AutoItemPlacer.StartItemSet}\"");
+                AutoItemPlacer.DefaultStartItemSet = args[0].ToIdentifier();
+                NewMessage($"Start item set changed to \"{AutoItemPlacer.DefaultStartItemSet}\"");
             }, isCheat: false));
 
             //"dummy commands" that only exist so that the server can give clients permissions to use them

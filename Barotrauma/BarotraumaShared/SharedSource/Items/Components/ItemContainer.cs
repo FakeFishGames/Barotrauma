@@ -187,7 +187,12 @@ namespace Barotrauma.Items.Components
         [Serialize(false, IsPropertySaveable.No)]
         public bool RemoveContainedItemsOnDeconstruct { get; set; }
 
-        private SlotRestrictions[] slotRestrictions;
+        private readonly ImmutableArray<SlotRestrictions> slotRestrictions;
+
+        readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
+
+        private Vector2 prevContainedItemPositions;
+
 
         public bool ShouldBeContained(string[] identifiersOrTags, out bool isRestrictionsDefined)
         {
@@ -237,10 +242,11 @@ namespace Barotrauma.Items.Components
                 }
             }
             Inventory = new ItemInventory(item, this, totalCapacity, SlotsPerRow);
-            slotRestrictions = new SlotRestrictions[totalCapacity];
+           
+            List<SlotRestrictions> newSlotRestrictions = new List<SlotRestrictions>(totalCapacity);
             for (int i = 0; i < capacity; i++)
             {
-                slotRestrictions[i] = new SlotRestrictions(maxStackSize, ContainableItems);
+                newSlotRestrictions.Add(new SlotRestrictions(maxStackSize, ContainableItems));
             }
 
             int subContainerIndex = capacity;
@@ -268,11 +274,13 @@ namespace Barotrauma.Items.Components
 
                 for (int i = subContainerIndex; i < subContainerIndex + subCapacity; i++)
                 {
-                    slotRestrictions[i] = new SlotRestrictions(subMaxStackSize, subContainableItems);
+                    newSlotRestrictions.Add(new SlotRestrictions(subMaxStackSize, subContainableItems));
                 }
                 subContainerIndex += subCapacity;
             }
             capacity = totalCapacity;
+            slotRestrictions = newSlotRestrictions.ToImmutableArray();
+            System.Diagnostics.Debug.Assert(totalCapacity == slotRestrictions.Length);
             InitProjSpecific(element);
         }
 
@@ -365,18 +373,21 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
-
         public override void Update(float deltaTime, Camera cam)
         {
             if (!string.IsNullOrEmpty(SpawnWithId) && !alwaysContainedItemsSpawned)
             {
                 SpawnAlwaysContainedItems();
+                alwaysContainedItemsSpawned = true;
             }
 
             if (item.ParentInventory is CharacterInventory ownerInventory)
             {
-                item.SetContainedItemPositions();
+                if (Vector2.DistanceSquared(prevContainedItemPositions, item.Position) > 10.0f)
+                {
+                    SetContainedItemPositions();
+                    prevContainedItemPositions = item.Position;
+                }
 
                 if (AutoInject)
                 {
@@ -397,7 +408,7 @@ namespace Barotrauma.Items.Components
                 item.body.Enabled &&
                 item.body.FarseerBody.Awake)
             {
-                item.SetContainedItemPositions();
+                SetContainedItemPositions();
             }
             else if (activeContainedItems.Count == 0)
             {

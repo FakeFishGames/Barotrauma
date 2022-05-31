@@ -21,7 +21,7 @@ namespace Barotrauma.Networking
         public UInt16 LastSentEntityEventID = 0;
         public UInt16 LastRecvEntityEventID = 0;
 
-        public UInt16 LastRecvCampaignUpdate = 0;
+        public readonly Dictionary<MultiPlayerCampaign.NetFlags, UInt16> LastRecvCampaignUpdate = new Dictionary<MultiPlayerCampaign.NetFlags, ushort>();
         public UInt16 LastRecvCampaignSave = 0;
 
         public (UInt16 saveId, float time) LastCampaignSaveSendTime;

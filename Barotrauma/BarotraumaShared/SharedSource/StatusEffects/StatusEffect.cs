@@ -132,7 +132,11 @@ namespace Barotrauma
             public enum SpawnPositionType
             {
                 This,
+                //the inventory of the StatusEffect's target entity
                 ThisInventory,
+                //the same inventory the StatusEffect's target entity is in (only valid if the target is an Item)
+                SameInventory,
+                //the inventory of an item in the inventory of the StatusEffect's target entity (e.g. a container in the character's inventory)
                 ContainedInventory
             }
 
@@ -308,11 +312,26 @@ namespace Barotrauma
         private readonly float lifeTime;
         private float lifeTimer;
 
+        public float intervalTimer;
+
         public static readonly List<DurationListElement> DurationList = new List<DurationListElement>();
 
-        public readonly bool CheckConditionalAlways; //Always do the conditional checks for the duration/delay. If false, only check conditional on apply.
+        /// <summary>
+        /// Always do the conditional checks for the duration/delay. If false, only check conditional on apply.
+        /// </summary>
+        public readonly bool CheckConditionalAlways;
 
-        public readonly bool Stackable = true; //Can the same status effect be applied several times to the same targets?
+        /// <summary>
+        /// Only valid if the effect has a duration or delay. Can the effect be applied on the same target(s)s if the effect is already being applied?
+        /// </summary>
+        public readonly bool Stackable = true;
+
+        /// <summary>
+        /// The interval at which the effect is executed. The difference between delay and interval is that effects with a delay find the targets, check the conditions, etc
+        /// immediately when Apply is called, but don't apply the effects until the delay has passed. Effects with an interval check if the interval has passed when Apply is
+        /// called and apply the effects if it has, otherwise they do nothing.
+        /// </summary>
+        public readonly float Interval;
 
 #if CLIENT
         private readonly bool playSoundOnRequiredItemFailure = false;
@@ -450,6 +469,8 @@ namespace Barotrauma
 
             TargetSlot = element.GetAttributeInt("targetslot", -1);
 
+            Interval = element.GetAttributeFloat("interval", 0.0f);
+
             Range = element.GetAttributeFloat("range", 0.0f);
             Offset = element.GetAttributeVector2("offset", Vector2.Zero);
             string[] targetLimbNames = element.GetAttributeStringArray("targetlimb", null) ?? element.GetAttributeStringArray("targetlimbs", null);
@@ -556,6 +577,7 @@ namespace Barotrauma
                             " - sounds should be defined as child elements of the StatusEffect, not as attributes.");
                         break;
                     case "delay":
+                    case "interval":
                         break;
                     case "range":
                         if (!HasTargetType(TargetType.NearbyCharacters) && !HasTargetType(TargetType.NearbyItems))
@@ -1094,6 +1116,12 @@ namespace Barotrauma
         {
             if (this.type != type) { return; }
 
+            if (intervalTimer > 0.0f)
+            {
+                intervalTimer -= deltaTime;
+                return;
+            }
+
             currentTargets.Clear();
             foreach (ISerializableEntity target in targets)
             {
@@ -1195,7 +1223,11 @@ namespace Barotrauma
                 lifeTimer -= deltaTime;
                 if (lifeTimer <= 0) { return; }
             }
-
+            if (intervalTimer > 0.0f)
+            {
+                intervalTimer -= deltaTime;
+                return;
+            }
             Hull hull = GetHull(entity);
             Vector2 position = GetPosition(entity, targets, worldPosition);
             if (useItemCount > 0)
@@ -1717,6 +1749,26 @@ namespace Barotrauma
                                 }
                             }
                             break;
+                        case ItemSpawnInfo.SpawnPositionType.SameInventory:
+                            {
+                                Inventory inventory = null;
+                                if (entity is Character character)
+                                {
+                                    inventory = character.Inventory;
+                                }
+                                else if (entity is Item item)
+                                {
+                                    inventory = item.ParentInventory;
+                                }
+                                if (inventory != null)
+                                {
+                                    Entity.Spawner.AddItemToSpawnQueue(chosenItemSpawnInfo.ItemPrefab, inventory, spawnIfInventoryFull: chosenItemSpawnInfo.SpawnIfInventoryFull, onSpawned: (Item newItem) =>
+                                    {
+                                        newItem.Condition = newItem.MaxCondition * chosenItemSpawnInfo.Condition;
+                                    });
+                                }
+                            }
+                            break;
                         case ItemSpawnInfo.SpawnPositionType.ContainedInventory:
                             {
                                 Inventory thisInventory = null;
@@ -1755,6 +1807,8 @@ namespace Barotrauma
             }
 
             ApplyProjSpecific(deltaTime, entity, targets, hull, position, playSound: true);
+
+            intervalTimer = Interval;
 
             static Character CharacterFromTarget(ISerializableEntity target)
             {

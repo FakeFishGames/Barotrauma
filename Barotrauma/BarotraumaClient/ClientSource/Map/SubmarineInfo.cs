@@ -154,13 +154,13 @@ namespace Barotrauma
                 crewSizeText.RectTransform.MinSize = new Point(0, crewSizeText.Children.First().Rect.Height);
             }
 
-            if (!string.IsNullOrEmpty(RecommendedCrewExperience))
+            if (RecommendedCrewExperience != CrewExperienceLevel.Unknown)
             {
                 var crewExperienceText = new GUITextBlock(new RectTransform(new Vector2(leftPanelWidth, 0), parent.Content.RectTransform),
                     TextManager.Get("RecommendedCrewExperience"), textAlignment: Alignment.TopLeft, font: font, wrap: true)
                 { CanBeFocused = false };
                 new GUITextBlock(new RectTransform(new Vector2(rightPanelWidth, 0.0f), crewExperienceText.RectTransform, Anchor.TopRight, Pivot.TopLeft),
-                    TextManager.Get(RecommendedCrewExperience), textAlignment: Alignment.TopLeft, font: font, wrap: true)
+                    TextManager.Get(RecommendedCrewExperience.ToIdentifier()), textAlignment: Alignment.TopLeft, font: font, wrap: true)
                 { CanBeFocused = false };
                 crewExperienceText.RectTransform.MinSize = new Point(0, crewExperienceText.Children.First().Rect.Height);
             }

@@ -390,7 +390,7 @@ namespace Barotrauma
                 ToolTip = TextManager.Get("campaignstore.reputationtooltip")
             };
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), reputationEffectContainer.RectTransform),
-                TextManager.Get("reputation"), font: GUIStyle.Font, textAlignment: Alignment.BottomLeft)
+                TextManager.Get("reputationmodifier"), font: GUIStyle.Font, textAlignment: Alignment.BottomLeft)
             {
                 AutoScaleVertical = true,
                 CanBeFocused = false,
@@ -656,7 +656,7 @@ namespace Barotrauma
             SetConfirmButtonBehavior();
             clearAllButton = new GUIButton(new RectTransform(new Vector2(0.35f, 1.0f), buttonContainer.RectTransform), TextManager.Get("campaignstore.clearall"))
             {
-                ClickSound = GUISoundType.DecreaseQuantity,
+                ClickSound = GUISoundType.Cart,
                 Enabled = HasActiveTabPermissions(),
                 ForceUpperCase = ForceUpperCase.Yes,
                 OnClicked = (button, userData) =>
@@ -1567,8 +1567,6 @@ namespace Barotrauma
                     }
                     AddToShoppingCrate(purchasedItem, quantity: numberInput.IntValue - purchasedItem.Quantity);
                 };
-                amountInput.PlusButton.ClickSound = GUISoundType.IncreaseQuantity;
-                amountInput.MinusButton.ClickSound = GUISoundType.DecreaseQuantity;
                 frame.HoverColor = frame.SelectedColor = Color.Transparent;
             }
 
@@ -1622,7 +1620,7 @@ namespace Barotrauma
             {
                 new GUIButton(new RectTransform(new Vector2(buttonRelativeWidth, 0.9f), mainGroup.RectTransform), style: "StoreAddToCrateButton")
                 {
-                    ClickSound = GUISoundType.IncreaseQuantity,
+                    ClickSound = GUISoundType.Cart,
                     Enabled = !forceDisable && pi.Quantity > 0,
                     ForceUpperCase = ForceUpperCase.Yes,
                     UserData = "addbutton",
@@ -1633,7 +1631,7 @@ namespace Barotrauma
             {
                 new GUIButton(new RectTransform(new Vector2(buttonRelativeWidth, 0.9f), mainGroup.RectTransform), style: "StoreRemoveFromCrateButton")
                 {
-                    ClickSound = GUISoundType.DecreaseQuantity,
+                    ClickSound = GUISoundType.Cart,
                     Enabled = !forceDisable,
                     ForceUpperCase = ForceUpperCase.Yes,
                     UserData = "removebutton",
@@ -2076,11 +2074,13 @@ namespace Barotrauma
         {
             if (IsBuying)
             {
+                confirmButton.ClickSound = GUISoundType.ConfirmTransaction;
                 confirmButton.Text = TextManager.Get("CampaignStore.Purchase");
                 confirmButton.OnClicked = (b, o) => BuyItems();
             }
             else
             {
+                confirmButton.ClickSound = GUISoundType.Select;
                 confirmButton.Text = TextManager.Get("CampaignStoreTab.Sell");
                 confirmButton.OnClicked = (b, o) =>
                 {
@@ -2088,6 +2088,7 @@ namespace Barotrauma
                         TextManager.Get("FireWarningHeader"),
                         TextManager.Get("CampaignStore.SellWarningText"),
                         new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                    confirmDialog.Buttons[0].ClickSound = GUISoundType.ConfirmTransaction;
                     confirmDialog.Buttons[0].OnClicked = (b, o) => SellItems();
                     confirmDialog.Buttons[0].OnClicked += confirmDialog.Close;
                     confirmDialog.Buttons[1].OnClicked = confirmDialog.Close;

@@ -171,7 +171,7 @@ namespace Barotrauma
             int childIndex = values.IndexOf(currentValue);
             dropdown.Select(childIndex);
             dropdown.ListBox.ForceLayoutRecalculation();
-            dropdown.ListBox.ScrollToElement(dropdown.ListBox.Content.GetChild(childIndex), playSound: false);
+            dropdown.ListBox.ScrollToElement(dropdown.ListBox.Content.GetChild(childIndex));
             dropdown.OnSelected = (dd, obj) =>
             {
                 setter((T)obj);

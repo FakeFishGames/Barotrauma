@@ -74,7 +74,7 @@ namespace Barotrauma
             }
         }
 
-        public bool HasMultipleLimbsOfSameType => limbs == null ? false : Limbs.Length > limbDictionary.Count;
+        public bool HasMultipleLimbsOfSameType => limbs != null && limbs.Length > limbDictionary.Count;
 
         private bool frozen;
         public bool Frozen
@@ -1850,35 +1850,29 @@ namespace Barotrauma
         }
         
         /// <summary>
-        /// Note that if there are multiple limbs of the same type, only the first of them is found in the dictionary.
+        /// Note that if there are multiple limbs of the same type, only the first (valid) limb is returned.
         /// </summary>
         public Limb GetLimb(LimbType limbType, bool excludeSevered = true)
         {
-            Limb limb = null;
-            if (HasMultipleLimbsOfSameType)
+            if (limbDictionary.TryGetValue(limbType, out Limb limb))
             {
-                for (int i = 0; i < 10; i++)
+                if (excludeSevered && limb.IsSevered)
                 {
-                    limbDictionary.TryGetValue(limbType, out limb);
-                    if (limb == null)
+                    limb = null;
+                }
+            }
+            if (limb == null && HasMultipleLimbsOfSameType)
+            {
+                // Didn't find a (valid) limb of the matching type. If there's multiple limbs of the same type, check the other limbs.
+                foreach (var l in limbs)
+                {
+                    if (l.type != limbType) { continue; }
+                    if (!excludeSevered || !l.IsSevered)
                     {
-                        // No limbs found
-                        break;
-                    }
-                    if (!excludeSevered || !limb.IsSevered)
-                    {
-                        // Found a valid limb
+                        limb = l;
                         break;
                     }
                 }
-            }
-            else
-            {
-                limbDictionary.TryGetValue(limbType, out limb);
-            }
-            if (excludeSevered && limb != null && limb.IsSevered)
-            {
-                limb = null;
             }
             return limb;
         }

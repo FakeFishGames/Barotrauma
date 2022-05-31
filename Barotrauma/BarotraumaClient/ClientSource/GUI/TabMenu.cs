@@ -360,7 +360,7 @@ namespace Barotrauma
             var talentsButton = createTabButton(InfoFrameTab.Talents, "tabmenu.character");
             talentsButton.OnAddedToGUIUpdateList += (component) =>
             {
-                talentsButton.Enabled = Character.Controlled?.Info != null || (GameMain.Client?.CharacterInfo != null && GameMain.GameSession?.GameMode is MultiPlayerCampaign);
+                talentsButton.Enabled = Character.Controlled?.Info != null || GameMain.Client?.CharacterInfo != null;
                 if (!talentsButton.Enabled && selectedTab == InfoFrameTab.Talents)
                 {
                     SelectInfoFrameTab(InfoFrameTab.Crew);
@@ -453,7 +453,8 @@ namespace Barotrauma
                 GUIListBox crewList = new GUIListBox(new RectTransform(crewListSize, content.RectTransform))
                 {
                     Padding = new Vector4(2, 5, 0, 0),
-                    AutoHideScrollBar = false
+                    AutoHideScrollBar = false,
+                    PlaySoundOnSelect = true
                 };
                 crewList.UpdateDimensions();
 
@@ -928,8 +929,8 @@ namespace Barotrauma
             }
             else
             {
-                Vector2 stringOffset = GUIStyle.GlobalFont.MeasureString(inLobbyString) / 2f;
-                GUIStyle.GlobalFont.DrawString(spriteBatch, inLobbyString, area.Center.ToVector2() - stringOffset, Color.White);
+                Vector2 stringOffset = GUIStyle.Font.MeasureString(inLobbyString) / 2f;
+                GUIStyle.Font.DrawString(spriteBatch, inLobbyString, area.Center.ToVector2() - stringOffset, Color.White);
             }
         }
 
@@ -1914,6 +1915,7 @@ namespace Barotrauma
                     {
                         OnClicked = (button, o) =>
                         {
+                            GameMain.Client?.SendCharacterInfo();
                             characterSettingsFrame!.Visible = false;
                             talentFrameMain.Visible = true;
                             return true;

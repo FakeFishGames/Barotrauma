@@ -2858,7 +2858,10 @@ namespace Barotrauma.CharacterEditor
             {
                 var loadBox = new GUIMessageBox(GetCharacterEditorTranslation("LoadRagdoll"), "", new LocalizedString[] { TextManager.Get("Cancel"), TextManager.Get("Load"), TextManager.Get("Delete") }, messageBoxRelSize);
                 loadBox.Buttons[0].OnClicked += loadBox.Close;
-                var listBox = new GUIListBox(new RectTransform(new Vector2(0.9f, 0.6f), loadBox.Content.RectTransform, Anchor.TopCenter));
+                var listBox = new GUIListBox(new RectTransform(new Vector2(0.9f, 0.6f), loadBox.Content.RectTransform, Anchor.TopCenter))
+                {
+                    PlaySoundOnSelect = true,
+                };
                 var deleteButton = loadBox.Buttons[2];
                 deleteButton.Enabled = false;
                 void PopulateListBox()
@@ -2996,7 +2999,10 @@ namespace Barotrauma.CharacterEditor
             {
                 var loadBox = new GUIMessageBox(GetCharacterEditorTranslation("LoadAnimation"), "", new LocalizedString[] { TextManager.Get("Cancel"), TextManager.Get("Load"), TextManager.Get("Delete") }, messageBoxRelSize);
                 loadBox.Buttons[0].OnClicked += loadBox.Close;
-                var listBox = new GUIListBox(new RectTransform(new Vector2(0.9f, 0.6f), loadBox.Content.RectTransform));
+                var listBox = new GUIListBox(new RectTransform(new Vector2(0.9f, 0.6f), loadBox.Content.RectTransform))
+                {
+                    PlaySoundOnSelect = true,
+                };
                 var deleteButton = loadBox.Buttons[2];
                 deleteButton.Enabled = false;
                 // Type filtering

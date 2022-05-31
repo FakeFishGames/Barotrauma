@@ -569,6 +569,7 @@ namespace Barotrauma
             GUILayoutGroup buttonLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.5f), footerLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterRight);
             GUIButton healButton = new GUIButton(new RectTransform(new Vector2(0.33f, 1f), buttonLayout.RectTransform), TextManager.Get("medicalclinic.heal"))
             {
+                ClickSound = GUISoundType.ConfirmTransaction,
                 Enabled = medicalClinic.PendingHeals.Any() && medicalClinic.GetBalance() >= medicalClinic.GetTotalCost(),
                 OnClicked = (button, _) =>
                 {
@@ -595,6 +596,7 @@ namespace Barotrauma
 
             GUIButton clearButton = new GUIButton(new RectTransform(new Vector2(0.33f, 1f), buttonLayout.RectTransform), TextManager.Get("campaignstore.clearall"))
             {
+                ClickSound = GUISoundType.Cart,
                 OnClicked = (button, _) =>
                 {
                     button.Enabled = false;
@@ -684,6 +686,7 @@ namespace Barotrauma
 
             GUIButton healButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1f), textLayout.RectTransform), style: "CrewManagementRemoveButton")
             {
+                ClickSound = GUISoundType.Cart,
                 OnClicked = (button, _) =>
                 {
                     button.Enabled = false;
@@ -766,6 +769,7 @@ namespace Barotrauma
 
             GUIButton treatAllButton = new GUIButton(new RectTransform(new Vector2(1f, 0.2f), mainLayout.RectTransform), TextManager.Get("medicalclinic.treatall"))
             {
+                ClickSound = GUISoundType.Cart,
                 Font = GUIStyle.SubHeadingFont,
                 Visible = false
             };
@@ -887,7 +891,10 @@ namespace Barotrauma
 
             GUITextBlock priceBlock = new GUITextBlock(new RectTransform(new Vector2(1f, 0.25f), bottomTextLayout.RectTransform), TextManager.FormatCurrency(affliction.Price), font: GUIStyle.SubHeadingFont);
 
-            GUIButton buyButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.75f), bottomLayout.RectTransform), style: "CrewManagementAddButton");
+            GUIButton buyButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.75f), bottomLayout.RectTransform), style: "CrewManagementAddButton")
+            {
+                ClickSound = GUISoundType.Cart
+            };
 
             ImmutableArray<GUIComponent> elementsToDisable = ImmutableArray.Create<GUIComponent>(prefabBlock, backgroundFrame, icon, vitalityBlock, severityBlock, buyButton, descriptionBlock, priceBlock);
 

@@ -72,7 +72,7 @@ namespace Barotrauma
             get
             {
                 if (Map != null) { return Map.CurrentLocation; }
-                if (dummyLocations == null) { CreateDummyLocations(); }
+                if (dummyLocations == null) { dummyLocations = CreateDummyLocations(LevelData?.Seed ?? string.Empty); }
                 if (dummyLocations == null) { throw new NullReferenceException("dummyLocations is null somehow!"); }
                 return dummyLocations[0];
             }
@@ -83,7 +83,7 @@ namespace Barotrauma
             get
             {
                 if (Map != null) { return Map.SelectedLocation; }
-                if (dummyLocations == null) { CreateDummyLocations(); }
+                if (dummyLocations == null) { dummyLocations = CreateDummyLocations(LevelData?.Seed ?? string.Empty); }
                 if (dummyLocations == null) { throw new NullReferenceException("dummyLocations is null somehow!"); }
                 return dummyLocations[1];
             }
@@ -207,7 +207,7 @@ namespace Barotrauma
             }
             else if (gameModePreset.GameModeType == typeof(MultiPlayerCampaign))
             {
-                var campaign = MultiPlayerCampaign.StartNew(seed ?? ToolBox.RandomSeed(8), selectedSub, settings);
+                var campaign = MultiPlayerCampaign.StartNew(seed ?? ToolBox.RandomSeed(8), settings);
                 if (selectedSub != null)
                 {
                     campaign.Bank.Deduct(selectedSub.Price);
@@ -218,7 +218,7 @@ namespace Barotrauma
 #if CLIENT
             else if (gameModePreset.GameModeType == typeof(SinglePlayerCampaign))
             {
-                var campaign = SinglePlayerCampaign.StartNew(seed ?? ToolBox.RandomSeed(8), selectedSub, settings);
+                var campaign = SinglePlayerCampaign.StartNew(seed ?? ToolBox.RandomSeed(8), settings);
                 if (selectedSub != null)
                 {
                     campaign.Bank.TryDeduct(selectedSub.Price);
@@ -245,25 +245,15 @@ namespace Barotrauma
             }
         }
 
-        private void CreateDummyLocations(LocationType? forceLocationType = null)
+        public static Location[] CreateDummyLocations(string seed, LocationType? forceLocationType = null)
         {
-            dummyLocations = new Location[2];
-
-            string seed = "";
-            if (GameMain.GameSession != null && GameMain.GameSession.Level != null)
-            {
-                seed = GameMain.GameSession.Level.Seed;
-            }
-            else if (GameMain.NetLobbyScreen != null)
-            {
-                seed = GameMain.NetLobbyScreen.LevelSeed;
-            }
-
+            var dummyLocations = new Location[2];
             MTRandom rand = new MTRandom(ToolBox.StringToInt(seed));
             for (int i = 0; i < 2; i++)
             {
                 dummyLocations[i] = Location.CreateRandom(new Vector2((float)rand.NextDouble() * 10000.0f, (float)rand.NextDouble() * 10000.0f), null, rand, requireOutpost: true, forceLocationType: forceLocationType);
             }
+            return dummyLocations;
         }
 
         public void LoadPreviousSave()
@@ -275,7 +265,7 @@ namespace Barotrauma
         /// <summary>
         /// Switch to another submarine. The sub is loaded when the next round starts.
         /// </summary>
-        public void SwitchSubmarine(SubmarineInfo newSubmarine, int cost, Client? client = null)
+        public void SwitchSubmarine(SubmarineInfo newSubmarine, bool transferItems, int cost, Client? client = null)
         {
             if (!OwnedSubmarines.Any(s => s.Name == newSubmarine.Name))
             {
@@ -299,6 +289,7 @@ namespace Barotrauma
             }
             GameAnalyticsManager.AddMoneySpentEvent(cost, GameAnalyticsManager.MoneySink.SubmarineSwitch, newSubmarine.Name);
             Campaign!.PendingSubmarineSwitch = newSubmarine;
+            Campaign!.TransferItemsOnSubSwitch = transferItems;
         }
 
         public void PurchaseSubmarine(SubmarineInfo newSubmarine, Client? client = null)
@@ -309,6 +300,9 @@ namespace Barotrauma
             {
                 GameAnalyticsManager.AddMoneySpentEvent(newSubmarine.Price, GameAnalyticsManager.MoneySink.SubmarinePurchase, newSubmarine.Name);
                 OwnedSubmarines.Add(newSubmarine);
+#if SERVER
+                (Campaign as MultiPlayerCampaign)?.IncrementLastUpdateIdForFlag(MultiPlayerCampaign.NetFlags.SubList);
+#endif
             }
         }
 
@@ -345,7 +339,7 @@ namespace Barotrauma
                     !missionPrefab.AllowedConnectionTypes.Any())
                 {
                     LocationType? locationType = LocationType.Prefabs.FirstOrDefault(lt => missionPrefab.AllowedLocationTypes.Any(m => m == lt.Identifier));
-                    CreateDummyLocations(locationType);
+                    dummyLocations = CreateDummyLocations(levelSeed, locationType);
                     randomLevel = LevelData.CreateRandom(levelSeed, difficulty, levelGenerationParams, requireOutpost: true);
                     break;
                 }
@@ -430,7 +424,7 @@ namespace Barotrauma
             Level? level = null;
             if (levelData != null)
             {
-                level = Level.Generate(levelData, mirrorLevel, startOutpost, endOutpost);
+                level = Level.Generate(levelData, mirrorLevel, StartLocation, EndLocation, startOutpost, endOutpost);
             }
 
             InitializeLevel(level);
@@ -603,7 +597,7 @@ namespace Barotrauma
                         Level.SpawnCorpses();
                         Level.PrepareBeaconStation();
                     }
-                    AutoItemPlacer.SpawnItems();
+                    AutoItemPlacer.SpawnItems(Campaign?.Settings.StartItemSet);
                 }
                 if (GameMode is MultiPlayerCampaign mpCampaign)
                 {

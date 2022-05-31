@@ -58,12 +58,12 @@ namespace Barotrauma
         /// <summary>
         /// Instantiates a new single player campaign
         /// </summary>
-        private SinglePlayerCampaign(string mapSeed, CampaignSettings settings) : base(GameModePreset.SinglePlayerCampaign)
+        private SinglePlayerCampaign(string mapSeed, CampaignSettings settings) : base(GameModePreset.SinglePlayerCampaign, settings)
         {
             CampaignMetadata = new CampaignMetadata(this);
             UpgradeManager = new UpgradeManager(this);
-            map = new Map(this, mapSeed, settings);
             Settings = settings;
+            map = new Map(this, mapSeed);
             foreach (JobPrefab jobPrefab in JobPrefab.Prefabs)
             {
                 for (int i = 0; i < jobPrefab.InitialCount; i++)
@@ -79,7 +79,7 @@ namespace Barotrauma
         /// <summary>
         /// Loads a previously saved single player campaign from XML
         /// </summary>
-        private SinglePlayerCampaign(XElement element) : base(GameModePreset.SinglePlayerCampaign)
+        private SinglePlayerCampaign(XElement element) : base(GameModePreset.SinglePlayerCampaign, CampaignSettings.Empty)
         {
             IsFirstRound = false;
 
@@ -87,7 +87,7 @@ namespace Barotrauma
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
-                    case "campaignsettings":
+                    case CampaignSettings.LowerCaseSaveElementName:
                         Settings = new CampaignSettings(subElement);
                         break;
                     case "crew":
@@ -95,7 +95,7 @@ namespace Barotrauma
                         ActiveOrdersElement = subElement.GetChildElement("activeorders");
                         break;
                     case "map":
-                        map = Map.Load(this, subElement, Settings);
+                        map = Map.Load(this, subElement);
                         break;
                     case "metadata":
                         CampaignMetadata = new CampaignMetadata(this, subElement);
@@ -163,21 +163,14 @@ namespace Barotrauma
         /// <summary>
         /// Start a completely new single player campaign
         /// </summary>
-        public static SinglePlayerCampaign StartNew(string mapSeed, SubmarineInfo selectedSub, CampaignSettings settings)
-        {
-            var campaign = new SinglePlayerCampaign(mapSeed, settings);
-            return campaign;
-        }
+        public static SinglePlayerCampaign StartNew(string mapSeed, CampaignSettings startingSettings) => new SinglePlayerCampaign(mapSeed, startingSettings);
 
         /// <summary>
         /// Load a previously saved single player campaign from xml
         /// </summary>
         /// <param name="element"></param>
         /// <returns></returns>
-        public static SinglePlayerCampaign Load(XElement element)
-        {
-            return new SinglePlayerCampaign(element);
-        }
+        public static SinglePlayerCampaign Load(XElement element) => new SinglePlayerCampaign(element);
 
         private void InitUI()
         {

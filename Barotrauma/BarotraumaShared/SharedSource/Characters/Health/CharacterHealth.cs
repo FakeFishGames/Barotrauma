@@ -1,12 +1,11 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.Networking;
-using Barotrauma.Extensions;
-using System.Globalization;
-using Barotrauma.Abilities;
 
 namespace Barotrauma
 {
@@ -148,7 +147,7 @@ namespace Barotrauma
                 {
                     max += Character.Info.Job.Prefab.VitalityModifier;
                 }
-                max *= Character.StaticHealthMultiplier;
+                max *= Character.HumanPrefabHealthMultiplier;
                 max *= 1f + Character.GetStatValue(StatTypes.MaximumHealthMultiplier);
                 return max * Character.HealthMultiplier;
             }
@@ -700,6 +699,7 @@ namespace Barotrauma
                 newStrength = Math.Min(existingAffliction.Prefab.MaxStrength, newStrength);
                 if (existingAffliction == stunAffliction) { Character.SetStun(newStrength, true, true); }
                 existingAffliction.Strength = newStrength;
+                existingAffliction.Duration = existingAffliction.Prefab.Duration;
                 if (newAffliction.Source != null) { existingAffliction.Source = newAffliction.Source; }
                 CalculateVitality();
                 if (Vitality <= MinVitality)
@@ -758,6 +758,15 @@ namespace Barotrauma
                         SteamAchievementManager.OnAfflictionRemoved(affliction, Character);
                         if (!irremovableAfflictions.Contains(affliction)) { afflictionsToRemove.Add(affliction); }
                         continue;
+                    }
+                    if (affliction.Prefab.Duration > 0.0f)
+                    {
+                        affliction.Duration -= deltaTime;
+                        if (affliction.Duration <= 0.0f)
+                        {
+                            afflictionsToRemove.Add(affliction);
+                            continue;
+                        }
                     }
                     afflictionsToUpdate.Add(kvp);
                 }

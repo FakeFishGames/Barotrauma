@@ -437,7 +437,7 @@ namespace Barotrauma
                     {
                         minDistance = 5000;
                     }
-                    else if (SpawnPosType.HasFlag(Level.PositionType.Wreck))
+                    else if (SpawnPosType.HasFlag(Level.PositionType.Wreck) || SpawnPosType.HasFlag(Level.PositionType.BeaconStation))
                     {
                         minDistance = 3000;
                     }

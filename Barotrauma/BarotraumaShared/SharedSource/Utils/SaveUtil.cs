@@ -126,6 +126,10 @@ namespace Barotrauma
 
         public static void LoadGame(string filePath)
         {
+            //ensure there's no gamesession/sub loaded because it'd lead to issues when starting a new one (e.g. trying to determine which level to load based on the placement of the sub)
+            //can happen if a gamesession is interrupted ungracefully (exception during loading)
+            Submarine.Unload();
+            GameMain.GameSession = null;
             DebugConsole.Log("Loading save file: " + filePath);
             DecompressToDirectory(filePath, TempPath, null);
 

@@ -1676,7 +1676,7 @@ namespace Barotrauma
                         GameMain.Server.SendConsoleMessage("No campaign active.", client, Color.Red);
                         return;
                     }
-                    mpCampaign.LastUpdateID++;
+                    mpCampaign.IncrementLastUpdateIdForFlag(MultiPlayerCampaign.NetFlags.MapAndMissions);
                     GameMain.GameSession.Map.AllowDebugTeleport = !GameMain.GameSession.Map.AllowDebugTeleport;
                     NewMessage(client.Name + (GameMain.GameSession.Map.AllowDebugTeleport ? " enabled" : " disabled") + " teleportation on the campaign map.", Color.White);
                     GameMain.Server.SendConsoleMessage((GameMain.GameSession.Map.AllowDebugTeleport ? "Enabled" : "Disabled") + " teleportation on the campaign map.", client);
@@ -2274,7 +2274,6 @@ namespace Barotrauma
                         Wallet wallet = targetCharacter is null ? campaign.Bank : targetCharacter.Wallet;
                         wallet.Give(money);
                         GameAnalyticsManager.AddMoneyGainedEvent(money, GameAnalyticsManager.MoneySource.Cheat, "console");
-                        campaign.LastUpdateID++;
                     }
                     else
                     {

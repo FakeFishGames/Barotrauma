@@ -39,7 +39,15 @@ namespace Barotrauma
         public SubmarineTag Tags { get; private set; }
 
         public int RecommendedCrewSizeMin = 1, RecommendedCrewSizeMax = 2;
-        public string RecommendedCrewExperience;
+        
+        public enum CrewExperienceLevel
+        {
+            Unknown,
+            CrewExperienceLow,
+            CrewExperienceMid,
+            CrewExperienceHigh
+        }
+        public CrewExperienceLevel RecommendedCrewExperience;
 
         /// <summary>
         /// A random int that gets assigned when saving the sub. Used in mp campaign to verify that sub files match
@@ -89,6 +97,7 @@ namespace Barotrauma
         public SubmarineClass SubmarineClass;
 
         public OutpostModuleInfo OutpostModuleInfo { get; set; }
+        public BeaconStationInfo BeaconStationInfo { get; set; }
 
         public bool IsOutpost => Type == SubmarineType.Outpost || Type == SubmarineType.OutpostModule;
 
@@ -280,6 +289,10 @@ namespace Barotrauma
             {
                 OutpostModuleInfo = new OutpostModuleInfo(original.OutpostModuleInfo);
             }
+            if (original.BeaconStationInfo != null)
+            {
+                BeaconStationInfo = new BeaconStationInfo(original.BeaconStationInfo);
+            }
 #if CLIENT
             PreviewImage = original.PreviewImage != null ? new Sprite(original.PreviewImage) : null;
 #endif
@@ -330,7 +343,24 @@ namespace Barotrauma
             CargoCapacity = SubmarineElement.GetAttributeInt("cargocapacity", -1);
             RecommendedCrewSizeMin = SubmarineElement.GetAttributeInt("recommendedcrewsizemin", 0);
             RecommendedCrewSizeMax = SubmarineElement.GetAttributeInt("recommendedcrewsizemax", 0);
-            RecommendedCrewExperience = SubmarineElement.GetAttributeString("recommendedcrewexperience", "Unknown");
+            var recommendedCrewExperience = SubmarineElement.GetAttributeIdentifier("recommendedcrewexperience", CrewExperienceLevel.Unknown.ToIdentifier());
+            // Backwards compatibility
+            if (recommendedCrewExperience == "Beginner")
+            {
+                RecommendedCrewExperience = CrewExperienceLevel.CrewExperienceLow;
+            }
+            else if (recommendedCrewExperience == "Intermediate")
+            {
+                RecommendedCrewExperience = CrewExperienceLevel.CrewExperienceMid;
+            }
+            else if (recommendedCrewExperience == "Experienced")
+            {
+                RecommendedCrewExperience = CrewExperienceLevel.CrewExperienceHigh;
+            }
+            else
+            {
+                Enum.TryParse(recommendedCrewExperience.Value, ignoreCase: true, out RecommendedCrewExperience);
+            }
 
             if (SubmarineElement?.Attribute("type") != null)
             {
@@ -340,6 +370,10 @@ namespace Barotrauma
                     if (Type == SubmarineType.OutpostModule)
                     {
                         OutpostModuleInfo = new OutpostModuleInfo(this, SubmarineElement);
+                    }
+                    else if (Type == SubmarineType.BeaconStation)
+                    {
+                        BeaconStationInfo = new BeaconStationInfo(this, SubmarineElement);
                     }
                 }
             }
@@ -357,20 +391,6 @@ namespace Barotrauma
             else
             {
                 SubmarineClass = SubmarineClass.Undefined;
-            }
-
-            //backwards compatibility (use text tags instead of the actual text)
-            if (RecommendedCrewExperience == "Beginner")
-            {
-                RecommendedCrewExperience = "CrewExperienceLow";
-            }
-            else if (RecommendedCrewExperience == "Intermediate")
-            {
-                RecommendedCrewExperience = "CrewExperienceMid";
-            }
-            else if (RecommendedCrewExperience == "Experienced")
-            {
-                RecommendedCrewExperience = "CrewExperienceHigh";
             }
 
             RequiredContentPackages.Clear();
@@ -528,6 +548,11 @@ namespace Barotrauma
                 OutpostModuleInfo.Save(newElement);
                 OutpostModuleInfo = new OutpostModuleInfo(this, newElement);
             }
+            else if (Type == SubmarineType.BeaconStation)
+            {
+                BeaconStationInfo.Save(newElement);
+                BeaconStationInfo = new BeaconStationInfo(this, newElement);
+            }
             XDocument doc = new XDocument(newElement);
 
             doc.Root.Add(new XAttribute("name", Name));
@@ -590,6 +615,7 @@ namespace Barotrauma
             List<string> filePaths = new List<string>();
             foreach (BaseSubFile subFile in contentPackageSubs)
             {
+                if (!File.Exists(subFile.Path.Value)) { continue; }
                 if (!filePaths.Any(fp => fp == subFile.Path))
                 {
                     filePaths.Add(subFile.Path.Value);

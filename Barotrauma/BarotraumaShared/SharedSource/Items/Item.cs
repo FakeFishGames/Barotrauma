@@ -24,13 +24,18 @@ namespace Barotrauma
     partial class Item : MapEntity, IDamageable, IIgnorable, ISerializableEntity, IServerPositionSync, IClientSerializable
     {
         public static List<Item> ItemList = new List<Item>();
+
+        private static readonly HashSet<Item> dangerousItems = new HashSet<Item>();
+
+        public static IReadOnlyCollection<Item> DangerousItems { get { return dangerousItems; } }
+
         public new ItemPrefab Prefab => base.Prefab as ItemPrefab;
 
         public static bool ShowLinks = true;
 
         private readonly HashSet<Identifier> tags;
 
-        private bool isWire, isLogic;
+        private readonly bool isWire, isLogic;
 
         private Hull currentHull;
         public Hull CurrentHull
@@ -279,7 +284,10 @@ namespace Barotrauma
                 if (Screen.Selected == GameMain.SubEditorScreen)
                 {
                     SetContainedItemPositions();
-                    GetComponent<LightComponent>()?.SetLightSourceTransform();
+                    foreach (var light in GetComponents<LightComponent>())
+                    {
+                        light.SetLightSourceTransform();
+                    }
                 }
 #endif
             }
@@ -1001,6 +1009,10 @@ namespace Barotrauma
 
             InsertToList();
             ItemList.Add(this);
+            if (Prefab.IsDangerous)
+            {
+                dangerousItems.Add(this);
+            }
 
             DebugConsole.Log("Created " + Name + " (" + ID + ")");
 
@@ -1092,17 +1104,16 @@ namespace Barotrauma
 
             component.OnActiveStateChanged += (bool isActive) => 
             {
-                bool hasSounds = false;
+                bool needsSoundUpdate = false;
 #if CLIENT
-                hasSounds = component.HasSounds;
+                needsSoundUpdate = component.NeedsSoundUpdate();
 #endif
                 //component doesn't need to be updated if it isn't active, doesn't have a parent that could activate it, 
-                //nor status effects, sounds or conditionals that would need to run
+                //nor sounds or conditionals that would need to run
                 if (!isActive && !component.UpdateWhenInactive && 
-                    !hasSounds &&
+                    !needsSoundUpdate &&
                     component.Parent == null &&
-                    (component.IsActiveConditionals == null || !component.IsActiveConditionals.Any()) &&
-                    (component.statusEffectLists == null || !component.statusEffectLists.Any()))
+                    (component.IsActiveConditionals == null || !component.IsActiveConditionals.Any()))
                 {
                     if (updateableComponents.Contains(component)) { updateableComponents.Remove(component); }
                 }
@@ -1499,6 +1510,11 @@ namespace Barotrauma
 
         public void ApplyStatusEffect(StatusEffect effect, ActionType type, float deltaTime, Character character = null, Limb limb = null, Entity useTarget = null, bool isNetworkEvent = false, bool checkCondition = true, Vector2? worldPosition = null)
         {
+            if (effect.intervalTimer > 0.0f)
+            {
+                effect.intervalTimer -= deltaTime;
+                return;
+            }
             if (!isNetworkEvent && checkCondition)
             {
                 if (condition == 0.0f && !effect.AllowWhenBroken && effect.type != ActionType.OnBroken) { return; }
@@ -1630,6 +1646,7 @@ namespace Barotrauma
                 foreach (ItemComponent ic in components)
                 {
                     ic.PlaySound(ActionType.OnBroken);
+                    ic.StopSounds(ActionType.OnActive);
                 }
                 if (Screen.Selected == GameMain.SubEditorScreen) { return; }
 #endif
@@ -1722,6 +1739,19 @@ namespace Barotrauma
 
         public override void Update(float deltaTime, Camera cam)
         {
+#if SERVER
+            if (!(Submarine is { Loading: true }))
+            {
+                sendConditionUpdateTimer -= deltaTime;
+                if (conditionUpdatePending && sendConditionUpdateTimer <= 0.0f)
+                {
+                    SendPendingNetworkUpdates();
+                }
+            }
+#endif
+
+            if (!isActive) { return; }
+
             if (impactQueue != null)
             {
                 while (impactQueue.TryDequeue(out float impact))
@@ -1730,21 +1760,10 @@ namespace Barotrauma
                 }
             }
 
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer && (!Submarine?.Loading ?? true))
-            {
-                sendConditionUpdateTimer -= deltaTime;
-                if (conditionUpdatePending && sendConditionUpdateTimer <= 0.0f)
-                {
-                    SendPendingNetworkUpdates();
-                }
-            }
-
-            if (aiTarget != null)
+            if (aiTarget != null && aiTarget.NeedsUpdate)
             {
                 aiTarget.Update(deltaTime);
             }
-
-            if (!isActive) { return; }
 
             ApplyStatusEffects(ActionType.Always, deltaTime, character: (parentInventory as CharacterInventory)?.Owner as Character);
             ApplyStatusEffects(parentInventory == null ? ActionType.OnNotContained : ActionType.OnContained, deltaTime, character: (parentInventory as CharacterInventory)?.Owner as Character);
@@ -1846,7 +1865,10 @@ namespace Barotrauma
             }
             else
             {
-                if (updateableComponents.Count == 0 && !hasStatusEffectsOfType[(int)ActionType.Always] && (body == null || !body.Enabled))
+                if (updateableComponents.Count == 0 && 
+                    (aiTarget == null || !aiTarget.NeedsUpdate) && 
+                    !hasStatusEffectsOfType[(int)ActionType.Always] && 
+                    (body == null || !body.Enabled))
                 {
 #if CLIENT
                     positionBuffer.Clear();
@@ -1983,6 +2005,7 @@ namespace Barotrauma
 
             impactQueue ??= new ConcurrentQueue<float>();
             impactQueue.Enqueue(impact);
+            isActive = true;
 
             return true;
         }
@@ -2501,11 +2524,9 @@ namespace Barotrauma
                 if (ic.Use(deltaTime, character))
                 {
                     ic.WasUsed = true;
-
 #if CLIENT
-                    ic.PlaySound(ActionType.OnUse, character);
-#endif
-    
+                    ic.PlaySound(ActionType.OnUse, character); 
+#endif    
                     ic.ApplyStatusEffects(ActionType.OnUse, deltaTime, character, targetLimb);
 
                     if (ic.DeleteOnUse) { remove = true; }
@@ -2534,11 +2555,9 @@ namespace Barotrauma
                 if (ic.SecondaryUse(deltaTime, character))
                 {
                     ic.WasSecondaryUsed = true;
-
 #if CLIENT
                     ic.PlaySound(ActionType.OnSecondaryUse, character);
 #endif
-
                     ic.ApplyStatusEffects(ActionType.OnSecondaryUse, deltaTime, character);
 
                     if (ic.DeleteOnUse) { remove = true; }
@@ -3219,9 +3238,17 @@ namespace Barotrauma
             item.RecalculateConditionValues();
             item.SetActiveSprite();
 
-            if (submarine?.Info.GameVersion != null)
+            Version savedVersion = submarine?.Info.GameVersion;
+            if (element.Document?.Root != null && element.Document.Root.Name.ToString().Equals("gamesession", StringComparison.OrdinalIgnoreCase))
             {
-                SerializableProperty.UpgradeGameVersion(item, item.Prefab.ConfigElement, submarine.Info.GameVersion);
+                //character inventories are loaded from the game session file - use the version number of the saved game session instead of the sub
+                //(the sub may have already been saved and up-to-date, even though the character inventories aren't)
+                savedVersion = new Version(element.Document.Root.GetAttributeString("version", "0.0.0.0"));
+            }
+            
+            if (savedVersion != null)
+            {
+                SerializableProperty.UpgradeGameVersion(item, item.Prefab.ConfigElement, savedVersion);
             }
 
             foreach (ItemComponent component in item.components)
@@ -3342,6 +3369,7 @@ namespace Barotrauma
                 ic.ShallowRemove();
             }
             ItemList.Remove(this);
+            dangerousItems.Remove(this);
 
             if (body != null)
             {
@@ -3400,6 +3428,7 @@ namespace Barotrauma
 #endif
             }
             ItemList.Remove(this);
+            dangerousItems.Remove(this);
 
             if (body != null)
             {

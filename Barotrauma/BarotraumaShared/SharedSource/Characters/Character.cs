@@ -117,7 +117,29 @@ namespace Barotrauma
 
         protected Key[] keys;
 
-        public HumanPrefab HumanPrefab;
+        private HumanPrefab humanPrefab;
+        public HumanPrefab HumanPrefab
+        {
+            get { return humanPrefab; }
+            set
+            {
+                if (humanPrefab == value) { return; }
+                humanPrefab = value;
+
+                if (humanPrefab != null)
+                {
+                    HumanPrefabHealthMultiplier = humanPrefab.HealthMultiplier;
+                    if (GameMain.NetworkMember != null)
+                    {
+                        HumanPrefabHealthMultiplier *= humanPrefab.HealthMultiplierInMultiplayer;
+                    }
+                }
+                else
+                {
+                    HumanPrefabHealthMultiplier = 1.0f;
+                }
+            }
+        }
 
         private CharacterTeamType teamID;
         public CharacterTeamType TeamID
@@ -1192,7 +1214,7 @@ namespace Barotrauma
                 CharacterHealth = new CharacterHealth(selectedHealthElement, this, limbHealthElement);
             }
 
-            if (Params.Husk && speciesName != "husk")
+            if (Params.Husk && speciesName != "husk" && Prefab.VariantOf != "husk")
             {
                 // Get the non husked name and find the ragdoll with it
                 var matchingAffliction = AfflictionPrefab.List
@@ -1392,7 +1414,7 @@ namespace Barotrauma
             if (inputType == InputType.Up || inputType == InputType.Down ||
                 inputType == InputType.Left || inputType == InputType.Right)
             {
-                var invertControls = CharacterHealth.GetAffliction("invertcontrols");
+                var invertControls = CharacterHealth.GetAfflictionOfType("invertcontrols".ToIdentifier());
                 if (invertControls != null)
                 {
                     switch (inputType)
@@ -1652,14 +1674,9 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Can be used to modify a character's health for runtime session. Change with AddHealthMultiplier
+        /// Health multiplier of the human prefab this character is an instance of (if any)
         /// </summary>
-        public float StaticHealthMultiplier { get; private set; } = 1;
-
-        public void AddStaticHealthMultiplier(float newMultiplier)
-        {
-            StaticHealthMultiplier *= newMultiplier;
-        }
+        public float HumanPrefabHealthMultiplier { get; private set; } = 1;
 
         /// <summary>
         /// Speed reduction from the current limb specific damage. Min 0, max 1.
@@ -4824,21 +4841,21 @@ namespace Barotrauma
             }
         }
 
-        private readonly List<AbilityFlags> abilityFlags = new List<AbilityFlags>();
+        private AbilityFlags abilityFlags;
 
         public void AddAbilityFlag(AbilityFlags abilityFlag)
         {
-            abilityFlags.Add(abilityFlag);
+            abilityFlags |= abilityFlag;
         }
 
         public void RemoveAbilityFlag(AbilityFlags abilityFlag)
         {
-            abilityFlags.Remove(abilityFlag);
+            abilityFlags &= ~abilityFlag;
         }
 
         public bool HasAbilityFlag(AbilityFlags abilityFlag)
         {
-            return abilityFlags.Contains(abilityFlag) || CharacterHealth.HasFlag(abilityFlag);
+            return abilityFlags.HasFlag(abilityFlag) || CharacterHealth.HasFlag(abilityFlag);
         }
 
         private readonly Dictionary<Identifier, float> abilityResistances = new Dictionary<Identifier, float>();

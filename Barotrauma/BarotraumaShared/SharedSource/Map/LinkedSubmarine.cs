@@ -432,7 +432,7 @@ namespace Barotrauma
             if (sub != null)
             {
                 bool leaveBehind = false;
-                if (!sub.DockedTo.Contains(Submarine.MainSub))
+                if (sub.Submarine != null && !sub.DockedTo.Contains(sub.Submarine))
                 {
                     System.Diagnostics.Debug.Assert(Submarine.MainSub.AtEndExit || Submarine.MainSub.AtStartExit);
                     if (Submarine.MainSub.AtEndExit)

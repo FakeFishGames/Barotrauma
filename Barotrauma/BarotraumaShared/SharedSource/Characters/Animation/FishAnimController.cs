@@ -22,8 +22,7 @@ namespace Barotrauma
             {
                 if (_ragdollParams == null)
                 {
-                    #warning TODO: this is kinda janky, this should probably be done better
-                    _ragdollParams = FishRagdollParams.GetDefaultRagdollParams(character.VariantOf.IfEmpty(character.SpeciesName));
+                    _ragdollParams = FishRagdollParams.GetDefaultRagdollParams(character.SpeciesName);
                     if (!character.VariantOf.IsEmpty)
                     {
                         _ragdollParams.ApplyVariantScale(character.Params.VariantFile);

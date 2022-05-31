@@ -20,7 +20,7 @@ namespace Barotrauma
 
         public readonly string Seed;
 
-        public float Difficulty;
+        public readonly float Difficulty;
 
         public readonly Biome Biome;
 

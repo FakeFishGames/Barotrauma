@@ -260,9 +260,15 @@ namespace Barotrauma
                 throw new InvalidOperationException("Could not select EventManager settings (level not set).");
             }
 
+            float extraDifficulty = 0;
+            if (GameMain.GameSession.Campaign?.Settings != null)
+            {
+                extraDifficulty = GameMain.GameSession.Campaign.Settings.ExtraEventManagerDifficulty;
+            }
+            float modifiedDifficulty = Math.Clamp(level.Difficulty + extraDifficulty, 0, 100);
             var suitableSettings = EventManagerSettings.OrderedByDifficulty.Where(s =>
-                level.Difficulty >= s.MinLevelDifficulty &&
-                level.Difficulty <= s.MaxLevelDifficulty).ToArray();
+                modifiedDifficulty >= s.MinLevelDifficulty &&
+                modifiedDifficulty <= s.MaxLevelDifficulty).ToArray();
 
             if (suitableSettings.Length == 0)
             {

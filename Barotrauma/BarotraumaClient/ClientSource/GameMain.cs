@@ -943,6 +943,23 @@ namespace Barotrauma
             Timing.Accumulator = 0.0f;
         }
 
+        private void FixRazerCortex()
+        {
+#if WINDOWS
+            //Razer Cortex's overlay is broken.
+            //For whatever reason, it messes up the blendstate and,
+            //because MonoGame reasonably assumes that you don't need
+            //to touch it if you're setting it to the exact same one
+            //you were already using, it doesn't fix Razer's mess.
+            //Therefore, we need to change the blendstate TWICE:
+            //once to force MonoGame to change it, and then again to
+            //use the blendstate we actually want.
+            var oldBlendState = GraphicsDevice.BlendState;
+            GraphicsDevice.BlendState = oldBlendState == BlendState.Opaque ? BlendState.NonPremultiplied : BlendState.Opaque;
+            GraphicsDevice.BlendState = oldBlendState;
+#endif
+        }
+        
         /// <summary>
         /// This is called when the game should draw itself.
         /// </summary>
@@ -950,7 +967,9 @@ namespace Barotrauma
         {
             Stopwatch sw = new Stopwatch();
             sw.Start();
-
+            
+            FixRazerCortex();
+            
             double deltaTime = gameTime.ElapsedGameTime.TotalSeconds;
 
             if (Timing.FrameLimit > 0)
@@ -1043,7 +1062,7 @@ namespace Barotrauma
                 }
 
                 // Update store stock when saving and quitting in an outpost (normally updated when CampaignMode.End() is called)
-                if (GameSession?.Campaign is SinglePlayerCampaign spCampaign && Level.IsLoadedOutpost && spCampaign.Map?.CurrentLocation != null && spCampaign.CargoManager != null)
+                if (GameSession?.Campaign is SinglePlayerCampaign spCampaign && Level.IsLoadedFriendlyOutpost && spCampaign.Map?.CurrentLocation != null && spCampaign.CargoManager != null)
                 {
                     spCampaign.Map.CurrentLocation.AddStock(spCampaign.CargoManager.SoldItems);
                     spCampaign.CargoManager.ClearSoldItemsProjSpecific();

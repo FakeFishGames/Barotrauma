@@ -786,6 +786,9 @@ namespace Barotrauma
                 case nameof(Character.HealthMultiplier):
                     { if (parentObject is Character character) { character.StackHealthMultiplier(value); return true; } }
                     break;
+                case nameof(Character.PropulsionSpeedMultiplier):
+                    { if (parentObject is Character character) { character.PropulsionSpeedMultiplier = value; return true; } }
+                    break;
             }
             return false;
         }
@@ -798,6 +801,12 @@ namespace Barotrauma
             {
                 case nameof(Character.ObstructVision):
                     { if (parentObject is Character character) { character.ObstructVision = value; return true; } }
+                    break;
+                case nameof(Character.HideFace):
+                    { if (parentObject is Character character) { character.HideFace = value; return true; } }
+                    break;
+                case nameof(Character.UseHullOxygen):
+                    { if (parentObject is Character character) { character.UseHullOxygen = value; return true; } }
                     break;
                 case nameof(LightComponent.IsOn):
                     { if (parentObject is LightComponent lightComponent) { lightComponent.IsOn = value; return true; } }

@@ -1608,7 +1608,7 @@ namespace Barotrauma
                         {
                             if (character == Character.Controlled && crewList.SelectedComponent != characterComponent)
                             {
-                                crewList.Select(character, force: true);
+                                crewList.Select(character, GUIListBox.Force.Yes);
                             }
                             // Icon colors might change based on the target so we check if they need to be updated
                             if (GetCurrentOrderIconList(characterComponent) is GUIListBox currentOrderIconList)

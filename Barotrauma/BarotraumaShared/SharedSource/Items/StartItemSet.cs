@@ -26,9 +26,15 @@ namespace Barotrauma
 
         public readonly ImmutableArray<StartItem> Items;
 
+        /// <summary>
+        /// The order in which the sets are displayed in menus
+        /// </summary>
+        public readonly int Order;
+
         public StartItemSet(ContentXElement element, StartItemsFile file) : base(file, element.GetAttributeIdentifier("identifier", Identifier.Empty))
         {
             Items = element.Elements().Select(e => new StartItem(e!)).ToImmutableArray();
+            Order = element.GetAttributeInt("order", 0);
         }
 
         public override void Dispose() { }

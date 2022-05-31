@@ -429,7 +429,10 @@ namespace Barotrauma
 
             //PLACEHOLDER
             var tutorialList = new GUIListBox(
-                new RectTransform(new Vector2(0.95f, 0.85f), menuTabs[Tab.Tutorials].RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.1f) });
+                new RectTransform(new Vector2(0.95f, 0.85f), menuTabs[Tab.Tutorials].RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.1f) })
+            {
+                PlaySoundOnSelect = true,
+            };
             var tutorialTypes = new List<Type>()
             {
                 typeof(MechanicTutorial),
@@ -850,16 +853,12 @@ namespace Barotrauma
                     arguments += " -nopassword";
                 }
 
-                int ownerKey = 0;
                 if (Steam.SteamManager.GetSteamID() != 0)
                 {
                     arguments += " -steamid " + Steam.SteamManager.GetSteamID();
                 }
-                else
-                {
-                    ownerKey = Math.Max(CryptoRandom.Instance.Next(), 1);
-                    arguments += " -ownerkey " + ownerKey;
-                }
+                int ownerKey = Math.Max(CryptoRandom.Instance.Next(), 1);
+                arguments += " -ownerkey " + ownerKey;
 
                 string filename = Path.Combine(
                     Path.GetDirectoryName(exeName),
@@ -1244,7 +1243,8 @@ namespace Barotrauma
             new GUIButton(new RectTransform(Vector2.One, buttonContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIMinusButton", textAlignment: Alignment.Center)
             {
                 UserData = -1,
-                OnClicked = ChangeMaxPlayers
+                OnClicked = ChangeMaxPlayers,
+                ClickSound = GUISoundType.Decrease
             };
             maxPlayersBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 1.0f), buttonContainer.RectTransform), textAlignment: Alignment.Center)
             {
@@ -1264,7 +1264,8 @@ namespace Barotrauma
             new GUIButton(new RectTransform(Vector2.One, buttonContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIPlusButton", textAlignment: Alignment.Center)
             {
                 UserData = 1,
-                OnClicked = ChangeMaxPlayers
+                OnClicked = ChangeMaxPlayers,
+                ClickSound = GUISoundType.Increase
             };
             maxPlayersLabel.RectTransform.IsFixedSize = true;
 

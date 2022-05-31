@@ -4,9 +4,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using Barotrauma.IO;
 using System.Linq;
-using System.Xml.Linq;
 using Barotrauma.Extensions;
 using FarseerPhysics.Dynamics;
 
@@ -20,8 +18,6 @@ namespace Barotrauma.Items.Components
 
         private Vector2 barrelPos;
         private Vector2 transformedBarrelPos;
-
-        private LightComponent lightComponent;
         
         private float rotation, targetRotation;
 
@@ -70,6 +66,8 @@ namespace Barotrauma.Items.Components
 
         public Character ActiveUser;
         private float resetActiveUserTimer;
+
+        private List<LightComponent> lightComponents;
 
         public float Rotation
         {
@@ -168,10 +166,13 @@ namespace Barotrauma.Items.Components
 
                 rotation = (minRotation + maxRotation) / 2;
 #if CLIENT
-                if (lightComponent != null) 
+                if (lightComponents != null)
                 {
-                    lightComponent.Rotation = rotation;
-                    lightComponent.Light.Rotation = -rotation;
+                    foreach (var light in lightComponents)
+                    {
+                        light.Rotation = rotation;
+                        light.Light.Rotation = -rotation;
+                    }
                 }
 #endif
             }
@@ -331,27 +332,39 @@ namespace Barotrauma.Items.Components
             if (loadedRotationLimits.HasValue) { RotationLimits = loadedRotationLimits.Value; }
             if (loadedBaseRotation.HasValue) { BaseRotation = loadedBaseRotation.Value; }
             targetRotation = rotation;
-            FindLightComponent();
             UpdateTransformedBarrelPos();
         }
 
-        private void FindLightComponent()
+        private void FindLightComponents()
         {
+            if (lightComponents != null)
+            {
+                // Can't run again, because of reparenting.
+                return;
+            }
             foreach (LightComponent lc in item.GetComponents<LightComponent>())
             {
+                // Only make the Turret control the LightComponents that are it's children. So it'd be possible to for example have some extra lights on the turret that don't rotate with it.
                 if (lc?.Parent == this)
                 {
-                    lightComponent = lc;
-                    break;
+                    if (lightComponents == null)
+                    {
+                        lightComponents = new List<LightComponent>();
+                    }
+                    lightComponents.Add(lc);
                 }
             }
 
 #if CLIENT
-            if (lightComponent != null) 
+            if (lightComponents != null)
             {
-                lightComponent.Parent = null;
-                lightComponent.Rotation = Rotation - item.RotationRad;
-                lightComponent.Light.Rotation = -rotation;
+                foreach (var light in lightComponents)
+                {
+                    // We want the turret to control the state of the LightComponent, not tie it's state to the state of the Turret (the light can be inactive even if the turret is active)
+                    light.Parent = null;
+                    light.Rotation = Rotation - item.RotationRad;
+                    light.Light.Rotation = -rotation;
+                }
             }
 #endif
         }
@@ -428,7 +441,7 @@ namespace Barotrauma.Items.Components
 
             if (MathUtils.NearlyEqual(minRotation, maxRotation))
             {
-                UpdateLightComponent();
+                UpdateLightComponents();
                 return;
             }
 
@@ -452,7 +465,7 @@ namespace Barotrauma.Items.Components
             }
 
             // Do not increase the weapons skill when operating a turret in an outpost level
-            if (user?.Info != null && (GameMain.GameSession?.Campaign == null || !Level.IsLoadedOutpost))
+            if (user?.Info != null && (GameMain.GameSession?.Campaign == null || !Level.IsLoadedFriendlyOutpost))
             {
                 user.Info.IncreaseSkillLevel("weapons".ToIdentifier(),
                     SkillSettings.Current.SkillIncreasePerSecondWhenOperatingTurret * deltaTime / Math.Max(user.GetSkillLevel("weapons"), 1.0f));
@@ -509,14 +522,17 @@ namespace Barotrauma.Items.Components
                 aiFindTargetTimer -= deltaTime;
             }
 
-            UpdateLightComponent();
+            UpdateLightComponents();
         }
 
-        private void UpdateLightComponent()
+        private void UpdateLightComponents()
         {
-            if (lightComponent != null)
+            if (lightComponents != null)
             {
-                lightComponent.Rotation = Rotation - item.RotationRad;
+                foreach (var light in lightComponents)
+                {
+                    light.Rotation = Rotation - item.RotationRad;
+                }
             }
         }
 
@@ -1601,21 +1617,24 @@ namespace Barotrauma.Items.Components
                     }
                     break;
                 case "toggle_light":
-                    if (lightComponent != null && signal.value != "0")
+                    if (lightComponents != null && signal.value != "0")
                     {
-                        lightComponent.IsOn = !lightComponent.IsOn;
-                        UpdateLightComponent();
+                        foreach (var light in lightComponents)
+                        {
+                            light.IsOn = !light.IsOn;
+                        }
+                        UpdateLightComponents();
                     }
                     break;
                 case "set_light":
-                    if (lightComponent != null)
+                    if (lightComponents != null)
                     {
                         bool shouldBeOn = signal.value != "0";
-                        if (shouldBeOn != lightComponent.IsOn)
+                        foreach (var light in lightComponents)
                         {
-                            lightComponent.IsOn = shouldBeOn;
-                            UpdateLightComponent();
+                            light.IsOn = shouldBeOn;
                         }
+                        UpdateLightComponents();
                     }
                     break;
             }
@@ -1633,7 +1652,7 @@ namespace Barotrauma.Items.Components
         public override void OnItemLoaded()
         {
             base.OnItemLoaded();
-            FindLightComponent();
+            FindLightComponents();
             targetRotation = rotation;
             if (!loadedBaseRotation.HasValue)
             {

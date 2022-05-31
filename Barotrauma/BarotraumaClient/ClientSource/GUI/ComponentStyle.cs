@@ -178,7 +178,14 @@ namespace Barotrauma
             return Sprites.ContainsKey(state) ? Sprites[state]?.First()?.Sprite : null;
         }
 
-        public void GetSize(XElement element)
+        public void RefreshSize()
+        {
+            Width = null;
+            Height = null;
+            GetSize(Element);
+        }
+
+        private void GetSize(XElement element)
         {
             Point size = new Point(0, 0);
             foreach (var subElement in element.Elements())

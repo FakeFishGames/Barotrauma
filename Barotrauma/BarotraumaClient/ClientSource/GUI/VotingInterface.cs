@@ -26,7 +26,7 @@ namespace Barotrauma
         private Color SubmarineColor => GUIStyle.Orange;
         private Point createdForResolution;
 
-        public static VotingInterface CreateSubmarineVotingInterface(Client starter, SubmarineInfo info, VoteType type, float votingTime)
+        public static VotingInterface CreateSubmarineVotingInterface(Client starter, SubmarineInfo info, VoteType type, bool transferItems, float votingTime)
         {
             if (starter == null || info == null) { return null; }
 
@@ -38,7 +38,7 @@ namespace Barotrauma
                 getMaxVotes = () => GameMain.NetworkMember?.Voting?.GetVoteCountMax(type) ?? 0,
             };
             subVoting.onVoteEnd = () => subVoting.SendSubmarineVoteEndMessage(info, type);
-            subVoting.SetSubmarineVotingText(starter, info, type);
+            subVoting.SetSubmarineVotingText(starter, info, transferItems, type);
             subVoting.Initialize(starter, type);
             return subVoting;
         }
@@ -160,19 +160,21 @@ namespace Barotrauma
         }
 
         #region Submarine Voting
-        private void SetSubmarineVotingText(Client starter, SubmarineInfo info, VoteType type)
+        
+        private void SetSubmarineVotingText(Client starter, SubmarineInfo info, bool transferItems, VoteType type)
         {
             string name = starter.Name;
             JobPrefab prefab = starter?.Character?.Info?.Job?.Prefab;
             Color nameColor = prefab != null ? prefab.UIColor : Color.White;
             string characterRichString = $"‖color:{nameColor.R},{nameColor.G},{nameColor.B}‖{name}‖color:end‖";
             string submarineRichString = $"‖color:{SubmarineColor.R},{SubmarineColor.G},{SubmarineColor.B}‖{info.DisplayName}‖color:end‖";
-
+            string tag = string.Empty;
             LocalizedString text = string.Empty;
             switch (type)
             {
                 case VoteType.PurchaseAndSwitchSub:
-                    text = TextManager.GetWithVariables("submarinepurchaseandswitchvote",
+                    tag = transferItems ? "submarinepurchaseandswitchwithitemsvote" : "submarinepurchaseandswitchvote";
+                    text = TextManager.GetWithVariables(tag,
                         ("[playername]", characterRichString),
                         ("[submarinename]", submarineRichString),
                         ("[amount]", info.Price.ToString()),
@@ -189,7 +191,8 @@ namespace Barotrauma
                     int deliveryFee = SubmarineSelection.DeliveryFeePerDistanceTravelled * GameMain.GameSession.Map.DistanceToClosestLocationWithOutpost(GameMain.GameSession.Map.CurrentLocation, out Location endLocation);
                     if (deliveryFee > 0)
                     {
-                        text = TextManager.GetWithVariables("submarineswitchfeevote",
+                        tag = transferItems ? "submarineswitchwithitemsfeevote" : "submarineswitchfeevote";
+                        text = TextManager.GetWithVariables(tag,
                             ("[playername]", characterRichString),
                             ("[submarinename]", submarineRichString),
                             ("[locationname]", endLocation.Name),
@@ -198,13 +201,13 @@ namespace Barotrauma
                     }
                     else
                     {
-                        text = TextManager.GetWithVariables("submarineswitchnofeevote",
+                        tag = transferItems ? "submarineswitchwithitemsnofeevote" : "submarineswitchnofeevote";
+                        text = TextManager.GetWithVariables(tag,
                             ("[playername]", characterRichString),
                             ("[submarinename]", submarineRichString));
                     }
                     break;
             }
-
             votingOnText = RichString.Rich(text);
         }
 

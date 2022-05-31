@@ -151,7 +151,10 @@ namespace Barotrauma.Steam
                 onDeselected: () => itemList?.Deselect(),
                 out var select, out var deselect);
 
-            itemList = new GUIListBox(new RectTransform(Vector2.One, outerContainer.Content.RectTransform));
+            itemList = new GUIListBox(new RectTransform(Vector2.One, outerContainer.Content.RectTransform))
+            {
+                PlaySoundOnSelect = true,
+            };
             itemList.RectTransform.SetAsFirstChild();
             workshopItemList = itemList;
 

@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Xml.Linq;
 using Microsoft.Xna.Framework;
 
 namespace Barotrauma.Items.Components
@@ -81,6 +80,8 @@ namespace Barotrauma.Items.Components
         private ItemContainer? container;
         private float growthTickTimer;
 
+        private List<LightComponent>? lightComponents;
+
         public Planter(Item item, ContentXElement element) : base(item, element)
         {
             canBePicked = true;
@@ -107,10 +108,14 @@ namespace Barotrauma.Items.Components
             base.OnItemLoaded();
             IsActive = true;
 #if CLIENT
-            lightComponent = item.GetComponent<LightComponent>();
-            if (lightComponent != null)
+            var lights = item.GetComponents<LightComponent>();
+            if (lights.Any())
             {
-                lightComponent.Light.Enabled = false;
+                lightComponents = lights.ToList();
+                foreach (var light in lightComponents)
+                {
+                    light.Light.Enabled = false;
+                }
             }
 #endif
             container = item.GetComponent<ItemContainer>();
@@ -227,12 +232,17 @@ namespace Barotrauma.Items.Components
             base.Update(deltaTime, cam);
             
 #if CLIENT
-            if (lightComponent != null)
+            if (lightComponents != null && lightComponents.Count > 0)
             {
                 bool hasSeed = false;
-                foreach (Growable? seed in GrowableSeeds) { hasSeed |= seed != null; }
-
-                lightComponent.Light.Enabled = hasSeed;
+                foreach (Growable? seed in GrowableSeeds)
+                {
+                    hasSeed |= seed != null;
+                }
+                foreach (var light in lightComponents)
+                {
+                    light.Light.Enabled = hasSeed;
+                }
             }
 #endif
 

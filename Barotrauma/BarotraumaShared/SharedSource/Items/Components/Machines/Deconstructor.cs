@@ -231,28 +231,40 @@ namespace Barotrauma.Items.Components
                         if (targetItem == otherItem) { continue; }
                         if (deconstructProduct.RequiredOtherItem.Any(r => otherItem.HasTag(r) || r == otherItem.Prefab.Identifier))
                         {
-                            user?.CheckTalents(AbilityEffectType.OnGeneticMaterialCombinedOrRefined);
-                            foreach (Character character in Character.GetFriendlyCrew(user))
-                            {
-                                character.CheckTalents(AbilityEffectType.OnCrewGeneticMaterialCombinedOrRefined);
-                            }
-
                             var geneticMaterial1 = targetItem.GetComponent<GeneticMaterial>();
                             var geneticMaterial2 = otherItem.GetComponent<GeneticMaterial>();
                             if (geneticMaterial1 != null && geneticMaterial2 != null)
                             {
-                                if (geneticMaterial1.Combine(geneticMaterial2, user))
+                                var result = geneticMaterial1.Combine(geneticMaterial2, user);
+                                if (result == GeneticMaterial.CombineResult.Refined)
                                 {
                                     inputContainer.Inventory.RemoveItem(otherItem);
                                     OutputContainer.Inventory.RemoveItem(otherItem);
                                     Entity.Spawner.AddItemToRemoveQueue(otherItem);
                                 }
+                                if (result != GeneticMaterial.CombineResult.None)
+                                {
+                                    OnCombinedOrRefined();
+                                }
                                 allowRemove = false;
                                 return;
                             }
-                            inputContainer.Inventory.RemoveItem(otherItem);
-                            OutputContainer.Inventory.RemoveItem(otherItem);
-                            Entity.Spawner.AddItemToRemoveQueue(otherItem);
+                            else
+                            {
+                                inputContainer.Inventory.RemoveItem(otherItem);
+                                OutputContainer.Inventory.RemoveItem(otherItem);
+                                Entity.Spawner.AddItemToRemoveQueue(otherItem);
+                                OnCombinedOrRefined();
+                            }
+                        }
+                    }
+
+                    void OnCombinedOrRefined()
+                    {
+                        user?.CheckTalents(AbilityEffectType.OnGeneticMaterialCombinedOrRefined);
+                        foreach (Character character in Character.GetFriendlyCrew(user))
+                        {
+                            character.CheckTalents(AbilityEffectType.OnCrewGeneticMaterialCombinedOrRefined);
                         }
                     }
                 }

@@ -587,196 +587,78 @@ namespace Barotrauma
         //static because we may need to instantiate the campaign if it hasn't been done yet
         public static void ClientRead(IReadMessage msg)
         {
+            NetFlags requiredFlags = (NetFlags)msg.ReadUInt16();
+
             bool isFirstRound   =  msg.ReadBoolean();
             byte campaignID     = msg.ReadByte();
-            UInt16 updateID     = msg.ReadUInt16();
             UInt16 saveID       = msg.ReadUInt16();
             string mapSeed      = msg.ReadString();
-            UInt16 currentLocIndex      = msg.ReadUInt16();
-            UInt16 selectedLocIndex     = msg.ReadUInt16();
 
-            byte selectedMissionCount = msg.ReadByte();
-            List<int> selectedMissionIndices = new List<int>();
-            for (int i = 0; i < selectedMissionCount; i++)
-            {
-                selectedMissionIndices.Add(msg.ReadByte());
-            }
-
-            ushort ownedSubCount = msg.ReadUInt16();
-            List<ushort> ownedSubIndices = new List<ushort>();
-            for (int i = 0; i < ownedSubCount; i++)
-            {
-                ownedSubIndices.Add(msg.ReadUInt16());
-            }
-
-            bool allowDebugTeleport = msg.ReadBoolean();
-            float? reputation = null;
-            if (msg.ReadBoolean()) { reputation = msg.ReadSingle(); }
-            
-            Dictionary<Identifier, float> factionReps = new Dictionary<Identifier, float>();
-            byte factionsCount = msg.ReadByte();
-            for (int i = 0; i < factionsCount; i++)
-            {
-                factionReps.Add(msg.ReadIdentifier(), msg.ReadSingle());
-            }
-
-            bool forceMapUI = msg.ReadBoolean();
-
-            bool purchasedHullRepairs   = msg.ReadBoolean();
-            bool purchasedItemRepairs   = msg.ReadBoolean();
-            bool purchasedLostShuttles  = msg.ReadBoolean();
-
-            byte missionCount = msg.ReadByte();
-            var availableMissions = new List<(Identifier Identifier, byte ConnectionIndex)>();
-            for (int i = 0; i < missionCount; i++)
-            {
-                Identifier missionIdentifier = msg.ReadIdentifier();
-                byte connectionIndex = msg.ReadByte();
-                availableMissions.Add((missionIdentifier, connectionIndex));
-            }
-
-            var storeBalances = new Dictionary<Identifier, UInt16>();
-            if (msg.ReadBoolean())
-            {
-                byte storeCount = msg.ReadByte();
-                for (int i = 0; i < storeCount; i++)
-                {
-                    Identifier identifier = msg.ReadIdentifier();
-                    UInt16 storeBalance = msg.ReadUInt16();
-                    storeBalances.Add(identifier, storeBalance);
-                }
-            }
-
-            var buyCrateItems = ReadPurchasedItems(msg, sender: null);
-            var subSellCrateItems = ReadPurchasedItems(msg, sender: null);
-            var purchasedItems = ReadPurchasedItems(msg, sender: null);
-            var soldItems = ReadSoldItems(msg);
-
-            ushort pendingUpgradeCount = msg.ReadUInt16();
-            List<PurchasedUpgrade> pendingUpgrades = new List<PurchasedUpgrade>();
-            for (int i = 0; i < pendingUpgradeCount; i++)
-            {
-                Identifier upgradeIdentifier = msg.ReadIdentifier();
-                UpgradePrefab prefab = UpgradePrefab.Find(upgradeIdentifier);
-                Identifier categoryIdentifier = msg.ReadIdentifier();
-                UpgradeCategory category = UpgradeCategory.Find(categoryIdentifier);
-                int upgradeLevel = msg.ReadByte();
-                if (prefab == null || category == null) { continue; }
-                pendingUpgrades.Add(new PurchasedUpgrade(prefab, category, upgradeLevel));
-            }
-
-            ushort purchasedItemSwapCount = msg.ReadUInt16();
-            List<PurchasedItemSwap> purchasedItemSwaps = new List<PurchasedItemSwap>();
-            for (int i = 0; i < purchasedItemSwapCount; i++)
-            {
-                UInt16 itemToRemoveID = msg.ReadUInt16();
-                Identifier itemToInstallIdentifier = msg.ReadIdentifier();
-                ItemPrefab itemToInstall = itemToInstallIdentifier.IsEmpty ? null : ItemPrefab.Find(string.Empty, itemToInstallIdentifier);
-                if (!(Entity.FindEntityByID(itemToRemoveID) is Item itemToRemove)) { continue; }
-                purchasedItemSwaps.Add(new PurchasedItemSwap(itemToRemove, itemToInstall));
-            }
-
-            bool hasCharacterData = msg.ReadBoolean();
-            CharacterInfo myCharacterInfo = null;
-            if (hasCharacterData)
-            {
-                myCharacterInfo = CharacterInfo.ClientRead(CharacterPrefab.HumanSpeciesName, msg);
-            }
+            bool refreshCampaignUI = false;
 
             if (!(GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign) || campaignID != campaign.CampaignID)
             {
                 string savePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Multiplayer);
 
-                GameMain.GameSession = new GameSession(null, savePath, GameModePreset.MultiPlayerCampaign, CampaignSettings.Unsure, mapSeed);
+                GameMain.GameSession = new GameSession(null, savePath, GameModePreset.MultiPlayerCampaign, CampaignSettings.Empty, mapSeed);
                 campaign = (MultiPlayerCampaign)GameMain.GameSession.GameMode;
                 campaign.CampaignID = campaignID;
                 GameMain.NetLobbyScreen.ToggleCampaignMode(true);
             }
 
             //server has a newer save file
-            if (NetIdUtils.IdMoreRecent(saveID, campaign.PendingSaveID))
-            {
-                campaign.PendingSaveID = saveID;
-            }
-            
-            if (NetIdUtils.IdMoreRecent(updateID, campaign.lastUpdateID))
-            {
-                campaign.SuppressStateSending = true;
-                campaign.IsFirstRound = isFirstRound;
+            if (NetIdUtils.IdMoreRecent(saveID, campaign.PendingSaveID)) { campaign.PendingSaveID = saveID;  }
+            campaign.IsFirstRound = isFirstRound;
 
-                //we need to have the latest save file to display location/mission/store
-                if (campaign.LastSaveID == saveID)
+            if (requiredFlags.HasFlag(NetFlags.Misc))
+            {
+                DebugConsole.Log("Received campaign update (Misc)");
+                UInt16 id           = msg.ReadUInt16();
+                bool purchasedHullRepairs = msg.ReadBoolean();
+                bool purchasedItemRepairs = msg.ReadBoolean();
+                bool purchasedLostShuttles = msg.ReadBoolean();
+                if (ShouldApply(NetFlags.Misc, id, requireUpToDateSave: false))
+                {
+                    refreshCampaignUI = campaign.PurchasedHullRepairs != purchasedHullRepairs ||
+                                    campaign.PurchasedItemRepairs != purchasedItemRepairs ||
+                                    campaign.PurchasedLostShuttles != purchasedLostShuttles;
+                    campaign.PurchasedHullRepairs = purchasedHullRepairs;
+                    campaign.PurchasedItemRepairs = purchasedItemRepairs;
+                    campaign.PurchasedLostShuttles = purchasedLostShuttles;
+                }
+            }
+
+            if (requiredFlags.HasFlag(NetFlags.MapAndMissions))
+            {
+                DebugConsole.Log("Received campaign update (MapAndMissions)");
+                UInt16 id = msg.ReadUInt16();
+                bool forceMapUI = msg.ReadBoolean();
+                bool allowDebugTeleport = msg.ReadBoolean();
+                UInt16 currentLocIndex = msg.ReadUInt16();
+                UInt16 selectedLocIndex = msg.ReadUInt16();
+
+                byte missionCount = msg.ReadByte();
+                var availableMissions = new List<(Identifier Identifier, byte ConnectionIndex)>();
+                for (int i = 0; i < missionCount; i++)
+                {
+                    Identifier missionIdentifier = msg.ReadIdentifier();
+                    byte connectionIndex = msg.ReadByte();
+                    availableMissions.Add((missionIdentifier, connectionIndex));
+                }
+
+                byte selectedMissionCount = msg.ReadByte();
+                List<int> selectedMissionIndices = new List<int>();
+                for (int i = 0; i < selectedMissionCount; i++)
+                {
+                    selectedMissionIndices.Add(msg.ReadByte());
+                }
+
+                if (ShouldApply(NetFlags.MapAndMissions, id, requireUpToDateSave: true))
                 {
                     campaign.ForceMapUI = forceMapUI;
-
-                    UpgradeStore.WaitForServerUpdate = false;
-
+                    campaign.Map.AllowDebugTeleport = allowDebugTeleport;
                     campaign.Map.SetLocation(currentLocIndex == UInt16.MaxValue ? -1 : currentLocIndex);
                     campaign.Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
-                    campaign.Map.SelectMission(selectedMissionIndices);
-
-                    GameMain.GameSession.OwnedSubmarines.Clear();
-                    foreach (int ownedSubIndex in ownedSubIndices)
-                    {
-                        SubmarineInfo sub = GameMain.Client.ServerSubmarines[ownedSubIndex];
-                        if (GameMain.NetLobbyScreen.CheckIfCampaignSubMatches(sub, NetLobbyScreen.SubmarineDeliveryData.Owned))
-                        {
-                            GameMain.GameSession.OwnedSubmarines.Add(sub);
-                        }
-                    }
-
-                    campaign.Map.AllowDebugTeleport = allowDebugTeleport;
-                    campaign.CargoManager.SetItemsInBuyCrate(buyCrateItems);
-                    campaign.CargoManager.SetItemsInSubSellCrate(subSellCrateItems);
-                    campaign.CargoManager.SetPurchasedItems(purchasedItems);
-                    campaign.CargoManager.SetSoldItems(soldItems);
-                    foreach (var balance in storeBalances)
-                    {
-                        if (campaign.Map.CurrentLocation.GetStore(balance.Key) is { } store)
-                        {
-                            store.Balance = balance.Value;
-                        }
-                    }
-                    campaign.UpgradeManager.SetPendingUpgrades(pendingUpgrades);
-                    campaign.UpgradeManager.PurchasedUpgrades.Clear();
-                    foreach (var purchasedItemSwap in purchasedItemSwaps)
-                    {
-                        if (purchasedItemSwap.ItemToInstall == null)
-                        {
-                            campaign.UpgradeManager.CancelItemSwap(purchasedItemSwap.ItemToRemove, force: true);
-                        }
-                        else
-                        {
-                            campaign.UpgradeManager.PurchaseItemSwap(purchasedItemSwap.ItemToRemove, purchasedItemSwap.ItemToInstall, force: true);
-                        }
-                    }
-                    foreach (Item item in Item.ItemList)
-                    {
-                        if (item.PendingItemSwap != null && !purchasedItemSwaps.Any(it => it.ItemToRemove == item))
-                        {
-                            item.PendingItemSwap = null;
-                        }
-                    }
-
-                    foreach (var (identifier, rep) in factionReps)
-                    {
-                       Faction faction = campaign.Factions.FirstOrDefault(f => f.Prefab.Identifier == identifier);
-                       if (faction?.Reputation != null)
-                       {
-                           faction.Reputation.SetReputation(rep);
-                       }
-                       else
-                       {
-                           DebugConsole.ThrowError($"Received an update for a faction that doesn't exist \"{identifier}\".");
-                       }
-                    }
-
-                    if (reputation.HasValue)
-                    {
-                        campaign.Map.CurrentLocation.Reputation.SetReputation(reputation.Value);
-                        campaign?.CampaignUI?.UpgradeStore?.RequestRefresh();
-                    }
-
                     foreach (var availableMission in availableMissions)
                     {
                         MissionPrefab missionPrefab = MissionPrefab.Prefabs.Find(mp => mp.Identifier == availableMission.Identifier);
@@ -800,36 +682,268 @@ namespace Barotrauma
                             campaign.Map.CurrentLocation.UnlockMission(missionPrefab, connection);
                         }
                     }
-
-                    GameMain.NetLobbyScreen.ToggleCampaignMode(true);
-                }
-
-                bool shouldRefresh = campaign.PurchasedHullRepairs != purchasedHullRepairs ||
-                                     campaign.PurchasedItemRepairs != purchasedItemRepairs ||
-                                     campaign.PurchasedLostShuttles != purchasedLostShuttles;
-
-                campaign.PurchasedHullRepairs = purchasedHullRepairs;
-                campaign.PurchasedItemRepairs = purchasedItemRepairs;
-                campaign.PurchasedLostShuttles = purchasedLostShuttles;
-
-                if (shouldRefresh)
-                {
-                    campaign?.CampaignUI?.UpgradeStore?.RequestRefresh();
-                }
-
-                if (myCharacterInfo != null)
-                {
-                    GameMain.Client.CharacterInfo = myCharacterInfo;
-                    GameMain.NetLobbyScreen.SetCampaignCharacterInfo(myCharacterInfo);
+                    campaign.Map.SelectMission(selectedMissionIndices);
+                    ReadStores(msg, apply: true);
                 }
                 else
                 {
-                    GameMain.NetLobbyScreen.SetCampaignCharacterInfo(null);
+                    ReadStores(msg, apply: false);
+                }
+            }
+
+            if (requiredFlags.HasFlag(NetFlags.SubList))
+            {
+                DebugConsole.Log("Received campaign update (SubList)");
+                UInt16 id = msg.ReadUInt16();
+                ushort ownedSubCount = msg.ReadUInt16();
+                List<ushort> ownedSubIndices = new List<ushort>();
+                for (int i = 0; i < ownedSubCount; i++)
+                {
+                    ownedSubIndices.Add(msg.ReadUInt16());
                 }
 
-                campaign.lastUpdateID = updateID;
-                campaign.SuppressStateSending = false;
+                if (ShouldApply(NetFlags.SubList, id, requireUpToDateSave: false))
+                {
+                    GameMain.GameSession.OwnedSubmarines.Clear();
+                    foreach (int ownedSubIndex in ownedSubIndices)
+                    {
+                        SubmarineInfo sub = GameMain.Client.ServerSubmarines[ownedSubIndex];
+                        if (GameMain.NetLobbyScreen.CheckIfCampaignSubMatches(sub, NetLobbyScreen.SubmarineDeliveryData.Owned))
+                        {
+                            GameMain.GameSession.OwnedSubmarines.Add(sub);
+                        }
+                    }
+                }
             }
+
+            if (requiredFlags.HasFlag(NetFlags.UpgradeManager))
+            {
+                DebugConsole.Log("Received campaign update (UpgradeManager)");
+                UInt16 id = msg.ReadUInt16();
+
+                ushort pendingUpgradeCount = msg.ReadUInt16();
+                List<PurchasedUpgrade> pendingUpgrades = new List<PurchasedUpgrade>();
+                for (int i = 0; i < pendingUpgradeCount; i++)
+                {
+                    Identifier upgradeIdentifier = msg.ReadIdentifier();
+                    UpgradePrefab prefab = UpgradePrefab.Find(upgradeIdentifier);
+                    Identifier categoryIdentifier = msg.ReadIdentifier();
+                    UpgradeCategory category = UpgradeCategory.Find(categoryIdentifier);
+                    int upgradeLevel = msg.ReadByte();
+                    if (prefab == null || category == null) { continue; }
+                    pendingUpgrades.Add(new PurchasedUpgrade(prefab, category, upgradeLevel));
+                }
+
+                ushort purchasedItemSwapCount = msg.ReadUInt16();
+                List<PurchasedItemSwap> purchasedItemSwaps = new List<PurchasedItemSwap>();
+                for (int i = 0; i < purchasedItemSwapCount; i++)
+                {
+                    UInt16 itemToRemoveID = msg.ReadUInt16();
+                    Identifier itemToInstallIdentifier = msg.ReadIdentifier();
+                    ItemPrefab itemToInstall = itemToInstallIdentifier.IsEmpty ? null : ItemPrefab.Find(string.Empty, itemToInstallIdentifier);
+                    if (!(Entity.FindEntityByID(itemToRemoveID) is Item itemToRemove)) { continue; }
+                    purchasedItemSwaps.Add(new PurchasedItemSwap(itemToRemove, itemToInstall));
+                }
+
+                if (ShouldApply(NetFlags.UpgradeManager, id, requireUpToDateSave: true))
+                {
+                    UpgradeStore.WaitForServerUpdate = false;
+                    campaign.UpgradeManager.SetPendingUpgrades(pendingUpgrades);
+                    campaign.UpgradeManager.PurchasedUpgrades.Clear();
+                    foreach (var purchasedItemSwap in purchasedItemSwaps)
+                    {
+                        if (purchasedItemSwap.ItemToInstall == null)
+                        {
+                            campaign.UpgradeManager.CancelItemSwap(purchasedItemSwap.ItemToRemove, force: true);
+                        }
+                        else
+                        {
+                            campaign.UpgradeManager.PurchaseItemSwap(purchasedItemSwap.ItemToRemove, purchasedItemSwap.ItemToInstall, force: true);
+                        }
+                    }
+                    foreach (Item item in Item.ItemList)
+                    {
+                        if (item.PendingItemSwap != null && !purchasedItemSwaps.Any(it => it.ItemToRemove == item))
+                        {
+                            item.PendingItemSwap = null;
+                        }
+                    }
+                }
+            }
+
+
+            if (requiredFlags.HasFlag(NetFlags.ItemsInBuyCrate))
+            {
+                DebugConsole.Log("Received campaign update (ItemsInBuyCrate)");
+                UInt16 id = msg.ReadUInt16();
+                var buyCrateItems = ReadPurchasedItems(msg, sender: null);
+                if (ShouldApply(NetFlags.ItemsInBuyCrate, id, requireUpToDateSave: true))
+                {
+                    campaign.CargoManager.SetItemsInBuyCrate(buyCrateItems);
+                    campaign.SetLastUpdateIdForFlag(NetFlags.ItemsInBuyCrate, id);
+                    ReadStores(msg, apply: true);
+                }
+                else
+                {
+                    ReadStores(msg, apply: false);
+                }
+            }
+            if (requiredFlags.HasFlag(NetFlags.ItemsInSellFromSubCrate))
+            {
+                DebugConsole.Log("Received campaign update (ItemsInSellFromSubCrate)");
+                UInt16 id = msg.ReadUInt16();
+                var subSellCrateItems = ReadPurchasedItems(msg, sender: null);
+                if (ShouldApply(NetFlags.ItemsInSellFromSubCrate, id, requireUpToDateSave: true))
+                {
+                    campaign.CargoManager.SetItemsInSubSellCrate(subSellCrateItems);
+                    campaign.SetLastUpdateIdForFlag(NetFlags.ItemsInSellFromSubCrate, id);
+                    ReadStores(msg, apply: true);
+                }
+                else
+                {
+                    ReadStores(msg, apply: false);
+                }
+            }
+            if (requiredFlags.HasFlag(NetFlags.PurchasedItems))
+            {
+                DebugConsole.Log("Received campaign update (PuchasedItems)");
+                UInt16 id = msg.ReadUInt16();
+                var purchasedItems = ReadPurchasedItems(msg, sender: null);
+                if (ShouldApply(NetFlags.PurchasedItems, id, requireUpToDateSave: true))
+                {
+                    campaign.CargoManager.SetPurchasedItems(purchasedItems);
+                    campaign.SetLastUpdateIdForFlag(NetFlags.PurchasedItems, id);
+                    ReadStores(msg, apply: true);
+                }
+                else
+                {
+                    ReadStores(msg, apply: false);
+                }
+            }
+            if (requiredFlags.HasFlag(NetFlags.SoldItems))
+            {
+                DebugConsole.Log("Received campaign update (SoldItems)");
+                UInt16 id = msg.ReadUInt16();
+                var soldItems = ReadSoldItems(msg);
+                if (ShouldApply(NetFlags.SoldItems, id, requireUpToDateSave: true))
+                {
+                    campaign.CargoManager.SetSoldItems(soldItems);
+                    campaign.SetLastUpdateIdForFlag(NetFlags.SoldItems, id);
+                    ReadStores(msg, apply: true);
+                }
+                else
+                {
+                    ReadStores(msg, apply: false);
+                }
+            }
+            if (requiredFlags.HasFlag(NetFlags.Reputation))
+            {
+                DebugConsole.Log("Received campaign update (Reputation)");
+                UInt16 id = msg.ReadUInt16();
+                float? reputation = null;
+                if (msg.ReadBoolean()) { reputation = msg.ReadSingle(); }
+                Dictionary<Identifier, float> factionReps = new Dictionary<Identifier, float>();
+                byte factionsCount = msg.ReadByte();
+                for (int i = 0; i < factionsCount; i++)
+                {
+                    factionReps.Add(msg.ReadIdentifier(), msg.ReadSingle());
+                }
+                if (ShouldApply(NetFlags.Reputation, id, requireUpToDateSave: true))
+                {
+                    if (reputation.HasValue)
+                    {
+                        campaign.Map.CurrentLocation.Reputation.SetReputation(reputation.Value);
+                        campaign?.CampaignUI?.UpgradeStore?.RequestRefresh();
+                    }
+                    foreach (var (identifier, rep) in factionReps)
+                    {
+                        Faction faction = campaign.Factions.FirstOrDefault(f => f.Prefab.Identifier == identifier);
+                        if (faction?.Reputation != null)
+                        {
+                            faction.Reputation.SetReputation(rep);
+                        }
+                        else
+                        {
+                            DebugConsole.ThrowError($"Received an update for a faction that doesn't exist \"{identifier}\".");
+                        }
+                    }
+                }
+            }
+            if (requiredFlags.HasFlag(NetFlags.CharacterInfo))
+            {
+                DebugConsole.Log("Received campaign update (CharacterInfo)");
+                UInt16 id = msg.ReadUInt16();
+                bool hasCharacterData = msg.ReadBoolean();
+                CharacterInfo myCharacterInfo = null;
+                if (hasCharacterData)
+                {
+                    myCharacterInfo = CharacterInfo.ClientRead(CharacterPrefab.HumanSpeciesName, msg);
+                }
+                if (ShouldApply(NetFlags.CharacterInfo, id, requireUpToDateSave: true))
+                {
+                    if (myCharacterInfo != null)
+                    {
+                        GameMain.Client.CharacterInfo = myCharacterInfo;
+                        GameMain.NetLobbyScreen.SetCampaignCharacterInfo(myCharacterInfo);
+                    }
+                    else
+                    {
+                        GameMain.NetLobbyScreen.SetCampaignCharacterInfo(null);
+                    }
+                }
+            }
+
+            campaign.SuppressStateSending = true;
+            //we need to have the latest save file to display location/mission/store
+            if (campaign.LastSaveID == saveID)
+            {
+                GameMain.NetLobbyScreen.ToggleCampaignMode(true);
+            }
+            if (refreshCampaignUI)
+            {
+                campaign?.CampaignUI?.UpgradeStore?.RequestRefresh();
+            }
+            campaign.SuppressStateSending = false;            
+
+            bool ShouldApply(NetFlags flag, UInt16 id, bool requireUpToDateSave)
+            {
+                if (NetIdUtils.IdMoreRecent(id, campaign.GetLastUpdateIdForFlag(flag)) &&
+                     (!requireUpToDateSave || saveID == campaign.LastSaveID))
+                {
+                    campaign.SetLastUpdateIdForFlag(flag, id);
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            void ReadStores(IReadMessage msg, bool apply)
+            {
+                var storeBalances = new Dictionary<Identifier, UInt16>();
+                if (msg.ReadBoolean())
+                {
+                    byte storeCount = msg.ReadByte();
+                    for (int i = 0; i < storeCount; i++)
+                    {
+                        Identifier identifier = msg.ReadIdentifier();
+                        UInt16 storeBalance = msg.ReadUInt16();
+                        storeBalances.Add(identifier, storeBalance);
+                    }
+                }
+                if (apply)
+                {
+                    foreach (var balance in storeBalances)
+                    {
+                        if (campaign.Map?.CurrentLocation?.GetStore(balance.Key) is { } store)
+                        {
+                            store.Balance = balance.Value;
+                        }
+                    }
+                }
+            }
+
         }
 
         public void ClientReadCrew(IReadMessage msg)

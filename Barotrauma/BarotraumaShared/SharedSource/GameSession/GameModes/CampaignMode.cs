@@ -10,63 +10,6 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    internal struct CampaignSettings
-    {
-        public static CampaignSettings Empty => new CampaignSettings();
-
-        // Anything that uses this field I wasn't sure if actually needed the proper campaign settings to be passed down
-        public static CampaignSettings Unsure => Empty;
-        public bool RadiationEnabled { get; set; }
-
-        public int TotalMaxMissionCount => MaxMissionCount + GetAddedMissionCount();
-
-        private int maxMissionCount;
-        public int MaxMissionCount
-        {
-            get { return maxMissionCount; }
-            set { maxMissionCount = MathHelper.Clamp(value, MinMissionCountLimit, MaxMissionCountLimit); }
-        }
-
-        public const int DefaultMaxMissionCount = 2;
-        public const int MaxMissionCountLimit = 10;
-        public const int MinMissionCountLimit = 1;
-
-        public CampaignSettings(IReadMessage inc)
-        {
-            maxMissionCount = DefaultMaxMissionCount;
-            RadiationEnabled = inc.ReadBoolean();
-            MaxMissionCount = inc.ReadRangedInteger(MinMissionCountLimit, MaxMissionCountLimit);
-        }
-
-        public CampaignSettings(XElement element)
-        {
-            maxMissionCount = DefaultMaxMissionCount;
-            RadiationEnabled = element.GetAttributeBool(nameof(RadiationEnabled).ToLowerInvariant(), true);
-            MaxMissionCount = element.GetAttributeInt(nameof(MaxMissionCount).ToLowerInvariant(), DefaultMaxMissionCount);
-        }
-
-        public void Serialize(IWriteMessage msg)
-        {
-            msg.Write(RadiationEnabled);
-            msg.WriteRangedInteger(MaxMissionCount, MinMissionCountLimit, MaxMissionCountLimit);
-        }
-
-        public int GetAddedMissionCount()
-        {
-            int count = 0;
-            foreach (Character character in GameSession.GetSessionCrewCharacters(CharacterType.Both))
-            {
-                count += (int)character.GetStatValue(StatTypes.ExtraMissionCount);
-            }
-            return count;
-        }
-
-        public XElement Save()
-        {
-            return new XElement(nameof(CampaignSettings), new XAttribute(nameof(RadiationEnabled).ToLowerInvariant(), RadiationEnabled), new XAttribute(nameof(MaxMissionCount).ToLowerInvariant(), MaxMissionCount));
-        }
-    }
-
     abstract partial class CampaignMode : GameMode
     {
         [NetworkSerialize]
@@ -149,9 +92,8 @@ namespace Barotrauma
         //key = dialog flag, double = Timing.TotalTime when the line was last said
         private readonly Dictionary<string, double> dialogLastSpoken = new Dictionary<string, double>();
 
-        public bool PurchasedHullRepairs, PurchasedLostShuttles, PurchasedItemRepairs;
-
         public SubmarineInfo PendingSubmarineSwitch;
+        public bool TransferItemsOnSubSwitch { get; set; }
 
         protected Map map;
         public Map Map
@@ -189,12 +131,16 @@ namespace Barotrauma
             protected set;
         }
 
-        protected CampaignMode(GameModePreset preset)
+        public virtual bool PurchasedHullRepairs { get; set; }
+        public virtual bool PurchasedLostShuttles { get; set; }
+        public virtual bool PurchasedItemRepairs { get; set; }
+
+        protected CampaignMode(GameModePreset preset, CampaignSettings settings)
             : base(preset)
         {
             Bank = new Wallet(Option<Character>.None())
             {
-                Balance = InitialMoney
+                Balance = settings.InitialMoney
             };
 
             CargoManager = new CargoManager(this);
@@ -596,6 +542,7 @@ namespace Barotrauma
                 if (Level.Loaded.StartOutpost == null)
                 {
                     Submarine closestSub = Submarine.FindClosest(Level.Loaded.StartExitPosition, ignoreOutposts: true, ignoreRespawnShuttle: true, teamType: leavingPlayers.FirstOrDefault()?.TeamID);
+                    if (closestSub == null) { return null; }
                     return closestSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : closestSub;
                 }
                 else
@@ -729,7 +676,6 @@ namespace Barotrauma
             }
         }
 
-
         public void EndCampaign()
         {
             foreach (Character c in Character.CharacterList)
@@ -741,7 +687,7 @@ namespace Barotrauma
             }
             foreach (LocationConnection connection in Map.Connections)
             {
-                connection.Difficulty = MathHelper.Lerp(connection.Difficulty, 100.0f, 0.25f);
+                connection.Difficulty = connection.Biome.MaxDifficulty;
                 connection.LevelData = new LevelData(connection)
                 {
                     IsBeaconActive = false
@@ -750,6 +696,7 @@ namespace Barotrauma
             }
             foreach (Location location in Map.Locations)
             {
+                location.LevelData = new LevelData(location, location.Biome.MaxDifficulty);
                 location.Reset();
             }
             Map.SetLocation(Map.Locations.IndexOf(Map.StartLocation));
@@ -873,7 +820,7 @@ namespace Barotrauma
             const float MaxDist = 3000.0f;
             const float MinDist = 2500.0f;
 
-            if (!Level.IsLoadedOutpost) { return; }
+            if (!Level.IsLoadedFriendlyOutpost) { return; }
 
             Rectangle worldBorders = Submarine.MainSub.GetDockedBorders();
             worldBorders.Location += Submarine.MainSub.WorldPosition.ToPoint();
@@ -1058,7 +1005,10 @@ namespace Barotrauma
 
         public SubmarineInfo SwitchSubs()
         {
-            TransferItemsBetweenSubs();
+            if (TransferItemsOnSubSwitch)
+            {
+                TransferItemsBetweenSubs();
+            }
             RefreshOwnedSubmarines();
             PendingSubmarineSwitch = null;
             return GameMain.GameSession.SubmarineInfo;

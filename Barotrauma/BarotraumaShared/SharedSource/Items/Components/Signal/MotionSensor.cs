@@ -13,12 +13,13 @@ namespace Barotrauma.Items.Components
 
         private float updateTimer;
 
+        [Flags]
         public enum TargetType
         {
-            Any,
-            Human,
-            Monster,
-            Wall
+            Human = 1,
+            Monster = 2,
+            Wall = 4,
+            Any = Human | Monster | Wall,
         }
 
         [Serialize(false, IsPropertySaveable.No, description: "Has the item currently detected movement. Intended to be used by StatusEffect conditionals (setting this value in XML has no effect).")]
@@ -179,6 +180,11 @@ namespace Barotrauma.Items.Components
 
             if (!string.IsNullOrEmpty(signalOut)) { item.SendSignal(new Signal(signalOut, 1), "state_out"); }
 
+            if (MotionDetected)
+            {
+                ApplyStatusEffects(ActionType.OnUse, deltaTime);
+            }
+
             updateTimer -= deltaTime;
             if (updateTimer > 0.0f) { return; }
 
@@ -199,8 +205,7 @@ namespace Barotrauma.Items.Components
             float broadRangeX = Math.Max(rangeX * 2, 500);
             float broadRangeY = Math.Max(rangeY * 2, 500);
 
-            if (item.CurrentHull == null && item.Submarine != null &&
-                (Target == TargetType.Wall || Target == TargetType.Any))
+            if (item.CurrentHull == null && item.Submarine != null && Target.HasFlag(TargetType.Wall))
             {
                 if (Level.Loaded != null && (Math.Abs(item.Submarine.Velocity.X) > MinimumVelocity || Math.Abs(item.Submarine.Velocity.Y) > MinimumVelocity))
                 {
@@ -248,7 +253,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (Target != TargetType.Wall)
+            if (Target.HasFlag(TargetType.Human) || Target.HasFlag(TargetType.Monster))
             {
                 foreach (Character c in Character.CharacterList)
                 {
@@ -258,14 +263,13 @@ namespace Barotrauma.Items.Components
                     //makes it possible to detect when a spawned character moves without triggering the detector immediately as the ragdoll spawns and drops to the ground
                     if (c.SpawnTime > Timing.TotalTime - 1.0) { continue; }
 
-                    switch (Target)
+                    if (c.IsHuman)
                     {
-                        case TargetType.Human:
-                            if (!c.IsHuman) { continue; }
-                            break;
-                        case TargetType.Monster:
-                            if (c.IsHuman || c.IsPet) { continue; }
-                            break;
+                        if (!Target.HasFlag(TargetType.Human)) { continue; }
+                    }
+                    else if (!c.IsPet)
+                    {
+                        if (!Target.HasFlag(TargetType.Monster)) { continue; }
                     }
 
                     //do a rough check based on the position of the character's collider first

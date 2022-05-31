@@ -107,6 +107,7 @@ namespace Barotrauma
 
             var buttonLeft = new GUIButton(new RectTransform(new Vector2(0.1f, 0.8f), channelSettingsContent.RectTransform), style: "DeviceButton")
             {
+                PlaySoundOnSelect = false,
                 OnClicked = (btn, userdata) =>
                 {
                     if (Character.Controlled != null && ChatMessage.CanUseRadio(Character.Controlled, out WifiComponent radio))
@@ -150,6 +151,7 @@ namespace Barotrauma
 
             var buttonRight = new GUIButton(new RectTransform(new Vector2(0.1f, 0.8f), channelSettingsContent.RectTransform), style: "DeviceButton")
             {
+                PlaySoundOnSelect = false,
                 OnClicked = (btn, userdata) =>
                 {
                     if (Character.Controlled != null && ChatMessage.CanUseRadio(Character.Controlled, out WifiComponent radio))
@@ -178,6 +180,7 @@ namespace Barotrauma
                     TextColor = new Color(51, 59, 46),
                     SelectedTextColor = GUIStyle.Green,
                     UserData = i,
+                    PlaySoundOnSelect = false,
                     OnClicked = (btn, userdata) =>
                     {
                         if (Character.Controlled != null && ChatMessage.CanUseRadio(Character.Controlled, out WifiComponent radio))
@@ -357,10 +360,15 @@ namespace Barotrauma
                     CanBeFocused = true,
                     ForceUpperCase = ForceUpperCase.No,
                     UserData = message.SenderClient,
+                    PlaySoundOnSelect = false,
                     OnClicked = (_, o) =>
                     {
                         if (!(o is Client client)) { return false; }
-                        GameMain.NetLobbyScreen?.SelectPlayer(client);
+                        if (GameMain.NetLobbyScreen != null)
+                        {
+                            GameMain.NetLobbyScreen.SelectPlayer(client);
+                            SoundPlayer.PlayUISound(GUISoundType.Select);
+                        }
                         return true;
                     },
                     OnSecondaryClicked = (_, o) =>

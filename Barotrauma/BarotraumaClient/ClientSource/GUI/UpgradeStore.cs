@@ -462,7 +462,7 @@ namespace Barotrauma
                             button.Enabled = false;
                         }
                         return true;
-                    });
+                    }, overrideConfirmButtonSound: GUISoundType.ConfirmTransaction);
                 }
                 else
                 {
@@ -497,7 +497,7 @@ namespace Barotrauma
                             button.Enabled = false;
                         }
                         return true;
-                    });
+                    }, overrideConfirmButtonSound: GUISoundType.ConfirmTransaction);
                 }
                 else
                 {
@@ -539,7 +539,7 @@ namespace Barotrauma
                             GameMain.Client?.SendCampaignState();
                         }
                         return true;
-                    });
+                    }, overrideConfirmButtonSound: GUISoundType.ConfirmTransaction);
                 }
                 else
                 {
@@ -589,7 +589,7 @@ namespace Barotrauma
                     new GUITextBlock(rectT(1, 0, textLayout), title, font: GUIStyle.SubHeadingFont) { CanBeFocused = false, AutoScaleHorizontal = true };
                     new GUITextBlock(rectT(1, 0, textLayout), TextManager.FormatCurrency(price));
                 GUILayoutGroup buyButtonLayout = new GUILayoutGroup(rectT(0.2f, 1, contentLayout), childAnchor: Anchor.Center) { UserData = "buybutton" };
-                    new GUIButton(rectT(0.7f, 0.5f, buyButtonLayout), string.Empty, style: "RepairBuyButton") { ClickSound = GUISoundType.HireRepairClick, Enabled = PlayerBalance >= price && !isDisabled, OnClicked = onPressed };
+                    new GUIButton(rectT(0.7f, 0.5f, buyButtonLayout), string.Empty, style: "RepairBuyButton") { Enabled = PlayerBalance >= price && !isDisabled, OnClicked = onPressed };
             contentLayout.Recalculate();
             buyButtonLayout.Recalculate();
 
@@ -622,7 +622,8 @@ namespace Barotrauma
                 PadBottom = true,
                 SelectTop = true,
                 ClampScrollToElements = true,
-                Spacing = 8
+                Spacing = 8,
+                PlaySoundOnSelect = true
             };
 
             Dictionary<UpgradeCategory, List<UpgradePrefab>> upgrades = new Dictionary<UpgradeCategory, List<UpgradePrefab>>();
@@ -1123,7 +1124,10 @@ namespace Barotrauma
                 {
                     priceText.Text = string.Empty;
                 }
-                new GUIButton(rectT(0.7f, 0.5f, buyButtonLayout), string.Empty, style: buttonStyle) { Enabled = false };
+                new GUIButton(rectT(0.7f, 0.5f, buyButtonLayout), string.Empty, style: buttonStyle)
+                {
+                    Enabled = false
+                };
                 if (upgradePrefab != null)
                 {
                     var increaseText = new GUITextBlock(rectT(1, 0.2f, buyButtonLayout), "", textAlignment: Alignment.Center);
@@ -1212,7 +1216,7 @@ namespace Barotrauma
                     Campaign.UpgradeManager.PurchaseUpgrade(prefab, category);
                     GameMain.Client?.SendCampaignState();
                     return true;
-                });
+                }, overrideConfirmButtonSound: GUISoundType.ConfirmTransaction);
 
                 return true;
             };
@@ -1400,7 +1404,7 @@ namespace Barotrauma
 
                         if (PlayerInput.PrimaryMouseButtonClicked() && selectedUpgradeTab == UpgradeTab.Upgrade && currentStoreLayout != null)
                         {
-                            ScrollToCategory(data => data.Category.IsWallUpgrade);
+                            ScrollToCategory(data => data.Category.IsWallUpgrade, GUIListBox.PlaySelectSound.Yes);
                         }
                     }
                 }
@@ -1682,7 +1686,7 @@ namespace Barotrauma
             }
         }
         
-        private void ScrollToCategory(Predicate<CategoryData> predicate)
+        private void ScrollToCategory(Predicate<CategoryData> predicate, GUIListBox.PlaySelectSound playSelectSound = GUIListBox.PlaySelectSound.No)
         {
             if (currentStoreLayout == null) { return; }
 
@@ -1690,7 +1694,7 @@ namespace Barotrauma
             {
                 if (child.UserData is CategoryData data && predicate(data))
                 {
-                    currentStoreLayout.ScrollToElement(child);
+                    currentStoreLayout.ScrollToElement(child, playSelectSound);
                     break;
                 }
             }

@@ -147,7 +147,7 @@ namespace Barotrauma.Items.Components
                     CancelUsing(user);
                     user = null;
                 }
-                if (!IsToggle) { IsActive = false; }
+                if (!IsToggle || item.Connections == null) { IsActive = false; }
                 return;
             }
 

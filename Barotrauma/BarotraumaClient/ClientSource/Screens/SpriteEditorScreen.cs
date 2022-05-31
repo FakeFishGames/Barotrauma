@@ -85,12 +85,12 @@ namespace Barotrauma
             {
                 OnClicked = (button, userData) =>
                 {
-                    var selected = selectedSprites;
+                    var selected = selectedSprites.ToList();
                     Sprite firstSelected = selected.First();
                     selected.ForEach(s => s.ReloadTexture());
                     RefreshLists();
-                    textureList.Select(firstSelected.FullPath, autoScroll: false);
-                    selected.ForEachMod(s => spriteList.Select(s, autoScroll: false));
+                    textureList.Select(firstSelected.FullPath, autoScroll: GUIListBox.AutoScroll.Disabled);
+                    selected.ForEachMod(s => spriteList.Select(s, autoScroll: GUIListBox.AutoScroll.Disabled));
                     texturePathText.Text = TextManager.GetWithVariable("spriteeditor.texturesreloaded", "[filepath]", firstSelected.FilePath.Value);
                     texturePathText.TextColor = GUIStyle.Green;
                     return true;
@@ -206,6 +206,7 @@ namespace Barotrauma
 
             textureList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), paddedLeftPanel.RectTransform))
             {
+                PlaySoundOnSelect = true,
                 OnSelected = (listBox, userData) =>
                 {
                     var newTexturePath = userData as string;
@@ -213,7 +214,7 @@ namespace Barotrauma
                     {
                         selectedTexturePath = newTexturePath;
                         ResetZoom();
-                        spriteList.Select(loadedSprites.First(s => s.FilePath == selectedTexturePath), autoScroll: false);
+                        spriteList.Select(loadedSprites.First(s => s.FilePath == selectedTexturePath), autoScroll: GUIListBox.AutoScroll.Disabled);
                         UpdateScrollBar(spriteList);
                     }
                     foreach (GUIComponent child in spriteList.Content.Children)
@@ -248,6 +249,7 @@ namespace Barotrauma
 
             spriteList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), paddedRightPanel.RectTransform))
             {
+                PlaySoundOnSelect = true,
                 OnSelected = (listBox, userData) =>
                 {
                     if (userData is Sprite sprite)
@@ -481,7 +483,7 @@ namespace Barotrauma
                             var scaledRect = new Rectangle(textureRect.Location + sprite.SourceRect.Location.Multiply(zoom), sprite.SourceRect.Size.Multiply(zoom));
                             if (scaledRect.Contains(PlayerInput.MousePosition))
                             {
-                                spriteList.Select(sprite, autoScroll: false);
+                                spriteList.Select(sprite, autoScroll: GUIListBox.AutoScroll.Disabled);
                                 UpdateScrollBar(spriteList);
                                 UpdateScrollBar(textureList);
                                 // Release the keyboard so that we can nudge the source rects
@@ -847,7 +849,7 @@ namespace Barotrauma
             base.Select();
             LoadSprites();
             RefreshLists();
-            spriteList.Select(0, autoScroll: false);            
+            spriteList.Select(0, autoScroll: GUIListBox.AutoScroll.Disabled);            
         }
 
         protected override void DeselectEditorSpecific()
@@ -905,7 +907,7 @@ namespace Barotrauma
             }
             if (sprite.FullPath != selectedTexturePath)
             {
-                textureList.Select(sprite.FullPath, autoScroll: false);
+                textureList.Select(sprite.FullPath, autoScroll: GUIListBox.AutoScroll.Disabled);
                 UpdateScrollBar(textureList);
             }
             xmlPathText.Text = string.Empty;

@@ -179,7 +179,7 @@ namespace Barotrauma
             get { return ModeList.SelectedIndex; }
             set
             {
-                ModeList.Select(value, true);
+                ModeList.Select(value, GUIListBox.Force.Yes);
             }
         }
 
@@ -504,6 +504,7 @@ namespace Barotrauma
 
             PlayerList = new GUIListBox(new RectTransform(new Vector2(0.4f, 1.0f), socialHolderHorizontal.RectTransform))
             {
+                PlaySoundOnSelect = true,
                 OnSelected = (component, userdata) => { SelectPlayer(userdata as Client); return true; }
             };
 
@@ -816,6 +817,7 @@ namespace Barotrauma
 
             SubList = new GUIListBox(new RectTransform(Vector2.One, subHolder.RectTransform))
             {
+                PlaySoundOnSelect = true,
                 OnSelected = VotableClicked
             };
 
@@ -901,6 +903,7 @@ namespace Barotrauma
             };
             ModeList = new GUIListBox(new RectTransform(Vector2.One, gameModeHolder.RectTransform))
             {
+                PlaySoundOnSelect = true,
                 OnSelected = VotableClicked
             };
 
@@ -1515,6 +1518,7 @@ namespace Barotrauma
                 JobList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.6f), JobPreferenceContainer.RectTransform, Anchor.BottomCenter), true)
                 {
                     Enabled = true,
+                    PlaySoundOnSelect = true,
                     OnSelected = (child, obj) =>
                     {
                         if (child.IsParentOf(GUI.MouseOn)) return false;
@@ -1600,6 +1604,7 @@ namespace Barotrauma
                 {
                     Enabled = true,
                     KeepSpaceForScrollBar = false,
+                    PlaySoundOnSelect = true,
                     ScrollBarEnabled = false,
                     ScrollBarVisible = false
                 };
@@ -3185,7 +3190,7 @@ namespace Barotrauma
 
             var prevMode = ModeList.Content.GetChild(selectedModeIndex).UserData as GameModePreset;
 
-            if ((HighlightedModeIndex == selectedModeIndex || HighlightedModeIndex < 0) && ModeList.SelectedIndex != modeIndex) { ModeList.Select(modeIndex, true); }
+            if ((HighlightedModeIndex == selectedModeIndex || HighlightedModeIndex < 0) && ModeList.SelectedIndex != modeIndex) { ModeList.Select(modeIndex, GUIListBox.Force.Yes); }
             selectedModeIndex = modeIndex;
 
             if ((prevMode == GameModePreset.PvP) != (SelectedMode == GameModePreset.PvP))
@@ -3301,7 +3306,7 @@ namespace Barotrauma
             RefreshEnabledElements();
             if (enabled)
             {
-                ModeList.Select(GameModePreset.MultiPlayerCampaign, true);
+                ModeList.Select(GameModePreset.MultiPlayerCampaign, GUIListBox.Force.Yes);
             }
         }
 
@@ -3417,7 +3422,7 @@ namespace Barotrauma
                         UserData = i,
                         OnClicked = (btn, obj) =>
                         {
-                            JobList.Select((int)obj, true);
+                            JobList.Select((int)obj, GUIListBox.Force.Yes);
                             SwitchJob(btn, null);
                             if (JobSelectionFrame != null) { JobSelectionFrame.Visible = false; }
                             JobList.Deselect();
@@ -3553,7 +3558,7 @@ namespace Barotrauma
                 else
                 {
                     subList.OnSelected -= VotableClicked;
-                    subList.Select(sub, force: true);
+                    subList.Select(sub, GUIListBox.Force.Yes);
                     subList.OnSelected += VotableClicked;
                 }
 

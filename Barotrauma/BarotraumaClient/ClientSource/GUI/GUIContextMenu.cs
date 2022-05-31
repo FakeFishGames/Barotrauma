@@ -113,7 +113,8 @@ namespace Barotrauma
             {
                 AutoHideScrollBar = false,
                 ScrollBarVisible = false,
-                Padding = hasHeader ? new Vector4(4, 0, 4, 4) : padding
+                Padding = hasHeader ? new Vector4(4, 0, 4, 4) : padding,
+                PlaySoundOnSelect = true
             };
 
             foreach (var (option, size) in optionsAndSizes)

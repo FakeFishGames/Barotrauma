@@ -46,7 +46,10 @@ namespace Barotrauma.Steam
                     regularBox.CanBeFocused = true;
                 }
             }
-            filterBox = CreateSearchBox(mainLayout, width: 1.0f);
+            
+            var searchRectT = NewItemRectT(mainLayout, heightScale: 1.0f);
+            searchRectT.RelativeSize = (1.0f, searchRectT.RelativeSize.Y);
+            filterBox = CreateSearchBox(searchRectT);
 
             Label(mainLayout, TextManager.Get("CannotChangeMods"), GUIStyle.Font);
         }
@@ -55,9 +58,8 @@ namespace Barotrauma.Steam
         {
             string str = filterBox.Text;
             regularList.Content.Children
-                .ForEach(c => c.Visible = str.IsNullOrWhiteSpace()
-                                          || (c.UserData is ContentPackage p
-                                              && p.Name.Contains(str, StringComparison.OrdinalIgnoreCase)));
+                .ForEach(c => c.Visible = !(c.UserData is ContentPackage p)
+                                              || ModNameMatches(p, str));
         }
     }
 }

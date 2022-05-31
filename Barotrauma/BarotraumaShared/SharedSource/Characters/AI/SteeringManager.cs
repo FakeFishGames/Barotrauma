@@ -1,8 +1,6 @@
 ﻿using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
-using FarseerPhysics;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -89,6 +87,10 @@ namespace Barotrauma
             if (steering.LengthSquared() > speed * speed)
             {
                 steering = Vector2.Normalize(steering) * Math.Abs(speed);
+            }
+            if (host is AIController aiController && aiController?.Character.CharacterHealth.GetAfflictionOfType("invertcontrols".ToIdentifier()) != null)
+            {
+                steering = -steering;
             }
             host.Steering = steering;
         }

@@ -235,7 +235,7 @@ namespace Barotrauma
             public Identifier[] BlockTransformation { get; private set; }
 
             public readonly Dictionary<StatTypes, (float minValue, float maxValue)> AfflictionStatValues = new Dictionary<StatTypes, (float minValue, float maxValue)>();
-            public readonly HashSet<AbilityFlags> AfflictionAbilityFlags = new HashSet<AbilityFlags>();
+            public AbilityFlags AfflictionAbilityFlags;
 
             //statuseffects applied on the character when the affliction is active
             public readonly List<StatusEffect> StatusEffects = new List<StatusEffect>();
@@ -265,7 +265,7 @@ namespace Barotrauma
                             break;
                         case "abilityflag":
                             var flagType = CharacterAbilityGroup.ParseFlagType(subElement.GetAttributeString("flagtype", ""), parentDebugName);
-                            AfflictionAbilityFlags.Add(flagType);
+                            AfflictionAbilityFlags |= flagType;
                             break;
                         case "affliction":
                             DebugConsole.AddWarning($"Error in affliction \"{parentDebugName}\" - additional afflictions caused by the affliction should be configured inside status effects.");
@@ -354,6 +354,11 @@ namespace Barotrauma
         //how strong the affliction needs to be before bots attempt to treat it
         public readonly float TreatmentThreshold = 5.0f;
 
+        /// <summary>
+        /// The affliction is automatically removed after this time. 0 = unlimited
+        /// </summary>
+        public readonly float Duration;
+
         //how much karma changes when a player applies this affliction to someone (per strength of the affliction)
         public float KarmaChangeOnApplied;
 
@@ -407,8 +412,10 @@ namespace Barotrauma
                 !IsBuff && 
                 AfflictionType != "geneticmaterialbuff" && 
                 AfflictionType != "geneticmaterialdebuff");
-            HealCostMultiplier = element.GetAttributeFloat(nameof(HealCostMultiplier).ToLowerInvariant(), 1f);
-            BaseHealCost = element.GetAttributeInt(nameof(BaseHealCost).ToLowerInvariant(), 0);
+            HealCostMultiplier = element.GetAttributeFloat(nameof(HealCostMultiplier), 1f);
+            BaseHealCost = element.GetAttributeInt(nameof(BaseHealCost), 0);
+
+            Duration = element.GetAttributeFloat(nameof(Duration), 0.0f);
 
             if (element.GetAttribute("nameidentifier") != null)
             {

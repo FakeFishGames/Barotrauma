@@ -112,12 +112,6 @@ namespace Barotrauma
 
         public void InitializeCharacter(Character npc, ISpatialEntity positionToStayIn = null)
         {
-            npc.AddStaticHealthMultiplier(HealthMultiplier);
-            if (GameMain.NetworkMember != null)
-            {
-                npc.AddStaticHealthMultiplier(HealthMultiplierInMultiplayer);
-            }
-
             var humanAI = npc.AIController as HumanAIController;
             if (humanAI != null)
             {

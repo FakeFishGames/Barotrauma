@@ -866,8 +866,8 @@ namespace Barotrauma
                 var container = i.GetComponent<ItemContainer>();
                 if (container == null) { return 0; }
                 if (!container.Inventory.CanBePut(containableItem)) { return 0; }
-                var rootContainer = container.Item.GetRootContainer();
-                if (rootContainer?.GetComponent<Fabricator>() != null || rootContainer?.GetComponent<Deconstructor>() != null) { return 0; }
+                var rootContainer = container.Item.GetRootContainer() ?? container.Item;
+                if (rootContainer.GetComponent<Fabricator>() != null || rootContainer.GetComponent<Deconstructor>() != null) { return 0; }
                 if (container.ShouldBeContained(containableItem, out bool isRestrictionsDefined))
                 {
                     if (isRestrictionsDefined)
@@ -882,7 +882,12 @@ namespace Barotrauma
                         }
                         else
                         {
-                            return isPreferencesDefined ? 0 : 1;
+                            if (isPreferencesDefined)
+                            {
+                                // Use any valid locker as a fall back container.
+                                return container.Item.HasTag("locker") ? 0.5f : 0;
+                            }
+                            return 1;
                         }
                     }
                 }
@@ -1950,11 +1955,10 @@ namespace Barotrauma
                 enemyFactor = MathHelper.Lerp(1, 0, MathHelper.Clamp(enemyCount * 0.9f, 0, 1));
             }
             float dangerousItemsFactor = 1f;
-            foreach (Item item in Item.ItemList)
+            foreach (Item item in Item.DangerousItems)
             {
-                if (item.CurrentHull != hull) { continue; }
-                if (item.Prefab != null && item.Prefab.IsDangerous)
-                {
+                if (item.CurrentHull == hull) 
+                { 
                     dangerousItemsFactor = 0;
                     break;
                 }

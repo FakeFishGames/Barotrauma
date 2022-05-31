@@ -144,9 +144,16 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public bool Combine(GeneticMaterial otherGeneticMaterial, Character user)
+        public enum CombineResult
         {
-            if (!CanBeCombinedWith(otherGeneticMaterial)) { return false; }
+            None,
+            Refined,
+            Combined
+        }
+
+        public CombineResult Combine(GeneticMaterial otherGeneticMaterial, Character user)
+        {
+            if (!CanBeCombinedWith(otherGeneticMaterial)) { return CombineResult.None; }
 
             float conditionIncrease = Rand.Range(ConditionIncreaseOnCombineMin, ConditionIncreaseOnCombineMax);
             conditionIncrease += user?.GetStatValue(StatTypes.GeneticMaterialRefineBonus) ?? 0.0f;
@@ -158,7 +165,7 @@ namespace Barotrauma.Items.Components
                 {
                     MakeTainted();
                 }
-                return true;
+                return CombineResult.Refined;
             }
             else
             {
@@ -171,7 +178,7 @@ namespace Barotrauma.Items.Components
                 {
                     MakeTainted();
                 }
-                return false;
+                return CombineResult.Combined;
             }
         }
 

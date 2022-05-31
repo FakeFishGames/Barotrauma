@@ -482,7 +482,10 @@ namespace Barotrauma.CharacterEditor
                     RelativeSpacing = 0.02f
                 };
                 new GUITextBlock(new RectTransform(new Vector2(0.2f, 1f), limbEditLayout.RectTransform), GetCharacterEditorTranslation("Limbs"), font: GUIStyle.SubHeadingFont);
-                var limbsList = new GUIListBox(new RectTransform(new Vector2(1, 0.45f), content.RectTransform));
+                var limbsList = new GUIListBox(new RectTransform(new Vector2(1, 0.45f), content.RectTransform))
+                {
+                    PlaySoundOnSelect = true,
+                };
                 var removeLimbButton = new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), limbEditLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIMinusButton")
                 {
                     OnClicked = (b, d) =>
@@ -659,7 +662,10 @@ namespace Barotrauma.CharacterEditor
                 { 
                     CanBeFocused = false 
                 };
-                var jointsList = new GUIListBox(new RectTransform(new Vector2(1, 0.45f), content.RectTransform));
+                var jointsList = new GUIListBox(new RectTransform(new Vector2(1, 0.45f), content.RectTransform))
+                {
+                    PlaySoundOnSelect = true,
+                };
                 var removeJointButton = new GUIButton(new RectTransform(new Point(jointButtonElement.Rect.Height, jointButtonElement.Rect.Height), jointButtonElement.RectTransform), style: "GUIMinusButton")
                 {
                     OnClicked = (b, d) =>

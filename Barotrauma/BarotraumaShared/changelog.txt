@@ -1,4 +1,77 @@
 ---------------------------------------------------------------------------------------------------------
+v0.18.4.0
+---------------------------------------------------------------------------------------------------------
+
+Unstable only:
+- Option to select whether to automatically transfer the items from the old sub to a new one when switching the sub.
+- Fixed Physicorium Chaingun Ammunition Box having an incorrect sprite.
+- Fixed crashing when trying to load a save that includes ItemContainers with different kinds of inventory slots (e.g. PUCS).
+- Disposable suits no longer protect from pressure when broken.
+- Made disposable suits play a sound and their lights flicker when the suit is about to break.
+- Fixed inability to access the character tab when your character is dead in non-campaign modes, fixed creating a new character not doing anything mid-round.
+- Fixed sprite editor crashing if you try to reload a texture twice.
+- Fixed drone/shuttles getting left behind in the outpost when you buy and switch to a sub that has a one.
+- Fixed crashing when closing the submarine preview window.
+
+Changes:
+- Added some new campaign settings: starting balance, amount of starting items and difficulty.
+- Added two new beacon stations.
+- Made the descriptions of some materials (that used to just say "useful for crafting") more descriptive. 
+- Increased oxygen generator output in some vanilla subs.
+- Made handheld sonar beacon sound less grating.
+- Disallowed mirroring beds vertically.
+- The client who initiated a vote cannot take part in that vote (except if they're the only client who can vote, in which case the vote automatically passes).
+- Made flashlight flicker before the battery runs out.
+- Added some lootable money to corpses found in wrecks.
+- Removed the small equipment indicators next to the character portrait.
+- Added a bunch of new UI sounds (tickbox toggling, confirming transactions, increase/decrease sounds for number inputs, cart sound for adding/removing items in store interfaces, selecting/clicking components, sliders and modlist).
+
+
+Fixes:
+- Split campaign state networking messages into multiple ones. Previously all the campaign-related data (map state, reputation, upgrades, purchased items, selected missions) was included in the same message, and whenever anything in the data changed, the server would send all of it to clients. This would cause performance and bandwidth issues in some situations, for example when reputation was changing rapidly. 
+- Fixed some pumps in Kastrull working without power.
+- Fixed quick-reloading working incorrectly when trying to reload from a stack that doesn't fully fit in the weapon (e.g. when double clicking on a full stack of revolver rounds with a half-loaded revolver in hand).
+- Fixed inability to quick-reload weapons with more than 1 inventory slot (e.g. autoshotgun).
+- Fixed outpost NPCs having x3 more health than they should.
+- Fixed morbusine not killing NPCs with higher-than-default health.
+- Fixed crashing with the error message "couldn't find a valid ICU package installed on the system" on some Linux distributions.
+- Fixed graphics errors when using Razer Cortex overlay.
+- Fixed bots being unable to repair Winterhalter's top hatch.
+- Fixed server crashing if you disable all mission types and try to start a mission round.
+- Fixed Chinese/Japanese/Korean text not wrapping properly on terminals.
+- Fixed bots sometimes walking towards a wall or holding the ladders when they are idling.
+- Fixed "main docking port" property not being taken into account when placing outposts (= the outpost was placed with the assumption that the docking port closest to the sub's center is the main docking port). Sometimes caused the outpost to be placed too close to the level walls, preventing the sub from docking with it.
+- Fixed ladders not being visible in the sub preview.
+- Fixed some UI elements being too large when switching from a large resolution to a smaller one, or vice versa.
+- Fixed weapon holder sprite depth.
+- Fixed level editor's test mode generating a different level than the editor itself.
+
+Modding:
+- Added "mod lists" which can be used to enable/disable sets of mods more easily.
+- Option to choose which local mod(s) to add a submarine to when saving one in the submarine editor.
+- Mods can be unsubscribed from by right-clicking on them in the mod list, and it's possible to unsubscribe from multiple ones at the same time by using ctrl+click or shift+click to select more than one.
+- Local mods can be merged in the mod list by selecting the ones you want to merge and selecting "merge all selected" from the right-click context menu.
+- Better filtering in the mod list: option to only show local mods, Workshop mods, published mods, submarines and/or item assemblies.
+- Added "SameInventory" spawn position type to status effects (allows spawning items in the same inventory the entity applying the effect is in).
+- Added support for multiple light components in wearables.
+
+---------------------------------------------------------------------------------------------------------
+v0.18.3.0
+---------------------------------------------------------------------------------------------------------
+
+Unstable only:
+- Fixed submarine not getting saved between levels in the multiplayer campaign.
+- Fixed clients sometimes unnecessarily showing the "trying to automatically dock with the outpost" prompt even when the docking is being done manually.
+- Added a new texture and icon for shotgun rubber shell.
+- Added sprite for disposable suit on shelf.
+
+Changes:
+- TriggerComponent now supports negative forces: negative force value will cause the it to pull triggerers towards it.
+
+Modding:
+- Multiple TriggerComponent properties can now be modified through signals and CustomInterface components.
+
+---------------------------------------------------------------------------------------------------------
 v0.18.2.0
 ---------------------------------------------------------------------------------------------------------
 
@@ -147,6 +220,17 @@ Modding:
 - Fixed nullref exception when trying to trigger a location type change to a type that doesn't exist (doesn't happen in the vanilla game).
 - Added an extra tag to the "canned heat" talent to make it easier to add custom upgradeable tanks that aren't compatible with vanilla tools.
 - Option to make status effects drop the items contained inside the target item (usage example in the duffel bag).
+
+---------------------------------------------------------------------------------------------------------
+v0.17.16.0
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Added some tutorial information to the data sent to GameAnalytics.
+
+Fixes:
+- Fixed an exploit that allowed modified clients to execute console commands server-side without the appropriate permissions.
+- Fixed NPCs spawning without any items when the system language is set to Turkish.
 
 ---------------------------------------------------------------------------------------------------------
 v0.17.15.0

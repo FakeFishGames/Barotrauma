@@ -48,16 +48,29 @@ namespace Barotrauma
             }
             else
             {
-                float xDist = Math.Abs(character.WorldPosition.X - Leak.WorldPosition.X);
-                float yDist = Math.Abs(character.WorldPosition.Y - Leak.WorldPosition.Y);
-                // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally).
-                // If the target is close, ignore the distance factor alltogether so that we keep fixing the leaks that are nearby.
-                float distanceFactor = isPriority || xDist < 200 && yDist < 100 ? 1 : MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 3000, xDist + yDist * 3.0f));
-                float severity = isPriority ? 1 : AIObjectiveFixLeaks.GetLeakSeverity(Leak) / 100;
                 float reduction = isPriority ? 1 : 2;
-                float max = AIObjectiveManager.LowestOrderPriority - reduction;
-                float devotion = CumulatedDevotion / 100;
-                Priority = MathHelper.Lerp(0, max, MathHelper.Clamp(devotion + (severity * distanceFactor * PriorityModifier), 0, 1));
+                float maxPriority = AIObjectiveManager.LowestOrderPriority - reduction;
+                if (operateObjective != null && objectiveManager.GetActiveObjective<AIObjectiveFixLeaks>() is AIObjectiveFixLeaks fixLeaks && fixLeaks.CurrentSubObjective == this)
+                {
+                    // Prioritize leaks that we are already fixing
+                    Priority = maxPriority;
+                }
+                else
+                {
+                    float xDist = Math.Abs(character.WorldPosition.X - Leak.WorldPosition.X);
+                    float yDist = Math.Abs(character.WorldPosition.Y - Leak.WorldPosition.Y);
+                    // Vertical distance matters more than horizontal (climbing up/down is harder than moving horizontally).
+                    // If the target is close, ignore the distance factor alltogether so that we keep fixing the leaks that are nearby.
+                    float distanceFactor = isPriority || xDist < 200 && yDist < 100 ? 1 : MathHelper.Lerp(1, 0.1f, MathUtils.InverseLerp(0, 3000, xDist + yDist * 3.0f));
+                    if (Leak.linkedTo.Any(e => e is Hull h && h == character.CurrentHull))
+                    {
+                        // Double the distance when the leak can be accessed from the current hull.
+                        distanceFactor *= 2;
+                    }
+                    float severity = isPriority ? 1 : AIObjectiveFixLeaks.GetLeakSeverity(Leak) / 100;
+                    float devotion = CumulatedDevotion / 100;
+                    Priority = MathHelper.Lerp(0, maxPriority, MathHelper.Clamp(devotion + (severity * distanceFactor * PriorityModifier), 0, 1));
+                }
             }
             return Priority;
         }
@@ -202,7 +215,7 @@ namespace Barotrauma
             // This is an approximation, because we don't know the exact reach until the pose is taken.
             // And even then the actual range depends on the direction we are aiming to.
             // Found out that without any multiplier the value (209) is often too short.
-            return repairTool.Range + armLength * 1.3f;
+            return repairTool.Range + armLength * 2;
         }
     }
 }

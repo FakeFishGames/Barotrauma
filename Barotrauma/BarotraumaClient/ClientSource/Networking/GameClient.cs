@@ -689,7 +689,7 @@ namespace Barotrauma.Networking
                     if (ChildServerRelay.Process?.HasExited ?? true)
                     {
                         Disconnect();
-                        if (!GUIMessageBox.MessageBoxes.Any(mb => (mb as GUIMessageBox)?.Text.Text == ChildServerRelay.CrashMessage))
+                        if (!GUIMessageBox.MessageBoxes.Any(mb => (mb as GUIMessageBox)?.Text?.Text == ChildServerRelay.CrashMessage))
                         {
                             var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), ChildServerRelay.CrashMessage);
                             msgBox.Buttons[0].OnClicked += ReturnToPreviousMenu;
@@ -824,7 +824,11 @@ namespace Barotrauma.Networking
 
                     byte campaignID = inc.ReadByte();
                     UInt16 campaignSaveID = inc.ReadUInt16();
-                    UInt16 campaignUpdateID = inc.ReadUInt16();
+                    Dictionary<MultiPlayerCampaign.NetFlags, UInt16> campaignUpdateIDs = new Dictionary<MultiPlayerCampaign.NetFlags, ushort>();
+                    foreach (MultiPlayerCampaign.NetFlags flag in Enum.GetValues(typeof(MultiPlayerCampaign.NetFlags)))
+                    {
+                        campaignUpdateIDs[flag] = inc.ReadUInt16();
+                    }
 
                     IWriteMessage readyToStartMsg = new WriteOnlyMessage();
                     readyToStartMsg.Write((byte)ClientPacketHeader.RESPONSE_STARTGAME);
@@ -843,7 +847,7 @@ namespace Barotrauma.Networking
                             campaign != null &&
                             campaign.CampaignID == campaignID &&
                             campaign.LastSaveID == campaignSaveID &&
-                            campaign.LastUpdateID == campaignUpdateID;
+                            campaignUpdateIDs.All(kvp => campaign.GetLastUpdateIdForFlag(kvp.Key) == kvp.Value);
                     }
                     readyToStartMsg.Write(readyToStart);
 
@@ -2401,7 +2405,10 @@ namespace Barotrauma.Networking
             {
                 outmsg.Write(campaign.LastSaveID);
                 outmsg.Write(campaign.CampaignID);
-                outmsg.Write(campaign.LastUpdateID);
+                foreach (MultiPlayerCampaign.NetFlags netFlag in Enum.GetValues(typeof(MultiPlayerCampaign.NetFlags)))
+                {
+                    outmsg.Write(campaign.GetLastUpdateIdForFlag(netFlag));
+                }
                 outmsg.Write(GameMain.NetLobbyScreen.CampaignCharacterDiscarded);
             }
 
@@ -2446,7 +2453,10 @@ namespace Barotrauma.Networking
             {
                 outmsg.Write(campaign.LastSaveID);
                 outmsg.Write(campaign.CampaignID);
-                outmsg.Write(campaign.LastUpdateID);
+                foreach (MultiPlayerCampaign.NetFlags flag in Enum.GetValues(typeof(MultiPlayerCampaign.NetFlags)))
+                {
+                    outmsg.Write(campaign.GetLastUpdateIdForFlag(flag));
+                }
                 outmsg.Write(GameMain.NetLobbyScreen.CampaignCharacterDiscarded);
             }
 
@@ -2644,7 +2654,7 @@ namespace Barotrauma.Networking
                     if (!(GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign) || campaign.CampaignID != campaignID)
                     {
                         string savePath = transfer.FilePath;
-                        GameMain.GameSession = new GameSession(null, savePath, GameModePreset.MultiPlayerCampaign, CampaignSettings.Unsure);
+                        GameMain.GameSession = new GameSession(null, savePath, GameModePreset.MultiPlayerCampaign, CampaignSettings.Empty);
                         campaign = (MultiPlayerCampaign)GameMain.GameSession.GameMode;
                         campaign.CampaignID = campaignID;
                         GameMain.NetLobbyScreen.ToggleCampaignMode(true);
@@ -2674,9 +2684,12 @@ namespace Barotrauma.Networking
                     }
 
                     DebugConsole.Log("Campaign save received (" + GameMain.GameSession.SavePath + "), save ID " + campaign.LastSaveID);
-                    //decrement campaign update ID so the server will send us the latest data
+                    //decrement campaign update IDs so the server will send us the latest data
                     //(as there may have been campaign updates after the save file was created)
-                    campaign.LastUpdateID--;
+                    foreach (MultiPlayerCampaign.NetFlags flag in Enum.GetValues(typeof(MultiPlayerCampaign.NetFlags)))
+                    {
+                        campaign.SetLastUpdateIdForFlag(flag, (ushort)(campaign.GetLastUpdateIdForFlag(flag) - 1));
+                    }
                     break;
                 case FileTransferType.Mod:
                     if (!(Screen.Selected is ModDownloadScreen)) { return; }
@@ -2775,6 +2788,15 @@ namespace Barotrauma.Networking
             GameMain.GameSession = null;
         }
 
+        public void SendCharacterInfo()
+        {
+            IWriteMessage msg = new WriteOnlyMessage();
+            msg.Write((byte)ClientPacketHeader.UPDATE_CHARACTERINFO);
+            WriteCharacterInfo(msg);
+            msg.Write((byte)ServerNetObject.END_OF_MESSAGE);
+            clientPeer?.Send(msg, DeliveryMethod.Reliable);
+        }
+
         public void WriteCharacterInfo(IWriteMessage msg)
         {
             msg.Write(characterInfo == null);
@@ -2824,18 +2846,18 @@ namespace Barotrauma.Networking
         }
 
         #region Submarine Change Voting
-        public void InitiateSubmarineChange(SubmarineInfo sub, VoteType voteType)
+        public void InitiateSubmarineChange(SubmarineInfo sub, bool transferItems, VoteType voteType)
         {
             if (sub == null) { return; }
-            Vote(voteType, sub);
+            Vote(voteType, (sub, transferItems));
         }
 
-        public void ShowSubmarineChangeVoteInterface(Client starter, SubmarineInfo info, VoteType type, float timeOut)
+        public void ShowSubmarineChangeVoteInterface(Client starter, SubmarineInfo info, VoteType type, bool transferItems, float timeOut)
         {
             if (info == null) { return; }
             if (votingInterface != null && votingInterface.VoteRunning) { return; }
             votingInterface?.Remove();
-            votingInterface = VotingInterface.CreateSubmarineVotingInterface(starter, info, type, timeOut);
+            votingInterface = VotingInterface.CreateSubmarineVotingInterface(starter, info, type, transferItems, timeOut);
         }
         #endregion
 
@@ -3014,7 +3036,7 @@ namespace Barotrauma.Networking
             msg.Write(mapSeed);
             msg.Write(sub.Name);
             msg.Write(sub.MD5Hash.StringRepresentation);
-            settings.Serialize(msg);
+            msg.Write(settings);
 
             clientPeer.Send(msg, DeliveryMethod.Reliable);
         }

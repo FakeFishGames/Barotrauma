@@ -1,12 +1,11 @@
-﻿using Barotrauma.Tutorials;
+﻿using Barotrauma.Extensions;
+using Barotrauma.IO;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using Barotrauma.IO;
+using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
-using System.Globalization;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -142,7 +141,7 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("MapSeed"), font: GUIStyle.SubHeadingFont);
             seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, ToolBox.RandomSeed(8));
-            
+
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SelectedSub"), font: GUIStyle.SubHeadingFont);
 
             var moddedDropdown = new GUIDropDown(new RectTransform(new Vector2(1f, 0.02f), leftColumn.RectTransform), "", 3);
@@ -155,8 +154,12 @@ namespace Barotrauma
             {
                 Stretch = true
             };
-            
-            subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.65f), leftColumn.RectTransform)) { ScrollBarVisible = true };
+
+            subList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.65f), leftColumn.RectTransform))
+            {
+                PlaySoundOnSelect = true,
+                ScrollBarVisible = true
+            };
 
             var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterContainer.RectTransform), TextManager.Get("serverlog.filter"), textAlignment: Alignment.CenterLeft, font: GUIStyle.Font);
             var searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform, Anchor.CenterRight), font: GUIStyle.Font, createClearButton: true);
@@ -191,7 +194,7 @@ namespace Barotrauma
             {
                 TextGetter = () =>
                 {
-                    int initialMoney = CampaignMode.InitialMoney;
+                    int initialMoney = CurrentSettings.InitialMoney;
                     if (subList.SelectedData is SubmarineInfo subInfo)
                     {
                         initialMoney -= subInfo.Price;
@@ -200,12 +203,16 @@ namespace Barotrauma
                     return TextManager.GetWithVariable("campaignstartingmoney", "[money]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", initialMoney));
                 }
             };
-            
+
             CampaignCustomizeButton = new GUIButton(new RectTransform(new Vector2(0.25f, 1f), firstPageButtonContainer.RectTransform, Anchor.CenterLeft), TextManager.Get("SettingsButton"))
             {
                 OnClicked = (tb, userdata) =>
                 {
-                    CreateCustomizeWindow();
+                    CreateCustomizeWindow(CurrentSettings, settings =>
+                    {
+                        CurrentSettings = settings;
+                        UpdateSubList(SubmarineInfo.SavedSubmarines);
+                    });
                     return true;
                 }
             };
@@ -218,7 +225,7 @@ namespace Barotrauma
                     return false;
                 }
             };
-            
+
             var disclaimerBtn = new GUIButton(new RectTransform(new Vector2(1.0f, 0.8f), rightColumn.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(5) }, style: "GUINotificationButton")
             {
                 IgnoreLayoutGroups = true,
@@ -353,54 +360,21 @@ namespace Barotrauma
                 StealRandomizeButton(CharacterMenus[i], jobTextContainer);
             }
         }
-        
-        private void CreateCustomizeWindow()
+
+        private void CreateCustomizeWindow(CampaignSettings prevSettings, Action<CampaignSettings> onClosed = null)
         {
-            CampaignCustomizeSettings = new GUIMessageBox("", "", new LocalizedString[] { TextManager.Get("OK") }, new Vector2(0.2f, 0.2f));
-            CampaignCustomizeSettings.Buttons[0].OnClicked += CampaignCustomizeSettings.Close;
+            CampaignCustomizeSettings = new GUIMessageBox("", "", new[] { TextManager.Get("OK") }, new Vector2(0.25f, 0.3f), minSize: new Point(450, 350));
 
-            CampaignSettingsContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), CampaignCustomizeSettings.Content.RectTransform, Anchor.TopCenter))
-            {
-                RelativeSpacing = 0.1f
-            };
+            GUILayoutGroup campaignSettingContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.8f), CampaignCustomizeSettings.Content.RectTransform, Anchor.TopCenter));
 
-            if (MapGenerationParams.Instance.RadiationParams != null)
-            {
-                bool prevRadiationToggleEnabled = EnableRadiationToggle?.Selected ?? true;
-                EnableRadiationToggle = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.3f), CampaignSettingsContent.RectTransform), TextManager.Get("CampaignOption.EnableRadiation"), font: GUIStyle.Font)
-                {
-                    Selected = prevRadiationToggleEnabled,
-                    ToolTip = TextManager.Get("campaignoption.enableradiation.tooltip")
-                };
-            }
-            var maxMissionCountSettingHolder = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.3f), CampaignSettingsContent.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) 
-            { 
-                Stretch = true,
-                ToolTip = TextManager.Get("maxmissioncounttooltip")
-            };
-            var maxMissionCountDescription = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.0f), maxMissionCountSettingHolder.RectTransform), TextManager.Get("maxmissioncount", "missions"), wrap: true);
-            var maxMissionCountContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), maxMissionCountSettingHolder.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { RelativeSpacing = 0.05f, Stretch = true };
-            var maxMissionCountButtons = new GUIButton[2];
-            maxMissionCountButtons[0] = new GUIButton(new RectTransform(new Vector2(0.15f, 0.8f), maxMissionCountContainer.RectTransform), style: "GUIButtonToggleLeft")
-            {
-                OnClicked = (button, obj) =>
-                {
-                    MaxMissionCountText.Text = Math.Clamp(Int32.Parse(MaxMissionCountText.Text.SanitizedValue) - 1, CampaignSettings.MinMissionCountLimit, CampaignSettings.MaxMissionCountLimit).ToString();
-                    return true;
-                }
-            };
 
-            RichString prevMaxMissionCountText = MaxMissionCountText?.Text ?? CampaignSettings.DefaultMaxMissionCount.ToString();
-            MaxMissionCountText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), maxMissionCountContainer.RectTransform), prevMaxMissionCountText, textAlignment: Alignment.Center, style: "GUITextBox");
-            maxMissionCountButtons[1] = new GUIButton(new RectTransform(new Vector2(0.15f, 0.8f), maxMissionCountContainer.RectTransform), style: "GUIButtonToggleRight")
+            CampaignSettingElements elements = CreateCampaignSettingList(campaignSettingContent, prevSettings);
+            CampaignCustomizeSettings.Buttons[0].OnClicked += (button, o) =>
             {
-                OnClicked = (button, obj) =>
-                {
-                    MaxMissionCountText.Text = Math.Clamp(Int32.Parse(MaxMissionCountText.Text.SanitizedValue) + 1, CampaignSettings.MinMissionCountLimit, CampaignSettings.MaxMissionCountLimit).ToString();
-                    return true;
-                }
+
+                onClosed?.Invoke(elements.CreateSettings());
+                return CampaignCustomizeSettings.Close(button, o);
             };
-            maxMissionCountContainer.Children.ForEach(c => c.ToolTip = maxMissionCountSettingHolder.ToolTip);
         }
 
         private static void StealRandomizeButton(CharacterInfo.AppearanceCustomizationMenu menu, GUIComponent parent)
@@ -412,7 +386,7 @@ namespace Barotrauma
             randomizeButton.RectTransform.Parent = parent.RectTransform;
             randomizeButton.RectTransform.RelativeSize = Vector2.One * 1.3f;
         }
-        
+
         private bool FinishSetup(GUIButton btn, object userdata)
         {
             if (string.IsNullOrWhiteSpace(saveNameBox.Text))
@@ -420,7 +394,7 @@ namespace Barotrauma
                 saveNameBox.Flash(GUIStyle.Red);
                 return false;
             }
-            
+
             SubmarineInfo selectedSub = null;
 
             if (!(subList.SelectedData is SubmarineInfo)) { return false; }
@@ -443,16 +417,7 @@ namespace Barotrauma
             string savePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Singleplayer, saveNameBox.Text);
             bool hasRequiredContentPackages = selectedSub.RequiredContentPackagesInstalled;
 
-            CampaignSettings settings = new CampaignSettings();
-            settings.RadiationEnabled = EnableRadiationToggle?.Selected ?? false;
-            if (MaxMissionCountText != null && Int32.TryParse(MaxMissionCountText.Text.SanitizedValue, out int missionCount))
-            {
-                settings.MaxMissionCount = missionCount;
-            }
-            else
-            {
-                settings.MaxMissionCount = CampaignSettings.DefaultMaxMissionCount;
-            }
+            CampaignSettings settings = CurrentSettings;
 
             if (selectedSub.HasTag(SubmarineTag.Shuttle) || !hasRequiredContentPackages)
             {
@@ -499,7 +464,7 @@ namespace Barotrauma
 
             return true;
         }
-        
+
         public void RandomizeSeed()
         {
             seedBox.Text = ToolBox.RandomSeed(8);
@@ -509,7 +474,7 @@ namespace Barotrauma
         {
             foreach (GUIComponent child in subList.Content.Children)
             {
-                var sub = child.UserData as SubmarineInfo;
+                SubmarineInfo sub = child.UserData as SubmarineInfo;
                 if (sub == null) { return; }
                 child.Visible = string.IsNullOrEmpty(filter) || sub.DisplayName.Contains(filter.ToLower(), StringComparison.OrdinalIgnoreCase);
             }
@@ -523,7 +488,7 @@ namespace Barotrauma
 
             if (!(obj is SubmarineInfo sub)) { return true; }
 #if !DEBUG
-            if (sub.Price > CampaignMode.InitialMoney && !GameMain.DebugDraw) 
+            if (sub.Price > CurrentSettings.InitialMoney && !GameMain.DebugDraw)
             {
                 SetPage(0);
                 nextButton.Enabled = false;
@@ -556,8 +521,8 @@ namespace Barotrauma
 
             subsToShow.Sort((s1, s2) => 
             {
-                int p1 = s1.Price > CampaignMode.InitialMoney ? 10 : 0;
-                int p2 = s2.Price > CampaignMode.InitialMoney ? 10 : 0;
+                int p1 = s1.Price > CurrentSettings.InitialMoney ? 10 : 0;
+                int p2 = s2.Price > CurrentSettings.InitialMoney ? 10 : 0;
                 return p1.CompareTo(p2) * 100 + s1.Name.CompareTo(s2.Name); 
             });
 
@@ -582,13 +547,13 @@ namespace Barotrauma
                 var priceText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), textBlock.RectTransform, Anchor.CenterRight),
                     TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", sub.Price)), textAlignment: Alignment.CenterRight, font: GUIStyle.SmallFont)
                 {
-                    TextColor = sub.Price > CampaignMode.InitialMoney ? GUIStyle.Red : textBlock.TextColor * 0.8f,
+                    TextColor = sub.Price > CurrentSettings.InitialMoney ? GUIStyle.Red : textBlock.TextColor * 0.8f,
                     ToolTip = textBlock.ToolTip
                 };
 #if !DEBUG
                 if (!GameMain.DebugDraw)
                 {
-                    if (sub.Price > CampaignMode.InitialMoney || !sub.IsCampaignCompatible)
+                    if (sub.Price > CurrentSettings.InitialMoney || !sub.IsCampaignCompatible)
                     {
                         textBlock.CanBeFocused = false;
                         textBlock.TextColor *= 0.5f;
@@ -598,7 +563,7 @@ namespace Barotrauma
             }
             if (SubmarineInfo.SavedSubmarines.Any())
             {
-                var validSubs = subsToShow.Where(s => s.IsCampaignCompatible && s.Price <= CampaignMode.InitialMoney).ToList();
+                var validSubs = subsToShow.Where(s => s.IsCampaignCompatible && s.Price <= CurrentSettings.InitialMoney).ToList();
                 if (validSubs.Count > 0)
                 {
                     subList.Select(validSubs[Rand.Int(validSubs.Count)]);
@@ -625,6 +590,7 @@ namespace Barotrauma
 
             saveList = new GUIListBox(new RectTransform(Vector2.One, leftColumn.RectTransform))
             {
+                PlaySoundOnSelect = true,
                 OnSelected = SelectSaveFile
             };
 
@@ -650,8 +616,9 @@ namespace Barotrauma
             {
                 var saveFrame = CreateSaveElement(saveInfo);
                 if (saveFrame == null) { continue; }
-                                
+
                 XDocument doc = SaveUtil.LoadGameSessionDoc(saveInfo.FilePath);
+
                 if (doc?.Root == null)
                 {
                     DebugConsole.ThrowError("Error loading save file \"" + saveInfo.FilePath + "\". The file may be corrupted.");
@@ -725,9 +692,10 @@ namespace Barotrauma
 
             string subName = doc.Root.GetAttributeString("submarine", "");
             string saveTime = doc.Root.GetAttributeString("savetime", "unknown");
+            DateTime? time = null;
             if (long.TryParse(saveTime, out long unixTime))
             {
-                DateTime time = ToolBox.Epoch.ToDateTime(unixTime);
+                time = ToolBox.Epoch.ToDateTime(unixTime);
                 saveTime = time.ToString();
             }
 

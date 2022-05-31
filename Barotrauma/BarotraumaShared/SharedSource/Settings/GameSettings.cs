@@ -490,6 +490,10 @@ namespace Barotrauma
                 {
                     font.Prefabs.ForEach(p => p.LoadFont());
                 }
+                foreach (var componentStyle in GUIStyle.ComponentStyles)
+                {
+                    componentStyle.RefreshSize();
+                }
             }
             
             GameMain.SoundManager?.ApplySettings();

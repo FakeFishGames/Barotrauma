@@ -414,7 +414,7 @@ namespace Barotrauma.Steam
             {
                 await Task.Yield();
                 Identifier extension = Path.GetExtension(from).ToIdentifier();
-                if (extension == ".xml" && shouldCorrectPaths == ShouldCorrectPaths.Yes)
+                if (extension == ".xml")
                 {
                     try
                     {
@@ -427,10 +427,14 @@ namespace Barotrauma.Steam
                         {
                             throw new Exception($"Could not load \"{from}\": doc is null");
                         }
-                        await CorrectPaths(
-                            fileListDir: fileListDir,
-                            modName: modName,
-                            element: doc.Root ?? throw new NullReferenceException());
+
+                        if (shouldCorrectPaths == ShouldCorrectPaths.Yes)
+                        {
+                            await CorrectPaths(
+                                fileListDir: fileListDir,
+                                modName: modName,
+                                element: doc.Root ?? throw new NullReferenceException());
+                        }
                         doc.SaveSafe(to);
                         return;
                     }

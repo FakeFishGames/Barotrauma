@@ -333,6 +333,7 @@ namespace Barotrauma.Items.Components
 
             GUIListBox listBox = new GUIListBox(new RectTransform(Vector2.One, searchAutoComplete.RectTransform))
             {
+                PlaySoundOnSelect = true,
                 OnSelected = (component, o) =>
                 {
                     if (o is ItemPrefab prefab)
@@ -744,11 +745,11 @@ namespace Barotrauma.Items.Components
 
             if (key == Keys.Down)
             {
-                listBox.SelectNext(true, autoScroll: true);
+                listBox.SelectNext(force: GUIListBox.Force.Yes, playSelectSound: GUIListBox.PlaySelectSound.Yes);
             }
             else if (key == Keys.Up)
             {
-                listBox.SelectPrevious(true, autoScroll: true);
+                listBox.SelectPrevious(force: GUIListBox.Force.Yes, playSelectSound: GUIListBox.PlaySelectSound.Yes);
             }
             else if (key == Keys.Enter)
             {
@@ -782,7 +783,7 @@ namespace Barotrauma.Items.Components
 
                     if (component.Visible && first)
                     {
-                        listBox.Select(i, force: true, autoScroll: false);
+                        listBox.Select(i, GUIListBox.Force.Yes, GUIListBox.AutoScroll.Disabled);
                         first = false;
                     }
                 }

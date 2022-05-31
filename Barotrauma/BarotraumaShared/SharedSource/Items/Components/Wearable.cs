@@ -6,7 +6,6 @@ using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Items.Components;
 using Barotrauma.Networking;
-using System.Collections.Immutable;
 using Barotrauma.Abilities;
 
 namespace Barotrauma
@@ -82,7 +81,20 @@ namespace Barotrauma
         public string Sound { get; private set; }
         public Point? SheetIndex { get; private set; }
 
-        public LightComponent LightComponent { get; set; }
+        public LightComponent LightComponent => LightComponents?.FirstOrDefault();
+
+        public List<LightComponent> LightComponents
+        {
+            get
+            {
+                if (_lightComponents == null)
+                {
+                    _lightComponents = new List<LightComponent>();
+                }
+                return _lightComponents;
+            }
+        }
+        private List<LightComponent> _lightComponents;
 
         public int Variant { get; set; }
 
@@ -338,11 +350,14 @@ namespace Barotrauma.Items.Components
                         foreach (var lightElement in subElement.Elements())
                         {
                             if (!lightElement.Name.ToString().Equals("lightcomponent", StringComparison.OrdinalIgnoreCase)) { continue; }
-                            wearableSprites[i].LightComponent = new LightComponent(item, lightElement)
+                            wearableSprites[i].LightComponents.Add(new LightComponent(item, lightElement)
                             {
                                 Parent = this
-                            };
-                            item.AddComponent(wearableSprites[i].LightComponent);
+                            });
+                            foreach (var light in wearableSprites[i].LightComponents)
+                            {
+                                item.AddComponent(light);
+                            }
                         }
 
                         i++;
@@ -413,7 +428,10 @@ namespace Barotrauma.Items.Components
                 IsActive = true;
                 if (wearableSprite.LightComponent != null)
                 {
-                    wearableSprite.LightComponent.ParentBody = equipLimb.body;
+                    foreach (var light in wearableSprite.LightComponents)
+                    {
+                        light.ParentBody = equipLimb.body;
+                    }
                 }
 
                 limb[i] = equipLimb;
@@ -467,7 +485,10 @@ namespace Barotrauma.Items.Components
 
                 if (wearableSprites[i].LightComponent != null)
                 {
-                    wearableSprites[i].LightComponent.ParentBody = null;
+                    foreach (var light in wearableSprites[i].LightComponents)
+                    {
+                        light.ParentBody = null;
+                    }
                 }
 
                 equipLimb.WearingItems.RemoveAll(w => w != null && w == wearableSprites[i]);
@@ -494,7 +515,6 @@ namespace Barotrauma.Items.Components
             }
 
             item.SetTransform(picker.SimPosition, 0.0f);
-            item.SetContainedItemPositions();
             
             item.ApplyStatusEffects(ActionType.OnWearing, deltaTime, picker);
 

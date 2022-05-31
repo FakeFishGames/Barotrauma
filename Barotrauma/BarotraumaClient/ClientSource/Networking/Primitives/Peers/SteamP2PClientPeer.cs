@@ -111,7 +111,7 @@ namespace Barotrauma.Networking
             timeout = Screen.Selected == GameMain.GameScreen ?
                 NetworkConnection.TimeoutThresholdInGame :
                 NetworkConnection.TimeoutThreshold;
-
+            
             PacketHeader packetHeader = (PacketHeader)data[0];
 
             if (!packetHeader.IsServerMessage()) { return; }

@@ -1,7 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Abilities
 {
@@ -19,10 +16,9 @@ namespace Barotrauma.Abilities
 
         protected override void ApplyEffect()
         {
-            IEnumerable<Character> chosenCharacters = Character.GetFriendlyCrew(Character).Where(c => allowSelf || c != Character);
-
-            foreach (Character character in chosenCharacters)
+            foreach (Character character in Character.GetFriendlyCrew(Character))
             {
+                if (!allowSelf && character == Character) { continue; }
                 if (maxDistance < float.MaxValue)
                 {
                     if (Vector2.DistanceSquared(character.WorldPosition, Character.WorldPosition) > maxDistance * maxDistance) { continue; }

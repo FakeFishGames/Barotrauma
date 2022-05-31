@@ -1440,14 +1440,33 @@ namespace Barotrauma
                 }
                 else if (selectedTargetingParams.AttackPattern == AttackPattern.Straight && distance < AttackLimb.attack.Range * 5)
                 {
-                    reachTimer += deltaTime;
-                    if (reachTimer > reachTimeOut)
+                    Vector2 targetVelocity = Vector2.Zero;
+                    Submarine targetSub = SelectedAiTarget.Entity.Submarine;
+                    if (targetSub != null)
                     {
-                        reachTimer = 0;
-                        IgnoreTarget(SelectedAiTarget);
-                        State = AIState.Idle;
-                        ResetAITarget();
-                        return;
+                        targetVelocity = targetSub.Velocity;
+                    }
+                    else if (targetCharacter != null)
+                    {
+                        targetVelocity = targetCharacter.AnimController.Collider.LinearVelocity;
+                    }
+                    else if (SelectedAiTarget.Entity is Item i && i.body != null)
+                    {
+                        targetVelocity = i.body.LinearVelocity;
+                    }
+                    float mySpeed = Character.AnimController.Collider.LinearVelocity.LengthSquared();
+                    float targetSpeed = targetVelocity.LengthSquared();
+                    if (mySpeed < 0.1f || mySpeed > targetSpeed)
+                    {
+                        reachTimer += deltaTime;
+                        if (reachTimer > reachTimeOut)
+                        {
+                            reachTimer = 0;
+                            IgnoreTarget(SelectedAiTarget);
+                            State = AIState.Idle;
+                            ResetAITarget();
+                            return;
+                        }
                     }
                 }
 

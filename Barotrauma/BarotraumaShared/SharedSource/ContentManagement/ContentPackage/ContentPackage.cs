@@ -14,7 +14,7 @@ namespace Barotrauma
 {
     public abstract class ContentPackage
     {
-        public static readonly Version MinimumHashCompatibleVersion = new Version(0, 17, 16, 0);
+        public static readonly Version MinimumHashCompatibleVersion = new Version(0, 18, 3, 0);
         
         public const string LocalModsDir = "LocalMods";
         public static readonly string WorkshopModsDir = Barotrauma.IO.Path.Combine(
@@ -33,11 +33,11 @@ namespace Barotrauma
 
         public readonly Version GameVersion;
         public readonly string ModVersion;
-        public readonly Md5Hash Hash;
+        public Md5Hash Hash { get; private set; }
         public readonly DateTime? InstallTime;
 
-        public readonly ImmutableArray<ContentFile> Files;
-        public readonly ImmutableArray<(string error, string? stackTrace)> Errors;
+        public ImmutableArray<ContentFile> Files { get; private set; }
+        public ImmutableArray<ContentFile.LoadError> Errors { get; private set; }
 
         public async Task<bool> IsUpToDate()
         {
@@ -55,7 +55,7 @@ namespace Barotrauma
         /// <summary>
         /// Does the content package include some content that needs to match between all players in multiplayer. 
         /// </summary>
-        public readonly bool HasMultiplayerSyncedContent;
+        public bool HasMultiplayerSyncedContent { get; private set; }
 
         protected ContentPackage(XDocument doc, string path)
         {
@@ -84,13 +84,13 @@ namespace Barotrauma
                 .ToArray();
 
             Files = fileResults
-                .OfType<Success<ContentFile, string>>()
+                .OfType<Success<ContentFile, ContentFile.LoadError>>()
                 .Select(f => f.Value)
                 .ToImmutableArray();
 
             Errors = fileResults
-                .OfType<Failure<ContentFile, string>>()
-                .Select(f => (f.Error, f.StackTrace))
+                .OfType<Failure<ContentFile, ContentFile.LoadError>>()
+                .Select(f => f.Error)
                 .ToImmutableArray();
 
             HasMultiplayerSyncedContent = Files.Any(f => !f.NotSyncedInMultiplayer);
@@ -127,18 +127,13 @@ namespace Barotrauma
 
             try
             {
-                if (doc.Root.GetAttributeBool("corepackage", false))
-                {
-                    return new CorePackage(doc, path);
-                }
-                else
-                {
-                    return new RegularPackage(doc, path);
-                }
+                return doc.Root.GetAttributeBool("corepackage", false)
+                    ? (ContentPackage)new CorePackage(doc, path)
+                    : new RegularPackage(doc, path);
             }
             catch (Exception e)
             {
-                while (e.InnerException != null) { e = e.InnerException; }
+                e = e.GetInnermost();
                 DebugConsole.ThrowError($"{e.Message}: {e.StackTrace}");
                 return null;
             }
@@ -278,12 +273,42 @@ namespace Barotrauma
             Files.ForEach(f => f.UnloadFile());
         }
 
-        public override int GetHashCode()
+        public void ReloadSubsAndItemAssemblies()
         {
-            byte[] shortHash = Encoding.ASCII.GetBytes(Hash.StringRepresentation.Substring(0, 4));
-            return (shortHash[0] << 24) | (shortHash[1] << 16) | (shortHash[2] << 8) | shortHash[3];
+            XDocument doc = XMLExtensions.TryLoadXml(Path);
+            List<ContentFile> newFileList = new List<ContentFile>();
+            XElement rootElement = doc.Root ?? throw new NullReferenceException("XML document is invalid: root element is null.");
+            
+            var fileResults = rootElement.Elements()
+                .Select(e => ContentFile.CreateFromXElement(this, e))
+                .ToArray();
+
+            foreach (var result in fileResults)
+            {
+                switch (result)
+                {
+                    case Success<ContentFile, ContentFile.LoadError> { Value: var file }:
+                        if (file is BaseSubFile || file is ItemAssemblyFile)
+                        {
+                            newFileList.Add(file);
+                        }
+                        else
+                        {
+                            var existingFile = Files.FirstOrDefault(f => f.Path == file.Path);
+                            newFileList.Add(existingFile ?? file);
+                        }
+                        break;
+                }
+            }
+
+            UnloadFilesOfType<BaseSubFile>();
+            UnloadFilesOfType<ItemAssemblyFile>();
+            Files = newFileList.ToImmutableArray();
+            Hash = CalculateHash();
+            LoadFilesOfType<BaseSubFile>();
+            LoadFilesOfType<ItemAssemblyFile>();
         }
-        
+
         public static bool PathAllowedAsLocalModFile(string path)
         {
 #if DEBUG
@@ -305,21 +330,17 @@ namespace Barotrauma
 
         public void LogErrors()
         {
-            if (Errors.Any())
+            if (!Errors.Any())
             {
-                DebugConsole.AddWarning(
-                    $"The following errors occurred while loading the content package\"{Name}\". The package might not work correctly.\n" +
-                    string.Join('\n', Errors.Select(e => errorToStr(e.error, e.stackTrace))));
-                static string errorToStr(string error, string? stackTrace)
-                {
-                    string str = error;
-                    if (stackTrace != null)
-                    {
-                        str += '\n' + stackTrace;
-                    }
-                    return str;
-                }
+                return;
             }
+
+            DebugConsole.AddWarning(
+                $"The following errors occurred while loading the content package \"{Name}\". The package might not work correctly.\n" +
+                string.Join('\n', Errors.Select(errorToStr)));
+
+            static string errorToStr(ContentFile.LoadError error)
+                => error.ToString();
         }
     }
 }

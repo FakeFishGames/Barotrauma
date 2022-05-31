@@ -729,7 +729,7 @@ namespace Barotrauma
                     break;
                 case CampaignMode.InteractionType.PurchaseSub:
                     if (submarineSelection == null) submarineSelection = new SubmarineSelection(false, () => Campaign.ShowCampaignUI = false, tabs[(int)CampaignMode.InteractionType.PurchaseSub].RectTransform);
-                    submarineSelection.RefreshSubmarineDisplay(true);
+                    submarineSelection.RefreshSubmarineDisplay(true, setTransferOptionToTrue: true);
                     break;
             }
         }
