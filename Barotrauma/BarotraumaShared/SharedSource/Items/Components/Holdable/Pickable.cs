@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -19,6 +18,8 @@ namespace Barotrauma.Items.Components
         private Character activePicker;
 
         private CoroutineHandle pickingCoroutine;
+
+        public virtual bool IsAttached => false;
 
         public List<InvSlotType> AllowedSlots
         {

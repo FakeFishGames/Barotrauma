@@ -4056,7 +4056,11 @@ namespace Barotrauma
             string beaconStationName = System.IO.Path.GetFileNameWithoutExtension(contentFile.Path.Value);
 
             BeaconStation = SpawnSubOnPath(beaconStationName, contentFile, SubmarineType.BeaconStation);
-            if (BeaconStation == null) { return; }
+            if (BeaconStation == null) 
+            {
+                LevelData.HasBeaconStation = false;
+                return; 
+            }
 
             Item sonarItem = Item.ItemList.Find(it => it.Submarine == BeaconStation && it.GetComponent<Sonar>() != null);
             if (sonarItem == null)
@@ -4071,6 +4075,11 @@ namespace Barotrauma
         {
             if (!LevelData.HasBeaconStation) { return; }
             if (GameMain.NetworkMember?.IsClient ?? false) { return; }
+
+            if (BeaconStation == null)
+            {
+                throw new InvalidOperationException("Failed to prepare beacon station (no beacon station in the level).");
+            }
 
             List<Item> beaconItems = Item.ItemList.FindAll(it => it.Submarine == BeaconStation);
 

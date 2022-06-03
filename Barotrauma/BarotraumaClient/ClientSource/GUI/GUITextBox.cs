@@ -352,7 +352,7 @@ namespace Barotrauma
             caretPosDirty = false;
         }
 
-        public void Select(int forcedCaretIndex = -1)
+        public void Select(int forcedCaretIndex = -1, bool ignoreSelectSound = false)
         {
             skipUpdate = true;
             if (memento.Current == null)
@@ -362,10 +362,11 @@ namespace Barotrauma
             CaretIndex = forcedCaretIndex == - 1 ? textBlock.GetCaretIndexFromScreenPos(PlayerInput.MousePosition) : forcedCaretIndex;
             CalculateCaretPos();
             ClearSelection();
+            bool wasSelected = selected;
             selected = true;
             GUI.KeyboardDispatcher.Subscriber = this;
             OnSelected?.Invoke(this, Keys.None);
-            if (PlaySoundOnSelect)
+            if (!wasSelected && PlaySoundOnSelect && !ignoreSelectSound)
             {
                 SoundPlayer.PlayUISound(GUISoundType.Select);
             }

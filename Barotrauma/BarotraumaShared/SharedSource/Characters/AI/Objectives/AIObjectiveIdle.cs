@@ -488,7 +488,7 @@ namespace Barotrauma
                 if (hull != null)
                 {
                     itemsToClean.Clear();
-                    foreach (Item item in Item.ItemList)
+                    foreach (Item item in Item.CleanableItems)
                     {
                         if (item.CurrentHull != hull) { continue; }
                         if (AIObjectiveCleanupItems.IsValidTarget(item, character, checkInventory: true, allowUnloading: false) && !ignoredItems.Contains(item))

@@ -270,7 +270,11 @@ namespace Barotrauma.Items.Components
             {
                 Body?.SetTransform(Body.SimPosition + ConvertUnits.ToSimUnits(amount), 0.0f);
             }
-
+            if (linkedGap != null)
+            {
+                RefreshLinkedGap();
+                linkedGap.Rect = item.Rect;
+            }
 #if CLIENT
             UpdateConvexHulls();
 #endif

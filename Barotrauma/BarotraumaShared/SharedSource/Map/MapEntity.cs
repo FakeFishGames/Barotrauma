@@ -567,6 +567,10 @@ namespace Barotrauma
         /// </summary>
         public static void UpdateAll(float deltaTime, Camera cam)
         {
+#if CLIENT
+            var sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+#endif
             foreach (Hull hull in Hull.HullList)
             {
                 hull.Update(deltaTime, cam);
@@ -594,6 +598,11 @@ namespace Barotrauma
                 gapUpdateTimer = 0;
             }
 
+#if CLIENT
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("Update:MapEntity:Misc", sw.ElapsedTicks);
+            sw.Restart();
+#endif
             Powered.UpdatePower(deltaTime);
             foreach (Item item in Item.ItemList)
             {
@@ -602,6 +611,11 @@ namespace Barotrauma
 
             UpdateAllProjSpecific(deltaTime);
 
+#if CLIENT
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("Update:MapEntity:Items", sw.ElapsedTicks);
+            sw.Restart();
+#endif
             Spawner?.Update();
         }
 

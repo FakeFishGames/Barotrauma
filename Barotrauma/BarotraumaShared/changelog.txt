@@ -1,4 +1,39 @@
 ---------------------------------------------------------------------------------------------------------
+v0.18.5.0
+---------------------------------------------------------------------------------------------------------
+
+Chat improvements:
+- Chat mode (radio/local) can be toggled using a dropdown next to the chat box or with a dedicated "ToggleChatMode" keybind (R by default).
+- Voice chat now has only one push-to-talk keybind (V by default) which respects the selected chat mode.
+- There's now a dedicated "ActiveChat" keybind (T by default) to open the chat using the currently active chat mode.
+- If you want to keep the chat keybinds the way they were (separate keybinds for local and radio), you can rebind the "Chat" and "RadioChat" inputs back to T and R and the new "ToggleChatMode" and "ActiveChat" inputs to something else.
+
+Changes:
+- Optimized bot AIs: in particular, the cleanup, repair, pump water and load items objectives. Should significantly improve performance when the bots are doing these objectives when there's a large number of items in the sub.
+- Optimized entity culling logic (determines which items/structures are currently visible in the screen).
+- Optimized a bunch of textures.
+- Improved the performance statistics view that's enabled with the "showperf" console command: more fine-grained stats and easier-to-read visuals.
+- Added UI volume slider.
+- Depth charges can be stored in coilgun ammo shelves.
+
+Fixes:
+- Fixed ballast flora branches that have been disconnected from the root not being considered disconnected after a level transition (allowing them to keep growing).
+- Fixed "set default bindings" not doing anything in the settings menu.
+- Fixed door/hatch gaps not getting moved when snapping to grid in the sub editor.
+- Vertically mirrored beds can't be laid on.
+- Fixed wrecked reactors being forced to non-interactable even if made interactable in the sub editor.
+
+Unstable only:
+- Fixed crashing when you try to edit beacon station settings on a station you haven't saved yet.
+- Fixed level difficulties being incorrect in the "normal" difficulty setting (levels were set to the minimum difficulty of the biome, instead of a linear increase across the biome).
+- Misc fixes and improvements to the new beacon stations.
+- Fixed "max missions per round" value not being restricted in the UI.
+- Fixed items not getting transferred to/from linked subs.
+
+Modding:
+- Doors and hatches can now be mirrored in the sub editor (making them open from top to bottom, or from right to left).
+
+---------------------------------------------------------------------------------------------------------
 v0.18.4.0
 ---------------------------------------------------------------------------------------------------------
 
@@ -12,6 +47,7 @@ Unstable only:
 - Fixed sprite editor crashing if you try to reload a texture twice.
 - Fixed drone/shuttles getting left behind in the outpost when you buy and switch to a sub that has a one.
 - Fixed crashing when closing the submarine preview window.
+- Disallowed mirroring beds vertically.
 
 Changes:
 - Added some new campaign settings: starting balance, amount of starting items and difficulty.
@@ -19,13 +55,17 @@ Changes:
 - Made the descriptions of some materials (that used to just say "useful for crafting") more descriptive. 
 - Increased oxygen generator output in some vanilla subs.
 - Made handheld sonar beacon sound less grating.
-- Disallowed mirroring beds vertically.
 - The client who initiated a vote cannot take part in that vote (except if they're the only client who can vote, in which case the vote automatically passes).
 - Made flashlight flicker before the battery runs out.
 - Added some lootable money to corpses found in wrecks.
 - Removed the small equipment indicators next to the character portrait.
 - Added a bunch of new UI sounds (tickbox toggling, confirming transactions, increase/decrease sounds for number inputs, cart sound for adding/removing items in store interfaces, selecting/clicking components, sliders and modlist).
-
+- Optimized many status effects by making them only execute once per second instead of every frame (most importantly, diving suits and volatile fuel rods).
+- Optimized talents: buffs are applied to characters periodically instead of every frame.
+- Optimized the logic that bots use to determine the safety of hulls.
+- Optimized items: stop updating items that don't need to be updated more aggressively.
+- Weapon holders now use the tag "mountableweapon" instead of "weapon" to determine which items can be placed in them. Allows tagging non-weapon items as mountable in the holder, without making bots consider it a weapon due to the "weapon" tag. Also allows to keep some weapons not-mountable.
+- Ammunition Shelf can now also store Depth Charges ("depthchargeammo" tag added) 
 
 Fixes:
 - Split campaign state networking messages into multiple ones. Previously all the campaign-related data (map state, reputation, upgrades, purchased items, selected missions) was included in the same message, and whenever anything in the data changed, the server would send all of it to clients. This would cause performance and bandwidth issues in some situations, for example when reputation was changing rapidly. 

@@ -121,7 +121,7 @@ namespace Barotrauma
             return folder.CleanUpPathCrossPlatform(correctFilenameCase: true);
         }
 
-        public static T GetDefaultRagdollParams<T>(Identifier speciesName) where T : RagdollParams, new() => GetRagdollParams<T>(speciesName, GetDefaultFileName(speciesName));
+        public static T GetDefaultRagdollParams<T>(Identifier speciesName) where T : RagdollParams, new() => GetRagdollParams<T>(speciesName);
 
         /// <summary>
         /// If the file name is left null, default file is selected. If fails, will select the default file.  Note: Use the filename without the extensions, don't use the full path!

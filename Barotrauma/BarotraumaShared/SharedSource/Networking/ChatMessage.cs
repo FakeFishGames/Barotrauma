@@ -117,6 +117,8 @@ namespace Barotrauma.Networking
             set;
         }
 
+        public ChatMode ChatMode { get; set; } = ChatMode.None; 
+
         protected ChatMessage(string senderName, string text, ChatMessageType type, Character sender, Client client, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None, Color? textColor = null)
         {
             Text = text;

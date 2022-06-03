@@ -1858,14 +1858,18 @@ namespace Barotrauma
             });
 
             GUILayoutGroup nameLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 1f), talentInfoLayoutGroup.RectTransform)) { RelativeSpacing = 0.05f };
-            
+
             Vector2 nameSize = GUIStyle.SubHeadingFont.MeasureString(info.Name);
-            GUITextBlock nameBlock = new GUITextBlock(new RectTransform(Vector2.One, nameLayout.RectTransform), info.Name, font: GUIStyle.SubHeadingFont) { TextColor = job.Prefab.UIColor };
+            GUITextBlock nameBlock = new GUITextBlock(new RectTransform(Vector2.One, nameLayout.RectTransform), info.Name, font: GUIStyle.SubHeadingFont);
             nameBlock.RectTransform.NonScaledSize = nameSize.Pad(nameBlock.Padding).ToPoint();
 
-            Vector2 jobSize = GUIStyle.SmallFont.MeasureString(job.Name);
-            GUITextBlock jobBlock = new GUITextBlock(new RectTransform(Vector2.One, nameLayout.RectTransform), job.Name, font: GUIStyle.SmallFont) { TextColor = job.Prefab.UIColor };
-            jobBlock.RectTransform.NonScaledSize = jobSize.Pad(jobBlock.Padding).ToPoint();
+            if (!info.OmitJobInMenus)
+            {
+                nameBlock.TextColor = job.Prefab.UIColor;
+                Vector2 jobSize = GUIStyle.SmallFont.MeasureString(job.Name);
+                GUITextBlock jobBlock = new GUITextBlock(new RectTransform(Vector2.One, nameLayout.RectTransform), job.Name, font: GUIStyle.SmallFont) { TextColor = job.Prefab.UIColor };
+                jobBlock.RectTransform.NonScaledSize = jobSize.Pad(jobBlock.Padding).ToPoint();
+            }
 
             LocalizedString traitString = TextManager.AddPunctuation(':', TextManager.Get("PersonalityTrait"), TextManager.Get("personalitytrait." + info.PersonalityTrait.Name.Replace(" ", "")));
             Vector2 traitSize = GUIStyle.SmallFont.MeasureString(traitString);
@@ -1876,7 +1880,8 @@ namespace Barotrauma
 
             if (!(GameMain.NetworkMember is null))
             {
-                GUIButton newCharacterBox = new GUIButton(new RectTransform(new Vector2(0.675f, 1f), talentsOutsideTreeFrame.RectTransform, Anchor.TopLeft), text: GameMain.NetLobbyScreen.CampaignCharacterDiscarded ? TextManager.Get("settings") : TextManager.Get("createnew"))
+                GUIButton newCharacterBox = new GUIButton(new RectTransform(new Vector2(0.675f, 1f), talentsOutsideTreeFrame.RectTransform, Anchor.TopLeft), 
+                    text: GameMain.NetLobbyScreen.CampaignCharacterDiscarded ? TextManager.Get("settings") : TextManager.Get("createnew"))
                 {
                     IgnoreLayoutGroups = true
                 };
@@ -1915,7 +1920,7 @@ namespace Barotrauma
                     {
                         OnClicked = (button, o) =>
                         {
-                            GameMain.Client?.SendCharacterInfo();
+                            GameMain.Client?.SendCharacterInfo(GameMain.Client.PendingName);
                             characterSettingsFrame!.Visible = false;
                             talentFrameMain.Visible = true;
                             return true;

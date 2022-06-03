@@ -172,6 +172,7 @@ namespace Barotrauma
                 isOpen = false;
                 GUI.ForceMouseOn(null);
                 textBox.Deselect();
+                SoundPlayer.PlayUISound(GUISoundType.Select);
             }
 
             if (isOpen)
@@ -209,7 +210,7 @@ namespace Barotrauma
             isOpen = !isOpen;
             if (isOpen)
             {
-                textBox.Select();
+                textBox.Select(ignoreSelectSound: true);
                 AddToGUIUpdateList();
             }
             else
@@ -217,6 +218,7 @@ namespace Barotrauma
                 GUI.ForceMouseOn(null);
                 textBox.Deselect();
             }
+            SoundPlayer.PlayUISound(GUISoundType.Select);
         }
 
         private static bool IsCommandPermitted(string command, GameClient client)

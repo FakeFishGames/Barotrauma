@@ -71,12 +71,22 @@ namespace Barotrauma
 
         public float GetFloat(Identifier identifier)
         {
-            return values.TryGetValue(identifier, out Either<int, float> value) && value.TryGet(out float range) ? range : 0.0f;
+            float range = 0;
+            if (!values.TryGetValue(identifier, out Either<int, float> value) || !value.TryGet(out range))
+            {
+                DebugConsole.ThrowError($"CampaignSettings: Can't find value for {identifier}");
+            }
+            return range;
         }
 
         public int GetInt(Identifier identifier)
         {
-            return values.TryGetValue(identifier, out Either<int, float> value) && value.TryGet(out int integer) ? integer : 0;
+            int integer = 0;
+            if (!values.TryGetValue(identifier, out Either<int, float> value) || !value.TryGet(out integer))
+            {
+                DebugConsole.ThrowError($"CampaignSettings: Can't find value for {identifier}");
+            }
+            return integer;
         }
     }
 }

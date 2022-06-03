@@ -43,6 +43,31 @@ namespace Barotrauma.Items.Components
             corners[2] = center + new Vector2(shadowSize.X, shadowSize.Y) / 2;
             corners[3] = center + new Vector2(shadowSize.X, -shadowSize.Y) / 2;
 
+            if (IsHorizontal)
+            {
+                if (item.FlippedX)
+                {
+                    Vector2 itemCenter = new Vector2(item.Rect.Center.X, item.Rect.Y - item.Rect.Height / 2);
+                    for (int i = 0; i < corners.Length; i++)
+                    {
+                        corners[i].X = itemCenter.X * 2 - corners[i].X;
+                    }
+                    Array.Reverse(corners);
+                }
+            }
+            else
+            {
+                if (item.FlippedY)
+                {
+                    Vector2 itemCenter = new Vector2(item.Rect.Center.X, item.Rect.Y - item.Rect.Height / 2);
+                    for (int i = 0; i < corners.Length; i++)
+                    {
+                        corners[i].Y = itemCenter.Y * 2 - corners[i].Y;
+                    }
+                    Array.Reverse(corners);
+                }
+            }
+
             return corners;
         }
 
@@ -163,69 +188,67 @@ namespace Barotrauma.Items.Components
             if (stuck > 0.0f && weldedSprite != null)
             {
                 Vector2 weldSpritePos = new Vector2(item.Rect.Center.X, item.Rect.Y - item.Rect.Height / 2.0f) + shakePos;
-                if (item.Submarine != null) weldSpritePos += item.Submarine.DrawPosition;
+                if (item.Submarine != null) { weldSpritePos += item.Submarine.DrawPosition; }
                 weldSpritePos.Y = -weldSpritePos.Y;
 
                 weldedSprite.Draw(spriteBatch,
                     weldSpritePos, item.SpriteColor * (stuck / 100.0f), scale: item.Scale);
             }
 
-            if (openState >= 1.0f)
-            {
-                return;
-            }
+            if (openState >= 1.0f) { return; }
 
+            Vector2 pos;
             if (IsHorizontal)
             {
-                Vector2 pos = new Vector2(item.Rect.X, item.Rect.Y - item.Rect.Height / 2) + shakePos;
-                if (item.Submarine != null) pos += item.Submarine.DrawPosition;
-                pos.Y = -pos.Y;
-
-                if (brokenSprite == null || !IsBroken)
-                {
-                    spriteBatch.Draw(doorSprite.Texture, pos,
-                        new Rectangle((int) (doorSprite.SourceRect.X + doorSprite.size.X * openState),
-                            (int) doorSprite.SourceRect.Y,
-                            (int) (doorSprite.size.X * (1.0f - openState)), (int) doorSprite.size.Y),
-                        color, 0.0f, doorSprite.Origin, item.Scale, SpriteEffects.None, doorSprite.Depth);
-                }
-
-                if (brokenSprite != null && item.Health < item.MaxCondition)
-                {
-                    Vector2 scale = scaleBrokenSprite ? new Vector2(1.0f, 1.0f - item.Health / item.MaxCondition) : Vector2.One;
-                    float alpha = fadeBrokenSprite ? 1.0f - item.Health / item.MaxCondition : 1.0f;
-                    spriteBatch.Draw(brokenSprite.Texture, pos,
-                        new Rectangle((int)(brokenSprite.SourceRect.X + brokenSprite.size.X * openState), brokenSprite.SourceRect.Y,
-                            (int)(brokenSprite.size.X * (1.0f - openState)), (int)brokenSprite.size.Y),
-                        color * alpha, 0.0f, brokenSprite.Origin, scale * item.Scale, SpriteEffects.None,
-                        brokenSprite.Depth);
-                }
+                pos = new Vector2(item.Rect.X, item.Rect.Y - item.Rect.Height / 2);
+                if (item.FlippedX) { pos.X += (int)(doorSprite.size.X * item.Scale * openState); }
             }
             else
             {
-                Vector2 pos = new Vector2(item.Rect.Center.X, item.Rect.Y) + shakePos;
-                if (item.Submarine != null) pos += item.Submarine.DrawPosition;
-                pos.Y = -pos.Y;
-
-                if (brokenSprite == null || !IsBroken)
-                {
-                    spriteBatch.Draw(doorSprite.Texture, pos,
-                        new Rectangle(doorSprite.SourceRect.X,
-                            (int) (doorSprite.SourceRect.Y + doorSprite.size.Y * openState),
-                            (int) doorSprite.size.X, (int) (doorSprite.size.Y * (1.0f - openState))),
-                        color, 0.0f, doorSprite.Origin, item.Scale, SpriteEffects.None, doorSprite.Depth);
-                }
-
-                if (brokenSprite != null && item.Health < item.MaxCondition)
-                {
-                    Vector2 scale = scaleBrokenSprite ? new Vector2(1.0f - item.Health / item.MaxCondition, 1.0f) : Vector2.One;
-                    float alpha = fadeBrokenSprite ? 1.0f - item.Health / item.MaxCondition : 1.0f;
-                    spriteBatch.Draw(brokenSprite.Texture, pos,
-                        new Rectangle(brokenSprite.SourceRect.X, (int)(brokenSprite.SourceRect.Y + brokenSprite.size.Y * openState),
-                            (int)brokenSprite.size.X, (int)(brokenSprite.size.Y * (1.0f - openState))),
-                        color * alpha, 0.0f, brokenSprite.Origin, scale * item.Scale, SpriteEffects.None, brokenSprite.Depth);
-                }
+                pos = new Vector2(item.Rect.Center.X, item.Rect.Y);
+                if (item.FlippedY) { pos.Y -= (int)(doorSprite.size.Y * item.Scale * openState); }
             }
+
+            pos += shakePos;
+            if (item.Submarine != null) { pos += item.Submarine.DrawPosition; }
+            pos.Y = -pos.Y;
+
+            if (brokenSprite == null || !IsBroken)
+            {
+                spriteBatch.Draw(doorSprite.Texture, pos,
+                    getSourceRect(doorSprite, openState, IsHorizontal),
+                    color, 0.0f, doorSprite.Origin, item.Scale, item.SpriteEffects, doorSprite.Depth);
+            }
+
+            if (brokenSprite != null && item.Health < item.MaxCondition)
+            {
+                Vector2 scale = scaleBrokenSprite ? new Vector2(1.0f, 1.0f - item.Health / item.MaxCondition) : Vector2.One;
+                float alpha = fadeBrokenSprite ? 1.0f - item.Health / item.MaxCondition : 1.0f;
+                spriteBatch.Draw(brokenSprite.Texture, pos,
+                    getSourceRect(brokenSprite, openState, IsHorizontal),
+                    color * alpha, 0.0f, brokenSprite.Origin, scale * item.Scale, item.SpriteEffects,
+                    brokenSprite.Depth);
+            }
+
+            static Rectangle getSourceRect(Sprite sprite, float openState, bool horizontal)
+            {
+                if (horizontal)
+                {
+                    return new Rectangle(
+                        (int)(sprite.SourceRect.X + sprite.size.X * openState),
+                        sprite.SourceRect.Y,
+                        (int)(sprite.size.X * (1.0f - openState)),
+                        (int)sprite.size.Y);
+                }
+                else
+                {
+                    return new Rectangle(
+                        sprite.SourceRect.X,
+                        (int)(sprite.SourceRect.Y + sprite.size.Y * openState),
+                        (int)sprite.size.X,
+                        (int)(sprite.size.Y * (1.0f - openState)));
+                }
+            }            
         }
 
         partial void OnFailedToOpen()

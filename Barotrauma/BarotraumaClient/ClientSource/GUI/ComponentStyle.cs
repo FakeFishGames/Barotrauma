@@ -183,6 +183,10 @@ namespace Barotrauma
             Width = null;
             Height = null;
             GetSize(Element);
+            foreach (var childStyle in ChildStyles.Values)
+            {
+                childStyle.RefreshSize();
+            }
         }
 
         private void GetSize(XElement element)

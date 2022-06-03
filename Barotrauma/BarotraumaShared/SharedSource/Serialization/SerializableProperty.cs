@@ -1119,7 +1119,12 @@ namespace Barotrauma
                                 itemComponent.SetRequiredItems(element, allowEmpty: true);
                                 break;
                         }
-                    }                   
+                    }          
+                    if (itemComponent is ItemContainer itemContainer &&
+                        (componentElement.GetChildElement("containable") != null || componentElement.GetChildElement("subcontainer") != null))
+                    {
+                        itemContainer.LoadContainableRestrictions(componentElement);
+                    }
                 }
             }
         }

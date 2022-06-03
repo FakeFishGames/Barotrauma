@@ -2696,6 +2696,24 @@ namespace Barotrauma.Networking
 
             if (newName == c.Name) { return false; }
 
+            if (IsNameValid(c, newName))
+            {
+                string oldName = c.Name;
+                c.Name = newName;
+                c.Connection.Name = newName;
+                SendChatMessage($"ServerMessage.NameChangeSuccessful~[oldname]={oldName}~[newname]={newName}", ChatMessageType.Server);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        private bool IsNameValid(Client c, string newName)
+        {
+            newName = Client.SanitizeName(newName);
+
             if (c.Connection != OwnerConnection)
             {
                 if (!Client.IsValidName(newName, serverSettings))
@@ -2723,9 +2741,6 @@ namespace Barotrauma.Networking
                 return false;
             }
 
-            SendChatMessage($"ServerMessage.NameChangeSuccessful~[oldname]={c.Name}~[newname]={newName}", ChatMessageType.Server);
-            c.Name = newName;
-            c.Connection.Name = newName;
             return true;
         }
 
@@ -2967,7 +2982,7 @@ namespace Barotrauma.Networking
         /// <summary>
         /// Add the message to the chatbox and pass it to all clients who can receive it
         /// </summary>
-        public void SendChatMessage(string message, ChatMessageType? type = null, Client senderClient = null, Character senderCharacter = null, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None)
+        public void SendChatMessage(string message, ChatMessageType? type = null, Client senderClient = null, Character senderCharacter = null, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None, ChatMode chatMode = ChatMode.None)
         {
             string senderName = "";
 
@@ -3023,6 +3038,10 @@ namespace Barotrauma.Networking
 
                             type = ChatMessageType.Private;
                         }
+                        else if (chatMode == ChatMode.Radio)
+                        {
+                            type = ChatMessageType.Radio;
+                        }
                         else
                         {
                             type = ChatMessageType.Default;
@@ -3051,7 +3070,6 @@ namespace Barotrauma.Networking
                 {
                     senderCharacter = senderClient.Character;
                     senderName = senderCharacter == null ? senderClient.Name : senderCharacter.Name;
-
                     if (type == ChatMessageType.Private)
                     {
                         if (senderCharacter != null && !senderCharacter.IsDead || targetClient.Character != null && !targetClient.Character.IsDead)
@@ -3512,6 +3530,20 @@ namespace Barotrauma.Networking
                 return;
             }
 
+            string newName = message.ReadString();
+            if (string.IsNullOrEmpty(newName))
+            {
+                newName = sender.Name;
+            }
+            else
+            {
+                newName = Client.SanitizeName(newName);
+                if (!IsNameValid(sender, newName))
+                {
+                    newName = sender.Name;
+                }
+            }
+
             int tagCount = message.ReadByte();
             HashSet<Identifier> tagSet = new HashSet<Identifier>();
             for (int i = 0; i < tagCount; i++)
@@ -3539,7 +3571,7 @@ namespace Barotrauma.Networking
                 }
             }
 
-            sender.CharacterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, sender.Name);
+            sender.CharacterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, newName);
             sender.CharacterInfo.RecreateHead(tagSet.ToImmutableHashSet(), hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
             sender.CharacterInfo.Head.SkinColor = skinColor;
             sender.CharacterInfo.Head.HairColor = hairColor;

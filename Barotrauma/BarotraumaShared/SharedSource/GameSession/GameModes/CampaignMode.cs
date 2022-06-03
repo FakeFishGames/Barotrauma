@@ -1028,13 +1028,14 @@ namespace Barotrauma
             var itemsToTransfer = new List<(Item item, Item container)>();
             if (PendingSubmarineSwitch != null)
             {
+                var connectedSubs = currentSub.GetConnectedSubs().Where(s => s.Info.Type == SubmarineType.Player).ToHashSet();
                 // Remove items from the old sub
                 foreach (Item item in Item.ItemList)
                 {
                     if (item.Removed) { continue; }
                     if (item.NonInteractable) { continue; }
                     if (item.HiddenInGame) { continue; }
-                    if (item.Submarine != currentSub) { continue; }
+                    if (!connectedSubs.Contains(item.Submarine)) { continue; }
                     if (item.Prefab.DontTransferBetweenSubs) { continue; }
                     if (item.GetRootInventoryOwner() is Character) { continue; }
                     if (item.GetComponent<Holdable>() == null && item.GetComponent<Wearable>() == null && item.GetComponent<Projectile>() == null) { continue; }
@@ -1058,9 +1059,10 @@ namespace Barotrauma
             {
                 // Load the new sub
                 var newSub = new Submarine(PendingSubmarineSwitch);
+                var connectedSubs = newSub.GetConnectedSubs().Where(s => s.Info.Type == SubmarineType.Player).ToHashSet();
                 // Move the transferred items
                 List<ItemContainer> availableContainers = Item.ItemList
-                    .Where(it => it.Submarine == newSub && it.HasTag("crate") && !it.NonInteractable && !it.HiddenInGame && !it.Removed)
+                    .Where(it => connectedSubs.Contains(it.Submarine) && it.HasTag("crate") && !it.NonInteractable && !it.HiddenInGame && !it.Removed)
                     .Select(it => it.GetComponent<ItemContainer>())
                     .Where(c => c != null)
                     .ToList();
@@ -1070,7 +1072,7 @@ namespace Barotrauma
                     item.Submarine = newSub;
                     if (item.Container == null)
                     {
-                        newContainer = newSub.FindContainerFor(item, onlyPrimary: true, checkTransferConditions: true);
+                        newContainer = newSub.FindContainerFor(item, onlyPrimary: true, checkTransferConditions: true, allowConnectedSubs: true);
                     }
                     if (item.Container == null && (newContainer == null || !newContainer.OwnInventory.TryPutItem(item, user: null, createNetworkEvent: false)))
                     {
@@ -1086,7 +1088,8 @@ namespace Barotrauma
                             var cargoContainer = CargoManager.GetOrCreateCargoContainerFor(item.Prefab, spawnHull, ref availableContainers);
                             if (cargoContainer == null || !cargoContainer.Inventory.TryPutItem(item, user: null, createNetworkEvent: false))
                             {
-                                item.SetTransform(wp.SimPosition, 0.0f, findNewHull: false, setPrevTransform: false);
+                                Vector2 simPos = ConvertUnits.ToSimUnits(CargoManager.GetCargoPos(spawnHull, item.Prefab));
+                                item.SetTransform(simPos, 0.0f, findNewHull: false, setPrevTransform: false);
                             }
                         }
                         else

@@ -17,7 +17,6 @@ namespace Barotrauma
         Beard,
         Moustache,
         FaceAttachment,
-        JobIndicator,
         Husk,
         Herpes
     }
@@ -128,7 +127,6 @@ namespace Barotrauma
                 case WearableType.Beard:
                 case WearableType.Moustache:
                 case WearableType.FaceAttachment:
-                case WearableType.JobIndicator:
                 case WearableType.Husk:
                 case WearableType.Herpes:
                     Limb = LimbType.Head;

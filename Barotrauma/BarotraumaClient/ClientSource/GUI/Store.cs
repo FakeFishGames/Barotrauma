@@ -2208,7 +2208,7 @@ namespace Barotrauma
             }
 
             updateStopwatch.Stop();
-            GameMain.PerformanceCounter.AddPartialElapsedTicks("GameSessionUpdate", "StoreUpdate", updateStopwatch.ElapsedTicks);
+            GameMain.PerformanceCounter.AddElapsedTicks("Update:GameSession:Store", updateStopwatch.ElapsedTicks);
         }
     }
 }

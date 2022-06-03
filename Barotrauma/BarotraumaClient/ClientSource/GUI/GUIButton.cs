@@ -111,6 +111,11 @@ namespace Barotrauma
             set { textBlock.SelectedTextColor = value; }
         }
 
+        public Color DisabledTextColor
+        {
+            get { return textBlock.DisabledTextColor; }
+        }
+
         public override float FlashTimer
         {
             get { return Frame.FlashTimer; }

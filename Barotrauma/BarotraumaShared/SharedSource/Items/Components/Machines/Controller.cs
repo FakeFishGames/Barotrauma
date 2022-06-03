@@ -114,6 +114,20 @@ namespace Barotrauma.Items.Components
             private set;
         } = true;
 
+        [Serialize(false, IsPropertySaveable.No)]
+        public bool NonInteractableWhenFlippedX
+        {
+            get;
+            set;
+        }
+
+        [Serialize(false, IsPropertySaveable.No)]
+        public bool NonInteractableWhenFlippedY
+        {
+            get;
+            set;
+        }
+
         public Controller(Item item, ContentXElement element)
             : base(item, element)
         {
@@ -568,6 +582,18 @@ namespace Barotrauma.Items.Components
                         (item.Rect.Center.X - diff - item.Rect.X) / item.Scale,
                         limbPositions[i].Position.Y);
                 limbPositions[i] = new LimbPos(limbPositions[i].LimbType, flippedPos, limbPositions[i].AllowUsingLimb);
+            }
+        }
+
+        public override void OnItemLoaded()
+        {
+            if (item.FlippedX && NonInteractableWhenFlippedX)
+            {
+                item.NonInteractable = true;
+            }
+            else if (item.FlippedY && NonInteractableWhenFlippedY)
+            {
+                item.NonInteractable = true;
             }
         }
 

@@ -23,7 +23,6 @@ namespace Barotrauma
 
         private readonly Dictionary<string, Queue<long>> elapsedTicks = new Dictionary<string, Queue<long>>();
         private readonly Dictionary<string, long> avgTicksPerFrame = new Dictionary<string, long>();
-        private readonly Dictionary<string, Dictionary<string, TickInfo>> partialTickInfos = new Dictionary<string, Dictionary<string, TickInfo>>();
 
 #if CLIENT
         internal Graph UpdateTimeGraph = new Graph(500), DrawTimeGraph = new Graph(500);
@@ -43,20 +42,6 @@ namespace Barotrauma
             }
         }
 
-        private readonly List<string> tempSavedPartialIdentifiers = new List<string>();
-        public IReadOnlyList<string> GetSavedPartialIdentifiers(string parentIdentifier)
-        {
-            lock (mutex)
-            {
-                tempSavedPartialIdentifiers.Clear();
-                if (partialTickInfos.TryGetValue(parentIdentifier, out var tickInfos))
-                {
-                    tempSavedPartialIdentifiers.AddRange(tickInfos.Keys);
-                }
-            }
-            return tempSavedPartialIdentifiers;
-        }
-
         public void AddElapsedTicks(string identifier, long ticks)
         {
             lock (mutex)
@@ -72,47 +57,12 @@ namespace Barotrauma
             }
         }
 
-        public void AddPartialElapsedTicks(string parentIdentifier, string identifier, long ticks)
-        {
-            lock (mutex)
-            {
-                if (!partialTickInfos.TryGetValue(parentIdentifier, out var tickInfos))
-                {
-                    tickInfos = new Dictionary<string, TickInfo>();
-                    partialTickInfos.Add(parentIdentifier, tickInfos);
-                }
-                if (!tickInfos.TryGetValue(identifier, out var tickInfo))
-                {
-                    tickInfo = new TickInfo();
-                    tickInfos.Add(identifier, tickInfo);
-                }
-                tickInfo.ElapsedTicks.Enqueue(ticks);
-                if (tickInfo.ElapsedTicks.Count > MaximumSamples)
-                {
-                    tickInfo.ElapsedTicks.Dequeue();
-                    tickInfo.AvgTicksPerFrame = (long)tickInfo.ElapsedTicks.Average(i => i);
-                }
-            }
-        }
-
         public float GetAverageElapsedMillisecs(string identifier)
         {
             long ticksPerFrame = 0;
             lock (mutex)
             {
                 avgTicksPerFrame.TryGetValue(identifier, out ticksPerFrame);
-            }
-            return ticksPerFrame * 1000.0f / Stopwatch.Frequency;
-        }
-
-        public float GetPartialAverageElapsedMillisecs(string parentIdentifier, string identifier)
-        {
-            long ticksPerFrame = 0;
-            lock (mutex)
-            {
-                if (!partialTickInfos.TryGetValue(parentIdentifier, out var tickInfos)) { return 0.0f; }
-                if (!tickInfos.TryGetValue(identifier, out var tickInfo)) { return 0.0f; }
-                ticksPerFrame = tickInfo.AvgTicksPerFrame;
             }
             return ticksPerFrame * 1000.0f / Stopwatch.Frequency;
         }

@@ -1,6 +1,7 @@
 ﻿#nullable enable
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
 using Barotrauma.Extensions;
@@ -35,6 +36,8 @@ namespace Barotrauma
         private readonly GUILayoutGroup bottom;
 
         public readonly WorkshopMenu WorkshopMenu;
+
+        private static readonly ImmutableHashSet<InputType> LegacyInputTypes = new List<InputType>() { InputType.Chat, InputType.RadioChat }.ToImmutableHashSet();
 
         public static SettingsMenu Create(RectTransform mainParent)
         {
@@ -392,6 +395,9 @@ namespace Barotrauma
             Label(audio, TextManager.Get("MusicVolume"), GUIStyle.SubHeadingFont);
             Slider(audio, (0, 1), 101, Percentage, unsavedConfig.Audio.MusicVolume, (v) => unsavedConfig.Audio.MusicVolume = v);
 
+            Label(audio, TextManager.Get("UiSoundVolume"), GUIStyle.SubHeadingFont);
+            Slider(audio, (0, 1), 101, Percentage, unsavedConfig.Audio.UiVolume, (v) => unsavedConfig.Audio.UiVolume = v);
+
             Tickbox(audio, TextManager.Get("MuteOnFocusLost"), TextManager.Get("MuteOnFocusLostTooltip"), unsavedConfig.Audio.MuteOnFocusLost, (v) => unsavedConfig.Audio.MuteOnFocusLost = v);
             Tickbox(audio, TextManager.Get("DynamicRangeCompression"), TextManager.Get("DynamicRangeCompressionTooltip"), unsavedConfig.Audio.DynamicRangeCompressionEnabled, (v) => unsavedConfig.Audio.DynamicRangeCompressionEnabled = v);
             Spacer(audio);
@@ -481,10 +487,14 @@ namespace Barotrauma
 
             HashSet<GUIButton> inputButtons = new HashSet<GUIButton>();
             Action<KeyOrMouse>? currentSetter = null;
-            void addInputToRow(GUILayoutGroup currRow, LocalizedString labelText, Func<LocalizedString> valueNameGetter, Action<KeyOrMouse> valueSetter)
+            void addInputToRow(GUILayoutGroup currRow, LocalizedString labelText, Func<LocalizedString> valueNameGetter, Action<KeyOrMouse> valueSetter, bool isLegacyBind = false)
             {
                 var inputFrame = new GUIFrame(new RectTransform((0.5f, 1.0f), currRow.RectTransform),
                     style: null);
+                if (isLegacyBind)
+                {
+                    labelText = TextManager.GetWithVariable("legacyitemformat", "[name]", labelText);
+                }
                 var label = new GUITextBlock(new RectTransform((0.6f, 1.0f), inputFrame.RectTransform), labelText,
                     font: GUIStyle.SmallFont) {ForceUpperCase = ForceUpperCase.Yes};
                 var inputBox = new GUIButton(
@@ -515,6 +525,12 @@ namespace Barotrauma
                         return true;
                     }
                 };
+                if (isLegacyBind)
+                {
+                    label.TextColor = Color.Lerp(label.TextColor, label.DisabledTextColor, 0.5f);
+                    inputBox.Color = Color.Lerp(inputBox.Color, inputBox.DisabledColor, 0.5f);
+                    inputBox.TextColor = Color.Lerp(inputBox.TextColor, label.DisabledTextColor, 0.5f);
+                }
                 inputButtons.Add(inputBox);
             }
 
@@ -594,7 +610,8 @@ namespace Barotrauma
                         currRow,
                         TextManager.Get($"InputType.{input}"),
                         () => unsavedConfig.KeyMap.Bindings[input].Name,
-                        (v) => unsavedConfig.KeyMap = unsavedConfig.KeyMap.WithBinding(input, v));
+                        (v) => unsavedConfig.KeyMap = unsavedConfig.KeyMap.WithBinding(input, v),
+                        LegacyInputTypes.Contains(input));
                 }
             }
 
@@ -609,30 +626,29 @@ namespace Barotrauma
                     var input = unsavedConfig.InventoryKeyMap.Bindings[currIndex];
                     addInputToRow(
                         currRow,
-                        TextManager.GetWithVariable("inventoryslotkeybind", "[slotnumber]", (currIndex+1).ToString(CultureInfo.InvariantCulture)),
+                        TextManager.GetWithVariable("inventoryslotkeybind", "[slotnumber]", (currIndex + 1).ToString(CultureInfo.InvariantCulture)),
                         () => unsavedConfig.InventoryKeyMap.Bindings[currIndex].Name,
                         (v) => unsavedConfig.InventoryKeyMap = unsavedConfig.InventoryKeyMap.WithBinding(currIndex, v));
                 }
             }
 
             GUILayoutGroup resetControlsHolder =
-                new GUILayoutGroup(new RectTransform((1.75f, 0.1f), layout.RectTransform), isHorizontal: true)
+                new GUILayoutGroup(new RectTransform((1.75f, 0.1f), layout.RectTransform), isHorizontal: true, childAnchor: Anchor.Center)
                 {
                     RelativeSpacing = 0.1f
                 };
 
             var defaultBindingsButton =
                 new GUIButton(new RectTransform(new Vector2(0.45f, 1.0f), resetControlsHolder.RectTransform),
-                    TextManager.Get("SetDefaultBindings"), style: "GUIButtonSmall")
+                    TextManager.Get("Reset"), style: "GUIButtonSmall")
                 {
-                    ToolTip = TextManager.Get("SetDefaultBindingsTooltip")
-                };
-
-            var legacyBindingsButton =
-                new GUIButton(new RectTransform(new Vector2(0.45f, 1.0f), resetControlsHolder.RectTransform),
-                    TextManager.Get("SetLegacyBindings"), style: "GUIButtonSmall")
-                {
-                    ToolTip = TextManager.Get("SetLegacyBindingsTooltip")
+                    ToolTip = TextManager.Get("SetDefaultBindingsTooltip"),
+                    OnClicked = (btn, userdata) => 
+                    {
+                        unsavedConfig.InventoryKeyMap = GameSettings.Config.InventoryKeyMapping.GetDefault();
+                        unsavedConfig.KeyMap = GameSettings.Config.KeyMapping.GetDefault();
+                        return true; 
+                    }
                 };
         }
 

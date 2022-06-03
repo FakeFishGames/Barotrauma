@@ -2,7 +2,6 @@
 using Barotrauma.Items.Components;
 using System.Collections.Generic;
 using System.Linq;
-using System;
 
 namespace Barotrauma
 {
@@ -48,6 +47,9 @@ namespace Barotrauma
 
         protected override bool Filter(Item target)
         {
+            System.Diagnostics.Debug.Assert(target.GetComponent<Pickable>() is { } pickable && !pickable.IsAttached, "Invalid target in AIObjectiveCleanUpItems - the the objective should only be checking pickable, non-attached items.");
+            System.Diagnostics.Debug.Assert(target.Prefab.PreferredContainers.Any(), "Invalid target in AIObjectiveCleanUpItems - the the objective should only be checking items that have preferred containers defined.");
+
             // If the target was selected as a valid target, we'll have to accept it so that the objective can be completed.
             // The validity changes when a character picks the item up.
             if (!IsValidTarget(target, character, checkInventory: true)) { return Objectives.ContainsKey(target) && IsItemInsideValidSubmarine(target, character); }
@@ -57,7 +59,7 @@ namespace Barotrauma
             return true;
         }
 
-        protected override IEnumerable<Item> GetList() => Item.ItemList;
+        protected override IEnumerable<Item> GetList() => Item.CleanableItems;
 
         protected override AIObjective ObjectiveConstructor(Item item)
             => new AIObjectiveCleanupItem(item, character, objectiveManager, priorityModifier: PriorityModifier)
@@ -102,9 +104,6 @@ namespace Barotrauma
             }
             if (character != null && !IsItemInsideValidSubmarine(item, character)) { return false; }
             if (item.HasBallastFloraInHull) { return false; }
-            var pickable = item.GetComponent<Pickable>();
-            if (pickable == null) { return false; }
-            if (pickable is Holdable h && h.Attachable && h.Attached) { return false; }
             var wire = item.GetComponent<Wire>();
             if (wire != null)
             {
@@ -117,10 +116,6 @@ namespace Barotrauma
                 {
                     return false;
                 }
-            }
-            if (item.Prefab.PreferredContainers.None())
-            {
-                return false;
             }
             if (!checkInventory)
             {

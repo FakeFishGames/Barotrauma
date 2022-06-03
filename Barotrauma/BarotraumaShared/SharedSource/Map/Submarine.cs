@@ -1857,15 +1857,23 @@ namespace Barotrauma
 
         public void RefreshOutdoorNodes() => OutdoorNodes.ForEach(n => n?.Waypoint?.FindHull());
 
-        public Item FindContainerFor(Item item, bool onlyPrimary, bool checkTransferConditions = false)
+        public Item FindContainerFor(Item item, bool onlyPrimary, bool checkTransferConditions = false, bool allowConnectedSubs = false)
         {
-            var potentialContainers = new List<Item>();
+            var connectedSubs = GetConnectedSubs().Where(s => s.Info.Type == SubmarineType.Player).ToHashSet();
+            Item selectedContainer = null;
             foreach (Item potentialContainer in Item.ItemList)
             {
                 if (potentialContainer.Removed) { continue; }
                 if (potentialContainer.NonInteractable) { continue; }
                 if (potentialContainer.HiddenInGame) { continue; }
-                if (potentialContainer.Submarine != this) { continue; }
+                if (allowConnectedSubs)
+                {
+                    if (!connectedSubs.Contains(potentialContainer.Submarine)) { continue; }
+                }
+                else
+                {
+                    if (potentialContainer.Submarine != this) { continue; }
+                }
                 if (potentialContainer == item) { continue; }
                 if (potentialContainer.Condition <= 0) { continue; }
                 if (potentialContainer.OwnInventory == null) { continue; }
@@ -1875,13 +1883,15 @@ namespace Barotrauma
                 if (!potentialContainer.OwnInventory.CanBePut(item)) { continue; }
                 if (!container.ShouldBeContained(item, out _)) { continue; }
                 if (!item.Prefab.IsContainerPreferred(item, container, out bool isPreferencesDefined, out bool isSecondary, checkTransferConditions: checkTransferConditions) || !isPreferencesDefined || onlyPrimary && isSecondary) { continue; }
-                potentialContainers.Add(potentialContainer);
-                if (!isSecondary)
+                if (potentialContainer.Submarine == this && !isSecondary)
                 {
-                    break;
+                    //valid primary container in the same sub -> perfect, let's use that one
+                    return potentialContainer;               
                 }
+                selectedContainer = potentialContainer;
+                
             }
-            return potentialContainers.LastOrDefault();
+            return selectedContainer;
         }
     }
 }

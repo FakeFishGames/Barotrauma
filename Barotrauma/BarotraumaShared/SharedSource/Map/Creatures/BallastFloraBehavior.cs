@@ -463,6 +463,15 @@ namespace Barotrauma.MapCreatures.Behavior
                 }
             }
 
+            if (root == null)
+            {
+                Branches.ForEach(b => b.DisconnectedFromRoot = true);
+            }
+            else
+            {
+                CheckDisconnectedFromRoot();
+            }
+
             void LoadBranch(XElement branchElement, IdRemap idRemap)
             {
                 Vector2 pos = branchElement.GetAttributeVector2("pos", Vector2.Zero);
@@ -649,9 +658,10 @@ namespace Barotrauma.MapCreatures.Behavior
             toBeRemoved.Clear();
             foreach (BallastFloraBranch branch in Branches)
             {
-                if (branch.ParentBranch != null && (branch.ParentBranch.DisconnectedFromRoot || branch.ParentBranch.Health <= 0.0f))
+                if (branch.ParentBranch == null || branch.ParentBranch.DisconnectedFromRoot || branch.ParentBranch.Health <= 0.0f)
                 {
-                    float speed = MathHelper.Lerp(5.0f, 0.1f, branch.ParentBranch.Health / branch.ParentBranch.MaxHealth);
+                    float parentHealth = branch.ParentBranch == null ? 0.0f : branch.ParentBranch.Health / branch.ParentBranch.MaxHealth;
+                    float speed = MathHelper.Lerp(5.0f, 0.1f, parentHealth);
                     DamageBranch(branch, speed * speed * deltaTime, AttackType.CutFromRoot);
                 }
                 if (branch.Health <= 0.0f)
@@ -1071,6 +1081,25 @@ namespace Barotrauma.MapCreatures.Behavior
             }
         }
 
+        private void CheckDisconnectedFromRoot()
+        {
+            bool foundDisconnected;
+            do
+            {
+                foundDisconnected = false;
+                foreach (BallastFloraBranch branch in Branches)
+                {
+                    if (branch.ParentBranch == null || branch.DisconnectedFromRoot) { continue; }
+                    if (branch.ParentBranch.Removed || branch.ParentBranch.DisconnectedFromRoot)
+                    {
+                        branch.DisconnectedFromRoot = true;
+                        foundDisconnected = true;
+                    }
+                }
+            } while (foundDisconnected);
+
+        }
+
         public void RemoveBranch(BallastFloraBranch branch)
         {
             bool isClient = GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
@@ -1081,20 +1110,7 @@ namespace Barotrauma.MapCreatures.Behavior
             Branches.Remove(branch);
             branch.Removed = true;
 
-            bool foundDisconnected = false;
-            do
-            {
-                foundDisconnected = false;
-                foreach (BallastFloraBranch otherBranch in Branches)
-                {
-                    if (otherBranch.ParentBranch == null || otherBranch.DisconnectedFromRoot) { continue; }
-                    if (otherBranch.ParentBranch.Removed || otherBranch.ParentBranch.DisconnectedFromRoot)
-                    {
-                        otherBranch.DisconnectedFromRoot = true;
-                        foundDisconnected = true;
-                    }
-                }
-            } while (foundDisconnected);
+            CheckDisconnectedFromRoot();
 
             bodies.ForEachMod(body =>
             {

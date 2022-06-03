@@ -110,7 +110,7 @@ namespace Barotrauma
         public bool CampaignCharacterDiscarded
         {
             get;
-            private set;
+            set;
         }
 
         //elements that can only be used by the host
@@ -1253,9 +1253,6 @@ namespace Barotrauma
             
             CharacterAppearanceCustomizationMenu?.Dispose();
             JobSelectionFrame = null;
-
-            /*foreach (Sprite sprite in jobPreferenceSprites) { sprite.Remove(); }
-            jobPreferenceSprites.Clear();*/
         }
 
         public override void Select()
@@ -1417,7 +1414,7 @@ namespace Barotrauma
                 characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, GameMain.Client.Name, null);
                 characterInfo.RecreateHead(MultiplayerPreferences.Instance);
                 GameMain.Client.CharacterInfo = characterInfo;
-                characterInfo.OmitJobInPortraitClothing = false;
+                characterInfo.OmitJobInMenus = true;
             }
 
             parent.ClearChildren();

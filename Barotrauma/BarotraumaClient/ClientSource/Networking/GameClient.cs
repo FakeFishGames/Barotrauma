@@ -1831,7 +1831,8 @@ namespace Barotrauma.Networking
 
             GameMain.GameScreen.Select();
 
-            AddChatMessage($"ServerMessage.HowToCommunicate~[chatbutton]={GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Chat)}~[radiobutton]={GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.RadioChat)}", ChatMessageType.Server);
+            // TODO: Re-enable the server message once it's been edited and translated
+            //AddChatMessage($"ServerMessage.HowToCommunicate~[chatbutton]={GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Chat)}~[radiobutton]={GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.RadioChat)}", ChatMessageType.Server);
 
             yield return CoroutineStatus.Success;
         }
@@ -2503,6 +2504,7 @@ namespace Barotrauma.Networking
                 message,
                 type,
                 gameStarted && myCharacter != null ? myCharacter : null);
+            chatMessage.ChatMode = GameMain.ActiveChatMode;
 
             lastQueueChatMsgID++;
             chatMessage.NetStateID = lastQueueChatMsgID;
@@ -2788,19 +2790,21 @@ namespace Barotrauma.Networking
             GameMain.GameSession = null;
         }
 
-        public void SendCharacterInfo()
+        public void SendCharacterInfo(string newName = null)
         {
             IWriteMessage msg = new WriteOnlyMessage();
             msg.Write((byte)ClientPacketHeader.UPDATE_CHARACTERINFO);
-            WriteCharacterInfo(msg);
+            WriteCharacterInfo(msg, newName);
             msg.Write((byte)ServerNetObject.END_OF_MESSAGE);
             clientPeer?.Send(msg, DeliveryMethod.Reliable);
         }
 
-        public void WriteCharacterInfo(IWriteMessage msg)
+        public void WriteCharacterInfo(IWriteMessage msg, string newName = null)
         {
             msg.Write(characterInfo == null);
-            if (characterInfo == null) return;
+            if (characterInfo == null) { return; }
+
+            msg.Write(newName ?? string.Empty);
 
             msg.Write((byte)characterInfo.Head.Preset.TagSet.Count);
             foreach (Identifier tag in characterInfo.Head.Preset.TagSet)
@@ -3284,10 +3288,8 @@ namespace Barotrauma.Networking
             {
                 if (GUI.KeyboardDispatcher.Subscriber == null)                
                 {
-                    bool chatKeyHit = PlayerInput.KeyHit(InputType.Chat);
-                    bool radioKeyHit = PlayerInput.KeyHit(InputType.RadioChat) && (Character.Controlled == null || Character.Controlled.SpeechImpediment < 100);
-
-                    if (chatKeyHit || radioKeyHit)
+                    var chatKeyStates = ChatBox.ChatKeyStates.GetChatKeyStates();
+                    if (chatKeyStates.AnyHit)
                     {
                         if (msgBox.Selected)
                         {
@@ -3298,34 +3300,8 @@ namespace Barotrauma.Networking
                         {
                             if (Screen.Selected == GameMain.GameScreen)
                             {
-                                if (chatKeyHit)
-                                {
-                                    msgBox.AddToGUIUpdateList();
-                                    ChatBox.GUIFrame.Flash(Color.DarkGreen, 0.5f);
-                                    if (!chatBox.ToggleOpen)
-                                    {
-                                        ChatBox.CloseAfterMessageSent = !ChatBox.ToggleOpen;
-                                        ChatBox.ToggleOpen = true;
-                                    }
-                                }
-
-                                if (radioKeyHit)
-                                {
-                                    msgBox.AddToGUIUpdateList();
-                                    ChatBox.GUIFrame.Flash(Color.YellowGreen, 0.5f);
-                                    if (!chatBox.ToggleOpen)
-                                    {
-                                        ChatBox.CloseAfterMessageSent = !ChatBox.ToggleOpen;
-                                        ChatBox.ToggleOpen = true;
-                                    }
-                                    
-                                    if (!msgBox.Text.StartsWith(ChatBox.RadioChatString))
-                                    {
-                                        msgBox.Text = ChatBox.RadioChatString;
-                                    }
-                                } 
+                                ChatBox.ApplySelectionInputs(msgBox, false, chatKeyStates);
                             }
-
                             msgBox.Select(msgBox.Text.Length);
                         }
                     }

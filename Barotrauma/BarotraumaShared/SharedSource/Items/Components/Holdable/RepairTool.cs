@@ -94,7 +94,7 @@ namespace Barotrauma.Items.Components
             get; set;
         }
 
-        [Serialize(true, IsPropertySaveable.No, description: "Can the item hit broken doors.")]
+        [Serialize(true, IsPropertySaveable.No, description: "Can the item hit doors.")]
         public bool HitItems { get; set; }
 
         [Serialize(false, IsPropertySaveable.No, description: "Can the item hit broken doors.")]

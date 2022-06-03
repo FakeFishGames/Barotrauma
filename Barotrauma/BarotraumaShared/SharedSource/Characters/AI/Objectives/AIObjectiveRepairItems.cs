@@ -136,7 +136,7 @@ namespace Barotrauma
             return MathHelper.Lerp(0, 100, MathHelper.Clamp(damagePriority * successFactor, 0, 1));
         }
 
-        protected override IEnumerable<Item> GetList() => Item.ItemList;
+        protected override IEnumerable<Item> GetList() => Item.RepairableItems;
 
         protected override AIObjective ObjectiveConstructor(Item item) 
             => new AIObjectiveRepairItem(character, item, objectiveManager, priorityModifier: PriorityModifier, isPriority: item == PrioritizedItem);
@@ -156,6 +156,9 @@ namespace Barotrauma
             if (character.IsOnPlayerTeam && item.Submarine.Info.IsOutpost) { return false; }
             if (!character.Submarine.IsEntityFoundOnThisSub(item, includingConnectedSubs: true)) { return false; }
             if (item.Repairables.None()) { return false; }
+
+            System.Diagnostics.Debug.Assert(item.Repairables.Any(), "Invalid target in AIObjectiveRepairItems - the objective should only be checking items that have a Repairable component (Item.RepairableItems)");
+
             return true;
         }
     }

@@ -41,6 +41,8 @@ namespace Barotrauma.Items.Components
 
         private Character prevEquipper;
 
+        public override bool IsAttached => Attached;
+
         private bool attachable, attached, attachedByDefault;
         private Voronoi2.VoronoiCell attachTargetCell;
         private PhysicsBody body;
@@ -71,6 +73,7 @@ namespace Barotrauma.Items.Components
             set
             {
                 attached = value;
+                item.CheckCleanable();
                 item.SetActiveSprite();
             }
         }

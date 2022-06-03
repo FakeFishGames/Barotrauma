@@ -39,12 +39,21 @@ namespace Barotrauma
             {
                 TargetContainers.Add(targetContainer);
             }
+            else
+            {
+                foreach (Item item in Item.ItemList)
+                {
+                    if (!OrderPrefab.TargetItemsMatchItem(TargetContainerTags, item)) { continue; }
+                    TargetContainers.Add(item);
+                }
+            }
             TargetCondition = option == "turretammo" ? ItemCondition.Empty : ItemCondition.Full;
         }
 
         protected override bool Filter(Item target)
         {
-            if (!IsValidTarget(target, character, TargetContainerTags, TargetCondition)) { return false; }
+            //don't pass TargetContainerTags to the method (no need to filter by tags anymore, it's already done when populating TargetContainers)
+            if (!IsValidTarget(target, character, null, TargetCondition)) { return false; }
             if (target.CurrentHull == null || target.CurrentHull.FireSources.Count > 0) { return false; }
             if (Character.CharacterList.Any(c => c.CurrentHull == target.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))) { return false; }
             return true;
@@ -52,8 +61,7 @@ namespace Barotrauma
 
         public static bool IsValidTarget(Item item, Character character, ImmutableArray<Identifier>? targetContainerTags = null, ItemCondition? targetCondition = null)
         {
-            if (item == null) { return false; }
-            if (item.Removed) { return false; }
+            if (item == null || item.Removed) { return false; }
             if (targetContainerTags.HasValue && !OrderPrefab.TargetItemsMatchItem(targetContainerTags.Value, item)) { return false; }
             if (!(item.GetComponent<ItemContainer>() is ItemContainer container)) { return false; }
             if (container.Inventory == null) { return false; }
@@ -88,7 +96,7 @@ namespace Barotrauma
             }
         }
 
-        protected override IEnumerable<Item> GetList() => TargetContainers.Any() ? TargetContainers : Item.ItemList;
+        protected override IEnumerable<Item> GetList() => TargetContainers;
 
         protected override AIObjective ObjectiveConstructor(Item target)
             => new AIObjectiveLoadItem(target, TargetContainerTags, TargetCondition, Option, character, objectiveManager, PriorityModifier);

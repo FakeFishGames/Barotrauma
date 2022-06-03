@@ -116,12 +116,6 @@ namespace Barotrauma.Items.Components
                     loadAttachments(Attachments, disguisedBeardElement, WearableType.Beard);
                     loadAttachments(Attachments, disguisedMoustacheElement, WearableType.Moustache);
                     loadAttachments(Attachments, disguisedHairElement, WearableType.Hair);
-
-                    loadAttachments(Attachments,
-                        characterInfo.OmitJobInPortraitClothing
-                            ? JobPrefab.NoJobElement?.GetChildElement("PortraitClothing")
-                            : JobPrefab?.ClothingElement,
-                        WearableType.JobIndicator);
                 }
 
                 HairColor = hairColor;

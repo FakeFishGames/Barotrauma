@@ -29,6 +29,20 @@ namespace Barotrauma
 
         public static IReadOnlyCollection<Item> DangerousItems { get { return dangerousItems; } }
 
+        private static readonly List<Item> repairableItems = new List<Item>();
+
+        /// <summary>
+        /// Items that have one more more Repairable component
+        /// </summary>
+        public static IReadOnlyCollection<Item> RepairableItems => repairableItems;
+
+        private static readonly List<Item> cleanableItems = new List<Item>();
+
+        /// <summary>
+        /// Items that may potentially need to be cleaned up (pickable, not attached to a wall, and not inside a valid container)
+        /// </summary>
+        public static IReadOnlyCollection<Item> CleanableItems => cleanableItems;
+
         public new ItemPrefab Prefab => base.Prefab as ItemPrefab;
 
         public static bool ShowLinks = true;
@@ -186,6 +200,7 @@ namespace Barotrauma
                 if (value != container)
                 {
                     container = value;
+                    CheckCleanable();
                     SetActiveSprite();
                 }
             }
@@ -1009,10 +1024,9 @@ namespace Barotrauma
 
             InsertToList();
             ItemList.Add(this);
-            if (Prefab.IsDangerous)
-            {
-                dangerousItems.Add(this);
-            }
+            if (Prefab.IsDangerous) { dangerousItems.Add(this); }
+            if (Repairables.Any()) { repairableItems.Add(this); }
+            CheckCleanable();
 
             DebugConsole.Log("Created " + Name + " (" + ID + ")");
 
@@ -1022,6 +1036,9 @@ namespace Barotrauma
             ApplyStatusEffects(ActionType.OnSpawn, 1.0f);
             Components.ForEach(c => c.ApplyStatusEffects(ActionType.OnSpawn, 1.0f));
             RecalculateConditionValues();
+#if CLIENT
+            Submarine.ForceVisibilityRecheck();
+#endif
         }
 
         partial void InitProjSpecific();
@@ -1150,6 +1167,7 @@ namespace Barotrauma
                 drawableComponents.Add(drawable);
                 hasComponentsToDraw = true;
 #if CLIENT
+                Submarine.ForceVisibilityRecheck();
                 cachedVisibleExtents = null;
 #endif
             }
@@ -1280,6 +1298,27 @@ namespace Barotrauma
         }
 
         partial void SetActiveSpriteProjSpecific();
+
+        /// <summary>
+        /// Recheck if the item needs to be included in the list of cleanable items
+        /// </summary>
+        public void CheckCleanable()
+        {
+            var pickable = GetComponent<Pickable>();
+            if (pickable != null && !pickable.IsAttached &&
+                Prefab.PreferredContainers.Any() &&
+                (container == null || container.HasTag("allowcleanup")))
+            {
+                if (!cleanableItems.Contains(this))
+                {
+                    cleanableItems.Add(this);
+                }
+            }
+            else
+            {
+                cleanableItems.Remove(this);
+            }
+        }
 
         public override void Move(Vector2 amount, bool ignoreContacts = false)
         {
@@ -2526,7 +2565,7 @@ namespace Barotrauma
                     ic.WasUsed = true;
 #if CLIENT
                     ic.PlaySound(ActionType.OnUse, character); 
-#endif    
+#endif
                     ic.ApplyStatusEffects(ActionType.OnUse, deltaTime, character, targetLimb);
 
                     if (ic.DeleteOnUse) { remove = true; }
@@ -2704,6 +2743,9 @@ namespace Barotrauma
             }
 
             SetContainedItemPositions();
+#if CLIENT
+            Submarine.ForceVisibilityRecheck();
+#endif
         }
 
         public void Equip(Character character)
@@ -3368,8 +3410,7 @@ namespace Barotrauma
             {
                 ic.ShallowRemove();
             }
-            ItemList.Remove(this);
-            dangerousItems.Remove(this);
+            RemoveFromLists();
 
             if (body != null)
             {
@@ -3427,8 +3468,8 @@ namespace Barotrauma
                 ic.GuiFrame = null;
 #endif
             }
-            ItemList.Remove(this);
-            dangerousItems.Remove(this);
+
+            RemoveFromLists();
 
             if (body != null)
             {
@@ -3459,6 +3500,14 @@ namespace Barotrauma
             }
 
             RemoveProjSpecific();
+        }
+
+        private void RemoveFromLists()
+        {
+            ItemList.Remove(this);
+            dangerousItems.Remove(this);
+            repairableItems.Remove(this);
+            cleanableItems.Remove(this);
         }
 
         partial void RemoveProjSpecific();

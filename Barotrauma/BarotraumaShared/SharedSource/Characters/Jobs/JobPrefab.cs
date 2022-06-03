@@ -79,7 +79,6 @@ namespace Barotrauma
         /// </summary>
         public static IReadOnlyDictionary<Identifier, float> ItemRepairPriorities => _itemRepairPriorities;
 
-        public static ContentXElement NoJobElement;
         public static JobPrefab Get(string identifier)
         {
             if (Prefabs.ContainsKey(identifier))
@@ -213,7 +212,7 @@ namespace Barotrauma
         public SkillPrefab PrimarySkill => Skills?.FirstOrDefault(s => s.IsPrimarySkill);
 
         public ContentXElement Element { get; private set; }
-        public ContentXElement ClothingElement { get; private set; }
+
         public int Variants { get; private set; }
 
         public JobPrefab(ContentXElement element, JobsFile file) : base(file, element.GetAttributeIdentifier("identifier", ""))
@@ -288,9 +287,6 @@ namespace Barotrauma
             Variants = variant;
 
             Skills.Sort((x,y) => y.LevelRange.Start.CompareTo(x.LevelRange.Start));
-
-            // Disabled on purpose, TODO: remove all references?
-            //ClothingElement = element.GetChildElement("PortraitClothing");
         }
 
         public static JobPrefab Random(Rand.RandSync sync, Func<JobPrefab, bool> predicate = null) => Prefabs.GetRandom(p => !p.HiddenJob && (predicate == null || predicate(p)), sync);

@@ -651,6 +651,8 @@ namespace Barotrauma
                     GameMain.LightManager.LosEnabled = true;
                     GameMain.LightManager.LosAlpha = 1f;
 
+                    GameMain.NetLobbyScreen.CampaignCharacterDiscarded = false;
+
                     character.memInput.Clear();
                     character.memState.Clear();
                     character.memLocalState.Clear();

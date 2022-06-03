@@ -356,7 +356,10 @@ namespace Barotrauma
             }
         }
 
-        public bool OmitJobInPortraitClothing;
+        /// <summary>
+        /// Can be used to disable displaying the job in any info panels
+        /// </summary>
+        public bool OmitJobInMenus;
 
         private Sprite portrait;
         public Sprite Portrait
@@ -434,7 +437,7 @@ namespace Barotrauma
             {
                 if (attachmentSprites == null)
                 {
-                    LoadAttachmentSprites(OmitJobInPortraitClothing);
+                    LoadAttachmentSprites();
                 }
                 return attachmentSprites;
             }
@@ -1092,7 +1095,7 @@ namespace Barotrauma
 
         private static IEnumerable<float> GetWeights(IEnumerable<ContentXElement> elements) => elements.Select(h => h.GetAttributeFloat("commonness", 1f));
 
-        partial void LoadAttachmentSprites(bool omitJob);
+        partial void LoadAttachmentSprites();
         
         private int CalculateSalary()
         {

@@ -160,6 +160,10 @@ namespace Barotrauma
                 listBox.ToolTip = value;
             }
         }
+
+        public GUIImage DropDownIcon => icon;
+
+        public Vector4 Padding => button.TextBlock.Padding;
                 
         public GUIDropDown(RectTransform rectT, LocalizedString text = null, int elementCount = 4, string style = "", bool selectMultiple = false, bool dropAbove = false, Alignment textAlignment = Alignment.CenterLeft) : base(style, rectT)
         {

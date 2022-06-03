@@ -27,6 +27,11 @@ namespace Barotrauma
             set;
         }
 
+        /// <summary>
+        /// The size of fixed area around the slice area
+        /// </summary>
+        public Point NonSliceSize { get; set; }
+
         public bool MaintainAspectRatio
         {
             get;
@@ -72,6 +77,7 @@ namespace Barotrauma
                 maxBorderScale = element.GetAttributeFloat("minborderscale", 10.0f);
 
                 Rectangle slice = new Rectangle((int)sliceVec.X, (int)sliceVec.Y, (int)(sliceVec.Z - sliceVec.X), (int)(sliceVec.W - sliceVec.Y));
+                NonSliceSize = new Point(Sprite.SourceRect.Width - slice.Width, Sprite.SourceRect.Height - slice.Height);
 
                 Slices = new Rectangle[9];
 

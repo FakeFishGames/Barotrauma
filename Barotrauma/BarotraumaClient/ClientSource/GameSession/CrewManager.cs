@@ -147,9 +147,10 @@ namespace Barotrauma
                             string msgCommand = ChatMessage.GetChatMessageCommand(text, out string msg);
                             // add to local history
                             ChatBox.ChatManager.Store(text);
-                            WifiComponent headset = null;
-                            ChatMessageType messageType =
-                                ((msgCommand == "r" || msgCommand == "radio") && ChatMessage.CanUseRadio(Character.Controlled, out headset)) ? ChatMessageType.Radio : ChatMessageType.Default;
+                            bool isUsingRadioMode = GameMain.ActiveChatMode == ChatMode.Radio;
+                            bool containsRadioCommand = msgCommand == "r" || msgCommand == "radio";
+                            bool canUseRadio = ChatMessage.CanUseRadio(Character.Controlled, out WifiComponent headset);
+                            ChatMessageType messageType = ((isUsingRadioMode && msgCommand == "") || containsRadioCommand) && canUseRadio ? ChatMessageType.Radio : ChatMessageType.Default;
                             AddSinglePlayerChatMessage(
                                 Character.Controlled.Info.Name,
                                 msg, messageType,
@@ -1553,40 +1554,9 @@ namespace Barotrauma
             {
                 ChatBox.Update(deltaTime);
                 ChatBox.InputBox.Visible = Character.Controlled != null;
-
-                if (!DebugConsole.IsOpen && ChatBox.InputBox.Visible && GUI.KeyboardDispatcher.Subscriber == null)
+                if (!DebugConsole.IsOpen && ChatBox.InputBox.Visible && GUI.KeyboardDispatcher.Subscriber == null && !ChatBox.InputBox.Selected)
                 {
-                    if (PlayerInput.KeyHit(InputType.Chat) && !ChatBox.InputBox.Selected)
-                    {
-                        ChatBox.InputBox.AddToGUIUpdateList();
-                        ChatBox.GUIFrame.Flash(Color.DarkGreen, 0.5f);
-                        if (!ChatBox.ToggleOpen)
-                        {
-                            ChatBox.CloseAfterMessageSent = !ChatBox.ToggleOpen;
-                            ChatBox.ToggleOpen = true;
-                        }
-                        ChatBox.InputBox.Select(ChatBox.InputBox.Text.Length);
-                    }
-
-                    if (PlayerInput.KeyHit(InputType.RadioChat) && !ChatBox.InputBox.Selected)
-                    {
-                        if (Character.Controlled == null || Character.Controlled.SpeechImpediment < 100)
-                        {
-                            ChatBox.InputBox.AddToGUIUpdateList();
-                            ChatBox.GUIFrame.Flash(Color.YellowGreen, 0.5f);
-                            if (!ChatBox.ToggleOpen)
-                            {
-                                ChatBox.CloseAfterMessageSent = !ChatBox.ToggleOpen;
-                                ChatBox.ToggleOpen = true;
-                            }
-
-                            if (!ChatBox.InputBox.Text.StartsWith(ChatBox.RadioChatString))
-                            {
-                                ChatBox.InputBox.Text = ChatBox.RadioChatString;
-                            }
-                            ChatBox.InputBox.Select(ChatBox.InputBox.Text.Length);
-                        }
-                    }
+                    ChatBox.ApplySelectionInputs();
                 }
             }
 

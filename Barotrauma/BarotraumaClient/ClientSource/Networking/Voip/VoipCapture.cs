@@ -227,20 +227,10 @@ namespace Barotrauma.Networking
                     bool allowEnqueue = overrideSound != null;
                     if (GameMain.WindowActive && SettingsMenu.Instance is null)
                     {
-                        ForceLocal = captureTimer > 0 ? ForceLocal : GameSettings.CurrentConfig.Audio.UseLocalVoiceByDefault;
-                        bool pttDown = false;
-                        if ((PlayerInput.KeyDown(InputType.Voice) || PlayerInput.KeyDown(InputType.LocalVoice)) &&
-                                GUI.KeyboardDispatcher.Subscriber == null)
+                        bool pttDown = PlayerInput.KeyDown(InputType.Voice) && GUI.KeyboardDispatcher.Subscriber == null;
+                        if (pttDown || captureTimer <= 0)
                         {
-                            pttDown = true;
-                            if (PlayerInput.KeyDown(InputType.LocalVoice))
-                            {
-                                ForceLocal = true;
-                            }
-                            else
-                            {
-                                ForceLocal = false;
-                            }
+                            ForceLocal = GameMain.ActiveChatMode == ChatMode.Local;
                         }
                         if (GameSettings.CurrentConfig.Audio.VoiceSetting == VoiceMode.Activity)
                         {
@@ -257,7 +247,6 @@ namespace Barotrauma.Networking
                             }
                         }
                     }
-
                     if (allowEnqueue || captureTimer > 0)
                     {
                         LastEnqueueAudio = DateTime.Now;

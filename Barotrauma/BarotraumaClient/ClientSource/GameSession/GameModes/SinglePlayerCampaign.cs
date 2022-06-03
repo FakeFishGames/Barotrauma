@@ -35,11 +35,7 @@ namespace Barotrauma
                 }
             }
 
-            if (CrewManager.ChatBox != null)
-            {
-                CrewManager.ChatBox.Update(deltaTime);
-            }
-
+            CrewManager.ChatBox?.Update(deltaTime);
             CrewManager.UpdateReports();
         }
 

@@ -157,7 +157,7 @@ namespace Barotrauma
             /// Should the item spawn even if the container can't contain items of this type
             /// </summary>
             public readonly bool SpawnIfCantBeContained;
-            public readonly float Speed;
+            public readonly float Impulse;
             public readonly float Rotation;
             public readonly int Count;
             public readonly float Spread;
@@ -198,7 +198,7 @@ namespace Barotrauma
 
                 SpawnIfInventoryFull = element.GetAttributeBool("spawnifinventoryfull", false);
                 SpawnIfCantBeContained = element.GetAttributeBool("spawnifcantbecontained", true);
-                Speed = element.GetAttributeFloat("speed", 0.0f);
+                Impulse = element.GetAttributeFloat("impulse", element.GetAttributeFloat("speed", 0.0f));
 
                 Condition = MathHelper.Clamp(element.GetAttributeFloat("condition", 1.0f), 0.0f, 1.0f);
 
@@ -1708,7 +1708,7 @@ namespace Barotrauma
                                                 throw new NotImplementedException("Spawn rotation type not implemented: " + chosenItemSpawnInfo.RotationType);
                                         }
                                         body.SetTransform(newItem.SimPosition, rotation);
-                                        body.ApplyLinearImpulse(Rand.Vector(1) * chosenItemSpawnInfo.Speed);
+                                        body.ApplyLinearImpulse(Rand.Vector(1) * chosenItemSpawnInfo.Impulse);
                                     }
                                 }
                                 newItem.Condition = newItem.MaxCondition * chosenItemSpawnInfo.Condition;

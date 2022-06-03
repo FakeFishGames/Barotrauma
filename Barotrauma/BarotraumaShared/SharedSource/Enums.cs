@@ -177,4 +177,11 @@ namespace Barotrauma
         Int,
         Float
     }
+
+    public enum ChatMode
+    {
+        None,
+        Local,
+        Radio
+    }
 }

@@ -10,14 +10,15 @@ namespace Barotrauma.Networking
         {
             msg.Write((byte)ClientNetObject.CHAT_MESSAGE);
             msg.Write(NetStateID);
-            msg.Write((byte)Type);
+            msg.WriteRangedInteger((int)Type, 0, Enum.GetValues(typeof(ChatMessageType)).Length - 1);
+            msg.WriteRangedInteger((int)ChatMode, 0, Enum.GetValues(typeof(ChatMode)).Length - 1);
             msg.Write(Text);
         }
 
         public static void ClientRead(IReadMessage msg)
         {
             UInt16 id = msg.ReadUInt16();
-            ChatMessageType type = (ChatMessageType)msg.ReadByte();
+            ChatMessageType type = (ChatMessageType)msg.ReadRangedInteger(0, Enum.GetValues(typeof(ChatMessageType)).Length - 1);
             PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None;
             string txt = "";
             string styleSetting = string.Empty;

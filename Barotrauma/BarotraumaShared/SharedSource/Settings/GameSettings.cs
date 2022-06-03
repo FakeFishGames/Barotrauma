@@ -226,6 +226,7 @@ namespace Barotrauma
                     {
                         MusicVolume = 0.3f,
                         SoundVolume = 0.5f,
+                        UiVolume = 0.3f,
                         VoiceChatVolume = 0.5f,
                         VoiceChatCutoffPrevention = 0,
                         MicrophoneVolume = 5,
@@ -234,7 +235,6 @@ namespace Barotrauma
                         UseDirectionalVoiceChat = true,
                         VoipAttenuationEnabled = true,
                         VoiceSetting = VoiceMode.PushToTalk,
-                        UseLocalVoiceByDefault = false,
                         DisableVoiceChatFilters = false
                     };
                     return audioSettings;
@@ -249,6 +249,7 @@ namespace Barotrauma
 
                 public float MusicVolume;
                 public float SoundVolume;
+                public float UiVolume;
                 public float VoiceChatVolume;
                 public int VoiceChatCutoffPrevention;
                 public float MicrophoneVolume;
@@ -264,7 +265,6 @@ namespace Barotrauma
                 public string VoiceCaptureDevice;
                 
                 public float NoiseGateThreshold;
-                public bool UseLocalVoiceByDefault;
                 public bool DisableVoiceChatFilters;
             }
 
@@ -286,12 +286,13 @@ namespace Barotrauma
                         { InputType.Aim, MouseButton.SecondaryMouse },
 
                         { InputType.InfoTab, Keys.Tab },
-                        { InputType.Chat, Keys.T },
-                        { InputType.RadioChat, Keys.R },
+                        { InputType.Chat, Keys.None },
+                        { InputType.RadioChat, Keys.None },
+                        { InputType.ActiveChat, Keys.T },
                         { InputType.CrewOrders, Keys.C },
 
                         { InputType.Voice, Keys.V },
-                        { InputType.LocalVoice, Keys.B },
+                        { InputType.ToggleChatMode, Keys.R },
                         { InputType.Command, MouseButton.MiddleMouse },
                         { InputType.PreviousFireMode, MouseButton.MouseWheelDown },
                         { InputType.NextFireMode, MouseButton.MouseWheelUp },
@@ -332,14 +333,32 @@ namespace Barotrauma
                         if (!bindings.ContainsKey(inputType)) { bindings.Add(inputType, defaultBindings[inputType]); }
                     }
 
+                    bool playerConfigContainsNewChatBinds = false;
                     foreach (XElement element in elements)
                     {
                         foreach (XAttribute attribute in element.Attributes())
                         {
                             if (Enum.TryParse(attribute.Name.LocalName, out InputType result))
                             {
+                                if (!playerConfigContainsNewChatBinds)
+                                {
+                                    playerConfigContainsNewChatBinds = result == InputType.ActiveChat;
+                                }
                                 bindings[result] = element.GetAttributeKeyOrMouse(attribute.Name.LocalName, bindings[result]);
                             }
+                        }
+                    }
+
+                    // Clear the old chat binds for configs saved before the introduction of the new chat binds
+                    if (!playerConfigContainsNewChatBinds)
+                    {
+                        if (bindings.ContainsKey(InputType.Chat))
+                        {
+                            bindings[InputType.Chat] = Keys.None;
+                        }
+                        if (bindings.ContainsKey(InputType.RadioChat))
+                        {
+                            bindings[InputType.RadioChat] = Keys.None;
                         }
                     }
 

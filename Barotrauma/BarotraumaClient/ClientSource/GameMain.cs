@@ -202,6 +202,8 @@ namespace Barotrauma
         public static bool CancelQuickStart;
 #endif
 
+        public static ChatMode ActiveChatMode { get; set; } = ChatMode.Radio;
+
         public GameMain(string[] args)
         {
             Content.RootDirectory = "Content";
@@ -924,7 +926,7 @@ namespace Barotrauma
                 updateCount++;
 
                 sw.Stop();
-                PerformanceCounter.AddElapsedTicks("Update total", sw.ElapsedTicks);
+                PerformanceCounter.AddElapsedTicks("Update", sw.ElapsedTicks);
                 PerformanceCounter.UpdateTimeGraph.Update(sw.ElapsedTicks * 1000.0f / (float)Stopwatch.Frequency);
             }
 
@@ -1026,7 +1028,7 @@ namespace Barotrauma
             }
 
             sw.Stop();
-            PerformanceCounter.AddElapsedTicks("Draw total", sw.ElapsedTicks);
+            PerformanceCounter.AddElapsedTicks("Draw", sw.ElapsedTicks);
             PerformanceCounter.DrawTimeGraph.Update(sw.ElapsedTicks * 1000.0f / (float)Stopwatch.Frequency);
         }
 

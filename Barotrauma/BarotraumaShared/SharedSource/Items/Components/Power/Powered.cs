@@ -435,7 +435,7 @@ namespace Barotrauma.Items.Components
 
 #if CLIENT
             sw.Stop();
-            GameMain.PerformanceCounter.AddElapsedTicks("GridUpdate", sw.ElapsedTicks);
+            GameMain.PerformanceCounter.AddElapsedTicks("Update:Power", sw.ElapsedTicks);
             sw.Restart();
 #endif
 
@@ -592,7 +592,7 @@ namespace Barotrauma.Items.Components
 
 #if CLIENT
             sw.Stop();
-            GameMain.PerformanceCounter.AddElapsedTicks("PowerUpdate", sw.ElapsedTicks);
+            GameMain.PerformanceCounter.AddElapsedTicks("Update:Power", sw.ElapsedTicks);
 #endif
         }
 

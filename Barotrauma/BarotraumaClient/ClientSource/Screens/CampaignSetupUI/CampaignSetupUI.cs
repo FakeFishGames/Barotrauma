@@ -205,7 +205,10 @@ namespace Barotrauma
             SettingCarouselElement<GameDifficulty> prevDifficulty = difficultyOptions.FirstOrNull(element => element.Value == prevSettings.Difficulty) ?? difficultyOptions[1];
             SettingValue<GameDifficulty> difficultyInput = CreateSelectionCarousel(settingsList.Content, TextManager.Get("leveldifficulty"), TextManager.Get("leveldifficultyexplanation"), prevDifficulty, verticalSize, difficultyOptions);
 
-            SettingValue<int> maxMissionCountInput = CreateGUINumberInputCarousel(settingsList.Content, TextManager.Get("maxmissioncount"), TextManager.Get("maxmissioncounttooltip"), prevSettings.MaxMissionCount, valueStep: 1, verticalSize);
+            SettingValue<int> maxMissionCountInput = CreateGUINumberInputCarousel(settingsList.Content, TextManager.Get("maxmissioncount"), TextManager.Get("maxmissioncounttooltip"),
+                prevSettings.MaxMissionCount,
+                valueStep: 1, minValue: CampaignSettings.MinMissionCountLimit, maxValue: CampaignSettings.MaxMissionCountLimit,
+                verticalSize);
 
             presetDropdown.OnSelected = (selected, o) =>
             {
@@ -231,7 +234,7 @@ namespace Barotrauma
             };
 
             // Create a number input with plus and minus buttons because for some reason the default GUINumberInput buttons don't work when in a GUIMessageBox
-            static SettingValue<int> CreateGUINumberInputCarousel(GUIComponent parent, LocalizedString description, LocalizedString tooltip, int defaultValue, int valueStep, float verticalSize)
+            static SettingValue<int> CreateGUINumberInputCarousel(GUIComponent parent, LocalizedString description, LocalizedString tooltip, int defaultValue, int valueStep, int minValue, int maxValue, float verticalSize)
             {
                 GUILayoutGroup inputContainer = CreateSettingBase(parent, description, tooltip, horizontalSize: 0.55f, verticalSize: verticalSize);
 
@@ -243,7 +246,9 @@ namespace Barotrauma
                 GUINumberInput numberInput = new GUINumberInput(new RectTransform(Vector2.One, inputContainer.RectTransform, Anchor.Center), NumberType.Int, textAlignment: Alignment.Center, style: "GUITextBox",
                     hidePlusMinusButtons: true)
                 {
-                    IntValue = defaultValue
+                    IntValue = defaultValue,
+                    MinValueInt = minValue,
+                    MaxValueInt = maxValue
                 };
                 inputContainer.RectTransform.Parent.MinSize = new Point(0, numberInput.RectTransform.MinSize.Y);
                 GUIButton plusButton = new GUIButton(new RectTransform(Vector2.One, inputContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIPlusButton", textAlignment: Alignment.Center)

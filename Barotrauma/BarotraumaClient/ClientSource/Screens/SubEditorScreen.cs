@@ -1870,7 +1870,8 @@ namespace Barotrauma
                 }
                 addSubAndSaveModProject(modProject, savePath, fileListPath);
             }
-            else if (MainSub?.Info != null
+            else if (MainSub?.Info?.FilePath != null
+                     && MainSub.Info.Name != null
                      && MainSub.Info.FilePath.StartsWith(ContentPackage.LocalModsDir)
                      && MainSub.Info.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
             {
@@ -2321,7 +2322,7 @@ namespace Barotrauma
             };
             new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), beaconMinDifficultyGroup.RectTransform),
                 TextManager.Get("minleveldifficulty"), textAlignment: Alignment.CenterLeft, wrap: true);
-            new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), beaconMinDifficultyGroup.RectTransform), NumberType.Int)
+            var numInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), beaconMinDifficultyGroup.RectTransform), NumberType.Int)
             {
                 IntValue = (int)(MainSub?.Info?.BeaconStationInfo?.MinLevelDifficulty ?? 0),
                 MinValueInt = 0,
@@ -2331,13 +2332,14 @@ namespace Barotrauma
                     MainSub.Info.BeaconStationInfo.MinLevelDifficulty = numberInput.IntValue;
                 }
             };
+            beaconMinDifficultyGroup.RectTransform.MaxSize = numInput.TextBox.RectTransform.MaxSize;
             var beaconMaxDifficultyGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), beaconSettingsContainer.RectTransform), isHorizontal: true)
             {
                 Stretch = true
             };
             new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), beaconMaxDifficultyGroup.RectTransform),
                 TextManager.Get("maxleveldifficulty"), textAlignment: Alignment.CenterLeft, wrap: true);
-            new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), beaconMaxDifficultyGroup.RectTransform), NumberType.Int)
+            numInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), beaconMaxDifficultyGroup.RectTransform), NumberType.Int)
             {
                 IntValue = (int)(MainSub?.Info?.BeaconStationInfo?.MaxLevelDifficulty ?? 100),
                 MinValueInt = 0,
@@ -2347,7 +2349,7 @@ namespace Barotrauma
                     MainSub.Info.BeaconStationInfo.MaxLevelDifficulty = numberInput.IntValue;
                 }
             };
-
+            beaconMaxDifficultyGroup.RectTransform.MaxSize = numInput.TextBox.RectTransform.MaxSize;
             new GUITickBox(new RectTransform(new Vector2(1.0f, 0.25f), beaconSettingsContainer.RectTransform), TextManager.Get("allowdamagedwalls"))
             {
                 Selected = MainSub?.Info?.BeaconStationInfo?.AllowDamagedWalls ?? true,
@@ -2544,6 +2546,10 @@ namespace Barotrauma
                 if (type == SubmarineType.OutpostModule)
                 {
                     MainSub.Info.OutpostModuleInfo ??= new OutpostModuleInfo(MainSub.Info);
+                }
+                else if (type == SubmarineType.BeaconStation)
+                {
+                    MainSub.Info.BeaconStationInfo ??= new BeaconStationInfo(MainSub.Info);
                 }
                 previewImageButtonHolder.Children.ForEach(c => c.Enabled = type != SubmarineType.OutpostModule);
                 outpostSettingsContainer.Visible = type == SubmarineType.OutpostModule;
