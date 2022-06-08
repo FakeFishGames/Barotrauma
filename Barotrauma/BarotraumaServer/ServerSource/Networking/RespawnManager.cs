@@ -392,6 +392,14 @@ namespace Barotrauma.Networking
                 bool forceSpawnInMainSub = false;
                 if (!bot && campaign != null)
                 {
+                    //the client has opted to change the name of their new character
+                    //when the character spawns, set the client's name to match
+                    if (clients[i].PendingName == characterInfos[i].Name)
+                    {
+                        GameMain.Server?.TryChangeClientName(clients[i], clients[i].PendingName);
+                        clients[i].PendingName = null;
+                    }
+
                     var matchingData = campaign?.GetClientCharacterData(clients[i]);
                     if (matchingData != null)
                     {

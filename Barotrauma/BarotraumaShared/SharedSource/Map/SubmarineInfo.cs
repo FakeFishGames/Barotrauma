@@ -109,6 +109,8 @@ namespace Barotrauma
         public bool IsCampaignCompatible => IsPlayer && !HasTag(SubmarineTag.Shuttle) && !HasTag(SubmarineTag.HideInMenus) && SubmarineClass != SubmarineClass.Undefined;
         public bool IsCampaignCompatibleIgnoreClass => IsPlayer && !HasTag(SubmarineTag.Shuttle) && !HasTag(SubmarineTag.HideInMenus);
 
+        public bool AllowPreviewImage => Type == SubmarineType.Player;
+
         public Md5Hash MD5Hash
         {
             get
@@ -556,7 +558,7 @@ namespace Barotrauma
             XDocument doc = new XDocument(newElement);
 
             doc.Root.Add(new XAttribute("name", Name));
-            if (previewImage != null)
+            if (previewImage != null && AllowPreviewImage)
             {
                 doc.Root.Add(new XAttribute("previewimage", Convert.ToBase64String(previewImage.ToArray())));
             }

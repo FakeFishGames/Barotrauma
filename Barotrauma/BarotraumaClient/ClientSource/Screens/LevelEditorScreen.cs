@@ -513,18 +513,18 @@ namespace Barotrauma
             var moduleLabel = new GUITextBlock(new RectTransform(new Point(editorContainer.Content.Rect.Width, (int)(70 * GUI.Scale))), TextManager.Get("submarinetype.outpostmodules"), font: GUIStyle.SubHeadingFont);
             outpostParamsEditor.AddCustomContent(moduleLabel, 100);
 
-            foreach (KeyValuePair<Identifier, int> moduleCount in outpostGenerationParams.ModuleCounts)
+            foreach (var moduleCount in outpostGenerationParams.ModuleCounts)
             {
                 var moduleCountGroup = new GUILayoutGroup(new RectTransform(new Point(editorContainer.Content.Rect.Width, (int)(25 * GUI.Scale))), isHorizontal: true, childAnchor: Anchor.CenterLeft);
-                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), moduleCountGroup.RectTransform), TextManager.Capitalize(moduleCount.Key.Value), textAlignment: Alignment.CenterLeft);
+                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), moduleCountGroup.RectTransform), TextManager.Capitalize(moduleCount.Identifier.Value), textAlignment: Alignment.CenterLeft);
                 new GUINumberInput(new RectTransform(new Vector2(0.5f, 1f), moduleCountGroup.RectTransform), NumberType.Int)
                 {
                     MinValueInt = 0,
                     MaxValueInt = 100,
-                    IntValue = moduleCount.Value,
+                    IntValue = moduleCount.Count,
                     OnValueChanged = (numInput) =>
                     {
-                        outpostGenerationParams.SetModuleCount(moduleCount.Key, numInput.IntValue);
+                        outpostGenerationParams.SetModuleCount(moduleCount.Identifier, numInput.IntValue);
                         if (numInput.IntValue == 0)
                         {
                             outpostParamsList.Select(outpostParamsList.SelectedData);
@@ -540,7 +540,7 @@ namespace Barotrauma
             var addModuleCountGroup = new GUILayoutGroup(new RectTransform(new Point(editorContainer.Content.Rect.Width, (int)(40 * GUI.Scale))), isHorizontal: true, childAnchor: Anchor.Center);
 
             HashSet<Identifier> availableFlags = new HashSet<Identifier>();
-            foreach (Identifier flag in OutpostGenerationParams.OutpostParams.SelectMany(p => p.ModuleCounts.Select(m => m.Key))) { availableFlags.Add(flag); }
+            foreach (Identifier flag in OutpostGenerationParams.OutpostParams.SelectMany(p => p.ModuleCounts.Select(m => m.Identifier))) { availableFlags.Add(flag); }
             foreach (var sub in SubmarineInfo.SavedSubmarines)
             {
                 if (sub.OutpostModuleInfo == null) { continue; }
@@ -551,7 +551,7 @@ namespace Barotrauma
                 text: TextManager.Get("leveleditor.addmoduletype"));
             foreach (Identifier flag in availableFlags)
             {
-                if (outpostGenerationParams.ModuleCounts.Any(mc => mc.Key == flag)) { continue; }
+                if (outpostGenerationParams.ModuleCounts.Any(mc => mc.Identifier == flag)) { continue; }
                 moduleTypeDropDown.AddItem(TextManager.Capitalize(flag.Value), flag);
             }
             moduleTypeDropDown.OnSelected += (_, userdata) =>

@@ -287,6 +287,11 @@ namespace Barotrauma
             InputBox.OnDeselected += (gui, Keys) =>
             {
                 ChatManager.Clear();
+                if (GUIFrame.IsParentOf(GUI.MouseOn))
+                {
+                    CloseAfterMessageSent = false;
+                    return;
+                }
                 ChatMessage.GetChatMessageCommand(InputBox.Text, out var message);
                 if (string.IsNullOrEmpty(message))
                 {

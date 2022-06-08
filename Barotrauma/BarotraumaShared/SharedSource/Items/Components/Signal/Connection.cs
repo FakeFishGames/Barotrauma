@@ -170,6 +170,7 @@ namespace Barotrauma.Items.Components
         public void SetRecipientsDirty()
         {
             recipientsDirty = true;
+            if (IsPower) { Powered.ChangedConnections.Add(this); }
         }
 
         private void RefreshRecipients()

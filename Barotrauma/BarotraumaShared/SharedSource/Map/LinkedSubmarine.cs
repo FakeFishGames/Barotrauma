@@ -215,15 +215,18 @@ namespace Barotrauma
                     saveElement = element
                 };
 
-                if (!string.IsNullOrWhiteSpace(levelSeed) && levelData != null &&
-                    levelData.Seed != levelSeed && !linkedSub.purchasedLostShuttles)
-                {
-                    linkedSub.loadSub = false;
-                }
-                else
+                bool levelMatches = string.IsNullOrWhiteSpace(levelSeed) || levelData == null || levelData.Seed == levelSeed;
+
+                //don't load a sub that was left in this level if we have a submarine switch pending
+                //to make sure it gets ignored during the submarine switch and item transfer (reloading and saving it during the switch makes it not considered "left behind")
+                if ((levelMatches || linkedSub.purchasedLostShuttles) && GameMain.GameSession?.Campaign?.PendingSubmarineSwitch == null)
                 {
                     linkedSub.loadSub = true;
                     linkedSub.rect.Location = MathUtils.ToPoint(pos);
+                }
+                else
+                {
+                    linkedSub.loadSub = false;
                 }
             }
 
@@ -279,14 +282,14 @@ namespace Barotrauma
             if (worldPos != Vector2.Zero)
             {
                 if (GameMain.GameSession != null && GameMain.GameSession.MirrorLevel)
-                {                    
+                {
                     worldPos.X = GameMain.GameSession.LevelData.Size.X - worldPos.X;
                 }
                 sub.SetPosition(worldPos);
             }
             else
             {
-                sub.SetPosition(WorldPosition);                
+                sub.SetPosition(WorldPosition);
             }
 
             DockingPort linkedPort = null;
@@ -308,8 +311,17 @@ namespace Barotrauma
                 {
                     linkedPort = (FindEntityByID(originalLinkedToID) as Item)?.GetComponent<DockingPort>();
                 }
-                if (linkedPort == null) { return; }
             }
+                
+            if (linkedPort == null) 
+            {
+                if (worldPos == Vector2.Zero)
+                {
+                    DebugConsole.ThrowError("Something went wrong when loading a linked submarine - the save didn't include either a world position or a linked port for the submarine.");
+                }
+                return; 
+            }
+
             originalLinkedPort = linkedPort;
 
             ushort originalMyId = childRemap.GetOffsetId(originalMyPortID);

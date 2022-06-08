@@ -230,7 +230,7 @@ namespace Barotrauma
                     if (!matchingCharacterData.HasSpawned) { continue; }
                     characterInfo ??= matchingCharacterData.CharacterInfo;
                 }
-                if (characterInfo == null) { continue; }
+                if (characterInfo == null || characterInfo.Discarded) { continue; }
                 //reduce skills if the character has died
                 if (characterInfo.CauseOfDeath != null && characterInfo.CauseOfDeath.Type != CauseOfDeathType.Disconnected)
                 {
@@ -420,6 +420,8 @@ namespace Barotrauma
                     {
                         discardedCharacters.Add(data);
                     }
+                    DebugConsole.Log($"Client \"{client}\" discarded the character ({data.Name})");
+                    data.CharacterInfo.Discarded = true;
                     characterData.Remove(data);
                     IncrementLastUpdateIdForFlag(NetFlags.CharacterInfo);
                 }

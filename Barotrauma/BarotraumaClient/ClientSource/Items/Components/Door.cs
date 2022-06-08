@@ -222,7 +222,8 @@ namespace Barotrauma.Items.Components
 
             if (brokenSprite != null && item.Health < item.MaxCondition)
             {
-                Vector2 scale = scaleBrokenSprite ? new Vector2(1.0f, 1.0f - item.Health / item.MaxCondition) : Vector2.One;
+                Vector2 scale = scaleBrokenSprite ? new Vector2(1.0f - item.Health / item.MaxCondition) : Vector2.One;
+                if (IsHorizontal) { scale.X = 1; } else { scale.Y = 1; }
                 float alpha = fadeBrokenSprite ? 1.0f - item.Health / item.MaxCondition : 1.0f;
                 spriteBatch.Draw(brokenSprite.Texture, pos,
                     getSourceRect(brokenSprite, openState, IsHorizontal),

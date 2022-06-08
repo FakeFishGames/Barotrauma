@@ -160,13 +160,12 @@ namespace Barotrauma.Tutorials
             radioSpeakerName = TextManager.Get("Tutorial.Radio.Speaker");
             mechanic = Character.Controlled;
 
-            var toolbelt = FindOrGiveItem(mechanic, "toolbelt".ToIdentifier());
-            toolbelt.Unequip(mechanic);
-            mechanic.Inventory.RemoveItem(toolbelt);
-
-            var crowbar = FindOrGiveItem(mechanic, "crowbar".ToIdentifier());
-            crowbar.Unequip(mechanic);
-            mechanic.Inventory.RemoveItem(crowbar);
+            foreach (Item item in mechanic.Inventory.AllItemsMod)
+            {
+                if (item.HasTag("clothing") || item.HasTag("identitycard") || item.HasTag("headset")) { continue; }
+                item.Unequip(mechanic);
+                mechanic.Inventory.RemoveItem(item);
+            }
 
             var repairOrder = OrderPrefab.Prefabs["repairsystems"];
             mechanic_repairIcon = repairOrder.SymbolSprite;
@@ -297,7 +296,10 @@ namespace Barotrauma.Tutorials
 
         public override void Update(float deltaTime)
         {
-            mechanic_brokenhull_1.WaterVolume = MathHelper.Clamp(mechanic_brokenhull_1.WaterVolume, 0, mechanic_brokenhull_1.Volume * 0.85f);
+            if (mechanic_brokenhull_1 != null)
+            {
+                mechanic_brokenhull_1.WaterVolume = MathHelper.Clamp(mechanic_brokenhull_1.WaterVolume, 0, mechanic_brokenhull_1.Volume * 0.85f);
+            }
             base.Update(deltaTime);
         }
 
@@ -413,7 +415,7 @@ namespace Barotrauma.Tutorials
                 }
             } while (mechanic_workingPump.FlowPercentage >= 0 || !mechanic_workingPump.IsActive); // Highlight until draining
             SetHighlight(mechanic_workingPump.Item, false);
-            do { yield return null; } while (mechanic_brokenhull_1.WaterPercentage > waterVolumeBeforeOpening); // Unlock door once drained
+            do { yield return null; } while (mechanic_brokenhull_1 != null && mechanic_brokenhull_1.WaterPercentage > waterVolumeBeforeOpening); // Unlock door once drained
             RemoveCompletedObjective(3);
             GameAnalyticsManager.AddDesignEvent("Tutorial:MechanicTutorial:Objective3");
 

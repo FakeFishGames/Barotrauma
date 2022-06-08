@@ -110,7 +110,7 @@ namespace Barotrauma
             public SettingValue<GameDifficulty> Difficulty;
             public SettingValue<Identifier> StartItemSet;
 
-            public CampaignSettings CreateSettings()
+            public readonly CampaignSettings CreateSettings()
             {
                 return new CampaignSettings(element: null)
                 {

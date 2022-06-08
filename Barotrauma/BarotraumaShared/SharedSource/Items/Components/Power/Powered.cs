@@ -68,7 +68,7 @@ namespace Barotrauma.Items.Components
             get { return poweredList; }
         }
 
-        public static readonly List<Connection> ChangedConnections = new List<Connection>();
+        public static readonly HashSet<Connection> ChangedConnections = new HashSet<Connection>();
 
         public readonly static Dictionary<int, GridInfo> Grids = new Dictionary<int, GridInfo>();
 
@@ -157,6 +157,12 @@ namespace Barotrauma.Items.Components
                 voltage = Math.Max(0.0f, value);
             }
         }
+
+        /// <summary>
+        /// Essentially Voltage / MinVoltage (= how much of the minimum required voltage has been satisfied), clamped between 0 and 1. 
+        /// Can be used by status effects or sounds to check if the item has enough power to run
+        /// </summary>
+        public float RelativeVoltage => minVoltage <= 0.0f ? 1.0f : MathHelper.Clamp(Voltage / minVoltage, 0.0f, 1.0f);
 
         public bool PoweredByTinkering { get; set; }
 

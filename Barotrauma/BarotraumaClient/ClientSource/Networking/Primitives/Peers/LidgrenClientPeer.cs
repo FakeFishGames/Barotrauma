@@ -117,8 +117,6 @@ namespace Barotrauma.Networking
 
             PacketHeader packetHeader = (PacketHeader)inc.ReadByte();
 
-            //Console.WriteLine(isCompressed + " " + isConnectionInitializationStep + " " + (int)incByte);
-
             if (packetHeader.IsConnectionInitializationStep() && initializationStep != ConnectionInitialization.Success)
             {
                 ReadConnectionInitializationStep(new ReadWriteMessage(inc.Data, (int)inc.Position, inc.LengthBits, false));

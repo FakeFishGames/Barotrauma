@@ -73,6 +73,9 @@ namespace Barotrauma.Networking
                 characterInfo = value;
             }
         }
+
+        public string PendingName;
+
         public NetworkConnection Connection { get; set; }
 
         public bool SpectateOnly;

@@ -1,13 +1,22 @@
 ﻿using Barotrauma.Networking;
-using Microsoft.Xna.Framework;
-using System;
-using System.Globalization;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
     partial class Pump : Powered, IServerSerializable, IClientSerializable
     {
+        const float NetworkUpdateInterval = 5.0f;
+        private float networkUpdateTimer;
+
+        partial void UpdateProjSpecific(float deltaTime)
+        {
+            networkUpdateTimer -= deltaTime;
+            if (networkUpdateTimer <= 0.0f)
+            {
+                item.CreateServerEvent(this);
+                networkUpdateTimer = NetworkUpdateInterval;
+            }
+        }
+
         public void ServerEventRead(IReadMessage msg, Client c)
         {
             float newFlowPercentage = msg.ReadRangedInteger(-10, 10) * 10.0f;

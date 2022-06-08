@@ -1,4 +1,42 @@
 ---------------------------------------------------------------------------------------------------------
+v0.18.7.0
+---------------------------------------------------------------------------------------------------------
+
+Unstable only: 
+- Reduced depth charge scale to fit in loader/racks better.
+- Fixed ballast flora dying by itself client-side when transitioning to a new level.
+- Disallow laying in vertically flipped normal bunks.
+- Fixed broken door sprite stretching on the wrong axis when cutting a door.
+- Fixed AI orders not working in multiplayer.
+- Fixed tutorial characters starting with more items than they should.
+- Fixed chat box closing when clicking any chat box elements after opening it with the keybind.
+- Fixed submarine selection resetting when changing server settings in the campaign setup menu.
+- Fixed "enable" and "disable" being wrong way around in the mod tab's context menus.
+- Fixed sub editor always saving subs from a local mod in the root of that mod's folder instead of the actual location of that sub file.
+- Fixed decoys not being containable in wrecked coilgun ammo shelves.
+- Fixes and improvements to the new beacon stations and the enemies inside them.
+- Fixed an issue during submarine switching when a drone / linked sub has been left behind (Regalis11/Barotrauma#9172): When you were switching back to a submarine whose drone you'd left behind, in the same level where you left the drone, the drone would get loaded and resaved during the item transfer, which caused it to no longer be considered "left behind". It also removed the drone's position from the save, and since it was not docked to anything either, positioning it failed at the beginning of the next round.
+
+Changes:
+- Adding preview images to wrecks, beacon stations, outposts or enemy subs isn't allowed in the sub editor (unnecessarily bloats up their file size, as the preview images aren't visible anywhere).
+
+Fixes:
+- Fixed server not refreshing the power grid when a client disconnects and reconnects a power wire.
+- Fixed hull updates not being sent if the water/oxygen/fire in the hull doesn't change server-side, preventing the hull's status from getting corrected if a client somehow ends up out of sync.
+- Fixed keybinds shown in the controls tab not refreshing when resetting the binds.
+- Hopefully fixed colonies sometimes not including some modules (most often the armory module).
+- Fixed ready checks sometimes ending at a slightly different time client-side compared to the server, allowing you to answer the prompt even though the time to answer already ended server-side.
+- Fixed large terminal welcome messages going slightly outside the bounds of the listbox.
+- Fixed overlapping in the tab menu's mission tab when there's more than one mission selected.
+- Fixed fabricators and deconstructors playing the sounds even if they're out of power.
+- Fixed occasional "hash mismatch for downloaded mod" errors on Linux.
+- Fixed clients occasionally spawning as the old character after they've opted to create a new one. Only happened if the client hadn't died and was still controlling the old character at the end of the round.
+- When a client creates a character with a new name, the client's name is changed to match it after they spawn as that character.
+- Fixed enabled mods getting disabled when updating them in the mods menu.
+- Fixed a rounding error in Sprite.DrawTiled that sometimes caused an extra 1-pixel line on some scaled and flipped structures (e.g. certain wall pieces scaled to 0.6).
+- Fixed Orca 2 still using the old chaingun charge time.
+
+---------------------------------------------------------------------------------------------------------
 v0.18.6.0
 ---------------------------------------------------------------------------------------------------------
 

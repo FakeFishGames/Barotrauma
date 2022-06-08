@@ -49,6 +49,9 @@ namespace Barotrauma
         [Serialize("", IsPropertySaveable.Yes)]
         public Identifier SpawnPointTag { get; set; }
 
+        [Serialize(CharacterTeamType.FriendlyNPC, IsPropertySaveable.Yes)]
+        public CharacterTeamType Team { get; protected set; }
+
         [Serialize(false, IsPropertySaveable.Yes, description: "Should we spawn the entity even when no spawn points with matching tags were found?")]
         public bool RequireSpawnPointTag { get; set; }
 
@@ -119,7 +122,7 @@ namespace Barotrauma
                         {
                             if (newCharacter == null) { return; }
                             newCharacter.HumanPrefab = humanPrefab;
-                            newCharacter.TeamID = CharacterTeamType.FriendlyNPC;
+                            newCharacter.TeamID = Team;
                             newCharacter.EnableDespawn = false;
                             humanPrefab.GiveItems(newCharacter, newCharacter.Submarine);
                             if (LootingIsStealing)

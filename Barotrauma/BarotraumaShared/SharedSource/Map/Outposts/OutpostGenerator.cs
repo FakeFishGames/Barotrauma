@@ -99,7 +99,7 @@ namespace Barotrauma
                     {
                         //if the module doesn't have the ruin flag or any other flag used in the generation params, don't use it in ruins
                         if (!subInfo.OutpostModuleInfo.ModuleFlags.Contains("ruin".ToIdentifier()) &&
-                            !generationParams.ModuleCounts.Any(m => subInfo.OutpostModuleInfo.ModuleFlags.Contains(m.Key)))
+                            !generationParams.ModuleCounts.Any(m => subInfo.OutpostModuleInfo.ModuleFlags.Contains(m.Identifier)))
                         {
                             continue;
                         }
@@ -141,16 +141,11 @@ namespace Barotrauma
 
                 selectedModules.Clear();
                 //select which module types the outpost should consist of
-                List<Identifier> pendingModuleFlags;
-                using (var md5 = MD5.Create())
-                {
-                    #warning TODO: cursed
-                    pendingModuleFlags = onlyEntrance
-                        ? generationParams.ModuleCounts
-                                .Keys.OrderBy(k => ToolBox.IdentifierToUint32Hash(k, md5))
-                                .First().ToEnumerable().ToList()
-                        : SelectModules(outpostModules, generationParams);
-                }
+                List<Identifier> pendingModuleFlags  =
+                    onlyEntrance ? 
+                    generationParams.ModuleCounts.First().Identifier.ToEnumerable().ToList() :
+                    SelectModules(outpostModules, generationParams);
+                
                 foreach (Identifier flag in pendingModuleFlags)
                 {
                     if (flag == "none") { continue; }
@@ -437,31 +432,27 @@ namespace Barotrauma
             var pendingModuleFlags = new List<Identifier>();
             bool availableModulesFound = true;
 
-            Identifier initialModuleFlag = generationParams.ModuleCounts.FirstOrDefault().Key;
+            Identifier initialModuleFlag = generationParams.ModuleCounts.FirstOrDefault().Identifier;
             pendingModuleFlags.Add(initialModuleFlag);
             while (pendingModuleFlags.Count < totalModuleCount && availableModulesFound)
             {
                 availableModulesFound = false;
                 foreach (var moduleFlag in generationParams.ModuleCounts)
                 {
-                    if (pendingModuleFlags.Count(m => m == moduleFlag.Key) >= generationParams.GetModuleCount(moduleFlag.Key))
+                    if (pendingModuleFlags.Count(m => m == moduleFlag.Identifier) >= generationParams.GetModuleCount(moduleFlag.Identifier))
                     {
                         continue;
                     }
-                    if (!modules.Any(m => m.OutpostModuleInfo.ModuleFlags.Contains(moduleFlag.Key)))
+                    if (!modules.Any(m => m.OutpostModuleInfo.ModuleFlags.Contains(moduleFlag.Identifier)))
                     {
-                        DebugConsole.ThrowError($"Failed to add a module to the outpost (no modules with the flag \"{moduleFlag.Key}\" found).");
+                        DebugConsole.ThrowError($"Failed to add a module to the outpost (no modules with the flag \"{moduleFlag.Identifier}\" found).");
                         continue;
                     }
                     availableModulesFound = true;
-                    pendingModuleFlags.Add(moduleFlag.Key);
+                    pendingModuleFlags.Add(moduleFlag.Identifier);
                 }
             }
-            using (MD5 md5 = MD5.Create())
-            {
-                pendingModuleFlags.Sort((i1, i2) => (int)ToolBox.StringToUInt32Hash(i1.Value.ToLowerInvariant(), md5) - (int)ToolBox.StringToUInt32Hash(i2.Value.ToLowerInvariant(), md5));
-            }
-            pendingModuleFlags.Shuffle(Rand.RandSync.ServerAndClient);
+            pendingModuleFlags.OrderBy(f => generationParams.ModuleCounts.First(m => m.Identifier == f)).ThenBy(f => Rand.Value(Rand.RandSync.ServerAndClient));
             while (pendingModuleFlags.Count < totalModuleCount)
             {
                 //don't place "none" modules at the end because
@@ -610,7 +601,7 @@ namespace Barotrauma
 
             Identifier flagToPlace = "none".ToIdentifier();
             SubmarineInfo nextModule = null;
-            foreach (Identifier moduleFlag in pendingModuleFlags)
+            foreach (Identifier moduleFlag in pendingModuleFlags.OrderByDescending(f => currentModule?.Info?.OutpostModuleInfo.AllowAttachToModules.Contains(f) ?? false))
             {
                 flagToPlace = moduleFlag;
                 nextModule = GetRandomModule(currentModule?.Info?.OutpostModuleInfo, availableModules, flagToPlace, gapPosition, locationType, allowDifferentLocationType);
@@ -1047,6 +1038,17 @@ namespace Barotrauma
                 bool isHorizontal =
                     module.ThisGapPosition == OutpostModuleInfo.GapPosition.Left ||
                     module.ThisGapPosition == OutpostModuleInfo.GapPosition.Right;
+
+                if (!module.ThisGap.linkedTo.Any())
+                {
+                    DebugConsole.ThrowError($"Error during outpost generation: {module.ThisGapPosition} gap in module \"{module.Info.Name}\" was not linked to any hulls.");
+                    continue;
+                }
+                if (!module.PreviousGap.linkedTo.Any())
+                {
+                    DebugConsole.ThrowError($"Error during outpost generation: {GetOpposingGapPosition(module.ThisGapPosition)} gap in module \"{module.PreviousModule.Info.Name}\" was not linked to any hulls.");
+                    continue;
+                }
 
                 MapEntity leftHull = module.ThisGap.Position.X < module.PreviousGap.Position.X ? module.ThisGap.linkedTo[0] : module.PreviousGap.linkedTo[0];
                 MapEntity rightHull = module.ThisGap.Position.X > module.PreviousGap.Position.X ?

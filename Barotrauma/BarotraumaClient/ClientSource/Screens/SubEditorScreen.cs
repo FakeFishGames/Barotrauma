@@ -1549,6 +1549,11 @@ namespace Barotrauma
             MapEntity.DeselectAll();
             ClearUndoBuffer();
 
+            GameMain.DebugDraw = false;
+            GameMain.LightManager.LightingEnabled = true;
+            Hull.EditWater = false;
+            Hull.EditFire = false;
+
             SetMode(Mode.Default);
 
             SoundPlayer.OverrideMusicType = Identifier.Empty;
@@ -1586,7 +1591,7 @@ namespace Barotrauma
 
         private void CreateDummyCharacter()
         {
-            if (dummyCharacter != null) RemoveDummyCharacter();
+            if (dummyCharacter != null) { RemoveDummyCharacter(); }
 
             dummyCharacter = Character.Create(CharacterPrefab.HumanSpeciesName, Vector2.Zero, "", id: Entity.DummyID, hasAi: false);
             dummyCharacter.Info.Name = "Galldren";
@@ -1876,21 +1881,15 @@ namespace Barotrauma
                      && MainSub.Info.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
             {
                 prevSavePath = MainSub.Info.FilePath.CleanUpPath();
-                string prevDir = Path.GetDirectoryName(MainSub.Info.FilePath).CleanUpPath();
-
-                ModProject modProject = new ModProject { Name = name };
-                string fileListPath = null;
-                
                 ContentPackage contentPackage = GetLocalPackageThatOwnsSub(MainSub.Info);
-                if (contentPackage != null)
+                if (contentPackage == null)
                 {
-                    modProject = new ModProject(contentPackage);                        
-                    fileListPath = contentPackage.Path;
-                    packageToSaveTo = contentPackage;
+                    throw new InvalidOperationException($"Tried to overwrite a submarine ({name}) that's not in a local package!");
                 }
-                
-                savePath = Path.Combine(prevDir, savePath).CleanUpPath();
-                addSubAndSaveModProject(modProject, savePath, fileListPath ?? Path.Combine(Path.GetDirectoryName(savePath), ContentPackage.FileListFileName));
+                ModProject modProject = new ModProject(contentPackage);
+                packageToSaveTo = contentPackage;
+                savePath = prevSavePath;
+                addSubAndSaveModProject(modProject, savePath, contentPackage.Path);
             }
             else
             {
@@ -2074,8 +2073,8 @@ namespace Barotrauma
 
             new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), outpostModuleGroup.RectTransform), TextManager.Get("outpostmoduletype"), textAlignment: Alignment.CenterLeft);
             HashSet<Identifier> availableFlags = new HashSet<Identifier>();
-            foreach (Identifier flag in OutpostGenerationParams.OutpostParams.SelectMany(p => p.ModuleCounts.Select(m => m.Key))) { availableFlags.Add(flag); }
-            foreach (Identifier flag in RuinGeneration.RuinGenerationParams.RuinParams.SelectMany(p => p.ModuleCounts.Select(m => m.Key))) { availableFlags.Add(flag); }
+            foreach (Identifier flag in OutpostGenerationParams.OutpostParams.SelectMany(p => p.ModuleCounts.Select(m => m.Identifier))) { availableFlags.Add(flag); }
+            foreach (Identifier flag in RuinGeneration.RuinGenerationParams.RuinParams.SelectMany(p => p.ModuleCounts.Select(m => m.Identifier))) { availableFlags.Add(flag); }
             foreach (var sub in SubmarineInfo.SavedSubmarines)
             {
                 if (sub.OutpostModuleInfo == null) { continue; }
@@ -2551,11 +2550,9 @@ namespace Barotrauma
                 {
                     MainSub.Info.BeaconStationInfo ??= new BeaconStationInfo(MainSub.Info);
                 }
-                previewImageButtonHolder.Children.ForEach(c => c.Enabled = type != SubmarineType.OutpostModule);
+                previewImageButtonHolder.Children.ForEach(c => c.Enabled = MainSub.Info.AllowPreviewImage);
                 outpostSettingsContainer.Visible = type == SubmarineType.OutpostModule;
-
                 beaconSettingsContainer.Visible = type == SubmarineType.BeaconStation;
-
                 subSettingsContainer.Visible = type == SubmarineType.Player;
                 return true;
             };
@@ -2572,6 +2569,7 @@ namespace Barotrauma
 
             new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), previewImageButtonHolder.RectTransform), TextManager.Get("SubPreviewImageCreate"), style: "GUIButtonSmall")
             {
+                Enabled = MainSub?.Info.AllowPreviewImage ?? false,
                 OnClicked = (btn, userdata) =>
                 {
                     using (System.IO.MemoryStream imgStream = new System.IO.MemoryStream())
@@ -2589,6 +2587,7 @@ namespace Barotrauma
 
             new GUIButton(new RectTransform(new Vector2(0.5f, 1.0f), previewImageButtonHolder.RectTransform), TextManager.Get("SubPreviewImageBrowse"), style: "GUIButtonSmall")
             {
+                Enabled = MainSub?.Info.AllowPreviewImage ?? false,
                 OnClicked = (btn, userdata) =>
                 {
                     FileSelection.OnFileSelected = (file) =>

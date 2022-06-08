@@ -562,10 +562,10 @@ namespace Barotrauma.Steam
                                 = (parentList == enabledRegularModsList, parentList.AllSelected.Count > 1);
                             Identifier swapLabel = (labelConditions switch
                             {
-                                (true, true) => "EnableSelectedWorkshopMods",
-                                (true, false) => "EnableWorkshopMod",
-                                (false, true) => "DisableSelectedWorkshopMods",
-                                (false, false) => "DisableWorkshopMod"
+                                (false, true) => "EnableSelectedWorkshopMods",
+                                (false, false) => "EnableWorkshopMod",
+                                (true, true) => "DisableSelectedWorkshopMods",
+                                (true, false) => "DisableWorkshopMod"
                             }).ToIdentifier();
                             
                             contextMenuOptions.Add(new ContextMenuOption(swapLabel,

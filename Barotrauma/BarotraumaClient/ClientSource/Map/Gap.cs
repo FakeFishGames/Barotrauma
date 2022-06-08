@@ -33,7 +33,7 @@ namespace Barotrauma
                     DrawArrow(FlowTargetHull, IsHorizontal ? rect.Height: rect.Width, Math.Abs(lerpedFlowForce.Length()), Color.Red * 0.3f);
                 }
 
-                if (outsideCollisionBlocker.Enabled && Submarine != null)
+                if (Submarine != null && outsideCollisionBlocker != null && outsideCollisionBlocker.Enabled)
                 {
                     var edgeShape = outsideCollisionBlocker.FixtureList[0].Shape as FarseerPhysics.Collision.Shapes.EdgeShape;
                     Vector2 startPos = ConvertUnits.ToDisplayUnits(outsideCollisionBlocker.GetWorldPoint(edgeShape.Vertex1)) + Submarine.Position;

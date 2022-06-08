@@ -8,7 +8,7 @@ namespace Barotrauma
     partial class SubmarineInfo : IDisposable
     {
         public Sprite PreviewImage;
-        
+
         partial void InitProjectSpecific()
         {
             string previewImageData = SubmarineElement.GetAttributeString("previewimage", "");

@@ -2,10 +2,7 @@
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using Barotrauma.Extensions;
-using Barotrauma.MapCreatures.Behavior;
 
 namespace Barotrauma
 {
@@ -39,9 +36,9 @@ namespace Barotrauma
                 return;
             }
 
-            statusUpdateTimer -= deltaTime;
-            decalUpdateTimer -= deltaTime;
-            backgroundSectionUpdateTimer -= deltaTime;
+            statusUpdateTimer += deltaTime;
+            decalUpdateTimer += deltaTime;
+            backgroundSectionUpdateTimer += deltaTime;
 
             //update client hulls if the amount of water has changed by >10%
             //or if oxygen percentage has changed by 5%
@@ -49,33 +46,32 @@ namespace Barotrauma
                 (Math.Abs(lastSentVolume - waterVolume) > Volume * 0.1f
                     || Math.Abs(lastSentOxygen - OxygenPercentage) > 5f
                     || lastSentFireCount != FireSources.Count)
-                && statusUpdateTimer <= 0.0f;
+                && (statusUpdateTimer > NetConfig.HullUpdateInterval);
 
-            if (shouldSendStatusUpdate)
+            //force an update every 5 seconds even if nothing's changed (in case a client's gotten out of sync somehow)
+            if (shouldSendStatusUpdate || statusUpdateTimer > NetConfig.SparseHullUpdateInterval)
             {
-                GameMain.NetworkMember.CreateEntityEvent(this, new StatusEventData());
-                
+                GameMain.NetworkMember.CreateEntityEvent(this, new StatusEventData());                
                 lastSentVolume = waterVolume;
                 lastSentOxygen = OxygenPercentage;
                 lastSentFireCount = FireSources.Count;
-                
-                statusUpdateTimer = NetConfig.SparseHullUpdateInterval;
+                statusUpdateTimer = 0;
             }
-            if (decalUpdatePending && decalUpdateTimer <= 0.0f)
+            if (decalUpdatePending && decalUpdateTimer > NetConfig.HullUpdateInterval)
             {
                 GameMain.NetworkMember.CreateEntityEvent(this, new DecalEventData());
 
-                decalUpdateTimer = NetConfig.HullUpdateInterval;
+                decalUpdateTimer = 0;
                 decalUpdatePending = false;
             }
-            if (pendingSectionUpdates.Count > 0 && backgroundSectionUpdateTimer <= 0.0f)
+            if (pendingSectionUpdates.Count > 0 && backgroundSectionUpdateTimer > NetConfig.HullUpdateInterval)
             {
                 foreach (int pendingSectionUpdate in pendingSectionUpdates)
                 {
                     GameMain.NetworkMember.CreateEntityEvent(this, new BackgroundSectionsEventData(pendingSectionUpdate));
                 }
                 
-                backgroundSectionUpdateTimer = NetConfig.HullUpdateInterval;
+                backgroundSectionUpdateTimer = 0;
                 pendingSectionUpdates.Clear();
             }
         }

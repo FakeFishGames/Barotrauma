@@ -1046,7 +1046,7 @@ namespace Barotrauma.Networking
                         c.LastRecvChatMsgID = NetIdUtils.Clamp(inc.ReadUInt16(), c.LastRecvChatMsgID, c.LastChatMsgQueueID);
                         c.LastRecvClientListUpdate = NetIdUtils.Clamp(inc.ReadUInt16(), c.LastRecvClientListUpdate, LastClientListUpdateID);
 
-                        TryChangeClientName(c, inc);
+                        ReadClientNameChange(c, inc);
 
                         c.LastRecvCampaignSave = inc.ReadUInt16();
                         if (c.LastRecvCampaignSave > 0)
@@ -2675,7 +2675,7 @@ namespace Barotrauma.Networking
             base.AddChatMessage(message);
         }
 
-        private bool TryChangeClientName(Client c, IReadMessage inc)
+        private bool ReadClientNameChange(Client c, IReadMessage inc)
         {
             UInt16 nameId = inc.ReadUInt16();
             string newName = inc.ReadString();
@@ -2685,16 +2685,21 @@ namespace Barotrauma.Networking
             if (c == null || string.IsNullOrEmpty(newName) || !NetIdUtils.IdMoreRecent(nameId, c.NameID)) { return false; }
 
             c.NameID = nameId;
-            newName = Client.SanitizeName(newName);
             if (newName == c.Name && newJob == c.PreferredJob && newTeam == c.PreferredTeam) { return false; }
             c.PreferredJob = newJob;
             c.PreferredTeam = newTeam;
 
+            return TryChangeClientName(c, newName);
+        }
+
+        public bool TryChangeClientName(Client c, string newName)
+        {
+            newName = Client.SanitizeName(newName);
             //update client list even if the name cannot be changed to the one sent by the client,
             //so the client will be informed what their actual name is
             LastClientListUpdateID++;
 
-            if (newName == c.Name) { return false; }
+            if (newName == c.Name || string.IsNullOrEmpty(newName)) { return false; }
 
             if (IsNameValid(c, newName))
             {
@@ -2709,6 +2714,7 @@ namespace Barotrauma.Networking
                 return false;
             }
         }
+
 
         private bool IsNameValid(Client c, string newName)
         {
@@ -3541,6 +3547,10 @@ namespace Barotrauma.Networking
                 if (!IsNameValid(sender, newName))
                 {
                     newName = sender.Name;
+                }
+                else
+                {
+                    sender.PendingName = newName;
                 }
             }
 

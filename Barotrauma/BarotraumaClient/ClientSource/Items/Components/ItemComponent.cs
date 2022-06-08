@@ -405,7 +405,7 @@ namespace Barotrauma.Items.Components
                 float newVolume;
                 try
                 {
-                    newVolume = property.GetFloatValue(this);
+                    newVolume = Math.Min(property.GetFloatValue(this), 1.0f);
                 }
                 catch
                 {

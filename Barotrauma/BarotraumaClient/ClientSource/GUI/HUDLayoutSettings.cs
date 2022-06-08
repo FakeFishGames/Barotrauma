@@ -15,7 +15,7 @@ namespace Barotrauma
             get { return inventoryTopY; }
             set
             {
-                if (value == inventoryTopY) return;
+                if (value == inventoryTopY) { return; }
                 inventoryTopY = value;
                 CreateAreas();
             }
@@ -91,8 +91,6 @@ namespace Barotrauma
             if (GameMain.Instance != null)
             {
                 GameMain.Instance.ResolutionChanged += CreateAreas;
-                #warning TODO: reimplement
-                //GameSettings.CurrentConfig.OnHUDScaleChanged += CreateAreas;
                 CreateAreas();
                 CharacterInfo.Init();
             }

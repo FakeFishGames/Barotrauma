@@ -619,6 +619,11 @@ namespace Barotrauma
                         if (parentObject is Powered powered) { value = powered.Voltage; return true; }
                     }
                     break;
+                case nameof(Powered.RelativeVoltage):
+                    {
+                        if (parentObject is Powered powered) { value = powered.RelativeVoltage; return true; }
+                    }
+                    break;
                 case nameof(Powered.CurrPowerConsumption):
                     {
                         if (parentObject is Powered powered) { value = powered.CurrPowerConsumption; return true; }

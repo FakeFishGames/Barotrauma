@@ -220,7 +220,7 @@ namespace Barotrauma
             };
         }
 
-        private string Percentage(float v) => $"{Round(v * 100)}%";
+        private string Percentage(float v) => TextManager.GetWithVariable("percentageformat", "[value]", Round(v * 100).ToString()).Value;
 
         private int Round(float v) => (int)MathF.Round(v);
         
@@ -647,6 +647,8 @@ namespace Barotrauma
                     {
                         unsavedConfig.InventoryKeyMap = GameSettings.Config.InventoryKeyMapping.GetDefault();
                         unsavedConfig.KeyMap = GameSettings.Config.KeyMapping.GetDefault();
+                        Create(mainFrame.Parent.RectTransform);
+                        Instance?.SelectTab(Tab.Controls);
                         return true; 
                     }
                 };

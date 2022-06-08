@@ -1,10 +1,9 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.MapCreatures.Behavior;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Globalization;
 using System.Linq;
-using System.Xml.Linq;
-using Barotrauma.MapCreatures.Behavior;
 
 namespace Barotrauma.Items.Components
 {
@@ -24,7 +23,10 @@ namespace Barotrauma.Items.Components
                 if (value == hijacked) { return; }
                 hijacked = value;
 #if SERVER
-                item.CreateServerEvent(this);
+                if (!Submarine.Unloading)
+                {
+                    item.CreateServerEvent(this);
+                }
 #endif
             }
         }

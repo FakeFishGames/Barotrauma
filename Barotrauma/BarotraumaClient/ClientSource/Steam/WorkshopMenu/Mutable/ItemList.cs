@@ -595,6 +595,12 @@ namespace Barotrauma.Steam
                 {
                     ContentPackageManager.WorkshopPackages.Refresh();
                     ContentPackageManager.EnabledPackages.RefreshUpdatedMods();
+                    var package = ContentPackageManager.WorkshopPackages.FirstOrDefault(p => p.SteamWorkshopId == workshopItem.Id);
+                    if (package is RegularPackage regular)
+                    {
+                        ContentPackageManager.EnabledPackages.EnableRegular(regular);
+                    }
+                    PopulateInstalledModLists(forceRefreshEnabled: true);
                 });
                 return false;
             }

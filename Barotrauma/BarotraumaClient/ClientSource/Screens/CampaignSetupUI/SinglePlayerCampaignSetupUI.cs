@@ -210,8 +210,17 @@ namespace Barotrauma
                 {
                     CreateCustomizeWindow(CurrentSettings, settings =>
                     {
+                        CampaignSettings prevSettings = CurrentSettings;
                         CurrentSettings = settings;
-                        UpdateSubList(SubmarineInfo.SavedSubmarines);
+                        if (prevSettings.InitialMoney != settings.InitialMoney)
+                        {
+                            object selectedData = subList.SelectedData;
+                            UpdateSubList(SubmarineInfo.SavedSubmarines);
+                            if (selectedData is SubmarineInfo selectedSub && selectedSub.Price <= CurrentSettings.InitialMoney)
+                            {
+                                subList.Select(selectedData);
+                            }
+                        }
                     });
                     return true;
                 }
@@ -519,7 +528,7 @@ namespace Barotrauma
                 subsToShow = submarines.Where(s => s.IsCampaignCompatibleIgnoreClass && Path.GetDirectoryName(Path.GetFullPath(s.FilePath)) != downloadFolder).ToList();
             }
 
-            subsToShow.Sort((s1, s2) => 
+            subsToShow.Sort((s1, s2) =>
             {
                 int p1 = s1.Price > CurrentSettings.InitialMoney ? 10 : 0;
                 int p2 = s2.Price > CurrentSettings.InitialMoney ? 10 : 0;
@@ -537,7 +546,7 @@ namespace Barotrauma
                         ToolTip = sub.Description,
                         UserData = sub
                     };
-                               
+
                 if (!sub.RequiredContentPackagesInstalled)
                 {
                     textBlock.TextColor = Color.Lerp(textBlock.TextColor, Color.DarkRed, .5f);

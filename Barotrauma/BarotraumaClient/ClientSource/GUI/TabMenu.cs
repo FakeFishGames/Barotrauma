@@ -1559,10 +1559,10 @@ namespace Barotrauma
                     RichString missionReputationString = RichString.Rich(reputationText, wrapMissionText(GUIStyle.Font));
                     RichString missionDescriptionString = RichString.Rich(descriptionText, wrapMissionText(GUIStyle.Font));
 
-                    Vector2 missionNameSize = GUIStyle.LargeFont.MeasureString(missionNameString);
-                    Vector2 missionDescriptionSize = GUIStyle.Font.MeasureString(missionDescriptionString);
-                    Vector2 missionRewardSize = GUIStyle.Font.MeasureString(missionRewardString);
-                    Vector2 missionReputationSize = GUIStyle.Font.MeasureString(missionReputationString);
+                    Vector2 missionNameSize = GUIStyle.LargeFont.MeasureString(missionNameString.SanitizedValue);
+                    Vector2 missionDescriptionSize = GUIStyle.Font.MeasureString(missionDescriptionString.SanitizedValue);
+                    Vector2 missionRewardSize = GUIStyle.Font.MeasureString(missionRewardString.SanitizedValue);
+                    Vector2 missionReputationSize = GUIStyle.Font.MeasureString(missionReputationString.SanitizedValue);
 
                     float ySize = missionNameSize.Y + missionDescriptionSize.Y + missionRewardSize.Y + missionReputationSize.Y + missionTextGroup.AbsoluteSpacing * 4;
                     bool displayDifficulty = mission.Difficulty.HasValue;

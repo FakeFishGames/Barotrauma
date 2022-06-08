@@ -227,9 +227,13 @@ namespace Barotrauma
                     {
                         mainLimb = Limbs.FirstOrDefault(l => IsValid(l));
                     }
+                    if (mainLimb == null)
+                    {
+                        DebugConsole.ThrowError("Couldn't find a valid main limb. The limb can't be hidden nor be set to ignore collisions!");
+                        mainLimb = Limbs.FirstOrDefault();
+                    }
                 }
-
-                bool IsValid(Limb limb) => limb != null && !limb.IsSevered && !limb.IgnoreCollisions && !limb.Hidden;
+                static bool IsValid(Limb limb) => limb != null && !limb.IsSevered && !limb.IgnoreCollisions && !limb.Hidden;
                 return mainLimb;
             }
         }

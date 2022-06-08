@@ -1200,7 +1200,14 @@ namespace Barotrauma.Networking
                     new LocalizedString[] { TextManager.Get("Cancel") });
                 reconnectBox.Buttons[0].OnClicked += (btn, userdata) => { CancelConnect(); return true; };
                 connected = false;
+
+                var prevContentPackages = clientPeer.ServerContentPackages;
                 ConnectToServer(serverEndpoint, serverName);
+                if (clientPeer != null)
+                {
+                    //restore the previous list of content packages so we can reconnect immediately without having to recheck that the packages match
+                    clientPeer.ServerContentPackages = prevContentPackages;
+                }
             }
             else
             {

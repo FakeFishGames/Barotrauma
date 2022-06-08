@@ -58,6 +58,8 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
+
+            layoutGroup.Recalculate();
         }
 
         // Create fillerBlock to cover historyBox so new values appear at the bottom of historyBox

@@ -480,6 +480,8 @@ namespace Barotrauma
             bool voiceCaptureChanged = currentConfig.Audio.VoiceCaptureDevice != newConfig.Audio.VoiceCaptureDevice;
             bool textScaleChanged = Math.Abs(currentConfig.Graphics.TextScale - newConfig.Graphics.TextScale) > MathF.Pow(2.0f, -7);
 
+            bool hudScaleChanged = !MathUtils.NearlyEqual(currentConfig.Graphics.HUDScale, newConfig.Graphics.HUDScale);
+
             bool setGraphicsMode =
                 resolutionChanged ||
                 currentConfig.Graphics.VSync != newConfig.Graphics.VSync ||
@@ -513,6 +515,10 @@ namespace Barotrauma
                 {
                     componentStyle.RefreshSize();
                 }
+            }
+            if (hudScaleChanged)
+            {
+                HUDLayoutSettings.CreateAreas();
             }
             
             GameMain.SoundManager?.ApplySettings();
