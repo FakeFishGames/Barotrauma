@@ -133,6 +133,8 @@ namespace Barotrauma
                 
                 prefabCollection
                     .Cast<IImplementsVariants<T>>()
+                    // don't return the prefab instance that triggered the query
+                    .Where(p => p != prefab)
                     .Where(p => p.VariantOf == id)
                     .Cast<T>()
                     .ForEach(p =>
@@ -174,12 +176,34 @@ namespace Barotrauma
             public void InvokeCallbacks()
             {
                 HashSet<Node> uncheckedNodes = IdToNode.Values.ToHashSet();
+                // We no longer need to worry about parent self references, but maybe this will still catch other issues???
                 IdToNode.Values.ForEach(v => FindCycles(v, uncheckedNodes));
                 void invokeCallbacksForNode(Node node)
                 {
-                    if (!prefabCollection.TryGet(node.Identifier, out var p) ||
-                        !(p is IImplementsVariants<T> prefab)) { return; }
-                    if (!prefab.VariantOf.IsEmpty && prefabCollection.TryGet(prefab.VariantOf, out T? parent)) { prefab.InheritFrom(parent!); }
+                    if (!prefabCollection.TryGet(node.Identifier, out var p) || !(p is IImplementsVariants<T> prefab)) { return; }
+
+                    if (!prefab.VariantOf.IsEmpty)
+                    {
+                        // If the item is a inheriting from itself, it likely wants to override a previous version.
+                        if (node.Identifier.Equals(prefab.VariantOf))
+                        {
+                            // Try to get the previous version to make the parent.
+                            if (prefabCollection.TryGetPrevious(prefab.VariantOf, out T? parent))
+                            {
+                                prefab.InheritFrom(parent!);
+                                // Return because inherits for parent where already processed earlier.
+                                // Not doing this will cause an infinite loop of sadness.
+                                return;
+                            } else
+                            {
+                                // There is no parent to inherit from. Best to error now rather that leave a potentially incomplete prefab.
+                                throw new Exception($"Failed to find previous selector for \"{node.Identifier}\" to inherit from.");
+                            }
+                        } else if (prefabCollection.TryGet(prefab.VariantOf, out T? parent))
+                        {
+                            prefab.InheritFrom(parent!);
+                        }
+                    }
                     node.Inheritors.ForEach(invokeCallbacksForNode);
                 }
                 RootNodes.ForEach(invokeCallbacksForNode);
@@ -266,6 +290,27 @@ namespace Barotrauma
         public bool TryGet(string identifier, out T? result)
             => TryGet(identifier.ToIdentifier(), out result);
 
+        /// <summary>
+        /// Returns true if there is a non-active prefab if exists, false otherwise.
+        /// </summary>
+        /// <param name="identifier">Prefab identifier</param>
+        /// <param name="result">The first non-active prefab (if one is found)</param>
+        /// <returns>Whether a previous prefab with the identifier exists</returns>
+        public bool TryGetPrevious(Identifier identifier, out T? result)
+        {
+            Prefab.DisallowCallFromConstructor();
+            if (prefabs.TryGetValue(identifier, out PrefabSelector<T>? selector))
+            {
+                result = selector!.PreviousPrefab;
+                return result != null;
+            }
+            else
+            {
+                result = null;
+                return false;
+            }
+        }
+        
         public IEnumerable<Identifier> Keys => prefabs.Keys;
 
         /// <summary>

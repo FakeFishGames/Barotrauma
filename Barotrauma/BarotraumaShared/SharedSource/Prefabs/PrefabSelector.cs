@@ -24,6 +24,23 @@ namespace Barotrauma
                 lock (overrides) { return activePrefabInternal; }
             }
         }
+        
+        /// <summary>
+        /// Returns the first non-active prefab if exists, else null.
+        /// </summary>
+        public T? PreviousPrefab
+        {
+            get
+            {
+                lock (overrides)
+                {
+                    var previous = previousPrefabInternal;
+                    if (previous != ActivePrefab)
+                        return previous;
+                    return null;
+                }
+            }
+        }
 
         public void Add(T prefab, bool isOverride)
         {
@@ -74,6 +91,8 @@ namespace Barotrauma
         private readonly List<T> overrides = new List<T>();
 
         private T? activePrefabInternal => overrides.Any() ? overrides.First() : basePrefabInternal;
+        
+        private T? previousPrefabInternal => overrides.Count > 1 ? overrides.Skip(1).First() : basePrefabInternal;
 
         private void AddInternal(T prefab, bool isOverride)
         {
