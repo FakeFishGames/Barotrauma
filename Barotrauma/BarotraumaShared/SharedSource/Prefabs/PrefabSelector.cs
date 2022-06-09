@@ -35,7 +35,7 @@ namespace Barotrauma
                 lock (overrides)
                 {
                     var previous = previousPrefabInternal;
-                    if (previous != ActivePrefab)
+                    if (previous != activePrefabInternal)
                         return previous;
                     return null;
                 }
