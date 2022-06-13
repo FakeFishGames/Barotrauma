@@ -589,7 +589,7 @@ namespace Barotrauma.Steam
                                     isEnabled: true,
                                     onSelected: () =>
                                     {
-                                        TaskPool.Add($"UnsubFromSelected", Task.WhenAll(selectedMods.Select(m => SteamManager.Workshop.GetItem(m.SteamWorkshopId))),
+                                        TaskPool.AddIfNotFound($"UnsubFromSelected", Task.WhenAll(selectedMods.Select(m => SteamManager.Workshop.GetItem(m.SteamWorkshopId))),
                                             t =>
                                             {
                                                 if (!t.TryGetResult(out Steamworks.Ugc.Item?[] items)) { return; }
@@ -668,7 +668,7 @@ namespace Barotrauma.Steam
                     {
                         infoButton.Enabled = false;
                     }
-                    TaskPool.Add(
+                    TaskPool.AddIfNotFound(
                         $"DetermineUpdateRequired{mod.SteamWorkshopId}",
                         mod.IsUpToDate(),
                         t =>
@@ -709,7 +709,7 @@ namespace Barotrauma.Steam
             addRegularModsToList(enabledMods, enabledRegularModsList);
             if (refreshDisabled) { addRegularModsToList(disabledMods, disabledRegularModsList); }
 
-            TaskPool.Add(
+            TaskPool.AddIfNotFound(
                 $"DetermineWorkshopModIcons",
                 SteamManager.Workshop.GetPublishedItems(),
                 t =>

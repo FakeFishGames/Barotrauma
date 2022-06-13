@@ -30,7 +30,7 @@ namespace Barotrauma.Items.Components
         class SlotRestrictions
         {
             public readonly int MaxStackSize;
-            public readonly List<RelatedItem> ContainableItems;
+            public List<RelatedItem> ContainableItems;
 
             public SlotRestrictions(int maxStackSize, List<RelatedItem> containableItems)
             {
@@ -187,7 +187,7 @@ namespace Barotrauma.Items.Components
         [Serialize(false, IsPropertySaveable.No)]
         public bool RemoveContainedItemsOnDeconstruct { get; set; }
 
-        private ImmutableArray<SlotRestrictions> slotRestrictions;
+        private readonly ImmutableArray<SlotRestrictions> slotRestrictions;
 
         readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
 
@@ -215,20 +215,12 @@ namespace Barotrauma.Items.Components
 
         public override bool RecreateGUIOnResolutionChange => true;
 
-        public List<RelatedItem> ContainableItems { get; private set; }
+        public List<RelatedItem> ContainableItems { get; }
 
         public ItemContainer(Item item, ContentXElement element)
             : base(item, element)
         {
-            LoadContainableRestrictions(element);
-            InitProjSpecific(element);
-        }
-
-        public void LoadContainableRestrictions(ContentXElement element)
-        {
             int totalCapacity = capacity;
-
-            ContainableItems?.Clear();
 
             foreach (var subElement in element.Elements())
             {
@@ -250,7 +242,7 @@ namespace Barotrauma.Items.Components
                 }
             }
             Inventory = new ItemInventory(item, this, totalCapacity, SlotsPerRow);
-
+           
             List<SlotRestrictions> newSlotRestrictions = new List<SlotRestrictions>(totalCapacity);
             for (int i = 0; i < capacity; i++)
             {
@@ -261,7 +253,7 @@ namespace Barotrauma.Items.Components
             foreach (var subElement in element.Elements())
             {
                 if (subElement.Name.ToString().ToLowerInvariant() != "subcontainer") { continue; }
-
+       
                 int subCapacity = subElement.GetAttributeInt("capacity", 1);
                 int subMaxStackSize = subElement.GetAttributeInt("maxstacksize", maxStackSize);
 
@@ -289,6 +281,28 @@ namespace Barotrauma.Items.Components
             capacity = totalCapacity;
             slotRestrictions = newSlotRestrictions.ToImmutableArray();
             System.Diagnostics.Debug.Assert(totalCapacity == slotRestrictions.Length);
+            InitProjSpecific(element);
+        }
+
+        public void ReloadContainableRestrictions(ContentXElement element)
+        {
+            int containableIndex = 0;
+            foreach (var subElement in element.GetChildElements("containable"))
+            {
+                RelatedItem containable = RelatedItem.Load(subElement, returnEmpty: false, parentDebugName: item.Name);
+                if (containable == null)
+                {
+                    DebugConsole.ThrowError("Error when loading containable restrictions for \"" + item.Name + "\" - containable with no identifiers.");
+                    continue;
+                }
+                ContainableItems[containableIndex] = containable;
+                containableIndex++;
+                if (containableIndex >= ContainableItems.Count) { break; }            
+            }
+            for (int i = 0; i < capacity; i++)
+            {
+                slotRestrictions[i].ContainableItems = ContainableItems;
+            }
         }
 
         public int GetMaxStackSize(int slotIndex)

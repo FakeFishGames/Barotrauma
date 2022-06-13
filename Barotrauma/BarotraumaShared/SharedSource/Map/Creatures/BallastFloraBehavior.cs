@@ -460,13 +460,14 @@ namespace Barotrauma.MapCreatures.Behavior
             {
                 if (parentBranchId > -1)
                 {
-                    if (parentBranchId < Branches.Count)
+                    var parentBranch = Branches.Find(b => b.ID == parentBranchId);
+                    if (parentBranch == null)
                     {
-                        branch.ParentBranch = Branches[parentBranchId];
+                        DebugConsole.AddWarning($"Error while loading ballast flora: couldn't find a parent branch with the ID {parentBranchId}");
                     }
                     else
                     {
-                        DebugConsole.AddWarning($"Error while loading ballast flora: parent branch ID {parentBranchId} out of range (total {Branches.Count} branches)");
+                        branch.ParentBranch = parentBranch;
                     }
                 }
             }
@@ -790,7 +791,8 @@ namespace Barotrauma.MapCreatures.Behavior
                 MaxHealth = RootHealth,
                 Health = RootHealth,
                 IsRoot = true,
-                CurrentHull = Parent
+                CurrentHull = Parent,
+                ID = CreateID()
             };
             
             Branches.Add(root);
@@ -1015,14 +1017,6 @@ namespace Barotrauma.MapCreatures.Behavior
         public void DamageBranch(BallastFloraBranch branch, float amount, AttackType type, Character? attacker = null)
         {
             float damage = amount;
-            if (damage > 0)
-            {
-                damage = Math.Min(damage, branch.Health);
-            }
-            else
-            {
-                damage = Math.Max(damage, branch.Health - branch.MaxHealth);
-            }
 
             if (type != AttackType.Other && type != AttackType.CutFromRoot)
             {
@@ -1081,6 +1075,14 @@ namespace Barotrauma.MapCreatures.Behavior
                 }
             }
 
+            if (damage > 0)
+            {
+                damage = Math.Min(damage, branch.Health);
+            }
+            else
+            {
+                damage = Math.Max(damage, branch.Health - branch.MaxHealth);
+            }
             branch.Health -= damage;
 
 #if SERVER

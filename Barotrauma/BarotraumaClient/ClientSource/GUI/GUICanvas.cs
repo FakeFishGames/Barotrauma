@@ -8,6 +8,8 @@ namespace Barotrauma
 {
     public class GUICanvas : RectTransform
     {
+        private static readonly object mutex = new object();
+
         protected GUICanvas() : base(size, parent: null) { }
 
         private static GUICanvas _instance;
@@ -39,22 +41,25 @@ namespace Barotrauma
 
         private static void OnChildrenChanged(RectTransform _)
         {
-            //add weak reference if we don't have one yet
-            foreach (var child in _instance.Children)
+            lock (mutex)
             {
-                if (!_instance.childrenWeakRef.Any(c => c.TryGetTarget(out var existingChild) && existingChild == child))
+                //add weak reference if we don't have one yet
+                foreach (var child in _instance.Children)
                 {
-                    _instance.childrenWeakRef.Add(new WeakReference<RectTransform>(child));
+                    if (!_instance.childrenWeakRef.Any(c => c.TryGetTarget(out var existingChild) && existingChild == child))
+                    {
+                        _instance.childrenWeakRef.Add(new WeakReference<RectTransform>(child));
+                    }
                 }
-            }
-            //get rid of strong references
-            _instance.children.Clear();
-            //remove dead children
-            for (int i = _instance.childrenWeakRef.Count - 2; i >= 0; i--)
-            {
-                if (!_instance.childrenWeakRef[i].TryGetTarget(out var child) || child.Parent != _instance)
+                //get rid of strong references
+                _instance.children.Clear();
+                //remove dead children
+                for (int i = _instance.childrenWeakRef.Count - 2; i >= 0; i--)
                 {
-                    _instance.childrenWeakRef.RemoveAt(i);
+                    if (!_instance.childrenWeakRef[i].TryGetTarget(out var child) || child.Parent != _instance)
+                    {
+                        _instance.childrenWeakRef.RemoveAt(i);
+                    }
                 }
             }
         }

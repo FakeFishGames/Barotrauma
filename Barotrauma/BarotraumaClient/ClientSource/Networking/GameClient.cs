@@ -1696,6 +1696,13 @@ namespace Barotrauma.Networking
                 }
             }
 
+            if (clientPeer == null)
+            {
+                DebugConsole.ThrowError("There was an error initializing the round (disconnected during the StartGame coroutine.)");
+                roundInitStatus = RoundInitStatus.Error;
+                yield return CoroutineStatus.Failure;
+            }
+
             roundInitStatus = RoundInitStatus.WaitingForStartGameFinalize;
 
             DateTime? timeOut = null;

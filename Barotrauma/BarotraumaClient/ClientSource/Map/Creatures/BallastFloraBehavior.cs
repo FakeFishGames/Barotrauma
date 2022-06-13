@@ -183,8 +183,21 @@ namespace Barotrauma.MapCreatures.Behavior
 
                 Color branchColor = (branch.IsRoot || branch.IsRootGrowth) ? RootColor : Color.White;
 
+
                 if (GameMain.DebugDraw)
                 {
+                    if (branch.DisconnectedFromRoot && branch.ParentBranch == null)
+                    {
+                        branchColor = Color.Yellow;
+                    }
+                    else if (branch.DisconnectedFromRoot)
+                    {
+                        branchColor = Color.Cyan;
+                    }
+                    else if (branch.ParentBranch == null)
+                    {
+                        branchColor = Color.Magenta;
+                    }
 #if DEBUG
                     Vector2 basePos = Parent.WorldPosition;
                     foreach (var (from, to) in debugSearchLines)

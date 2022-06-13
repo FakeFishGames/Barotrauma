@@ -207,5 +207,21 @@ namespace Barotrauma
                     return ItemQualityColorNormal;
             }
         }
+
+        public static void RecalculateFonts()
+        {
+            foreach (var font in Fonts.Values)
+            {
+                font.Prefabs.ForEach(p => p.LoadFont());
+            }
+        }
+
+        public static void RecalculateSizeRestrictions()
+        {
+            foreach (var componentStyle in ComponentStyles)
+            {
+                componentStyle.RefreshSize();
+            }
+        }
     }
 }

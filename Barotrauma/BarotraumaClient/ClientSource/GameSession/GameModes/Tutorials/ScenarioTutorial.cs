@@ -1,10 +1,7 @@
 ﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
-using System;
 using System.Collections.Generic;
-using Barotrauma.IO;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Tutorials
 {
@@ -228,6 +225,8 @@ namespace Barotrauma.Tutorials
                     {
                         CoroutineManager.StopCoroutines(tutorialCoroutine);
                     }
+                    GUI.PreventPauseMenuToggle = false;
+                    ContentRunning = false;
                     infoBox = null;
                 }
                 else if (Character.Controlled.IsDead)

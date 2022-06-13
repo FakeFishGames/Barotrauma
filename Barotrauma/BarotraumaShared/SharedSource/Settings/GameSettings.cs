@@ -492,7 +492,11 @@ namespace Barotrauma
 #if CLIENT
             if (setGraphicsMode)
             {
-                GameMain.Instance.ApplyGraphicsSettings();
+                GameMain.Instance.ApplyGraphicsSettings(recalculateFontsAndStyles: true);
+            }
+            else if (textScaleChanged)
+            {
+                GUIStyle.RecalculateFonts();
             }
 
             if (audioOutputChanged)
@@ -505,17 +509,6 @@ namespace Barotrauma
                 VoipCapture.ChangeCaptureDevice(currentConfig.Audio.VoiceCaptureDevice);
             }
 
-            if (textScaleChanged || resolutionChanged)
-            {
-                foreach (var font in GUIStyle.Fonts.Values)
-                {
-                    font.Prefabs.ForEach(p => p.LoadFont());
-                }
-                foreach (var componentStyle in GUIStyle.ComponentStyles)
-                {
-                    componentStyle.RefreshSize();
-                }
-            }
             if (hudScaleChanged)
             {
                 HUDLayoutSettings.CreateAreas();

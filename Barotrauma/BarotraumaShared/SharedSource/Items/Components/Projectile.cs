@@ -846,6 +846,10 @@ namespace Barotrauma.Items.Components
             }
             else if (target.Body.UserData is Limb limb)
             {
+                if (!FriendlyFire && User != null && limb.character.IsFriendly(User))
+                {
+                    return false;
+                }
                 // when hitting limbs with piercing ammo, don't lose as much speed
                 if (MaxTargetsToHit > 1)
                 {

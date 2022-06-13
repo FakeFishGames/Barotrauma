@@ -2526,5 +2526,15 @@ namespace Barotrauma
                 ThrowError("Saving debug console log to " + filePath + " failed", e);
             }
         }
+
+        public static void DeactivateCheats()
+        {
+#if CLIENT
+            GameMain.DebugDraw = false;
+            GameMain.LightManager.LightingEnabled = true;
+#endif
+            Hull.EditWater = false;
+            Hull.EditFire = false;
+        }
     }
 }

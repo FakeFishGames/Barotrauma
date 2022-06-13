@@ -282,9 +282,9 @@ namespace Barotrauma
             screen.OnFileDropped(filePath, extension);
         }
 
-        public void ApplyGraphicsSettings()
+        public void ApplyGraphicsSettings(bool recalculateFontsAndStyles = false)
         {
-            void updateConfig()
+            static void updateConfig()
             {
                 var config = GameSettings.CurrentConfig;
                 config.Graphics.Width = GraphicsWidth;
@@ -322,6 +322,12 @@ namespace Barotrauma
             SetWindowMode(GameSettings.CurrentConfig.Graphics.DisplayMode);
 
             defaultViewport = GraphicsDevice.Viewport;
+
+            if (recalculateFontsAndStyles)
+            {
+                GUIStyle.RecalculateFonts();
+                GUIStyle.RecalculateSizeRestrictions();
+            }
 
             ResolutionChanged?.Invoke();
         }

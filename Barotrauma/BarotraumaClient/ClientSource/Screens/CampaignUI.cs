@@ -526,7 +526,7 @@ namespace Barotrauma
                         tickBox.OnSelected += (GUITickBox tb) =>
                         {
                             if (!Campaign.AllowedToManageCampaign(Networking.ClientPermissions.ManageMap)) { return false; }
-                            
+
                             if (tb.Selected)
                             {
                                 Campaign.Map.CurrentLocation.SelectMission(mission);
@@ -549,7 +549,7 @@ namespace Barotrauma
                             {
                                 GameMain.Client?.SendCampaignState();
                             }
-                            return true;                            
+                            return true;
                         };
                         missionTickBoxes.Add(tickBox);
 
@@ -730,6 +730,14 @@ namespace Barotrauma
                 case CampaignMode.InteractionType.PurchaseSub:
                     if (submarineSelection == null) submarineSelection = new SubmarineSelection(false, () => Campaign.ShowCampaignUI = false, tabs[(int)CampaignMode.InteractionType.PurchaseSub].RectTransform);
                     submarineSelection.RefreshSubmarineDisplay(true, setTransferOptionToTrue: true);
+                    break;
+                case CampaignMode.InteractionType.Map:
+                    //refresh mission rewards (may have been changed by e.g. a pending submarine switch)
+                    foreach (GUITextBlock rewardText in missionRewardTexts)
+                    {
+                        Mission mission = (Mission)rewardText.UserData;
+                        rewardText.Text = mission.GetMissionRewardText(Submarine.MainSub);
+                    }
                     break;
             }
         }

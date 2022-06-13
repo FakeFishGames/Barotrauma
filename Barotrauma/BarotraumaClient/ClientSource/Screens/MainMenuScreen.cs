@@ -74,6 +74,7 @@ namespace Barotrauma
             {
                 CreateHostServerFields();
                 CreateCampaignSetupUI();
+                SettingsMenu.Create(menuTabs[Tab.Settings].RectTransform);
                 if (remoteContentDoc?.Root != null)
                 {
                     remoteContentContainer.ClearChildren();

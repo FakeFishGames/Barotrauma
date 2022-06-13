@@ -1128,7 +1128,7 @@ namespace Barotrauma
                     if (itemComponent is ItemContainer itemContainer &&
                         (componentElement.GetChildElement("containable") != null || componentElement.GetChildElement("subcontainer") != null))
                     {
-                        itemContainer.LoadContainableRestrictions(componentElement);
+                        itemContainer.ReloadContainableRestrictions(componentElement);
                     }
                 }
             }

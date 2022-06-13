@@ -390,7 +390,7 @@ namespace Barotrauma.Networking
                 characterInfos[i].ClearCurrentOrders();
 
                 bool forceSpawnInMainSub = false;
-                if (!bot && campaign != null)
+                if (!bot)
                 {
                     //the client has opted to change the name of their new character
                     //when the character spawns, set the client's name to match

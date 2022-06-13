@@ -20,14 +20,12 @@ namespace Barotrauma
                 if (targetId == Entity.NullEntityID) { continue; }
                 Entity target = Entity.FindEntityByID(targetId);
                 if (target == null) { continue; }
-                existingTargets.Add(target);
                 allTargets.Add(target);
             }
             ushort spawnedTargetsCount = msg.ReadUInt16();
             for (int i = 0; i < spawnedTargetsCount; i++)
             {
                 var enemy = Character.ReadSpawnData(msg);
-                existingTargets.Add(enemy);
                 allTargets.Add(enemy);
             }
         }

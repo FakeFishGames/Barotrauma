@@ -1549,10 +1549,7 @@ namespace Barotrauma
             MapEntity.DeselectAll();
             ClearUndoBuffer();
 
-            GameMain.DebugDraw = false;
-            GameMain.LightManager.LightingEnabled = true;
-            Hull.EditWater = false;
-            Hull.EditFire = false;
+            DebugConsole.DeactivateCheats();
 
             SetMode(Mode.Default);
 

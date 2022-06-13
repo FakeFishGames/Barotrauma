@@ -408,6 +408,14 @@ namespace Barotrauma
             bool isPrefabSuitable(EventPrefab e)
                 => e.BiomeIdentifier.IsEmpty ||
                    e.BiomeIdentifier == level.LevelData?.Biome?.Identifier;
+
+            foreach (var subEventPrefab in eventSet.EventPrefabs)
+            {
+                foreach (Identifier missingId in subEventPrefab.GetMissingIdentifiers())
+                {
+                    DebugConsole.ThrowError($"Error in event set \"{eventSet.Identifier}\" ({eventSet.ContentFile?.ContentPackage?.Name ?? "null"}) - could not find an event prefab with the identifier \"{missingId}\".");
+                }
+            }
             
             var suitablePrefabSubsets = eventSet.EventPrefabs.Where(
                 e => e.EventPrefabs.Any(isPrefabSuitable)).ToArray();

@@ -79,7 +79,6 @@ namespace Barotrauma
         public override void Deselect()
         {
             base.Deselect();
-
 #if CLIENT
             var config = GameSettings.CurrentConfig;
             config.CrewMenuOpen = CrewManager.PreferCrewMenuOpen;
@@ -88,6 +87,10 @@ namespace Barotrauma
             GameSettings.SaveCurrentConfig();
             GameMain.SoundManager.SetCategoryMuffle("default", false);
             GUI.ClearMessages();
+            if (GameMain.GameSession?.GameMode is TestGameMode)
+            {
+                DebugConsole.DeactivateCheats();
+            }
 #endif
         }
 

@@ -26,6 +26,7 @@ namespace Barotrauma
 
         protected override bool Filter(Pump pump)
         {
+            if (pump?.Item == null || pump.Item.Removed) { return false; }
             if (pump.Item.IgnoreByAI(character)) { return false; }
             if (!pump.Item.IsInteractable(character)) { return false; }
             if (pump.IsAutoControlled) { return false; }

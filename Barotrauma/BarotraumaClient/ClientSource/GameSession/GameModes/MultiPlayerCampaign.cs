@@ -745,7 +745,8 @@ namespace Barotrauma
                     purchasedItemSwaps.Add(new PurchasedItemSwap(itemToRemove, itemToInstall));
                 }
 
-                if (ShouldApply(NetFlags.UpgradeManager, id, requireUpToDateSave: true))
+                if (!Submarine.Unloading && !(Submarine.MainSub is { Loading: true }) && 
+                    ShouldApply(NetFlags.UpgradeManager, id, requireUpToDateSave: true))
                 {
                     UpgradeStore.WaitForServerUpdate = false;
                     campaign.UpgradeManager.SetPendingUpgrades(pendingUpgrades);
@@ -761,7 +762,7 @@ namespace Barotrauma
                             campaign.UpgradeManager.PurchaseItemSwap(purchasedItemSwap.ItemToRemove, purchasedItemSwap.ItemToInstall, force: true);
                         }
                     }
-                    foreach (Item item in Item.ItemList)
+                    foreach (Item item in Item.ItemList.ToList())
                     {
                         if (item.PendingItemSwap != null && !purchasedItemSwaps.Any(it => it.ItemToRemove == item))
                         {

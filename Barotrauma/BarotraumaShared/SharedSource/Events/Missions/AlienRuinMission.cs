@@ -125,10 +125,6 @@ namespace Barotrauma
                     if (!AllTargetsEliminated()) { return; }
                     State = 1;
                     break;
-                case 1:
-                    if (!Submarine.MainSub.AtEndExit && !Submarine.MainSub.AtStartExit) { return; }
-                    State = 2;
-                    break;
             }
         }
 
@@ -166,11 +162,16 @@ namespace Barotrauma
 
         public override void End()
         {
-            if (State == 2)
+            bool exitingLevel = GameMain.GameSession?.GameMode is CampaignMode campaign ?
+                campaign.GetAvailableTransition() != CampaignMode.TransitionType.None :
+                Submarine.MainSub is { } sub && (sub.AtEndExit || sub.AtStartExit);
+
+            if (State > 0 && exitingLevel)
             {
                 GiveReward();
                 completed = true;
             }
+
             failed = !completed && State > 0;
         }
     }

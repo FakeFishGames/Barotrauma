@@ -142,11 +142,15 @@ namespace Barotrauma
                     {
                         foreach (var id in (Identifier[])PrefabOrIdentifier)
                         {
-                            yield return EventPrefab.Prefabs[id];
+                            if (EventPrefab.Prefabs.TryGet(id, out EventPrefab prefab))
+                            {
+                                yield return prefab;
+                            }
                         }
                     }
                 }
             }
+
             public readonly float? SelfCommonness;
             public float Commonness => SelfCommonness ?? EventPrefabs.MaxOrNull(p => p.Commonness) ?? 0.0f;
 
@@ -159,6 +163,20 @@ namespace Barotrauma
                 commonness = Commonness;
                 probability = Probability;
             }
+
+            public IEnumerable<Identifier> GetMissingIdentifiers()
+            {
+                if (PrefabOrIdentifier.TryCast<Identifier[]>(out var ids))
+                {
+                    foreach (var id in ids)
+                    {
+                        if (!EventPrefab.Prefabs.ContainsKey(id))
+                        {
+                            yield return id;
+                        }
+                    }
+                }
+            }        
         }
         public readonly ImmutableArray<SubEventPrefab> EventPrefabs;
 

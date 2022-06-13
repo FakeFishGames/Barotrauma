@@ -1,12 +1,11 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.IO;
-using Barotrauma.Extensions;
-using System.Collections.Immutable;
 
 namespace Barotrauma
 {
@@ -81,6 +80,8 @@ namespace Barotrauma
         }
 
         private XElement saveElement;
+
+        private Vector2? positionRelativeToMainSub;
 
         public override bool Linkable
         {
@@ -256,6 +257,15 @@ namespace Barotrauma
             }            
         }
 
+        public void SetPositionRelativeToMainSub()
+        {
+            if (positionRelativeToMainSub.HasValue)
+            {
+                Sub.SetPosition(Submarine.WorldPosition + positionRelativeToMainSub.Value);
+            }
+            positionRelativeToMainSub = null;
+        }
+
         public override void OnMapLoaded()
         {
             if (!loadSub) { return; }
@@ -317,7 +327,19 @@ namespace Barotrauma
             {
                 if (worldPos == Vector2.Zero)
                 {
-                    DebugConsole.ThrowError("Something went wrong when loading a linked submarine - the save didn't include either a world position or a linked port for the submarine.");
+                    Vector2 relativePos = saveElement.GetAttributeVector2("posrelativetomainsub", Vector2.Zero);
+                    if (relativePos != Vector2.Zero)
+                    {
+                        positionRelativeToMainSub = relativePos;
+                    }
+                    else
+                    {
+                        DebugConsole.ThrowError("Something went wrong when loading a linked submarine - the save didn't include a world position, a linked port or position relative to the main sub.");
+                    }
+                }
+                else
+                {
+                    sub.Submarine = Submarine;
                 }
                 return; 
             }
@@ -469,8 +491,9 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (saveElement.Attribute("location") != null) saveElement.Attribute("location").Remove();
-                    if (saveElement.Attribute("worldpos") != null) saveElement.Attribute("worldpos").Remove();
+                    if (saveElement.Attribute("location") != null) { saveElement.Attribute("location").Remove(); }
+                    if (saveElement.Attribute("worldpos") != null) { saveElement.Attribute("worldpos").Remove(); }
+                    saveElement.SetAttributeValue("posrelativetomainsub", XMLExtensions.Vector2ToString(sub.WorldPosition - Submarine.WorldPosition));
                 }
                 saveElement.SetAttributeValue("pos", XMLExtensions.Vector2ToString(Position - Submarine.HiddenSubPosition));
             }

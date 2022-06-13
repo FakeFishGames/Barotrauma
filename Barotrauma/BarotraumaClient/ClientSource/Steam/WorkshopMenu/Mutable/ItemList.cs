@@ -418,7 +418,7 @@ namespace Barotrauma.Steam
             itemListBox.ClearChildren();
             itemListBox.Deselect();
             itemListBox.ScrollBar.BarScroll = 0.0f;
-            TaskPool.Add("PopulateTabWithItemList", items,
+            TaskPool.AddIfNotFound("PopulateTabWithItemList", items,
                 (t) =>
                 {
                     taskCancelSrc = taskCancelSrc.IsCancellationRequested ? new CancellationTokenSource() : taskCancelSrc;
@@ -591,16 +591,16 @@ namespace Barotrauma.Steam
 
             bool reinstallAction(GUIButton button, object o)
             {
-                TaskPool.Add($"Reinstall{workshopItem.Id}", SteamManager.Workshop.Reinstall(workshopItem), t =>
+                int prevIndex = ContentPackageManager.EnabledPackages.Regular.IndexOf(contentPackage);
+                TaskPool.AddIfNotFound($"Reinstall{workshopItem.Id}", 
+                    SteamManager.Workshop.Reinstall(workshopItem), t =>
                 {
                     ContentPackageManager.WorkshopPackages.Refresh();
                     ContentPackageManager.EnabledPackages.RefreshUpdatedMods();
-                    var package = ContentPackageManager.WorkshopPackages.FirstOrDefault(p => p.SteamWorkshopId == workshopItem.Id);
-                    if (package is RegularPackage regular)
+                    if (SettingsMenu.Instance?.WorkshopMenu is MutableWorkshopMenu mutableWorkshopMenu)
                     {
-                        ContentPackageManager.EnabledPackages.EnableRegular(regular);
+                        mutableWorkshopMenu.PopulateInstalledModLists(forceRefreshEnabled: true);
                     }
-                    PopulateInstalledModLists(forceRefreshEnabled: true);
                 });
                 return false;
             }
@@ -615,7 +615,7 @@ namespace Barotrauma.Steam
 
             if (contentPackage != null)
             {
-                TaskPool.Add(
+                TaskPool.AddIfNotFound(
                     $"DetermineUpdateRequired{contentPackage.SteamWorkshopId}",
                     contentPackage.IsUpToDate(),
                     t =>

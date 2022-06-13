@@ -622,8 +622,6 @@ namespace Barotrauma
                 return;
             }
 
-            var originalSubPos = Submarine.WorldPosition;
-
             if (level.StartOutpost != null)
             {
                 //start by placing the sub below the outpost
@@ -706,7 +704,7 @@ namespace Barotrauma
                 if (!ls.LoadSub || ls.Sub.DockedTo.Contains(Submarine)) { continue; }
                 if (Submarine.Info.LeftBehindDockingPortIDs.Contains(ls.OriginalLinkedToID)) { continue; }
                 if (ls.Sub.Info.SubmarineElement.Attribute("location") != null) { continue; }
-                ls.Sub.SetPosition(ls.Sub.WorldPosition + (Submarine.WorldPosition - originalSubPos));
+                ls.SetPositionRelativeToMainSub();
             }
         }
 

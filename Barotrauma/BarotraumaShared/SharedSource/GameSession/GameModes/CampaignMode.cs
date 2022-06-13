@@ -507,6 +507,8 @@ namespace Barotrauma
             }
         }
 
+        public TransitionType GetAvailableTransition() => GetAvailableTransition(out _, out _);
+
         /// <summary>
         /// Which submarine is at a position where it can leave the level and enter another one (if any).
         /// </summary>
