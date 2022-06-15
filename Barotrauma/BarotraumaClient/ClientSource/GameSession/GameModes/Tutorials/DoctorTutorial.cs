@@ -107,7 +107,7 @@ namespace Barotrauma.Tutorials
 
             foreach (Item item in doctor.Inventory.AllItemsMod)
             {
-                if (item.HasTag("clothing") || item.HasTag("identitycard") || item.HasTag("headset")) { continue; }
+                if (item.HasTag("clothing") || item.HasTag("identitycard") || item.HasTag("mobileradio")) { continue; }
                 item.Unequip(doctor);
                 doctor.Inventory.RemoveItem(item);
             }

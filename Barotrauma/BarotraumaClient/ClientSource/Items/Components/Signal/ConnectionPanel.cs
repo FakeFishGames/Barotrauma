@@ -147,9 +147,10 @@ namespace Barotrauma.Items.Components
                 //because some of the wires connected to the panel may not exist yet
                 long msgStartPos = msg.BitPosition;
                 msg.ReadUInt16(); //user ID
-                foreach (Connection connection in Connections)
+                foreach (Connection _ in Connections)
                 {
-                    for (int i = 0; i < connection.MaxWires; i++)
+                    uint wireCount = msg.ReadVariableUInt32();
+                    for (int i = 0; i < wireCount; i++)
                     {
                         msg.ReadUInt16();
                     }

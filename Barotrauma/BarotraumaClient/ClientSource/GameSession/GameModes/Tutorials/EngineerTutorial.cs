@@ -133,7 +133,7 @@ namespace Barotrauma.Tutorials
 
             foreach (Item item in engineer.Inventory.AllItemsMod)
             {
-                if (item.HasTag("clothing") || item.HasTag("identitycard") || item.HasTag("headset")) { continue; }
+                if (item.HasTag("clothing") || item.HasTag("identitycard") || item.HasTag("mobileradio")) { continue; }
                 item.Unequip(engineer);
                 engineer.Inventory.RemoveItem(item);
             }

@@ -1,4 +1,19 @@
 ---------------------------------------------------------------------------------------------------------
+v0.18.11.0
+---------------------------------------------------------------------------------------------------------
+
+- Disabled project-wide invariant globalization, which was meant to address "couldn't find a valid ICU package installed on the system" errors on some Linux distributions. The fix caused issues with case-insensitive comparisons and converting to upper or lower case in non-latin alphabets.
+- Fixed tutorial characters spawning without a headset.
+- Fixed inability to bind keys to LMB by clicking on the input box.
+
+---------------------------------------------------------------------------------------------------------
+v0.18.10.0
+---------------------------------------------------------------------------------------------------------
+
+- Fixed "index out of range" error when joining a server where's someone's rewired items.
+- Fixed some mission messages being displayed as "missionmessage0.nameofthemission".
+
+---------------------------------------------------------------------------------------------------------
 v0.18.9.0
 ---------------------------------------------------------------------------------------------------------
 
@@ -152,7 +167,6 @@ Fixes:
 - Fixed inability to quick-reload weapons with more than 1 inventory slot (e.g. autoshotgun).
 - Fixed outpost NPCs having x3 more health than they should.
 - Fixed morbusine not killing NPCs with higher-than-default health.
-- Fixed crashing with the error message "couldn't find a valid ICU package installed on the system" on some Linux distributions.
 - Fixed graphics errors when using Razer Cortex overlay.
 - Fixed bots being unable to repair Winterhalter's top hatch.
 - Fixed server crashing if you disable all mission types and try to start a mission round.

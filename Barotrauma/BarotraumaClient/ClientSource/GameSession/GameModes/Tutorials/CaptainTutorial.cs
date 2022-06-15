@@ -104,7 +104,7 @@ namespace Barotrauma.Tutorials
 
             foreach (Item item in captain.Inventory.AllItemsMod)
             {
-                if (item.HasTag("identitycard") || item.HasTag("headset")) { continue; }
+                if (item.HasTag("identitycard") || item.HasTag("mobileradio")) { continue; }
                 item.Unequip(captain);
                 captain.Inventory.RemoveItem(item);
             }

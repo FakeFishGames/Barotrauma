@@ -462,6 +462,8 @@ namespace Barotrauma
             Slider(voiceChat, (0, 500), 26, (v) => $"{Round(v)} ms", unsavedConfig.Audio.VoiceChatCutoffPrevention, (v) => unsavedConfig.Audio.VoiceChatCutoffPrevention = Round(v), TextManager.Get("CutoffPreventionTooltip"));
         }
 
+
+        private bool inputBoxSelectedThisFrame = false;
         private void CreateControlsTab()
         {
             GUIFrame content = CreateNewContentFrame(Tab.Controls);
@@ -510,15 +512,12 @@ namespace Barotrauma
                         bool willBeSelected = !btn.Selected;
                         if (willBeSelected)
                         {
+                            inputBoxSelectedThisFrame = true;
                             currentSetter = (v) =>
                             {
                                 valueSetter(v);
                                 btn.Text = valueNameGetter();
                             };
-                        }
-                        else
-                        {
-                            currentSetter = null;
                         }
 
                         btn.Selected = willBeSelected;
@@ -538,6 +537,12 @@ namespace Barotrauma
             {
                 if (currentSetter is null) { return; }
 
+                if (PlayerInput.PrimaryMouseButtonClicked() && inputBoxSelectedThisFrame)
+                {
+                    inputBoxSelectedThisFrame = false;
+                    return;
+                }
+
                 void clearSetter()
                 {
                     currentSetter = null;
@@ -551,7 +556,7 @@ namespace Barotrauma
                 }
                 
                 var pressedKeys = PlayerInput.GetKeyboardState.GetPressedKeys();
-                if ((pressedKeys?.Any() ?? false))
+                if (pressedKeys?.Any() ?? false)
                 {
                     if (pressedKeys.Contains(Keys.Escape))
                     {
@@ -562,7 +567,8 @@ namespace Barotrauma
                         callSetter(pressedKeys.First());
                     }
                 }
-                else if (PlayerInput.PrimaryMouseButtonClicked() && !(GUI.MouseOn is GUIButton))
+                else if (PlayerInput.PrimaryMouseButtonClicked() &&
+                        (GUI.MouseOn == null || !(GUI.MouseOn is GUIButton) || GUI.MouseOn.IsChildOf(keyMapList.Content)))
                 {
                     callSetter(MouseButton.PrimaryMouse);
                 }
