@@ -49,7 +49,10 @@ namespace Barotrauma
                             .Replace(string.Format(OtherModDirFmt, ContentPackage.SteamWorkshopId.ToString(CultureInfo.InvariantCulture)), modPath, StringComparison.OrdinalIgnoreCase);
                     }
                 }
-                var allPackages = ContentPackageManager.EnabledPackages.All;
+                var allPackages = ContentPackageManager.AllPackages;
+#if CLIENT
+                if (GameMain.ModDownloadScreen?.DownloadedPackages != null) { allPackages = allPackages.Concat(GameMain.ModDownloadScreen.DownloadedPackages); }
+#endif
                 foreach (Identifier otherModName in otherMods)
                 {
                     if (!UInt64.TryParse(otherModName.Value, out UInt64 workshopId)) { workshopId = 0; }

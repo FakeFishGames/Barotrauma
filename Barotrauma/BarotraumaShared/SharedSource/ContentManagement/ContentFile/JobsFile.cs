@@ -22,11 +22,7 @@ namespace Barotrauma
         {
             foreach (var element in mainElement.Elements())
             {
-                if (element.NameAsIdentifier() == "nojob")
-                {
-                    JobPrefab.NoJobElement ??= element;
-                }
-                else if (element.NameAsIdentifier() == "ItemRepairPriorities")
+                if (element.NameAsIdentifier() == "ItemRepairPriorities")
                 {
                     foreach (var subElement in element.Elements())
                     {

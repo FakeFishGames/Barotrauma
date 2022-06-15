@@ -111,6 +111,11 @@ namespace Barotrauma
             set { textBlock.SelectedTextColor = value; }
         }
 
+        public Color DisabledTextColor
+        {
+            get { return textBlock.DisabledTextColor; }
+        }
+
         public override float FlashTimer
         {
             get { return Frame.FlashTimer; }
@@ -159,7 +164,9 @@ namespace Barotrauma
         private float pulseExpand;
         private bool flashed;
 
-        public GUISoundType ClickSound { get; set; } = GUISoundType.Click;
+        public GUISoundType ClickSound { get; set; } = GUISoundType.Select;
+
+        public override bool PlaySoundOnSelect { get; set; } = true;
 
         public GUIButton(RectTransform rectT, Alignment textAlignment = Alignment.Center, string style = "", Color? color = null) : this(rectT, new RawLString(""), textAlignment, style, color) { }
 
@@ -247,7 +254,10 @@ namespace Barotrauma
                 }
                 else if (PlayerInput.PrimaryMouseButtonClicked())
                 {
-                    SoundPlayer.PlayUISound(ClickSound);
+                    if (PlaySoundOnSelect)
+                    {
+                        SoundPlayer.PlayUISound(ClickSound);
+                    }
                     if (OnClicked != null)
                     {
                         if (OnClicked(this, UserData))

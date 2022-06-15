@@ -38,7 +38,7 @@ namespace Barotrauma.Items.Components
             int totalWireCount = 0;
             foreach (Connection c in panel.Connections)
             {
-                totalWireCount += c.Wires.Count(w => w != null);
+                totalWireCount += c.Wires.Count;
             }
 
             Wire equippedWire = null;
@@ -87,8 +87,8 @@ namespace Barotrauma.Items.Components
                             (DraggingConnected.Connections[0] == null && DraggingConnected.Connections[1] == null) ||
                             (DraggingConnected.Connections.Contains(c) && DraggingConnected.Connections.Contains(null)))
                         {
-                            int linkIndex = c.FindWireIndex(DraggingConnected.Item);
-                            if (linkIndex > -1 || panel.DisconnectedWires.Contains(DraggingConnected))
+                            var linkedWire = c.FindWireByItem(DraggingConnected.Item);
+                            if (linkedWire != null || panel.DisconnectedWires.Contains(DraggingConnected))
                             {
                                 Inventory.DraggingItems.Clear();
                                 Inventory.DraggingItems.Add(DraggingConnected.Item);
@@ -108,7 +108,7 @@ namespace Barotrauma.Items.Components
                             c.DrawWires(spriteBatch, panel, rightPos, rightWirePos, mouseInRect, equippedWire, wireInterval);
                         }
                         rightPos.Y += connectorIntervalLeft;
-                        rightWirePos.Y += c.Wires.Count(w => w != null) * wireInterval;
+                        rightWirePos.Y += c.Wires.Count * wireInterval;
                     }
                     else
                     {
@@ -121,7 +121,7 @@ namespace Barotrauma.Items.Components
                             c.DrawWires(spriteBatch, panel, leftPos, leftWirePos, mouseInRect, equippedWire, wireInterval);
                         }
                         leftPos.Y += connectorIntervalRight;
-                        leftWirePos.Y += c.Wires.Count(w => w != null) * wireInterval;
+                        leftWirePos.Y += c.Wires.Count * wireInterval;
                     }
                 }
             }
@@ -228,15 +228,15 @@ namespace Barotrauma.Items.Components
         {
             float connectorSpriteScale = (35.0f / connectionSprite.SourceRect.Width) * panel.Scale;
 
-            for (int i = 0; i < MaxWires; i++)
+            foreach (var wire in wires)
             {
-                if (wires[i] == null || wires[i].Hidden || (DraggingConnected == wires[i] && (mouseIn || Screen.Selected == GameMain.SubEditorScreen))) { continue; }
-                if (wires[i].HiddenInGame && Screen.Selected == GameMain.GameScreen) { continue; }
+                if (wire.Hidden || (DraggingConnected == wire && (mouseIn || Screen.Selected == GameMain.SubEditorScreen))) { continue; }
+                if (wire.HiddenInGame && Screen.Selected == GameMain.GameScreen) { continue; }
 
-                Connection recipient = wires[i].OtherConnection(this);
+                Connection recipient = wire.OtherConnection(this);
                 LocalizedString label = recipient == null ? "" : recipient.item.Name + $" ({recipient.DisplayName})";
-                if (wires[i].Locked) { label += "\n" + TextManager.Get("ConnectionLocked"); }
-                DrawWire(spriteBatch, wires[i], position, wirePosition, equippedWire, panel, label);
+                if (wire.Locked) { label += "\n" + TextManager.Get("ConnectionLocked"); }
+                DrawWire(spriteBatch, wire, position, wirePosition, equippedWire, panel, label);
 
                 wirePosition.Y += wireInterval;
             }
@@ -248,18 +248,17 @@ namespace Barotrauma.Items.Components
                 if (!PlayerInput.PrimaryMouseButtonHeld())
                 {
                     if ((GameMain.NetworkMember != null || panel.CheckCharacterSuccess(Character.Controlled)) &&
-                        Wires.Count(w => w != null) < MaxPlayerConnectableWires)
+                        Wires.Count < MaxPlayerConnectableWires)
                     {
                         //find an empty cell for the new connection
-                        int index = FindEmptyIndex();
-                        if (index > -1 && !Wires.Contains(DraggingConnected))
+                        if (WireSlotsAvailable() && !Wires.Contains(DraggingConnected))
                         {
                             bool alreadyConnected = DraggingConnected.IsConnectedTo(panel.Item);
                             DraggingConnected.RemoveConnection(panel.Item);
                             if (DraggingConnected.Connect(this, !alreadyConnected, true))
                             {
                                 var otherConnection = DraggingConnected.OtherConnection(this);
-                                SetWire(index, DraggingConnected);
+                                ConnectWire(DraggingConnected);
                             }
                         }
                     }
@@ -284,7 +283,7 @@ namespace Barotrauma.Items.Components
                     flashColor * (float)Math.Sin(FlashTimer % flashCycleDuration / flashCycleDuration * MathHelper.Pi * 0.8f), scale: connectorSpriteScale);
             }
 
-            if (Wires.Any(w => w != null && w != DraggingConnected && !w.Hidden && (!w.HiddenInGame || Screen.Selected != GameMain.GameScreen)))
+            if (Wires.Any(w => w != DraggingConnected && !w.Hidden && (!w.HiddenInGame || Screen.Selected != GameMain.GameScreen)))
             {
                 int screwIndex = (int)Math.Floor(position.Y / 30.0f) % screwSprites.Count;
                 screwSprites[screwIndex].Draw(spriteBatch, position, scale: connectorSpriteScale);

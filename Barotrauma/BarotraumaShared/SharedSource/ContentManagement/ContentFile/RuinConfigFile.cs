@@ -10,7 +10,7 @@ namespace Barotrauma
 
         protected override bool MatchesSingular(Identifier identifier) => identifier == "RuinConfig";
         protected override bool MatchesPlural(Identifier identifier) => identifier == "RuinGenerationParameters";
-        protected override PrefabCollection<RuinGenerationParams> prefabs => RuinGenerationParams.RuinParams;
+        protected override PrefabCollection<RuinGenerationParams> Prefabs => RuinGenerationParams.RuinParams;
         protected override RuinGenerationParams CreatePrefab(ContentXElement element)
         {
             return new RuinGenerationParams(element, this);

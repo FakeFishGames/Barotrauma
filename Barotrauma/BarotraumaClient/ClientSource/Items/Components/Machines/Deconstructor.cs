@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Linq;
@@ -78,7 +79,7 @@ namespace Barotrauma.Items.Components
                         activateButton = new GUIButton(new RectTransform(new Vector2(0.95f, 0.8f), buttonContainer.RectTransform), TextManager.Get("DeconstructorDeconstruct"), style: "DeviceButton")
                         {
                             TextBlock = { AutoScaleHorizontal = true },
-                            OnClicked = ToggleActive
+                            OnClicked = OnActivateButtonClicked
                         };
                             inSufficientPowerWarning = new GUITextBlock(new RectTransform(Vector2.One, activateButton.RectTransform),
                                 TextManager.Get("DeconstructorNoPower"), textColor: GUIStyle.Orange, textAlignment: Alignment.Center, color: Color.Black, style: "OuterGlow", wrap: true)
@@ -164,7 +165,7 @@ namespace Barotrauma.Items.Components
                         }
                     }
                 }
-                activateButton.Enabled = outputsFound;
+                activateButton.Enabled = outputsFound || !InputContainer.Inventory.IsEmpty();
                 activateButton.Text = TextManager.Get(ActivateButtonText);
             };
         }
@@ -236,8 +237,19 @@ namespace Barotrauma.Items.Components
             inSufficientPowerWarning.Visible = IsActive && !hasPower;
         }
 
-        private bool ToggleActive(GUIButton button, object obj)
+        private bool OnActivateButtonClicked(GUIButton button, object obj)
         {
+            var disallowedItem = inputContainer.Inventory.FindItem(i => !i.AllowDeconstruct, recursive: false);
+            if (disallowedItem != null && !DeconstructItemsSimultaneously)
+            {
+                int index = inputContainer.Inventory.FindIndex(disallowedItem);
+                if (index >= 0 && index < inputContainer.Inventory.visualSlots.Length)
+                {
+                    var slot = inputContainer.Inventory.visualSlots[index];
+                    slot?.ShowBorderHighlight(GUIStyle.Red, 0.1f, 0.9f);
+                }
+                return true;
+            }
             if (GameMain.Client != null)
             {
                 pendingState = !IsActive;
@@ -247,7 +259,6 @@ namespace Barotrauma.Items.Components
             {
                 SetActive(!IsActive, Character.Controlled);
             }
-
             return true;
         }
 

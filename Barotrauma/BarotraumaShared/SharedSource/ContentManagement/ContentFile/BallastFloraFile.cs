@@ -9,7 +9,7 @@ namespace Barotrauma
 
         protected override bool MatchesSingular(Identifier identifier) => identifier == "ballastflorabehavior";
         protected override bool MatchesPlural(Identifier identifier) => identifier == "ballastflorabehaviors";
-        protected override PrefabCollection<BallastFloraPrefab> prefabs => BallastFloraPrefab.Prefabs;
+        protected override PrefabCollection<BallastFloraPrefab> Prefabs => BallastFloraPrefab.Prefabs;
 
         protected override BallastFloraPrefab CreatePrefab(ContentXElement element)
         {

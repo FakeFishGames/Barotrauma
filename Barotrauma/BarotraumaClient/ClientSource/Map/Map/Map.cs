@@ -98,7 +98,7 @@ namespace Barotrauma
                 OnClicked = (btn, userData) =>
                 {
                     Rand.SetSyncedSeed(ToolBox.StringToInt(this.Seed));
-                    Generate();
+                    Generate(GameMain.GameSession.GameMode is CampaignMode campaign ? campaign.Settings : CampaignSettings.Empty);
                     InitProjectSpecific();
                     return true;
                 }
@@ -642,11 +642,11 @@ namespace Barotrauma
                         }
                     }
 
-                    if (GameMain.DebugDraw && location == HighlightedLocation && (!location.Discovered || !location.HasOutpost()))
+                    if (GameMain.DebugDraw)
                     {
-                        if (location.Reputation != null)
+                        Vector2 dPos = pos;
+                        if (location == HighlightedLocation && (!location.Discovered || !location.HasOutpost()) && location.Reputation != null)
                         {
-                            Vector2 dPos = pos;
                             dPos.Y += 48;
                             string name = $"Reputation: {location.Name}";
                             Vector2 nameSize = GUIStyle.SmallFont.MeasureString(name);
@@ -663,6 +663,8 @@ namespace Barotrauma
                             GUI.DrawString(spriteBatch, dPos + (new Vector2(256, 32) / 2) - (repValueSize / 2), reputationValue, Color.White, Color.Black, font: GUIStyle.SubHeadingFont);
                             GUI.DrawRectangle(spriteBatch, new Rectangle((int)dPos.X, (int)dPos.Y, 256, 32), Color.White);
                         }
+                        dPos.Y += 48;
+                        GUI.DrawString(spriteBatch, dPos, $"Difficulty: {location.LevelData.Difficulty.FormatZeroDecimal()}", Color.White, Color.Black * 0.8f, 4, font: GUIStyle.SmallFont);
                     }
                 }
             }
@@ -977,7 +979,7 @@ namespace Barotrauma
                 Vector2 center = rectCenter + (connection.CenterPos + viewOffset) * zoom;
                 if (viewArea.Contains(center) && connection.Biome != null)
                 {
-                    GUI.DrawString(spriteBatch, center, connection.Biome.Identifier + " (" + connection.Difficulty + ")", Color.White);
+                    GUI.DrawString(spriteBatch, center, (connection.LevelData?.GenerationParams?.Identifier ?? connection.Biome.Identifier) + " (" + (int)connection.Difficulty + ")", Color.White);
                 }
             }
 

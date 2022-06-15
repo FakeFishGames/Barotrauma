@@ -105,21 +105,12 @@ namespace Barotrauma.Tutorials
             radioSpeakerName = TextManager.Get("Tutorial.Radio.Speaker");
             doctor = Character.Controlled;
 
-            var bandages = FindOrGiveItem(doctor, "antibleeding1".ToIdentifier());
-            bandages.Unequip(doctor);
-            doctor.Inventory.RemoveItem(bandages);
-
-            var syringegun = FindOrGiveItem(doctor, "syringegun".ToIdentifier());
-            syringegun.Unequip(doctor);
-            doctor.Inventory.RemoveItem(syringegun);
-
-            var antibiotics = FindOrGiveItem(doctor, "antibiotics".ToIdentifier());
-            antibiotics.Unequip(doctor);
-            doctor.Inventory.RemoveItem(antibiotics);
-
-            var morphine = FindOrGiveItem(doctor, "antidama1".ToIdentifier());
-            morphine.Unequip(doctor);
-            doctor.Inventory.RemoveItem(morphine);
+            foreach (Item item in doctor.Inventory.AllItemsMod)
+            {
+                if (item.HasTag("clothing") || item.HasTag("identitycard") || item.HasTag("mobileradio")) { continue; }
+                item.Unequip(doctor);
+                doctor.Inventory.RemoveItem(item);
+            }
 
             doctor_suppliesCabinet = Item.ItemList.Find(i => i.HasTag("doctor_suppliescabinet"))?.GetComponent<ItemContainer>();
             doctor_medBayCabinet = Item.ItemList.Find(i => i.HasTag("doctor_medbaycabinet"))?.GetComponent<ItemContainer>();
@@ -260,7 +251,7 @@ namespace Barotrauma.Tutorials
                 yield return new WaitForSeconds(2.0f);
             }*/
 
-            TriggerTutorialSegment(0, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Select), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Deselect), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.ToggleInventory)); // Medical supplies objective
+            TriggerTutorialSegment(0, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Select), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Deselect)); // Medical supplies objective
 
             do
             {

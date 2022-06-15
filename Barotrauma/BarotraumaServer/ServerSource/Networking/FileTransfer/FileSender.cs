@@ -391,7 +391,7 @@ namespace Barotrauma.Networking
                         StartTransfer(inc.Sender, FileTransferType.CampaignSave, GameMain.GameSession.SavePath);
                         if (GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign)
                         {
-                            client.LastCampaignSaveSendTime = new Pair<ushort, float>(campaign.LastSaveID, (float)Lidgren.Network.NetTime.Now);
+                            client.LastCampaignSaveSendTime = (campaign.LastSaveID, (float)Lidgren.Network.NetTime.Now);
                         }
                     }
                     break;

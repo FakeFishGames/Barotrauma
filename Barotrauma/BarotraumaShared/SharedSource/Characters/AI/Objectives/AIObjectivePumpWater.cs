@@ -13,7 +13,7 @@ namespace Barotrauma
         public override bool KeepDivingGearOn => true;
         public override bool AllowAutomaticItemUnequipping => true;
 
-        private IEnumerable<Pump> pumpList;
+        private List<Pump> pumpList;
 
         public AIObjectivePumpWater(Character character, AIObjectiveManager objectiveManager, Identifier option, float priorityModifier = 1)
             : base(character, objectiveManager, priorityModifier, option) { }
@@ -26,13 +26,9 @@ namespace Barotrauma
 
         protected override bool Filter(Pump pump)
         {
-            if (pump == null) { return false; }
+            if (pump?.Item == null || pump.Item.Removed) { return false; }
             if (pump.Item.IgnoreByAI(character)) { return false; }
             if (!pump.Item.IsInteractable(character)) { return false; }
-            if (pump.Item.HasTag("ballast")) { return false; }
-            if (pump.Item.Submarine == null) { return false; }
-            if (pump.Item.CurrentHull == null) { return false; }
-            if (pump.Item.Submarine.TeamID != character.TeamID) { return false; }
             if (pump.IsAutoControlled) { return false; }
             if (pump.Item.ConditionPercentage <= 0) { return false; }
             if (pump.Item.CurrentHull.FireSources.Count > 0) { return false; }
@@ -50,7 +46,16 @@ namespace Barotrauma
             if (pumpList == null)
             {
                 if (character == null || character.Submarine == null) { return Array.Empty<Pump>(); }
-                pumpList = character.Submarine.GetItems(true).Select(i => i.GetComponent<Pump>()).Where(p => p != null);
+
+                pumpList = new List<Pump>();
+                foreach (Item item in character.Submarine.GetItems(true))
+                {
+                    var pump = item.GetComponent<Pump>();
+                    if (pump == null || pump.Item.Submarine == null || pump.Item.CurrentHull == null) { continue; }
+                    if (pump.Item.Submarine.TeamID != character.TeamID) { continue; }
+                    if (pump.Item.HasTag("ballast")) { continue; }
+                    pumpList.Add(pump);
+                }
             }
             return pumpList;
         }

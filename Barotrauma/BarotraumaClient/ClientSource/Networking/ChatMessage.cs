@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using System;
 
 namespace Barotrauma.Networking
@@ -9,14 +10,15 @@ namespace Barotrauma.Networking
         {
             msg.Write((byte)ClientNetObject.CHAT_MESSAGE);
             msg.Write(NetStateID);
-            msg.Write((byte)Type);
+            msg.WriteRangedInteger((int)Type, 0, Enum.GetValues(typeof(ChatMessageType)).Length - 1);
+            msg.WriteRangedInteger((int)ChatMode, 0, Enum.GetValues(typeof(ChatMode)).Length - 1);
             msg.Write(Text);
         }
 
         public static void ClientRead(IReadMessage msg)
         {
             UInt16 id = msg.ReadUInt16();
-            ChatMessageType type = (ChatMessageType)msg.ReadByte();
+            ChatMessageType type = (ChatMessageType)msg.ReadRangedInteger(0, Enum.GetValues(typeof(ChatMessageType)).Length - 1);
             PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None;
             string txt = "";
             string styleSetting = string.Empty;
@@ -183,6 +185,11 @@ namespace Barotrauma.Networking
                         break;
                     default:
                         GameMain.Client.AddChatMessage(txt, type, senderName, senderClient, senderCharacter, changeType, textColor: textColor);
+                        if (type == ChatMessageType.Radio && CanUseRadio(senderCharacter, out WifiComponent radio))
+                        {
+                            Signal s = new Signal(txt, sender: senderCharacter, source: radio.Item);
+                            radio.TransmitSignal(s, sentFromChat: true);
+                        }
                         break;
                 }
                 LastID = id;

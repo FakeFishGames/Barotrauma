@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -19,11 +20,8 @@ namespace Barotrauma.Items.Components
         public readonly string Name;
         public readonly LocalizedString DisplayName;
 
-        private readonly Wire[] wires;
-        public IEnumerable<Wire> Wires
-        {
-            get { return wires; }
-        }
+        private readonly HashSet<Wire> wires;
+        public IReadOnlyCollection<Wire> Wires => wires;
 
         private readonly Item item;
 
@@ -31,7 +29,7 @@ namespace Barotrauma.Items.Components
         
         public readonly List<StatusEffect> Effects;
 
-        public readonly ushort[] wireId;
+        public readonly List<ushort> LoadedWireIds;
 
         //The grid the connection is a part of
         public GridInfo Grid;
@@ -92,7 +90,7 @@ namespace Barotrauma.Items.Components
             MaxWires = Math.Max(element.Elements().Count(e => e.Name.ToString().Equals("link", StringComparison.OrdinalIgnoreCase)), MaxWires);
 
             MaxPlayerConnectableWires = element.GetAttributeInt("maxplayerconnectablewires", MaxWires);
-            wires = new Wire[MaxWires];
+            wires = new HashSet<Wire>();
 
             IsOutput = element.Name.ToString() == "output";
             Name = element.GetAttributeString("name", IsOutput ? "output" : "input");
@@ -150,23 +148,15 @@ namespace Barotrauma.Items.Components
             IsPower = Name == "power_in" || Name == "power" || Name == "power_out";
 
 
-            wireId = new ushort[MaxWires];
-
+            LoadedWireIds = new List<ushort>();
             foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "link":
-                        int index = -1;
-                        for (int i = 0; i < MaxWires; i++)
-                        {
-                            if (wireId[i] < 1) { index = i; }
-                        }
-                        if (index == -1) { break; }
-
                         int id = subElement.GetAttributeInt("w", 0);
                         if (id < 0) { id = 0; }
-                        wireId[index] = idRemap.GetOffsetId(id);
+                        if (LoadedWireIds.Count < MaxWires) { LoadedWireIds.Add(idRemap.GetOffsetId(id)); }
 
                         break;
                     case "statuseffect":
@@ -180,143 +170,117 @@ namespace Barotrauma.Items.Components
         public void SetRecipientsDirty()
         {
             recipientsDirty = true;
+            if (IsPower) { Powered.ChangedConnections.Add(this); }
         }
 
         private void RefreshRecipients()
         {
             recipients.Clear();
-            for (int i = 0; i < MaxWires; i++)
+            foreach (var wire in wires)
             {
-                if (wires[i] == null) continue;
-                Connection recipient = wires[i].OtherConnection(this);
-                if (recipient != null) recipients.Add(recipient);
+                Connection recipient = wire.OtherConnection(this);
+                if (recipient != null) { recipients.Add(recipient); }
             }
             recipientsDirty = false;
         }
 
-        public int FindEmptyIndex()
-        {
-            for (int i = 0; i < MaxWires; i++)
-            {
-                if (wires[i] == null) return i;
-            }
-            return -1;
-        }
+        public Wire FindWireByItem(Item it)
+            => Wires.FirstOrDefault(w => w.Item == it);
 
-        public int FindWireIndex(Wire wire)
-        {
-            for (int i = 0; i < MaxWires; i++)
-            {
-                if (wires[i] == wire) return i;
-            }
-            return -1;
-        }
-
-        public int FindWireIndex(Item wireItem)
-        {
-            for (int i = 0; i < MaxWires; i++)
-            {
-                if (wires[i] == null && wireItem == null) return i;
-                if (wires[i] != null && wires[i].Item == wireItem) return i;
-            }
-            return -1;
-        }
-
+        public bool WireSlotsAvailable()
+            => wires.Count < MaxWires;
+        
         public bool TryAddLink(Wire wire)
         {
-            for (int i = 0; i < MaxWires; i++)
+            if (wire is null
+                || wires.Contains(wire)
+                || !WireSlotsAvailable())
             {
-                if (wires[i] == null)
-                {
-                    SetWire(i, wire);
-                    return true;
-                }
+                return false;
             }
-            return false;
+            wires.Add(wire);
+            return true;
         }
 
-        public void SetWire(int index, Wire wire)
+        public void DisconnectWire(Wire wire)
         {
-            Wire previousWire = wires[index];
-            if (wire != previousWire && previousWire != null)
-            {
-                var otherConnection = previousWire.OtherConnection(this);
-                if (otherConnection != null)
-                {
-                    //Change the connection grids or flag them for updating
-                    if (IsPower && otherConnection.IsPower && Grid != null)
-                    {
-                        //Check if both connections belong to a larger grid
-                        if (otherConnection.recipients.Count > 1 && recipients.Count > 1)
-                        {
-                            Powered.ChangedConnections.Add(otherConnection);
-                            Powered.ChangedConnections.Add(this);
-                        }
-                        else if (recipients.Count > 1)
-                        {
-                            //This wire was the only one at the other grid
-                            otherConnection.Grid?.RemoveConnection(otherConnection);
-                            otherConnection.Grid = null;
-                        }
-                        else if (otherConnection.recipients.Count > 1)
-                        {
-                            Grid?.RemoveConnection(this);
-                            Grid = null;
-                        }
-                        else if (Grid.Connections.Count == 2)
-                        {
-                            //Delete the grid as these were the only 2 devices
-                            Powered.Grids.Remove(Grid.ID);
-                            Grid = null;
-                            otherConnection.Grid = null;
-                        }
-                    }
-                    otherConnection.recipientsDirty = true;
-                }
-            }
+            if (wire == null || !wires.Contains(wire)) { return; }
 
-            wires[index] = wire;
+            var prevOtherConnection = wire.OtherConnection(this);
+            if (prevOtherConnection != null)
+            {
+                //Change the connection grids or flag them for updating
+                if (IsPower && prevOtherConnection.IsPower && Grid != null)
+                {
+                    //Check if both connections belong to a larger grid
+                    if (prevOtherConnection.recipients.Count > 1 && recipients.Count > 1)
+                    {
+                        Powered.ChangedConnections.Add(prevOtherConnection);
+                        Powered.ChangedConnections.Add(this);
+                    }
+                    else if (recipients.Count > 1)
+                    {
+                        //This wire was the only one at the other grid
+                        prevOtherConnection.Grid?.RemoveConnection(prevOtherConnection);
+                        prevOtherConnection.Grid = null;
+                    }
+                    else if (prevOtherConnection.recipients.Count > 1)
+                    {
+                        Grid?.RemoveConnection(this);
+                        Grid = null;
+                    }
+                    else if (Grid.Connections.Count == 2)
+                    {
+                        //Delete the grid as these were the only 2 devices
+                        Powered.Grids.Remove(Grid.ID);
+                        Grid = null;
+                        prevOtherConnection.Grid = null;
+                    }
+                }
+                prevOtherConnection.recipientsDirty = true;
+            }
+            wires.Remove(wire);
             recipientsDirty = true;
-            if (wire != null)
+        }
+        
+        public void ConnectWire(Wire wire)
+        {
+            if (wire == null || !TryAddLink(wire)) { return; }
+            ConnectionPanel.DisconnectedWires.Remove(wire);
+            var otherConnection = wire.OtherConnection(this);
+            if (otherConnection != null)
             {
-
-                ConnectionPanel.DisconnectedWires.Remove(wire);
-                var otherConnection = wire.OtherConnection(this);
-                if (otherConnection != null)
+                //Set the other connection grid if a grid exists already
+                if (Powered.ValidPowerConnection(this, otherConnection))
                 {
-                    //Set the other connection grid if a grid exists already
-                    if (Powered.ValidPowerConnection(this, otherConnection))
+                    if (Grid == null && otherConnection.Grid != null)
                     {
-                        if (Grid == null && otherConnection.Grid != null)
-                        {
-                            otherConnection.Grid.AddConnection(this);
-                            Grid = otherConnection.Grid;
-                        }
-                        else if (Grid != null && otherConnection.Grid == null)
-                        {
-                            Grid.AddConnection(otherConnection);
-                            otherConnection.Grid = Grid;
-                        }
-                        else
-                        {
-                            //Flag change so that proper grids can be formed
-                            Powered.ChangedConnections.Add(this);
-                            Powered.ChangedConnections.Add(otherConnection);
-                        }
+                        otherConnection.Grid.AddConnection(this);
+                        Grid = otherConnection.Grid;
                     }
-
-                    otherConnection.recipientsDirty = true;
+                    else if (Grid != null && otherConnection.Grid == null)
+                    {
+                        Grid.AddConnection(otherConnection);
+                        otherConnection.Grid = Grid;
+                    }
+                    else
+                    {
+                        //Flag change so that proper grids can be formed
+                        Powered.ChangedConnections.Add(this);
+                        Powered.ChangedConnections.Add(otherConnection);
+                    }
                 }
+
+                otherConnection.recipientsDirty = true;
             }
+            recipientsDirty = true;
         }
 
         public void SendSignal(Signal signal)
         {
-            for (int i = 0; i < MaxWires; i++)
+            foreach (var wire in wires)
             {
-                if (wires[i] == null) { continue; }
-
-                Connection recipient = wires[i].OtherConnection(this);
+                Connection recipient = wire.OtherConnection(this);
                 if (recipient == null) { continue; }
                 if (recipient.item == this.item || signal.source?.LastSentSignalRecipients.LastOrDefault() == recipient) { continue; }
 
@@ -350,35 +314,32 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            for (int i = 0; i < MaxWires; i++)
+            foreach (var wire in wires)
             {
-                if (wires[i] == null) continue;
-
-                wires[i].RemoveConnection(this);
-                wires[i] = null;
+                wire.RemoveConnection(this);
                 recipientsDirty = true;
             }
+            wires.Clear();
         }
         
-        public void ConnectLinked()
+        public void InitializeFromLoaded()
         {
-            if (wireId == null) return;
+            if (LoadedWireIds.Count == 0) { return; }
             
-            for (int i = 0; i < MaxWires; i++)
+            for (int i = 0; i < LoadedWireIds.Count; i++)
             {
-                if (wireId[i] == 0) { continue; }
+                if (!(Entity.FindEntityByID(LoadedWireIds[i]) is Item wireItem)) { continue; }
 
-                if (!(Entity.FindEntityByID(wireId[i]) is Item wireItem)) { continue; }
-                wires[i] = wireItem.GetComponent<Wire>();
-                recipientsDirty = true;
-
-                if (wires[i] != null)
+                var wire = wireItem.GetComponent<Wire>();
+                if (wire != null && TryAddLink(wire))
                 {
-                    if (wires[i].Item.body != null) wires[i].Item.body.Enabled = false;
-                    wires[i].Connect(this, false, false);
-                    wires[i].FixNodeEnds();
+                    if (wire.Item.body != null) wire.Item.body.Enabled = false;
+                    wire.Connect(this, false, false);
+                    wire.FixNodeEnds();
+                    recipientsDirty = true;
                 }
             }
+            LoadedWireIds.Clear();
         }
 
 
@@ -386,19 +347,10 @@ namespace Barotrauma.Items.Components
         {
             XElement newElement = new XElement(IsOutput ? "output" : "input", new XAttribute("name", Name));
 
-            Array.Sort(wires, delegate (Wire wire1, Wire wire2)
+            foreach (var wire in wires.OrderBy(w => w.Item.ID))
             {
-                if (wire1 == null) return 1;
-                if (wire2 == null) return -1;
-                return wire1.Item.ID.CompareTo(wire2.Item.ID);
-            });
-
-            for (int i = 0; i < MaxWires; i++)
-            {
-                if (wires[i] == null) continue;
-                
                 newElement.Add(new XElement("link",
-                    new XAttribute("w", wires[i].Item.ID.ToString())));
+                    new XAttribute("w", wire.Item.ID.ToString())));
             }
 
             parentElement.Add(newElement);

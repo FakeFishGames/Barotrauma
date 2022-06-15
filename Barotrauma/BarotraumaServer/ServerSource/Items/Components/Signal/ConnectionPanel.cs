@@ -15,7 +15,8 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < Connections.Count; i++)
             {
                 wires[i] = new List<Wire>();
-                for (int j = 0; j < Connections[i].MaxWires; j++)
+                uint wireCount = msg.ReadVariableUInt32();
+                for (int j = 0; j < wireCount; j++)
                 {
                     ushort wireId = msg.ReadUInt16();
 
@@ -91,12 +92,8 @@ namespace Barotrauma.Items.Components
             //go through existing wire links
             for (int i = 0; i < Connections.Count; i++)
             {
-                int j = -1;
-                foreach (Wire existingWire in Connections[i].Wires)
+                foreach (Wire existingWire in Connections[i].Wires.ToArray())
                 {
-                    j++;
-                    if (existingWire == null) { continue; }
-
                     //existing wire not in the list of new wires -> disconnect it
                     if (!wires[i].Contains(existingWire))
                     {
@@ -163,7 +160,7 @@ namespace Barotrauma.Items.Components
                             }*/
                         }
 
-                        Connections[i].SetWire(j, null);
+                        Connections[i].DisconnectWire(existingWire);
                     }
                 }
             }

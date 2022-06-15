@@ -36,6 +36,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonoGame.Framework.MacOS.Ne
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Facepunch.Steamworks.Posix", "Libraries\Facepunch.Steamworks\Facepunch.Steamworks.Posix.csproj", "{F10CE3BB-26B8-446E-84D2-86D25E850F61}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MacTest", "Barotrauma\BarotraumaTest\MacTest.csproj", "{20BC9336-B439-4BF1-8B65-D587DBF421D1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -178,6 +180,18 @@ Global
 		{F10CE3BB-26B8-446E-84D2-86D25E850F61}.Unstable|Any CPU.Build.0 = Release|Any CPU
 		{F10CE3BB-26B8-446E-84D2-86D25E850F61}.Unstable|x64.ActiveCfg = Release|Any CPU
 		{F10CE3BB-26B8-446E-84D2-86D25E850F61}.Unstable|x64.Build.0 = Release|Any CPU
+		{20BC9336-B439-4BF1-8B65-D587DBF421D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20BC9336-B439-4BF1-8B65-D587DBF421D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20BC9336-B439-4BF1-8B65-D587DBF421D1}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{20BC9336-B439-4BF1-8B65-D587DBF421D1}.Debug|x64.Build.0 = Debug|Any CPU
+		{20BC9336-B439-4BF1-8B65-D587DBF421D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20BC9336-B439-4BF1-8B65-D587DBF421D1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20BC9336-B439-4BF1-8B65-D587DBF421D1}.Release|x64.ActiveCfg = Release|Any CPU
+		{20BC9336-B439-4BF1-8B65-D587DBF421D1}.Release|x64.Build.0 = Release|Any CPU
+		{20BC9336-B439-4BF1-8B65-D587DBF421D1}.Unstable|Any CPU.ActiveCfg = Debug|Any CPU
+		{20BC9336-B439-4BF1-8B65-D587DBF421D1}.Unstable|Any CPU.Build.0 = Debug|Any CPU
+		{20BC9336-B439-4BF1-8B65-D587DBF421D1}.Unstable|x64.ActiveCfg = Debug|Any CPU
+		{20BC9336-B439-4BF1-8B65-D587DBF421D1}.Unstable|x64.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -195,6 +209,7 @@ Global
 		{F17FB469-E9E6-4B1C-B887-4FE709D4D771} = {DFD82BBD-8D05-403D-BEBC-F4C1CF783E18}
 		{35DDDA7D-328D-4A5D-BCBB-2E60C830A899} = {DE36F45F-F09E-4719-B953-00D148F7722A}
 		{F10CE3BB-26B8-446E-84D2-86D25E850F61} = {DE36F45F-F09E-4719-B953-00D148F7722A}
+		{20BC9336-B439-4BF1-8B65-D587DBF421D1} = {DFD82BBD-8D05-403D-BEBC-F4C1CF783E18}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {17032EAB-554B-4B44-A4F6-EFB177ACAB7A}

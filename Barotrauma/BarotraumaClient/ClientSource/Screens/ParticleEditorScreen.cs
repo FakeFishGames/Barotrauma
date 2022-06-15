@@ -129,7 +129,10 @@ namespace Barotrauma
                 OnClicked = (btn, userdata) => { FilterEmitters(""); filterBox.Text = ""; filterBox.Flash(Color.White); return true; }
             };
 
-            prefabList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.8f), paddedLeftPanel.RectTransform));
+            prefabList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.8f), paddedLeftPanel.RectTransform))
+            {
+                PlaySoundOnSelect = true,
+            };
             prefabList.OnSelected += (GUIComponent component, object obj) =>
             {
                 cam.Position = Vector2.Zero;

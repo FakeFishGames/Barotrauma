@@ -526,7 +526,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void Move(Vector2 amount)
+        public override void Move(Vector2 amount, bool ignoreContacts = false)
         {
             //only used in the sub editor, hence only in the client project
             if (!item.IsSelected) { return; }

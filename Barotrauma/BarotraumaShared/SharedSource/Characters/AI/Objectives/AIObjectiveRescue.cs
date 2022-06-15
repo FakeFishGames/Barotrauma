@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static Barotrauma.AIObjectiveFindSafety;
 
 namespace Barotrauma
 {
@@ -186,7 +187,9 @@ namespace Barotrauma
                                     }
                                     else
                                     {
-                                        safeHull = objectiveManager.GetObjective<AIObjectiveFindSafety>().FindBestHull(HumanAIController.VisibleHulls);
+                                        HullSearchStatus hullSearchStatus = objectiveManager.GetObjective<AIObjectiveFindSafety>().FindBestHull(out Hull potentialSafeHull, HumanAIController.VisibleHulls);
+                                        if (hullSearchStatus != HullSearchStatus.Finished) { return; }
+                                        safeHull = potentialSafeHull;
                                         findHullTimer = findHullInterval * Rand.Range(0.9f, 1.1f);
                                     }
                                 }

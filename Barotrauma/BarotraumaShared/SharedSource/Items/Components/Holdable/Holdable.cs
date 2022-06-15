@@ -41,6 +41,8 @@ namespace Barotrauma.Items.Components
 
         private Character prevEquipper;
 
+        public override bool IsAttached => Attached;
+
         private bool attachable, attached, attachedByDefault;
         private Voronoi2.VoronoiCell attachTargetCell;
         private PhysicsBody body;
@@ -71,6 +73,7 @@ namespace Barotrauma.Items.Components
             set
             {
                 attached = value;
+                item.CheckCleanable();
                 item.SetActiveSprite();
             }
         }
@@ -164,6 +167,8 @@ namespace Barotrauma.Items.Components
         public bool SwingWhenAiming { get; set; }
         [Editable, Serialize(false, IsPropertySaveable.No, description: "Should the item swing around when it's being used (for example, when firing a weapon or a welding tool).")]
         public bool SwingWhenUsing { get; set; }
+        [Editable, Serialize(false, IsPropertySaveable.No)]
+        public bool DisableHeadRotation { get; set; }
 
         [ConditionallyEditable(ConditionallyEditable.ConditionType.Attachable, MinValueFloat = 0.0f, MaxValueFloat = 0.999f, DecimalCount = 3), Serialize(0.55f, IsPropertySaveable.No, description: "Sprite depth that's used when the item is NOT attached to a wall.")]
         public float SpriteDepthWhenDropped
@@ -180,11 +185,12 @@ namespace Barotrauma.Items.Components
             Pusher = null;
             if (element.GetAttributeBool("blocksplayers", false))
             {
-                Pusher = new PhysicsBody(item.body.width, item.body.height, item.body.radius, item.body.Density)
+                Pusher = new PhysicsBody(item.body.width, item.body.height, item.body.radius, 
+                    item.body.Density,
+                    BodyType.Dynamic,
+                    Physics.CollisionItemBlocking, 
+                    Physics.CollisionCharacter | Physics.CollisionProjectile)
                 {
-                    BodyType = BodyType.Dynamic,
-                    CollidesWith = Physics.CollisionCharacter | Physics.CollisionProjectile,
-                    CollisionCategories = Physics.CollisionItemBlocking,
                     Enabled = false,
                     UserData = this
                 };

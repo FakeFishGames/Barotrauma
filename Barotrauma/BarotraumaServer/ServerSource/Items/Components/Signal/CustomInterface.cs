@@ -26,26 +26,34 @@ namespace Barotrauma.Items.Components
             {
                 for (int i = 0; i < customInterfaceElementList.Count; i++)
                 {
-                    if (customInterfaceElementList[i].HasPropertyName)
+                    var element = customInterfaceElementList[i];
+                    if (element.HasPropertyName)
                     {
-                        if (!customInterfaceElementList[i].IsIntegerInput)
+                        if (!element.IsNumberInput)
                         {
-                            TextChanged(customInterfaceElementList[i], elementValues[i]);
+                            TextChanged(element, elementValues[i]);
                         }
                         else
                         {
-                            int.TryParse(elementValues[i], out int value);
-                            ValueChanged(customInterfaceElementList[i], value);
+                            switch (element.NumberType)
+                            {
+                                case NumberType.Int when int.TryParse(elementValues[i], out int value):
+                                    ValueChanged(element, value);
+                                    break;
+                                case NumberType.Float when TryParseFloatInvariantCulture(elementValues[i], out float value):
+                                    ValueChanged(element, value);
+                                    break;
+                            }
                         }
                     }
-                    else if (customInterfaceElementList[i].ContinuousSignal)
+                    else if (element.ContinuousSignal)
                     {
-                        TickBoxToggled(customInterfaceElementList[i], elementStates[i]);
+                        TickBoxToggled(element, elementStates[i]);
                     }
                     else if (elementStates[i])
                     {
-                        clickedButton = customInterfaceElementList[i];
-                        ButtonClicked(customInterfaceElementList[i]);
+                        clickedButton = element;
+                        ButtonClicked(element);
                     }
                 }
             }
@@ -61,13 +69,14 @@ namespace Barotrauma.Items.Components
             //extradata contains an array of buttons clicked by a client (or nothing if nothing was clicked)
             for (int i = 0; i < customInterfaceElementList.Count; i++)
             {
-                if (customInterfaceElementList[i].HasPropertyName)
+                var element = customInterfaceElementList[i];
+                if (element.HasPropertyName)
                 {
-                    msg.Write(customInterfaceElementList[i].Signal);
+                    msg.Write(element.Signal);
                 }
-                else if(customInterfaceElementList[i].ContinuousSignal)
+                else if(element.ContinuousSignal)
                 {
-                    msg.Write(customInterfaceElementList[i].State);
+                    msg.Write(element.State);
                 }
                 else
                 {

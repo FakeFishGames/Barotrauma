@@ -383,6 +383,8 @@ namespace Barotrauma
 
         public bool ExternalHighlight = false;
 
+        public virtual bool PlaySoundOnSelect { get; set; } = false;
+
         private RectTransform rectTransform;
         public RectTransform RectTransform
         {

@@ -114,6 +114,20 @@ namespace Barotrauma.Items.Components
             private set;
         } = true;
 
+        [Serialize(false, IsPropertySaveable.No)]
+        public bool NonInteractableWhenFlippedX
+        {
+            get;
+            set;
+        }
+
+        [Serialize(false, IsPropertySaveable.No)]
+        public bool NonInteractableWhenFlippedY
+        {
+            get;
+            set;
+        }
+
         public Controller(Item item, ContentXElement element)
             : base(item, element)
         {
@@ -147,7 +161,7 @@ namespace Barotrauma.Items.Components
                     CancelUsing(user);
                     user = null;
                 }
-                if (!IsToggle) { IsActive = false; }
+                if (!IsToggle || item.Connections == null) { IsActive = false; }
                 return;
             }
 
@@ -462,19 +476,8 @@ namespace Barotrauma.Items.Components
             {
                 dir = dir == Direction.Left ? Direction.Right : Direction.Left;
             }
-
-            userPos.X = -UserPos.X;            
-
-            for (int i = 0; i < limbPositions.Count; i++)
-            {
-                float diff = (item.Rect.X + limbPositions[i].Position.X * item.Scale) - item.Rect.Center.X;
-
-                Vector2 flippedPos =
-                    new Vector2(
-                        (item.Rect.Center.X - diff - item.Rect.X) / item.Scale,
-                        limbPositions[i].Position.Y);
-                limbPositions[i] = new LimbPos(limbPositions[i].LimbType, flippedPos, limbPositions[i].AllowUsingLimb);
-            }
+            userPos.X = -UserPos.X;
+            FlipLimbPositions();
         }
 
         public override void FlipY(bool relativeToSub)
@@ -519,12 +522,21 @@ namespace Barotrauma.Items.Components
         {
             if (Screen.Selected == GameMain.SubEditorScreen)
             {
+                if (item.FlippedX)
+                {
+                    FlipLimbPositions();
+                }
+                // Don't save flipped positions.
                 foreach (var limbPos in limbPositions)
                 {
                     element.Add(new XElement("limbposition",
                         new XAttribute("limb", limbPos.LimbType),
                         new XAttribute("position", XMLExtensions.Vector2ToString(limbPos.Position)),
                         new XAttribute("allowusinglimb", limbPos.AllowUsingLimb)));
+                }
+                if (item.FlippedX)
+                {
+                    FlipLimbPositions();
                 }
             }
             return element;
@@ -556,6 +568,42 @@ namespace Barotrauma.Items.Components
                         }
                     }
                 }
+            }
+        }
+
+        private void FlipLimbPositions()
+        {
+            for (int i = 0; i < limbPositions.Count; i++)
+            {
+                float diff = (item.Rect.X + limbPositions[i].Position.X * item.Scale) - item.Rect.Center.X;
+
+                Vector2 flippedPos =
+                    new Vector2(
+                        (item.Rect.Center.X - diff - item.Rect.X) / item.Scale,
+                        limbPositions[i].Position.Y);
+                limbPositions[i] = new LimbPos(limbPositions[i].LimbType, flippedPos, limbPositions[i].AllowUsingLimb);
+            }
+        }
+
+        public override void OnItemLoaded()
+        {
+            if (item.FlippedX && NonInteractableWhenFlippedX)
+            {
+                item.NonInteractable = true;
+            }
+            else if (item.FlippedY && NonInteractableWhenFlippedY)
+            {
+                item.NonInteractable = true;
+            }
+        }
+
+        public override void Reset()
+        {
+            base.Reset();
+            LoadLimbPositions(originalElement);
+            if (item.FlippedX)
+            {
+                FlipLimbPositions();
             }
         }
     }

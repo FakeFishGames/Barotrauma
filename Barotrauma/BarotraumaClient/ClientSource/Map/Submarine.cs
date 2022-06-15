@@ -1,55 +1,61 @@
-﻿using Barotrauma.Networking;
-using Barotrauma.RuinGeneration;
-using Barotrauma.Sounds;
+﻿using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using Barotrauma.IO;
 using System.Linq;
-using System.Xml.Linq;
-using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {
     partial class Submarine : Entity, IServerPositionSync
     {
-        public static Vector2 MouseToWorldGrid(Camera cam, Submarine sub)
-        {
-            Vector2 position = PlayerInput.MousePosition;
-            position = cam.ScreenToWorld(position);
-
-            Vector2 worldGridPos = VectorToWorldGrid(position);
-
-            if (sub != null)
-            {
-                worldGridPos.X += sub.Position.X % GridSize.X;
-                worldGridPos.Y += sub.Position.Y % GridSize.Y;
-            }
-
-            return worldGridPos;
-        }
-
         //drawing ----------------------------------------------------
         private static readonly HashSet<Submarine> visibleSubs = new HashSet<Submarine>();
+
+        private static double prevCullTime;
+        private static Rectangle prevCullArea;
+        /// <summary>
+        /// Interval at which we force culled entites to be updated, regardless if the camera has moved
+        /// </summary>
+        private const float CullInterval = 0.25f;
+        /// <summary>
+        /// Margin applied around the view area when culling entities (i.e. entities that are this far outside the view are still considered visible)
+        /// </summary>
+        private const int CullMargin = 500;
+        /// <summary>
+        /// Update entity culling when any corner of the view has moved more than this
+        /// </summary>
+        private const int CullMoveThreshold = 50;
+
         public static void CullEntities(Camera cam)
         {
+            Rectangle camView = cam.WorldView;
+            camView = new Rectangle(camView.X - CullMargin, camView.Y + CullMargin, camView.Width + CullMargin * 2, camView.Height + CullMargin * 2);
+
+            if (Math.Abs(camView.X - prevCullArea.X) < CullMoveThreshold &&
+                Math.Abs(camView.Y - prevCullArea.Y) < CullMoveThreshold &&
+                Math.Abs(camView.Right - prevCullArea.Right) < CullMoveThreshold &&
+                Math.Abs(camView.Bottom - prevCullArea.Bottom) < CullMoveThreshold &&
+                prevCullTime > Timing.TotalTime - CullInterval)
+            {
+                return;
+            }
+            
             visibleSubs.Clear();
             foreach (Submarine sub in Loaded)
             {
                 if (Level.Loaded != null && sub.WorldPosition.Y < Level.MaxEntityDepth) { continue; }
 
-                int margin = 500;
                 Rectangle worldBorders = new Rectangle(
-                    sub.VisibleBorders.X + (int)sub.WorldPosition.X - margin,
-                    sub.VisibleBorders.Y + (int)sub.WorldPosition.Y + margin,
-                    sub.VisibleBorders.Width + margin * 2,
-                    sub.VisibleBorders.Height + margin * 2);
+                    sub.VisibleBorders.X + (int)sub.WorldPosition.X,
+                    sub.VisibleBorders.Y + (int)sub.WorldPosition.Y,
+                    sub.VisibleBorders.Width,
+                    sub.VisibleBorders.Height);
 
-                if (RectsOverlap(worldBorders, cam.WorldView))
+                if (RectsOverlap(worldBorders, camView))
                 {
                     visibleSubs.Add(sub);
                 }
@@ -64,16 +70,22 @@ namespace Barotrauma
                 visibleEntities.Clear();
             }
 
-            Rectangle worldView = cam.WorldView;
             foreach (MapEntity entity in MapEntity.mapEntityList)
             {
                 if (entity.Submarine != null)
                 {
                     if (!visibleSubs.Contains(entity.Submarine)) { continue; }
                 }
-
-                if (entity.IsVisible(worldView)) { visibleEntities.Add(entity); }
+                if (entity.IsVisible(camView)) { visibleEntities.Add(entity); }
             }
+
+            prevCullArea = camView;
+            prevCullTime = Timing.TotalTime;
+        }
+
+        public static void ForceVisibilityRecheck()
+        {
+            prevCullTime = 0;
         }
 
         public static void Draw(SpriteBatch spriteBatch, bool editing = false)
@@ -148,7 +160,7 @@ namespace Barotrauma
                 {
                     if (predicate != null)
                     {
-                        if (!predicate(e)) continue;
+                        if (!predicate(e)) { continue; }
                     }
                     float drawDepth = structure.GetDrawDepth();
                     int i = 0;
@@ -525,7 +537,7 @@ namespace Barotrauma
                         Item.ItemList.Count(it2 => it2.linkedTo.Contains(item) && !item.linkedTo.Contains(it2));
                     for (int i = 0; i < item.Connections.Count; i++)
                     {
-                        int wireCount = item.Connections[i].Wires.Count(w => w != null);
+                        int wireCount = item.Connections[i].Wires.Count;
                         if (doorLinks + wireCount > item.Connections[i].MaxWires)
                         {
                             errorMsgs.Add(TextManager.GetWithVariables("InsufficientFreeConnectionsWarning",
@@ -677,6 +689,22 @@ namespace Barotrauma
                 disabledItemLightCount += item.GetComponents<Items.Components.LightComponent>().Count();
             }
             return GameMain.LightManager.Lights.Count(l => l.CastShadows && !l.IsBackground) - disabledItemLightCount;
+        }
+
+        public static Vector2 MouseToWorldGrid(Camera cam, Submarine sub)
+        {
+            Vector2 position = PlayerInput.MousePosition;
+            position = cam.ScreenToWorld(position);
+
+            Vector2 worldGridPos = VectorToWorldGrid(position);
+
+            if (sub != null)
+            {
+                worldGridPos.X += sub.Position.X % GridSize.X;
+                worldGridPos.Y += sub.Position.Y % GridSize.Y;
+            }
+
+            return worldGridPos;
         }
 
         public void ClientReadPosition(IReadMessage msg, float sendingTime)

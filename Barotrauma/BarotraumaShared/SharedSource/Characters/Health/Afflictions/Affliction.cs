@@ -35,6 +35,7 @@ namespace Barotrauma
                 if (newValue > _strength)
                 {
                     PendingAdditionStrength = Prefab.GrainBurst;
+                    Duration = Prefab.Duration;
                 }
                 _strength = newValue;
             }
@@ -60,6 +61,8 @@ namespace Barotrauma
 
         public double AppliedAsSuccessfulTreatmentTime, AppliedAsFailedTreatmentTime;
 
+        public float Duration;
+
         /// <summary>
         /// Which character gave this affliction
         /// </summary>
@@ -74,6 +77,8 @@ namespace Barotrauma
             PendingAdditionStrength = Prefab.GrainBurst;
             _strength = strength;
             Identifier = prefab.Identifier;
+
+            Duration = prefab.Duration;
 
             foreach (var periodicEffect in prefab.PeriodicEffects)
             {
@@ -315,8 +320,7 @@ namespace Barotrauma
         public bool HasFlag(AbilityFlags flagType)
         {
             if (!(GetViableEffect() is AfflictionPrefab.Effect currentEffect)) { return false; }
-
-            return currentEffect.AfflictionAbilityFlags.Contains(flagType);
+            return currentEffect.AfflictionAbilityFlags.HasFlag(flagType);
         }
 
         private AfflictionPrefab.Effect GetViableEffect()

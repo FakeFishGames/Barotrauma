@@ -1,12 +1,11 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.Networking;
-using Barotrauma.Extensions;
-using System.Globalization;
-using Barotrauma.Abilities;
 
 namespace Barotrauma
 {
@@ -124,7 +123,18 @@ namespace Barotrauma
 
         public float PressureKillDelay { get; private set; } = 5.0f;
 
-        public float Vitality { get; private set; }
+        private float vitality;
+        public float Vitality 
+        {
+            get 
+            { 
+                return Character.IsDead ? minVitality : vitality; 
+            }
+            private set
+            {
+                vitality = value;
+            }
+        }
 
         public float HealthPercentage => MathUtils.Percentage(Vitality, MaxVitality);
 
@@ -137,7 +147,7 @@ namespace Barotrauma
                 {
                     max += Character.Info.Job.Prefab.VitalityModifier;
                 }
-                max *= Character.StaticHealthMultiplier;
+                max *= Character.HumanPrefabHealthMultiplier;
                 max *= 1f + Character.GetStatValue(StatTypes.MaximumHealthMultiplier);
                 return max * Character.HealthMultiplier;
             }
@@ -689,6 +699,7 @@ namespace Barotrauma
                 newStrength = Math.Min(existingAffliction.Prefab.MaxStrength, newStrength);
                 if (existingAffliction == stunAffliction) { Character.SetStun(newStrength, true, true); }
                 existingAffliction.Strength = newStrength;
+                existingAffliction.Duration = existingAffliction.Prefab.Duration;
                 if (newAffliction.Source != null) { existingAffliction.Source = newAffliction.Source; }
                 CalculateVitality();
                 if (Vitality <= MinVitality)
@@ -725,6 +736,8 @@ namespace Barotrauma
             AddLimbAffliction(limbHealth: null, newAffliction, allowStacking);
         }
 
+        partial void UpdateSkinTint();
+
         partial void UpdateLimbAfflictionOverlays();
 
         public void Update(float deltaTime)
@@ -745,6 +758,15 @@ namespace Barotrauma
                         SteamAchievementManager.OnAfflictionRemoved(affliction, Character);
                         if (!irremovableAfflictions.Contains(affliction)) { afflictionsToRemove.Add(affliction); }
                         continue;
+                    }
+                    if (affliction.Prefab.Duration > 0.0f)
+                    {
+                        affliction.Duration -= deltaTime;
+                        if (affliction.Duration <= 0.0f)
+                        {
+                            afflictionsToRemove.Add(affliction);
+                            continue;
+                        }
                     }
                     afflictionsToUpdate.Add(kvp);
                 }
@@ -788,30 +810,13 @@ namespace Barotrauma
             if (!Character.GodMode)
             {
                 UpdateLimbAfflictionOverlays();
-                UpdateSkinTint();
+                UpdateSkinTint();                
                 CalculateVitality();
 
                 if (Vitality <= MinVitality)
                 {
                     Kill();
                 }
-            }
-        }
-
-        private void UpdateSkinTint()
-        {
-            FaceTint = DefaultFaceTint;
-            BodyTint = Color.TransparentBlack;
-
-            if (!(Character?.Params?.Health.ApplyAfflictionColors ?? false)) { return; }
-
-            foreach (KeyValuePair<Affliction, LimbHealth> kvp in afflictions)
-            {
-                var affliction = kvp.Key;
-                Color faceTint = affliction.GetFaceTint();
-                if (faceTint.A > FaceTint.A) { FaceTint = faceTint; }
-                Color bodyTint = affliction.GetBodyTint();
-                if (bodyTint.A > BodyTint.A) { BodyTint = bodyTint; }
             }
         }
 
@@ -905,6 +910,7 @@ namespace Barotrauma
             if (Unkillable || Character.GodMode) { return; }
             
             var (type, affliction) = GetCauseOfDeath();
+            UpdateLimbAfflictionOverlays();
             UpdateSkinTint();
             Character.Kill(type, affliction);
 #if CLIENT

@@ -40,7 +40,7 @@ namespace Barotrauma.Items.Components
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            if (character == null || character.Removed) return false;
+            if (character == null || character.Removed) { return false; }
             if (!character.IsKeyDown(InputType.Aim) || character.Stun > 0.0f) { return false; }
 
             IsActive = true;
@@ -55,12 +55,11 @@ namespace Barotrauma.Items.Components
                 if (UsableIn == UseEnvironment.Water) { return true; }
             }
 
-            Vector2 dir = Vector2.Normalize(character.CursorPosition - character.Position);
-            //move upwards if the cursor is at the position of the character
-            if (!MathUtils.IsValid(dir)) dir = Vector2.UnitY;
-
+            Vector2 dir = character.CursorPosition - character.Position;
+            if (!MathUtils.IsValid(dir)) { return true; }
+            float length = 200;
+            dir = dir.ClampLength(length) / length;
             Vector2 propulsion = dir * Force * character.PropulsionSpeedMultiplier;
-
             if (character.AnimController.InWater && Force > 0.0f) { character.AnimController.TargetMovement = dir; }
 
             foreach (Limb limb in character.AnimController.Limbs)

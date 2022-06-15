@@ -11,7 +11,7 @@ namespace Barotrauma
         {
             Message = $"\"{whoAsked?.Name ?? "[NULL]"}\" depends on a package " +
                       $"with name or ID \"{missingPackage ?? "[NULL]"}\" " +
-                      $"that is not currently enabled.";
+                      $"that is not currently installed.";
         }
     }
 }

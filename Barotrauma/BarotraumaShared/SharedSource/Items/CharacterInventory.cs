@@ -360,9 +360,6 @@ namespace Barotrauma
                 {
                     if (allowedSlot.HasFlag(SlotTypes[i]) && item.AllowedSlots.Any(s => s.HasFlag(SlotTypes[i])) && slots[i].Items.Any(it => it != item))
                     {
-#if CLIENT
-                        if (PersonalSlots.HasFlag(SlotTypes[i])) { hidePersonalSlots = false; }
-#endif
                         if (!slots[i].First().AllowedSlots.Contains(InvSlotType.Any) || !TryPutItem(slots[i].FirstOrDefault(), character, new List<InvSlotType> { InvSlotType.Any }, true, ignoreCondition))
                         {
                             free = false;
@@ -382,9 +379,6 @@ namespace Barotrauma
                 {
                     if (allowedSlot.HasFlag(SlotTypes[i]) && item.GetComponents<Pickable>().Any(p => p.AllowedSlots.Any(s => s.HasFlag(SlotTypes[i]))) && slots[i].Empty())
                     {
-#if CLIENT
-                        if (PersonalSlots.HasFlag(SlotTypes[i])) { hidePersonalSlots = false; }
-#endif
                         bool removeFromOtherSlots = item.ParentInventory != this;
                         if (placedInSlot == -1 && inWrongSlot)
                         {
@@ -454,9 +448,6 @@ namespace Barotrauma
                 GameAnalyticsManager.AddErrorEventOnce("CharacterInventory.TryPutItem:IndexOutOfRange", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return false;
             }
-#if CLIENT
-            if (PersonalSlots.HasFlag(SlotTypes[index])) { hidePersonalSlots = false; }
-#endif
             //there's already an item in the slot
             if (slots[index].Any())
             {
@@ -480,9 +471,6 @@ namespace Barotrauma
                 foreach (InvSlotType allowedSlot in pickable.AllowedSlots)
                 {
                     if (!allowedSlot.HasFlag(SlotTypes[index])) { continue; }
-    #if CLIENT
-                    if (PersonalSlots.HasFlag(allowedSlot)) { hidePersonalSlots = false; }
-    #endif
                     for (int i = 0; i < capacity; i++)
                     {
                         if (allowedSlot.HasFlag(SlotTypes[i]) && slots[i].Any() && !slots[i].Contains(item))

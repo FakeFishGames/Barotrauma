@@ -238,7 +238,7 @@ namespace Barotrauma
                         };
                         if (repairTool != null)
                         {
-                            objective.CloseEnough = repairTool.Range * 0.75f;
+                            objective.CloseEnough = AIObjectiveFixLeak.CalculateReach(repairTool, character);
                         }
                         return objective;
                     },                    

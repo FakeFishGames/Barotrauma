@@ -164,8 +164,6 @@ namespace Barotrauma
         public float LegBendTorque => CurrentGroundedParams.LegBendTorque * RagdollParams.JointScale;
         public Vector2 HandMoveOffset => CurrentGroundedParams.HandMoveOffset * RagdollParams.JointScale;
 
-        public float LockFlippingUntil;
-
         public override Vector2 AimSourceSimPos
         {
             get
@@ -841,7 +839,7 @@ namespace Barotrauma
                 rotation += 360;
             }
             float targetSpeed = TargetMovement.Length();
-            if (targetSpeed > 0.1f && !character.IsRemotelyControlled && !character.IsKeyDown(InputType.Aim))
+            if (targetSpeed > 0.1f && !character.IsRemotelyControlled && !Aiming)
             {
                 if (Anim != Animation.UsingConstruction && !(character.SelectedConstruction?.GetComponent<Controller>()?.ControlCharacterPose ?? false))
                 {

@@ -27,11 +27,13 @@ namespace Barotrauma
             public VoteState State { get; set; }
 
             public SubmarineInfo Sub;
+            public bool TransferItems;
             public int DeliveryFee;
 
-            public SubmarineVote(Client starter, SubmarineInfo subInfo, int deliveryFee, VoteType voteType)
+            public SubmarineVote(Client starter, SubmarineInfo subInfo, bool transferItems, int deliveryFee, VoteType voteType)
             {
                 Sub = subInfo;
+                TransferItems = transferItems;
                 DeliveryFee = deliveryFee;
                 VoteType = voteType;
                 State = VoteState.Started;
@@ -44,11 +46,13 @@ namespace Barotrauma
                 {
                     GameMain.Server?.SwitchSubmarine();
                 }
+                else
+                {
+                    voting.RegisterRejectedVote(this);
+                }
                 voting.StopSubmarineVote(passed);                
             }
         }
-
-        public static IVote ActiveVote;
 
         public class TransferVote : IVote
         {
@@ -83,21 +87,28 @@ namespace Barotrauma
                         toWallet.Give(TransferAmount);
                     }
                 }
+                else
+                {
+                    voting.RegisterRejectedVote(this);
+                }
                 voting.StopMoneyTransferVote(passed);
             }
         }
 
+        public static IVote ActiveVote;
+
         private static readonly Queue<IVote> pendingVotes = new Queue<IVote>();
 
-        private void StartSubmarineVote(SubmarineInfo subInfo, VoteType voteType, Client sender)
+        private readonly TimeSpan rejectedVoteCooldown = new TimeSpan(0, 1, 0);
+
+        private readonly Dictionary<Client, (VoteType voteType, DateTime time)> rejectedVoteTimes = new Dictionary<Client, (VoteType voteType, DateTime time)>();
+
+        private void StartSubmarineVote(SubmarineInfo subInfo, bool transferItems, VoteType voteType, Client sender)
         {
-            if (ActiveVote == null)
-            {
-                sender.SetVote(voteType, 2);
-            }
             var subVote = new SubmarineVote(
                 sender,
                 subInfo,
+                transferItems,
                 voteType == VoteType.SwitchSub ? GameMain.GameSession.Map.DistanceToClosestLocationWithOutpost(GameMain.GameSession.Map.CurrentLocation, out Location endLocation) : 0,
                 voteType);
             StartOrEnqueueVote(subVote);
@@ -136,9 +147,9 @@ namespace Barotrauma
 
         public void StartTransferVote(Client starter, Client from, int transferAmount, Client to)
         {
-            if (ActiveVote == null)
+            if (ShouldRejectVote(starter, VoteType.TransferMoney))
             {
-                starter.SetVote(VoteType.TransferMoney, 2);
+                return;
             }
             StartOrEnqueueVote(new TransferVote(starter, from, transferAmount, to));
             GameMain.Server.UpdateVoteStatus(checkActiveVote: false);
@@ -156,6 +167,31 @@ namespace Barotrauma
             }
         }
 
+        private bool ShouldRejectVote(Client sender, VoteType voteType)
+        {
+            if (rejectedVoteTimes.ContainsKey(sender))
+            {
+                TimeSpan remainingCooldown = (rejectedVoteTimes[sender].time + rejectedVoteCooldown) - DateTime.Now;
+                if (rejectedVoteTimes[sender].voteType == voteType &&
+                    remainingCooldown.TotalSeconds > 0)
+                {
+                    GameMain.Server.SendDirectChatMessage(
+                        TextManager.FormatServerMessage("voterejectedpleasewait", ("[time]", ((int)remainingCooldown.TotalSeconds).ToString())),
+                        sender, ChatMessageType.ServerMessageBox);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        protected void RegisterRejectedVote(IVote vote)
+        {
+            if (vote.VoteStarter != null)
+            {
+                rejectedVoteTimes[vote.VoteStarter] = (vote.VoteType, DateTime.Now);
+            }
+        }
+
         public void Update(float deltaTime)
         {
             if (ActiveVote == null) { return; }
@@ -164,10 +200,19 @@ namespace Barotrauma
 
             if (ActiveVote.Timer >= GameMain.NetworkMember.ServerSettings.VoteTimeout)
             {
+                var inGameClients = GameMain.Server.ConnectedClients.Where(c => c.InGame);
+                var eligibleClients = inGameClients.Where(c => c != ActiveVote.VoteStarter);
+
                 // Do not take unanswered into account for total
-                int yes = GameMain.Server.ConnectedClients.Count(c => c.InGame && c.GetVote<int>(ActiveVote.VoteType) == 2);
-                int no = GameMain.Server.ConnectedClients.Count(c => c.InGame && c.GetVote<int>(ActiveVote.VoteType) == 1);
-                ActiveVote.Finish(this, passed: yes / (float)(yes + no) >= GameMain.NetworkMember.ServerSettings.VoteRequiredRatio);
+                int yes = eligibleClients.Count(c => c.GetVote<int>(ActiveVote.VoteType) == 2);
+                int no = eligibleClients.Count(c => c.GetVote<int>(ActiveVote.VoteType) == 1);
+                int total = Math.Max(yes + no, 1);
+
+                bool passed = 
+                    yes / (float)total >= GameMain.NetworkMember.ServerSettings.VoteRequiredRatio || 
+                    inGameClients.Count() == 1; 
+
+                ActiveVote.Finish(this, passed);
             }
         }
 
@@ -227,7 +272,6 @@ namespace Barotrauma
                         GameServer.Log(GameServer.ClientLogName(sender) + (ready ? " is ready to start the game." : " is not ready to start the game."), ServerLog.MessageType.ServerMessage);
                     }
                     break;
-
                 case VoteType.PurchaseAndSwitchSub:
                 case VoteType.PurchaseSub:
                 case VoteType.SwitchSub:
@@ -240,18 +284,26 @@ namespace Barotrauma
                             int amount = inc.ReadInt32();
                             int fromClientId = inc.ReadByte();
                             int toClientId = inc.ReadByte();
-                            pendingVotes.Enqueue(new TransferVote(sender,
-                                GameMain.Server.ConnectedClients.Find(c => c.ID == fromClientId),
-                                amount,
-                                GameMain.Server.ConnectedClients.Find(c => c.ID == toClientId)));
+                            if (!ShouldRejectVote(sender, voteType))
+                            {
+                                pendingVotes.Enqueue(new TransferVote(sender,
+                                    GameMain.Server.ConnectedClients.Find(c => c.ID == fromClientId),
+                                    amount,
+                                    GameMain.Server.ConnectedClients.Find(c => c.ID == toClientId)));
+                            }
                         }
                         else
                         {
                             string subName = inc.ReadString();
                             SubmarineInfo subInfo = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName);
-                            if (GameMain.GameSession?.Campaign is MultiPlayerCampaign campaign && (campaign.CanPurchaseSub(subInfo, sender) || GameMain.GameSession.IsSubmarineOwned(subInfo)))
+                            bool transferItems = inc.ReadBoolean();
+                            if (!ShouldRejectVote(sender, voteType))
                             {
-                                StartSubmarineVote(subInfo, voteType, sender);
+                                if (GameMain.GameSession?.Campaign is MultiPlayerCampaign campaign && 
+                                    (campaign.CanPurchaseSub(subInfo, sender) || GameMain.GameSession.IsSubmarineOwned(subInfo)))
+                                {
+                                    StartSubmarineVote(subInfo, transferItems, voteType, sender);
+                                }
                             }
                         }
                     }
@@ -307,22 +359,24 @@ namespace Barotrauma
             {
                 msg.Write((byte)ActiveVote.VoteType);
                 if (ActiveVote.State != VoteState.None && ActiveVote.VoteType != VoteType.Unknown)
-                {               
-                    var yesClients = GameMain.Server.ConnectedClients.FindAll(c => c.InGame && c.GetVote<int>(ActiveVote.VoteType) == 2);
-                    msg.Write((byte)yesClients.Count);
+                {
+                    var eligibleClients = GameMain.Server.ConnectedClients.Where(c => c.InGame && c != ActiveVote.VoteStarter);
+
+                    var yesClients = eligibleClients.Where(c => c.GetVote<int>(ActiveVote.VoteType) == 2);
+                    msg.Write((byte)yesClients.Count());
                     foreach (Client c in yesClients)
                     {
                         msg.Write(c.ID);
                     }
 
-                    var noClients = GameMain.Server.ConnectedClients.FindAll(c => c.InGame && c.GetVote<int>(ActiveVote.VoteType) == 1);
-                    msg.Write((byte)noClients.Count);
+                    var noClients = eligibleClients.Where(c => c.GetVote<int>(ActiveVote.VoteType) == 1);
+                    msg.Write((byte)noClients.Count());
                     foreach (Client c in noClients)
                     {
                         msg.Write(c.ID);
                     }
 
-                    msg.Write((byte)GameMain.Server.ConnectedClients.Count(c => c.InGame));
+                    msg.Write((byte)eligibleClients.Count());
 
                     switch (ActiveVote.State)
                     {
@@ -336,6 +390,7 @@ namespace Barotrauma
                                 case VoteType.PurchaseAndSwitchSub:
                                 case VoteType.SwitchSub:
                                     msg.Write((ActiveVote as SubmarineVote).Sub.Name);
+                                    msg.Write((ActiveVote as SubmarineVote).TransferItems);
                                     break;
                                 case VoteType.TransferMoney:
                                     var transferVote = (ActiveVote as TransferVote);
@@ -357,8 +412,10 @@ namespace Barotrauma
                                 case VoteType.PurchaseSub:
                                 case VoteType.PurchaseAndSwitchSub:
                                 case VoteType.SwitchSub:
-                                    msg.Write((ActiveVote as SubmarineVote).Sub.Name);
-                                    msg.Write((short)(ActiveVote as SubmarineVote).DeliveryFee);
+                                    var subVote = ActiveVote as SubmarineVote;
+                                    msg.Write(subVote.Sub.Name);
+                                    msg.Write(subVote.TransferItems);
+                                    msg.Write((short)subVote.DeliveryFee);
                                     break;
                             }
                             break;

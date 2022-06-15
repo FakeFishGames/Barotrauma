@@ -68,7 +68,7 @@ namespace Barotrauma.Items.Components
             get { return poweredList; }
         }
 
-        public static readonly List<Connection> ChangedConnections = new List<Connection>();
+        public static readonly HashSet<Connection> ChangedConnections = new HashSet<Connection>();
 
         public readonly static Dictionary<int, GridInfo> Grids = new Dictionary<int, GridInfo>();
 
@@ -150,7 +150,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (powerOut?.Grid != null) { return powerOut.Grid.Voltage; }
                 }
-                return voltage;
+                return PowerConsumption <= 0.0f ? 1.0f : voltage;
             }
             set
             {
@@ -158,21 +158,13 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public bool PoweredByTinkering
-        {
-            get
-            {
-                if (this is PowerContainer) { return false; }
-                foreach (Repairable repairable in Item.Repairables)
-                {
-                    if (repairable.IsTinkering && repairable.TinkeringPowersDevices)
-                    {
-                        return true;
-                    }
-                }
-                return false;
-            }
-        }
+        /// <summary>
+        /// Essentially Voltage / MinVoltage (= how much of the minimum required voltage has been satisfied), clamped between 0 and 1. 
+        /// Can be used by status effects or sounds to check if the item has enough power to run
+        /// </summary>
+        public float RelativeVoltage => minVoltage <= 0.0f ? 1.0f : MathHelper.Clamp(Voltage / minVoltage, 0.0f, 1.0f);
+
+        public bool PoweredByTinkering { get; set; }
 
         [Editable, Serialize(true, IsPropertySaveable.Yes, description: "Can the item be damaged by electomagnetic pulses.")]
         public bool VulnerableToEMP
@@ -449,7 +441,7 @@ namespace Barotrauma.Items.Components
 
 #if CLIENT
             sw.Stop();
-            GameMain.PerformanceCounter.AddElapsedTicks("GridUpdate", sw.ElapsedTicks);
+            GameMain.PerformanceCounter.AddElapsedTicks("Update:Power", sw.ElapsedTicks);
             sw.Restart();
 #endif
 
@@ -606,7 +598,7 @@ namespace Barotrauma.Items.Components
 
 #if CLIENT
             sw.Stop();
-            GameMain.PerformanceCounter.AddElapsedTicks("PowerUpdate", sw.ElapsedTicks);
+            GameMain.PerformanceCounter.AddElapsedTicks("Update:Power", sw.ElapsedTicks);
 #endif
         }
 

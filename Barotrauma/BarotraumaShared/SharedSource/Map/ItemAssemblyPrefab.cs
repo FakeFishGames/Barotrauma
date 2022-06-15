@@ -10,11 +10,10 @@ using System.Net;
 
 namespace Barotrauma
 {
+    #warning TODO: MapEntityPrefab should be constrained further to not include item assemblies, as assemblies are effectively not entities at all
     partial class ItemAssemblyPrefab : MapEntityPrefab
     {
         public static readonly PrefabCollection<ItemAssemblyPrefab> Prefabs = new PrefabCollection<ItemAssemblyPrefab>();
-
-        public static readonly string VanillaSaveFolder = Path.Combine("Content", "Items", "Assemblies");
 
         private readonly XElement configElement;
 

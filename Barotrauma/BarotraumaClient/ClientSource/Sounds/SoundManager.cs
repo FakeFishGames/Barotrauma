@@ -705,7 +705,7 @@ namespace Barotrauma.Sounds
         public void ApplySettings()
         {
             SetCategoryGainMultiplier("default", GameSettings.CurrentConfig.Audio.SoundVolume, 0);
-            SetCategoryGainMultiplier("ui", GameSettings.CurrentConfig.Audio.SoundVolume, 0);
+            SetCategoryGainMultiplier("ui", GameSettings.CurrentConfig.Audio.UiVolume, 0);
             SetCategoryGainMultiplier("waterambience", GameSettings.CurrentConfig.Audio.SoundVolume, 0);
             SetCategoryGainMultiplier("music", GameSettings.CurrentConfig.Audio.MusicVolume, 0);
             SetCategoryGainMultiplier("voip", Math.Min(GameSettings.CurrentConfig.Audio.VoiceChatVolume, 1.0f), 0);

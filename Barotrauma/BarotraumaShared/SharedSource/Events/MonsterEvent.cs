@@ -16,6 +16,8 @@ namespace Barotrauma
         private readonly float scatter;
         private readonly float offset;
         private readonly float delayBetweenSpawns;
+        private float resetTime;
+        private float resetTimer;
 
         private Vector2? spawnPos;
 
@@ -24,7 +26,7 @@ namespace Barotrauma
         public readonly Level.PositionType SpawnPosType;
         private readonly string spawnPointTag;
 
-        private bool spawnPending;
+        private bool spawnPending, spawnReady;
 
         public readonly int MaxAmountPerLevel = int.MaxValue;
 
@@ -96,6 +98,7 @@ namespace Barotrauma
             offset = prefab.ConfigElement.GetAttributeFloat("offset", 0);
             scatter = Math.Clamp(prefab.ConfigElement.GetAttributeFloat("scatter", 500), 0, 3000);
             delayBetweenSpawns = prefab.ConfigElement.GetAttributeFloat("delaybetweenspawns", 0.1f);
+            resetTime = prefab.ConfigElement.GetAttributeFloat("resettime", 0);
 
             if (GameMain.NetworkMember != null)
             {
@@ -131,14 +134,14 @@ namespace Barotrauma
             }
         }
 
-        public override bool CanAffectSubImmediately(Level level)
+        public override void Init(EventSet parentSet)
         {
-            float maxRange = Sonar.DefaultSonarRange * 0.8f;
-            return GetAvailableSpawnPositions().Any(p => Vector2.DistanceSquared(p.Position.ToVector2(), GetReferenceSub().WorldPosition) < maxRange * maxRange);
-        }
-
-        public override void Init(bool affectSubImmediately)
-        {
+            base.Init(parentSet);
+            if (parentSet != null && resetTime == 0)
+            {
+                // Use the parent reset time only if there's no reset time defined for the event.
+                resetTime = parentSet.ResetTime;
+            }
             if (GameSettings.CurrentConfig.VerboseLogging)
             {
                 DebugConsole.NewMessage("Initialized MonsterEvent (" + SpeciesName + ")", Color.White);
@@ -199,7 +202,7 @@ namespace Barotrauma
                 {
                     //no suitable position found, disable the event
                     spawnPos = null;
-                    Finished();
+                    Finish();
                     return;
                 }
                 Submarine refSub = GetReferenceSub();
@@ -267,22 +270,17 @@ namespace Barotrauma
                 if (!isRuinOrWreck)
                 {
                     float minDistance = 20000;
-                    var refSub = GetReferenceSub();
-                    availablePositions.RemoveAll(p => Vector2.DistanceSquared(refSub.WorldPosition, p.Position.ToVector2()) < minDistance * minDistance);
-                    if (Submarine.MainSubs.Length > 1)
+                    for (int i = 0; i < Submarine.MainSubs.Length; i++)
                     {
-                        for (int i = 1; i < Submarine.MainSubs.Length; i++)
-                        {
-                            if (Submarine.MainSubs[i] == null) { continue; }
-                            availablePositions.RemoveAll(p => Vector2.DistanceSquared(Submarine.MainSubs[i].WorldPosition, p.Position.ToVector2()) < minDistance * minDistance);
-                        }
+                        if (Submarine.MainSubs[i] == null) { continue; }
+                        availablePositions.RemoveAll(p => Vector2.DistanceSquared(Submarine.MainSubs[i].WorldPosition, p.Position.ToVector2()) < minDistance * minDistance);
                     }
                 }
                 if (availablePositions.None())
                 {
                     //no suitable position found, disable the event
                     spawnPos = null;
-                    Finished();
+                    Finish();
                     return;
                 }
                 chosenPosition = availablePositions.GetRandomUnsynced();
@@ -306,7 +304,7 @@ namespace Barotrauma
                     {
                         //no suitable position found, disable the event
                         spawnPos = null;
-                        Finished();
+                        Finish();
                         return;
                     }
                 }
@@ -344,7 +342,7 @@ namespace Barotrauma
                     {
                         //no suitable position found, disable the event
                         spawnPos = null;
-                        Finished();
+                        Finish();
                         return;
                     }
                 }
@@ -352,20 +350,42 @@ namespace Barotrauma
             }
         }
 
-        private float GetMinDistanceToSub(Submarine submarine)
+        private float GetMinDistanceToSub(Submarine submarine) 
         {
-            return Math.Max(Math.Max(submarine.Borders.Width, submarine.Borders.Height), Sonar.DefaultSonarRange * 0.9f);
+            float minDist = Math.Max(Math.Max(submarine.Borders.Width, submarine.Borders.Height), Sonar.DefaultSonarRange * 0.9f);
+            if (SpawnPosType.HasFlag(Level.PositionType.Abyss))
+            {
+                minDist *= 2;
+            }
+            return minDist;
         }
 
         public override void Update(float deltaTime)
         {
             if (disallowed)
             {
-                Finished();
+                Finish();
                 return;
             }
 
-            if (isFinished) { return; }
+            if (resetTimer > 0)
+            {
+                resetTimer -= deltaTime;
+                if (resetTimer <= 0)
+                {
+                    if (ParentSet?.ResetTime > 0)
+                    {
+                        // If parent has reset time defined, the set is recreated. Otherwise we'll just reset this event.
+                        Finish();
+                    }
+                    else
+                    {
+                        spawnReady = false;
+                        spawnPos = null;
+                    }
+                }
+                return;
+            }
 
             if (spawnPos == null)
             {
@@ -373,7 +393,11 @@ namespace Barotrauma
                 {
                     if (Character.CharacterList.Count(c => c.SpeciesName == SpeciesName) >= MaxAmountPerLevel)
                     {
-                        disallowed = true;
+                        // If the event is set to reset, let's just wait until the old corpse is removed (after being disabled).
+                        if (resetTime == 0)
+                        {
+                            disallowed = true;
+                        }
                         return;
                     }
                 }
@@ -384,9 +408,14 @@ namespace Barotrauma
                 spawnPending = true;
             }
 
-            bool spawnReady = false;
             if (spawnPending)
             {
+                System.Diagnostics.Debug.Assert(spawnPos.HasValue);
+                if (spawnPos == null)
+                {
+                    Finish();
+                    return;
+                }
                 //wait until there are no submarines at the spawnpos
                 if (SpawnPosType.HasFlag(Level.PositionType.MainPath) || SpawnPosType.HasFlag(Level.PositionType.SidePath) || SpawnPosType.HasFlag(Level.PositionType.Abyss))
                 {
@@ -408,7 +437,7 @@ namespace Barotrauma
                     {
                         minDistance = 5000;
                     }
-                    else if (SpawnPosType.HasFlag(Level.PositionType.Wreck))
+                    else if (SpawnPosType.HasFlag(Level.PositionType.Wreck) || SpawnPosType.HasFlag(Level.PositionType.BeaconStation))
                     {
                         minDistance = 3000;
                     }
@@ -554,28 +583,24 @@ namespace Barotrauma
                 }
             }
 
-            if (!spawnReady) { return; }
-
-            Entity targetEntity = Submarine.FindClosest(GameMain.GameScreen.Cam.WorldViewCenter);
-#if CLIENT
-            if (Character.Controlled != null) { targetEntity = Character.Controlled; }
-#endif
-            
-            bool monstersDead = true;
-            foreach (Character monster in monsters)
+            if (spawnReady)
             {
-                if (!monster.IsDead)
+                if (monsters.None())
                 {
-                    monstersDead = false;
-
-                    if (targetEntity != null && Vector2.DistanceSquared(monster.WorldPosition, targetEntity.WorldPosition) < 5000.0f * 5000.0f)
+                    Finish();
+                }
+                else if (monsters.All(m => m.IsDead))
+                {
+                    if (resetTime > 0)
                     {
-                        break;
+                        resetTimer = resetTime;
+                    }
+                    else
+                    {
+                        Finish();
                     }
                 }
             }
-
-            if (monstersDead) { Finished(); }
         }
     }
 }

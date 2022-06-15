@@ -225,7 +225,7 @@ namespace Barotrauma
             return true;
         }
 
-        public static GUIMessageBox AskForConfirmation(LocalizedString header, LocalizedString body, Func<bool> onConfirm)
+        public static GUIMessageBox AskForConfirmation(LocalizedString header, LocalizedString body, Func<bool> onConfirm, GUISoundType? overrideConfirmButtonSound = null)
         {
             LocalizedString[] buttons = { TextManager.Get("Ok"), TextManager.Get("Cancel") };
             GUIMessageBox msgBox = new GUIMessageBox(header, body, buttons);
@@ -244,6 +244,10 @@ namespace Barotrauma
                 msgBox.Close();
                 return true;
             };
+            if (overrideConfirmButtonSound.HasValue)
+            {
+                msgBox.Buttons[0].ClickSound = overrideConfirmButtonSound.Value;
+            }
             return msgBox;
         }
 
@@ -818,7 +822,7 @@ namespace Barotrauma
                 }
                 else if (type == typeof(float) || type == typeof(int))
                 {
-                    GUINumberInput valueInput = new GUINumberInput(new RectTransform(Vector2.One, layout.RectTransform), GUINumberInput.NumberType.Float) { FloatValue = (float) (newValue ?? 0.0f) };
+                    GUINumberInput valueInput = new GUINumberInput(new RectTransform(Vector2.One, layout.RectTransform), NumberType.Float) { FloatValue = (float) (newValue ?? 0.0f) };
                     valueInput.OnValueChanged += component => { newValue = component.FloatValue; };
                 }
                 else if (type == typeof(bool))

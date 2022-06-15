@@ -39,9 +39,8 @@ namespace Barotrauma
             get { return texture != null && !cannotBeLoaded; }
         }
 
-        public Sprite(Sprite other) : this(other.texture, other.sourceRect, other.offset, other.rotation)
+        public Sprite(Sprite other) : this(other.texture, other.sourceRect, other.offset, other.rotation, other.FilePath.Value)
         {
-            FilePath = other.FilePath;
             Compress = other.Compress;
             size = other.size;
             effects = other.effects;
@@ -58,6 +57,17 @@ namespace Barotrauma
             rotation = newRotation;
             FilePath = ContentPath.FromRaw(path);
             AddToList(this);
+            if (!string.IsNullOrEmpty(path))
+            {
+                Identifier fullPath = Path.GetFullPath(path).CleanUpPathCrossPlatform(correctFilenameCase: false).ToIdentifier();
+                lock (list)
+                {
+                    if (!textureRefCounts.TryAdd(fullPath, new TextureRefCounter { RefCount = 1, Texture = texture }))
+                    {
+                        textureRefCounts[fullPath].RefCount++;
+                    }
+                }
+            }
         }
 
         partial void LoadTexture(ref Vector4 sourceVector, ref bool shouldReturn)
@@ -243,12 +253,12 @@ namespace Barotrauma
             if (flipHorizontal)
             {
                 float diff = targetSize.X % (sourceRect.Width * scale.X);
-                flippedDrawOffset.X = (int)((sourceRect.Width * scale.X - diff) / scale.X);
+                flippedDrawOffset.X = (int)MathF.Round((sourceRect.Width * scale.X - diff) / scale.X);
             }
             if (flipVertical)
             {
                 float diff = targetSize.Y % (sourceRect.Height * scale.Y);
-                flippedDrawOffset.Y = (int)((sourceRect.Height * scale.Y - diff) / scale.Y);
+                flippedDrawOffset.Y = (int)MathF.Round((sourceRect.Height * scale.Y - diff) / scale.Y);
             }
             drawOffset += flippedDrawOffset;
 

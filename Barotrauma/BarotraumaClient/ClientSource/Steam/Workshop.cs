@@ -16,6 +16,8 @@ namespace Barotrauma.Steam
     {
         public static partial class Workshop
         {
+            public const int MaxThumbnailSize = 1024 * 1024;
+
             public static readonly ImmutableArray<Identifier> Tags = new []
             {
                 "submarine",
@@ -87,11 +89,6 @@ namespace Barotrauma.Steam
                             TaskPool.Add($"Workshop thumbnail {item.Title}", GetTexture(item, cancellationToken), SaveTextureToRefCounter(item.Id));
                         }
                     }
-                }
-
-                ~ItemThumbnail()
-                {
-                    Dispose();
                 }
 
                 public void Dispose()
@@ -177,14 +174,17 @@ namespace Barotrauma.Steam
 
                 DeletePublishStagingCopy();
                 Directory.CreateDirectory(PublishStagingDir);
-                await CopyDirectory(contentPackage.Dir, contentPackage.Name, Path.GetDirectoryName(contentPackage.Path)!, PublishStagingDir);
+                await CopyDirectory(contentPackage.Dir, contentPackage.Name, Path.GetDirectoryName(contentPackage.Path)!, PublishStagingDir, ShouldCorrectPaths.No);
 
+                var stagingFileListPath = Path.Combine(PublishStagingDir, ContentPackage.FileListFileName);
+                ContentPackage tempPkg = ContentPackage.TryLoad(stagingFileListPath) ?? throw new Exception("Staging copy could not be loaded");
+                
                 //Load filelist.xml and write the hash into it so anyone downloading this mod knows what it should be
-                ModProject modProject = new ModProject(contentPackage)
+                ModProject modProject = new ModProject(tempPkg)
                 {
                     ModVersion = modVersion
                 };
-                modProject.Save(Path.Combine(PublishStagingDir, ContentPackage.FileListFileName));
+                modProject.Save(stagingFileListPath);
             }
 
             public static async Task<ContentPackage?> CreateLocalCopy(ContentPackage contentPackage)
@@ -218,7 +218,7 @@ namespace Barotrauma.Steam
                     throw new Exception($"{newPath} already exists");
                 }
 
-                await CopyDirectory(contentPackage.Dir, contentPackage.Name, Path.GetDirectoryName(contentPackage.Path)!, newPath);
+                await CopyDirectory(contentPackage.Dir, contentPackage.Name, Path.GetDirectoryName(contentPackage.Path)!, newPath, ShouldCorrectPaths.Yes);
 
                 ModProject modProject = new ModProject(contentPackage);
                 modProject.DiscardHashAndInstallTime();

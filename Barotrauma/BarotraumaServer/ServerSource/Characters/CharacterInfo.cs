@@ -10,6 +10,11 @@ namespace Barotrauma
     {
         private readonly Dictionary<Identifier, float> prevSentSkill = new Dictionary<Identifier, float>();
 
+        /// <summary>
+        /// The client opted to create a new character and discard this one
+        /// </summary>
+        public bool Discarded;
+
         partial void OnSkillChanged(Identifier skillIdentifier, float prevLevel, float newLevel)
         {
             if (Character == null || Character.Removed) { return; }
@@ -37,7 +42,7 @@ namespace Barotrauma
         partial void OnPermanentStatChanged(StatTypes statType)
         {
             if (Character == null || Character.Removed) { return; }
-            GameMain.NetworkMember.CreateEntityEvent(Character, new Character.UpdatePermanentStatsEventData());
+            GameMain.NetworkMember.CreateEntityEvent(Character, new Character.UpdatePermanentStatsEventData(statType));
         }
 
         public void ServerWrite(IWriteMessage msg)

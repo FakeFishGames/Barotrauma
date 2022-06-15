@@ -927,6 +927,8 @@ namespace Barotrauma.Items.Components
 
             bool autoPilot                  = msg.ReadBoolean();
             bool dockingButtonClicked       = msg.ReadBoolean();
+            ushort userID                   = msg.ReadUInt16();
+
             Vector2 newSteeringInput        = steeringInput;
             Vector2 newTargetVelocity       = targetVelocity;
             float newSteeringAdjustSpeed    = steeringAdjustSpeed;
@@ -935,7 +937,7 @@ namespace Barotrauma.Items.Components
 
             if (dockingButtonClicked)
             {
-                item.SendSignal("1", "toggle_docking");
+                item.SendSignal(new Signal("1", sender: Entity.FindEntityByID(userID) as Character), "toggle_docking");
             }
 
             if (autoPilot)

@@ -187,7 +187,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        public override void Move(Vector2 amount)
+        public override void Move(Vector2 amount, bool ignoreContacts = false)
         {
 #if CLIENT
             Light.Position += amount;

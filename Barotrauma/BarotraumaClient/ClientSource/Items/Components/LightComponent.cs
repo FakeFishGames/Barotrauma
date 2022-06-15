@@ -56,9 +56,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                Vector2 pos = item.DrawPosition;
-                if (item.Submarine != null) { pos -= item.Submarine.DrawPosition; }
-                Light.Position = pos;
+                Light.Position = item.Position;
             }
             PhysicsBody body = Light.ParentBody;
             if (body != null)
@@ -68,7 +66,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                Light.Rotation = -Rotation - MathHelper.ToRadians(item.Rotation);
+                Light.Rotation = -Rotation - item.RotationRad;
                 Light.LightSpriteEffect = item.SpriteEffects;
             }
         }

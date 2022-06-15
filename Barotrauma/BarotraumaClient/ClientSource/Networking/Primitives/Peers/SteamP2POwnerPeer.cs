@@ -455,12 +455,6 @@ namespace Barotrauma.Networking
             ChildServerRelay.Write(bufToSend);
         }
 
-        ~SteamP2POwnerPeer()
-        {
-            OnDisconnect = null;
-            Close();
-        }
-
         protected override void SendMsgInternal(DeliveryMethod deliveryMethod, IWriteMessage msg)
         {
             //not currently used by SteamP2POwnerPeer

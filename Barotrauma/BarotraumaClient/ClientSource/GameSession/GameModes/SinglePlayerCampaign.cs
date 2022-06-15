@@ -35,11 +35,7 @@ namespace Barotrauma
                 }
             }
 
-            if (CrewManager.ChatBox != null)
-            {
-                CrewManager.ChatBox.Update(deltaTime);
-            }
-
+            CrewManager.ChatBox?.Update(deltaTime);
             CrewManager.UpdateReports();
         }
 
@@ -58,12 +54,12 @@ namespace Barotrauma
         /// <summary>
         /// Instantiates a new single player campaign
         /// </summary>
-        private SinglePlayerCampaign(string mapSeed, CampaignSettings settings) : base(GameModePreset.SinglePlayerCampaign)
+        private SinglePlayerCampaign(string mapSeed, CampaignSettings settings) : base(GameModePreset.SinglePlayerCampaign, settings)
         {
             CampaignMetadata = new CampaignMetadata(this);
             UpgradeManager = new UpgradeManager(this);
-            map = new Map(this, mapSeed, settings);
             Settings = settings;
+            map = new Map(this, mapSeed);
             foreach (JobPrefab jobPrefab in JobPrefab.Prefabs)
             {
                 for (int i = 0; i < jobPrefab.InitialCount; i++)
@@ -79,7 +75,7 @@ namespace Barotrauma
         /// <summary>
         /// Loads a previously saved single player campaign from XML
         /// </summary>
-        private SinglePlayerCampaign(XElement element) : base(GameModePreset.SinglePlayerCampaign)
+        private SinglePlayerCampaign(XElement element) : base(GameModePreset.SinglePlayerCampaign, CampaignSettings.Empty)
         {
             IsFirstRound = false;
 
@@ -87,14 +83,15 @@ namespace Barotrauma
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
-                    case "campaignsettings":
+                    case CampaignSettings.LowerCaseSaveElementName:
                         Settings = new CampaignSettings(subElement);
                         break;
                     case "crew":
                         GameMain.GameSession.CrewManager = new CrewManager(subElement, true);
+                        ActiveOrdersElement = subElement.GetChildElement("activeorders");
                         break;
                     case "map":
-                        map = Map.Load(this, subElement, Settings);
+                        map = Map.Load(this, subElement);
                         break;
                     case "metadata":
                         CampaignMetadata = new CampaignMetadata(this, subElement);
@@ -162,21 +159,14 @@ namespace Barotrauma
         /// <summary>
         /// Start a completely new single player campaign
         /// </summary>
-        public static SinglePlayerCampaign StartNew(string mapSeed, SubmarineInfo selectedSub, CampaignSettings settings)
-        {
-            var campaign = new SinglePlayerCampaign(mapSeed, settings);
-            return campaign;
-        }
+        public static SinglePlayerCampaign StartNew(string mapSeed, CampaignSettings startingSettings) => new SinglePlayerCampaign(mapSeed, startingSettings);
 
         /// <summary>
         /// Load a previously saved single player campaign from xml
         /// </summary>
         /// <param name="element"></param>
         /// <returns></returns>
-        public static SinglePlayerCampaign Load(XElement element)
-        {
-            return new SinglePlayerCampaign(element);
-        }
+        public static SinglePlayerCampaign Load(XElement element) => new SinglePlayerCampaign(element);
 
         private void InitUI()
         {
@@ -242,11 +232,10 @@ namespace Barotrauma
             crewDead = false;
             endTimer = 5.0f;
             CrewManager.InitSinglePlayerRound();
-            if (petsElement != null)
-            {
-                PetBehavior.LoadPets(petsElement);
-            }
-            CrewManager.LoadActiveOrders();
+            LoadPets();
+            LoadActiveOrders();
+
+            CargoManager.InitPurchasedIDCards();
 
             GUI.DisableSavingIndicatorDelayed();
         }
@@ -461,41 +450,8 @@ namespace Barotrauma
 
             if (success)
             {
-                if (leavingSub != Submarine.MainSub && !leavingSub.DockedTo.Contains(Submarine.MainSub))
-                {
-                    Submarine.MainSub = leavingSub;
-                    GameMain.GameSession.Submarine = leavingSub;
-                    GameMain.GameSession.SubmarineInfo = leavingSub.Info;
-                    leavingSub.Info.FilePath = System.IO.Path.Combine(SaveUtil.TempPath, leavingSub.Info.Name + ".sub");
-                    var subsToLeaveBehind = GetSubsToLeaveBehind(leavingSub);
-                    GameMain.GameSession.OwnedSubmarines.Add(leavingSub.Info);
-                    foreach (Submarine sub in subsToLeaveBehind)
-                    {
-                        GameMain.GameSession.OwnedSubmarines.RemoveAll(s => s != leavingSub.Info && s.Name == sub.Info.Name);
-                        MapEntity.mapEntityList.RemoveAll(e => e.Submarine == sub && e is LinkedSubmarine);
-                        LinkedSubmarine.CreateDummy(leavingSub, sub);
-                    }
-                }
-
                 GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);
-
-                if (PendingSubmarineSwitch != null)
-                {
-                    SubmarineInfo previousSub = GameMain.GameSession.SubmarineInfo;
-                    GameMain.GameSession.SubmarineInfo = PendingSubmarineSwitch;
-
-                    for (int i = 0; i < GameMain.GameSession.OwnedSubmarines.Count; i++)
-                    {
-                        if (GameMain.GameSession.OwnedSubmarines[i].Name == previousSub.Name)
-                        {
-                            GameMain.GameSession.OwnedSubmarines[i] = previousSub;
-                            break;
-                        }
-                    }
-                }
-
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
-                PendingSubmarineSwitch = null;
             }
             else
             {
@@ -766,11 +722,10 @@ namespace Barotrauma
                 c.Info.SaveOrderData();
             }
 
-            petsElement = new XElement("pets");
-            PetBehavior.SavePets(petsElement);
-            modeElement.Add(petsElement);
+            SavePets(modeElement);
+            var crewManagerElement = CrewManager.Save(modeElement);
+            SaveActiveOrders(crewManagerElement);
 
-            CrewManager.Save(modeElement);
             CampaignMetadata.Save(modeElement);
             Map.Save(modeElement);
             CargoManager?.SavePurchasedItems(modeElement);

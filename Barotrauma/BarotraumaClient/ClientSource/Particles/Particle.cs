@@ -103,7 +103,7 @@ namespace Barotrauma.Particles
         {
             return debugName;
         }
-        public void Init(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation, Hull hullGuess = null, bool drawOnTop = false, float collisionIgnoreTimer = 0f, Tuple<Vector2, Vector2> tracerPoints = null)
+        public void Init(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation, Hull hullGuess = null, bool drawOnTop = false, float collisionIgnoreTimer = 0f, float lifeTimeMultiplier = 1f, Tuple<Vector2, Vector2> tracerPoints = null)
         {
             this.prefab = prefab;
 #if DEBUG
@@ -149,13 +149,13 @@ namespace Barotrauma.Particles
           
             if (prefab.LifeTimeMin <= 0.0f)
             {
-                totalLifeTime = prefab.LifeTime;
-                lifeTime = prefab.LifeTime;
+                totalLifeTime = prefab.LifeTime * lifeTimeMultiplier;
+                lifeTime = prefab.LifeTime * lifeTimeMultiplier;
             }
             else
             {
-                totalLifeTime = Rand.Range(prefab.LifeTimeMin, prefab.LifeTime);
-                lifeTime = totalLifeTime;
+                totalLifeTime = Rand.Range(prefab.LifeTimeMin, prefab.LifeTime) * lifeTimeMultiplier;
+                lifeTime = totalLifeTime * lifeTimeMultiplier;
             }
 
             startDelay = Rand.Range(prefab.StartDelayMin, prefab.StartDelayMax);

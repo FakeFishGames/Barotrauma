@@ -160,13 +160,12 @@ namespace Barotrauma.Tutorials
             radioSpeakerName = TextManager.Get("Tutorial.Radio.Speaker");
             mechanic = Character.Controlled;
 
-            var toolbelt = FindOrGiveItem(mechanic, "toolbelt".ToIdentifier());
-            toolbelt.Unequip(mechanic);
-            mechanic.Inventory.RemoveItem(toolbelt);
-
-            var crowbar = FindOrGiveItem(mechanic, "crowbar".ToIdentifier());
-            crowbar.Unequip(mechanic);
-            mechanic.Inventory.RemoveItem(crowbar);
+            foreach (Item item in mechanic.Inventory.AllItemsMod)
+            {
+                if (item.HasTag("clothing") || item.HasTag("identitycard") || item.HasTag("mobileradio")) { continue; }
+                item.Unequip(mechanic);
+                mechanic.Inventory.RemoveItem(item);
+            }
 
             var repairOrder = OrderPrefab.Prefabs["repairsystems"];
             mechanic_repairIcon = repairOrder.SymbolSprite;
@@ -297,7 +296,10 @@ namespace Barotrauma.Tutorials
 
         public override void Update(float deltaTime)
         {
-            mechanic_brokenhull_1.WaterVolume = MathHelper.Clamp(mechanic_brokenhull_1.WaterVolume, 0, mechanic_brokenhull_1.Volume * 0.85f);
+            if (mechanic_brokenhull_1 != null)
+            {
+                mechanic_brokenhull_1.WaterVolume = MathHelper.Clamp(mechanic_brokenhull_1.WaterVolume, 0, mechanic_brokenhull_1.Volume * 0.85f);
+            }
             base.Update(deltaTime);
         }
 
@@ -334,7 +336,7 @@ namespace Barotrauma.Tutorials
             yield return new WaitForSeconds(0.0f, false);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Equipment"), ChatMessageType.Radio, null);
             do { yield return null; } while (!mechanic_equipmentObjectiveSensor.MotionDetected);
-            TriggerTutorialSegment(1, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Select), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Deselect), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.ToggleInventory)); // Equipment & inventory objective
+            TriggerTutorialSegment(1, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Select), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Deselect)); // Equipment & inventory objective
             SetHighlight(mechanic_equipmentCabinet.Item, true);
             bool firstSlotRemoved = false;
             bool secondSlotRemoved = false;
@@ -377,7 +379,7 @@ namespace Barotrauma.Tutorials
 
             // Room 3
             do { yield return null; } while (!mechanic_weldingObjectiveSensor.MotionDetected);
-            TriggerTutorialSegment(2, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Aim), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Shoot), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.ToggleInventory)); // Welding objective
+            TriggerTutorialSegment(2, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Aim), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Shoot)); // Welding objective
             do
             {
                 if (!mechanic.HasEquippedItem("divingmask".ToIdentifier()))
@@ -413,7 +415,7 @@ namespace Barotrauma.Tutorials
                 }
             } while (mechanic_workingPump.FlowPercentage >= 0 || !mechanic_workingPump.IsActive); // Highlight until draining
             SetHighlight(mechanic_workingPump.Item, false);
-            do { yield return null; } while (mechanic_brokenhull_1.WaterPercentage > waterVolumeBeforeOpening); // Unlock door once drained
+            do { yield return null; } while (mechanic_brokenhull_1 != null && mechanic_brokenhull_1.WaterPercentage > waterVolumeBeforeOpening); // Unlock door once drained
             RemoveCompletedObjective(3);
             GameAnalyticsManager.AddDesignEvent("Tutorial:MechanicTutorial:Objective3");
 

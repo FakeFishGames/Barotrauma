@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -19,6 +18,8 @@ namespace Barotrauma.Items.Components
         private Character activePicker;
 
         private CoroutineHandle pickingCoroutine;
+
+        public virtual bool IsAttached => false;
 
         public List<InvSlotType> AllowedSlots
         {
@@ -71,6 +72,7 @@ namespace Barotrauma.Items.Components
             //return if someone is already trying to pick the item
             if (pickTimer > 0.0f) { return false; }
             if (picker == null || picker.Inventory == null) { return false; }
+            if (!picker.Inventory.AccessibleWhenAlive && !picker.Inventory.AccessibleByOwner) { return false; }
 
             if (PickingTime > 0.0f)
             {
@@ -226,7 +228,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach (Connection c in connectionPanel.Connections)
                 {
-                    foreach (Wire w in c.Wires)
+                    foreach (Wire w in c.Wires.ToArray())
                     {
                         if (w == null) continue;
                         w.Item.Drop(character);

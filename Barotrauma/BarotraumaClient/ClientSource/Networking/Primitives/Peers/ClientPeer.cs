@@ -50,7 +50,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public ImmutableArray<ServerContentPackage> ServerContentPackages { get; private set; } =
+        public ImmutableArray<ServerContentPackage> ServerContentPackages { get; set; } =
             ImmutableArray<ServerContentPackage>.Empty;
 
         public delegate void MessageCallback(IReadMessage message);

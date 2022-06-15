@@ -49,7 +49,7 @@ namespace Barotrauma.Items.Components
 
         public bool TemporarilyLocked
         {
-            get { return Level.IsLoadedOutpost && item.GetComponent<DockingPort>() != null; }
+            get { return Level.IsLoadedOutpost && (item.GetComponent<DockingPort>()?.Docked ?? false); }
         }
 
         //connection panels can't be deactivated externally (by signals or status effects)
@@ -99,7 +99,7 @@ namespace Barotrauma.Items.Components
         {
             foreach (Connection c in Connections)
             {
-                c.ConnectLinked();
+                c.InitializeFromLoaded();
             }
 
             if (disconnectedWireIds != null)
@@ -286,25 +286,8 @@ namespace Barotrauma.Items.Components
 
             for (int i = 0; i < loadedConnections.Count && i < Connections.Count; i++)
             {
-                if (loadedConnections[i].wireId.Length == Connections[i].wireId.Length)
-                {
-                    loadedConnections[i].wireId.CopyTo(Connections[i].wireId, 0);
-                }
-                else
-                {
-                    //backwards compatibility when maximum number of wires has changed                    
-                    foreach (ushort id in loadedConnections[i].wireId)
-                    {
-                        for (int j = 0; j < Connections[i].wireId.Length; j++)
-                        {
-                            if (Connections[i].wireId[j] == 0)
-                            {
-                                Connections[i].wireId[j] = id;
-                                break;
-                            }
-                        }
-                    }
-                }
+                Connections[i].LoadedWireIds.Clear();
+                Connections[i].LoadedWireIds.AddRange(loadedConnections[i].LoadedWireIds);
             }
 
             disconnectedWireIds = element.GetAttributeUshortArray("disconnectedwires", Array.Empty<ushort>()).ToList();
@@ -361,10 +344,8 @@ namespace Barotrauma.Items.Components
             DisconnectedWires.Clear();
             foreach (Connection c in Connections)
             {
-                foreach (Wire wire in c.Wires)
+                foreach (Wire wire in c.Wires.ToArray())
                 {
-                    if (wire == null) { continue; }
-
                     if (wire.OtherConnection(c) == null) //wire not connected to anything else
                     {
 #if CLIENT
@@ -408,13 +389,14 @@ namespace Barotrauma.Items.Components
 
             foreach (Connection connection in Connections)
             {
+                msg.WriteVariableUInt32((uint)connection.Wires.Count);
                 foreach (Wire wire in connection.Wires)
                 {
                     msg.Write(wire?.Item == null ? (ushort)0 : wire.Item.ID);
                 }
             }
 
-            msg.Write((ushort)DisconnectedWires.Count());
+            msg.Write((ushort)DisconnectedWires.Count);
             foreach (Wire disconnectedWire in DisconnectedWires)
             {
                 msg.Write(disconnectedWire.Item.ID);

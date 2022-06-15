@@ -16,7 +16,7 @@ namespace Barotrauma
     class SubmarinePreview : IDisposable
     {
         private SpriteRecorder spriteRecorder;
-        private SubmarineInfo submarineInfo;
+        private readonly SubmarineInfo submarineInfo;
         private Camera camera;
         private Task loadTask;
         private volatile bool isDisposed;
@@ -66,7 +66,7 @@ namespace Barotrauma
 
         public static void Close()
         {
-            instance?.Dispose();
+            instance?.Dispose(); instance = null;
         }
 
         private SubmarinePreview(SubmarineInfo subInfo)
@@ -100,12 +100,16 @@ namespace Barotrauma
             GUIListBox specsContainer = null;
 
             new GUICustomComponent(new RectTransform(Vector2.One, innerPadded.RectTransform, Anchor.Center),
-                (spriteBatch, component) => {
+                (spriteBatch, component) => 
+                {
+                    if (isDisposed) { return; }
                     camera.UpdateTransform(interpolate: true, updateListener: false);
                     Rectangle drawRect = new Rectangle(component.Rect.X + 1, component.Rect.Y + 1, component.Rect.Width - 2, component.Rect.Height - 2);
                     RenderSubmarine(spriteBatch, drawRect, component);
                 },
-                (deltaTime, component) => {
+                (deltaTime, component) => 
+                {
+                    if (isDisposed) { return; }
                     bool isMouseOnComponent = GUI.MouseOn == component;
                     camera.MoveCamera(deltaTime, allowZoom: isMouseOnComponent, followSub: false);
                     if (isMouseOnComponent &&
@@ -294,8 +298,8 @@ namespace Barotrauma
 
         private void BakeMapEntity(XElement element)
         {
-            string identifier = element.GetAttributeString("identifier", "");
-            if (string.IsNullOrEmpty(identifier)) { return; }
+            Identifier identifier = element.GetAttributeIdentifier("identifier", Identifier.Empty);
+            if (identifier.IsEmpty) { return; }
             Rectangle rect = element.GetAttributeRect("rect", Rectangle.Empty);
             if (rect.Equals(Rectangle.Empty)) { return; }
 
@@ -308,7 +312,16 @@ namespace Barotrauma
 
             float rotation = element.GetAttributeFloat("rotation", 0f);
 
-            MapEntityPrefab prefab = MapEntityPrefab.List.FirstOrDefault(p => p.Identifier == identifier);
+            MapEntityPrefab prefab = null;
+            if (element.Name.ToString().Equals("item", StringComparison.OrdinalIgnoreCase) &&
+                ItemPrefab.Prefabs.TryGet(identifier, out ItemPrefab ip))
+            {
+                prefab = ip;
+            }
+            else
+            {
+                prefab = MapEntityPrefab.List.FirstOrDefault(p => p.Identifier == identifier);
+            }
             if (prefab == null) { return; }
 
             var texture = prefab.Sprite.Texture;
@@ -329,7 +342,6 @@ namespace Barotrauma
 
             bool overrideSprite = false;
             ItemPrefab itemPrefab = prefab as ItemPrefab;
-            StructurePrefab structurePrefab = prefab as StructurePrefab;
             if (itemPrefab != null)
             {
                 BakeItemComponents(itemPrefab, rect, color, scale, rotation, depth, out overrideSprite);
@@ -337,7 +349,7 @@ namespace Barotrauma
 
             if (!overrideSprite)
             {
-                if (structurePrefab != null)
+                if (prefab is StructurePrefab structurePrefab)
                 {
                     ParseUpgrades(structurePrefab.ConfigElement, ref scale);
 
@@ -655,7 +667,8 @@ namespace Barotrauma
                 previewFrame.RectTransform.Parent = null;
                 previewFrame = null;
             }
-            spriteRecorder?.Dispose();
+            spriteRecorder?.Dispose(); spriteRecorder = null;
+            camera?.Dispose(); camera = null;
             isDisposed = true;
         }
     }

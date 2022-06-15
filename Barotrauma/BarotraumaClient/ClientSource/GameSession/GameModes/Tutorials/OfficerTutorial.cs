@@ -141,36 +141,12 @@ namespace Barotrauma.Tutorials
             radioSpeakerName = TextManager.Get("Tutorial.Radio.Speaker");
             officer = Character.Controlled;
 
-            var handcuffs = FindOrGiveItem(officer, "handcuffs".ToIdentifier());
-            handcuffs.Unequip(officer);
-            officer.Inventory.RemoveItem(handcuffs);
-
-            var stunbaton = FindOrGiveItem(officer, "stunbaton".ToIdentifier());
-            stunbaton.Unequip(officer);
-            officer.Inventory.RemoveItem(stunbaton);
-
-            var smg = FindOrGiveItem(officer, "smg".ToIdentifier());
-            smg.Unequip(officer);
-            officer.Inventory.RemoveItem(smg);
-
-            var divingknife = FindOrGiveItem(officer, "divingknife".ToIdentifier());
-            divingknife.Unequip(officer);
-            officer.Inventory.RemoveItem(divingknife);
-
-            var steroids = FindOrGiveItem(officer, "steroids".ToIdentifier());
-            steroids.Unequip(officer);
-            officer.Inventory.RemoveItem(steroids);
-
-            var ballistichelmet =
-                officer.Inventory.FindItemByIdentifier("ballistichelmet1".ToIdentifier()) ??
-                officer.Inventory.FindItemByIdentifier("ballistichelmet2".ToIdentifier()) ??
-                FindOrGiveItem(officer, "ballistichelmet3".ToIdentifier());
-            ballistichelmet.Unequip(officer);
-            officer.Inventory.RemoveItem(ballistichelmet);
-
-            var bodyarmor = FindOrGiveItem(officer, "bodyarmor".ToIdentifier());
-            bodyarmor.Unequip(officer);
-            officer.Inventory.RemoveItem(bodyarmor);
+            foreach (Item item in officer.Inventory.AllItemsMod)
+            {
+                if (item.HasTag("clothing") || item.HasTag("identitycard") || item.HasTag("mobileradio")) { continue; }
+                item.Unequip(officer);
+                officer.Inventory.RemoveItem(item);
+            }
 
             var gunOrder = OrderPrefab.Prefabs["operateweapons"];
             officer_gunIcon = gunOrder.SymbolSprite;

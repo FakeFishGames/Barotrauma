@@ -251,6 +251,8 @@ namespace Barotrauma
 
         public bool Readonly { get; set; }
 
+        public override bool PlaySoundOnSelect { get; set; } = true;
+
         public GUITextBox(RectTransform rectT, string text = "", Color? textColor = null, GUIFont font = null,
                           Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null, bool createClearButton = false, bool createPenIcon = true)
             : base(style, rectT)
@@ -261,7 +263,7 @@ namespace Barotrauma
             this.color = color ?? Color.White;
             frame = new GUIFrame(new RectTransform(Vector2.One, rectT, Anchor.Center), style, color);
             GUIStyle.Apply(frame, style == "" ? "GUITextBox" : style);
-            textBlock = new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.CenterLeft), text ?? "", textColor, font, textAlignment, wrap, playerInput: true);
+            textBlock = new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.CenterLeft), text ?? "", textColor, font, textAlignment, wrap);
             GUIStyle.Apply(textBlock, "", this);
             if (font != null) { textBlock.Font = font; }
             CaretEnabled = true;
@@ -350,7 +352,7 @@ namespace Barotrauma
             caretPosDirty = false;
         }
 
-        public void Select(int forcedCaretIndex = -1)
+        public void Select(int forcedCaretIndex = -1, bool ignoreSelectSound = false)
         {
             skipUpdate = true;
             if (memento.Current == null)
@@ -360,9 +362,14 @@ namespace Barotrauma
             CaretIndex = forcedCaretIndex == - 1 ? textBlock.GetCaretIndexFromScreenPos(PlayerInput.MousePosition) : forcedCaretIndex;
             CalculateCaretPos();
             ClearSelection();
+            bool wasSelected = selected;
             selected = true;
             GUI.KeyboardDispatcher.Subscriber = this;
             OnSelected?.Invoke(this, Keys.None);
+            if (!wasSelected && PlaySoundOnSelect && !ignoreSelectSound)
+            {
+                SoundPlayer.PlayUISound(GUISoundType.Select);
+            }
         }
 
         public void Deselect()

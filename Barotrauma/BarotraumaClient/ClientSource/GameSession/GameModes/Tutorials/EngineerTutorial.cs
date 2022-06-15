@@ -131,9 +131,12 @@ namespace Barotrauma.Tutorials
             radioSpeakerName = TextManager.Get("Tutorial.Radio.Speaker");
             engineer = Character.Controlled;
 
-            var toolbelt = FindOrGiveItem(engineer, "toolbelt".ToIdentifier());
-            toolbelt.Unequip(engineer);
-            engineer.Inventory.RemoveItem(toolbelt);
+            foreach (Item item in engineer.Inventory.AllItemsMod)
+            {
+                if (item.HasTag("clothing") || item.HasTag("identitycard") || item.HasTag("mobileradio")) { continue; }
+                item.Unequip(engineer);
+                engineer.Inventory.RemoveItem(item);
+            }
 
             var repairOrder = OrderPrefab.Prefabs["repairsystems"];
             engineer_repairIcon = repairOrder.SymbolSprite;
@@ -278,7 +281,7 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!engineer_equipmentObjectiveSensor.MotionDetected);
             GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Engineer.Radio.Equipment"), ChatMessageType.Radio, null);
             yield return new WaitForSeconds(0.5f, false);
-            TriggerTutorialSegment(0, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Select), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Deselect), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.ToggleInventory)); // Retrieve equipment
+            TriggerTutorialSegment(0, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Select), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Deselect)); // Retrieve equipment
             bool firstSlotRemoved = false;
             bool secondSlotRemoved = false;
             bool thirdSlotRemoved = false;

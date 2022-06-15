@@ -3,6 +3,7 @@ using Barotrauma.Networking;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using System.Globalization;
 
 namespace Barotrauma.Items.Components
 {
@@ -34,13 +35,17 @@ namespace Barotrauma.Items.Components
             public Identifier PropertyName { get; }
             public bool TargetOnlyParentProperty { get; }
 
-            public int NumberInputMin { get; }
-            public int NumberInputMax { get; }
+            public string NumberInputMin { get; }
+            public string NumberInputMax { get; }
+            public string NumberInputStep { get; }
+            public int NumberInputDecimalPlaces { get; }
 
             public int MaxTextLength { get; }
 
-            public const int DefaultNumberInputMin = 0, DefaultNumberInputMax = 99;
-            public bool IsIntegerInput { get; }
+            public const string DefaultNumberInputMin = "0", DefaultNumberInputMax = "99", DefaultNumberInputStep = "1";
+            public const int DefaultNumberInputDecimalPlaces = 0;
+            public bool IsNumberInput { get; }
+            public NumberType? NumberType { get; }
             public bool HasPropertyName { get; }
             public bool ShouldSetProperty { get; set; }
 
@@ -60,11 +65,34 @@ namespace Barotrauma.Items.Components
                 ConnectionName = element.GetAttributeString("connection", "");
                 PropertyName = element.GetAttributeIdentifier("propertyname", "");
                 TargetOnlyParentProperty = element.GetAttributeBool("targetonlyparentproperty", false);
-                NumberInputMin = element.GetAttributeInt("min", DefaultNumberInputMin);
-                NumberInputMax = element.GetAttributeInt("max", DefaultNumberInputMax);
+                NumberInputMin = element.GetAttributeString("min", DefaultNumberInputMin);
+                NumberInputMax = element.GetAttributeString("max", DefaultNumberInputMax);
+                NumberInputStep = element.GetAttributeString("step", DefaultNumberInputStep);
+                NumberInputDecimalPlaces = element.GetAttributeInt("decimalplaces", DefaultNumberInputDecimalPlaces);
                 MaxTextLength = element.GetAttributeInt("maxtextlength", int.MaxValue);
+
                 HasPropertyName = !PropertyName.IsEmpty;
-                IsIntegerInput = HasPropertyName && element.Name.ToString().ToLowerInvariant() == "integerinput";
+                if (HasPropertyName)
+                {
+                    string elementName = element.Name.ToString().ToLowerInvariant();
+                    IsNumberInput = elementName == "numberinput" || elementName == "integerinput"; // backwards compatibility
+                    if (IsNumberInput)
+                    {
+                        string numberType = element.GetAttributeString("numbertype", string.Empty);
+                        switch (numberType)
+                        {
+                            case "f":
+                            case "float":
+                                NumberType = Barotrauma.NumberType.Float;
+                                break;
+                            case "int":
+                            case "integer":
+                            default:  // backwards compatibility
+                                NumberType = Barotrauma.NumberType.Int;
+                                break;
+                        }
+                    }
+                }
 
                 if (element.GetAttribute("signal") is XAttribute attribute)
                 {
@@ -152,7 +180,8 @@ namespace Barotrauma.Items.Components
                 {
                     case "button":
                     case "textbox":
-                    case "integerinput":
+                    case "integerinput": // backwards compatibility
+                    case "numberinput":
                         var button = new CustomInterfaceElement(item, subElement, this)
                         {
                             ContinuousSignal = false
@@ -317,6 +346,24 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private void ValueChanged(CustomInterfaceElement numberInputElement, float value)
+        {
+            if (numberInputElement == null) { return; }
+            numberInputElement.Signal = value.ToString();
+            if (!numberInputElement.TargetOnlyParentProperty)
+            {
+                foreach (ISerializableEntity e in item.AllPropertyObjects)
+                {
+                    if (!e.SerializableProperties.ContainsKey(numberInputElement.PropertyName)) { continue; }
+                    e.SerializableProperties[numberInputElement.PropertyName].TrySetValue(e, value);
+                }
+            }
+            else if (SerializableProperties.ContainsKey(numberInputElement.PropertyName))
+            {
+                SerializableProperties[numberInputElement.PropertyName].TrySetValue(this, value);
+            }
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
             foreach (CustomInterfaceElement ciElement in customInterfaceElementList)
@@ -340,6 +387,11 @@ namespace Barotrauma.Items.Components
             labels = customInterfaceElementList.Select(ci => ci.Label).ToArray();
             signals = customInterfaceElementList.Select(ci => ci.Signal).ToArray();
             return base.Save(parentElement);
+        }
+
+        private static bool TryParseFloatInvariantCulture(string s, out float f)
+        {
+            return float.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out f);
         }
     }
 }

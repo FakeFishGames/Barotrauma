@@ -98,7 +98,6 @@ namespace Barotrauma
             foreach (var subElement in element.Elements().Reverse())
             {
                 if (subElement.NameAsIdentifier() != "override") { continue; }
-
                 if (subElement.GetAttributeBool("iscjk", false))
                 {
                     return new ScalableFont(subElement, GameMain.Instance.GraphicsDevice);
@@ -111,8 +110,7 @@ namespace Barotrauma
         {
             foreach (var subElement in element.Elements())
             {
-                if (!subElement.Name.ToString().Equals("override", StringComparison.OrdinalIgnoreCase)) { continue; }
-                if (GameSettings.CurrentConfig.Language == subElement.GetAttributeIdentifier("language", "").ToLanguageIdentifier())
+                if (IsValidOverride(subElement))
                 {
                     return subElement.GetAttributeContentPath("file")?.Value;
                 }
@@ -125,8 +123,7 @@ namespace Barotrauma
             //check if any of the language override fonts want to override the font size as well
             foreach (var subElement in element.Elements())
             {
-                if (!subElement.Name.ToString().Equals("override", StringComparison.OrdinalIgnoreCase)) { continue; }
-                if (GameSettings.CurrentConfig.Language == subElement.GetAttributeIdentifier("language", "").ToLanguageIdentifier())
+                if (IsValidOverride(subElement))
                 {
                     uint overrideFontSize = GetFontSize(subElement, 0);
                     if (overrideFontSize > 0) { return (uint)Math.Round(overrideFontSize * GameSettings.CurrentConfig.Graphics.TextScale); }
@@ -149,8 +146,7 @@ namespace Barotrauma
         {
             foreach (var subElement in element.Elements())
             {
-                if (!subElement.Name.ToString().Equals("override", StringComparison.OrdinalIgnoreCase)) { continue; }
-                if (GameSettings.CurrentConfig.Language == subElement.GetAttributeIdentifier("language", "").ToLanguageIdentifier())
+                if (IsValidOverride(subElement))
                 {
                     return subElement.GetAttributeBool("dynamicloading", false);
                 }
@@ -162,13 +158,19 @@ namespace Barotrauma
         {
             foreach (var subElement in element.Elements())
             {
-                if (!subElement.Name.ToString().Equals("override", StringComparison.OrdinalIgnoreCase)) { continue; }
-                if (GameSettings.CurrentConfig.Language == subElement.GetAttributeIdentifier("language", "").ToLanguageIdentifier())
+                if (IsValidOverride(subElement))
                 {
                     return subElement.GetAttributeBool("iscjk", false);
                 }
             }
             return element.GetAttributeBool("iscjk", false);
+        }
+
+        private bool IsValidOverride(XElement element)
+        {
+            if (!element.Name.ToString().Equals("override", StringComparison.OrdinalIgnoreCase)) { return false; }
+            var languages = element.GetAttributeIdentifierArray("language", Array.Empty<Identifier>());
+            return languages.Any(l => l.ToLanguageIdentifier() == GameSettings.CurrentConfig.Language);
         }
     }
 

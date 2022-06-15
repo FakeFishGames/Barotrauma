@@ -253,6 +253,12 @@ namespace Barotrauma
         public readonly float MinCondition;
         public readonly int MinAmount;
         public readonly int MaxAmount;
+        // Overrides min and max, if defined.
+        public readonly int Amount;
+        public readonly bool CampaignOnly;
+        public readonly bool NotCampaign;
+        public readonly bool TransferOnlyOnePerContainer;
+        public readonly bool AllowTransfersHere = true;
 
         public PreferredContainer(XElement element)
         {
@@ -261,21 +267,26 @@ namespace Barotrauma
             SpawnProbability = element.GetAttributeFloat("spawnprobability", 0.0f);
             MinAmount = element.GetAttributeInt("minamount", 0);
             MaxAmount = Math.Max(MinAmount, element.GetAttributeInt("maxamount", 0));
+            Amount = element.GetAttributeInt("amount", 0);
             MaxCondition = element.GetAttributeFloat("maxcondition", 100f);
             MinCondition = element.GetAttributeFloat("mincondition", 0f);
+            CampaignOnly = element.GetAttributeBool("campaignonly", CampaignOnly);
+            NotCampaign = element.GetAttributeBool("notcampaign", NotCampaign);
+            TransferOnlyOnePerContainer = element.GetAttributeBool("TransferOnlyOnePerContainer", TransferOnlyOnePerContainer);
+            AllowTransfersHere = element.GetAttributeBool("AllowTransfersHere", AllowTransfersHere);
 
-            if (element.Attribute("spawnprobability") == null)
+            if (element.GetAttribute("spawnprobability") == null)
             {
                 //if spawn probability is not defined but amount is, assume the probability is 1
-                if (MaxAmount > 0)
+                if (MaxAmount > 0 || Amount > 0)
                 {
                     SpawnProbability = 1.0f;
                 } 
             }
-            else if (element.Attribute("minamount") == null && element.Attribute("maxamount") == null)
+            else if (element.GetAttribute("minamount") == null && element.GetAttribute("maxamount") == null && element.GetAttribute("amount") == null)
             {
                 //spawn probability defined but amount isn't, assume amount is 1
-                MinAmount = MaxAmount = 1;
+                MinAmount = MaxAmount = Amount = 1;
                 SpawnProbability = element.GetAttributeFloat("spawnprobability", 0.0f);
             }
         }
@@ -599,6 +610,9 @@ namespace Barotrauma
         public bool AllowDroppingOnSwap { get; private set; }
 
         public ImmutableHashSet<Identifier> AllowDroppingOnSwapWith { get; private set; }
+
+        [Serialize(false, IsPropertySaveable.No)]
+        public bool DontTransferBetweenSubs { get; private set; }
 
         protected override Identifier DetermineIdentifier(XElement element)
         {
@@ -1084,7 +1098,7 @@ namespace Barotrauma
                 //legacy support
                 identifier = GenerateLegacyIdentifier(name);
             }
-            prefab = Find(p => p is ItemPrefab && p.Identifier == identifier) as ItemPrefab;
+            Prefabs.TryGet(identifier, out prefab);
 
             //not found, see if we can find a prefab with a matching alias
             if (prefab == null && !string.IsNullOrEmpty(name))
@@ -1104,12 +1118,13 @@ namespace Barotrauma
             return prefab;
         }
 
-        public bool IsContainerPreferred(Item item, ItemContainer targetContainer, out bool isPreferencesDefined, out bool isSecondary, bool requireConditionRequirement = false)
+        public bool IsContainerPreferred(Item item, ItemContainer targetContainer, out bool isPreferencesDefined, out bool isSecondary, bool requireConditionRequirement = false, bool checkTransferConditions = false)
         {
             isPreferencesDefined = PreferredContainers.Any();
             isSecondary = false;
             if (!isPreferencesDefined) { return true; }
-            if (PreferredContainers.Any(pc => (!requireConditionRequirement || HasConditionRequirement(pc)) && IsItemConditionAcceptable(item, pc) && IsContainerPreferred(pc.Primary, targetContainer)))
+            if (PreferredContainers.Any(pc => (!requireConditionRequirement || HasConditionRequirement(pc)) && IsItemConditionAcceptable(item, pc) && 
+                IsContainerPreferred(pc.Primary, targetContainer) && (!checkTransferConditions || CanBeTransferred(item.Prefab.Identifier, pc, targetContainer))))
             {
                 return true;
             }
@@ -1132,6 +1147,8 @@ namespace Barotrauma
         }
 
         private bool IsItemConditionAcceptable(Item item, PreferredContainer pc) => item.ConditionPercentage >= pc.MinCondition && item.ConditionPercentage <= pc.MaxCondition;
+        private bool CanBeTransferred(Identifier item, PreferredContainer pc, ItemContainer targetContainer) => 
+            pc.AllowTransfersHere && (!pc.TransferOnlyOnePerContainer || targetContainer.Inventory.AllItems.None(i => i.Prefab.Identifier == item));
 
         public static bool IsContainerPreferred(IEnumerable<Identifier> preferences, ItemContainer c) => preferences.Any(id => c.Item.Prefab.Identifier == id || c.Item.HasTag(id));
         public static bool IsContainerPreferred(IEnumerable<Identifier> preferences, IEnumerable<Identifier> ids) => ids.Any(id => preferences.Contains(id));

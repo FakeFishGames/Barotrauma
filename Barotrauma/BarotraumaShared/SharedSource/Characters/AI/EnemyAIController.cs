@@ -275,7 +275,11 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "chooserandom":
-                        LoadSubElement(subElement.Elements().ToArray().GetRandom(random));
+                        var subElements = subElement.Elements();
+                        if (subElements.Any())
+                        {
+                            LoadSubElement(subElements.ToArray().GetRandom(random));
+                        }
                         break;
                     default:
                         LoadSubElement(subElement);
@@ -1055,6 +1059,9 @@ namespace Barotrauma
 
         private Vector2 attackWorldPos;
         private Vector2 attackSimPos;
+        private float reachTimer;
+        // How long the monster tries to reach out for the target when it's close to it before ignoring it.
+        private const float reachTimeOut = 10;
 
         private void UpdateAttack(float deltaTime)
         {
@@ -1427,6 +1434,41 @@ namespace Barotrauma
                 // Check that we can reach the target
                 distance = toTarget.Length();
                 canAttack = distance < AttackLimb.attack.Range;
+                if (canAttack)
+                {
+                    reachTimer = 0;
+                }
+                else if (selectedTargetingParams.AttackPattern == AttackPattern.Straight && distance < AttackLimb.attack.Range * 5)
+                {
+                    Vector2 targetVelocity = Vector2.Zero;
+                    Submarine targetSub = SelectedAiTarget.Entity.Submarine;
+                    if (targetSub != null)
+                    {
+                        targetVelocity = targetSub.Velocity;
+                    }
+                    else if (targetCharacter != null)
+                    {
+                        targetVelocity = targetCharacter.AnimController.Collider.LinearVelocity;
+                    }
+                    else if (SelectedAiTarget.Entity is Item i && i.body != null)
+                    {
+                        targetVelocity = i.body.LinearVelocity;
+                    }
+                    float mySpeed = Character.AnimController.Collider.LinearVelocity.LengthSquared();
+                    float targetSpeed = targetVelocity.LengthSquared();
+                    if (mySpeed < 0.1f || mySpeed > targetSpeed)
+                    {
+                        reachTimer += deltaTime;
+                        if (reachTimer > reachTimeOut)
+                        {
+                            reachTimer = 0;
+                            IgnoreTarget(SelectedAiTarget);
+                            State = AIState.Idle;
+                            ResetAITarget();
+                            return;
+                        }
+                    }
+                }
 
                 // Crouch if the target is down (only humanoids), so that we can reach it.
                 if (Character.AnimController is HumanoidAnimController humanoidAnimController && distance < AttackLimb.attack.Range * 2)
@@ -1958,9 +2000,8 @@ namespace Barotrauma
             }
             if (!isFriendly && attackResult.Damage > 0.0f)
             {
-                ignoredTargets.Remove(attacker.AiTarget);
                 bool canAttack = attacker.Submarine == Character.Submarine && canAttackCharacters || attacker.Submarine != null && canAttackWalls;
-                if (AIParams.AttackWhenProvoked && canAttack)
+                if (AIParams.AttackWhenProvoked && canAttack && !ignoredTargets.Contains(attacker.AiTarget))
                 {
                     if (attacker.IsHusk)
                     {
@@ -3476,6 +3517,7 @@ namespace Barotrauma
             {
                 observeTimer = targetParams.Timer * Rand.Range(0.75f, 1.25f);
             }
+            reachTimer = 0;
         }
 
         protected override void OnStateChanged(AIState from, AIState to)
@@ -3496,6 +3538,7 @@ namespace Barotrauma
                 SetStateResetTimer();
             }
             blockCheckTimer = 0;
+            reachTimer = 0;
         }
 
         private void SetStateResetTimer() => stateResetTimer = stateResetCooldown * Rand.Range(0.75f, 1.25f);

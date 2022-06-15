@@ -331,7 +331,7 @@ namespace Barotrauma
 #if CLIENT
                 if (isSevered)
                 {
-                    damageOverlayStrength = 100.0f;
+                    damageOverlayStrength = 1.0f;
                 }
 #endif
             }
@@ -352,7 +352,7 @@ namespace Barotrauma
 
         public Vector2 Position
         {
-            get { return ConvertUnits.ToDisplayUnits(body.SimPosition); }
+            get { return ConvertUnits.ToDisplayUnits(body?.SimPosition ?? Vector2.Zero); }
         }
 
         public Vector2 SimPosition
@@ -597,18 +597,7 @@ namespace Barotrauma
             dir = Direction.Right;
             body = new PhysicsBody(limbParams);
             type = limbParams.Type;
-            if (limbParams.IgnoreCollisions)
-            {
-                body.CollisionCategories = Category.None;
-                body.CollidesWith = Category.None;
-                IgnoreCollisions = true;
-            }
-            else
-            {
-                //limbs don't collide with each other
-                body.CollisionCategories = Physics.CollisionCharacter;
-                body.CollidesWith = Physics.CollisionAll & ~Physics.CollisionCharacter & ~Physics.CollisionItem & ~Physics.CollisionItemBlocking;
-            }
+            IgnoreCollisions = limbParams.IgnoreCollisions;
             body.UserData = this;
             pullJoint = new FixedMouseJoint(body.FarseerBody, ConvertUnits.ToSimUnits(limbParams.PullPos * Scale))
             {
@@ -646,10 +635,9 @@ namespace Barotrauma
                             }
                             attack.DamageRange = ConvertUnits.ToDisplayUnits(attack.DamageRange);
                         }
-                        if (!character.VariantOf.IsEmpty)
+                        if (character is { VariantOf: { IsEmpty: false } })
                         {
-                            var attackElement = CharacterPrefab.Prefabs.TryGet(character.VariantOf, out var basePrefab)
-                                ? basePrefab.ConfigElement.GetChildElement("attack") : null;
+                            var attackElement = character.Params.VariantFile.Root.GetChildElement("attack");
                             if (attackElement != null)
                             {
                                 attack.DamageMultiplier = attackElement.GetAttributeFloat("damagemultiplier", 1f);

@@ -80,15 +80,17 @@ namespace Barotrauma
             }
             Vector2 center = new Vector2((minX + maxX) / 2.0f, (minY + maxY) / 2.0f);
             if (Submarine.MainSub != null) { center -= Submarine.MainSub.HiddenSubPosition; }
-            center.X -= MathUtils.RoundTowardsClosest(center.X, Submarine.GridSize.X);
-            center.Y -= MathUtils.RoundTowardsClosest(center.Y, Submarine.GridSize.Y);
+
+            Vector2 offsetFromGrid = new Vector2(
+                MathUtils.RoundTowardsClosest(center.X, Submarine.GridSize.X) - center.X,
+                MathUtils.RoundTowardsClosest(center.Y, Submarine.GridSize.Y) - center.Y - Submarine.GridSize.Y / 2);
 
             MapEntity.SelectedList.Clear();
             assemblyEntities.ForEach(e => MapEntity.AddSelection(e));
 
             foreach (MapEntity mapEntity in assemblyEntities)
             {
-                mapEntity.Move(-center);
+                mapEntity.Move(-center - offsetFromGrid);
                 mapEntity.Submarine = Submarine.MainSub;
                 var entityElement = mapEntity.Save(element);
                 if (disabledEntities.Contains(mapEntity))

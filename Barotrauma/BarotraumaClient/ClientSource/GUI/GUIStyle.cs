@@ -34,7 +34,6 @@ namespace Barotrauma
         public readonly static PrefabCollection<GUIComponentStyle> ComponentStyles = new PrefabCollection<GUIComponentStyle>();
 
         public readonly static GUIFont Font = new GUIFont("Font");
-        public readonly static GUIFont GlobalFont = new GUIFont("GlobalFont");
         public readonly static GUIFont UnscaledSmallFont = new GUIFont("UnscaledSmallFont");
         public readonly static GUIFont SmallFont = new GUIFont("SmallFont");
         public readonly static GUIFont LargeFont = new GUIFont("LargeFont");
@@ -142,10 +141,6 @@ namespace Barotrauma
         public readonly static GUIColor HealthBarColorMedium = new GUIColor("HealthBarColorMedium");
         public readonly static GUIColor HealthBarColorHigh = new GUIColor("HealthBarColorHigh");
 
-        public readonly static GUIColor EquipmentIndicatorNotEquipped = new GUIColor("EquipmentIndicatorNotEquipped");
-        public readonly static GUIColor EquipmentIndicatorEquipped = new GUIColor("EquipmentIndicatorEquipped");
-        public readonly static GUIColor EquipmentIndicatorRunningOut = new GUIColor("EquipmentIndicatorRunningOut");
-
         public static Point ItemFrameMargin => new Point(50, 56).Multiply(GUI.SlicedSpriteScale);
         public static Point ItemFrameOffset => new Point(0, 3).Multiply(GUI.SlicedSpriteScale);
 
@@ -159,7 +154,7 @@ namespace Barotrauma
 
         public static void Apply(GUIComponent targetComponent, Identifier styleName, GUIComponent parent = null)
         {
-            GUIComponentStyle componentStyle = null;
+            GUIComponentStyle componentStyle;
             if (parent != null)
             {
                 GUIComponentStyle parentStyle = parent.Style;
@@ -210,6 +205,22 @@ namespace Barotrauma
                     return ItemQualityColorPoor;
                 default:
                     return ItemQualityColorNormal;
+            }
+        }
+
+        public static void RecalculateFonts()
+        {
+            foreach (var font in Fonts.Values)
+            {
+                font.Prefabs.ForEach(p => p.LoadFont());
+            }
+        }
+
+        public static void RecalculateSizeRestrictions()
+        {
+            foreach (var componentStyle in ComponentStyles)
+            {
+                componentStyle.RefreshSize();
             }
         }
     }

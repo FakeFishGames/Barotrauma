@@ -388,7 +388,7 @@ namespace Barotrauma.Items.Components
             IsActive = isActive;
         }
 
-        public void SetRequiredItems(ContentXElement element)
+        public void SetRequiredItems(ContentXElement element, bool allowEmpty = false)
         {
             bool returnEmpty = false;
 #if CLIENT
@@ -410,13 +410,13 @@ namespace Barotrauma.Items.Components
                     requiredItems[ri.Type].Add(ri);
                 }
             }
-            else
+            else if (!allowEmpty)
             {
                 DebugConsole.ThrowError("Error in item config \"" + item.ConfigFilePath + "\" - component " + GetType().ToString() + " requires an item with no identifiers.");
             }
         }
 
-        public virtual void Move(Vector2 amount) { }
+        public virtual void Move(Vector2 amount, bool ignoreContacts = false) { }
 
         /// <summary>a Character has picked the item</summary>
         public virtual bool Pick(Character picker)

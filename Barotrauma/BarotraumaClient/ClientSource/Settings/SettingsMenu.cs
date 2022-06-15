@@ -1,6 +1,7 @@
 ﻿#nullable enable
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
 using Barotrauma.Extensions;
@@ -35,6 +36,8 @@ namespace Barotrauma
         private readonly GUILayoutGroup bottom;
 
         public readonly WorkshopMenu WorkshopMenu;
+
+        private static readonly ImmutableHashSet<InputType> LegacyInputTypes = new List<InputType>() { InputType.Chat, InputType.RadioChat }.ToImmutableHashSet();
 
         public static SettingsMenu Create(RectTransform mainParent)
         {
@@ -171,7 +174,7 @@ namespace Barotrauma
             int childIndex = values.IndexOf(currentValue);
             dropdown.Select(childIndex);
             dropdown.ListBox.ForceLayoutRecalculation();
-            dropdown.ListBox.ScrollToElement(dropdown.ListBox.Content.GetChild(childIndex), playSound: false);
+            dropdown.ListBox.ScrollToElement(dropdown.ListBox.Content.GetChild(childIndex));
             dropdown.OnSelected = (dd, obj) =>
             {
                 setter((T)obj);
@@ -182,7 +185,7 @@ namespace Barotrauma
         private void Slider(GUILayoutGroup parent, Vector2 range, int steps, Func<float, string> labelFunc, float currentValue, Action<float> setter, LocalizedString? tooltip = null)
         {
             var layout = new GUILayoutGroup(NewItemRectT(parent), isHorizontal: true);
-            var slider = new GUIScrollBar(new RectTransform((0.82f, 1.0f), layout.RectTransform), style: "GUISlider")
+            var slider = new GUIScrollBar(new RectTransform((0.72f, 1.0f), layout.RectTransform), style: "GUISlider")
             {
                 Range = range,
                 BarScrollValue = currentValue,
@@ -193,7 +196,7 @@ namespace Barotrauma
             {
                 slider.ToolTip = tooltip;
             }
-            var label = new GUITextBlock(new RectTransform((0.18f, 1.0f), layout.RectTransform),
+            var label = new GUITextBlock(new RectTransform((0.28f, 1.0f), layout.RectTransform),
                 labelFunc(currentValue), wrap: false, textAlignment: Alignment.Center);
             slider.OnMoved = (sb, val) =>
             {
@@ -217,10 +220,7 @@ namespace Barotrauma
             };
         }
 
-        private string ScaleResolution(float scale) =>
-            $"{Round(unsavedConfig.Graphics.Width * scale)}\nx\n{Round(unsavedConfig.Graphics.Height * scale)}";
-
-        private string Percentage(float v) => $"{Round(v * 100)}%";
+        private string Percentage(float v) => TextManager.GetWithVariable("percentageformat", "[value]", Round(v * 100).ToString()).Value;
 
         private int Round(float v) => (int)MathF.Round(v);
         
@@ -259,22 +259,27 @@ namespace Barotrauma
             Tickbox(left, TextManager.Get("EnableVSync"), TextManager.Get("EnableVSyncTooltip"), unsavedConfig.Graphics.VSync, (v) => unsavedConfig.Graphics.VSync = v);
             Tickbox(left, TextManager.Get("EnableTextureCompression"), TextManager.Get("EnableTextureCompressionTooltip"), unsavedConfig.Graphics.CompressTextures, (v) => unsavedConfig.Graphics.CompressTextures = v);
             
-            Label(right, TextManager.Get("ParticleLimit"), GUIStyle.SubHeadingFont);
-            Slider(right, (100, 1500), 15, (v) => Round(v).ToString(), unsavedConfig.Graphics.ParticleLimit, (v) => unsavedConfig.Graphics.ParticleLimit = Round(v));
-            Spacer(right);
-
             Label(right, TextManager.Get("LOSEffect"), GUIStyle.SubHeadingFont);
             DropdownEnum(right, (m) => TextManager.Get($"LosMode{m}"), null, unsavedConfig.Graphics.LosMode, (v) => unsavedConfig.Graphics.LosMode = v);
             Spacer(right);
-            
+
             Label(right, TextManager.Get("LightMapScale"), GUIStyle.SubHeadingFont);
-            Slider(right, (0.5f, 1.0f), 10, ScaleResolution, unsavedConfig.Graphics.LightMapScale, (v) => unsavedConfig.Graphics.LightMapScale = v, TextManager.Get("LightMapScaleTooltip"));
+            Slider(right, (0.5f, 1.0f), 11, (v) => TextManager.GetWithVariable("percentageformat", "[value]", Round(v * 100).ToString()).Value, unsavedConfig.Graphics.LightMapScale, (v) => unsavedConfig.Graphics.LightMapScale = v, TextManager.Get("LightMapScaleTooltip"));
             Spacer(right);
-            
+
+            Label(right, TextManager.Get("VisibleLightLimit"), GUIStyle.SubHeadingFont);
+            Slider(right, (10, 210), 21, (v) => v > 200 ? TextManager.Get("unlimited").Value : Round(v).ToString(), unsavedConfig.Graphics.VisibleLightLimit, 
+                (v) =>  unsavedConfig.Graphics.VisibleLightLimit = v > 200 ? int.MaxValue : Round(v), TextManager.Get("VisibleLightLimitTooltip"));
+            Spacer(right);
+
             Tickbox(right, TextManager.Get("RadialDistortion"), TextManager.Get("RadialDistortionTooltip"), unsavedConfig.Graphics.RadialDistortion, (v) => unsavedConfig.Graphics.RadialDistortion = v);
             Tickbox(right, TextManager.Get("ChromaticAberration"), TextManager.Get("ChromaticAberrationTooltip"), unsavedConfig.Graphics.ChromaticAberration, (v) => unsavedConfig.Graphics.ChromaticAberration = v);
+
+            Label(right, TextManager.Get("ParticleLimit"), GUIStyle.SubHeadingFont);
+            Slider(right, (100, 1500), 15, (v) => Round(v).ToString(), unsavedConfig.Graphics.ParticleLimit, (v) => unsavedConfig.Graphics.ParticleLimit = Round(v));
+            Spacer(right);
         }
-        
+
         private static string TrimAudioDeviceName(string name)
         {
             if (string.IsNullOrWhiteSpace(name)) { return string.Empty; }
@@ -390,6 +395,9 @@ namespace Barotrauma
             Label(audio, TextManager.Get("MusicVolume"), GUIStyle.SubHeadingFont);
             Slider(audio, (0, 1), 101, Percentage, unsavedConfig.Audio.MusicVolume, (v) => unsavedConfig.Audio.MusicVolume = v);
 
+            Label(audio, TextManager.Get("UiSoundVolume"), GUIStyle.SubHeadingFont);
+            Slider(audio, (0, 1), 101, Percentage, unsavedConfig.Audio.UiVolume, (v) => unsavedConfig.Audio.UiVolume = v);
+
             Tickbox(audio, TextManager.Get("MuteOnFocusLost"), TextManager.Get("MuteOnFocusLostTooltip"), unsavedConfig.Audio.MuteOnFocusLost, (v) => unsavedConfig.Audio.MuteOnFocusLost = v);
             Tickbox(audio, TextManager.Get("DynamicRangeCompression"), TextManager.Get("DynamicRangeCompressionTooltip"), unsavedConfig.Audio.DynamicRangeCompressionEnabled, (v) => unsavedConfig.Audio.DynamicRangeCompressionEnabled = v);
             Spacer(audio);
@@ -454,6 +462,8 @@ namespace Barotrauma
             Slider(voiceChat, (0, 500), 26, (v) => $"{Round(v)} ms", unsavedConfig.Audio.VoiceChatCutoffPrevention, (v) => unsavedConfig.Audio.VoiceChatCutoffPrevention = Round(v), TextManager.Get("CutoffPreventionTooltip"));
         }
 
+
+        private bool inputBoxSelectedThisFrame = false;
         private void CreateControlsTab()
         {
             GUIFrame content = CreateNewContentFrame(Tab.Controls);
@@ -479,10 +489,14 @@ namespace Barotrauma
 
             HashSet<GUIButton> inputButtons = new HashSet<GUIButton>();
             Action<KeyOrMouse>? currentSetter = null;
-            void addInputToRow(GUILayoutGroup currRow, LocalizedString labelText, Func<LocalizedString> valueNameGetter, Action<KeyOrMouse> valueSetter)
+            void addInputToRow(GUILayoutGroup currRow, LocalizedString labelText, Func<LocalizedString> valueNameGetter, Action<KeyOrMouse> valueSetter, bool isLegacyBind = false)
             {
                 var inputFrame = new GUIFrame(new RectTransform((0.5f, 1.0f), currRow.RectTransform),
                     style: null);
+                if (isLegacyBind)
+                {
+                    labelText = TextManager.GetWithVariable("legacyitemformat", "[name]", labelText);
+                }
                 var label = new GUITextBlock(new RectTransform((0.6f, 1.0f), inputFrame.RectTransform), labelText,
                     font: GUIStyle.SmallFont) {ForceUpperCase = ForceUpperCase.Yes};
                 var inputBox = new GUIButton(
@@ -498,27 +512,36 @@ namespace Barotrauma
                         bool willBeSelected = !btn.Selected;
                         if (willBeSelected)
                         {
+                            inputBoxSelectedThisFrame = true;
                             currentSetter = (v) =>
                             {
                                 valueSetter(v);
                                 btn.Text = valueNameGetter();
                             };
                         }
-                        else
-                        {
-                            currentSetter = null;
-                        }
 
                         btn.Selected = willBeSelected;
                         return true;
                     }
                 };
+                if (isLegacyBind)
+                {
+                    label.TextColor = Color.Lerp(label.TextColor, label.DisabledTextColor, 0.5f);
+                    inputBox.Color = Color.Lerp(inputBox.Color, inputBox.DisabledColor, 0.5f);
+                    inputBox.TextColor = Color.Lerp(inputBox.TextColor, label.DisabledTextColor, 0.5f);
+                }
                 inputButtons.Add(inputBox);
             }
 
             var inputListener = new GUICustomComponent(new RectTransform(Vector2.Zero, layout.RectTransform), onUpdate: (deltaTime, component) =>
             {
                 if (currentSetter is null) { return; }
+
+                if (PlayerInput.PrimaryMouseButtonClicked() && inputBoxSelectedThisFrame)
+                {
+                    inputBoxSelectedThisFrame = false;
+                    return;
+                }
 
                 void clearSetter()
                 {
@@ -533,7 +556,7 @@ namespace Barotrauma
                 }
                 
                 var pressedKeys = PlayerInput.GetKeyboardState.GetPressedKeys();
-                if ((pressedKeys?.Any() ?? false))
+                if (pressedKeys?.Any() ?? false)
                 {
                     if (pressedKeys.Contains(Keys.Escape))
                     {
@@ -544,7 +567,8 @@ namespace Barotrauma
                         callSetter(pressedKeys.First());
                     }
                 }
-                else if (PlayerInput.PrimaryMouseButtonClicked() && !(GUI.MouseOn is GUIButton))
+                else if (PlayerInput.PrimaryMouseButtonClicked() &&
+                        (GUI.MouseOn == null || !(GUI.MouseOn is GUIButton) || GUI.MouseOn.IsChildOf(keyMapList.Content)))
                 {
                     callSetter(MouseButton.PrimaryMouse);
                 }
@@ -592,7 +616,8 @@ namespace Barotrauma
                         currRow,
                         TextManager.Get($"InputType.{input}"),
                         () => unsavedConfig.KeyMap.Bindings[input].Name,
-                        (v) => unsavedConfig.KeyMap = unsavedConfig.KeyMap.WithBinding(input, v));
+                        (v) => unsavedConfig.KeyMap = unsavedConfig.KeyMap.WithBinding(input, v),
+                        LegacyInputTypes.Contains(input));
                 }
             }
 
@@ -607,30 +632,31 @@ namespace Barotrauma
                     var input = unsavedConfig.InventoryKeyMap.Bindings[currIndex];
                     addInputToRow(
                         currRow,
-                        TextManager.GetWithVariable("inventoryslotkeybind", "[slotnumber]", (currIndex+1).ToString(CultureInfo.InvariantCulture)),
+                        TextManager.GetWithVariable("inventoryslotkeybind", "[slotnumber]", (currIndex + 1).ToString(CultureInfo.InvariantCulture)),
                         () => unsavedConfig.InventoryKeyMap.Bindings[currIndex].Name,
                         (v) => unsavedConfig.InventoryKeyMap = unsavedConfig.InventoryKeyMap.WithBinding(currIndex, v));
                 }
             }
 
             GUILayoutGroup resetControlsHolder =
-                new GUILayoutGroup(new RectTransform((1.75f, 0.1f), layout.RectTransform), isHorizontal: true)
+                new GUILayoutGroup(new RectTransform((1.75f, 0.1f), layout.RectTransform), isHorizontal: true, childAnchor: Anchor.Center)
                 {
                     RelativeSpacing = 0.1f
                 };
 
             var defaultBindingsButton =
                 new GUIButton(new RectTransform(new Vector2(0.45f, 1.0f), resetControlsHolder.RectTransform),
-                    TextManager.Get("SetDefaultBindings"), style: "GUIButtonSmall")
+                    TextManager.Get("Reset"), style: "GUIButtonSmall")
                 {
-                    ToolTip = TextManager.Get("SetDefaultBindingsTooltip")
-                };
-
-            var legacyBindingsButton =
-                new GUIButton(new RectTransform(new Vector2(0.45f, 1.0f), resetControlsHolder.RectTransform),
-                    TextManager.Get("SetLegacyBindings"), style: "GUIButtonSmall")
-                {
-                    ToolTip = TextManager.Get("SetLegacyBindingsTooltip")
+                    ToolTip = TextManager.Get("SetDefaultBindingsTooltip"),
+                    OnClicked = (btn, userdata) => 
+                    {
+                        unsavedConfig.InventoryKeyMap = GameSettings.Config.InventoryKeyMapping.GetDefault();
+                        unsavedConfig.KeyMap = GameSettings.Config.KeyMapping.GetDefault();
+                        Create(mainFrame.Parent.RectTransform);
+                        Instance?.SelectTab(Tab.Controls);
+                        return true; 
+                    }
                 };
         }
 

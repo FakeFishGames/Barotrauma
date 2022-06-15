@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
@@ -9,63 +10,6 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    internal struct CampaignSettings
-    {
-        public static CampaignSettings Empty => new CampaignSettings();
-
-        // Anything that uses this field I wasn't sure if actually needed the proper campaign settings to be passed down
-        public static CampaignSettings Unsure => Empty;
-        public bool RadiationEnabled { get; set; }
-
-        public int TotalMaxMissionCount => MaxMissionCount + GetAddedMissionCount();
-
-        private int maxMissionCount;
-        public int MaxMissionCount
-        {
-            get { return maxMissionCount; }
-            set { maxMissionCount = MathHelper.Clamp(value, MinMissionCountLimit, MaxMissionCountLimit); }
-        }
-
-        public const int DefaultMaxMissionCount = 2;
-        public const int MaxMissionCountLimit = 10;
-        public const int MinMissionCountLimit = 1;
-
-        public CampaignSettings(IReadMessage inc)
-        {
-            maxMissionCount = DefaultMaxMissionCount;
-            RadiationEnabled = inc.ReadBoolean();
-            MaxMissionCount = inc.ReadRangedInteger(MinMissionCountLimit, MaxMissionCountLimit);
-        }
-
-        public CampaignSettings(XElement element)
-        {
-            maxMissionCount = DefaultMaxMissionCount;
-            RadiationEnabled = element.GetAttributeBool(nameof(RadiationEnabled).ToLowerInvariant(), true);
-            MaxMissionCount = element.GetAttributeInt(nameof(MaxMissionCount).ToLowerInvariant(), DefaultMaxMissionCount);
-        }
-
-        public void Serialize(IWriteMessage msg)
-        {
-            msg.Write(RadiationEnabled);
-            msg.WriteRangedInteger(MaxMissionCount, MinMissionCountLimit, MaxMissionCountLimit);
-        }
-
-        public int GetAddedMissionCount()
-        {
-            int count = 0;
-            foreach (Character character in GameSession.GetSessionCrewCharacters(CharacterType.Both))
-            {
-                count += (int)character.GetStatValue(StatTypes.ExtraMissionCount);
-            }
-            return count;
-        }
-
-        public XElement Save()
-        {
-            return new XElement(nameof(CampaignSettings), new XAttribute(nameof(RadiationEnabled).ToLowerInvariant(), RadiationEnabled), new XAttribute(nameof(MaxMissionCount).ToLowerInvariant(), MaxMissionCount));
-        }
-    }
-
     abstract partial class CampaignMode : GameMode
     {
         [NetworkSerialize]
@@ -107,6 +51,8 @@ namespace Barotrauma
 
         protected XElement petsElement;
 
+        protected XElement ActiveOrdersElement { get; set; }
+
         public CampaignSettings Settings;
 
         private readonly List<Mission> extraMissions = new List<Mission>();
@@ -146,9 +92,8 @@ namespace Barotrauma
         //key = dialog flag, double = Timing.TotalTime when the line was last said
         private readonly Dictionary<string, double> dialogLastSpoken = new Dictionary<string, double>();
 
-        public bool PurchasedHullRepairs, PurchasedLostShuttles, PurchasedItemRepairs;
-
         public SubmarineInfo PendingSubmarineSwitch;
+        public bool TransferItemsOnSubSwitch { get; set; }
 
         protected Map map;
         public Map Map
@@ -186,12 +131,16 @@ namespace Barotrauma
             protected set;
         }
 
-        protected CampaignMode(GameModePreset preset)
+        public virtual bool PurchasedHullRepairs { get; set; }
+        public virtual bool PurchasedLostShuttles { get; set; }
+        public virtual bool PurchasedItemRepairs { get; set; }
+
+        protected CampaignMode(GameModePreset preset, CampaignSettings settings)
             : base(preset)
         {
             Bank = new Wallet(Option<Character>.None())
             {
-                Balance = InitialMoney
+                Balance = settings.InitialMoney
             };
 
             CargoManager = new CargoManager(this);
@@ -558,6 +507,8 @@ namespace Barotrauma
             }
         }
 
+        public TransitionType GetAvailableTransition() => GetAvailableTransition(out _, out _);
+
         /// <summary>
         /// Which submarine is at a position where it can leave the level and enter another one (if any).
         /// </summary>
@@ -593,6 +544,7 @@ namespace Barotrauma
                 if (Level.Loaded.StartOutpost == null)
                 {
                     Submarine closestSub = Submarine.FindClosest(Level.Loaded.StartExitPosition, ignoreOutposts: true, ignoreRespawnShuttle: true, teamType: leavingPlayers.FirstOrDefault()?.TeamID);
+                    if (closestSub == null) { return null; }
                     return closestSub.DockedTo.Contains(Submarine.MainSub) ? Submarine.MainSub : closestSub;
                 }
                 else
@@ -726,7 +678,6 @@ namespace Barotrauma
             }
         }
 
-
         public void EndCampaign()
         {
             foreach (Character c in Character.CharacterList)
@@ -738,13 +689,16 @@ namespace Barotrauma
             }
             foreach (LocationConnection connection in Map.Connections)
             {
-                connection.Difficulty = MathHelper.Lerp(connection.Difficulty, 100.0f, 0.25f);
-                connection.LevelData.Difficulty = connection.Difficulty;
-                connection.LevelData.IsBeaconActive = false;
+                connection.Difficulty = connection.Biome.MaxDifficulty;
+                connection.LevelData = new LevelData(connection)
+                {
+                    IsBeaconActive = false
+                };
                 connection.LevelData.HasHuntingGrounds = connection.LevelData.OriginallyHadHuntingGrounds;
             }
             foreach (Location location in Map.Locations)
             {
+                location.LevelData = new LevelData(location, location.Biome.MaxDifficulty);
                 location.Reset();
             }
             Map.SetLocation(Map.Locations.IndexOf(Map.StartLocation));
@@ -868,7 +822,7 @@ namespace Barotrauma
             const float MaxDist = 3000.0f;
             const float MinDist = 2500.0f;
 
-            if (!Level.IsLoadedOutpost) { return; }
+            if (!Level.IsLoadedFriendlyOutpost) { return; }
 
             Rectangle worldBorders = Submarine.MainSub.GetDockedBorders();
             worldBorders.Location += Submarine.MainSub.WorldPosition.ToPoint();
@@ -1032,5 +986,190 @@ namespace Barotrauma
             }
         }
 
+        protected void LeaveUnconnectedSubs(Submarine leavingSub)
+        {
+            if (leavingSub != Submarine.MainSub && !leavingSub.DockedTo.Contains(Submarine.MainSub))
+            {
+                Submarine.MainSub = leavingSub;
+                GameMain.GameSession.Submarine = leavingSub;
+                GameMain.GameSession.SubmarineInfo = leavingSub.Info;
+                leavingSub.Info.FilePath = System.IO.Path.Combine(SaveUtil.TempPath, leavingSub.Info.Name + ".sub");
+                var subsToLeaveBehind = GetSubsToLeaveBehind(leavingSub);
+                GameMain.GameSession.OwnedSubmarines.Add(leavingSub.Info);
+                foreach (Submarine sub in subsToLeaveBehind)
+                {
+                    GameMain.GameSession.OwnedSubmarines.RemoveAll(s => s != leavingSub.Info && s.Name == sub.Info.Name);
+                    MapEntity.mapEntityList.RemoveAll(e => e.Submarine == sub && e is LinkedSubmarine);
+                    LinkedSubmarine.CreateDummy(leavingSub, sub);
+                }
+            }
+        }
+
+        public SubmarineInfo SwitchSubs()
+        {
+            if (TransferItemsOnSubSwitch)
+            {
+                TransferItemsBetweenSubs();
+            }
+            RefreshOwnedSubmarines();
+            PendingSubmarineSwitch = null;
+            return GameMain.GameSession.SubmarineInfo;
+        }
+
+        /// <summary>
+        /// Also serializes the current sub.
+        /// </summary>
+        protected void TransferItemsBetweenSubs()
+        {
+            Submarine currentSub = GameMain.GameSession.Submarine;
+            if (currentSub == null || currentSub.Removed)
+            {
+                DebugConsole.ThrowError("Cannot transfer items between subs, because the current sub is null or removed!");
+                return;
+            }
+            var itemsToTransfer = new List<(Item item, Item container)>();
+            if (PendingSubmarineSwitch != null)
+            {
+                var connectedSubs = currentSub.GetConnectedSubs().Where(s => s.Info.Type == SubmarineType.Player).ToHashSet();
+                // Remove items from the old sub
+                foreach (Item item in Item.ItemList)
+                {
+                    if (item.Removed) { continue; }
+                    if (item.NonInteractable) { continue; }
+                    if (item.HiddenInGame) { continue; }
+                    if (!connectedSubs.Contains(item.Submarine)) { continue; }
+                    if (item.Prefab.DontTransferBetweenSubs) { continue; }
+                    if (item.GetRootInventoryOwner() is Character) { continue; }
+                    if (item.GetComponent<Holdable>() == null && item.GetComponent<Wearable>() == null && item.GetComponent<Projectile>() == null) { continue; }
+                    if (item.Components.Any(c => c is Holdable h && h.Attached)) { continue; }
+                    if (item.Components.Any(c => c is Wire w && w.Connections.Any(c => c != null))) { continue; }
+                    itemsToTransfer.Add((item, item.Container));
+                    item.Submarine = null;
+                }
+                foreach (var (item, container) in itemsToTransfer)
+                {
+                    if (container?.Submarine != null)
+                    {
+                        // Drop the item if it's not inside another item set to be transferred.
+                        item.Drop(null, createNetworkEvent: false, setTransform: false);
+                    }
+                }
+            }
+            // Serialize the current sub
+            GameMain.GameSession.SubmarineInfo = new SubmarineInfo(currentSub);
+            if (PendingSubmarineSwitch != null && itemsToTransfer.Any())
+            {
+                // Load the new sub
+                var newSub = new Submarine(PendingSubmarineSwitch);
+                var connectedSubs = newSub.GetConnectedSubs().Where(s => s.Info.Type == SubmarineType.Player).ToHashSet();
+                // Move the transferred items
+                List<ItemContainer> availableContainers = Item.ItemList
+                    .Where(it => connectedSubs.Contains(it.Submarine) && it.HasTag("crate") && !it.NonInteractable && !it.HiddenInGame && !it.Removed)
+                    .Select(it => it.GetComponent<ItemContainer>())
+                    .Where(c => c != null)
+                    .ToList();
+                foreach (var (item, oldContainer) in itemsToTransfer)
+                {
+                    Item newContainer = null;
+                    item.Submarine = newSub;
+                    if (item.Container == null)
+                    {
+                        newContainer = newSub.FindContainerFor(item, onlyPrimary: true, checkTransferConditions: true, allowConnectedSubs: true);
+                    }
+                    if (item.Container == null && (newContainer == null || !newContainer.OwnInventory.TryPutItem(item, user: null, createNetworkEvent: false)))
+                    {
+                        WayPoint wp = WayPoint.GetRandom(SpawnType.Cargo, null, newSub);
+                        Hull spawnHull = wp?.CurrentHull ?? Hull.HullList.Where(h => h.Submarine == newSub && !h.IsWetRoom).GetRandomUnsynced();
+                        if (spawnHull == null)
+                        {
+                            DebugConsole.AddWarning($"Failed to transfer items between subs. No cargo waypoint or dry hulls found in the new sub.");
+                            return;
+                        }
+                        if (spawnHull != null)
+                        {
+                            var cargoContainer = CargoManager.GetOrCreateCargoContainerFor(item.Prefab, spawnHull, ref availableContainers);
+                            if (cargoContainer == null || !cargoContainer.Inventory.TryPutItem(item, user: null, createNetworkEvent: false))
+                            {
+                                Vector2 simPos = ConvertUnits.ToSimUnits(CargoManager.GetCargoPos(spawnHull, item.Prefab));
+                                item.SetTransform(simPos, 0.0f, findNewHull: false, setPrevTransform: false);
+                            }
+                        }
+                        else
+                        {
+                            DebugConsole.AddWarning($"Failed to transfer item {item.Prefab.Identifier} ({item.ID}), because no cargo spawn point could be found!");
+                        }
+                    }
+                    string newContainerName = newContainer == null ? "(null)" : $"{newContainer.Prefab.Identifier} ({newContainer.Tags})";
+                    string msg = "Item transfer log error.";
+                    if (oldContainer != null)
+                    {
+                        if (newContainer == null && oldContainer == item.Container)
+                        {
+                            msg = $"Transferred {item.Prefab.Identifier} ({item.ID}) contained inside {oldContainer.Prefab.Identifier} ({oldContainer.ID})";
+                        }
+                        else
+                        {
+                            msg = $"Transferred {item.Prefab.Identifier} ({item.ID}) from {oldContainer.Prefab.Identifier} ({oldContainer.Tags}) to {newContainerName}";
+                        }
+                    }
+                    else
+                    {
+                        msg = $"Transferred {item.Prefab.Identifier} ({item.ID}) to {newContainerName}";
+                    }
+#if DEBUG
+                    DebugConsole.NewMessage(msg);
+#else
+                    DebugConsole.Log(msg);
+#endif
+                }
+                // Serialize the new sub
+                PendingSubmarineSwitch = new SubmarineInfo(newSub);
+            }
+        }
+
+        protected void RefreshOwnedSubmarines()
+        {
+            if (PendingSubmarineSwitch != null)
+            {
+                SubmarineInfo previousSub = GameMain.GameSession.SubmarineInfo;
+                GameMain.GameSession.SubmarineInfo = PendingSubmarineSwitch;
+
+                for (int i = 0; i < GameMain.GameSession.OwnedSubmarines.Count; i++)
+                {
+                    if (GameMain.GameSession.OwnedSubmarines[i].Name == previousSub.Name)
+                    {
+                        GameMain.GameSession.OwnedSubmarines[i] = previousSub;
+                        break;
+                    }
+                }
+            }
+        }
+
+        public void SavePets(XElement parentElement = null)
+        {
+            petsElement = new XElement("pets");
+            PetBehavior.SavePets(petsElement);
+            parentElement?.Add(petsElement);
+        }
+
+        public void LoadPets()
+        {
+            if (petsElement != null)
+            {
+                PetBehavior.LoadPets(petsElement);
+            }
+        }
+
+        public void SaveActiveOrders(XElement parentElement = null)
+        {
+            ActiveOrdersElement = new XElement("activeorders");
+            CrewManager?.SaveActiveOrders(ActiveOrdersElement);
+            parentElement?.Add(ActiveOrdersElement);
+        }
+
+        public void LoadActiveOrders()
+        {
+            CrewManager?.LoadActiveOrders(ActiveOrdersElement);
+        }
     }
 }

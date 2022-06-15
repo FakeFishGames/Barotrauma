@@ -64,8 +64,6 @@ namespace Barotrauma
                         campaign.GetWallet(client).Give(Amount);
                     }
                 }
-
-                ((MultiPlayerCampaign)campaign).LastUpdateID++;
 #else
                 campaign.Wallet.Give(Amount);
 #endif

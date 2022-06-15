@@ -209,11 +209,8 @@ namespace Barotrauma
                 }
             }
 
-            if (item.Prefab.Identifier == "idcard")
-            {
-                IdCard idCardComponent = item.GetComponent<IdCard>();
-                idCardComponent?.Initialize(spawnPoint, character);
-            }
+            IdCard idCardComponent = item.GetComponent<IdCard>();
+            idCardComponent?.Initialize(spawnPoint, character);
 
             foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
             {

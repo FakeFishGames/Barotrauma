@@ -324,7 +324,7 @@ namespace Barotrauma.Steam
 
                 using (var copyIndicator = new CopyIndicator(copyIndicatorPath))
                 {
-                    await CopyDirectory(itemDirectory, modPathDirName ?? modName, itemDirectory, installDir);
+                    await CopyDirectory(itemDirectory, modPathDirName ?? modName, itemDirectory, installDir, ShouldCorrectPaths.Yes);
 
                     string fileListDestPath = Path.Combine(installDir, ContentPackage.FileListFileName);
                     XDocument fileListDest = XMLExtensions.TryLoadXml(fileListDestPath);
@@ -358,12 +358,15 @@ namespace Barotrauma.Steam
 
                     string val = attribute.Value.CleanUpPathCrossPlatform(correctFilenameCase: false);
 
+                    bool isPath = false;
+                    
                     //Handle mods that have been mangled by pre-modding-refactor
                     //copying of post-modding-refactor mods (what a clusterfuck)
                     int modDirStrIndex = val.IndexOf(ContentPath.ModDirStr, StringComparison.OrdinalIgnoreCase);
                     if (modDirStrIndex >= 0)
                     {
                         val = val[modDirStrIndex..];
+                        isPath = true;
                     }
                     
                     //Handle really old mods (0.9.0.4-era) that might be structured as
@@ -372,6 +375,7 @@ namespace Barotrauma.Steam
                     if (File.Exists(fullSrcPath))
                     {
                         val = $"{ContentPath.ModDirStr}/{val}";
+                        isPath = true;
                     }
                     
                     //Handle old mods that installed to the fixed Mods directory
@@ -380,6 +384,7 @@ namespace Barotrauma.Steam
                     if (val.StartsWith(oldModDir, StringComparison.OrdinalIgnoreCase))
                     {
                         val = $"{ContentPath.ModDirStr}{val.Remove(0, oldModDir.Length)}";
+                        isPath = true;
                     }
                     //Handle old mods that depend on other mods
                     else if (val.StartsWith("Mods/", StringComparison.OrdinalIgnoreCase))
@@ -387,13 +392,15 @@ namespace Barotrauma.Steam
                         string otherModName = val.Substring(val.IndexOf('/')+1);
                         otherModName = otherModName.Substring(0, otherModName.IndexOf('/'));
                         val = $"{string.Format(ContentPath.OtherModDirFmt, otherModName)}{val.Remove(0, $"Mods/{otherModName}".Length)}";
+                        isPath = true;
                     }
                     //Handle really old mods that installed Submarines in the wrong place
                     else if (val.StartsWith("Submarines/", StringComparison.OrdinalIgnoreCase))
                     {
                         val = $"{ContentPath.ModDirStr}/{val}";
+                        isPath = true;
                     }
-                    attribute.Value = val;
+                    if (isPath) { attribute.Value = val; }
                 }
                 await Task.WhenAll(
                     element.Elements()
@@ -403,7 +410,7 @@ namespace Barotrauma.Steam
                         element: subElement)));
             }
 
-            private static async Task CopyFile(string fileListDir, string modName, string from, string to)
+            private static async Task CopyFile(string fileListDir, string modName, string from, string to, ShouldCorrectPaths shouldCorrectPaths)
             {
                 await Task.Yield();
                 Identifier extension = Path.GetExtension(from).ToIdentifier();
@@ -420,10 +427,14 @@ namespace Barotrauma.Steam
                         {
                             throw new Exception($"Could not load \"{from}\": doc is null");
                         }
-                        await CorrectPaths(
-                            fileListDir: fileListDir,
-                            modName: modName,
-                            element: doc.Root ?? throw new NullReferenceException());
+
+                        if (shouldCorrectPaths == ShouldCorrectPaths.Yes)
+                        {
+                            await CorrectPaths(
+                                fileListDir: fileListDir,
+                                modName: modName,
+                                element: doc.Root ?? throw new NullReferenceException());
+                        }
                         doc.SaveSafe(to);
                         return;
                     }
@@ -436,7 +447,12 @@ namespace Barotrauma.Steam
                 File.Copy(from, to, overwrite: true);
             }
 
-            public static async Task CopyDirectory(string fileListDir, string modName, string from, string to)
+            public enum ShouldCorrectPaths
+            {
+                Yes, No
+            }
+            
+            public static async Task CopyDirectory(string fileListDir, string modName, string from, string to, ShouldCorrectPaths shouldCorrectPaths)
             {
                 from = Path.GetFullPath(from); to = Path.GetFullPath(to);
                 Directory.CreateDirectory(to);
@@ -448,10 +464,10 @@ namespace Barotrauma.Steam
                 string[] subDirs = Directory.GetDirectories(from);
                 foreach (var file in files)
                 {
-                    await CopyFile(fileListDir, modName, file, convertFromTo(file));
+                    await CopyFile(fileListDir, modName, file, convertFromTo(file), shouldCorrectPaths);
                 }
 
-                foreach (var dir in subDirs) { await CopyDirectory(fileListDir, modName, dir, convertFromTo(dir)); }
+                foreach (var dir in subDirs) { await CopyDirectory(fileListDir, modName, dir, convertFromTo(dir), shouldCorrectPaths); }
             }
         }
     }

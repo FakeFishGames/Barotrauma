@@ -111,8 +111,9 @@ namespace Barotrauma.Items.Components
 
             ActivateNearbySleepingCharacters();
             reloadTimer = reload;
-            reloadTimer /= (1f + character.GetStatValue(StatTypes.MeleeAttackSpeed));
-            reloadTimer /= (1f + item.GetQualityModifier(Quality.StatType.StrikingSpeedMultiplier));
+            reloadTimer /= 1f + character.GetStatValue(StatTypes.MeleeAttackSpeed);
+            reloadTimer /= 1f + item.GetQualityModifier(Quality.StatType.StrikingSpeedMultiplier);
+            character.AnimController.LockFlippingUntil = (float)Timing.TotalTime + reloadTimer;
 
             item.body.FarseerBody.CollisionCategories = Physics.CollisionProjectile;
             item.body.FarseerBody.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionItemBlocking;
@@ -216,6 +217,10 @@ namespace Barotrauma.Items.Components
                 {
                     hitPos = MathUtils.WrapAnglePi(Math.Min(hitPos + deltaTime * 3f, MathHelper.PiOver4));
                     ac.HoldItem(deltaTime, item, handlePos, aimPos, Vector2.Zero, aim: false, hitPos, holdAngle + hitPos, aimMelee: true);
+                    if (ac.InWater)
+                    {
+                        ac.LockFlippingUntil = (float)Timing.TotalTime + Reload;
+                    }
                 }
                 else
                 {

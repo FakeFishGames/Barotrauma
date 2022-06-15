@@ -40,10 +40,14 @@ namespace Barotrauma
             }
         }
 
-        private static void AddInternal(string name, Task task, Action<Task, object> onCompletion, object userdata)
+        private static void AddInternal(string name, Task task, Action<Task, object> onCompletion, object userdata, bool addIfFound = true)
         {
             lock (taskActions)
             {
+                if (!addIfFound)
+                {
+                    if (taskActions.Any(t => t.Name == name)) { return; }
+                }
                 if (taskActions.Count >= MaxTasks)
                 {
                     throw new Exception(
@@ -58,6 +62,10 @@ namespace Barotrauma
         public static void Add(string name, Task task, Action<Task> onCompletion)
         {
             AddInternal(name, task, (Task t, object obj) => { onCompletion?.Invoke(t); }, null);
+        }
+        public static void AddIfNotFound(string name, Task task, Action<Task> onCompletion)
+        {
+            AddInternal(name, task, (Task t, object obj) => { onCompletion?.Invoke(t); }, null, addIfFound: false);
         }
 
         public static void Add<U>(string name, Task task, U userdata, Action<Task, U> onCompletion) where U : class

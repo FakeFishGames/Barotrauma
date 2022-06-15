@@ -780,7 +780,7 @@ namespace Barotrauma
                             return;
                         }
                         GameMain.GameSession.EventManager.ActiveEvents.Add(newEvent);
-                        newEvent.Init(true);
+                        newEvent.Init();
                         NewMessage($"Initialized event {eventPrefab.Identifier}", Color.Aqua);
                         return;
                     }
@@ -1122,7 +1122,7 @@ namespace Barotrauma
                 {
                     var gamesession = new GameSession(
                         SubmarineInfo.SavedSubmarines.GetRandomUnsynced(s => s.Type == SubmarineType.Player && !s.HasTag(SubmarineTag.HideInMenus)),
-                        GameModePreset.DevSandbox);
+                        GameModePreset.DevSandbox ?? GameModePreset.Sandbox);
                     string seed = ToolBox.RandomSeed(16);
                     gamesession.StartRound(seed);
 
@@ -1829,6 +1829,17 @@ namespace Barotrauma
             }));
 #endif
 
+            commands.Add(new Command("startitems|startitemset", "start item set identifier", (string[] args) =>
+            {
+                if (args.Length == 0)
+                {
+                    ThrowError($"No start item set identifier defined!");
+                    return;
+                }
+                AutoItemPlacer.DefaultStartItemSet = args[0].ToIdentifier();
+                NewMessage($"Start item set changed to \"{AutoItemPlacer.DefaultStartItemSet}\"");
+            }, isCheat: false));
+
             //"dummy commands" that only exist so that the server can give clients permissions to use them
             //TODO: alphabetical order?
             commands.Add(new Command("control", "control [character name]: Start controlling the specified character (client-only).", null, () =>
@@ -2514,6 +2525,16 @@ namespace Barotrauma
                 unsavedMessages.Clear();
                 ThrowError("Saving debug console log to " + filePath + " failed", e);
             }
+        }
+
+        public static void DeactivateCheats()
+        {
+#if CLIENT
+            GameMain.DebugDraw = false;
+            GameMain.LightManager.LightingEnabled = true;
+#endif
+            Hull.EditWater = false;
+            Hull.EditFire = false;
         }
     }
 }

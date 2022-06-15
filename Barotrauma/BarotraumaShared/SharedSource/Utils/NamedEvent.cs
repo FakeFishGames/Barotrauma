@@ -7,11 +7,6 @@ namespace Barotrauma
     {
         private readonly Dictionary<Identifier, Action<T>> events = new Dictionary<Identifier, Action<T>>();
 
-        ~NamedEvent()
-        {
-            ReleaseUnmanagedResources();
-        }
-
         public void Register(Identifier identifier, Action<T> action)
         {
             if (HasEvent(identifier))
@@ -53,15 +48,9 @@ namespace Barotrauma
             }
         }
 
-        private void ReleaseUnmanagedResources()
-        {
-            events.Clear();
-        }
-
         public void Dispose()
         {
-            ReleaseUnmanagedResources();
-            GC.SuppressFinalize(this);
+            events.Clear();
         }
     }
 }

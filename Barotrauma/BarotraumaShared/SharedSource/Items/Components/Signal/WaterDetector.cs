@@ -64,6 +64,11 @@ namespace Barotrauma.Items.Components
             IsActive = true;
         }
 
+        public static int GetWaterPercentage(Hull hull)
+        {
+            return hull.WaterVolume > 1.0f ? MathHelper.Clamp((int)Math.Ceiling(hull.WaterPercentage), 0, 100) : 0;
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
             if (stateSwitchDelay > 0.0f)
@@ -103,12 +108,7 @@ namespace Barotrauma.Items.Components
 
             if (item.CurrentHull != null)
             {
-                int waterPercentage = 0;
-                //ignore minuscule amounts of water
-                if (item.CurrentHull.WaterVolume > 1.0f)
-                {
-                    waterPercentage = MathHelper.Clamp((int)Math.Ceiling(item.CurrentHull.WaterPercentage), 0, 100);
-                }
+                int waterPercentage = GetWaterPercentage(item.CurrentHull);
                 if (prevSentWaterPercentageValue != waterPercentage || waterPercentageSignal == null)
                 {
                     prevSentWaterPercentageValue = waterPercentage;

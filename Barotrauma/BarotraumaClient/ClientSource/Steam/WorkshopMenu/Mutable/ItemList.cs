@@ -151,7 +151,10 @@ namespace Barotrauma.Steam
                 onDeselected: () => itemList?.Deselect(),
                 out var select, out var deselect);
 
-            itemList = new GUIListBox(new RectTransform(Vector2.One, outerContainer.Content.RectTransform));
+            itemList = new GUIListBox(new RectTransform(Vector2.One, outerContainer.Content.RectTransform))
+            {
+                PlaySoundOnSelect = true,
+            };
             itemList.RectTransform.SetAsFirstChild();
             workshopItemList = itemList;
 
@@ -415,7 +418,7 @@ namespace Barotrauma.Steam
             itemListBox.ClearChildren();
             itemListBox.Deselect();
             itemListBox.ScrollBar.BarScroll = 0.0f;
-            TaskPool.Add("PopulateTabWithItemList", items,
+            TaskPool.AddIfNotFound("PopulateTabWithItemList", items,
                 (t) =>
                 {
                     taskCancelSrc = taskCancelSrc.IsCancellationRequested ? new CancellationTokenSource() : taskCancelSrc;
@@ -588,10 +591,16 @@ namespace Barotrauma.Steam
 
             bool reinstallAction(GUIButton button, object o)
             {
-                TaskPool.Add($"Reinstall{workshopItem.Id}", SteamManager.Workshop.Reinstall(workshopItem), t =>
+                int prevIndex = ContentPackageManager.EnabledPackages.Regular.IndexOf(contentPackage);
+                TaskPool.AddIfNotFound($"Reinstall{workshopItem.Id}", 
+                    SteamManager.Workshop.Reinstall(workshopItem), t =>
                 {
                     ContentPackageManager.WorkshopPackages.Refresh();
                     ContentPackageManager.EnabledPackages.RefreshUpdatedMods();
+                    if (SettingsMenu.Instance?.WorkshopMenu is MutableWorkshopMenu mutableWorkshopMenu)
+                    {
+                        mutableWorkshopMenu.PopulateInstalledModLists(forceRefreshEnabled: true);
+                    }
                 });
                 return false;
             }
@@ -606,7 +615,7 @@ namespace Barotrauma.Steam
 
             if (contentPackage != null)
             {
-                TaskPool.Add(
+                TaskPool.AddIfNotFound(
                     $"DetermineUpdateRequired{contentPackage.SteamWorkshopId}",
                     contentPackage.IsUpToDate(),
                     t =>

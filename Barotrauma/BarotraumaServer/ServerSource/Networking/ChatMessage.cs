@@ -10,7 +10,8 @@ namespace Barotrauma.Networking
             c.KickAFKTimer = 0.0f;
 
             UInt16 ID = msg.ReadUInt16();
-            ChatMessageType type = (ChatMessageType)msg.ReadByte();
+            ChatMessageType type = (ChatMessageType)msg.ReadRangedInteger(0, Enum.GetValues(typeof(ChatMessageType)).Length - 1);
+            ChatMode chatMode = (ChatMode)msg.ReadRangedInteger(0, Enum.GetValues(typeof(ChatMode)).Length - 1);
             string txt;
 
             Character orderTargetCharacter = null;
@@ -172,7 +173,7 @@ namespace Barotrauma.Networking
             }
             else
             {
-                GameMain.Server.SendChatMessage(txt, null, c);
+                GameMain.Server.SendChatMessage(txt, senderClient: c, chatMode: chatMode);
             }
         }
 
@@ -203,7 +204,7 @@ namespace Barotrauma.Networking
         {
             msg.Write((byte)ServerNetObject.CHAT_MESSAGE);
             msg.Write(NetStateID);
-            msg.Write((byte)Type);
+            msg.WriteRangedInteger((int)Type, 0, Enum.GetValues(typeof(ChatMessageType)).Length - 1);
             msg.Write((byte)ChangeType);
             msg.Write(Text);
 

@@ -160,6 +160,10 @@ namespace Barotrauma
                 listBox.ToolTip = value;
             }
         }
+
+        public GUIImage DropDownIcon => icon;
+
+        public Vector4 Padding => button.TextBlock.Padding;
                 
         public GUIDropDown(RectTransform rectT, LocalizedString text = null, int elementCount = 4, string style = "", bool selectMultiple = false, bool dropAbove = false, Alignment textAlignment = Alignment.CenterLeft) : base(style, rectT)
         {
@@ -183,7 +187,8 @@ namespace Barotrauma
             listBox = new GUIListBox(new RectTransform(new Point(Rect.Width, Rect.Height * MathHelper.Clamp(elementCount, 2, 10)), rectT, listAnchor, listPivot)
             { IsFixedSize = false }, style: null)
             {
-                Enabled = !selectMultiple
+                Enabled = !selectMultiple,
+                PlaySoundOnSelect = true,
             };
             if (!selectMultiple) { listBox.OnSelected = SelectItem; }           
             GUIStyle.Apply(listBox, "GUIListBox", this);

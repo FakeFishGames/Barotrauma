@@ -28,6 +28,8 @@ namespace Barotrauma.Networking
 
         REQUEST_STARTGAMEFINALIZE, //tell the server you're ready to finalize round initialization
 
+        UPDATE_CHARACTERINFO,
+
         ERROR,           //tell the server that an error occurred
         CREW,            //hiring UI
         MEDICAL,         //medical clinic

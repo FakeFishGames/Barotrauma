@@ -20,10 +20,11 @@ namespace Barotrauma
         private ServerContentPackage? currentDownload;
 
         private readonly List<ContentPackage> downloadedPackages = new List<ContentPackage>();
+        public IEnumerable<ContentPackage> DownloadedPackages => downloadedPackages;
         
         private bool confirmDownload;
 
-        private void Reset()
+        public void Reset()
         {
             pendingDownloads.Clear();
             downloadedPackages.Clear();
@@ -253,12 +254,6 @@ namespace Barotrauma
                     return 0.0f;
                 };
             }
-        }
-
-        public override void Deselect()
-        {
-            Reset();
-            base.Deselect();
         }
 
         public override void Update(double deltaTime)

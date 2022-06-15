@@ -333,6 +333,7 @@ namespace Barotrauma.Items.Components
 
             GUIListBox listBox = new GUIListBox(new RectTransform(Vector2.One, searchAutoComplete.RectTransform))
             {
+                PlaySoundOnSelect = true,
                 OnSelected = (component, o) =>
                 {
                     if (o is ItemPrefab prefab)
@@ -613,7 +614,7 @@ namespace Barotrauma.Items.Components
                     if (hullData.Distort)
                     {
                         hullData.ReceivedOxygenAmount = Rand.Range(0.0f, 100.0f);
-                        hullData.ReceivedWaterAmount = Rand.Range(0.0f, 1.0f);
+                        hullData.ReceivedWaterAmount = Rand.Range(0.0f, 100.0f);
                     }
                     hullData.DistortionTimer = Rand.Range(1.0f, 10.0f);
                 }
@@ -681,7 +682,7 @@ namespace Barotrauma.Items.Components
 
                 var sprite = GUIStyle.UIGlowSolidCircular.Value?.Sprite;
                 float alpha = (MathF.Sin(blipState / maxBlipState * MathHelper.TwoPi) + 1.5f) * 0.5f;
-                if (sprite != null)
+                if (sprite != null && ShowHullIntegrity)
                 {
                     Vector2 spriteSize = sprite.size;
                     Rectangle worldBorders = item.Submarine.GetDockedBorders();
@@ -744,11 +745,11 @@ namespace Barotrauma.Items.Components
 
             if (key == Keys.Down)
             {
-                listBox.SelectNext(true, autoScroll: true);
+                listBox.SelectNext(force: GUIListBox.Force.Yes, playSelectSound: GUIListBox.PlaySelectSound.Yes);
             }
             else if (key == Keys.Up)
             {
-                listBox.SelectPrevious(true, autoScroll: true);
+                listBox.SelectPrevious(force: GUIListBox.Force.Yes, playSelectSound: GUIListBox.PlaySelectSound.Yes);
             }
             else if (key == Keys.Enter)
             {
@@ -782,7 +783,7 @@ namespace Barotrauma.Items.Components
 
                     if (component.Visible && first)
                     {
-                        listBox.Select(i, force: true, autoScroll: false);
+                        listBox.Select(i, GUIListBox.Force.Yes, GUIListBox.AutoScroll.Disabled);
                         first = false;
                     }
                 }
@@ -1014,13 +1015,13 @@ namespace Barotrauma.Items.Components
                     hullData.HullWaterAmount = 0.0f;
                     foreach (Hull linkedHull in hullData.LinkedHulls)
                     {
-                        hullData.HullWaterAmount += Math.Min(linkedHull.WaterVolume / linkedHull.Volume, 1.0f);
+                        hullData.HullWaterAmount += WaterDetector.GetWaterPercentage(linkedHull);
                     }
                     hullData.HullWaterAmount /= hullData.LinkedHulls.Count;
                 }
                 else
                 {
-                    hullData.HullWaterAmount = Math.Min(hull.WaterVolume / hull.Volume, 1.0f);
+                    hullData.HullWaterAmount = WaterDetector.GetWaterPercentage(hull);
                 }
 
                 float gapOpenSum = 0.0f;
@@ -1052,8 +1053,8 @@ namespace Barotrauma.Items.Components
 
                     LocalizedString line3 = waterAmount == null ?
                         TextManager.Get("MiniMapWaterLevelUnavailable") :
-                        TextManager.AddPunctuation(':', TextManager.Get("MiniMapWaterLevel"), (int)Math.Round(waterAmount.Value * 100.0f) + "%");
-                    Color line3Color = waterAmount == null ? GUIStyle.Red : Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)waterAmount);
+                        TextManager.AddPunctuation(':', TextManager.Get("MiniMapWaterLevel"), (int)Math.Round(waterAmount.Value) + "%");
+                    Color line3Color = waterAmount == null ? GUIStyle.Red : Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)waterAmount / 100.0f);
 
                     SetTooltip(borderComponent.Rect.Center, header, line1, line2, line3, line1Color, line2Color, line3Color);
                 }
@@ -1188,7 +1189,8 @@ namespace Barotrauma.Items.Components
 
                         if (hullsVisible && hullData.HullWaterAmount is { } waterAmount)
                         {
-                            if (!RequireWaterDetectors) { waterAmount = hull.WaterPercentage / 100.0f; }
+                            if (!RequireWaterDetectors) { waterAmount = WaterDetector.GetWaterPercentage(hull); }
+                            waterAmount /= 100.0f;
                             if (hullFrame.Rect.Height * waterAmount > 1.0f)
                             {
                                 RectangleF waterRect = new RectangleF(hullFrame.Rect.X, hullFrame.Rect.Y + hullFrame.Rect.Height * (1.0f - waterAmount), hullFrame.Rect.Width, hullFrame.Rect.Height * waterAmount);
@@ -1327,7 +1329,7 @@ namespace Barotrauma.Items.Components
             pos.X += inflate;
             pos.Y += inflate;
 
-            sprite.Draw(spriteBatch, pos, item.SpriteColor, sprite.Origin, MathHelper.ToRadians(item.Rotation), spriteScale, item.SpriteEffects);
+            sprite.Draw(spriteBatch, pos, item.SpriteColor, sprite.Origin, item.RotationRad, spriteScale, item.SpriteEffects);
 
             void DrawAdditionalSprite(Vector2 basePos, Sprite addSprite, float rotation)
             {

@@ -280,9 +280,9 @@ namespace Barotrauma.Items.Components
                 transformedItemPos += new Vector2(item.Rect.X, item.Rect.Y);
                 if (item.Submarine != null) { transformedItemPos += item.Submarine.DrawPosition; }
 
-                if (Math.Abs(item.Rotation) > 0.01f)
+                if (Math.Abs(item.RotationRad) > 0.01f)
                 {
-                    Matrix transform = Matrix.CreateRotationZ(MathHelper.ToRadians(-item.Rotation));
+                    Matrix transform = Matrix.CreateRotationZ(-item.RotationRad);
                     transformedItemPos = Vector2.Transform(transformedItemPos - item.DrawPosition, transform) + item.DrawPosition;
                     transformedItemInterval = Vector2.Transform(transformedItemInterval, transform);
                     transformedItemIntervalHorizontal = Vector2.Transform(transformedItemIntervalHorizontal, transform);

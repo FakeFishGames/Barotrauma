@@ -231,6 +231,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(false, IsPropertySaveable.No, description:"Enable only if you want to make the projectile ignore collisions with other projectiles when it's shot. Doesn't have any effect, if the item is not set to be damaged by projectiles.")]
+        public bool IgnoreProjectilesWhileActive
+        {
+            get;
+            set;
+        }
+
         public Body StickTarget 
         { 
             get; 
@@ -405,6 +412,10 @@ namespace Barotrauma.Items.Components
 
             item.body.CollisionCategories = Physics.CollisionProjectile;
             item.body.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking;
+            if (item.Prefab.DamagedByProjectiles && !IgnoreProjectilesWhileActive)
+            {
+                item.body.CollidesWith |= Physics.CollisionProjectile;
+            }
 
             IsActive = true;
 
@@ -835,6 +846,10 @@ namespace Barotrauma.Items.Components
             }
             else if (target.Body.UserData is Limb limb)
             {
+                if (!FriendlyFire && User != null && limb.character.IsFriendly(User))
+                {
+                    return false;
+                }
                 // when hitting limbs with piercing ammo, don't lose as much speed
                 if (MaxTargetsToHit > 1)
                 {
@@ -954,7 +969,8 @@ namespace Barotrauma.Items.Components
             {
                 item.body.LinearVelocity *= deflectedSpeedMultiplier;
             }
-            else if (   stickJoint == null && StickTarget == null &&
+            else if (   remainingHits <= 0 &&
+                        stickJoint == null && StickTarget == null &&
                         StickToStructures && target.Body.UserData is Structure ||
                         ((StickToLightTargets || target.Body.Mass > item.body.Mass * 0.5f) &&
                         (DoesStick ||

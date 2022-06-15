@@ -126,7 +126,7 @@ namespace Barotrauma
             DrawMap(graphics, spriteBatch, deltaTime);
 
             sw.Stop();
-            GameMain.PerformanceCounter.AddElapsedTicks("DrawMap", sw.ElapsedTicks);
+            GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map", sw.ElapsedTicks);
             sw.Restart();
 
             spriteBatch.Begin(SpriteSortMode.Deferred, null, GUI.SamplerState, null, GameMain.ScissorTestEnable);
@@ -165,7 +165,7 @@ namespace Barotrauma
             spriteBatch.End();
 
             sw.Stop();
-            GameMain.PerformanceCounter.AddElapsedTicks("DrawHUD", sw.ElapsedTicks);
+            GameMain.PerformanceCounter.AddElapsedTicks("Draw:HUD", sw.ElapsedTicks);
             sw.Restart();
         }
 
@@ -178,12 +178,19 @@ namespace Barotrauma
 
             GameMain.ParticleManager.UpdateTransforms();
 
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+
             GameMain.LightManager.ObstructVision = 
                 Character.Controlled != null && 
                 Character.Controlled.ObstructVision && 
                 (Character.Controlled.ViewTarget == Character.Controlled || Character.Controlled.ViewTarget == null);
 
             GameMain.LightManager.UpdateObstructVision(graphics, spriteBatch, cam, Character.Controlled?.CursorWorldPosition ?? Vector2.Zero);
+
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map:LOS", sw.ElapsedTicks);
+            sw.Restart();
 
             //------------------------------------------------------------------------
             graphics.SetRenderTarget(renderTarget);
@@ -196,8 +203,16 @@ namespace Barotrauma
             Submarine.DrawPaintedColors(spriteBatch, false);
             spriteBatch.End();
 
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map:BackStructures", sw.ElapsedTicks);
+            sw.Restart();
+
             graphics.SetRenderTarget(null);
             GameMain.LightManager.RenderLightMap(graphics, spriteBatch, cam, renderTarget);
+
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map:Lighting", sw.ElapsedTicks);
+            sw.Restart();
 
             //------------------------------------------------------------------------
             graphics.SetRenderTarget(renderTargetBackground);
@@ -228,6 +243,10 @@ namespace Barotrauma
             spriteBatch.Draw(renderTarget, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
             spriteBatch.End();
 
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map:BackLevel", sw.ElapsedTicks);
+            sw.Restart();
+
             //----------------------------------------------------------------------------
 
             //Start drawing to the normal render target (stuff that can't be seen through the LOS effect)
@@ -248,6 +267,10 @@ namespace Barotrauma
             }
             spriteBatch.End();
 
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map:BackCharactersItems", sw.ElapsedTicks);
+            sw.Restart();
+
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, DepthStencilState.None, null, null, cam.Transform);
             DrawDeformed(firstPass: true);
             DrawDeformed(firstPass: false);
@@ -266,7 +289,15 @@ namespace Barotrauma
                 }
             }
 
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map:DeformableCharacters", sw.ElapsedTicks);
+            sw.Restart();
+
             Level.Loaded?.DrawFront(spriteBatch, cam);
+
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map:FrontLevel", sw.ElapsedTicks);
+            sw.Restart();
 
             //draw the rendertarget and particles that are only supposed to be drawn in water into renderTargetWater
             graphics.SetRenderTarget(renderTargetWater);
@@ -302,6 +333,10 @@ namespace Barotrauma
             WaterRenderer.Instance.RenderAir(graphics, cam, renderTarget, Cam.ShaderTransform);
             graphics.DepthStencilState = DepthStencilState.None;
 
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map:FrontParticles", sw.ElapsedTicks);
+            sw.Restart();
+
             spriteBatch.Begin(SpriteSortMode.Immediate,
                 BlendState.NonPremultiplied, SamplerState.LinearWrap,
                 null, null,
@@ -310,9 +345,17 @@ namespace Barotrauma
             Submarine.DrawDamageable(spriteBatch, damageEffect, false);
             spriteBatch.End();
 
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map:FrontDamageable", sw.ElapsedTicks);
+            sw.Restart();
+
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, null, DepthStencilState.None, null, null, cam.Transform);
             Submarine.DrawFront(spriteBatch, false, null);
             spriteBatch.End();
+
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map:FrontStructuresItems", sw.ElapsedTicks);
+            sw.Restart();
 
             //draw additive particles that are inside a sub
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, null, DepthStencilState.Default, null, null, cam.Transform);
@@ -348,6 +391,10 @@ namespace Barotrauma
                 }
             }
             spriteBatch.End();
+
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map:FrontMisc", sw.ElapsedTicks);
+            sw.Restart();
 
             if (GameMain.LightManager.LosEnabled && GameMain.LightManager.LosMode != LosMode.None && Lights.LightManager.ViewTarget != null)
             {
@@ -457,6 +504,10 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch, new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.Lerp(Color.TransparentBlack, Color.Black, fadeToBlackState), isFilled: true);
                 spriteBatch.End();
             }
+
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map:PostProcess", sw.ElapsedTicks);
+            sw.Restart();
         }
 
         partial void UpdateProjSpecific(double deltaTime)

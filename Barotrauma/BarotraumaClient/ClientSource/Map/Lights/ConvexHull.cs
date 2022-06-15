@@ -461,7 +461,7 @@ namespace Barotrauma.Lights
                 Matrix.CreateTranslation(-origin.X, -origin.Y, 0.0f) * 
                 Matrix.CreateRotationZ(amount) *
                 Matrix.CreateTranslation(origin.X, origin.Y, 0.0f);
-            SetVertices(vertices.Select(v => v.Pos).ToArray(), rotationMatrix);
+            SetVertices(vertices.Select(v => v.Pos).ToArray(), rotationMatrix: rotationMatrix);
         }
 
         private void CalculateDimensions()
@@ -541,7 +541,7 @@ namespace Barotrauma.Lights
             }
         }
 
-        public void SetVertices(Vector2[] points, Matrix? rotationMatrix = null)
+        public void SetVertices(Vector2[] points, bool mergeOverlappingSegments = true, Matrix? rotationMatrix = null)
         {
             Debug.Assert(points.Length == 4, "Only rectangular convex hulls are supported");
 
@@ -594,13 +594,16 @@ namespace Barotrauma.Lights
 
             if (ParentEntity == null) { return; }
 
-            var chList = HullLists.Find(h => h.Submarine == ParentEntity.Submarine);
-            if (chList != null)
+            if (mergeOverlappingSegments)
             {
-                overlappingHulls.Clear();
-                foreach (ConvexHull ch in chList.List)
+                var chList = HullLists.Find(h => h.Submarine == ParentEntity.Submarine);
+                if (chList != null)
                 {
-                    MergeOverlappingSegments(ch);
+                    overlappingHulls.Clear();
+                    foreach (ConvexHull ch in chList.List)
+                    {
+                        MergeOverlappingSegments(ch);
+                    }
                 }
             }
         }

@@ -77,7 +77,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void Move(Vector2 amount)
+        public override void Move(Vector2 amount, bool ignoreContacts = false)
         {
             if (item.Submarine == null || item.Submarine.Loading || Screen.Selected != GameMain.SubEditorScreen) { return; }
             MoveConnectedWires(amount);
@@ -147,9 +147,10 @@ namespace Barotrauma.Items.Components
                 //because some of the wires connected to the panel may not exist yet
                 long msgStartPos = msg.BitPosition;
                 msg.ReadUInt16(); //user ID
-                foreach (Connection connection in Connections)
+                foreach (Connection _ in Connections)
                 {
-                    for (int i = 0; i < connection.MaxWires; i++)
+                    uint wireCount = msg.ReadVariableUInt32();
+                    for (int i = 0; i < wireCount; i++)
                     {
                         msg.ReadUInt16();
                     }
@@ -173,9 +174,8 @@ namespace Barotrauma.Items.Components
 
         private void ApplyRemoteState(IReadMessage msg)
         {
-            List<Wire> prevWires = Connections.SelectMany(c => c.Wires.Where(w => w != null)).ToList();
-            List<Wire> newWires = new List<Wire>();
-
+            List<Wire> prevWires = Connections.SelectMany(c => c.Wires).ToList();
+            
             ushort userID = msg.ReadUInt16();
 
             if (userID == 0)
@@ -195,7 +195,9 @@ namespace Barotrauma.Items.Components
 
             foreach (Connection connection in Connections)
             {
-                for (int i = 0; i < connection.MaxWires; i++)
+                HashSet<Wire> newWires = new HashSet<Wire>();
+                uint wireCount = msg.ReadVariableUInt32();
+                for (int i = 0; i < wireCount; i++)
                 {
                     ushort wireId = msg.ReadUInt16();
 
@@ -204,9 +206,18 @@ namespace Barotrauma.Items.Components
                     if (wireComponent == null) { continue; }
 
                     newWires.Add(wireComponent);
+                }
 
-                    connection.SetWire(i, wireComponent);
-                    wireComponent.Connect(connection, false);
+                Wire[] oldWires = connection.Wires.Where(w => !newWires.Contains(w)).ToArray();
+                foreach (var wire in oldWires)
+                {
+                    connection.DisconnectWire(wire);
+                }
+
+                foreach (var wire in newWires.Where(w => !connection.Wires.Contains(w)).ToArray())
+                {
+                    connection.ConnectWire(wire);
+                    wire.Connect(connection, false);
                 }
             }
 

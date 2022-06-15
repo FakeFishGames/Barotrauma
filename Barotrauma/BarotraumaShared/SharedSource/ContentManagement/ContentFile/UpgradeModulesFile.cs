@@ -14,7 +14,7 @@ namespace Barotrauma
         protected override bool MatchesPlural(Identifier identifier) =>
             identifier == "upgrademodules";
 
-        protected override PrefabCollection<UpgradeContentPrefab> prefabs => UpgradeContentPrefab.PrefabsAndCategories;
+        protected override PrefabCollection<UpgradeContentPrefab> Prefabs => UpgradeContentPrefab.PrefabsAndCategories;
         protected override UpgradeContentPrefab CreatePrefab(ContentXElement element)
         {
             Identifier elemName = element.NameAsIdentifier();

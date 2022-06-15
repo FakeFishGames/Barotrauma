@@ -94,7 +94,7 @@ namespace Barotrauma.Items.Components
             get; set;
         }
 
-        [Serialize(true, IsPropertySaveable.No, description: "Can the item hit broken doors.")]
+        [Serialize(true, IsPropertySaveable.No, description: "Can the item hit doors.")]
         public bool HitItems { get; set; }
 
         [Serialize(false, IsPropertySaveable.No, description: "Can the item hit broken doors.")]
@@ -697,14 +697,17 @@ namespace Barotrauma.Items.Components
             Vector2 fromCharacterToLeak = leak.WorldPosition - character.AnimController.AimSourceWorldPos;
             float dist = fromCharacterToLeak.Length();
             float reach = AIObjectiveFixLeak.CalculateReach(this, character);
-
-            if (dist > reach * 3)
+            if (dist > reach * 2)
             {
                 // Too far away -> consider this done and hope the AI is smart enough to move closer
                 Reset();
                 return true;
             }
             character.AIController.SteeringManager.Reset();
+            if (character.AIController.SteeringManager is IndoorsSteeringManager pathSteering)
+            {
+                pathSteering.ResetPath();
+            }
             if (!character.AnimController.InWater)
             {
                 // TODO: use the collider size?
@@ -714,34 +717,25 @@ namespace Barotrauma.Items.Components
                     humanAnim.Crouching = true;
                 }
             }
-            if (dist > reach * 0.8f || dist > reach * 0.5f && character.AnimController.Limbs.Any(l => l.InWater))
+            if (!character.IsClimbing)
             {
-                // Steer closer
-                if (character.AIController.SteeringManager is IndoorsSteeringManager indoorSteering)
+                if (dist > reach * 0.8f || dist > reach * 0.5f && character.AnimController.Limbs.Any(l => l.InWater))
                 {
-                    // Swimming inside the sub
-                    if (indoorSteering.CurrentPath != null && !indoorSteering.IsPathDirty && (indoorSteering.CurrentPath.Unreachable || indoorSteering.CurrentPath.Finished))
+                    // Steer closer
+                    Vector2 dir = Vector2.Normalize(fromCharacterToLeak);
+                    if (!character.InWater)
                     {
-                        Vector2 dir = Vector2.Normalize(fromCharacterToLeak);
-                        character.AIController.SteeringManager.SteeringManual(deltaTime, dir);
+                        dir.Y = 0;
                     }
-                    else
-                    {
-                        character.AIController.SteeringManager.SteeringSeek(character.GetRelativeSimPosition(leak));
-                    }
+                    character.AIController.SteeringManager.SteeringManual(deltaTime, dir);
                 }
-                else
+                else if (dist < reach * 0.25f && !character.IsClimbing)
                 {
-                    // Swimming outside the sub
-                    character.AIController.SteeringManager.SteeringSeek(character.GetRelativeSimPosition(leak));
+                    // Too close -> steer away
+                    character.AIController.SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(character.SimPosition - leak.SimPosition));
                 }
             }
-            else if (dist < reach * 0.25f)
-            {
-                // Too close -> steer away
-                character.AIController.SteeringManager.SteeringManual(deltaTime, Vector2.Normalize(character.SimPosition - leak.SimPosition));
-            }
-            if (dist <= reach)
+            if (dist <= reach || character.IsClimbing)
             {
                 // In range
                 character.CursorPosition = leak.WorldPosition;
@@ -815,7 +809,7 @@ namespace Barotrauma.Items.Components
             }
 
             bool leakFixed = (leak.Open <= 0.0f || leak.Removed) && 
-                (leak.ConnectedWall == null || leak.ConnectedWall.Sections.Average(s => s.damage) < 1);
+                (leak.ConnectedWall == null || leak.ConnectedWall.Sections.Max(s => s.damage) < 0.1f);
 
             if (leakFixed && leak.FlowTargetHull?.DisplayName != null && character.IsOnPlayerTeam)
             {

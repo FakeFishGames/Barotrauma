@@ -120,7 +120,7 @@ namespace Barotrauma
             }
         }
 
-        public Gap(MapEntityPrefab prefab, Rectangle rectangle)
+        public Gap(Rectangle rectangle)
             : this(rectangle, Submarine.MainSub)
         {
 #if CLIENT
@@ -136,7 +136,7 @@ namespace Barotrauma
         { }
 
         public Gap(Rectangle rect, bool isHorizontal, Submarine submarine, ushort id = Entity.NullEntityID)
-            : base(MapEntityPrefab.FindByIdentifier("gap".ToIdentifier()), submarine, id)
+            : base(CoreEntityPrefab.GapPrefab, submarine, id)
         {
             this.rect = rect;
             flowForce = Vector2.Zero;
@@ -148,11 +148,12 @@ namespace Barotrauma
             InsertToList();
 
             float blockerSize = ConvertUnits.ToSimUnits(Math.Max(rect.Width, rect.Height)) / 2;
-            outsideCollisionBlocker = GameMain.World.CreateEdge(-Vector2.UnitX * blockerSize, Vector2.UnitX * blockerSize);
+            outsideCollisionBlocker = GameMain.World.CreateEdge(-Vector2.UnitX * blockerSize, Vector2.UnitX * blockerSize, 
+                BodyType.Static, 
+                Physics.CollisionWall, 
+                Physics.CollisionCharacter,
+                findNewContacts: false);
             outsideCollisionBlocker.UserData = $"CollisionBlocker (Gap {ID})";
-            outsideCollisionBlocker.BodyType = BodyType.Static;
-            outsideCollisionBlocker.CollisionCategories = Physics.CollisionWall;
-            outsideCollisionBlocker.CollidesWith = Physics.CollisionCharacter;
             outsideCollisionBlocker.Enabled = false;
 #if CLIENT
             Resized += newRect => IsHorizontal = newRect.Width < newRect.Height;
@@ -165,7 +166,7 @@ namespace Barotrauma
             return new Gap(rect, IsHorizontal, Submarine);
         }
 
-        public override void Move(Vector2 amount)
+        public override void Move(Vector2 amount, bool ignoreContacts = false)
         {
             if (!MathUtils.IsValid(amount))
             {
@@ -325,14 +326,6 @@ namespace Barotrauma
             else
             {
                 lerpedFlowForce = Vector2.Lerp(lerpedFlowForce, flowForce, deltaTime * 5.0f);
-            }
-            if (FlowTargetHull != null && IsRoomToRoom)
-            {
-                var otherRoom = linkedTo[1] == FlowTargetHull ? linkedTo[0] : linkedTo[1];
-                if ((otherRoom as Hull).Volume < FlowTargetHull.Volume)
-                {
-                    lerpedFlowForce = Vector2.Zero;
-                }
             }
 
             openedTimer -= deltaTime;

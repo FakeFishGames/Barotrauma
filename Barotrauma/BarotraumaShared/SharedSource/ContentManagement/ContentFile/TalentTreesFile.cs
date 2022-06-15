@@ -9,7 +9,7 @@ namespace Barotrauma
 
         protected override bool MatchesSingular(Identifier identifier) => identifier == "talenttree";
         protected override bool MatchesPlural(Identifier identifier) => identifier == "talenttrees";
-        protected override PrefabCollection<TalentTree> prefabs => TalentTree.JobTalentTrees;
+        protected override PrefabCollection<TalentTree> Prefabs => TalentTree.JobTalentTrees;
         protected override TalentTree CreatePrefab(ContentXElement element)
         {
             return new TalentTree(element, this);

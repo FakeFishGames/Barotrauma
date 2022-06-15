@@ -146,26 +146,19 @@ namespace Barotrauma.Networking
             }
 
             private bool disposed = false;
-            protected virtual void Dispose(bool disposing)
-            {
-                if (disposed) return;
-                
-                if (disposing)
-                {
-                    if (WriteStream != null)
-                    {
-                        WriteStream.Flush();
-                        WriteStream.Close();
-                        WriteStream.Dispose();
-                        WriteStream = null;
-                    }
-                }
-                disposed = true;                
-            }
-            
+
             public void Dispose()
             {
-                Dispose(true);
+                if (disposed) { return; }
+                
+                if (WriteStream != null)
+                {
+                    WriteStream.Flush();
+                    WriteStream.Close();
+                    WriteStream.Dispose();
+                    WriteStream = null;
+                }
+                disposed = true;  
             }
         }
 

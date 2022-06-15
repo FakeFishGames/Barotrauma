@@ -482,7 +482,10 @@ namespace Barotrauma.CharacterEditor
                     RelativeSpacing = 0.02f
                 };
                 new GUITextBlock(new RectTransform(new Vector2(0.2f, 1f), limbEditLayout.RectTransform), GetCharacterEditorTranslation("Limbs"), font: GUIStyle.SubHeadingFont);
-                var limbsList = new GUIListBox(new RectTransform(new Vector2(1, 0.45f), content.RectTransform));
+                var limbsList = new GUIListBox(new RectTransform(new Vector2(1, 0.45f), content.RectTransform))
+                {
+                    PlaySoundOnSelect = true,
+                };
                 var removeLimbButton = new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), limbEditLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIMinusButton")
                 {
                     OnClicked = (b, d) =>
@@ -523,7 +526,7 @@ namespace Barotrauma.CharacterEditor
                 {
                     var element = new GUIFrame(new RectTransform(new Vector2(0.22f, 1), inputArea.RectTransform) { MinSize = new Point(50, 0), MaxSize = new Point(150, 50) }, style: null);
                     new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), GUI.RectComponentLabels[i], font: GUIStyle.SmallFont, textAlignment: Alignment.CenterLeft);
-                    GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight), GUINumberInput.NumberType.Int)
+                    GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight), NumberType.Int)
                     {
                         Font = GUIStyle.SmallFont
                     };
@@ -659,7 +662,10 @@ namespace Barotrauma.CharacterEditor
                 { 
                     CanBeFocused = false 
                 };
-                var jointsList = new GUIListBox(new RectTransform(new Vector2(1, 0.45f), content.RectTransform));
+                var jointsList = new GUIListBox(new RectTransform(new Vector2(1, 0.45f), content.RectTransform))
+                {
+                    PlaySoundOnSelect = true,
+                };
                 var removeJointButton = new GUIButton(new RectTransform(new Point(jointButtonElement.Rect.Height, jointButtonElement.Rect.Height), jointButtonElement.RectTransform), style: "GUIMinusButton")
                 {
                     OnClicked = (b, d) =>
@@ -863,7 +869,7 @@ namespace Barotrauma.CharacterEditor
                 var limbTypeField = GUI.CreateEnumField(limbType, elementSize, GetCharacterEditorTranslation("LimbType"), group.RectTransform, font: GUIStyle.Font);
                 var sourceRectField = GUI.CreateRectangleField(sourceRect ?? new Rectangle(0, 100 * LimbGUIElements.Count, 100, 100), elementSize, GetCharacterEditorTranslation("SourceRectangle"), group.RectTransform, font: GUIStyle.Font);
                 new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), idField.RectTransform, Anchor.TopLeft), GetCharacterEditorTranslation("ID"));
-                new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), idField.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
+                new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), idField.RectTransform, Anchor.TopRight), NumberType.Int)
                 {
                     MinValueInt = 0,
                     MaxValueInt = byte.MaxValue,
@@ -912,7 +918,7 @@ namespace Barotrauma.CharacterEditor
                 };
                 var limb1Field = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
                 new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), limb1Field.RectTransform, Anchor.TopLeft), GetCharacterEditorTranslation("LimbWithIndex").Replace("[index]", "1"));
-                var limb1InputField = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), limb1Field.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
+                var limb1InputField = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), limb1Field.RectTransform, Anchor.TopRight), NumberType.Int)
                 {
                     MinValueInt = 0,
                     MaxValueInt = byte.MaxValue,
@@ -920,7 +926,7 @@ namespace Barotrauma.CharacterEditor
                 };
                 var limb2Field = new GUIFrame(new RectTransform(new Point(group.Rect.Width, elementSize), group.RectTransform), style: null);
                 new GUITextBlock(new RectTransform(new Vector2(0.5f, 1), limb2Field.RectTransform, Anchor.TopLeft), GetCharacterEditorTranslation("LimbWithIndex").Replace("[index]", "2"));
-                var limb2InputField = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), limb2Field.RectTransform, Anchor.TopRight), GUINumberInput.NumberType.Int)
+                var limb2InputField = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1), limb2Field.RectTransform, Anchor.TopRight), NumberType.Int)
                 {
                     MinValueInt = 0,
                     MaxValueInt = byte.MaxValue,

@@ -11,8 +11,8 @@ namespace Barotrauma
         public static Success<T, TError> Success(T value)
             => new Success<T, TError>(value);
         
-        public static Failure<T, TError> Failure(TError error, string? stackTrace)
-            => new Failure<T, TError>(error, stackTrace);
+        public static Failure<T, TError> Failure(TError error)
+            => new Failure<T, TError>(error);
     }
 
     public sealed class Success<T, TError> : Result<T, TError>
@@ -34,14 +34,11 @@ namespace Barotrauma
     {
         public readonly TError Error;
 
-        public readonly string? StackTrace;
-
         public override bool IsSuccess => false;
 
-        public Failure(TError error, string? stackTrace)
+        public Failure(TError error)
         {
             Error = error;
-            StackTrace = stackTrace;
         }
     }
 }

@@ -96,24 +96,31 @@ namespace Barotrauma
         public readonly Sprite WallSprite;
         public readonly Sprite WallEdgeSprite;
 
-        public static CaveGenerationParams GetRandom(LevelGenerationParams generationParams, bool abyss, Rand.RandSync rand)
+        public static CaveGenerationParams GetRandom(Level level, bool abyss, Rand.RandSync rand)
         {
             var caveParams = CaveParams.OrderBy(p => p.UintIdentifier).ToList();
-            if (caveParams.All(p => p.GetCommonness(generationParams, abyss) <= 0.0f))
+            if (caveParams.All(p => p.GetCommonness(level.LevelData, abyss) <= 0.0f))
             {
                 return caveParams.First();
             }
-            return ToolBox.SelectWeightedRandom(caveParams.ToList(), caveParams.Select(p => p.GetCommonness(generationParams, abyss)).ToList(), rand);
+            return ToolBox.SelectWeightedRandom(caveParams.ToList(), caveParams.Select(p => p.GetCommonness(level.LevelData, abyss)).ToList(), rand);
         }
 
-        public float GetCommonness(LevelGenerationParams generationParams, bool abyss)
+        public float GetCommonness(LevelData levelData, bool abyss)
         {
-            if (generationParams != null &&
-                generationParams.Identifier != Identifier.Empty &&
-                OverrideCommonness.TryGetValue(abyss ? "abyss".ToIdentifier() : generationParams.Identifier, out float commonness))
+            if (levelData.GenerationParams != null && levelData.GenerationParams.Identifier != Identifier.Empty &&
+                OverrideCommonness.TryGetValue(abyss ? "abyss".ToIdentifier() : levelData.GenerationParams.Identifier, out float commonness))
             {
                 return commonness;
             }
+            if (levelData?.Biome != null)
+            {
+                if (OverrideCommonness.TryGetValue(levelData.Biome.Identifier, out float biomeCommonness))
+                {
+                    return biomeCommonness;
+                }
+            }
+            
             return Commonness;
         }
 

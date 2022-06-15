@@ -27,7 +27,7 @@ namespace Barotrauma
 
         public string BaseUri => Element.BaseUri;
 
-        public XDocument Document => Element.Document ?? throw new NullReferenceException("XML element is invalid: document is null.");
+        public XDocument? Document => Element.Document;
         
         public ContentXElement? FirstElement() => Elements().FirstOrDefault();
         

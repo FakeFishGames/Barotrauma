@@ -106,10 +106,8 @@ namespace Barotrauma.Steam
             => new GUIFrame(new RectTransform(Vector2.Zero, parent.RectTransform), style: null)
                 { UserData = new ActionCarrier(id, action) };
 
-        protected GUITextBox CreateSearchBox(GUILayoutGroup mainLayout, float width = 1.0f, float heightScale = 1.0f)
+        protected GUITextBox CreateSearchBox(RectTransform searchRectT)
         {
-            var searchRectT = NewItemRectT(mainLayout, heightScale: heightScale);
-            searchRectT.RelativeSize = (width, searchRectT.RelativeSize.Y);
             var searchHolder = new GUIFrame(searchRectT, style: null);
             var searchBox = new GUITextBox(new RectTransform(Vector2.One, searchHolder.RectTransform), "", createClearButton: true);
             var searchTitle = new GUITextBlock(new RectTransform(Vector2.One, searchHolder.RectTransform) {Anchor = Anchor.TopLeft},
@@ -119,6 +117,11 @@ namespace Barotrauma.Steam
             {
                 CanBeFocused = false
             };
+            new GUICustomComponent(new RectTransform(Vector2.Zero, searchHolder.RectTransform), onUpdate:
+                (f, component) =>
+                {
+                    searchTitle.RectTransform.NonScaledSize = searchBox.Frame.RectTransform.NonScaledSize;
+                });
             searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
             searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = searchBox.Text.IsNullOrWhiteSpace(); };
 
@@ -137,7 +140,8 @@ namespace Barotrauma.Steam
                 const int maxErrorsToShow = 5;
                 nameText.TextColor = GUIStyle.Red;
                 uiElement.ToolTip =
-                    TextManager.GetWithVariable("contentpackagehaserrors", "[packagename]", mod.Name) + '\n' + string.Join('\n', mod.Errors.Take(maxErrorsToShow).Select(e => e.error));
+                    TextManager.GetWithVariable("contentpackagehaserrors", "[packagename]", mod.Name)
+                    + '\n' + string.Join('\n', mod.Errors.Take(maxErrorsToShow).Select(e => e.Message));
                 if (mod.Errors.Count() > maxErrorsToShow)
                 {
                     uiElement.ToolTip += '\n' + TextManager.GetWithVariable("workshopitemdownloadprompttruncated", "[number]", (mod.Errors.Count() - maxErrorsToShow).ToString());

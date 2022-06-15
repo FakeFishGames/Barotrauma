@@ -105,19 +105,13 @@ namespace Barotrauma
             return spawnPointTags;
         }
 
-        public JobPrefab GetJobPrefab(Rand.RandSync randSync = Rand.RandSync.Unsynced)
+        public JobPrefab GetJobPrefab(Rand.RandSync randSync = Rand.RandSync.Unsynced, Func<JobPrefab, bool> predicate = null)
         {
-            return Job != null && Job != "any" ? JobPrefab.Get(Job) : JobPrefab.Random(randSync);
+            return Job != null && Job != "any" ? JobPrefab.Get(Job) : JobPrefab.Random(randSync, predicate);
         }
 
         public void InitializeCharacter(Character npc, ISpatialEntity positionToStayIn = null)
         {
-            npc.AddStaticHealthMultiplier(HealthMultiplier);
-            if (GameMain.NetworkMember != null)
-            {
-                npc.AddStaticHealthMultiplier(HealthMultiplierInMultiplayer);
-            }
-
             var humanAI = npc.AIController as HumanAIController;
             if (humanAI != null)
             {

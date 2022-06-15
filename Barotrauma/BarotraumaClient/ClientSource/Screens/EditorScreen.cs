@@ -38,9 +38,9 @@ namespace Barotrauma
             }
 
             // attach number inputs to our generated parent elements
-            var rInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1f), layoutParents[0].RectTransform), GUINumberInput.NumberType.Int) { IntValue = BackgroundColor.R };
-            var gInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1f), layoutParents[1].RectTransform), GUINumberInput.NumberType.Int) { IntValue = BackgroundColor.G };
-            var bInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1f), layoutParents[2].RectTransform), GUINumberInput.NumberType.Int) { IntValue = BackgroundColor.B };
+            var rInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1f), layoutParents[0].RectTransform), NumberType.Int) { IntValue = BackgroundColor.R };
+            var gInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1f), layoutParents[1].RectTransform), NumberType.Int) { IntValue = BackgroundColor.G };
+            var bInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1f), layoutParents[2].RectTransform), NumberType.Int) { IntValue = BackgroundColor.B };
 
             rInput.MinValueInt = gInput.MinValueInt = bInput.MinValueInt = 0;
             rInput.MaxValueInt = gInput.MaxValueInt = bInput.MaxValueInt = 255;

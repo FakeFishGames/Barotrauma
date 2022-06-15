@@ -406,23 +406,14 @@ namespace Barotrauma
             }
         }
 
-        private void Dispose(bool disposing)
+        public void Dispose()
         {
             if (!Disposed)
             {
-                if (disposing)
-                {
-                    TargetComponents.Clear();
-                }
+                TargetComponents.Clear();
             }
 
             Disposed = true;
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
         }
     }
 }

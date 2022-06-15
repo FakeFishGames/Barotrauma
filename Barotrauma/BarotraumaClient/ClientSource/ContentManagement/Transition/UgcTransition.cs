@@ -1,7 +1,6 @@
 ﻿#nullable enable
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,9 +8,7 @@ using System.Xml.Linq;
 using Barotrauma.Extensions;
 using Barotrauma.Steam;
 using Microsoft.Xna.Framework;
-using Directory = Barotrauma.IO.Directory;
-using File = Barotrauma.IO.File;
-using Path = Barotrauma.IO.Path;
+using Barotrauma.IO;
 
 namespace Barotrauma.Transition
 {
@@ -258,13 +255,13 @@ namespace Barotrauma.Transition
             {
                 string[] getFiles(string path, string pattern)
                     => Directory.Exists(path)
-                        ? Directory.GetFiles(path, pattern, SearchOption.TopDirectoryOnly)
+                        ? Directory.GetFiles(path, pattern, System.IO.SearchOption.TopDirectoryOnly)
                         : Array.Empty<string>();
                 
                 subs = getFiles(oldSubsPath, "*.sub");
                 itemAssemblies = getFiles(oldItemAssembliesPath, "*.xml");
                 
-                string[] allOldMods = Directory.GetDirectories(oldModsPath, "*", SearchOption.TopDirectoryOnly);
+                string[] allOldMods = Directory.GetDirectories(oldModsPath, "*", System.IO.SearchOption.TopDirectoryOnly);
 
                 var publishedItems = await SteamManager.Workshop.GetPublishedItems();
                 foreach (var modDir in allOldMods)
@@ -359,7 +356,7 @@ namespace Barotrauma.Transition
             else
             {
                 //copying a mod: we have a neat method for that!
-                await SteamManager.Workshop.CopyDirectory(path, Path.GetFileName(path), path, destPath);
+                await SteamManager.Workshop.CopyDirectory(path, Path.GetFileName(path), path, destPath, SteamManager.Workshop.ShouldCorrectPaths.Yes);
 
                 return null;
             }

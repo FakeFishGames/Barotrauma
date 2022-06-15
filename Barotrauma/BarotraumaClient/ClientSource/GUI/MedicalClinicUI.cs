@@ -569,6 +569,7 @@ namespace Barotrauma
             GUILayoutGroup buttonLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.5f), footerLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterRight);
             GUIButton healButton = new GUIButton(new RectTransform(new Vector2(0.33f, 1f), buttonLayout.RectTransform), TextManager.Get("medicalclinic.heal"))
             {
+                ClickSound = GUISoundType.ConfirmTransaction,
                 Enabled = medicalClinic.PendingHeals.Any() && medicalClinic.GetBalance() >= medicalClinic.GetTotalCost(),
                 OnClicked = (button, _) =>
                 {
@@ -595,6 +596,7 @@ namespace Barotrauma
 
             GUIButton clearButton = new GUIButton(new RectTransform(new Vector2(0.33f, 1f), buttonLayout.RectTransform), TextManager.Get("campaignstore.clearall"))
             {
+                ClickSound = GUISoundType.Cart,
                 OnClicked = (button, _) =>
                 {
                     button.Enabled = false;
@@ -657,6 +659,7 @@ namespace Barotrauma
             {
                 CanBeFocused = false
             };
+
             GUILayoutGroup parentLayout = new GUILayoutGroup(new RectTransform(Vector2.One, backgroundFrame.RectTransform), isHorizontal: true) { Stretch = true };
 
             if (!(affliction.Prefab is { } prefab)) { return; }
@@ -676,13 +679,14 @@ namespace Barotrauma
             GUIFrame textContainer = new GUIFrame(new RectTransform(new Vector2(0.6f, 1f), textLayout.RectTransform), style: null);
             GUITextBlock afflictionName = new GUITextBlock(new RectTransform(Vector2.One, textContainer.RectTransform), name, font: GUIStyle.SubHeadingFont);
 
-            GUITextBlock healCost = new GUITextBlock(new RectTransform(new Vector2(0.2f, 1f), textLayout.RectTransform), TextManager.FormatCurrency(affliction.Price), textAlignment: Alignment.Center, font: GUIStyle.LargeFont)
+            GUITextBlock healCost = new GUITextBlock(new RectTransform(new Vector2(0.2f, 1f), textLayout.RectTransform), TextManager.FormatCurrency(affliction.Price), textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont)
             {
                 Padding = Vector4.Zero
             };
 
             GUIButton healButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1f), textLayout.RectTransform), style: "CrewManagementRemoveButton")
             {
+                ClickSound = GUISoundType.Cart,
                 OnClicked = (button, _) =>
                 {
                     button.Enabled = false;
@@ -746,12 +750,12 @@ namespace Barotrauma
 
             ClosePopup();
 
-            GUIFrame mainFrame = new GUIFrame(new RectTransform(new Vector2(0.28f, 0.45f), container.RectTransform)
+            GUIFrame mainFrame = new GUIFrame(new RectTransform(new Vector2(0.28f, 0.5f), container.RectTransform)
             {
                 ScreenSpaceOffset = location.ToPoint()
             });
 
-            GUILayoutGroup mainLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f), mainFrame.RectTransform, Anchor.Center)) { RelativeSpacing = 0.01f, Stretch = true };
+            GUILayoutGroup mainLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), mainFrame.RectTransform, Anchor.Center)) { RelativeSpacing = 0.01f, Stretch = true };
 
             if (mainFrame.Rect.Bottom > GameMain.GraphicsHeight)
             {
@@ -765,6 +769,7 @@ namespace Barotrauma
 
             GUIButton treatAllButton = new GUIButton(new RectTransform(new Vector2(1f, 0.2f), mainLayout.RectTransform), TextManager.Get("medicalclinic.treatall"))
             {
+                ClickSound = GUISoundType.Cart,
                 Font = GUIStyle.SubHeadingFont,
                 Visible = false
             };
@@ -819,7 +824,9 @@ namespace Barotrauma
             if (!(affliction.Prefab is { } prefab)) { return ImmutableArray<GUIComponent>.Empty; }
 
             GUIFrame backgroundFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.33f), parent.RectTransform), style: "ListBoxElement");
-            GUILayoutGroup mainLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f), backgroundFrame.RectTransform, Anchor.Center))
+            new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), backgroundFrame.RectTransform, Anchor.BottomCenter), style: "HorizontalLine");
+
+            GUILayoutGroup mainLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), backgroundFrame.RectTransform, Anchor.Center))
             {
                 RelativeSpacing = 0.05f
             };
@@ -862,15 +869,32 @@ namespace Barotrauma
 
             GUILayoutGroup bottomLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.66f), mainLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
 
-            GUILayoutGroup bottomTextLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 1f), bottomLayout.RectTransform));
-            GUITextBlock descriptionBlock = new GUITextBlock(new RectTransform(new Vector2(1f, 0.5f), bottomTextLayout.RectTransform), ToolBox.LimitString(prefab.Description, GUIStyle.Font, GUI.IntScale(64)), wrap: true)
+            GUILayoutGroup bottomTextLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 1f), bottomLayout.RectTransform))
+            {
+                RelativeSpacing = 0.05f
+            };
+            GUITextBlock descriptionBlock = new GUITextBlock(new RectTransform(new Vector2(1f, 0.6f), bottomTextLayout.RectTransform), prefab.Description, font: GUIStyle.SmallFont, wrap: true)
             {
                 ToolTip = prefab.Description
             };
+            bool truncated = false;
+            while (descriptionBlock.TextSize.Y > descriptionBlock.Rect.Height && descriptionBlock.WrappedText.Contains('\n'))
+            {
+                var split = descriptionBlock.WrappedText.Value.Split('\n');
+                descriptionBlock.Text = string.Join('\n', split.Take(split.Length - 1));
+                truncated = true;
+            }
+            if (truncated)
+            {
+                descriptionBlock.Text += "...";
+            }
 
-            GUITextBlock priceBlock = new GUITextBlock(new RectTransform(new Vector2(1f, 0.5f), bottomTextLayout.RectTransform), TextManager.FormatCurrency(affliction.Price), font: GUIStyle.LargeFont);
+            GUITextBlock priceBlock = new GUITextBlock(new RectTransform(new Vector2(1f, 0.25f), bottomTextLayout.RectTransform), TextManager.FormatCurrency(affliction.Price), font: GUIStyle.SubHeadingFont);
 
-            GUIButton buyButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.75f), bottomLayout.RectTransform), style: "CrewManagementAddButton");
+            GUIButton buyButton = new GUIButton(new RectTransform(new Vector2(0.2f, 0.75f), bottomLayout.RectTransform), style: "CrewManagementAddButton")
+            {
+                ClickSound = GUISoundType.Cart
+            };
 
             ImmutableArray<GUIComponent> elementsToDisable = ImmutableArray.Create<GUIComponent>(prefabBlock, backgroundFrame, icon, vitalityBlock, severityBlock, buyButton, descriptionBlock, priceBlock);
 
@@ -923,6 +947,7 @@ namespace Barotrauma
             });
         }
 
+        #warning TODO: this doesn't seem like the right place for this, and it's not clear from the method signature how this differs from ToolBox.LimitString
         public static void EnsureTextDoesntOverflow(string? text, GUITextBlock textBlock, Rectangle bounds, ImmutableArray<GUILayoutGroup>? layoutGroups = null)
         {
             if (string.IsNullOrWhiteSpace(text)) { return; }

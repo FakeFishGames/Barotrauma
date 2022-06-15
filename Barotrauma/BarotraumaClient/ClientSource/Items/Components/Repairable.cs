@@ -1,11 +1,10 @@
-﻿using System;
-using Barotrauma.Networking;
+﻿using Barotrauma.Networking;
 using Barotrauma.Particles;
 using Barotrauma.Sounds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -419,7 +418,7 @@ namespace Barotrauma.Items.Components
 
             if (!GameMain.IsMultiplayer) { RepairBoost(qteSuccess); }
 
-            SoundPlayer.PlayUISound(qteSuccess ? GUISoundType.IncreaseQuantity : GUISoundType.DecreaseQuantity);
+            SoundPlayer.PlayUISound(qteSuccess ? GUISoundType.Increase : GUISoundType.Decrease);
 
             //on failure during cooldown reset cursor to beginning
             if (!qteSuccess && qteCooldown > 0.0f) { qteTimer = QteDuration; }

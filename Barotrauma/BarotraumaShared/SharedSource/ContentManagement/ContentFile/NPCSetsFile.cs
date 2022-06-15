@@ -9,7 +9,7 @@ namespace Barotrauma
 
         protected override bool MatchesSingular(Identifier identifier) => identifier == "npcset";
         protected override bool MatchesPlural(Identifier identifier) => identifier == "npcsets";
-        protected override PrefabCollection<NPCSet> prefabs => NPCSet.Sets;
+        protected override PrefabCollection<NPCSet> Prefabs => NPCSet.Sets;
         protected override NPCSet CreatePrefab(ContentXElement element)
         {
             return new NPCSet(element, this);

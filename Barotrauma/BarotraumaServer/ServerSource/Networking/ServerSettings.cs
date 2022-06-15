@@ -1,11 +1,9 @@
-﻿using Barotrauma.IO;
-using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Barotrauma.IO;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma.Networking
 {
@@ -36,7 +34,7 @@ namespace Barotrauma.Networking
             => LastUpdateIdForFlag[flag] = (UInt16)(GameMain.NetLobbyScreen.LastUpdateID + 1);
 
         private bool IsFlagRequired(Client c, NetFlags flag)
-            => LastUpdateIdForFlag[flag] > c.LastRecvLobbyUpdate;
+            => NetIdUtils.IdMoreRecent(LastUpdateIdForFlag[flag], c.LastRecvLobbyUpdate);
         
         public NetFlags GetRequiredFlags(Client c)
             => LastUpdateIdForFlag.Keys
@@ -56,7 +54,7 @@ namespace Barotrauma.Networking
             {
                 var property = netProperties[key];
                 property.SyncValue();
-                if (property.LastUpdateID > c.LastRecvLobbyUpdate)
+                if (NetIdUtils.IdMoreRecent(property.LastUpdateID, c.LastRecvLobbyUpdate))
                 {
                     outMsg.Write(key);
                     netProperties[key].Write(outMsg);
@@ -257,7 +255,7 @@ namespace Barotrauma.Networking
             doc.Root.SetAttributeValue("queryport", QueryPort);
 #endif
             doc.Root.SetAttributeValue("password", password ?? "");
-            
+
             doc.Root.SetAttributeValue("enableupnp", EnableUPnP);
             doc.Root.SetAttributeValue("autorestart", autoRestart);
 
@@ -266,11 +264,12 @@ namespace Barotrauma.Networking
             doc.Root.SetAttributeValue("ServerMessage", ServerMessageText);
 
             doc.Root.SetAttributeValue("HiddenSubs", string.Join(",", HiddenSubs));
-            
+
             doc.Root.SetAttributeValue("AllowedRandomMissionTypes", string.Join(",", AllowedRandomMissionTypes));
             doc.Root.SetAttributeValue("AllowedClientNameChars", string.Join(",", AllowedClientNameChars.Select(c => $"{c.Start}-{c.End}")));
 
             SerializableProperty.SerializeProperties(this, doc.Root, true);
+            doc.Root.Add(CampaignSettings.Save());
 
             System.Xml.XmlWriterSettings settings = new System.Xml.XmlWriterSettings
             {
@@ -399,7 +398,7 @@ namespace Barotrauma.Networking
             ServerName = doc.Root.GetAttributeString("name", "");
             if (ServerName.Length > NetConfig.ServerNameMaxLength) { ServerName = ServerName.Substring(0, NetConfig.ServerNameMaxLength); }
             ServerMessageText = doc.Root.GetAttributeString("ServerMessage", "");
-            
+
             GameMain.NetLobbyScreen.SelectedModeIdentifier = GameModeIdentifier;
             //handle Random as the mission type, which is no longer a valid setting
             //MissionType.All offers equivalent functionality
@@ -410,6 +409,14 @@ namespace Barotrauma.Networking
             GameMain.NetLobbyScreen.SetBotCount(BotCount);
 
             MonsterEnabled ??= CharacterPrefab.Prefabs.Select(p => (p.Identifier, true)).ToDictionary();
+
+            foreach (XElement element in doc.Root.Elements())
+            {
+                if (element.Name.ToIdentifier() == nameof(Barotrauma.CampaignSettings))
+                {
+                    CampaignSettings = new CampaignSettings(element);
+                }
+            }
         }
 
         public string SelectNonHiddenSubmarine(string current = null)

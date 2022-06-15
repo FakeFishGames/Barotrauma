@@ -113,7 +113,8 @@ namespace Barotrauma
             {
                 AutoHideScrollBar = false,
                 ScrollBarVisible = false,
-                Padding = hasHeader ? new Vector4(4, 0, 4, 4) : padding
+                Padding = hasHeader ? new Vector4(4, 0, 4, 4) : padding,
+                PlaySoundOnSelect = true
             };
 
             foreach (var (option, size) in optionsAndSizes)
@@ -290,7 +291,7 @@ namespace Barotrauma
         public override void AddToGUIUpdateList(bool ignoreChildren = false, int order = 0)
         {
             base.AddToGUIUpdateList(ignoreChildren, order);
-            SubMenu?.AddToGUIUpdateList();
+            SubMenu?.AddToGUIUpdateList(order: 2);
         }
 
         public static void AddActiveToGUIUpdateList()
@@ -300,7 +301,7 @@ namespace Barotrauma
                 CurrentContextMenu = null;
             }
 
-            CurrentContextMenu?.AddToGUIUpdateList();
+            CurrentContextMenu?.AddToGUIUpdateList(order: 2);
         }
     }
 }

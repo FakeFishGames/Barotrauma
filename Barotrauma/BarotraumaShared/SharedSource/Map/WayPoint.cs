@@ -109,14 +109,21 @@ namespace Barotrauma
 #endif
         }
 
-
+        public enum Type
+        {
+            WayPoint,
+            SpawnPoint
+        }
+        
         public WayPoint(Rectangle newRect, Submarine submarine)
-            : this (MapEntityPrefab.FindByIdentifier("waypoint".ToIdentifier()), newRect, submarine)
+            : this (Type.WayPoint, newRect, submarine)
         {
         }
 
-        public WayPoint(MapEntityPrefab prefab, Rectangle newRect, Submarine submarine, ushort id = Entity.NullEntityID)
-            : base (prefab, submarine, id)
+        public WayPoint(Type type, Rectangle newRect, Submarine submarine, ushort id = Entity.NullEntityID)
+            : base (type is Type.WayPoint
+                ? CoreEntityPrefab.WayPointPrefab
+                : CoreEntityPrefab.SpawnPointPrefab, submarine, id)
         {
             rect = newRect;
             idCardTags = Array.Empty<string>();
@@ -1010,7 +1017,7 @@ namespace Barotrauma
 
 
             Enum.TryParse(element.GetAttributeString("spawn", "Path"), out SpawnType spawnType);
-            WayPoint w = new WayPoint(MapEntityPrefab.FindByIdentifier((spawnType == SpawnType.Path ? "waypoint" : "spawnpoint").ToIdentifier()), rect, submarine, idRemap.GetOffsetId(element))
+            WayPoint w = new WayPoint(spawnType == SpawnType.Path ? Type.WayPoint : Type.SpawnPoint, rect, submarine, idRemap.GetOffsetId(element))
             {
                 spawnType = spawnType
             };

@@ -266,7 +266,7 @@ namespace Barotrauma
             disguisedSkinColor = idCard.StoredOwnerAppearance.SkinColor;
         }
 
-        partial void LoadAttachmentSprites(bool omitJob)
+        partial void LoadAttachmentSprites()
         {
             if (attachmentSprites == null)
             {
@@ -280,14 +280,6 @@ namespace Barotrauma
             Head.BeardElement?.GetChildElements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.Beard)));
             Head.MoustacheElement?.GetChildElements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.Moustache)));
             Head.HairElement?.GetChildElements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.Hair)));
-            if (omitJob)
-            {
-                JobPrefab.NoJobElement?.GetChildElement("PortraitClothing")?.GetChildElements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.JobIndicator)));
-            }
-            else
-            {
-                Job?.Prefab.ClothingElement?.GetChildElements("sprite").ForEach(s => attachmentSprites.Add(new WearableSprite(s, WearableType.JobIndicator)));
-            }
         }
 
         // Doesn't work if the head's source rect does not start at 0,0.
@@ -987,11 +979,6 @@ namespace Barotrauma
                     HeadSelectionList.RectTransform.Parent = null;
                     HeadSelectionList = null;
                 }
-            }
-
-            ~AppearanceCustomizationMenu()
-            {
-                Dispose();
             }
         }
     }

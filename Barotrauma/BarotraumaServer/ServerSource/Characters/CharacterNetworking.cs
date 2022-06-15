@@ -647,6 +647,7 @@ namespace Barotrauma
             {
                 msg.Write(false);
             }
+            msg.Write(HumanPrefabHealthMultiplier);
             msg.Write(Wallet.Balance);
             msg.WriteRangedInteger(Wallet.RewardDistribution, 0, 100);
             msg.Write((byte)TeamID);

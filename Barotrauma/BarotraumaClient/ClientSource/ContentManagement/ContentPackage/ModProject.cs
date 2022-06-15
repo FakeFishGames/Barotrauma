@@ -108,6 +108,15 @@ namespace Barotrauma
             }
         }
 
+        public void RemoveFile(File file)
+        {
+            if (HasFile(file))
+            {
+                files.Remove(file);
+                DiscardHashAndInstallTime();
+            }
+        }
+
         public void DiscardHashAndInstallTime()
         {
             ExpectedHash = null;
@@ -144,7 +153,7 @@ namespace Barotrauma
                 => rootElement.Add(new XAttribute(name, value.ToString() ?? ""));
             
             addRootAttribute("name", Name);
-            addRootAttribute("modversion", ModVersion);
+            if (!ModVersion.IsNullOrEmpty()) { addRootAttribute("modversion", ModVersion); }
             addRootAttribute("corepackage", IsCore);
             if (SteamWorkshopId != 0) { addRootAttribute("steamworkshopid", SteamWorkshopId); }
             addRootAttribute("gameversion", GameMain.Version);

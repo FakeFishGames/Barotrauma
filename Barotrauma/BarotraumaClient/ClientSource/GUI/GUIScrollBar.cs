@@ -322,9 +322,8 @@ namespace Barotrauma
         {
             if (!enabled || !PlayerInput.PrimaryMouseButtonDown()) { return false; }
             if (barSize >= 1.0f) { return false; }
-
             DraggingBar = this;
-
+            SoundPlayer.PlayUISound(GUISoundType.Select);
             return true;
         }
 

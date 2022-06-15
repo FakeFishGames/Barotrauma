@@ -9,7 +9,7 @@ namespace Barotrauma
 
         protected override bool MatchesSingular(Identifier identifier) => !MatchesPlural(identifier);
         protected override bool MatchesPlural(Identifier identifier) => identifier == "levelobjects";
-        protected override PrefabCollection<LevelObjectPrefab> prefabs => LevelObjectPrefab.Prefabs;
+        protected override PrefabCollection<LevelObjectPrefab> Prefabs => LevelObjectPrefab.Prefabs;
         protected override LevelObjectPrefab CreatePrefab(ContentXElement element)
         {
             return new LevelObjectPrefab(element, this);

@@ -110,7 +110,7 @@ namespace Barotrauma
         public bool CampaignCharacterDiscarded
         {
             get;
-            private set;
+            set;
         }
 
         //elements that can only be used by the host
@@ -179,7 +179,7 @@ namespace Barotrauma
             get { return ModeList.SelectedIndex; }
             set
             {
-                ModeList.Select(value, true);
+                ModeList.Select(value, GUIListBox.Force.Yes);
             }
         }
 
@@ -504,6 +504,7 @@ namespace Barotrauma
 
             PlayerList = new GUIListBox(new RectTransform(new Vector2(0.4f, 1.0f), socialHolderHorizontal.RectTransform))
             {
+                PlaySoundOnSelect = true,
                 OnSelected = (component, userdata) => { SelectPlayer(userdata as Client); return true; }
             };
 
@@ -816,6 +817,7 @@ namespace Barotrauma
 
             SubList = new GUIListBox(new RectTransform(Vector2.One, subHolder.RectTransform))
             {
+                PlaySoundOnSelect = true,
                 OnSelected = VotableClicked
             };
 
@@ -901,6 +903,7 @@ namespace Barotrauma
             };
             ModeList = new GUIListBox(new RectTransform(Vector2.One, gameModeHolder.RectTransform))
             {
+                PlaySoundOnSelect = true,
                 OnSelected = VotableClicked
             };
 
@@ -1250,9 +1253,6 @@ namespace Barotrauma
             
             CharacterAppearanceCustomizationMenu?.Dispose();
             JobSelectionFrame = null;
-
-            /*foreach (Sprite sprite in jobPreferenceSprites) { sprite.Remove(); }
-            jobPreferenceSprites.Clear();*/
         }
 
         public override void Select()
@@ -1400,7 +1400,7 @@ namespace Barotrauma
         public void CreatePlayerFrame(GUIComponent parent, bool createPendingText = true, bool alwaysAllowEditing = false)
         {
             UpdatePlayerFrame(
-                Character.Controlled?.Info ?? playerInfoContainer.Children?.First().UserData as CharacterInfo,
+                Character.Controlled?.Info ?? playerInfoContainer.Children?.First().UserData as CharacterInfo ?? GameMain.Client.CharacterInfo,
                 allowEditing: alwaysAllowEditing || campaignCharacterInfo == null,
                 parent: parent,
                 createPendingText: createPendingText);
@@ -1414,7 +1414,7 @@ namespace Barotrauma
                 characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, GameMain.Client.Name, null);
                 characterInfo.RecreateHead(MultiplayerPreferences.Instance);
                 GameMain.Client.CharacterInfo = characterInfo;
-                characterInfo.OmitJobInPortraitClothing = false;
+                characterInfo.OmitJobInMenus = true;
             }
 
             parent.ClearChildren();
@@ -1515,6 +1515,7 @@ namespace Barotrauma
                 JobList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.6f), JobPreferenceContainer.RectTransform, Anchor.BottomCenter), true)
                 {
                     Enabled = true,
+                    PlaySoundOnSelect = true,
                     OnSelected = (child, obj) =>
                     {
                         if (child.IsParentOf(GUI.MouseOn)) return false;
@@ -1600,6 +1601,7 @@ namespace Barotrauma
                 {
                     Enabled = true,
                     KeepSpaceForScrollBar = false,
+                    PlaySoundOnSelect = true,
                     ScrollBarEnabled = false,
                     ScrollBarVisible = false
                 };
@@ -2902,6 +2904,7 @@ namespace Barotrauma
             appearanceFrame.ClearChildren();
 
             var info = GameMain.Client.CharacterInfo ?? Character.Controlled?.Info;
+            CharacterAppearanceCustomizationMenu?.Dispose();
             CharacterAppearanceCustomizationMenu = new CharacterInfo.AppearanceCustomizationMenu(info, appearanceFrame)
             {
                 OnHeadSwitch = menu =>
@@ -3131,10 +3134,11 @@ namespace Barotrauma
                     retVal[i] = new GUIImage[outfitPreview.Sprites.Count];
                     for (int j = 0; j < outfitPreview.Sprites.Count; j++)
                     {
-                        Pair<Sprite, Vector2> sprite = outfitPreview.Sprites[j];
+                        Sprite sprite = outfitPreview.Sprites[j].sprite;
+                        Vector2 drawOffset = outfitPreview.Sprites[j].drawOffset;
                         float aspectRatio = outfitPreview.Dimensions.Y / outfitPreview.Dimensions.X;
                         retVal[i][j] = new GUIImage(new RectTransform(new Vector2(0.7f / aspectRatio, 0.7f), innerFrame.RectTransform, Anchor.Center)
-                            { RelativeOffset = sprite.Second / outfitPreview.Dimensions }, sprite.First, scaleToFit: true)
+                            { RelativeOffset = drawOffset / outfitPreview.Dimensions }, sprite, scaleToFit: true)
                         {
                             PressedColor = Color.White,
                             CanBeFocused = false
@@ -3183,7 +3187,7 @@ namespace Barotrauma
 
             var prevMode = ModeList.Content.GetChild(selectedModeIndex).UserData as GameModePreset;
 
-            if ((HighlightedModeIndex == selectedModeIndex || HighlightedModeIndex < 0) && ModeList.SelectedIndex != modeIndex) { ModeList.Select(modeIndex, true); }
+            if ((HighlightedModeIndex == selectedModeIndex || HighlightedModeIndex < 0) && ModeList.SelectedIndex != modeIndex) { ModeList.Select(modeIndex, GUIListBox.Force.Yes); }
             selectedModeIndex = modeIndex;
 
             if ((prevMode == GameModePreset.PvP) != (SelectedMode == GameModePreset.PvP))
@@ -3299,7 +3303,7 @@ namespace Barotrauma
             RefreshEnabledElements();
             if (enabled)
             {
-                ModeList.Select(GameModePreset.MultiPlayerCampaign, true);
+                ModeList.Select(GameModePreset.MultiPlayerCampaign, GUIListBox.Force.Yes);
             }
         }
 
@@ -3415,7 +3419,7 @@ namespace Barotrauma
                         UserData = i,
                         OnClicked = (btn, obj) =>
                         {
-                            JobList.Select((int)obj, true);
+                            JobList.Select((int)obj, GUIListBox.Force.Yes);
                             SwitchJob(btn, null);
                             if (JobSelectionFrame != null) { JobSelectionFrame.Visible = false; }
                             JobList.Deselect();
@@ -3551,7 +3555,7 @@ namespace Barotrauma
                 else
                 {
                     subList.OnSelected -= VotableClicked;
-                    subList.Select(sub, force: true);
+                    subList.Select(sub, GUIListBox.Force.Yes);
                     subList.OnSelected += VotableClicked;
                 }
 

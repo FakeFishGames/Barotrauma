@@ -33,13 +33,13 @@ namespace Barotrauma
     public enum AbilityEffectType
     {
         Undefined,
-        None, 
+        None,
         OnAttack,
         OnAttackResult,
         OnAttacked,
         OnAttackedResult,
-        OnGainSkillPoint, 
-        OnAllyGainSkillPoint, 
+        OnGainSkillPoint,
+        OnAllyGainSkillPoint,
         OnRepairComplete,
         OnItemFabricationSkillGain,
         OnItemFabricatedAmount,
@@ -131,21 +131,22 @@ namespace Barotrauma
         MaxAttachableCount,
     }
 
+    [Flags]
     public enum AbilityFlags
     {
-        None,
-        MustWalk,
-        ImmuneToPressure,
-        IgnoredByEnemyAI,
-        MoveNormallyWhileDragging,
-        CanTinker,
-        CanTinkerFabricatorsAndDeconstructors,
-        TinkeringPowersDevices,
-        GainSkillPastMaximum,
-        RetainExperienceForNewCharacter,
-        AllowSecondOrderedTarget,
-        PowerfulCPR,
-        AlwaysStayConscious,
+        None = 0,
+        MustWalk = 0x1,
+        ImmuneToPressure = 0x2,
+        IgnoredByEnemyAI = 0x4,
+        MoveNormallyWhileDragging = 0x8,
+        CanTinker = 0x10,
+        CanTinkerFabricatorsAndDeconstructors = 0x20,
+        TinkeringPowersDevices = 0x40,
+        GainSkillPastMaximum = 0x80,
+        RetainExperienceForNewCharacter = 0x100,
+        AllowSecondOrderedTarget = 0x200,
+        PowerfulCPR = 0x400,
+        AlwaysStayConscious = 0x800,
     }
 
     [Flags]
@@ -154,5 +155,33 @@ namespace Barotrauma
         Bot = 0b01,
         Player = 0b10,
         Both = Bot | Player
+    }
+
+    public enum StartingBalanceAmount
+    {
+        Low,
+        Medium,
+        High,
+    }
+
+    public enum GameDifficulty
+    {
+        Easy,
+        Medium,
+        Hard,
+        Hellish
+    }
+
+    public enum NumberType
+    {
+        Int,
+        Float
+    }
+
+    public enum ChatMode
+    {
+        None,
+        Local,
+        Radio
     }
 }

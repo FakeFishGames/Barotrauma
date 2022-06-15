@@ -85,7 +85,7 @@ namespace Barotrauma
 
         public readonly Identifier[] ForbiddenAmmunition;
 
-        public static WreckAIConfig GetRandom() => Prefabs.GetRandom(Rand.RandSync.ServerAndClient);
+        public static WreckAIConfig GetRandom() => Prefabs.OrderBy(p => p.UintIdentifier).GetRandom(Rand.RandSync.ServerAndClient);
 
         protected override Identifier DetermineIdentifier(XElement element)
         {

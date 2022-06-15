@@ -9,7 +9,7 @@ namespace Barotrauma
 
         protected override bool MatchesSingular(Identifier identifier) => identifier == "cave";
         protected override bool MatchesPlural(Identifier identifier) => identifier == "cavegenerationparameters";
-        protected override PrefabCollection<CaveGenerationParams> prefabs => CaveGenerationParams.CaveParams;
+        protected override PrefabCollection<CaveGenerationParams> Prefabs => CaveGenerationParams.CaveParams;
         protected override CaveGenerationParams CreatePrefab(ContentXElement element)
         {
             return new CaveGenerationParams(element, this);

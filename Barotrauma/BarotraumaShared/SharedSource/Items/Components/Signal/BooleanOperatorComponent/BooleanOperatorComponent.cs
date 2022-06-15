@@ -3,7 +3,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    class AndComponent : ItemComponent
+    abstract class BooleanOperatorComponent : ItemComponent
     {        
         protected string output, falseOutput;
 
@@ -70,22 +70,25 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public AndComponent(Item item, ContentXElement element)
+        public BooleanOperatorComponent(Item item, ContentXElement element)
             : base(item, element)
         {
             timeSinceReceived = new float[] { Math.Max(timeFrame * 2.0f, 0.1f), Math.Max(timeFrame * 2.0f, 0.1f) };
             IsActive = true;
         }
 
-        public override void Update(float deltaTime, Camera cam)
+        protected abstract bool GetOutput(int numTrueInputs);
+        
+        public sealed override void Update(float deltaTime, Camera cam)
         {
-            bool state = true;
+            int receivedInputs = 0;
             for (int i = 0; i < timeSinceReceived.Length; i++)
             {
-                if (timeSinceReceived[i] > timeFrame) { state = false; }
+                if (timeSinceReceived[i] <= timeFrame) { receivedInputs += 1; }
                 timeSinceReceived[i] += deltaTime;
             }
 
+            bool state = GetOutput(receivedInputs);
             string signalOut = state ? output : falseOutput;
             if (string.IsNullOrEmpty(signalOut))
             {

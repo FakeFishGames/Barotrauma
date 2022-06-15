@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
-using StoreBalanceStatus = Barotrauma.LocationType.StoreBalanceStatus;
 
 namespace Barotrauma
 {
@@ -92,21 +91,8 @@ namespace Barotrauma
 
         public class StoreInfo
         {
-            private int balance;
-
             public Identifier Identifier { get; }
-            public int Balance
-            {
-                get
-                {
-                    return balance;
-                }
-                set
-                {
-                    balance = value;
-                    ActiveBalanceStatus = Location.GetStoreBalanceStatus(value);
-                }
-            }
+            public int Balance { get; set; }
             public List<PurchasedItem> Stock { get; } = new List<PurchasedItem>();
             public List<ItemPrefab> DailySpecials { get; } = new List<ItemPrefab>();
             public List<ItemPrefab> RequestedGoods { get; } = new List<ItemPrefab>();
@@ -114,8 +100,6 @@ namespace Barotrauma
             /// In percentages. Larger values make buying more expensive and selling less profitable, and vice versa.
             /// </summary>
             public int PriceModifier { get; set; }
-            public StoreBalanceStatus ActiveBalanceStatus { get; private set; }
-            public Color BalanceColor => ActiveBalanceStatus.Color;
             public Location Location { get; }
 
             private StoreInfo(Location location)
@@ -298,14 +282,7 @@ namespace Barotrauma
                     price = Location.DailySpecialPriceModifier * price;
                 }
                 // Adjust by current location reputation
-                if (Location.Reputation.Value > 0.0f)
-                {
-                    price = MathHelper.Lerp(1.0f, 1.0f - Location.StoreMaxReputationModifier, Location.Reputation.Value / Location.Reputation.MaxReputation) * price;
-                }
-                else
-                {
-                    price = MathHelper.Lerp(1.0f, 1.0f + Location.StoreMaxReputationModifier, Location.Reputation.Value / Location.Reputation.MinReputation) * price;
-                }
+                price *= Location.GetStoreReputationModifier(true);
                 // Price should never go below 1 mk
                 return Math.Max((int)price, 1);
             }
@@ -319,22 +296,13 @@ namespace Barotrauma
                 float price = Location.StoreSellPriceModifier * priceInfo.Price;
                 // Adjust by random price modifier
                 price = (100 - PriceModifier) / 100.0f * price;
-                // Adjust by current store balance
-                price = ActiveBalanceStatus.SellPriceModifier * price;
                 // Adjust by requested good status
                 if (considerRequestedGoods && RequestedGoods.Contains(item))
                 {
                     price = Location.RequestGoodPriceModifier * price;
                 }
                 // Adjust by current location reputation
-                if (Location.Reputation.Value > 0.0f)
-                {
-                    price = MathHelper.Lerp(1.0f, 1.0f + Location.StoreMaxReputationModifier, Location.Reputation.Value / Location.Reputation.MaxReputation) * price;
-                }
-                else
-                {
-                    price = MathHelper.Lerp(1.0f, 1.0f - Location.StoreMaxReputationModifier, Location.Reputation.Value / Location.Reputation.MinReputation) * price;
-                }
+                price *= Location.GetStoreReputationModifier(false);
                 // Price should never go below 1 mk
                 return Math.Max((int)price, 1);
             }
@@ -353,7 +321,6 @@ namespace Barotrauma
         private float RequestGoodPriceModifier => Type.RequestGoodPriceModifier;
         public int StoreInitialBalance => Type.StoreInitialBalance;
         private int StorePriceModifierRange => Type.StorePriceModifierRange;
-        private List<StoreBalanceStatus> StoreBalanceStatuses => Type.StoreBalanceStatuses;
 
         /// <summary>
         /// How many map progress steps it takes before the discounts should be updated.
@@ -517,6 +484,19 @@ namespace Barotrauma
             MechanicalPriceMultiplier   = element.GetAttributeFloat("mechanicalpricemultipler", 1.0f);
             TurnsInRadiation            = element.GetAttributeInt(nameof(TurnsInRadiation).ToLower(), 0);
             StepsSinceSpecialsUpdated   = element.GetAttributeInt("stepssincespecialsupdated", 0);
+
+            Identifier biomeId = element.GetAttributeIdentifier("biome", Identifier.Empty);
+            if (biomeId != Identifier.Empty)
+            {
+                if (Biome.Prefabs.TryGet(biomeId, out Biome biome))
+                {
+                    Biome = biome;
+                }
+                else
+                {
+                    DebugConsole.ThrowError($"Error while loading the campaign map: could not find a biome with the identifier \"{biomeId}\".");
+                }
+            }
 
             if (!typeNotFound)
             {
@@ -806,22 +786,41 @@ namespace Barotrauma
             
             static float GetConnectionWeight(Location location, LocationConnection c)
             {
-                float weight = c.Passed ? 1.0f : 5.0f;
                 Location destination = c.OtherLocation(location);
-                if (destination != null)
+                if (destination == null) { return 0; }
+                float minWeight = 0.0001f;
+                float lowWeight = 0.2f;
+                float normalWeight = 1.0f;
+                float maxWeight = 2.0f;
+                float weight = c.Passed ? lowWeight : normalWeight;
+                if (location.Biome.AllowedZones.Contains(1))
                 {
-                    if (destination.MapPosition.X > location.MapPosition.X) { weight *= 2.0f; }
-                    int missionCount = location.availableMissions.Count(m => m.Locations.Contains(destination));
-                    if (missionCount > 0) 
-                    { 
-                        weight /= missionCount * 2;
-                    }
-                    if (destination.IsRadiated())
+                    // In the first biome, give a stronger preference for locations that are farther to the right)
+                    float diff = destination.MapPosition.X - location.MapPosition.X;
+                    if (diff < 0)
                     {
-                        weight *= 0.001f;
+                        weight *= 0.1f;
+                    }
+                    else
+                    {
+                        float maxRelevantDiff = 300;
+                        weight = MathHelper.Lerp(weight, maxWeight, MathUtils.InverseLerp(0, maxRelevantDiff, diff));
                     }
                 }
-                return weight;
+                else if (destination.MapPosition.X > location.MapPosition.X)
+                {
+                    weight *= 2.0f;
+                }
+                int missionCount = location.availableMissions.Count(m => m.Locations.Contains(destination));
+                if (missionCount > 0) 
+                { 
+                    weight /= missionCount * 2;
+                }
+                if (destination.IsRadiated())
+                {
+                    weight *= 0.001f;
+                }
+                return MathHelper.Clamp(weight, minWeight, maxWeight);
             }
 
             return InstantiateMission(prefab, connection);
@@ -1224,26 +1223,37 @@ namespace Barotrauma
             }
         }
 
+        public float GetStoreReputationModifier(bool buying)
+        {
+            if (buying)
+            {
+                if (Reputation.Value > 0.0f)
+                {
+                    return MathHelper.Lerp(1.0f, 1.0f - StoreMaxReputationModifier, Reputation.Value / Reputation.MaxReputation);
+                }
+                else
+                {
+                    return MathHelper.Lerp(1.0f, 1.0f + StoreMaxReputationModifier, Reputation.Value / Reputation.MinReputation);
+                }
+            }
+            else
+            {
+                if (Reputation.Value > 0.0f)
+                {
+                    return MathHelper.Lerp(1.0f, 1.0f + StoreMaxReputationModifier, Reputation.Value / Reputation.MaxReputation);
+                }
+                else
+                {
+                    return MathHelper.Lerp(1.0f, 1.0f - StoreMaxReputationModifier, Reputation.Value / Reputation.MinReputation);
+                }
+            }
+        }
+
         public int GetExtraSpecialSalesCount()
         {
             var characters = GameSession.GetSessionCrewCharacters(CharacterType.Both);
             if (!characters.Any()) { return 0; }
             return characters.Max(c => (int)c.GetStatValue(StatTypes.ExtraSpecialSalesCount));
-        }
-
-        public StoreBalanceStatus GetStoreBalanceStatus(int balance)
-        {
-            StoreBalanceStatus nextStatus = StoreBalanceStatuses[0];
-            for (int i = 1; i < StoreBalanceStatuses.Count; i++)
-            {
-                var status = StoreBalanceStatuses[i];
-                if (status.PercentageOfInitialBalance < nextStatus.PercentageOfInitialBalance &&
-                    ((float)balance / StoreInitialBalance) < status.PercentageOfInitialBalance)
-                {
-                    nextStatus = status;
-                }
-            }
-            return nextStatus;
         }
 
         public void Discover(bool checkTalents = true)
@@ -1277,6 +1287,7 @@ namespace Barotrauma
                 new XAttribute("originaltype", (Type ?? OriginalType).Identifier),
                 new XAttribute("basename", BaseName),
                 new XAttribute("name", Name),
+                new XAttribute("biome", Biome?.Identifier.Value ?? string.Empty),
                 new XAttribute("discovered", Discovered),
                 new XAttribute("position", XMLExtensions.Vector2ToString(MapPosition)),
                 new XAttribute("pricemultiplier", PriceMultiplier),

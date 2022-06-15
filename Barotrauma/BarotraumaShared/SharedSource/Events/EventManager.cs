@@ -117,6 +117,8 @@ namespace Barotrauma
 
         public bool Enabled = true;
 
+        private MTRandom rand;
+
         public void StartRound(Level level)
         {
             this.level = level;
@@ -147,7 +149,7 @@ namespace Barotrauma
                     seed ^= ToolBox.IdentifierToInt(previousEvent.Identifier);
                 }
             }
-            MTRandom rand = new MTRandom(seed);
+            rand = new MTRandom(seed);
 
             EventSet initialEventSet = SelectRandomEvents(EventSet.Prefabs.ToList(), requireCampaignSet: GameMain.GameSession?.GameMode is CampaignMode, rand);
             EventSet additiveSet = null;
@@ -159,12 +161,12 @@ namespace Barotrauma
             if (initialEventSet != null)
             {
                 pendingEventSets.Add(initialEventSet);
-                CreateEvents(initialEventSet, rand);
+                CreateEvents(initialEventSet);
             }
             if (additiveSet != null)
             {
                 pendingEventSets.Add(additiveSet);
-                CreateEvents(additiveSet, rand);
+                CreateEvents(additiveSet);
             }
 
             if (level?.LevelData?.Type == LevelData.LevelType.Outpost)
@@ -183,7 +185,7 @@ namespace Barotrauma
                     if (unlockPathEventPrefab != null)
                     {
                         var newEvent = unlockPathEventPrefab.CreateInstance();
-                        newEvent.Init(true);
+                        newEvent.Init();
                         ActiveEvents.Add(newEvent);
                     }
                     else
@@ -258,9 +260,15 @@ namespace Barotrauma
                 throw new InvalidOperationException("Could not select EventManager settings (level not set).");
             }
 
+            float extraDifficulty = 0;
+            if (GameMain.GameSession.Campaign?.Settings != null)
+            {
+                extraDifficulty = GameMain.GameSession.Campaign.Settings.ExtraEventManagerDifficulty;
+            }
+            float modifiedDifficulty = Math.Clamp(level.Difficulty + extraDifficulty, 0, 100);
             var suitableSettings = EventManagerSettings.OrderedByDifficulty.Where(s =>
-                level.Difficulty >= s.MinLevelDifficulty &&
-                level.Difficulty <= s.MaxLevelDifficulty).ToArray();
+                modifiedDifficulty >= s.MinLevelDifficulty &&
+                modifiedDifficulty <= s.MaxLevelDifficulty).ToArray();
 
             if (suitableSettings.Length == 0)
             {
@@ -362,8 +370,9 @@ namespace Barotrauma
             return retVal;
         }
 
-        private void CreateEvents(EventSet eventSet, Random rand)
+        private void CreateEvents(EventSet eventSet)
         {
+            selectedEvents.Remove(eventSet);
             if (level == null) { return; }
             if (level.LevelData.HasHuntingGrounds && eventSet.DisableInHuntingGrounds) { return; }
             DebugConsole.NewMessage($"Loading event set {eventSet.Identifier}", Color.LightBlue, debugOnly: true);
@@ -399,6 +408,14 @@ namespace Barotrauma
             bool isPrefabSuitable(EventPrefab e)
                 => e.BiomeIdentifier.IsEmpty ||
                    e.BiomeIdentifier == level.LevelData?.Biome?.Identifier;
+
+            foreach (var subEventPrefab in eventSet.EventPrefabs)
+            {
+                foreach (Identifier missingId in subEventPrefab.GetMissingIdentifiers())
+                {
+                    DebugConsole.ThrowError($"Error in event set \"{eventSet.Identifier}\" ({eventSet.ContentFile?.ContentPackage?.Name ?? "null"}) - could not find an event prefab with the identifier \"{missingId}\".");
+                }
+            }
             
             var suitablePrefabSubsets = eventSet.EventPrefabs.Where(
                 e => e.EventPrefabs.Any(isPrefabSuitable)).ToArray();
@@ -421,7 +438,7 @@ namespace Barotrauma
 
                                 var newEvent = eventPrefab.CreateInstance();
                                 if (newEvent == null) { continue; }
-                                newEvent.Init(true);
+                                newEvent.Init(eventSet);
                                 if (i < spawnPosFilter.Count) { newEvent.SpawnPosFilter = spawnPosFilter[i]; }
                                 DebugConsole.NewMessage($"Initialized event {newEvent}", debugOnly: true);
                                 if (!selectedEvents.ContainsKey(eventSet))
@@ -438,7 +455,7 @@ namespace Barotrauma
                         var newEventSet = SelectRandomEvents(eventSet.ChildSets, random: rand);
                         if (newEventSet != null)
                         {
-                            CreateEvents(newEventSet, rand);
+                            CreateEvents(newEventSet);
                         }
                     }
                 }
@@ -451,7 +468,7 @@ namespace Barotrauma
                         var eventPrefab = ToolBox.SelectWeightedRandom(eventPrefabs.Where(isPrefabSuitable), e => e.Commonness, rand);
                         var newEvent = eventPrefab.CreateInstance();
                         if (newEvent == null) { continue; }
-                        newEvent.Init(true);
+                        newEvent.Init(eventSet);
                         DebugConsole.NewMessage($"Initialized event {newEvent}", debugOnly: true);
                         if (!selectedEvents.ContainsKey(eventSet))
                         {
@@ -465,7 +482,7 @@ namespace Barotrauma
                     {
                         if (!IsValidForLevel(childEventSet, level)) { continue; }
                         if (location != null && !IsValidForLocation(childEventSet, location)) { continue; }
-                        CreateEvents(childEventSet, rand);                        
+                        CreateEvents(childEventSet);                        
                     }
                 }
             }
@@ -665,6 +682,14 @@ namespace Barotrauma
                                 if (eventSet.TriggerEventCooldown && selectedEvents[eventSet].Any(e => e.Prefab.TriggerEventCooldown))
                                 {
                                     eventCoolDown = settings.EventCooldown;
+                                }
+                                if (eventSet.ResetTime > 0)
+                                {
+                                    ev.Finished += () =>
+                                    {
+                                        pendingEventSets.Add(eventSet);
+                                        CreateEvents(eventSet);
+                                    };
                                 }
                             }
                         }

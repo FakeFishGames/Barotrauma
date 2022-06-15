@@ -28,7 +28,7 @@ namespace Barotrauma
                              UserListData = "ReadyUserList",
                              ReadySpriteData = "ReadySprite";
 
-        private int lastSecond;
+        private int lastSecond = 1;
 
         private GUIMessageBox? msgBox;
         private GUIMessageBox? resultsBox;
@@ -44,7 +44,7 @@ namespace Barotrauma
             msgBox = new GUIMessageBox(readyCheckHeader, readyCheckBody(author), new[] { yesButton, noButton }, relativeSize, minSize, type: GUIMessageBox.Type.Vote) { UserData = PromptData, Draggable = true };
 
             GUILayoutGroup contentLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.125f), msgBox.Content.RectTransform), childAnchor: Anchor.Center);
-            new GUIProgressBar(new RectTransform(new Vector2(0.8f, 1f), contentLayout.RectTransform), time / endTime, GUIStyle.Orange) { UserData = TimerData };
+            new GUIProgressBar(new RectTransform(new Vector2(0.8f, 1f), contentLayout.RectTransform), 0.0f, GUIStyle.Orange) { UserData = TimerData };
 
             // Yes
             msgBox.Buttons[0].OnClicked = delegate
@@ -116,17 +116,18 @@ namespace Barotrauma
 
         private void UpdateBar()
         {
+            double elapsedTime = (DateTime.Now - startTime).TotalSeconds;
             if (msgBox != null && !msgBox.Closed && GUIMessageBox.MessageBoxes.Contains(msgBox))
             {
                 if (msgBox.FindChild(TimerData, true) is GUIProgressBar bar)
                 {
-                    bar.BarSize = time / endTime;
+                    bar.BarSize = (float)(elapsedTime / (endTime - startTime).TotalSeconds);
                 }
             }
 
             // play click sound after a second has passed
-            int second = (int) Math.Ceiling(time);
-            if (second < lastSecond)
+            int second = (int)Math.Ceiling(elapsedTime);
+            if (second > lastSecond)
             {
                 if (msgBox != null && !msgBox.Closed)
                 {
@@ -156,7 +157,8 @@ namespace Barotrauma
                     bool isOwn = false;
                     byte authorId = 0;
 
-                    float duration = inc.ReadSingle();
+                    long startTime = inc.ReadInt64();
+                    long endTime = inc.ReadInt64();
                     string author = inc.ReadString();
                     bool hasAuthor = inc.ReadBoolean();
 
@@ -173,7 +175,9 @@ namespace Barotrauma
                         clients.Add(inc.ReadByte());
                     }
 
-                    ReadyCheck rCheck = new ReadyCheck(clients, duration);
+                    ReadyCheck rCheck = new ReadyCheck(clients, 
+                        DateTimeOffset.FromUnixTimeSeconds(startTime).LocalDateTime, 
+                        DateTimeOffset.FromUnixTimeSeconds(endTime).LocalDateTime);
                     crewManager.ActiveReadyCheck = rCheck;
 
                     if (isOwn)
@@ -192,12 +196,10 @@ namespace Barotrauma
                     }
                     break;
                 case ReadyCheckState.Update:
-                    float time = inc.ReadSingle();
                     ReadyStatus newState = (ReadyStatus) inc.ReadByte();
                     byte targetId = inc.ReadByte();
                     if (crewManager.ActiveReadyCheck != null)
                     {
-                        crewManager.ActiveReadyCheck.time = time;
                         crewManager.ActiveReadyCheck?.UpdateState(targetId, newState);
                     }
                     break;

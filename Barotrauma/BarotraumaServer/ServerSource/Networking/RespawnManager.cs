@@ -390,8 +390,16 @@ namespace Barotrauma.Networking
                 characterInfos[i].ClearCurrentOrders();
 
                 bool forceSpawnInMainSub = false;
-                if (!bot && campaign != null)
+                if (!bot)
                 {
+                    //the client has opted to change the name of their new character
+                    //when the character spawns, set the client's name to match
+                    if (clients[i].PendingName == characterInfos[i].Name)
+                    {
+                        GameMain.Server?.TryChangeClientName(clients[i], clients[i].PendingName);
+                        clients[i].PendingName = null;
+                    }
+
                     var matchingData = campaign?.GetClientCharacterData(clients[i]);
                     if (matchingData != null)
                     {
@@ -441,32 +449,43 @@ namespace Barotrauma.Networking
                     GameServer.Log(string.Format("Respawning {0} ({1}) as {2}", GameServer.ClientLogName(clients[i]), clients[i].Connection?.EndPointString, characterInfos[i].Job.Name), ServerLog.MessageType.Spawning);
                 }
 
-                if (divingSuitPrefab != null && oxyPrefab != null && RespawnShuttle != null)
+                if (RespawnShuttle != null)
                 {
                     Vector2 pos = cargoSp == null ? character.Position : cargoSp.Position;
-                    if (divingSuitPrefab != null && oxyPrefab != null)
+                    if (divingSuitPrefab != null)
                     {
                         var divingSuit = new Item(divingSuitPrefab, pos, respawnSub);
                         Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(divingSuit));
                         respawnItems.Add(divingSuit);
 
-                        var oxyTank = new Item(oxyPrefab, pos, respawnSub);
-                        Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(oxyTank));
-                        divingSuit.Combine(oxyTank, user: null);
-                        respawnItems.Add(oxyTank);
+                        if (oxyPrefab != null && divingSuit.GetComponent<ItemContainer>() != null)
+                        {
+                            var oxyTank = new Item(oxyPrefab, pos, respawnSub);
+                            Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(oxyTank));
+                            divingSuit.Combine(oxyTank, user: null);
+                            respawnItems.Add(oxyTank);
+                        }
                     }
 
-                    if (scooterPrefab != null && batteryPrefab != null)
+                    if (!(GameMain.GameSession.GameMode is CampaignMode))
                     {
-                        var scooter = new Item(scooterPrefab, pos, respawnSub);
-                        Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(scooter));
-
-                        var battery = new Item(batteryPrefab, pos, respawnSub);
-                        Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(battery));
-
-                        scooter.Combine(battery, user: null);
-                        respawnItems.Add(scooter);
-                        respawnItems.Add(battery);
+                        if (scooterPrefab != null)
+                        {
+                            var scooter = new Item(scooterPrefab, pos, respawnSub);
+                            Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(scooter));
+                            respawnItems.Add(scooter);
+                            if (batteryPrefab != null)
+                            {
+                                var battery = new Item(batteryPrefab, pos, respawnSub);
+                                Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(battery));
+                                scooter.Combine(battery, user: null);
+                                respawnItems.Add(battery);
+                            }
+                        }
+                    }
+                    if (respawnContainer != null)
+                    {
+                        AutoItemPlacer.RegenerateLoot(RespawnShuttle, respawnContainer);
                     }
                 }
 
@@ -504,7 +523,7 @@ namespace Barotrauma.Networking
                 //add the ID card tags they should've gotten when spawning in the shuttle
                 foreach (Item item in character.Inventory.AllItems.Distinct())
                 {
-                    if (item.Prefab.Identifier != "idcard") { continue; }
+                    if (item.GetComponent<IdCard>() == null) { continue; }
                     foreach (string s in shuttleSpawnPoints[i].IdCardTags)
                     {
                         item.AddTag(s);

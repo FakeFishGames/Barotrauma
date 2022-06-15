@@ -2,12 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Globalization;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -69,10 +67,10 @@ namespace Barotrauma
                 .ToImmutableHashSet();
         }
 
-        public static Result<ContentFile, string> CreateFromXElement(ContentPackage contentPackage, XElement element)
+        public static Result<ContentFile, LoadError> CreateFromXElement(ContentPackage contentPackage, XElement element)
         {
-            static Result<ContentFile, string> fail(string error, string? stackTrace = null)
-                => Result<ContentFile, string>.Failure(error, stackTrace);
+            static Result<ContentFile, LoadError> fail(string error, Exception? exception = null)
+                => Result<ContentFile, LoadError>.Failure(new LoadError(error, exception));
             
             Identifier elemName = element.NameAsIdentifier();
             var type = Types.FirstOrDefault(t => t.Names.Contains(elemName));
@@ -95,11 +93,11 @@ namespace Barotrauma
                 var file = type.CreateInstance(contentPackage, filePath);
                 return file is null
                     ? throw new Exception($"Content type is not implemented correctly")
-                    : Result<ContentFile, string>.Success(file);
+                    : Result<ContentFile, LoadError>.Success(file);
             }
             catch (Exception e)
             {
-                return fail($"Failed to load file \"{filePath}\" of type \"{elemName}\": {e.Message}", e.StackTrace.CleanupStackTrace());
+                return fail($"Failed to load file \"{filePath}\" of type \"{elemName}\": {e.Message}", e);
             }
         }
 
@@ -125,5 +123,23 @@ namespace Barotrauma
         }
 
         public bool NotSyncedInMultiplayer => Types.Any(t => t.Type == GetType() && t.NotSyncedInMultiplayer);
+
+        public readonly struct LoadError
+        {
+            public readonly string Message;
+            public readonly Exception? Exception;
+            
+            public LoadError(string message, Exception? exception)
+            {
+                Message = message;
+                Exception = exception;
+            }
+
+            public override string ToString()
+                => Message
+                   + (Exception is { StackTrace: var stackTrace }
+                       ? '\n' + stackTrace.CleanupStackTrace()
+                       : string.Empty);
+        }
     }
 }

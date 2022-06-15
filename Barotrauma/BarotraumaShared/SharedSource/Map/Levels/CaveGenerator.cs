@@ -157,9 +157,6 @@ namespace Barotrauma
 
         public static List<VoronoiCell> GeneratePath(List<VoronoiCell> targetCells, List<VoronoiCell> cells)
         {
-            Stopwatch sw2 = new Stopwatch();
-            sw2.Start();
-
             List<VoronoiCell> pathCells = new List<VoronoiCell>();
 
             if (targetCells.Count == 0) { return pathCells; }
@@ -212,10 +209,6 @@ namespace Barotrauma
                 }
 
             } while (currentCell != targetCells[targetCells.Count - 1] && iterationsLeft > 0);
-
-
-            Debug.WriteLine("gettooclose: " + sw2.ElapsedMilliseconds + " ms");
-            sw2.Restart();
 
             return pathCells;
         }
@@ -351,7 +344,7 @@ namespace Barotrauma
                 BodyType = BodyType.Static,
                 CollisionCategories = Physics.CollisionLevel
             };
-            GameMain.World.Add(cellBody);
+            GameMain.World.Add(cellBody, findNewContacts: false);
 
             for (int n = cells.Count - 1; n >= 0; n-- )
             {
@@ -429,7 +422,9 @@ namespace Barotrauma
 
                     Vertices bodyVertices = new Vertices(triangles[i]);
                     PolygonShape polygon = new PolygonShape(bodyVertices, 5.0f);
-                    Fixture fixture = new Fixture(polygon)
+                    Fixture fixture = new Fixture(polygon,
+                        Physics.CollisionLevel,
+                        Physics.CollisionAll)
                     {
                         UserData = cell
                     };
@@ -446,8 +441,6 @@ namespace Barotrauma
                 }                
                 cell.Body = cellBody;
             }
-
-            cellBody.CollisionCategories = Physics.CollisionLevel;
             cellBody.ResetMassData();
 
             return cellBody;

@@ -126,7 +126,7 @@ namespace Barotrauma
                 ToolTip = TextManager.Get("Karma." + propertyName + "ToolTip")
             };
 
-            var numInput = new GUINumberInput(new RectTransform(new Vector2(0.3f, 1.0f), container.RectTransform), GUINumberInput.NumberType.Int)
+            var numInput = new GUINumberInput(new RectTransform(new Vector2(0.3f, 1.0f), container.RectTransform), NumberType.Int)
             {
                 MinValueInt = min,
                 MaxValueInt = max

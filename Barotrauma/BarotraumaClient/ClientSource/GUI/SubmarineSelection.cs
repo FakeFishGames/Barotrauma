@@ -29,6 +29,8 @@ namespace Barotrauma
         private GUITextBlock descriptionTextBlock;
         private int selectionIndicatorThickness;
         private GUIImage listBackground;
+        private GUITickBox transferItemsTickBox;
+        private GUITextBlock itemTransferReminderBlock;
 
         private readonly List<SubmarineInfo> subsToShow;
         private readonly SubmarineDisplayContent[] submarineDisplays = new SubmarineDisplayContent[submarinesPerPage];
@@ -60,6 +62,23 @@ namespace Barotrauma
             public GUITextBlock middleTextBlock;
             public GUIButton previewButton;
         }
+
+        private bool TransferItemsOnSwitch
+        {
+            get
+            {
+                return transferItemsOnSwitch;
+            }
+            set
+            {
+                transferItemsOnSwitch = value;
+                if (transferItemsTickBox != null)
+                {
+                    transferItemsTickBox.Selected = value;
+                }
+            }
+        }
+        private bool transferItemsOnSwitch = true;
 
         public SubmarineSelection(bool transfer, Action closeAction, RectTransform parent)
         {
@@ -149,11 +168,12 @@ namespace Barotrauma
             GUIListBox descriptionFrame = new GUIListBox(new RectTransform(new Vector2(0.59f, 1f), infoFrame.RectTransform), style: null) { Padding = new Vector4(HUDLayoutSettings.Padding / 2f, HUDLayoutSettings.Padding * 1.5f, HUDLayoutSettings.Padding * 1.5f, HUDLayoutSettings.Padding / 2f) };
             descriptionTextBlock = new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionFrame.Content.RectTransform), string.Empty, font: GUIStyle.Font, wrap: true) { CanBeFocused = false };
 
-            GUILayoutGroup buttonFrame = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.075f), content.RectTransform), childAnchor: Anchor.CenterRight) { IsHorizontal = true, AbsoluteSpacing = HUDLayoutSettings.Padding };
+            GUILayoutGroup bottomContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.075f), content.RectTransform, Anchor.CenterRight), childAnchor: Anchor.CenterRight) { IsHorizontal = true, AbsoluteSpacing = HUDLayoutSettings.Padding };
+            float transferInfoFrameWidth = 1.0f;
 
             if (closeAction != null)
             {
-                GUIButton closeButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1f), buttonFrame.RectTransform), TextManager.Get("Close"), style: "GUIButtonFreeScale")
+                GUIButton closeButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1f), bottomContainer.RectTransform), TextManager.Get("Close"), style: "GUIButtonFreeScale")
                 {
                     OnClicked = (button, userData) =>
                     {
@@ -161,11 +181,33 @@ namespace Barotrauma
                         return true;
                     }
                 };
+                transferInfoFrameWidth -= closeButton.RectTransform.RelativeSize.X;
             }
 
-            if (purchaseService) confirmButtonAlt = new GUIButton(new RectTransform(new Vector2(0.2f, 1f), buttonFrame.RectTransform), purchaseOnlyText, style: "GUIButtonFreeScale");
-            confirmButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1f), buttonFrame.RectTransform), purchaseService ? purchaseAndSwitchText : deliveryFee > 0 ? deliveryText : switchText, style: "GUIButtonFreeScale");
+            if (purchaseService)
+            {
+                confirmButtonAlt = new GUIButton(new RectTransform(new Vector2(0.2f, 1f), bottomContainer.RectTransform), purchaseOnlyText, style: "GUIButtonFreeScale");
+                transferInfoFrameWidth -= confirmButtonAlt.RectTransform.RelativeSize.X;
+            } 
+            confirmButton = new GUIButton(new RectTransform(new Vector2(0.2f, 1f), bottomContainer.RectTransform), purchaseService ? purchaseAndSwitchText : deliveryFee > 0 ? deliveryText : switchText, style: "GUIButtonFreeScale");
             SetConfirmButtonState(false);
+            transferInfoFrameWidth -= confirmButton.RectTransform.RelativeSize.X;
+            GUIFrame transferInfoFrame = new GUIFrame(new RectTransform(new Vector2(transferInfoFrameWidth, 1.0f), bottomContainer.RectTransform), style: null)
+            {
+                CanBeFocused = false
+            };
+            transferItemsTickBox = new GUITickBox(new RectTransform(new Vector2(0.2f, 1.0f), transferInfoFrame.RectTransform, Anchor.CenterRight), TextManager.Get("transferitems"), font: GUIStyle.SubHeadingFont)
+            {
+                Selected = TransferItemsOnSwitch,
+                Visible = false,
+                OnSelected = (tb) => transferItemsOnSwitch = tb.Selected
+            };
+            transferItemsTickBox.RectTransform.Resize(new Point(Math.Min((int)transferItemsTickBox.ContentWidth, transferInfoFrame.Rect.Width), transferItemsTickBox.Rect.Height));
+            itemTransferReminderBlock = new GUITextBlock(new RectTransform(Vector2.One, transferInfoFrame.RectTransform, Anchor.CenterRight), null)
+            {
+                TextAlignment = Alignment.CenterRight,
+                Visible = false
+            };
 
             pageIndicatorHolder = new GUIFrame(new RectTransform(new Vector2(1f, 1.5f), submarineControlsGroup.RectTransform), style: null);
             pageIndicator = GUIStyle.GetComponentStyle("GUIPageIndicator").GetDefaultSprite();
@@ -272,7 +314,7 @@ namespace Barotrauma
             }
         }
 
-        public void RefreshSubmarineDisplay(bool updateSubs)
+        public void RefreshSubmarineDisplay(bool updateSubs, bool setTransferOptionToTrue = false)
         {
             if (!initialized)
             {
@@ -285,6 +327,10 @@ namespace Barotrauma
             else
             {
                 playerBalanceElement = CampaignUI.UpdateBalanceElement(playerBalanceElement);
+            }
+            if (setTransferOptionToTrue)
+            {
+                TransferItemsOnSwitch = true;
             }
             if (updateSubs)
             {
@@ -400,6 +446,10 @@ namespace Barotrauma
             if (subsToShow.Count == 0)
             {
                 SelectSubmarine(null, Rectangle.Empty);
+            }
+            else
+            {
+                UpdateItemTransferInfoFrame();
             }
         }
 
@@ -553,6 +603,40 @@ namespace Barotrauma
                 selectedSubmarineIndicator.RectTransform.NonScaledSize = Point.Zero;
                 SetConfirmButtonState(false);
             }
+
+            UpdateItemTransferInfoFrame();
+        }
+
+        private void UpdateItemTransferInfoFrame()
+        {
+            if (selectedSubmarine != null)
+            {
+                var pendingSub = GameMain.GameSession?.Campaign?.PendingSubmarineSwitch;
+                if (Submarine.MainSub?.Info?.Name == selectedSubmarine.Name && pendingSub == null)
+                {
+                    transferItemsTickBox.Visible = false;
+                    itemTransferReminderBlock.Visible = false;
+                }
+                else if (pendingSub?.Name == selectedSubmarine.Name)
+                {
+                    transferItemsTickBox.Visible = false;
+                    itemTransferReminderBlock.Text = GameMain.GameSession.Campaign.TransferItemsOnSubSwitch ?
+                        TextManager.Get("itemtransferenabledreminder") :
+                        TextManager.Get("itemtransferdisabledreminder");
+                    itemTransferReminderBlock.Visible = true;
+                }
+                else
+                {
+                    transferItemsTickBox.Selected = TransferItemsOnSwitch;
+                    transferItemsTickBox.Visible = true;
+                    itemTransferReminderBlock.Visible = false;
+                }
+            }
+            else
+            {
+                transferItemsTickBox.Visible = false;
+                itemTransferReminderBlock.Visible = false;
+            }
         }
 
         private void SetConfirmButtonState(bool state)
@@ -614,24 +698,27 @@ namespace Barotrauma
                     ("[submarinename2]", CurrentOrPendingSubmarine().DisplayName),
                     ("[amount]", deliveryFee.ToString()),
                     ("[currencyname]", currencyName)), messageBoxOptions);
+                msgBox.Buttons[0].ClickSound = GUISoundType.ConfirmTransaction;
             }
             else
             {
-                msgBox = new GUIMessageBox(TextManager.Get("switchsubmarineheader"), TextManager.GetWithVariables("switchsubmarinetext",
+                var text = TextManager.GetWithVariables("switchsubmarinetext",
                     ("[submarinename1]", CurrentOrPendingSubmarine().DisplayName),
-                    ("[submarinename2]", selectedSubmarine.DisplayName)), messageBoxOptions);
+                    ("[submarinename2]", selectedSubmarine.DisplayName));
+                text += GetItemTransferText();
+                msgBox = new GUIMessageBox(TextManager.Get("switchsubmarineheader"), text, messageBoxOptions);
             }
 
             msgBox.Buttons[0].OnClicked = (applyButton, obj) =>
             {
                 if (GameMain.Client == null)
                 {
-                    SubmarineInfo newSub = GameMain.GameSession.SwitchSubmarine(selectedSubmarine, deliveryFee);
+                    GameMain.GameSession.SwitchSubmarine(selectedSubmarine, TransferItemsOnSwitch, deliveryFee);
                     RefreshSubmarineDisplay(true);
                 }
                 else
                 {
-                    GameMain.Client.InitiateSubmarineChange(selectedSubmarine, Networking.VoteType.SwitchSub);
+                    GameMain.Client.InitiateSubmarineChange(selectedSubmarine, TransferItemsOnSwitch, Networking.VoteType.SwitchSub);
                 }
                 return true;
             };
@@ -653,23 +740,25 @@ namespace Barotrauma
 
             if (!purchaseOnly)
             {
-                msgBox = new GUIMessageBox(TextManager.Get("purchaseandswitchsubmarineheader"), TextManager.GetWithVariables("purchaseandswitchsubmarinetext",
+                var text = TextManager.GetWithVariables("purchaseandswitchsubmarinetext",
                     ("[submarinename1]", selectedSubmarine.DisplayName),
                     ("[amount]", selectedSubmarine.Price.ToString()),
                     ("[currencyname]", currencyName),
-                    ("[submarinename2]", CurrentOrPendingSubmarine().DisplayName)), messageBoxOptions);
+                    ("[submarinename2]", CurrentOrPendingSubmarine().DisplayName));
+                text += GetItemTransferText();
+                msgBox = new GUIMessageBox(TextManager.Get("purchaseandswitchsubmarineheader"), text, messageBoxOptions);
 
                 msgBox.Buttons[0].OnClicked = (applyButton, obj) =>
                 {
                     if (GameMain.Client == null)
                     {
                         GameMain.GameSession.PurchaseSubmarine(selectedSubmarine);
-                        SubmarineInfo newSub = GameMain.GameSession.SwitchSubmarine(selectedSubmarine, 0);
+                        GameMain.GameSession.SwitchSubmarine(selectedSubmarine, TransferItemsOnSwitch, 0);
                         RefreshSubmarineDisplay(true);
                     }
                     else
                     {
-                        GameMain.Client.InitiateSubmarineChange(selectedSubmarine, Networking.VoteType.PurchaseAndSwitchSub);
+                        GameMain.Client.InitiateSubmarineChange(selectedSubmarine, TransferItemsOnSwitch, Networking.VoteType.PurchaseAndSwitchSub);
                     }
                     return true;
                 };
@@ -690,14 +779,20 @@ namespace Barotrauma
                     }
                     else
                     {
-                        GameMain.Client.InitiateSubmarineChange(selectedSubmarine, Networking.VoteType.PurchaseSub);
+                        GameMain.Client.InitiateSubmarineChange(selectedSubmarine, false, Networking.VoteType.PurchaseSub);
                     }
                     return true;
                 };
             }
 
+            msgBox.Buttons[0].ClickSound = GUISoundType.ConfirmTransaction;
             msgBox.Buttons[0].OnClicked += msgBox.Close;
             msgBox.Buttons[1].OnClicked = msgBox.Close;
-        }        
+        }     
+        
+        private LocalizedString GetItemTransferText()
+        {
+            return "\n\n" + TextManager.Get(TransferItemsOnSwitch ? "itemswillbetransferred" : "itemswontbetransferred");
+        }
     }
 }

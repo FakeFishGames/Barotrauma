@@ -185,6 +185,11 @@ namespace Barotrauma
                 {
                     PathSteering.SteeringSeek(character.GetRelativeSimPosition(currentTarget), weight: 1, nodeFilter: node => node.Waypoint.CurrentHull != null);
                 }
+                else
+                {
+                    PathSteering.ResetPath();
+                    PathSteering.Reset();
+                }
             }
             else
             {
@@ -290,12 +295,25 @@ namespace Barotrauma
                 {
                     PathSteering.SteeringSeek(character.GetRelativeSimPosition(currentTarget), weight: 1, nodeFilter: node => node.Waypoint.CurrentHull != null);
                 }
+                else
+                {
+                    PathSteering.ResetPath();
+                    PathSteering.Reset();
+                }
             }
         }
 
         public void Wander(float deltaTime)
         {
-            if (character.IsClimbing) { return; }
+            if (character.IsClimbing)
+            {
+                if (character.AnimController.GetHeightFromFloor() < 0.1f)
+                {
+                    character.AnimController.Anim = AnimController.Animation.None;
+                    character.SelectedConstruction = null;
+                }
+                return;
+            }
             var currentHull = character.CurrentHull;
             if (!character.AnimController.InWater && currentHull != null)
             {
@@ -470,7 +488,7 @@ namespace Barotrauma
                 if (hull != null)
                 {
                     itemsToClean.Clear();
-                    foreach (Item item in Item.ItemList)
+                    foreach (Item item in Item.CleanableItems)
                     {
                         if (item.CurrentHull != hull) { continue; }
                         if (AIObjectiveCleanupItems.IsValidTarget(item, character, checkInventory: true, allowUnloading: false) && !ignoredItems.Contains(item))

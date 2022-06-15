@@ -21,6 +21,8 @@ namespace Barotrauma.Networking
         private readonly NetworkMember networkMember;
         private readonly Steering shuttleSteering;
         private readonly List<Door> shuttleDoors;
+        private const string RespawnContainerTag = "respawncontainer";
+        private readonly ItemContainer respawnContainer;
 
         //items created during respawn
         //any respawn items left in the shuttle are removed when the shuttle despawns
@@ -100,13 +102,18 @@ namespace Barotrauma.Networking
                 shuttleDoors = new List<Door>();
                 foreach (Item item in Item.ItemList)
                 {
-                    if (item.Submarine != RespawnShuttle) continue;
+                    if (item.Submarine != RespawnShuttle) { continue; }
+
+                    if (item.HasTag(RespawnContainerTag))
+                    {
+                        respawnContainer = item.GetComponent<ItemContainer>();
+                    }
 
                     var steering = item.GetComponent<Steering>();
-                    if (steering != null) shuttleSteering = steering;
+                    if (steering != null) { shuttleSteering = steering; }
 
                     var door = item.GetComponent<Door>();
-                    if (door != null) shuttleDoors.Add(door);
+                    if (door != null) { shuttleDoors.Add(door); }
 
                     //lock all wires to prevent the players from messing up the electronics
                     var connectionPanel = item.GetComponent<ConnectionPanel>();
@@ -227,14 +234,14 @@ namespace Barotrauma.Networking
             despawnTime = ReturnTime + new TimeSpan(0, 0, seconds: 30);
 #endif
 
-            if (RespawnShuttle == null) return;
+            if (RespawnShuttle == null) { return; }
 
             foreach (Item item in Item.ItemList)
             {
                 if (item.Submarine != RespawnShuttle) { continue; }
                 
                 //remove respawn items that have been left in the shuttle
-                if (respawnItems.Contains(item))
+                if (respawnItems.Contains(item) || respawnContainer?.Item != null && item.IsOwnedBy(respawnContainer.Item))
                 {
                     Spawner.AddItemToRemoveQueue(item);
                     continue;

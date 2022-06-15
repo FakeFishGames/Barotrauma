@@ -81,7 +81,6 @@ namespace Barotrauma
             : this(isSinglePlayer)
         {
             AddCharacterElements(element);
-            ActiveOrdersElement = element.GetChildElement("activeorders");
         }
 
         partial void InitProjectSpecific()
@@ -148,9 +147,10 @@ namespace Barotrauma
                             string msgCommand = ChatMessage.GetChatMessageCommand(text, out string msg);
                             // add to local history
                             ChatBox.ChatManager.Store(text);
-                            WifiComponent headset = null;
-                            ChatMessageType messageType =
-                                ((msgCommand == "r" || msgCommand == "radio") && ChatMessage.CanUseRadio(Character.Controlled, out headset)) ? ChatMessageType.Radio : ChatMessageType.Default;
+                            bool isUsingRadioMode = GameMain.ActiveChatMode == ChatMode.Radio;
+                            bool containsRadioCommand = msgCommand == "r" || msgCommand == "radio";
+                            bool canUseRadio = ChatMessage.CanUseRadio(Character.Controlled, out WifiComponent headset);
+                            ChatMessageType messageType = ((isUsingRadioMode && msgCommand == "") || containsRadioCommand) && canUseRadio ? ChatMessageType.Radio : ChatMessageType.Default;
                             AddSinglePlayerChatMessage(
                                 Character.Controlled.Info.Name,
                                 msg, messageType,
@@ -1554,40 +1554,9 @@ namespace Barotrauma
             {
                 ChatBox.Update(deltaTime);
                 ChatBox.InputBox.Visible = Character.Controlled != null;
-
-                if (!DebugConsole.IsOpen && ChatBox.InputBox.Visible && GUI.KeyboardDispatcher.Subscriber == null)
+                if (!DebugConsole.IsOpen && ChatBox.InputBox.Visible && GUI.KeyboardDispatcher.Subscriber == null && !ChatBox.InputBox.Selected)
                 {
-                    if (PlayerInput.KeyHit(InputType.Chat) && !ChatBox.InputBox.Selected)
-                    {
-                        ChatBox.InputBox.AddToGUIUpdateList();
-                        ChatBox.GUIFrame.Flash(Color.DarkGreen, 0.5f);
-                        if (!ChatBox.ToggleOpen)
-                        {
-                            ChatBox.CloseAfterMessageSent = !ChatBox.ToggleOpen;
-                            ChatBox.ToggleOpen = true;
-                        }
-                        ChatBox.InputBox.Select(ChatBox.InputBox.Text.Length);
-                    }
-
-                    if (PlayerInput.KeyHit(InputType.RadioChat) && !ChatBox.InputBox.Selected)
-                    {
-                        if (Character.Controlled == null || Character.Controlled.SpeechImpediment < 100)
-                        {
-                            ChatBox.InputBox.AddToGUIUpdateList();
-                            ChatBox.GUIFrame.Flash(Color.YellowGreen, 0.5f);
-                            if (!ChatBox.ToggleOpen)
-                            {
-                                ChatBox.CloseAfterMessageSent = !ChatBox.ToggleOpen;
-                                ChatBox.ToggleOpen = true;
-                            }
-
-                            if (!ChatBox.InputBox.Text.StartsWith(ChatBox.RadioChatString))
-                            {
-                                ChatBox.InputBox.Text = ChatBox.RadioChatString;
-                            }
-                            ChatBox.InputBox.Select(ChatBox.InputBox.Text.Length);
-                        }
-                    }
+                    ChatBox.ApplySelectionInputs();
                 }
             }
 
@@ -1609,7 +1578,7 @@ namespace Barotrauma
                         {
                             if (character == Character.Controlled && crewList.SelectedComponent != characterComponent)
                             {
-                                crewList.Select(character, force: true);
+                                crewList.Select(character, GUIListBox.Force.Yes);
                             }
                             // Icon colors might change based on the target so we check if they need to be updated
                             if (GetCurrentOrderIconList(characterComponent) is GUIListBox currentOrderIconList)
@@ -3661,9 +3630,9 @@ namespace Barotrauma
             crewList.ClearChildren();
         }
 
-        public void Save(XElement parentElement)
+        public XElement Save(XElement parentElement)
         {
-            XElement element = new XElement("crew");
+            var element = new XElement("crew");
             for (int i = 0; i < characterInfos.Count; i++)
             {
                 var ci = characterInfos[i];
@@ -3674,8 +3643,8 @@ namespace Barotrauma
                 infoElement.Add(new XAttribute("crewlistindex", ci.CrewListIndex));
                 if (ci.LastControlled) { infoElement.Add(new XAttribute("lastcontrolled", true)); }
             }
-            SaveActiveOrders(element);
-            parentElement.Add(element);
+            parentElement?.Add(element);
+            return element;
         }
 
         public static void ClientReadActiveOrders(IReadMessage inc)

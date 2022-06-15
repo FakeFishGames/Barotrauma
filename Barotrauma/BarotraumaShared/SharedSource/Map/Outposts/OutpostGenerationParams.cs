@@ -1,11 +1,9 @@
 ﻿using Barotrauma.Extensions;
-using Microsoft.Xna.Framework;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -98,9 +96,29 @@ namespace Barotrauma
         [Serialize("", IsPropertySaveable.Yes), Editable]
         public string ReplaceInRadiation { get; set; }
 
-        private readonly Dictionary<Identifier, int> moduleCounts = new Dictionary<Identifier, int>();
+        public class ModuleCount
+        {
+            public Identifier Identifier;
+            public int Count;
+            public int Order;
 
-        public IReadOnlyDictionary<Identifier, int> ModuleCounts
+            public ModuleCount(ContentXElement element)
+            {
+                Identifier = element.GetAttributeIdentifier("flag", element.GetAttributeIdentifier("moduletype", ""));
+                Count = element.GetAttributeInt("count", 0);
+                Order = element.GetAttributeInt("order", 0);
+            }
+
+            public ModuleCount(Identifier id, int count)
+            {
+                Identifier = id;
+                Count = count;
+            }
+        }
+
+        private readonly List<ModuleCount> moduleCounts = new List<ModuleCount>();
+
+        public IReadOnlyList<ModuleCount> ModuleCounts
         {
             get { return moduleCounts; }
         }
@@ -171,8 +189,7 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "modulecount":
-                        Identifier moduleFlag = subElement.GetAttributeIdentifier("flag", subElement.GetAttributeIdentifier("moduletype", ""));
-                        moduleCounts[moduleFlag] = subElement.GetAttributeInt("count", 0);                        
+                        moduleCounts.Add(new ModuleCount(subElement));
                         break;
                     case "npcs":
                         var newCollection = new NpcCollection();
@@ -200,7 +217,7 @@ namespace Barotrauma
         public int GetModuleCount(Identifier moduleFlag)
         {
             if (moduleFlag == Identifier.Empty || moduleFlag == "none") { return int.MaxValue; }
-            return moduleCounts.ContainsKey(moduleFlag) ? moduleCounts[moduleFlag] : 0;
+            return moduleCounts.FirstOrDefault(m => m.Identifier == moduleFlag)?.Count ?? 0;
         }
 
         public void SetModuleCount(Identifier moduleFlag, int count)
@@ -208,11 +225,19 @@ namespace Barotrauma
             if (moduleFlag == Identifier.Empty || moduleFlag == "none") { return; }
             if (count <= 0)
             {
-                moduleCounts.Remove(moduleFlag);
+                moduleCounts.RemoveAll(m => m.Identifier == moduleFlag);
             }
             else
             {
-                moduleCounts[moduleFlag]  = count;
+                var moduleCount = moduleCounts.FirstOrDefault(m => m.Identifier == moduleFlag);
+                if (moduleCount == null)
+                {
+                    moduleCounts.Add(new ModuleCount(moduleFlag, count));
+                }
+                else
+                {
+                    moduleCount.Count = count;
+                }
             }
         }
 

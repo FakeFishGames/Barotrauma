@@ -44,13 +44,13 @@ namespace FarseerPhysics.Common
             if (path.Closed)
             {
                 ChainShape chain = new ChainShape(verts, true);
-                body.CreateFixture(chain);
+                body.CreateFixture(chain, Category.Cat1, Category.All);
             }
             else
             {
                 for (int i = 1; i < verts.Count; i++)
                 {
-                    body.CreateFixture(new EdgeShape(verts[i], verts[i - 1]));
+                    body.CreateFixture(new EdgeShape(verts[i], verts[i - 1]), Category.Cat1, Category.All);
                 }
             }
         }
@@ -74,7 +74,7 @@ namespace FarseerPhysics.Common
 
             foreach (Vertices item in decomposedVerts)
             {
-                body.CreateFixture(new PolygonShape(item, density));
+                body.CreateFixture(new PolygonShape(item, density), Category.Cat1, Category.All);
             }
         }
 
@@ -105,7 +105,7 @@ namespace FarseerPhysics.Common
 
                 foreach (Shape shape in shapes)
                 {
-                    b.CreateFixture(shape);
+                    b.CreateFixture(shape, Category.Cat1, Category.All);
                 }
 
                 bodyList.Add(b);

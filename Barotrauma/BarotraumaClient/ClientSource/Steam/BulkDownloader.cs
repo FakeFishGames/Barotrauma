@@ -119,9 +119,11 @@ namespace Barotrauma.Steam
                     onComplete?.Invoke();
                 }
                 msgBox.Close();
+                ContentPackageManager.WorkshopPackages.Refresh();
+                ContentPackageManager.EnabledPackages.RefreshUpdatedMods();
                 if (SettingsMenu.Instance?.WorkshopMenu is MutableWorkshopMenu mutableWorkshopMenu)
                 {
-                    mutableWorkshopMenu.PopulateInstalledModLists();
+                    mutableWorkshopMenu.PopulateInstalledModLists(forceRefreshEnabled: true);
                 }
             });
         }

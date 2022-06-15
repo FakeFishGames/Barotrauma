@@ -574,7 +574,7 @@ namespace Barotrauma
             public float AggressionGreed { get; private set; }
 
             [Serialize(0f, IsPropertySaveable.Yes, description: "If the health drops below this threshold, the character flees. In percentages."), Editable(minValue: 0f, maxValue: 100f)]
-            public float FleeHealthThreshold { get; private set; }
+            public float FleeHealthThreshold { get; set; }
 
             [Serialize(false, IsPropertySaveable.Yes, description: "Does the character attack when provoked? When enabled, overrides the predefined targeting state with Attack and increases the priority of it."), Editable()]
             public bool AttackWhenProvoked { get; private set; }

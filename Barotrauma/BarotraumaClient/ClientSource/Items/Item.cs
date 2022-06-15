@@ -1,4 +1,6 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
+using Barotrauma.MapCreatures.Behavior;
 using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
@@ -6,13 +8,8 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using Barotrauma.Extensions;
-using Barotrauma.MapCreatures.Behavior;
-using FarseerPhysics.Dynamics;
-using FarseerPhysics.Dynamics.Contacts;
 using System.Collections.Immutable;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -355,7 +352,7 @@ namespace Barotrauma
                             foreach (var decorativeSprite in Prefab.DecorativeSprites)
                             {
                                 if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
-                                Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier, flippedX && Prefab.CanSpriteFlipX ? rotationRad : -rotationRad) * Scale;
+                                Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier, flippedX && Prefab.CanSpriteFlipX ? RotationRad : -RotationRad) * Scale;
                                 if (flippedX && Prefab.CanSpriteFlipX) { offset.X = -offset.X; }
                                 if (flippedY && Prefab.CanSpriteFlipY) { offset.Y = -offset.Y; }
                                 decorativeSprite.Sprite.DrawTiled(spriteBatch,
@@ -379,17 +376,17 @@ namespace Barotrauma
                         }
                         if (color.A > 0)
                         {
-                            activeSprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y) + drawOffset, color, origin, rotationRad, Scale, activeSprite.effects, depth);
+                            activeSprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y) + drawOffset, color, origin, RotationRad, Scale, activeSprite.effects, depth);
                             if (fadeInBrokenSprite != null)
                             {
                                 float d = Math.Min(depth + (fadeInBrokenSprite.Sprite.Depth - activeSprite.Depth - 0.000001f), 0.999f);
-                                fadeInBrokenSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y) + fadeInBrokenSprite.Offset.ToVector2() * Scale, color * fadeInBrokenSpriteAlpha, origin, rotationRad, Scale, activeSprite.effects, d);
+                                fadeInBrokenSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y) + fadeInBrokenSprite.Offset.ToVector2() * Scale, color * fadeInBrokenSpriteAlpha, origin, RotationRad, Scale, activeSprite.effects, d);
                             }
                         }
                         if (Infector != null && (Infector.ParentBallastFlora.HasBrokenThrough || BallastFloraBehavior.AlwaysShowBallastFloraSprite))
                         {
-                            Prefab.InfectedSprite?.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y) + drawOffset, color, Prefab.InfectedSprite.Origin, rotationRad, Scale, activeSprite.effects, depth - 0.001f);
-                            Prefab.DamagedInfectedSprite?.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y) + drawOffset, Infector.HealthColor, Prefab.DamagedInfectedSprite.Origin, rotationRad, Scale, activeSprite.effects, depth - 0.002f);
+                            Prefab.InfectedSprite?.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y) + drawOffset, color, Prefab.InfectedSprite.Origin, RotationRad, Scale, activeSprite.effects, depth - 0.001f);
+                            Prefab.DamagedInfectedSprite?.Draw(spriteBatch, new Vector2(DrawPosition.X, -DrawPosition.Y) + drawOffset, Infector.HealthColor, Prefab.DamagedInfectedSprite.Origin, RotationRad, Scale, activeSprite.effects, depth - 0.002f);
                         }
                         foreach (var decorativeSprite in Prefab.DecorativeSprites)
                         {
@@ -397,11 +394,11 @@ namespace Barotrauma
                             float rot = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState, spriteAnimState[decorativeSprite].RandomRotationFactor);
                             bool flipX = flippedX && Prefab.CanSpriteFlipX;
                             bool flipY = flippedY && Prefab.CanSpriteFlipY;
-                            Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier, flipX ^ flipY ? rotationRad : -rotationRad) * Scale;
+                            Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier, flipX ^ flipY ? RotationRad : -RotationRad) * Scale;
                             if (flipX) { offset.X = -offset.X; }
                             if (flipY) { offset.Y = -offset.Y; }
                             decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X + offset.X, -(DrawPosition.Y + offset.Y)), color,
-                                rotationRad + rot, decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, activeSprite.effects,
+                                RotationRad + rot, decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, activeSprite.effects,
                                 depth: Math.Min(depth + (decorativeSprite.Sprite.Depth - activeSprite.Depth), 0.999f));
                         }
                     }
@@ -448,7 +445,7 @@ namespace Barotrauma
                     {
                         if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
                         float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState, spriteAnimState[decorativeSprite].RandomRotationFactor);
-                        Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier, -rotationRad) * Scale;
+                        Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier, -RotationRad) * Scale;
                         if (flippedX && Prefab.CanSpriteFlipX) { offset.X = -offset.X; }
                         if (flippedY && Prefab.CanSpriteFlipY) { offset.Y = -offset.Y; }
                         var ca = (float)Math.Cos(-body.Rotation);
@@ -469,7 +466,7 @@ namespace Barotrauma
                     {
                         if (!spriteAnimState[decorativeSprite].IsActive) { continue; }
                         float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState, spriteAnimState[decorativeSprite].RandomRotationFactor);
-                        Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier, -rotationRad) * Scale;
+                        Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier, -RotationRad) * Scale;
                         if (flippedX && Prefab.CanSpriteFlipX) { offset.X = -offset.X; }
                         if (flippedY && Prefab.CanSpriteFlipY) { offset.Y = -offset.Y; }
                         decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X + offset.X, -(DrawPosition.Y + offset.Y)), color,
@@ -569,6 +566,18 @@ namespace Barotrauma
             {
                 LastImpactSoundTime = (float)Timing.TotalTime;
                 SoundPlayer.PlaySound(Prefab.ImpactSoundTag, WorldPosition, hullGuess: CurrentHull);
+            }
+        }
+
+        public void CheckNeedsSoundUpdate(ItemComponent ic)
+        {
+            if (ic.NeedsSoundUpdate())
+            {
+                if (!updateableComponents.Contains(ic))
+                {
+                    updateableComponents.Add(ic);
+                }
+                isActive = true;
             }
         }
 
@@ -720,7 +729,7 @@ namespace Barotrauma
                         //remove identifiers from the available container tags
                         //(otherwise the list will include many irrelevant options,
                         //e.g. "weldingtool" because a welding fuel tank can be placed inside the container, etc)
-                        .Where(t => !ItemPrefab.Prefabs.Any(ip => ip.Identifier == t))
+                        .Where(t => !ItemPrefab.Prefabs.ContainsKey(t))
                         .ToImmutableHashSet();
                     new GUIButton(new RectTransform(new Vector2(0.1f, 1), tagsField.RectTransform, Anchor.TopRight), "...")
                     {
@@ -943,6 +952,7 @@ namespace Barotrauma
 
             var textList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.8f), msgBox.Content.RectTransform, Anchor.TopCenter))
             {
+                PlaySoundOnSelect = true,
                 OnSelected = (component, userData) =>
                 {
                     if (!(userData is Identifier)) { return true; }
@@ -1174,7 +1184,7 @@ namespace Barotrauma
             texts.Clear();
 
             string nameText = Name;
-            if (Prefab.Identifier == "idcard" || Tags.Contains("despawncontainer"))
+            if (Prefab.Tags.Contains("identitycard") || Tags.Contains("despawncontainer"))
             {
                 string[] readTags = Tags.Split(',');
                 string idName = null;

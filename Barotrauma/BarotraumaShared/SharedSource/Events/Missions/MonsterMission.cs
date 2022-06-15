@@ -135,8 +135,10 @@ namespace Barotrauma
                 monster.Enabled = false;
                 if (monster.Params.AI != null && monster.Params.AI.EnforceAggressiveBehaviorForMissions)
                 {
+                    monster.Params.AI.FleeHealthThreshold = 0;
                     foreach (var targetParam in monster.Params.AI.Targets)
                     {
+                        if (targetParam.Tag.Equals("engine", StringComparison.OrdinalIgnoreCase)) { continue; }
                         switch (targetParam.State)
                         {
                             case AIState.Avoid:

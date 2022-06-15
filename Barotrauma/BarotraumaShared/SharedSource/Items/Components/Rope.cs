@@ -160,7 +160,8 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             if (source == null || target == null || target.Removed ||
-                (source is Entity sourceEntity && sourceEntity.Removed))
+                (source is Entity sourceEntity && sourceEntity.Removed) ||
+                (source is Limb limb && limb.Removed))
             {
                 ResetSource();
                 target = null;

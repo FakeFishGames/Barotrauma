@@ -13,6 +13,11 @@ namespace Barotrauma
 
         partial void SettingsChanged(Option<int> balanceChanged, Option<int> rewardChanged)
         {
+            if (Owner is Some<Character> { Value: var character })
+            {
+                if (!character.IsPlayer) { return; }
+            }
+
             CampaignMode campaign = GameMain.GameSession?.Campaign;
             WalletChangedData data = new WalletChangedData
             {

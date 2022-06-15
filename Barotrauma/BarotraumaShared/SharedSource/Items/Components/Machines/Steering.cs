@@ -68,6 +68,8 @@ namespace Barotrauma.Items.Components
         private const float ConnectedSubUpdateInterval = 1.0f;
         float connectedSubUpdateTimer;
 
+        private double lastReceivedSteeringSignalTime;
+
         public bool AutoPilot
         {
             get { return autoPilot; }
@@ -312,16 +314,20 @@ namespace Barotrauma.Items.Components
             }
             else if (AutoPilot)
             {
-                UpdateAutoPilot(deltaTime);
-                float throttle = 1.0f;
-                if (controlledSub != null)
+                //signals override autopilot for a duration of one second
+                if (lastReceivedSteeringSignalTime < Timing.TotalTime - 1)
                 {
-                    //if the sub is heading in the correct direction, throttle the speed according to the user's skill
-                    //if it's e.g. sinking due to extra water, don't throttle, but allow emptying up the ballast completely
-                    throttle = MathHelper.Clamp(Vector2.Dot(controlledSub.Velocity, TargetVelocity) / 100.0f, 0.0f, 1.0f);
+                    UpdateAutoPilot(deltaTime);
+                    float throttle = 1.0f;
+                    if (controlledSub != null)
+                    {
+                        //if the sub is heading in the correct direction, throttle the speed according to the user's skill
+                        //if it's e.g. sinking due to extra water, don't throttle, but allow emptying up the ballast completely
+                        throttle = MathHelper.Clamp(Vector2.Dot(controlledSub.Velocity, TargetVelocity) / 100.0f, 0.0f, 1.0f);
+                    }
+                    float maxSpeed = MathHelper.Lerp(AutoPilotMaxSpeed, AIPilotMaxSpeed, userSkill) * 100.0f;
+                    TargetVelocity = TargetVelocity.ClampLength(MathHelper.Lerp(100.0f, maxSpeed, throttle));
                 }
-                float maxSpeed = MathHelper.Lerp(AutoPilotMaxSpeed, AIPilotMaxSpeed, userSkill) * 100.0f;
-                TargetVelocity = TargetVelocity.ClampLength(MathHelper.Lerp(100.0f, maxSpeed, throttle));
             }
             else
             {
@@ -394,8 +400,8 @@ namespace Barotrauma.Items.Components
         private void IncreaseSkillLevel(Character user, float deltaTime)
         {
             if (user?.Info == null) { return; }
-            // Do not increase the helm skill when "steering" the sub in an outpost level
-            if (GameMain.GameSession?.Campaign != null && Level.IsLoadedOutpost) { return; }
+            // Do not increase the helm skill when "steering" the sub while docked into something static (e.g. outpost or wreck)
+            if (GameMain.GameSession?.Campaign != null && controlledSub != null && controlledSub.DockedTo.Any(d => d.PhysicsBody.BodyType == BodyType.Static)) { return; }
 
             float userSkill = Math.Max(user.GetSkillLevel("helm"), 1.0f) / 100.0f;
             user.Info.IncreaseSkillLevel(
@@ -821,6 +827,7 @@ namespace Barotrauma.Items.Components
                 steeringInput.X = MathHelper.Clamp(steeringInput.X, -100.0f, 100.0f);
                 steeringInput.Y = MathHelper.Clamp(-steeringInput.Y, -100.0f, 100.0f);
                 TargetVelocity = steeringInput;
+                lastReceivedSteeringSignalTime = Timing.TotalTime;
             }
             else
             {

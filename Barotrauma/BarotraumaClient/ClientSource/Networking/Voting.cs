@@ -7,6 +7,20 @@ namespace Barotrauma
 {
     partial class Voting
     {
+        private struct SubmarineVoteInfo
+        {
+            public SubmarineInfo SubmarineInfo { get; set; }
+            public bool TransferItems { get; set; }
+            public int DeliveryFee { get; set; }
+
+            public SubmarineVoteInfo(SubmarineInfo submarineInfo, bool transferItems, int deliveryFee)
+            {
+                SubmarineInfo = submarineInfo;
+                TransferItems = transferItems;
+                DeliveryFee = deliveryFee;
+            }
+        }
+
         private readonly Dictionary<VoteType, int>
             voteCountYes = new Dictionary<VoteType, int>(),
             voteCountNo = new Dictionary<VoteType, int>(),
@@ -131,14 +145,16 @@ namespace Barotrauma
                 case VoteType.PurchaseAndSwitchSub:
                 case VoteType.PurchaseSub:
                 case VoteType.SwitchSub:
-                    if (data is SubmarineInfo voteSub)
+                    if (data is (SubmarineInfo voteSub, bool transferItems))
                     { 
                         //initiate sub vote
                         msg.Write(true);
                         msg.Write(voteSub.Name);
+                        msg.Write(transferItems);
                     }
                     else
                     {
+                        // vote
                         if (!(data is int)) { return; }
                         msg.Write(false);
                         msg.Write((int)data);
@@ -246,7 +262,7 @@ namespace Barotrauma
                         float timeOut = inc.ReadByte();
 
                         Client myClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.ID == GameMain.Client.ID);
-                        if (!myClient.InGame)  { return; }
+                        if (myClient == null || !myClient.InGame)  { return; }
 
                         switch (voteType)
                         {
@@ -254,13 +270,14 @@ namespace Barotrauma
                             case VoteType.PurchaseAndSwitchSub:
                             case VoteType.SwitchSub:
                                 string subName1 = inc.ReadString();
+                                bool transferItems = inc.ReadBoolean();
                                 SubmarineInfo info = GameMain.Client.ServerSubmarines.FirstOrDefault(s => s.Name == subName1);
                                 if (info == null)
                                 {
                                     DebugConsole.ThrowError("Failed to find a matching submarine, vote aborted");
                                     return;
                                 }
-                                GameMain.Client.ShowSubmarineChangeVoteInterface(starterClient, info, voteType, timeOut);
+                                GameMain.Client.ShowSubmarineChangeVoteInterface(starterClient, info, voteType, transferItems, timeOut);
                                 break;
                             case VoteType.TransferMoney:
                                 byte fromClientId = inc.ReadByte();
@@ -279,39 +296,40 @@ namespace Barotrauma
                     case VoteState.Passed:
                     case VoteState.Failed:
                         bool passed = inc.ReadBoolean();
-
-                        SubmarineInfo subInfo = null;
+                        SubmarineVoteInfo submarineVoteInfo = default;
                         switch (voteType)
                         {
                             case VoteType.PurchaseSub:
                             case VoteType.PurchaseAndSwitchSub:
                             case VoteType.SwitchSub:
                                 string subName2 = inc.ReadString();
-                                subInfo = GameMain.Client.ServerSubmarines.FirstOrDefault(s => s.Name == subName2);
-                                if (subInfo == null)
+                                var submarineInfo = GameMain.Client.ServerSubmarines.FirstOrDefault(s => s.Name == subName2);
+                                bool transferItems = inc.ReadBoolean();
+                                int deliveryFee = inc.ReadInt16();
+                                if (submarineInfo == null)
                                 {
                                     DebugConsole.ThrowError("Failed to find a matching submarine, vote aborted");
                                     return;
                                 }
+                                submarineVoteInfo = new SubmarineVoteInfo(submarineInfo, transferItems, deliveryFee);
                                 break;
                         }
 
                         GameMain.Client.VotingInterface?.EndVote(passed, yesClientCount, noClientCount);                        
 
-                        if (passed && subInfo != null)
+                        if (passed && submarineVoteInfo.SubmarineInfo is { } subInfo)
                         {
-                            int deliveryFee = inc.ReadInt16();
                             switch (voteType)
                             {
                                 case VoteType.PurchaseAndSwitchSub:
                                     GameMain.GameSession.PurchaseSubmarine(subInfo);
-                                    GameMain.GameSession.SwitchSubmarine(subInfo, 0);
+                                    GameMain.GameSession.SwitchSubmarine(subInfo, submarineVoteInfo.TransferItems, 0);
                                     break;
                                 case VoteType.PurchaseSub:
                                     GameMain.GameSession.PurchaseSubmarine(subInfo);
                                     break;
                                 case VoteType.SwitchSub:
-                                    GameMain.GameSession.SwitchSubmarine(subInfo, deliveryFee);
+                                    GameMain.GameSession.SwitchSubmarine(subInfo, submarineVoteInfo.TransferItems, submarineVoteInfo.DeliveryFee);
                                     break;
                             }
 

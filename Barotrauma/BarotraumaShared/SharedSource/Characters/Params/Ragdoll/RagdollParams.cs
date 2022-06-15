@@ -121,7 +121,7 @@ namespace Barotrauma
             return folder.CleanUpPathCrossPlatform(correctFilenameCase: true);
         }
 
-        public static T GetDefaultRagdollParams<T>(Identifier speciesName) where T : RagdollParams, new() => GetRagdollParams<T>(speciesName, GetDefaultFileName(speciesName));
+        public static T GetDefaultRagdollParams<T>(Identifier speciesName) where T : RagdollParams, new() => GetRagdollParams<T>(speciesName);
 
         /// <summary>
         /// If the file name is left null, default file is selected. If fails, will select the default file.  Note: Use the filename without the extensions, don't use the full path!
@@ -138,61 +138,53 @@ namespace Barotrauma
                 ragdolls = new Dictionary<string, RagdollParams>();
                 allRagdolls.Add(speciesName, ragdolls);
             }
-
             if (!string.IsNullOrEmpty(fileName) && ragdolls.TryGetValue(fileName, out RagdollParams ragdoll))
             {
                 return (T)ragdoll;
             }
-
             string selectedFile = null;
-
-            void tryFolderForSpecies(Identifier species, out string err)
+            Identifier ragdollSpecies = speciesName;
+            if (CharacterPrefab.Prefabs.TryGet(speciesName, out var prefab))
             {
-                err = null;
-                string folder = GetFolder(species);
+                if (!prefab.VariantOf.IsEmpty)
+                {
+                    ragdollSpecies = prefab.VariantOf;
+                }
+                string error = null;
+                string folder = GetFolder(ragdollSpecies);
                 if (!Directory.Exists(folder))
                 {
-                    err = $"[RagdollParams] Invalid directory: {folder}. Using the default ragdoll.";
-                    selectedFile = GetDefaultFile(species);
-                    return;
-                }
-
-                string[] files = Directory.GetFiles(folder);
-                if (files.None())
-                {
-                    err = $"[RagdollParams] Could not find any ragdoll files from the folder: {folder}. Using the default ragdoll.";
-                    selectedFile = GetDefaultFile(species);
-                }
-                else if (string.IsNullOrEmpty(fileName))
-                {
-                    // Files found, but none specified
-                    selectedFile = GetDefaultFile(species);
+                    error = $"[RagdollParams] Invalid directory: {folder}. Using the default ragdoll.";
+                    selectedFile = GetDefaultFile(ragdollSpecies);
                 }
                 else
                 {
-                    selectedFile = files.FirstOrDefault(f => IO.Path.GetFileNameWithoutExtension(f).Equals(fileName, StringComparison.OrdinalIgnoreCase));
-                    if (selectedFile == null)
+                    string[] files = Directory.GetFiles(folder);
+                    if (files.None())
                     {
-                        err = $"[RagdollParams] Could not find a ragdoll file that matches the name {fileName}. Using the default ragdoll.";
-                        selectedFile = GetDefaultFile(species);
+                        error = $"[RagdollParams] Could not find any ragdoll files from the folder: {folder}. Using the default ragdoll.";
+                        selectedFile = GetDefaultFile(ragdollSpecies);
+                    }
+                    else if (string.IsNullOrEmpty(fileName))
+                    {
+                        // Files found, but none specified
+                        selectedFile = GetDefaultFile(ragdollSpecies);
+                    }
+                    else
+                    {
+                        selectedFile = files.FirstOrDefault(f => IO.Path.GetFileNameWithoutExtension(f).Equals(fileName, StringComparison.OrdinalIgnoreCase));
+                        if (selectedFile == null)
+                        {
+                            error = $"[RagdollParams] Could not find a ragdoll file that matches the name {fileName}. Using the default ragdoll.";
+                            selectedFile = GetDefaultFile(ragdollSpecies);
+                        }
                     }
                 }
+                if (error != null)
+                {
+                    DebugConsole.ThrowError(error);
+                }
             }
-
-            tryFolderForSpecies(speciesName, out var error);
-            Identifier parentSpeciesName = CharacterPrefab.Prefabs.TryGet(speciesName, out var prefab)
-                ? prefab.VariantOf
-                : Identifier.Empty;
-            if (!error.IsNullOrEmpty() && !parentSpeciesName.IsEmpty)
-            {
-                tryFolderForSpecies(parentSpeciesName, out error);
-            }
-
-            if (!error.IsNullOrEmpty())
-            {
-                DebugConsole.ThrowError(error);
-            }
-
             if (selectedFile == null)
             {
                 throw new Exception("[RagdollParams] Selected file null!");
@@ -200,7 +192,7 @@ namespace Barotrauma
             DebugConsole.Log($"[RagdollParams] Loading ragdoll from {selectedFile}.");
             var characterPrefab = CharacterPrefab.Prefabs[speciesName];
             T r = new T();
-            if (r.Load(ContentPath.FromRaw(characterPrefab.ContentPackage, selectedFile), speciesName))
+            if (r.Load(ContentPath.FromRaw(characterPrefab.ContentPackage, selectedFile), ragdollSpecies))
             {
                 if (!ragdolls.ContainsKey(r.Name))
                 {

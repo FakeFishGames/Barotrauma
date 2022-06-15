@@ -241,12 +241,14 @@ namespace Barotrauma.Items.Components
             Body = new PhysicsBody(
                 ConvertUnits.ToSimUnits(Math.Max(doorRect.Width, 1)),
                 ConvertUnits.ToSimUnits(Math.Max(doorRect.Height, 1)),
-                0.0f,
-                1.5f)
+                radius: 0.0f,
+                density: 1.5f,
+                BodyType.Static,
+                Physics.CollisionWall,
+                Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionCharacter | Physics.CollisionItemBlocking | Physics.CollisionProjectile,
+                findNewContacts: false)
             {
                 UserData = item,
-                CollisionCategories = Physics.CollisionWall,
-                BodyType = BodyType.Static,
                 Friction = 0.5f
             };
             Body.SetTransformIgnoreContacts(
@@ -258,12 +260,16 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override void Move(Vector2 amount)
+        public override void Move(Vector2 amount, bool ignoreContacts = false)
         {
-            base.Move(amount);
-            
-            Body?.SetTransform(Body.SimPosition + ConvertUnits.ToSimUnits(amount), 0.0f);
-
+            if (ignoreContacts)
+            {
+                Body?.SetTransformIgnoreContacts(Body.SimPosition + ConvertUnits.ToSimUnits(amount), 0.0f);
+            }
+            else
+            {
+                Body?.SetTransform(Body.SimPosition + ConvertUnits.ToSimUnits(amount), 0.0f);
+            }
 #if CLIENT
             UpdateConvexHulls();
 #endif

@@ -161,7 +161,7 @@ namespace Barotrauma.Items.Components
                     hullData.ReceivedWaterAmount = null;
                     if (fromWaterDetector)
                     {
-                        hullData.ReceivedWaterAmount = Math.Min(sourceHull.WaterVolume / sourceHull.Volume, 1.0f);
+                        hullData.ReceivedWaterAmount = WaterDetector.GetWaterPercentage(sourceHull);
                     }
                     foreach (var linked in sourceHull.linkedTo)
                     {
@@ -174,7 +174,7 @@ namespace Barotrauma.Items.Components
                         linkedHullData.ReceivedWaterAmount = null;
                         if (fromWaterDetector)
                         {
-                            linkedHullData.ReceivedWaterAmount = Math.Min(linkedHull.WaterVolume / linkedHull.Volume, 1.0f);
+                            linkedHullData.ReceivedWaterAmount = WaterDetector.GetWaterPercentage(linkedHull);
                         }
                     }
                     break;

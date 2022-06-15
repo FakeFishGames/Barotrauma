@@ -18,6 +18,23 @@ namespace Barotrauma.IO
             ".bat", ".sh", //shell scripts
         }.ToIdentifiers().ToImmutableArray();
 
+        public ref struct Skipper
+        {
+            public void Dispose()
+            {
+                SkipValidationInDebugBuilds = false;
+            }
+        }
+
+        /// <summary>
+        /// Skips validation for as long as the returned object remains in scope (remember to use using)
+        /// </summary>
+        public static Skipper SkipInDebugBuilds()
+        {
+            SkipValidationInDebugBuilds = true;
+            return new Skipper();
+        }
+
         /// <summary>
         /// When set to true, the game is allowed to modify the vanilla content in debug builds. Has no effect in non-debug builds.
         /// </summary>
@@ -429,8 +446,8 @@ namespace Barotrauma.IO
 
     public class FileStream : System.IO.Stream
     {
-        private System.IO.FileStream innerStream;
-        private string fileName;
+        private readonly System.IO.FileStream innerStream;
+        private readonly string fileName;
 
         public FileStream(string fn, System.IO.FileStream stream)
         {
@@ -496,9 +513,9 @@ namespace Barotrauma.IO
             innerStream.Flush();
         }
 
-        protected override void Dispose(bool disposing)
+        protected override void Dispose(bool notCalledByFinalizer)
         {
-            innerStream.Dispose();
+            if (notCalledByFinalizer) { innerStream.Dispose(); }
         }
     }
 

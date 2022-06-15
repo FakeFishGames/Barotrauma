@@ -81,9 +81,16 @@ namespace Barotrauma
                 }
                 catch (System.IO.FileNotFoundException e)
                 {
-                    string errorMsg = "Failed to load sound file \"" + filename + "\".";
+                    string errorMsg = "Failed to load sound file \"" + filename + "\" (file not found).";
                     DebugConsole.ThrowError(errorMsg, e);
                     GameAnalyticsManager.AddErrorEventOnce("RoundSound.LoadRoundSound:FileNotFound" + filename, GameAnalyticsManager.ErrorSeverity.Error, errorMsg + "\n" + Environment.StackTrace.CleanupStackTrace());
+                    return null;
+                }
+                catch (System.IO.InvalidDataException e)
+                {
+                    string errorMsg = "Failed to load sound file \"" + filename + "\" (invalid data).";
+                    DebugConsole.ThrowError(errorMsg, e);
+                    GameAnalyticsManager.AddErrorEventOnce("RoundSound.LoadRoundSound:InvalidData" + filename, GameAnalyticsManager.ErrorSeverity.Error, errorMsg + "\n" + Environment.StackTrace.CleanupStackTrace());
                     return null;
                 }
             }

@@ -45,6 +45,12 @@ namespace Barotrauma
                     bool matchingElementFound = false;
                     foreach (var subElement in element.Elements())
                     {
+                        if (replacementSubElement.Name.ToString().Equals("clear", StringComparison.OrdinalIgnoreCase))
+                        {
+                            matchingElementFound = true;
+                            elementsToRemove.AddRange(element.Elements());
+                            break;
+                        }
                         if (!subElement.Name.ToString().Equals(replacementSubElement.Name.ToString(), StringComparison.OrdinalIgnoreCase)) { continue; }
                         if (i == index)
                         {

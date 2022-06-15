@@ -102,29 +102,11 @@ namespace Barotrauma.Tutorials
             radioSpeakerName = TextManager.Get("Tutorial.Radio.Watchman");
             GameMain.GameSession.CrewManager.AllowCharacterSwitch = false;
 
-            var revolver = FindOrGiveItem(captain, "revolver".ToIdentifier());
-            revolver.Unequip(captain);
-            captain.Inventory.RemoveItem(revolver);
-
-            var captainscap = 
-                captain.Inventory.FindItemByIdentifier("captainscap1".ToIdentifier()) ??
-                captain.Inventory.FindItemByIdentifier("captainscap2".ToIdentifier()) ??
-                captain.Inventory.FindItemByIdentifier("captainscap3".ToIdentifier());
-
-            if (captainscap != null)
+            foreach (Item item in captain.Inventory.AllItemsMod)
             {
-                captainscap.Unequip(captain);
-                captain.Inventory.RemoveItem(captainscap);
-            }
-
-            var captainsuniform = 
-                captain.Inventory.FindItemByIdentifier("captainsuniform1".ToIdentifier()) ??
-                captain.Inventory.FindItemByIdentifier("captainsuniform2".ToIdentifier()) ??
-                captain.Inventory.FindItemByIdentifier("captainsuniform3".ToIdentifier());
-            if (captainsuniform != null)
-            {
-                captainsuniform.Unequip(captain);
-                captain.Inventory.RemoveItem(captainsuniform);
+                if (item.HasTag("identitycard") || item.HasTag("mobileradio")) { continue; }
+                item.Unequip(captain);
+                captain.Inventory.RemoveItem(item);
             }
 
             var steerOrder = OrderPrefab.Prefabs["steer"];

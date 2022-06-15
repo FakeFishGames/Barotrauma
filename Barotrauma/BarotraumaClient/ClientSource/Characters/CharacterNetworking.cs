@@ -551,6 +551,7 @@ namespace Barotrauma
             {
                 bool hasOwner = inc.ReadBoolean();
                 int ownerId = hasOwner ? inc.ReadByte() : -1;
+                float humanPrefabHealthMultiplier = inc.ReadSingle();
                 int balance = inc.ReadInt32();
                 int rewardDistribution = inc.ReadRangedInteger(0, 100);
                 byte teamID = inc.ReadByte();
@@ -573,6 +574,7 @@ namespace Barotrauma
                 {
                     character.MerchantIdentifier = inc.ReadIdentifier();
                 }
+                character.HumanPrefabHealthMultiplier = humanPrefabHealthMultiplier;
                 character.Wallet.Balance = balance;
                 character.Wallet.RewardDistribution = rewardDistribution;
                 if (character.CampaignInteractionType != CampaignMode.InteractionType.None)
@@ -648,6 +650,8 @@ namespace Barotrauma
 
                     GameMain.LightManager.LosEnabled = true;
                     GameMain.LightManager.LosAlpha = 1f;
+
+                    GameMain.NetLobbyScreen.CampaignCharacterDiscarded = false;
 
                     character.memInput.Clear();
                     character.memState.Clear();

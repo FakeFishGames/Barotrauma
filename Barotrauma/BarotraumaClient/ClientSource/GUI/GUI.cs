@@ -24,15 +24,17 @@ namespace Barotrauma
         ChatMessage,
         RadioMessage,
         DeadMessage,
-        Click,
+        Select,
         PickItem,
         PickItemFail,
         DropItem,
         PopupMenu,
-        DecreaseQuantity,
-        IncreaseQuantity,
-        HireRepairClick,
-        UISwitch
+        Decrease,
+        Increase,
+        UISwitch,
+        TickBox,
+        ConfirmTransaction,
+        Cart,
     }
 
     public enum CursorState
@@ -301,6 +303,7 @@ namespace Barotrauma
                 }
 
                 float startY = 10.0f;
+                float yStep = AdjustForTextScale(18) * yScale;
                 if (GameMain.ShowFPS || GameMain.DebugDraw || GameMain.ShowPerf)
                 {
                     float y = startY;
@@ -309,10 +312,37 @@ namespace Barotrauma
                         Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
                     if (GameMain.GameSession != null && Timing.TotalTime > GameMain.GameSession.RoundStartTime + 1.0)
                     {
-                        y += AdjustForTextScale(15) * yScale;
+                        y += yStep;
                         DrawString(spriteBatch, new Vector2(10, y),
                             $"Physics: {GameMain.CurrentUpdateRate}",
                             (GameMain.CurrentUpdateRate < Timing.FixedUpdateRate) ? Color.Red : Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
+                    }
+                    if (GameMain.DebugDraw || GameMain.ShowPerf)
+                    {
+                        y += yStep;
+                        DrawString(spriteBatch, new Vector2(10, y),
+                            "Active lights: " + Lights.LightManager.ActiveLightCount,
+                            Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
+                        y += yStep;
+                        DrawString(spriteBatch, new Vector2(10, y),
+                            "Physics: " + GameMain.World.UpdateTime.TotalMilliseconds + " ms",
+                            Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
+                        y += yStep;
+                        try
+                        {
+                            DrawString(spriteBatch, new Vector2(10, y),
+                                $"Bodies: {GameMain.World.BodyList.Count} ({GameMain.World.BodyList.Count(b => b != null && b.Awake && b.Enabled)} awake, {GameMain.World.BodyList.Count(b => b != null && b.Awake && b.BodyType == BodyType.Dynamic && b.Enabled)} dynamic)",
+                                Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            DebugConsole.AddWarning("Exception while rendering debug info. Physics bodies may have been created or removed while rendering.");
+                        }
+                        y += yStep;
+                        DrawString(spriteBatch, new Vector2(10, y),
+                            "Particle count: " + GameMain.ParticleManager.ParticleCount + "/" + GameMain.ParticleManager.MaxParticles,
+                            Color.Lerp(GUIStyle.Green, GUIStyle.Red, (GameMain.ParticleManager.ParticleCount / (float)GameMain.ParticleManager.MaxParticles)), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
+
                     }
                 }
 
@@ -324,67 +354,53 @@ namespace Barotrauma
                         "Draw - Avg: " + GameMain.PerformanceCounter.DrawTimeGraph.Average().ToString("0.00") + " ms" +
                         " Max: " + GameMain.PerformanceCounter.DrawTimeGraph.LargestValue().ToString("0.00") + " ms",
                         GUIStyle.Green, Color.Black * 0.8f, font: GUIStyle.SmallFont);
-                        y += 15 * yScale;
+                        y += yStep;
                     GameMain.PerformanceCounter.DrawTimeGraph.Draw(spriteBatch, new Rectangle((int)x, (int)y, 170, 50), color: GUIStyle.Green);
-                    y += 50 * yScale;
+                    y += yStep * 4;
 
                     DrawString(spriteBatch, new Vector2(x, y),
                         "Update - Avg: " + GameMain.PerformanceCounter.UpdateTimeGraph.Average().ToString("0.00") + " ms" +
                         " Max: " + GameMain.PerformanceCounter.UpdateTimeGraph.LargestValue().ToString("0.00") + " ms",
                         Color.LightBlue, Color.Black * 0.8f, font: GUIStyle.SmallFont);
-                    y += 15 * yScale;
+                    y += yStep;
                     GameMain.PerformanceCounter.UpdateTimeGraph.Draw(spriteBatch, new Rectangle((int)x, (int)y, 170, 50), color: Color.LightBlue);
-                    y += 50 * yScale;
-                    foreach (string key in GameMain.PerformanceCounter.GetSavedIdentifiers)
+                    y += yStep * 4;
+                    foreach (string key in GameMain.PerformanceCounter.GetSavedIdentifiers.OrderBy(i => i))
                     {
                         float elapsedMillisecs = GameMain.PerformanceCounter.GetAverageElapsedMillisecs(key);
-                        DrawString(spriteBatch, new Vector2(x, y),
-                            key + ": " + elapsedMillisecs.ToString("0.00"),
-                            Color.Lerp(Color.LightGreen, GUIStyle.Red, elapsedMillisecs / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                        y += 15 * yScale;
-                        foreach (string childKey in GameMain.PerformanceCounter.GetSavedPartialIdentifiers(key))
-                        {
-                            elapsedMillisecs = GameMain.PerformanceCounter.GetPartialAverageElapsedMillisecs(key, childKey);
-                            DrawString(spriteBatch, new Vector2(x + 15, y),
-                                childKey + ": " + elapsedMillisecs.ToString("0.00"),
-                                Color.Lerp(Color.LightGreen, GUIStyle.Red, elapsedMillisecs / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                            y += 15 * yScale;
-                        }
-                    }
 
+                        int categoryDepth = key.Count(c => c == ':');
+                        //color the more fine-grained counters red more easily (ok for the whole Update to take a longer time than specific part of the update)
+                        float runningSlowThreshold = 10.0f / categoryDepth;
+                        DrawString(spriteBatch, new Vector2(x + categoryDepth * 15, y),
+                            key.Split(':').Last() + ": " + elapsedMillisecs.ToString("0.00"),
+                            ToolBox.GradientLerp(elapsedMillisecs / runningSlowThreshold, Color.LightGreen, GUIStyle.Yellow, GUIStyle.Orange, GUIStyle.Red, Color.Magenta), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
+                        y += yStep;
+                    }
                     if (Powered.Grids != null)
                     {
                         DrawString(spriteBatch, new Vector2(x, y), "Grids: " + Powered.Grids.Count, Color.LightGreen, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                        y += 15 * yScale;
+                        y += yStep;
                     }
-
                     if (Settings.EnableDiagnostics)
                     {
-                        x += 20 * xScale;
-                        DrawString(spriteBatch, new Vector2(x, y), "ContinuousPhysicsTime: " + GameMain.World.ContinuousPhysicsTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.ContinuousPhysicsTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                        DrawString(spriteBatch, new Vector2(x, y + 15 * yScale), "ControllersUpdateTime: " + GameMain.World.ControllersUpdateTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.ControllersUpdateTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                        DrawString(spriteBatch, new Vector2(x, y + 30 * yScale), "AddRemoveTime: " + GameMain.World.AddRemoveTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.AddRemoveTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                        DrawString(spriteBatch, new Vector2(x, y + 45 * yScale), "NewContactsTime: " + GameMain.World.NewContactsTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.NewContactsTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                        DrawString(spriteBatch, new Vector2(x, y + 60 * yScale), "ContactsUpdateTime: " + GameMain.World.ContactsUpdateTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.ContactsUpdateTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                        DrawString(spriteBatch, new Vector2(x, y + 75 * yScale), "SolveUpdateTime: " + GameMain.World.SolveUpdateTime.TotalMilliseconds, Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.SolveUpdateTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
+                        x += yStep * 2;
+                        DrawString(spriteBatch, new Vector2(x, y), "ContinuousPhysicsTime: " + GameMain.World.ContinuousPhysicsTime.TotalMilliseconds.ToString("0.00"), Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.ContinuousPhysicsTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
+                        DrawString(spriteBatch, new Vector2(x, y + yStep), "ControllersUpdateTime: " + GameMain.World.ControllersUpdateTime.TotalMilliseconds.ToString("0.00"), Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.ControllersUpdateTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
+                        DrawString(spriteBatch, new Vector2(x, y + yStep * 2), "AddRemoveTime: " + GameMain.World.AddRemoveTime.TotalMilliseconds.ToString("0.00"), Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.AddRemoveTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
+                        DrawString(spriteBatch, new Vector2(x, y + yStep * 3), "NewContactsTime: " + GameMain.World.NewContactsTime.TotalMilliseconds.ToString("0.00"), Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.NewContactsTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
+                        DrawString(spriteBatch, new Vector2(x, y + yStep * 4), "ContactsUpdateTime: " + GameMain.World.ContactsUpdateTime.TotalMilliseconds.ToString("0.00"), Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.ContactsUpdateTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
+                        DrawString(spriteBatch, new Vector2(x, y + yStep * 5), "SolveUpdateTime: " + GameMain.World.SolveUpdateTime.TotalMilliseconds.ToString("0.00"), Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)GameMain.World.SolveUpdateTime.TotalMilliseconds / 10.0f), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
                     }
                 }
 
                 if (GameMain.DebugDraw && !Submarine.Unloading && !(Screen.Selected is RoundSummaryScreen))
                 {
-                    float y = startY + 15 * yScale;
-                    DrawString(spriteBatch, new Vector2(10, y),
-                        "Physics: " + GameMain.World.UpdateTime,
-                        Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-
-                    y += 15 * yScale;
-                    DrawString(spriteBatch, new Vector2(10, y),
-                        $"Bodies: {GameMain.World.BodyList.Count} ({GameMain.World.BodyList.Count(b => b != null && b.Awake && b.Enabled)} awake, {GameMain.World.BodyList.Count(b => b != null && b.Awake && b.BodyType == BodyType.Dynamic && b.Enabled)} dynamic)",
-                        Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
+                    float y = startY + yStep * 6;
 
                     if (Screen.Selected.Cam != null)
                     {
-                        y += 15 * yScale;
+                        y += yStep;
                         DrawString(spriteBatch, new Vector2(10, y),
                             "Camera pos: " + Screen.Selected.Cam.Position.ToPoint() + ", zoom: " + Screen.Selected.Cam.Zoom,
                             Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
@@ -392,23 +408,18 @@ namespace Barotrauma
 
                     if (Submarine.MainSub != null)
                     {
-                        y += 15 * yScale;
+                        y += yStep;
                         DrawString(spriteBatch, new Vector2(10, y),
                             "Sub pos: " + Submarine.MainSub.Position.ToPoint(),
                             Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
                     }
-
-                    y += 20 * yScale;
-                    DrawString(spriteBatch, new Vector2(10, y),
-                        "Particle count: " + GameMain.ParticleManager.ParticleCount + "/" + GameMain.ParticleManager.MaxParticles,
-                        Color.Lerp(GUIStyle.Green, GUIStyle.Red, (GameMain.ParticleManager.ParticleCount / (float)GameMain.ParticleManager.MaxParticles)), Color.Black * 0.5f, 0, GUIStyle.SmallFont);
 
                     if (loadedSpritesText == null || DateTime.Now > loadedSpritesUpdateTime)
                     {
                         loadedSpritesText = "Loaded sprites: " + Sprite.LoadedSprites.Count() + "\n(" + Sprite.LoadedSprites.Select(s => s.FilePath).Distinct().Count() + " unique textures)";
                         loadedSpritesUpdateTime = DateTime.Now + new TimeSpan(0, 0, seconds: 5);
                     }
-                    y += 25 * yScale;
+                    y += yStep * 2;
                     DrawString(spriteBatch, new Vector2(10, y), loadedSpritesText, Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
 
                     if (debugDrawSounds)
@@ -416,21 +427,21 @@ namespace Barotrauma
                         float soundTextY = 0;
                         DrawString(spriteBatch, new Vector2(500, soundTextY),
                             "Sounds (Ctrl+S to hide): ", Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                        soundTextY += 15 * yScale;
+                        soundTextY += yStep;
 
                         DrawString(spriteBatch, new Vector2(500, soundTextY),
                             "Current playback amplitude: " + GameMain.SoundManager.PlaybackAmplitude.ToString(), Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
 
-                        soundTextY += 15 * yScale;
+                        soundTextY += yStep;
 
                         DrawString(spriteBatch, new Vector2(500, soundTextY),
                             "Compressed dynamic range gain: " + GameMain.SoundManager.CompressionDynamicRangeGain.ToString(), Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
 
-                        soundTextY += 15 * yScale;
+                        soundTextY += yStep;
 
                         DrawString(spriteBatch, new Vector2(500, soundTextY),
                             "Loaded sounds: " + GameMain.SoundManager.LoadedSoundCount + " (" + GameMain.SoundManager.UniqueLoadedSoundCount + " unique)", Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                        soundTextY += 15 * yScale;
+                        soundTextY += yStep;
 
                         for (int i = 0; i < SoundManager.SOURCE_COUNT; i++)
                         {
@@ -479,7 +490,7 @@ namespace Barotrauma
                             }
 
                             DrawString(spriteBatch, new Vector2(500, soundTextY), soundStr, clr, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                            soundTextY += 15 * yScale;
+                            soundTextY += yStep;
                         }
                     }
                     else
@@ -1981,7 +1992,7 @@ namespace Barotrauma
                 var element = new GUIFrame(new RectTransform(new Vector2(0.22f, 1), inputArea.RectTransform) { MinSize = new Point(50, 0), MaxSize = new Point(150, 50) }, style: null);
                 new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), RectComponentLabels[i], font: font, textAlignment: Alignment.CenterLeft);
                 GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight),
-                    GUINumberInput.NumberType.Int)
+                    NumberType.Int)
                 {
                     Font = font
                 };
@@ -2025,7 +2036,7 @@ namespace Barotrauma
                 var element = new GUIFrame(new RectTransform(new Vector2(0.45f, 1), inputArea.RectTransform), style: null);
                 new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), VectorComponentLabels[i], font: GUIStyle.SmallFont, textAlignment: Alignment.CenterLeft);
                 GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight),
-                    GUINumberInput.NumberType.Int)
+                    NumberType.Int)
                 {
                     Font = GUIStyle.SmallFont
                 };
@@ -2055,7 +2066,7 @@ namespace Barotrauma
             {
                 var element = new GUIFrame(new RectTransform(new Vector2(0.45f, 1), inputArea.RectTransform), style: null);
                 new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), VectorComponentLabels[i], font: font, textAlignment: Alignment.CenterLeft);
-                GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight), GUINumberInput.NumberType.Float) { Font = font };
+                GUINumberInput numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight), NumberType.Float) { Font = font };
                 switch (i)
                 {
                     case 0:
@@ -2369,7 +2380,7 @@ namespace Barotrauma
                 CreateButton("PauseMenuResume", buttonContainer, null);
                 CreateButton("PauseMenuSettings", buttonContainer, () => SettingsMenuOpen = true);
 
-                bool IsOutpostLevel() => GameMain.GameSession != null && Level.IsLoadedOutpost;
+                bool IsFriendlyOutpostLevel() => GameMain.GameSession != null && Level.IsLoadedFriendlyOutpost;
                 if (Screen.Selected == GameMain.GameScreen && GameMain.GameSession != null)
                 {
                     if (GameMain.GameSession.GameMode is SinglePlayerCampaign spMode)
@@ -2384,11 +2395,11 @@ namespace Barotrauma
                             GameMain.GameSession.LoadPreviousSave();
                         });
 
-                        if (IsOutpostLevel())
+                        if (IsFriendlyOutpostLevel())
                         {
                             CreateButton("PauseMenuSaveQuit", buttonContainer, verificationTextTag: "PauseMenuSaveAndReturnToMainMenuVerification", action: () =>
                             {
-                                if (IsOutpostLevel()) { GameMain.QuitToMainMenu(save: true); }
+                                if (IsFriendlyOutpostLevel()) { GameMain.QuitToMainMenu(save: true); }
                             });
                         }
                     }
@@ -2401,7 +2412,7 @@ namespace Barotrauma
                     }
                     else if (!GameMain.GameSession.GameMode.IsSinglePlayer && GameMain.Client != null && GameMain.Client.HasPermission(ClientPermissions.ManageRound))
                     {
-                        bool canSave = GameMain.GameSession.GameMode is CampaignMode && IsOutpostLevel();
+                        bool canSave = GameMain.GameSession.GameMode is CampaignMode && IsFriendlyOutpostLevel();
                         if (canSave)
                         {
                             CreateButton("PauseMenuSaveQuit", buttonContainer, verificationTextTag: "PauseMenuSaveAndReturnToServerLobbyVerification", action: () =>

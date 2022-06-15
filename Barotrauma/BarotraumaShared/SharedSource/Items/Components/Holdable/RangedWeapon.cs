@@ -79,7 +79,7 @@ namespace Barotrauma.Items.Components
         {
             get
             {
-                Matrix bodyTransform = Matrix.CreateRotationZ(item.body == null ? MathHelper.ToRadians(item.Rotation) : item.body.Rotation);
+                Matrix bodyTransform = Matrix.CreateRotationZ(item.body == null ? item.RotationRad : item.body.Rotation);
                 Vector2 flippedPos = barrelPos;
                 if (item.body != null && item.body.Dir < 0.0f) { flippedPos.X = -flippedPos.X; }
                 return Vector2.Transform(flippedPos, bodyTransform) * item.Scale;

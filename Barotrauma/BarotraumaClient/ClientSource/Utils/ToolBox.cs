@@ -404,7 +404,7 @@ namespace Barotrauma
 
         public static string LimitString(string str, ScalableFont font, int maxWidth)
         {
-            if (maxWidth <= 0 || string.IsNullOrWhiteSpace(str)) return "";
+            if (maxWidth <= 0 || string.IsNullOrWhiteSpace(str)) { return ""; }
 
             float currWidth = font.MeasureString("...").X;
             for (int i = 0; i < str.Length; i++)

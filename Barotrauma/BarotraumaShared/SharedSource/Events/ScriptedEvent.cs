@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -12,6 +11,7 @@ namespace Barotrauma
         private readonly Dictionary<Identifier, List<Entity>> cachedTargets = new Dictionary<Identifier, List<Entity>>();
         private int prevEntityCount;
         private int prevPlayerCount, prevBotCount;
+        private Character prevControlled;
 
         private readonly string[] requiredDestinationTypes;
         public readonly bool RequireBeaconStation;
@@ -163,24 +163,25 @@ namespace Barotrauma
                     botCount++;
                 }
             }
-            if (Entity.EntityCount != prevEntityCount || botCount != prevBotCount || playerCount != prevPlayerCount)
+            if (Entity.EntityCount != prevEntityCount || botCount != prevBotCount || playerCount != prevPlayerCount || prevControlled != Character.Controlled)
             {
                 cachedTargets.Clear();
                 prevEntityCount = Entity.EntityCount;
                 prevBotCount = botCount;
                 prevPlayerCount = playerCount;
+                prevControlled = Character.Controlled;
             }
             
             if (!Actions.Any())
             {
-                Finished();
+                Finish();
                 return;
             }
 
             var currentAction = Actions[CurrentActionIndex];
             if (!currentAction.CanBeFinished())
             {
-                Finished();
+                Finish();
                 return;
             }
 
@@ -207,7 +208,7 @@ namespace Barotrauma
 
                 if (CurrentActionIndex >= Actions.Count || CurrentActionIndex < 0)
                 {
-                    Finished();
+                    Finish();
                 }
             }
             else
@@ -232,9 +233,9 @@ namespace Barotrauma
             return false;
         }
 
-        public override void Finished()
+        public override void Finish()
         {
-            base.Finished();
+            base.Finish();
             GameAnalyticsManager.AddDesignEvent($"ScriptedEvent:{prefab.Identifier}:Finished:{CurrentActionIndex}");
         }
     }
