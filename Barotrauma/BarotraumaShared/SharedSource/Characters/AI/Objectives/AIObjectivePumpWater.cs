@@ -31,8 +31,9 @@ namespace Barotrauma
             if (!pump.Item.IsInteractable(character)) { return false; }
             if (pump.IsAutoControlled) { return false; }
             if (pump.Item.ConditionPercentage <= 0) { return false; }
+            if (pump.Item.CurrentHull == null) { return false; }
             if (pump.Item.CurrentHull.FireSources.Count > 0) { return false; }
-            if (character.Submarine != null)
+            if (character.Submarine != null && pump.Item.Submarine != null)
             {
                 if (!character.Submarine.IsConnectedTo(pump.Item.Submarine)) { return false; }
             }

@@ -1,4 +1,18 @@
 ---------------------------------------------------------------------------------------------------------
+v0.18.12.0
+---------------------------------------------------------------------------------------------------------
+
+- Fixed medical doctor tutorial throwing an error and freezing in most languages other than English.
+- Fixed occasional disconnects with the error "the given key was not present in the dictionary" when giving orders or reporting things in multiplayer.
+- Fixed occasional crashes caused by AIObjectivePumpWater.
+- Fixed certain looping item sounds (oxygen generators, vents, reactor) being too quiet to hear.
+- Fixed one of texts not appearing in the "captive souls" event.
+- Fixed inability to fabricate rubber shells.
+
+Modding:
+- Fixed crashing when a MonsterEvent fails to find the character prefab.
+
+---------------------------------------------------------------------------------------------------------
 v0.18.11.0
 ---------------------------------------------------------------------------------------------------------
 

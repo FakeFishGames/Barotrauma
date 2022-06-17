@@ -532,7 +532,13 @@ namespace Barotrauma
                             }
                         }
 
-                        Character createdCharacter = Character.Create(SpeciesName, pos, seed, characterInfo: null, isRemotePlayer: false, hasAi: true, createNetworkEvent: true);
+                        Character createdCharacter = Character.Create(SpeciesName, pos, seed, characterInfo: null, isRemotePlayer: false, hasAi: true, createNetworkEvent: true, throwErrorIfNotFound: false);
+                        if (createdCharacter == null)
+                        {
+                            disallowed = true;
+                            return;
+                        }
+                        
                         var eventManager = GameMain.GameSession.EventManager;
                         if (eventManager != null)
                         {
