@@ -156,5 +156,42 @@ namespace Barotrauma
                 }
             }
         }
+
+        public static void Create(ItemPrefab itemPrefab)
+        {
+            Vector2 size = itemPrefab.Sprite.size;
+            DebugConsole.NewMessage("Image size: " + size.X + "x" + size.Y);
+
+            Item item = new Item(itemPrefab, size / 2, null);
+
+            float zoom = 1 / itemPrefab.Scale;
+            using Camera cam = new Camera();
+            cam.SetResolution(size.ToPoint());
+            cam.Zoom = zoom;
+            cam.Position = size / 2;
+            cam.UpdateTransform(false);
+
+            int width = (int)size.X; int height = (int)size.Y;
+
+            using (RenderTarget2D rt = new RenderTarget2D(GameMain.Instance.GraphicsDevice, width, height, false, SurfaceFormat.Color, DepthFormat.None))
+            using (SpriteBatch spriteBatch = new SpriteBatch(GameMain.Instance.GraphicsDevice))
+            {  
+                Viewport prevViewport = GameMain.Instance.GraphicsDevice.Viewport;
+                GameMain.Instance.GraphicsDevice.Viewport = new Viewport(0, -height, width, height);
+                GameMain.Instance.GraphicsDevice.SetRenderTarget(rt);
+                GameMain.Instance.GraphicsDevice.Clear(Color.Transparent);
+
+                spriteBatch.Begin(transformMatrix: cam.Transform);
+                item.Draw(spriteBatch, false, false);
+                spriteBatch.End();
+
+                GameMain.Instance.GraphicsDevice.SetRenderTarget(null);
+                GameMain.Instance.GraphicsDevice.Viewport = prevViewport;
+                using (FileStream fs = File.Open("wikiimage.png", System.IO.FileMode.Create))
+                {
+                    rt.SaveAsPng(fs, width, height);
+                }
+            }
+        }
     }
 }

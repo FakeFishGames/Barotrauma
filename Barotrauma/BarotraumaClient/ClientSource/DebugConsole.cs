@@ -672,11 +672,31 @@ namespace Barotrauma
                 MapEntity.mapEntityList.ForEach(me => me.IsHighlighted = false);
                 WikiImage.Create(Submarine.MainSub);
             }));
-            
-            commands.Add(new Command("wikiimage_item", "Output the cropped sprite of the provided item to wikiimage.png.", (string[] args) =>
+
+            commands.Add(new Command("wikiimage_item", "wikiimage_item [itemname/itemidentifier]: Save an image of the provided item.", (string[] args) =>
             {
-                if (args.Length == 0) return;
-                WikiImage.Create(Item.Item);
+                string errorMsg = "";
+                if (args.Length == 0) { return; }
+                string itemNameOrId = args[0].ToLowerInvariant();
+                ItemPrefab itemPrefab =
+                    (MapEntityPrefab.FindByName(itemNameOrId) ??
+                    MapEntityPrefab.FindByIdentifier(itemNameOrId.ToIdentifier())) as ItemPrefab;
+                if (itemPrefab == null)
+                {
+                    errorMsg = "Item \"" + itemNameOrId + "\" not found!";
+                    var matching = ItemPrefab.Prefabs.Find(me => me.Name.StartsWith(itemNameOrId, StringComparison.OrdinalIgnoreCase) && me is ItemPrefab);
+                    if (matching != null)
+                    {
+                        errorMsg += $" Did you mean \"{matching.Name}\"?";
+                        if (matching.Name.Contains(" "))
+                        {
+                            errorMsg += $" Please note that you should surround multi-word names with quotation marks (e.q. spawnitem \"{matching.Name}\")";
+                        }
+                    }
+                    DebugConsole.NewMessage(errorMsg);
+                    return;
+                }
+                WikiImage.Create(itemPrefab);
             }));
 
             AssignRelayToServer("kick", false);
