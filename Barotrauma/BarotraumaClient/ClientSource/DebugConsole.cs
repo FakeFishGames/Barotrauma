@@ -253,6 +253,7 @@ namespace Barotrauma
                 case "unbindkey":
                 case "wikiimage_character":
                 case "wikiimage_sub":
+                case "wikiimage_item":
                     return true;
                 default:
                     return client.HasConsoleCommandPermission(command);
@@ -670,6 +671,12 @@ namespace Barotrauma
                 MapEntity.SelectedList.Clear();
                 MapEntity.mapEntityList.ForEach(me => me.IsHighlighted = false);
                 WikiImage.Create(Submarine.MainSub);
+            }));
+            
+            commands.Add(new Command("wikiimage_item", "Output the cropped sprite of the provided item to wikiimage.png.", (string[] args) =>
+            {
+                if (args.Length == 0) return;
+                WikiImage.Create(Item.Item);
             }));
 
             AssignRelayToServer("kick", false);
