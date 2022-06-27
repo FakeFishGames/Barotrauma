@@ -697,6 +697,21 @@ namespace Barotrauma
                     return;
                 }
                 WikiImage.Create(itemPrefab);
+            },
+            () =>
+            {
+                List<string> itemNames = new List<string>();
+                foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
+                {
+                    if (!itemNames.Contains(itemPrefab.Name.Value))
+                    {
+                        itemNames.Add(itemPrefab.Name.Value);
+                    }
+                }
+                return new string[][]
+                {
+                    itemNames.ToArray()
+                };
             }));
 
             AssignRelayToServer("kick", false);
