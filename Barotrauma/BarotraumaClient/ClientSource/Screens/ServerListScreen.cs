@@ -1764,7 +1764,7 @@ namespace Barotrauma
             if (serverInfo.OwnerVerified)
             {
                 var childrenToRemove = serverList.Content.FindChildren(c => (c.UserData is ServerInfo info) && info != serverInfo &&
-                                                                            (serverInfo.OwnerID != 0 ? info.OwnerID == serverInfo.OwnerID : info.IP == serverInfo.IP)).ToList();
+                                                                            (serverInfo.OwnerID != 0 ? info.OwnerID == serverInfo.OwnerID : info.IP == serverInfo.IP && info.Port == serverInfo.Port)).ToList();
                 foreach (var child in childrenToRemove)
                 {
                     serverList.Content.RemoveChild(child);
