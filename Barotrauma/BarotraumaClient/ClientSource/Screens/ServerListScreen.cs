@@ -81,7 +81,7 @@ namespace Barotrauma
         private List<ServerInfo> favoriteServers;
         private List<ServerInfo> recentServers;
 
-        private readonly Dictionary<string, int> activePings = new Dictionary<string, int>();
+        private readonly Dictionary<ServerInfo, int> activePings = new Dictionary<ServerInfo, int>();
 
         private enum ServerListTab
         {
@@ -2041,14 +2041,14 @@ namespace Barotrauma
 
             lock (activePings)
             {
-                if (activePings.ContainsKey(serverInfo.IP)) { return; }
-                activePings.Add(serverInfo.IP, activePings.Any() ? activePings.Values.Max()+1 : 0);
+                if (activePings.ContainsKey(serverInfo)) { return; }
+                activePings.Add(serverInfo, activePings.Any() ? activePings.Values.Max()+1 : 0);
             }
 
             serverInfo.PingChecked = false;
             serverInfo.Ping = -1;
 
-            TaskPool.Add($"PingServerAsync ({serverInfo?.IP ?? "NULL"})", PingServerAsync(serverInfo.IP, 1000),
+            TaskPool.Add($"PingServerAsync ({serverInfo?.IP ?? "NULL"})", PingServerAsync(serverInfo, 1000),
                 new Tuple<ServerInfo, GUITextBlock>(serverInfo, serverPingText),
                 (rtt, obj) =>
                 {
@@ -2059,7 +2059,7 @@ namespace Barotrauma
                     text.Text = info.Ping > -1 ? info.Ping.ToString() : "?";
                     lock (activePings)
                     {
-                        activePings.Remove(info.IP);
+                        activePings.Remove(info);
                     }
                 });
         }
@@ -2070,7 +2070,7 @@ namespace Barotrauma
             return ToolBox.GradientLerp(ping / 200.0f, GUIStyle.Green, GUIStyle.Orange, GUIStyle.Red);
         }
 
-        public async Task<int> PingServerAsync(string ip, int timeOut)
+        public async Task<int> PingServerAsync(ServerInfo serverInfo, int timeOut)
         {
             await Task.Yield();
             bool shouldGo = false;
@@ -2078,19 +2078,19 @@ namespace Barotrauma
             {
                 lock (activePings)
                 {
-                    shouldGo = activePings.Count(kvp => kvp.Value < activePings[ip]) < 25;
+                    shouldGo = activePings.Count(kvp => kvp.Value < activePings[serverInfo]) < 25;
                 }
                 await Task.Delay(25);
             }
 
-            if (string.IsNullOrWhiteSpace(ip))
+            if (string.IsNullOrWhiteSpace(serverInfo.IP))
             {
                 return -1;
             }
 
             long rtt = -1;
             IPAddress address = null;
-            IPAddress.TryParse(ip, out address);
+            IPAddress.TryParse(serverInfo.IP, out address);
             if (address != null)
             {
                 //don't attempt to ping if the address is IPv6 and it's not supported
@@ -2117,9 +2117,9 @@ namespace Barotrauma
                     }
                     catch (Exception ex)
                     {
-                        GameAnalyticsManager.AddErrorEventOnce("ServerListScreen.PingServer:PingException" + ip, GameAnalyticsManager.ErrorSeverity.Warning, "Failed to ping a server - " + (ex?.InnerException?.Message ?? ex.Message));
+                        GameAnalyticsManager.AddErrorEventOnce("ServerListScreen.PingServer:PingException" + serverInfo.IP, GameAnalyticsManager.ErrorSeverity.Warning, "Failed to ping a server - " + (ex?.InnerException?.Message ?? ex.Message));
 #if DEBUG
-                        DebugConsole.NewMessage("Failed to ping a server (" + ip + ") - " + (ex?.InnerException?.Message ?? ex.Message), Color.Red);
+                        DebugConsole.NewMessage("Failed to ping a server (" + serverInfo.IP + ") - " + (ex?.InnerException?.Message ?? ex.Message), Color.Red);
 #endif
                     }
                 }
