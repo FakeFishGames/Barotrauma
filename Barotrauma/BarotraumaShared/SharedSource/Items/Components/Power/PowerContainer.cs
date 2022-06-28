@@ -111,14 +111,7 @@ namespace Barotrauma.Items.Components
             {
                 if (!MathUtils.IsValid(value)) return;
                 rechargeSpeed = MathHelper.Clamp(value, 0.0f, maxRechargeSpeed);
-                if (IsAutoControlled)
-                {
-                    rechargeSpeed = MathUtils.RoundTowardsClosest(rechargeSpeed, Math.Max(maxRechargeSpeed * 0.01f, 1.0f));
-                }
-                else
-                {
-                    rechargeSpeed = MathUtils.RoundTowardsClosest(rechargeSpeed, Math.Max(maxRechargeSpeed * 0.1f, 1.0f));
-                }
+                rechargeSpeed = MathUtils.RoundTowardsClosest(rechargeSpeed, Math.Max(maxRechargeSpeed * 0.01f, 1.0f));
                 if (isRunning)
                 {
                     HasBeenTuned = true;
