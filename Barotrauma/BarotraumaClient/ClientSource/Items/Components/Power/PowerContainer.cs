@@ -128,6 +128,10 @@ namespace Barotrauma.Items.Components
                 float chargeRatio = charge / capacity;
                 chargeIndicator.Color = ToolBox.GradientLerp(chargeRatio, Color.Red, Color.Orange, Color.Green);
             }
+            if (rechargeSpeedSlider != null)
+            {
+                rechargeSpeedSlider.Enabled = !IsAutoControlled;
+            }
         }
 
         public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
