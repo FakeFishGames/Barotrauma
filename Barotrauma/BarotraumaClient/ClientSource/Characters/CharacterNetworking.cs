@@ -685,6 +685,7 @@ namespace Barotrauma
                         causeOfDeathAffliction = AfflictionPrefab.Prefabs[afflictionName];
                     }
                 }
+                bool containsAfflictionData = msg.ReadBoolean();
                 if (!IsDead)
                 {
                     if (causeOfDeathType == CauseOfDeathType.Pressure || causeOfDeathAffliction == AfflictionPrefab.Pressure)
@@ -695,6 +696,11 @@ namespace Barotrauma
                     {
                         Kill(causeOfDeathType, causeOfDeathAffliction?.Instantiate(1.0f), true);
                     }
+                }                
+                if (containsAfflictionData)
+                {
+                    CharacterHealth.ClientRead(msg);
+                    CharacterHealth.ForceUpdateVisuals();
                 }
             }
             else

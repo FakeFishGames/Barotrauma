@@ -1030,21 +1030,30 @@ namespace Barotrauma
         /// <param name="hasAi">Is the character controlled by AI.</param>
         /// <param name="createNetworkEvent">Should clients receive a network event about the creation of this character?</param>
         /// <param name="ragdoll">Ragdoll configuration file. If null, will select the default.</param>
-        public static Character Create(string speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, ushort id = Entity.NullEntityID, bool isRemotePlayer = false, bool hasAi = true, bool createNetworkEvent = true, RagdollParams ragdoll = null)
+        public static Character Create(string speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, ushort id = Entity.NullEntityID, bool isRemotePlayer = false, bool hasAi = true, bool createNetworkEvent = true, RagdollParams ragdoll = null, bool throwErrorIfNotFound = true)
         {
             if (speciesName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
             {
                 speciesName = Path.GetFileNameWithoutExtension(speciesName);
             }
-            return Create(speciesName.ToIdentifier(), position, seed, characterInfo, id, isRemotePlayer, hasAi, createNetworkEvent, ragdoll);
+            return Create(speciesName.ToIdentifier(), position, seed, characterInfo, id, isRemotePlayer, hasAi, createNetworkEvent, ragdoll, throwErrorIfNotFound);
         }
 
-        public static Character Create(Identifier speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, ushort id = Entity.NullEntityID, bool isRemotePlayer = false, bool hasAi = true, bool createNetworkEvent = true, RagdollParams ragdoll = null)
+        public static Character Create(Identifier speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, ushort id = Entity.NullEntityID, bool isRemotePlayer = false, bool hasAi = true, bool createNetworkEvent = true, RagdollParams ragdoll = null, bool throwErrorIfNotFound = true)
         {
             var prefab = CharacterPrefab.FindBySpeciesName(speciesName);
             if (prefab == null)
             {
-                DebugConsole.ThrowError($"Failed to create character \"{speciesName}\". Matching prefab not found.\n" + Environment.StackTrace);
+                string errorMsg = $"Failed to create character \"{speciesName}\". Matching prefab not found.\n" + Environment.StackTrace;
+                if (throwErrorIfNotFound)
+                {
+                    DebugConsole.ThrowError(errorMsg);
+                }
+                else
+                {
+                    DebugConsole.AddWarning(errorMsg);
+                }
+
                 return null;
             }
             return Create(prefab, position, seed, characterInfo, id, isRemotePlayer, hasAi, createNetworkEvent, ragdoll);
@@ -1510,9 +1519,10 @@ namespace Barotrauma
 
             if (skillIdentifier != null)
             {
-                for (int i = 0; i < Inventory.Capacity; i++)
+                foreach (Item item in Inventory.AllItems)
                 {
-                    if (Inventory.SlotTypes[i] != InvSlotType.Any && Inventory.GetItemAt(i)?.GetComponent<Wearable>() is Wearable wearable)
+                    if (item?.GetComponent<Wearable>() is Wearable wearable &&
+                        !Inventory.IsInLimbSlot(item, InvSlotType.Any))
                     {
                         if (wearable.SkillModifiers.TryGetValue(skillIdentifier, out float skillValue))
                         {

@@ -326,6 +326,47 @@ namespace Barotrauma
             ReadyCheckButton?.AddToGUIUpdateList();
         }
 
+        protected void TryEndRoundWithFuelCheck(Action onConfirm, Action onReturnToMapScreen)
+        {
+            Submarine.MainSub.CheckFuel();
+            SubmarineInfo nextSub = PendingSubmarineSwitch ?? Submarine.MainSub.Info;
+            if (Level.IsLoadedFriendlyOutpost && nextSub.LowFuel && CargoManager.PurchasedItems.None(i => i.Value.Any(pi => pi.ItemPrefab.Tags.Contains("reactorfuel"))))
+            {
+                var extraConfirmationBox =
+                    new GUIMessageBox(TextManager.Get("lowfuelheader"),
+                    TextManager.Get("lowfuelwarning"),
+                    new LocalizedString[2] { TextManager.Get("ok"), TextManager.Get("cancel") });
+                extraConfirmationBox.Buttons[0].OnClicked = (b, o) => { Confirm(); return true; };
+                extraConfirmationBox.Buttons[0].OnClicked += extraConfirmationBox.Close;
+                extraConfirmationBox.Buttons[1].OnClicked = extraConfirmationBox.Close;
+            }
+            else
+            {
+                Confirm();
+            }
+
+            void Confirm()
+            {
+                var availableTransition = GetAvailableTransition(out _, out _);
+                if (Character.Controlled != null &&
+                    availableTransition == TransitionType.ReturnToPreviousLocation &&
+                    Character.Controlled?.Submarine == Level.Loaded?.StartOutpost)
+                {
+                    onConfirm();
+                }
+                else if (Character.Controlled != null &&
+                    availableTransition == TransitionType.ProgressToNextLocation &&
+                    Character.Controlled?.Submarine == Level.Loaded?.EndOutpost)
+                {
+                    onConfirm();
+                }
+                else
+                {
+                    onReturnToMapScreen();
+                }
+            }
+        }
+
         public override void Update(float deltaTime)
         {
             base.Update(deltaTime);

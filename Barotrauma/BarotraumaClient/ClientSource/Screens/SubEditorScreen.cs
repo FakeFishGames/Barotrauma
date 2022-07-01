@@ -1814,7 +1814,7 @@ namespace Barotrauma
             {
                 if (Submarine.GetLightCount() > MaxLights)
                 {
-                    new GUIMessageBox(TextManager.Get("error"), TextManager.GetWithVariable("subeditor.lightcounterror", "[max]", MaxShadowCastingLights.ToString()));
+                    new GUIMessageBox(TextManager.Get("error"), TextManager.GetWithVariable("subeditor.lightcounterror", "[max]", MaxLights.ToString()));
                     return false;
                 }
 
@@ -2522,6 +2522,27 @@ namespace Barotrauma
                 }
             };
 
+            var outFittingArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), subSettingsContainer.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+            {
+                Stretch = true,
+                AbsoluteSpacing = 5
+            };
+            new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), outFittingArea.RectTransform),
+                TextManager.Get("ManuallyOutfitted"), textAlignment: Alignment.CenterLeft, wrap: true, font: GUIStyle.SmallFont)
+            {
+                ToolTip = TextManager.Get("manuallyoutfittedtooltip")
+            };
+            new GUITickBox(new RectTransform((0.4f, 1.0f), outFittingArea.RectTransform), "")
+            {
+                ToolTip = TextManager.Get("manuallyoutfittedtooltip"),
+                Selected = MainSub.Info.IsManuallyOutfitted,
+                OnSelected = box =>
+                {
+                    MainSub.Info.IsManuallyOutfitted = box.Selected;
+                    return true;
+                }
+            };
+
             if (MainSub != null)
             {
                 int min =  MainSub.Info.RecommendedCrewSizeMin;
@@ -2824,7 +2845,7 @@ namespace Barotrauma
             };
 
             var saveButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), buttonArea.RectTransform, Anchor.BottomRight),
-                TextManager.Get("SaveSubButton"))
+                TextManager.Get("SaveSubButton").Fallback(TextManager.Get("save")))
             {
                 OnClicked = (button, o) => SaveSub(packageToSaveInList.SelectedData as ContentPackage)
             };
@@ -3502,8 +3523,11 @@ namespace Barotrauma
                         modProject.RemoveFile(modProject.Files.First(f => ContentPath.FromRaw(subPackage, f.Path) == sub.FilePath));
                         modProject.Save(subPackage.Path);
                         ReloadModifiedPackage(subPackage);
-                    }
-                    
+                        if (MainSub?.Info != null && MainSub.Info.FilePath == sub.FilePath)
+                        {
+                            MainSub.Info.FilePath = null;
+                        }
+                    }                    
                     sub.Dispose();
                     CreateLoadScreen();
                 }
@@ -5036,8 +5060,8 @@ namespace Barotrauma
 
             hullVolumeFrame.Visible = MapEntity.SelectedList.Any(s => s is Hull);
             hullVolumeFrame.RectTransform.AbsoluteOffset = new Point(Math.Max(showEntitiesPanel.Rect.Right, previouslyUsedPanel.Rect.Right), 0);
-            saveAssemblyFrame.Visible = MapEntity.SelectedList.Count > 0;
-            snapToGridFrame.Visible = MapEntity.SelectedList.Count > 0;
+            saveAssemblyFrame.Visible = MapEntity.SelectedList.Count > 0 && !WiringMode;
+            snapToGridFrame.Visible = MapEntity.SelectedList.Count > 0 && !WiringMode;
 
             var offset = cam.WorldView.Top - cam.ScreenToWorld(new Vector2(0, GameMain.GraphicsHeight - EntityMenu.Rect.Top)).Y;
 

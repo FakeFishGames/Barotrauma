@@ -275,7 +275,7 @@ namespace Barotrauma
             {
                 GUILayoutGroup inputContainer = CreateSettingBase(parent, description, tooltip, horizontalSize: 0.55f, verticalSize: verticalSize);
 
-                GUIButton minusButton = new GUIButton(new RectTransform(Vector2.One, inputContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIMinusButton", textAlignment: Alignment.Center) { UserData = -1 };
+                GUIButton minusButton = new GUIButton(new RectTransform(Vector2.One, inputContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIButtonToggleLeft", textAlignment: Alignment.Center) { UserData = -1 };
                 GUIFrame inputFrame = new GUIFrame(new RectTransform(Vector2.One, inputContainer.RectTransform), style: null);
                 GUINumberInput numberInput = new GUINumberInput(new RectTransform(Vector2.One, inputFrame.RectTransform, Anchor.Center), NumberType.Int, textAlignment: Alignment.Center, style: "GUITextBox", hidePlusMinusButtons: true)
                 {
@@ -290,7 +290,7 @@ namespace Barotrauma
                     CanBeFocused = false
                 };
 
-                GUIButton plusButton = new GUIButton(new RectTransform(Vector2.One, inputContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIPlusButton", textAlignment: Alignment.Center) { UserData = 1 };
+                GUIButton plusButton = new GUIButton(new RectTransform(Vector2.One, inputContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIButtonToggleRight", textAlignment: Alignment.Center) { UserData = 1 };
 
                 minusButton.OnClicked = plusButton.OnClicked = ChangeValue;
 

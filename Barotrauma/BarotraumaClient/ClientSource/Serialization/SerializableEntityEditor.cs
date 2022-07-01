@@ -629,16 +629,18 @@ namespace Barotrauma
 
             bool isFlagsAttribute = value.GetType().IsDefined(typeof(FlagsAttribute), false);
 
+            bool hasNoneOption = false;
             foreach (object enumValue in Enum.GetValues(value.GetType()))
             {
                 if (isFlagsAttribute && !MathHelper.IsPowerOfTwo((int)enumValue)) { continue; }
-
+                hasNoneOption |= (int)enumValue == 0;
                 enumDropDown.AddItem(enumValue.ToString(), enumValue);
                 if (((int)enumValue != 0 || (int)value == 0) && ((Enum)value).HasFlag((Enum)enumValue))
                 {
                     enumDropDown.SelectItem(enumValue);
                 }
             }
+            enumDropDown.MustSelectAtLeastOne = !hasNoneOption;
             enumDropDown.OnSelected += (selected, val) =>
             {
                 if (SetPropertyValue(property, entity, string.Join(", ", enumDropDown.SelectedDataMultiple.Select(d => d.ToString()))))
@@ -1441,7 +1443,21 @@ namespace Barotrauma
                             if (component.GetType() == parentObject.GetType() && component != parentObject)
                             {
                                 SafeAdd(component, property);
-                                property.PropertyInfo.SetValue(component, value);
+                                if (value is string stringValue && Enum.TryParse(property.PropertyType, stringValue, out var enumValue))
+                                {
+                                    property.PropertyInfo.SetValue(component, enumValue);
+                                }
+                                else
+                                {
+                                    try
+                                    {
+                                        property.PropertyInfo.SetValue(component, value);
+                                    }
+                                    catch (ArgumentException e)
+                                    {
+                                        DebugConsole.ThrowError($"Failed to set the value of the property \"{property.Name}\" to {value?.ToString() ?? "null"}", e);
+                                    }
+                                }
                             }
                         }
                         break;

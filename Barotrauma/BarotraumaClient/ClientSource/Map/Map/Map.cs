@@ -110,7 +110,9 @@ namespace Barotrauma
         {
             noiseOverlay ??= new Sprite("Content/UI/noise.png", Vector2.Zero);
 
-            OnLocationChanged = LocationChanged;
+            OnLocationChanged.RegisterOverwriteExisting(
+                "Map.InitProjSpecific".ToIdentifier(), 
+                (locationChangeInfo) => LocationChanged(locationChangeInfo.PrevLocation, locationChangeInfo.NewLocation));
 
             borders = new Rectangle(
                 (int)Locations.Min(l => l.MapPosition.X),
@@ -447,7 +449,7 @@ namespace Barotrauma
                         Level.Loaded.DebugSetEndLocation(null);
 
                         CurrentLocation.Discover();
-                        OnLocationChanged?.Invoke(prevLocation, CurrentLocation);
+                        OnLocationChanged?.Invoke(new LocationChangeInfo(prevLocation, CurrentLocation));
                         SelectLocation(-1);
                         if (GameMain.Client == null)
                         {

@@ -1005,7 +1005,7 @@ namespace Barotrauma
             }
         }
 
-        public SubmarineInfo SwitchSubs()
+        public void SwitchSubs()
         {
             if (TransferItemsOnSubSwitch)
             {
@@ -1013,7 +1013,6 @@ namespace Barotrauma
             }
             RefreshOwnedSubmarines();
             PendingSubmarineSwitch = null;
-            return GameMain.GameSession.SubmarineInfo;
         }
 
         /// <summary>
@@ -1039,9 +1038,12 @@ namespace Barotrauma
                     if (item.HiddenInGame) { continue; }
                     if (!connectedSubs.Contains(item.Submarine)) { continue; }
                     if (item.Prefab.DontTransferBetweenSubs) { continue; }
-                    if (item.GetRootInventoryOwner() is Character) { continue; }
-                    if (item.GetComponent<Holdable>() == null && item.GetComponent<Wearable>() == null && item.GetComponent<Projectile>() == null) { continue; }
-                    if (item.Components.Any(c => c is Holdable h && h.Attached)) { continue; }
+                    var rootOwner = item.GetRootInventoryOwner();
+                    if (rootOwner is Character) { continue; }
+                    if (rootOwner is Item ownerItem && (ownerItem.NonInteractable || ownerItem.HiddenInGame)) { continue; }
+                    if (item.GetComponent<Door>() != null) { continue; }
+                    if (item.Components.None(c => c is Pickable)) { continue; }
+                    if (item.Components.Any(c => c is Pickable p && p.IsAttached)) { continue; }
                     if (item.Components.Any(c => c is Wire w && w.Connections.Any(c => c != null))) { continue; }
                     itemsToTransfer.Add((item, item.Container));
                     item.Submarine = null;
@@ -1054,6 +1056,7 @@ namespace Barotrauma
                         item.Drop(null, createNetworkEvent: false, setTransform: false);
                     }
                 }
+                currentSub.Info.NoItems = true;
             }
             // Serialize the current sub
             GameMain.GameSession.SubmarineInfo = new SubmarineInfo(currentSub);
@@ -1122,6 +1125,7 @@ namespace Barotrauma
                     DebugConsole.Log(msg);
 #endif
                 }
+                newSub.Info.NoItems = false;
                 // Serialize the new sub
                 PendingSubmarineSwitch = new SubmarineInfo(newSub);
             }

@@ -149,51 +149,18 @@ namespace Barotrauma
                 pos.X += Math.Sign(flowForce.X);
                 pos.Y = MathHelper.Clamp(Rand.Range(higherSurface, lowerSurface), rect.Y - rect.Height, rect.Y);
             }
-            else
+            if (flowTargetHull != null)
             {
-                pos.Y += Math.Sign(flowForce.Y) * rect.Height / 2.0f;
+                pos.X = MathHelper.Clamp(pos.X, flowTargetHull.Rect.X + 1, flowTargetHull.Rect.Right - 1);
+                pos.Y = MathHelper.Clamp(pos.Y, flowTargetHull.Rect.Y - flowTargetHull.Rect.Height + 1, flowTargetHull.Rect.Y - 1);
             }
 
             //spawn less particles when there's already a large number of them
             float particleAmountMultiplier = 1.0f - GameMain.ParticleManager.ParticleCount / (float)GameMain.ParticleManager.MaxParticles;
             particleAmountMultiplier *= particleAmountMultiplier;
 
-            //light dripping
-            if (open < 0.2f && LerpedFlowForce.LengthSquared() > 100.0f)
-            {
-                particleTimer += deltaTime;
-                float particlesPerSec = open * 100.0f * particleAmountMultiplier;
-                float emitInterval = 1.0f / particlesPerSec;
-                while (particleTimer > emitInterval)
-                {
-                    Vector2 velocity = flowForce;
-                    if (!IsHorizontal)
-                    {
-                        velocity.X = Rand.Range(-500.0f, 500.0f) * open;
-                    }
-                    else
-                    {
-                        velocity.X *= Rand.Range(1.0f, 3.0f);
-                    }
-
-                    if (flowTargetHull.WaterVolume < flowTargetHull.Volume)
-                    {
-                        GameMain.ParticleManager.CreateParticle(
-                            Rand.Range(0.0f, open) < 0.05f ? "waterdrop" : "watersplash",
-                            (Submarine == null ? pos : pos + Submarine.Position),
-                            velocity, 0, flowTargetHull);
-                    }
-
-                    GameMain.ParticleManager.CreateParticle(
-                        "bubbles",
-                        (Submarine == null ? pos : pos + Submarine.Position),
-                        velocity, 0, flowTargetHull);
-
-                    particleTimer -= emitInterval;
-                }
-            }
             //heavy flow -> strong waterfall type of particles
-            else if (LerpedFlowForce.LengthSquared() > 20000.0f)
+            if (LerpedFlowForce.LengthSquared() > 20000.0f)
             {
                 particleTimer += deltaTime;
                 if (IsHorizontal)
@@ -217,6 +184,10 @@ namespace Barotrauma
                             {
                                 if (particle.CurrentHull == null) { GameMain.ParticleManager.RemoveParticle(particle); }
                                 particle.Size *= Math.Min(Math.Abs(flowForce.X / 500.0f), 5.0f);
+                            }
+                            if (GapSize() <= Structure.WallSectionSize || !IsRoomToRoom)
+                            {
+                                CreateWaterSpatter();
                             }
                         }
 
@@ -245,7 +216,7 @@ namespace Barotrauma
                 {
                     if (Math.Sign(flowTargetHull.Rect.Y - rect.Y) != Math.Sign(lerpedFlowForce.Y)) { return; }
 
-                    float particlesPerSec = Math.Max(open * rect.Width * 0.3f * particleAmountMultiplier, 20.0f);
+                    float particlesPerSec = Math.Max(open * rect.Width * 0.5f * particleAmountMultiplier, 10.0f);
                     float emitInterval = 1.0f / particlesPerSec;
                     while (particleTimer > emitInterval)
                     {
@@ -263,7 +234,11 @@ namespace Barotrauma
                             if (splash != null) 
                             {
                                 if (splash.CurrentHull == null) { GameMain.ParticleManager.RemoveParticle(splash); }
-                                splash.Size *= MathHelper.Clamp(rect.Width / 50.0f, 1.5f, 4.0f); 
+                                splash.Size *= MathHelper.Clamp(rect.Width / 50.0f, 1.5f, 4.0f);
+                            }
+                            if (GapSize() <= Structure.WallSectionSize || !IsRoomToRoom)
+                            {
+                                CreateWaterSpatter();
                             }
                         }
                         if (Math.Abs(flowForce.Y) > 190.0f && Rand.Range(0.0f, 1.0f) < 0.3f && flowTargetHull.WaterVolume > flowTargetHull.Volume * 0.1f)
@@ -277,9 +252,76 @@ namespace Barotrauma
                     }
                 }
             }
+            //light dripping
+            else if (LerpedFlowForce.LengthSquared() > 100.0f && 
+                /*no dripping from large gaps between rooms (looks bad)*/
+                ((GapSize() <= Structure.WallSectionSize) || !IsRoomToRoom))
+            {
+                particleTimer += deltaTime;
+                float particlesPerSec = open * 100.0f * particleAmountMultiplier;
+                float emitInterval = 1.0f / particlesPerSec;
+                while (particleTimer > emitInterval)
+                {
+                    Vector2 velocity = flowForce;
+                    if (!IsHorizontal)
+                    {
+                        velocity.X = Rand.Range(-100.0f, 100.0f) * open;
+                    }
+                    else
+                    {
+                        velocity.X *= Rand.Range(1.0f, 3.0f);
+                    }
+
+                    if (flowTargetHull.WaterVolume < flowTargetHull.Volume)
+                    {
+                        GameMain.ParticleManager.CreateParticle(
+                            Rand.Range(0.0f, open) < 0.05f ? "waterdrop" : "watersplash",
+                            Submarine == null ? pos : pos + Submarine.Position,
+                            velocity, 0, flowTargetHull);
+                        CreateWaterSpatter();
+                    }
+
+                    GameMain.ParticleManager.CreateParticle(
+                        "bubbles",
+                        (Submarine == null ? pos : pos + Submarine.Position),
+                        velocity, 0, flowTargetHull);
+
+                    particleTimer -= emitInterval;
+                }
+            }
             else
             {
                 particleTimer = 0.0f;
+            }
+
+            void CreateWaterSpatter()
+            {
+                Vector2 spatterPos = pos;
+                float rotation;
+                if (IsHorizontal)
+                {
+                    rotation = LerpedFlowForce.X > 0 ? 0 : MathHelper.Pi;
+                    spatterPos.Y = rect.Y - rect.Height / 2;
+                }
+                else
+                {
+                    rotation = LerpedFlowForce.Y > 0 ? -MathHelper.PiOver2 : MathHelper.PiOver2;
+                    spatterPos.X = rect.Center.X;
+                }
+                var spatter = GameMain.ParticleManager.CreateParticle(
+                    "waterspatter",
+                    Submarine == null ? spatterPos : spatterPos + Submarine.Position,
+                    Vector2.Zero, rotation, flowTargetHull);
+                if (spatter != null)
+                {
+                    if (spatter.CurrentHull == null) { GameMain.ParticleManager.RemoveParticle(spatter); }
+                    spatter.Size *= MathHelper.Clamp(LerpedFlowForce.Length() / 200.0f, 0.5f, 1.0f);
+                }                
+            }
+
+            float GapSize()
+            {
+                return IsHorizontal ? rect.Height : rect.Width;
             }
         }
     }

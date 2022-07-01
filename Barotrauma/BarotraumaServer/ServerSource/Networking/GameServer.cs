@@ -2409,17 +2409,20 @@ namespace Barotrauma.Networking
 
             campaign?.CargoManager.InitPurchasedIDCards();
 
-            foreach (Submarine sub in Submarine.MainSubs)
+            if (campaign == null || campaign.IsFirstRound)
             {
-                if (sub == null) { continue; }
-
-                List<PurchasedItem> spawnList = new List<PurchasedItem>();
-                foreach (KeyValuePair<ItemPrefab, int> kvp in serverSettings.ExtraCargo)
+                foreach (Submarine sub in Submarine.MainSubs)
                 {
-                    spawnList.Add(new PurchasedItem(kvp.Key, kvp.Value, buyer: null));
-                }
+                    if (sub == null) { continue; }
 
-                CargoManager.CreateItems(spawnList, sub, cargoManager: null);
+                    List<PurchasedItem> spawnList = new List<PurchasedItem>();
+                    foreach (KeyValuePair<ItemPrefab, int> kvp in serverSettings.ExtraCargo)
+                    {
+                        spawnList.Add(new PurchasedItem(kvp.Key, kvp.Value, buyer: null));
+                    }
+
+                    CargoManager.CreateItems(spawnList, sub, cargoManager: null);
+                }
             }
 
             TraitorManager = null;

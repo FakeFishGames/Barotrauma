@@ -137,25 +137,14 @@ namespace Barotrauma
                 },
                 OnClicked = (btn, userdata) =>
                 {
-                    var availableTransition = GetAvailableTransition(out _, out _);
-                    if (Character.Controlled != null &&
-                        availableTransition == TransitionType.ReturnToPreviousLocation && 
-                        Character.Controlled?.Submarine == Level.Loaded?.StartOutpost)
-                    {
-                        GameMain.Client.RequestStartRound();
-                    }
-                    else if (Character.Controlled != null &&
-                        availableTransition == TransitionType.ProgressToNextLocation &&
-                        Character.Controlled?.Submarine == Level.Loaded?.EndOutpost)
-                    {
-                        GameMain.Client.RequestStartRound();
-                    }
-                    else
-                    {
-                        ShowCampaignUI = true;
-                        if (CampaignUI == null) { InitCampaignUI(); }
-                        CampaignUI.SelectTab(InteractionType.Map);
-                    }
+                    TryEndRoundWithFuelCheck(
+                        onConfirm: () => GameMain.Client.RequestStartRound(),
+                        onReturnToMapScreen: () => 
+                        {
+                            ShowCampaignUI = true;
+                            if (CampaignUI == null) { InitCampaignUI(); }
+                            CampaignUI.SelectTab(InteractionType.Map);
+                        });
                     return true;
                 }
             };

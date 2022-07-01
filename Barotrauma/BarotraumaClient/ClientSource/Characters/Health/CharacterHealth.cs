@@ -2011,7 +2011,6 @@ namespace Barotrauma
 
         partial void UpdateSkinTint()
         {
-            if (!Character.IsVisible) { return; }
             FaceTint = DefaultFaceTint;
             BodyTint = Color.TransparentBlack;
 
@@ -2029,7 +2028,6 @@ namespace Barotrauma
 
         partial void UpdateLimbAfflictionOverlays()
         {
-            if (!Character.IsVisible) { return; }
             foreach (Limb limb in Character.AnimController.Limbs)
             {
                 if (limb.HealthIndex < 0 || limb.HealthIndex >= limbHealths.Count) { continue; }

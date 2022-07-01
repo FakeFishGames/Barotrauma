@@ -77,7 +77,7 @@ namespace Barotrauma
                 campaign.GetWallet(client).Give(itemValue);
                 GameAnalyticsManager.AddMoneyGainedEvent(itemValue, GameAnalyticsManager.MoneySource.Store, item.ItemPrefab.Identifier.Value);
             }
-            OnSoldItemsChanged?.Invoke();
+            OnSoldItemsChanged?.Invoke(this);
         }
 
         public void ClearSoldItemsProjSpecific()

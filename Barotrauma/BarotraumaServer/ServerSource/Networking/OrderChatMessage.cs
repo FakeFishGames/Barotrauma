@@ -19,7 +19,8 @@ namespace Barotrauma.Networking
             if (Sender != null && c.InGame)
             {
                 msg.Write(Sender.ID);
-            }
+            }            
+            msg.Write(false); //text color (no custom text colors for order messages)
             msg.WritePadBits();
             WriteOrder(msg);
         }

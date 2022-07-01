@@ -338,9 +338,7 @@ namespace Barotrauma.Items.Components
                 if (user == null) { return; }
                 if (GameMain.GameSession?.GameMode is MultiPlayerCampaign mpCampaign)
                 {
-#if CLIENT
-                    mpCampaign.TryPurchase(null, fabricatedItem.RequiredMoney);
-#elif SERVER
+#if SERVER
                     if (GetUsingClient() is { } client)
                     {
                         mpCampaign.TryPurchase(client, fabricatedItem.RequiredMoney);

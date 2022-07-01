@@ -985,7 +985,8 @@ namespace Barotrauma.Items.Components
                 missionIndex++;
             }
 
-            if (AllowUsingMineralScanner && useMineralScanner && CurrentMode == Mode.Active && MineralClusters != null)
+            if (AllowUsingMineralScanner && useMineralScanner && CurrentMode == Mode.Active && MineralClusters != null &&
+                (item.CurrentHull == null || !DetectSubmarineWalls))
             {
                 foreach (var c in MineralClusters)
                 {

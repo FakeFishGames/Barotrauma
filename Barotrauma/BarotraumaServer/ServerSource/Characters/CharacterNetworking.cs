@@ -562,8 +562,10 @@ namespace Barotrauma
             }
         }
 
-        private List<int> severedJointIndices = new List<int>();
-        private void WriteStatus(IWriteMessage msg)
+        private readonly List<int> severedJointIndices = new List<int>();
+
+        /// <param name="forceAfflictionData">Normally full affliction data is not written for dead characters, this can be used to force them to be written</param>
+        private void WriteStatus(IWriteMessage msg, bool forceAfflictionData = false)
         {
             msg.Write(IsDead);
             if (IsDead)
@@ -572,6 +574,11 @@ namespace Barotrauma
                 if (CauseOfDeath.Type == CauseOfDeathType.Affliction)
                 {
                     msg.Write(CauseOfDeath.Affliction.Identifier);
+                }
+                msg.Write(forceAfflictionData);
+                if (forceAfflictionData)
+                {
+                    CharacterHealth.ServerWrite(msg);
                 }
             }
             else
@@ -689,7 +696,7 @@ namespace Barotrauma
 
             if (msg.LengthBytes - initialMsgLength >= 255 && restrictMessageSize)
             {
-                string errorMsg = $"Error when writing character spawn data: data exceeded 255 bytes (info: {infoLength}, orders: {ordersLength}, total: {msg.LengthBytes - initialMsgLength})";
+                string errorMsg = $"Error when writing character spawn data for  \"{Name}\": data exceeded 255 bytes (info: {infoLength}, orders: {ordersLength}, total: {msg.LengthBytes - initialMsgLength})";
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce("Character.WriteSpawnData:TooMuchData", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
             }
@@ -701,13 +708,13 @@ namespace Barotrauma
                 int msgLengthBeforeStatus = msg.LengthBytes - initialMsgLength;
 
                 var tempBuffer = new ReadWriteMessage();
-                WriteStatus(tempBuffer);
+                WriteStatus(tempBuffer, forceAfflictionData: true);
                 if (msgLengthBeforeStatus + tempBuffer.LengthBytes >= 255 && restrictMessageSize)
                 { 
                     msg.Write(false);
                     if (msgLengthBeforeStatus < 255)
                     {
-                        string errorMsg = $"Error when writing character spawn data: status data caused the length of the message to exceed 255 bytes ({msgLengthBeforeStatus} + {tempBuffer.LengthBytes})";
+                        string errorMsg = $"Error when writing character spawn data for \"{Name}\": status data caused the length of the message to exceed 255 bytes ({msgLengthBeforeStatus} + {tempBuffer.LengthBytes})";
                         DebugConsole.ThrowError(errorMsg);
                         GameAnalyticsManager.AddErrorEventOnce("Character.WriteSpawnData:TooMuchDataForStatus", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                     }
@@ -715,7 +722,7 @@ namespace Barotrauma
                 else
                 {
                     msg.Write(true);
-                    WriteStatus(msg);
+                    WriteStatus(msg, forceAfflictionData: true);
                 }
             }
 

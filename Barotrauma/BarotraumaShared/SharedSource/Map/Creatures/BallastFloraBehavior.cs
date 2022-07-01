@@ -403,13 +403,14 @@ namespace Barotrauma.MapCreatures.Behavior
                     new XAttribute("health", branch.Health.ToString("G", CultureInfo.InvariantCulture)),
                     new XAttribute("maxhealth", branch.MaxHealth.ToString("G", CultureInfo.InvariantCulture)),
                     new XAttribute("sides", (int)branch.Sides),
-                    new XAttribute("blockedsides", (int)branch.BlockedSides));
+                    new XAttribute("blockedsides", (int)branch.BlockedSides),
+                    new XAttribute("tile", (int)branch.Type));
 
                 if (branch.ClaimedItem != null)
                 {
                     be.Add(new XAttribute("claimed", (int)(branch.ClaimedItem?.ID ?? -1)));
                 }
-                if (branch.ParentBranch != null)
+                if (branch.ParentBranch != null && !branch.ParentBranch.Removed)
                 {
                     be.Add(new XAttribute("parentbranch", (int)(branch.ParentBranch?.ID ?? -1)));
                 }
@@ -495,14 +496,15 @@ namespace Barotrauma.MapCreatures.Behavior
                 int blockedSides = getInt("blockedsides");
                 int claimedId = branchElement.GetAttributeInt("claimed", -1);
                 int parentBranchId = branchElement.GetAttributeInt("parentbranch", -1);
+                VineTileType type = (VineTileType)branchElement.GetAttributeInt("tile", 0);
 
-                BallastFloraBranch newBranch = new BallastFloraBranch(this, null, pos, VineTileType.CrossJunction, FoliageConfig.Deserialize(flowerConfig), FoliageConfig.Deserialize(leafconfig))
+                BallastFloraBranch newBranch = new BallastFloraBranch(this, null, pos, type, FoliageConfig.Deserialize(flowerConfig), FoliageConfig.Deserialize(leafconfig))
                 {
                     ID = id,
                     Health = health,
                     MaxHealth = maxhealth,
-                    Sides = (TileSide) sides,
-                    BlockedSides = (TileSide) blockedSides,
+                    Sides = (TileSide)sides,
+                    BlockedSides = (TileSide)blockedSides,
                     IsRoot = isRoot,
                     IsRootGrowth = isRootGrowth
                 };
@@ -683,7 +685,6 @@ namespace Barotrauma.MapCreatures.Behavior
                     if (branch.ClaimedItem != null)
                     {
                         RemoveClaim(branch.ClaimedItem);
-                        branch.ClaimedItem = null;
                     }
 
                     branch.RemoveTimer -= deltaTime;
@@ -1196,6 +1197,14 @@ namespace Barotrauma.MapCreatures.Behavior
             ClaimedTargets.Remove(item);
             item.Infector = null;
 
+            foreach (var branch in Branches)
+            {
+                if (branch.ClaimedItem == item)
+                {
+                    branch.ClaimedItem = null;
+                }
+            }
+
             ClaimedJunctionBoxes.ForEachMod(jb =>
             {
                 if (jb.Item == item)
@@ -1226,10 +1235,14 @@ namespace Barotrauma.MapCreatures.Behavior
                 branch.DisconnectedFromRoot = true;
             }
 
-            foreach (Item target in ClaimedTargets)
+            foreach (Item target in ClaimedTargets.ToList())
             {
+                RemoveClaim(target);
                 target.Infector = null;
             }
+            Debug.Assert(ClaimedTargets.Count == 0);
+            Debug.Assert(ClaimedJunctionBoxes.Count == 0);
+            Debug.Assert(ClaimedBatteries.Count == 0);
 
             StateMachine?.State?.Exit();
 #if SERVER

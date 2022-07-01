@@ -45,6 +45,20 @@ namespace Barotrauma
             Instance = new SettingsMenu(mainParent);
             return Instance;
         }
+
+        public void Recreate()
+        {
+            if (GUI.SettingsMenuOpen)
+            {
+                GUI.SettingsMenuOpen = false;
+                GUI.SettingsMenuOpen = true;
+            }
+            else
+            {
+                Create(mainFrame.Parent.RectTransform);
+                Instance?.SelectTab(Tab.Controls);
+            }
+        }
         
         private SettingsMenu(RectTransform mainParent)
         {
@@ -653,7 +667,7 @@ namespace Barotrauma
                     {
                         unsavedConfig.InventoryKeyMap = GameSettings.Config.InventoryKeyMapping.GetDefault();
                         unsavedConfig.KeyMap = GameSettings.Config.KeyMapping.GetDefault();
-                        Create(mainFrame.Parent.RectTransform);
+                        Recreate();
                         Instance?.SelectTab(Tab.Controls);
                         return true; 
                     }
@@ -761,7 +775,7 @@ namespace Barotrauma
         private void CreateBottomButtons()
         {
             GUIButton cancelButton =
-                new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), bottom.RectTransform), text: "Cancel")
+                new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), bottom.RectTransform), text: TextManager.Get("Cancel"))
                 {
                     OnClicked = (btn, obj) =>
                     {
@@ -770,7 +784,7 @@ namespace Barotrauma
                     }
                 };
             GUIButton applyButton =
-                new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), bottom.RectTransform), text: "Apply")
+                new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), bottom.RectTransform), text: TextManager.Get("applysettingsbutton"))
                 {
                     OnClicked = (btn, obj) =>
                     {

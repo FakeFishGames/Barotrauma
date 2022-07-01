@@ -405,6 +405,8 @@ namespace Barotrauma
             FarseerBody.Restitution = limbParams.Restitution;
             FarseerBody.AngularDamping = limbParams.AngularDamping;
             FarseerBody.UserData = this;
+            _collisionCategories = collisionCategory;
+            _collidesWith = collidesWith;
             SetTransformIgnoreContacts(position, 0.0f);
             LastSentPosition = position;
             list.Add(this);
@@ -418,6 +420,8 @@ namespace Barotrauma
             density = Math.Max(forceDensity ?? element.GetAttributeFloat("density", 10.0f), MinDensity);
             Enum.TryParse(element.GetAttributeString("bodytype", "Dynamic"), out BodyType bodyType);
             CreateBody(width, height, radius, density, bodyType, collisionCategory, collidesWith, findNewContacts);
+            _collisionCategories = collisionCategory;
+            _collidesWith = collidesWith;
             FarseerBody.Friction = element.GetAttributeFloat("friction", 0.5f);
             FarseerBody.Restitution = element.GetAttributeFloat("restitution", 0.05f);                    
             FarseerBody.UserData = this;
@@ -456,6 +460,8 @@ namespace Barotrauma
             this.width = width;
             this.height = height;
             this.radius = radius;
+            _collisionCategories = collisionCategory;
+            _collidesWith = collidesWith;
         }
 
         /// <summary>

@@ -94,7 +94,7 @@ namespace Barotrauma
         private CampaignMetadata Metadata => Campaign.CampaignMetadata;
         private readonly CampaignMode Campaign;
 
-        public event Action? OnUpgradesChanged;
+        public readonly NamedEvent<UpgradeManager> OnUpgradesChanged = new NamedEvent<UpgradeManager>();
 
         public UpgradeManager(CampaignMode campaign)
         {
@@ -248,7 +248,7 @@ namespace Barotrauma
                 // tell the server that this item is yet to be paid for server side
                 PurchasedUpgrades.Add(new PurchasedUpgrade(prefab, category));
 #endif
-                OnUpgradesChanged?.Invoke();
+                OnUpgradesChanged?.Invoke(this);
             }
             else
             {
@@ -349,7 +349,7 @@ namespace Barotrauma
                     }
                 }
 
-                OnUpgradesChanged?.Invoke();
+                OnUpgradesChanged?.Invoke(this);
             }
             else
             {
@@ -418,7 +418,7 @@ namespace Barotrauma
             }
 
 #if CLIENT
-            OnUpgradesChanged?.Invoke();
+            OnUpgradesChanged?.Invoke(this);
 #endif       
         }
 
@@ -802,7 +802,7 @@ namespace Barotrauma
         {
             PendingUpgrades.Clear();
             PendingUpgrades.AddRange(upgrades);
-            OnUpgradesChanged?.Invoke();
+            OnUpgradesChanged?.Invoke(this);
         }
 
         public static void DebugLog(string msg, Color? color = null)

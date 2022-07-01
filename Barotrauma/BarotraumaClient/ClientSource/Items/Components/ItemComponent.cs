@@ -405,13 +405,13 @@ namespace Barotrauma.Items.Components
                 float newVolume;
                 try
                 {
-                    newVolume = Math.Min(property.GetFloatValue(this), 1.0f);
+                    newVolume = property.GetFloatValue(this);
                 }
                 catch
                 {
                     return 0.0f;
                 }
-                newVolume *= sound.VolumeMultiplier;
+                newVolume = Math.Min(newVolume * sound.VolumeMultiplier, 1.0f);
 
                 if (!MathUtils.IsValid(newVolume))
                 {

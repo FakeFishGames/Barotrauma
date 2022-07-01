@@ -88,6 +88,11 @@ namespace Barotrauma
             prevCullTime = 0;
         }
 
+        public static void ForceRemoveFromVisibleEntities(MapEntity entity)
+        {
+            visibleEntities?.Remove(entity);
+        }
+
         public static void Draw(SpriteBatch spriteBatch, bool editing = false)
         {
             var entitiesToRender = !editing && visibleEntities != null ? visibleEntities : MapEntity.mapEntityList;

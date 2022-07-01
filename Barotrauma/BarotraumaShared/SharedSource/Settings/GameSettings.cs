@@ -54,7 +54,6 @@ namespace Barotrauma
                     EnableMouseLook = true,
                     ChatOpen = true,
                     CrewMenuOpen = true,
-                    CampaignDisclaimerShown = false,
                     EditorDisclaimerShown = false,
                     ShowOffensiveServerPrompt = true,
                     TutorialSkipWarning = true,
@@ -127,7 +126,6 @@ namespace Barotrauma
             public bool EnableMouseLook;
             public bool ChatOpen;
             public bool CrewMenuOpen;
-            public bool CampaignDisclaimerShown;
             public bool EditorDisclaimerShown;
             public bool ShowOffensiveServerPrompt;
             public bool TutorialSkipWarning;

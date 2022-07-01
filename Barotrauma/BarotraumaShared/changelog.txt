@@ -1,4 +1,65 @@
 ---------------------------------------------------------------------------------------------------------
+v0.18.13.0
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Show a warning when trying to switch to a submarine that's low on fuel.
+- Also show the low fuel warning when leaving an outpost without enough fuel.
+- Items are always transferred when switching to a submarine that has no manually placed items, which should prevent softlocking the campaign if you switch to a sub that has no fuel. Whether a submarine is considered to have manually placed items can be set when saving it in the submarine editor (the checkbox "manually outfitted" in the saving dialog).
+- Handheld sonars can't detect minerals from inside the sub.
+- Changed the plus and minus button in the campaign settings into arrows. The button on the right increases difficulty, which in the case of the starting balance and supplies means reducing them, making the plus and minus buttons misleading.
+- Reduced costs of handheld weapon ammunition significantly.
+- Slightly reduced effectiveness of harpoons and revolver round to compensate for the cheaper ammo.
+- Changed recipes for Handcannon, Assault Rifle and Auto-Shotgun. Weapon crafting is more expensive, to compensate for cheaper ammo.
+- Adjusted numerous other recipes and price costs of materials. Previously little used materials (like tin) are now used more.
+
+Fixes:
+- Fixed shuttles getting misplaced when switching and transferring items to a new sub with shuttles.
+- Fixed inability to damage items (such as monster eggs) with melee weapons or handheld weapons.
+- Fixed "failed to parse the string 'COLOR.GUI.GREEN' to Color" errors when using the submarine upgrade interface in Spanish.
+- Fixed items with a projectile component (e.g. bullets, harpoons, syringes) going through external walls when dropped.
+- Fixed incorrect value in the "too many lights" error message in the sub editor.
+- Fixed lightcomponent not getting refreshed when flipping a lightcomponent horizontally.
+- Fixed extra cargo defined in the server settings spawning every round in multiplayer campaign.
+- Fixes wreck corpses' damage visuals (bloodstains, burns) not showing client-side. 
+- Fixed wearables that are worn (or held) in multiple limbs applying skill bonuses multiple times (e.g. when holding a bandolier with both hands).
+- Fixed console error when deselecting all target types from a motion sensor in the sub editor.
+- Fixed crashing when multi-editing motion sensor targets in the sub editor.
+- Fixed one of the path unlock event texts still using the old price (talking about 12,000 mk even though the price is 4,000 mk).
+- Fixed money getting incorrectly deducted on the client side when buying items from the vending machine.
+- Fixed item transfer taking items from non-interactable containers.
+- Made depleted fuel sprite darker to match the rest of the "depleted" items.
+- Fixed PUCS's autoinjection feature sometimes causing performance drops in multiplayer.
+- Fixed "tried to overwrite a submarine that's not in a local package" error when you delete a sub that's in a local package and try to resave it.
+- Fixed misaligned broken duffelbag sprite.
+- Fixed full-white x-ray monitors.
+- Fixed FPS drop when adjusting character appearance in the campaign setup menu or server lobby.
+- Fixed tunnels at the beginning or end of the level sometimes being too narrow to pass through (especially with a small sub) when there's no outpost at that side of the level. 
+- Fixed missing background sprite in duct block.
+- Fixed water particles not showing up when water is flowing down a duct block.
+- Fixed changing the scale of resizeable structures (such as background doors) messing up the outline of linked subs in the sub editor.
+- Fixed friendly fire and karma always showing up as disabled on dedicated servers in the server list.
+
+Modding:
+- Fixed removing a door mid-round crashing the game. Does not affect the vanilla game, because doors are never removed mid-round.
+- Fixed having a vending machine in your inventory crashing the game due to the 0-capacity input inventory of the machine.
+
+---------------------------------------------------------------------------------------------------------
+v0.18.12.0
+---------------------------------------------------------------------------------------------------------
+
+- Fixed medical doctor tutorial throwing an error and freezing in most languages other than English.
+- Fixed occasional disconnects with the error "the given key was not present in the dictionary" when giving orders or reporting things in multiplayer.
+- Fixed occasional crashes caused by AIObjectivePumpWater.
+- Fixed certain looping item sounds (oxygen generators, vents, reactor) being too quiet to hear.
+- Fixed one of texts not appearing in the "captive souls" event.
+- Fixed inability to fabricate rubber shells.
+
+
+Modding:
+- Fixed crashing when a MonsterEvent fails to find the character prefab.
+
+---------------------------------------------------------------------------------------------------------
 v0.18.11.0
 ---------------------------------------------------------------------------------------------------------
 

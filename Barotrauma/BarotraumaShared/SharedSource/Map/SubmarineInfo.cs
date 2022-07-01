@@ -86,6 +86,18 @@ namespace Barotrauma
             set;
         }
 
+        public bool NoItems
+        {
+            get;
+            set;
+        }
+
+        public bool LowFuel
+        {
+            get;
+            set;
+        }
+
         public Version GameVersion
         {
             get;
@@ -93,6 +105,8 @@ namespace Barotrauma
         }
 
         public SubmarineType Type { get; set; }
+
+        public bool IsManuallyOutfitted { get; set; }
 
         public SubmarineClass SubmarineClass;
 
@@ -272,6 +286,8 @@ namespace Barotrauma
             Description = original.Description;
             Price = original.Price;
             InitialSuppliesSpawned = original.InitialSuppliesSpawned;
+            NoItems = original.NoItems;
+            LowFuel = original.LowFuel;
             GameVersion = original.GameVersion;
             Type = original.Type;
             SubmarineClass = original.SubmarineClass;
@@ -286,6 +302,7 @@ namespace Barotrauma
             RecommendedCrewExperience = original.RecommendedCrewExperience;
             RecommendedCrewSizeMin = original.RecommendedCrewSizeMin;
             RecommendedCrewSizeMax = original.RecommendedCrewSizeMax;
+            IsManuallyOutfitted = original.IsManuallyOutfitted;
             Tags = original.Tags;
             if (original.OutpostModuleInfo != null)
             {
@@ -335,6 +352,9 @@ namespace Barotrauma
             Price = SubmarineElement.GetAttributeInt("price", 1000);
 
             InitialSuppliesSpawned = SubmarineElement.GetAttributeBool("initialsuppliesspawned", false);
+            NoItems = SubmarineElement.GetAttributeBool("noitems", false);
+            LowFuel = SubmarineElement.GetAttributeBool("lowfuel", false);
+            IsManuallyOutfitted = SubmarineElement.GetAttributeBool("ismanuallyoutfitted", false);
 
             GameVersion = new Version(SubmarineElement.GetAttributeString("gameversion", "0.0.0.0"));
             if (Enum.TryParse(SubmarineElement.GetAttributeString("tags", ""), out SubmarineTag tags))

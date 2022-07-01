@@ -1845,8 +1845,11 @@ namespace Barotrauma.Networking
 
             GameMain.GameScreen.Select();
 
-            // TODO: Re-enable the server message once it's been edited and translated
-            //AddChatMessage($"ServerMessage.HowToCommunicate~[chatbutton]={GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Chat)}~[radiobutton]={GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.RadioChat)}", ChatMessageType.Server);
+            string message = "ServerMessage.HowToCommunicate" +
+                $"~[chatbutton]={GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.ActiveChat)}" +
+                $"~[pttbutton]={GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Voice)}" +
+                $"~[switchbutton]={GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.ToggleChatMode)}";
+            AddChatMessage(message, ChatMessageType.Server);
 
             yield return CoroutineStatus.Success;
         }

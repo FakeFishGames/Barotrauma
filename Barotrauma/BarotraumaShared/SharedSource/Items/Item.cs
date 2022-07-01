@@ -877,6 +877,7 @@ namespace Barotrauma
                             //and check if the collision should be ignored in the OnCollision callback, but
                             //that'd make the hit detection more expensive because every item would be included)
                             collisionCategory = Physics.CollisionCharacter;
+                            collidesWith |= Physics.CollisionProjectile;
                         }
                         if (collisionCategoryStr != null)
                         {                            
@@ -1265,8 +1266,8 @@ namespace Barotrauma
 
             Vector2 displayPos = ConvertUnits.ToDisplayUnits(simPosition);
 
-            rect.X = (int)(displayPos.X - rect.Width / 2.0f);
-            rect.Y = (int)(displayPos.Y + rect.Height / 2.0f);
+            rect.X = (int)MathF.Round(displayPos.X - rect.Width / 2.0f);
+            rect.Y = (int)MathF.Round(displayPos.Y + rect.Height / 2.0f);
 
             if (findNewHull) { FindHull(); }
         }

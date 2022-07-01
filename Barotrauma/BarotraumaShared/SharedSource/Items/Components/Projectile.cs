@@ -789,6 +789,11 @@ namespace Barotrauma.Items.Components
 
         private bool ShouldIgnoreSubmarineCollision(ref Fixture target, Contact contact)
         {
+            //not in the projectile category: the projectile has not been launched (e.g. just dropped from an inventory)
+            if (item.body.CollisionCategories != Physics.CollisionProjectile) 
+            { 
+                return false; 
+            }
             if (target.Body.UserData is Submarine sub)
             {
                 Vector2 dir = item.body.LinearVelocity.LengthSquared() < 0.001f ?
