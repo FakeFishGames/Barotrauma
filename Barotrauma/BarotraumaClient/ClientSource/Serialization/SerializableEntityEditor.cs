@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Items.Components;
 using Barotrauma.Extensions;
+using System.Diagnostics;
 
 namespace Barotrauma
 {
@@ -1437,28 +1438,31 @@ namespace Barotrauma
                             }
                         }
                         break;
-                    case ItemComponent _ when entity is Item item:
-                        foreach (var component in item.Components)
+                    case ItemComponent parentComponent when entity is Item otherItem:
+                        if (otherItem == parentComponent.Item) { continue; }                        
+                        int componentIndex = parentComponent.Item.Components.FindAll(c => c.GetType() == parentComponent.GetType()).IndexOf(parentComponent);
+                        //find the component of the same type and same index from the other item
+                        var otherComponents = otherItem.Components.FindAll(c => c.GetType() == parentComponent.GetType());
+                        if (componentIndex >= 0 && componentIndex < otherComponents.Count)
                         {
-                            if (component.GetType() == parentObject.GetType() && component != parentObject)
+                            var component = otherComponents[componentIndex];
+                            Debug.Assert(component.GetType() == parentObject.GetType());                            
+                            SafeAdd(component, property);
+                            if (value is string stringValue && Enum.TryParse(property.PropertyType, stringValue, out var enumValue))
                             {
-                                SafeAdd(component, property);
-                                if (value is string stringValue && Enum.TryParse(property.PropertyType, stringValue, out var enumValue))
-                                {
-                                    property.PropertyInfo.SetValue(component, enumValue);
-                                }
-                                else
-                                {
-                                    try
-                                    {
-                                        property.PropertyInfo.SetValue(component, value);
-                                    }
-                                    catch (ArgumentException e)
-                                    {
-                                        DebugConsole.ThrowError($"Failed to set the value of the property \"{property.Name}\" to {value?.ToString() ?? "null"}", e);
-                                    }
-                                }
+                                property.PropertyInfo.SetValue(component, enumValue);
                             }
+                            else
+                            {
+                                try
+                                {
+                                    property.PropertyInfo.SetValue(component, value);
+                                }
+                                catch (ArgumentException e)
+                                {
+                                    DebugConsole.ThrowError($"Failed to set the value of the property \"{property.Name}\" to {value?.ToString() ?? "null"}", e);
+                                }
+                            }                            
                         }
                         break;
                 }

@@ -1,17 +1,17 @@
 ---------------------------------------------------------------------------------------------------------
-v0.18.13.0
+v0.18.15.0
 ---------------------------------------------------------------------------------------------------------
 
 Changes:
-- Show a warning when trying to switch to a submarine that's low on fuel.
+- Show a warning when trying to switch to a submarine that's low on fuel or to a submarine that has no manually placed items to prevent softlocking the campaign if you switch to a sub that has no fuel. Whether a submarine is considered to have manually placed items can be set when saving it in the submarine editor (the checkbox "manually outfitted" in the saving dialog).
 - Also show the low fuel warning when leaving an outpost without enough fuel.
-- Items are always transferred when switching to a submarine that has no manually placed items, which should prevent softlocking the campaign if you switch to a sub that has no fuel. Whether a submarine is considered to have manually placed items can be set when saving it in the submarine editor (the checkbox "manually outfitted" in the saving dialog).
 - Handheld sonars can't detect minerals from inside the sub.
 - Changed the plus and minus button in the campaign settings into arrows. The button on the right increases difficulty, which in the case of the starting balance and supplies means reducing them, making the plus and minus buttons misleading.
 - Reduced costs of handheld weapon ammunition significantly.
 - Slightly reduced effectiveness of harpoons and revolver round to compensate for the cheaper ammo.
 - Changed recipes for Handcannon, Assault Rifle and Auto-Shotgun. Weapon crafting is more expensive, to compensate for cheaper ammo.
 - Adjusted numerous other recipes and price costs of materials. Previously little used materials (like tin) are now used more.
+- Partially reintroduced the "toggle inventory" keybind, now called "toggle entity list". Even though toggling the in-game inventory is no longer possible, the keybind can be used to change the hotkey for toggling the sub editor's entity list.
 
 Fixes:
 - Fixed shuttles getting misplaced when switching and transferring items to a new sub with shuttles.
@@ -38,7 +38,16 @@ Fixes:
 - Fixed missing background sprite in duct block.
 - Fixed water particles not showing up when water is flowing down a duct block.
 - Fixed changing the scale of resizeable structures (such as background doors) messing up the outline of linked subs in the sub editor.
+- Fixed non-player-team interactable items getting transferred on sub switch.
+- Fixed ballast flora root emitting particles when damaged client-side, even if it's already been destroyed.
+- Fixed recycle recipes for Piercing Ammunition Box and Pulse Tri-Laser Fuel Box.
 - Fixed friendly fire and karma always showing up as disabled on dedicated servers in the server list.
+- Fixed some lights (e.g. vending machines, neon lights, holographics displays) looking different in the sub editor than they do in-game.
+- Fixed undocked shuttles remaining undocked if you save and start a new game with the same submarine during the same session. Restarting the game fixed the issue though. 
+- Fixed sonar markers going crazy if the start and end locations have the same name + added some more variety to location names to prevent duplicate location names.
+- Fixed multiediting an ItemComponent modifying all the components of that type in all the selected items (e.g. when editing the 1st light component of a switch, all lights in all switches would be edited).
+- Fixed spineling spikes fired by a human with spineling genes not damaging any human characters (enemies in PvP, pirates in pirate missions) when friendly fire is disabled.
+- Fixed melee weapons not damaging structures from outside.
 
 Modding:
 - Fixed removing a door mid-round crashing the game. Does not affect the vanilla game, because doors are never removed mid-round.
@@ -54,7 +63,6 @@ v0.18.12.0
 - Fixed certain looping item sounds (oxygen generators, vents, reactor) being too quiet to hear.
 - Fixed one of texts not appearing in the "captive souls" event.
 - Fixed inability to fabricate rubber shells.
-
 
 Modding:
 - Fixed crashing when a MonsterEvent fails to find the character prefab.

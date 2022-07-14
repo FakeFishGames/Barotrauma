@@ -693,13 +693,15 @@ namespace Barotrauma
 
                 if (ShouldApply(NetFlags.SubList, id, requireUpToDateSave: false))
                 {
-                    GameMain.GameSession.OwnedSubmarines.Clear();
                     foreach (int ownedSubIndex in ownedSubIndices)
                     {
                         SubmarineInfo sub = GameMain.Client.ServerSubmarines[ownedSubIndex];
                         if (GameMain.NetLobbyScreen.CheckIfCampaignSubMatches(sub, NetLobbyScreen.SubmarineDeliveryData.Owned))
                         {
-                            GameMain.GameSession.OwnedSubmarines.Add(sub);
+                            if (GameMain.GameSession.OwnedSubmarines.None(s => s.Name == sub.Name))
+                            {
+                                GameMain.GameSession.OwnedSubmarines.Add(sub);
+                            }
                         }
                     }
                 }

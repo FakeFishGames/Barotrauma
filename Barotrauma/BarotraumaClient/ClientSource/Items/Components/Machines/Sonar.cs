@@ -938,7 +938,7 @@ namespace Barotrauma.Items.Components
                 DrawMarker(spriteBatch,
                     Level.Loaded.StartLocation.Name,
                     (Level.Loaded.StartOutpost != null ? "outpost" : "location").ToIdentifier(),
-                    Level.Loaded.StartLocation.Name,
+                    "startlocation",
                     Level.Loaded.StartExitPosition, transducerCenter,
                     displayScale, center, DisplayRadius);
             }
@@ -948,7 +948,7 @@ namespace Barotrauma.Items.Components
                 DrawMarker(spriteBatch,
                     Level.Loaded.EndLocation.Name,
                     (Level.Loaded.EndOutpost != null ? "outpost" : "location").ToIdentifier(),
-                    Level.Loaded.EndLocation.Name,
+                    "endlocation",
                     Level.Loaded.EndExitPosition, transducerCenter,
                     displayScale, center, DisplayRadius);
             }

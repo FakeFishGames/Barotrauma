@@ -216,7 +216,7 @@ namespace Barotrauma
                 {
                     if (Math.Sign(flowTargetHull.Rect.Y - rect.Y) != Math.Sign(lerpedFlowForce.Y)) { return; }
 
-                    float particlesPerSec = Math.Max(open * rect.Width * 0.5f * particleAmountMultiplier, 10.0f);
+                    float particlesPerSec = Math.Max(open * rect.Width * particleAmountMultiplier, 10.0f);
                     float emitInterval = 1.0f / particlesPerSec;
                     while (particleTimer > emitInterval)
                     {
@@ -257,8 +257,8 @@ namespace Barotrauma
                 /*no dripping from large gaps between rooms (looks bad)*/
                 ((GapSize() <= Structure.WallSectionSize) || !IsRoomToRoom))
             {
-                particleTimer += deltaTime;
-                float particlesPerSec = open * 100.0f * particleAmountMultiplier;
+                particleTimer += deltaTime; 
+                float particlesPerSec = open * 10.0f * particleAmountMultiplier;
                 float emitInterval = 1.0f / particlesPerSec;
                 while (particleTimer > emitInterval)
                 {

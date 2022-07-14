@@ -921,7 +921,7 @@ namespace Barotrauma
             toggleEntityMenuButton = new GUIButton(new RectTransform(new Vector2(0.15f, 0.08f), EntityMenu.RectTransform, Anchor.TopCenter, Pivot.BottomCenter) { MinSize = new Point(0, 15) },
                 style: "UIToggleButtonVertical")
             {
-                ToolTip = RichString.Rich(TextManager.Get("EntityMenuToggleTooltip") + "‖color:125,125,125‖\nQ‖color:end‖"),
+                ToolTip = RichString.Rich($"{TextManager.Get("EntityMenuToggleTooltip")}\n‖color:125,125,125‖{GameSettings.CurrentConfig.KeyMap.Bindings[InputType.ToggleInventory].Name}‖color:end‖"),
                 OnClicked = (btn, userdata) =>
                 {
                     entityMenuOpen = !entityMenuOpen;
@@ -5187,7 +5187,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (PlayerInput.KeyHit(Keys.Q) && mode == Mode.Default)
+                if (GameSettings.CurrentConfig.KeyMap.Bindings[InputType.ToggleInventory].IsHit() && mode == Mode.Default)
                 {
                     toggleEntityMenuButton.OnClicked?.Invoke(toggleEntityMenuButton, toggleEntityMenuButton.UserData);
                 }

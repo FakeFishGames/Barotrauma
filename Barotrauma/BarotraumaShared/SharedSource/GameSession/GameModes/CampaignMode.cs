@@ -1034,13 +1034,13 @@ namespace Barotrauma
                 foreach (Item item in Item.ItemList)
                 {
                     if (item.Removed) { continue; }
-                    if (item.NonInteractable) { continue; }
+                    if (item.NonInteractable || item.NonPlayerTeamInteractable) { continue; }
                     if (item.HiddenInGame) { continue; }
                     if (!connectedSubs.Contains(item.Submarine)) { continue; }
                     if (item.Prefab.DontTransferBetweenSubs) { continue; }
                     var rootOwner = item.GetRootInventoryOwner();
                     if (rootOwner is Character) { continue; }
-                    if (rootOwner is Item ownerItem && (ownerItem.NonInteractable || ownerItem.HiddenInGame)) { continue; }
+                    if (rootOwner is Item ownerItem && (ownerItem.NonInteractable || item.NonPlayerTeamInteractable || ownerItem.HiddenInGame)) { continue; }
                     if (item.GetComponent<Door>() != null) { continue; }
                     if (item.Components.None(c => c is Pickable)) { continue; }
                     if (item.Components.Any(c => c is Pickable p && p.IsAttached)) { continue; }
@@ -1067,7 +1067,7 @@ namespace Barotrauma
                 var connectedSubs = newSub.GetConnectedSubs().Where(s => s.Info.Type == SubmarineType.Player).ToHashSet();
                 // Move the transferred items
                 List<ItemContainer> availableContainers = Item.ItemList
-                    .Where(it => connectedSubs.Contains(it.Submarine) && it.HasTag("crate") && !it.NonInteractable && !it.HiddenInGame && !it.Removed)
+                    .Where(it => connectedSubs.Contains(it.Submarine) && it.HasTag("crate") && !it.NonInteractable && !it.NonPlayerTeamInteractable && !it.HiddenInGame && !it.Removed)
                     .Select(it => it.GetComponent<ItemContainer>())
                     .Where(c => c != null)
                     .ToList();

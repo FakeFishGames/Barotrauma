@@ -308,6 +308,8 @@ namespace Barotrauma.MapCreatures.Behavior
         private BallastFloraBranch? root;
         private readonly List<Body> bodies = new List<Body>();
 
+        private bool isDead;
+
         public readonly BallastFloraStateMachine StateMachine;
 
         public int GrowthWarps;
@@ -1230,6 +1232,8 @@ namespace Barotrauma.MapCreatures.Behavior
 
         public void Kill()
         {
+            isDead = true;
+
             foreach (var branch in Branches)
             {
                 branch.DisconnectedFromRoot = true;

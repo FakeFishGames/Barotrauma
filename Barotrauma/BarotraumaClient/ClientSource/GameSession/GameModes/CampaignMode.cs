@@ -330,7 +330,8 @@ namespace Barotrauma
         {
             Submarine.MainSub.CheckFuel();
             SubmarineInfo nextSub = PendingSubmarineSwitch ?? Submarine.MainSub.Info;
-            if (Level.IsLoadedFriendlyOutpost && nextSub.LowFuel && CargoManager.PurchasedItems.None(i => i.Value.Any(pi => pi.ItemPrefab.Tags.Contains("reactorfuel"))))
+            bool lowFuel = nextSub.Name == Submarine.MainSub.Info.Name ? Submarine.MainSub.Info.LowFuel : nextSub.LowFuel;
+            if (Level.IsLoadedFriendlyOutpost && lowFuel && CargoManager.PurchasedItems.None(i => i.Value.Any(pi => pi.ItemPrefab.Tags.Contains("reactorfuel"))))
             {
                 var extraConfirmationBox =
                     new GUIMessageBox(TextManager.Get("lowfuelheader"),

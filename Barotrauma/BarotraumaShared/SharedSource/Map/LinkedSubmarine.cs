@@ -203,7 +203,7 @@ namespace Barotrauma
             if (Screen.Selected == GameMain.SubEditorScreen)
             {
                 linkedSub = CreateDummy(submarine, element, pos, id);
-                linkedSub.saveElement = element;
+                linkedSub.saveElement = new XElement(element);
                 linkedSub.purchasedLostShuttles = false;
             }
             else
@@ -215,7 +215,7 @@ namespace Barotrauma
                     purchasedLostShuttles = 
                         (GameMain.GameSession?.GameMode is CampaignMode campaign && campaign.PurchasedLostShuttles) || 
                         element.GetAttributeBool("purchasedlostshuttle", false),
-                    saveElement = element
+                    saveElement = new XElement(element)
                 };
 
                 bool levelMatches = string.IsNullOrWhiteSpace(levelSeed) || levelData == null || levelData.Seed == levelSeed;
@@ -453,12 +453,15 @@ namespace Barotrauma
 
                 saveElement.SetAttributeValue("pos", XMLExtensions.Vector2ToString(Position - Submarine.HiddenSubPosition));
 
-                var linkedPort = 
-                    linkedTo.FirstOrDefault(lt => (lt is Item item) && item.GetComponent<DockingPort>() != null) ?? 
-                    FindEntityByID(linkedToID.First()) as MapEntity;
-                if (linkedPort != null)
+                if (linkedTo.Any() || linkedToID.Any())
                 {
-                    saveElement.SetAttributeValue("linkedto", linkedPort.ID);
+                    var linkedPort = 
+                        linkedTo.FirstOrDefault(lt => (lt is Item item) && item.GetComponent<DockingPort>() != null) ?? 
+                        FindEntityByID(linkedToID.First()) as MapEntity;
+                    if (linkedPort != null)
+                    {
+                        saveElement.SetAttributeValue("linkedto", linkedPort.ID);
+                    }
                 }
             }
             else

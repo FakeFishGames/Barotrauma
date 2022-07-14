@@ -92,6 +92,9 @@ namespace Barotrauma
             set;
         }
 
+        /// <summary>
+        /// Note: Refreshed for loaded submarines when they are saved, when they are loaded, and on round end. If you need to refresh it, please use Submarine.CheckFuel() method!
+        /// </summary>
         public bool LowFuel
         {
             get;

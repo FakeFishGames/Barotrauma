@@ -302,6 +302,7 @@ namespace Barotrauma
                         { InputType.Down, Keys.S },
                         { InputType.Left, Keys.A },
                         { InputType.Right, Keys.D },
+                        { InputType.ToggleInventory, Keys.Q },
 
                         { InputType.SelectNextCharacter, Keys.Z },
                         { InputType.SelectPreviousCharacter, Keys.X },
