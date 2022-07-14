@@ -193,6 +193,9 @@ namespace Barotrauma.Items.Components
 
         private Vector2 prevContainedItemPositions;
 
+        private float autoInjectCooldown = 1.0f;
+        const float AutoInjectInterval = 1.0f;
+
 
         public bool ShouldBeContained(string[] identifiersOrTags, out bool isRestrictionsDefined)
         {
@@ -412,7 +415,15 @@ namespace Barotrauma.Items.Components
 
                 if (AutoInject)
                 {
-                    if (ownerInventory?.Owner is Character ownerCharacter && 
+                    //normally autoinjection should delete the (medical) item, so it only gets applied once
+                    //but in multiplayer clients aren't allowed to remove items themselves, so they may be able to trigger this dozens of times
+                    //before the server notifies them of the item being removed, leading to a sharp lag spike.
+                    //this can also happen with mods, if there's a way to autoinject something that doesn't get removed On Use.
+                    //so let's ensure the item is only applied once per second at most.
+
+                    autoInjectCooldown -= deltaTime;
+                    if (autoInjectCooldown <= 0.0f &&
+                        ownerInventory?.Owner is Character ownerCharacter && 
                         ownerCharacter.HealthPercentage / 100f <= AutoInjectThreshold &&
                         ownerCharacter.HasEquippedItem(item))
                     {
@@ -420,6 +431,7 @@ namespace Barotrauma.Items.Components
                         {
                             item.ApplyStatusEffects(ActionType.OnUse, 1.0f, ownerCharacter);
                             item.GetComponent<GeneticMaterial>()?.Equip(ownerCharacter);
+                            autoInjectCooldown = AutoInjectInterval;
                         }
                     }
                 }

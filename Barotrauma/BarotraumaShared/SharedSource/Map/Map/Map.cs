@@ -20,11 +20,24 @@ namespace Barotrauma
         public int Height { get; private set; }
 
         public Action<Location, LocationConnection> OnLocationSelected;
+        public Action<LocationConnection, IEnumerable<Mission>> OnMissionsSelected;
+
+        public readonly struct LocationChangeInfo
+        {
+            public readonly Location PrevLocation;
+            public readonly Location NewLocation;
+
+            public LocationChangeInfo(Location prevLocation, Location newLocation)
+            {
+                PrevLocation = prevLocation;
+                NewLocation = newLocation;
+            }
+        }
+
         /// <summary>
         /// From -> To
         /// </summary>
-        public Action<Location, Location> OnLocationChanged;
-        public Action<LocationConnection, IEnumerable<Mission>> OnMissionsSelected;
+        public readonly NamedEvent<LocationChangeInfo> OnLocationChanged = new NamedEvent<LocationChangeInfo>();
 
         public Location EndLocation { get; private set; }
 
@@ -766,7 +779,7 @@ namespace Barotrauma
             SelectedLocation = null;
 
             CurrentLocation.CreateStores();
-            OnLocationChanged?.Invoke(prevLocation, CurrentLocation);
+            OnLocationChanged?.Invoke(new LocationChangeInfo(prevLocation, CurrentLocation));
 
             if (GameMain.GameSession is { Campaign: { CampaignMetadata: { } metadata } })
             {
@@ -803,7 +816,7 @@ namespace Barotrauma
                 {
                     connection.Passed = true;
                 }
-                OnLocationChanged?.Invoke(prevLocation, CurrentLocation);
+                OnLocationChanged?.Invoke(new LocationChangeInfo(prevLocation, CurrentLocation));
             }
         }
 

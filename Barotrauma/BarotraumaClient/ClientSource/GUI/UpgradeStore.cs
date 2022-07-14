@@ -107,10 +107,11 @@ namespace Barotrauma
             CreateUI(upgradeFrame);
 
             if (Campaign == null) { return; }
-            Campaign.UpgradeManager.OnUpgradesChanged += RequestRefresh;
-            Campaign.CargoManager.OnPurchasedItemsChanged += RequestRefresh;
-            Campaign.CargoManager.OnSoldItemsChanged += RequestRefresh;
-            Campaign.OnMoneyChanged.RegisterOverwriteExisting(nameof(UpgradeStore).ToIdentifier(), e => { RequestRefresh(); } );
+            Identifier eventId = new Identifier(nameof(UpgradeStore));
+            Campaign.UpgradeManager.OnUpgradesChanged?.RegisterOverwriteExisting(eventId, _ => RequestRefresh());
+            Campaign.CargoManager.OnPurchasedItemsChanged.RegisterOverwriteExisting(eventId, _ => RequestRefresh());
+            Campaign.CargoManager.OnSoldItemsChanged.RegisterOverwriteExisting(eventId, _ => RequestRefresh());
+            Campaign.OnMoneyChanged.RegisterOverwriteExisting(eventId, _ => RequestRefresh());
         }
 
         public void RequestRefresh()

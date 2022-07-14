@@ -238,6 +238,12 @@ namespace Barotrauma.Items.Components
             base.OnItemLoaded();
             SetLightSourceState(IsActive, lightBrightness);
             turret = item.GetComponent<Turret>();
+#if CLIENT
+            if (Screen.Selected.IsEditor)
+            {
+                OnMapLoaded();
+            }
+#endif
         }
 
         public override void OnMapLoaded()

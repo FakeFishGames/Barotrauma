@@ -147,12 +147,12 @@ namespace Barotrauma
 
         private Location Location => campaign?.Map?.CurrentLocation;
 
-        public Action OnItemsInBuyCrateChanged;
-        public Action OnItemsInSellCrateChanged;
-        public Action OnItemsInSellFromSubCrateChanged;
-        public Action OnPurchasedItemsChanged;
-        public Action OnSoldItemsChanged;
-        
+        public readonly NamedEvent<CargoManager> OnItemsInBuyCrateChanged = new NamedEvent<CargoManager>();
+        public readonly NamedEvent<CargoManager> OnItemsInSellCrateChanged = new NamedEvent<CargoManager>();
+        public readonly NamedEvent<CargoManager> OnItemsInSellFromSubCrateChanged = new NamedEvent<CargoManager>();
+        public readonly NamedEvent<CargoManager> OnPurchasedItemsChanged = new NamedEvent<CargoManager>();
+        public readonly NamedEvent<CargoManager> OnSoldItemsChanged = new NamedEvent<CargoManager>();
+
         public CargoManager(CampaignMode campaign)
         {
             this.campaign = campaign;
@@ -215,19 +215,19 @@ namespace Barotrauma
         public void ClearItemsInBuyCrate()
         {
             ItemsInBuyCrate.Clear();
-            OnItemsInBuyCrateChanged?.Invoke();
+            OnItemsInBuyCrateChanged?.Invoke(this);
         }
 
         public void ClearItemsInSellCrate()
         {
             ItemsInSellCrate.Clear();
-            OnItemsInSellCrateChanged?.Invoke();
+            OnItemsInSellCrateChanged?.Invoke(this);
         }
 
         public void ClearItemsInSellFromSubCrate()
         {
             ItemsInSellFromSubCrate.Clear();
-            OnItemsInSellFromSubCrateChanged?.Invoke();
+            OnItemsInSellFromSubCrateChanged?.Invoke(this);
         }
 
         public void SetPurchasedItems(Dictionary<Identifier, List<PurchasedItem>> purchasedItems)
@@ -238,7 +238,7 @@ namespace Barotrauma
             {
                 PurchasedItems.Add(entry.Key, entry.Value);
             }
-            OnPurchasedItemsChanged?.Invoke();
+            OnPurchasedItemsChanged?.Invoke(this);
         }
 
         public void ModifyItemQuantityInBuyCrate(Identifier storeIdentifier, ItemPrefab itemPrefab, int changeInQuantity, Client client = null)
@@ -255,7 +255,7 @@ namespace Barotrauma
             {
                 GetBuyCrateItems(storeIdentifier, create: true).Add(new PurchasedItem(itemPrefab, changeInQuantity, client));
             }
-            OnItemsInBuyCrateChanged?.Invoke();
+            OnItemsInBuyCrateChanged?.Invoke(this);
         }
 
         public void ModifyItemQuantityInSubSellCrate(Identifier storeIdentifier, ItemPrefab itemPrefab, int changeInQuantity, Client client = null)
@@ -272,7 +272,7 @@ namespace Barotrauma
             {
                 GetSubCrateItems(storeIdentifier, create: true).Add(new PurchasedItem(itemPrefab, changeInQuantity, client));
             }
-            OnItemsInSellFromSubCrateChanged?.Invoke();
+            OnItemsInSellFromSubCrateChanged?.Invoke(this);
         }
 
 #if SERVER
@@ -331,7 +331,7 @@ namespace Barotrauma
                     }
                 }
             }
-            OnPurchasedItemsChanged?.Invoke();
+            OnPurchasedItemsChanged?.Invoke(this);
         }
 
         public Dictionary<ItemPrefab, int> GetBuyValuesAtCurrentLocation(Identifier storeIdentifier, IEnumerable<ItemPrefab> items)
@@ -378,7 +378,7 @@ namespace Barotrauma
             }
             CreateItems(items, Submarine.MainSub, this);
             PurchasedItems.Clear();
-            OnPurchasedItemsChanged?.Invoke();
+            OnPurchasedItemsChanged?.Invoke(this);
         }
 
         private Dictionary<ItemPrefab, int> UndeterminedSoldEntities { get; } = new Dictionary<ItemPrefab, int>();

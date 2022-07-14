@@ -28,6 +28,7 @@ namespace Barotrauma
                     var subs = sub.GetConnectedSubs().Where(s => s.TeamID == sub.TeamID);
                     CreateAndPlace(subs);
                     subs.ForEach(s => s.Info.InitialSuppliesSpawned = true);
+                    sub.CheckFuel();
                 }
             }
 

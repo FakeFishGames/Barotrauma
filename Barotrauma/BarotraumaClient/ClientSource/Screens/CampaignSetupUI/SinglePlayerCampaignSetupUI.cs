@@ -235,13 +235,6 @@ namespace Barotrauma
                 }
             };
 
-            var disclaimerBtn = new GUIButton(new RectTransform(new Vector2(1.0f, 0.8f), rightColumn.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(5) }, style: "GUINotificationButton")
-            {
-                IgnoreLayoutGroups = true,
-                OnClicked = (btn, userdata) => { GameMain.Instance.ShowCampaignDisclaimer(); return true; }
-            };
-            disclaimerBtn.RectTransform.MaxSize = new Point((int)(30 * GUI.Scale));
-
             columnContainer.Recalculate();
             leftColumn.Recalculate();
             rightColumn.Recalculate();

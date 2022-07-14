@@ -549,7 +549,7 @@ namespace Barotrauma
                 startPath = new Tunnel(
                     TunnelType.SidePath,
                     new List<Point>() { startExitPosition, startPosition }, 
-                    minWidth / 2, parentTunnel: mainPath);
+                    minWidth, parentTunnel: mainPath);
                 Tunnels.Add(startPath);
             }
             else
@@ -561,7 +561,7 @@ namespace Barotrauma
                 endPath = new Tunnel(
                     TunnelType.SidePath,
                     new List<Point>() { endPosition, endExitPosition },
-                    minWidth / 2, parentTunnel: mainPath);
+                    minWidth, parentTunnel: mainPath);
                 Tunnels.Add(endPath);
             }
             else
@@ -576,14 +576,14 @@ namespace Barotrauma
                     endHole = new Tunnel(
                         TunnelType.SidePath,
                         new List<Point>() { startPosition, startExitPosition, new Point(0, Size.Y) },
-                        minWidth / 2, parentTunnel: mainPath);
+                        minWidth, parentTunnel: mainPath);
                 }
                 else
                 {
                     endHole = new Tunnel(
                         TunnelType.SidePath,
                         new List<Point>() { endPosition, endExitPosition, Size },
-                        minWidth / 2, parentTunnel: mainPath);
+                        minWidth, parentTunnel: mainPath);
                 }
                 Tunnels.Add(endHole);
             }
@@ -601,7 +601,7 @@ namespace Barotrauma
                 abyssTunnel = new Tunnel(
                     TunnelType.SidePath,
                     new List<Point>() { lowestPoint, new Point(lowestPoint.X, 0) },
-                    minWidth / 2, parentTunnel: mainPath);
+                    minWidth, parentTunnel: mainPath);
                 Tunnels.Add(abyssTunnel);
             }
 
@@ -4266,6 +4266,7 @@ namespace Barotrauma
                     corpse.TeamID = CharacterTeamType.None;
                     corpse.EnableDespawn = false;
                     selectedPrefab.GiveItems(corpse, wreck);
+                    corpse.Kill(CauseOfDeathType.Unknown, causeOfDeathAffliction: null, log: false);
                     corpse.CharacterHealth.ApplyAffliction(corpse.AnimController.MainLimb, AfflictionPrefab.OxygenLow.Instantiate(200));
                     bool applyBurns = Rand.Value() < 0.1f;
                     bool applyDamage = Rand.Value() < 0.3f;
@@ -4294,7 +4295,7 @@ namespace Barotrauma
                             return strength;
                         }
                     }
-                    corpse.Kill(CauseOfDeathType.Unknown, causeOfDeathAffliction: null, log: false);
+                    corpse.CharacterHealth.ForceUpdateVisuals();
                     corpse.GiveIdCardTags(sp);
 
                     bool isServerOrSingleplayer = GameMain.IsSingleplayer || GameMain.NetworkMember is { IsServer: true };

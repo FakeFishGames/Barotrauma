@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Text.RegularExpressions;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
     class RegExFindComponent : ItemComponent
     {
-        private static readonly TimeSpan timeout = TimeSpan.FromSeconds(Timing.Step);
+        private static readonly TimeSpan timeout = TimeSpan.FromMilliseconds(1);
 
         private string expression;
 
@@ -63,10 +62,9 @@ namespace Barotrauma.Items.Components
             get { return expression; }
             set 
             {
-                if (expression == value) return;
+                if (expression == value) { return; }
                 expression = value;
                 previousReceivedSignal = "";
-
                 try
                 {
                     regex = new Regex(
@@ -74,11 +72,12 @@ namespace Barotrauma.Items.Components
                         options: RegexOptions.None,
                         matchTimeout: timeout);
                 }
-
                 catch
                 {
                     return;
                 }
+                //reactivate the component, in case some faulty/malicious expression caused it to time out and deactivate itself
+                IsActive = true;
             }
         }
 
@@ -105,11 +104,16 @@ namespace Barotrauma.Items.Components
                 }
                 catch (Exception e)
                 {
-                    item.SendSignal(
-                        e is RegexMatchTimeoutException
-                            ? "TIMEOUT"
-                            : "ERROR",
-                        "signal_out");
+                    if (e is RegexMatchTimeoutException)
+                    {
+                        item.SendSignal("TIMEOUT", "signal_out");
+                        //deactivate the component if the expression caused it to time out
+                        IsActive = false;
+                    }
+                    else
+                    {
+                        item.SendSignal("ERROR", "signal_out");
+                    }
                     previousResult = false;
                     return;
                 }

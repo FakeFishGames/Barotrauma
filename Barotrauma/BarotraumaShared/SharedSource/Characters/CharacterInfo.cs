@@ -1639,8 +1639,13 @@ namespace Barotrauma
 
         private void RefreshHeadSprites()
         {
-            HeadSprite = null;
-            AttachmentSprites = null;
+            _headSprite = null;
+            LoadHeadSprite();
+#if CLIENT
+            CalculateHeadPosition(_headSprite);
+#endif
+            attachmentSprites?.Clear();
+            LoadAttachmentSprites();
         }
 
         // This could maybe be a LookUp instead?

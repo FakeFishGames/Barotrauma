@@ -57,8 +57,8 @@ namespace Barotrauma
 
             CreateUI(container);
 
-            campaign.Map.OnLocationSelected += SelectLocation;
-            campaign.Map.OnMissionsSelected += (connection, missions) => 
+            campaign.Map.OnLocationSelected = SelectLocation;
+            campaign.Map.OnMissionsSelected = (connection, missions) => 
             {
                 if (missionList?.Content != null)
                 {

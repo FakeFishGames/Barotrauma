@@ -598,7 +598,12 @@ namespace Barotrauma
             if (newHull != null)
             {
                 CoroutineManager.Invoke(() =>
-                    character.AnimController.FindHull(newHull.WorldPosition, setSubmarine: true));
+                {
+                    if (character != null && !character.Removed)
+                    {
+                        character.AnimController.FindHull(newHull.WorldPosition, setSubmarine: true);
+                    }
+                });
             }
 
             return false;

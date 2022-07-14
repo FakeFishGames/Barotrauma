@@ -324,7 +324,10 @@ namespace Barotrauma.Steam
 
                 using (var copyIndicator = new CopyIndicator(copyIndicatorPath))
                 {
-                    await CopyDirectory(itemDirectory, modPathDirName ?? modName, itemDirectory, installDir, ShouldCorrectPaths.Yes);
+                    await CopyDirectory(itemDirectory, modPathDirName ?? modName, itemDirectory, installDir,
+                        gameVersion < new Version(0, 18, 3, 0)
+                            ? ShouldCorrectPaths.Yes
+                            : ShouldCorrectPaths.No);
 
                     string fileListDestPath = Path.Combine(installDir, ContentPackage.FileListFileName);
                     XDocument fileListDest = XMLExtensions.TryLoadXml(fileListDestPath);

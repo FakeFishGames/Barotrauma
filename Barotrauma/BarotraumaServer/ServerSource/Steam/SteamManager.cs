@@ -65,6 +65,8 @@ namespace Barotrauma.Steam
             Steamworks.SteamServer.SetKey("allowspectating", server.ServerSettings.AllowSpectating.ToString());
             Steamworks.SteamServer.SetKey("allowrespawn", server.ServerSettings.AllowRespawn.ToString());
             Steamworks.SteamServer.SetKey("traitors", server.ServerSettings.TraitorsEnabled.ToString());
+            Steamworks.SteamServer.SetKey("friendlyfireenabled", server.ServerSettings.AllowFriendlyFire.ToString());
+            Steamworks.SteamServer.SetKey("karmaenabled", server.ServerSettings.KarmaEnabled.ToString());
             Steamworks.SteamServer.SetKey("gamestarted", server.GameStarted.ToString());
             Steamworks.SteamServer.SetKey("gamemode", server.ServerSettings.GameModeIdentifier.Value);
             Steamworks.SteamServer.SetKey("playstyle", server.ServerSettings.PlayStyle.ToString());
