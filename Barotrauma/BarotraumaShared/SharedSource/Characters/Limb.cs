@@ -822,7 +822,9 @@ namespace Barotrauma
         public void Update(float deltaTime)
         {
             UpdateProjSpecific(deltaTime);
-            
+            ApplyStatusEffects(ActionType.Always, deltaTime);
+            ApplyStatusEffects(ActionType.OnActive, deltaTime);
+
             if (InWater)
             {
                 body.ApplyWaterForces();
