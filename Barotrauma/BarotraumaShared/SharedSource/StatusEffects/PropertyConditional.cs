@@ -253,12 +253,14 @@ namespace Barotrauma
                 case ConditionType.SpeciesName:
                     {
                         if (target == null) { return Operator == OperatorType.NotEquals; }
+                        if (target is Limb targetLimb) { return (Operator == OperatorType.Equals) == (targetLimb.character.SpeciesName == AttributeValue); }
                         if (!(target is Character targetCharacter)) { return false; }
                         return (Operator == OperatorType.Equals) == (targetCharacter.SpeciesName == AttributeValue);
                     }
                 case ConditionType.SpeciesGroup:
                     {
                         if (target == null) { return Operator == OperatorType.NotEquals; }
+                        if (target is Limb targetLimb) { return (Operator == OperatorType.Equals) == targetLimb.character.Params.CompareGroup(AttributeValue.ToIdentifier()); }
                         if (!(target is Character targetCharacter)) { return false; }
                         return (Operator == OperatorType.Equals) == targetCharacter.Params.CompareGroup(AttributeValue.ToIdentifier());
                     }
