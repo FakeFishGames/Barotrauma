@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -7,52 +8,18 @@ namespace Barotrauma
 {
     partial class CargoManager
     {
-        private class SoldEntity
-        {
-            public enum SellStatus
-            {
-                /// <summary>
-                /// Entity sold in SP. Or, entity sold by client and confirmed by server in MP.
-                /// </summary>
-                Confirmed,
-                /// <summary>
-                /// Entity sold by client in MP. Client has received at least one update from server after selling, but this entity wasn't yet confirmed.
-                /// </summary>
-                Unconfirmed,
-                /// <summary>
-                /// Entity sold by client in MP. Client hasn't yet received an update from server after selling.
-                /// </summary>
-                Local
-            }
-
-            public Item Item { get; }
-            public SellStatus Status { get; set; }
-
-            private SoldEntity(Item item, SellStatus status)
-            {
-                Item = item;
-                Status = status;
-            }
-
-            public static SoldEntity CreateInSinglePlayer(Item item) => new SoldEntity(item, SellStatus.Confirmed);
-            public static SoldEntity CreateInMultiPlayer(Item item) => new SoldEntity(item, SellStatus.Local);
-        }
-
         private List<SoldEntity> SoldEntities { get; } = new List<SoldEntity>();
+
+        // The bag slot is intentionally left out since we want to be able to sell items from there
+        private readonly List<InvSlotType> equipmentSlots = new List<InvSlotType>() { InvSlotType.Head, InvSlotType.InnerClothes, InvSlotType.OuterClothes, InvSlotType.Headset, InvSlotType.Card };
 
         public IEnumerable<Item> GetSellableItems(Character character)
         {
             if (character == null) { return new List<Item>(); }
             var confirmedSoldEntities = GetConfirmedSoldEntities();
-            // The bag slot is intentionally left out since we want to be able to sell items from there
-            var equipmentSlots = new List<InvSlotType>() { InvSlotType.Head, InvSlotType.InnerClothes, InvSlotType.OuterClothes, InvSlotType.Headset, InvSlotType.Card };
             return character.Inventory.FindAllItems(item =>
             {
-                if (item.SpawnedInOutpost) { return false; }
-                if (!item.Prefab.AllowSellingWhenBroken && item.ConditionPercentage < 90.0f) { return false; }
-                if (confirmedSoldEntities.Any(it => it.Item == item)) { return false; }
-                // There must be no contained items or the contained items must be confirmed as sold
-                if (!item.ContainedItems.All(it => confirmedSoldEntities.Any(se => se.Item == it))) { return false; }
+                if (!IsItemSellable(item, confirmedSoldEntities)) { return false; }
                 // Item must be in a non-equipment slot if possible
                 if (!item.AllowedSlots.All(s => equipmentSlots.Contains(s)) && IsInEquipmentSlot(item)) { return false; }
                 // Item must not be contained inside an item in an equipment slot
@@ -70,35 +37,6 @@ namespace Barotrauma
             }
         }
 
-        public IEnumerable<Item> GetSellableItemsFromSub()
-        {
-            if (Submarine.MainSub == null) { return new List<Item>(); }
-            var confirmedSoldEntities = GetConfirmedSoldEntities();
-            return Submarine.MainSub.GetItems(true).FindAll(item =>
-            {
-                if (!item.Prefab.CanBeSold) { return false; }
-                if (item.SpawnedInOutpost) { return false; }
-                if (!item.Prefab.AllowSellingWhenBroken && item.ConditionPercentage < 90.0f) { return false; }
-                if (!item.Components.All(c => !(c is Holdable h) || !h.Attachable || !h.Attached)) { return false; }
-                if (!item.Components.All(c => !(c is Wire w) || w.Connections.All(c => c == null))) { return false; }
-                if (!ItemAndAllContainersInteractable(item)) { return false; }
-                if (confirmedSoldEntities.Any(it => it.Item == item)) { return false; }
-                // There must be no contained items or the contained items must be confirmed as sold
-                if (!item.ContainedItems.All(it => confirmedSoldEntities.Any(se => se.Item == it))) { return false; }
-                return true;
-            }).Distinct();
-
-            static bool ItemAndAllContainersInteractable(Item item)
-            {
-                do
-                {
-                    if (!item.IsPlayerTeamInteractable) { return false; }
-                    item = item.Container;
-                } while (item != null);
-                return true;
-            }
-        }
-
         private IEnumerable<SoldEntity> GetConfirmedSoldEntities()
         {
             // Only consider items which have been:
@@ -107,22 +45,39 @@ namespace Barotrauma
             return SoldEntities.Where(se => se.Status != SoldEntity.SellStatus.Unconfirmed);
         }
 
-        public void SetItemsInBuyCrate(List<PurchasedItem> items)
+        public void SetItemsInBuyCrate(Dictionary<Identifier, List<PurchasedItem>> items)
         {
             ItemsInBuyCrate.Clear();
-            ItemsInBuyCrate.AddRange(items);
-            OnItemsInBuyCrateChanged?.Invoke();
+            foreach (var entry in items)
+            {
+                ItemsInBuyCrate.Add(entry.Key, entry.Value);
+            }
+            OnItemsInBuyCrateChanged?.Invoke(this);
         }
 
-        public void SetSoldItems(List<SoldItem> items)
+        public void SetItemsInSubSellCrate(Dictionary<Identifier, List<PurchasedItem>> items)
         {
-            SoldItems.Clear();
-            SoldItems.AddRange(items);
+            ItemsInSellFromSubCrate.Clear();
+            foreach (var entry in items)
+            {
+                ItemsInSellFromSubCrate.Add(entry.Key, entry.Value);
+            }
+            OnItemsInSellFromSubCrateChanged?.Invoke(this);
+        }
 
-            foreach (SoldEntity se in SoldEntities)
+        public void SetSoldItems(Dictionary<Identifier, List<SoldItem>> items)
+        {
+            if (SoldItems.Count == 0 && items.Count == 0) { return; }
+
+            SoldItems.Clear();
+            foreach (var entry in items)
+            {
+                SoldItems.Add(entry.Key, entry.Value);
+            }
+            foreach (var se in SoldEntities)
             {
                 if (se.Status == SoldEntity.SellStatus.Confirmed) { continue; }
-                if (SoldItems.Any(si => si.ID == se.Item.ID && si.ItemPrefab == se.Item.Prefab && (GameMain.Client == null || GameMain.Client.ID == si.SellerID)))
+                if (SoldItems.Any(si => si.Value.Any(si => Match(si, se, true))))
                 {
                     se.Status = SoldEntity.SellStatus.Confirmed;
                 }
@@ -131,117 +86,120 @@ namespace Barotrauma
                     se.Status = SoldEntity.SellStatus.Unconfirmed;
                 }
             }
+            foreach (var soldItems in SoldItems.Values)
+            {
+                foreach (var si in soldItems)
+                {
+                    if (si.Origin != SoldItem.SellOrigin.Submarine) { continue; }
+                    if (!(SoldEntities.FirstOrDefault(se => se.Item == null && Match(si, se, false)) is SoldEntity soldEntityMatch)) { continue; }
+                    if (!(Entity.FindEntityByID(si.ID) is Item item)) { continue; }
+                    soldEntityMatch.SetItem(item);
+                    soldEntityMatch.Status = SoldEntity.SellStatus.Confirmed;
+                }
+            }
+            OnSoldItemsChanged?.Invoke(this);
 
-            OnSoldItemsChanged?.Invoke();
+            static bool Match(SoldItem soldItem, SoldEntity soldEntity, bool matchId)
+            {
+                if (soldItem.ItemPrefab != soldEntity.ItemPrefab) { return false; }
+                if (matchId && (soldEntity.Item == null || soldItem.ID != soldEntity.Item.ID)) { return false; }
+                if (soldItem.Origin == SoldItem.SellOrigin.Character && GameMain.Client != null && soldItem.SellerID != GameMain.Client.ID) { return false; }
+                return true;
+            }
         }
 
-        public void ModifyItemQuantityInSellCrate(ItemPrefab itemPrefab, int changeInQuantity)
+        public void ModifyItemQuantityInSellCrate(Identifier storeIdentifier, ItemPrefab itemPrefab, int changeInQuantity)
         {
-            PurchasedItem itemToSell = ItemsInSellCrate.Find(i => i.ItemPrefab == itemPrefab);
-            if (itemToSell != null)
+            if (GetSellCrateItem(storeIdentifier, itemPrefab) is { } item)
             {
-                itemToSell.Quantity += changeInQuantity;
-                if (itemToSell.Quantity < 1)
+                item.Quantity += changeInQuantity;
+                if (item.Quantity < 1)
                 {
-                    ItemsInSellCrate.Remove(itemToSell);
+                    GetSellCrateItems(storeIdentifier)?.Remove(item);
                 }
             }
             else if (changeInQuantity > 0)
             {
-                itemToSell = new PurchasedItem(itemPrefab, changeInQuantity);
-                ItemsInSellCrate.Add(itemToSell);
+                GetSellCrateItems(storeIdentifier, create: true).Add(new PurchasedItem(itemPrefab, changeInQuantity));
             }
-            OnItemsInSellCrateChanged?.Invoke();
+            OnItemsInSellCrateChanged?.Invoke(this);
         }
 
-        public void ModifyItemQuantityInSellFromSubCrate(ItemPrefab itemPrefab, int changeInQuantity)
+        public void SellItems(Identifier storeIdentifier, List<PurchasedItem> itemsToSell, Store.StoreTab sellingMode)
         {
-            var itemToSell = ItemsInSellFromSubCrate.Find(i => i.ItemPrefab == itemPrefab);
-            if (itemToSell != null)
+            IEnumerable<Item> sellableItems;
+            try
             {
-                itemToSell.Quantity += changeInQuantity;
-                if (itemToSell.Quantity < 1)
+                sellableItems = sellingMode switch
                 {
-                    ItemsInSellFromSubCrate.Remove(itemToSell);
-                }
+                    Store.StoreTab.Sell => GetSellableItems(Character.Controlled),
+                    Store.StoreTab.SellSub => GetSellableItemsFromSub(),
+                    _ => throw new NotImplementedException()
+                };
             }
-            else if (changeInQuantity > 0)
+            catch (NotImplementedException e)
             {
-                itemToSell = new PurchasedItem(itemPrefab, changeInQuantity);
-                ItemsInSellFromSubCrate.Add(itemToSell);
+                DebugConsole.ShowError($"Error selling items: uknown store tab type \"{sellingMode}\".\n{e.StackTrace.CleanupStackTrace()}");
+                return;
             }
-            OnItemsInSellFromSubCrateChanged?.Invoke();
-        }
-
-        public void SellItems(List<PurchasedItem> itemsToSell, Store.StoreTab sellingMode)
-        {
-            var sellableItems = sellingMode switch
-            {
-                Store.StoreTab.Sell => GetSellableItems(Character.Controlled),
-                Store.StoreTab.SellFromSub => GetSellableItemsFromSub(),
-                _ => throw new System.NotImplementedException(),
-            }; 
             bool canAddToRemoveQueue = campaign.IsSinglePlayer && Entity.Spawner != null;
-            var sellerId = GameMain.Client?.ID ?? 0;
-
-            // Check all the prices before starting the transaction
-            // to make sure the modifiers stay the same for the whole transaction
-            Dictionary<ItemPrefab, int> sellValues = GetSellValuesAtCurrentLocation(itemsToSell.Select(i => i.ItemPrefab));
-
-            foreach (PurchasedItem item in itemsToSell)
+            byte sellerId = GameMain.Client?.ID ?? 0;
+            // Check all the prices before starting the transaction to make sure the modifiers stay the same for the whole transaction
+            var sellValues = GetSellValuesAtCurrentLocation(storeIdentifier, itemsToSell.Select(i => i.ItemPrefab));
+            if (!(Location.GetStore(storeIdentifier) is { } store))
             {
-                var itemValue = item.Quantity * sellValues[item.ItemPrefab];
-
+                DebugConsole.ShowError($"Error selling items at {Location}: no store with identifier \"{storeIdentifier}\" exists.\n{Environment.StackTrace.CleanupStackTrace()}");
+                return;
+            }
+            var storeSpecificSoldItems = GetSoldItems(storeIdentifier, create: true);
+            foreach (var item in itemsToSell)
+            {
+                int itemValue = item.Quantity * sellValues[item.ItemPrefab];
                 // check if the store can afford the item
-                if (Location.StoreCurrentBalance < itemValue) { continue; }
-
+                if (store.Balance < itemValue) { continue; }
                 // TODO: Write logic for prioritizing certain items over others (e.g. lone Battery Cell should be preferred over one inside a Stun Baton)
                 var matchingItems = sellableItems.Where(i => i.Prefab == item.ItemPrefab);
-                if (matchingItems.Count() <= item.Quantity)
+                int count = Math.Min(item.Quantity, matchingItems.Count());
+                SoldItem.SellOrigin origin = sellingMode == Store.StoreTab.Sell ? SoldItem.SellOrigin.Character : SoldItem.SellOrigin.Submarine;
+                if (origin == SoldItem.SellOrigin.Character || GameMain.IsSingleplayer)
                 {
-                    foreach (Item i in matchingItems)
+                    for (int i = 0; i < count; i++)
                     {
-                        SoldItems.Add(new SoldItem(i.Prefab, i.ID, canAddToRemoveQueue, sellerId));
-                        SoldEntities.Add(campaign.IsSinglePlayer ? SoldEntity.CreateInSinglePlayer(i) : SoldEntity.CreateInMultiPlayer(i));
-                        if (canAddToRemoveQueue) { Entity.Spawner.AddToRemoveQueue(i); }
+                        var matchingItem = matchingItems.ElementAt(i);
+                        storeSpecificSoldItems.Add(new SoldItem(matchingItem.Prefab, matchingItem.ID, canAddToRemoveQueue, sellerId, origin));
+                        SoldEntities.Add(new SoldEntity(matchingItem, campaign.IsSinglePlayer ? SoldEntity.SellStatus.Confirmed : SoldEntity.SellStatus.Local));
+                        if (canAddToRemoveQueue) { Entity.Spawner.AddItemToRemoveQueue(matchingItem); }
                     }
                 }
                 else
                 {
-                    for (int i = 0; i < item.Quantity; i++)
+                    // When selling from the sub in multiplayer, the server will determine the items that are sold
+                    for (int i = 0; i < count; i++)
                     {
-                        var matchingItem = matchingItems.ElementAt(i);
-                        SoldItems.Add(new SoldItem(matchingItem.Prefab, matchingItem.ID, canAddToRemoveQueue, sellerId));
-                        SoldEntities.Add(campaign.IsSinglePlayer ? SoldEntity.CreateInSinglePlayer(matchingItem) : SoldEntity.CreateInMultiPlayer(matchingItem));
-                        if (canAddToRemoveQueue) { Entity.Spawner.AddToRemoveQueue(matchingItem); }
+                        storeSpecificSoldItems.Add(new SoldItem(item.ItemPrefab, Entity.NullEntityID, canAddToRemoveQueue, sellerId, origin));
+                        SoldEntities.Add(new SoldEntity(item.ItemPrefab, SoldEntity.SellStatus.Local));
                     }
                 }
-
                 // Exchange money
-                Location.StoreCurrentBalance -= itemValue;
-                campaign.Money += itemValue;
+                store.Balance -= itemValue;
+                if (GameMain.IsSingleplayer)
+                {
+                    campaign.Bank.Give(itemValue);
+                }
+                GameAnalyticsManager.AddMoneyGainedEvent(itemValue, GameAnalyticsManager.MoneySource.Store, item.ItemPrefab.Identifier.Value);
 
                 // Remove from the sell crate
-                // TODO: Simplify duplicate logic?
-                if (sellingMode == Store.StoreTab.Sell && ItemsInSellCrate.Find(pi => pi.ItemPrefab == item.ItemPrefab) is { } inventoryItem)
+                var sellCrate = (sellingMode == Store.StoreTab.Sell ? GetSellCrateItems(storeIdentifier) : GetSubCrateItems(storeIdentifier));
+                if (sellCrate?.Find(pi => pi.ItemPrefab == item.ItemPrefab) is { } itemToSell)
                 {
-                    inventoryItem.Quantity -= item.Quantity;
-                    if (inventoryItem.Quantity < 1)
+                    itemToSell.Quantity -= item.Quantity;
+                    if (itemToSell.Quantity < 1)
                     {
-                        ItemsInSellCrate.Remove(inventoryItem);
-                    }
-                }
-                else if(sellingMode == Store.StoreTab.SellFromSub && ItemsInSellFromSubCrate.Find(pi => pi.ItemPrefab == item.ItemPrefab) is { } subItem)
-                {
-                    subItem.Quantity -= item.Quantity;
-                    if (subItem.Quantity < 1)
-                    {
-                        ItemsInSellFromSubCrate.Remove(subItem);
+                        sellCrate.Remove(itemToSell);
                     }
                 }
             }
-
-            OnSoldItemsChanged?.Invoke();
+            OnSoldItemsChanged?.Invoke(this);
         }
 
         public void ClearSoldItemsProjSpecific()

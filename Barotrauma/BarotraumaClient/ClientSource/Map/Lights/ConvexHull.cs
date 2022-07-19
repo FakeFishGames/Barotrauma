@@ -388,7 +388,7 @@ namespace Barotrauma.Lights
             if (!BoundingBox.Contains(point)) { return false; }
 
             Vector2 center = (vertices[0].Pos + vertices[1].Pos + vertices[2].Pos + vertices[3].Pos) * 0.25f;
-            for (int i=0;i<4;i++)
+            for (int i = 0; i < 4; i++)
             {
                 Vector2 segmentVector = vertices[(i + 1) % 4].Pos - vertices[i].Pos;
                 Vector2 centerToVertex = center - vertices[i].Pos;
@@ -461,7 +461,7 @@ namespace Barotrauma.Lights
                 Matrix.CreateTranslation(-origin.X, -origin.Y, 0.0f) * 
                 Matrix.CreateRotationZ(amount) *
                 Matrix.CreateTranslation(origin.X, origin.Y, 0.0f);
-            SetVertices(vertices.Select(v => v.Pos).ToArray(), rotationMatrix);
+            SetVertices(vertices.Select(v => v.Pos).ToArray(), rotationMatrix: rotationMatrix);
         }
 
         private void CalculateDimensions()
@@ -541,7 +541,7 @@ namespace Barotrauma.Lights
             }
         }
 
-        public void SetVertices(Vector2[] points, Matrix? rotationMatrix = null)
+        public void SetVertices(Vector2[] points, bool mergeOverlappingSegments = true, Matrix? rotationMatrix = null)
         {
             Debug.Assert(points.Length == 4, "Only rectangular convex hulls are supported");
 
@@ -594,13 +594,16 @@ namespace Barotrauma.Lights
 
             if (ParentEntity == null) { return; }
 
-            var chList = HullLists.Find(h => h.Submarine == ParentEntity.Submarine);
-            if (chList != null)
+            if (mergeOverlappingSegments)
             {
-                overlappingHulls.Clear();
-                foreach (ConvexHull ch in chList.List)
+                var chList = HullLists.Find(h => h.Submarine == ParentEntity.Submarine);
+                if (chList != null)
                 {
-                    MergeOverlappingSegments(ch);
+                    overlappingHulls.Clear();
+                    foreach (ConvexHull ch in chList.List)
+                    {
+                        MergeOverlappingSegments(ch);
+                    }
                 }
             }
         }
@@ -695,7 +698,7 @@ namespace Barotrauma.Lights
             }
 
             ShadowVertexCount = 0;
-            for (int i=0;i<4;i++)
+            for (int i = 0; i < 4; i++)
             {
                 if (!backFacing[i]) { continue; }
                 int currentIndex = i;
@@ -846,16 +849,15 @@ namespace Barotrauma.Lights
                     if (chList.Submarine == null)
                     {
                         list.AddRange(chList.List.FindAll(ch => MathUtils.CircleIntersectsRectangle(lightPos, range, ch.BoundingBox)));
-
                     }
                     //light is outside, convexhull inside a sub
                     else
                     {
                         Rectangle subBorders = chList.Submarine.Borders;
                         subBorders.Y -= chList.Submarine.Borders.Height;
-                        if (!MathUtils.CircleIntersectsRectangle(lightPos - chList.Submarine.WorldPosition, range, subBorders)) continue;
+                        if (!MathUtils.CircleIntersectsRectangle(lightPos - chList.Submarine.WorldPosition, range, subBorders)) { continue; }
 
-                        lightPos -= (chList.Submarine.WorldPosition - chList.Submarine.HiddenSubPosition);
+                        lightPos -= chList.Submarine.WorldPosition - chList.Submarine.HiddenSubPosition;
 
                         list.AddRange(chList.List.FindAll(ch => MathUtils.CircleIntersectsRectangle(lightPos, range, ch.BoundingBox)));
                     }
@@ -865,14 +867,6 @@ namespace Barotrauma.Lights
                     //light is inside, convexhull outside
                     if (chList.Submarine == null)
                     {
-                        lightPos += (ParentSub.WorldPosition - ParentSub.HiddenSubPosition);
-                        HashSet<RuinGeneration.Ruin> visibleRuins = new HashSet<RuinGeneration.Ruin>();
-                        foreach (RuinGeneration.Ruin ruin in Level.Loaded.Ruins)
-                        {
-                            if (!MathUtils.CircleIntersectsRectangle(lightPos, range, ruin.Area)) { continue; }
-                            visibleRuins.Add(ruin);
-                        }
-                        list.AddRange(chList.List.FindAll(ch => ch.ParentEntity?.ParentRuin != null && visibleRuins.Contains(ch.ParentEntity.ParentRuin)));
                         continue;
                     }
                     //light and convexhull are both inside the same sub

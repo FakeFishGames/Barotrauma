@@ -10,7 +10,7 @@ namespace Barotrauma
 {
     class AIObjectiveIdle : AIObjective
     {
-        public override string Identifier { get; set; } = "idle";
+        public override Identifier Identifier { get; set; } = "idle".ToIdentifier();
         public override bool AllowAutomaticItemUnequipping => true;
         public override bool AllowInAnySub => true;
 
@@ -93,7 +93,7 @@ namespace Barotrauma
 
         public override bool IsLoop { get => true; set => throw new Exception("Trying to set the value for IsLoop from: " + Environment.StackTrace.CleanupStackTrace()); }
 
-        public readonly HashSet<string> PreferredOutpostModuleTypes = new HashSet<string>();
+        public readonly HashSet<Identifier> PreferredOutpostModuleTypes = new HashSet<Identifier>();
 
         public void CalculatePriority(float max = 0)
         {
@@ -185,6 +185,11 @@ namespace Barotrauma
                 {
                     PathSteering.SteeringSeek(character.GetRelativeSimPosition(currentTarget), weight: 1, nodeFilter: node => node.Waypoint.CurrentHull != null);
                 }
+                else
+                {
+                    PathSteering.ResetPath();
+                    PathSteering.Reset();
+                }
             }
             else
             {
@@ -242,9 +247,8 @@ namespace Barotrauma
                     if (!searchingNewHull)
                     {
                         //find all available hulls first
-                        FindTargetHulls();
                         searchingNewHull = true;
-                        return;
+                        FindTargetHulls();
                     }
                     else if (targetHulls.Any())
                     {
@@ -252,14 +256,13 @@ namespace Barotrauma
                         currentTarget = ToolBox.SelectWeightedRandom(targetHulls, hullWeights, Rand.RandSync.Unsynced);
                         bool isInWrongSub = (character.TeamID == CharacterTeamType.FriendlyNPC && !character.IsEscorted) && character.Submarine.TeamID != character.TeamID;
                         bool isCurrentHullAllowed = !isInWrongSub && !IsForbidden(character.CurrentHull);
-                        var path = PathSteering.PathFinder.FindPath(character.SimPosition, currentTarget.SimPosition, errorMsgStr: null, nodeFilter: node =>
+                        var path = PathSteering.PathFinder.FindPath(character.SimPosition, currentTarget.SimPosition, character.Submarine, nodeFilter: node =>
                         {
                             if (node.Waypoint.CurrentHull == null) { return false; }
-                            // Check that there is no unsafe or forbidden hulls on the way to the target
+                            // Check that there is no unsafe hulls on the way to the target
                             if (node.Waypoint.CurrentHull != character.CurrentHull && HumanAIController.UnsafeHulls.Contains(node.Waypoint.CurrentHull)) { return false; }
-                            if (isCurrentHullAllowed && IsForbidden(node.Waypoint.CurrentHull)) { return false; }
                             return true;
-                        });
+                        }, endNodeFilter: node => !isCurrentHullAllowed | !IsForbidden(node.Waypoint.CurrentHull));
                         if (path.Unreachable)
                         {
                             //can't go to this room, remove it from the list and try another room
@@ -271,31 +274,20 @@ namespace Barotrauma
                             SetTargetTimerLow();
                             return;
                         }
+                        character.AIController.SelectTarget(currentTarget.AiTarget);
+                        PathSteering.SetPath(path);
+                        SetTargetTimerNormal();
                         searchingNewHull = false;
                     }
                     else
                     {
-                        // Couldn't find a target for some reason -> reset
+                        // Couldn't find a valid hull
                         SetTargetTimerHigh();
                         searchingNewHull = false;
                     }
-
-                    if (currentTarget != null)
-                    {
-                        character.AIController.SelectTarget(currentTarget.AiTarget);
-                        string errorMsg = null;
-#if DEBUG
-                        bool isRoomNameFound = currentTarget.DisplayName != null;
-                        errorMsg = "(Character " + character.Name + " idling, target " + (isRoomNameFound ? currentTarget.DisplayName : currentTarget.ToString()) + ")";
-#endif
-                        var path = PathSteering.PathFinder.FindPath(character.SimPosition, currentTarget.SimPosition, errorMsgStr: errorMsg, nodeFilter: node => node.Waypoint.CurrentHull != null);
-                        PathSteering.SetPath(path);
-                    }
-                    SetTargetTimerNormal();
                 }
                 newTargetTimer -= deltaTime;
-
-                if (!character.IsClimbing && IsSteeringFinished())
+                if (!character.IsClimbing && (PathSteering == null || PathSteering.CurrentPath == null || IsSteeringFinished()))
                 {
                     Wander(deltaTime);
                 }
@@ -303,12 +295,25 @@ namespace Barotrauma
                 {
                     PathSteering.SteeringSeek(character.GetRelativeSimPosition(currentTarget), weight: 1, nodeFilter: node => node.Waypoint.CurrentHull != null);
                 }
+                else
+                {
+                    PathSteering.ResetPath();
+                    PathSteering.Reset();
+                }
             }
         }
 
         public void Wander(float deltaTime)
         {
-            if (character.IsClimbing) { return; }
+            if (character.IsClimbing)
+            {
+                if (character.AnimController.GetHeightFromFloor() < 0.1f)
+                {
+                    character.AnimController.Anim = AnimController.Animation.None;
+                    character.SelectedConstruction = null;
+                }
+                return;
+            }
             var currentHull = character.CurrentHull;
             if (!character.AnimController.InWater && currentHull != null)
             {
@@ -404,11 +409,12 @@ namespace Barotrauma
         {
             targetHulls.Clear();
             hullWeights.Clear();
-            foreach (var hull in Hull.hullList)
+            foreach (var hull in Hull.HullList)
             {
+                if (character.Submarine == null) { break; }
                 if (HumanAIController.UnsafeHulls.Contains(hull)) { continue; }
                 if (hull.Submarine == null) { continue; }
-                if (character.Submarine == null) { break; }
+                if (hull.Submarine.Info.IsRuin || hull.Submarine.Info.IsWreck) { continue; }
                 if (character.TeamID == CharacterTeamType.FriendlyNPC && !character.IsEscorted)
                 {
                     if (hull.Submarine.TeamID != character.TeamID)
@@ -482,7 +488,7 @@ namespace Barotrauma
                 if (hull != null)
                 {
                     itemsToClean.Clear();
-                    foreach (Item item in Item.ItemList)
+                    foreach (Item item in Item.CleanableItems)
                     {
                         if (item.CurrentHull != hull) { continue; }
                         if (AIObjectiveCleanupItems.IsValidTarget(item, character, checkInventory: true, allowUnloading: false) && !ignoredItems.Contains(item))

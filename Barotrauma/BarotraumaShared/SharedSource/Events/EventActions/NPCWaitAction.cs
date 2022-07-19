@@ -6,18 +6,18 @@ namespace Barotrauma
 {
     class NPCWaitAction : EventAction
     {
-        [Serialize("", true)]
-        public string NPCTag { get; set; }
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier NPCTag { get; set; }
 
-        [Serialize(true, true)]
+        [Serialize(true, IsPropertySaveable.Yes)]
         public bool Wait { get; set; }
 
         private bool isFinished = false;
 
 
-        public NPCWaitAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) { }
+        public NPCWaitAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
 
-        private List<Character> affectedNpcs = null;
+        private IEnumerable<Character> affectedNpcs;
 
         private AIObjectiveGoTo gotoObjective;
 
@@ -25,7 +25,7 @@ namespace Barotrauma
         {
             if (isFinished) { return; }
 
-            affectedNpcs = ParentEvent.GetTargets(NPCTag).Where(c => c is Character).Select(c => c as Character).ToList();
+            affectedNpcs = ParentEvent.GetTargets(NPCTag).Where(c => c is Character).Select(c => c as Character);
 
             foreach (var npc in affectedNpcs)
             {
@@ -62,7 +62,7 @@ namespace Barotrauma
             {
                 foreach (var npc in affectedNpcs)
                 {
-                    if (npc.Removed || !(npc.AIController is HumanAIController humanAiController)) { continue; }
+                    if (npc.Removed || !(npc.AIController is HumanAIController)) { continue; }
                     if (gotoObjective != null)
                     {
                         gotoObjective.Abandon = true;

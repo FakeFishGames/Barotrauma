@@ -837,6 +837,10 @@ internal static class Sdl
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate Keymod d_sdl_getmodstate();
         public static d_sdl_getmodstate GetModState = FuncLoader.LoadFunction<d_sdl_getmodstate>(NativeLibrary, "SDL_GetModState");
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate int d_sdl_getkeyfromscancode(int scancode);
+        public static d_sdl_getkeyfromscancode GetKeyFromScancode = FuncLoader.LoadFunction<d_sdl_getkeyfromscancode>(NativeLibrary, "SDL_GetKeyFromScancode");
     }
 
     public static class Joystick

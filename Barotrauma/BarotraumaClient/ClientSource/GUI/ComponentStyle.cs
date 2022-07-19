@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -16,7 +17,7 @@ namespace Barotrauma
         Toggle
     }
 
-    public class GUIComponentStyle
+    public class GUIComponentStyle : GUIPrefab
     {
         public readonly Vector4 Padding;
 
@@ -35,31 +36,53 @@ namespace Barotrauma
         public readonly float ColorCrossFadeTime;
         public readonly TransitionMode TransitionMode;
 
-        public readonly string Font;
+        public readonly Identifier Font;
         public readonly bool ForceUpperCase;
 
         public readonly Color OutlineColor;
         
-        public readonly XElement Element;
+        public readonly ContentXElement Element;
 
         public readonly Dictionary<GUIComponent.ComponentState, List<UISprite>> Sprites;
 
         public SpriteFallBackState FallBackState;
-        
-        public Dictionary<string, GUIComponentStyle> ChildStyles;
 
-        public readonly GUIStyle Style;
+        public readonly GUIComponentStyle ParentStyle;
+        public readonly Dictionary<Identifier, GUIComponentStyle> ChildStyles;
+
+        public static GUIComponentStyle FromHierarchy(IReadOnlyList<Identifier> hierarchy)
+        {
+            if (hierarchy is null || hierarchy.None()) { return null; }
+            GUIStyle.ComponentStyles.TryGet(hierarchy[0], out GUIComponentStyle style);
+            for (int i = 1; i < hierarchy.Count; i++)
+            {
+                if (style is null) { return null; }
+                style.ChildStyles.TryGetValue(hierarchy[i], out style);
+            }
+            return style;
+        }
+
+        public static Identifier[] ToHierarchy(GUIComponentStyle style)
+        {
+            List<Identifier> ids = new List<Identifier>();
+            while (style != null)
+            {
+                ids.Insert(0, style.Identifier);
+                style = style.ParentStyle;
+            }
+
+            return ids.ToArray();
+        }
 
         public readonly string Name;
 
         public int? Width { get; private set; }
         public int? Height { get; private set; }
 
-        public GUIComponentStyle(XElement element, GUIStyle style)
+        public GUIComponentStyle(ContentXElement element, UIStyleFile file, GUIComponentStyle parent = null) : base(element, file)
         {
             Name = element.Name.LocalName;
 
-            Style = style;
             Element = element;
 
             Sprites = new Dictionary<GUIComponent.ComponentState, List<UISprite>>();
@@ -68,7 +91,8 @@ namespace Barotrauma
                 Sprites[state] = new List<UISprite>();
             }
 
-            ChildStyles = new Dictionary<string, GUIComponentStyle>();
+            ParentStyle = parent;
+            ChildStyles = new Dictionary<Identifier, GUIComponentStyle>();
 
             Padding = element.GetAttributeVector4("padding", Vector4.Zero);
             
@@ -95,10 +119,10 @@ namespace Barotrauma
                 FallBackState = s;
             }
 
-            Font = element.GetAttributeString("font", ""); 
+            Font = element.GetAttributeIdentifier("font", ""); 
             ForceUpperCase = element.GetAttributeBool("forceuppercase", false);
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -106,7 +130,7 @@ namespace Barotrauma
                         UISprite newSprite = new UISprite(subElement);
 
                         GUIComponent.ComponentState spriteState = GUIComponent.ComponentState.None;
-                        if (subElement.Attribute("state") != null)
+                        if (subElement.GetAttribute("state") != null)
                         {
                             string stateStr = subElement.GetAttributeString("state", "None");
                             Enum.TryParse(stateStr, out spriteState);
@@ -128,15 +152,15 @@ namespace Barotrauma
                     case "size":
                         break;
                     default:
-                        string styleName = subElement.Name.ToString().ToLowerInvariant();
+                        Identifier styleName = subElement.NameAsIdentifier();
                         if (ChildStyles.ContainsKey(styleName))
                         {
                             DebugConsole.ThrowError("UI style \"" + element.Name.ToString() + "\" contains multiple child styles with the same name (\"" + styleName + "\")!");
-                            ChildStyles[styleName] = new GUIComponentStyle(subElement, style);
+                            ChildStyles[styleName] = new GUIComponentStyle(subElement, file, this);
                         }
                         else
                         {
-                            ChildStyles.Add(styleName, new GUIComponentStyle(subElement, style));
+                            ChildStyles.Add(styleName, new GUIComponentStyle(subElement, file, this));
                         }
                         break;
                 }
@@ -154,10 +178,21 @@ namespace Barotrauma
             return Sprites.ContainsKey(state) ? Sprites[state]?.First()?.Sprite : null;
         }
 
-        public void GetSize(XElement element)
+        public void RefreshSize()
+        {
+            Width = null;
+            Height = null;
+            GetSize(Element);
+            foreach (var childStyle in ChildStyles.Values)
+            {
+                childStyle.RefreshSize();
+            }
+        }
+
+        private void GetSize(XElement element)
         {
             Point size = new Point(0, 0);
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 if (!subElement.Name.ToString().Equals("size", StringComparison.OrdinalIgnoreCase)) { continue; }
                 Point maxResolution = subElement.GetAttributePoint("maxresolution", new Point(int.MaxValue, int.MaxValue));
@@ -172,5 +207,7 @@ namespace Barotrauma
             if (size.X > 0) { Width = size.X; }
             if (size.Y > 0) { Height = size.Y; }
         }
+
+        public override void Dispose() { }
     }
 }

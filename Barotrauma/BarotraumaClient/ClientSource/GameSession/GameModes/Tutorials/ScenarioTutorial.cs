@@ -1,25 +1,25 @@
 ﻿using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
-using System;
 using System.Collections.Generic;
-using Barotrauma.IO;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Tutorials
 {
-    class ScenarioTutorial : Tutorial
+    abstract class ScenarioTutorial : Tutorial
     {
         private CoroutineHandle tutorialCoroutine;
 
         private Character character;
-        private string spawnSub;
-        private SpawnType spawnPointType;
-        private string submarinePath;
-        private string startOutpostPath;
-        private string endOutpostPath;
-        private string levelSeed;
-        private string levelParams;
+
+        private const string submarinePath = "Content/Tutorials/Dugong_Tutorial.sub";
+        private const string startOutpostPath = "Content/Tutorials/TutorialOutpost.sub";
+        //private const string endOutpostPath = "";
+
+        private const string levelSeed = "nLoZLLtza";
+        private const string levelParams = "ColdCavernsTutorial";
+
+        //private const string spawnSub = "startoutpost";
+        private const SpawnType spawnPointType = SpawnType.Human;
 
         private SubmarineInfo startOutpost = null;
         private SubmarineInfo endOutpost = null;
@@ -31,34 +31,18 @@ namespace Barotrauma.Tutorials
         protected Color highlightColor = Color.OrangeRed;
         protected Color uiHighlightColor = new Color(150, 50, 0);
         protected Color buttonHighlightColor = new Color(255, 100, 0);
-        protected Color inaccessibleColor = GUI.Style.Red;
-        protected Color accessibleColor = GUI.Style.Green;
+        protected Color inaccessibleColor = GUIStyle.Red;
+        protected Color accessibleColor = GUIStyle.Green;
 
-        public ScenarioTutorial(XElement element) : base(element)
-        {
-            submarinePath = element.GetAttributeString("submarinepath", "");
-            startOutpostPath = element.GetAttributeString("startoutpostpath", "");
-            endOutpostPath = element.GetAttributeString("endoutpostpath", "");
+        protected ScenarioTutorial(Identifier identifier, params Segment[] segments) : base(identifier, segments) { }
 
-            levelSeed = element.GetAttributeString("levelseed", "tuto");
-            levelParams = element.GetAttributeString("levelparams", "");
-
-            spawnSub = element.GetAttributeString("spawnsub", "");
-            Enum.TryParse(element.GetAttributeString("spawnpointtype", "Human"), true, out spawnPointType);        
-        }
-
-        public override void Initialize()
-        {
-            base.Initialize();
-            currentTutorialCompleted = false;
-            GameMain.Instance.ShowLoading(Loading());
-        }
-
-        private IEnumerable<object> Loading()
+        protected abstract void Initialize();
+        
+        protected override IEnumerable<CoroutineStatus> Loading()
         {
             SubmarineInfo subInfo = new SubmarineInfo(submarinePath);
 
-            LevelGenerationParams generationParams = LevelGenerationParams.LevelParams.Find(p => p.Identifier.Equals(levelParams, StringComparison.OrdinalIgnoreCase));
+            LevelGenerationParams generationParams = LevelGenerationParams.LevelParams.Find(p => p.Identifier == levelParams);
 
             yield return CoroutineStatus.Running;
 
@@ -68,18 +52,18 @@ namespace Barotrauma.Tutorials
             if (generationParams != null)
             {
                 Biome biome = 
-                    LevelGenerationParams.GetBiomes().FirstOrDefault(b => generationParams.AllowedBiomes.Contains(b)) ??
-                    LevelGenerationParams.GetBiomes().First();
+                    Biome.Prefabs.FirstOrDefault(b => generationParams.AllowedBiomeIdentifiers.Contains(b.Identifier)) ??
+                    Biome.Prefabs.First();
 
                 if (!string.IsNullOrEmpty(startOutpostPath))
                 {
                     startOutpost = new SubmarineInfo(startOutpostPath);
                 }
 
-                if (!string.IsNullOrEmpty(endOutpostPath))
+                /*if (!string.IsNullOrEmpty(endOutpostPath))
                 {
                     endOutpost = new SubmarineInfo(endOutpostPath);
-                }
+                }*/
 
                 LevelData tutorialLevel = new LevelData(levelSeed, 0, 0, generationParams, biome);
                 GameMain.GameSession.StartRound(tutorialLevel, startOutpost: startOutpost, endOutpost: endOutpost);
@@ -93,12 +77,6 @@ namespace Barotrauma.Tutorials
             GameMain.GameSession.EventManager.Enabled = false;
             GameMain.GameScreen.Select();
 
-            yield return CoroutineStatus.Success;
-        }
-
-        public override void Start()
-        {
-            base.Start();
 
             Submarine.MainSub.GodMode = true;
             foreach (Structure wall in Structure.WallList)
@@ -109,16 +87,15 @@ namespace Barotrauma.Tutorials
                 }
             }
 
-            CharacterInfo charInfo = configElement.Element("Character") == null ?
-                new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: JobPrefab.Get("engineer")) :
-                new CharacterInfo(configElement.Element("Character"));
+            CharacterInfo charInfo = GetCharacterInfo();
 
             WayPoint wayPoint = GetSpawnPoint(charInfo);
 
             if (wayPoint == null)
             {
                 DebugConsole.ThrowError("A waypoint with the spawntype \"" + spawnPointType + "\" is required for the tutorial event");
-                return;
+                yield return CoroutineStatus.Failure;
+                yield break;
             }
 
             character = Character.Create(charInfo, wayPoint.WorldPosition, "", isRemotePlayer: false, hasAi: false);
@@ -126,11 +103,12 @@ namespace Barotrauma.Tutorials
             Character.Controlled = character;
             character.GiveJobItems(null);
 
-            var idCard = character.Inventory.FindItemByIdentifier("idcard");
+            var idCard = character.Inventory.FindItemByTag("identitycard".ToIdentifier());
             if (idCard == null)
             {
                 DebugConsole.ThrowError("Item prefab \"ID Card\" not found!");
-                return;
+                yield return CoroutineStatus.Failure;
+                yield break;
             }
             idCard.AddTag("com");
             idCard.AddTag("eng");
@@ -145,7 +123,13 @@ namespace Barotrauma.Tutorials
             }            
 
             tutorialCoroutine = CoroutineManager.StartCoroutine(UpdateState());
+
+            Initialize();
+            
+            yield return CoroutineStatus.Success;
         }
+
+        protected abstract CharacterInfo GetCharacterInfo();
 
         public override void AddToGUIUpdateList()
         {
@@ -157,7 +141,7 @@ namespace Barotrauma.Tutorials
 
         private WayPoint GetSpawnPoint(CharacterInfo charInfo)
         {
-            Submarine spawnSub = null;
+            /*Submarine spawnSub = null;
 
             if (this.spawnSub != string.Empty)
             {
@@ -175,15 +159,15 @@ namespace Barotrauma.Tutorials
                         spawnSub = Submarine.MainSub;
                         break;
                 }
-            }
-
+            }*/
+            Submarine spawnSub = Level.Loaded.StartOutpost;
             return WayPoint.GetRandom(spawnPointType, charInfo.Job?.Prefab, spawnSub);
         }
 
         protected bool HasOrder(Character character, string identifier, string option = null)
         {
             var currentOrderInfo = character.GetCurrentOrderWithTopPriority();
-            if (currentOrderInfo?.Order?.Identifier == identifier)
+            if (currentOrderInfo?.Identifier == identifier)
             {
                 if (option == null)
                 {
@@ -191,7 +175,7 @@ namespace Barotrauma.Tutorials
                 }
                 else
                 {
-                    return currentOrderInfo?.OrderOption == option;
+                    return currentOrderInfo?.Option == option;
                 }
             }
 
@@ -241,6 +225,8 @@ namespace Barotrauma.Tutorials
                     {
                         CoroutineManager.StopCoroutines(tutorialCoroutine);
                     }
+                    GUI.PreventPauseMenuToggle = false;
+                    ContentRunning = false;
                     infoBox = null;
                 }
                 else if (Character.Controlled.IsDead)
@@ -259,15 +245,17 @@ namespace Barotrauma.Tutorials
             base.Stop();
         }
 
-        private IEnumerable<object> Dead()
+        private IEnumerable<CoroutineStatus> Dead()
         {
             GUI.PreventPauseMenuToggle = true;
             Character.Controlled = character = null;
             Stop();
 
+            GameAnalyticsManager.AddDesignEvent("Tutorial:Died");
+
             yield return new WaitForSeconds(3.0f);
 
-            var messageBox = new GUIMessageBox(TextManager.Get("Tutorial.TryAgainHeader"), TextManager.Get("Tutorial.TryAgain"), new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+            var messageBox = new GUIMessageBox(TextManager.Get("Tutorial.TryAgainHeader"), TextManager.Get("Tutorial.TryAgain"), new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") });
 
             messageBox.Buttons[0].OnClicked += Restart;
             messageBox.Buttons[0].OnClicked += messageBox.Close;
@@ -279,12 +267,14 @@ namespace Barotrauma.Tutorials
             yield return CoroutineStatus.Success;
         }
 
-        protected IEnumerable<object> TutorialCompleted()
+        protected IEnumerable<CoroutineStatus> TutorialCompleted()
         {
             GUI.PreventPauseMenuToggle = true;
 
             Character.Controlled.ClearInputs();
             Character.Controlled = null;
+
+            GameAnalyticsManager.AddDesignEvent("Tutorial:Completed");
 
             yield return new WaitForSeconds(waitBeforeFade);
 
@@ -303,7 +293,7 @@ namespace Barotrauma.Tutorials
             character.SetStun(0.0f, true);
         }
 
-        protected Item FindOrGiveItem(Character character, string identifier)
+        protected Item FindOrGiveItem(Character character, Identifier identifier)
         {
             var item = character.Inventory.FindItemByIdentifier(identifier);
             if (item != null && !item.Removed) { return item; }

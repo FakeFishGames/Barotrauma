@@ -10,11 +10,14 @@ namespace Barotrauma
 
         private UInt16 originalInventoryID;
         private byte originalItemContainerIndex;
+        private int originalSlotIndex;
 
         private readonly List<Pair<int, int>> executedEffectIndices = new List<Pair<int, int>>();
 
         public override void ServerWriteInitial(IWriteMessage msg, Client c)
         {
+            base.ServerWriteInitial(msg, c);
+
             msg.Write(usedExistingItem);
             if (usedExistingItem)
             {
@@ -22,7 +25,7 @@ namespace Barotrauma
             }
             else
             {
-                item.WriteSpawnData(msg, item.ID, originalInventoryID, originalItemContainerIndex);
+                item.WriteSpawnData(msg, item.ID, originalInventoryID, originalItemContainerIndex, originalSlotIndex);
             }
 
             msg.Write((byte)executedEffectIndices.Count);

@@ -13,97 +13,106 @@ namespace Barotrauma
 
         public string Name => "KarmaManager";
 
-        public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; }
+        public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; private set; }
 
-        [Serialize(true, true)]
+        [Serialize(true, IsPropertySaveable.Yes)]
         public bool ResetKarmaBetweenRounds { get; set; }
 
-        [Serialize(0.1f, true)]
+        [Serialize(0.1f, IsPropertySaveable.Yes)]
         public float KarmaDecay { get; set; }
 
-        [Serialize(50.0f, true)]
+        [Serialize(50.0f, IsPropertySaveable.Yes)]
         public float KarmaDecayThreshold { get; set; }
 
-        [Serialize(0.15f, true)]
+        [Serialize(0.15f, IsPropertySaveable.Yes)]
         public float KarmaIncrease { get; set; }
 
-        [Serialize(50.0f, true)]
+        [Serialize(50.0f, IsPropertySaveable.Yes)]
         public float KarmaIncreaseThreshold { get; set; }
 
-        [Serialize(0.05f, true)]
+        [Serialize(0.05f, IsPropertySaveable.Yes)]
         public float StructureRepairKarmaIncrease { get; set; }
 
-        [Serialize(0.1f, true)]
+        [Serialize(0.1f, IsPropertySaveable.Yes)]
         public float StructureDamageKarmaDecrease { get; set; }
 
-        [Serialize(15.0f, true)]
+        [Serialize(15.0f, IsPropertySaveable.Yes)]
         public float MaxStructureDamageKarmaDecreasePerSecond { get; set; }
 
-        [Serialize(0.03f, true)]
+        [Serialize(0.03f, IsPropertySaveable.Yes)]
         public float ItemRepairKarmaIncrease { get; set; }
 
-        [Serialize(0.5f, true)]
+        [Serialize(0.5f, IsPropertySaveable.Yes)]
         public float ReactorOverheatKarmaDecrease { get; set; }
-        [Serialize(30.0f, true)]
+        [Serialize(30.0f, IsPropertySaveable.Yes)]
         public float ReactorMeltdownKarmaDecrease { get; set; }
 
-        [Serialize(0.1f, true)]
+        [Serialize(0.1f, IsPropertySaveable.Yes)]
         public float DamageEnemyKarmaIncrease { get; set; }
-        [Serialize(0.2f, true)]
+        [Serialize(0.2f, IsPropertySaveable.Yes)]
         public float HealFriendlyKarmaIncrease { get; set; }
-        [Serialize(0.25f, true)]
+        [Serialize(0.25f, IsPropertySaveable.Yes)]
         public float DamageFriendlyKarmaDecrease { get; set; }
 
-        [Serialize(0.25f, true)]
+        [Serialize(0.25f, IsPropertySaveable.Yes)]
         public float StunFriendlyKarmaDecrease { get; set; }
 
-        [Serialize(0.3f, true)]
+        [Serialize(0.3f, IsPropertySaveable.Yes)]
         public float StunFriendlyKarmaDecreaseThreshold { get; set; }
 
-        [Serialize(1.0f, true)]
+        [Serialize(1.0f, IsPropertySaveable.Yes)]
         public float ExtinguishFireKarmaIncrease { get; set; }
         
-        [Serialize(defaultValue: 15.0f, true)]
+        [Serialize(defaultValue: 15.0f, IsPropertySaveable.Yes)]
         public float DangerousItemStealKarmaDecrease { get; set; }
         
-        [Serialize(defaultValue: false, true)]
+        [Serialize(defaultValue: false, IsPropertySaveable.Yes)]
         public bool DangerousItemStealBots { get; set; }
 
-        [Serialize(defaultValue: 0.05f, true)]
+        [Serialize(defaultValue: 0.05f, IsPropertySaveable.Yes)]
         public float BallastFloraKarmaIncrease { get; set; }
 
 
         private int allowedWireDisconnectionsPerMinute;
-        [Serialize(5, true)]
+        [Serialize(5, IsPropertySaveable.Yes)]
         public int AllowedWireDisconnectionsPerMinute
         {
             get { return allowedWireDisconnectionsPerMinute; }
             set { allowedWireDisconnectionsPerMinute = Math.Max(0, value); }
         }
 
-        [Serialize(6.0f, true)]
+        [Serialize(6.0f, IsPropertySaveable.Yes)]
         public float WireDisconnectionKarmaDecrease { get; set; }
 
-        [Serialize(0.15f, true)]
+        [Serialize(0.15f, IsPropertySaveable.Yes)]
         public float SteerSubKarmaIncrease { get; set; }
 
-        [Serialize(15.0f, true)]
+        [Serialize(15.0f, IsPropertySaveable.Yes)]
         public float SpamFilterKarmaDecrease { get; set; }
 
-        [Serialize(40.0f, true)]
+        [Serialize(40.0f, IsPropertySaveable.Yes)]
         public float HerpesThreshold { get; set; }
 
-        [Serialize(1.0f, true)]
+        [Serialize(1.0f, IsPropertySaveable.Yes)]
         public float KickBanThreshold { get; set; }
         
-        [Serialize(0, true)]
+        [Serialize(0, IsPropertySaveable.Yes)]
         public int KicksBeforeBan { get; set; }
         
-        [Serialize(10.0f, true)]
+        [Serialize(10.0f, IsPropertySaveable.Yes)]
         public float KarmaNotificationInterval { get; set; }
 
-        [Serialize(120.0f, true)]
+        [Serialize(120.0f, IsPropertySaveable.Yes)]
         public float AllowedRetaliationTime { get; set; }
+
+        [Serialize(5.0f, IsPropertySaveable.Yes)]
+        public float DangerousItemContainKarmaDecrease { get; set; }
+
+        [Serialize(defaultValue: true, IsPropertySaveable.Yes)]
+        public bool IsDangerousItemContainKarmaDecreaseIncremental { get; set; }
+
+        [Serialize(30.0f, IsPropertySaveable.Yes)]
+        public float MaxDangerousItemContainKarmaDecrease { get; set; }
 
         private readonly AfflictionPrefab herpesAffliction;
 
@@ -132,7 +141,7 @@ namespace Barotrauma
             if (doc?.Root != null)
             {
                 Presets["custom"] = doc.Root;
-                foreach (XElement subElement in doc.Root.Elements())
+                foreach (var subElement in doc.Root.Elements())
                 {
                     string presetName = subElement.GetAttributeString("name", "");
                     Presets[presetName.ToLowerInvariant()] = subElement;

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -14,7 +15,7 @@ namespace Barotrauma
             get { return inventoryTopY; }
             set
             {
-                if (value == inventoryTopY) return;
+                if (value == inventoryTopY) { return; }
                 inventoryTopY = value;
                 CreateAreas();
             }
@@ -90,7 +91,6 @@ namespace Barotrauma
             if (GameMain.Instance != null)
             {
                 GameMain.Instance.ResolutionChanged += CreateAreas;
-                GameMain.Config.OnHUDScaleChanged += CreateAreas;
                 CreateAreas();
                 CharacterInfo.Init();
             }
@@ -121,7 +121,17 @@ namespace Barotrauma
 
             //horizontal slices at the corners of the screen for health bar and affliction icons
             int afflictionAreaHeight = (int)(50 * GUI.Scale);
-            int healthBarWidth = (int)(BottomRightInfoArea.Width * 1.58f);
+            int healthBarWidth = BottomRightInfoArea.Width;
+
+            var healthBarChildStyles = GUIStyle.GetComponentStyle("CharacterHealthBar")?.ChildStyles;
+            if (healthBarChildStyles!= null && healthBarChildStyles.TryGetValue("GUIFrame".ToIdentifier(), out var style))
+            {
+                if (style.Sprites.TryGetValue(GUIComponent.ComponentState.None, out var uiSprites) && uiSprites.FirstOrDefault() is { } uiSprite)
+                {
+                    // The default health bar uses a sliced sprite so let's make sure the health bar area is calculated accordingly
+                    healthBarWidth += (int)(uiSprite.NonSliceSize.X * Math.Min(GUI.Scale, 1f));
+                }
+            }
             int healthBarHeight = (int)(50f * GUI.Scale);
             HealthBarArea = new Rectangle(BottomRightInfoArea.Right - healthBarWidth + (int)Math.Floor(1 / GUI.Scale), BottomRightInfoArea.Y - healthBarHeight + GUI.IntScale(10), healthBarWidth, healthBarHeight);
             AfflictionAreaLeft = new Rectangle(HealthBarArea.X, HealthBarArea.Y - Padding - afflictionAreaHeight, HealthBarArea.Width, afflictionAreaHeight);            
@@ -163,7 +173,7 @@ namespace Barotrauma
         public static void Draw(SpriteBatch spriteBatch)
         {
             GUI.DrawRectangle(spriteBatch, ButtonAreaTop, Color.White * 0.5f);
-            GUI.DrawRectangle(spriteBatch, MessageAreaTop, GUI.Style.Orange * 0.5f);
+            GUI.DrawRectangle(spriteBatch, MessageAreaTop, GUIStyle.Orange * 0.5f);
             GUI.DrawRectangle(spriteBatch, CrewArea, Color.Blue * 0.5f);
             GUI.DrawRectangle(spriteBatch, ChatBoxArea, Color.Cyan * 0.5f);
             GUI.DrawRectangle(spriteBatch, HealthBarArea, Color.Red * 0.5f);
@@ -185,7 +195,7 @@ namespace Barotrauma
             if (GUI.MouseOn != null) { return false; }
 
             //don't close when hovering over an inventory element
-            if (Inventory.IsMouseOnInventory()) { return false; }
+            if (Inventory.IsMouseOnInventory) { return false; }
             
             bool input = PlayerInput.PrimaryMouseButtonDown() || PlayerInput.SecondaryMouseButtonClicked();
             return input && !rect.Contains(PlayerInput.MousePosition);

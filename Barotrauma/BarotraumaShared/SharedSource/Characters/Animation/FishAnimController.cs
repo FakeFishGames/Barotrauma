@@ -22,8 +22,8 @@ namespace Barotrauma
             {
                 if (_ragdollParams == null)
                 {
-                    _ragdollParams = FishRagdollParams.GetDefaultRagdollParams(character.VariantOf ?? character.SpeciesName);
-                    if (character.VariantOf != null)
+                    _ragdollParams = FishRagdollParams.GetDefaultRagdollParams(character.SpeciesName);
+                    if (!character.VariantOf.IsEmpty)
                     {
                         _ragdollParams.ApplyVariantScale(character.Params.VariantFile);
                     }
@@ -97,9 +97,9 @@ namespace Barotrauma
         public new FishSwimParams CurrentSwimParams => base.CurrentSwimParams as FishSwimParams;
 
         public float? TailAngle => GetValidOrNull(CurrentAnimationParams, CurrentFishAnimation?.TailAngleInRadians);
-        public float FootTorque => CurrentFishAnimation.FootTorque;
-        public float HeadTorque => CurrentFishAnimation.HeadTorque;
-        public float TorsoTorque => CurrentFishAnimation.TorsoTorque;
+        public float FootTorque => CurrentAnimationParams.FootTorque;
+        public float HeadTorque => CurrentAnimationParams.HeadTorque;
+        public float TorsoTorque => CurrentAnimationParams.TorsoTorque;
         public float TailTorque => CurrentFishAnimation.TailTorque;
         public float HeadMoveForce => CurrentGroundedParams.HeadMoveForce;
         public float TorsoMoveForce => CurrentGroundedParams.TorsoMoveForce;
@@ -139,7 +139,7 @@ namespace Barotrauma
             if (MainLimb == null) { return; }
             var mainLimb = MainLimb;
 
-            levitatingCollider = true;
+            levitatingCollider = !IsHanging;
 
             if (!character.CanMove)
             {
@@ -192,6 +192,11 @@ namespace Barotrauma
                 strongestImpact = 0.0f;
             }
 
+            if (Aiming)
+            {
+                TargetMovement = TargetMovement.ClampLength(2);
+            }
+
             if (inWater && !forceStanding)
             {
                 Collider.FarseerBody.FixedRotation = false;
@@ -202,7 +207,7 @@ namespace Barotrauma
                 if (CurrentGroundedParams != null)
                 {
                     //rotate collider back upright
-                    float standAngle = dir == Direction.Right ? CurrentGroundedParams.ColliderStandAngleInRadians : -CurrentGroundedParams.ColliderStandAngleInRadians;
+                    float standAngle = CurrentGroundedParams.ColliderStandAngleInRadians * Dir;
                     if (Math.Abs(MathUtils.GetShortestAngle(Collider.Rotation, standAngle)) > 0.001f)
                     {
                         Collider.AngularVelocity = MathUtils.GetShortestAngle(Collider.Rotation, standAngle) * 60.0f;
@@ -215,16 +220,19 @@ namespace Barotrauma
                 }
                 UpdateWalkAnim(deltaTime);
             }
-
             if (character.SelectedCharacter != null)
             {
                 DragCharacter(character.SelectedCharacter, deltaTime);
+                return;
             }
-
+            if (character.AnimController.AnimationTestPose)
+            {
+                ApplyTestPose();
+            }
             //don't flip when simply physics is enabled
             if (SimplePhysicsEnabled) { return; }
             
-            if (!character.IsRemotelyControlled && (character.AIController == null || character.AIController.CanFlip))
+            if (!character.IsRemotelyControlled && (character.AIController == null || character.AIController.CanFlip) && !Aiming)
             {
                 if (!inWater || (CurrentSwimParams != null && CurrentSwimParams.Mirror))
                 {
@@ -289,6 +297,10 @@ namespace Barotrauma
             {
                 flipTimer = 0.0f;
             }
+            wasAiming = aiming;
+            aiming = false;
+            wasAimingMelee = aimingMelee;
+            aimingMelee = false;
         }
 
         private bool CanDrag(Character target)
@@ -334,7 +346,12 @@ namespace Barotrauma
 
             Vector2 limbDiff = attackSimPosition - mouthPos;
             float extent = Math.Max(mouthLimb.body.GetMaxExtent(), 1);
-            if (limbDiff.LengthSquared() < extent * extent)
+            bool tooFar = character.InWater ? limbDiff.LengthSquared() > extent * extent : limbDiff.X > extent;
+            if (tooFar)
+            {
+                character.SelectedCharacter = null;
+            }
+            else
             {
                 //pull the target character to the position of the mouth
                 //(+ make the force fluctuate to waggle the character a bit)
@@ -362,7 +379,7 @@ namespace Barotrauma
                 {
                     //pull the character's mouth to the target character (again with a fluctuating force)
                     float pullStrength = (float)(Math.Sin(eatTimer) * Math.Max(Math.Sin(eatTimer * 0.5f), 0.0f));
-                    mouthLimb.body.ApplyForce(limbDiff * mouthLimb.Mass * 50.0f * pullStrength, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
+                    mouthLimb.body.ApplyForce(limbDiff * mouthLimb.Mass * 50.0f * pullStrength);
                 }
                 else
                 {
@@ -370,49 +387,55 @@ namespace Barotrauma
                     mouthLimb.body.ApplyLinearImpulse(Vector2.UnitY * force * 2, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
                     mouthLimb.body.ApplyTorque(-force * 50);
                 }
-                var jaw = GetLimb(LimbType.Jaw);
-                if (jaw != null)
-                {
-                    jaw.body.ApplyTorque(-(float)Math.Sin(eatTimer * 150) * jaw.Mass * 25);
-                }
 
-                character.ApplyStatusEffects(ActionType.OnEating, deltaTime);
-
-                float particleFrequency = MathHelper.Clamp(eatSpeed / 2, 0.02f, 0.5f);
-                if (Rand.Value() < particleFrequency / 6)
+                if (Character.CanEat && target.IsDead)
                 {
-                    target.AnimController.MainLimb.AddDamage(target.SimPosition, dmg, 0, 0, false);
-                }
-                if (Rand.Value() < particleFrequency)
-                {
-                    target.AnimController.MainLimb.AddDamage(target.SimPosition, 0, dmg, 0, false);
-                }
-                if (eatTimer % 1.0f < 0.5f && (eatTimer - deltaTime * eatSpeed) % 1.0f > 0.5f)
-                {
-                    bool CanBeSevered(LimbJoint j) => !j.IsSevered && j.CanBeSevered && j.LimbA != null && !j.LimbA.IsSevered && j.LimbB != null && !j.LimbB.IsSevered;
-                    //keep severing joints until there is only one limb left
-                    var nonSeveredJoints = target.AnimController.LimbJoints.Where(CanBeSevered);
-                    if (nonSeveredJoints.None())
+                    var jaw = GetLimb(LimbType.Jaw);
+                    if (jaw != null)
                     {
-                        //only one limb left, the character is now full eaten
-                        Entity.Spawner?.AddToRemoveQueue(target);
+                        jaw.body.ApplyTorque(-(float)Math.Sin(eatTimer * 150) * jaw.Mass * 25);
+                    }
 
-                        if (Character.AIController is EnemyAIController enemyAi)
+                    character.ApplyStatusEffects(ActionType.OnEating, deltaTime);
+
+                    float particleFrequency = MathHelper.Clamp(eatSpeed / 2, 0.02f, 0.5f);
+                    if (Rand.Value() < particleFrequency / 6)
+                    {
+                        target.AnimController.MainLimb.AddDamage(target.SimPosition, dmg, 0, 0, false);
+                    }
+                    if (Rand.Value() < particleFrequency)
+                    {
+                        target.AnimController.MainLimb.AddDamage(target.SimPosition, 0, dmg, 0, false);
+                    }
+                    if (eatTimer % 1.0f < 0.5f && (eatTimer - deltaTime * eatSpeed) % 1.0f > 0.5f)
+                    {
+                        static bool CanBeSevered(LimbJoint j) => !j.IsSevered && j.CanBeSevered && j.LimbA != null && !j.LimbA.IsSevered && j.LimbB != null && !j.LimbB.IsSevered;
+                        //keep severing joints until there is only one limb left
+                        var nonSeveredJoints = target.AnimController.LimbJoints.Where(CanBeSevered);
+                        if (nonSeveredJoints.None())
                         {
-                            enemyAi.PetBehavior?.OnEat("dead", 1.0f);
-                        }
+                            //small monsters don't eat the contents of the character's inventory
+                            if (Mass < target.AnimController.Mass)
+                            {
+                                target.Inventory?.AllItemsMod.ForEach(it => it?.Drop(dropper: null));
+                            }
 
-                        character.SelectedCharacter = null;
-                    }
-                    else //sever a random joint
-                    {
-                        target.AnimController.SeverLimbJoint(nonSeveredJoints.GetRandom());
+                            //only one limb left, the character is now full eaten
+                            Entity.Spawner?.AddEntityToRemoveQueue(target);
+
+                            if (Character.AIController is EnemyAIController enemyAi)
+                            {
+                                enemyAi.PetBehavior?.OnEat(target);
+                            }
+
+                            character.SelectedCharacter = null;
+                        }
+                        else //sever a random joint
+                        {
+                            target.AnimController.SeverLimbJoint(nonSeveredJoints.GetRandomUnsynced());
+                        }
                     }
                 }
-            }
-            else
-            {
-                character.SelectedCharacter = null;
             }
         }
 
@@ -424,24 +447,31 @@ namespace Barotrauma
             movement = TargetMovement;
             bool isMoving = movement.LengthSquared() > 0.00001f;
             var mainLimb = MainLimb;
-            if (isMoving)
+            float t = 0.5f;
+            if (isMoving && !SimplePhysicsEnabled && CurrentSwimParams.RotateTowardsMovement)
             {
-                float t = 0.5f;
-                if (!SimplePhysicsEnabled && CurrentSwimParams.RotateTowardsMovement)
+                Vector2 forward = VectorExtensions.Forward(Collider.Rotation + MathHelper.PiOver2);
+                float dot = Vector2.Dot(forward, Vector2.Normalize(movement));
+                if (dot < 0)
                 {
-                    Vector2 forward = VectorExtensions.Forward(Collider.Rotation + MathHelper.PiOver2);
-                    float dot = Vector2.Dot(forward, Vector2.Normalize(movement));
-                    if (dot < 0)
-                    {
-                        // Reduce the linear movement speed when not facing the movement direction
-                        t = MathHelper.Clamp((1 + dot) / 10, 0.01f, 0.1f);
-                    }
+                    // Reduce the linear movement speed when not facing the movement direction
+                    t = MathHelper.Clamp((1 + dot) / 10, 0.01f, 0.1f);
                 }
-                Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement, t);
             }
+            Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement, t);
             //limbs are disabled when simple physics is enabled, no need to move them
             if (SimplePhysicsEnabled) { return; }
             mainLimb.PullJointEnabled = true;
+
+            if (aiming && movement.Length() <= 0.1f)
+            {
+                Vector2 mousePos = ConvertUnits.ToSimUnits(character.CursorPosition);
+                Vector2 diff = (mousePos - (GetLimb(LimbType.Torso) ?? MainLimb).SimPosition) * Dir;
+                TargetMovement = new Vector2(0.0f, -0.1f);
+                float newRotation = MathUtils.VectorToAngle(diff);
+                Collider.SmoothRotate(newRotation, CurrentSwimParams.SteerTorque * character.SpeedMultiplier);
+            }
+
             if (!isMoving)
             {
                 WalkPos = MathHelper.SmoothStep(WalkPos, MathHelper.PiOver2, deltaTime * 5);
@@ -787,7 +817,7 @@ namespace Barotrauma
                 {
                     limb.body.SmoothRotate(MainLimb.Rotation + MathHelper.ToRadians(limb.Params.ConstantAngle) * Dir, limb.Mass * limb.Params.ConstantTorque, wrapAngle: true);
                 }
-                if (limb.Params.BlinkFrequency > 0)
+                if (limb.Params.BlinkFrequency > 0 && !limb.Params.OnlyBlinkInWater)
                 {
                     limb.UpdateBlink(deltaTime, MainLimb.Rotation);
                 }
@@ -923,7 +953,7 @@ namespace Barotrauma
                 {
                     string errorMsg = "Creature death animation error: invalid limb mass on character \"" + character.SpeciesName + "\" (type: " + limb.type + ", mass: " + limb.Mass + ")";
                     DebugConsole.ThrowError(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("FishAnimController.UpdateDying:InvalidMass" + character.ID, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("FishAnimController.UpdateDying:InvalidMass" + character.ID, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                     deathAnimTimer = deathAnimDuration;
                     return;
                 }
@@ -933,7 +963,7 @@ namespace Barotrauma
                 {
                     string errorMsg = "Creature death animation error: invalid diff (center of mass: " + centerOfMass + ", limb position: " + limb.SimPosition + ")";
                     DebugConsole.ThrowError(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("FishAnimController.UpdateDying:InvalidDiff" + character.ID, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("FishAnimController.UpdateDying:InvalidDiff" + character.ID, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                     deathAnimTimer = deathAnimDuration;
                     return;
                 }
@@ -983,24 +1013,29 @@ namespace Barotrauma
             {
                 if (l.IsSevered) { continue; }
 
+                float rotation = l.body.Rotation;
+                if (l.DoesFlip)
+                {
+                    if (RagdollParams.IsSpritesheetOrientationHorizontal)
+                    {
+                        //horizontally oriented sprites can be mirrored by rotating 180 deg and inverting the angle
+                        rotation = -(l.body.Rotation + MathHelper.Pi);
+                    }
+                    else
+                    {
+                        //vertically oriented limbs can be mirrored by inverting the angle (neutral angle is straight upwards)
+                        rotation = -l.body.Rotation;
+                    }
+                }
+
                 TrySetLimbPosition(l,
                     centerOfMass,
                     new Vector2(centerOfMass.X - (l.SimPosition.X - centerOfMass.X), l.SimPosition.Y),
+                    rotation,
                     lerp);
 
                 l.body.PositionSmoothingFactor = 0.8f;
-
-                if (!l.DoesFlip) { continue; }
-                if (RagdollParams.IsSpritesheetOrientationHorizontal)
-				{
-                    //horizontally oriented sprites can be mirrored by rotating 180 deg and inverting the angle
-                    l.body.SetTransform(l.SimPosition, -(l.body.Rotation + MathHelper.Pi));
-				}    
-                else
-				{
-                    //vertically oriented limbs can be mirrored by inverting the angle (neutral angle is straight upwards)
-                    l.body.SetTransform(l.SimPosition, -l.body.Rotation);
-				}        
+     
             }
             if (character.SelectedCharacter != null && CanDrag(character.SelectedCharacter))
             {

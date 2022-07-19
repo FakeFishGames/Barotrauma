@@ -43,7 +43,7 @@ namespace Barotrauma
         }
 
         public float QuickUseTimer;
-        public string QuickUseButtonToolTip;
+        public LocalizedString QuickUseButtonToolTip;
         public bool IsMoving = false;
 
         private static Rectangle offScreenRect = new Rectangle(new Point(-1000, 0), Point.Zero);
@@ -101,7 +101,7 @@ namespace Barotrauma
 
         private float currentHighlightState, fadeInDuration, fadeOutDuration;
         private Color currentHighlightColor;
-        private IEnumerable<object> UpdateBorderHighlight()
+        private IEnumerable<CoroutineStatus> UpdateBorderHighlight()
         {
             HighlightTimer = 1.0f;
             while (currentHighlightState < fadeInDuration + fadeOutDuration)
@@ -144,7 +144,7 @@ namespace Barotrauma
     {
         public static float UIScale
         {
-            get { return (GameMain.GraphicsWidth / 1920.0f + GameMain.GraphicsHeight / 1080.0f) / 2.5f * GameSettings.InventoryScale; }
+            get { return (GameMain.GraphicsWidth / 1920.0f + GameMain.GraphicsHeight / 1080.0f) / 2.5f * GameSettings.CurrentConfig.Graphics.InventoryScale; }
         }
 
         public static int ContainedIndicatorHeight
@@ -215,8 +215,7 @@ namespace Barotrauma
             public Inventory Inventory;
             public readonly Item Item;
             public readonly bool IsSubSlot;
-            public string Tooltip { get; private set; }
-            public List<RichTextData> TooltipRichTextData { get; private set;}
+            public RichString Tooltip { get; private set; }
 
             public int tooltipDisplayedCondition;
 
@@ -250,24 +249,23 @@ namespace Barotrauma
                 {
                     itemsInSlot = ParentInventory.GetItemsAt(SlotIndex);
                 }
-                TooltipRichTextData = RichTextData.GetRichTextData(GetTooltip(Item, itemsInSlot), out string newTooltip);
-                Tooltip = newTooltip;
+                Tooltip = GetTooltip(Item, itemsInSlot);
                 tooltipDisplayedCondition = (int)Item.ConditionPercentage;
             }
 
-            private string GetTooltip(Item item, IEnumerable<Item> itemsInSlot)
+            private RichString GetTooltip(Item item, IEnumerable<Item> itemsInSlot)
             {
                 if (item == null) { return null; }
 
-                string toolTip = "";
+                LocalizedString toolTip = "";
                 if (GameMain.DebugDraw)
                 {
                     toolTip = item.ToString();
                 }
                 else
                 {
-                    string description = item.Description;
-                    if (item.Prefab.Identifier == "idcard" || item.Tags.Contains("despawncontainer"))
+                    LocalizedString description = item.Description;
+                    if (item.HasTag("identitycard") || item.HasTag("despawncontainer"))
                     {
                         string[] readTags = item.Tags.Split(',');
                         string idName = null;
@@ -275,10 +273,16 @@ namespace Barotrauma
                         foreach (string tag in readTags)
                         {
                             string[] s = tag.Split(':');
-                            if (s[0] == "name")
-                                idName = s[1];
-                            if (s[0] == "job")
-                                idJob = s[1];
+                            switch (s[0])
+                            {
+                                case "name":
+                                    idName = s[1];
+                                    break;
+                                case "job":
+                                case "jobid":
+                                    idJob = s[1];
+                                    break;
+                            }
                         }
                         if (idName != null)
                         {
@@ -288,7 +292,9 @@ namespace Barotrauma
                             }
                             else
                             {
-                                description = TextManager.GetWithVariables("IDCardNameJob", new string[2] { "[name]", "[job]" }, new string[2] { idName, idJob }, new bool[2] { false, true });
+                                description = TextManager.GetWithVariables("IDCardNameJob",
+                                    ("[name]", idName, FormatCapitals.No),
+                                    ("[job]", TextManager.Get("jobname." + idJob).Fallback(idJob), FormatCapitals.Yes));
                             }
                             if (!string.IsNullOrEmpty(item.Description))
                             {
@@ -297,9 +303,10 @@ namespace Barotrauma
                         }
                     }
 
+                    LocalizedString name = item.Name;
                     foreach (ItemComponent component in item.Components)
                     {
-                        component.AddTooltipInfo(ref description);
+                        component.AddTooltipInfo(ref name, ref description);
                     }
 
                     if (item.Prefab.ShowContentsInTooltip && item.OwnInventory != null)
@@ -313,33 +320,40 @@ namespace Barotrauma
                         }
                     }
 
-                    string colorStr = XMLExtensions.ColorToString(!item.AllowStealing ? GUI.Style.Red : Color.White);
+                    string colorStr = (item.SpawnedInCurrentOutpost && !item.AllowStealing ? GUIStyle.Red : Color.White).ToStringHex();
 
-                    toolTip = $"‖color:{colorStr}‖{item.Name}‖color:end‖";
+                    toolTip = $"‖color:{colorStr}‖{name}‖color:end‖";
+                    if (item.GetComponent<Quality>() != null)
+                    {
+                        toolTip += "\n" + TextManager.GetWithVariable("itemname.quality" + item.Quality, "[itemname]", "")
+                            .Fallback(TextManager.GetWithVariable("itemname.quality3", "[itemname]", ""))
+                            .TrimStart();
+                    }
+
                     if (itemsInSlot.All(it => it.NonInteractable || it.NonPlayerTeamInteractable))
                     {
                         toolTip += " " + TextManager.Get("connectionlocked");
                     }
-                    if (!item.IsFullCondition && !item.Prefab.HideConditionBar)
+                    if (!item.IsFullCondition && !item.Prefab.HideConditionInTooltip)
                     {
-                        string conditionColorStr = XMLExtensions.ColorToString(ToolBox.GradientLerp(item.Condition / item.MaxCondition, GUI.Style.ColorInventoryEmpty, GUI.Style.ColorInventoryHalf, GUI.Style.ColorInventoryFull));
+                        string conditionColorStr = XMLExtensions.ColorToString(ToolBox.GradientLerp(item.Condition / item.MaxCondition, GUIStyle.ColorInventoryEmpty, GUIStyle.ColorInventoryHalf, GUIStyle.ColorInventoryFull));
                         toolTip += $"‖color:{conditionColorStr}‖ ({(int)item.ConditionPercentage} %)‖color:end‖";
                     }
-                    if (!string.IsNullOrEmpty(description)) { toolTip += '\n' + description; }
-                    if (item.prefab.ContentPackage != GameMain.VanillaContent && item.prefab.ContentPackage != null)
+                    if (!description.IsNullOrEmpty()) { toolTip += '\n' + description; }
+                    if (item.Prefab.ContentPackage != GameMain.VanillaContent && item.Prefab.ContentPackage != null)
                     {
                         colorStr = XMLExtensions.ColorToString(Color.MediumPurple);
-                        toolTip += $"\n‖color:{colorStr}‖{item.prefab.ContentPackage.Name}‖color:end‖";
+                        toolTip += $"\n‖color:{colorStr}‖{item.Prefab.ContentPackage.Name}‖color:end‖";
                     }
                 }
                 if (itemsInSlot.Count() > 1)
                 {
-                    string colorStr = XMLExtensions.ColorToString(GUI.Style.Blue);
-                    toolTip += $"\n‖color:{colorStr}‖[{GameMain.Config.KeyBindText(InputType.TakeOneFromInventorySlot)}] {TextManager.Get("inputtype.takeonefrominventoryslot")}‖color:end‖";
-                    colorStr = XMLExtensions.ColorToString(GUI.Style.Blue);
-                    toolTip += $"\n‖color:{colorStr}‖[{GameMain.Config.KeyBindText(InputType.TakeHalfFromInventorySlot)}] {TextManager.Get("inputtype.takehalffrominventoryslot")}‖color:end‖";
+                    string colorStr = XMLExtensions.ColorToString(GUIStyle.Blue);
+                    toolTip += $"\n‖color:{colorStr}‖[{GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.TakeOneFromInventorySlot)}] {TextManager.Get("inputtype.takeonefrominventoryslot")}‖color:end‖";
+                    colorStr = XMLExtensions.ColorToString(GUIStyle.Blue);
+                    toolTip += $"\n‖color:{colorStr}‖[{GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.TakeHalfFromInventorySlot)}] {TextManager.Get("inputtype.takehalffrominventoryslot")}‖color:end‖";
                 }
-                return toolTip;
+                return RichString.Rich(toolTip);
             }
         }
 
@@ -478,7 +492,7 @@ namespace Barotrauma
             }
 
             if (container == null) { return false; }
-            return owner.SelectedCharacter != null|| (!(owner is Character character)) || !container.KeepOpenWhenEquippedBy(character)  || !owner.HasEquippedItem(container.Item);
+            return owner.SelectedCharacter != null|| (!(owner is Character character)) || !container.KeepOpenWhenEquippedBy(character) || !owner.HasEquippedItem(container.Item);
         }
 
         protected virtual bool HideSlot(int i)
@@ -533,7 +547,7 @@ namespace Barotrauma
                 }
             }*/
 
-            bool mouseOn = interactRect.Contains(PlayerInput.MousePosition) && !Locked && !mouseOnGUI && !slot.Disabled;
+            bool mouseOn = interactRect.Contains(PlayerInput.MousePosition) && !Locked && !mouseOnGUI && !slot.Disabled && IsMouseOnInventory;
 
             // Delete item from container in sub editor
             if (SubEditorScreen.IsSubEditor() && PlayerInput.IsCtrlDown())
@@ -544,7 +558,7 @@ namespace Barotrauma
                 {
                     if (item != null)
                     {
-                        slot.ShowBorderHighlight(GUI.Style.Red, 0.1f, 0.4f);
+                        slot.ShowBorderHighlight(GUIStyle.Red, 0.1f, 0.4f);
                         if (!mouseDrag)
                         {
                             SoundPlayer.PlayUISound(GUISoundType.PickItem);
@@ -594,7 +608,10 @@ namespace Barotrauma
                 {
                     var slotRef = new SlotReference(this, slot, slotIndex, isSubSlot, slots[slotIndex].FirstOrDefault()?.GetComponent<ItemContainer>()?.Inventory);
                     if (Screen.Selected is SubEditorScreen editor && !editor.WiringMode && slotRef.ParentInventory is CharacterInventory) { return; }
-                    selectedSlot = slotRef;
+                    if (CanSelectSlot(slotRef))
+                    {
+                        selectedSlot = slotRef;
+                    }
                 }
 
                 if (!DraggingItems.Any())
@@ -667,6 +684,10 @@ namespace Barotrauma
             if (subInventory.visualSlots == null) { subInventory.CreateSlots(); }
 
             canMove = container.MovableFrame && !subInventory.IsInventoryHoverAvailable(Owner as Character, container) && subInventory.originalPos != Point.Zero;
+            if (this is CharacterInventory characterInventory && characterInventory.CurrentLayout != CharacterInventory.Layout.Default)
+            {
+                canMove = false;
+            }
 
             if (canMove)
             {
@@ -715,7 +736,7 @@ namespace Barotrauma
                 spacing = new Vector2(10 * UIScale, (10 + UnequippedIndicator.size.Y) * UIScale);
             }
 
-            int columns = (int)Math.Max(Math.Floor(Math.Sqrt(itemCapacity)), 1);
+            int columns = MathHelper.Clamp((int)Math.Floor(Math.Sqrt(itemCapacity)), 1, container.SlotsPerRow);
             while (itemCapacity / columns * (subRect.Height + spacing.Y) > GameMain.GraphicsHeight * 0.5f)
             {
                 columns++;
@@ -826,17 +847,31 @@ namespace Barotrauma
             return rect.Contains(PlayerInput.MousePosition);
         }
 
+        public static bool IsMouseOnInventory
+        {
+            get; private set;
+        }
+
+        /// <summary>
+        /// Refresh the value of IsMouseOnInventory
+        /// </summary>
+        public static void RefreshMouseOnInventory()
+        {
+            IsMouseOnInventory = DetermineMouseOnInventory();
+        }
+
         /// <summary>
         /// Is the mouse on any inventory element (slot, equip button, subinventory...)
         /// </summary>
-        /// <returns></returns>
-        public static bool IsMouseOnInventory(bool ignoreDraggedItem = false)
+        private static bool DetermineMouseOnInventory(bool ignoreDraggedItem = false)
         {
             if (GameMain.GameSession?.Campaign != null &&
                 (GameMain.GameSession.Campaign.ShowCampaignUI || GameMain.GameSession.Campaign.ForceMapUI))
             {
                 return false;
             }
+            if (GameSession.IsTabMenuOpen) { return false; }
+            if (CrewManager.IsCommandInterfaceOpen) { return false; }
 
             if (Character.Controlled == null) { return false; }
 
@@ -1010,9 +1045,9 @@ namespace Barotrauma
             return CursorState.Default;
         }
 
-        protected static void DrawToolTip(SpriteBatch spriteBatch, string toolTip, Rectangle highlightedSlot, List<RichTextData> richTextData = null)
+        protected static void DrawToolTip(SpriteBatch spriteBatch, RichString toolTip, Rectangle highlightedSlot)
         {           
-            GUIComponent.DrawToolTip(spriteBatch, toolTip, highlightedSlot, richTextData);
+            GUIComponent.DrawToolTip(spriteBatch, toolTip, highlightedSlot);
         }
 
         public void DrawSubInventory(SpriteBatch spriteBatch, int slotIndex)
@@ -1104,11 +1139,15 @@ namespace Barotrauma
 
         public static void UpdateDragging()
         {
+            if (Screen.Selected == GameMain.GameScreen)
+            {
+                DraggingItems.RemoveAll(it => !Character.Controlled.CanInteractWith(it));
+            }
             if (DraggingItems.Any() && PlayerInput.PrimaryMouseButtonReleased())
             {
                 Character.Controlled.ClearInputs();
 
-                if (!IsMouseOnInventory(ignoreDraggedItem: true) &&
+                if (!DetermineMouseOnInventory(ignoreDraggedItem: true) &&
                     CharacterHealth.OpenHealthWindow != null)
                 {
                     bool dropSuccessful = false;
@@ -1123,7 +1162,7 @@ namespace Barotrauma
                             {
                                 foreach (int i in indices)
                                 {
-                                    inventory.visualSlots[i]?.ShowBorderHighlight(GUI.Style.Green, 0.1f, 0.4f);
+                                    inventory.visualSlots[i]?.ShowBorderHighlight(GUIStyle.Green, 0.1f, 0.4f);
                                 }
                             }
                             break;
@@ -1216,16 +1255,25 @@ namespace Barotrauma
                                     selectedInventory.visualSlots[slotIndex].ShowBorderHighlight(Color.White, 0.1f, 0.4f);
                                 }
                             }
-                            selectedInventory.visualSlots[slotIndex].ShowBorderHighlight(GUI.Style.Red, 0.1f, 0.9f);
+                            selectedInventory.visualSlots[slotIndex].ShowBorderHighlight(GUIStyle.Red, 0.1f, 0.9f);
                         }
                         SoundPlayer.PlayUISound(GUISoundType.PickItem);
                     }
                     else
                     {
                         bool anySuccess = false;
+                        bool allowCombine = true;
+                        //if we're dragging a stack of partial items or trying to drag to a stack of partial items
+                        //(which should not normally exist, but can happen when e.g. fire damages a stack of items)
+                        //don't allow combining because it leads to weird behavior (stack of items of mixed quality)
+                        if (DraggingItems.Count(it => !it.IsFullCondition && it.Condition > 0.0f) > 1 || 
+                            selectedInventory.GetItemsAt(slotIndex).Count(it => !it.IsFullCondition && it.Condition > 0.0f) > 1) 
+                        { 
+                            allowCombine = false; 
+                        }
                         foreach (Item item in DraggingItems)
                         {
-                            bool success =  selectedInventory.TryPutItem(item, slotIndex, allowSwapping: !anySuccess, true, Character.Controlled);
+                            bool success =  selectedInventory.TryPutItem(item, slotIndex, allowSwapping: !anySuccess, allowCombine, Character.Controlled);
                             anySuccess |= success;
                             if (!success) { break; }
                         }
@@ -1248,7 +1296,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            if (selectedInventory.visualSlots != null){ selectedInventory.visualSlots[slotIndex].ShowBorderHighlight(GUI.Style.Red, 0.1f, 0.9f); }
+                            if (selectedInventory.visualSlots != null){ selectedInventory.visualSlots[slotIndex].ShowBorderHighlight(GUIStyle.Red, 0.1f, 0.9f); }
                             SoundPlayer.PlayUISound(GUISoundType.PickItemFail);
                         }
                     }
@@ -1275,34 +1323,57 @@ namespace Barotrauma
                 DraggingItems.Clear();
             }
 
-            if (selectedSlot != null)
+            if (selectedSlot != null && !CanSelectSlot(selectedSlot))
             {
-                if (!selectedSlot.Slot.MouseOn())
+                selectedSlot = null;
+            }            
+        }
+
+        private static bool CanSelectSlot(SlotReference selectedSlot)
+        {
+            if (!IsMouseOnInventory)
+            {
+                return false;
+            }
+            if (!selectedSlot.Slot.MouseOn())
+            {
+                return false;
+            }
+            else
+            {
+                var rootOwner = (selectedSlot.ParentInventory?.Owner as Item)?.GetRootInventoryOwner();
+                if (selectedSlot.ParentInventory?.Owner != Character.Controlled &&
+                   selectedSlot.ParentInventory?.Owner != Character.Controlled.SelectedCharacter &&
+                   selectedSlot.ParentInventory?.Owner != Character.Controlled.SelectedConstruction &&
+                   !(Character.Controlled.SelectedConstruction?.linkedTo.Contains(selectedSlot.ParentInventory?.Owner) ?? false) &&
+                   rootOwner != Character.Controlled &&
+                   rootOwner != Character.Controlled.SelectedCharacter &&
+                   rootOwner != Character.Controlled.SelectedConstruction &&
+                   !(Character.Controlled.SelectedConstruction?.linkedTo.Contains(rootOwner) ?? false))
                 {
-                    selectedSlot = null;
+                    return false;
                 }
-                else
+                var parentItem = (selectedSlot?.ParentInventory?.Owner as Item) ?? selectedSlot?.Item;
+                if ((parentItem?.GetRootInventoryOwner() is Character ownerCharacter) &&
+                    ownerCharacter == Character.Controlled &&
+                    CharacterHealth.OpenHealthWindow?.Character != ownerCharacter &&
+                    ownerCharacter.Inventory.IsInLimbSlot(parentItem, InvSlotType.HealthInterface) &&
+                    Screen.Selected != GameMain.SubEditorScreen)
                 {
-                    var rootOwner = (selectedSlot.ParentInventory?.Owner as Item)?.GetRootInventoryOwner();
-                    if (selectedSlot.ParentInventory?.Owner != Character.Controlled &&
-                       selectedSlot.ParentInventory?.Owner != Character.Controlled.SelectedCharacter &&
-                       selectedSlot.ParentInventory?.Owner != Character.Controlled.SelectedConstruction &&
-                       !(Character.Controlled.SelectedConstruction?.linkedTo.Contains(selectedSlot.ParentInventory?.Owner) ?? false) &&
-                       rootOwner != Character.Controlled &&
-                       rootOwner != Character.Controlled.SelectedCharacter &&
-                       rootOwner != Character.Controlled.SelectedConstruction &&
-                       !(Character.Controlled.SelectedConstruction?.linkedTo.Contains(rootOwner) ?? false))
-                    {
-                        selectedSlot = null;
-                    }
+                    highlightedSubInventorySlots.RemoveWhere(s => s.Item == parentItem);
+                    return false;
                 }
             }
+            return true;
         }
+
 
         protected static Rectangle GetSubInventoryHoverArea(SlotReference subSlot)
         {
             Rectangle hoverArea;
-            if (!subSlot.Inventory.Movable() || Character.Controlled?.Inventory == subSlot.ParentInventory && !Character.Controlled.HasEquippedItem(subSlot.Item))
+            if (!subSlot.Inventory.Movable() || 
+                (Character.Controlled?.Inventory == subSlot.ParentInventory && !Character.Controlled.HasEquippedItem(subSlot.Item)) ||
+                (subSlot.ParentInventory is CharacterInventory characterInventory && characterInventory.CurrentLayout != CharacterInventory.Layout.Default))
             {
                 hoverArea = subSlot.Slot.Rect;
                 hoverArea.Location += subSlot.Slot.DrawOffset.ToPoint();
@@ -1371,24 +1442,24 @@ namespace Barotrauma
                     float scale = Math.Min(Math.Min(iconSize / sprite.size.X, iconSize / sprite.size.Y), 1.5f);
                     Vector2 itemPos = PlayerInput.MousePosition;
 
-                    bool mouseOnHealthInterface = CharacterHealth.OpenHealthWindow != null && CharacterHealth.OpenHealthWindow.MouseOnElement;
+                    bool mouseOnHealthInterface = CharacterHealth.OpenHealthWindow != null && CharacterHealth.OpenHealthWindow.MouseOnElement && DraggingItems.Any(it => it.UseInHealthInterface);
 
                     if ((GUI.MouseOn == null || mouseOnHealthInterface) && selectedSlot == null)
                     {
-                        var shadowSprite = GUI.Style.GetComponentStyle("OuterGlow").Sprites[GUIComponent.ComponentState.None][0];
-                        string toolTip = mouseOnHealthInterface ? TextManager.Get("QuickUseAction.UseTreatment") :
+                        var shadowSprite = GUIStyle.GetComponentStyle("OuterGlow").Sprites[GUIComponent.ComponentState.None][0];
+                        LocalizedString toolTip = mouseOnHealthInterface ? TextManager.Get("QuickUseAction.UseTreatment") :
                             Character.Controlled.FocusedItem != null ?
-                                TextManager.GetWithVariable("PutItemIn", "[itemname]", Character.Controlled.FocusedItem.Name, true) :
+                                TextManager.GetWithVariable("PutItemIn", "[itemname]", Character.Controlled.FocusedItem.Name, FormatCapitals.Yes) :
                                 TextManager.Get(Screen.Selected is SubEditorScreen editor && editor.EntityMenu.Rect.Contains(PlayerInput.MousePosition) ? "Delete" : "DropItem");
-                        int textWidth = (int)Math.Max(GUI.Font.MeasureString(DraggingItems.First().Name).X, GUI.SmallFont.MeasureString(toolTip).X);
+                        int textWidth = (int)Math.Max(GUIStyle.Font.MeasureString(DraggingItems.First().Name).X, GUIStyle.SmallFont.MeasureString(toolTip).X);
                         int textSpacing = (int)(15 * GUI.Scale);
                         Point shadowBorders = (new Point(40, 10)).Multiply(GUI.Scale);
                         shadowSprite.Draw(spriteBatch,
                             new Rectangle(itemPos.ToPoint() - new Point(iconSize / 2) - shadowBorders, new Point(iconSize + textWidth + textSpacing, iconSize) + shadowBorders.Multiply(2)), Color.Black * 0.8f);
                         GUI.DrawString(spriteBatch, new Vector2(itemPos.X + iconSize / 2 + textSpacing, itemPos.Y - iconSize / 2), DraggingItems.First().Name, Color.White);
                         GUI.DrawString(spriteBatch, new Vector2(itemPos.X + iconSize / 2 + textSpacing, itemPos.Y), toolTip,
-                            color: Character.Controlled.FocusedItem == null && !mouseOnHealthInterface ? GUI.Style.Red : Color.LightGreen,
-                            font: GUI.SmallFont);
+                            color: Character.Controlled.FocusedItem == null && !mouseOnHealthInterface ? GUIStyle.Red : Color.LightGreen,
+                            font: GUIStyle.SmallFont);
                     }
                     sprite.Draw(spriteBatch, itemPos + Vector2.One * 2, Color.Black, scale: scale);
                     sprite.Draw(spriteBatch,
@@ -1400,8 +1471,8 @@ namespace Barotrauma
                     {
                         Vector2 stackCountPos = itemPos + Vector2.One * iconSize * 0.25f;
                         string stackCountText = "x" + DraggingItems.Count;
-                        GUI.SmallFont.DrawString(spriteBatch, stackCountText, stackCountPos + Vector2.One, Color.Black);
-                        GUI.SmallFont.DrawString(spriteBatch, stackCountText, stackCountPos, Color.White);
+                        GUIStyle.SmallFont.DrawString(spriteBatch, stackCountText, stackCountPos + Vector2.One, Color.Black);
+                        GUIStyle.SmallFont.DrawString(spriteBatch, stackCountText, stackCountPos, Color.White);
                     }
                 }
             }
@@ -1414,7 +1485,7 @@ namespace Barotrauma
                 {
                     selectedSlot.RefreshTooltip();
                 }
-                DrawToolTip(spriteBatch, selectedSlot.Tooltip, slotRect, selectedSlot.TooltipRichTextData);
+                DrawToolTip(spriteBatch, selectedSlot.Tooltip, slotRect);
             }
         }
 
@@ -1430,7 +1501,8 @@ namespace Barotrauma
             }
 
             Color slotColor = Color.White;
-            if (inventory?.Owner is Item i && !i.IsPlayerTeamInteractable) { slotColor = Color.Gray; }
+            Item parentItem = inventory?.Owner as Item;
+            if (parentItem != null && !parentItem.IsPlayerTeamInteractable) { slotColor = Color.Gray; }
             var itemContainer = item?.GetComponent<ItemContainer>();
             if (itemContainer != null && (itemContainer.InventoryTopSprite != null || itemContainer.InventoryBottomSprite != null))
             {
@@ -1449,11 +1521,11 @@ namespace Barotrauma
                 /*if (inventory != null && (CharacterInventory.PersonalSlots.HasFlag(type) || (inventory.isSubInventory && (inventory.Owner as Item) != null 
                     && (inventory.Owner as Item).AllowedSlots.Any(a => CharacterInventory.PersonalSlots.HasFlag(a)))))
                 {
-                    slotColor = slot.IsHighlighted ? GUI.Style.EquipmentSlotColor : GUI.Style.EquipmentSlotColor * 0.8f;
+                    slotColor = slot.IsHighlighted ? GUIStyle.EquipmentSlotColor : GUIStyle.EquipmentSlotColor * 0.8f;
                 }
                 else
                 {
-                    slotColor = slot.IsHighlighted ? GUI.Style.InventorySlotColor : GUI.Style.InventorySlotColor * 0.8f;
+                    slotColor = slot.IsHighlighted ? GUIStyle.InventorySlotColor : GUIStyle.InventorySlotColor * 0.8f;
                 }*/
 
                 if (inventory != null && inventory.Locked) { slotColor = Color.Gray * 0.5f; }
@@ -1461,14 +1533,14 @@ namespace Barotrauma
                 
                 if (SubEditorScreen.IsSubEditor() && PlayerInput.IsCtrlDown() && selectedSlot?.Slot == slot)
                 {
-                    GUI.DrawRectangle(spriteBatch, rect, GUI.Style.Red * 0.3f, isFilled: true);
+                    GUI.DrawRectangle(spriteBatch, rect, GUIStyle.Red * 0.3f, isFilled: true);
                 }
 
                 bool canBePut = false;
 
                 if (DraggingItems.Any() && inventory != null && slotIndex > -1 && slotIndex < inventory.visualSlots.Length)
                 {
-                    if (inventory.CanBePut(DraggingItems.First(), slotIndex))
+                    if (inventory.CanBePutInSlot(DraggingItems.First(), slotIndex))
                     {
                         canBePut = true;
                     }
@@ -1485,7 +1557,7 @@ namespace Barotrauma
                 }
                 if (slot.MouseOn() && canBePut && selectedSlot?.Slot == slot)
                 {
-                    GUI.UIGlow.Draw(spriteBatch, rect, GUI.Style.Green);
+                    GUIStyle.UIGlow.Draw(spriteBatch, rect, GUIStyle.Green);
                 }
 
                 if (item != null && drawItem)
@@ -1506,31 +1578,35 @@ namespace Barotrauma
                             conditionIndicatorArea.Inflate(-4, 0);
                         }
 
-                        var indicatorStyle = GUI.Style.GetComponentStyle("ContainedStateIndicator.Default");
+                        var indicatorStyle = GUIStyle.GetComponentStyle("ContainedStateIndicator.Default");
                         Sprite indicatorSprite = indicatorStyle?.GetDefaultSprite();
                         Sprite emptyIndicatorSprite = indicatorStyle?.GetSprite(GUIComponent.ComponentState.Hover);
-                        DrawItemStateIndicator(spriteBatch,  inventory, indicatorSprite, emptyIndicatorSprite, conditionIndicatorArea, item.Condition / item.MaxCondition);
+                        DrawItemStateIndicator(spriteBatch, inventory, indicatorSprite, emptyIndicatorSprite, conditionIndicatorArea, item.Condition / item.MaxCondition);
                     }
 
-                    if (itemContainer != null && itemContainer.ShowContainedStateIndicator)
+                    if (itemContainer != null && itemContainer.ShowContainedStateIndicator && itemContainer.Capacity > 0)
                     {
                         float containedState = 0.0f;
                         if (itemContainer.ShowConditionInContainedStateIndicator)
                         {
                             containedState = item.Condition / item.MaxCondition;
                         }
+                        else if (itemContainer.ShowTotalStackCapacityInContainedStateIndicator)
+                        {
+                            containedState = itemContainer.Inventory.AllItems.Count() / (float)(itemContainer.GetMaxStackSize(0) * itemContainer.Capacity);
+                        }
                         else
                         {
-                            var containedItem = itemContainer.Inventory.slots[0].FirstOrDefault();
-                            containedState = itemContainer.Inventory.Capacity == 1 ?
+                            var containedItem = itemContainer.Inventory.slots[Math.Max(itemContainer.ContainedStateIndicatorSlot, 0)].FirstOrDefault();
+                            containedState = itemContainer.Inventory.Capacity == 1 || itemContainer.ContainedStateIndicatorSlot > -1 ?
                                 (containedItem == null ? 0.0f : containedItem.Condition / containedItem.MaxCondition) :
                                 itemContainer.Inventory.slots.Count(i => !i.Empty()) / (float)itemContainer.Inventory.capacity;
                             if (containedItem != null && itemContainer.Inventory.Capacity == 1)
                             {
-                                int maxStackSize = Math.Min(containedItem.Prefab.MaxStackSize, itemContainer.MaxStackSize);
-                                if (maxStackSize > 1)
+                                int maxStackSize = Math.Min(containedItem.Prefab.MaxStackSize, itemContainer.GetMaxStackSize(0));
+                                if (maxStackSize > 1 || containedItem.Prefab.HideConditionBar)
                                 {
-                                    containedState = itemContainer.Inventory.slots[0].ItemCount / (float)maxStackSize;
+                                    containedState = itemContainer.Inventory.slots[0].Items.Count / (float)maxStackSize;
                                 }
                             }
                         }
@@ -1552,6 +1628,27 @@ namespace Barotrauma
                         DrawItemStateIndicator(spriteBatch, inventory, indicatorSprite, emptyIndicatorSprite, containedIndicatorArea, containedState, 
                             pulsate: !usingDefaultSprite && containedState >= 0.0f && containedState < 0.25f && inventory == Character.Controlled?.Inventory && Character.Controlled.HasEquippedItem(item));
                     }
+
+                    if (item.Quality != 0)
+                    {
+                        var style = GUIStyle.GetComponentStyle("InnerGlowSmall");
+                        if (style == null)
+                        {
+                            GUI.DrawRectangle(spriteBatch, rect, GUIStyle.GetQualityColor(item.Quality) * 0.7f);
+                        }
+                        else
+                        {
+                            style.Sprites[GUIComponent.ComponentState.None].FirstOrDefault()?.Draw(spriteBatch, rect, GUIStyle.GetQualityColor(item.Quality) * 0.5f);
+                        }
+                    }
+                }
+                else
+                {
+                    var slotIcon = parentItem?.GetComponent<ItemContainer>()?.GetSlotIcon(slotIndex);
+                    if (slotIcon != null)
+                    {
+                        slotIcon.Draw(spriteBatch, rect.Center.ToVector2(), GUIStyle.EquipmentSlotIconColor, scale: Math.Min(rect.Width / slotIcon.size.X, rect.Height / slotIcon.size.Y) * 0.8f);
+                    }
                 }
             }
 
@@ -1563,7 +1660,7 @@ namespace Barotrauma
 
             if (slot.HighlightColor != Color.Transparent)
             {
-                GUI.UIGlow.Draw(spriteBatch, rect, slot.HighlightColor);
+                GUIStyle.UIGlow.Draw(spriteBatch, rect, slot.HighlightColor);
             }
 
             if (item != null && drawItem)
@@ -1586,7 +1683,7 @@ namespace Barotrauma
 
                 Color spriteColor = sprite == item.Sprite ? item.GetSpriteColor() : item.GetInventoryIconColor();
                 if (inventory != null && (inventory.Locked || inventory.slots[slotIndex].Items.All(it => it.NonInteractable || it.NonPlayerTeamInteractable))) { spriteColor *= 0.5f; }
-                if (CharacterHealth.OpenHealthWindow != null && !item.UseInHealthInterface)
+                if (CharacterHealth.OpenHealthWindow != null && !item.UseInHealthInterface && !item.AllowedSlots.Contains(InvSlotType.HealthInterface) && item.GetComponent<GeneticMaterial>() == null)
                 {
                     spriteColor = Color.Lerp(spriteColor, Color.TransparentBlack, 0.5f);
                 }
@@ -1596,31 +1693,31 @@ namespace Barotrauma
                 }
                 sprite.Draw(spriteBatch, itemPos, spriteColor, rotation, scale);
 
-                if ((!item.AllowStealing || (inventory != null && inventory.slots[slotIndex].Items.Any(it => !it.AllowStealing))) && CharacterInventory.LimbSlotIcons.ContainsKey(InvSlotType.LeftHand))
+                if (((item.SpawnedInCurrentOutpost && !item.AllowStealing) || (inventory != null && inventory.slots[slotIndex].Items.Any(it => it.SpawnedInCurrentOutpost && !it.AllowStealing))) && CharacterInventory.LimbSlotIcons.ContainsKey(InvSlotType.LeftHand))
                 {
                     var stealIcon = CharacterInventory.LimbSlotIcons[InvSlotType.LeftHand];
                     Vector2 iconSize = new Vector2(25 * GUI.Scale);
                     stealIcon.Draw(
                         spriteBatch,
                         new Vector2(rect.X + iconSize.X * 0.2f, rect.Bottom - iconSize.Y * 1.2f),
-                        color: GUI.Style.Red,
+                        color: GUIStyle.Red,
                         scale: iconSize.X / stealIcon.size.X);
                 }
                 int maxStackSize = item.Prefab.MaxStackSize;
-                if (item.Container != null)
+                if (inventory is ItemInventory itemInventory)
                 {
-                    maxStackSize = Math.Min(maxStackSize, item.Container.GetComponent<ItemContainer>()?.MaxStackSize ?? maxStackSize);
+                    maxStackSize = Math.Min(maxStackSize, itemInventory.Container.GetMaxStackSize(slotIndex));
                 }
                 if (maxStackSize > 1 && inventory != null)
                 {
-                    int itemCount = slot.MouseOn() ? inventory.slots[slotIndex].ItemCount : inventory.slots[slotIndex].Items.Where(it => !DraggingItems.Contains(it)).Count();
+                    int itemCount = slot.MouseOn() ? inventory.slots[slotIndex].Items.Count : inventory.slots[slotIndex].Items.Where(it => !DraggingItems.Contains(it)).Count();
                     if (item.IsFullCondition || MathUtils.NearlyEqual(item.Condition, 0.0f) || itemCount > 1)
                     {
                         Vector2 stackCountPos = new Vector2(rect.Right, rect.Bottom);
                         string stackCountText = "x" + itemCount;
-                        stackCountPos -= GUI.SmallFont.MeasureString(stackCountText) + new Vector2(4, 2);
-                        GUI.SmallFont.DrawString(spriteBatch, stackCountText, stackCountPos + Vector2.One, Color.Black);
-                        GUI.SmallFont.DrawString(spriteBatch, stackCountText, stackCountPos, Color.White);
+                        stackCountPos -= GUIStyle.SmallFont.MeasureString(stackCountText) + new Vector2(4, 2);
+                        GUIStyle.SmallFont.DrawString(spriteBatch, stackCountText, stackCountPos + Vector2.One, Color.Black);
+                        GUIStyle.SmallFont.DrawString(spriteBatch, stackCountText, stackCountPos, Color.White);
                     }
                 }
             }
@@ -1631,7 +1728,7 @@ namespace Barotrauma
                 slot.InventoryKeyIndex != -1)
             {
                 spriteBatch.Draw(slotHotkeySprite.Texture, rect.ScaleSize(1.15f), slotHotkeySprite.SourceRect, slotColor);
-                GUI.DrawString(spriteBatch, rect.Location.ToVector2() + new Vector2((int)(4.25f * UIScale), (int)Math.Ceiling(-1.5f * UIScale)), GameMain.Config.InventoryKeyBind(slot.InventoryKeyIndex).Name, Color.Black, font: GUI.HotkeyFont);
+                GUI.DrawString(spriteBatch, rect.Location.ToVector2() + new Vector2((int)(4.25f * UIScale), (int)Math.Ceiling(-1.5f * UIScale)), GameSettings.CurrentConfig.InventoryKeyMap.Bindings[slot.InventoryKeyIndex].Name, Color.Black, font: GUIStyle.HotkeyFont);
             }
         }
 
@@ -1640,7 +1737,7 @@ namespace Barotrauma
             Sprite indicatorSprite, Sprite emptyIndicatorSprite, Rectangle containedIndicatorArea, float containedState,
             bool pulsate = false)
         {
-            Color backgroundColor = GUI.Style.ColorInventoryBackground;
+            Color backgroundColor = GUIStyle.ColorInventoryBackground;
 
             if (indicatorSprite == null)
             {
@@ -1648,7 +1745,7 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch, containedIndicatorArea, backgroundColor, true);
                 GUI.DrawRectangle(spriteBatch,
                     new Rectangle(containedIndicatorArea.X, containedIndicatorArea.Y, (int)(containedIndicatorArea.Width * containedState), containedIndicatorArea.Height),
-                    ToolBox.GradientLerp(containedState, GUI.Style.ColorInventoryEmpty, GUI.Style.ColorInventoryHalf, GUI.Style.ColorInventoryFull) * 0.8f, true);
+                    ToolBox.GradientLerp(containedState, GUIStyle.ColorInventoryEmpty, GUIStyle.ColorInventoryHalf, GUIStyle.ColorInventoryFull) * 0.8f, true);
                 GUI.DrawLine(spriteBatch,
                     new Vector2(containedIndicatorArea.X + (int)(containedIndicatorArea.Width * containedState), containedIndicatorArea.Y),
                     new Vector2(containedIndicatorArea.X + (int)(containedIndicatorArea.Width * containedState), containedIndicatorArea.Bottom),
@@ -1673,7 +1770,7 @@ namespace Barotrauma
 
                 if (containedState > 0.0f)
                 {
-                    Color indicatorColor = ToolBox.GradientLerp(containedState, GUI.Style.ColorInventoryEmpty, GUI.Style.ColorInventoryHalf, GUI.Style.ColorInventoryFull);
+                    Color indicatorColor = ToolBox.GradientLerp(containedState, GUIStyle.ColorInventoryEmpty, GUIStyle.ColorInventoryHalf, GUIStyle.ColorInventoryFull);
                     if (inventory != null && inventory.Locked) { indicatorColor *= 0.5f; }
 
                     spriteBatch.Draw(indicatorSprite.Texture, containedIndicatorArea.Center.ToVector2(),
@@ -1694,7 +1791,7 @@ namespace Barotrauma
                 }
                 else if (emptyIndicatorSprite != null)
                 {
-                    Color indicatorColor = GUI.Style.ColorInventoryEmptyOverlay;
+                    Color indicatorColor = GUIStyle.ColorInventoryEmptyOverlay;
                     if (inventory != null && inventory.Locked) { indicatorColor *= 0.5f; }
 
                     emptyIndicatorSprite.Draw(spriteBatch, containedIndicatorArea.Center.ToVector2(),
@@ -1706,20 +1803,10 @@ namespace Barotrauma
             }
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             UInt16 lastEventID = msg.ReadUInt16();
-            byte slotCount = msg.ReadByte();
-            receivedItemIDs = new List<ushort>[slotCount];
-            for (int i = 0; i < slotCount; i++)
-            {
-                receivedItemIDs[i] = new List<ushort>();
-                int itemCount = msg.ReadRangedInteger(0, MaxStackSize);
-                for (int j = 0; j < itemCount; j++)
-                {
-                    receivedItemIDs[i].Add(msg.ReadUInt16());
-                }
-            }
+            SharedRead(msg, out receivedItemIDs);
 
             //delay applying the new state if less than 1 second has passed since this client last sent a state to the server
             //prevents the inventory from briefly reverting to an old state if items are moved around in quick succession
@@ -1741,7 +1828,7 @@ namespace Barotrauma
             }
         }
 
-        private IEnumerable<object> SyncItemsAfterDelay(UInt16 lastEventID)
+        private IEnumerable<CoroutineStatus> SyncItemsAfterDelay(UInt16 lastEventID)
         {
             while (syncItemsDelay > 0.0f || 
                 //don't apply inventory updates until 
@@ -1767,7 +1854,7 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        private void ApplyReceivedState()
+        public void ApplyReceivedState()
         {
             if (receivedItemIDs == null || (Owner != null && Owner.Removed)) { return; }
 
@@ -1806,7 +1893,7 @@ namespace Barotrauma
             receivedItemIDs = null;
         }
 
-        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
+        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
             SharedWrite(msg, extraData);
             syncItemsDelay = 1.0f;

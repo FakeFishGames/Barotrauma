@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -22,6 +23,7 @@ namespace Barotrauma
 
         private GUIListBox missionList;
         private readonly List<GUITickBox> missionTickBoxes = new List<GUITickBox>();
+        private readonly List<GUITextBlock> missionRewardTexts = new List<GUITextBlock>();
 
         private bool hasMaxMissions;
 
@@ -44,6 +46,8 @@ namespace Barotrauma
 
         public UpgradeStore UpgradeStore { get; set; }
 
+        public MedicalClinicUI MedicalClinic { get; set; }
+
         public CampaignUI(CampaignMode campaign, GUIComponent container)
         {
             Campaign = campaign;
@@ -53,8 +57,8 @@ namespace Barotrauma
 
             CreateUI(container);
 
-            campaign.Map.OnLocationSelected += SelectLocation;
-            campaign.Map.OnMissionsSelected += (connection, missions) => 
+            campaign.Map.OnLocationSelected = SelectLocation;
+            campaign.Map.OnMissionsSelected = (connection, missions) => 
             {
                 if (missionList?.Content != null)
                 {
@@ -112,7 +116,7 @@ namespace Barotrauma
                 RelativeSpacing = 0.05f,
                 Stretch = true
             };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), repairContent.RectTransform), "", font: GUI.LargeFont)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), repairContent.RectTransform), "", font: GUIStyle.LargeFont)
             {
                 TextGetter = GetMoney
             };
@@ -129,25 +133,25 @@ namespace Barotrauma
                 IgnoreLayoutGroups = true,
                 CanBeFocused = false
             };
-            var repairHullsLabel = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.3f), repairHullsHolder.RectTransform), TextManager.Get("RepairAllWalls"), textAlignment: Alignment.Right, font: GUI.SubHeadingFont)
+            var repairHullsLabel = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.3f), repairHullsHolder.RectTransform), TextManager.Get("RepairAllWalls"), textAlignment: Alignment.Right, font: GUIStyle.SubHeadingFont)
             {
-                ForceUpperCase = true
+                ForceUpperCase = ForceUpperCase.Yes
             };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), repairHullsHolder.RectTransform), CampaignMode.HullRepairCost.ToString(), textAlignment: Alignment.Right, font: GUI.SubHeadingFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), repairHullsHolder.RectTransform), CampaignMode.HullRepairCost.ToString(), textAlignment: Alignment.Right, font: GUIStyle.SubHeadingFont);
             repairHullsButton = new GUIButton(new RectTransform(new Vector2(0.4f, 0.3f), repairHullsHolder.RectTransform) { MinSize = new Point(140, 0) }, TextManager.Get("Repair"))
             {
                 OnClicked = (btn, userdata) =>
                 {
                     if (Campaign.PurchasedHullRepairs)
                     {
-                        Campaign.Money += CampaignMode.HullRepairCost;
+                        Campaign.Wallet.Refund(CampaignMode.HullRepairCost);
                         Campaign.PurchasedHullRepairs = false;
                     }
                     else
                     {
-                        if (Campaign.Money >= CampaignMode.HullRepairCost)
+                        if (Campaign.TryPurchase(null, CampaignMode.HullRepairCost))
                         {
-                            Campaign.Money -= CampaignMode.HullRepairCost;
+                            GameAnalyticsManager.AddMoneySpentEvent(CampaignMode.HullRepairCost, GameAnalyticsManager.MoneySink.Service, "hullrepairs");
                             Campaign.PurchasedHullRepairs = true;
                         }
                     }
@@ -174,25 +178,25 @@ namespace Barotrauma
                 IgnoreLayoutGroups = true,
                 CanBeFocused = false
             };
-            var repairItemsLabel = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.3f), repairItemsHolder.RectTransform), TextManager.Get("RepairAllItems"), textAlignment: Alignment.Right, font: GUI.SubHeadingFont)
+            var repairItemsLabel = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.3f), repairItemsHolder.RectTransform), TextManager.Get("RepairAllItems"), textAlignment: Alignment.Right, font: GUIStyle.SubHeadingFont)
             {
-                ForceUpperCase = true
+                ForceUpperCase = ForceUpperCase.Yes
             };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), repairItemsHolder.RectTransform), CampaignMode.ItemRepairCost.ToString(), textAlignment: Alignment.Right, font: GUI.SubHeadingFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), repairItemsHolder.RectTransform), CampaignMode.ItemRepairCost.ToString(), textAlignment: Alignment.Right, font: GUIStyle.SubHeadingFont);
             repairItemsButton = new GUIButton(new RectTransform(new Vector2(0.4f, 0.3f), repairItemsHolder.RectTransform) { MinSize = new Point(140, 0) }, TextManager.Get("Repair"))
             {
                 OnClicked = (btn, userdata) =>
                 {
                     if (Campaign.PurchasedItemRepairs)
                     {
-                        Campaign.Money += CampaignMode.ItemRepairCost;
+                        Campaign.Wallet.Refund(CampaignMode.ItemRepairCost);
                         Campaign.PurchasedItemRepairs = false;
                     }
                     else
                     {
-                        if (Campaign.Money >= CampaignMode.ItemRepairCost)
+                        if (Campaign.TryPurchase(null, CampaignMode.ItemRepairCost))
                         {
-                            Campaign.Money -= CampaignMode.ItemRepairCost;
+                            GameAnalyticsManager.AddMoneySpentEvent(CampaignMode.ItemRepairCost, GameAnalyticsManager.MoneySink.Service, "devicerepairs");
                             Campaign.PurchasedItemRepairs = true;
                         }
                     }
@@ -219,11 +223,11 @@ namespace Barotrauma
                 IgnoreLayoutGroups = true,
                 CanBeFocused = false
             };
-            var replaceShuttlesLabel = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.3f), replaceShuttlesHolder.RectTransform), TextManager.Get("ReplaceLostShuttles"), textAlignment: Alignment.Right, font: GUI.SubHeadingFont)
+            var replaceShuttlesLabel = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.3f), replaceShuttlesHolder.RectTransform), TextManager.Get("ReplaceLostShuttles"), textAlignment: Alignment.Right, font: GUIStyle.SubHeadingFont)
             {
-                ForceUpperCase = true
+                ForceUpperCase = ForceUpperCase.Yes
             };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), replaceShuttlesHolder.RectTransform), CampaignMode.ShuttleReplaceCost.ToString(), textAlignment: Alignment.Right, font: GUI.SubHeadingFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), replaceShuttlesHolder.RectTransform), CampaignMode.ShuttleReplaceCost.ToString(), textAlignment: Alignment.Right, font: GUIStyle.SubHeadingFont);
             replaceShuttlesButton = new GUIButton(new RectTransform(new Vector2(0.4f, 0.3f), replaceShuttlesHolder.RectTransform) { MinSize = new Point(140, 0) }, TextManager.Get("ReplaceShuttles"))
             {
                 OnClicked = (btn, userdata) =>
@@ -237,14 +241,14 @@ namespace Barotrauma
 
                     if (Campaign.PurchasedLostShuttles)
                     {
-                        Campaign.Money += CampaignMode.ShuttleReplaceCost;
+                        Campaign.Wallet.Refund(CampaignMode.ShuttleReplaceCost);
                         Campaign.PurchasedLostShuttles = false;
                     }
                     else
                     {
-                        if (Campaign.Money >= CampaignMode.ShuttleReplaceCost)
+                        if (Campaign.TryPurchase(null, CampaignMode.ShuttleReplaceCost))
                         {
-                            Campaign.Money -= CampaignMode.ShuttleReplaceCost;
+                            GameAnalyticsManager.AddMoneySpentEvent(CampaignMode.ShuttleReplaceCost, GameAnalyticsManager.MoneySink.Service, "retrieveshuttle");
                             Campaign.PurchasedLostShuttles = true;
                         }
                     }
@@ -268,6 +272,9 @@ namespace Barotrauma
 
             // Submarine buying tab
             tabs[(int)CampaignMode.InteractionType.PurchaseSub] = new GUIFrame(new RectTransform(Vector2.One, container.RectTransform, Anchor.TopLeft), color: Color.Black * 0.9f);
+
+            tabs[(int)CampaignMode.InteractionType.MedicalClinic] = new GUIFrame(new RectTransform(Vector2.One, container.RectTransform), color: Color.Black * 0.9f);
+            MedicalClinic = new MedicalClinicUI(Campaign.MedicalClinic, GetTabContainer(CampaignMode.InteractionType.MedicalClinic));
 
             // mission info -------------------------------------------------------------------------
 
@@ -326,7 +333,7 @@ namespace Barotrauma
             foreach (GUITickBox tickBox in missionTickBoxes)
             {
                 bool disable = hasMaxMissions && !tickBox.Selected;
-                tickBox.Enabled = Campaign.AllowedToManageCampaign() && !disable;
+                tickBox.Enabled = Campaign.AllowedToManageCampaign(ClientPermissions.ManageMap) && !disable;
                 tickBox.Box.DisabledColor = disable ? tickBox.Box.Color * 0.5f : tickBox.Box.Color * 0.8f;
                 foreach (GUIComponent child in tickBox.Parent.Parent.Children)
                 {
@@ -354,6 +361,10 @@ namespace Barotrauma
                 case CampaignMode.InteractionType.Store:
                     Store?.Update(deltaTime);
                     break;
+                
+                case CampaignMode.InteractionType.MedicalClinic:
+                    MedicalClinic?.Update(deltaTime);
+                    break;
             }
         }
 
@@ -368,6 +379,7 @@ namespace Barotrauma
         public void SelectLocation(Location location, LocationConnection connection)
         {
             missionTickBoxes.Clear();
+            missionRewardTexts.Clear();
             locationInfoPanel.ClearChildren();
             //don't select the map panel if we're looking at some other tab
             if (selectedTab == CampaignMode.InteractionType.Map)
@@ -390,11 +402,11 @@ namespace Barotrauma
                 RelativeSpacing = 0.02f,
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), location.Name, font: GUI.LargeFont)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), location.Name, font: GUIStyle.LargeFont)
             {
                 AutoScaleHorizontal = true
             };
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), location.Type.Name, font: GUI.SubHeadingFont);
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), location.Type.Name, font: GUIStyle.SubHeadingFont);
 
             Sprite portrait = location.Type.GetPortrait(location.PortraitId);
             portrait.EnsureLazyLoaded();
@@ -415,11 +427,11 @@ namespace Barotrauma
             if (connection?.LevelData != null)
             {
                 var biomeLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), textContent.RectTransform),
-                    TextManager.Get("Biome", fallBackTag: "location"), font: GUI.SubHeadingFont, textAlignment: Alignment.CenterLeft);
+                    TextManager.Get("Biome", "location"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft);
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), biomeLabel.RectTransform), connection.Biome.DisplayName, textAlignment: Alignment.CenterRight);
 
                 var difficultyLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), textContent.RectTransform),
-                    TextManager.Get("LevelDifficulty"), font: GUI.SubHeadingFont, textAlignment: Alignment.CenterLeft);
+                    TextManager.Get("LevelDifficulty"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft);
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), difficultyLabel.RectTransform), ((int)connection.LevelData.Difficulty) + " %", textAlignment: Alignment.CenterRight);
             
                 if (connection.LevelData.HasBeaconStation)
@@ -431,10 +443,10 @@ namespace Barotrauma
                     {
                         Color = MapGenerationParams.Instance.IndicatorColor,
                         HoverColor = Color.Lerp(MapGenerationParams.Instance.IndicatorColor, Color.White, 0.5f),
-                        ToolTip = TextManager.Get(connection.LevelData.IsBeaconActive ? "BeaconStationActiveTooltip" : "BeaconStationInactiveTooltip")
+                        ToolTip = RichString.Rich(TextManager.Get(connection.LevelData.IsBeaconActive ? "BeaconStationActiveTooltip" : "BeaconStationInactiveTooltip"))
                     };
                     new GUITextBlock(new RectTransform(Vector2.One, beaconStationContent.RectTransform),
-                        TextManager.Get("submarinetype.beaconstation", fallBackTag: "beaconstationsonarlabel"), font: GUI.SubHeadingFont, textAlignment: Alignment.CenterLeft)
+                        TextManager.Get("submarinetype.beaconstation", "beaconstationsonarlabel"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft)
                     {
                         Padding = Vector4.Zero,
                         ToolTip = icon.ToolTip
@@ -448,10 +460,10 @@ namespace Barotrauma
                     {
                         Color = MapGenerationParams.Instance.IndicatorColor,
                         HoverColor = Color.Lerp(MapGenerationParams.Instance.IndicatorColor, Color.White, 0.5f),
-                        ToolTip = TextManager.Get("HuntingGroundsTooltip")
+                        ToolTip = RichString.Rich(TextManager.Get("HuntingGroundsTooltip"))
                     };
                     new GUITextBlock(new RectTransform(Vector2.One, huntingGroundsContent.RectTransform),
-                        TextManager.Get("missionname.huntinggrounds"), font: GUI.SubHeadingFont, textAlignment: Alignment.CenterLeft)
+                        TextManager.Get("missionname.huntinggrounds"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft)
                     {
                         Padding = Vector4.Zero,
                         ToolTip = icon.ToolTip
@@ -469,7 +481,7 @@ namespace Barotrauma
                 if (GUI.MouseOn == tickBox) { return false; }
                 if (tickBox != null)
                 {
-                    if (Campaign.AllowedToManageCampaign() && tickBox.Enabled)
+                    if (Campaign.AllowedToManageCampaign(ClientPermissions.ManageMap) && tickBox.Enabled)
                     {
                         tickBox.Selected = !tickBox.Selected;
                     }
@@ -499,7 +511,7 @@ namespace Barotrauma
                         AbsoluteSpacing = GUI.IntScale(5)
                     };
 
-                    var missionName = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), mission?.Name ?? TextManager.Get("NoMission"), font: GUI.SubHeadingFont, wrap: true);
+                    var missionName = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), mission?.Name ?? TextManager.Get("NoMission"), font: GUIStyle.SubHeadingFont, wrap: true);
                    // missionName.RectTransform.MinSize = new Point(0, (int)(missionName.Rect.Height * 1.5f));
                     if (mission != null)
                     {                    
@@ -510,11 +522,11 @@ namespace Barotrauma
                         };
                         tickBox.RectTransform.MinSize = new Point(tickBox.Rect.Height, 0);
                         tickBox.RectTransform.IsFixedSize = true;
-                        tickBox.Enabled = Campaign.AllowedToManageCampaign();
+                        tickBox.Enabled = Campaign.AllowedToManageCampaign(ClientPermissions.ManageMap);
                         tickBox.OnSelected += (GUITickBox tb) =>
                         {
-                            if (!Campaign.AllowedToManageCampaign()) { return false; }
-                            
+                            if (!Campaign.AllowedToManageCampaign(Networking.ClientPermissions.ManageMap)) { return false; }
+
                             if (tb.Selected)
                             {
                                 Campaign.Map.CurrentLocation.SelectMission(mission);
@@ -524,14 +536,20 @@ namespace Barotrauma
                                 Campaign.Map.CurrentLocation.DeselectMission(mission);
                             }
 
+                            foreach (GUITextBlock rewardText in missionRewardTexts)
+                            {
+                                Mission otherMission = rewardText.UserData as Mission;
+                                rewardText.Text = otherMission.GetMissionRewardText(Submarine.MainSub);
+                            }
+
                             UpdateMaxMissions(connection.OtherLocation(currentDisplayLocation));
 
                             if ((Campaign is MultiPlayerCampaign multiPlayerCampaign) && !multiPlayerCampaign.SuppressStateSending &&
-                                Campaign.AllowedToManageCampaign())
+                                Campaign.AllowedToManageCampaign(Networking.ClientPermissions.ManageMap))
                             {
                                 GameMain.Client?.SendCampaignState();
                             }
-                            return true;                            
+                            return true;
                         };
                         missionTickBoxes.Add(tickBox);
 
@@ -566,13 +584,17 @@ namespace Barotrauma
 
                         //spacing
                         new GUIFrame(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform) { MinSize = new Point(0, GUI.IntScale(10)) }, style: null);
+                        
+                        var rewardText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), RichString.Rich(mission.GetMissionRewardText(Submarine.MainSub)), wrap: true)
+                        {
+                            UserData = mission
+                        };
+                        missionRewardTexts.Add(rewardText);
 
-                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), mission.GetMissionRewardText(Submarine.MainSub), wrap: true, parseRichText: true);
+                        LocalizedString reputationText = mission.GetReputationRewardText(mission.Locations[0]);
+                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), RichString.Rich(reputationText), wrap: true);
 
-                        string reputationText = mission.GetReputationRewardText(mission.Locations[0]);
-                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), reputationText, wrap: true, parseRichText: true);
-
-                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), mission.Description, wrap: true, parseRichText: true);
+                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), RichString.Rich(mission.Description), wrap: true);
                     }
                     missionPanel.RectTransform.MinSize = new Point(0, (int)(missionTextContent.Children.Sum(c => c.Rect.Height + missionTextContent.AbsoluteSpacing) / missionTextContent.RectTransform.RelativeSize.Y) + GUI.IntScale(0));
                     foreach (GUIComponent child in missionTextContent.Children)
@@ -612,11 +634,11 @@ namespace Barotrauma
 
             var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform), isHorizontal: true);
 
-            new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), buttonArea.RectTransform), "", font: GUI.Style.SubHeadingFont)
+            new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), buttonArea.RectTransform), "", font: GUIStyle.SubHeadingFont)
             {
                 TextGetter = () =>
                 {
-                    return TextManager.AddPunctuation(':', TextManager.Get("Missions"), $"{Campaign.NumberOfMissionsAtLocation(destination)}/{Campaign.Settings.MaxMissionCount}");
+                    return TextManager.AddPunctuation(':', TextManager.Get("Missions"), $"{Campaign.NumberOfMissionsAtLocation(destination)}/{Campaign.Settings.TotalMaxMissionCount}");
                 }
             };
 
@@ -628,7 +650,7 @@ namespace Barotrauma
                     if (missionList.Content.FindChild(c => c is GUITickBox tickBox && tickBox.Selected, recursive: true) == null &&
                         missionList.Content.Children.Any(c => c.UserData is Mission))
                     {
-                        var noMissionVerification = new GUIMessageBox(string.Empty, TextManager.Get("nomissionprompt"), new string[] { TextManager.Get("yes"), TextManager.Get("no") });
+                        var noMissionVerification = new GUIMessageBox(string.Empty, TextManager.Get("nomissionprompt"), new LocalizedString[] { TextManager.Get("yes"), TextManager.Get("no") });
                         noMissionVerification.Buttons[0].OnClicked = (btn, userdata) =>
                         {
                             StartRound?.Invoke();
@@ -644,7 +666,7 @@ namespace Barotrauma
                     return true;
                 },
                 Enabled = true,
-                Visible = Campaign.AllowedToEndRound()
+                Visible = Campaign.AllowedToManageCampaign(ClientPermissions.ManageMap)
             };
 
             buttonArea.RectTransform.MinSize = new Point(0, StartButton.RectTransform.MinSize.Y);
@@ -659,7 +681,7 @@ namespace Barotrauma
             //locationInfoPanel?.UpdateAuto(1.0f);
         }
 
-        public void SelectTab(CampaignMode.InteractionType tab)
+        public void SelectTab(CampaignMode.InteractionType tab, Identifier storeIdentifier = default)
         {
             if (Campaign.ShowCampaignUI || (Campaign.ForceMapUI && tab == CampaignMode.InteractionType.Map))
             {
@@ -681,12 +703,10 @@ namespace Barotrauma
             {
                 case CampaignMode.InteractionType.Repair:
                     repairHullsButton.Enabled =
-                        (Campaign.PurchasedHullRepairs || Campaign.Money >= CampaignMode.HullRepairCost) &&
-                        Campaign.AllowedToManageCampaign();
+                        (Campaign.PurchasedHullRepairs || Campaign.Wallet.CanAfford(CampaignMode.HullRepairCost));
                     repairHullsButton.GetChild<GUITickBox>().Selected = Campaign.PurchasedHullRepairs;
                     repairItemsButton.Enabled =
-                        (Campaign.PurchasedItemRepairs || Campaign.Money >= CampaignMode.ItemRepairCost) &&
-                        Campaign.AllowedToManageCampaign();
+                        (Campaign.PurchasedItemRepairs || Campaign.Wallet.CanAfford(CampaignMode.ItemRepairCost));
                     repairItemsButton.GetChild<GUITickBox>().Selected = Campaign.PurchasedItemRepairs;
 
                     if (GameMain.GameSession?.SubmarineInfo == null || !GameMain.GameSession.SubmarineInfo.SubsLeftBehind)
@@ -697,33 +717,142 @@ namespace Barotrauma
                     else
                     {
                         replaceShuttlesButton.Enabled =
-                            (Campaign.PurchasedLostShuttles || Campaign.Money >= CampaignMode.ShuttleReplaceCost) &&
-                            Campaign.AllowedToManageCampaign();
+                            (Campaign.PurchasedLostShuttles || Campaign.Wallet.CanAfford(CampaignMode.ShuttleReplaceCost));
                         replaceShuttlesButton.GetChild<GUITickBox>().Selected = Campaign.PurchasedLostShuttles;
                     }
                     break;
                 case CampaignMode.InteractionType.Store:
-                    Store.RefreshItemsToSell();
-                    Store.Refresh();
+                    Store.SelectStore(storeIdentifier);
                     break;
                 case CampaignMode.InteractionType.Crew:
                     CrewManagement.UpdateCrew();
                     break;
                 case CampaignMode.InteractionType.PurchaseSub:
                     if (submarineSelection == null) submarineSelection = new SubmarineSelection(false, () => Campaign.ShowCampaignUI = false, tabs[(int)CampaignMode.InteractionType.PurchaseSub].RectTransform);
-                    submarineSelection.RefreshSubmarineDisplay(true);
+                    submarineSelection.RefreshSubmarineDisplay(true, setTransferOptionToTrue: true);
+                    break;
+                case CampaignMode.InteractionType.Map:
+                    //refresh mission rewards (may have been changed by e.g. a pending submarine switch)
+                    foreach (GUITextBlock rewardText in missionRewardTexts)
+                    {
+                        Mission mission = (Mission)rewardText.UserData;
+                        rewardText.Text = mission.GetMissionRewardText(Submarine.MainSub);
+                    }
                     break;
             }
         }
 
-        public static string GetMoney()
+        public static LocalizedString GetMoney()
         {
-            return TextManager.GetWithVariable("PlayerCredits", "[credits]", (GameMain.GameSession?.Campaign == null) ? "0" : string.Format(CultureInfo.InvariantCulture, "{0:N0}", GameMain.GameSession.Campaign.Money));
+            return TextManager.GetWithVariable("PlayerCredits", "[credits]", (GameMain.GameSession?.Campaign == null) ? "0" : string.Format(CultureInfo.InvariantCulture, "{0:N0}", GameMain.GameSession.Campaign.GetBalance()));
+        }
+
+        public static LocalizedString GetTotalBalance()
+        {
+            return TextManager.FormatCurrency(GameMain.GameSession?.Campaign is { } campaign ? campaign.GetBalance() : 0);
+        }
+
+        public static LocalizedString GetBankBalance()
+        {
+            return TextManager.FormatCurrency(GameMain.GameSession?.Campaign is { } campaign ? campaign.Bank.Balance : 0);
+        }
+
+        public static LocalizedString GetWalletBalance()
+        {
+            return TextManager.FormatCurrency(GameMain.GameSession?.Campaign is { } campaign ? campaign.Wallet.Balance : 0);
         }
 
         private void UpdateMaxMissions(Location location)
         {
-            hasMaxMissions = Campaign.NumberOfMissionsAtLocation(location) >= Campaign.Settings.MaxMissionCount;
+            hasMaxMissions = Campaign.NumberOfMissionsAtLocation(location) >= Campaign.Settings.TotalMaxMissionCount;
+        }
+
+        public readonly struct PlayerBalanceElement
+        {
+            public readonly bool DisplaySeparateBalances;
+            public readonly GUILayoutGroup ParentComponent;
+            public readonly GUILayoutGroup TotalBalanceContainer;
+            public readonly GUILayoutGroup BankBalanceContainer;
+
+            public PlayerBalanceElement(bool displaySeparateBalances, GUILayoutGroup parentComponent, GUILayoutGroup totalBalanceContainer, GUILayoutGroup bankBalanceContainer)
+            {
+                DisplaySeparateBalances = displaySeparateBalances;
+                ParentComponent = parentComponent;
+                TotalBalanceContainer = totalBalanceContainer;
+                BankBalanceContainer = bankBalanceContainer;
+            }
+
+            public PlayerBalanceElement(PlayerBalanceElement element, bool displaySeparateBalances)
+            {
+                DisplaySeparateBalances = displaySeparateBalances;
+                ParentComponent = element.ParentComponent;
+                TotalBalanceContainer = element.TotalBalanceContainer;
+                BankBalanceContainer = element.BankBalanceContainer;
+            }
+        }
+
+        public static PlayerBalanceElement? AddBalanceElement(GUIComponent elementParent, Vector2 relativeSize)
+        {
+            var parent = new GUILayoutGroup(new RectTransform(relativeSize, elementParent.RectTransform), isHorizontal: true, childAnchor: Anchor.TopRight);
+            if (GameMain.IsSingleplayer)
+            {
+                AddBalance(parent, true, TextManager.Get("campaignstore.balance"), GetTotalBalance);
+                return null;
+            }
+            else
+            {
+                bool displaySeparateBalances = CampaignMode.AllowedToManageWallets();
+                var totalBalanceContainer = AddBalance(parent, displaySeparateBalances, TextManager.Get("campaignstore.total"), GetTotalBalance);
+                var bankBalanceContainer = AddBalance(parent, displaySeparateBalances, TextManager.Get("crewwallet.bank"), GetBankBalance);
+                AddBalance(parent, true, TextManager.Get("crewwallet.wallet"), GetWalletBalance);
+                var playerBalanceElement = new PlayerBalanceElement(displaySeparateBalances, parent, totalBalanceContainer, bankBalanceContainer);
+                parent.Recalculate();
+                return playerBalanceElement;
+            }
+
+            static GUILayoutGroup AddBalance(GUIComponent parent, bool visible, LocalizedString text, GUITextBlock.TextGetterHandler textGetter)
+            {
+                float balanceContainerWidth = GameMain.IsSingleplayer ? 1 : 1 / 3f;
+                var rt = new RectTransform(new Vector2(balanceContainerWidth, 1.0f), parent.RectTransform)
+                {
+                    MaxSize = new Point(GUI.IntScale(GUI.AdjustForTextScale(120)), int.MaxValue)
+                };
+                var balanceContainer = new GUILayoutGroup(rt, childAnchor: Anchor.TopRight)
+                {
+                    RelativeSpacing = 0.005f,
+                    Visible = visible
+                };
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), balanceContainer.RectTransform), text,
+                    font: GUIStyle.Font, textAlignment: Alignment.BottomRight)
+                {
+                    AutoScaleVertical = true,
+                    ForceUpperCase = ForceUpperCase.Yes
+                };
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), balanceContainer.RectTransform), "",
+                    textColor: Color.White, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.TopRight)
+                {
+                    AutoScaleVertical = true,
+                    TextScale = 1.1f,
+                    TextGetter = textGetter
+                };
+                return balanceContainer;
+            }
+        }
+
+        public static PlayerBalanceElement? UpdateBalanceElement(PlayerBalanceElement? playerBalanceElement)
+        {
+            if (playerBalanceElement is { } balanceElement)
+            {
+                bool displaySeparateBalances = CampaignMode.AllowedToManageWallets();
+                if (displaySeparateBalances != balanceElement.DisplaySeparateBalances)
+                {
+                    balanceElement.TotalBalanceContainer.Visible = displaySeparateBalances;
+                    balanceElement.BankBalanceContainer.Visible = displaySeparateBalances;
+                    playerBalanceElement = new PlayerBalanceElement(balanceElement, displaySeparateBalances);
+                    balanceElement.ParentComponent.Recalculate();
+                }
+            }
+            return playerBalanceElement;
         }
     }
 }

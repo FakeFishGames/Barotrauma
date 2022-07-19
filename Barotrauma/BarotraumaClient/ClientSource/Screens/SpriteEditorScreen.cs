@@ -14,7 +14,7 @@ using Barotrauma.IO;
 
 namespace Barotrauma
 {
-    class SpriteEditorScreen : Screen
+    class SpriteEditorScreen : EditorScreen
     {
         private GUIListBox textureList, spriteList;
 
@@ -30,22 +30,22 @@ namespace Barotrauma
         private GUITextBlock texturePathText;
         private GUITextBlock xmlPathText;
         private GUIScrollBar zoomBar;
-        private List<Sprite> selectedSprites = new List<Sprite>();
-        private List<Sprite> dirtySprites = new List<Sprite>();
-        private Texture2D selectedTexture;
-        private Sprite lastSelected;
+        private readonly List<Sprite> selectedSprites = new List<Sprite>();
+        private readonly List<Sprite> dirtySprites = new List<Sprite>();
+        private Texture2D SelectedTexture => lastSprite?.Texture;
+        private Sprite lastSprite;
+        private string selectedTexturePath;
+
         private Rectangle textureRect;
         private float zoom = 1;
-        private float minZoom = 0.25f;
-        private float maxZoom;
-        private int spriteCount;
+        private const float MinZoom = 0.25f, MaxZoom = 10.0f;
 
         private GUITextBox filterSpritesBox;
         private GUITextBlock filterSpritesLabel;
         private GUITextBox filterTexturesBox;
         private GUITextBlock filterTexturesLabel;
 
-        private string originLabel, positionLabel, sizeLabel;
+        private LocalizedString originLabel, positionLabel, sizeLabel;
 
         private bool editBackgroundColor;
         private Color backgroundColor = new Color(0.051f, 0.149f, 0.271f, 1.0f);
@@ -85,15 +85,14 @@ namespace Barotrauma
             {
                 OnClicked = (button, userData) =>
                 {
-                    if (!(textureList.SelectedData is Texture2D selectedTexture)) { return false; }
-                    var selected = selectedSprites;
+                    var selected = selectedSprites.ToList();
                     Sprite firstSelected = selected.First();
                     selected.ForEach(s => s.ReloadTexture());
                     RefreshLists();
-                    textureList.Select(firstSelected.Texture, autoScroll: false);
-                    selected.ForEachMod(s => spriteList.Select(s, autoScroll: false));
-                    texturePathText.Text = TextManager.GetWithVariable("spriteeditor.texturesreloaded", "[filepath]", firstSelected.FilePath);
-                    texturePathText.TextColor = GUI.Style.Green;
+                    textureList.Select(firstSelected.FullPath, autoScroll: GUIListBox.AutoScroll.Disabled);
+                    selected.ForEachMod(s => spriteList.Select(s, autoScroll: GUIListBox.AutoScroll.Disabled));
+                    texturePathText.Text = TextManager.GetWithVariable("spriteeditor.texturesreloaded", "[filepath]", firstSelected.FilePath.Value);
+                    texturePathText.TextColor = GUIStyle.Green;
                     return true;
                 }
             };
@@ -104,10 +103,10 @@ namespace Barotrauma
             {
                 OnClicked = (button, userData) =>
                 {
-                    if (selectedTexture == null) { return false; }
+                    if (SelectedTexture == null) { return false; }
                     foreach (Sprite sprite in loadedSprites)
                     {
-                        if (sprite.Texture != selectedTexture) { continue; }
+                        if (sprite.FullPath != selectedTexturePath) { continue; }
                         var element = sprite.SourceElement;
                         if (element == null) { continue; }
                         // Not all sprites have a sourcerect defined, in which case we'll want to use the current source rect instead of an empty rect.
@@ -116,7 +115,7 @@ namespace Barotrauma
                     }
                     ResetWidgets();
                     xmlPathText.Text = TextManager.Get("spriteeditor.resetsuccessful");
-                    xmlPathText.TextColor = GUI.Style.Green;
+                    xmlPathText.TextColor = GUIStyle.Green;
                     return true;
                 }
             };
@@ -153,7 +152,7 @@ namespace Barotrauma
                 Step = 0.01f,
                 OnMoved = (scrollBar, value) =>
                 {
-                    zoom = MathHelper.Lerp(minZoom, maxZoom, value);
+                    zoom = MathHelper.Lerp(MinZoom, MaxZoom, value);
                     viewAreaOffset = Point.Zero;
                     return true;
                 }
@@ -200,32 +199,30 @@ namespace Barotrauma
                 Stretch = true,
                 UserData = "filterarea"
             };
-            filterTexturesLabel = new GUITextBlock(new RectTransform(Vector2.One, filterArea.RectTransform), TextManager.Get("serverlog.filter"), font: GUI.Font, textAlignment: Alignment.CenterLeft) { IgnoreLayoutGroups = true }; ;
-            filterTexturesBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterArea.RectTransform), font: GUI.Font, createClearButton: true);
+            filterTexturesLabel = new GUITextBlock(new RectTransform(Vector2.One, filterArea.RectTransform), TextManager.Get("serverlog.filter"), font: GUIStyle.Font, textAlignment: Alignment.CenterLeft) { IgnoreLayoutGroups = true }; ;
+            filterTexturesBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterArea.RectTransform), font: GUIStyle.Font, createClearButton: true);
             filterArea.RectTransform.MinSize = filterTexturesBox.RectTransform.MinSize;
             filterTexturesBox.OnTextChanged += (textBox, text) => { FilterTextures(text); return true; };
 
             textureList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), paddedLeftPanel.RectTransform))
             {
+                PlaySoundOnSelect = true,
                 OnSelected = (listBox, userData) =>
                 {
-                    var previousTexture = selectedTexture;
-                    selectedTexture = userData as Texture2D;
-                    if (previousTexture != selectedTexture)
+                    var newTexturePath = userData as string;
+                    if (selectedTexturePath == null || selectedTexturePath != newTexturePath)
                     {
+                        selectedTexturePath = newTexturePath;
                         ResetZoom();
+                        spriteList.Select(loadedSprites.First(s => s.FilePath == selectedTexturePath), autoScroll: GUIListBox.AutoScroll.Disabled);
+                        UpdateScrollBar(spriteList);
                     }
                     foreach (GUIComponent child in spriteList.Content.Children)
                     {
                         var textBlock = (GUITextBlock)child;
                         var sprite = (Sprite)textBlock.UserData;
-                        textBlock.TextColor = new Color(textBlock.TextColor, sprite.Texture == selectedTexture ? 1.0f : 0.4f);
-                        if (sprite.Texture == selectedTexture) { textBlock.Visible = true; }
-                    }
-                    if (selectedSprites.None(s => s.Texture == selectedTexture))
-                    {
-                        spriteList.Select(loadedSprites.First(s => s.Texture == selectedTexture), autoScroll: false);
-                        UpdateScrollBar(spriteList);
+                        textBlock.TextColor = new Color(textBlock.TextColor, sprite.FilePath == selectedTexturePath ? 1.0f : 0.4f);
+                        if (sprite.FilePath == selectedTexturePath) { textBlock.Visible = true; }
                     }
                     texturePathText.TextColor = Color.LightGray;
                     topPanelContents.Visible = true;
@@ -245,18 +242,22 @@ namespace Barotrauma
                 Stretch = true,
                 UserData = "filterarea"
             };
-            filterSpritesLabel = new GUITextBlock(new RectTransform(Vector2.One, filterArea.RectTransform), TextManager.Get("serverlog.filter"), font: GUI.Font, textAlignment: Alignment.CenterLeft) { IgnoreLayoutGroups = true };
-            filterSpritesBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterArea.RectTransform), font: GUI.Font, createClearButton: true);
+            filterSpritesLabel = new GUITextBlock(new RectTransform(Vector2.One, filterArea.RectTransform), TextManager.Get("serverlog.filter"), font: GUIStyle.Font, textAlignment: Alignment.CenterLeft) { IgnoreLayoutGroups = true };
+            filterSpritesBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterArea.RectTransform), font: GUIStyle.Font, createClearButton: true);
             filterArea.RectTransform.MinSize = filterSpritesBox.RectTransform.MinSize;
             filterSpritesBox.OnTextChanged += (textBox, text) => { FilterSprites(text); return true; };
 
             spriteList = new GUIListBox(new RectTransform(new Vector2(1.0f, 1.0f), paddedRightPanel.RectTransform))
             {
+                PlaySoundOnSelect = true,
                 OnSelected = (listBox, userData) =>
                 {
-                    if (!(userData is Sprite sprite)) return false;
-                    SelectSprite(sprite);
-                    return true;
+                    if (userData is Sprite sprite)
+                    {
+                        SelectSprite(sprite);
+                        return true;
+                    }
+                    return false;
                 }
             };
 
@@ -282,7 +283,7 @@ namespace Barotrauma
                 RelativeSpacing = 0.01f
             };
             var fields = new GUIComponent[4];
-            string[] colorComponentLabels = { TextManager.Get("spriteeditor.colorcomponentr"), TextManager.Get("spriteeditor.colorcomponentg"), TextManager.Get("spriteeditor.colorcomponentb") };
+            LocalizedString[] colorComponentLabels = { TextManager.Get("spriteeditor.colorcomponentr"), TextManager.Get("spriteeditor.colorcomponentg"), TextManager.Get("spriteeditor.colorcomponentb") };
             for (int i = 2; i >= 0; i--)
             {
                 var element = new GUIFrame(new RectTransform(new Vector2(0.2f, 1), inputArea.RectTransform)
@@ -291,23 +292,23 @@ namespace Barotrauma
                     MaxSize = new Point(100, 50)
                 }, style: null, color: Color.Black * 0.6f);
                 var colorLabel = new GUITextBlock(new RectTransform(new Vector2(0.3f, 1), element.RectTransform, Anchor.CenterLeft), colorComponentLabels[i],
-                    font: GUI.SmallFont, textAlignment: Alignment.CenterLeft);
-                var numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight), GUINumberInput.NumberType.Int)
+                    font: GUIStyle.SmallFont, textAlignment: Alignment.CenterLeft);
+                var numberInput = new GUINumberInput(new RectTransform(new Vector2(0.7f, 1), element.RectTransform, Anchor.CenterRight), NumberType.Int)
                 {
-                    Font = GUI.SmallFont
+                    Font = GUIStyle.SmallFont
                 };
                 numberInput.MinValueInt = 0;
                 numberInput.MaxValueInt = 255;
-                numberInput.Font = GUI.SmallFont;
+                numberInput.Font = GUIStyle.SmallFont;
                 switch (i)
                 {
                     case 0:
-                        colorLabel.TextColor = GUI.Style.Red;
+                        colorLabel.TextColor = GUIStyle.Red;
                         numberInput.IntValue = backgroundColor.R;
                         numberInput.OnValueChanged += (numInput) => backgroundColor.R = (byte)(numInput.IntValue);
                         break;
                     case 1:
-                        colorLabel.TextColor = GUI.Style.Green;
+                        colorLabel.TextColor = GUIStyle.Green;
                         numberInput.IntValue = backgroundColor.G;
                         numberInput.OnValueChanged += (numInput) => backgroundColor.G = (byte)(numInput.IntValue);
                         break;
@@ -325,7 +326,7 @@ namespace Barotrauma
         {
             loadedSprites.ForEach(s => s.Remove());
             loadedSprites.Clear();
-            var contentPackages = GameMain.Config.AllEnabledPackages.ToList();
+            var contentPackages = ContentPackageManager.EnabledPackages.All.ToList();
 
 #if !DEBUG
             var vanilla = GameMain.VanillaContent;
@@ -343,16 +344,15 @@ namespace Barotrauma
                         XDocument doc = XMLExtensions.TryLoadXml(file.Path);
                         if (doc != null)
                         {
-                            LoadSprites(doc.Root);
+                            LoadSprites(doc.Root.FromPackage(file.Path.ContentPackage));
                         }
                     }
                 }
             }
 
-            void LoadSprites(XElement element)
+            void LoadSprites(ContentXElement element)
             {
-                string[] spriteElementNames = new string[]
-                {
+                string[] spriteElementNames = {
                     "Sprite",
                     "DeformableSprite",
                     "BackgroundSprite",
@@ -371,34 +371,33 @@ namespace Barotrauma
 
                 foreach (string spriteElementName in spriteElementNames)
                 {
-                    element.Elements(spriteElementName).ForEach(s => CreateSprite(s));
-                    element.Elements(spriteElementName.ToLowerInvariant()).ForEach(s => CreateSprite(s));
+                    element.GetChildElements(spriteElementName).ForEach(s => CreateSprite(s));
                 }
 
                 element.Elements().ForEach(e => LoadSprites(e));
             }
 
-            void CreateSprite(XElement element)
+            void CreateSprite(ContentXElement element)
             {
                 string spriteFolder = "";
-                string textureElement = "";
+                ContentPath texturePath = null;
                 
-                if (element.Attribute("texture") != null)
+                if (element.GetAttribute("texture") != null)
                 {
-                    textureElement = element.GetAttributeString("texture", "");
+                    texturePath = element.GetAttributeContentPath("texture");
                 }
                 else
                 {
                     if (element.Name.ToString().ToLower() == "vinesprite")
                     {
-                        textureElement = element.Parent.GetAttributeString("vineatlas", "");
+                        texturePath = element.Parent.GetAttributeContentPath("vineatlas");
                     }
                 }
-                if (string.IsNullOrEmpty(textureElement)) { return; }
+                if (texturePath.IsNullOrEmpty()) { return; }
 
                 // TODO: parse and create?
-                if (textureElement.Contains("[GENDER]") || textureElement.Contains("[HEADID]") || textureElement.Contains("[RACE]") || textureElement.Contains("[VARIANT]")) { return; }
-                if (!textureElement.Contains("/"))
+                if (texturePath.Value.Contains("[GENDER]") || texturePath.Value.Contains("[HEADID]") || texturePath.Value.Contains("[RACE]") || texturePath.Value.Contains("[VARIANT]")) { return; }
+                if (!texturePath.Value.Contains("/"))
                 {
                     var parsedPath = element.ParseContentPathFromUri();
                     spriteFolder = Path.GetDirectoryName(parsedPath);
@@ -409,18 +408,18 @@ namespace Barotrauma
                 //{
                 //    loadedSprites.Add(new Sprite(element, spriteFolder));
                 //}
-                loadedSprites.Add(new Sprite(element, spriteFolder, textureElement));
+                loadedSprites.Add(new Sprite(element, spriteFolder, texturePath.Value, lazyLoad: true));
             }
         }
 
         private bool SaveSprites(IEnumerable<Sprite> sprites)
         {
-            if (selectedTexture == null) { return false; }
+            if (SelectedTexture == null) { return false; }
             if (sprites.None()) { return false; }
             HashSet<XDocument> docsToSave = new HashSet<XDocument>();
             foreach (Sprite sprite in sprites)
             {
-                if (sprite.Texture != selectedTexture) { continue; }
+                if (sprite.FullPath != selectedTexturePath) { continue; }
                 var element = sprite.SourceElement;
                 if (element == null) { continue; }
                 element.SetAttributeValue("sourcerect", XMLExtensions.RectToString(sprite.SourceRect));
@@ -448,7 +447,7 @@ namespace Barotrauma
                 doc.SaveSafe(xmlPath);
 #endif
             }
-            xmlPathText.TextColor = GUI.Style.Green;
+            xmlPathText.TextColor = GUIStyle.Green;
             return true;
         }
 #endregion
@@ -474,17 +473,17 @@ namespace Barotrauma
             // Select rects with the mouse
             if (Widget.selectedWidgets.None() || Widget.EnableMultiSelect)
             {
-                if (selectedTexture != null && GUI.MouseOn == null)
+                if (SelectedTexture != null && GUI.MouseOn == null)
                 {
                     foreach (Sprite sprite in loadedSprites)
                     {
-                        if (sprite.Texture != selectedTexture) continue;
+                        if (sprite.FullPath != selectedTexturePath) { continue; }
                         if (PlayerInput.PrimaryMouseButtonClicked())
                         {
                             var scaledRect = new Rectangle(textureRect.Location + sprite.SourceRect.Location.Multiply(zoom), sprite.SourceRect.Size.Multiply(zoom));
                             if (scaledRect.Contains(PlayerInput.MousePosition))
                             {
-                                spriteList.Select(sprite, autoScroll: false);
+                                spriteList.Select(sprite, autoScroll: GUIListBox.AutoScroll.Disabled);
                                 UpdateScrollBar(spriteList);
                                 UpdateScrollBar(textureList);
                                 // Release the keyboard so that we can nudge the source rects
@@ -498,7 +497,7 @@ namespace Barotrauma
             {
                 if (PlayerInput.ScrollWheelSpeed != 0)
                 {
-                    zoom = MathHelper.Clamp(zoom + PlayerInput.ScrollWheelSpeed * (float)deltaTime * 0.05f * zoom, minZoom, maxZoom);
+                    zoom = MathHelper.Clamp(zoom + PlayerInput.ScrollWheelSpeed * (float)deltaTime * 0.05f * zoom, MinZoom, MaxZoom);
                     zoomBar.BarScroll = GetBarScrollValue();
                 }
                 widgets.Values.ForEach(w => w.Update((float)deltaTime));
@@ -642,20 +641,20 @@ namespace Barotrauma
 
             var viewArea = GetViewArea;
 
-            if (selectedTexture != null)
+            if (SelectedTexture != null)
             {
                 textureRect = new Rectangle(
-                    (int)(viewArea.Center.X - selectedTexture.Bounds.Width / 2f * zoom),
-                    (int)(viewArea.Center.Y - selectedTexture.Bounds.Height / 2f * zoom),
-                    (int)(selectedTexture.Bounds.Width * zoom),
-                    (int)(selectedTexture.Bounds.Height * zoom));
+                    (int)(viewArea.Center.X - SelectedTexture.Bounds.Width / 2f * zoom),
+                    (int)(viewArea.Center.Y - SelectedTexture.Bounds.Height / 2f * zoom),
+                    (int)(SelectedTexture.Bounds.Width * zoom),
+                    (int)(SelectedTexture.Bounds.Height * zoom));
 
-                spriteBatch.Draw(selectedTexture,
+                spriteBatch.Draw(SelectedTexture,
                     viewArea.Center.ToVector2(),
                     sourceRectangle: null,
                     color: Color.White,
                     rotation: 0.0f,
-                    origin: new Vector2(selectedTexture.Bounds.Width / 2.0f, selectedTexture.Bounds.Height / 2.0f),
+                    origin: new Vector2(SelectedTexture.Bounds.Width / 2.0f, SelectedTexture.Bounds.Height / 2.0f),
                     scale: zoom,
                     effects: SpriteEffects.None,
                     layerDepth: 0);
@@ -670,10 +669,8 @@ namespace Barotrauma
 
                 foreach (GUIComponent element in spriteList.Content.Children)
                 {
-                    Sprite sprite = element.UserData as Sprite;
-                    if (sprite == null) { continue; }
-                    if (sprite.Texture != selectedTexture) continue;
-                    spriteCount++;
+                    if (!(element.UserData is Sprite sprite)) { continue; }
+                    if (sprite.FullPath != selectedTexturePath) { continue; }
 
                     Rectangle sourceRect = new Rectangle(
                         textureRect.X + (int)(sprite.SourceRect.X * zoom),
@@ -682,10 +679,10 @@ namespace Barotrauma
                         (int)(sprite.SourceRect.Height * zoom));
 
                     bool isSelected = selectedSprites.Contains(sprite);
-                    GUI.DrawRectangle(spriteBatch, sourceRect, isSelected ? GUI.Style.Orange : GUI.Style.Red * 0.5f, thickness: isSelected ? 2 : 1);
+                    GUI.DrawRectangle(spriteBatch, sourceRect, isSelected ? GUIStyle.Orange : GUIStyle.Red * 0.5f, thickness: isSelected ? 2 : 1);
 
-                    string id = sprite.ID;
-                    if (!string.IsNullOrEmpty(id))
+                    Identifier id = sprite.Identifier;
+                    if (!id.IsEmpty)
                     {
                         int widgetSize = 10;
                         Vector2 GetTopLeft() => sprite.SourceRect.Location.ToVector2();
@@ -759,8 +756,6 @@ namespace Barotrauma
 
             GUI.Draw(Cam, spriteBatch);
 
-            spriteCount = 0;
-
             spriteBatch.End();
         }
 
@@ -829,7 +824,7 @@ namespace Barotrauma
             foreach (GUIComponent child in textureList.Content.Children)
             {
                 if (!(child is GUITextBlock textBlock)) { continue; }
-                textBlock.Visible = textBlock.Text.ToLower().Contains(text);
+                textBlock.Visible = textBlock.Text.Contains(text, StringComparison.OrdinalIgnoreCase);
             }
         }
         private void FilterSprites(string text)
@@ -845,7 +840,7 @@ namespace Barotrauma
             foreach (GUIComponent child in spriteList.Content.Children)
             {
                 if (!(child is GUITextBlock textBlock)) { continue; }
-                textBlock.Visible = textBlock.Text.ToLower().Contains(text);
+                textBlock.Visible = textBlock.Text.Contains(text, StringComparison.OrdinalIgnoreCase);
             }
         }
 
@@ -854,30 +849,11 @@ namespace Barotrauma
             base.Select();
             LoadSprites();
             RefreshLists();
-            // Store the reference, because lastSelected is reassigned when the texture is selected.
-            Sprite lastSprite = lastSelected;
-            // Select the last selected texture if any.
-            // TODO: Does not work if the texture has been disposed. This happens when it's not used by any sprite -> is there a better way to identify the textures? id or something?
-            if (selectedTexture != null && textureList.Content.Children.Any(c => c.UserData as Texture2D == selectedTexture))
-            {
-                textureList.Select(selectedTexture, autoScroll: false);
-                UpdateScrollBar(textureList);
-                // Select the last selected sprite if any
-                if (lastSprite != null && spriteList.Content.Children.FirstOrDefault(c => c.UserData is Sprite s && s.ID == lastSprite.ID)?.UserData is Sprite sprite)
-                {
-                    spriteList.Select(sprite, autoScroll: false);
-                    UpdateScrollBar(spriteList);
-                }
-            }
-            else
-            {
-                spriteList.Select(0, autoScroll: false);
-            }
+            spriteList.Select(0, autoScroll: GUIListBox.AutoScroll.Disabled);            
         }
 
-        public override void Deselect()
+        protected override void DeselectEditorSpecific()
         {
-            base.Deselect();
             loadedSprites.ForEach(s => s.Remove());
             loadedSprites.Clear();
             ResetWidgets();
@@ -887,7 +863,7 @@ namespace Barotrauma
             {
                 foreach (var s in Sprite.LoadedSprites)
                 {
-                    if (s.Texture == sprite.Texture && !reloadedSprites.Contains(s))
+                    if (s.FullPath == sprite.FullPath && !reloadedSprites.Contains(s))
                     {
                         s.ReloadXML();
                         reloadedSprites.Add(s);
@@ -901,13 +877,13 @@ namespace Barotrauma
 
         public void SelectSprite(Sprite sprite)
         {
+            lastSprite = sprite;
             if (!loadedSprites.Contains(sprite))
             {
                 loadedSprites.Add(sprite);
                 RefreshLists();
             }
-
-            if (selectedSprites.Any(s => s.Texture != selectedTexture))
+            if (selectedSprites.Any(s => s.FullPath != selectedTexturePath))
             {
                 ResetWidgets();
             }
@@ -921,7 +897,6 @@ namespace Barotrauma
                 {
                     selectedSprites.Add(sprite);
                     dirtySprites.Add(sprite);
-                    lastSelected = sprite;
                 }
             }
             else
@@ -929,17 +904,16 @@ namespace Barotrauma
                 selectedSprites.Clear();
                 selectedSprites.Add(sprite);
                 dirtySprites.Add(sprite);
-                lastSelected = sprite;
             }
-            if (selectedTexture != sprite.Texture)
+            if (sprite.FullPath != selectedTexturePath)
             {
-                textureList.Select(sprite.Texture, autoScroll: false);
+                textureList.Select(sprite.FullPath, autoScroll: GUIListBox.AutoScroll.Disabled);
                 UpdateScrollBar(textureList);
             }
             xmlPathText.Text = string.Empty;
             foreach (var s in selectedSprites)
             {
-                texturePathText.Text = s.FilePath;
+                texturePathText.Text = s.FilePath.Value;
                 var element = s.SourceElement;
                 if (element != null)
                 {
@@ -955,25 +929,24 @@ namespace Barotrauma
 
         public void RefreshLists()
         {
-            //selectedTexture = null;
             selectedSprites.Clear();
             textureList.ClearChildren();
             spriteList.ClearChildren();
             ResetWidgets();
             HashSet<string> textures = new HashSet<string>();
             // Create texture list
-            foreach (Sprite sprite in loadedSprites.OrderBy(s => Path.GetFileNameWithoutExtension(s.FilePath)))
+            foreach (Sprite sprite in loadedSprites.OrderBy(s => Path.GetFileNameWithoutExtension(s.FilePath.Value)))
             {
                 //ignore sprites that don't have a file path (e.g. submarine pics)
-                if (string.IsNullOrEmpty(sprite.FilePath)) continue;
-                string normalizedFilePath = Path.GetFullPath(sprite.FilePath);
+                if (sprite.FilePath.IsNullOrEmpty()) { continue; }
+                string normalizedFilePath = sprite.FilePath.FullPath;
                 if (!textures.Contains(normalizedFilePath))
                 {
                     new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), textureList.Content.RectTransform) { MinSize = new Point(0, 20) },
-                        Path.GetFileName(sprite.FilePath))
+                        Path.GetFileName(sprite.FilePath.Value))
                     {
-                        ToolTip = sprite.FilePath,
-                        UserData = sprite.Texture
+                        ToolTip = sprite.FilePath.Value,
+                        UserData = sprite.FullPath
                     };
                     textures.Add(normalizedFilePath);
                 }
@@ -981,7 +954,7 @@ namespace Barotrauma
             // Create sprite list
             // TODO: allow the user to choose whether to sort by file name or by texture sheet
             //foreach (Sprite sprite in loadedSprites.OrderBy(s => GetSpriteName(s)))
-            foreach (Sprite sprite in loadedSprites.OrderBy(s => s.SourceElement.GetAttributeString("texture", string.Empty)))
+            foreach (Sprite sprite in loadedSprites.OrderBy(s => s.SourceElement.GetAttributeContentPath("texture")?.Value ?? string.Empty))
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), spriteList.Content.RectTransform) { MinSize = new Point(0, 20) },
                     GetSpriteName(sprite) + " (" + sprite.SourceRect.X + ", " + sprite.SourceRect.Y + ", " + sprite.SourceRect.Width + ", " + sprite.SourceRect.Height + ")")
@@ -994,11 +967,10 @@ namespace Barotrauma
 
         public void ResetZoom()
         {
-            if (selectedTexture == null) { return; }
+            if (SelectedTexture == null) { return; }
             var viewArea = GetViewArea;
-            float width = viewArea.Width / (float)selectedTexture.Width;
-            float height = viewArea.Height / (float)selectedTexture.Height;
-            maxZoom = 10; // TODO: user-definable?
+            float width = viewArea.Width / (float)SelectedTexture.Width;
+            float height = viewArea.Height / (float)SelectedTexture.Height;
             zoom = Math.Min(1, Math.Min(width, height));
             zoomBar.BarScroll = GetBarScrollValue();
             viewAreaOffset = Point.Zero;
@@ -1017,7 +989,7 @@ namespace Barotrauma
             }
         }
 
-        private float GetBarScrollValue() => MathHelper.Lerp(0, 1, MathUtils.InverseLerp(minZoom, maxZoom, zoom));
+        private float GetBarScrollValue() => MathHelper.Lerp(0, 1, MathUtils.InverseLerp(MinZoom, MaxZoom, zoom));
 
         private string GetSpriteName(Sprite sprite)
         {
@@ -1032,7 +1004,7 @@ namespace Barotrauma
             {
                 name = sourceElement.Parent.GetAttributeString("name", string.Empty);
             }
-            return string.IsNullOrEmpty(name) ? Path.GetFileNameWithoutExtension(sprite.FilePath) : name;
+            return string.IsNullOrEmpty(name) ? Path.GetFileNameWithoutExtension(sprite.FilePath.Value) : name;
         }
 
         private void UpdateScrollBar(GUIListBox listBox)

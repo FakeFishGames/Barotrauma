@@ -18,7 +18,7 @@ namespace Barotrauma
 
         public Sprite Sprite { get; private set; }
 
-        public DeformableSprite(XElement element, int? subdivisionsX = null, int? subdivisionsY = null, string filePath = "", bool lazyLoad = false, bool invert = false)
+        public DeformableSprite(ContentXElement element, int? subdivisionsX = null, int? subdivisionsY = null, string filePath = "", bool lazyLoad = false, bool invert = false)
         {
             Sprite = new Sprite(element, file: filePath, lazyLoad: lazyLoad);
             InitProjSpecific(element, subdivisionsX, subdivisionsY, lazyLoad, invert);

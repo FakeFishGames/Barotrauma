@@ -15,7 +15,7 @@ namespace Barotrauma
 
         public Action OnFinished;
 
-        private string textOverlay;
+        private LocalizedString textOverlay;
         private float textOverlayTimer;
         private Vector2 textOverlaySize;
 
@@ -43,15 +43,15 @@ namespace Barotrauma
         {
             base.Select();
 
-            textOverlay = ToolBox.WrapText(TextManager.Get("campaignend1"), GameMain.GraphicsWidth / 3, GUI.Font);
-            textOverlaySize = GUI.Font.MeasureString(textOverlay);
+            textOverlay = ToolBox.WrapText(TextManager.Get("campaignend1"), GameMain.GraphicsWidth / 3, GUIStyle.Font);
+            textOverlaySize = GUIStyle.Font.MeasureString(textOverlay);
             textOverlayTimer = 0.0f;
 
             video = Video.Load(GameMain.GraphicsDeviceManager.GraphicsDevice, GameMain.SoundManager, "Content/SplashScreens/Ending.webm");
             video.Play();
             creditsPlayer.Restart();
             creditsPlayer.Visible = false;
-            SteamAchievementManager.UnlockAchievement("campaigncompleted", unlockClients: true);
+            SteamAchievementManager.UnlockAchievement("campaigncompleted".ToIdentifier(), unlockClients: true);
         }
 
         public override void Deselect()
@@ -59,7 +59,7 @@ namespace Barotrauma
             video?.Dispose();
             video = null;
             GUI.HideCursor = false;
-            SoundPlayer.OverrideMusicType = null;
+            SoundPlayer.OverrideMusicType = Identifier.Empty;
         }
 
         public override void Update(double deltaTime)
@@ -67,7 +67,7 @@ namespace Barotrauma
             if (creditsPlayer.Finished)
             {
                 OnFinished?.Invoke();
-                SoundPlayer.OverrideMusicType = null;
+                SoundPlayer.OverrideMusicType = Identifier.Empty;
             }
         }
 
@@ -82,7 +82,7 @@ namespace Barotrauma
             }
             else
             {
-                SoundPlayer.OverrideMusicType = "ending";
+                SoundPlayer.OverrideMusicType = "ending".ToIdentifier();
                 float duration = 20.0f;
                 float creditsDelay = 3.0f;
                 if (textOverlayTimer < duration + creditsDelay)
@@ -102,7 +102,7 @@ namespace Barotrauma
                     {
                         textAlpha = 1.0f;
                     }
-                    GUI.Font.DrawString(spriteBatch, textOverlay, new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) / 2 - textOverlaySize / 2, Color.White * textAlpha);
+                    GUIStyle.Font.DrawString(spriteBatch, textOverlay, new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) / 2 - textOverlaySize / 2, Color.White * textAlpha);
                 }
                 else
                 {

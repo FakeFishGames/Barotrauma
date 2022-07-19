@@ -4,7 +4,7 @@ namespace Barotrauma
 {
     partial class CombatMission : Mission
     {
-        public override string Description
+        public override LocalizedString Description
         {
             get
             {
@@ -21,9 +21,7 @@ namespace Barotrauma
             }
         }
 
-        public override void ClientReadInitial(IReadMessage msg)
-        {
-            //do nothing
-        }
+        public override bool DisplayAsCompleted => false;
+        public override bool DisplayAsFailed => false;
     }
 }

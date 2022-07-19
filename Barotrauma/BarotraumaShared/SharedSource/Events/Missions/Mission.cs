@@ -1,6 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Abilities;
+using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
@@ -25,45 +28,43 @@ namespace Barotrauma
                     state = value;
                     TryTriggerEvents(state);
 #if SERVER
-                    GameMain.Server?.UpdateMissionState(this, state);
+                    GameMain.Server?.UpdateMissionState(this);
 #endif
                     ShowMessage(State);
+                    OnMissionStateChanged?.Invoke(this);
                 }
             }
         }
 
         protected bool IsClient => GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
 
-        public readonly List<string> Headers;
-        public readonly List<string> Messages;
-        
-        public string Name
-        {
-            get { return Prefab.Name; }
-        }
+        public readonly ImmutableArray<LocalizedString> Headers;
+        public readonly ImmutableArray<LocalizedString> Messages;
 
-        private readonly string successMessage;
-        public virtual string SuccessMessage
+        public LocalizedString Name => Prefab.Name;
+
+        private readonly LocalizedString successMessage;
+        public virtual LocalizedString SuccessMessage
         {
             get { return successMessage; }
             //private set { successMessage = value; }
         }
 
-        private readonly string failureMessage;
-        public virtual string FailureMessage
+        private readonly LocalizedString failureMessage;
+        public virtual LocalizedString FailureMessage
         {
             get { return failureMessage; }
             //private set { failureMessage = value; }
         }
 
-        protected string description;
-        public virtual string Description
+        protected LocalizedString description;
+        public virtual LocalizedString Description
         {
             get { return description; }
             //private set { description = value; }
         }
 
-        protected string descriptionWithoutReward;
+        protected LocalizedString descriptionWithoutReward;
 
         public virtual bool AllowUndocking
         {
@@ -78,7 +79,7 @@ namespace Barotrauma
             }
         }
 
-        public Dictionary<string, float> ReputationRewards
+        public Dictionary<Identifier, float> ReputationRewards
         {
             get { return Prefab.ReputationRewards; }
         }
@@ -113,15 +114,10 @@ namespace Barotrauma
         {
             get { return Enumerable.Empty<Vector2>(); }
         }
-        
-        public virtual string SonarLabel
-        {
-            get { return Prefab.SonarLabel; }
-        }
-        public string SonarIconIdentifier
-        {
-            get { return Prefab.SonarIconIdentifier; }
-        }
+
+        public virtual LocalizedString SonarLabel => Prefab.SonarLabel;
+
+        public Identifier SonarIconIdentifier => Prefab.SonarIconIdentifier;
 
         public readonly Location[] Locations;
 
@@ -143,18 +139,20 @@ namespace Barotrauma
         }
 
         private List<DelayedTriggerEvent> delayedTriggerEvents = new List<DelayedTriggerEvent>();
-           
+
+        public Action<Mission> OnMissionStateChanged;
+
         public Mission(MissionPrefab prefab, Location[] locations, Submarine sub)
         {
             System.Diagnostics.Debug.Assert(locations.Length == 2);
 
             Prefab = prefab;
 
-            description = prefab.Description;
-            successMessage = prefab.SuccessMessage;
-            failureMessage = prefab.FailureMessage;
-            Headers = new List<string>(prefab.Headers);
-            Messages = new List<string>(prefab.Messages);
+            description = prefab.Description.Value;
+            successMessage = prefab.SuccessMessage.Value;
+            failureMessage = prefab.FailureMessage.Value;
+            Headers = prefab.Headers;
+            var messages = prefab.Messages.ToArray();
 
             Locations = locations;
 
@@ -164,9 +162,9 @@ namespace Barotrauma
                 if (description != null) { description = description.Replace("[location" + (n + 1) + "]", locationName); }
                 if (successMessage != null) { successMessage = successMessage.Replace("[location" + (n + 1) + "]", locationName); }
                 if (failureMessage != null) { failureMessage = failureMessage.Replace("[location" + (n + 1) + "]", locationName); }
-                for (int m = 0; m < Messages.Count; m++)
+                for (int m = 0; m < messages.Length; m++)
                 {
-                    Messages[m] = Messages[m].Replace("[location" + (n + 1) + "]", locationName);
+                    messages[m] = messages[m].Replace("[location" + (n + 1) + "]", locationName);
                 }
             }
             string rewardText = $"‖color:gui.orange‖{string.Format(CultureInfo.InvariantCulture, "{0:N0}", GetReward(sub))}‖end‖";
@@ -177,13 +175,15 @@ namespace Barotrauma
             }
             if (successMessage != null) { successMessage = successMessage.Replace("[reward]", rewardText); }
             if (failureMessage != null) { failureMessage = failureMessage.Replace("[reward]", rewardText); }
-            for (int m = 0; m < Messages.Count; m++)
+            for (int m = 0; m < messages.Length; m++)
             {
-                Messages[m] = Messages[m].Replace("[reward]", rewardText);
+                messages[m] = messages[m].Replace("[reward]", rewardText);
             }
+
+            Messages = messages.ToImmutableArray();
         }
 
-        public virtual void SetDifficulty(float difficulty) { }
+        public virtual void SetLevel(LevelData level) { }
 
         public static Mission LoadRandom(Location[] locations, string seed, bool requireCorrectLocationType, MissionType missionType, bool isSinglePlayer = false)
         {
@@ -199,7 +199,7 @@ namespace Barotrauma
             }
             else
             {
-                allowedMissions.AddRange(MissionPrefab.List.Where(m => ((int)(missionType & m.Type)) != 0));
+                allowedMissions.AddRange(MissionPrefab.Prefabs.Where(m => ((int)(missionType & m.Type)) != 0));
             }
 
             allowedMissions.RemoveAll(m => isSinglePlayer ? m.MultiplayerOnly : m.SingleplayerOnly);            
@@ -212,7 +212,7 @@ namespace Barotrauma
             {
                 return null;
             }
-            
+
             int probabilitySum = allowedMissions.Sum(m => m.Commonness);
             int randomNumber = rand.NextInt32() % probabilitySum;
             foreach (MissionPrefab missionPrefab in allowedMissions)
@@ -241,7 +241,7 @@ namespace Barotrauma
             delayedTriggerEvents.Clear();
             foreach (string categoryToShow in Prefab.UnhideEntitySubCategories)
             {
-                foreach (MapEntity entityToShow in MapEntity.mapEntityList.Where(me => me.prefab?.HasSubCategory(categoryToShow) ?? false))
+                foreach (MapEntity entityToShow in MapEntity.mapEntityList.Where(me => me.Prefab?.HasSubCategory(categoryToShow) ?? false))
                 {
                     entityToShow.HiddenInGame = false;
                 }
@@ -313,7 +313,7 @@ namespace Barotrauma
         private void TriggerEvent(MissionPrefab.TriggerEvent trigger)
         {
             if (trigger.CampaignOnly && GameMain.GameSession?.Campaign == null) { return; }
-            var eventPrefab = EventSet.GetAllEventPrefabs().Find(p => p.Identifier.Equals(trigger.EventIdentifier, StringComparison.OrdinalIgnoreCase));
+            var eventPrefab = EventSet.GetAllEventPrefabs().Find(p => p.Identifier == trigger.EventIdentifier);
             if (eventPrefab == null)
             {
                 DebugConsole.ThrowError($"Mission \"{Name}\" failed to trigger an event (couldn't find an event with the identifier \"{trigger.EventIdentifier}\").");
@@ -323,7 +323,7 @@ namespace Barotrauma
             {
                 var newEvent = eventPrefab.CreateInstance();
                 GameMain.GameSession.EventManager.ActiveEvents.Add(newEvent);
-                newEvent.Init(true);
+                newEvent.Init();
             }
         }
 
@@ -343,19 +343,67 @@ namespace Barotrauma
         public void GiveReward()
         {
             if (!(GameMain.GameSession.GameMode is CampaignMode campaign)) { return; }
-            campaign.Money += GetReward(Submarine.MainSub);
+            int reward = GetReward(Submarine.MainSub);
 
-            foreach (KeyValuePair<string, float> reputationReward in ReputationRewards)
+            float baseExperienceGain = reward * 0.09f;
+
+            float difficultyMultiplier = 1 + level.Difficulty / 100f;
+            baseExperienceGain *= difficultyMultiplier;
+
+            IEnumerable<Character> crewCharacters = GameSession.GetSessionCrewCharacters(CharacterType.Both);
+
+            // use multipliers here so that we can easily add them together without introducing multiplicative XP stacking
+            var experienceGainMultiplier = new AbilityExperienceGainMultiplier(1f);
+            crewCharacters.ForEach(c => c.CheckTalents(AbilityEffectType.OnAllyGainMissionExperience, experienceGainMultiplier));
+            crewCharacters.ForEach(c => experienceGainMultiplier.Value += c.GetStatValue(StatTypes.MissionExperienceGainMultiplier));
+
+            int experienceGain = (int)(baseExperienceGain * experienceGainMultiplier.Value);
+#if CLIENT
+            foreach (Character character in crewCharacters)
             {
-                if (reputationReward.Key.Equals("location", StringComparison.OrdinalIgnoreCase))
+                character.Info?.GiveExperience(experienceGain, isMissionExperience: true);
+            }
+#else
+            foreach (Barotrauma.Networking.Client c in GameMain.Server.ConnectedClients)
+            {
+                //give the experience to the stored characterinfo if the client isn't currently controlling a character
+                (c.Character?.Info ?? c.CharacterInfo)?.GiveExperience(experienceGain, isMissionExperience: true);
+            }
+#endif
+
+            // apply money gains afterwards to prevent them from affecting XP gains
+            var missionMoneyGainMultiplier = new AbilityMissionMoneyGainMultiplier(this, 1f);
+            crewCharacters.ForEach(c => c.CheckTalents(AbilityEffectType.OnGainMissionMoney, missionMoneyGainMultiplier));
+            crewCharacters.ForEach(c => missionMoneyGainMultiplier.Value += c.GetStatValue(StatTypes.MissionMoneyGainMultiplier));
+
+            int totalReward = (int)(reward * missionMoneyGainMultiplier.Value);
+            GameAnalyticsManager.AddMoneyGainedEvent(totalReward, GameAnalyticsManager.MoneySource.MissionReward, Prefab.Identifier.Value);
+
+#if SERVER
+            totalReward = DistributeRewardsToCrew(GameSession.GetSessionCrewCharacters(CharacterType.Player), totalReward);
+#endif
+            bool isSingleplayerOrServer = GameMain.IsSingleplayer || GameMain.NetworkMember is { IsServer: true };
+            if (isSingleplayerOrServer && totalReward > 0)
+            {
+                campaign.Bank.Give(totalReward);
+            }
+
+            foreach (Character character in crewCharacters)
+            {
+                character.Info.MissionsCompletedSinceDeath++;
+            }
+
+            foreach (KeyValuePair<Identifier, float> reputationReward in ReputationRewards)
+            {
+                if (reputationReward.Key == "location")
                 {
-                    Locations[0].Reputation.Value += reputationReward.Value;
-                    Locations[1].Reputation.Value += reputationReward.Value;
+                    Locations[0].Reputation.AddReputation(reputationReward.Value);
+                    Locations[1].Reputation.AddReputation(reputationReward.Value);
                 }
                 else
                 {
-                    Faction faction = campaign.Factions.Find(faction1 => faction1.Prefab.Identifier.Equals(reputationReward.Key, StringComparison.OrdinalIgnoreCase));
-                    if (faction != null) { faction.Reputation.Value += reputationReward.Value; }
+                    Faction faction = campaign.Factions.Find(faction1 => faction1.Prefab.Identifier == reputationReward.Key);
+                    if (faction != null) { faction.Reputation.AddReputation(reputationReward.Value); }
                 }
             }
 
@@ -368,6 +416,46 @@ namespace Barotrauma
             }
         }
 
+#if SERVER
+        public static int DistributeRewardsToCrew(IEnumerable<Character> crew, int totalReward)
+        {
+            int remainingRewards = totalReward;
+            float sum = GetRewardDistibutionSum(crew);
+            if (MathUtils.NearlyEqual(sum, 0)) { return remainingRewards; }
+            foreach (Character character in crew)
+            {
+                int rewardDistribution = character.Wallet.RewardDistribution;
+                float rewardWeight = sum > 100 ? rewardDistribution / sum : rewardDistribution / 100f;
+                int reward = (int)(totalReward * rewardWeight);
+                reward = Math.Min(remainingRewards, reward);
+                character.Wallet.Give(reward);
+                remainingRewards -= reward;
+                if (remainingRewards <= 0) { break; }
+            }
+
+            return remainingRewards;
+        }
+#endif
+
+        public static int GetRewardDistibutionSum(IEnumerable<Character> crew, int rewardDistribution = 0) => crew.Sum(c => c.Wallet.RewardDistribution) + rewardDistribution;
+
+
+        public static (int Amount, int Percentage, float Sum) GetRewardShare(int rewardDistribution, IEnumerable<Character> crew, Option<int> reward)
+        {
+            float sum = GetRewardDistibutionSum(crew, rewardDistribution);
+            if (MathUtils.NearlyEqual(sum, 0)) { return (0, 0, sum); }
+
+            float rewardWeight = sum > 100 ? rewardDistribution / sum : rewardDistribution / 100f;
+            int rewardPercentage = (int)(rewardWeight * 100);
+
+            return reward switch
+            {
+                Some<int> { Value: var amount } => ((int)(amount * rewardWeight), rewardPercentage, sum),
+                None<int> _ => (0, rewardPercentage, sum),
+                _ => throw new ArgumentOutOfRangeException()
+            };
+        }
+
         protected void ChangeLocationType(LocationTypeChange change)
         {
             if (change == null) { throw new ArgumentException(); }
@@ -376,7 +464,7 @@ namespace Barotrauma
                 int srcIndex = -1;
                 for (int i = 0; i < Locations.Length; i++)
                 {
-                    if (Locations[i].Type.Identifier.Equals(change.CurrentType, StringComparison.OrdinalIgnoreCase))
+                    if (Locations[i].Type.Identifier == change.CurrentType)
                     {
                         srcIndex = i;
                         break;
@@ -391,7 +479,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    location.ChangeType(LocationType.List.Find(lt => lt.Identifier.Equals(change.ChangeToType, StringComparison.OrdinalIgnoreCase)));
+                    location.ChangeType(LocationType.Prefabs[change.ChangeToType]);
                     location.LocationTypeChangeCooldown = change.CooldownAfterChange;
                 }
             }
@@ -409,8 +497,8 @@ namespace Barotrauma
                 return null;
             }
 
-            string characterIdentifier = element.GetAttributeString("identifier", "");
-            string characterFrom = element.GetAttributeString("from", "");
+            Identifier characterIdentifier = element.GetAttributeIdentifier("identifier", Identifier.Empty);
+            Identifier characterFrom = element.GetAttributeIdentifier("from", Identifier.Empty);
             HumanPrefab humanPrefab = NPCSet.Get(characterFrom, characterIdentifier);
             if (humanPrefab == null)
             {
@@ -421,24 +509,89 @@ namespace Barotrauma
             return humanPrefab;
         }
 
-        protected Character CreateHuman(HumanPrefab humanPrefab, List<Character> characters, Dictionary<Character, List<Item>> characterItems, Submarine submarine, CharacterTeamType teamType, ISpatialEntity positionToStayIn = null, Rand.RandSync humanPrefabRandSync = Rand.RandSync.Server, bool giveTags = true)
+        protected Character CreateHuman(HumanPrefab humanPrefab, List<Character> characters, Dictionary<Character, List<Item>> characterItems, Submarine submarine, CharacterTeamType teamType, ISpatialEntity positionToStayIn = null, Rand.RandSync humanPrefabRandSync = Rand.RandSync.ServerAndClient, bool giveTags = true)
         {
+            var characterInfo = humanPrefab.GetCharacterInfo(Rand.RandSync.ServerAndClient) ?? new CharacterInfo(CharacterPrefab.HumanSpeciesName, npcIdentifier: humanPrefab.Identifier, jobOrJobPrefab: humanPrefab.GetJobPrefab(humanPrefabRandSync), randSync: humanPrefabRandSync);
+            characterInfo.TeamID = teamType;
+
             if (positionToStayIn == null) 
             {
-                positionToStayIn = WayPoint.GetRandom(SpawnType.Human, null, submarine);
+                positionToStayIn = 
+                    WayPoint.GetRandom(SpawnType.Human, characterInfo.Job?.Prefab, submarine) ??
+                    WayPoint.GetRandom(SpawnType.Human, null, submarine);
             }
 
-            var characterInfo = humanPrefab.GetCharacterInfo(Rand.RandSync.Server) ?? new CharacterInfo(CharacterPrefab.HumanSpeciesName, npcIdentifier: humanPrefab.Identifier, jobPrefab: humanPrefab.GetJobPrefab(humanPrefabRandSync), randSync: humanPrefabRandSync);
-            characterInfo.TeamID = teamType;
             Character spawnedCharacter = Character.Create(characterInfo.SpeciesName, positionToStayIn.WorldPosition, ToolBox.RandomSeed(8), characterInfo, createNetworkEvent: false);
-            spawnedCharacter.Prefab = humanPrefab;
+            spawnedCharacter.HumanPrefab = humanPrefab;
             humanPrefab.InitializeCharacter(spawnedCharacter, positionToStayIn);
-            humanPrefab.GiveItems(spawnedCharacter, submarine, Rand.RandSync.Server, createNetworkEvents: false);
+            humanPrefab.GiveItems(spawnedCharacter, submarine, Rand.RandSync.ServerAndClient, createNetworkEvents: false);
 
             characters.Add(spawnedCharacter);
             characterItems.Add(spawnedCharacter, spawnedCharacter.Inventory.FindAllItems(recursive: true));
 
             return spawnedCharacter;
         }
+
+        protected ItemPrefab FindItemPrefab(XElement element)
+        {
+            ItemPrefab itemPrefab;
+            if (element.Attribute("name") != null)
+            {
+                DebugConsole.ThrowError($"Error in mission \"{Name}\" - use item identifiers instead of names to configure the items");
+                string itemName = element.GetAttributeString("name", "");
+                itemPrefab = MapEntityPrefab.Find(itemName) as ItemPrefab;
+                if (itemPrefab == null)
+                {
+                    DebugConsole.ThrowError($"Couldn't spawn item for mission \"{Name}\": item prefab \"{itemName}\" not found");
+                }
+            }
+            else
+            {
+                string itemIdentifier = element.GetAttributeString("identifier", "");
+                itemPrefab = MapEntityPrefab.Find(null, itemIdentifier) as ItemPrefab;
+                if (itemPrefab == null)
+                {
+                    DebugConsole.ThrowError($"Couldn't spawn item for mission \"{Name}\": item prefab \"{itemIdentifier}\" not found");
+                }
+            }
+            return itemPrefab;
+        }
+
+        protected Vector2? GetCargoSpawnPosition(ItemPrefab itemPrefab, out Submarine cargoRoomSub)
+        {
+            cargoRoomSub = null;
+
+            WayPoint cargoSpawnPos = WayPoint.GetRandom(SpawnType.Cargo, null, Submarine.MainSub, useSyncedRand: true);
+            if (cargoSpawnPos == null)
+            {
+                DebugConsole.ThrowError($"Couldn't spawn items for mission \"{Name}\": no waypoints marked as Cargo were found");
+                return null;
+            }
+
+            var cargoRoom = cargoSpawnPos.CurrentHull;
+            if (cargoRoom == null)
+            {
+                DebugConsole.ThrowError($"Couldn't spawn items for mission \"{Name}\": waypoints marked as Cargo must be placed inside a room");
+                return null;
+            }
+
+            cargoRoomSub = cargoRoom.Submarine;
+
+            return new Vector2(
+                cargoSpawnPos.Position.X + Rand.Range(-20.0f, 20.0f, Rand.RandSync.ServerAndClient),
+                cargoRoom.Rect.Y - cargoRoom.Rect.Height + itemPrefab.Size.Y / 2);
+        }
     }
+
+    class AbilityMissionMoneyGainMultiplier : AbilityObject, IAbilityValue, IAbilityMission
+    {
+        public AbilityMissionMoneyGainMultiplier(Mission mission, float moneyGainMultiplier)
+        {
+            Value = moneyGainMultiplier;
+            Mission = mission;
+        }
+        public float Value { get; set; }
+        public Mission Mission { get; set; }
+    }
+
 }

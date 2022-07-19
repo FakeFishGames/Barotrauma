@@ -1,4 +1,3 @@
-using Lidgren.Network;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -6,6 +5,25 @@ using System.Linq;
 
 namespace Barotrauma.Networking
 {
+    [NetworkSerialize]
+    struct TempClient : INetSerializableStruct
+    {
+        public string Name;
+        public Identifier PreferredJob;
+        public CharacterTeamType PreferredTeam;
+        public UInt16 NameID;
+        public UInt64 SteamID;
+        public byte ID;
+        public UInt16 CharacterID;
+        public float Karma;
+        public bool Muted;
+        public bool InGame;
+        public bool HasPermissions;
+        public bool IsOwner;
+        public bool AllowKicking;
+        public bool IsDownloading;
+    }
+    
     partial class Client : IDisposable
     {
         public const int MaxNameLength = 32;
@@ -15,11 +33,11 @@ namespace Barotrauma.Networking
         public UInt64 SteamID;
         public UInt64 OwnerSteamID;
 
-        public string Language;
+        public LanguageIdentifier Language;
 
         public UInt16 Ping;
 
-        public string PreferredJob;
+        public Identifier PreferredJob;
 
         public CharacterTeamType TeamID;
 
@@ -122,7 +140,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public bool HasPermissions = false;
+        public bool HasPermissions => Permissions != ClientPermissions.None;
 
         public VoipQueue VoipQueue
         {
@@ -148,18 +166,14 @@ namespace Barotrauma.Networking
         }
         public bool HasSpawned; //has the client spawned as a character during the current round
         
-        private List<Client> kickVoters;
+        private readonly List<Client> kickVoters;
 
-        public HashSet<string> GivenAchievements = new HashSet<string>();
+        public HashSet<Identifier> GivenAchievements = new HashSet<Identifier>();
 
         public ClientPermissions Permissions = ClientPermissions.None;
-        public List<DebugConsole.Command> PermittedConsoleCommands
-        {
-            get;
-            private set;
-        }
+        public readonly HashSet<DebugConsole.Command> PermittedConsoleCommands = new HashSet<DebugConsole.Command>();
 
-        private object[] votes;
+        private readonly object[] votes;
 
         public int KickVoteCount
         {
@@ -179,7 +193,6 @@ namespace Barotrauma.Networking
             this.Name = name;
             this.ID = ID;
 
-            PermittedConsoleCommands = new List<DebugConsole.Command>();
             kickVoters = new List<Client>();
 
             votes = new object[Enum.GetNames(typeof(VoteType)).Length];
@@ -240,7 +253,7 @@ namespace Barotrauma.Networking
         public void WritePermissions(IWriteMessage msg)
         {
             msg.Write(ID);
-            msg.Write((UInt16)Permissions);
+            msg.WriteRangedInteger((int)Permissions, 0, (int)ClientPermissions.All);
             if (HasPermission(ClientPermissions.ConsoleCommands))
             {
                 msg.Write((UInt16)PermittedConsoleCommands.Count);
@@ -252,8 +265,7 @@ namespace Barotrauma.Networking
         }
         public static void ReadPermissions(IReadMessage inc, out ClientPermissions permissions, out List<DebugConsole.Command> permittedCommands)
         {
-            UInt16 permissionsInt = inc.ReadUInt16();
-
+            int permissionsInt = inc.ReadRangedInteger(0, (int)ClientPermissions.All);
             permissions = ClientPermissions.None;
             permittedCommands = new List<DebugConsole.Command>();
             try
@@ -281,9 +293,7 @@ namespace Barotrauma.Networking
 
         public void ReadPermissions(IReadMessage inc)
         {
-            ClientPermissions permissions = ClientPermissions.None;
-            List<DebugConsole.Command> permittedCommands = new List<DebugConsole.Command>();
-            ReadPermissions(inc, out permissions, out permittedCommands);
+            ReadPermissions(inc, out ClientPermissions permissions, out List<DebugConsole.Command> permittedCommands);
             SetPermissions(permissions, permittedCommands);
         }
 

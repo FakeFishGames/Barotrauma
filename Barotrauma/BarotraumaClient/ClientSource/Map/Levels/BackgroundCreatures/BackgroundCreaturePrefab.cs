@@ -12,52 +12,52 @@ namespace Barotrauma
 
         public readonly XElement Config;
 
-        [Serialize(1.0f, true)]
+        [Serialize(1.0f, IsPropertySaveable.Yes)]
         public float Speed { get; private set; }
 
-        [Serialize(0.0f, true)]
+        [Serialize(0.0f, IsPropertySaveable.Yes)]
         public float WanderAmount { get; private set; }
 
-        [Serialize(0.0f, true)]
+        [Serialize(0.0f, IsPropertySaveable.Yes)]
         public float WanderZAmount { get; private set; }
 
-        [Serialize(1, true)]
+        [Serialize(1, IsPropertySaveable.Yes)]
         public int SwarmMin { get; private set; }
 
-        [Serialize(1, true)]
+        [Serialize(1, IsPropertySaveable.Yes)]
         public int SwarmMax { get; private set; }
 
-        [Serialize(200.0f, true)]
+        [Serialize(200.0f, IsPropertySaveable.Yes)]
         public float SwarmRadius { get; private set; }
 
-        [Serialize(0.2f, true)]
+        [Serialize(0.2f, IsPropertySaveable.Yes)]
         public float SwarmCohesion { get; private set; }
 
-        [Serialize(10.0f, true)]
+        [Serialize(10.0f, IsPropertySaveable.Yes)]
         public float MinDepth { get; private set; }
 
-        [Serialize(1000.0f, true)]
+        [Serialize(1000.0f, IsPropertySaveable.Yes)]
         public float MaxDepth { get; private set; }
 
-        [Serialize(false, true)]
+        [Serialize(false, IsPropertySaveable.Yes)]
         public bool DisableRotation { get; private set; }
 
-        [Serialize(false, true)]
+        [Serialize(false, IsPropertySaveable.Yes)]
         public bool DisableFlipping { get; private set; }
 
-        [Serialize(1.0f, true)]
+        [Serialize(1.0f, IsPropertySaveable.Yes)]
         public float Scale { get; private set; }
 
-        [Serialize(1.0f, true)]
+        [Serialize(1.0f, IsPropertySaveable.Yes)]
         public float Commonness { get; private set; }
 
-        [Serialize(1000, true)]
+        [Serialize(1000, IsPropertySaveable.Yes)]
         public int MaxCount { get; private set; }
 
-        [Serialize(0.0f, true)]
+        [Serialize(0.0f, IsPropertySaveable.Yes)]
         public float FlashInterval { get; private set; }
 
-        [Serialize(0.0f, true)]
+        [Serialize(0.0f, IsPropertySaveable.Yes)]
         public float FlashDuration { get; private set; }
 
 
@@ -65,9 +65,9 @@ namespace Barotrauma
         /// Overrides the commonness of the object in a specific level type. 
         /// Key = name of the level type, value = commonness in that level type.
         /// </summary>
-        public Dictionary<string, float> OverrideCommonness = new Dictionary<string, float>();
+        public Dictionary<Identifier, float> OverrideCommonness = new Dictionary<Identifier, float>();
 
-        public BackgroundCreaturePrefab(XElement element)
+        public BackgroundCreaturePrefab(ContentXElement element)
         {
             Name = element.Name.ToString();
 
@@ -75,7 +75,7 @@ namespace Barotrauma
 
             SerializableProperty.DeserializeProperties(this, element);
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -92,7 +92,7 @@ namespace Barotrauma
                         DeformableLightSprite = new DeformableSprite(subElement, lazyLoad: true);
                         break;
                     case "overridecommonness":
-                        string levelType = subElement.GetAttributeString("leveltype", "").ToLowerInvariant();
+                        Identifier levelType = subElement.GetAttributeIdentifier("leveltype", Identifier.Empty);
                         if (!OverrideCommonness.ContainsKey(levelType))
                         {
                             OverrideCommonness.Add(levelType, subElement.GetAttributeFloat("commonness", 1.0f));
@@ -104,9 +104,10 @@ namespace Barotrauma
 
         public float GetCommonness(LevelGenerationParams generationParams)
         {
-            if (generationParams?.Identifier != null &&
+            if (generationParams != null &&
+                !generationParams.Identifier.IsEmpty &&
                 (OverrideCommonness.TryGetValue(generationParams.Identifier, out float commonness) ||
-                (generationParams.OldIdentifier != null && OverrideCommonness.TryGetValue(generationParams.OldIdentifier, out commonness))))
+                (!generationParams.OldIdentifier.IsEmpty && OverrideCommonness.TryGetValue(generationParams.OldIdentifier, out commonness))))
             {
                 return commonness;
             }

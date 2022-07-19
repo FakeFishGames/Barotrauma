@@ -4,8 +4,12 @@ namespace Barotrauma
 {
     partial class PirateMission : Mission
     {
+        public override bool DisplayAsCompleted => State > 1;
+        public override bool DisplayAsFailed => false;
+
         public override void ClientReadInitial(IReadMessage msg)
         {
+            base.ClientReadInitial(msg);
             // duplicate code from escortmission, should possibly be combined, though additional loot items might be added so maybe not
             byte characterCount = msg.ReadByte();
 

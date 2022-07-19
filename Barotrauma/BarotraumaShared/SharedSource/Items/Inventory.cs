@@ -10,7 +10,7 @@ namespace Barotrauma
 {
     partial class Inventory : IServerSerializable, IClientSerializable
     {
-        public const int MaxStackSize = 32;
+        public const int MaxStackSize = (1 << 6) - 1; //the max value that will fit in 6 bits, i.e 63
 
         public class ItemSlot
         {
@@ -18,35 +18,30 @@ namespace Barotrauma
 
             public bool HideIfEmpty;
 
-            public IEnumerable<Item> Items
-            {
-                get { return items; }
-            }
+            public IReadOnlyList<Item> Items => items;
 
-            public int ItemCount
-            {
-                get { return items.Count; }
-            }
-
-            public bool CanBePut(Item item)
+            public bool CanBePut(Item item, bool ignoreCondition = false)
             {
                 if (item == null) { return false; }
                 if (items.Count > 0)
                 {
-                    if (item.IsFullCondition)
+                    if (!ignoreCondition)
                     {
-                        if (items.Any(it => !it.IsFullCondition)) { return false; }
+                        if (item.IsFullCondition)
+                        {
+                            if (items.Any(it => !it.IsFullCondition)) { return false; }
+                        }
+                        else if (MathUtils.NearlyEqual(item.Condition, 0.0f))
+                        {
+                            if (items.Any(it => !MathUtils.NearlyEqual(it.Condition, 0.0f))) { return false; }
+                        }
+                        else
+                        {
+                            return false;
+                        }
                     }
-                    else if (MathUtils.NearlyEqual(item.Condition, 0.0f))
-                    {
-                        if (items.Any(it => !MathUtils.NearlyEqual(it.Condition, 0.0f))) { return false; }
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                    if (items[0].Prefab.Identifier != item.Prefab.Identifier ||
-                        items.Count + 1 > item.Prefab.MaxStackSize)
+                    if (items[0].Quality != item.Quality) { return false; }
+                    if (items[0].Prefab.Identifier != item.Prefab.Identifier || items.Count + 1 > item.Prefab.MaxStackSize)
                     {
                         return false;
                     }
@@ -54,12 +49,36 @@ namespace Barotrauma
                 return true;
             }
 
-            public bool CanBePut(ItemPrefab itemPrefab)
+            public bool CanBePut(ItemPrefab itemPrefab, float? condition = null, int? quality = null)
             {
                 if (itemPrefab == null) { return false; }
                 if (items.Count > 0)
                 {
-                    if (items.Any(it => !it.IsFullCondition)) { return false; }
+                    if (condition.HasValue)
+                    {
+                        if (MathUtils.NearlyEqual(condition.Value, 0.0f))
+                        {
+                            if (items.Any(it => it.Condition > 0.0f)) { return false; }
+                        }
+                        else if (MathUtils.NearlyEqual(condition.Value, itemPrefab.Health))
+                        {
+                            if (items.Any(it => !it.IsFullCondition)) { return false; }
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        if (items.Any(it => !it.IsFullCondition)) { return false; }
+                    }
+
+                    if (quality.HasValue)
+                    {
+                        if (items[0].Quality != quality.Value) { return false; }
+                    }
+
                     if (items[0].Prefab.Identifier != itemPrefab.Identifier ||
                         items.Count + 1 > itemPrefab.MaxStackSize)
                     {
@@ -70,13 +89,31 @@ namespace Barotrauma
             }
 
             /// <param name="maxStackSize">Defaults to <see cref="ItemPrefab.MaxStackSize"/> if null</param>
-            public int HowManyCanBePut(ItemPrefab itemPrefab, int? maxStackSize = null)
+            public int HowManyCanBePut(ItemPrefab itemPrefab, int? maxStackSize = null, float? condition = null)
             {
                 if (itemPrefab == null) { return 0; }
                 maxStackSize ??= itemPrefab.MaxStackSize;
                 if (items.Count > 0)
                 {
-                    if (items.Any(it => !it.IsFullCondition)) { return 0; }
+                    if (condition.HasValue)
+                    {
+                        if (MathUtils.NearlyEqual(condition.Value, 0.0f))
+                        {
+                            if (items.Any(it => it.Condition > 0.0f)) { return 0; }
+                        }
+                        else if (MathUtils.NearlyEqual(condition.Value, itemPrefab.Health))
+                        {
+                            if (items.Any(it => !it.IsFullCondition)) { return 0; }
+                        }
+                        else
+                        {
+                            return 0;
+                        }
+                    }
+                    else
+                    {
+                        if (items.Any(it => !it.IsFullCondition)) { return 0; }
+                    }
                     if (items[0].Prefab.Identifier != itemPrefab.Identifier) { return 0; }
                     return maxStackSize.Value - items.Count;
                 }
@@ -130,6 +167,11 @@ namespace Barotrauma
             public void RemoveAllItems()
             {
                 items.Clear();
+            }
+
+            public void RemoveWhere(Func<Item, bool> predicate)
+            {
+                items.RemoveAll(it => predicate(it));
             }
 
             public bool Any()
@@ -218,6 +260,8 @@ namespace Barotrauma
             get { return capacity; }
         }
 
+        public bool AllowSwappingContainedItems = true;
+
         public Inventory(Entity owner, int capacity, int slotsPerRow = 5)
         {
             this.capacity = capacity;
@@ -235,7 +279,7 @@ namespace Barotrauma
 
             if (DraggableIndicator == null)
             {
-                DraggableIndicator = GUI.Style.GetComponentStyle("GUIDragIndicator").GetDefaultSprite();
+                DraggableIndicator = GUIStyle.GetComponentStyle("GUIDragIndicator").GetDefaultSprite();
 
                 slotHotkeySprite = new Sprite("Content/UI/InventoryUIAtlas.png", new Rectangle(258, 7, 120, 120), null, 0);
 
@@ -340,7 +384,7 @@ namespace Barotrauma
             return ownerItem.ParentInventory.ItemOwnsSelf(item);
         }
 
-        public virtual int FindAllowedSlot(Item item)
+        public virtual int FindAllowedSlot(Item item, bool ignoreCondition = false)
         {
             if (ItemOwnsSelf(item)) { return -1; }
 
@@ -352,7 +396,7 @@ namespace Barotrauma
 
             for (int i = 0; i < capacity; i++)
             {
-                if (slots[i].CanBePut(item)) { return i; }
+                if (slots[i].CanBePut(item, ignoreCondition)) { return i; }
             }
 
             return -1;
@@ -365,7 +409,7 @@ namespace Barotrauma
         {
             for (int i = 0; i < capacity; i++)
             {
-                if (CanBePut(item, i)) { return true; }
+                if (CanBePutInSlot(item, i)) { return true; }
             }
             return false;
         }
@@ -373,62 +417,75 @@ namespace Barotrauma
         /// <summary>
         /// Can the item be put in the specified slot.
         /// </summary>
-        public virtual bool CanBePut(Item item, int i)
+        public virtual bool CanBePutInSlot(Item item, int i, bool ignoreCondition = false)
         {
             if (ItemOwnsSelf(item)) { return false; }
             if (i < 0 || i >= slots.Length) { return false; }
-            return slots[i].CanBePut(item);
+            return slots[i].CanBePut(item, ignoreCondition);
         }
 
-        public bool CanBePut(ItemPrefab itemPrefab)
+        public bool CanBePut(ItemPrefab itemPrefab, float? condition = null, int? quality = null)
         {
             for (int i = 0; i < capacity; i++)
             {
-                if (CanBePut(itemPrefab, i)) { return true; }
+                if (CanBePutInSlot(itemPrefab, i, condition, quality)) { return true; }
             }
             return false;
         }
 
-        public virtual bool CanBePut(ItemPrefab itemPrefab, int i)
+        public virtual bool CanBePutInSlot(ItemPrefab itemPrefab, int i, float? condition = null, int? quality = null)
         {
             if (i < 0 || i >= slots.Length) { return false; }
-            return slots[i].CanBePut(itemPrefab);
+            return slots[i].CanBePut(itemPrefab, condition);
         }
 
-        public int HowManyCanBePut(ItemPrefab itemPrefab)
+        public int HowManyCanBePut(ItemPrefab itemPrefab, float? condition = null)
         {
             int count = 0;
             for (int i = 0; i < capacity; i++)
             {
-                count += HowManyCanBePut(itemPrefab, i);
+                count += HowManyCanBePut(itemPrefab, i, condition);
             }
             return count;
         }
 
-        public virtual int HowManyCanBePut(ItemPrefab itemPrefab, int i)
+        public virtual int HowManyCanBePut(ItemPrefab itemPrefab, int i, float? condition)
         {
             if (i < 0 || i >= slots.Length) { return 0; }
-            return slots[i].HowManyCanBePut(itemPrefab);
+            return slots[i].HowManyCanBePut(itemPrefab, condition: condition);
         }
 
         /// <summary>
         /// If there is room, puts the item in the inventory and returns true, otherwise returns false
         /// </summary>
-        public virtual bool TryPutItem(Item item, Character user, IEnumerable<InvSlotType> allowedSlots = null, bool createNetworkEvent = true)
+        public virtual bool TryPutItem(Item item, Character user, IEnumerable<InvSlotType> allowedSlots = null, bool createNetworkEvent = true, bool ignoreCondition = false)
         {
-            int slot = FindAllowedSlot(item);
+            int slot = FindAllowedSlot(item, ignoreCondition);
             if (slot < 0) { return false; }
 
             PutItem(item, slot, user, true, createNetworkEvent);
             return true;
         }
 
-        public virtual bool TryPutItem(Item item, int i, bool allowSwapping, bool allowCombine, Character user, bool createNetworkEvent = true)
+        public virtual bool TryPutItem(Item item, int i, bool allowSwapping, bool allowCombine, Character user, bool createNetworkEvent = true, bool ignoreCondition = false)
         {
             if (i < 0 || i >= slots.Length)
             {
-                string errorMsg = "Inventory.TryPutItem failed: index was out of range(" + i + ").\n" + Environment.StackTrace.CleanupStackTrace();
-                GameAnalyticsManager.AddErrorEventOnce("Inventory.TryPutItem:IndexOutOfRange", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                string thisItemStr = item?.Prefab.Identifier.Value ?? "null";
+                string ownerStr = "null";
+                if (Owner is Item ownerItem)
+                {
+                    ownerStr = ownerItem.Prefab.Identifier.Value;
+                }
+                else if (Owner is Character ownerCharacter)
+                {
+                    ownerStr = ownerCharacter.SpeciesName.Value;
+                }
+                string errorMsg = $"Inventory.TryPutItem failed: index was out of range (item: {thisItemStr}, inventory: {ownerStr}).";
+                GameAnalyticsManager.AddErrorEventOnce("Inventory.TryPutItem:IndexOutOfRange", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+#if DEBUG
+                DebugConsole.ThrowError(errorMsg);
+#endif
                 return false;
             }
 
@@ -441,12 +498,12 @@ namespace Barotrauma
                     //item in the slot removed as a result of combining -> put this item in the now free slot
                     if (!slots[i].Any())
                     {
-                        return TryPutItem(item, i, allowSwapping, allowCombine, user, createNetworkEvent);
+                        return TryPutItem(item, i, allowSwapping, allowCombine, user, createNetworkEvent, ignoreCondition);
                     }
                     return true;
                 }
             }
-            if (CanBePut(item, i))
+            if (CanBePutInSlot(item, i, ignoreCondition))
             {
                 PutItem(item, i, user, true, createNetworkEvent);
                 return true;
@@ -456,19 +513,19 @@ namespace Barotrauma
                 var itemInSlot = slots[i].First();
                 if (itemInSlot.OwnInventory != null && 
                     !itemInSlot.OwnInventory.Contains(item) &&
-                    (itemInSlot.GetComponent<ItemContainer>()?.MaxStackSize ?? 0) == 1 && 
+                    (itemInSlot.GetComponent<ItemContainer>()?.GetMaxStackSize(0) ?? 0) == 1 && 
                     itemInSlot.OwnInventory.TrySwapping(0, item, user, createNetworkEvent, swapWholeStack: false))
                 {
                     return true;
                 }
-                return 
+                return
                     TrySwapping(i, item, user, createNetworkEvent, swapWholeStack: true) || 
                     TrySwapping(i, item, user, createNetworkEvent, swapWholeStack: false);
             }
             else
             {
 #if CLIENT
-                if (visualSlots != null && createNetworkEvent) { visualSlots[i].ShowBorderHighlight(GUI.Style.Red, 0.1f, 0.9f); }
+                if (visualSlots != null && createNetworkEvent) { visualSlots[i].ShowBorderHighlight(GUIStyle.Red, 0.1f, 0.9f); }
 #endif
                 return false;
             }
@@ -479,7 +536,7 @@ namespace Barotrauma
             if (i < 0 || i >= slots.Length)
             {
                 string errorMsg = "Inventory.PutItem failed: index was out of range(" + i + ").\n" + Environment.StackTrace.CleanupStackTrace();
-                GameAnalyticsManager.AddErrorEventOnce("Inventory.PutItem:IndexOutOfRange", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Inventory.PutItem:IndexOutOfRange", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return;
             }
 
@@ -566,7 +623,7 @@ namespace Barotrauma
                 {
                     if (!slots[i].Any()) { return false; }
                     var item = slots[i].FirstOrDefault();
-                    if (slots[i].ItemCount < item.Prefab.MaxStackSize) { return false; }
+                    if (slots[i].Items.Count < item.Prefab.MaxStackSize) { return false; }
                 }
             }
             else
@@ -583,6 +640,8 @@ namespace Barotrauma
         protected bool TrySwapping(int index, Item item, Character user, bool createNetworkEvent, bool swapWholeStack)
         {
             if (item?.ParentInventory == null || !slots[index].Any()) { return false; }
+            if (slots[index].Items.Any(it => !it.IsInteractable(user))) { return false; }
+            if (!AllowSwappingContainedItems) { return false; }
 
             //swap to InvSlotType.Any if possible
             Inventory otherInventory = item.ParentInventory;
@@ -699,11 +758,14 @@ namespace Barotrauma
                 {
                     for (int j = 0; j < capacity; j++)
                     {
-                        if (slots[j].Contains(item)) { visualSlots[j].ShowBorderHighlight(GUI.Style.Green, 0.1f, 0.9f); }                       
+                        if (slots[j].Contains(item)) { visualSlots[j].ShowBorderHighlight(GUIStyle.Green, 0.1f, 0.9f); }
                     }
+                }
+                if (otherInventory.visualSlots != null)
+                {
                     for (int j = 0; j < otherInventory.capacity; j++)
                     {
-                        if (otherInventory.slots[j].Contains(existingItems.FirstOrDefault())) { otherInventory.visualSlots[j].ShowBorderHighlight(GUI.Style.Green, 0.1f, 0.9f); }                          
+                        if (otherInventory.slots[j].Contains(existingItems.FirstOrDefault())) { otherInventory.visualSlots[j].ShowBorderHighlight(GUIStyle.Green, 0.1f, 0.9f); }                          
                     }
                 }
 #endif
@@ -732,23 +794,29 @@ namespace Barotrauma
                 {
                     for (int j = 0; j < capacity; j++)
                     {
-                        if (slots[j].Contains(item)) { slots[j].RemoveAllItems(); };
+                        if (slots[j].Contains(item))
+                        {
+                            slots[j].RemoveWhere(it => existingItems.Contains(it) || stackedItems.Contains(it));
+                        }
                     }
                     for (int j = 0; j < otherInventory.capacity; j++)
                     {
-                        if (otherInventory.slots[j].Contains(existingItems.FirstOrDefault())) { otherInventory.slots[j].RemoveAllItems(); }
+                        if (otherInventory.slots[j].Contains(existingItems.FirstOrDefault()))
+                        {
+                            otherInventory.slots[j].RemoveWhere(it => existingItems.Contains(it) || stackedItems.Contains(it));
+                        }
                     }
                 }
 
                 if (otherIsEquipped)
                 {
-                    existingItems.ForEach(existingItem => TryPutItem(existingItem, index, false, false, user, createNetworkEvent));
-                    stackedItems.ForEach(stackedItem => otherInventory.TryPutItem(stackedItem, otherIndex, false, false, user, createNetworkEvent));
+                    existingItems.ForEach(existingItem => TryPutItem(existingItem, index, false, false, user, createNetworkEvent, ignoreCondition: true));
+                    stackedItems.ForEach(stackedItem => otherInventory.TryPutItem(stackedItem, otherIndex, false, false, user, createNetworkEvent, ignoreCondition: true));
                 }
                 else
                 {
-                    stackedItems.ForEach(stackedItem => otherInventory.TryPutItem(stackedItem, otherIndex, false, false, user, createNetworkEvent));
-                    existingItems.ForEach(existingItem => TryPutItem(existingItem, index, false, false, user, createNetworkEvent));
+                    stackedItems.ForEach(stackedItem => otherInventory.TryPutItem(stackedItem, otherIndex, false, false, user, createNetworkEvent, ignoreCondition: true));
+                    existingItems.ForEach(existingItem => TryPutItem(existingItem, index, false, false, user, createNetworkEvent, ignoreCondition: true));
                 }
 
 #if CLIENT                
@@ -758,7 +826,7 @@ namespace Barotrauma
                     {
                         if (slots[j].Contains(existingItems.FirstOrDefault()))
                         {
-                            visualSlots[j].ShowBorderHighlight(GUI.Style.Red, 0.1f, 0.9f);
+                            visualSlots[j].ShowBorderHighlight(GUIStyle.Red, 0.1f, 0.9f);
                         }
                     }
                 }
@@ -769,29 +837,30 @@ namespace Barotrauma
 
         public virtual void CreateNetworkEvent()
         {
-            if (GameMain.NetworkMember != null)
+            if (GameMain.NetworkMember == null) { return; }
+            if (GameMain.NetworkMember.IsClient) { syncItemsDelay = 1.0f; }
+
+            if (Owner is Character character)
             {
-                if (GameMain.NetworkMember.IsClient) { syncItemsDelay = 1.0f; }
-                GameMain.NetworkMember.CreateEntityEvent(Owner as INetSerializable, new object[] { NetEntityEvent.Type.InventoryState });
+                GameMain.NetworkMember.CreateEntityEvent(character, new Character.InventoryStateEventData());
+            }
+            else if (Owner is Item item)
+            {
+                GameMain.NetworkMember.CreateEntityEvent(item, new Item.InventoryStateEventData());
             }
         }
 
         public Item FindItem(Func<Item, bool> predicate, bool recursive)
         {
-            Item match = AllItems.FirstOrDefault(i => predicate(i));
+            Item match = AllItems.FirstOrDefault(predicate);
             if (match == null && recursive)
             {
                 foreach (var item in AllItems)
                 {
-                    if (item == null) { continue; }
-                    if (item.OwnInventory != null)
-                    {
-                        match = item.OwnInventory.FindItem(predicate, recursive: true);
-                        if (match != null)
-                        {
-                            return match;
-                        }
-                    }
+                    if (item?.OwnInventory == null) { continue; }
+
+                    match = item.OwnInventory.FindItem(predicate, recursive: true);
+                    if (match != null) { return match; }
                 }
             }
             return match;
@@ -817,15 +886,15 @@ namespace Barotrauma
             return list;
         }
 
-        public Item FindItemByTag(string tag, bool recursive = false)
+        public Item FindItemByTag(Identifier tag, bool recursive = false)
         {
-            if (tag == null) { return null; }
+            if (tag.IsEmpty) { return null; }
             return FindItem(i => i.HasTag(tag), recursive);
         }
 
-        public Item FindItemByIdentifier(string identifier, bool recursive = false)
+        public Item FindItemByIdentifier(Identifier identifier, bool recursive = false)
         {
-            if (identifier == null) { return null; }
+            if (identifier.IsEmpty) { return null; }
             return FindItem(i => i.Prefab.Identifier == identifier, recursive);
         }
 
@@ -873,16 +942,31 @@ namespace Barotrauma
             slots[index].RemoveItem(item);
         }
 
-
-        public void SharedWrite(IWriteMessage msg, object[] extraData = null)
+        public void SharedRead(IReadMessage msg, out List<ushort>[] newItemIds)
+        {
+            byte slotCount = msg.ReadByte();
+            newItemIds = new List<ushort>[slotCount];
+            for (int i = 0; i < slotCount; i++)
+            {
+                newItemIds[i] = new List<ushort>();
+                int itemCount = msg.ReadRangedInteger(0, MaxStackSize);
+                for (int j = 0; j < itemCount; j++)
+                {
+                    newItemIds[i].Add(msg.ReadUInt16());
+                }
+            }
+        }
+        
+        public void SharedWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
             msg.Write((byte)capacity);
             for (int i = 0; i < capacity; i++)
             {
-                msg.WriteRangedInteger(slots[i].ItemCount, 0, MaxStackSize);
-                foreach (Item item in slots[i].Items)
+                msg.WriteRangedInteger(slots[i].Items.Count, 0, MaxStackSize);
+                for (int j = 0; j < Math.Min(slots[i].Items.Count, MaxStackSize); j++)
                 {
-                    msg.Write((ushort)(item == null ? 0 : item.ID));
+                    var item = slots[i].Items[j];
+                    msg.Write(item?.ID ?? (ushort)0);
                 }
             }
         }

@@ -10,13 +10,12 @@ namespace Barotrauma
     {
         public virtual float Devotion => AIObjectiveManager.baseDevotion;
 
-        public abstract string Identifier { get; set; }
-        public virtual string DebugTag => Identifier;
+        public abstract Identifier Identifier { get; set; }
+        public virtual string DebugTag => Identifier.Value;
         public virtual bool ForceRun => false;
         public virtual bool IgnoreUnsafeHulls => false;
         public virtual bool AbandonWhenCannotCompleteSubjectives => true;
         public virtual bool AllowSubObjectiveSorting => false;
-        public virtual bool ForceOrderPriority => true;
         public virtual bool PrioritizeIfSubObjectivesActive => false;
 
         /// <summary>
@@ -31,6 +30,8 @@ namespace Barotrauma
         public virtual bool ConcurrentObjectives => false;
 
         public virtual bool KeepDivingGearOn => false;
+        public virtual bool KeepDivingGearOnAlsoWhenInactive => false;
+
         /// <summary>
         /// There's a separate property for diving suit and mask: KeepDivingGearOn.
         /// </summary>
@@ -82,7 +83,7 @@ namespace Barotrauma
 
         public readonly Character character;
         public readonly AIObjectiveManager objectiveManager;
-        public string Option { get; private set; }
+        public readonly Identifier Option;
 
         private bool _abandon;
         public bool Abandon
@@ -93,12 +94,6 @@ namespace Barotrauma
                 _abandon = value;
                 if (_abandon)
                 {
-#if DEBUG
-                    if (HumanAIController.debugai && objectiveManager.IsOrder(this) && !objectiveManager.IsCurrentOrder<AIObjectiveGoTo>())
-                    {
-                        throw new Exception("Order abandoned!");
-                    }
-#endif
                     OnAbandon();
                 }
             }
@@ -162,11 +157,11 @@ namespace Barotrauma
             return subObjective == null ? this : subObjective.GetActiveObjective();
         }
 
-        public AIObjective(Character character, AIObjectiveManager objectiveManager, float priorityModifier, string option = null)
+        public AIObjective(Character character, AIObjectiveManager objectiveManager, float priorityModifier, Identifier option = default)
         {
             this.objectiveManager = objectiveManager;
             this.character = character;
-            Option = option ?? string.Empty;
+            Option = option;
             PriorityModifier = priorityModifier;
         }
 
@@ -246,11 +241,11 @@ namespace Barotrauma
             }
         }
 
-        protected bool IsAllowed
+        public bool IsAllowed
         {
             get 
             {
-                if (IgnoreAtOutpost && Level.IsLoadedOutpost && character.TeamID != CharacterTeamType.FriendlyNPC)
+                if (IgnoreAtOutpost && Level.IsLoadedFriendlyOutpost && character.TeamID != CharacterTeamType.FriendlyNPC)
                 {
                     if (Submarine.MainSub != null && Submarine.MainSub.DockedTo.None(s => s.TeamID != CharacterTeamType.FriendlyNPC && s.TeamID != character.TeamID))
                     {
@@ -270,7 +265,7 @@ namespace Barotrauma
             if (!IsAllowed)
             {
                 Priority = 0;
-                Abandon = !isOrder;
+                Abandon = true;
                 return Priority;
             }
             if (isOrder)
@@ -289,9 +284,9 @@ namespace Barotrauma
         /// </summary>
         public float CalculatePriority()
         {
+            ForceWalk = false;
             Priority = GetPriority();
             ForceHighestPriority = false;
-            ForceWalk = false;
             return Priority;
         }
 
@@ -507,5 +502,34 @@ namespace Barotrauma
                 }
             }
         }
+
+        protected static bool CanEquip(Character character, Item item)
+        {
+            bool canEquip = item != null;
+            if (canEquip && !item.AllowedSlots.Contains(InvSlotType.Any))
+            {
+                canEquip = false;
+                var inv = character.Inventory;
+                foreach (var allowedSlot in item.AllowedSlots)
+                {
+                    foreach (var slotType in inv.SlotTypes)
+                    {
+                        if (!allowedSlot.HasFlag(slotType)) { continue; }
+                        for (int i = 0; i < inv.Capacity; i++)
+                        {
+                            canEquip = true;
+                            if (allowedSlot.HasFlag(inv.SlotTypes[i]) && inv.GetItemAt(i) != null)
+                            {
+                                canEquip = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            return canEquip;
+        }
+
+        protected bool CanEquip(Item item) => CanEquip(character, item);
     }
 }

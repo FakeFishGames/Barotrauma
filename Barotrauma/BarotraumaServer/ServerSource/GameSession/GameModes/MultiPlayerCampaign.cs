@@ -12,6 +12,22 @@ namespace Barotrauma
     partial class MultiPlayerCampaign : CampaignMode
     {
         private readonly List<CharacterCampaignData> characterData = new List<CharacterCampaignData>();
+        private readonly Dictionary<ushort, Wallet> walletsToCheck = new Dictionary<ushort, Wallet>();
+        private readonly HashSet<NetWalletTransaction> transactions = new HashSet<NetWalletTransaction>();
+        private const float clientCheckInterval = 10;
+        private float clientCheckTimer = clientCheckInterval;
+
+        public override Wallet GetWallet(Client client = null)
+        {
+            if (client is null) { throw new ArgumentNullException(nameof(client), "Client should not be null in multiplayer"); }
+
+            if (client.Character is { } character)
+            {
+                return character.Wallet;
+            }
+
+            return Wallet.Invalid;
+        }
 
         private bool forceMapUI;
         public bool ForceMapUI
@@ -21,22 +37,77 @@ namespace Barotrauma
             {
                 if (forceMapUI == value) { return; }
                 forceMapUI = value;
-                LastUpdateID++;
+                IncrementLastUpdateIdForFlag(NetFlags.MapAndMissions);
             }
         }
 
         public bool GameOver { get; private set; }
+
+        class SavedExperiencePoints
+        {
+            public readonly ulong SteamID;
+            public readonly string EndPoint;
+            public readonly int ExperiencePoints;
+
+            public SavedExperiencePoints(Client client)
+            {
+                SteamID = client.SteamID;
+                EndPoint = client.Connection.EndPointString;
+                ExperiencePoints = client.Character?.Info?.ExperiencePoints ?? 0;
+            }
+
+            public SavedExperiencePoints(XElement element)
+            {
+                SteamID = element.GetAttributeUInt64("steamid", 0);
+                EndPoint = element.GetAttributeString("endpoint", string.Empty);
+                ExperiencePoints = element.GetAttributeInt("points", 0);
+            }
+        }
+
+        private readonly List<SavedExperiencePoints> savedExperiencePoints = new List<SavedExperiencePoints>();
 
         public override bool Paused
         {
             get { return ForceMapUI || CoroutineManager.IsCoroutineRunning("LevelTransition"); }
         }
 
-        public static void StartNewCampaign(string savePath, string subPath, string seed, CampaignSettings settings)
+        private bool purchasedHullRepairs, purchasedLostShuttles, purchasedItemRepairs;
+        public override bool PurchasedHullRepairs 
+        { 
+            get { return purchasedHullRepairs; }
+            set
+            {
+                if (purchasedHullRepairs == value) { return; }
+                purchasedHullRepairs = value;
+                IncrementLastUpdateIdForFlag(NetFlags.Misc);
+            }
+        }
+        public override bool PurchasedLostShuttles
+        {
+            get { return purchasedLostShuttles; }
+            set
+            {
+                if (purchasedLostShuttles == value) { return; }
+                purchasedLostShuttles = value;
+                IncrementLastUpdateIdForFlag(NetFlags.Misc);
+            }
+        }
+        public override bool PurchasedItemRepairs
+        {
+            get { return purchasedItemRepairs; }
+            set
+            {
+                if (purchasedItemRepairs == value) { return; }
+                purchasedItemRepairs = value;
+                IncrementLastUpdateIdForFlag(NetFlags.Misc);
+            }
+        }
+
+        public static void StartNewCampaign(string savePath, string subPath, string seed, CampaignSettings startingSettings)
         {
             if (string.IsNullOrWhiteSpace(savePath)) { return; }
 
-            GameMain.GameSession = new GameSession(new SubmarineInfo(subPath), savePath, GameModePreset.MultiPlayerCampaign, settings, seed);
+            GameMain.GameSession = new GameSession(new SubmarineInfo(subPath), savePath, GameModePreset.MultiPlayerCampaign, startingSettings, seed);
             GameMain.NetLobbyScreen.ToggleCampaignMode(true);
             SaveUtil.SaveGame(GameMain.GameSession.SavePath);
 
@@ -96,7 +167,7 @@ namespace Barotrauma
                     DebugConsole.NewMessage("Saved campaigns:", Color.White);
                     for (int i = 0; i < saveFiles.Length; i++)
                     {
-                        DebugConsole.NewMessage("   " + i + ". " + saveFiles[i], Color.White);
+                        DebugConsole.NewMessage("   " + i + ". " + saveFiles[i].FilePath, Color.White);
                     }
                     DebugConsole.ShowQuestionPrompt("Select a save file to load (0 - " + (saveFiles.Length - 1) + "):", (string selectedSave) =>
                     {
@@ -109,7 +180,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            LoadCampaign(saveFiles[saveIndex]);
+                            LoadCampaign(saveFiles[saveIndex].FilePath);
                         }
                     });
                 }
@@ -119,84 +190,79 @@ namespace Barotrauma
         public override void Start()
         {
             base.Start();
-            lastUpdateID++;
+            IncrementAllLastUpdateIds();
         }
 
         private static bool IsOwner(Client client) => client != null && client.Connection == GameMain.Server.OwnerConnection;
 
-        /// <summary>
-        /// There is a client-side implementation of the method in <see cref="CampaignMode"/>
-        /// </summary>
-        public bool AllowedToEndRound(Client client)
+        public void SaveExperiencePoints(Client client)
         {
-            //allow ending the round if the client has permissions, is the owner, the only client in the server,
-            //or if no-one has permissions
-            return
-                client.HasPermission(ClientPermissions.ManageRound) ||
-                client.HasPermission(ClientPermissions.ManageCampaign) ||
-                GameMain.Server.ConnectedClients.Count == 1 ||
-                IsOwner(client) ||
-                GameMain.Server.ConnectedClients.None(c =>
-                    c.InGame && (IsOwner(c) || c.HasPermission(ClientPermissions.ManageRound) || c.HasPermission(ClientPermissions.ManageCampaign)));
+            ClearSavedExperiencePoints(client);
+            savedExperiencePoints.Add(new SavedExperiencePoints(client));
+        }
+        public int GetSavedExperiencePoints(Client client)
+        {
+            return savedExperiencePoints.Find(s => s.SteamID != 0 && client.SteamID == s.SteamID || client.EndpointMatches(s.EndPoint))?.ExperiencePoints ?? 0;
+        }
+        public void ClearSavedExperiencePoints(Client client)
+        {
+            savedExperiencePoints.RemoveAll(s => s.SteamID != 0 && client.SteamID == s.SteamID || client.EndpointMatches(s.EndPoint));
         }
 
-        /// <summary>
-        /// There is a client-side implementation of the method in <see cref="CampaignMode"/>
-        /// </summary>
-        public bool AllowedToManageCampaign(Client client)
+        public void SavePlayers()
         {
-            //allow ending the round if the client has permissions, is the owner, or the only client in the server,
-            //or if no-one has management permissions
-            return
-                client.HasPermission(ClientPermissions.ManageCampaign) ||
-                GameMain.Server.ConnectedClients.Count == 1 ||
-                IsOwner(client) ||
-                GameMain.Server.ConnectedClients.None(c =>
-                    c.InGame && (IsOwner(c) || c.HasPermission(ClientPermissions.ManageCampaign)));
-        }
-
-        public void LoadPets()
-        {
-            if (petsElement != null)
-            {
-                PetBehavior.LoadPets(petsElement);
-            }
-        }
-
-        public void SaveInventories()
-        {
-            List<CharacterCampaignData> prevCharacterData = new List<CharacterCampaignData>(characterData);
-            //client character has spawned this round -> remove old data (and replace with an up-to-date one if the client still has a character)
-            characterData.RemoveAll(cd => cd.HasSpawned);
-
             //refresh the character data of clients who are still in the server
             foreach (Client c in GameMain.Server.ConnectedClients)
             {
-                if (c.Character?.Info == null) { continue; }
-                if (c.Character.IsDead && c.Character.CauseOfDeath?.Type != CauseOfDeathType.Disconnected) { continue; }
-                c.CharacterInfo = c.Character.Info;
-                characterData.RemoveAll(cd => cd.MatchesClient(c));
-                characterData.Add(new CharacterCampaignData(c));
+                //ignore if the character is controlling a monster
+                //(we'll just use the previously saved campaign data if there's any)
+                if (c.Character != null && c.Character.Info == null)
+                {
+                    c.Character = null;
+                }
+                //use the info of the character the client is currently controlling
+                // or the previously saved info if not (e.g. if the client has been spectating or died)
+                var characterInfo = c.Character?.Info;
+                var matchingCharacterData = characterData.Find(d => d.MatchesClient(c));
+                if (matchingCharacterData != null)
+                {
+                    //hasn't spawned this round -> don't touch the data
+                    if (!matchingCharacterData.HasSpawned) { continue; }
+                    characterInfo ??= matchingCharacterData.CharacterInfo;
+                }
+                if (characterInfo == null || characterInfo.Discarded) { continue; }
+                //reduce skills if the character has died
+                if (characterInfo.CauseOfDeath != null && characterInfo.CauseOfDeath.Type != CauseOfDeathType.Disconnected)
+                {
+                    RespawnManager.ReduceCharacterSkills(characterInfo);
+                    characterInfo.RemoveSavedStatValuesOnDeath();
+                    characterInfo.CauseOfDeath = null;
+                }
+                c.CharacterInfo = characterInfo;
+                SetClientCharacterData(c);
             }
 
             //refresh the character data of clients who aren't in the server anymore
+            List<CharacterCampaignData> prevCharacterData = new List<CharacterCampaignData>(characterData);
             foreach (CharacterCampaignData data in prevCharacterData)
             {
-                if (data.HasSpawned && !characterData.Any(cd => cd.IsDuplicate(data)))
+                if (data.HasSpawned && !GameMain.Server.ConnectedClients.Any(c => data.MatchesClient(c)))
                 {
                     var character = Character.CharacterList.Find(c => c.Info == data.CharacterInfo && !c.IsHusk);
                     if (character != null && (!character.IsDead || character.CauseOfDeath?.Type == CauseOfDeathType.Disconnected))
                     {
+                        characterData.RemoveAll(cd => cd.IsDuplicate(data));
                         data.Refresh(character);
                         characterData.Add(data);
                     }
                 }
             }
 
+            MoveDiscardedCharacterBalancesToBank();
+
             characterData.ForEach(cd => cd.HasSpawned = false);
 
-            petsElement = new XElement("pets");
-            PetBehavior.SavePets(petsElement);
+            SavePets();
 
             //remove all items that are in someone's inventory
             foreach (Character c in Character.CharacterList)
@@ -204,7 +270,7 @@ namespace Barotrauma
                 if (c.Inventory == null) { continue; }
                 if (Level.Loaded.Type == LevelData.LevelType.Outpost && c.Submarine != Level.Loaded.StartOutpost)
                 {
-                    Map.CurrentLocation.RegisterTakenItems(c.Inventory.AllItems.Where(it => it.SpawnedInOutpost && it.OriginalModuleIndex > 0));
+                    Map.CurrentLocation.RegisterTakenItems(c.Inventory.AllItems.Where(it => it.SpawnedInCurrentOutpost && it.OriginalModuleIndex > 0));
                 }
 
                 if (c.Info != null && c.IsBot)
@@ -219,11 +285,28 @@ namespace Barotrauma
 
                 c.Inventory.DeleteAllItems();
             }
+
+            SaveActiveOrders();
         }
 
-        protected override IEnumerable<object> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror, List<TraitorMissionResult> traitorResults)
+        public void MoveDiscardedCharacterBalancesToBank()
         {
-            lastUpdateID++;
+            foreach (var discardedCharacter in discardedCharacters)
+            {
+                if (discardedCharacter.WalletData != null)
+                {
+                    var wallet = 
+                        Character.CharacterList.Find(c => c.Info == discardedCharacter.CharacterInfo)?.Wallet ?? 
+                        new Wallet(Option<Character>.None(), discardedCharacter.WalletData);
+                    Bank.Give(wallet.Balance);
+                }
+            }
+            discardedCharacters.Clear();
+        }
+
+        protected override IEnumerable<CoroutineStatus> DoLevelTransition(TransitionType transitionType, LevelData newLevel, Submarine leavingSub, bool mirror, List<TraitorMissionResult> traitorResults)
+        {
+            IncrementAllLastUpdateIds();
 
             switch (transitionType)
             {
@@ -235,16 +318,30 @@ namespace Barotrauma
                     break;
                 case TransitionType.ProgressToNextLocation:
                     Map.MoveToNextLocation();
+                    TotalPassedLevels++;
                     break;
                 case TransitionType.End:
                     EndCampaign();
                     IsFirstRound = true;
+                    break;
+                case TransitionType.ProgressToNextEmptyLocation:
+                    TotalPassedLevels++;
                     break;
             }
 
             Map.ProgressWorld(transitionType, (float)(Timing.TotalTime - GameMain.GameSession.RoundStartTime));
 
             bool success = GameMain.Server.ConnectedClients.Any(c => c.InGame && c.Character != null && !c.Character.IsDead);
+            if (success)
+            {
+                foreach (Client c in GameMain.Server.ConnectedClients)
+                {
+                    if (c.Character?.HasAbilityFlag(AbilityFlags.RetainExperienceForNewCharacter) ?? false)
+                    {
+                        (GameMain.GameSession?.GameMode as MultiPlayerCampaign)?.SaveExperiencePoints(c);
+                    }
+                }
+            }
 
             GameMain.GameSession.EndRound("", traitorResults, transitionType);
             
@@ -252,53 +349,20 @@ namespace Barotrauma
 
             if (success)
             {
-                SaveInventories();
-
+                SavePlayers();
                 yield return CoroutineStatus.Running;
-
-                if (leavingSub != Submarine.MainSub && !leavingSub.DockedTo.Contains(Submarine.MainSub))
-                {
-                    Submarine.MainSub = leavingSub;
-                    GameMain.GameSession.Submarine = leavingSub;
-                    GameMain.GameSession.SubmarineInfo = leavingSub.Info;
-                    leavingSub.Info.FilePath = System.IO.Path.Combine(SaveUtil.TempPath, leavingSub.Info.Name + ".sub");
-                    var subsToLeaveBehind = GetSubsToLeaveBehind(leavingSub);
-                    GameMain.GameSession.OwnedSubmarines.Add(leavingSub.Info);
-                    foreach (Submarine sub in subsToLeaveBehind)
-                    {
-                        GameMain.GameSession.OwnedSubmarines.RemoveAll(s => s != leavingSub.Info && s.Name == sub.Info.Name);
-                        MapEntity.mapEntityList.RemoveAll(e => e.Submarine == sub && e is LinkedSubmarine);
-                        LinkedSubmarine.CreateDummy(leavingSub, sub);
-                    }
-                }
+                LeaveUnconnectedSubs(leavingSub);
                 NextLevel = newLevel;
                 GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);
-
-                if (PendingSubmarineSwitch != null)
-                {
-                    SubmarineInfo previousSub = GameMain.GameSession.SubmarineInfo;
-                    GameMain.GameSession.SubmarineInfo = PendingSubmarineSwitch;
-                    PendingSubmarineSwitch = null;
-
-                    for (int i = 0; i < GameMain.GameSession.OwnedSubmarines.Count; i++)
-                    {
-                        if (GameMain.GameSession.OwnedSubmarines[i].Name == previousSub.Name)
-                        {
-                            GameMain.GameSession.OwnedSubmarines[i] = previousSub;
-                            break;
-                        }
-                    }
-                }
-
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
             else
             {
                 PendingSubmarineSwitch = null;
-                GameMain.Server.EndGame(TransitionType.None);
+                GameMain.Server.EndGame(TransitionType.None, wasSaved: false);
                 LoadCampaign(GameMain.GameSession.SavePath);
                 LastSaveID++;
-                LastUpdateID++;
+                IncrementAllLastUpdateIds();
                 yield return CoroutineStatus.Success;
             }
 
@@ -306,7 +370,7 @@ namespace Barotrauma
 
             //--------------------------------------
 
-            GameMain.Server.EndGame(transitionType);
+            GameMain.Server.EndGame(transitionType, wasSaved: true);
 
             ForceMapUI = false;
 
@@ -330,23 +394,41 @@ namespace Barotrauma
 
         partial void InitProjSpecific()
         {
-            if (GameMain.Server != null)
-            {
-                CargoManager.OnItemsInBuyCrateChanged += () => { LastUpdateID++; };
-                CargoManager.OnPurchasedItemsChanged += () => { LastUpdateID++; };
-                CargoManager.OnSoldItemsChanged += () => { LastUpdateID++; };
-                UpgradeManager.OnUpgradesChanged += () => { LastUpdateID++; };
-                Map.OnLocationSelected += (loc, connection) => { LastUpdateID++; };
-                Map.OnMissionsSelected += (loc, mission) => { LastUpdateID++; };
-                Reputation.OnAnyReputationValueChanged += () => { LastUpdateID++; };
-            }
+            Identifier eventId = nameof(MultiPlayerCampaign).ToIdentifier();
+            CargoManager.OnItemsInBuyCrateChanged.RegisterOverwriteExisting(eventId, _ =>  IncrementLastUpdateIdForFlag(NetFlags.ItemsInBuyCrate));
+            CargoManager.OnPurchasedItemsChanged.RegisterOverwriteExisting(eventId, _ =>  IncrementLastUpdateIdForFlag(NetFlags.PurchasedItems));
+            CargoManager.OnSoldItemsChanged.RegisterOverwriteExisting(eventId, _ =>  IncrementLastUpdateIdForFlag(NetFlags.SoldItems));
+            UpgradeManager.OnUpgradesChanged.RegisterOverwriteExisting(eventId, _ =>  IncrementLastUpdateIdForFlag(NetFlags.UpgradeManager));
+
+            Reputation.OnAnyReputationValueChanged.RegisterOverwriteExisting(eventId, _ => IncrementLastUpdateIdForFlag(NetFlags.Reputation));
+
+            Map.OnLocationSelected = (loc, connection) => IncrementLastUpdateIdForFlag(NetFlags.MapAndMissions);
+            Map.OnMissionsSelected = (loc, mission) => IncrementLastUpdateIdForFlag(NetFlags.MapAndMissions);
+
             //increment save ID so clients know they're lacking the most up-to-date save file
             LastSaveID++;
         }
 
+        public bool CanPurchaseSub(SubmarineInfo info, Client client)
+            => CanAfford(info.Price, client) && GetCampaignSubs().Contains(info);
+
+        private readonly List<CharacterCampaignData> discardedCharacters = new List<CharacterCampaignData>();
         public void DiscardClientCharacterData(Client client)
         {
-            characterData.RemoveAll(cd => cd.MatchesClient(client));
+            foreach (var data in characterData.ToList())
+            {
+                if (data.MatchesClient(client))
+                {
+                    if (!discardedCharacters.Any(d => d.MatchesClient(client)))
+                    {
+                        discardedCharacters.Add(data);
+                    }
+                    DebugConsole.Log($"Client \"{client}\" discarded the character ({data.Name})");
+                    data.CharacterInfo.Discarded = true;
+                    characterData.Remove(data);
+                    IncrementLastUpdateIdForFlag(NetFlags.CharacterInfo);
+                }
+            }
         }
 
         public CharacterCampaignData GetClientCharacterData(Client client)
@@ -359,6 +441,7 @@ namespace Barotrauma
             characterData.RemoveAll(cd => cd.MatchesClient(client));
             var data = new CharacterCampaignData(client);
             characterData.Add(data);
+            IncrementLastUpdateIdForFlag(NetFlags.CharacterInfo);
             return data;
         }
 
@@ -370,6 +453,7 @@ namespace Barotrauma
                 var matchingData = GetClientCharacterData(client);
                 if (matchingData != null) { client.CharacterInfo = matchingData.CharacterInfo; }
             }
+            IncrementLastUpdateIdForFlag(NetFlags.CharacterInfo);
         }
 
         public Dictionary<Client, Job> GetAssignedJobs(IEnumerable<Client> connectedClients)
@@ -416,6 +500,56 @@ namespace Barotrauma
                     KeepCharactersCloseToOutpost(deltaTime);
                 }
             }
+
+            UpdateClientsToCheck(deltaTime);
+            UpdateWallets();
+        }
+
+        private void UpdateClientsToCheck(float deltaTime)
+        {
+            if (clientCheckTimer < clientCheckInterval)
+            {
+                clientCheckTimer += deltaTime;
+                return;
+            }
+
+            clientCheckTimer = 0;
+            walletsToCheck.Clear();
+            walletsToCheck.Add(0, Bank);
+
+            foreach (Character character in GameSession.GetSessionCrewCharacters(CharacterType.Player))
+            {
+                walletsToCheck.Add(character.ID, character.Wallet);
+            }
+        }
+
+        private void UpdateWallets()
+        {
+            foreach (var (id, wallet) in walletsToCheck)
+            {
+                if (wallet.HasTransactions())
+                {
+                    NetWalletTransaction transaction = wallet.DequeueAndMergeTransactions(id);
+                    if (transaction.ChangedData.BalanceChanged.IsNone() && transaction.ChangedData.RewardDistributionChanged.IsNone()) { continue; }
+                    transactions.Add(transaction);
+                }
+            }
+
+            if (transactions.Count == 0) { return; }
+
+            NetWalletUpdate walletUpdate = new NetWalletUpdate
+            {
+                Transactions = transactions.ToArray()
+            };
+
+            transactions.Clear();
+
+            foreach (Client client in GameMain.Server.ConnectedClients)
+            {
+                IWriteMessage msg = new WriteOnlyMessage().WithHeader(ServerPacketHeader.MONEY);
+                ((INetSerializableStruct)walletUpdate).Write(msg);
+                GameMain.Server?.ServerPeer?.Send(msg, client.Connection, DeliveryMethod.Reliable);
+            }
         }
 
         public override void End(TransitionType transitionType = TransitionType.None)
@@ -424,122 +558,187 @@ namespace Barotrauma
             base.End(transitionType);
         }
 
+        private bool IsFlagRequired(Client c, NetFlags flag)
+            => !c.LastRecvCampaignUpdate.TryGetValue(flag, out var id) || NetIdUtils.IdMoreRecent(GetLastUpdateIdForFlag(flag), id);
+
         public void ServerWrite(IWriteMessage msg, Client c)
         {
             System.Diagnostics.Debug.Assert(map.Locations.Count < UInt16.MaxValue);
 
-            Reputation reputation = Map?.CurrentLocation?.Reputation;
+            NetFlags requiredFlags = lastUpdateID.Keys.Where(k => IsFlagRequired(c, k)).Aggregate((NetFlags)0, (f1, f2) => f1 | f2);
+
+            msg.Write((UInt16)requiredFlags);
 
             msg.Write(IsFirstRound);
             msg.Write(CampaignID);
-            msg.Write(lastUpdateID);
             msg.Write(lastSaveID);
             msg.Write(map.Seed);
-            msg.Write(map.CurrentLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.CurrentLocationIndex);
-            msg.Write(map.SelectedLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.SelectedLocationIndex); 
-            
-            var selectedMissionIndices = map.GetSelectedMissionIndices();
-            msg.Write((byte)selectedMissionIndices.Count());
-            foreach (int selectedMissionIndex in selectedMissionIndices)
+
+            if (requiredFlags.HasFlag(NetFlags.Misc))
             {
-                msg.Write((byte)selectedMissionIndex);
+                msg.Write(GetLastUpdateIdForFlag(NetFlags.Misc));
+                msg.Write(PurchasedHullRepairs);
+                msg.Write(PurchasedItemRepairs);
+                msg.Write(PurchasedLostShuttles);
             }
 
-            msg.Write(map.AllowDebugTeleport);
-            msg.Write(reputation != null);
-            if (reputation != null) { msg.Write(reputation.Value); }
-
-            // hopefully we'll never have more than 128 factions
-            msg.Write((byte)Factions.Count);
-            foreach (Faction faction in Factions)
+            if (requiredFlags.HasFlag(NetFlags.MapAndMissions))
             {
-                msg.Write(faction.Prefab.Identifier);
-                msg.Write(faction.Reputation.Value);
-            }
+                msg.Write(GetLastUpdateIdForFlag(NetFlags.MapAndMissions));
+                msg.Write(ForceMapUI);
+                msg.Write(map.AllowDebugTeleport);
+                msg.Write(map.CurrentLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.CurrentLocationIndex);
+                msg.Write(map.SelectedLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.SelectedLocationIndex);
 
-            msg.Write(ForceMapUI);
-
-            msg.Write(Money);
-            msg.Write(PurchasedHullRepairs);
-            msg.Write(PurchasedItemRepairs);
-            msg.Write(PurchasedLostShuttles);
-
-            if (map.CurrentLocation != null)
-            {
-                msg.Write((byte)map.CurrentLocation?.AvailableMissions.Count());
-                foreach (Mission mission in map.CurrentLocation.AvailableMissions)
+                if (map.CurrentLocation != null)
                 {
-                    msg.Write(mission.Prefab.Identifier);
-                    if (mission.Locations[0] == mission.Locations[1])
+                    msg.Write((byte)map.CurrentLocation.AvailableMissions.Count());
+                    foreach (Mission mission in map.CurrentLocation.AvailableMissions)
                     {
-                        msg.Write((byte)255);
-                    }
-                    else
-                    {
-                        Location missionDestination = mission.Locations[0] == map.CurrentLocation ? mission.Locations[1] : mission.Locations[0];
-                        LocationConnection connection = map.CurrentLocation.Connections.Find(c => c.OtherLocation(map.CurrentLocation) == missionDestination);
-                        msg.Write((byte)map.CurrentLocation.Connections.IndexOf(connection));
+                        msg.Write(mission.Prefab.Identifier);
+                        if (mission.Locations[0] == mission.Locations[1])
+                        {
+                            msg.Write((byte)255);
+                        }
+                        else
+                        {
+                            Location missionDestination = mission.Locations[0] == map.CurrentLocation ? mission.Locations[1] : mission.Locations[0];
+                            LocationConnection connection = map.CurrentLocation.Connections.Find(c => c.OtherLocation(map.CurrentLocation) == missionDestination);
+                            msg.Write((byte)map.CurrentLocation.Connections.IndexOf(connection));
+                        }
                     }
                 }
+                else
+                {
+                    msg.Write((byte)0);
+                }
 
-                // Store balance
-                msg.Write(true);
-                msg.Write((UInt16)map.CurrentLocation.StoreCurrentBalance);
-            }
-            else
-            {
-                msg.Write((byte)0);
-                // Store balance
-                msg.Write(false);
-            }
+                var selectedMissionIndices = map.GetSelectedMissionIndices();
+                msg.Write((byte)selectedMissionIndices.Count());
+                foreach (int selectedMissionIndex in selectedMissionIndices)
+                {
+                    msg.Write((byte)selectedMissionIndex);
+                }
 
-            msg.Write((UInt16)CargoManager.ItemsInBuyCrate.Count);
-            foreach (PurchasedItem pi in CargoManager.ItemsInBuyCrate)
-            {
-                msg.Write(pi.ItemPrefab.Identifier);
-                msg.WriteRangedInteger(pi.Quantity, 0, 100);
+                WriteStores(msg);
             }
 
-            msg.Write((UInt16)CargoManager.PurchasedItems.Count);
-            foreach (PurchasedItem pi in CargoManager.PurchasedItems)
+            if (requiredFlags.HasFlag(NetFlags.SubList))
             {
-                msg.Write(pi.ItemPrefab.Identifier);
-                msg.WriteRangedInteger(pi.Quantity, 0, 100);
+                msg.Write(GetLastUpdateIdForFlag(NetFlags.SubList));
+                var subList = GameMain.NetLobbyScreen.GetSubList();
+                List<int> ownedSubmarineIndices = new List<int>();
+                for (int i = 0; i < subList.Count; i++)
+                {
+                    if (GameMain.GameSession.OwnedSubmarines.Any(s => s.Name == subList[i].Name))
+                    {
+                        ownedSubmarineIndices.Add(i);
+                    }
+                }
+                msg.Write((ushort)ownedSubmarineIndices.Count);
+                foreach (int index in ownedSubmarineIndices)
+                {
+                    msg.Write((ushort)index);
+                }
+            }
+            if (requiredFlags.HasFlag(NetFlags.UpgradeManager))
+            {
+                msg.Write(GetLastUpdateIdForFlag(NetFlags.UpgradeManager));
+                msg.Write((ushort)UpgradeManager.PendingUpgrades.Count);
+                foreach (var (prefab, category, level) in UpgradeManager.PendingUpgrades)
+                {
+                    msg.Write(prefab.Identifier);
+                    msg.Write(category.Identifier);
+                    msg.Write((byte)level);
+                }
+                msg.Write((ushort)UpgradeManager.PurchasedItemSwaps.Count);
+                foreach (var itemSwap in UpgradeManager.PurchasedItemSwaps)
+                {
+                    msg.Write(itemSwap.ItemToRemove.ID);
+                    msg.Write(itemSwap.ItemToInstall?.Identifier ?? Identifier.Empty);
+                }
             }
 
-            msg.Write((UInt16)CargoManager.SoldItems.Count);
-            foreach (SoldItem si in CargoManager.SoldItems)
+            if (requiredFlags.HasFlag(NetFlags.ItemsInBuyCrate))
             {
-                msg.Write(si.ItemPrefab.Identifier);
-                msg.Write((UInt16)si.ID);
-                msg.Write(si.Removed);
-                msg.Write(si.SellerID);
+                msg.Write(GetLastUpdateIdForFlag(NetFlags.ItemsInBuyCrate));
+                WriteItems(msg, CargoManager.ItemsInBuyCrate);
+                WriteStores(msg);
             }
 
-            msg.Write((ushort)UpgradeManager.PendingUpgrades.Count);
-            foreach (var (prefab, category, level) in UpgradeManager.PendingUpgrades)
+            if (requiredFlags.HasFlag(NetFlags.ItemsInSellFromSubCrate))
             {
-                msg.Write(prefab.Identifier);
-                msg.Write(category.Identifier);
-                msg.Write((byte)level);
+                msg.Write(GetLastUpdateIdForFlag(NetFlags.ItemsInSellFromSubCrate));
+                WriteItems(msg, CargoManager.ItemsInSellFromSubCrate);
+                WriteStores(msg);
             }
 
-            msg.Write((ushort)UpgradeManager.PurchasedItemSwaps.Count);
-            foreach (var itemSwap in UpgradeManager.PurchasedItemSwaps)
+            if (requiredFlags.HasFlag(NetFlags.PurchasedItems))
             {
-                msg.Write(itemSwap.ItemToRemove.ID);
-                msg.Write(itemSwap.ItemToInstall?.Identifier ?? string.Empty);
+                msg.Write(GetLastUpdateIdForFlag(NetFlags.PurchasedItems));
+                WriteItems(msg, CargoManager.PurchasedItems);
+                WriteStores(msg);
+
+            }
+            if (requiredFlags.HasFlag(NetFlags.SoldItems))
+            {
+                msg.Write(GetLastUpdateIdForFlag(NetFlags.SoldItems));
+                WriteItems(msg, CargoManager.SoldItems);
+                WriteStores(msg);
+            }
+            if (requiredFlags.HasFlag(NetFlags.Reputation))
+            {
+                msg.Write(GetLastUpdateIdForFlag(NetFlags.Reputation));
+                Reputation reputation = Map?.CurrentLocation?.Reputation;
+                msg.Write(reputation != null);
+                if (reputation != null) { msg.Write(reputation.Value); }
+
+                // hopefully we'll never have more than 128 factions
+                msg.Write((byte)Factions.Count);
+                foreach (Faction faction in Factions)
+                {
+                    msg.Write(faction.Prefab.Identifier);
+                    msg.Write(faction.Reputation.Value);
+                }
+            }
+            if (requiredFlags.HasFlag(NetFlags.CharacterInfo))
+            {
+                msg.Write(GetLastUpdateIdForFlag(NetFlags.CharacterInfo));
+                var characterData = GetClientCharacterData(c);
+                if (characterData?.CharacterInfo == null)
+                {
+                    msg.Write(false);
+                }
+                else
+                {
+                    msg.Write(true);
+                    characterData.CharacterInfo.ServerWrite(msg);
+                }
             }
 
-            var characterData = GetClientCharacterData(c);
-            if (characterData?.CharacterInfo == null)
+            void WriteStores(IWriteMessage msg)
             {
-                msg.Write(false);
-            }
-            else
-            {
-                msg.Write(true);
-                characterData.CharacterInfo.ServerWrite(msg);
+                if (map.CurrentLocation != null)
+                {
+                    // Store balance
+                    bool hasStores = map.CurrentLocation.Stores != null && map.CurrentLocation.Stores.Any();
+                    msg.Write(hasStores);
+                    if (hasStores)
+                    {
+                        msg.Write((byte)map.CurrentLocation.Stores.Count);
+                        foreach (var store in map.CurrentLocation.Stores.Values)
+                        {
+                            msg.Write(store.Identifier);
+                            msg.Write((UInt16)store.Balance);
+                        }
+                    }
+                }
+                else
+                {
+                    msg.Write((byte)0);
+                    // Store balance
+                    msg.Write(false);
+                }
             }
         }
 
@@ -559,43 +758,19 @@ namespace Barotrauma
             bool purchasedItemRepairs = msg.ReadBoolean();
             bool purchasedLostShuttles = msg.ReadBoolean();
 
-            UInt16 buyCrateItemCount = msg.ReadUInt16();
-            List<PurchasedItem> buyCrateItems = new List<PurchasedItem>();
-            for (int i = 0; i < buyCrateItemCount; i++)
-            {
-                string itemPrefabIdentifier = msg.ReadString();
-                int itemQuantity = msg.ReadRangedInteger(0, CargoManager.MaxQuantity);
-                buyCrateItems.Add(new PurchasedItem(ItemPrefab.Prefabs[itemPrefabIdentifier], itemQuantity));
-            }
-
-            UInt16 purchasedItemCount = msg.ReadUInt16();
-            List<PurchasedItem> purchasedItems = new List<PurchasedItem>();
-            for (int i = 0; i < purchasedItemCount; i++)
-            {
-                string itemPrefabIdentifier = msg.ReadString();
-                int itemQuantity = msg.ReadRangedInteger(0, CargoManager.MaxQuantity);
-                purchasedItems.Add(new PurchasedItem(ItemPrefab.Prefabs[itemPrefabIdentifier], itemQuantity));
-            }
-
-            UInt16 soldItemCount = msg.ReadUInt16();
-            List<SoldItem> soldItems = new List<SoldItem>();
-            for (int i = 0; i < soldItemCount; i++)
-            {
-                string itemPrefabIdentifier = msg.ReadString();
-                UInt16 id = msg.ReadUInt16();
-                bool removed = msg.ReadBoolean();
-                byte sellerId = msg.ReadByte();
-                soldItems.Add(new SoldItem(ItemPrefab.Prefabs[itemPrefabIdentifier], id, removed, sellerId));
-            }
+            var buyCrateItems = ReadPurchasedItems(msg, sender);
+            var subSellCrateItems = ReadPurchasedItems(msg, sender);
+            var purchasedItems = ReadPurchasedItems(msg, sender);
+            var soldItems = ReadSoldItems(msg);
 
             ushort purchasedUpgradeCount = msg.ReadUInt16();
             List<PurchasedUpgrade> purchasedUpgrades = new List<PurchasedUpgrade>();
             for (int i = 0; i < purchasedUpgradeCount; i++)
             {
-                string upgradeIdentifier = msg.ReadString();
+                Identifier upgradeIdentifier = msg.ReadIdentifier();
                 UpgradePrefab prefab = UpgradePrefab.Find(upgradeIdentifier);
 
-                string categoryIdentifier = msg.ReadString();
+                Identifier categoryIdentifier = msg.ReadIdentifier();
                 UpgradeCategory category = UpgradeCategory.Find(categoryIdentifier);
 
                 int upgradeLevel = msg.ReadByte();
@@ -609,69 +784,65 @@ namespace Barotrauma
             for (int i = 0; i < purchasedItemSwapCount; i++)
             {
                 UInt16 itemToRemoveID = msg.ReadUInt16();
-                Item itemToRemove = Entity.FindEntityByID(itemToRemoveID) as Item;
-
-                string itemToInstallIdentifier = msg.ReadString();
-                ItemPrefab itemToInstall = string.IsNullOrEmpty(itemToInstallIdentifier) ? null : ItemPrefab.Find(string.Empty, itemToInstallIdentifier);
-
-                if (itemToRemove == null) { continue; }
-
+                Identifier itemToInstallIdentifier = msg.ReadIdentifier();
+                ItemPrefab itemToInstall = itemToInstallIdentifier.IsEmpty ? null : ItemPrefab.Find(string.Empty, itemToInstallIdentifier);
+                if (!(Entity.FindEntityByID(itemToRemoveID) is Item itemToRemove)) { continue; }
                 purchasedItemSwaps.Add(new PurchasedItemSwap(itemToRemove, itemToInstall));
             }
 
-            if (!AllowedToManageCampaign(sender))
-            {
-                DebugConsole.ThrowError("Client \"" + sender.Name + "\" does not have a permission to manage the campaign");
-                return;
-            }
-            
             Location location = Map.CurrentLocation;
-            int hullRepairCost      = location?.GetAdjustedMechanicalCost(HullRepairCost)     ?? HullRepairCost;
-            int itemRepairCost      = location?.GetAdjustedMechanicalCost(ItemRepairCost)     ?? ItemRepairCost;
+            int hullRepairCost = location?.GetAdjustedMechanicalCost(HullRepairCost) ?? HullRepairCost;
+            int itemRepairCost = location?.GetAdjustedMechanicalCost(ItemRepairCost) ?? ItemRepairCost;
             int shuttleRetrieveCost = location?.GetAdjustedMechanicalCost(ShuttleReplaceCost) ?? ShuttleReplaceCost;
+            Wallet personalWallet = GetWallet(sender);
 
-            if (purchasedHullRepairs != this.PurchasedHullRepairs)
+            if (purchasedHullRepairs != PurchasedHullRepairs)
             {
-                if (purchasedHullRepairs && Money >= hullRepairCost)
+                switch (purchasedHullRepairs)
                 {
-                    this.PurchasedHullRepairs = true;
-                    Money -= hullRepairCost;
-                }
-                else if (!purchasedHullRepairs)
-                {
-                    this.PurchasedHullRepairs = false;
-                    Money += hullRepairCost;
+                    case true when GetBalance(sender) >= hullRepairCost:
+                        TryPurchase(sender, hullRepairCost);
+                        PurchasedHullRepairs = true;
+                        GameAnalyticsManager.AddMoneySpentEvent(hullRepairCost, GameAnalyticsManager.MoneySink.Service, "hullrepairs");
+                        break;
+                    case false:
+                        PurchasedHullRepairs = false;
+                        personalWallet.Refund(hullRepairCost);
+                        break;
                 }
             }
-            if (purchasedItemRepairs != this.PurchasedItemRepairs)
+
+            if (purchasedItemRepairs != PurchasedItemRepairs)
             {
-                if (purchasedItemRepairs && Money >= itemRepairCost)
+                switch (purchasedItemRepairs)
                 {
-                    this.PurchasedItemRepairs = true;
-                    Money -= itemRepairCost;
-                }
-                else if (!purchasedItemRepairs)
-                {
-                    this.PurchasedItemRepairs = false;
-                    Money += itemRepairCost;
+                    case true when GetBalance(sender) >= itemRepairCost:
+                        TryPurchase(sender, itemRepairCost);
+                        PurchasedItemRepairs = true;
+                        GameAnalyticsManager.AddMoneySpentEvent(itemRepairCost, GameAnalyticsManager.MoneySink.Service, "devicerepairs");
+                        break;
+                    case false:
+                        PurchasedItemRepairs = false;
+                        personalWallet.Refund(itemRepairCost);
+                        break;
                 }
             }
-            if (purchasedLostShuttles != this.PurchasedLostShuttles)
+
+            if (purchasedLostShuttles != PurchasedLostShuttles)
             {
-                if (GameMain.GameSession?.SubmarineInfo != null &&
-                    GameMain.GameSession.SubmarineInfo.LeftBehindSubDockingPortOccupied)
+                if (GameMain.GameSession?.SubmarineInfo != null && GameMain.GameSession.SubmarineInfo.LeftBehindSubDockingPortOccupied)
                 {
                     GameMain.Server.SendDirectChatMessage(TextManager.FormatServerMessage("ReplaceShuttleDockingPortOccupied"), sender, ChatMessageType.MessageBox);
                 }
-                else if (purchasedLostShuttles && Money >= shuttleRetrieveCost)
+                else if (purchasedLostShuttles && TryPurchase(sender, shuttleRetrieveCost))
                 {
-                    this.PurchasedLostShuttles = true;
-                    Money -= shuttleRetrieveCost;
+                    PurchasedLostShuttles = true;
+                    GameAnalyticsManager.AddMoneySpentEvent(shuttleRetrieveCost, GameAnalyticsManager.MoneySink.Service, "retrieveshuttle");
                 }
                 else if (!purchasedItemRepairs)
                 {
-                    this.PurchasedLostShuttles = false;
-                    Money += shuttleRetrieveCost;
+                    PurchasedLostShuttles = false;
+                    personalWallet.Refund(shuttleRetrieveCost);
                 }
             }
 
@@ -680,34 +851,144 @@ namespace Barotrauma
                 Map.SetLocation(currentLocIndex);
             }
 
-            Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
-            if (Map.SelectedLocation == null) { Map.SelectRandomLocation(preferUndiscovered: true); }
-            if (Map.SelectedConnection != null) { Map.SelectMission(selectedMissionIndices); }
+            if (AllowedToManageCampaign(sender, ClientPermissions.ManageMap))
+            {
+                Map.SelectLocation(selectedLocIndex == UInt16.MaxValue ? -1 : selectedLocIndex);
+                if (Map.SelectedLocation == null) { Map.SelectRandomLocation(preferUndiscovered: true); }
+                if (Map.SelectedConnection != null) { Map.SelectMission(selectedMissionIndices); }
+                CheckTooManyMissions(Map.CurrentLocation, sender);
+            }
 
-            CheckTooManyMissions(Map.CurrentLocation, sender);
+            var prevBuyCrateItems = new Dictionary<Identifier, List<PurchasedItem>>();
+            foreach (var kvp in CargoManager.ItemsInBuyCrate)
+            {
+                prevBuyCrateItems.Add(kvp.Key, new List<PurchasedItem>(kvp.Value));
+            }
+            foreach (var store in prevBuyCrateItems)
+            {
+                foreach (var item in store.Value.ToList())
+                {
+                    CargoManager.ModifyItemQuantityInBuyCrate(store.Key, item.ItemPrefab, -item.Quantity, sender);
+                }
+            }
+            foreach (var store in buyCrateItems)
+            {
+                foreach (var item in store.Value.ToList())
+                {
+                    CargoManager.ModifyItemQuantityInBuyCrate(store.Key, item.ItemPrefab, item.Quantity, sender);
+                }
+            }
 
-            List<PurchasedItem> currentBuyCrateItems = new List<PurchasedItem>(CargoManager.ItemsInBuyCrate);
-            currentBuyCrateItems.ForEach(i => CargoManager.ModifyItemQuantityInBuyCrate(i.ItemPrefab, -i.Quantity));
-            buyCrateItems.ForEach(i => CargoManager.ModifyItemQuantityInBuyCrate(i.ItemPrefab, i.Quantity));
+            var prevPurchasedItems = new Dictionary<Identifier, List<PurchasedItem>>();
+            foreach (var kvp in CargoManager.PurchasedItems)
+            {
+                prevPurchasedItems.Add(kvp.Key, new List<PurchasedItem>(kvp.Value));
+            }
+            foreach (var store in prevPurchasedItems)
+            {
+                CargoManager.SellBackPurchasedItems(store.Key, store.Value, sender);
+            }
+            foreach (var store in purchasedItems)
+            {
+                CargoManager.PurchaseItems(store.Key, store.Value, false, sender);
+            }
 
-            CargoManager.SellBackPurchasedItems(new List<PurchasedItem>(CargoManager.PurchasedItems));
-            CargoManager.PurchaseItems(purchasedItems, false);
+            foreach (var (storeIdentifier, items) in CargoManager.PurchasedItems)
+            {
+                if (!prevPurchasedItems.ContainsKey(storeIdentifier))
+                {
+                    CargoManager.OnNewItemsPurchased(storeIdentifier, items, sender);
+                    continue;
+                }
 
-            // for some reason CargoManager.SoldItem is never cleared by the server, I've added a check to SellItems that ignores all
-            // sold items that are removed so they should be discarded on the next message
-            CargoManager.BuyBackSoldItems(new List<SoldItem>(CargoManager.SoldItems));
-            CargoManager.SellItems(soldItems);
+                List<PurchasedItem> newItems = new List<PurchasedItem>();
+                List<PurchasedItem> prevItems = prevPurchasedItems[storeIdentifier];
+
+                foreach (PurchasedItem item in items)
+                {
+                    PurchasedItem matching = prevItems.FirstOrDefault(ppi => ppi.ItemPrefab == item.ItemPrefab);
+                    if (matching is null)
+                    {
+                        newItems.Add(item);
+                        continue;
+                    }
+
+                    if (matching.Quantity < item.Quantity)
+                    {
+                        newItems.Add(new PurchasedItem(item.ItemPrefab, item.Quantity - matching.Quantity, sender));
+                    }
+                }
+
+                if (newItems.Any())
+                {
+                    CargoManager.OnNewItemsPurchased(storeIdentifier, newItems, sender);
+                }
+            }
+
+
+            bool allowedToSellSubItems = AllowedToManageCampaign(sender, ClientPermissions.SellSubItems);
+            if (allowedToSellSubItems)
+            {
+                var prevSubSellCrateItems = new Dictionary<Identifier, List<PurchasedItem>>(CargoManager.ItemsInSellFromSubCrate);
+                foreach (var store in prevSubSellCrateItems)
+                {
+                    foreach (var item in store.Value.ToList())
+                    {
+                        CargoManager.ModifyItemQuantityInSubSellCrate(store.Key, item.ItemPrefab, -item.Quantity, sender);
+                    }
+                }
+                foreach (var store in subSellCrateItems)
+                {
+                    foreach (var item in store.Value.ToList())
+                    {
+                        CargoManager.ModifyItemQuantityInSubSellCrate(store.Key, item.ItemPrefab, item.Quantity, sender);
+                    }
+                }
+            }
+
+            bool allowedToSellInventoryItems = AllowedToManageCampaign(sender, ClientPermissions.SellInventoryItems);
+            if (allowedToSellInventoryItems && allowedToSellSubItems)
+            {
+                // for some reason CargoManager.SoldItem is never cleared by the server, I've added a check to SellItems that ignores all
+                // sold items that are removed so they should be discarded on the next message
+                var prevSoldItems = new Dictionary<Identifier, List<SoldItem>>(CargoManager.SoldItems);
+                foreach (var store in prevSoldItems)
+                {
+                    CargoManager.BuyBackSoldItems(store.Key, store.Value.ToList(), sender);
+                }
+                foreach (var store in soldItems)
+                {
+                    CargoManager.SellItems(store.Key, store.Value.ToList(), sender);
+                }
+            }
+            else if (allowedToSellInventoryItems || allowedToSellSubItems)
+            {
+                var prevSoldItems = new Dictionary<Identifier, List<SoldItem>>(CargoManager.SoldItems);
+                foreach (var store in prevSoldItems)
+                {
+                    store.Value.RemoveAll(predicate);
+                    CargoManager.BuyBackSoldItems(store.Key, store.Value.ToList(), sender);
+                }
+                foreach (var store in soldItems)
+                {
+                    store.Value.RemoveAll(predicate);
+                }
+                foreach (var store in soldItems)
+                {
+                    CargoManager.SellItems(store.Key, store.Value.ToList(), sender);
+                }
+                bool predicate(SoldItem i) => allowedToSellInventoryItems != (i.Origin == SoldItem.SellOrigin.Character);
+            }
 
             foreach (var (prefab, category, _) in purchasedUpgrades)
             {
-                UpgradeManager.PurchaseUpgrade(prefab, category);
+                UpgradeManager.PurchaseUpgrade(prefab, category, client: sender);
 
                 // unstable logging
                 int price = prefab.Price.GetBuyprice(UpgradeManager.GetUpgradeLevel(prefab, category), Map?.CurrentLocation);
                 int level = UpgradeManager.GetUpgradeLevel(prefab, category);
                 GameServer.Log($"SERVER: Purchased level {level} {category.Identifier}.{prefab.Identifier} for {price}", ServerLog.MessageType.ServerMessage);
             }
-
             foreach (var purchasedItemSwap in purchasedItemSwaps)
             {
                 if (purchasedItemSwap.ItemToInstall == null)
@@ -716,7 +997,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    UpgradeManager.PurchaseItemSwap(purchasedItemSwap.ItemToRemove, purchasedItemSwap.ItemToInstall);
+                    UpgradeManager.PurchaseItemSwap(purchasedItemSwap.ItemToRemove, purchasedItemSwap.ItemToInstall, client: sender);
                 }
             }
             foreach (Item item in Item.ItemList)
@@ -727,6 +1008,76 @@ namespace Barotrauma
                     item.PendingItemSwap = null;
                 }
             }
+        }
+
+        public void ServerReadMoney(IReadMessage msg, Client sender)
+        {
+            NetWalletTransfer transfer = INetSerializableStruct.Read<NetWalletTransfer>(msg);
+
+            if (GameMain.Server is null) { return; }
+
+            switch (transfer.Sender)
+            {
+                case Some<ushort> { Value: var id }:
+                    if (id != sender.CharacterID && !AllowedToManageWallets(sender)) { return; }
+
+                    Wallet wallet = GetWalletByID(id);
+                    if (wallet is InvalidWallet) { return; }
+
+                    TransferMoney(wallet);
+                    break;
+                case None<ushort> _:
+                    if (!AllowedToManageWallets(sender))
+                    {
+                        if (transfer.Receiver is Some<ushort> { Value: var receiverId } && receiverId == sender.CharacterID)
+                        {
+                            if (transfer.Amount > GameMain.Server.ServerSettings.MaximumMoneyTransferRequest) { return; }
+                            GameMain.Server.Voting.StartTransferVote(sender, null, transfer.Amount, sender);
+                            GameServer.Log($"{sender.Name} started a vote to transfer {transfer.Amount} mk from the bank.", ServerLog.MessageType.Money);
+                        }
+                        return;
+                    }
+
+                    TransferMoney(Bank);
+                    break;
+            }
+
+            void TransferMoney(Wallet from)
+            {
+                if (!from.TryDeduct(transfer.Amount)) { return; }
+
+                switch (transfer.Receiver)
+                {
+                    case Some<ushort> { Value: var id }:
+                        Wallet wallet = GetWalletByID(id);
+                        if (wallet is InvalidWallet) { return; }
+
+                        wallet.Give(transfer.Amount);
+                        GameServer.Log($"{sender.Name} transferred {transfer.Amount} mk to {wallet.GetOwnerLogName()} from {from.GetOwnerLogName()}.", ServerLog.MessageType.Money);
+                        break;
+                    case None<ushort> _:
+                        Bank.Give(transfer.Amount);
+                        GameServer.Log($"{sender.Name} transferred {transfer.Amount} mk to {Bank.GetOwnerLogName()} from {from.GetOwnerLogName()}.", ServerLog.MessageType.Money);
+                        break;
+                }
+            }
+
+            Wallet GetWalletByID(ushort id)
+            {
+                Character targetCharacter = Character.CharacterList.FirstOrDefault(c => c.ID == id);
+                return targetCharacter is null ? Wallet.Invalid : targetCharacter.Wallet;
+            }
+        }
+
+        public void ServerReadRewardDistribution(IReadMessage msg, Client sender)
+        {
+            NetWalletSetSalaryUpdate update = INetSerializableStruct.Read<NetWalletSetSalaryUpdate>(msg);
+
+            if (!AllowedToManageWallets(sender)) { return; }
+
+            Character targetCharacter = Character.CharacterList.FirstOrDefault(c => c.ID == update.Target);
+            targetCharacter?.Wallet.SetRewardDistribution(update.NewRewardDistribution);
+            GameServer.Log($"{sender.Name} changed the salary of {targetCharacter?.Name ?? "the bank"} to {update.NewRewardDistribution}%.", ServerLog.MessageType.Money);
         }
 
         public void ServerReadCrew(IReadMessage msg, Client sender)
@@ -765,7 +1116,7 @@ namespace Barotrauma
             List<CharacterInfo> hiredCharacters = new List<CharacterInfo>();
             CharacterInfo firedCharacter = null;
 
-            if (location != null && AllowedToManageCampaign(sender))
+            if (location != null && AllowedToManageCampaign(sender, ClientPermissions.ManageHires))
             {
                 if (fireCharacter)
                 {
@@ -815,7 +1166,7 @@ namespace Barotrauma
                     {
                         foreach (CharacterInfo hireInfo in location.HireManager.PendingHires)
                         {
-                            if (TryHireCharacter(location, hireInfo))
+                            if (TryHireCharacter(location, hireInfo, sender))
                             {
                                 hiredCharacters.Add(hireInfo);
                             };
@@ -928,16 +1279,57 @@ namespace Barotrauma
             }
         }
 
+        public override bool TryPurchase(Client client, int price)
+        {
+            Wallet wallet = GetWallet(client);
+            if (!AllowedToManageWallets(client))
+            {
+                return wallet.TryDeduct(price);
+            }
+
+            int balance = wallet.Balance;
+
+            if (balance >= price)
+            {
+                return wallet.TryDeduct(price);
+            }
+
+            if (balance + Bank.Balance >= price)
+            {
+                int remainder = price - balance;
+                if (balance > 0) { wallet.Deduct(balance); }
+                Bank.Deduct(remainder);
+                return true ;
+            }
+
+            return false;
+        }
+
+        public override int GetBalance(Client client = null)
+        {
+            if (client is null) { return 0; }
+
+            Wallet wallet = GetWallet(client);
+            if (!AllowedToManageWallets(client))
+            {
+                return wallet.Balance;
+            }
+
+            return wallet.Balance + Bank.Balance;
+        }
+
         public override void Save(XElement element)
         {
             element.Add(new XAttribute("campaignid", CampaignID));
             XElement modeElement = new XElement("MultiPlayerCampaign",
-                new XAttribute("money", Money),
                 new XAttribute("purchasedlostshuttles", PurchasedLostShuttles),
                 new XAttribute("purchasedhullrepairs", PurchasedHullRepairs),
                 new XAttribute("purchaseditemrepairs", PurchasedItemRepairs),
                 new XAttribute("cheatsenabled", CheatsEnabled));
+
             modeElement.Add(Settings.Save());
+            modeElement.Add(SaveStats());
+            modeElement.Add(Bank.Save());
             CampaignMetadata?.Save(modeElement);
             Map.Save(modeElement);
             CargoManager?.SavePurchasedItems(modeElement);
@@ -949,15 +1341,20 @@ namespace Barotrauma
             }
 
             // save bots
-            CrewManager.SaveMultiplayer(modeElement);
-
-            // save available submarines
-            XElement availableSubsElement = new XElement("AvailableSubs");
-            for (int i = 0; i < GameMain.NetLobbyScreen.CampaignSubmarines.Count; i++)
+            var crewManagerElement = CrewManager.SaveMultiplayer(modeElement);
+            if (ActiveOrdersElement != null)
             {
-                availableSubsElement.Add(new XElement("Sub", new XAttribute("name", GameMain.NetLobbyScreen.CampaignSubmarines[i].Name)));
+                crewManagerElement.Add(ActiveOrdersElement);
             }
-            modeElement.Add(availableSubsElement);
+
+            XElement savedExperiencePointsElement = new XElement("SavedExperiencePoints");
+            foreach (var savedExperiencePoint in savedExperiencePoints)
+            {
+                savedExperiencePointsElement.Add(new XElement("Point",
+                    new XAttribute("steamid", savedExperiencePoint.SteamID),
+                    new XAttribute("endpoint", savedExperiencePoint?.EndPoint ?? string.Empty),
+                    new XAttribute("points", savedExperiencePoint.ExperiencePoints)));
+            }
 
             element.Add(modeElement);
 

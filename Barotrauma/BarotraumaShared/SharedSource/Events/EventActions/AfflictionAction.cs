@@ -7,19 +7,19 @@ namespace Barotrauma
 {
     class AfflictionAction : EventAction
     {
-        [Serialize("", true)]
-        public string Affliction { get; set; }
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier Affliction { get; set; }
 
-        [Serialize(0.0f, true)]
+        [Serialize(0.0f, IsPropertySaveable.Yes)]
         public float Strength { get; set; }
 
-        [Serialize(LimbType.None, true)]
+        [Serialize(LimbType.None, IsPropertySaveable.Yes)]
         public LimbType LimbType { get; set; }
 
-        [Serialize("", true)]
-        public string TargetTag { get; set; }
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier TargetTag { get; set; }
 
-        public AfflictionAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) { }
+        public AfflictionAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
 
         private bool isFinished = false;
 
@@ -36,7 +36,7 @@ namespace Barotrauma
         public override void Update(float deltaTime)
         {
             if (isFinished) { return; }
-            var afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(p => p.Identifier.Equals(Affliction, StringComparison.InvariantCultureIgnoreCase));
+            var afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(p => p.Identifier == Affliction);
             if (afflictionPrefab != null)
             {
                 var targets = ParentEvent.GetTargets(TargetTag);
@@ -44,14 +44,28 @@ namespace Barotrauma
                 {
                     if (target != null && target is Character character)
                     {
-                        var limb = LimbType != LimbType.None ? character.AnimController.GetLimb(LimbType) : null;
-                        if (Strength > 0.0f)
+                        if (LimbType != LimbType.None)
                         {
-                            character.CharacterHealth.ApplyAffliction(limb, afflictionPrefab.Instantiate(Strength));
+                            var limb = character.AnimController.GetLimb(LimbType);
+                            if (Strength > 0.0f)
+                            {
+                                character.CharacterHealth.ApplyAffliction(limb, afflictionPrefab.Instantiate(Strength));
+                            }
+                            else if (Strength < 0.0f)
+                            {
+                                character.CharacterHealth.ReduceAfflictionOnLimb(limb, Affliction, -Strength);
+                            }
                         }
-                        else if (Strength < 0.0f)
+                        else
                         {
-                            character.CharacterHealth.ReduceAffliction(limb, Affliction, -Strength);
+                            if (Strength > 0.0f)
+                            {
+                                character.CharacterHealth.ApplyAffliction(null, afflictionPrefab.Instantiate(Strength));
+                            }
+                            else if (Strength < 0.0f)
+                            {
+                                character.CharacterHealth.ReduceAfflictionOnAllLimbs(Affliction, -Strength);
+                            }
                         }
                     }
                 }

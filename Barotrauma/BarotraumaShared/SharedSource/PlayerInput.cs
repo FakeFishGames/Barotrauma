@@ -17,7 +17,7 @@ namespace Barotrauma
 #if CLIENT
         private KeyOrMouse binding
         {
-            get { return GameMain.Config.KeyBind(inputType); }
+            get { return GameSettings.CurrentConfig.KeyMap.Bindings[inputType]; }
         }
 
         private static bool AllowOnGUI(InputType input)

@@ -205,6 +205,8 @@ namespace Barotrauma
             foreach (var cell in Cells)
             {
                 cell.CellType = CellType.Removed;
+                cell.OnDestroyed?.Invoke();
+                cell.OnDestroyed = null;
             }
             GameMain.World.Remove(Body);
             Dispose();

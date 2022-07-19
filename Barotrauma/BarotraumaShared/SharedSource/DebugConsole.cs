@@ -67,8 +67,13 @@ namespace Barotrauma
 
             public void Execute(string[] args)
             {
-                if (OnExecute == null) return;
-                if (!CheatsEnabled && IsCheat)
+                if (OnExecute == null) { return; }
+
+                bool allowCheats = false;
+#if CLIENT
+                allowCheats = GameMain.NetworkMember == null && (GameMain.GameSession?.GameMode is TestGameMode || Screen.Selected is EditorScreen);
+#endif
+                if (!allowCheats && !CheatsEnabled && IsCheat)
                 {
                     NewMessage("You need to enable cheats using the command \"enablecheats\" before you can use the command \"" + names[0] + "\".", Color.Red);
 #if USE_STEAM
@@ -109,7 +114,7 @@ namespace Barotrauma
         public static bool CheatsEnabled;
 
         private static readonly List<ColoredText> unsavedMessages = new List<ColoredText>();
-        private static readonly int messagesPerFile = 5000;
+        private static readonly int messagesPerFile = 800;
         public const string SavePath = "ConsoleLogs";
 
         private static void AssignOnExecute(string names, Action<string[]> onExecute)
@@ -159,29 +164,38 @@ namespace Barotrauma
                 return new string[][]
                 {
                     commands.SelectMany(c => c.names).ToArray(),
-                    new string[0]
+                    Array.Empty<string>()
                 };
             }));
 
+            void printMapEntityPrefabs<T>(IEnumerable<T> prefabs) where T : MapEntityPrefab
+            {
+                NewMessage("***************", Color.Cyan);
+                foreach (T prefab in prefabs)
+                {
+                    if (prefab.Name.IsNullOrEmpty()) { continue; }
+                    string text = $"- {prefab.Name}";
+                    if (prefab.Tags.Any())
+                    {
+                        text += $" ({string.Join(", ", prefab.Tags)})";
+                    }
+                    if (prefab.AllowedLinks?.Any() ?? false)
+                    {
+                        text += $", Links: {string.Join(", ", prefab.AllowedLinks)}";
+                    }
+                    NewMessage(text, prefab.ContentPackage == ContentPackageManager.VanillaCorePackage ? Color.Cyan : Color.Purple);
+                }
+                NewMessage("***************", Color.Cyan);
+            }
 
             commands.Add(new Command("items|itemlist", "itemlist: List all the item prefabs available for spawning.", (string[] args) =>
             {
-                NewMessage("***************", Color.Cyan);
-                foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
-                {
-                    if (string.IsNullOrEmpty(itemPrefab.Name)) continue;
-                    string text = $"- {itemPrefab.Name}";
-                    if (itemPrefab.Tags.Any())
-                    {
-                        text += $" ({string.Join(", ", itemPrefab.Tags)})";
-                    }
-                    if (itemPrefab.AllowedLinks.Any())
-                    {
-                        text += $", Links: {string.Join(", ", itemPrefab.AllowedLinks)}";
-                    }
-                    NewMessage(text, Color.Cyan);
-                }
-                NewMessage("***************", Color.Cyan);
+                printMapEntityPrefabs(ItemPrefab.Prefabs);
+            }));
+            
+            commands.Add(new Command("itemassemblies", "itemassemblies: List all the item assemblies available for spawning.", (string[] args) =>
+            {
+                printMapEntityPrefabs(ItemAssemblyPrefab.Prefabs);
             }));
 
 
@@ -191,39 +205,29 @@ namespace Barotrauma
                 GameMain.NetworkMember.ShowNetStats = !GameMain.NetworkMember.ShowNetStats;
             }));
 
-            commands.Add(new Command("createfilelist", "", (string[] args) =>
-            {
-                UpdaterUtil.SaveFileList("filelist.xml");
-            }));
-
             commands.Add(new Command("spawn|spawncharacter", "spawn [creaturename/jobname] [near/inside/outside/cursor] [team (0-3)]: Spawn a creature at a random spawnpoint (use the second parameter to only select spawnpoints near/inside/outside the submarine). You can also enter the name of a job (e.g. \"Mechanic\") to spawn a character with a specific job and the appropriate equipment.", null,
             () =>
             {
-                List<string> characterFiles = GameMain.Instance.GetFilesOfType(ContentType.Character).Select(f => f.Path).ToList();
-                for (int i = 0; i < characterFiles.Count; i++)
-                {
-                    characterFiles[i] = Path.GetFileNameWithoutExtension(characterFiles[i]).ToLowerInvariant();
-                }
-
-                foreach (JobPrefab jobPrefab in JobPrefab.Prefabs)
-                {
-                    characterFiles.Add(jobPrefab.Name);
-                }
+                string[] creatureAndJobNames =
+                    CharacterPrefab.Prefabs.Select(p => p.Identifier.Value)
+                    .Concat(JobPrefab.Prefabs.Select(p => p.Identifier.Value))
+                    .OrderBy(s => s)
+                    .ToArray();
 
                 return new string[][]
                 {
-                    characterFiles.ToArray(),
+                    creatureAndJobNames.ToArray(),
                     new string[] { "near", "inside", "outside", "cursor" }
                 };
             }, isCheat: true));
 
-            commands.Add(new Command("spawnitem", "spawnitem [itemname/itemidentifier] [cursor/inventory/cargo/random/[name]]: Spawn an item at the position of the cursor, in the inventory of the controlled character, in the inventory of the client with the given name, or at a random spawnpoint if the last parameter is omitted or \"random\".",
+            commands.Add(new Command("spawnitem", "spawnitem [itemname/itemidentifier] [cursor/inventory/cargo/random/[name]] [amount]: Spawn an item at the position of the cursor, in the inventory of the controlled character, in the inventory of the client with the given name, or at a random spawnpoint if the last parameter is omitted or \"random\".",
             (string[] args) =>
             {
                 try
                 {
 #if CLIENT
-                    SpawnItem(args, GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition), Character.Controlled, out string errorMsg);
+                    SpawnItem(args, Screen.Selected.Cam?.ScreenToWorld(PlayerInput.MousePosition) ?? PlayerInput.MousePosition, Character.Controlled, out string errorMsg);
 #elif SERVER
                     SpawnItem(args, Vector2.Zero, null, out string errorMsg);
 #endif
@@ -236,7 +240,7 @@ namespace Barotrauma
                 {
                     string errorMsg = "Failed to spawn an item. Arguments: \"" + string.Join(" ", args) + "\".";
                     ThrowError(errorMsg, e);
-                    GameAnalyticsManager.AddErrorEventOnce("DebugConsole.SpawnItem:Error", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg + '\n' + e.Message + '\n' + e.StackTrace.CleanupStackTrace());
+                    GameAnalyticsManager.AddErrorEventOnce("DebugConsole.SpawnItem:Error", GameAnalyticsManager.ErrorSeverity.Error, errorMsg + '\n' + e.Message + '\n' + e.StackTrace.CleanupStackTrace());
                 }
             },
             () =>
@@ -244,7 +248,10 @@ namespace Barotrauma
                 List<string> itemNames = new List<string>();
                 foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
                 {
-                    itemNames.Add(itemPrefab.Name);
+                    if (!itemNames.Contains(itemPrefab.Name.Value))
+                    {
+                        itemNames.Add(itemPrefab.Name.Value);
+                    }
                 }
 
                 List<string> spawnPosParams = new List<string>() { "cursor", "inventory" };
@@ -255,8 +262,8 @@ namespace Barotrauma
 
                 return new string[][]
                 {
-                itemNames.ToArray(),
-                spawnPosParams.ToArray()
+                    itemNames.ToArray(),
+                    spawnPosParams.ToArray()
                 };
             }, isCheat: true));
             
@@ -332,7 +339,7 @@ namespace Barotrauma
                     return new string[][]
                     {
                         GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray(),
-                        PermissionPreset.List.Select(pp => pp.Name).ToArray()
+                        PermissionPreset.List.Select(pp => pp.Name.Value).ToArray()
                     };
                 }));
 
@@ -523,6 +530,7 @@ namespace Barotrauma
                 if (targetCharacter == null) { return; }
 
                 targetCharacter.GodMode = !targetCharacter.GodMode;
+                NewMessage((targetCharacter.GodMode ? "Enabled godmode on " : "Disabled godmode on ") + targetCharacter.Name, Color.White);
             },
             () =>
             {
@@ -580,7 +588,7 @@ namespace Barotrauma
                 }
             }));
 
-            commands.Add(new Command("dumptofile", "", (string[] args) =>
+            commands.Add(new Command("dumptofile", "findentityids [filename]: Outputs the contents of the debug console into a text file in the game folder. If the filename argument is omitted, \"consoleOutput.txt\" is used as the filename.", (string[] args) =>
             {
                 string filename = "consoleOutput.txt";
                 if (args.Length > 0) { filename = string.Join(" ", args); }
@@ -600,55 +608,60 @@ namespace Barotrauma
                 }
                 foreach (Character character in Character.CharacterList)
                 {
-                    if (character.Name.Equals(args[0], StringComparison.OrdinalIgnoreCase) || character.SpeciesName.Equals(args[0], StringComparison.OrdinalIgnoreCase))
+                    if (character.Name.Equals(args[0], StringComparison.OrdinalIgnoreCase) || character.SpeciesName == args[0])
                     {
                         ThrowError(character.ID + ": " + character.Name.ToString());
                     }
                 }
             }));
 
-            commands.Add(new Command("giveaffliction", "giveaffliction [affliction name] [affliction strength] [character name]: Add an affliction to a character. If the name parameter is omitted, the affliction is added to the controlled character.", (string[] args) =>
+            commands.Add(new Command("giveaffliction", "giveaffliction [affliction name] [affliction strength] [character name] [limb type] [use relative strength]: Add an affliction to a character. If the name parameter is omitted, the affliction is added to the controlled character.", (string[] args) =>
             {
                 if (args.Length < 2) { return; }
-
-                AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(a =>
-                    a.Name.Equals(args[0], StringComparison.OrdinalIgnoreCase) ||
-                    a.Identifier.Equals(args[0], StringComparison.OrdinalIgnoreCase));
+                string affliction = args[0];
+                AfflictionPrefab afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(a => a.Identifier == affliction);
                 if (afflictionPrefab == null)
                 {
-                    ThrowError("Affliction \"" + args[0] + "\" not found.");
+                    afflictionPrefab = AfflictionPrefab.List.FirstOrDefault(a => a.Name.Equals(affliction, StringComparison.OrdinalIgnoreCase));
+                }
+                if (afflictionPrefab == null)
+                {
+                    ThrowError("Affliction \"" + affliction + "\" not found.");
                     return;
                 }
-
                 if (!float.TryParse(args[1], out float afflictionStrength))
                 {
                     ThrowError("\"" + args[1] + "\" is not a valid affliction strength.");
                     return;
                 }
-
                 bool relativeStrength = false;
-                if (args.Length > 2)
+                if (args.Length > 4)
                 {
-                    bool.TryParse(args[2], out relativeStrength);
+                    bool.TryParse(args[4], out relativeStrength);
                 }
-
-                Character targetCharacter = (relativeStrength || args.Length <= 2) ? Character.Controlled : FindMatchingCharacter(args.Skip(2).ToArray());
+                Character targetCharacter = args.Length <= 2 ? Character.Controlled : FindMatchingCharacter(new string[] { args[2] });
                 if (targetCharacter != null)
                 {
+                    Limb targetLimb = targetCharacter.AnimController.MainLimb;
+                    if (args.Length > 3)
+                    {
+                        targetLimb = targetCharacter.AnimController.Limbs.FirstOrDefault(l => l.type.ToString().Equals(args[3], StringComparison.OrdinalIgnoreCase));
+                    }
                     if (relativeStrength)
                     {
                         afflictionStrength *= targetCharacter.MaxVitality / afflictionPrefab.MaxStrength;
                     }
-                    targetCharacter.CharacterHealth.ApplyAffliction(targetCharacter.AnimController.MainLimb, afflictionPrefab.Instantiate(afflictionStrength));
+                    targetCharacter.CharacterHealth.ApplyAffliction(targetLimb ?? targetCharacter.AnimController.MainLimb, afflictionPrefab.Instantiate(afflictionStrength));
                 }
             },
             () =>
             {
                 return new string[][]
                 {
-                    AfflictionPrefab.List.Select(a => a.Name).ToArray(),
+                    AfflictionPrefab.Prefabs.Select(a => a.Name.Value).ToArray(),
                     new string[] { "1" },
-                    Character.CharacterList.Select(c => c.Name).ToArray()
+                    Character.CharacterList.Select(c => c.Name).ToArray(),
+                    Enum.GetNames(typeof(LimbType)).ToArray()
                 };
             }, isCheat: true));
 
@@ -672,7 +685,7 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                    Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n).ToArray()
                 };
             }, isCheat: true));
 
@@ -700,7 +713,7 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                    Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n).ToArray()
                 };
             }, isCheat: true));
 
@@ -721,7 +734,7 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                    Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n).ToArray()
                 };
             }, isCheat: true));
 
@@ -729,9 +742,16 @@ namespace Barotrauma
             {
 #if CLIENT
                 if (Screen.Selected == GameMain.SubEditorScreen) { return; }
-                Character.Controlled = null;
-                GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
-                GameMain.Client?.SendConsoleCommand("freecam");
+
+                if (GameMain.Client == null)
+                {
+                    Character.Controlled = null;
+                    GameMain.GameScreen.Cam.TargetPos = Vector2.Zero;
+                }
+                else
+                {
+                    GameMain.Client?.SendConsoleCommand("freecam");
+                }
 #endif
             }, isCheat: true));
 
@@ -746,10 +766,10 @@ namespace Barotrauma
             
             commands.Add(new Command("triggerevent", "triggerevent [identifier]: Created a new event.", (string[] args) =>
             {
-                List<EventPrefab> eventPrefabs = EventSet.GetAllEventPrefabs().Where(prefab => !string.IsNullOrWhiteSpace(prefab.Identifier)).ToList();
+                List<EventPrefab> eventPrefabs = EventSet.GetAllEventPrefabs().Where(prefab => prefab.Identifier != Identifier.Empty).ToList();
                 if (GameMain.GameSession?.EventManager != null && args.Length > 0)
                 {
-                    EventPrefab eventPrefab = eventPrefabs.Find(prefab => string.Equals(prefab.Identifier, args[0], StringComparison.InvariantCultureIgnoreCase));
+                    EventPrefab eventPrefab = eventPrefabs.Find(prefab => prefab.Identifier == args[0]);
 
                     if (eventPrefab != null)
                     {
@@ -760,7 +780,7 @@ namespace Barotrauma
                             return;
                         }
                         GameMain.GameSession.EventManager.ActiveEvents.Add(newEvent);
-                        newEvent.Init(true);
+                        newEvent.Init();
                         NewMessage($"Initialized event {eventPrefab.Identifier}", Color.Aqua);
                         return;
                     }
@@ -771,11 +791,11 @@ namespace Barotrauma
                 NewMessage("Failed to trigger event", Color.Red);
             }, isCheat: true, getValidArgs: () =>
             {
-                List<EventPrefab> eventPrefabs = EventSet.GetAllEventPrefabs().Where(prefab => !string.IsNullOrWhiteSpace(prefab.Identifier)).ToList();
+                List<EventPrefab> eventPrefabs = EventSet.GetAllEventPrefabs().Where(prefab => prefab.Identifier != Identifier.Empty).ToList();
                 
                 return new[]
                 {
-                   eventPrefabs.Select(prefab => prefab.Identifier).Distinct().ToArray()
+                   eventPrefabs.Select(prefab => prefab.Identifier).Distinct().Select(id => id.Value).ToArray()
                 };
             }));
             
@@ -787,7 +807,7 @@ namespace Barotrauma
                     return;
                 }
 
-                string skillIdentifier = args[0];
+                Identifier skillIdentifier = args[0].ToIdentifier();
                 string levelString = args[1];
                 Character character = args.Length >= 3 ? FindMatchingCharacter(args.Skip(2).ToArray(), false) : Character.Controlled;
 
@@ -802,17 +822,17 @@ namespace Barotrauma
                 if (float.TryParse(levelString, NumberStyles.Number, CultureInfo.InvariantCulture, out float level) || isMax)
                 {
                     if (isMax) { level = 100; }
-                    if (skillIdentifier.Equals("all", StringComparison.OrdinalIgnoreCase))
+                    if (skillIdentifier == "all")
                     {
-                        foreach (Skill skill in character.Info.Job.Skills)
+                        foreach (Skill skill in character.Info.Job.GetSkills())
                         {
-                            character.Info.SetSkillLevel(skill.Identifier, level, character.WorldPosition);
+                            character.Info.SetSkillLevel(skill.Identifier, level);
                         }
                         NewMessage($"Set all {character.Name}'s skills to {level}", Color.Green);
                     }
                     else
                     {
-                        character.Info.SetSkillLevel(skillIdentifier, level, character.WorldPosition);
+                        character.Info.SetSkillLevel(skillIdentifier, level);
                         NewMessage($"Set {character.Name}'s {skillIdentifier} level to {level}", Color.Green);
                     }
                 }
@@ -824,17 +844,137 @@ namespace Barotrauma
             {
                 return new[]
                 {
-                    Character.Controlled?.Info?.Job?.Skills?.Select(skill => skill.Identifier).ToArray() ?? new string[0],
+                    Character.Controlled?.Info?.Job?.GetSkills()?.Select(skill => skill.Identifier.Value).ToArray() ?? Array.Empty<string>(),
                     new[]{ "max" },
-                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray(),
+                    Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n).ToArray(),
                 };
             }));
 
             commands.Add(new Command("water|editwater", "water/editwater: Toggle water editing. Allows adding water into rooms by holding the left mouse button and removing it by holding the right mouse button.", (string[] args) =>
             {
                 Hull.EditWater = !Hull.EditWater;
-                NewMessage(Hull.EditWater ? "Water editing on" : "Water editing off", Color.White);                
+                NewMessage(Hull.EditWater ? "Water editing on" : "Water editing off", Color.White);
             }, isCheat: true));
+
+            commands.Add(new Command("givetalent", "givetalent [talent] [player]: give the talent to the specified character. If the character argument is omitted, the talent is given to the controlled character.", (string[] args) =>
+            {
+                if (args.Length == 0) { return; }
+                var character = args.Length >= 2 ? FindMatchingCharacter(args.Skip(1).ToArray()) : Character.Controlled;
+                if (character != null)
+                {
+                    TalentPrefab talentPrefab = TalentPrefab.TalentPrefabs.Find(c => 
+                        c.Identifier == args[0] ||
+                        c.DisplayName.Equals(args[0], StringComparison.OrdinalIgnoreCase));
+                    if (talentPrefab == null)
+                    {
+                        ThrowError($"Couldn't find the talent \"{args[0]}\".");
+                        return;
+                    }
+                    character.GiveTalent(talentPrefab);
+                    NewMessage($"Gave talent \"{talentPrefab.DisplayName}\" to \"{character.Name}\".");
+                }
+            },
+            () =>
+            {
+                List<string> talentNames = new List<string>();
+                foreach (TalentPrefab talent in TalentPrefab.TalentPrefabs)
+                {
+                    talentNames.Add(talent.DisplayName.Value);
+                }
+
+                return new string[][]
+                {
+                    talentNames.Select(id => id).ToArray(),
+                    Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n).ToArray()
+                };
+            }, isCheat: true));
+
+            commands.Add(new Command("unlocktalents", "unlocktalents [all/[jobname]] [character]: give the specified character all the talents of the specified class", (string[] args) =>
+            {
+                var character = args.Length >= 2 ? FindMatchingCharacter(args.Skip(1).ToArray()) : Character.Controlled;
+                if (character == null) { return; }
+
+                List<TalentTree> talentTrees = new List<TalentTree>();
+                if (args.Length == 0 || args[0].Equals("all", StringComparison.OrdinalIgnoreCase))
+                {
+                    talentTrees.AddRange(TalentTree.JobTalentTrees);
+                }
+                else
+                {
+                    var job = JobPrefab.Prefabs.Find(jp => jp.Name != null && jp.Name.Equals(args[0], StringComparison.OrdinalIgnoreCase));
+                    if (job == null)
+                    {
+                        ThrowError($"Failed to find the job \"{args[0]}\".");
+                        return;
+                    }
+                    if (!TalentTree.JobTalentTrees.TryGet(job.Identifier, out TalentTree talentTree))
+                    {
+                        ThrowError($"No talents configured for the job \"{args[0]}\".");
+                        return;
+                    }
+                    talentTrees.Add(talentTree);
+                }
+
+                foreach (var talentTree in talentTrees)
+                {
+                    foreach (var subTree in talentTree.TalentSubTrees)
+                    {
+                        foreach (var option in subTree.TalentOptionStages)
+                        {
+                            foreach (var talent in option.Talents)
+                            {
+                                character.GiveTalent(talent);
+                                NewMessage($"Unlocked talent \"{talent.DisplayName}\".");
+                            }
+                        }
+                    }
+                }
+            },
+            () =>
+            {
+                List<string> availableArgs = new List<string>() { "All" };
+                availableArgs.AddRange(JobPrefab.Prefabs.Select(j => j.Name.Value));
+                return new string[][]
+                {
+                    availableArgs.ToArray(),
+                    Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n).ToArray()
+                };
+            }, isCheat: true));
+
+            commands.Add(new Command("giveexperience", "giveexperience [amount] [character]: Give experience to character.", (string[] args) =>
+            {
+                if (args.Length < 1)
+                {
+                    NewMessage($"Missing arguments. Expected at least 1 but got {args.Length} (experience, name)");
+                    return;
+                }
+
+                string experienceString = args[0];
+                var character = FindMatchingCharacter(args.Skip(1).ToArray()) ?? Character.Controlled;
+
+                if (character?.Info == null)
+                {
+                    NewMessage("Character is not valid.");
+                    return;
+                }
+
+                if (int.TryParse(experienceString, NumberStyles.Number, CultureInfo.InvariantCulture, out int experience))
+                {
+                    character.Info.GiveExperience(experience);
+                    NewMessage($"Gave {character.Name} {experience} experience");
+                }
+                else
+                {
+                    NewMessage($"{experienceString} is not a valid value. Expected number.");
+                }
+            }, isCheat: true, getValidArgs: () =>
+            {
+                return new[]
+                {
+                    new string[] { "100" },
+                    Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n).ToArray(),
+                };
+            }));
 
             commands.Add(new Command("fire|editfire", "fire/editfire: Allows putting up fires by left clicking.", (string[] args) =>
             {
@@ -853,15 +993,18 @@ namespace Barotrauma
                 else
                 {
                     NewMessage("Level seed: " + Level.Loaded.Seed);
-                    NewMessage("Level size: " + Level.Loaded.Size.X+"x"+ Level.Loaded.Size.Y);
+                    NewMessage("Level generation params: " + Level.Loaded.GenerationParams.Identifier);
+                    NewMessage("Adjacent locations: " + (Level.Loaded.StartLocation?.Type.Identifier ?? "none".ToIdentifier()) + ", " + (Level.Loaded.StartLocation?.Type.Identifier ?? "none".ToIdentifier()));
+                    NewMessage("Mirrored: " + Level.Loaded.Mirrored);
+                    NewMessage("Level size: " + Level.Loaded.Size.X + "x" + Level.Loaded.Size.Y);
                     NewMessage("Minimum main path width: " + (Level.Loaded.LevelData?.MinMainPathWidth?.ToString() ?? "unknown"));
                 }
             },null));
             
             commands.Add(new Command("teleportsub", "teleportsub [start/end/cursor]: Teleport the submarine to the position of the cursor, or the start or end of the level. WARNING: does not take outposts into account, so often leads to physics glitches. Only use for debugging.", (string[] args) =>
             {
-                if (Submarine.MainSub == null || Level.Loaded == null) return;
-                if (Level.Loaded.Type == LevelData.LevelType.Outpost)
+                if (Submarine.MainSub == null) { return; }
+                if (Level.Loaded?.Type == LevelData.LevelType.Outpost && GameMain.GameSession != null)
                 {
                     NewMessage("The teleportsub command is unavailable in outpost levels!", Color.Red);
                     return;
@@ -877,6 +1020,11 @@ namespace Barotrauma
                 }
                 else if (args[0].Equals("start", StringComparison.OrdinalIgnoreCase))
                 {
+                    if (Level.Loaded == null)
+                    {
+                        NewMessage("Can't teleport the sub to the start of the level (no level loaded).", Color.Red);
+                        return;
+                    }
                     Vector2 pos = Level.Loaded.StartPosition;
                     if (Level.Loaded.StartOutpost != null)
                     {
@@ -886,6 +1034,11 @@ namespace Barotrauma
                 }
                 else
                 {
+                    if (Level.Loaded == null)
+                    {
+                        NewMessage("Can't teleport the sub to the end of the level (no level loaded).", Color.Red);
+                        return;
+                    }
                     Vector2 pos = Level.Loaded.EndPosition;
                     if (Level.Loaded.EndOutpost != null)
                     {
@@ -908,19 +1061,33 @@ namespace Barotrauma
                 throw new Exception("crash command issued");
             }));
 
+            commands.Add(new Command("fastforward", "fastforward [seconds]: Fast forwards the game by x seconds. Note that large numbers may cause a long freeze.", (string[] args) =>
+            {
+                float seconds = 0;
+                if (args.Length > 0) { float.TryParse(args[0], out seconds); }
+                System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+                sw.Start();
+                for (int i = 0; i < seconds * Timing.FixedUpdateRate; i++)
+                {
+                    Screen.Selected?.Update(Timing.Step);
+                }
+                sw.Stop();
+                NewMessage($"Fast-forwarded by {seconds} seconds (took {sw.ElapsedMilliseconds / 1000.0f} s).");
+            }));
+
             commands.Add(new Command("removecharacter", "removecharacter [character name]: Immediately deletes the specified character.", (string[] args) =>
             {
                 if (args.Length == 0) { return; }
                 Character character = FindMatchingCharacter(args, false);
                 if (character == null) { return; }
 
-                Entity.Spawner?.AddToRemoveQueue(character);
+                Entity.Spawner?.AddEntityToRemoveQueue(character);
             },
             () =>
             {
                 return new string[][]
                 {
-                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                    Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n).ToArray()
                 };
             }, isCheat: true));
 
@@ -941,21 +1108,21 @@ namespace Barotrauma
             },
             null));
 
-            IEnumerable<object> TestLevels()
+            IEnumerable<CoroutineStatus> TestLevels()
             {
                 SubmarineInfo selectedSub = null;
-                string subName = GameMain.Config.QuickStartSubmarineName;
-                if (!string.IsNullOrEmpty(subName))
+                Identifier subName = GameSettings.CurrentConfig.QuickStartSub;
+                if (subName != Identifier.Empty)
                 {
-                    selectedSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name.ToLower() == subName.ToLower());
+                    selectedSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName);
                 }
 
                 int count = 0;
                 while (true)
                 {
                     var gamesession = new GameSession(
-                        SubmarineInfo.SavedSubmarines.GetRandom(s => s.Type == SubmarineType.Player && !s.HasTag(SubmarineTag.HideInMenus)),
-                        GameModePreset.DevSandbox);
+                        SubmarineInfo.SavedSubmarines.GetRandomUnsynced(s => s.Type == SubmarineType.Player && !s.HasTag(SubmarineTag.HideInMenus)),
+                        GameModePreset.DevSandbox ?? GameModePreset.Sandbox);
                     string seed = ToolBox.RandomSeed(16);
                     gamesession.StartRound(seed);
 
@@ -1013,7 +1180,7 @@ namespace Barotrauma
                     if (args.Length == 0) { return; }
                     if (float.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out float reputation))
                     {
-                        campaign.Map.CurrentLocation.Reputation.Value = reputation;
+                        campaign.Map.CurrentLocation.Reputation.SetReputation(reputation);
                     }
                     else
                     {
@@ -1036,11 +1203,11 @@ namespace Barotrauma
 
                 if (GameMain.GameSession?.GameMode is CampaignMode campaign)
                 {
-                    if (campaign.Factions.FirstOrDefault(f => f.Prefab.Identifier.Equals(args[0], StringComparison.OrdinalIgnoreCase)) is { } faction)
+                    if (campaign.Factions.FirstOrDefault(f => f.Prefab.Identifier == args[0]) is { } faction)
                     {
                         if (float.TryParse(args[1], NumberStyles.Any, CultureInfo.InvariantCulture, out float reputation))
                         {
-                            faction.Reputation.Value = reputation;
+                            faction.Reputation.SetReputation(reputation);
                         }
                         else
                         {
@@ -1058,13 +1225,14 @@ namespace Barotrauma
                 }
             }, () =>
             {
-                return new[] { FactionPrefab.Prefabs.Select(f => f.Identifier).ToArray() };
+                return new[] { FactionPrefab.Prefabs.Select(f => f.Identifier.Value).ToArray() };
             }, true));
 
             commands.Add(new Command("fixitems", "fixitems: Repairs all items and restores them to full condition.", (string[] args) =>
             {
                 foreach (Item it in Item.ItemList)
                 {
+                    if (it.GetComponent<GeneticMaterial>() != null) { continue; }
                     it.Condition = it.MaxCondition;
                 }
             }, null, true));
@@ -1084,7 +1252,7 @@ namespace Barotrauma
                     catch (InvalidOperationException e)
                     {
                         string errorMsg = "Error while executing the fixhulls command.\n" + e.StackTrace.CleanupStackTrace();
-                        GameAnalyticsManager.AddErrorEventOnce("DebugConsole.FixHulls", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                        GameAnalyticsManager.AddErrorEventOnce("DebugConsole.FixHulls", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                     }
                 }
             }, null, true));
@@ -1113,7 +1281,7 @@ namespace Barotrauma
                         return;
                     }
 
-                    var upgradePrefab = UpgradePrefab.Find(args[0]);
+                    var upgradePrefab = UpgradePrefab.Find(args[0].ToIdentifier());
 
                     if (upgradePrefab == null)
                     {
@@ -1148,7 +1316,7 @@ namespace Barotrauma
 
                     foreach (MapEntity targetItem in targetItems)
                     {
-                        Upgrade existingUpgrade = targetItem.GetUpgrade(args[0]);
+                        Upgrade existingUpgrade = targetItem.GetUpgrade(args[0].ToIdentifier());
 
                         if (!(targetItem is ISerializableEntity sEntity)) { continue; }
 
@@ -1180,7 +1348,7 @@ namespace Barotrauma
             {
                 return new[]
                 {
-                    UpgradePrefab.Prefabs.Select(c => c.Identifier).Distinct().ToArray()
+                    UpgradePrefab.Prefabs.Select(c => c.Identifier).Distinct().Select(i => i.Value).ToArray()
                 };
             }, true));
             
@@ -1209,11 +1377,11 @@ namespace Barotrauma
                 
                 foreach (UpgradeCategory category in UpgradeCategory.Categories)
                 {
-                    if (!string.IsNullOrWhiteSpace(categoryIdentifier) && !category.Identifier.Equals(categoryIdentifier, StringComparison.OrdinalIgnoreCase)) { continue; }
+                    if (!string.IsNullOrWhiteSpace(categoryIdentifier) && category.Identifier != categoryIdentifier) { continue; }
                     foreach (UpgradePrefab prefab in UpgradePrefab.Prefabs)
                     {
                         if (!prefab.UpgradeCategories.Contains(category)) { continue; }
-                        if (!string.IsNullOrWhiteSpace(prefabIdentifier) && !prefab.Identifier.Equals(prefabIdentifier, StringComparison.OrdinalIgnoreCase)) { continue; }
+                        if (!string.IsNullOrWhiteSpace(prefabIdentifier) && prefab.Identifier != prefabIdentifier) { continue; }
                         
                         int targetLevel = prefab.MaxLevel - upgradeManager.GetRealUpgradeLevel(prefab, category);
                         for (int i = 0; i < targetLevel; i++)
@@ -1229,8 +1397,8 @@ namespace Barotrauma
             {
                 return new[]
                 {
-                    UpgradeCategory.Categories.Select(c => c.Identifier).Distinct().ToArray(),
-                    UpgradePrefab.Prefabs.Select(c => c.Identifier).Distinct().ToArray()
+                    UpgradeCategory.Categories.Select(c => c.Identifier).Distinct().Select(i => i.Value).ToArray(),
+                    UpgradePrefab.Prefabs.Select(c => c.Identifier).Distinct().Select(i => i.Value).ToArray()
                 };
             }, true));
 
@@ -1251,7 +1419,7 @@ namespace Barotrauma
 
             commands.Add(new Command("oxygen|air", "oxygen/air: Replenishes the oxygen levels in every room to 100%.", (string[] args) =>
             {
-                foreach (Hull hull in Hull.hullList)
+                foreach (Hull hull in Hull.HullList)
                 {
                     hull.OxygenPercentage = 100.0f;
                 }
@@ -1266,7 +1434,7 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                    Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n).ToArray()
                 };
             }, isCheat: true));
 
@@ -1279,7 +1447,7 @@ namespace Barotrauma
                         c.SetAllDamage(200.0f, 0.0f, 0.0f);
                     }
                 }
-                foreach (Hull hull in Hull.hullList)
+                foreach (Hull hull in Hull.HullList)
                 {
                     hull.BallastFlora?.Kill();
                 }
@@ -1289,6 +1457,29 @@ namespace Barotrauma
                 }
             }, null, isCheat: true));
 
+            commands.Add(new Command("despawnnow", "despawnnow [character]: Immediately despawns the specified dead character. If the character argument is omitted, all dead characters are despawned.", (string[] args) =>
+            {
+                if (args.Length == 0)
+                {
+                    foreach (Character c in Character.CharacterList.Where(c => c.IsDead).ToList())
+                    {
+                        c.DespawnNow();
+                    }
+                }
+                else
+                {
+                    Character character = FindMatchingCharacter(args);
+                    character?.DespawnNow();
+                }
+            },
+            () =>
+            {
+                return new string[][]
+                {
+                    Character.CharacterList.Where(c => c.IsDead).Select(c => c.Name).Distinct().OrderBy(n => n).ToArray()
+                };
+            }, isCheat: true));
+
             commands.Add(new Command("setclientcharacter", "setclientcharacter [client name] [character name]: Gives the client control of the specified character.", null,
             () =>
             {
@@ -1297,7 +1488,7 @@ namespace Barotrauma
                 return new string[][]
                 {
                     GameMain.NetworkMember.ConnectedClients.Select(c => c.Name).ToArray(),
-                    Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+                    Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n).ToArray()
                 };
             }));
 
@@ -1368,22 +1559,50 @@ namespace Barotrauma
                 NewMessage((GameMain.GameSession.Map.AllowDebugTeleport ? "Enabled" : "Disabled") + " teleportation on the campaign map.", Color.White);
             }, isCheat: true));
 
-            commands.Add(new Command("money", "", args =>
+            commands.Add(new Command("money", "money [amount] [character]: Gives the specified amount of money to the crew when a campaign is active.", args =>
             {
                 if (args.Length == 0) { return; }
-                if (GameMain.GameSession?.GameMode is CampaignMode campaign)
+
+                if (!(GameMain.GameSession?.GameMode is CampaignMode campaign)) { return; }
+                Character targetCharacter = null;
+
+                if (args.Length >= 2)
                 {
-                    if (int.TryParse(args[0], out int money))
-                    {
-                        campaign.Money += money;
-                    }
-                    else
-                    {
-                        ThrowError($"\"{args[0]}\" is not a valid numeric value.");
-                    }
+                    targetCharacter = FindMatchingCharacter(args.Skip(1).ToArray());
                 }
+
+                if (int.TryParse(args[0], out int money))
+                {
+                    Wallet wallet = targetCharacter is null || GameMain.IsSingleplayer ? campaign.Bank : targetCharacter.Wallet;
+                    wallet.Give(money);
+                    GameAnalyticsManager.AddMoneyGainedEvent(money, GameAnalyticsManager.MoneySource.Cheat, "console");
+                }
+                else
+                {
+                    ThrowError($"\"{args[0]}\" is not a valid numeric value.");
+                }
+            }, isCheat: true, getValidArgs: () => new []
+            {
+                new []{ string.Empty },
+                Character.CharacterList.Select(c => c.Name).Distinct().ToArray()
+            }));
+
+            commands.Add(new Command("showmoney", "showmoney: Shows the amount of money in everyones wallet.", args =>
+            {
+                if (!(GameMain.GameSession?.GameMode is CampaignMode campaign))
+                {
+                    ThrowError("No campaign active!");
+                    return;
+                }
+
+                NewMessage($"Bank: {campaign.Bank.Balance}");
             }, isCheat: true));
-            
+
+            commands.Add(new Command("skipeventcooldown", "skipeventcooldown: Skips the currently active event cooldown and triggers pending monster spawns immediately.", args =>
+            {
+                GameMain.GameSession?.EventManager?.SkipEventCooldown();
+            }, isCheat: true));
+
             commands.Add(new Command("ballastflora", "infectballast [options]: Infect ballasts and control its growth.", args =>
             {
                 if (args.Length == 0)
@@ -1415,14 +1634,14 @@ namespace Barotrauma
                 
                     if (pumps.Any())
                     {
-                        BallastFloraPrefab prefab = string.IsNullOrWhiteSpace(secondaryArgument) ? BallastFloraPrefab.Prefabs.First() : BallastFloraPrefab.Find(secondaryArgument);
+                        BallastFloraPrefab prefab = string.IsNullOrWhiteSpace(secondaryArgument) ? BallastFloraPrefab.Prefabs.First() : BallastFloraPrefab.Find(secondaryArgument.ToIdentifier());
                         if (prefab == null)
                         {
                             ThrowError($"No such behavior: {secondaryArgument}");
                             return;
                         }
 
-                        Pump random = pumps.GetRandom();
+                        Pump random = pumps.GetRandomUnsynced();
                         random.InfectBallast(prefab.Identifier, allowMultiplePerShip: true);
                         NewMessage($"Infected {random.Name} with {prefab.Identifier} in {random.Item.CurrentHull.DisplayName}.", Color.Green);
                         return;
@@ -1435,7 +1654,7 @@ namespace Barotrauma
                 {
                     if (int.TryParse(secondaryArgument, out int value))
                     {
-                        foreach (Hull hull in Hull.hullList.Where(h => h.BallastFlora != null))
+                        foreach (Hull hull in Hull.HullList.Where(h => h.BallastFlora != null))
                         {
                             BallastFloraBehavior bs = hull.BallastFlora;
                             bs.GrowthWarps = value;
@@ -1450,7 +1669,7 @@ namespace Barotrauma
             }, isCheat: true, getValidArgs: () =>
             {
                 string[] primaries = { "infect", "growthwarp" };
-                string[] identifiers = BallastFloraPrefab.Prefabs.Select(bfp => bfp.Identifier).Distinct().ToArray();
+                string[] identifiers = BallastFloraPrefab.Prefabs.Select(bfp => bfp.Identifier).Distinct().Select(i => i.Value).ToArray();
                 return new[] { primaries, identifiers };
             }));
 
@@ -1478,8 +1697,10 @@ namespace Barotrauma
 
             commands.Add(new Command("verboselogging", "verboselogging: Toggle verbose console logging on/off. When on, additional debug information is written to the debug console.", (string[] args) =>
             {
-                GameSettings.VerboseLogging = !GameSettings.VerboseLogging;
-                NewMessage((GameSettings.VerboseLogging ? "Enabled" : "Disabled") + " verbose logging.", Color.White);
+                var config = GameSettings.CurrentConfig;
+                config.VerboseLogging = !GameSettings.CurrentConfig.VerboseLogging;
+                GameSettings.SetCurrentConfig(config);
+                NewMessage((GameSettings.CurrentConfig.VerboseLogging ? "Enabled" : "Disabled") + " verbose logging.", Color.White);
             }, isCheat: false));
 
             commands.Add(new Command("listtasks", "listtasks: Lists all asynchronous tasks currently in the task pool.", (string[] args) => { TaskPool.ListTasks(); }));
@@ -1488,8 +1709,8 @@ namespace Barotrauma
             {
                 if (args.Length > 0)
                 {
-                    string packageName = string.Join(" ", args).ToLower();
-                    var package = GameMain.Config.AllEnabledPackages.FirstOrDefault(p => p.Name.ToLower() == packageName);
+                    string packageName = string.Join(" ", args);
+                    var package = ContentPackageManager.EnabledPackages.All.FirstOrDefault(p => p.Name.Equals(packageName, StringComparison.OrdinalIgnoreCase));
                     if (package == null)
                     {
                         ThrowError("Content package \"" + packageName + "\" not found.");
@@ -1501,14 +1722,14 @@ namespace Barotrauma
                 }
                 else
                 {
-                    GameMain.Config.AllEnabledPackages.First().CalculateHash(logging: true);
+                    ContentPackageManager.EnabledPackages.Core.CalculateHash(logging: true);
                 }
             },
             () =>
             {
                 return new string[][]
                 {
-                    GameMain.Config.AllEnabledPackages.Select(cp => cp.Name).ToArray()
+                    ContentPackageManager.EnabledPackages.All.Select(cp => cp.Name).ToArray()
                 };
             }));
 
@@ -1525,20 +1746,12 @@ namespace Barotrauma
                     ThrowError(args[1] + " is not a valid latency value.");
                     return;
                 }
-#if CLIENT
-                if (GameMain.Client != null)
+                if (GameMain.NetworkMember != null)
                 {
-                    GameMain.Client.SimulatedMinimumLatency = minimumLatency;
-                    GameMain.Client.SimulatedRandomLatency = randomLatency;
+                    GameMain.NetworkMember.SimulatedMinimumLatency = minimumLatency;
+                    GameMain.NetworkMember.SimulatedRandomLatency = randomLatency;
                 }
-#elif SERVER
-                if (GameMain.Server != null)
-                {
-                    GameMain.Server.SimulatedMinimumLatency = minimumLatency;
-                    GameMain.Server.SimulatedRandomLatency = randomLatency;
-                }
-#endif
-                NewMessage("Set simulated minimum latency to " + minimumLatency + " and random latency to " + randomLatency + ".", Color.White);
+                NewMessage("Set simulated minimum latency to " + minimumLatency.ToString(CultureInfo.InvariantCulture) + " and random latency to " + randomLatency.ToString(CultureInfo.InvariantCulture) + ".", Color.White);
             }));
 
             commands.Add(new Command("simulatedloss", "simulatedloss [lossratio]: applies simulated packet loss to network messages. For example, a value of 0.1 would mean 10% of the packets are dropped. Useful for simulating real network conditions when testing the multiplayer locally.", (string[] args) =>
@@ -1549,17 +1762,10 @@ namespace Barotrauma
                     ThrowError(args[0] + " is not a valid loss ratio.");
                     return;
                 }
-#if CLIENT
-                if (GameMain.Client != null)
+                if (GameMain.NetworkMember != null)
                 {
-                    GameMain.Client.SimulatedLoss = loss;
+                    GameMain.NetworkMember.SimulatedLoss = loss;
                 }
-#elif SERVER
-                if (GameMain.Server != null)
-                {
-                    GameMain.Server.SimulatedLoss = loss;
-                }
-#endif
                 NewMessage("Set simulated packet loss to " + (int)(loss * 100) + "%.", Color.White);
             }));
             commands.Add(new Command("simulatedduplicateschance", "simulatedduplicateschance [duplicateratio]: simulates packet duplication in network messages. For example, a value of 0.1 would mean there's a 10% chance a packet gets sent twice. Useful for simulating real network conditions when testing the multiplayer locally.", (string[] args) =>
@@ -1570,34 +1776,51 @@ namespace Barotrauma
                     ThrowError(args[0] + " is not a valid duplicate ratio.");
                     return;
                 }
-#if CLIENT
-                if (GameMain.Client != null)
+                if (GameMain.NetworkMember != null)
                 {
-                    GameMain.Client.SimulatedDuplicatesChance = duplicates;
+                    GameMain.NetworkMember.SimulatedDuplicatesChance = duplicates;
                 }
-#elif SERVER
-                if (GameMain.Server != null)
-                {
-                    GameMain.Server.SimulatedDuplicatesChance = duplicates;
-                }
-#endif
                 NewMessage("Set packet duplication to " + (int)(duplicates * 100) + "%.", Color.White);
             }));
 
 #if DEBUG
+
+            commands.Add(new Command("simulatedlongloadingtime", "simulatedlongloadingtime [minimum loading time]: forces loading a round to take at least the specified amount of seconds.", (string[] args) =>
+            {
+                if (args.Count() < 1 || (GameMain.NetworkMember == null)) return;
+                if (!float.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out float time))
+                {
+                    ThrowError(args[0] + " is not a valid duration ratio.");
+                    return;
+                }
+                GameSession.MinimumLoadingTime = time;                
+                NewMessage("Set minimum loading time to " + time + " seconds.", Color.White);
+            }));
+
             commands.Add(new Command("storeinfo", "", (string[] args) =>
             {
                 if (GameMain.GameSession?.Map?.CurrentLocation is Location location)
                 {
-
-                    var msg = "--- Location: " + location.Name + " ---";
-                    msg += "\nBalance: " + location.StoreCurrentBalance;
-                    msg += "\nPrice modifier: " + location.StorePriceModifier + "%";
-                    msg +=  "\nDaily specials:";
-                    location.DailySpecials.ForEach(i => msg += "\n   - " + i.Name);
-                    msg += "\nRequested goods:";
-                    location.RequestedGoods.ForEach(i => msg += "\n   - " + i.Name);
-                    NewMessage(msg);
+                    if (location.Stores != null)
+                    {
+                        var msg = "--- Location: " + location.Name + " ---";
+                        foreach (var store in location.Stores)
+                        {
+                            msg += $"\nStore identifier: {store.Value.Identifier}";
+                            msg += $"\nBalance: {store.Value.Balance}";
+                            msg += $"\nPrice modifier: {store.Value.PriceModifier}%";
+                            msg += "\nDaily specials:";
+                            store.Value.DailySpecials.ForEach(i => msg += $"\n   - {i.Name}");
+                            msg += "\nRequested goods:";
+                            store.Value.RequestedGoods.ForEach(i => msg += $"\n   - {i.Name}");
+                            
+                        }
+                        NewMessage(msg);
+                    }
+                    else
+                    {
+                        NewMessage($"No stores at {location}, can't show store info.");
+                    }
                 }
                 else
                 {
@@ -1605,6 +1828,17 @@ namespace Barotrauma
                 }
             }));
 #endif
+
+            commands.Add(new Command("startitems|startitemset", "start item set identifier", (string[] args) =>
+            {
+                if (args.Length == 0)
+                {
+                    ThrowError($"No start item set identifier defined!");
+                    return;
+                }
+                AutoItemPlacer.DefaultStartItemSet = args[0].ToIdentifier();
+                NewMessage($"Start item set changed to \"{AutoItemPlacer.DefaultStartItemSet}\"");
+            }, isCheat: false));
 
             //"dummy commands" that only exist so that the server can give clients permissions to use them
             //TODO: alphabetical order?
@@ -1711,7 +1945,7 @@ namespace Barotrauma
 #if CLIENT
                 activeQuestionText = null;
 #endif
-                NewMessage(command, Color.White, true);
+                NewCommand(command);
                 //reset the variable before invoking the delegate because the method may need to activate another question
                 var temp = activeQuestionCallback;
                 activeQuestionCallback = null;
@@ -1727,7 +1961,7 @@ namespace Barotrauma
                 ThrowError("Failed to execute command \"" + command + "\"!");
                 GameAnalyticsManager.AddErrorEventOnce(
                     "DebugConsole.ExecuteCommand:LengthZero",
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.ErrorSeverity.Error,
                     "Failed to execute command \"" + command + "\"!");
                 return;
             }
@@ -1736,7 +1970,7 @@ namespace Barotrauma
 
             if (!firstCommand.Equals("admin", StringComparison.OrdinalIgnoreCase))
             {
-                NewMessage(command, Color.White, true);
+                NewCommand(command);
             }
 
 #if CLIENT
@@ -1763,13 +1997,15 @@ namespace Barotrauma
                     }
                     return;
                 }
-#if !DEBUG
                 if (!IsCommandPermitted(splitCommand[0].ToLowerInvariant(), GameMain.Client))
                 {
-                    ThrowError("You're not permitted to use the command \"" + splitCommand[0].ToLowerInvariant() + "\"!");
+#if DEBUG
+                    AddWarning($"You're not permitted to use the command \"{splitCommand[0].ToLowerInvariant()}\". Executing the command anyway because this is a debug build.");
+#else
+                    ThrowError($"You're not permitted to use the command \"{splitCommand[0].ToLowerInvariant()}\"!");
                     return;
-                }
 #endif
+                }
             }
 #endif
 
@@ -1788,7 +2024,7 @@ namespace Barotrauma
             }
         }
 
-        private static string[] ListCharacterNames() => Character.CharacterList.OrderBy(c => c.IsDead).ThenByDescending(c => c.IsHuman).Select(c => c.Name).Distinct().ToArray();
+        private static string[] ListCharacterNames() => Character.CharacterList.OrderBy(c => c.IsDead).ThenByDescending(c => c.IsHuman).ThenBy(c => c.Name).Select(c => c.Name).Distinct().ToArray();
 
         private static Character FindMatchingCharacter(string[] args, bool ignoreRemotePlayers = false, Client allowedRemotePlayer = null)
         {
@@ -1867,7 +2103,7 @@ namespace Barotrauma
                 switch (args[1].ToLowerInvariant())
                 {
                     case "inside":
-                        spawnPoint = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub);
+                        spawnPoint = WayPoint.GetRandom(SpawnType.Human, job, Submarine.MainSub);
                         break;
                     case "outside":
                         spawnPoint = WayPoint.GetRandom(SpawnType.Enemy);
@@ -1914,7 +2150,7 @@ namespace Barotrauma
                 }
                 catch
                 {
-                    DebugConsole.ThrowError($"\"{args[2]}\" is not a valid team id.");
+                    ThrowError($"\"{args[2]}\" is not a valid team id.");
                 }
             }
 
@@ -1922,8 +2158,8 @@ namespace Barotrauma
 
             if (human)
             {
-                var variant = job != null ? Rand.Range(0, job.Variants, Rand.RandSync.Server) : 0;
-                CharacterInfo characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: job, variant: variant);
+                var variant = job != null ? Rand.Range(0, job.Variants, Rand.RandSync.ServerAndClient) : 0;
+                CharacterInfo characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: job, variant: variant);
                 spawnedCharacter = Character.Create(characterInfo, spawnPosition, ToolBox.RandomSeed(8));
                 if (GameMain.GameSession != null)
                 {
@@ -1937,7 +2173,7 @@ namespace Barotrauma
             }
             else
             {
-                if (CharacterPrefab.FindBySpeciesName(args[0]) != null)
+                if (CharacterPrefab.FindBySpeciesName(args[0].ToIdentifier()) != null)
                 {
                     Character.Create(args[0], spawnPosition, ToolBox.RandomSeed(8));
                 }
@@ -1959,7 +2195,7 @@ namespace Barotrauma
             if (itemPrefab == null)
             {
                 errorMsg = "Item \"" + itemNameOrId + "\" not found!";
-                var matching = ItemPrefab.Prefabs.Find(me => me.Name.ToLowerInvariant().StartsWith(itemNameOrId) && me is ItemPrefab);
+                var matching = ItemPrefab.Prefabs.Find(me => me.Name.StartsWith(itemNameOrId, StringComparison.OrdinalIgnoreCase) && me is ItemPrefab);
                 if (matching != null)
                 {
                     errorMsg += $" Did you mean \"{matching.Name}\"?";
@@ -1971,9 +2207,18 @@ namespace Barotrauma
                 return;
             }
 
+            int amount = 1;
             if (args.Length > 1)
             {
-                switch (args.Last())
+                string spawnLocation = args.Last();
+                if (args.Length > 2)
+                {
+                    spawnLocation = args[^2];
+                    if (!int.TryParse(args[^1], NumberStyles.Any, CultureInfo.InvariantCulture, out amount)) { amount = 1; }
+                    amount = Math.Min(amount, 100);
+                }
+                
+                switch (spawnLocation)
                 {
                     case "cursor":
                         spawnPos = cursorPos;
@@ -2001,52 +2246,80 @@ namespace Barotrauma
                 spawnPos = wp == null ? Vector2.Zero : wp.WorldPosition;
             }
 
-            if (spawnPos != null)
+            for (int i = 0; i < amount; i++)
             {
-                if (Entity.Spawner == null)
+                if (spawnPos != null)
                 {
-                    new Item(itemPrefab, spawnPos.Value, null);
-                }
-                else
-                {
-                    Entity.Spawner?.AddToSpawnQueue(itemPrefab, spawnPos.Value);
-                }
-            }
-            else if (spawnInventory != null)
-            {
-                if (Entity.Spawner == null)
-                {
-                    var spawnedItem = new Item(itemPrefab, Vector2.Zero, null);
-                    spawnInventory.TryPutItem(spawnedItem, null, spawnedItem.AllowedSlots);
-                    onItemSpawned(spawnedItem);
-                }
-                else
-                {
-                    Entity.Spawner?.AddToSpawnQueue(itemPrefab, spawnInventory, onSpawned: onItemSpawned);
-                }
-
-                static void onItemSpawned(Item item)
-                {
-                    if (item.ParentInventory?.Owner is Character character)
+                    if (Entity.Spawner == null || Entity.Spawner.Removed)
                     {
-                        foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
+                        new Item(itemPrefab, spawnPos.Value, null);
+                    }
+                    else
+                    {
+                        Entity.Spawner?.AddItemToSpawnQueue(itemPrefab, spawnPos.Value);
+                    }
+                }
+                else if (spawnInventory != null)
+                {
+                    if (Entity.Spawner == null)
+                    {
+                        var spawnedItem = new Item(itemPrefab, Vector2.Zero, null);
+                        spawnInventory.TryPutItem(spawnedItem, null, spawnedItem.AllowedSlots);
+                        onItemSpawned(spawnedItem);
+                    }
+                    else
+                    {
+                        Entity.Spawner?.AddItemToSpawnQueue(itemPrefab, spawnInventory, onSpawned: onItemSpawned);
+                    }
+
+                    static void onItemSpawned(Item item)
+                    {
+                        if (item.ParentInventory?.Owner is Character character)
                         {
-                            wifiComponent.TeamID = character.TeamID;
+                            foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
+                            {
+                                wifiComponent.TeamID = character.TeamID;
+                            }
                         }
                     }
                 }
             }
         }
 
-        public static void NewMessage(string msg, bool isCommand = false)
+        public static void ShowError(string msg, Color? color = null)
         {
+            color ??= Color.Red;
+            NewMessage(msg, color.Value, isCommand: false, isError: true);
+        }
+
+        public static void NewCommand(string command, Color? color = null)
+        {
+            color ??= Color.White;
+            NewMessage(command, color.Value, isCommand: true, isError: false);
+        }
+
+        public static void NewMessage(LocalizedString msg, Color? color = null, bool debugOnly = false)
+            => NewMessage(msg.Value, color, debugOnly);
+
+        public static void NewMessage(string msg, Color? color = null, bool debugOnly = false)
+        {
+            color ??= Color.White;
+            if (debugOnly)
+            {
+#if DEBUG
+                NewMessage(msg, color.Value, isCommand: false, isError: false);
+#endif
+            }
+            else
+            {
+                NewMessage(msg, color.Value, isCommand: false, isError: false);
+            }
 #if DEBUG
             Console.WriteLine(msg);
 #endif
-            NewMessage(msg, Color.White, isCommand);
         }
 
-        public static void NewMessage(string msg, Color color, bool isCommand = false, bool isError = false)
+        private static void NewMessage(string msg, Color color, bool isCommand, bool isError)
         {
             if (string.IsNullOrEmpty(msg)) { return; }
             
@@ -2066,7 +2339,7 @@ namespace Barotrauma
 
 #if CLIENT
             activeQuestionText = new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width, 0), listBox.Content.RectTransform),
-                "   >>" + question, font: GUI.SmallFont, wrap: true)
+                "   >>" + question, font: GUIStyle.SmallFont, wrap: true)
             {
                 CanBeFocused = false,
                 TextColor = Color.Cyan
@@ -2134,9 +2407,19 @@ namespace Barotrauma
 
         public static Command FindCommand(string commandName) => commands.Find(c => c.names.Any(n => n.Equals(commandName, StringComparison.OrdinalIgnoreCase)));
 
+        public static void Log(LocalizedString message) => Log(message?.Value);
+        
         public static void Log(string message)
         {
-            if (GameSettings.VerboseLogging) NewMessage(message, Color.Gray);
+            if (GameSettings.CurrentConfig.VerboseLogging)
+            {
+                NewMessage(message, Color.Gray);
+            }
+        }
+
+        public static void ThrowError(LocalizedString error, Exception e = null, bool createMessageBox = false, bool appendStackTrace = false)
+        {
+            ThrowError(error.Value, e, createMessageBox, appendStackTrace);
         }
 
         public static void ThrowError(string error, Exception e = null, bool createMessageBox = false, bool appendStackTrace = false)
@@ -2150,10 +2433,11 @@ namespace Barotrauma
                 }
                 if (e.InnerException != null)
                 {
-                    error += "\n\nInner exception: " + e.InnerException.Message + "\n";
-                    if (e.InnerException.StackTrace != null)
+                    var innermost = e.GetInnermost();
+                    error += "\n\nInner exception: " + innermost.Message + "\n";
+                    if (innermost.StackTrace != null)
                     {
-                        error += e.InnerException.StackTrace.CleanupStackTrace(); ;
+                        error += innermost.StackTrace.CleanupStackTrace(); ;
                     }
                 }
             }
@@ -2161,7 +2445,7 @@ namespace Barotrauma
             {
                 error += "\n" + Environment.StackTrace.CleanupStackTrace();
             }
-            System.Diagnostics.Debug.WriteLine(error);
+            System.Diagnostics.Debug.WriteLine($"ThrowError: {error}");
 
 #if CLIENT
             if (createMessageBox)
@@ -2174,7 +2458,7 @@ namespace Barotrauma
             }
 #endif
 
-            NewMessage(error, Color.Red, isError: true);
+            ShowError(error);
         }
         
         public static void AddWarning(string warning)
@@ -2184,13 +2468,8 @@ namespace Barotrauma
         }
 
 #if CLIENT
-        private static IEnumerable<object> CreateMessageBox(string errorMsg)
+        private static IEnumerable<CoroutineStatus> CreateMessageBox(string errorMsg)
         {
-            while (GUI.Style == null)
-            {
-                yield return null;
-            }
-
             new GUIMessageBox(TextManager.Get("Error"), errorMsg);
             yield return CoroutineStatus.Success;
         }
@@ -2246,6 +2525,16 @@ namespace Barotrauma
                 unsavedMessages.Clear();
                 ThrowError("Saving debug console log to " + filePath + " failed", e);
             }
+        }
+
+        public static void DeactivateCheats()
+        {
+#if CLIENT
+            GameMain.DebugDraw = false;
+            GameMain.LightManager.LightingEnabled = true;
+#endif
+            Hull.EditWater = false;
+            Hull.EditFire = false;
         }
     }
 }

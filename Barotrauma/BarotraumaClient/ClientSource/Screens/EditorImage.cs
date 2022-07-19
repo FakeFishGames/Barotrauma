@@ -1,7 +1,7 @@
 ﻿#nullable enable
 using System;
 using System.Collections.Generic;
-using System.IO;
+using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Microsoft.Xna.Framework;
@@ -93,7 +93,7 @@ namespace Barotrauma
 
         public bool EditorMode;
 
-        private string editModeText = "";
+        private LocalizedString editModeText = "";
         private Vector2 textSize = Vector2.Zero;
 
         public void Save(XElement element)
@@ -117,7 +117,7 @@ namespace Barotrauma
         {
             Clear(alsoPending: true);
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 EditorImageContainer? tempImage = EditorImageContainer.Load(subElement);
                 if (tempImage != null)
@@ -130,7 +130,7 @@ namespace Barotrauma
         public void OnEditorSelected()
         {
             editModeText = TextManager.Get("SubEditor.ImageEditingMode");
-            textSize = GUI.LargeFont.MeasureString(editModeText);
+            textSize = GUIStyle.LargeFont.MeasureString(editModeText);
 
             TryLoadPendingImages();
         }
@@ -267,7 +267,7 @@ namespace Barotrauma
                 pos.Y = -pos.Y;
                 Images.Add(new EditorImage(file, pos) { DrawTarget = EditorImage.DrawTargetType.World });
                 UpdateImageCategories();
-                GameMain.Config.SaveNewPlayerConfig();
+                GameSettings.SaveCurrentConfig();
             };
 
             FileSelection.ClearFileTypeFilters();
@@ -287,7 +287,7 @@ namespace Barotrauma
 
             spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState);
             Vector2 textPos = new Vector2(GameMain.GraphicsWidth / 2f - (textSize.X / 2f), GameMain.GraphicsHeight / 10f - (textSize.Y / 2f));
-            GUI.DrawString(spriteBatch, textPos, editModeText, GUI.Style.Yellow, Color.Black * 0.4f, 8, GUI.LargeFont);
+            GUI.DrawString(spriteBatch, textPos, editModeText, GUIStyle.Yellow, Color.Black * 0.4f, 8, GUIStyle.LargeFont);
             spriteBatch.End();
         }
 
@@ -352,7 +352,7 @@ namespace Barotrauma
 
         public EditorImage(string path, Vector2 pos)
         {
-            Image = Sprite.LoadTexture(path, out Sprite _, compress: false);
+            Image = Sprite.LoadTexture(path, compress: false);
             ImagePath = path;
             Position = pos;
             UpdateRectangle();
@@ -440,7 +440,7 @@ namespace Barotrauma
             {
                 widget.MouseDown += () =>
                 {
-                    widget.color = GUI.Style.Green;
+                    widget.color = GUIStyle.Green;
                     prevAngle = Rotation;
                     disableMove = true;
                 };
@@ -493,7 +493,7 @@ namespace Barotrauma
             });
 
             currentWidget.Draw(spriteBatch, (float) Timing.Step);
-            GUI.DrawLine(spriteBatch, Position, currentWidget.DrawPos, GUI.Style.Green, width: width);
+            GUI.DrawLine(spriteBatch, Position, currentWidget.DrawPos, GUIStyle.Green, width: width);
         }
 
         private float GetRotationAngle(Vector2 drawPosition)
@@ -561,7 +561,7 @@ namespace Barotrauma
                 width = (int) (width / cam.Zoom);
             }
 
-            GUI.DrawRectangle(spriteBatch, bounds, Selected ? GUI.Style.Red : GUI.Style.Green, thickness: width);
+            GUI.DrawRectangle(spriteBatch, bounds, Selected ? GUIStyle.Red : GUIStyle.Green, thickness: width);
             if (Selected)
             {
                 DrawWidgets(spriteBatch);

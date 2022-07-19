@@ -8,23 +8,23 @@ namespace Barotrauma
 {
     internal class CheckAfflictionAction : BinaryOptionAction
     {
-        [Serialize("", true)]
-        public string Identifier { get; set; } = "";
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier Identifier { get; set; } = Identifier.Empty;
 
-        [Serialize("", true)]
-        public string TargetTag { get; set; } = "";
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier TargetTag { get; set; } = Identifier.Empty;
 
-        [Serialize(LimbType.None, true, "Only check afflictions on the specified limb type")]
+        [Serialize(LimbType.None, IsPropertySaveable.Yes, "Only check afflictions on the specified limb type")]
         public LimbType TargetLimb { get; set; }
 
-        [Serialize(true, true, "When set to false when TargetLimb is not specified prevent checking limb-specific afflictions")]
+        [Serialize(true, IsPropertySaveable.Yes, "When set to false when TargetLimb is not specified prevent checking limb-specific afflictions")]
         public bool AllowLimbAfflictions { get; set; }
 
-        public CheckAfflictionAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) { }
+        public CheckAfflictionAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
 
         protected override bool? DetermineSuccess()
         {
-            if (string.IsNullOrWhiteSpace(Identifier) || string.IsNullOrWhiteSpace(TargetTag)) { return false; }
+            if (Identifier.IsEmpty || TargetTag.IsEmpty) { return false; }
             List<Character> targets = ParentEvent.GetTargets(TargetTag).OfType<Character>().ToList();
 
             foreach (var target in targets)
@@ -42,7 +42,7 @@ namespace Barotrauma
                     return limbType == TargetLimb || true;
                 });
 
-                if (afflictions.Any(a => a.Identifier.Equals(Identifier, StringComparison.OrdinalIgnoreCase))) { return true; }
+                if (afflictions.Any(a => a.Identifier == Identifier)) { return true; }
             }
             return false;
         }

@@ -1,9 +1,9 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Abilities;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -18,6 +18,8 @@ namespace Barotrauma.Items.Components
         private Character activePicker;
 
         private CoroutineHandle pickingCoroutine;
+
+        public virtual bool IsAttached => false;
 
         public List<InvSlotType> AllowedSlots
         {
@@ -35,8 +37,8 @@ namespace Barotrauma.Items.Components
                 return picker; 
             }
         }
-        
-        public Pickable(Item item, XElement element)
+
+        public Pickable(Item item, ContentXElement element)
             : base(item, element)
         {
             allowedSlots = new List<InvSlotType>();
@@ -68,17 +70,37 @@ namespace Barotrauma.Items.Components
         public override bool Pick(Character picker)
         {
             //return if someone is already trying to pick the item
-            if (pickTimer > 0.0f) return false;
-            if (picker == null || picker.Inventory == null) return false;
+            if (pickTimer > 0.0f) { return false; }
+            if (picker == null || picker.Inventory == null) { return false; }
+            if (!picker.Inventory.AccessibleWhenAlive && !picker.Inventory.AccessibleByOwner) { return false; }
 
             if (PickingTime > 0.0f)
             {
+                var abilityPickingTime = new AbilityItemPickingTime(PickingTime, item.Prefab);
+                picker.CheckTalents(AbilityEffectType.OnItemPicked, abilityPickingTime);
+
+                if (requiredItems.ContainsKey(RelatedItem.RelationType.Equipped))
+                {
+                    foreach (RelatedItem ri in requiredItems[RelatedItem.RelationType.Equipped])
+                    {
+                        foreach (var heldItem in picker.HeldItems)
+                        {
+                            if (ri.MatchesItem(heldItem))
+                            {
+                                abilityPickingTime.Value /= 1 + heldItem.Prefab.AddedPickingSpeedMultiplier;
+                            }
+                        }
+                    }
+                }
+
                 if ((picker.PickingItem == null || picker.PickingItem == item) && PickingTime <= float.MaxValue)
                 {
 #if SERVER
+                    // Set active picker before creating the server event to make sure it's set correctly
+                    activePicker = picker;
                     item.CreateServerEvent(this);
 #endif
-                    pickingCoroutine = CoroutineManager.StartCoroutine(WaitForPick(picker, PickingTime));
+                    pickingCoroutine = CoroutineManager.StartCoroutine(WaitForPick(picker, abilityPickingTime.Value));
                 }
                 return false;
             }
@@ -136,7 +158,7 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        private IEnumerable<object> WaitForPick(Character picker, float requiredTime)
+        private IEnumerable<CoroutineStatus> WaitForPick(Character picker, float requiredTime)
         {
             activePicker = picker;
             picker.PickingItem = item;
@@ -161,7 +183,7 @@ namespace Barotrauma.Items.Components
                     this,
                     item.WorldPosition,
                     pickTimer / requiredTime,
-                    GUI.Style.Red, GUI.Style.Green,
+                    GUIStyle.Red, GUIStyle.Green,
                     !string.IsNullOrWhiteSpace(PickingMsg) ? PickingMsg : this is Door ? "progressbar.opening" : "progressbar.deattaching");
 #endif
                 
@@ -206,7 +228,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach (Connection c in connectionPanel.Connections)
                 {
-                    foreach (Wire w in c.Wires)
+                    foreach (Wire w in c.Wires.ToArray())
                     {
                         if (w == null) continue;
                         w.Item.Drop(character);
@@ -262,12 +284,12 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public virtual void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public virtual void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            msg.Write(activePicker == null ? (ushort)0 : activePicker.ID);
+            msg.Write(activePicker?.ID ?? (ushort)0);
         }
 
-        public virtual void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public virtual void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             ushort pickerID = msg.ReadUInt16();
             if (pickerID == 0)
@@ -279,5 +301,16 @@ namespace Barotrauma.Items.Components
                 Pick(Entity.FindEntityByID(pickerID) as Character);
             }
         }
+    }
+
+    class AbilityItemPickingTime : AbilityObject, IAbilityValue, IAbilityItemPrefab
+    {
+        public AbilityItemPickingTime(float pickingTime, ItemPrefab itemPrefab)
+        {
+            Value = pickingTime;
+            ItemPrefab = itemPrefab;
+        }
+        public float Value { get; set; }
+        public ItemPrefab ItemPrefab { get; set; }
     }
 }

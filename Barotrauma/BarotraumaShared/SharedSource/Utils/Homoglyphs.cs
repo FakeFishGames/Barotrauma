@@ -7,7 +7,7 @@ namespace Barotrauma
     class Homoglyphs
     {
         ///List of homoglyphs taken from https://github.com/codebox/homoglyph/
-        private static List<uint[]> homoglyphs = new List<uint[]>(){
+        private readonly static uint[][] homoglyphs = {
             new uint[]{0x20,0xa0,0x1680,0x2000,0x2001,0x2002,0x2003,0x2004,0x2005,0x2006,0x2007,0x2008,0x2009,0x200a,0x2028,0x2029,0x202f,0x205f},
             new uint[]{0x21,0x1c3,0x2d51,0xff01},
             new uint[]{0x24,0xff04},

@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -17,6 +16,8 @@ namespace Barotrauma.Items.Components
 
         const int MaxNodes = 100;
         const float MaxNodeDistance = 150.0f;
+
+        private bool waitForVoltageRecalculation;
 
         public struct Node
         {
@@ -48,28 +49,28 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Serialize(500.0f, true, description: "How far the discharge can travel from the item.", alwaysUseInstanceValues: true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 5000.0f)]
+        [Serialize(500.0f, IsPropertySaveable.Yes, description: "How far the discharge can travel from the item.", alwaysUseInstanceValues: true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 5000.0f)]
         public float Range
         {
             get;
             set;
         }
 
-        [Serialize(25.0f, true, description: "How much further can the discharge be carried when moving across walls.", alwaysUseInstanceValues: true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
+        [Serialize(25.0f, IsPropertySaveable.Yes, description: "How much further can the discharge be carried when moving across walls.", alwaysUseInstanceValues: true), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         public float RangeMultiplierInWalls
         {
             get;
             set;
         }
 
-        [Serialize(0.25f, true, description: "The duration of an individual discharge (in seconds)."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 60.0f, ValueStep = 0.1f, DecimalCount = 2)]
+        [Serialize(0.25f, IsPropertySaveable.Yes, description: "The duration of an individual discharge (in seconds)."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 60.0f, ValueStep = 0.1f, DecimalCount = 2)]
         public float Duration
         {
             get;
             set;
         }
 
-        [Serialize(false, true, "If set to true, the discharge cannot travel inside the submarine nor shock anyone inside."), Editable]
+        [Serialize(false, IsPropertySaveable.Yes, "If set to true, the discharge cannot travel inside the submarine nor shock anyone inside."), Editable]
         public bool OutdoorsOnly
         {
             get;
@@ -82,20 +83,20 @@ namespace Barotrauma.Items.Components
             get { return nodes; }
         }
 
-        private readonly List<Pair<Character,Node>> charactersInRange = new List<Pair<Character, Node>>();
+        private readonly List<(Character character, Node node)> charactersInRange = new List<(Character character, Node node)>();
 
         private bool charging;
 
         private float timer;
 
-        private Attack attack;
+        private readonly Attack attack;
 
-        public ElectricalDischarger(Item item, XElement element) : 
+        public ElectricalDischarger(Item item, ContentXElement element) : 
             base(item, element)
         {
             list.Add(this);
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -114,10 +115,13 @@ namespace Barotrauma.Items.Components
         {
             //already active, do nothing
             if (IsActive) { return false; }
-
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return false; }
+            if (character != null && !CharacterUsable) { return false; }
 
             CurrPowerConsumption = powerConsumption;
+            Voltage = 0.0f;
+
+            waitForVoltageRecalculation = true;
             charging = true;
             timer = Duration;
             IsActive = true;
@@ -132,6 +136,12 @@ namespace Barotrauma.Items.Components
 #if CLIENT
             frameOffset = Rand.Int(electricitySprite.FrameCount);
 #endif
+            if (waitForVoltageRecalculation)
+            {
+                waitForVoltageRecalculation = false;
+                return;
+            }
+
             if (timer <= 0.0f)
             {
                 IsActive = false;
@@ -141,10 +151,10 @@ namespace Barotrauma.Items.Components
             timer -= deltaTime;
             if (charging)
             {
-                if (GetAvailableBatteryPower() >= powerConsumption)
+                if (GetAvailableInstantaneousBatteryPower() >= PowerConsumption)
                 {
-                    var batteries = item.GetConnectedComponents<PowerContainer>();
-                    float neededPower = powerConsumption;
+                    List<PowerContainer> batteries = GetConnectedBatteries();
+                    float neededPower = PowerConsumption;
                     while (neededPower > 0.0001f && batteries.Count > 0)
                     {
                         batteries.RemoveAll(b => b.Charge <= 0.0001f || b.MaxOutPut <= 0.0001f);
@@ -169,6 +179,14 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        /// <summary>
+        /// Discharge coil only draws power when charging
+        /// </summary>
+        public override float GetCurrentPowerConsumption(Connection connection = null)
+        {
+            return charging && IsActive ? PowerConsumption : 0;
+        }
+
         public override void UpdateBroken(float deltaTime, Camera cam)
         {
             base.UpdateBroken(deltaTime, cam);
@@ -182,9 +200,10 @@ namespace Barotrauma.Items.Components
             FindNodes(item.WorldPosition, Range);
             if (attack != null)
             {
-                foreach (Pair<Character, Node> characterInRange in charactersInRange)
+                foreach ((Character character, Node node) in charactersInRange)
                 {
-                    characterInRange.First.ApplyAttack(null, characterInRange.Second.WorldPosition, attack, 1.0f);
+                    if (character == null || character.Removed) { continue; }
+                    character.ApplyAttack(null, node.WorldPosition, attack, 1.0f);
                 }
             }
             DischargeProjSpecific();
@@ -315,7 +334,6 @@ namespace Barotrauma.Items.Components
 
             if (closestIndex == -1 || closestDist > currentRange)
             {
-                int originalParentNodeIndex = parentNodeIndex;
                 //nothing in range, create some arcs to random directions
                 for (int i = 0; i < Rand.Int(4); i++)
                 {
@@ -455,7 +473,7 @@ namespace Barotrauma.Items.Components
                 AddNodesBetweenPoints(currPos, targetPos, 0.25f, ref parentNodeIndex);
                 nodes.Add(new Node(targetPos, parentNodeIndex));
                 entitiesInRange.RemoveAt(closestIndex);
-                charactersInRange.Add(new Pair<Character, Node>(character, nodes[parentNodeIndex]));
+                charactersInRange.Add((character, nodes[parentNodeIndex]));
                 FindNodes(entitiesInRange, targetPos, nodes.Count - 1, currentRange);
             }     
         }
@@ -476,13 +494,28 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override void ReceiveSignal(Signal signal, Connection connection)
+        {
+            switch (connection.Name)
+            {
+                case "activate":
+                case "use":
+                case "trigger_in":
+                    if (signal.value != "0")
+                    {
+                        item.Use(1.0f, null);
+                    }
+                    break;
+            }
+        }
+
         protected override void RemoveComponentSpecific()
         {
             base.RemoveComponentSpecific();
             list.Remove(this);
         }
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
             //no further data needed, the event just triggers the discharge
         }

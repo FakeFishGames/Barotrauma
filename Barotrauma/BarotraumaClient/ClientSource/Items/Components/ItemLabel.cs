@@ -2,12 +2,14 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
-    partial class ItemLabel : ItemComponent, IDrawableComponent
+    partial class ItemLabel : ItemComponent, IDrawableComponent, IHasExtraTextPickerEntries
     {
         private GUITextBlock textBlock;
 
@@ -21,9 +23,13 @@ namespace Barotrauma.Items.Components
 
         private float[] charWidths;
 
+        private float prevScale;
+        private Rectangle prevRect;
+        private StringBuilder sb;
+
         private Vector4 padding;
 
-        [Serialize("0,0,0,0", true, description: "The amount of padding around the text in pixels (left,top,right,bottom).")]
+        [Serialize("0,0,0,0", IsPropertySaveable.Yes, description: "The amount of padding around the text in pixels (left,top,right,bottom).")]
         public Vector4 Padding
         {
             get { return padding; }
@@ -35,7 +41,7 @@ namespace Barotrauma.Items.Components
         }
 
         private string text;
-        [Serialize("", true, translationTextTag: "Label.", description: "The text displayed in the label.", alwaysUseInstanceValues: true), Editable(100)]
+        [Serialize("", IsPropertySaveable.Yes, translationTextTag: "Label.", description: "The text displayed in the label.", alwaysUseInstanceValues: true), Editable(100)]
         public string Text
         {
             get { return text; }
@@ -49,13 +55,14 @@ namespace Barotrauma.Items.Components
                 }
 
                 text = value;
-                SetDisplayText(value);
+                SetDisplayText(value); 
+                UpdateScrollingText();
             }
         }
 
         private bool ignoreLocalization;
 
-        [Editable, Serialize(false, true, "Whether or not to skip localization and always display the raw value.")]
+        [Editable, Serialize(false, IsPropertySaveable.Yes, "Whether or not to skip localization and always display the raw value.")]
         public bool IgnoreLocalization
         {
             get => ignoreLocalization;
@@ -66,13 +73,13 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public string DisplayText
+        public LocalizedString DisplayText
         {
             get;
             private set;
         }
 
-        [Editable, Serialize("0,0,0,255", true, description: "The color of the text displayed on the label (R,G,B,A).", alwaysUseInstanceValues: true)]
+        [Editable, Serialize("0,0,0,255", IsPropertySaveable.Yes, description: "The color of the text displayed on the label (R,G,B,A).", alwaysUseInstanceValues: true)]
         public Color TextColor
         {
             get { return textColor; }
@@ -83,31 +90,39 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable(0.0f, 10.0f), Serialize(1.0f, true, description: "The scale of the text displayed on the label.", alwaysUseInstanceValues: true)]
+        [Editable(0.0f, 10.0f), Serialize(1.0f, IsPropertySaveable.Yes, description: "The scale of the text displayed on the label.", alwaysUseInstanceValues: true)]
         public float TextScale
         {
             get { return textBlock == null ? 1.0f : textBlock.TextScale; }
             set
             {
-                if (textBlock != null) { textBlock.TextScale = MathHelper.Clamp(value, 0.1f, 10.0f); }
+                if (textBlock != null) 
+                {
+                    float prevScale = TextBlock.TextScale;
+                    textBlock.TextScale = MathHelper.Clamp(value, 0.1f, 10.0f); 
+                    if (!MathUtils.NearlyEqual(prevScale, TextBlock.TextScale))
+                    {
+                        SetScrollingText();
+                    }
+                }
             }
         }
 
         private bool scrollable;
-        [Serialize(false, true, description: "Should the text scroll horizontally across the item if it's too long to be displayed all at once.")]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Should the text scroll horizontally across the item if it's too long to be displayed all at once.")]
         public bool Scrollable
         {
             get { return scrollable; }
             set
             {
                 scrollable = value;
-                IsActive = value;
+                IsActive = value || parseSpecialTextTagOnStart;
                 TextBlock.Wrap = !scrollable;
                 TextBlock.TextAlignment = scrollable ? Alignment.CenterLeft : Alignment.Center;
             }
         }
 
-        [Serialize(20.0f, true, description: "How fast the text scrolls across the item (only valid if Scrollable is set to true).")]
+        [Serialize(20.0f, IsPropertySaveable.Yes, description: "How fast the text scrolls across the item (only valid if Scrollable is set to true).")]
         public float ScrollSpeed
         {
             get;
@@ -126,30 +141,35 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public ItemLabel(Item item, XElement element)
+        public ItemLabel(Item item, ContentXElement element)
             : base(item, element)
         {            
+        }
+
+        public IEnumerable<string> GetExtraTextPickerEntries()
+        {
+            return SpecialTextTags;
         }
 
         private void SetScrollingText()
         {
             if (!scrollable) { return; }
 
-            float totalWidth = textBlock.Font.MeasureString(DisplayText).X;
+            float totalWidth = textBlock.Font.MeasureString(DisplayText).X * TextBlock.TextScale;
             float textAreaWidth = Math.Max(textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z, 0);
             if (totalWidth >= textAreaWidth)
             {
                 //add enough spaces to fill the rect
                 //(so the text can scroll entirely out of view before we reset it back to start)
                 needsScrolling = true;
-                float spaceWidth = textBlock.Font.MeasureChar(' ').X;
-                scrollingText = new string(' ', (int)Math.Ceiling(textAreaWidth / spaceWidth)) + DisplayText;
+                float spaceWidth = textBlock.Font.MeasureChar(' ').X * TextBlock.TextScale;
+                scrollingText = new string(' ', (int)Math.Ceiling(textAreaWidth / spaceWidth)) + DisplayText.Value;
             }
             else
             {
                 //whole text can fit in the textblock, no need to scroll
                 needsScrolling = false;
-                scrollingText = DisplayText;
+                scrollingText = DisplayText.Value;
                 scrollPadding = 0;
                 scrollAmount = 0.0f;
                 scrollIndex = 0;
@@ -161,7 +181,7 @@ namespace Barotrauma.Items.Components
             charWidths = new float[scrollingText.Length];
             for (int i = 0; i < scrollingText.Length; i++)
             {
-                float charWidth = TextBlock.Font.MeasureChar(scrollingText[i]).X;
+                float charWidth = TextBlock.Font.MeasureChar(scrollingText[i]).X * TextBlock.TextScale;
                 scrollPadding = Math.Max(charWidth, scrollPadding);
                 charWidths[i] = charWidth;
             }
@@ -169,9 +189,18 @@ namespace Barotrauma.Items.Components
             scrollIndex = MathHelper.Clamp(scrollIndex, 0, DisplayText.Length);
         }
 
+        private static readonly string[] SpecialTextTags = new string[] { "[CurrentLocationName]", "[CurrentBiomeName]", "[CurrentSubName]" };
+        private bool parseSpecialTextTagOnStart;
         private void SetDisplayText(string value)
         {
-            DisplayText = IgnoreLocalization ? value : TextManager.Get(value, returnNull: true) ?? value;
+            if (SpecialTextTags.Contains(value))
+            {
+                parseSpecialTextTagOnStart = true;
+                IsActive = true;
+            }
+
+            DisplayText = IgnoreLocalization ? value : TextManager.Get(value).Fallback(value);
+
             TextBlock.Text = DisplayText;
             if (Screen.Selected == GameMain.SubEditorScreen && Scrollable)
             {
@@ -184,7 +213,7 @@ namespace Barotrauma.Items.Components
         private void RecreateTextBlock()
         {
             textBlock = new GUITextBlock(new RectTransform(item.Rect.Size), "",
-                textColor: textColor, font: GUI.UnscaledSmallFont, textAlignment: scrollable ? Alignment.CenterLeft : Alignment.Center, wrap: !scrollable, style: null)
+                textColor: textColor, font: GUIStyle.UnscaledSmallFont, textAlignment: scrollable ? Alignment.CenterLeft : Alignment.Center, wrap: !scrollable, style: null)
             {
                 TextDepth = item.SpriteDepth - 0.00001f,
                 RoundToNearestPixel = false,
@@ -193,9 +222,37 @@ namespace Barotrauma.Items.Components
             };
         }
 
+        private void ParseSpecialTextTag()
+        {
+            switch (text)
+            {
+                case "[CurrentLocationName]":
+                    SetDisplayText(Level.Loaded?.StartLocation?.Name ?? string.Empty);
+                    break;
+                case "[CurrentBiomeName]":
+                    SetDisplayText(Level.Loaded?.LevelData?.Biome?.DisplayName.Value ?? string.Empty);
+                    break;
+                case "[CurrentSubName]":
+                    SetDisplayText(item.Submarine?.Info?.DisplayName.Value ?? string.Empty);
+                    break;
+                default:
+                    break;
+            }
+        }
+
         public override void Update(float deltaTime, Camera cam)
         {
-            if (!scrollable) { return; }
+            if (parseSpecialTextTagOnStart)
+            {
+                ParseSpecialTextTag();
+                parseSpecialTextTagOnStart = false;
+            }
+
+            if (!scrollable) 
+            {
+                IsActive = false;
+                return; 
+            }
 
             if (scrollingText == null)
             {
@@ -205,9 +262,16 @@ namespace Barotrauma.Items.Components
             if (!needsScrolling) { return; }
 
             scrollAmount -= deltaTime * ScrollSpeed;
+            UpdateScrollingText();
+        }
+
+        private void UpdateScrollingText()
+        {
+            if (!scrollable || !needsScrolling) { return; }
 
             float currLength = 0;
-            StringBuilder sb = new StringBuilder();
+            sb ??= new StringBuilder();
+            sb.Clear();
             float textAreaWidth = textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z;
             for (int i = scrollIndex; i < scrollingText.Length; i++)
             {
@@ -246,12 +310,10 @@ namespace Barotrauma.Items.Components
             prevScale = item.Scale;
             prevRect = item.Rect;
         }
-
-        private float prevScale;
-        private Rectangle prevRect;
-
+        
         public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
         {
+            if (item.ParentInventory != null) { return; }
             if (editing)
             {
                 if (!MathUtils.NearlyEqual(prevScale, item.Scale) || prevRect != item.Rect)
@@ -267,23 +329,15 @@ namespace Barotrauma.Items.Components
                 item.DrawPosition.X - item.Rect.Width / 2.0f,
                 -(item.DrawPosition.Y + item.Rect.Height / 2.0f));
 
-            Rectangle worldRect = item.WorldRect;
-            if (worldRect.X > Screen.Selected.Cam.WorldView.Right ||
-                worldRect.Right < Screen.Selected.Cam.WorldView.X ||
-                worldRect.Y < Screen.Selected.Cam.WorldView.Y - Screen.Selected.Cam.WorldView.Height ||
-                worldRect.Y - worldRect.Height > Screen.Selected.Cam.WorldView.Y)
-            {
-                return;
-            }
-
             textBlock.TextDepth = item.SpriteDepth - 0.0001f;
             textBlock.TextOffset = drawPos - textBlock.Rect.Location.ToVector2() + (editing ? Vector2.Zero : new Vector2(scrollAmount + scrollPadding, 0.0f));
             textBlock.DrawManually(spriteBatch);
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             Text = msg.ReadString();
         }
+
     }
 }

@@ -43,6 +43,8 @@ namespace Barotrauma
                 get;
                 private set;
             } = new Dictionary<Character, double>();
+
+            public int DangerousItemsContained { get; set; }
         }
 
         public bool TestMode = false;
@@ -126,7 +128,7 @@ namespace Barotrauma
                      clientMemory.PreviousNotifiedKarma >= KickBanThreshold + KarmaNotificationInterval &&
                      client.Karma < KickBanThreshold + KarmaNotificationInterval)
             {
-                GameMain.Server.SendDirectChatMessage(TextManager.Get("KarmaBanWarning"), client);
+                GameMain.Server.SendDirectChatMessage(TextManager.Get("KarmaBanWarning").Value, client);
                 GameServer.Log(GameServer.ClientLogName(client) + " has been warned for having dangerously low karma.", ServerLog.MessageType.Karma);
                 clientMemory.PreviousNotifiedKarma = client.Karma;
                 clientMemory.PreviousKarmaNotificationTime = Timing.TotalTime;
@@ -168,7 +170,7 @@ namespace Barotrauma
                     existingAffliction.Strength = herpesStrength;
                     if (herpesStrength <= 0.0f)
                     {
-                        client.Character.CharacterHealth.ReduceAffliction(null, "invertcontrols", 100.0f);
+                        client.Character.CharacterHealth.ReduceAfflictionOnAllLimbs("invertcontrols".ToIdentifier(), 100.0f);
                     }
                 }
 
@@ -276,12 +278,12 @@ namespace Barotrauma
 
             static bool isValid(Item item)
             {
-                return item.Prefab.Identifier == "idcard" || item.GetComponent<RangedWeapon>() != null || item.GetComponent<MeleeWeapon>() != null;
+                return item.GetComponent<IdCard>() != null || item.GetComponent<RangedWeapon>() != null || item.GetComponent<MeleeWeapon>() != null;
             }
 
             if (foundItem == null) { return; }
 
-            bool isIdCard = foundItem.prefab.Identifier == "idcard";
+            bool isIdCard = foundItem.GetComponent<IdCard>() != null;
             bool isWeapon = foundItem.GetComponent<RangedWeapon>() != null || foundItem.GetComponent<MeleeWeapon>() != null;
 
             if (isIdCard)
@@ -392,8 +394,8 @@ namespace Barotrauma
             }
 
             //attacking/healing clowns has a smaller effect on karma
-            if (target.HasEquippedItem("clownmask") &&
-                target.HasEquippedItem("clowncostume"))
+            if (target.HasEquippedItem("clownmask".ToIdentifier()) &&
+                target.HasEquippedItem("clowncostume".ToIdentifier()))
             {
                 damage *= 0.5f;
                 stun *= 0.5f;
@@ -518,14 +520,22 @@ namespace Barotrauma
             AdjustKarma(character, karmaIncrease, "Repaired item");
         }
 
-        public void OnReactorOverHeating(Character character, float deltaTime)
+        public void OnReactorOverHeating(Item reactor, Character character, float deltaTime)
         {
-            AdjustKarma(character, -ReactorOverheatKarmaDecrease * deltaTime, "Caused reactor to overheat");
+            if (reactor?.Submarine == null || character == null) { return; }
+            if (reactor.Submarine.TeamID == CharacterTeamType.FriendlyNPC || reactor.Submarine.TeamID == character.TeamID)
+            {
+                AdjustKarma(character, -ReactorOverheatKarmaDecrease * deltaTime, "Caused reactor to overheat");
+            }
         }
 
-        public void OnReactorMeltdown(Character character)
+        public void OnReactorMeltdown(Item reactor, Character character)
         {
-            AdjustKarma(character, -ReactorMeltdownKarmaDecrease, "Caused a reactor meltdown");
+            if (reactor?.Submarine == null || character == null) { return; }
+            if (reactor.Submarine.TeamID == CharacterTeamType.FriendlyNPC || reactor.Submarine.TeamID == character.TeamID)
+            {
+                AdjustKarma(character, -ReactorMeltdownKarmaDecrease, "Caused a reactor meltdown");
+            }
         }
 
         public void OnExtinguishingFire(Character character, float deltaTime)
@@ -567,6 +577,25 @@ namespace Barotrauma
             }
         }
 
+        public void OnItemContained(Item containedItem, Item container, Character character)
+        {
+            if (containedItem == null || container == null || character == null || character.IsTraitor) { return; }
+            if (container.Prefab.Identifier == "weldingtool" && containedItem.HasTag("oxygensource"))
+            {
+                var client = GameMain.Server.ConnectedClients.Find(c => c.Character == character);
+                if (client == null) { return; }
+                float amount = -DangerousItemContainKarmaDecrease;
+                var memory = GetClientMemory(client);
+                if (IsDangerousItemContainKarmaDecreaseIncremental)
+                {
+                    amount *= memory.DangerousItemsContained;
+                }
+                amount = Math.Max(amount, -MaxDangerousItemContainKarmaDecrease);
+                AdjustKarma(character, amount, "Put an oxygen tank inside a welding tool");
+                clientMemories[client].DangerousItemsContained = memory.DangerousItemsContained + 1;
+            }
+        }
+
         private void AdjustKarma(Character target, float amount, string debugKarmaChangeReason = "")
         {
             if (target == null) { return; }
@@ -575,8 +604,8 @@ namespace Barotrauma
             if (client == null) { return; }
 
             //all penalties/rewards are halved when wearing a clown costume
-            if (target.HasEquippedItem("clownmask") &&
-                target.HasEquippedItem("clowncostume"))
+            if (target.HasEquippedItem("clownmask".ToIdentifier()) &&
+                target.HasEquippedItem("clowncostume".ToIdentifier()))
             {
                 amount *= 0.5f;
             }

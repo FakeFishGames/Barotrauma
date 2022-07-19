@@ -41,7 +41,7 @@ namespace Barotrauma
                     invertControlsToggleTimer = 5.0f;
                     if (Rand.Range(0.0f, 1.0f) < 0.5f)
                     {
-                        characterHealth.ReduceAffliction(null, "invertcontrols", 100);
+                        characterHealth.ReduceAfflictionOnAllLimbs("invertcontrols".ToIdentifier(), 100);
                     }
                     else
                     {

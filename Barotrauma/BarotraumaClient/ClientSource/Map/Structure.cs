@@ -14,38 +14,43 @@ namespace Barotrauma
 {
     partial class Structure : MapEntity, IDamageable, IServerSerializable
     {
-        public static bool ShowWalls = true, ShowStructures = true;        
+        public static bool ShowWalls = true, ShowStructures = true;
 
         private List<ConvexHull> convexHulls;
 
         private readonly Dictionary<DecorativeSprite, DecorativeSprite.State> spriteAnimState = new Dictionary<DecorativeSprite, DecorativeSprite.State>();
 
+        public readonly List<LightSource> Lights = new List<LightSource>();
+
         public override bool SelectableInEditor
         {
             get
             {
-                if (GameMain.SubEditorScreen.IsSubcategoryHidden(prefab.Subcategory))
+                if (GameMain.SubEditorScreen.IsSubcategoryHidden(Prefab.Subcategory))
                 {
                     return false;
                 }
+
+                if (!SubEditorScreen.IsLayerVisible(this)) { return false; }
+
                 return HasBody ? ShowWalls : ShowStructures;
             }
         }
 
 #if DEBUG
-        [Editable, Serialize("", true)]
+        [Editable, Serialize("", IsPropertySaveable.Yes)]
 #else
-        [Serialize("", true)]
+        [Serialize("", IsPropertySaveable.Yes)]
 #endif
         public string SpecialTag
         {
             get;
             set;
-        }        
+        }
 
         partial void InitProjSpecific()
         {
-            Prefab.sprite?.EnsureLazyLoaded();
+            Prefab.Sprite?.EnsureLazyLoaded();
             Prefab.BackgroundSprite?.EnsureLazyLoaded();
 
             foreach (var decorativeSprite in Prefab.DecorativeSprites)
@@ -83,12 +88,28 @@ namespace Barotrauma
             convexHulls.Add(h);
         }
 
-        public override void UpdateEditing(Camera cam)
+        public override void UpdateEditing(Camera cam, float deltaTime)
         {
             if (editingHUD == null || editingHUD.UserData as Structure != this)
             {
                 editingHUD = CreateEditingHUD(Screen.Selected != GameMain.SubEditorScreen);
-            }            
+            }
+        }
+
+        private void SetLightTextureOffset()
+        {
+            Vector2 textOffset = textureOffset;
+            if (FlippedX) { textOffset.X = -textOffset.X; }
+            if (FlippedY) { textOffset.Y = -textOffset.Y; }
+
+            foreach (LightSource light in Lights)
+            {
+                Vector2 bgOffset = new Vector2(
+                    MathUtils.PositiveModulo((int)-textOffset.X, light.texture.Width),
+                    MathUtils.PositiveModulo((int)-textOffset.Y, light.texture.Height));
+
+                light.LightTextureOffset = bgOffset;
+            }
         }
 
         public GUIComponent CreateEditingHUD(bool inGame = false)
@@ -99,13 +120,13 @@ namespace Barotrauma
             {
                 CanTakeKeyBoardFocus = false
             };
-            var editor = new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true, titleFont: GUI.LargeFont) { UserData = this };
+            var editor = new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true, titleFont: GUIStyle.LargeFont) { UserData = this };
 
             if (Submarine.MainSub?.Info?.Type == SubmarineType.OutpostModule)
             {
                 GUITickBox tickBox = new GUITickBox(new RectTransform(new Point(listBox.Content.Rect.Width, 10)), TextManager.Get("sp.structure.removeiflinkedoutpostdoorinuse.name"))
                 {
-                    Font = GUI.SmallFont,
+                    Font = GUIStyle.SmallFont,
                     Selected = RemoveIfLinkedOutpostDoorInUse,
                     ToolTip = TextManager.Get("sp.structure.removeiflinkedoutpostdoorinuse.description"),
                     OnSelected = (tickBox) =>
@@ -122,7 +143,7 @@ namespace Barotrauma
                 Stretch = true,
                 RelativeSpacing = 0.01f
             };
-            new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityX"))
+            new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityX"), style: "GUIButtonSmall")
             {
                 ToolTip = TextManager.Get("MirrorEntityXToolTip"),
                 OnClicked = (button, data) =>
@@ -135,7 +156,7 @@ namespace Barotrauma
                     return true;
                 }
             };
-            new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityY"))
+            new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("MirrorEntityY"), style: "GUIButtonSmall")
             {
                 ToolTip = TextManager.Get("MirrorEntityYToolTip"),
                 OnClicked = (button, data) =>
@@ -148,7 +169,7 @@ namespace Barotrauma
                     return true;
                 }
             };
-            new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("ReloadSprite"))
+            new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("ReloadSprite"), style: "GUIButtonSmall")
             {
                 OnClicked = (button, data) =>
                 {
@@ -157,7 +178,7 @@ namespace Barotrauma
                     return true;
                 }
             };
-            new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("ResetToPrefab"))
+            new GUIButton(new RectTransform(new Vector2(0.23f, 1.0f), buttonContainer.RectTransform), TextManager.Get("ResetToPrefab"), style: "GUIButtonSmall")
             {
                 OnClicked = (button, data) =>
                 {
@@ -175,12 +196,12 @@ namespace Barotrauma
             buttonContainer.RectTransform.IsFixedSize = true;
             GUITextBlock.AutoScaleAndNormalize(buttonContainer.Children.Where(c => c is GUIButton).Select(b => ((GUIButton)b).TextBlock));
             editor.AddCustomContent(buttonContainer, editor.ContentCount);
-            
+
             PositionEditingHUD();
 
             return editingHUD;
         }
-        
+
         partial void OnImpactProjSpecific(Fixture f1, Fixture f2, Contact contact)
         {
             if (!Prefab.Platform && Prefab.StairDirection == Direction.None)
@@ -218,16 +239,18 @@ namespace Barotrauma
             }
 
             if (min.X > worldView.Right || max.X < worldView.X) { return false; }
-            if ( min.Y > worldView.Y || max.Y < worldView.Y - worldView.Height) { return false; }
+            if (min.Y > worldView.Y || max.Y < worldView.Y - worldView.Height) { return false; }
 
             return true;
         }
 
         public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
         {
-            if (prefab.sprite == null) { return; }
+            if (Prefab.Sprite == null) { return; }
+
             if (editing)
             {
+                if (!SubEditorScreen.IsLayerVisible(this)) { return; }
                 if (!HasBody && !ShowStructures) { return; }
                 if (HasBody && !ShowWalls) { return; }
             }
@@ -242,26 +265,27 @@ namespace Barotrauma
 
         private float GetRealDepth()
         {
-            return SpriteDepthOverrideIsSet ? SpriteOverrideDepth : prefab.sprite.Depth;
+            return SpriteDepthOverrideIsSet ? SpriteOverrideDepth : Prefab.Sprite.Depth;
         }
 
         public float GetDrawDepth()
         {
-            return GetDrawDepth(GetRealDepth(), prefab.sprite);
+            return GetDrawDepth(GetRealDepth(), Prefab.Sprite);
         }
 
         private void Draw(SpriteBatch spriteBatch, bool editing, bool back = true, Effect damageEffect = null)
         {
-            if (prefab.sprite == null) { return; }
+            if (Prefab.Sprite == null) { return; }
             if (editing)
             {
+                if (!SubEditorScreen.IsLayerVisible(this)) { return; }
                 if (!HasBody && !ShowStructures) { return; }
                 if (HasBody && !ShowWalls) { return; }
             }
             else if (HiddenInGame) { return; }
 
-            Color color = IsIncludedInSelection && editing ? GUI.Style.Blue : IsHighlighted ? GUI.Style.Orange * Math.Max(spriteColor.A / (float) byte.MaxValue, 0.1f) : spriteColor;
-            
+            Color color = IsIncludedInSelection && editing ? GUIStyle.Blue : IsHighlighted ? GUIStyle.Orange * Math.Max(spriteColor.A / (float) byte.MaxValue, 0.1f) : spriteColor;
+
             if (IsSelected && editing)
             {
                 //color = Color.Lerp(color, Color.Gold, 0.5f);
@@ -271,9 +295,9 @@ namespace Barotrauma
                 if (BodyWidth > 0.0f) { rectSize.X = BodyWidth; }
                 if (BodyHeight > 0.0f) { rectSize.Y = BodyHeight; }
 
-                Vector2 bodyPos = WorldPosition + BodyOffset;
+                Vector2 bodyPos = WorldPosition + BodyOffset * Scale;
 
-                GUI.DrawRectangle(spriteBatch, new Vector2(bodyPos.X, -bodyPos.Y), rectSize.X, rectSize.Y, BodyRotation, Color.White, 
+                GUI.DrawRectangle(spriteBatch, new Vector2(bodyPos.X, -bodyPos.Y), rectSize.X, rectSize.Y, BodyRotation, Color.White,
                     thickness: Math.Max(1, (int)(2 / Screen.Selected.Cam.Zoom)));
             }
 
@@ -305,14 +329,14 @@ namespace Barotrauma
                             }
                             else
                             {
-                                dropShadowOffset = IsHorizontal ? 
-                                    new Vector2(0.0f, Math.Sign(Submarine.HiddenSubPosition.Y - Position.Y) * 10.0f) : 
+                                dropShadowOffset = IsHorizontal ?
+                                    new Vector2(0.0f, Math.Sign(Submarine.HiddenSubPosition.Y - Position.Y) * 10.0f) :
                                     new Vector2(Math.Sign(Submarine.HiddenSubPosition.X - Position.X) * 10.0f, 0.0f);
                             }
                         }
                         dropShadowOffset.Y = -dropShadowOffset.Y;
                     }
-                    
+
                     SpriteEffects oldEffects = Prefab.BackgroundSprite.effects;
                     Prefab.BackgroundSprite.effects ^= SpriteEffects;
 
@@ -347,8 +371,8 @@ namespace Barotrauma
 
             if (back == GetRealDepth() > 0.5f)
             {
-                SpriteEffects oldEffects = prefab.sprite.effects;
-                prefab.sprite.effects ^= SpriteEffects;
+                SpriteEffects oldEffects = Prefab.Sprite.effects;
+                Prefab.Sprite.effects ^= SpriteEffects;
 
                 for (int i = 0; i < Sections.Length; i++)
                 {
@@ -372,13 +396,13 @@ namespace Barotrauma
                     if (!HasDamage && i == 0)
                     {
                         drawSection = new Rectangle(
-                            drawSection.X, 
-                            drawSection.Y, 
+                            drawSection.X,
+                            drawSection.Y,
                             Sections[Sections.Length -1 ].rect.Right - drawSection.X,
                             drawSection.Y - (Sections[Sections.Length - 1].rect.Y - Sections[Sections.Length - 1].rect.Height));
                         i = Sections.Length;
                     }
-                    
+
                     Vector2 sectionOffset = new Vector2(
                         Math.Abs(rect.Location.X - drawSection.Location.X),
                         Math.Abs(rect.Location.Y - drawSection.Location.Y));
@@ -386,10 +410,10 @@ namespace Barotrauma
                     if (FlippedX && IsHorizontal) { sectionOffset.X = drawSection.Right - rect.Right; }
                     if (FlippedY && !IsHorizontal) { sectionOffset.Y = (rect.Y - rect.Height) - (drawSection.Y - drawSection.Height); }
 
-                    sectionOffset.X += MathUtils.PositiveModulo((int)-textureOffset.X, prefab.sprite.SourceRect.Width);
-                    sectionOffset.Y += MathUtils.PositiveModulo((int)-textureOffset.Y, prefab.sprite.SourceRect.Height);
+                    sectionOffset.X += MathUtils.PositiveModulo((int)-textureOffset.X, Prefab.Sprite.SourceRect.Width);
+                    sectionOffset.Y += MathUtils.PositiveModulo((int)-textureOffset.Y, Prefab.Sprite.SourceRect.Height);
 
-                    prefab.sprite.DrawTiled(
+                    Prefab.Sprite.DrawTiled(
                         spriteBatch,
                         new Vector2(drawSection.X + drawOffset.X, -(drawSection.Y + drawOffset.Y)),
                         new Vector2(drawSection.Width, drawSection.Height),
@@ -405,10 +429,10 @@ namespace Barotrauma
                     float rotation = decorativeSprite.GetRotation(ref spriteAnimState[decorativeSprite].RotationState, spriteAnimState[decorativeSprite].RandomRotationFactor);
                     Vector2 offset = decorativeSprite.GetOffset(ref spriteAnimState[decorativeSprite].OffsetState, spriteAnimState[decorativeSprite].RandomOffsetMultiplier) * Scale;
                     decorativeSprite.Sprite.Draw(spriteBatch, new Vector2(DrawPosition.X + offset.X, -(DrawPosition.Y + offset.Y)), color,
-                        rotation, decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, prefab.sprite.effects,
-                        depth: Math.Min(depth + (decorativeSprite.Sprite.Depth - prefab.sprite.Depth), 0.999f));
+                        rotation, decorativeSprite.GetScale(spriteAnimState[decorativeSprite].RandomScaleFactor) * Scale, Prefab.Sprite.effects,
+                        depth: Math.Min(depth + (decorativeSprite.Sprite.Depth - Prefab.Sprite.Depth), 0.999f));
                 }
-                prefab.sprite.effects = oldEffects;
+                Prefab.Sprite.effects = oldEffects;
             }
 
             if (GameMain.DebugDraw && Screen.Selected.Cam.Zoom > 0.5f)
@@ -418,7 +442,7 @@ namespace Barotrauma
                     for (int i = 0; i < Bodies.Count; i++)
                     {
                         Vector2 pos = FarseerPhysics.ConvertUnits.ToDisplayUnits(Bodies[i].Position);
-                        if (Submarine != null) pos += Submarine.Position;
+                        if (Submarine != null) { pos += Submarine.DrawPosition; }
                         pos.Y = -pos.Y;
                         GUI.DrawRectangle(spriteBatch,
                             pos,
@@ -445,16 +469,17 @@ namespace Barotrauma
 
         public void UpdateSpriteStates(float deltaTime)
         {
-            DecorativeSprite.UpdateSpriteStates(Prefab.DecorativeSpriteGroups, spriteAnimState, ID, deltaTime, ConditionalMatches);
+            if (Prefab.DecorativeSpriteGroups.Count == 0) { return; }            
+            DecorativeSprite.UpdateSpriteStates(Prefab.DecorativeSpriteGroups, spriteAnimState, ID, deltaTime, ConditionalMatches);            
             foreach (int spriteGroup in Prefab.DecorativeSpriteGroups.Keys)
             {
-                for (int i = 0; i < Prefab.DecorativeSpriteGroups[spriteGroup].Count; i++)
+                for (int i = 0; i < Prefab.DecorativeSpriteGroups[spriteGroup].Length; i++)
                 {
                     var decorativeSprite = Prefab.DecorativeSpriteGroups[spriteGroup][i];
                     if (decorativeSprite == null) { continue; }
                     if (spriteGroup > 0)
                     {
-                        int activeSpriteIndex = ID % Prefab.DecorativeSpriteGroups[spriteGroup].Count;
+                        int activeSpriteIndex = ID % Prefab.DecorativeSpriteGroups[spriteGroup].Length;
                         if (i != activeSpriteIndex)
                         {
                             spriteAnimState[decorativeSprite].IsActive = false;
@@ -496,27 +521,22 @@ namespace Barotrauma
             }
             else
             {
-                if (!conditional.Matches(this)) { return false; }                
+                if (!conditional.Matches(this)) { return false; }
             }
             return true;
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             byte sectionCount = msg.ReadByte();
 
             bool invalidMessage = false;
-            if (type != ServerNetObject.ENTITY_EVENT && type != ServerNetObject.ENTITY_EVENT_INITIAL)
-            {
-                DebugConsole.NewMessage($"Error while reading a network event for the structure \"{Name} ({ID})\". Invalid event type ({type}).", Color.Red);
-                return;
-            }
-            else if (sectionCount != Sections.Length)
+            if (sectionCount != Sections.Length)
             {
                 invalidMessage = true;
                 string errorMsg = $"Error while reading a network event for the structure \"{Name} ({ID})\". Section count does not match (server: {sectionCount} client: {Sections.Length})";
-                DebugConsole.NewMessage(errorMsg, Color.Red);
-                GameAnalyticsManager.AddErrorEventOnce("Structure.ClientRead:SectionCountMismatch", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Structure.ClientRead:SectionCountMismatch", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                throw new Exception(errorMsg);
             }
 
             for (int i = 0; i < sectionCount; i++)

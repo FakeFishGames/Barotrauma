@@ -27,7 +27,7 @@ namespace Barotrauma.Items.Components
             return retVal;
         }
 
-        public static bool operator==(Signal a, Signal b) =>
+        public static bool operator ==(Signal a, Signal b) =>
             a.value == b.value &&
             a.stepsTaken == b.stepsTaken &&
             a.sender == b.sender &&
@@ -35,6 +35,6 @@ namespace Barotrauma.Items.Components
             MathUtils.NearlyEqual(a.power, b.power) &&
             MathUtils.NearlyEqual(a.strength, b.strength);
 
-        public static bool operator!=(Signal a, Signal b) => !(a == b);
+        public static bool operator !=(Signal a, Signal b) => !(a == b);
     }
 }

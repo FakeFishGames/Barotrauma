@@ -5,20 +5,17 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class SkillSettings : ISerializableEntity
+    class SkillSettings : Prefab, ISerializableEntity
     {
-        public static SkillSettings Current
-        {
-            get;
-            private set;
-        }
+        public readonly static PrefabSelector<SkillSettings> Prefabs = new PrefabSelector<SkillSettings>();
+        public static SkillSettings Current => Prefabs.ActivePrefab;
 
-        [Serialize(4.0f, true)]
+        [Serialize(4.0f, IsPropertySaveable.Yes)]
         public float SingleRoundSkillGainMultiplier { get; set; }
         
 
         private float skillIncreasePerRepair;
-        [Serialize(5.0f, true)]
+        [Serialize(5.0f, IsPropertySaveable.Yes)]
         public float SkillIncreasePerRepair
         {
             get { return skillIncreasePerRepair * GetCurrentSkillGainMultiplier(); }
@@ -26,7 +23,7 @@ namespace Barotrauma
         }
 
         private float skillIncreasePerSabotage;
-        [Serialize(3.0f, true)]
+        [Serialize(3.0f, IsPropertySaveable.Yes)]
         public float SkillIncreasePerSabotage
         {
             get { return skillIncreasePerSabotage * GetCurrentSkillGainMultiplier(); }
@@ -34,7 +31,7 @@ namespace Barotrauma
         }
 
         private float skillIncreasePerCprRevive;
-        [Serialize(0.5f, true)]
+        [Serialize(0.5f, IsPropertySaveable.Yes)]
         public float SkillIncreasePerCprRevive
         {
             get { return skillIncreasePerCprRevive * GetCurrentSkillGainMultiplier(); }
@@ -42,7 +39,7 @@ namespace Barotrauma
         }
 
         private float skillIncreasePerRepairedStructureDamage;
-        [Serialize(0.005f, true)]
+        [Serialize(0.0025f, IsPropertySaveable.Yes)]
         public float SkillIncreasePerRepairedStructureDamage
         {
             get { return skillIncreasePerRepairedStructureDamage * GetCurrentSkillGainMultiplier(); }
@@ -50,7 +47,7 @@ namespace Barotrauma
         }
 
         private float skillIncreasePerSecondWhenSteering;
-        [Serialize(0.005f, true)]
+        [Serialize(0.005f, IsPropertySaveable.Yes)]
         public float SkillIncreasePerSecondWhenSteering
         {
             get { return skillIncreasePerSecondWhenSteering * GetCurrentSkillGainMultiplier(); }
@@ -58,7 +55,7 @@ namespace Barotrauma
         }
 
         private float skillIncreasePerFabricatorRequiredSkill;
-        [Serialize(0.5f, true)]
+        [Serialize(0.5f, IsPropertySaveable.Yes)]
         public float SkillIncreasePerFabricatorRequiredSkill
         {
             get { return skillIncreasePerFabricatorRequiredSkill * GetCurrentSkillGainMultiplier(); }
@@ -66,7 +63,7 @@ namespace Barotrauma
         }
 
         private float skillIncreasePerHostileDamage;
-        [Serialize(0.01f, true)]
+        [Serialize(0.01f, IsPropertySaveable.Yes)]
         public float SkillIncreasePerHostileDamage
         {
             get { return skillIncreasePerHostileDamage * GetCurrentSkillGainMultiplier(); }
@@ -74,7 +71,7 @@ namespace Barotrauma
         }
 
         private float skillIncreasePerSecondWhenOperatingTurret;
-        [Serialize(0.001f, true)]
+        [Serialize(0.001f, IsPropertySaveable.Yes)]
         public float SkillIncreasePerSecondWhenOperatingTurret
         {
             get { return skillIncreasePerSecondWhenOperatingTurret * GetCurrentSkillGainMultiplier(); }
@@ -82,55 +79,38 @@ namespace Barotrauma
         }
 
         private float skillIncreasePerFriendlyHealed;
-        [Serialize(0.001f, true)]
+        [Serialize(0.001f, IsPropertySaveable.Yes)]
         public float SkillIncreasePerFriendlyHealed
         {
             get { return skillIncreasePerFriendlyHealed * GetCurrentSkillGainMultiplier(); }
             set { skillIncreasePerFriendlyHealed = value; }
         }
 
-        [Serialize(1.1f, true)]
+        [Serialize(1.1f, IsPropertySaveable.Yes)]
         public float AssistantSkillIncreaseMultiplier
         {
             get;
             set;
         }
 
-        private SkillSettings(XElement element)
+        [Serialize(200.0f, IsPropertySaveable.Yes)]
+        public float MaximumSkillWithTalents
+        {
+            get;
+            set;
+        }
+
+        public SkillSettings(XElement element, SkillSettingsFile file) : base(file, "SkillSettings".ToIdentifier())
         {
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
         }
 
         public string Name => "SkillSettings";
 
-        public Dictionary<string, SerializableProperty> SerializableProperties
+        public Dictionary<Identifier, SerializableProperty> SerializableProperties
         {
             get;
             set;
-        }
-
-        public static void Load(IEnumerable<ContentFile> files)
-        {
-            //reverse order to respect content package load order (last file overrides others)
-            foreach (ContentFile file in files.Reverse())
-            {
-                if (file.Type != ContentType.SkillSettings)
-                {
-                    throw new ArgumentException();
-                }
-
-                XDocument doc = XMLExtensions.TryLoadXml(file.Path);
-                if (doc == null) { continue; }
-
-                Current = new SkillSettings(doc.Root);
-                break;
-            }
-
-            if (Current == null)
-            {
-                DebugConsole.NewMessage("No skill settings found in the selected content packages. Using default values.");
-                Current = new SkillSettings(null);
-            }
         }
 
         private float GetCurrentSkillGainMultiplier()
@@ -144,5 +124,7 @@ namespace Barotrauma
                 return SingleRoundSkillGainMultiplier;
             }
         }
+
+        public override void Dispose() { }
     }
 }

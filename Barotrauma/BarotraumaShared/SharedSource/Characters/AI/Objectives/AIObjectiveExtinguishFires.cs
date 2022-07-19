@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     class AIObjectiveExtinguishFires : AIObjectiveLoop<Hull>
     {
-        public override string Identifier { get; set; } = "extinguish fires";
+        public override Identifier Identifier { get; set; } = "extinguish fires".ToIdentifier();
         public override bool ForceRun => true;
         public override bool AllowInAnySub => true;
 
@@ -25,9 +25,9 @@ namespace Barotrauma
         /// <summary>
         /// 0-1 based on the horizontal size of all of the fires in the hull.
         /// </summary>
-        public static float GetFireSeverity(Hull hull) => MathHelper.Lerp(0, 1, MathUtils.InverseLerp(0, Math.Min(hull.Rect.Width, 1000), hull.FireSources.Sum(fs => fs.Size.X)));
+        public static float GetFireSeverity(Hull hull) => MathHelper.Lerp(0, 1, MathUtils.InverseLerp(0, 500, hull.FireSources.Sum(fs => fs.Size.X)));
 
-        protected override IEnumerable<Hull> GetList() => Hull.hullList;
+        protected override IEnumerable<Hull> GetList() => Hull.HullList;
 
         protected override AIObjective ObjectiveConstructor(Hull target) 
             => new AIObjectiveExtinguishFire(character, target, objectiveManager, PriorityModifier);

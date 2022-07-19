@@ -17,43 +17,42 @@ namespace FarseerPhysics.Dynamics
 {
     public partial class World
     {
-        public virtual Body CreateBody(Vector2 position = new Vector2(), float rotation = 0, BodyType bodyType = BodyType.Static)
+        public virtual Body CreateBody(Vector2 position = new Vector2(), float rotation = 0, BodyType bodyType = BodyType.Static, bool findNewContacts = true)
         {
-            Body body = new Body();
-            body.Position = position;
-            body.Rotation = rotation;            
-            body.BodyType = bodyType;
-            
-            AddAsync(body);
+            Body body = new Body
+            {
+                Position = position,
+                Rotation = rotation,
+                BodyType = bodyType
+            };
+
+            AddAsync(body, findNewContacts);
 
             return body;
         }
 
-        public Body CreateEdge(Vector2 start, Vector2 end)
+        public Body CreateEdge(Vector2 start, Vector2 end, BodyType bodyType = BodyType.Static, Category collisionCategory = Category.Cat1, Category collidesWith = Category.All, bool findNewContacts = true)
         {
-            Body body = CreateBody();
-
-            body.CreateEdge(start, end);
+            Body body = CreateBody(bodyType: bodyType, findNewContacts: findNewContacts);
+            body.CreateEdge(start, end, collisionCategory, collidesWith);
             return body;
         }
 
-        public Body CreateChainShape(Vertices vertices, Vector2 position = new Vector2())
+        public Body CreateChainShape(Vertices vertices, Vector2 position = new Vector2(), Category collisionCategory = Category.Cat1, Category collidesWith = Category.All, bool findNewContacts = true)
         {
-            Body body = CreateBody(position);
-
-            body.CreateChainShape(vertices);
+            Body body = CreateBody(position, findNewContacts: findNewContacts);
+            body.CreateChainShape(vertices, collisionCategory, collidesWith);
             return body;
         }
 
-        public Body CreateLoopShape(Vertices vertices, Vector2 position = new Vector2())
+        public Body CreateLoopShape(Vertices vertices, Vector2 position = new Vector2(), Category collisionCategory = Category.Cat1, Category collidesWith = Category.All, bool findNewContacts = true)
         {
-            Body body = CreateBody(position);
-
-            body.CreateLoopShape(vertices);
+            Body body = CreateBody(position, findNewContacts: findNewContacts);
+            body.CreateLoopShape(vertices, collisionCategory, collidesWith);
             return body;
         }
 
-        public Body CreateRectangle(float width, float height, float density, Vector2 position = new Vector2(), float rotation = 0, BodyType bodyType = BodyType.Static)
+        public Body CreateRectangle(float width, float height, float density, Vector2 position = new Vector2(), float rotation = 0, BodyType bodyType = BodyType.Static, Category collisionCategory = Category.Cat1, Category collidesWith = Category.All, bool findNewContacts = true)
         {
             if (width <= 0)
                 throw new ArgumentOutOfRangeException("width", "Width must be more than 0 meters");
@@ -61,44 +60,44 @@ namespace FarseerPhysics.Dynamics
             if (height <= 0)
                 throw new ArgumentOutOfRangeException("height", "Height must be more than 0 meters");
 
-            Body body = CreateBody(position, rotation, bodyType);
+            Body body = CreateBody(position, rotation, bodyType, findNewContacts);
 
             Vertices rectangleVertices = PolygonTools.CreateRectangle(width / 2, height / 2);
-            body.CreatePolygon(rectangleVertices, density);
+            body.CreatePolygon(rectangleVertices, density, collisionCategory, collidesWith);
 
             return body;
         }
 
-        public Body CreateCircle(float radius, float density, Vector2 position = new Vector2(), BodyType bodyType = BodyType.Static)
+        public Body CreateCircle(float radius, float density, Vector2 position = new Vector2(), BodyType bodyType = BodyType.Static, Category collisionCategory = Category.Cat1, Category collidesWith = Category.All, bool findNewContacts = true)
         {
-            Body body = CreateBody(position, 0, bodyType);
-            body.CreateCircle(radius, density);
+            Body body = CreateBody(position, 0, bodyType, findNewContacts);
+            body.CreateCircle(radius, density, collisionCategory, collidesWith);
             return body;
         }
 
-        public Body CreateEllipse(float xRadius, float yRadius, int edges, float density, Vector2 position = new Vector2(), float rotation = 0, BodyType bodyType = BodyType.Static)
+        public Body CreateEllipse(float xRadius, float yRadius, int edges, float density, Vector2 position = new Vector2(), float rotation = 0, BodyType bodyType = BodyType.Static, Category collisionCategory = Category.Cat1, Category collidesWith = Category.All, bool findNewContacts = true)
         {
-            Body body = CreateBody(position, rotation, bodyType);
-            body.CreateEllipse(xRadius, yRadius, edges, density);
+            Body body = CreateBody(position, rotation, bodyType, findNewContacts);
+            body.CreateEllipse(xRadius, yRadius, edges, density, collisionCategory, collidesWith);
             return body;
         }
 
-        public Body CreatePolygon(Vertices vertices, float density, Vector2 position = new Vector2(), float rotation = 0, BodyType bodyType = BodyType.Static)
+        public Body CreatePolygon(Vertices vertices, float density, Vector2 position = new Vector2(), float rotation = 0, BodyType bodyType = BodyType.Static, Category collisionCategory = Category.Cat1, Category collidesWith = Category.All, bool findNewContacts = true)
         {
-            Body body = CreateBody(position, rotation, bodyType);
-            body.CreatePolygon(vertices, density);
+            Body body = CreateBody(position, rotation, bodyType, findNewContacts);
+            body.CreatePolygon(vertices, density, collisionCategory, collidesWith);
             return body;
         }
 
-        public Body CreateCompoundPolygon(List<Vertices> list, float density, Vector2 position = new Vector2(), float rotation = 0, BodyType bodyType = BodyType.Static)
+        public Body CreateCompoundPolygon(List<Vertices> list, float density, Vector2 position = new Vector2(), float rotation = 0, BodyType bodyType = BodyType.Static, Category collisionCategory = Category.Cat1, Category collidesWith = Category.All, bool findNewContacts = true)
         {
             //We create a single body
-            Body body = CreateBody(position, rotation, bodyType);
-            body.CreateCompoundPolygon(list, density);
+            Body body = CreateBody(position, rotation, bodyType, findNewContacts);
+            body.CreateCompoundPolygon(list, density, collisionCategory, collidesWith);
             return body;
         }
 
-        public Body CreateGear(float radius, int numberOfTeeth, float tipPercentage, float toothHeight, float density, Vector2 position = new Vector2(), float rotation = 0, BodyType bodyType = BodyType.Static)
+        public Body CreateGear(float radius, int numberOfTeeth, float tipPercentage, float toothHeight, float density, Vector2 position = new Vector2(), float rotation = 0, BodyType bodyType = BodyType.Static, Category collisionCategory = Category.Cat1, Category collidesWith = Category.All)
         {
             Vertices gearPolygon = PolygonTools.CreateGear(radius, numberOfTeeth, tipPercentage, toothHeight);
 
@@ -108,13 +107,13 @@ namespace FarseerPhysics.Dynamics
                 //Decompose the gear:
                 List<Vertices> list = Triangulate.ConvexPartition(gearPolygon, TriangulationAlgorithm.Earclip);
 
-                return CreateCompoundPolygon(list, density, position, rotation, bodyType);
+                return CreateCompoundPolygon(list, density, position, rotation, bodyType, collisionCategory, collidesWith);
             }
 
-            return CreatePolygon(gearPolygon, density, position, rotation, bodyType);
+            return CreatePolygon(gearPolygon, density, position, rotation, bodyType, collisionCategory, collidesWith);
         }
 
-        public Body CreateCapsule(float height, float topRadius, int topEdges, float bottomRadius, int bottomEdges, float density, Vector2 position = new Vector2(), float rotation = 0, BodyType bodyType = BodyType.Static)
+        public Body CreateCapsule(float height, float topRadius, int topEdges, float bottomRadius, int bottomEdges, float density, Vector2 position = new Vector2(), float rotation = 0, BodyType bodyType = BodyType.Static, Category collisionCategory = Category.Cat1, Category collidesWith = Category.All, bool findNewContacts = true)
         {
             Vertices verts = PolygonTools.CreateCapsule(height, topRadius, topEdges, bottomRadius, bottomEdges);
 
@@ -122,23 +121,25 @@ namespace FarseerPhysics.Dynamics
             if (verts.Count >= Settings.MaxPolygonVertices)
             {
                 List<Vertices> vertList = Triangulate.ConvexPartition(verts, TriangulationAlgorithm.Earclip);
-                return CreateCompoundPolygon(vertList, density, position, rotation, bodyType);
+                return CreateCompoundPolygon(vertList, density, position, rotation, bodyType, collisionCategory, collidesWith, findNewContacts);
             }
 
-            return CreatePolygon(verts, density, position, rotation, bodyType);
+            return CreatePolygon(verts, density, position, rotation, bodyType, collisionCategory, collidesWith, findNewContacts);
         }
 
-        public Body CreateCapsuleHorizontal(float width, float endRadius, float density, Vector2 position = new Vector2(), float rotation = 0, BodyType bodyType = BodyType.Static)
+        public Body CreateCapsuleHorizontal(float width, float endRadius, float density, Vector2 position = new Vector2(), float rotation = 0, BodyType bodyType = BodyType.Static, Category collisionCategory = Category.Cat1, Category collidesWith = Category.All, bool findNewContacts = true)
         {
             //Create the middle rectangle
             Vertices rectangle = PolygonTools.CreateRectangle(width / 2, endRadius);
 
-            List<Vertices> list = new List<Vertices>();
-            list.Add(rectangle);
+            List<Vertices> list = new List<Vertices>
+            {
+                rectangle
+            };
 
-            Body body = CreateCompoundPolygon(list, density, position, rotation, bodyType);
-            body.CreateCircle(endRadius, density, new Vector2(width / 2, 0));
-            body.CreateCircle(endRadius, density, new Vector2(-width / 2, 0));
+            Body body = CreateCompoundPolygon(list, density, position, rotation, bodyType, collisionCategory, collidesWith, findNewContacts);
+            body.CreateCircle(endRadius, density, new Vector2(width / 2, 0), collisionCategory, collidesWith);
+            body.CreateCircle(endRadius, density, new Vector2(-width / 2, 0), collisionCategory, collidesWith);
 
             //Create the two circles
             //CircleShape topCircle = new CircleShape(endRadius, density);
@@ -150,17 +151,19 @@ namespace FarseerPhysics.Dynamics
             //body.CreateFixture(bottomCircle);
             return body;
         }
-        public Body CreateCapsule(float height, float endRadius, float density, Vector2 position = new Vector2(), float rotation = 0, BodyType bodyType = BodyType.Static)
+        public Body CreateCapsule(float height, float endRadius, float density, Vector2 position = new Vector2(), float rotation = 0, BodyType bodyType = BodyType.Static, Category collisionCategory = Category.Cat1, Category collidesWith = Category.All, bool findNewContacts = true)
         {
             //Create the middle rectangle
             Vertices rectangle = PolygonTools.CreateRectangle(endRadius, height / 2);
 
-            List<Vertices> list = new List<Vertices>();
-            list.Add(rectangle);
+            List<Vertices> list = new List<Vertices>()
+            {
+                rectangle
+            };
 
-            Body body = CreateCompoundPolygon(list, density, position, rotation, bodyType);
-            body.CreateCircle(endRadius, density, new Vector2(0, height / 2));
-            body.CreateCircle(endRadius, density, new Vector2(0, -(height / 2)));
+            Body body = CreateCompoundPolygon(list, density, position, rotation, bodyType, collisionCategory, collidesWith, findNewContacts);
+            body.CreateCircle(endRadius, density, new Vector2(0, height / 2), collisionCategory, collidesWith);
+            body.CreateCircle(endRadius, density, new Vector2(0, -(height / 2)), collisionCategory, collidesWith);
 
             //Create the two circles
             //CircleShape topCircle = new CircleShape(endRadius, density);
@@ -173,7 +176,7 @@ namespace FarseerPhysics.Dynamics
             return body;
         }
 
-        public Body CreateRoundedRectangle(float width, float height, float xRadius, float yRadius, int segments, float density, Vector2 position = new Vector2(), float rotation = 0, BodyType bodyType = BodyType.Static)
+        public Body CreateRoundedRectangle(float width, float height, float xRadius, float yRadius, int segments, float density, Vector2 position = new Vector2(), float rotation = 0, BodyType bodyType = BodyType.Static, Category collisionCategory = Category.Cat1, Category collidesWith = Category.All)
         {
             Vertices verts = PolygonTools.CreateRoundedRectangle(width, height, xRadius, yRadius, segments);
 
@@ -181,23 +184,23 @@ namespace FarseerPhysics.Dynamics
             if (verts.Count >= Settings.MaxPolygonVertices)
             {
                 List<Vertices> vertList = Triangulate.ConvexPartition(verts, TriangulationAlgorithm.Earclip);
-                return CreateCompoundPolygon(vertList, density, position, rotation, bodyType);
+                return CreateCompoundPolygon(vertList, density, position, rotation, bodyType, collisionCategory, collidesWith);
             }
 
-            return CreatePolygon(verts, density, position, rotation, bodyType);
+            return CreatePolygon(verts, density, position, rotation, bodyType, collisionCategory, collidesWith);
         }
 
-        public Body CreateLineArc(float radians, int sides, float radius, bool closed = false, Vector2 position = new Vector2(), float rotation = 0, BodyType bodyType = BodyType.Static)
+        public Body CreateLineArc(float radians, int sides, float radius, bool closed = false, Vector2 position = new Vector2(), float rotation = 0, BodyType bodyType = BodyType.Static, Category collisionCategory = Category.Cat1, Category collidesWith = Category.All)
         {
             Body body = CreateBody(position, rotation, bodyType);
-            body.CreateLineArc(radians, sides, radius, closed);
+            body.CreateLineArc(radians, sides, radius, closed, collisionCategory, collidesWith);
             return body;
         }
 
-        public Body CreateSolidArc(float density, float radians, int sides, float radius, Vector2 position = new Vector2(), float rotation = 0, BodyType bodyType = BodyType.Static)
+        public Body CreateSolidArc(float density, float radians, int sides, float radius, Vector2 position = new Vector2(), float rotation = 0, BodyType bodyType = BodyType.Static, Category collisionCategory = Category.Cat1, Category collidesWith = Category.All)
         {
             Body body = CreateBody(position, rotation, bodyType);
-            body.CreateSolidArc(density, radians, sides, radius);
+            body.CreateSolidArc(density, radians, sides, radius, collisionCategory, collidesWith);
 
             return body;
         }

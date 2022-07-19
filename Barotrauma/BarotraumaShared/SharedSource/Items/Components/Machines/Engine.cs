@@ -27,7 +27,7 @@ namespace Barotrauma.Items.Components
         public Character User;
 
         [Editable(0.0f, 10000000.0f), 
-        Serialize(500.0f, true, description: "The amount of force exerted on the submarine when the engine is operating at full power.")]
+        Serialize(500.0f, IsPropertySaveable.Yes, description: "The amount of force exerted on the submarine when the engine is operating at full power.")]
         public float MaxForce
         {
             get { return maxForce; }
@@ -37,7 +37,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize("0.0,0.0", true, 
+        [Editable, Serialize("0.0,0.0", IsPropertySaveable.Yes, 
             description: "The position of the propeller as an offset from the item's center (in pixels)."+
             " Determines where the particles spawn and the position that causes characters to take damage from the engine if the PropellerDamage is defined.")]
         public Vector2 PropellerPos
@@ -46,7 +46,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Editable, Serialize(false, true)]
+        [Editable, Serialize(false, IsPropertySaveable.Yes)]
         public bool DisablePropellerDamage
         {
             get;
@@ -73,12 +73,14 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public Engine(Item item, XElement element)
+        private const float TinkeringForceIncrease = 1.5f;
+
+        public Engine(Item item, ContentXElement element)
             : base(item, element)
         {
             IsActive = true;
             
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -91,7 +93,7 @@ namespace Barotrauma.Items.Components
             InitProjSpecific(element);
         }
 
-        partial void InitProjSpecific(XElement element);
+        partial void InitProjSpecific(ContentXElement element);
     
         public override void Update(float deltaTime, Camera cam)
         {
@@ -101,60 +103,94 @@ namespace Barotrauma.Items.Components
 
             controlLockTimer -= deltaTime;
 
-            currPowerConsumption = Math.Abs(targetForce) / 100.0f * powerConsumption;
-            //engines consume more power when in a bad condition
-            item.GetComponent<Repairable>()?.AdjustPowerConsumption(ref currPowerConsumption);
+            if (powerConsumption == 0.0f)
+            {
+                prevVoltage = 1;
+                hasPower = true;
+            }
+            else
+            {
+                hasPower = Voltage > MinVoltage;
+            }
 
-            if (powerConsumption == 0.0f) { Voltage = 1.0f; }
 
-            prevVoltage = Voltage;
-            hasPower = Voltage > MinVoltage;
-
-            Force = MathHelper.Lerp(force, (Voltage < MinVoltage) ? 0.0f : targetForce, 0.1f);
+            Force = MathHelper.Lerp(force, (Voltage < MinVoltage) ? 0.0f : targetForce, deltaTime * 10.0f);
             if (Math.Abs(Force) > 1.0f)
             {
+                float voltageFactor = MinVoltage <= 0.0f ? 1.0f : Math.Min(Voltage, 1.0f);
+                float currForce = force * voltageFactor;
+                float condition = item.Condition / item.MaxCondition;
+                // Broken engine makes more noise.
+                float noise = Math.Abs(currForce) * MathHelper.Lerp(1.5f, 1f, condition);
+                UpdateAITargets(noise);
                 //arbitrary multiplier that was added to changes in submarine mass without having to readjust all engines
                 float forceMultiplier = 0.1f;
                 if (User != null)
                 {
                     forceMultiplier *= MathHelper.Lerp(0.5f, 2.0f, (float)Math.Sqrt(User.GetSkillLevel("helm") / 100));
                 }
-
-                float voltageFactor = MinVoltage <= 0.0f ? 1.0f : Math.Min(Voltage, 1.0f);
-                Vector2 currForce = new Vector2(force * maxForce * forceMultiplier * voltageFactor, 0.0f);
-                //less effective when in a bad condition
-                currForce *= MathHelper.Lerp(0.5f, 2.0f, item.Condition / item.MaxCondition);
-                if (item.Submarine.FlippedX) { currForce *= -1; }
-                item.Submarine.ApplyForce(currForce);
-                UpdatePropellerDamage(deltaTime);
-                float maxChangeSpeed = 0.5f;
-                float modifier = 2;
-                float noise = MathUtils.NearlyEqual(0.0f, maxForce) ? 0.0f : currForce.Length() * forceMultiplier * modifier / maxForce;
-                float min = Math.Max(1 - maxChangeSpeed, 0);
-                float max = 1 + maxChangeSpeed;
-                UpdateAITargets(Math.Clamp(noise, min, max), deltaTime);
-#if CLIENT
-                particleTimer -= deltaTime;
-                if (particleTimer <= 0.0f)
+                currForce *= maxForce * forceMultiplier;
+                if (item.GetComponent<Repairable>() is Repairable repairable && repairable.IsTinkering)
                 {
-                    Vector2 particleVel = -currForce.ClampLength(5000.0f) / 5.0f;
+                    currForce *= 1f + repairable.TinkeringStrength * TinkeringForceIncrease;
+                }
+
+                //less effective when in a bad condition
+                currForce *= MathHelper.Lerp(0.5f, 2.0f, condition);
+                if (item.Submarine.FlippedX) { currForce *= -1; }
+                Vector2 forceVector = new Vector2(currForce, 0);
+                item.Submarine.ApplyForce(forceVector * deltaTime * Timing.FixedUpdateRate);
+                UpdatePropellerDamage(deltaTime);
+#if CLIENT
+                float particleInterval = 1.0f / particlesPerSec;
+                particleTimer += deltaTime;
+                while (particleTimer > particleInterval)
+                {
+                    Vector2 particleVel = -forceVector.ClampLength(5000.0f) / 5.0f;
                     GameMain.ParticleManager.CreateParticle("bubbles", item.WorldPosition + PropellerPos * item.Scale,
-                        particleVel * Rand.Range(0.9f, 1.1f),
+                        particleVel * Rand.Range(0.8f, 1.1f),
                         0.0f, item.CurrentHull);
-                    particleTimer = 1.0f / particlesPerSec;
-                }                
+                    particleTimer -= particleInterval;
+                }
 #endif
             }
         }
 
-        private void UpdateAITargets(float increaseSpeed, float deltaTime)
+        /// <summary>
+        /// Power consumption of the engine. Only consume power when active and adjust consumption based on condition and target force.
+        /// </summary>
+        public override float GetCurrentPowerConsumption(Connection connection = null)
+        {
+            if (connection != this.powerIn || !IsActive)
+            {
+                return 0;
+            }
+
+            currPowerConsumption = Math.Abs(targetForce) / 100.0f * powerConsumption;
+            //engines consume more power when in a bad condition
+            item.GetComponent<Repairable>()?.AdjustPowerConsumption(ref currPowerConsumption);
+            return currPowerConsumption;
+        }
+
+        /// <summary>
+        /// When grid is resolved update the previous voltage
+        /// </summary>
+        public override void GridResolved(Connection connection) 
+        {
+            if (connection == powerIn)
+            {
+                prevVoltage = Voltage;
+            }
+        }
+
+        private void UpdateAITargets(float noise)
         {
             if (item.AiTarget != null)
             {
-                item.AiTarget.IncreaseSoundRange(deltaTime, increaseSpeed);
+                item.AiTarget.SoundRange = MathHelper.Lerp(item.AiTarget.MinSoundRange, item.AiTarget.MaxSoundRange, noise / 100);
                 if (item.CurrentHull != null && item.CurrentHull.AiTarget != null)
                 {
-                    // It's possible that some othe item increases the hull's soundrange more than the engine.
+                    // It's possible that some other item increases the hull's soundrange more than the engine.
                     item.CurrentHull.AiTarget.SoundRange = Math.Max(item.CurrentHull.AiTarget.SoundRange, item.AiTarget.SoundRange);
                 }
             }

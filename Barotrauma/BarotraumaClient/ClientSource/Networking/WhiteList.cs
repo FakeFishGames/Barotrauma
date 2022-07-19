@@ -56,16 +56,11 @@ namespace Barotrauma.Networking
                 {
                     nameBox.Enabled = box.Selected;
                     ipBox.Enabled = box.Selected;
-                    addNewButton.Enabled = box.Selected;
-
+                    addNewButton.Enabled = box.Selected && !string.IsNullOrEmpty(ipBox.Text) && !string.IsNullOrEmpty(nameBox.Text);
                     localEnabled = box.Selected;
-
-
                     return true;
                 }
             };
-
-            localEnabled = Enabled;
 
             var listBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.7f), whitelistFrame.RectTransform));
             foreach (WhiteListedPlayer wlp in whitelistedPlayers)

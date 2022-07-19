@@ -34,11 +34,11 @@ namespace Barotrauma
             : base(prefab, locations, sub)
         {
             missionSub = sub;
-            characterConfig = prefab.ConfigElement.Element("Characters");
+            characterConfig = prefab.ConfigElement.GetChildElement("Characters");
             baseEscortedCharacters = prefab.ConfigElement.GetAttributeInt("baseescortedcharacters", 1);
             scalingEscortedCharacters = prefab.ConfigElement.GetAttributeFloat("scalingescortedcharacters", 0);
             terroristChance = prefab.ConfigElement.GetAttributeFloat("terroristchance", 0);
-            itemConfig = prefab.ConfigElement.Element("TerroristItems");
+            itemConfig = prefab.ConfigElement.GetChildElement("TerroristItems");
             CalculateReward();
         }
 
@@ -50,7 +50,8 @@ namespace Barotrauma
                 return;
             }
 
-            int multiplier = CalculateScalingEscortedCharacterCount();
+            // Disabled for now, because they make balancing the missions a pain.
+            int multiplier = 1;//CalculateScalingEscortedCharacterCount();
             calculatedReward = Prefab.Reward * multiplier;
 
             string rewardText = $"‖color:gui.orange‖{string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:N0}", GetReward(missionSub))}‖end‖";
@@ -86,7 +87,7 @@ namespace Barotrauma
             characterItems.Clear();
 
             WayPoint explicitStayInHullPos = WayPoint.GetRandom(SpawnType.Human, null, Submarine.MainSub);
-            Rand.RandSync randSync = Rand.RandSync.Server;
+            Rand.RandSync randSync = Rand.RandSync.ServerAndClient;
 
             if (terroristChance > 0f)
             {
@@ -225,8 +226,8 @@ namespace Barotrauma
                     if (IsAlive(character) && !character.IsIncapacitated && !character.LockHands)
                     {
                         character.TryAddNewTeamChange(TerroristTeamChangeIdentifier, new ActiveTeamChange(CharacterTeamType.None, ActiveTeamChange.TeamChangePriorities.Willful, aggressiveBehavior: true));
-                        character.Speak(TextManager.Get("dialogterroristannounce"), null, Rand.Range(0.5f, 3f));
-                        XElement randomElement = itemConfig.Elements().GetRandom(e => e.GetAttributeFloat(0f, "mindifficulty") <= Level.Loaded.Difficulty);
+                        character.Speak(TextManager.Get("dialogterroristannounce").Value, null, Rand.Range(0.5f, 3f));
+                        XElement randomElement = itemConfig.Elements().GetRandomUnsynced(e => e.GetAttributeFloat(0f, "mindifficulty") <= Level.Loaded.Difficulty);
                         if (randomElement != null)
                         {
                             HumanPrefab.InitializeItem(character, randomElement, character.Submarine, humanPrefab: null, createNetworkEvents: true);
@@ -285,7 +286,8 @@ namespace Barotrauma
 
         private bool Survived(Character character)
         {
-            return IsAlive(character) && character.CurrentHull != null && character.CurrentHull.Submarine == Submarine.MainSub;
+            return IsAlive(character) && character.CurrentHull?.Submarine != null && 
+                (character.CurrentHull.Submarine == Submarine.MainSub || Submarine.MainSub.DockedTo.Contains(character.CurrentHull.Submarine));
         }
 
         private bool IsAlive(Character character)
@@ -319,18 +321,33 @@ namespace Barotrauma
                 }
             }
 
-            // characters that survived will take their items with them, in case players tried to be crafty and steal them
-            // this needs to run here in case players abort the mission by going back home
-            // TODO: I think this might feel like a bug.
-            foreach (var characterItem in characterItems)
+            if (!IsClient)
             {
-                if (Survived(characterItem.Key) || !completed)
+                foreach (Character character in characters)
                 {
-                    foreach (Item item in characterItem.Value)
+                    if (character.Inventory == null) { continue; }
+                    foreach (Item item in character.Inventory.AllItemsMod)
                     {
-                        if (!item.Removed)
+                        //item didn't spawn with the characters -> drop it
+                        if (!characterItems.Any(c => c.Value.Contains(item)))
                         {
-                            item.Remove();
+                            item.Drop(character);
+                        }
+                    }
+                }
+
+                // characters that survived will take their items with them, in case players tried to be crafty and steal them
+                // this needs to run here in case players abort the mission by going back home
+                foreach (var characterItem in characterItems)
+                {
+                    if (Survived(characterItem.Key) || !completed)
+                    {
+                        foreach (Item item in characterItem.Value)
+                        {
+                            if (!item.Removed)
+                            {
+                                item.Remove();
+                            }
                         }
                     }
                 }

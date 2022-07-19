@@ -5,14 +5,64 @@ using System.Threading;
 
 namespace Barotrauma
 {
-    enum CoroutineStatus
+    abstract class CoroutineStatus
     {
-        Running, Success, Failure
+        public static CoroutineStatus Running => EnumCoroutineStatus.Running;
+        public static CoroutineStatus Success => EnumCoroutineStatus.Success;
+        public static CoroutineStatus Failure => EnumCoroutineStatus.Failure;
+
+        public abstract bool CheckFinished(float deltaTime);
+        public abstract bool EndsCoroutine(CoroutineHandle handle);
+    }
+
+    class EnumCoroutineStatus : CoroutineStatus
+    {
+        private enum StatusValue
+        {
+            Running, Success, Failure
+        }
+
+        private readonly StatusValue Value;
+
+        private EnumCoroutineStatus(StatusValue value) { Value = value; }
+
+        public new readonly static EnumCoroutineStatus Running = new EnumCoroutineStatus(StatusValue.Running);
+        public new readonly static EnumCoroutineStatus Success = new EnumCoroutineStatus(StatusValue.Success);
+        public new readonly static EnumCoroutineStatus Failure = new EnumCoroutineStatus(StatusValue.Failure);
+
+        public override bool CheckFinished(float deltaTime)
+        {
+            return true;
+        }
+
+        public override bool EndsCoroutine(CoroutineHandle handle)
+        {
+            if (Value == StatusValue.Failure)
+            {
+                DebugConsole.ThrowError("Coroutine \"" + handle.Name + "\" has failed");
+            }
+            return Value != StatusValue.Running;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is EnumCoroutineStatus other && Value == other.Value;
+        }
+
+        public override int GetHashCode()
+        {
+            return Value.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return Value.ToString();
+        }
     }
 
     class CoroutineHandle
     {
-        public readonly IEnumerator<object> Coroutine;
+        public readonly IEnumerator<CoroutineStatus> Coroutine;
         public readonly string Name;
 
         public Exception Exception;
@@ -20,7 +70,7 @@ namespace Barotrauma
 
         public Thread Thread;
 
-        public CoroutineHandle(IEnumerator<object> coroutine, string name = "", bool useSeparateThread = false)
+        public CoroutineHandle(IEnumerator<CoroutineStatus> coroutine, string name = "", bool useSeparateThread = false)
         {
             Coroutine = coroutine;
             Name = string.IsNullOrWhiteSpace(name) ? coroutine.ToString() : name;
@@ -36,7 +86,7 @@ namespace Barotrauma
 
         public static float UnscaledDeltaTime, DeltaTime;
 
-        public static CoroutineHandle StartCoroutine(IEnumerable<object> func, string name = "", bool useSeparateThread = false)
+        public static CoroutineHandle StartCoroutine(IEnumerable<CoroutineStatus> func, string name = "", bool useSeparateThread = false)
         {
             var handle = new CoroutineHandle(func.GetEnumerator(), name);
             lock (Coroutines)
@@ -58,17 +108,12 @@ namespace Barotrauma
             return handle;
         }
 
-        public static CoroutineHandle Invoke(Action action)
-        {
-            return StartCoroutine(DoInvokeAfter(action, 0.0f));
-        }
-
-        public static CoroutineHandle InvokeAfter(Action action, float delay)
+        public static CoroutineHandle Invoke(Action action, float delay = 0f)
         {
             return StartCoroutine(DoInvokeAfter(action, delay));
         }
 
-        private static IEnumerable<object> DoInvokeAfter(Action action, float delay)
+        private static IEnumerable<CoroutineStatus> DoInvokeAfter(Action action, float delay)
         {
             if (action == null)
             {
@@ -132,14 +177,24 @@ namespace Barotrauma
                         bool joined = false;
                         while (!joined)
                         {
-#if CLIENT
                             CrossThread.ProcessTasks();
-#endif
                             joined = coroutine.Thread.Join(TimeSpan.FromMilliseconds(500));
                         }
                     }
                 }
             }
+        }
+
+        private static bool PerformCoroutineStep(CoroutineHandle handle)
+        {
+            var current = handle.Coroutine.Current;
+            if (current != null)
+            {
+                if (current.EndsCoroutine(handle) || handle.AbortRequested) { return true; }
+                if (!current.CheckFinished(UnscaledDeltaTime)) { return false; }
+            }
+            if (!handle.Coroutine.MoveNext()) { return true; }
+            return false;
         }
 
         public static void ExecuteCoroutineThread(CoroutineHandle handle)
@@ -148,29 +203,8 @@ namespace Barotrauma
             {
                 while (!handle.AbortRequested)
                 {
-                    if (handle.Coroutine.Current != null)
-                    {
-                        WaitForSeconds wfs = handle.Coroutine.Current as WaitForSeconds;
-                        if (wfs != null)
-                        {
-                            Thread.Sleep((int)(wfs.TotalTime * 1000));
-                        }
-                        else
-                        {
-                            switch ((CoroutineStatus)handle.Coroutine.Current)
-                            {
-                                case CoroutineStatus.Success:
-                                    return;
-
-                                case CoroutineStatus.Failure:
-                                    DebugConsole.ThrowError("Coroutine \"" + handle.Name + "\" has failed");
-                                    return;
-                            }
-                        }
-                    }
-
-                    Thread.Yield();
-                    if (!handle.Coroutine.MoveNext()) return;
+                    if (PerformCoroutineStep(handle)) { return; }
+                    Thread.Sleep((int)(UnscaledDeltaTime * 1000));
                 }
             }
             catch (ThreadAbortException)
@@ -192,36 +226,13 @@ namespace Barotrauma
 #endif
                 if (handle.Thread == null)
                 {
-                    if (handle.AbortRequested) { return true; }
-                    if (handle.Coroutine.Current != null)
-                    {
-                        WaitForSeconds wfs = handle.Coroutine.Current as WaitForSeconds;
-                        if (wfs != null)
-                        {
-                            if (!wfs.CheckFinished(UnscaledDeltaTime)) return false;
-                        }
-                        else
-                        {
-                            switch ((CoroutineStatus)handle.Coroutine.Current)
-                            {
-                                case CoroutineStatus.Success:
-                                    return true;
-
-                                case CoroutineStatus.Failure:
-                                    DebugConsole.ThrowError("Coroutine \"" + handle.Name + "\" has failed");
-                                    return true;
-                            }
-                        }
-                    }
-
-                    handle.Coroutine.MoveNext();
-                    return false;
+                    return PerformCoroutineStep(handle);
                 }
                 else
                 {
                     if (handle.Thread.ThreadState.HasFlag(ThreadState.Stopped))
                     {
-                        if (handle.Exception!=null || (CoroutineStatus)handle.Coroutine.Current == CoroutineStatus.Failure)
+                        if (handle.Exception!=null || handle.Coroutine.Current == CoroutineStatus.Failure)
                         {
                             DebugConsole.ThrowError("Coroutine \"" + handle.Name + "\" has failed");
                         }
@@ -267,7 +278,7 @@ namespace Barotrauma
         }
     }
   
-    class WaitForSeconds
+    class WaitForSeconds : CoroutineStatus
     {
         public readonly float TotalTime;
 
@@ -281,7 +292,7 @@ namespace Barotrauma
             this.ignorePause = ignorePause;
         }
 
-        public bool CheckFinished(float deltaTime) 
+        public override bool CheckFinished(float deltaTime) 
         {
 #if !SERVER
             if (ignorePause || !GUI.PauseMenuOpen)
@@ -292,6 +303,11 @@ namespace Barotrauma
             timer -= deltaTime;
 #endif
             return timer <= 0.0f;
+        }
+
+        public override bool EndsCoroutine(CoroutineHandle handle)
+        {
+            return false;
         }
     }
 }

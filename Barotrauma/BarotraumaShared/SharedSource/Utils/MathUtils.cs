@@ -29,6 +29,11 @@ namespace Barotrauma
             return (i % n + n) % n;
         }
 
+        public static float PositiveModulo(float i, float n)
+        {
+            return (i % n + n) % n;
+        }
+
         public static double Distance(double x1, double y1, double x2, double y2)
         {
             double dX = x1 - x2;
@@ -744,7 +749,7 @@ namespace Barotrauma
 
                     Vector2 normal = Vector2.Normalize(endSegment - startSegment);
                     normal = new Vector2(-normal.Y, normal.X);
-                    midPoint += normal * Rand.Range(-offsetAmount, offsetAmount, Rand.RandSync.Server);
+                    midPoint += normal * Rand.Range(-offsetAmount, offsetAmount, Rand.RandSync.ServerAndClient);
 
                     if (bounds.HasValue)
                     {

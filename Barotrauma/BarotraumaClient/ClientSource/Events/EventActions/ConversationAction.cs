@@ -94,7 +94,7 @@ namespace Barotrauma
 
             var (relative, min) = GetSizes(dialogType);
 
-            GUIMessageBox messageBox = new GUIMessageBox(string.Empty, string.Empty, new string[0], 
+            GUIMessageBox messageBox = new GUIMessageBox(string.Empty, string.Empty, Array.Empty<LocalizedString>(), 
                 relativeSize: relative, minSize: min,
                 type: GUIMessageBox.Type.InGame, backgroundIcon: EventSet.GetEventSprite(spriteIdentifier))
             {
@@ -105,7 +105,7 @@ namespace Barotrauma
 
             messageBox.InnerFrame.ClearChildren();
             messageBox.AutoClose = false;
-            GUI.Style.Apply(messageBox.InnerFrame, "DialogBox");
+            GUIStyle.Apply(messageBox.InnerFrame, "DialogBox");
 
             if (actionInstance != null)
             {
@@ -222,11 +222,11 @@ namespace Barotrauma
                     closeButton.SlideIn(0.5f, 0.33f, 16, SlideDirection.Down);
 
                     InputType? closeInput = null;
-                    if (GameMain.Config.KeyBind(InputType.Use).MouseButton == MouseButton.None)
+                    if (GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Use].MouseButton == MouseButton.None)
                     {
                         closeInput = InputType.Use;
                     }
-                    else if (GameMain.Config.KeyBind(InputType.Select).MouseButton == MouseButton.None)
+                    else if (GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Select].MouseButton == MouseButton.None)
                     {
                         closeInput = InputType.Select;
                     }
@@ -239,7 +239,7 @@ namespace Barotrauma
                             {
                                 GUIButton btn = component as GUIButton;
                                 btn?.OnClicked(btn, btn.UserData);
-                                btn?.Flash(GUI.Style.Green);
+                                btn?.Flash(GUIStyle.Green);
                             }
                         };
                     }
@@ -308,7 +308,7 @@ namespace Barotrauma
                 AlwaysOverrideCursor = true
             };
 
-            string translatedText = TextManager.Get(text, returnNull: true) ?? text;
+            LocalizedString translatedText = TextManager.Get(text).Fallback(text);
 
             if (speaker?.Info != null && drawChathead)
             {
@@ -335,9 +335,9 @@ namespace Barotrauma
             {
                 foreach (string option in options)
                 {
-                    var btn = new GUIButton(new RectTransform(new Vector2(0.9f, 0.01f), textContent.RectTransform), TextManager.Get(option, returnNull: true) ?? option, style: "ListBoxElement");
+                    var btn = new GUIButton(new RectTransform(new Vector2(0.9f, 0.01f), textContent.RectTransform), TextManager.Get(option).Fallback(option), style: "ListBoxElement");
                     btn.TextBlock.TextAlignment = Alignment.CenterLeft;
-                    btn.TextColor = btn.HoverTextColor = GUI.Style.Green;
+                    btn.TextColor = btn.HoverTextColor = GUIStyle.Green;
                     btn.TextBlock.Wrap = true;
                     buttons.Add(btn);
                 }
@@ -384,7 +384,7 @@ namespace Barotrauma
         }
 
         // Too broken, left it here if I ever want to come back to it
-        private static List<RichTextData> GetQuoteHighlights(string text, Color color)
+        /*private static List<RichTextData> GetQuoteHighlights(string text, Color color)
         {
             char[] quotes = { '“', '”', '\"', '\'', '「', '」'};
 
@@ -406,6 +406,6 @@ namespace Barotrauma
                 last.EndIndex = text.Length;
             }
             return textColors;
-        }
+        }*/
     }
 }

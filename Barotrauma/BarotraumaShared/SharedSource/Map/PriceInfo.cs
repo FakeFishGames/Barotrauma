@@ -6,24 +6,31 @@ namespace Barotrauma
 {
     class PriceInfo
     {
-        public readonly int Price;
-        public readonly bool CanBeBought;
+        public int Price { get; }
+        public bool CanBeBought { get; }
         //minimum number of items available at a given store
-        public readonly int MinAvailableAmount;
+        public int MinAvailableAmount { get; }
         //maximum number of items available at a given store
-        public readonly int MaxAvailableAmount;
+        public int MaxAvailableAmount { get; }
+        /// <summary>
+        /// Can the item be a Daily Special or a Requested Good
+        /// </summary>
+        public bool CanBeSpecial { get; }
+        /// <summary>
+        /// The item isn't available in stores unless the level's difficulty is above this value
+        /// </summary>
+        public int MinLevelDifficulty { get; }
+        /// <summary>
+        /// The cost of item when sold by the store. Higher modifier means the item costs more to buy from the store.
+        /// </summary>
+        public float BuyingPriceMultiplier { get; } = 1f;
+        public bool DisplayNonEmpty { get; } = false;
+        public Identifier StoreIdentifier { get; }
+
         /// <summary>
         /// Used when both <see cref="MinAvailableAmount"/> and <see cref="MaxAvailableAmount"/> are set to 0.
         /// </summary>
         public const int DefaultAmount = 5;
-        /// <summary>
-        /// Can the item be a Daily Special or a Requested Good
-        /// </summary>
-        public readonly bool CanBeSpecial;
-        /// <summary>
-        /// The item isn't available in stores unless the level's difficulty is above this value
-        /// </summary>
-        public readonly int MinLevelDifficulty;
 
         /// <summary>
         /// Support for the old style of determining item prices
@@ -34,62 +41,85 @@ namespace Barotrauma
         {
             Price = element.GetAttributeInt("buyprice", 0);
             MinLevelDifficulty = element.GetAttributeInt("minleveldifficulty", 0);
+            BuyingPriceMultiplier = element.GetAttributeFloat("buyingpricemultiplier", 1f);
             CanBeBought = true;
-            var minAmount = GetMinAmount(element);
+            int minAmount = GetMinAmount(element);
             MinAvailableAmount = Math.Min(minAmount, CargoManager.MaxQuantity);
-            var maxAmount = GetMaxAmount(element);
+            int maxAmount = GetMaxAmount(element);
             maxAmount = Math.Min(maxAmount, CargoManager.MaxQuantity);
             MaxAvailableAmount = Math.Max(maxAmount, MinAvailableAmount);
         }
 
-        public PriceInfo(int price, bool canBeBought, int minAmount = 0, int maxAmount = 0, bool canBeSpecial = true, int minLevelDifficulty = 0)
+        public PriceInfo(int price, bool canBeBought,
+            int minAmount = 0, int maxAmount = 0, bool canBeSpecial = true, int minLevelDifficulty = 0, float buyingPriceMultiplier = 1f,
+            bool displayNonEmpty = false, string storeIdentifier = null)
         {
             Price = price;
             CanBeBought = canBeBought;
             MinAvailableAmount = Math.Min(minAmount, CargoManager.MaxQuantity);
+            BuyingPriceMultiplier = buyingPriceMultiplier;
             maxAmount = Math.Min(maxAmount, CargoManager.MaxQuantity);
             MaxAvailableAmount = Math.Max(maxAmount, minAmount);
             MinLevelDifficulty = minLevelDifficulty;
             CanBeSpecial = canBeSpecial;
+            DisplayNonEmpty = displayNonEmpty;
+            StoreIdentifier = new Identifier(storeIdentifier);
         }
 
-        public static List<Tuple<string, PriceInfo>> CreatePriceInfos(XElement element, out PriceInfo defaultPrice)
+        public static List<PriceInfo> CreatePriceInfos(XElement element, out PriceInfo defaultPrice)
         {
+            var priceInfos = new List<PriceInfo>();
             defaultPrice = null;
-            var basePrice = element.GetAttributeInt("baseprice", 0);
-            var soldByDefault = element.GetAttributeBool("soldbydefault", true);
-            var minAmount = GetMinAmount(element);
-            var maxAmount = GetMaxAmount(element);
-            var minLevelDifficulty = element.GetAttributeInt("minleveldifficulty", 0);
-            var canBeSpecial = element.GetAttributeBool("canbespecial", true);
-            var priceInfos = new List<Tuple<string, PriceInfo>>();
-
+            int basePrice = element.GetAttributeInt("baseprice", 0);
+            int minAmount = GetMinAmount(element);
+            int maxAmount = GetMaxAmount(element);
+            int minLevelDifficulty = element.GetAttributeInt("minleveldifficulty", 0);
+            bool canBeSpecial = element.GetAttributeBool("canbespecial", true);
+            float buyingPriceMultiplier = element.GetAttributeFloat("buyingpricemultiplier", 1f);
+            bool displayNonEmpty = element.GetAttributeBool("displaynonempty", false);
+            bool soldByDefault = element.GetAttributeBool("sold", element.GetAttributeBool("soldbydefault", true));
             foreach (XElement childElement in element.GetChildElements("price"))
             {
-                var priceMultiplier = childElement.GetAttributeFloat("multiplier", 1.0f);
-                var sold = childElement.GetAttributeBool("sold", soldByDefault);
-                priceInfos.Add(new Tuple<string, PriceInfo>(childElement.GetAttributeString("locationtype", "").ToLowerInvariant(),
-                    new PriceInfo(price: (int)(priceMultiplier * basePrice), canBeBought: sold,
-                        minAmount: sold ? GetMinAmount(childElement, minAmount) : 0,
-                        maxAmount: sold ? GetMaxAmount(childElement, maxAmount) : 0,
-                        canBeSpecial,
-                        childElement.GetAttributeInt("minleveldifficulty", minLevelDifficulty))));
+                float priceMultiplier = childElement.GetAttributeFloat("multiplier", 1.0f);
+                bool sold = childElement.GetAttributeBool("sold", soldByDefault); 
+                int storeMinLevelDifficulty = childElement.GetAttributeInt("minleveldifficulty", minLevelDifficulty);
+                float storeBuyingMultiplier = childElement.GetAttributeFloat("buyingpricemultiplier", buyingPriceMultiplier);
+                string backwardsCompatibleIdentifier = childElement.GetAttributeString("locationtype", "");
+                if (!string.IsNullOrEmpty(backwardsCompatibleIdentifier))
+                {
+                    backwardsCompatibleIdentifier = $"merchant{backwardsCompatibleIdentifier}";
+                }
+                string storeIdentifier = childElement.GetAttributeString("storeidentifier", backwardsCompatibleIdentifier);
+                // TODO: Add some error messages if we have defined the min or max amount while the item is not sold
+                var priceInfo = new PriceInfo((int)(priceMultiplier * basePrice),
+                    sold,
+                    sold ? GetMinAmount(childElement, minAmount) : 0,
+                    sold ? GetMaxAmount(childElement, maxAmount) : 0,
+                    canBeSpecial,
+                    storeMinLevelDifficulty,
+                    storeBuyingMultiplier,
+                    displayNonEmpty,
+                    storeIdentifier);
+                priceInfos.Add(priceInfo);
             }
-
-            var canBeBoughtAtOtherLocations = soldByDefault && element.GetAttributeBool("soldeverywhere", true);
-            defaultPrice = new PriceInfo(basePrice, canBeBoughtAtOtherLocations,
-                minAmount: canBeBoughtAtOtherLocations ? minAmount : 0,
-                maxAmount: canBeBoughtAtOtherLocations ? maxAmount : 0,
-                canBeSpecial, 
-                minLevelDifficulty);
-            
+            bool soldElsewhere = soldByDefault && element.GetAttributeBool("soldelsewhere", element.GetAttributeBool("soldeverywhere", false));
+            defaultPrice = new PriceInfo(basePrice,
+                soldElsewhere,
+                soldElsewhere ? minAmount : 0,
+                soldElsewhere ? maxAmount : 0,
+                canBeSpecial,
+                minLevelDifficulty,
+                buyingPriceMultiplier,
+                displayNonEmpty);
             return priceInfos;
         }
 
         private static int GetMinAmount(XElement element, int defaultValue = 0) => element != null ?
-            element.GetAttributeInt("minamount", element.GetAttributeInt("minavailable", defaultValue)) : defaultValue;
+            element.GetAttributeInt("minamount", element.GetAttributeInt("minavailable", defaultValue)) :
+            defaultValue;
 
         private static int GetMaxAmount(XElement element, int defaultValue = 0) => element != null ?
-            element.GetAttributeInt("maxamount", element.GetAttributeInt("maxavailable", defaultValue)) : defaultValue;
+            element.GetAttributeInt("maxamount", element.GetAttributeInt("maxavailable", defaultValue)) :
+            defaultValue;
     }
 }

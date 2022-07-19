@@ -28,6 +28,8 @@ namespace Barotrauma
         private float pirateSightingUpdateTimer;
         private Vector2? lastSighting;
 
+        private LevelData levelData;
+
         public override int TeamCount => 2;
 
         private bool outsideOfSonarRange;
@@ -78,26 +80,29 @@ namespace Barotrauma
 
         public PirateMission(MissionPrefab prefab, Location[] locations, Submarine sub) : base(prefab, locations, sub)
         {
-            submarineTypeConfig = prefab.ConfigElement.Element("SubmarineTypes");
-            characterConfig = prefab.ConfigElement.Element("Characters");
-            characterTypeConfig = prefab.ConfigElement.Element("CharacterTypes");
+            submarineTypeConfig = prefab.ConfigElement.GetChildElement("SubmarineTypes");
+            characterConfig = prefab.ConfigElement.GetChildElement("Characters");
+            characterTypeConfig = prefab.ConfigElement.GetChildElement("CharacterTypes");
             addedMissionDifficultyPerPlayer = prefab.ConfigElement.GetAttributeFloat("addedmissiondifficultyperplayer", 0);
 
-            // for campaign missions, set difficulty at construction
+            // for campaign missions, set level at construction
             LevelData levelData = locations[0].Connections.Where(c => c.Locations.Contains(locations[1])).FirstOrDefault()?.LevelData ?? locations[0]?.LevelData;
-            
-            SetDifficulty(levelData?.Difficulty ?? Level.Loaded?.Difficulty ?? 0f);
+            if (levelData != null)
+            {
+                SetLevel(levelData);
+            }
         }
 
-        public override void SetDifficulty(float difficulty)
+        public override void SetLevel(LevelData level)
         {
-            if (missionDifficulty > 0f)
+            if (levelData != null)
             {
-                // difficulty already set
+                //level already set
                 return;
             }
 
-            missionDifficulty = difficulty;
+            levelData = level;
+            missionDifficulty = level?.Difficulty ?? 0;
 
             XElement submarineConfig = GetRandomDifficultyModifiedElement(submarineTypeConfig, missionDifficulty, ShipRandomnessModifier);
 
@@ -106,40 +111,41 @@ namespace Barotrauma
             string rewardText = $"‖color:gui.orange‖{string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:N0}", alternateReward)}‖end‖";
             if (descriptionWithoutReward != null) { description = descriptionWithoutReward.Replace("[reward]", rewardText); }
 
-            string submarinePath = submarineConfig.GetAttributeString("path", string.Empty);
-            if (submarinePath == string.Empty)
+            ContentPath submarinePath = submarineConfig.GetAttributeContentPath("path", Prefab.ContentPackage);
+            if (submarinePath.IsNullOrEmpty())
             {
                 DebugConsole.ThrowError($"No path used for submarine for the pirate mission \"{Prefab.Identifier}\"!");
                 return;
             }
             // maybe a little redundant
-            var contentFile = ContentPackage.GetFilesOfType(GameMain.Config.AllEnabledPackages, ContentType.EnemySubmarine).FirstOrDefault(x => x.Path == submarinePath);
+            var contentFile = ContentPackageManager.EnabledPackages.All.SelectMany(p => p.GetFiles<EnemySubmarineFile>()).FirstOrDefault(x => x.Path == submarinePath);
             if (contentFile == null)
             {
                 DebugConsole.ThrowError($"No submarine file found from the path {submarinePath}!");
                 return;
             }
 
-            submarineInfo = new SubmarineInfo(contentFile.Path);
+            submarineInfo = new SubmarineInfo(contentFile.Path.Value);
         }
 
-        private float GetDifficultyModifiedValue(float preferredDifficulty, float levelDifficulty, float randomnessModifier)
+        private float GetDifficultyModifiedValue(float preferredDifficulty, float levelDifficulty, float randomnessModifier, Random rand)
         {
-            return Math.Abs(levelDifficulty - preferredDifficulty + (Rand.Range(-randomnessModifier, randomnessModifier, Rand.RandSync.Server)));
+            return Math.Abs(levelDifficulty - preferredDifficulty + MathHelper.Lerp(-randomnessModifier, randomnessModifier, (float)rand.NextDouble()));
         }
-        private int GetDifficultyModifiedAmount(int minAmount, int maxAmount, float levelDifficulty)
+        private int GetDifficultyModifiedAmount(int minAmount, int maxAmount, float levelDifficulty, Random rand)
         {
-            return Math.Max((int)Math.Round(minAmount + (maxAmount - minAmount) * ((levelDifficulty + Rand.Range(-RandomnessModifier, RandomnessModifier, Rand.RandSync.Server)) / MaxDifficulty)), minAmount);
+            return Math.Max((int)Math.Round(minAmount + (maxAmount - minAmount) * (levelDifficulty + MathHelper.Lerp(-RandomnessModifier, RandomnessModifier, (float)rand.NextDouble())) / MaxDifficulty), minAmount);
         }
 
         private XElement GetRandomDifficultyModifiedElement(XElement parentElement, float levelDifficulty, float randomnessModifier)
         {
+            Random rand = new MTRandom(ToolBox.StringToInt(levelData.Seed));
             // look for the element that is closest to our difficulty, with some randomness
             XElement bestElement = null;
             float bestValue = float.MaxValue;
             foreach (XElement element in parentElement.Elements())
             {
-                float applicabilityValue = GetDifficultyModifiedValue(element.GetAttributeFloat(0f, "preferreddifficulty"), levelDifficulty, randomnessModifier);
+                float applicabilityValue = GetDifficultyModifiedValue(element.GetAttributeFloat(0f, "preferreddifficulty"), levelDifficulty, randomnessModifier, rand);
                 if (applicabilityValue < bestValue)
                 {
                     bestElement = element;
@@ -154,11 +160,11 @@ namespace Barotrauma
             Vector2 patrolPos = enemySub.WorldPosition;
             Point subSize = enemySub.GetDockedBorders().Size;
 
-            if (!Level.Loaded.TryGetInterestingPosition(true, Level.PositionType.MainPath | Level.PositionType.SidePath, Level.Loaded.Size.X * 0.3f, out preferredSpawnPos))
+            if (!Level.Loaded.TryGetInterestingPosition(true, Level.PositionType.MainPath, Level.Loaded.Size.X * 0.3f, out preferredSpawnPos))
             {
                 DebugConsole.ThrowError("Could not spawn pirate submarine in an interesting location! " + this);
             }
-            if (!Level.Loaded.TryGetInterestingPositionAwayFromPoint(true, Level.PositionType.MainPath | Level.PositionType.SidePath, Level.Loaded.Size.X * 0.3f, out patrolPos, preferredSpawnPos, minDistFromPoint: 10000f))
+            if (!Level.Loaded.TryGetInterestingPositionAwayFromPoint(true, Level.PositionType.MainPath, Level.Loaded.Size.X * 0.3f, out patrolPos, preferredSpawnPos, minDistFromPoint: 10000f))
             {
                 DebugConsole.ThrowError("Could not give pirate submarine an interesting location to patrol to! " + this);
             }
@@ -174,7 +180,11 @@ namespace Barotrauma
                 var path = pathFinder.FindPath(ConvertUnits.ToSimUnits(patrolPos), ConvertUnits.ToSimUnits(preferredSpawnPos));
                 if (!path.Unreachable)
                 {
-                    preferredSpawnPos = path.Nodes[Rand.Range(0, path.Nodes.Count - 1)].WorldPosition; // spawn the sub in a random point in the path if possible
+                    var validNodes = path.Nodes.FindAll(n => !Level.Loaded.ExtraWalls.Any(w => w.Cells.Any(c => c.IsPointInside(n.WorldPosition))));
+                    if (validNodes.Any())
+                    {
+                        preferredSpawnPos = validNodes.GetRandomUnsynced().WorldPosition; // spawn the sub in a random point in the path if possible
+                    }
                 }
 
                 int graceDistance = 500; // the sub still spawns awkwardly close to walls, so this helps. could also be given as a parameter instead
@@ -182,7 +192,7 @@ namespace Barotrauma
             }
         }
 
-        private void InitPirateShip(Vector2 spawnPos)
+        private void InitPirateShip()
         {
             enemySub.NeutralizeBallast();
             if (enemySub.GetItems(alsoFromConnectedSubs: false).Find(i => i.HasTag("reactor") && !i.NonInteractable)?.GetComponent<Reactor>() is Reactor reactor)
@@ -193,6 +203,15 @@ namespace Barotrauma
             enemySub.TeamID = CharacterTeamType.None;
             //make the enemy sub withstand atleast the same depth as the player sub
             enemySub.RealWorldCrushDepth = Math.Max(enemySub.RealWorldCrushDepth, Submarine.MainSub.RealWorldCrushDepth);
+            if (Level.Loaded != null)
+            {
+                //...and the depth of the patrol positions + 1000 m
+                foreach (var patrolPos in patrolPositions)
+                {
+                    enemySub.RealWorldCrushDepth = Math.Max(enemySub.RealWorldCrushDepth, Level.Loaded.GetRealWorldDepth(patrolPos.Y) + 1000);
+                }
+            }
+            enemySub.ImmuneToBallastFlora = true;
         }
 
         private void InitPirates()
@@ -214,12 +233,14 @@ namespace Barotrauma
 
             float enemyCreationDifficulty = missionDifficulty + playerCount * addedMissionDifficultyPerPlayer;
 
+            Random rand = new MTRandom(ToolBox.StringToInt(levelData.Seed));
+
             bool commanderAssigned = false;
             foreach (XElement element in characterConfig.Elements())
             {
                 // it is possible to get more than the "max" amount of characters if the modified difficulty is high enough; this is intentional
                 // if necessary, another "hard max" value could be used to clamp the value for performance/gameplay concerns
-                int amountCreated = GetDifficultyModifiedAmount(element.GetAttributeInt("minamount", 0), element.GetAttributeInt("maxamount", 0), enemyCreationDifficulty);
+                int amountCreated = GetDifficultyModifiedAmount(element.GetAttributeInt("minamount", 0), element.GetAttributeInt("maxamount", 0), enemyCreationDifficulty, rand);
                 for (int i = 0; i < amountCreated; i++)
                 {
                     XElement characterType = characterTypeConfig.Elements().Where(e => e.GetAttributeString("typeidentifier", string.Empty) == element.GetAttributeString("typeidentifier", string.Empty)).FirstOrDefault();
@@ -249,7 +270,7 @@ namespace Barotrauma
 
                     foreach (Item item in spawnedCharacter.Inventory.AllItems)
                     {
-                        if (item?.Prefab.Identifier == "idcard")
+                        if (item?.GetComponent<IdCard>() != null)
                         {
                             item.AddTag("id_pirate");
                         }
@@ -307,7 +328,7 @@ namespace Barotrauma
 #endif
             if (!IsClient)
             {
-                InitPirateShip(spawnPos);
+                InitPirateShip();
             }
             enemySub.SetPosition(spawnPos);
 
@@ -324,12 +345,13 @@ namespace Barotrauma
 
         protected override void UpdateMissionSpecific(float deltaTime)
         {
-            int newState = State;
+            if (state >= 2) { return; }
+
             float sqrSonarRange = MathUtils.Pow2(Sonar.DefaultSonarRange);
             outsideOfSonarRange = Vector2.DistanceSquared(enemySub.WorldPosition, Submarine.MainSub.WorldPosition) > sqrSonarRange;
-            if (State < 2 && CheckWinState())
+            if (CheckWinState())
             {
-                newState = 2;
+                State = 2;
             }
             else
             {
@@ -345,7 +367,7 @@ namespace Barotrauma
                         }
                         if (!outsideOfSonarRange || patrolPositions.None())
                         {
-                            newState = 1;
+                            State = 1;
                         }
                         break;
                     case 1:
@@ -370,14 +392,13 @@ namespace Barotrauma
                         break;
                 }
             }
-            State = newState;
         }
 
-        private bool CheckWinState() => !IsClient && (characters.All(m => !Survived(m)));
+        private bool CheckWinState() => !IsClient && characters.All(m => DeadOrCaptured(m));
 
-        private bool Survived(Character character)
+        private bool DeadOrCaptured(Character character)
         {
-            return character != null && !character.Removed && !character.IsDead;
+            return character == null || character.Removed || character.Submarine == null || (character.LockHands && character.Submarine == Submarine.MainSub) || character.IsIncapacitated;
         }
 
         public override void End()

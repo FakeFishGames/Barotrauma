@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Linq;
@@ -14,11 +15,21 @@ namespace Barotrauma.Items.Components
         }
         private GUIButton activateButton;
         private GUIComponent inputInventoryHolder, outputInventoryHolder;
-        private GUICustomComponent inputInventoryOverlay;
 
         private GUIComponent inSufficientPowerWarning;
 
         private bool pendingState;
+
+        private GUITextBlock infoArea;
+
+        [Serialize("DeconstructorDeconstruct", IsPropertySaveable.Yes)]
+        public string ActivateButtonText { get; set; }
+        
+        [Serialize("", IsPropertySaveable.Yes)]
+        public string InfoText { get; set; }
+
+        [Serialize(0.0f, IsPropertySaveable.Yes)]
+        public float InfoAreaWidth { get; set; }
 
         partial void InitProjSpecific(XElement element)
         {
@@ -39,6 +50,12 @@ namespace Barotrauma.Items.Components
                 RelativeSpacing = 0.08f
             };
 
+            new GUITextBlock(new RectTransform(new Vector2(1f, 0.07f), paddedFrame.RectTransform), item.Name, font: GUIStyle.SubHeadingFont)
+            {
+                TextAlignment = Alignment.Center,
+                AutoScaleHorizontal = true
+            };
+
             var topFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.5f), paddedFrame.RectTransform), style: null);
                 
                 // === INPUT LABEL === //
@@ -47,7 +64,7 @@ namespace Barotrauma.Items.Components
                     Stretch = true, 
                     RelativeSpacing = 0.05f
                 };
-                    var inputLabel = new GUITextBlock(new RectTransform(Vector2.One, inputLabelArea.RectTransform), TextManager.Get("uilabel.input"), font: GUI.SubHeadingFont) { Padding = Vector4.Zero };
+                    var inputLabel = new GUITextBlock(new RectTransform(Vector2.One, inputLabelArea.RectTransform), TextManager.Get("deconstructor.input", "uilabel.input"), font: GUIStyle.SubHeadingFont) { Padding = Vector4.Zero };
                     inputLabel.RectTransform.Resize(new Point((int) inputLabel.Font.MeasureString(inputLabel.Text).X, inputLabel.RectTransform.Rect.Height));
                     new GUIFrame(new RectTransform(Vector2.One, inputLabelArea.RectTransform), style: "HorizontalLine");
 
@@ -55,22 +72,23 @@ namespace Barotrauma.Items.Components
                     
                     // === INPUT SLOTS === //
                     inputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(0.7f, 1f), inputArea.RectTransform), style: null);
-                        inputInventoryOverlay = new GUICustomComponent(new RectTransform(Vector2.One, inputInventoryHolder.RectTransform), DrawOverLay, null) { CanBeFocused = false };
+                        new GUICustomComponent(new RectTransform(Vector2.One, inputInventoryHolder.RectTransform), DrawOverLay, null) { CanBeFocused = false };
 
                     // === ACTIVATE BUTTON === //
-                    var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 0.7f), inputArea.RectTransform), childAnchor: Anchor.CenterLeft);
+                    var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 0.8f), inputArea.RectTransform), childAnchor: Anchor.CenterLeft);
                         activateButton = new GUIButton(new RectTransform(new Vector2(0.95f, 0.8f), buttonContainer.RectTransform), TextManager.Get("DeconstructorDeconstruct"), style: "DeviceButton")
                         {
                             TextBlock = { AutoScaleHorizontal = true },
-                            OnClicked = ToggleActive
+                            OnClicked = OnActivateButtonClicked
                         };
-                            inSufficientPowerWarning = new GUITextBlock(new RectTransform(Vector2.One, activateButton.RectTransform), 
-                                TextManager.Get("DeconstructorNoPower"), textColor: GUI.Style.Orange, textAlignment: Alignment.Center, color: Color.Black, style: "OuterGlow")
-                            {
+                            inSufficientPowerWarning = new GUITextBlock(new RectTransform(Vector2.One, activateButton.RectTransform),
+                                TextManager.Get("DeconstructorNoPower"), textColor: GUIStyle.Orange, textAlignment: Alignment.Center, color: Color.Black, style: "OuterGlow", wrap: true)
+                                {
                                 HoverColor = Color.Black, 
                                 IgnoreLayoutGroups = true, 
                                 Visible = false, 
-                                CanBeFocused = false
+                                CanBeFocused = false,
+                                AutoScaleHorizontal = true
                             };
 
             // === OUTPUT AREA === //
@@ -82,12 +100,74 @@ namespace Barotrauma.Items.Components
                     Stretch = true, 
                     RelativeSpacing = 0.05f
                 };
-                    var outputLabel = new GUITextBlock(new RectTransform(new Vector2(0f, 1.0f), outputLabelArea.RectTransform), TextManager.Get("uilabel.output"), font: GUI.SubHeadingFont) { Padding = Vector4.Zero };
+                    var outputLabel = new GUITextBlock(new RectTransform(new Vector2(0f, 1.0f), outputLabelArea.RectTransform), TextManager.Get("uilabel.output"), font: GUIStyle.SubHeadingFont) { Padding = Vector4.Zero };
                     outputLabel.RectTransform.Resize(new Point((int) outputLabel.Font.MeasureString(outputLabel.Text).X, outputLabel.RectTransform.Rect.Height));
                     new GUIFrame(new RectTransform(Vector2.One, outputLabelArea.RectTransform), style: "HorizontalLine");
 
-                // === OUTPUT SLOTS === //
-                outputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(1f, 1f), bottomFrame.RectTransform, Anchor.CenterLeft), style: null);
+            var outputArea = new GUILayoutGroup(new RectTransform(new Vector2(1f, 1f), bottomFrame.RectTransform, Anchor.CenterLeft), childAnchor: Anchor.BottomLeft, isHorizontal: true) { Stretch = true, RelativeSpacing = 0.05f };
+
+            // === OUTPUT SLOTS === //
+            outputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(1f - InfoAreaWidth, 1f), outputArea.RectTransform, Anchor.CenterLeft), style: null);
+
+            if (InfoAreaWidth >= 0.0f)
+            {
+                var infoAreaContainer = new GUILayoutGroup(new RectTransform(new Vector2(InfoAreaWidth, 0.8f), outputArea.RectTransform), childAnchor: Anchor.CenterLeft);
+                infoArea = new GUITextBlock(new RectTransform(new Vector2(0.95f, 0.95f), infoAreaContainer.RectTransform), string.Empty, wrap: true);
+            }
+
+            ActivateButton.OnAddedToGUIUpdateList += (GUIComponent component) =>
+            {
+                activateButton.Enabled = true;
+                if (string.IsNullOrEmpty(InfoText))
+                {
+                    infoArea.Text = string.Empty;
+                }
+                else
+                {
+                    infoArea.Text = TextManager.Get(InfoText).Fallback(InfoText);
+                }
+                if (IsActive)
+                {
+                    activateButton.Text = TextManager.Get("DeconstructorCancel");
+                    infoArea.Text = string.Empty;
+                    return;
+                }
+                bool outputsFound = false;
+                foreach (var (inputItem, deconstructItem) in GetAvailableOutputs(checkRequiredOtherItems: true))
+                {
+                    outputsFound = true;
+                    if (!string.IsNullOrEmpty(deconstructItem.ActivateButtonText))
+                    {
+                        LocalizedString buttonText = TextManager.Get(deconstructItem.ActivateButtonText).Fallback(deconstructItem.ActivateButtonText);
+                        LocalizedString infoText =  string.Empty;
+                        if (!string.IsNullOrEmpty(deconstructItem.InfoText))
+                        {
+                            infoText = TextManager.Get(deconstructItem.InfoText).Fallback(deconstructItem.InfoText);
+                        }
+                        inputItem.GetComponent<GeneticMaterial>()?.ModifyDeconstructInfo(this, ref buttonText, ref infoText);
+                        activateButton.Text = buttonText;
+                        if (infoArea != null)
+                        {
+                            infoArea.Text = infoText;
+                        }
+                        return;
+                    }
+                }
+                //no valid outputs found: check if we're missing some required items from the input slots and display a message about it if possible
+                if (!outputsFound && infoArea != null)
+                {
+                    foreach (var (inputItem, deconstructItem) in GetAvailableOutputs(checkRequiredOtherItems: false))
+                    {
+                        if (deconstructItem.RequiredOtherItem.Any() && !string.IsNullOrEmpty(deconstructItem.InfoTextOnOtherItemMissing))
+                        {
+                            LocalizedString missingItemName = TextManager.Get("entityname." + deconstructItem.RequiredOtherItem.First());
+                            infoArea.Text = TextManager.GetWithVariable(deconstructItem.InfoTextOnOtherItemMissing, "[itemname]", missingItemName);
+                        }
+                    }
+                }
+                activateButton.Enabled = outputsFound || !InputContainer.Inventory.IsEmpty();
+                activateButton.Text = TextManager.Get(ActivateButtonText);
+            };
         }
 
         public override bool Select(Character character)
@@ -126,22 +206,50 @@ namespace Barotrauma.Items.Components
         private void DrawOverLay(SpriteBatch spriteBatch, GUICustomComponent overlayComponent)
         {
             overlayComponent.RectTransform.SetAsLastChild();
-            var lastSlot = inputContainer.Inventory.visualSlots.Last();
 
-            GUI.DrawRectangle(spriteBatch, 
-                new Rectangle(
-                    lastSlot.Rect.X, lastSlot.Rect.Y + (int)(lastSlot.Rect.Height * (1.0f - progressState)), 
-                    lastSlot.Rect.Width, (int)(lastSlot.Rect.Height * progressState)), 
-                GUI.Style.Green * 0.5f, isFilled: true);
+            if (!(inputContainer?.Inventory?.visualSlots is { } visualSlots)) { return; }
+            
+            if (DeconstructItemsSimultaneously)
+            {
+                for (int i = 0; i < InputContainer.Inventory.Capacity; i++)
+                {
+                    if (InputContainer.Inventory.GetItemAt(i) == null) { continue; }
+                    DrawProgressBar(InputContainer.Inventory.visualSlots[i]);
+                }
+            }
+            else
+            {
+                DrawProgressBar(inputContainer.Inventory.visualSlots.Last());
+            }
+
+            void DrawProgressBar(VisualSlot slot)
+            {
+                GUI.DrawRectangle(spriteBatch,
+                    new Rectangle(
+                        slot.Rect.X, slot.Rect.Y + (int)(slot.Rect.Height * (1.0f - progressState)),
+                        slot.Rect.Width, (int)(slot.Rect.Height * progressState)),
+                    GUIStyle.Green * 0.5f, isFilled: true);
+            }
         }
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
-            inSufficientPowerWarning.Visible = CurrPowerConsumption > 0 && !hasPower;
+            inSufficientPowerWarning.Visible = IsActive && !hasPower;
         }
 
-        private bool ToggleActive(GUIButton button, object obj)
+        private bool OnActivateButtonClicked(GUIButton button, object obj)
         {
+            var disallowedItem = inputContainer.Inventory.FindItem(i => !i.AllowDeconstruct, recursive: false);
+            if (disallowedItem != null && !DeconstructItemsSimultaneously)
+            {
+                int index = inputContainer.Inventory.FindIndex(disallowedItem);
+                if (index >= 0 && index < inputContainer.Inventory.visualSlots.Length)
+                {
+                    var slot = inputContainer.Inventory.visualSlots[index];
+                    slot?.ShowBorderHighlight(GUIStyle.Red, 0.1f, 0.9f);
+                }
+                return true;
+            }
             if (GameMain.Client != null)
             {
                 pendingState = !IsActive;
@@ -150,20 +258,20 @@ namespace Barotrauma.Items.Components
             else
             {
                 SetActive(!IsActive, Character.Controlled);
-                currPowerConsumption = IsActive ? powerConsumption : 0.0f;
             }
-
             return true;
         }
 
-        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
+        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
             msg.Write(pendingState);
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
-            SetActive(msg.ReadBoolean());
+            ushort userID = msg.ReadUInt16();
+            Character user = userID == Entity.NullEntityID ? null : Entity.FindEntityByID(userID) as Character;
+            SetActive(msg.ReadBoolean(), user);
             progressTimer = msg.ReadSingle();
         }
     }

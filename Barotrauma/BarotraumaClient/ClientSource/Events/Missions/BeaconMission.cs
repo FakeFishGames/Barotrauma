@@ -1,12 +1,8 @@
-﻿using Barotrauma.Networking;
-
-namespace Barotrauma
+﻿namespace Barotrauma
 {
     partial class BeaconMission : Mission
     {
-        public override void ClientReadInitial(IReadMessage msg)
-        {
-            return;
-        }
+        public override bool DisplayAsCompleted => State > 0;
+        public override bool DisplayAsFailed => false;
     }
 }

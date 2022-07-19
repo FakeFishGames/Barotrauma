@@ -53,7 +53,7 @@ namespace Barotrauma
 
         private static XElement ParseRecipe(ItemPrefab prefab)
         {
-            FabricationRecipe? recipe = prefab.FabricationRecipes.FirstOrDefault();
+            FabricationRecipe? recipe = prefab.FabricationRecipes.Values.FirstOrDefault();
 
             List<ItemPrefab> ingredients = recipe?.RequiredItems.SelectMany(ri => ri.ItemPrefabs).Distinct().ToList() ?? new List<ItemPrefab>();
             Skill? skill = recipe?.RequiredSkills.FirstOrDefault();
@@ -61,7 +61,7 @@ namespace Barotrauma
             return new XElement("Recipe",
                 new XAttribute("amount", recipe?.Amount ?? 0),
                 new XAttribute("time", recipe?.RequiredTime ?? 0),
-                new XAttribute("skillname", skill?.Identifier ?? ""),
+                new XAttribute("skillname", skill?.Identifier.Value ?? ""),
                 new XAttribute("skillamount", (int?) skill?.Level ?? 0),
                 new XAttribute("ingredients", FormatArray(ingredients.Select(ip => ip.Name))),
                 new XAttribute("values", FormatArray(ingredients.Select(ip => ip.DefaultPrice?.Price ?? 0)))
@@ -80,15 +80,15 @@ namespace Barotrauma
 
         private static XElement ParseMedical(ItemPrefab prefab)
         {
-            XElement? itemMeleeWeapon = prefab.ConfigElement.GetChildElement(nameof(MeleeWeapon));
+            ContentXElement? itemMeleeWeapon = prefab.ConfigElement.GetChildElement(nameof(MeleeWeapon));
             // affliction, amount, duration
-            List<Tuple<string, float, float>> onSuccessAfflictions = new List<Tuple<string, float, float>>();
-            List<Tuple<string, float, float>> onFailureAfflictions = new List<Tuple<string, float, float>>();
+            List<(LocalizedString Name, float Amount, float Duration)> onSuccessAfflictions = new List<(LocalizedString Name, float Amount, float Duration)>();
+            List<(LocalizedString Name, float Amount, float Duration)> onFailureAfflictions = new List<(LocalizedString Name, float Amount, float Duration)>();
             int medicalRequiredSkill = 0;
             if (itemMeleeWeapon != null)
             {
                 List<StatusEffect> statusEffects = new List<StatusEffect>();
-                foreach (XElement subElement in itemMeleeWeapon.Elements())
+                foreach (var subElement in itemMeleeWeapon.Elements())
                 {
                     string name = subElement.Name.ToString();
                     if (name.Equals(nameof(StatusEffect), StringComparison.OrdinalIgnoreCase))
@@ -110,15 +110,15 @@ namespace Barotrauma
                 foreach (StatusEffect statusEffect in successEffects)
                 {
                     float duration = statusEffect.Duration;
-                    onSuccessAfflictions.AddRange(statusEffect.ReduceAffliction.Select(pair => Tuple.Create(GetAfflictionName(pair.First), -pair.Second, duration)));
-                    onSuccessAfflictions.AddRange(statusEffect.Afflictions.Select(affliction => Tuple.Create(affliction.Prefab.Name, affliction.NonClampedStrength, duration)));
+                    onSuccessAfflictions.AddRange(statusEffect.ReduceAffliction.Select(ra => (GetAfflictionName(ra.AfflictionIdentifier), -ra.ReduceAmount, duration)));
+                    onSuccessAfflictions.AddRange(statusEffect.Afflictions.Select(affliction => (affliction.Prefab.Name, affliction.NonClampedStrength, duration)));
                 }
 
                 foreach (StatusEffect statusEffect in failureEffects)
                 {
                     float duration = statusEffect.Duration;
-                    onFailureAfflictions.AddRange(statusEffect.ReduceAffliction.Select(pair => Tuple.Create(GetAfflictionName(pair.First), -pair.Second, duration)));
-                    onFailureAfflictions.AddRange(statusEffect.Afflictions.Select(affliction => Tuple.Create(affliction.Prefab.Name, affliction.NonClampedStrength, duration)));
+                    onFailureAfflictions.AddRange(statusEffect.ReduceAffliction.Select(ra => (GetAfflictionName(ra.AfflictionIdentifier), -ra.ReduceAmount, duration)));
+                    onFailureAfflictions.AddRange(statusEffect.Afflictions.Select(affliction => (affliction.Prefab.Name, affliction.NonClampedStrength, duration)));
                 }
             }
 
@@ -141,15 +141,15 @@ namespace Barotrauma
             int skillRequirement = 0;
 
             // affliction, amount
-            List<Tuple<string, float>> damages = new List<Tuple<string, float>>();
+            List<(LocalizedString Name, float Amount)> damages = new List<(LocalizedString Name, float Amount)>();
 
             string[] validNames = { nameof(Projectile), nameof(MeleeWeapon), nameof(RepairTool), nameof(ItemComponent), nameof(RangedWeapon) };
-            foreach (XElement icElement in prefab.ConfigElement.Elements())
+            foreach (var icElement in prefab.ConfigElement.Elements())
             {
                 string icName = icElement.Name.ToString();
                 if (!validNames.Any(name => icName.Equals(name, StringComparison.OrdinalIgnoreCase))) { continue; }
 
-                foreach (XElement icChildElement in icElement.Elements())
+                foreach (var icChildElement in icElement.Elements())
                 {
                     string name = icChildElement.Name.ToString();
                     if (IsRequiredSkill(icChildElement, out Skill? skill) && skill != null)
@@ -208,7 +208,7 @@ namespace Barotrauma
                                 continue;
                             }
 
-                            damages.Add(Tuple.Create(affliction.Prefab.Name, affliction.NonClampedStrength));
+                            damages.Add((affliction.Prefab.Name, affliction.NonClampedStrength));
                         }
                     }
                 }
@@ -224,9 +224,9 @@ namespace Barotrauma
             );
         }
 
-        private static string GetAfflictionName(string identifier)
+        private static LocalizedString GetAfflictionName(Identifier identifier)
         {
-            return AfflictionPrefab.Prefabs.Find(prefab => prefab.Identifier.Equals(identifier, StringComparison.OrdinalIgnoreCase))?.Name ?? CultureInfo.CurrentCulture.TextInfo.ToTitleCase(identifier.ToLower());
+            return AfflictionPrefab.Prefabs.Find(prefab => prefab.Identifier == identifier)?.Name ?? CultureInfo.CurrentCulture.TextInfo.ToTitleCase(identifier.Value!.ToLower());
         }
 
         private static string FormatFloat(float value)
@@ -239,7 +239,7 @@ namespace Barotrauma
             return string.Join(separator, array);
         }
 
-        private static bool IsRequiredSkill(XElement element, out Skill? skill)
+        private static bool IsRequiredSkill(ContentXElement element, out Skill? skill)
         {
             string name = element.Name.ToString();
             bool isSkill = name.Equals("RequiredSkill", StringComparison.OrdinalIgnoreCase) ||
@@ -247,7 +247,7 @@ namespace Barotrauma
 
             if (isSkill)
             {
-                string identifier = element.GetAttributeString(nameof(Skill.Identifier).ToLowerInvariant(), string.Empty);
+                Identifier identifier = element.GetAttributeIdentifier(nameof(Skill.Identifier), Identifier.Empty);
                 float level = element.GetAttributeFloat(nameof(Skill.Level).ToLowerInvariant(), 0f);
                 skill = new Skill(identifier, level);
             }

@@ -1,7 +1,6 @@
 ﻿using Barotrauma.Networking;
 using Barotrauma.Steam;
 using FarseerPhysics.Dynamics;
-using GameAnalyticsSDK.Net;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -11,6 +10,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -18,13 +18,24 @@ namespace Barotrauma
     {
         public static readonly Version Version = Assembly.GetEntryAssembly().GetName().Version;
 
-        public static World World;
-        public static GameSettings Config;
+        public static bool IsSingleplayer => NetworkMember == null;
+        public static bool IsMultiplayer => NetworkMember != null;
+
+        private static World world;
+        public static World World
+        {
+            get
+            {
+                if (world == null) { world = new World(new Vector2(0, -9.82f)); }
+                return world;
+            }
+            set { world = value; }
+        }
 
         public static GameServer Server;
         public static NetworkMember NetworkMember
         {
-            get { return Server as NetworkMember; }
+            get { return Server; }
         }
 
         public static GameSession GameSession;
@@ -46,25 +57,14 @@ namespace Barotrauma
         //TODO: maybe clean up instead of having these constants
         public static readonly Screen SubEditorScreen = UnimplementedScreen.Instance;
 
-        public static DecalManager DecalManager;
-
         public static bool ShouldRun = true;
 
         private static Stopwatch stopwatch;
 
-        private static ContentPackage vanillaContent;
-        public static ContentPackage VanillaContent
-        {
-            get
-            {
-                if (vanillaContent == null)
-                {
-                    // TODO: Dynamic method for defining and finding the vanilla content package.
-                    vanillaContent = ContentPackage.CorePackages.SingleOrDefault(cp => Path.GetFileName(cp.Path).Equals("vanilla 0.9.xml", StringComparison.OrdinalIgnoreCase));
-                }
-                return vanillaContent;
-            }
-        }
+        private static readonly Queue<int> prevUpdateRates = new Queue<int>();
+        private static int updateCount = 0;
+        
+        public static ContentPackage VanillaContent => ContentPackageManager.VanillaCorePackage;
 
         public readonly string[] CommandLineArgs;
 
@@ -81,15 +81,17 @@ namespace Barotrauma
             FarseerPhysics.Settings.PositionIterations = 1;
 
             Console.WriteLine("Loading game settings");
-            Config = new GameSettings();
+            GameSettings.Init();
 
             Console.WriteLine("Loading MD5 hash cache");
-            Md5Hash.LoadCache();
+            Md5Hash.Cache.Load();
 
             Console.WriteLine("Initializing SteamManager");
             SteamManager.Initialize();
-            Console.WriteLine("Initializing GameAnalytics");
-            if (GameSettings.SendUserStatistics) GameAnalyticsManager.Init();
+
+            //TODO: figure out how consent is supposed to work for servers
+            //Console.WriteLine("Initializing GameAnalytics");
+            //GameAnalyticsManager.InitIfConsented();
 
             Console.WriteLine("Initializing GameScreen");
             GameScreen = new GameScreen();
@@ -99,34 +101,12 @@ namespace Barotrauma
 
         public void Init()
         {
-            NPCSet.LoadSets();
-            FactionPrefab.LoadFactions();
-            CharacterPrefab.LoadAll();
-            MissionPrefab.Init();
-            TraitorMissionPrefab.Init();
-            MapEntityPrefab.Init();
-            MapGenerationParams.Init();
-            LevelGenerationParams.LoadPresets();
-            CaveGenerationParams.LoadPresets();
-            OutpostGenerationParams.LoadPresets();
-            EventSet.LoadPrefabs();
-            Order.Init();
-            EventManagerSettings.Init();
-            ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
-            AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
-            SkillSettings.Load(GetFilesOfType(ContentType.SkillSettings));
-            StructurePrefab.LoadAll(GetFilesOfType(ContentType.Structure));
-            UpgradePrefab.LoadAll(GetFilesOfType(ContentType.UpgradeModules));
-            JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
-            CorpsePrefab.LoadAll(GetFilesOfType(ContentType.Corpses));
-            NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
-            ItemAssemblyPrefab.LoadAll();
-            LevelObjectPrefab.LoadAll();
-            BallastFloraPrefab.LoadAll(GetFilesOfType(ContentType.MapCreature));
+            CoreEntityPrefab.InitCorePrefabs();
 
             GameModePreset.Init();
-            DecalManager = new DecalManager();
-            LocationType.Init();
+
+            ContentPackageManager.Init().Consume();
+            ContentPackageManager.LogEnabledRegularPackageErrors();
 
             SubmarineInfo.RefreshSavedSubs();
 
@@ -160,23 +140,6 @@ namespace Barotrauma
                     break;
                 }
             }*/
-        }
-
-        /// <summary>
-        /// Returns the file paths of all files of the given type in the content packages.
-        /// </summary>
-        /// <param name="type"></param>
-        /// <param name="searchAllContentPackages">If true, also returns files in content packages that are installed but not currently selected.</param>
-        public IEnumerable<ContentFile> GetFilesOfType(ContentType type, bool searchAllContentPackages = false)
-        {
-            if (searchAllContentPackages)
-            {
-                return ContentPackage.GetFilesOfType(ContentPackage.AllPackages, type);
-            }
-            else
-            {
-                return ContentPackage.GetFilesOfType(Config.AllEnabledPackages, type);
-            }
         }
 
         public void StartServer()
@@ -264,7 +227,7 @@ namespace Barotrauma
                         i++;
                         break;
                     case "-pipes":
-                        ChildServerRelay.Start(CommandLineArgs[i + 2], CommandLineArgs[i + 1]);
+                        //handled in TryStartChildServerRelay
                         i += 2;
                         break;
                 }
@@ -334,6 +297,8 @@ namespace Barotrauma
                 DebugConsole.NewMessage("WARNING: Stopwatch frequency under 1500 ticks per second. Expect significant syncing accuracy issues.", Color.Yellow);
             }
 
+            Stopwatch performanceCounterTimer = Stopwatch.StartNew();
+
             stopwatch = Stopwatch.StartNew();
             long prevTicks = stopwatch.ElapsedTicks;
             while (ShouldRun)
@@ -341,11 +306,16 @@ namespace Barotrauma
                 long currTicks = stopwatch.ElapsedTicks;
                 double elapsedTime = Math.Max(currTicks - prevTicks, 0) / frequency;
                 Timing.Accumulator += elapsedTime;
-                if (Timing.Accumulator > 1.0)
+                if (Timing.Accumulator > Timing.AccumulatorMax)
                 {
-                    //prevent spiral of death
+                    //prevent spiral of death:
+                    //if the game's running too slowly then we have no choice but to skip a bunch of steps
+                    //otherwise it snowballs and becomes unplayable
                     Timing.Accumulator = Timing.Step;
                 }
+                
+                CrossThread.ProcessTasks();
+                
                 prevTicks = currTicks;
                 while (Timing.Accumulator >= Timing.Step)
                 {
@@ -362,6 +332,7 @@ namespace Barotrauma
                     CoroutineManager.Update((float)Timing.Step, (float)Timing.Step);
 
                     Timing.Accumulator -= Timing.Step;
+                    updateCount++;
                 }
 
 #if !DEBUG
@@ -377,10 +348,37 @@ namespace Barotrauma
                 DebugConsole.UpdateCommandLine((int)(Timing.Accumulator * 800));
 #endif
 
-                int frameTime = (int)(((double)(stopwatch.ElapsedTicks - prevTicks) / frequency) * 1000.0);
+                int frameTime = (int)((stopwatch.ElapsedTicks - prevTicks) / frequency * 1000.0);
                 frameTime = Math.Max(0, frameTime);
                 
                 Thread.Sleep(Math.Max(((int)(Timing.Step * 1000.0) - frameTime) / 2, 0));
+
+                if (performanceCounterTimer.ElapsedMilliseconds > 1000)
+                {
+                    int updateRate = (int)Math.Round(updateCount / (double)(performanceCounterTimer.ElapsedMilliseconds / 1000.0));
+                    prevUpdateRates.Enqueue(updateRate);
+                    if (prevUpdateRates.Count >= 10)
+                    {
+                        int avgUpdateRate = (int)prevUpdateRates.Average();
+                        if (avgUpdateRate < Timing.FixedUpdateRate * 0.98 && GameSession != null && Timing.TotalTime > GameSession.RoundStartTime + 1.0)
+                        {
+                            DebugConsole.AddWarning($"Running slowly ({avgUpdateRate} updates/s)!");
+                            if (Server != null)
+                            {
+                                foreach (Client c in Server.ConnectedClients)
+                                {
+                                    if (c.Connection == Server.OwnerConnection || c.Permissions != ClientPermissions.None)
+                                    {
+                                        Server.SendConsoleMessage($"Server running slowly ({avgUpdateRate} updates/s)!", c, Color.Orange);
+                                    }
+                                }
+                            }
+                        }
+                        prevUpdateRates.Clear();
+                    }
+                    performanceCounterTimer.Restart();
+                    updateCount = 0;
+                }
             }
             stopwatch.Stop();
 
@@ -390,8 +388,9 @@ namespace Barotrauma
 
             SaveUtil.CleanUnnecessarySaveFiles();
 
-            if (GameSettings.SaveDebugConsoleLogs) { DebugConsole.SaveLogs(); }
-            if (GameSettings.SendUserStatistics) { GameAnalytics.OnQuit(); }
+            if (GameSettings.CurrentConfig.SaveDebugConsoleLogs
+                || GameSettings.CurrentConfig.VerboseLogging) { DebugConsole.SaveLogs(); }
+            if (GameAnalyticsManager.SendUserStatistics) { GameAnalyticsManager.ShutDown(); }
 
             MainThread = null;
         }
@@ -399,11 +398,12 @@ namespace Barotrauma
         public static void ResetFrameTime()
         {
             Timing.Accumulator = 0.0f;
-            stopwatch?.Reset();
-            stopwatch?.Start();
+            stopwatch?.Restart();
+            prevUpdateRates.Clear();
+            updateCount = 0;
         }
         
-        public CoroutineHandle ShowLoading(IEnumerable<object> loader, bool waitKeyHit = true)
+        public CoroutineHandle ShowLoading(IEnumerable<CoroutineStatus> loader, bool waitKeyHit = true)
         {
             return CoroutineManager.StartCoroutine(loader);
         }

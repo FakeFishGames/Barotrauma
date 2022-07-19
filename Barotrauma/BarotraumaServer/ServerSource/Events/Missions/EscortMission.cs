@@ -9,6 +9,8 @@ namespace Barotrauma
     {
         public override void ServerWriteInitial(IWriteMessage msg, Client c)
         {
+            base.ServerWriteInitial(msg, c);
+
             if (characters.Count == 0)
             {
                 throw new InvalidOperationException("Server attempted to write escort mission data when no characters had been spawned.");
@@ -22,7 +24,7 @@ namespace Barotrauma
                 msg.Write((ushort)characterItems[character].Count());
                 foreach (Item item in characterItems[character])
                 {
-                    item.WriteSpawnData(msg, item.ID, item.ParentInventory?.Owner?.ID ?? Entity.NullEntityID, 0);
+                    item.WriteSpawnData(msg, item.ID, item.ParentInventory?.Owner?.ID ?? Entity.NullEntityID, 0, item.ParentInventory?.FindIndex(item) ?? -1);
                 }
             }
         }

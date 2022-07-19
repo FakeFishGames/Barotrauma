@@ -8,7 +8,9 @@ namespace Barotrauma.Items.Components
 
         private float sendSignalTimer;
 
-        public SonarTransducer(Item item, XElement element) : base(item, element)
+        public Sonar ConnectedSonar;
+
+        public SonarTransducer(Item item, ContentXElement element) : base(item, element)
         {
             IsActive = true;
         }
@@ -16,8 +18,6 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             UpdateOnActiveEffects(deltaTime);
-
-            CurrPowerConsumption = powerConsumption;
 
             if (Voltage >= MinVoltage)
             {
@@ -28,6 +28,16 @@ namespace Barotrauma.Items.Components
                     sendSignalTimer = SendSignalInterval;
                 }
             }
+        }
+
+        public override float GetCurrentPowerConsumption(Connection connection = null)
+        {
+            if (connection != powerIn || !IsActive)
+            {
+                return 0;
+            }
+
+            return PowerConsumption * (ConnectedSonar?.CurrentMode == Sonar.Mode.Active ? 1.0f : Sonar.PassivePowerConsumption);
         }
     }
 }

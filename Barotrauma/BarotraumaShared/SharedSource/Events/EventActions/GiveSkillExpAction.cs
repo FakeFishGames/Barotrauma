@@ -1,6 +1,4 @@
 using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -8,18 +6,18 @@ namespace Barotrauma
 {
     class GiveSkillExpAction : EventAction
     {
-        [Serialize("", true)]
-        public string Skill { get; set; }
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier Skill { get; set; }
 
-        [Serialize(0.0f, true)]
+        [Serialize(0.0f, IsPropertySaveable.Yes)]
         public float Amount { get; set; }
 
-        [Serialize("", true)]
-        public string TargetTag { get; set; }
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier TargetTag { get; set; }
 
-        public GiveSkillExpAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element)
+        public GiveSkillExpAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)
         {
-            if (string.IsNullOrEmpty(TargetTag))
+            if (TargetTag.IsEmpty)
             {
                 DebugConsole.ThrowError($"Error in event \"{parentEvent.Prefab.Identifier}\": GiveSkillExpAction without a target tag (the action needs to know whose skill to check).");
             }
@@ -42,7 +40,7 @@ namespace Barotrauma
             var targets = ParentEvent.GetTargets(TargetTag).Where(e => e is Character).Select(e => e as Character);
             foreach (var target in targets)
             {
-                target.Info?.IncreaseSkillLevel(Skill?.ToLowerInvariant(), Amount, target.Position + Vector2.UnitY * 150.0f);
+                target.Info?.IncreaseSkillLevel(Skill, Amount);
             }
             isFinished = true;
         }

@@ -1,10 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Immutable;
 
 namespace Barotrauma
 {
     partial class UpgradePrefab
     {
-        public readonly List<DecorativeSprite> DecorativeSprites = new List<DecorativeSprite>();
+        public readonly ImmutableArray<DecorativeSprite> DecorativeSprites = new ImmutableArray<DecorativeSprite>();
         public Sprite Sprite { get; private set; }
     }
 }

@@ -4,7 +4,7 @@ namespace Barotrauma.Items.Components
 {
     partial class MemoryComponent : ItemComponent
     {
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             Value = msg.ReadString();
         }

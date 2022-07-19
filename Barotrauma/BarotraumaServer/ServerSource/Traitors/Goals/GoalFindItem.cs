@@ -15,7 +15,7 @@ namespace Barotrauma
             private readonly bool preferNew;
             private readonly bool allowNew;
             private readonly bool allowExisting;
-            private readonly HashSet<string> allowedContainerIdentifiers = new HashSet<string>();
+            private readonly HashSet<Identifier> allowedContainerIdentifiers = new HashSet<Identifier>();
 
             private ItemPrefab targetPrefab;
             private ItemPrefab containedPrefab;
@@ -78,11 +78,12 @@ namespace Barotrauma
                 List<Item> suitableItems = new List<Item>();
                 foreach (Item item in Item.ItemList)
                 {
+                    if (item.HiddenInGame || item.NonInteractable || item.NonPlayerTeamInteractable) { continue; }
                     if (item.Submarine == null || traitors.All(traitor => item.Submarine.TeamID != traitor.Character.TeamID))
                     {
                         continue;
                     }
-                    if (item.GetComponent<ItemContainer>() != null && allowedContainerIdentifiers.Contains(item.prefab.Identifier))
+                    if (item.GetComponent<ItemContainer>() != null && allowedContainerIdentifiers.Contains(((MapEntity)item).Prefab.Identifier))
                     {
                         if ((includeNew && !item.OwnInventory.IsFull()) || (includeExisting && item.OwnInventory.FindItemByIdentifier(targetPrefabCandidate.Identifier) != null))
                         {
@@ -165,7 +166,7 @@ namespace Barotrauma
                     targetPrefabTextId = targetPrefab.GetItemNameTextId();
                 }
 
-                targetNameText = targetPrefabTextId != null ? TextManager.FormatServerMessage(targetPrefabTextId) : targetPrefab.Name;
+                targetNameText = targetPrefabTextId != null ? TextManager.FormatServerMessage(targetPrefabTextId) : targetPrefab.Name.Value;
                 targetContainer = FindTargetContainer(Traitors, targetPrefab);
                 if (targetContainer == null)
                 {
@@ -174,9 +175,9 @@ namespace Barotrauma
                     return false;
                 }
                 var containerPrefabTextId = targetContainer.Prefab.GetItemNameTextId();
-                targetContainerNameText = containerPrefabTextId != null ? TextManager.FormatServerMessage(containerPrefabTextId) : targetContainer.Prefab.Name;
-                var targetHullTextId = targetContainer.CurrentHull?.prefab.GetHullNameTextId();
-                targetHullNameText = targetHullTextId != null ? TextManager.FormatServerMessage(targetHullTextId) : targetContainer?.CurrentHull?.DisplayName ?? "";
+                targetContainerNameText = containerPrefabTextId != null ? TextManager.FormatServerMessage(containerPrefabTextId) : targetContainer.Prefab.Name.Value;
+                var targetHullTextId = targetContainer.CurrentHull?.Prefab.GetHullNameTextId();
+                targetHullNameText = targetHullTextId != null ? TextManager.FormatServerMessage(targetHullTextId) : targetContainer?.CurrentHull?.DisplayName.Value ?? "";
                 if (allowNew && !targetContainer.OwnInventory.IsFull())
                 {
                     existingItems.Clear();
@@ -184,7 +185,10 @@ namespace Barotrauma
                     {
                         existingItems.Add(item);
                     }
-                    Entity.Spawner.AddToSpawnQueue(targetPrefab, targetContainer.OwnInventory);
+                    Entity.Spawner.AddItemToSpawnQueue(targetPrefab, targetContainer.OwnInventory, onSpawned: item =>
+                    {
+                        item.AddTag("traitormissionitem");
+                    });
                     target = null;
                 }
                 else if (allowExisting)
@@ -212,7 +216,7 @@ namespace Barotrauma
                         {
                             for (int i = 0; i < spawnAmount; i++)
                             {
-                                Entity.Spawner.AddToSpawnQueue(containedPrefab, target.OwnInventory);
+                                Entity.Spawner.AddItemToSpawnQueue(containedPrefab, target.OwnInventory);
                             }
                         }
                         existingItems.Clear();
@@ -220,7 +224,7 @@ namespace Barotrauma
                 }
             }
 
-            public GoalFindItem(TraitorMission.CharacterFilter filter, string identifier, bool preferNew, bool allowNew, bool allowExisting, float percentage, params string[] allowedContainerIdentifiers)
+            public GoalFindItem(TraitorMission.CharacterFilter filter, string identifier, bool preferNew, bool allowNew, bool allowExisting, float percentage, params Identifier[] allowedContainerIdentifiers)
             {
                 this.filter = filter;
                 this.identifier = identifier;

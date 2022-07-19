@@ -6,7 +6,7 @@ namespace Barotrauma.Items.Components
     class SignalCheckComponent : ItemComponent
     {
         private int maxOutputLength;
-        [Editable, Serialize(200, false, description: "The maximum length of the output strings. Warning: Large values can lead to large memory usage or networking issues.")]
+        [Editable, Serialize(200, IsPropertySaveable.No, description: "The maximum length of the output strings. Warning: Large values can lead to large memory usage or networking issues.")]
         public int MaxOutputLength
         {
             get { return maxOutputLength; }
@@ -17,7 +17,7 @@ namespace Barotrauma.Items.Components
         }
 
         private string output;
-        [InGameEditable, Serialize("1", true, description: "The signal this item outputs when the received signal matches the target signal.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize("1", IsPropertySaveable.Yes, description: "The signal this item outputs when the received signal matches the target signal.", alwaysUseInstanceValues: true)]
         public string Output
         {
             get { return output; }
@@ -33,7 +33,7 @@ namespace Barotrauma.Items.Components
         }
 
         private string falseOutput;
-        [InGameEditable, Serialize("0", true, description: "The signal this item outputs when the received signal does not match the target signal.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize("0", IsPropertySaveable.Yes, description: "The signal this item outputs when the received signal does not match the target signal.", alwaysUseInstanceValues: true)]
         public string FalseOutput
         {
             get { return falseOutput; }
@@ -48,10 +48,10 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [InGameEditable, Serialize("", true, description: "The value to compare the received signals against.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize("", IsPropertySaveable.Yes, description: "The value to compare the received signals against.", alwaysUseInstanceValues: true)]
         public string TargetSignal { get; set; }
 
-        public SignalCheckComponent(Item item, XElement element)
+        public SignalCheckComponent(Item item, ContentXElement element)
             : base(item, element)
         {
         }

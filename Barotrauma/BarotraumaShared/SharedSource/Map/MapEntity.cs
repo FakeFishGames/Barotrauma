@@ -3,12 +3,10 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
-using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -16,40 +14,41 @@ namespace Barotrauma
     {
         public static List<MapEntity> mapEntityList = new List<MapEntity>();
 
-        public readonly MapEntityPrefab prefab;
+        public readonly MapEntityPrefab Prefab;
 
         protected List<ushort> linkedToID;
         public List<ushort> unresolvedLinkedToID;
-        
+
+        private const int GapUpdateInterval = 4;
+        private static int gapUpdateTimer;
+
         /// <summary>
         /// List of upgrades this item has
         /// </summary>
         protected readonly List<Upgrade> Upgrades = new List<Upgrade>();
+
+        public readonly HashSet<Identifier> DisallowedUpgradeSet = new HashSet<Identifier>();
         
-        public HashSet<string> disallowedUpgrades = new HashSet<string>();
-        
-        [Editable, Serialize("", true)]
+        [Editable, Serialize("", IsPropertySaveable.Yes)]
         public string DisallowedUpgrades
         {
-            get { return string.Join(",", disallowedUpgrades); }
+            get { return string.Join(",", DisallowedUpgradeSet); }
             set
             {
-                disallowedUpgrades.Clear();
+                DisallowedUpgradeSet.Clear();
                 if (!string.IsNullOrWhiteSpace(value))
                 {
                     string[] splitTags = value.Split(',');
                     foreach (string tag in splitTags)
                     {
                         string[] splitTag = tag.Trim().Split(':');
-                        splitTag[0] = splitTag[0].ToLowerInvariant();
-                        disallowedUpgrades.Add(string.Join(":", splitTag));
+                        DisallowedUpgradeSet.Add(string.Join(":", splitTag).ToIdentifier());
                     }
                 }
             }
         }
 
-        //observable collection because some entities may need to be notified when the collection is modified
-        public readonly ObservableCollection<MapEntity> linkedTo = new ObservableCollection<MapEntity>();
+        public readonly List<MapEntity> linkedTo = new List<MapEntity>();
 
         protected bool flippedX, flippedY;
         public bool FlippedX { get { return flippedX; } }
@@ -102,25 +101,25 @@ namespace Barotrauma
                 return !DrawBelowWater;
             }
         }
-        
+
         public virtual bool Linkable
         {
             get { return false; }
         }
 
-        public List<string> AllowedLinks => prefab == null ? new List<string>() : prefab.AllowedLinks;
+        public IEnumerable<Identifier> AllowedLinks => Prefab == null ? Enumerable.Empty<Identifier>() : Prefab.AllowedLinks;
 
         public bool ResizeHorizontal
         {
-            get { return prefab != null && prefab.ResizeHorizontal; }
+            get { return Prefab != null && Prefab.ResizeHorizontal; }
         }
         public bool ResizeVertical
         {
-            get { return prefab != null && prefab.ResizeVertical; }
+            get { return Prefab != null && Prefab.ResizeVertical; }
         }
 
         //for upgrading the dimensions of the entity from xml
-        [Serialize(0, false)]
+        [Serialize(0, IsPropertySaveable.No)]
         public int RectWidth
         {
             get { return rect.Width; }
@@ -131,7 +130,7 @@ namespace Barotrauma
             }
         }
         //for upgrading the dimensions of the entity from xml
-        [Serialize(0, false)]
+        [Serialize(0, IsPropertySaveable.No)]
         public int RectHeight
         {
             get { return rect.Height; }
@@ -147,7 +146,7 @@ namespace Barotrauma
         public bool SpriteDepthOverrideIsSet { get; private set; }
         public float SpriteOverrideDepth => SpriteDepth;
         private float _spriteOverrideDepth = float.NaN;
-        [Editable(0.001f, 0.999f, decimals: 3), Serialize(float.NaN, true)]
+        [Editable(0.001f, 0.999f, decimals: 3), Serialize(float.NaN, IsPropertySaveable.Yes)]
         public float SpriteDepth
         {
             get
@@ -166,10 +165,10 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(1f, true), Editable(0.01f, 10f, DecimalCount = 3, ValueStep = 0.1f)]
+        [Serialize(1f, IsPropertySaveable.Yes), Editable(0.01f, 10f, DecimalCount = 3, ValueStep = 0.1f)]
         public virtual float Scale { get; set; } = 1;
 
-        [Editable, Serialize(false, true)]
+        [Editable, Serialize(false, IsPropertySaveable.Yes)]
         public bool HiddenInGame
         {
             get;
@@ -225,18 +224,15 @@ namespace Barotrauma
             }
         }
 
-        public RuinGeneration.Ruin ParentRuin
-        {
-            get;
-            set;
-        }
-
-        [Serialize(true, true)]
+        [Serialize(true, IsPropertySaveable.Yes)]
         public bool RemoveIfLinkedOutpostDoorInUse
         {
             get;
             protected set;
         } = true;
+
+        [Serialize("", IsPropertySaveable.Yes, "Submarine editor layer")]
+        public string Layer { get; set; }
 
         /// <summary>
         /// The index of the outpost module this entity originally spawned in (-1 if not an outpost item)
@@ -249,10 +245,10 @@ namespace Barotrauma
         {
             get { return ""; }
         }
-        
+
         public MapEntity(MapEntityPrefab prefab, Submarine submarine, ushort id) : base(submarine, id)
         {
-            this.prefab = prefab;
+            this.Prefab = prefab;
             Scale = prefab != null ? prefab.Scale : 1;
         }
 
@@ -295,7 +291,7 @@ namespace Barotrauma
             }
         }
 
-        public virtual void Move(Vector2 amount)
+        public virtual void Move(Vector2 amount, bool ignoreContacts = false)
         {
             rect.X += (int)amount.X;
             rect.Y += (int)amount.Y;
@@ -306,12 +302,12 @@ namespace Barotrauma
             return (Submarine.RectContains(WorldRect, position));
         }
 
-        public bool HasUpgrade(string identifier)
+        public bool HasUpgrade(Identifier identifier)
         {
             return GetUpgrade(identifier) != null;
         }
-        
-        public Upgrade GetUpgrade(string identifier)
+
+        public Upgrade GetUpgrade(Identifier identifier)
         {
             return Upgrades.Find(upgrade => upgrade.Identifier == identifier);
         }
@@ -334,9 +330,9 @@ namespace Barotrauma
             {
                 AddUpgrade(upgrade, createNetworkEvent);
             }
-            DebugConsole.Log($"Set (ID: {ID} {prefab.Name})'s \"{upgrade.Prefab.Name}\" upgrade to level {upgrade.Level}");
+            DebugConsole.Log($"Set (ID: {ID} {Prefab.Name})'s \"{upgrade.Prefab.Name}\" upgrade to level {upgrade.Level}");
         }
-        
+
         /// <summary>
         /// Adds a new upgrade to the item
         /// </summary>
@@ -347,7 +343,7 @@ namespace Barotrauma
                 return false;
             }
 
-            if (disallowedUpgrades.Contains(upgrade.Identifier)) { return false; }
+            if (DisallowedUpgradeSet.Contains(upgrade.Identifier)) { return false; }
 
             Upgrade existingUpgrade = GetUpgrade(upgrade.Identifier);
 
@@ -393,7 +389,7 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Cloning entity \"" + e.Name + "\" failed.", ex);
                     GameAnalyticsManager.AddErrorEventOnce(
                         "MapEntity.Clone:" + e.Name,
-                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        GameAnalyticsManager.ErrorSeverity.Error,
                         "Cloning entity \"" + e.Name + "\" failed (" + ex.Message + ").\n" + ex.StackTrace.CleanupStackTrace());
                     return clones;
                 }
@@ -414,16 +410,16 @@ namespace Barotrauma
             }
 
             //connect clone wires to the clone items and refresh links between doors and gaps
+            List<Wire> orphanedWires = new List<Wire>();
             for (int i = 0; i < clones.Count; i++)
             {
-                var cloneItem = clones[i] as Item;
-                if (cloneItem == null) { continue; }
+                if (!(clones[i] is Item cloneItem)) { continue; }
 
                 var door = cloneItem.GetComponent<Door>();
                 door?.RefreshLinkedGap();
 
                 var cloneWire = cloneItem.GetComponent<Wire>();
-                if (cloneWire == null) continue;
+                if (cloneWire == null) { continue; }
 
                 var originalWire = ((Item)entitiesToClone[i]).GetComponent<Wire>();
 
@@ -431,10 +427,23 @@ namespace Barotrauma
 
                 for (int n = 0; n < 2; n++)
                 {
-                    if (originalWire.Connections[n] == null) { continue; }
+                    if (originalWire.Connections[n] == null)
+                    {
+                        var disconnectedFrom = entitiesToClone.Find(e => e is Item item && (item.GetComponent<ConnectionPanel>()?.DisconnectedWires.Contains(originalWire) ?? false));
+                        if (disconnectedFrom == null) { continue; }
+
+                        int disconnectedFromIndex = entitiesToClone.IndexOf(disconnectedFrom);
+                        var disconnectedFromClone = (clones[disconnectedFromIndex] as Item)?.GetComponent<ConnectionPanel>();
+                        if (disconnectedFromClone == null) { continue; }
+
+                        disconnectedFromClone.DisconnectedWires.Add(cloneWire);
+                        if (cloneWire.Item.body != null) { cloneWire.Item.body.Enabled = false; }
+                        cloneWire.IsActive = false;
+                        continue;
+                    }
 
                     var connectedItem = originalWire.Connections[n].Item;
-                    if (connectedItem == null) continue;
+                    if (connectedItem == null || !entitiesToClone.Contains(connectedItem)) { continue; }
 
                     //index of the item the wire is connected to
                     int itemIndex = entitiesToClone.IndexOf(connectedItem);
@@ -442,7 +451,7 @@ namespace Barotrauma
                     {
                         DebugConsole.ThrowError("Error while cloning wires - item \"" + connectedItem.Name + "\" was not found in entities to clone.");
                         GameAnalyticsManager.AddErrorEventOnce("MapEntity.Clone:ConnectedNotFound" + connectedItem.ID,
-                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                            GameAnalyticsManager.ErrorSeverity.Error,
                             "Error while cloning wires - item \"" + connectedItem.Name + "\" was not found in entities to clone.");
                         continue;
                     }
@@ -453,7 +462,7 @@ namespace Barotrauma
                     {
                         DebugConsole.ThrowError("Error while cloning wires - connection \"" + originalWire.Connections[n].Name + "\" was not found in connected item \"" + connectedItem.Name + "\".");
                         GameAnalyticsManager.AddErrorEventOnce("MapEntity.Clone:ConnectionNotFound" + connectedItem.ID,
-                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                            GameAnalyticsManager.ErrorSeverity.Error,
                             "Error while cloning wires - connection \"" + originalWire.Connections[n].Name + "\" was not found in connected item \"" + connectedItem.Name + "\".");
                         continue;
                     }
@@ -461,6 +470,20 @@ namespace Barotrauma
                     (clones[itemIndex] as Item).Connections[connectionIndex].TryAddLink(cloneWire);
                     cloneWire.Connect((clones[itemIndex] as Item).Connections[connectionIndex], false);
                 }
+
+                if ((cloneWire.Connections[0] == null || cloneWire.Connections[1] == null) && cloneItem.GetComponent<DockingPort>() == null)
+                {
+                    if (!clones.Any(c => (c as Item)?.GetComponent<ConnectionPanel>()?.DisconnectedWires.Contains(cloneWire) ?? false))
+                    {
+                        orphanedWires.Add(cloneWire);
+                    }
+                }
+            }
+
+            foreach (var orphanedWire in orphanedWires)
+            {
+                orphanedWire.Item.Remove();
+                clones.Remove(orphanedWire.Item);
             }
 
             return clones;
@@ -468,25 +491,33 @@ namespace Barotrauma
 
         protected void InsertToList()
         {
-            int i = 0;
-
             if (Sprite == null)
             {
                 mapEntityList.Add(this);
                 return;
             }
 
+            int i = 0;
             while (i < mapEntityList.Count)
             {
                 i++;
-
-                Sprite existingSprite = mapEntityList[i - 1].Sprite;
-                if (existingSprite == null) continue;
-#if CLIENT
-                if (existingSprite.Texture == this.Sprite.Texture) break;
-#endif
+                if (mapEntityList[i - 1]?.Prefab == Prefab)
+                {
+                    mapEntityList.Insert(i, this);
+                    return;
+                }
             }
 
+#if CLIENT
+            i = 0;
+            while (i < mapEntityList.Count)
+            {
+                i++;
+                Sprite existingSprite = mapEntityList[i - 1].Sprite;
+                if (existingSprite == null) { continue; }
+                if (existingSprite.Texture == this.Sprite.Texture) { break; }
+            }
+#endif
             mapEntityList.Insert(i, this);
         }
 
@@ -509,13 +540,18 @@ namespace Barotrauma
             mapEntityList.Remove(this);
 
 #if CLIENT
+            Submarine.ForceRemoveFromVisibleEntities(this);
             if (SelectedList.Contains(this))
             {
                 SelectedList = SelectedList.Where(e => e != this).ToHashSet();
             }
 #endif
 
-            if (aiTarget != null) aiTarget.Remove();
+            if (aiTarget != null)
+            {
+                aiTarget.Remove();
+                aiTarget = null;
+            }
 
             if (linkedTo != null)
             {
@@ -532,26 +568,42 @@ namespace Barotrauma
         /// </summary>
         public static void UpdateAll(float deltaTime, Camera cam)
         {
-            foreach (Hull hull in Hull.hullList)
+#if CLIENT
+            var sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+#endif
+            foreach (Hull hull in Hull.HullList)
             {
                 hull.Update(deltaTime, cam);
             }
+#if CLIENT
+            Hull.UpdateCheats(deltaTime, cam);
+#endif
 
             foreach (Structure structure in Structure.WallList)
             {
                 structure.Update(deltaTime, cam);
             }
 
-
-            //update gaps in random order, because otherwise in rooms with multiple gaps 
+            //update gaps in random order, because otherwise in rooms with multiple gaps
             //the water/air will always tend to flow through the first gap in the list,
             //which may lead to weird behavior like water draining down only through
             //one gap in a room even if there are several
-            foreach (Gap gap in Gap.GapList.OrderBy(g => Rand.Int(int.MaxValue)))
+            gapUpdateTimer++;
+            if (gapUpdateTimer >= GapUpdateInterval)
             {
-                gap.Update(deltaTime, cam);
+                foreach (Gap gap in Gap.GapList.OrderBy(g => Rand.Int(int.MaxValue)))
+                {
+                    gap.Update(deltaTime * GapUpdateInterval, cam);
+                }
+                gapUpdateTimer = 0;
             }
 
+#if CLIENT
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("Update:MapEntity:Misc", sw.ElapsedTicks);
+            sw.Restart();
+#endif
             Powered.UpdatePower(deltaTime);
             foreach (Item item in Item.ItemList)
             {
@@ -560,6 +612,11 @@ namespace Barotrauma
 
             UpdateAllProjSpecific(deltaTime);
 
+#if CLIENT
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("Update:MapEntity:Items", sw.ElapsedTicks);
+            sw.Restart();
+#endif
             Spawner?.Update();
         }
 
@@ -600,7 +657,7 @@ namespace Barotrauma
             IdRemap idRemap = new IdRemap(parentElement, idOffset);
 
             List<MapEntity> entities = new List<MapEntity>();
-            foreach (XElement element in parentElement.Elements())
+            foreach (var element in parentElement.Elements())
             {
                 string typeName = element.Name.ToString();
 
@@ -623,7 +680,7 @@ namespace Barotrauma
                 if (t == typeof(Structure))
                 {
                     string name = element.Attribute("name").Value;
-                    string identifier = element.GetAttributeString("identifier", "");
+                    Identifier identifier = element.GetAttributeIdentifier("identifier", "");
                     StructurePrefab structurePrefab = Structure.FindPrefab(name, identifier);
                     if (structurePrefab == null)
                     {
@@ -637,7 +694,7 @@ namespace Barotrauma
 
                 try
                 {
-                    MethodInfo loadMethod = t.GetMethod("Load", new[] { typeof(XElement), typeof(Submarine), typeof(IdRemap) });
+                    MethodInfo loadMethod = t.GetMethod("Load", new[] { typeof(ContentXElement), typeof(Submarine), typeof(IdRemap) });
                     if (loadMethod == null)
                     {
                         DebugConsole.ThrowError("Could not find the method \"Load\" in " + t + ".");
@@ -648,7 +705,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        object newEntity = loadMethod.Invoke(t, new object[] { element, submarine, idRemap });
+                        object newEntity = loadMethod.Invoke(t, new object[] { element.FromPackage(null), submarine, idRemap });
                         if (newEntity != null)
                         {
                             entities.Add((MapEntity)newEntity);
@@ -716,11 +773,11 @@ namespace Barotrauma
 
                 foreach (ushort i in e.linkedToID)
                 {
-                    if (FindEntityByID(i) is MapEntity linked) 
+                    if (FindEntityByID(i) is MapEntity linked)
                     {
-                        e.linkedTo.Add(linked); 
-                    } 
-                    else 
+                        e.linkedTo.Add(linked);
+                    }
+                    else
                     {
 #if DEBUG
                         DebugConsole.ThrowError($"Linking the entity \"{e.Name}\" to another entity failed. Could not find an entity with the ID \"{i}\".");
@@ -761,7 +818,7 @@ namespace Barotrauma
         /// <summary>
         /// Gets all linked entities of specific type.
         /// </summary>
-        private static void GetLinkedEntitiesRecursive<T>(MapEntity mapEntity, HashSet<T> linkedTargets, ref int depth, int? maxDepth = null, Func<T, bool> filter = null) 
+        private static void GetLinkedEntitiesRecursive<T>(MapEntity mapEntity, HashSet<T> linkedTargets, ref int depth, int? maxDepth = null, Func<T, bool> filter = null)
             where T : MapEntity
         {
             if (depth > maxDepth) { return; }

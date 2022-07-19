@@ -4,68 +4,71 @@ namespace Barotrauma
 {
     class Skill
     {
+        public readonly Identifier Identifier;
+
+        public const float MaximumSkill = 100.0f;
+
         private float level;
 
-        public string Identifier { get; }
-        
         public float Level
         {
             get { return level; }
-            set { level = MathHelper.Clamp(value, 0.0f, 100.0f); }
+            set { level = value; }
         }
 
-        private Sprite icon;
-        public Sprite Icon
+        public void IncreaseSkill(float value, bool increasePastMax)
         {
-            get
-            {
-                if (icon == null)
-                {
-                    icon = GetIcon();
-                }
-                return icon;
-            }
+            level = MathHelper.Clamp(level + value, 0.0f, increasePastMax ? SkillSettings.Current.MaximumSkillWithTalents : MaximumSkill);
         }
 
-        internal SkillPrefab Prefab { get; private set; }
+        private Identifier iconJobId;
 
-        public Skill(SkillPrefab prefab)
+        public Sprite Icon => !iconJobId.IsEmpty && JobPrefab.Prefabs.TryGet(iconJobId, out var jobPrefab)
+            ? jobPrefab.Icon
+            : null;
+
+        public readonly float PriceMultiplier = 1.0f;
+
+        public Skill(SkillPrefab prefab, Rand.RandSync randSync)
         {
-            this.Prefab = prefab;
             Identifier = prefab.Identifier;
-            level = Rand.Range(prefab.LevelRange.X, prefab.LevelRange.Y, Rand.RandSync.Server);
-            icon = GetIcon();
+            level = Rand.Range(prefab.LevelRange.Start, prefab.LevelRange.End, randSync);
+            iconJobId = GetIconJobId();
+            PriceMultiplier = prefab.PriceMultiplier;
         }
 
-        public Skill(string identifier, float level)
+        public Skill(Identifier identifier, float level)
         {
             Identifier = identifier;
             this.level = level;
-            icon = GetIcon();
+            iconJobId = GetIconJobId();
         }
 
-        private Sprite GetIcon()
+        private Identifier GetIconJobId()
         {
-            string jobId = null;
-            switch (Identifier.ToLowerInvariant())
+            Identifier jobId = Identifier.Empty;
+            if (Identifier == "electrical")
             {
-                case "electrical":
-                    jobId = "engineer";
-                    break;
-                case "helm":
-                    jobId = "captain";
-                    break;
-                case "mechanical":
-                    jobId = "mechanic";
-                    break;
-                case "medical":
-                    jobId = "medicaldoctor";
-                    break;
-                case "weapons":
-                    jobId = "securityofficer";
-                    break;
+                jobId = "engineer".ToIdentifier();
             }
-            return jobId != null && JobPrefab.Prefabs.ContainsKey(jobId) ? JobPrefab.Prefabs[jobId].IconSmall : null;
+            else if (Identifier == "helm")
+            {
+                jobId = "captain".ToIdentifier();
+            }
+            else if (Identifier == "mechanical")
+            {
+                jobId = "mechanic".ToIdentifier();
+            }
+            else if (Identifier == "medical")
+            {
+                jobId = "medicaldoctor".ToIdentifier();
+            }
+            else if (Identifier == "weapons")
+            {
+                jobId = "securityofficer".ToIdentifier();
+            }
+
+            return jobId;
         }
     }
 }

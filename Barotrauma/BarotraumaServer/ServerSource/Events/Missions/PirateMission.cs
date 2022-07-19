@@ -9,6 +9,8 @@ namespace Barotrauma
     {
         public override void ServerWriteInitial(IWriteMessage msg, Client c)
         {
+            base.ServerWriteInitial(msg, c);
+
             // duplicate code from escortmission, should possibly be combined, though additional loot items might be added so maybe not
             if (characters.Count == 0)
             {
@@ -22,7 +24,7 @@ namespace Barotrauma
                 msg.Write((ushort)characterItems[character].Count());
                 foreach (Item item in characterItems[character])
                 {
-                    item.WriteSpawnData(msg, item.ID, item.ParentInventory?.Owner?.ID ?? Entity.NullEntityID, 0);
+                    item.WriteSpawnData(msg, item.ID, item.ParentInventory?.Owner?.ID ?? Entity.NullEntityID, 0, item.ParentInventory?.FindIndex(item) ?? -1);
                 }
             }
         }

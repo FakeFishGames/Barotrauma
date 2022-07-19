@@ -143,7 +143,8 @@ namespace Steamworks
 		#endregion
 		internal bool GetConnectionName( Connection hPeer, out string pszName )
 		{
-			IntPtr mempszName = Helpers.TakeMemory();
+			using var memory = Helpers.TakeMemory();
+			IntPtr mempszName = memory;
 			var returnValue = _GetConnectionName( Self, hPeer, mempszName, (1024 * 32) );
 			pszName = Helpers.MemoryToString( mempszName );
 			return returnValue;
@@ -223,7 +224,8 @@ namespace Steamworks
 		#endregion
 		internal int GetDetailedConnectionStatus( Connection hConn, out string pszBuf )
 		{
-			IntPtr mempszBuf = Helpers.TakeMemory();
+			using var memory = Helpers.TakeMemory();
+			IntPtr mempszBuf = memory;
 			var returnValue = _GetDetailedConnectionStatus( Self, hConn, mempszBuf, (1024 * 32) );
 			pszBuf = Helpers.MemoryToString( mempszBuf );
 			return returnValue;

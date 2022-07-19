@@ -18,46 +18,49 @@ namespace Barotrauma
             Bottom = 8
         }
 
-        private readonly HashSet<string> moduleFlags = new HashSet<string>();
-        public IEnumerable<string> ModuleFlags
+        private readonly HashSet<Identifier> moduleFlags = new HashSet<Identifier>();
+        public IEnumerable<Identifier> ModuleFlags
         {
             get { return moduleFlags; }
         }
 
-        private readonly HashSet<string> allowAttachToModules = new HashSet<string>();
-        public IEnumerable<string> AllowAttachToModules
+        private readonly HashSet<Identifier> allowAttachToModules = new HashSet<Identifier>();
+        public IEnumerable<Identifier> AllowAttachToModules
         {
             get { return allowAttachToModules; }
         }
 
-        private readonly HashSet<string> allowedLocationTypes = new HashSet<string>();
-        public IEnumerable<string> AllowedLocationTypes
+        private readonly HashSet<Identifier> allowedLocationTypes = new HashSet<Identifier>();
+        public IEnumerable<Identifier> AllowedLocationTypes
         {
             get { return allowedLocationTypes; }
         }
 
-        [Serialize(100, isSaveable: true, description: "How many instances of this module can be used in one outpost."), Editable]
+        [Serialize(100, IsPropertySaveable.Yes, description: "How many instances of this module can be used in one outpost."), Editable]
         public int MaxCount { get; set; }
 
-        [Serialize(10.0f, isSaveable: true, description: "How likely it is for the module to get picked when selecting from a set of modules during the outpost generation."), Editable]
+        [Serialize(10.0f, IsPropertySaveable.Yes, description: "How likely it is for the module to get picked when selecting from a set of modules during the outpost generation."), Editable]
         public float Commonness { get; set; }
 
-        [Serialize(GapPosition.None, isSaveable: true, description: "Which sides of the module have gaps on them (i.e. from which sides the module can be attached to other modules). Center = no gaps available.")]
+        [Serialize(GapPosition.None, IsPropertySaveable.Yes, description: "Which sides of the module have gaps on them (i.e. from which sides the module can be attached to other modules). Center = no gaps available.")]
         public GapPosition GapPositions { get; set; }
+
+        [Serialize(GapPosition.Right | GapPosition.Left | GapPosition.Bottom | GapPosition.Top, IsPropertySaveable.Yes, description: "Which sides of this module are allowed to attach to the previously placed module. E.g. if you want a module to always attach to the left side of the docking module, you could set this to Right.")]
+        public GapPosition CanAttachToPrevious { get; set; }
 
         public string Name { get; private set; }
 
-        public Dictionary<string, SerializableProperty> SerializableProperties { get; private set; }
+        public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; private set; }
 
         public OutpostModuleInfo(SubmarineInfo submarineInfo, XElement element)
         {
             Name = $"OutpostModuleInfo ({submarineInfo.Name})";
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
             SetFlags(
-                element.GetAttributeStringArray("flags", null, convertToLowerInvariant: true) ?? 
-                element.GetAttributeStringArray("moduletypes", new string[0], convertToLowerInvariant: true));
-            SetAllowAttachTo(element.GetAttributeStringArray("allowattachto", new string[0], convertToLowerInvariant: true));
-            allowedLocationTypes = new HashSet<string>(element.GetAttributeStringArray("allowedlocationtypes", new string[0], convertToLowerInvariant: true));
+                element.GetAttributeIdentifierArray("flags", null) ?? 
+                element.GetAttributeIdentifierArray("moduletypes", Array.Empty<Identifier>()));
+            SetAllowAttachTo(element.GetAttributeIdentifierArray("allowattachto", Array.Empty<Identifier>()));
+            allowedLocationTypes = new HashSet<Identifier>(element.GetAttributeIdentifierArray("allowedlocationtypes", Array.Empty<Identifier>()));
         }
 
         public OutpostModuleInfo(SubmarineInfo submarineInfo)
@@ -68,12 +71,12 @@ namespace Barotrauma
         public OutpostModuleInfo(OutpostModuleInfo original)
         {
             Name = original.Name;
-            moduleFlags = new HashSet<string>(original.moduleFlags);
-            allowAttachToModules = new HashSet<string>(original.allowAttachToModules);
-            allowedLocationTypes = new HashSet<string>(original.allowedLocationTypes);
-            SerializableProperties = new Dictionary<string, SerializableProperty>();
+            moduleFlags = new HashSet<Identifier>(original.moduleFlags);
+            allowAttachToModules = new HashSet<Identifier>(original.allowAttachToModules);
+            allowedLocationTypes = new HashSet<Identifier>(original.allowedLocationTypes);
+            SerializableProperties = new Dictionary<Identifier, SerializableProperty>();
             GapPositions = original.GapPositions;
-            foreach (KeyValuePair<string, SerializableProperty> kvp in original.SerializableProperties)
+            foreach (KeyValuePair<Identifier, SerializableProperty> kvp in original.SerializableProperties)
             {
                 SerializableProperties.Add(kvp.Key, kvp.Value);
                 if (SerializableProperty.GetSupportedTypeName(kvp.Value.PropertyType) != null)
@@ -83,49 +86,51 @@ namespace Barotrauma
             }
         }
 
-        public void SetFlags(IEnumerable<string> newFlags)
+        public void SetFlags(IEnumerable<Identifier> newFlags)
         {
             moduleFlags.Clear();
-            if (newFlags.Contains("hallwayhorizontal"))
+            if (newFlags.Contains("hallwayhorizontal".ToIdentifier()))
             {
-                moduleFlags.Add("hallwayhorizontal");
+                moduleFlags.Add("hallwayhorizontal".ToIdentifier());
+                if (newFlags.Contains("ruin".ToIdentifier())) { moduleFlags.Add("ruin".ToIdentifier()); }
                 return;
             }
-            if (newFlags.Contains("hallwayvertical"))
+            if (newFlags.Contains("hallwayvertical".ToIdentifier()))
             {
-                moduleFlags.Add("hallwayvertical");
+                moduleFlags.Add("hallwayvertical".ToIdentifier());
+                if (newFlags.Contains("ruin".ToIdentifier())) { moduleFlags.Add("ruin".ToIdentifier()); }
                 return;
             }
             if (!newFlags.Any())
             {
-                moduleFlags.Add("none");
+                moduleFlags.Add("none".ToIdentifier());
             }
-            foreach (string flag in newFlags)
+            foreach (Identifier flag in newFlags)
             {
                 if (flag == "none" && newFlags.Count() > 1) { continue; }
-                moduleFlags.Add(flag.ToLowerInvariant());
+                moduleFlags.Add(flag);
             }
         }
-        public void SetAllowAttachTo(IEnumerable<string> allowAttachTo)
+        public void SetAllowAttachTo(IEnumerable<Identifier> allowAttachTo)
         {
             allowAttachToModules.Clear();
             if (!allowAttachTo.Any())
             {
-                allowAttachToModules.Add("any");
+                allowAttachToModules.Add("any".ToIdentifier());
             }
-            foreach (string flag in allowAttachTo)
+            foreach (Identifier flag in allowAttachTo)
             {
                 if (flag == "any" && allowAttachTo.Count() > 1) { continue; }
                 allowAttachToModules.Add(flag);
             }
         }
 
-        public void SetAllowedLocationTypes(IEnumerable<string> allowedLocationTypes)
+        public void SetAllowedLocationTypes(IEnumerable<Identifier> allowedLocationTypes)
         {
             this.allowedLocationTypes.Clear();
-            foreach (string locationType in allowedLocationTypes)
+            foreach (Identifier locationType in allowedLocationTypes)
             {
-                if (locationType.Equals("any", StringComparison.OrdinalIgnoreCase)) { continue; }
+                if (locationType == "any") { continue; }
                 this.allowedLocationTypes.Add(locationType);
             }
         }

@@ -4,8 +4,12 @@ namespace Barotrauma
 {
     partial class MonsterMission : Mission
     {
+        public override bool DisplayAsCompleted => State > 0;
+        public override bool DisplayAsFailed => false;
+
         public override void ClientReadInitial(IReadMessage msg)
         {
+            base.ClientReadInitial(msg);
             byte monsterCount = msg.ReadByte();
             for (int i = 0; i < monsterCount; i++)
             {

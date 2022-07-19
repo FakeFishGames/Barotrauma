@@ -9,7 +9,7 @@ namespace Barotrauma
 {
     class UnlockPathAction : EventAction
     {
-        public UnlockPathAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) { }
+        public UnlockPathAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
 
         private bool isFinished = false;
 
@@ -36,7 +36,7 @@ namespace Barotrauma
                     NotifyUnlock(connection);
 #else
                     new GUIMessageBox(string.Empty, TextManager.Get("pathunlockedgeneric"),
-                        new string[0], type: GUIMessageBox.Type.InGame, iconStyle: "UnlockPathIcon", relativeSize: new Vector2(0.3f, 0.15f), minSize: new Point(512, 128));
+                        Array.Empty<LocalizedString>(), type: GUIMessageBox.Type.InGame, iconStyle: "UnlockPathIcon", relativeSize: new Vector2(0.3f, 0.15f), minSize: new Point(512, 128));
 #endif
                 }
             }

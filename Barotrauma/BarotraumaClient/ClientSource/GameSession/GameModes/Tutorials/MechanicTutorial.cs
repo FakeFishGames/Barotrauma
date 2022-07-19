@@ -69,33 +69,105 @@ namespace Barotrauma.Tutorials
 
         // Variables
         private const float waterVolumeBeforeOpening = 15f;
-        private string radioSpeakerName;
+        private LocalizedString radioSpeakerName;
         private Character mechanic;
         private Sprite mechanic_repairIcon;
         private Color mechanic_repairIconColor;
         private Sprite mechanic_weldIcon;
 
-        public MechanicTutorial(XElement element) : base(element)
-        {
+        public MechanicTutorial() : base("tutorial.mechanictraining".ToIdentifier(),
+            new Segment(
+                "Mechanic.OpenDoor".ToIdentifier(),
+                "Mechanic.OpenDoorObjective".ToIdentifier(),
+                TutorialContentType.TextOnly,
+                textContent: new Segment.Text { Tag = "Mechanic.OpenDoorText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center }),
+            new Segment(
+                "Mechanic.Equipment".ToIdentifier(),
+                "Mechanic.EquipmentObjective".ToIdentifier(),
+                TutorialContentType.ManualVideo,
+                textContent: new Segment.Text { Tag = "Mechanic.EquipmentText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center },
+                videoContent: new Segment.Video { File = "tutorial_inventory.webm", TextTag = "Mechanic.EquipmentText".ToIdentifier(), Width = 450, Height = 80 }),
+            new Segment(
+                "Mechanic.Welding".ToIdentifier(),
+                "Mechanic.WeldingObjective".ToIdentifier(),
+                TutorialContentType.ManualVideo,
+                textContent: new Segment.Text { Tag = "Mechanic.WeldingText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center },
+                videoContent: new Segment.Video { File = "tutorial_equip.webm", TextTag = "Mechanic.WeldingText".ToIdentifier(), Width = 450, Height = 80 }),
+            new Segment(
+                "Mechanic.Drain".ToIdentifier(),
+                "Mechanic.DrainObjective".ToIdentifier(),
+                TutorialContentType.TextOnly,
+                textContent: new Segment.Text { Tag = "Mechanic.DrainText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center }),
+            new Segment(
+                "Mechanic.Deconstruct".ToIdentifier(),
+                "Mechanic.DeconstructObjective".ToIdentifier(),
+                TutorialContentType.ManualVideo,
+                textContent: new Segment.Text { Tag = "Mechanic.DeconstructText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center },
+                videoContent: new Segment.Video { File = "tutorial_deconstruct.webm", TextTag = "Mechanic.DeconstructText".ToIdentifier(), Width = 450, Height = 80 }),
+            new Segment(
+                "Mechanic.Fabricate".ToIdentifier(),
+                "Mechanic.FabricateObjective".ToIdentifier(),
+                TutorialContentType.ManualVideo,
+                textContent: new Segment.Text { Tag = "Mechanic.FabricateText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center },
+                videoContent: new Segment.Video { File = "tutorial_fabricate.webm", TextTag = "Mechanic.FabricateText".ToIdentifier(), Width = 450, Height = 80 }),
+            new Segment(
+                "Mechanic.Extinguisher".ToIdentifier(),
+                "Mechanic.ExtinguisherObjective".ToIdentifier(),
+                TutorialContentType.TextOnly,
+                textContent: new Segment.Text { Tag = "Mechanic.ExtinguisherText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center }),
+            new Segment(
+                "Mechanic.DropExtinguisher".ToIdentifier(),
+                "Mechanic.DropExtinguisherObjective".ToIdentifier(),
+                TutorialContentType.TextOnly,
+                textContent: new Segment.Text { Tag = "Mechanic.DropExtinguisherText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center }),
+            new Segment(
+                "Mechanic.Diving".ToIdentifier(),
+                "Mechanic.DivingObjective".ToIdentifier(),
+                TutorialContentType.TextOnly,
+                textContent: new Segment.Text { Tag = "Mechanic.DivingText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center }),
+            new Segment(
+                "Mechanic.RepairPump".ToIdentifier(),
+                "Mechanic.RepairPumpObjective".ToIdentifier(),
+                TutorialContentType.TextOnly,
+                textContent: new Segment.Text { Tag = "Mechanic.RepairPumpText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center }),
+            new Segment(
+                "Mechanic.RepairSubmarine".ToIdentifier(),
+                "Mechanic.RepairSubmarineObjective".ToIdentifier(),
+                TutorialContentType.TextOnly,
+                textContent: new Segment.Text { Tag = "Mechanic.RepairSubmarineText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center }),
+            new Segment(
+                "tutorial.laddertitle".ToIdentifier(),
+                "tutorial.laddertitle".ToIdentifier(),
+                TutorialContentType.TextOnly,
+                textContent: new Segment.Text { Tag = "tutorial.ladderdescription".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center }))
+        { }
 
+        protected override CharacterInfo GetCharacterInfo()
+        {
+            return new CharacterInfo(
+                CharacterPrefab.HumanSpeciesName,
+                jobOrJobPrefab: new Job(
+                    JobPrefab.Prefabs["mechanic"], Rand.RandSync.Unsynced, 0,
+                    new Skill("medical".ToIdentifier(), 0),
+                    new Skill("weapons".ToIdentifier(), 0),
+                    new Skill("mechanical".ToIdentifier(), 50),
+                    new Skill("electrical".ToIdentifier(), 20),
+                    new Skill("helm".ToIdentifier(), 0)));
         }
 
-        public override void Start()
+        protected override void Initialize()
         {
-            base.Start();
-
             radioSpeakerName = TextManager.Get("Tutorial.Radio.Speaker");
             mechanic = Character.Controlled;
 
-            var toolbelt = FindOrGiveItem(mechanic, "toolbelt");
-            toolbelt.Unequip(mechanic);
-            mechanic.Inventory.RemoveItem(toolbelt);
+            foreach (Item item in mechanic.Inventory.AllItemsMod)
+            {
+                if (item.HasTag("clothing") || item.HasTag("identitycard") || item.HasTag("mobileradio")) { continue; }
+                item.Unequip(mechanic);
+                mechanic.Inventory.RemoveItem(item);
+            }
 
-            var crowbar = FindOrGiveItem(mechanic, "crowbar");
-            crowbar.Unequip(mechanic);
-            mechanic.Inventory.RemoveItem(crowbar);
-
-            var repairOrder = Order.GetPrefab("repairsystems");
+            var repairOrder = OrderPrefab.Prefabs["repairsystems"];
             mechanic_repairIcon = repairOrder.SymbolSprite;
             mechanic_repairIconColor = repairOrder.Color;
             mechanic_weldIcon = new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(1, 256, 127, 127), new Vector2(0.5f, 0.5f));
@@ -217,15 +289,21 @@ namespace Barotrauma.Tutorials
             mechanic_ballastPump_2 = Item.ItemList.Find(i => i.HasTag("mechanic_ballastpump_2")).GetComponent<Pump>();
             mechanic_ballastPump_2.Item.Indestructible = false;
             mechanic_ballastPump_2.Item.Condition = 0f;
+
+            GameAnalyticsManager.AddDesignEvent("Tutorial:MechanicTutorial:Started");
+            GameAnalyticsManager.AddDesignEvent("Tutorial:Started");
         }
 
         public override void Update(float deltaTime)
         {
-            mechanic_brokenhull_1.WaterVolume = MathHelper.Clamp(mechanic_brokenhull_1.WaterVolume, 0, mechanic_brokenhull_1.Volume * 0.85f);
+            if (mechanic_brokenhull_1 != null)
+            {
+                mechanic_brokenhull_1.WaterVolume = MathHelper.Clamp(mechanic_brokenhull_1.WaterVolume, 0, mechanic_brokenhull_1.Volume * 0.85f);
+            }
             base.Update(deltaTime);
         }
 
-        public override IEnumerable<object> UpdateState()
+        public override IEnumerable<CoroutineStatus> UpdateState()
         {
             while (GameMain.Instance.LoadingScreenOpen) yield return null;
 
@@ -239,24 +317,26 @@ namespace Barotrauma.Tutorials
             }
             yield return new WaitForSeconds(2.5f, false);
 
-            mechanic_fabricator.RemoveFabricationRecipes(new List<string>() { "extinguisher", "wrench", "weldingtool", "weldingfuel", "divingmask", "railgunshell", "nuclearshell", "uex", "harpoongun" });
+            mechanic_fabricator.RemoveFabricationRecipes(allowedIdentifiers:
+                new[] { "extinguisher", "wrench", "weldingtool", "weldingfuel", "divingmask", "railgunshell", "nuclearshell", "uex", "harpoongun" }.ToIdentifiers());
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.WakeUp"), ChatMessageType.Radio, null);
 
             yield return new WaitForSeconds(2.5f, false);
-            TriggerTutorialSegment(0, GameMain.Config.KeyBindText(InputType.Up), GameMain.Config.KeyBindText(InputType.Left), GameMain.Config.KeyBindText(InputType.Down), GameMain.Config.KeyBindText(InputType.Right), GameMain.Config.KeyBindText(InputType.Select), GameMain.Config.KeyBindText(InputType.Select)); // Open door objective
+            TriggerTutorialSegment(0, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Up), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Left), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Down), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Right), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Select), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Select)); // Open door objective
             yield return new WaitForSeconds(0.0f, false);
             SetDoorAccess(mechanic_firstDoor, mechanic_firstDoorLight, true);
             SetHighlight(mechanic_firstDoor.Item, true);
             do { yield return null; } while (!mechanic_firstDoor.IsOpen);
             SetHighlight(mechanic_firstDoor.Item, false);
             yield return new WaitForSeconds(1.5f, false);
-            RemoveCompletedObjective(segments[0]);
+            RemoveCompletedObjective(0);
+            GameAnalyticsManager.AddDesignEvent("Tutorial:MechanicTutorial:Objective0");
 
             // Room 2
             yield return new WaitForSeconds(0.0f, false);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Equipment"), ChatMessageType.Radio, null);
             do { yield return null; } while (!mechanic_equipmentObjectiveSensor.MotionDetected);
-            TriggerTutorialSegment(1, GameMain.Config.KeyBindText(InputType.Select), GameMain.Config.KeyBindText(InputType.Deselect), GameMain.Config.KeyBindText(InputType.ToggleInventory)); // Equipment & inventory objective
+            TriggerTutorialSegment(1, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Select), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Deselect)); // Equipment & inventory objective
             SetHighlight(mechanic_equipmentCabinet.Item, true);
             bool firstSlotRemoved = false;
             bool secondSlotRemoved = false;
@@ -290,35 +370,38 @@ namespace Barotrauma.Tutorials
                 }
 
                 yield return null;
-            } while (mechanic.Inventory.FindItemByIdentifier("divingmask") == null || mechanic.Inventory.FindItemByIdentifier("weldingtool") == null || mechanic.Inventory.FindItemByIdentifier("wrench") == null); // Wait until looted
+            } while (mechanic.Inventory.FindItemByIdentifier("divingmask".ToIdentifier()) == null || mechanic.Inventory.FindItemByIdentifier("weldingtool".ToIdentifier()) == null || mechanic.Inventory.FindItemByIdentifier("wrench".ToIdentifier()) == null); // Wait until looted
             SetHighlight(mechanic_equipmentCabinet.Item, false);
             yield return new WaitForSeconds(1.5f, false);
-            RemoveCompletedObjective(segments[1]);
+            RemoveCompletedObjective(1);
+            GameAnalyticsManager.AddDesignEvent("Tutorial:MechanicTutorial:Objective1");
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Breach"), ChatMessageType.Radio, null);
 
             // Room 3
             do { yield return null; } while (!mechanic_weldingObjectiveSensor.MotionDetected);
-            TriggerTutorialSegment(2, GameMain.Config.KeyBindText(InputType.Aim), GameMain.Config.KeyBindText(InputType.Shoot), GameMain.Config.KeyBindText(InputType.ToggleInventory)); // Welding objective
+            TriggerTutorialSegment(2, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Aim), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Shoot)); // Welding objective
             do
             {
-                if (!mechanic.HasEquippedItem("divingmask"))
+                if (!mechanic.HasEquippedItem("divingmask".ToIdentifier()))
                 {
-                    HighlightInventorySlot(mechanic.Inventory, "divingmask", highlightColor, .5f, .5f, 0f);
+                    HighlightInventorySlot(mechanic.Inventory, "divingmask".ToIdentifier(), highlightColor, .5f, .5f, 0f);
                 }
 
-                if (!mechanic.HasEquippedItem("weldingtool"))
+                if (!mechanic.HasEquippedItem("weldingtool".ToIdentifier()))
                 {
-                    HighlightInventorySlot(mechanic.Inventory, "weldingtool", highlightColor, .5f, .5f, 0f);
+                    HighlightInventorySlot(mechanic.Inventory, "weldingtool".ToIdentifier(), highlightColor, .5f, .5f, 0f);
                 }
                 yield return null;
-            } while (!mechanic.HasEquippedItem("divingmask") || !mechanic.HasEquippedItem("weldingtool")); // Wait until equipped
+            } while (!mechanic.HasEquippedItem("divingmask".ToIdentifier()) || !mechanic.HasEquippedItem("weldingtool".ToIdentifier())); // Wait until equipped
             SetDoorAccess(mechanic_secondDoor, mechanic_secondDoorLight, true);
             mechanic.AddActiveObjectiveEntity(mechanic_brokenWall_1, mechanic_weldIcon, mechanic_repairIconColor);
             do { yield return null; } while (WallHasDamagedSections(mechanic_brokenWall_1)); // Highlight until repaired
             mechanic.RemoveActiveObjectiveEntity(mechanic_brokenWall_1);
-            RemoveCompletedObjective(segments[2]);
+            RemoveCompletedObjective(2);
+            GameAnalyticsManager.AddDesignEvent("Tutorial:MechanicTutorial:Objective2");
+
             yield return new WaitForSeconds(1f, false);
-            TriggerTutorialSegment(3, GameMain.Config.KeyBindText(InputType.Select)); // Pump objective
+            TriggerTutorialSegment(3, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Select)); // Pump objective
             SetHighlight(mechanic_workingPump.Item, true);
             do
             {
@@ -332,10 +415,12 @@ namespace Barotrauma.Tutorials
                 }
             } while (mechanic_workingPump.FlowPercentage >= 0 || !mechanic_workingPump.IsActive); // Highlight until draining
             SetHighlight(mechanic_workingPump.Item, false);
-            do { yield return null; } while (mechanic_brokenhull_1.WaterPercentage > waterVolumeBeforeOpening); // Unlock door once drained
-            RemoveCompletedObjective(segments[3]);
+            do { yield return null; } while (mechanic_brokenhull_1 != null && mechanic_brokenhull_1.WaterPercentage > waterVolumeBeforeOpening); // Unlock door once drained
+            RemoveCompletedObjective(3);
+            GameAnalyticsManager.AddDesignEvent("Tutorial:MechanicTutorial:Objective3");
+
             SetDoorAccess(mechanic_thirdDoor, mechanic_thirdDoorLight, true);
-            //TriggerTutorialSegment(11, GameMain.Config.KeyBind(InputType.Select), GameMain.Config.KeyBind(InputType.Up), GameMain.Config.KeyBind(InputType.Down), GameMain.Config.KeyBind(InputType.Select)); // Ladder objective
+            //TriggerTutorialSegment(11, GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Select], GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Up], GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Down], GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Select]); // Ladder objective
             //do { yield return null; } while (!mechanic_ladderSensor.MotionDetected);
             //RemoveCompletedObjective(segments[11]);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.News"), ChatMessageType.Radio, null);
@@ -362,24 +447,24 @@ namespace Barotrauma.Tutorials
                         if (mechanic.Inventory.GetItemAt(i) == null) { HighlightInventorySlot(mechanic.Inventory, i, highlightColor, .5f, .5f, 0f); }
                     }
 
-                    if (mechanic.Inventory.FindItemByIdentifier("oxygentank") == null && mechanic.Inventory.FindItemByIdentifier("aluminium") == null)
+                    if (mechanic.Inventory.FindItemByIdentifier("oxygentank".ToIdentifier()) == null && mechanic.Inventory.FindItemByIdentifier("aluminium".ToIdentifier()) == null)
                     {
                         for (int i = 0; i < mechanic_craftingCabinet.Capacity; i++)
                         {
                             Item item = mechanic_craftingCabinet.Inventory.GetItemAt(i);
-                            if (item != null && item.prefab.Identifier == "oxygentank")
+                            if (item != null && item.Prefab.Identifier == "oxygentank")
                             {
                                 HighlightInventorySlot(mechanic_craftingCabinet.Inventory, i, highlightColor, .5f, .5f, 0f);
                             }
                         }
                     }
 
-                    if (mechanic.Inventory.FindItemByIdentifier("sodium") == null)
+                    if (mechanic.Inventory.FindItemByIdentifier("sodium".ToIdentifier()) == null)
                     {
                         for (int i = 0; i < mechanic_craftingCabinet.Inventory.Capacity; i++)
                         {
                             Item item = mechanic_craftingCabinet.Inventory.GetItemAt(i);
-                            if (item != null && item.prefab.Identifier == "sodium")
+                            if (item != null && item.Prefab.Identifier == "sodium")
                             {
                                 HighlightInventorySlot(mechanic_craftingCabinet.Inventory, i, highlightColor, .5f, .5f, 0f);
                             }
@@ -387,12 +472,12 @@ namespace Barotrauma.Tutorials
                     }
                 }
 
-                if (!gotOxygenTank && (mechanic.Inventory.FindItemByIdentifier("oxygentank") != null ||
-                                       mechanic_deconstructor.InputContainer.Inventory.FindItemByIdentifier("oxygentank") != null))
+                if (!gotOxygenTank && (mechanic.Inventory.FindItemByIdentifier("oxygentank".ToIdentifier()) != null ||
+                                       mechanic_deconstructor.InputContainer.Inventory.FindItemByIdentifier("oxygentank".ToIdentifier()) != null))
                 {
                     gotOxygenTank = true;
                 }
-                if (!gotSodium && mechanic.Inventory.FindItemByIdentifier("sodium") != null)
+                if (!gotSodium && mechanic.Inventory.FindItemByIdentifier("sodium".ToIdentifier()) != null)
                 {
                     gotSodium = true;
                 }
@@ -406,9 +491,9 @@ namespace Barotrauma.Tutorials
             {
                 if (IsSelectedItem(mechanic_deconstructor.Item))
                 {
-                    if (mechanic_deconstructor.OutputContainer.Inventory.FindItemByIdentifier("aluminium") != null)
+                    if (mechanic_deconstructor.OutputContainer.Inventory.FindItemByIdentifier("aluminium".ToIdentifier()) != null)
                     {
-                        HighlightInventorySlot(mechanic_deconstructor.OutputContainer.Inventory, "aluminium", highlightColor, .5f, .5f, 0f);
+                        HighlightInventorySlot(mechanic_deconstructor.OutputContainer.Inventory, "aluminium".ToIdentifier(), highlightColor, .5f, .5f, 0f);
 
                         for (int i = 0; i < mechanic.Inventory.Capacity; i++)
                         {
@@ -417,16 +502,16 @@ namespace Barotrauma.Tutorials
                     }
                     else
                     {
-                        if (mechanic.Inventory.FindItemByIdentifier("oxygentank") != null && mechanic_deconstructor.InputContainer.Inventory.FindItemByIdentifier("oxygentank") == null)
+                        if (mechanic.Inventory.FindItemByIdentifier("oxygentank".ToIdentifier()) != null && mechanic_deconstructor.InputContainer.Inventory.FindItemByIdentifier("oxygentank".ToIdentifier()) == null)
                         {
-                            HighlightInventorySlot(mechanic.Inventory, "oxygentank", highlightColor, .5f, .5f, 0f);
+                            HighlightInventorySlot(mechanic.Inventory, "oxygentank".ToIdentifier(), highlightColor, .5f, .5f, 0f);
                             for (int i = 0; i < mechanic_deconstructor.InputContainer.Inventory.Capacity; i++)
                             {
                                 HighlightInventorySlot(mechanic_deconstructor.InputContainer.Inventory, i, highlightColor, .5f, .5f, 0f);
                             }                            
                         }
 
-                        if (mechanic_deconstructor.InputContainer.Inventory.FindItemByIdentifier("oxygentank") != null && !mechanic_deconstructor.IsActive)
+                        if (mechanic_deconstructor.InputContainer.Inventory.FindItemByIdentifier("oxygentank".ToIdentifier()) != null && !mechanic_deconstructor.IsActive)
                         {
                             if (mechanic_deconstructor.ActivateButton.FlashTimer <= 0)
                             {
@@ -437,11 +522,13 @@ namespace Barotrauma.Tutorials
                 }
                 yield return null;
             } while (
-                mechanic.Inventory.FindItemByIdentifier("aluminium") == null && 
-                mechanic_fabricator.InputContainer.Inventory.FindItemByIdentifier("aluminium") == null); // Wait until aluminium obtained
+                mechanic.Inventory.FindItemByIdentifier("aluminium".ToIdentifier()) == null && 
+                mechanic_fabricator.InputContainer.Inventory.FindItemByIdentifier("aluminium".ToIdentifier()) == null); // Wait until aluminium obtained
 
-            SetHighlight(mechanic_deconstructor.Item, false);
-            RemoveCompletedObjective(segments[4]);
+                SetHighlight(mechanic_deconstructor.Item, false);
+            RemoveCompletedObjective(4);
+            GameAnalyticsManager.AddDesignEvent("Tutorial:MechanicTutorial:Objective4");
+
             yield return new WaitForSeconds(1f, false);
             TriggerTutorialSegment(5); // Fabricate
             SetHighlight(mechanic_fabricator.Item, true);
@@ -455,26 +542,26 @@ namespace Barotrauma.Tutorials
                     }
                     else
                     {
-                        if (mechanic_fabricator.OutputContainer.Inventory.FindItemByIdentifier("extinguisher") != null)
+                        if (mechanic_fabricator.OutputContainer.Inventory.FindItemByIdentifier("extinguisher".ToIdentifier()) != null)
                         {
-                            HighlightInventorySlot(mechanic_fabricator.OutputContainer.Inventory, "extinguisher", highlightColor, .5f, .5f, 0f);
+                            HighlightInventorySlot(mechanic_fabricator.OutputContainer.Inventory, "extinguisher".ToIdentifier(), highlightColor, .5f, .5f, 0f);
 
                             /*for (int i = 0; i < mechanic.Inventory.Capacity; i++)
                             {
                                 if (mechanic.Inventory.Items[i] == null) HighlightInventorySlot(mechanic.Inventory, i, highlightColor, .5f, .5f, 0f);
                             }*/
                         }
-                        else if (mechanic_fabricator.InputContainer.Inventory.FindItemByIdentifier("aluminium") != null && mechanic_fabricator.InputContainer.Inventory.FindItemByIdentifier("sodium") != null && !mechanic_fabricator.IsActive)
+                        else if (mechanic_fabricator.InputContainer.Inventory.FindItemByIdentifier("aluminium".ToIdentifier()) != null && mechanic_fabricator.InputContainer.Inventory.FindItemByIdentifier("sodium".ToIdentifier()) != null && !mechanic_fabricator.IsActive)
                         {
                             if (mechanic_fabricator.ActivateButton.FlashTimer <= 0)
                             {
                                 mechanic_fabricator.ActivateButton.Flash(highlightColor, 1.5f, false);
                             }
                         }
-                        else if (mechanic.Inventory.FindItemByIdentifier("aluminium") != null || mechanic.Inventory.FindItemByIdentifier("sodium") != null)
+                        else if (mechanic.Inventory.FindItemByIdentifier("aluminium".ToIdentifier()) != null || mechanic.Inventory.FindItemByIdentifier("sodium".ToIdentifier()) != null)
                         {
-                            HighlightInventorySlot(mechanic.Inventory, "aluminium", highlightColor, .5f, .5f, 0f);
-                            HighlightInventorySlot(mechanic.Inventory, "sodium", highlightColor, .5f, .5f, 0f);
+                            HighlightInventorySlot(mechanic.Inventory, "aluminium".ToIdentifier(), highlightColor, .5f, .5f, 0f);
+                            HighlightInventorySlot(mechanic.Inventory, "sodium".ToIdentifier(), highlightColor, .5f, .5f, 0f);
 
                             if (mechanic_fabricator.InputContainer.Inventory.GetItemAt(0) == null)
                             {
@@ -489,27 +576,30 @@ namespace Barotrauma.Tutorials
                     }                   
                 }
                 yield return null;
-            } while (mechanic.Inventory.FindItemByIdentifier("extinguisher") == null); // Wait until extinguisher is created
-            RemoveCompletedObjective(segments[5]);
+            } while (mechanic.Inventory.FindItemByIdentifier("extinguisher".ToIdentifier()) == null); // Wait until extinguisher is created
+            RemoveCompletedObjective(5);
+            GameAnalyticsManager.AddDesignEvent("Tutorial:MechanicTutorial:Objective5");
             SetHighlight(mechanic_fabricator.Item, false);
             SetDoorAccess(mechanic_fourthDoor, mechanic_fourthDoorLight, true);
 
             // Room 5
             do { yield return null; } while (!mechanic_fireSensor.MotionDetected);
-            TriggerTutorialSegment(6, GameMain.Config.KeyBindText(InputType.Aim), GameMain.Config.KeyBindText(InputType.Shoot)); // Using the extinguisher
+            TriggerTutorialSegment(6, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Aim), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Shoot)); // Using the extinguisher
             do { yield return null; } while (!mechanic_fire.Removed); // Wait until extinguished
             yield return new WaitForSeconds(3f, false);
-            RemoveCompletedObjective(segments[6]);
+            RemoveCompletedObjective(6);
+            GameAnalyticsManager.AddDesignEvent("Tutorial:MechanicTutorial:Objective6");
 
-            if (mechanic.HasEquippedItem("extinguisher")) // do not trigger if dropped already
+            if (mechanic.HasEquippedItem("extinguisher".ToIdentifier())) // do not trigger if dropped already
             {
                 TriggerTutorialSegment(7);
                 do
                 {
-                    HighlightInventorySlot(mechanic.Inventory, "extinguisher", highlightColor, 0.5f, 0.5f, 0f);
+                    HighlightInventorySlot(mechanic.Inventory, "extinguisher".ToIdentifier(), highlightColor, 0.5f, 0.5f, 0f);
                     yield return null;
-                } while (mechanic.HasEquippedItem("extinguisher"));
-                RemoveCompletedObjective(segments[7]);
+                } while (mechanic.HasEquippedItem("extinguisher".ToIdentifier()));
+                RemoveCompletedObjective(7);
+                GameAnalyticsManager.AddDesignEvent("Tutorial:MechanicTutorial:Objective7");
             }
             SetDoorAccess(mechanic_fifthDoor, mechanic_fifthDoorLight, true);
 
@@ -531,9 +621,10 @@ namespace Barotrauma.Tutorials
                     }
                 }
                 yield return null;
-            } while (!mechanic.HasEquippedItem("divingsuit", slotType: InvSlotType.OuterClothes));
+            } while (!mechanic.HasEquippedItem("divingsuit".ToIdentifier(), slotType: InvSlotType.OuterClothes));
             SetHighlight(mechanic_divingSuitContainer.Item, false);
-            RemoveCompletedObjective(segments[8]);
+            RemoveCompletedObjective(8);
+            GameAnalyticsManager.AddDesignEvent("Tutorial:MechanicTutorial:Objective8");
             SetDoorAccess(tutorial_mechanicFinalDoor, tutorial_mechanicFinalDoorLight, true);
 
             // Room 7
@@ -542,7 +633,7 @@ namespace Barotrauma.Tutorials
             mechanic.RemoveActiveObjectiveEntity(mechanic_brokenWall_2);
             yield return new WaitForSeconds(2f, false);
 
-            TriggerTutorialSegment(9, GameMain.Config.KeyBindText(InputType.Use)); // Repairing machinery (pump)
+            TriggerTutorialSegment(9, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Use)); // Repairing machinery (pump)
             SetHighlight(mechanic_brokenPump.Item, true);
             mechanic_brokenPump.CanBeSelected = true;
             Repairable repairablePumpComponent = mechanic_brokenPump.Item.GetComponent<Repairable>();
@@ -550,11 +641,11 @@ namespace Barotrauma.Tutorials
             do
             {
                 yield return null;
-                if (mechanic_brokenPump.Item.Condition < repairablePumpComponent.RepairThreshold)
+                if (repairablePumpComponent.IsBelowRepairThreshold)
                 {
-                    if (!mechanic.HasEquippedItem("wrench"))
+                    if (!mechanic.HasEquippedItem("wrench".ToIdentifier()))
                     {
-                        HighlightInventorySlot(mechanic.Inventory, "wrench", highlightColor, 0.5f, 0.5f, 0f);
+                        HighlightInventorySlot(mechanic.Inventory, "wrench".ToIdentifier(), highlightColor, 0.5f, 0.5f, 0f);
                     }
                     else if (IsSelectedItem(mechanic_brokenPump.Item) && repairablePumpComponent.CurrentFixer == null)
                     {
@@ -574,8 +665,9 @@ namespace Barotrauma.Tutorials
                         }
                     }
                 }
-            } while (mechanic_brokenPump.Item.Condition < repairablePumpComponent.RepairThreshold || mechanic_brokenPump.FlowPercentage >= 0 || !mechanic_brokenPump.IsActive);
-            RemoveCompletedObjective(segments[9]);
+            } while (repairablePumpComponent.IsBelowRepairThreshold || mechanic_brokenPump.FlowPercentage >= 0 || !mechanic_brokenPump.IsActive);
+            RemoveCompletedObjective(9);
+            GameAnalyticsManager.AddDesignEvent("Tutorial:MechanicTutorial:Objective9");
             SetHighlight(mechanic_brokenPump.Item, false);
             do { yield return null; } while (mechanic_brokenhull_2.WaterPercentage > waterVolumeBeforeOpening);
             SetDoorAccess(tutorial_submarineDoor, tutorial_submarineDoorLight, true);
@@ -597,12 +689,14 @@ namespace Barotrauma.Tutorials
             Repairable repairableEngineComponent = mechanic_submarineEngine.Item.GetComponent<Repairable>();
 
             // Remove highlights when each individual machine is repaired
-            do { CheckHighlights(repairablePumpComponent1, repairablePumpComponent2, repairableEngineComponent); yield return null; } while (mechanic_ballastPump_1.Item.Condition < repairablePumpComponent1.RepairThreshold || mechanic_ballastPump_2.Item.Condition < repairablePumpComponent2.RepairThreshold || mechanic_submarineEngine.Item.Condition < repairableEngineComponent.RepairThreshold);
+            do { CheckHighlights(repairablePumpComponent1, repairablePumpComponent2, repairableEngineComponent); yield return null; } while (repairablePumpComponent1.IsBelowRepairThreshold || repairablePumpComponent2.IsBelowRepairThreshold || repairableEngineComponent.IsBelowRepairThreshold);
             CheckHighlights(repairablePumpComponent1, repairablePumpComponent2, repairableEngineComponent);
-            RemoveCompletedObjective(segments[10]);
+            RemoveCompletedObjective(10);
+            GameAnalyticsManager.AddDesignEvent("Tutorial:MechanicTutorial:Objective10");
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Mechanic.Radio.Complete"), ChatMessageType.Radio, null);
 
             // END TUTORIAL
+            GameAnalyticsManager.AddDesignEvent("Tutorial:MechanicTutorial:Completed");
             CoroutineManager.StartCoroutine(TutorialCompleted());
         }
 
@@ -623,17 +717,17 @@ namespace Barotrauma.Tutorials
 
         private void CheckHighlights(Repairable comp1, Repairable comp2, Repairable comp3)
         {
-            if (mechanic_ballastPump_1.Item.Condition > comp1.RepairThreshold && mechanic_ballastPump_1.Item.ExternalHighlight)
+            if (!comp1.IsBelowRepairThreshold && mechanic_ballastPump_1.Item.ExternalHighlight)
             {
                 SetHighlight(mechanic_ballastPump_1.Item, false);
                 mechanic.RemoveActiveObjectiveEntity(mechanic_ballastPump_1.Item);
             }
-            if (mechanic_ballastPump_2.Item.Condition > comp2.RepairThreshold && mechanic_ballastPump_2.Item.ExternalHighlight)
+            if (!comp2.IsBelowRepairThreshold && mechanic_ballastPump_2.Item.ExternalHighlight)
             {
                 SetHighlight(mechanic_ballastPump_2.Item, false);
                 mechanic.RemoveActiveObjectiveEntity(mechanic_ballastPump_2.Item);
             }
-            if (mechanic_submarineEngine.Item.Condition > comp3.RepairThreshold && mechanic_submarineEngine.Item.ExternalHighlight)
+            if (!comp3.IsBelowRepairThreshold && mechanic_submarineEngine.Item.ExternalHighlight)
             {
                 SetHighlight(mechanic_submarineEngine.Item, false);
                 mechanic.RemoveActiveObjectiveEntity(mechanic_submarineEngine.Item);

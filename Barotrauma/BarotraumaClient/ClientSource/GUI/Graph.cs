@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Linq;
 
 namespace Barotrauma
@@ -37,39 +38,44 @@ namespace Barotrauma
             values[0] = newValue;
         }
 
-        public void Draw(SpriteBatch spriteBatch, Rectangle rect, float? maxVal, float xOffset, Color color)
+        public delegate void GraphDelegate(SpriteBatch spriteBatch, float value, int order, Vector2 position);
+
+        public void Draw(SpriteBatch spriteBatch, Rectangle rect, float? maxValue = null, float xOffset = 0, Color? color = null, GraphDelegate doForEachValue = null)
         {
+            color ??= Color.White;
             float graphMaxVal = 1.0f;
-            if (maxVal == null)
+            if (maxValue == null)
             {
                 graphMaxVal = LargestValue();
             }
-            else if (maxVal > 0.0f)
+            else if (maxValue > 0.0f)
             {
-                graphMaxVal = (float)maxVal;
+                graphMaxVal = (float)maxValue;
             }
 
             GUI.DrawRectangle(spriteBatch, rect, Color.White);
 
-            if (values.Length == 0) return;
+            if (values.Length == 0) { return; }
 
-            float lineWidth = (float)rect.Width / (float)(values.Length - 2);
-            float yScale = (float)rect.Height / graphMaxVal;
+            float lineWidth = rect.Width / (float)(values.Length - 2);
+            float yScale = rect.Height / graphMaxVal;
 
             Vector2 prevPoint = new Vector2(rect.Right, rect.Bottom - (values[1] + (values[0] - values[1]) * xOffset) * yScale);
             float currX = rect.Right - ((xOffset - 1.0f) * lineWidth);
             for (int i = 1; i < values.Length - 1; i++)
             {
+                float value = values[i];
                 currX -= lineWidth;
-                Vector2 newPoint = new Vector2(currX, rect.Bottom - values[i] * yScale);
-                GUI.DrawLine(spriteBatch, prevPoint, newPoint - new Vector2(1.0f, 0), color);
+                Vector2 newPoint = new Vector2(currX, rect.Bottom - value * yScale);
+                GUI.DrawLine(spriteBatch, prevPoint, newPoint - new Vector2(1.0f, 0), color.Value);
                 prevPoint = newPoint;
+                doForEachValue?.Invoke(spriteBatch, value, i, newPoint);
             }
-
-            Vector2 lastPoint = new Vector2(rect.X,
-                rect.Bottom - (values[values.Length - 1] + (values[values.Length - 2] - values[values.Length - 1]) * xOffset) * yScale);
-
-            GUI.DrawLine(spriteBatch, prevPoint, lastPoint, color);
+            int lastIndex = values.Length - 1;
+            float lastValue = values[lastIndex];
+            Vector2 lastPoint = new Vector2(rect.X, rect.Bottom - (lastValue + (values[values.Length - 2] - lastValue) * xOffset) * yScale);
+            GUI.DrawLine(spriteBatch, prevPoint, lastPoint, color.Value);
+            doForEachValue?.Invoke(spriteBatch, lastValue, lastIndex, lastPoint);
         }
     }
 }

@@ -5,8 +5,12 @@ namespace Barotrauma
 {
     partial class SalvageMission : Mission
     {
+        public override bool DisplayAsCompleted => false;
+        public override bool DisplayAsFailed => false;
+
         public override void ClientReadInitial(IReadMessage msg)
         {
+            base.ClientReadInitial(msg);
             bool usedExistingItem = msg.ReadBoolean();
             if (usedExistingItem)
             {

@@ -11,6 +11,7 @@ using System.Xml.Linq;
 using Barotrauma.Networking;
 using LimbParams = Barotrauma.RagdollParams.LimbParams;
 using JointParams = Barotrauma.RagdollParams.JointParams;
+using Barotrauma.Abilities;
 
 namespace Barotrauma
 {
@@ -217,9 +218,9 @@ namespace Barotrauma
                         
         public Vector2 StepOffset => ConvertUnits.ToSimUnits(Params.StepOffset) * ragdoll.RagdollParams.JointScale;
 
-        public bool inWater;
+        public bool InWater { get; set; }
 
-        private readonly FixedMouseJoint pullJoint;
+        private FixedMouseJoint pullJoint;
 
         public readonly LimbType type;
 
@@ -330,7 +331,7 @@ namespace Barotrauma
 #if CLIENT
                 if (isSevered)
                 {
-                    damageOverlayStrength = 100.0f;
+                    damageOverlayStrength = 1.0f;
                 }
 #endif
             }
@@ -351,7 +352,7 @@ namespace Barotrauma
 
         public Vector2 Position
         {
-            get { return ConvertUnits.ToDisplayUnits(body.SimPosition); }
+            get { return ConvertUnits.ToDisplayUnits(body?.SimPosition ?? Vector2.Zero); }
         }
 
         public Vector2 SimPosition
@@ -363,7 +364,7 @@ namespace Barotrauma
 #if DEBUG
                     DebugConsole.ThrowError("Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
 #endif
-                    GameAnalyticsManager.AddErrorEventOnce("Limb.LinearVelocity:SimPosition", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.LinearVelocity:SimPosition", GameAnalyticsManager.ErrorSeverity.Error,
                         "Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
                     return Vector2.Zero;
                 }
@@ -380,7 +381,7 @@ namespace Barotrauma
 #if DEBUG
                     DebugConsole.ThrowError("Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
 #endif
-                    GameAnalyticsManager.AddErrorEventOnce("Limb.LinearVelocity:SimPosition", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.LinearVelocity:SimPosition", GameAnalyticsManager.ErrorSeverity.Error,
                         "Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
                     return 0.0f;
                 }
@@ -400,7 +401,7 @@ namespace Barotrauma
 #if DEBUG
                     DebugConsole.ThrowError("Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
 #endif
-                    GameAnalyticsManager.AddErrorEventOnce("Limb.Mass:AccessRemoved", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.Mass:AccessRemoved", GameAnalyticsManager.ErrorSeverity.Error,
                         "Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
                     return 1.0f;
                 }
@@ -419,7 +420,7 @@ namespace Barotrauma
 #if DEBUG
                     DebugConsole.ThrowError("Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
 #endif
-                    GameAnalyticsManager.AddErrorEventOnce("Limb.LinearVelocity:AccessRemoved", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.LinearVelocity:AccessRemoved", GameAnalyticsManager.ErrorSeverity.Error,
                         "Attempted to access a removed limb.\n" + Environment.StackTrace.CleanupStackTrace());
                     return Vector2.Zero;
                 }
@@ -429,8 +430,15 @@ namespace Barotrauma
 
         public float Dir
         {
-            get { return ((dir == Direction.Left) ? -1.0f : 1.0f); }
-            set { dir = (value == -1.0f) ? Direction.Left : Direction.Right; }
+            get { return (dir == Direction.Left) ? -1.0f : 1.0f; }
+            set 
+            { 
+                dir = (value == -1.0f) ? Direction.Left : Direction.Right; 
+                if (body != null)
+                {
+                    body.Dir = Dir;
+                }
+            }
         }
 
         public int RefJointIndex => Params.RefJoint;
@@ -463,7 +471,7 @@ namespace Barotrauma
                 if (!MathUtils.IsValid(value))
                 {
                     string errorMsg = "Attempted to set the anchor A of a limb's pull joint to an invalid value (" + value + ")\n" + Environment.StackTrace.CleanupStackTrace();
-                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorA:InvalidValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorA:InvalidValue", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
 #if DEBUG
                     DebugConsole.ThrowError(errorMsg);
 #endif
@@ -477,7 +485,7 @@ namespace Barotrauma
                         ", limb enabled: " + body.Enabled +
                         ", simple physics enabled: " + character.AnimController.SimplePhysicsEnabled + ")\n"
                         + Environment.StackTrace.CleanupStackTrace();
-                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorA:ExcessiveValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorA:ExcessiveValue", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
 #if DEBUG
                     DebugConsole.ThrowError(errorMsg);
 #endif
@@ -496,7 +504,7 @@ namespace Barotrauma
                 if (!MathUtils.IsValid(value))
                 {
                     string errorMsg = "Attempted to set the anchor B of a limb's pull joint to an invalid value (" + value + ")\n" + Environment.StackTrace.CleanupStackTrace();
-                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorB:InvalidValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorB:InvalidValue", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
 #if DEBUG
                     DebugConsole.ThrowError(errorMsg);
 #endif
@@ -510,7 +518,7 @@ namespace Barotrauma
                         ", limb enabled: " + body.Enabled +
                         ", simple physics enabled: " + character.AnimController.SimplePhysicsEnabled + ")\n"
                         + Environment.StackTrace.CleanupStackTrace();
-                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorB:ExcessiveValue", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Limb.SetPullJointAnchorB:ExcessiveValue", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
 #if DEBUG
                     DebugConsole.ThrowError(errorMsg);
 #endif
@@ -532,17 +540,25 @@ namespace Barotrauma
             private set;
         }
 
+        public Items.Components.Rope AttachedRope { get; set; }
+
         public string Name => Params.Name;
 
-        // Exposed for status effects
+        // These properties are exposed for status effects
         public bool IsDead => character.IsDead;
+        public float Health => character.Health;
+        public float HealthPercentage => character.HealthPercentage;
+        public AIState AIState => character.AIController is EnemyAIController enemyAI ? enemyAI.State : AIState.Idle;
 
         public bool CanBeSeveredAlive
         {
             get
             {
                 if (character.IsHumanoid) { return false; }
+                // TODO: We might need this or solve the cases where a limb is severed while holding on to an item
+                //if (character.Params.CanInteract) { return false; }
                 if (this == character.AnimController.MainLimb) { return false; }
+                bool canBeSevered = Params.CanBeSeveredAlive;
                 if (character.AnimController.CanWalk)
                 {
                     switch (type)
@@ -558,17 +574,19 @@ namespace Barotrauma
                             return false;
                     }
                 }
-                return true;
+                return canBeSevered;
             }
         }
 
-        public Dictionary<string, SerializableProperty> SerializableProperties
+        public Dictionary<Identifier, SerializableProperty> SerializableProperties
         {
             get;
             private set;
         }
 
-        private readonly List<StatusEffect> statusEffects = new List<StatusEffect>();
+        private readonly Dictionary<ActionType, List<StatusEffect>> statusEffects = new Dictionary<ActionType, List<StatusEffect>>();
+
+        public Dictionary<ActionType, List<StatusEffect>> StatusEffects { get { return statusEffects; } }
 
         public Limb(Ragdoll ragdoll, Character character, LimbParams limbParams)
         {
@@ -579,18 +597,7 @@ namespace Barotrauma
             dir = Direction.Right;
             body = new PhysicsBody(limbParams);
             type = limbParams.Type;
-            if (limbParams.IgnoreCollisions)
-            {
-                body.CollisionCategories = Category.None;
-                body.CollidesWith = Category.None;
-                IgnoreCollisions = true;
-            }
-            else
-            {
-                //limbs don't collide with each other
-                body.CollisionCategories = Physics.CollisionCharacter;
-                body.CollidesWith = Physics.CollisionAll & ~Physics.CollisionCharacter & ~Physics.CollisionItem & ~Physics.CollisionItemBlocking;
-            }
+            IgnoreCollisions = limbParams.IgnoreCollisions;
             body.UserData = this;
             pullJoint = new FixedMouseJoint(body.FarseerBody, ConvertUnits.ToSimUnits(limbParams.PullPos * Scale))
             {
@@ -606,7 +613,7 @@ namespace Barotrauma
 
             body.BodyType = BodyType.Dynamic;
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -628,12 +635,14 @@ namespace Barotrauma
                             }
                             attack.DamageRange = ConvertUnits.ToDisplayUnits(attack.DamageRange);
                         }
-                        if (character.VariantOf != null && character.Params.VariantFile != null)
+                        if (character is { VariantOf: { IsEmpty: false } })
                         {
                             var attackElement = character.Params.VariantFile.Root.GetChildElement("attack");
                             if (attackElement != null)
                             {
                                 attack.DamageMultiplier = attackElement.GetAttributeFloat("damagemultiplier", 1f);
+                                attack.RangeMultiplier = attackElement.GetAttributeFloat("rangemultiplier", 1f);
+                                attack.ImpactMultiplier = attackElement.GetAttributeFloat("impactmultiplier", 1f);
                             }
                         }
                         break;
@@ -641,7 +650,15 @@ namespace Barotrauma
                         DamageModifiers.Add(new DamageModifier(subElement, character.Name));
                         break;
                     case "statuseffect":
-                        statusEffects.Add(StatusEffect.Load(subElement, Name));
+                        var statusEffect = StatusEffect.Load(subElement, Name);
+                        if (statusEffect != null)
+                        {
+                            if (!statusEffects.ContainsKey(statusEffect.type))
+                            {
+                                statusEffects.Add(statusEffect.type, new List<StatusEffect>());
+                            }
+                            statusEffects[statusEffect.type].Add(statusEffect);
+                        }
                         break;
                 }
             }
@@ -650,7 +667,7 @@ namespace Barotrauma
 
             InitProjSpecific(element);
         }
-        partial void InitProjSpecific(XElement element);
+        partial void InitProjSpecific(ContentXElement element);
 
         public void MoveToPos(Vector2 pos, float force, bool pullFromCenter = false)
         {
@@ -683,7 +700,7 @@ namespace Barotrauma
         private readonly List<DamageModifier> appliedDamageModifiers = new List<DamageModifier>();
         private readonly List<DamageModifier> tempModifiers = new List<DamageModifier>();
         private readonly List<Affliction> afflictionsCopy = new List<Affliction>();
-        public AttackResult AddDamage(Vector2 simPosition, IEnumerable<Affliction> afflictions, bool playSound, float damageMultiplier = 1, float penetration = 0f)
+        public AttackResult AddDamage(Vector2 simPosition, IEnumerable<Affliction> afflictions, bool playSound, float damageMultiplier = 1, float penetration = 0f, Character attacker = null)
         {
             appliedDamageModifiers.Clear();
             afflictionsCopy.Clear();
@@ -741,14 +758,23 @@ namespace Barotrauma
                 {
                     newAffliction.SetStrength(affliction.NonClampedStrength);
                 }
-
+                if (attacker != null)
+                {
+                    var abilityAfflictionCharacter = new AbilityAfflictionCharacter(newAffliction, character);
+                    attacker.CheckTalents(AbilityEffectType.OnAddDamageAffliction, abilityAfflictionCharacter);
+                }
                 if (applyAffliction)
                 {
                     afflictionsCopy.Add(newAffliction);
+                    newAffliction.Source ??= attacker;
                 }
                 appliedDamageModifiers.AddRange(tempModifiers);
             }
             var result = new AttackResult(afflictionsCopy, this, appliedDamageModifiers);
+            if (result.Afflictions.None())
+            {
+                playSound = false;
+            }
             AddDamageProjSpecific(playSound, result);
 
             float bleedingDamage = 0;
@@ -797,7 +823,7 @@ namespace Barotrauma
         {
             UpdateProjSpecific(deltaTime);
             
-            if (inWater)
+            if (InWater)
             {
                 body.ApplyWaterForces();
             }
@@ -840,20 +866,25 @@ namespace Barotrauma
             attack?.UpdateCoolDown(deltaTime);
         }
 
+        private bool temporarilyDisabled;
         private float reEnableTimer = -1;
-        public void HideAndDisable(float duration = 0)
+        public void HideAndDisable(float duration = 0, bool ignoreCollisions = true)
         {
+            if (Hidden || Disabled) { return; }
+            if (ignoreCollisions && IgnoreCollisions) { return; }
+            temporarilyDisabled = true;
             Hidden = true;
             Disabled = true;
-            IgnoreCollisions = true;
+            IgnoreCollisions = ignoreCollisions;
             if (duration > 0)
             {
                 reEnableTimer = duration;
             }
         }
 
-        private void ReEnable()
+        public void ReEnable()
         {
+            if (!temporarilyDisabled) { return; }
             Hidden = false;
             Disabled = false;
             IgnoreCollisions = false;
@@ -868,7 +899,7 @@ namespace Barotrauma
         /// </summary>
         public bool UpdateAttack(float deltaTime, Vector2 attackSimPos, IDamageable damageTarget, out AttackResult attackResult, float distance = -1, Limb targetLimb = null)
         {
-            attackResult = default(AttackResult);
+            attackResult = default;
             Vector2 simPos = ragdoll.SimplePhysicsEnabled ? character.SimPosition : SimPosition;
             float dist = distance > -1 ? distance : ConvertUnits.ToDisplayUnits(Vector2.Distance(simPos, attackSimPos));
             bool wasRunning = attack.IsRunning;
@@ -971,22 +1002,16 @@ namespace Barotrauma
                 wasHit = damageTarget != null;
             }
 
-            if (wasHit)
+            if (wasHit || attack.HitDetectionType == HitDetection.None)
             {
                 if (character == Character.Controlled || GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
                 {
                     ExecuteAttack(damageTarget, targetLimb, out attackResult);
                 }
 #if SERVER
-                GameMain.NetworkMember.CreateEntityEvent(character, new object[] 
-                { 
-                    NetEntityEvent.Type.ExecuteAttack, 
-                    this, 
-                    (damageTarget as Entity)?.ID ?? Entity.NullEntityID, 
-                    damageTarget is Character && targetLimb != null ? Array.IndexOf(((Character)damageTarget).AnimController.Limbs, targetLimb) : 0,
-                    attackSimPos.X,
-                    attackSimPos.Y
-                });   
+                GameMain.NetworkMember.CreateEntityEvent(character, new Character.ExecuteAttackEventData(
+                    attackLimb: this, targetEntity: damageTarget, targetLimb: targetLimb,
+                    targetSimPos: attackSimPos));
 #endif
             }
 
@@ -1022,7 +1047,10 @@ namespace Barotrauma
             if (!attack.IsRunning)
             {
                 // Set the main collider where the body lands after the attack
-                character.AnimController.Collider.SetTransform(character.AnimController.MainLimb.body.SimPosition, rotation: character.AnimController.Collider.Rotation);
+                if (Vector2.DistanceSquared(character.AnimController.Collider.SimPosition, character.AnimController.MainLimb.body.SimPosition) > 0.1f * 0.1f)
+                {
+                    character.AnimController.Collider.SetTransform(character.AnimController.MainLimb.body.SimPosition, rotation: character.AnimController.Collider.Rotation);
+                }
             }
             return wasHit;
         }
@@ -1039,7 +1067,7 @@ namespace Barotrauma
 #endif
             if (damageTarget is Character targetCharacter && targetLimb != null)
             {
-                attackResult = attack.DoDamageToLimb(character, targetLimb, WorldPosition, 1.0f, playSound, body);
+                attackResult = attack.DoDamageToLimb(character, targetLimb, WorldPosition, 1.0f, playSound, body, this);
             }
             else
             {
@@ -1049,10 +1077,10 @@ namespace Barotrauma
                 }
                 else
                 {
-                    attackResult = attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, playSound, body);
+                    attackResult = attack.DoDamage(character, damageTarget, WorldPosition, 1.0f, playSound, body, this);
                 }
             }
-            /*if (structureBody != null && attack.StickChance > Rand.Range(0.0f, 1.0f, Rand.RandSync.Server))
+            /*if (structureBody != null && attack.StickChance > Rand.Range(0.0f, 1.0f, Rand.RandSync.ServerAndClient))
             {
                 // TODO: use the hit pos?
                 var localFront = body.GetLocalFront(Params.GetSpriteOrientation());
@@ -1127,15 +1155,12 @@ namespace Barotrauma
         private readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
         public void ApplyStatusEffects(ActionType actionType, float deltaTime)
         {
-            foreach (StatusEffect statusEffect in statusEffects)
+            if (!statusEffects.TryGetValue(actionType, out var statusEffectList)) { return; }
+            foreach (StatusEffect statusEffect in statusEffectList)
             {
-                if (statusEffect.type != actionType) { continue; }
                 if (statusEffect.type == ActionType.OnDamaged)
                 {
-                    if (statusEffect.AllowedAfflictions != null && (character.LastDamage.Afflictions == null || character.LastDamage.Afflictions.None(a => statusEffect.AllowedAfflictions.Contains(a.Prefab.AfflictionType) || statusEffect.AllowedAfflictions.Contains(a.Prefab.Identifier))))
-                    {
-                        continue;
-                    }
+                    if (!statusEffect.HasRequiredAfflictions(character.LastDamage)) { continue; }
                     if (statusEffect.OnlyPlayerTriggered)
                     {
                         if (character.LastAttacker == null || !character.LastAttacker.IsPlayer)
@@ -1263,6 +1288,14 @@ namespace Barotrauma
         {
             body?.Remove();
             body = null;
+            if (pullJoint != null)
+            {
+                if (GameMain.World.JointList.Contains(pullJoint))
+                {
+                    GameMain.World.Remove(pullJoint);
+                }
+                pullJoint = null;
+            }
             Release();
             RemoveProjSpecific();
             Removed = true;
@@ -1278,4 +1311,16 @@ namespace Barotrauma
 
         partial void LoadParamsProjSpecific();
     }
+
+    class AbilityAfflictionCharacter : AbilityObject, IAbilityAffliction, IAbilityCharacter
+    {
+        public AbilityAfflictionCharacter(Affliction affliction, Character character)
+        {
+            Affliction = affliction;
+            Character = character;
+        }
+        public Character Character { get; set; }
+        public Affliction Affliction { get; set; }
+    }
+
 }

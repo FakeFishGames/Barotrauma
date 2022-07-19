@@ -6,20 +6,22 @@ namespace Barotrauma.Items.Components
 {
     partial class Controller : ItemComponent
     {
+        private bool chatBoxOriginalState;
+        private bool isHUDsHidden;
+
         public override void DrawHUD(SpriteBatch spriteBatch, Character character)
         {
             if (focusTarget != null && character.ViewTarget == focusTarget)
             {
                 foreach (ItemComponent ic in focusTarget.Components)
                 {
-                    ic.DrawHUD(spriteBatch, character);
+                    if (ic.ShouldDrawHUD(character))
+                    {
+                        ic.DrawHUD(spriteBatch, character);
+                    }
                 }
             }
         }
-
-        private bool crewAreaOriginalState;
-        private bool chatBoxOriginalState;
-        private bool isHUDsHidden;
 
         partial void HideHUDs(bool value)
         {
@@ -78,7 +80,7 @@ namespace Barotrauma.Items.Components
         }
 #endif
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             State = msg.ReadBoolean();
             ushort userID = msg.ReadUInt16();

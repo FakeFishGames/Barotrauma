@@ -23,6 +23,14 @@ namespace Barotrauma
 
         public LevelWallVertexBuffer(VertexPositionTexture[] wallVertices, VertexPositionTexture[] wallEdgeVertices, Texture2D wallTexture, Texture2D edgeTexture, Color color)
         {
+            if (wallVertices.Length == 0)
+            {
+                throw new ArgumentException("Failed to instantiate a LevelWallVertexBuffer (no wall vertices).");
+            }
+            if (wallVertices.Length == 0)
+            {
+                throw new ArgumentException("Failed to instantiate a LevelWallVertexBuffer (no wall edge vertices).");
+            }
             this.wallVertices = LevelRenderer.GetColoredVertices(wallVertices, color);
             WallBuffer = new VertexBuffer(GameMain.Instance.GraphicsDevice, VertexPositionColorTexture.VertexDeclaration, wallVertices.Length, BufferUsage.WriteOnly);
             WallBuffer.SetData(this.wallVertices);
@@ -52,12 +60,6 @@ namespace Barotrauma
         }
 
         public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
         {
             IsDisposed = true;
             WallEdgeBuffer?.Dispose();
@@ -318,7 +320,7 @@ namespace Barotrauma
                         GUI.DrawLine(spriteBatch,
                             new Vector2(nodeList[i - 1].X, -nodeList[i - 1].Y),
                             new Vector2(nodeList[i].X, -nodeList[i].Y),
-                            Color.Lerp(Color.Yellow, GUI.Style.Red, i / (float)nodeList.Count), 0, 10);
+                            Color.Lerp(Color.Yellow, GUIStyle.Red, i / (float)nodeList.Count), 0, 10);
                     }
                 }*/
 
@@ -474,12 +476,6 @@ namespace Barotrauma
         }
 
         public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
         {
             foreach (var vertexBuffer in vertexBuffers)
             {

@@ -9,91 +9,110 @@ namespace Barotrauma
     {
         private readonly JobPrefab prefab;
 
-        private Dictionary<string, Skill> skills;
+        private readonly Dictionary<Identifier, Skill> skills;
 
-        public string Name
-        {
-            get { return prefab.Name; }
-        }
+        public LocalizedString Name => prefab.Name;
 
-        public string Description
-        {
-            get { return prefab.Description; }
-        }
+        public LocalizedString Description => prefab.Description;
 
-        public JobPrefab Prefab
-        {
-            get { return prefab; }
-        }
-        
-        public List<Skill> Skills
-        {
-            get { return skills.Values.ToList(); }
-        }
+        public JobPrefab Prefab => prefab;
 
         public int Variant;
 
         public Skill PrimarySkill { get; }
 
-        public Job(JobPrefab jobPrefab, int variant = 0)
+        public Job(JobPrefab jobPrefab) : this(jobPrefab, randSync: Rand.RandSync.Unsynced, variant: 0) { }
+
+        public Job(JobPrefab jobPrefab, Rand.RandSync randSync, int variant, params Skill[] s)
         {
             prefab = jobPrefab;
             Variant = variant;
 
-            skills = new Dictionary<string, Skill>();
+            skills = new Dictionary<Identifier, Skill>();
+            foreach (var skill in s) { skills.Add(skill.Identifier, skill); }
             foreach (SkillPrefab skillPrefab in prefab.Skills)
             {
-                var skill = new Skill(skillPrefab);
-                skills.Add(skillPrefab.Identifier, skill);
+                Skill skill;
+                if (skills.ContainsKey(skillPrefab.Identifier))
+                {
+                    skill = skills[skillPrefab.Identifier];
+                    skills[skillPrefab.Identifier] = new Skill(skill.Identifier, skill.Level);
+                }
+                else
+                {
+                    skill = new Skill(skillPrefab, randSync);
+                    skills.Add(skillPrefab.Identifier, skill);
+                }
                 if (skillPrefab.IsPrimarySkill) { PrimarySkill = skill; }
             }
         }
 
         public Job(XElement element)
         {
-            string identifier = element.GetAttributeString("identifier", "").ToLowerInvariant();
+            Identifier identifier = element.GetAttributeIdentifier("identifier", "");
             JobPrefab p;
             if (!JobPrefab.Prefabs.ContainsKey(identifier))
             {
                 DebugConsole.ThrowError($"Could not find the job {identifier}. Giving the character a random job.");
-                p = JobPrefab.Random();
+                p = JobPrefab.Random(Rand.RandSync.Unsynced);
             }
             else
             {
                 p = JobPrefab.Prefabs[identifier];
             }
             prefab = p;
-            skills = new Dictionary<string, Skill>();
-            foreach (XElement subElement in element.Elements())
+            skills = new Dictionary<Identifier, Skill>();
+            foreach (var subElement in element.Elements())
             {
-                if (!subElement.Name.ToString().Equals("skill", System.StringComparison.OrdinalIgnoreCase)) { continue; }
-                string skillIdentifier = subElement.GetAttributeString("identifier", "");
-                if (string.IsNullOrEmpty(skillIdentifier)) { continue; }
+                if (subElement.NameAsIdentifier() != "skill") { continue; }
+                Identifier skillIdentifier = subElement.GetAttributeIdentifier("identifier", "");
+                if (skillIdentifier.IsEmpty) { continue; }
                 var skill = new Skill(skillIdentifier, subElement.GetAttributeFloat("level", 0));
                 skills.Add(skillIdentifier, skill);
                 if (skillIdentifier == prefab.PrimarySkill?.Identifier) { PrimarySkill = skill; }
             }
         }
 
-        public static Job Random(Rand.RandSync randSync = Rand.RandSync.Unsynced)
+        public static Job Random(Rand.RandSync randSync)
         {
             var prefab = JobPrefab.Random(randSync);
             var variant = Rand.Range(0, prefab.Variants, randSync);
-            return new Job(prefab, variant);
-        } 
-
-        public float GetSkillLevel(string skillIdentifier)
-        {
-            if (string.IsNullOrWhiteSpace(skillIdentifier)) { return 0.0f; }
-            skills.TryGetValue(skillIdentifier, out Skill skill);
-            return (skill == null) ? 0.0f : skill.Level;
+            return new Job(prefab, randSync, variant);
         }
 
-        public void IncreaseSkillLevel(string skillIdentifier, float increase)
+        public IEnumerable<Skill> GetSkills()
+        {
+            return skills.Values;
+        }
+
+        public float GetSkillLevel(Identifier skillIdentifier)
+        {
+            if (skillIdentifier.IsEmpty) { return 0.0f; }
+            skills.TryGetValue(skillIdentifier, out Skill skill);
+            return skill?.Level ?? 0.0f;
+        }
+
+        public Skill GetSkill(Identifier skillIdentifier)
+        {
+            if (skillIdentifier.IsEmpty) { return null; }
+            skills.TryGetValue(skillIdentifier, out Skill skill);
+            return skill;
+        }
+
+        public void OverrideSkills(Dictionary<Identifier, float> newSkills)
+        {
+            skills.Clear();            
+            foreach (var newSkill in newSkills)
+            {
+                skills.Add(newSkill.Key, new Skill(newSkill.Key, newSkill.Value));
+            }
+        }
+
+        public void IncreaseSkillLevel(Identifier skillIdentifier, float increase, bool increasePastMax)
         {
             if (skills.TryGetValue(skillIdentifier, out Skill skill))
             {
-                skill.Level += increase;
+                skill.IncreaseSkill(increase, increasePastMax);
             }
             else
             {
@@ -130,7 +149,7 @@ namespace Barotrauma
             else
             {
                 string itemIdentifier = itemElement.GetAttributeString("identifier", "");
-                itemPrefab = MapEntityPrefab.Find(null, itemIdentifier) as ItemPrefab;
+                itemPrefab = MapEntityPrefab.FindByIdentifier(itemIdentifier.ToIdentifier()) as ItemPrefab;
                 if (itemPrefab == null)
                 {
                     DebugConsole.ThrowError("Tried to spawn \"" + Name + "\" with the item \"" + itemIdentifier + "\". Matching item prefab not found.");
@@ -147,12 +166,12 @@ namespace Barotrauma
                 {
                     string errorMsg = $"Error while spawning job items. Item {item.Name} created network events before the spawn event had been created.";
                     DebugConsole.ThrowError(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("Job.InitializeJobItem:EventsBeforeSpawning", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("Job.InitializeJobItem:EventsBeforeSpawning", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                     GameMain.Server.EntityEventManager.UniqueEvents.RemoveAll(ev => ev.Entity == item);
                     GameMain.Server.EntityEventManager.Events.RemoveAll(ev => ev.Entity == item);
                 }
 
-                Entity.Spawner.CreateNetworkEvent(item, false);
+                Entity.Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(item));
             }
 #endif
 
@@ -171,7 +190,7 @@ namespace Barotrauma
                 character.Inventory.TryPutItem(item, null, item.AllowedSlots);
             }
 
-            Wearable wearable = ((List<ItemComponent>)item.Components)?.Find(c => c is Wearable) as Wearable;
+            Wearable wearable = item.GetComponent<Wearable>();
             if (wearable != null)
             {
                 if (Variant > 0 && Variant <= wearable.Variants)
@@ -190,29 +209,15 @@ namespace Barotrauma
                 }
             }
 
-            if (item.Prefab.Identifier == "idcard")
-            {
-                if (spawnPoint != null)
-                {
-                    foreach (string s in spawnPoint.IdCardTags)
-                    {
-                        item.AddTag(s);
-                        if (!string.IsNullOrWhiteSpace(spawnPoint.IdCardDesc)) { item.Description = spawnPoint.IdCardDesc; }
-                    }
-                }
-                item.AddTag("name:" + character.Name);
-                item.AddTag("job:" + Name);
-
-                IdCard idCardComponent = item.GetComponent<IdCard>();
-                idCardComponent?.Initialize(character.Info);
-            }
+            IdCard idCardComponent = item.GetComponent<IdCard>();
+            idCardComponent?.Initialize(spawnPoint, character);
 
             foreach (WifiComponent wifiComponent in item.GetComponents<WifiComponent>())
             {
                 wifiComponent.TeamID = character.TeamID;
             }
-            
-            if (parentItem != null) parentItem.Combine(item, user: null);
+
+            if (parentItem != null) { parentItem.Combine(item, user: null); }
 
             foreach (XElement childItemElement in itemElement.Elements())
             {
@@ -227,7 +232,7 @@ namespace Barotrauma
             jobElement.Add(new XAttribute("name", Name));
             jobElement.Add(new XAttribute("identifier", prefab.Identifier));
 
-            foreach (KeyValuePair<string, Skill> skill in skills)
+            foreach (KeyValuePair<Identifier, Skill> skill in skills)
             {
                 jobElement.Add(new XElement("skill", new XAttribute("identifier", skill.Value.Identifier), new XAttribute("level", skill.Value.Level)));
             }

@@ -5,8 +5,8 @@ using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.Items.Components;
-using Barotrauma.Extensions;
 using Barotrauma.Networking;
+using Barotrauma.Abilities;
 
 namespace Barotrauma
 {
@@ -17,23 +17,22 @@ namespace Barotrauma
         Beard,
         Moustache,
         FaceAttachment,
-        JobIndicator,
         Husk,
         Herpes
     }
 
     class WearableSprite
     {
-        public string UnassignedSpritePath { get; private set; }
+        public ContentPath UnassignedSpritePath { get; private set; }
         public string SpritePath { get; private set; }
-        public XElement SourceElement { get; private set; }
+        public ContentXElement SourceElement { get; private set; }
 
         public WearableType Type { get; private set; }
         private Sprite _sprite;
         public Sprite Sprite
         {
             get { return _sprite; }
-            set
+            private set
             {
                 if (value == _sprite) { return; }
                 if (_sprite != null)
@@ -46,13 +45,22 @@ namespace Barotrauma
         public LimbType Limb { get; private set; }
         public bool HideLimb { get; private set; }
         public bool HideOtherWearables { get; private set; }
+        public bool CanBeHiddenByOtherWearables { get; private set; }
         public List<WearableType> HideWearablesOfType { get; private set; }
         public bool InheritLimbDepth { get; private set; }
-        public bool InheritTextureScale { get; private set; }
+        /// <summary>
+        /// Does the wearable inherit all the scalings of the wearer? Also the wearable's own scale is used!
+        /// </summary>
+        public bool InheritScale { get; private set; }
+        public bool IgnoreRagdollScale { get; private set; }
+        public bool IgnoreLimbScale { get; private set; }
+        public bool IgnoreTextureScale { get; private set; }
         public bool InheritOrigin { get; private set; }
         public bool InheritSourceRect { get; private set; }
 
         public float Scale { get; private set; }
+
+        public float Rotation { get; private set; }
 
         public LimbType DepthLimb { get; private set; }
         private Wearable _wearableComponent;
@@ -72,33 +80,46 @@ namespace Barotrauma
         public string Sound { get; private set; }
         public Point? SheetIndex { get; private set; }
 
-        public LightComponent LightComponent { get; set; }
+        public LightComponent LightComponent => LightComponents?.FirstOrDefault();
+
+        public List<LightComponent> LightComponents
+        {
+            get
+            {
+                if (_lightComponents == null)
+                {
+                    _lightComponents = new List<LightComponent>();
+                }
+                return _lightComponents;
+            }
+        }
+        private List<LightComponent> _lightComponents;
 
         public int Variant { get; set; }
 
-        private Gender _gender;
+        private Character _picker;
         /// <summary>
         /// None = Any/Not Defined -> no effect.
         /// Changing the gender forces re-initialization, because the textures can be different for male and female characters.
         /// </summary>
-        public Gender Gender
+        public Character Picker
         {
-            get { return _gender; }
+            get { return _picker; }
             set
             {
-                if (value == _gender) { return; }
-                _gender = value;
+                if (value == _picker) { return; }
+                _picker = value;
                 IsInitialized = false;
-                UnassignedSpritePath = ParseSpritePath(SourceElement.GetAttributeString("texture", string.Empty));
-                Init(_gender);
+                UnassignedSpritePath = ParseSpritePath(SourceElement);
+                Init(_picker);
             }
         }
 
-        public WearableSprite(XElement subElement, WearableType type)
+        public WearableSprite(ContentXElement subElement, WearableType type)
         {
             Type = type;
             SourceElement = subElement;
-            UnassignedSpritePath = subElement.GetAttributeString("texture", string.Empty);
+            UnassignedSpritePath = subElement.GetAttributeContentPath("texture") ?? ContentPath.Empty;
             Init();
             switch (type)
             {
@@ -106,14 +127,12 @@ namespace Barotrauma
                 case WearableType.Beard:
                 case WearableType.Moustache:
                 case WearableType.FaceAttachment:
-                case WearableType.JobIndicator:
                 case WearableType.Husk:
                 case WearableType.Herpes:
                     Limb = LimbType.Head;
-                    HideLimb = type == WearableType.Husk || type == WearableType.Herpes;
                     HideOtherWearables = false;
                     InheritLimbDepth = true;
-                    InheritTextureScale = true;
+                    InheritScale = true;
                     InheritOrigin = true;
                     InheritSourceRect = true;
                     break;
@@ -123,34 +142,48 @@ namespace Barotrauma
         /// <summary>
         /// Note: this constructor cannot initialize automatically, because the gender is unknown at this point. We only know it when the item is equipped.
         /// </summary>
-        public WearableSprite(XElement subElement, Wearable wearable, int variant = 0)
+        public WearableSprite(ContentXElement subElement, Wearable wearable, int variant = 0)
         {
             Type = WearableType.Item;
             WearableComponent = wearable;
             Variant = Math.Max(variant, 0);
-            UnassignedSpritePath = ParseSpritePath(subElement.GetAttributeString("texture", string.Empty));
+            UnassignedSpritePath = ParseSpritePath(subElement);
             SourceElement = subElement;
         }
 
-        private string ParseSpritePath(string texturePath) => texturePath.Contains("/") ? texturePath : $"{Path.GetDirectoryName(WearableComponent.Item.Prefab.FilePath)}/{texturePath}";
+        private ContentPath ParseSpritePath(ContentXElement element)
+        {
+            if (element.DoesAttributeReferenceFileNameAlone("texture"))
+            {
+                string textureName = element.GetAttributeString("texture", "");
+                return ContentPath.FromRaw(
+                    element.ContentPackage,
+                    $"{Path.GetDirectoryName(WearableComponent.Item.Prefab.FilePath)}/{textureName}");
+            }
+            else
+            {
+                return element.GetAttributeContentPath("texture") ?? ContentPath.Empty;
+            }
+        }
 
         public void ParsePath(bool parseSpritePath)
         {
-            string tempPath = UnassignedSpritePath;
-            if (_gender != Gender.None)
+            SpritePath = UnassignedSpritePath.Value;
+            if (_picker?.Info != null)
             {
-                tempPath = tempPath.Replace("[GENDER]", (_gender == Gender.Female) ? "female" : "male");
+                SpritePath = _picker.Info.ReplaceVars(SpritePath);
             }
-            SpritePath = tempPath.Replace("[VARIANT]", Variant.ToString());
+            SpritePath = SpritePath.Replace("[VARIANT]", Variant.ToString());
             if (!File.Exists(SpritePath))
             {
                 // If the variant does not exist, parse the path so that it uses first variant.
-                SpritePath = tempPath.Replace("[VARIANT]", "1");
+                SpritePath = SpritePath.Replace("[VARIANT]", "1");
             }
-            if (!File.Exists(SpritePath) && _gender == Gender.None)
+            if (!File.Exists(SpritePath) && _picker?.Info == null)
             {
-                // If there's no sprite for Gender.None does not exist, try to use male sprite
-                SpritePath = tempPath.Replace("[GENDER]", "male");
+                // If there's no character info is defined, try to use first tagset from CharacterInfoPrefab
+                var charInfoPrefab = CharacterPrefab.HumanPrefab.CharacterInfoPrefab;
+                SpritePath = charInfoPrefab.ReplaceVars(SpritePath, charInfoPrefab.Heads.First());
             }
             if (parseSpritePath)
             {
@@ -159,23 +192,38 @@ namespace Barotrauma
         }
 
         public bool IsInitialized { get; private set; }
-        public void Init(Gender gender = Gender.None)
+        public void Init(Character picker = null)
         {
             if (IsInitialized) { return; }
-            _gender = UnassignedSpritePath.Contains("[GENDER]") ? gender : Gender.None;
+
+            _picker = picker;
             ParsePath(false);
             Sprite?.Remove();
             Sprite = new Sprite(SourceElement, file: SpritePath);
             Limb = (LimbType)Enum.Parse(typeof(LimbType), SourceElement.GetAttributeString("limb", "Head"), true);
             HideLimb = SourceElement.GetAttributeBool("hidelimb", false);
             HideOtherWearables = SourceElement.GetAttributeBool("hideotherwearables", false);
+            CanBeHiddenByOtherWearables = SourceElement.GetAttributeBool("canbehiddenbyotherwearables", true);
             InheritLimbDepth = SourceElement.GetAttributeBool("inheritlimbdepth", true);
-            InheritTextureScale = SourceElement.GetAttributeBool("inherittexturescale", false);
+            var scale = SourceElement.GetAttribute("inheritscale");
+            if (scale != null)
+            {
+                InheritScale = scale.GetAttributeBool(false);
+            }
+            else
+            {
+                InheritScale = SourceElement.GetAttributeBool("inherittexturescale", false);
+            }
+            IgnoreLimbScale = SourceElement.GetAttributeBool("ignorelimbscale", false);
+            IgnoreTextureScale = SourceElement.GetAttributeBool("ignoretexturescale", false);
+            IgnoreRagdollScale = SourceElement.GetAttributeBool("ignoreragdollscale", false);
+            SourceElement.GetAttributeBool("inherittexturescale", false);
             InheritOrigin = SourceElement.GetAttributeBool("inheritorigin", false);
             InheritSourceRect = SourceElement.GetAttributeBool("inheritsourcerect", false);
             DepthLimb = (LimbType)Enum.Parse(typeof(LimbType), SourceElement.GetAttributeString("depthlimb", "None"), true);
             Sound = SourceElement.GetAttributeString("sound", "");
             Scale = SourceElement.GetAttributeFloat("scale", 1.0f);
+            Rotation = MathHelper.ToRadians(SourceElement.GetAttributeFloat("rotation", 0.0f));
             var index = SourceElement.GetAttributePoint("sheetindex", new Point(-1, -1));
             if (index.X > -1 && index.Y > -1)
             {
@@ -204,13 +252,15 @@ namespace Barotrauma.Items.Components
 {
     partial class Wearable : Pickable, IServerSerializable
     {
-        private readonly XElement[] wearableElements;
+        private readonly ContentXElement[] wearableElements;
         private readonly WearableSprite[] wearableSprites;
         private readonly LimbType[] limbType;
         private readonly Limb[] limb;
 
         private readonly List<DamageModifier> damageModifiers;
-        public readonly Dictionary<string, float> SkillModifiers;
+        public readonly Dictionary<Identifier, float> SkillModifiers;
+
+        public readonly Dictionary<StatTypes, float> WearableStatValues = new Dictionary<StatTypes, float>();
 
         public IEnumerable<DamageModifier> DamageModifiers
         {
@@ -261,29 +311,29 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public Wearable(Item item, XElement element) : base(item, element)
+        public Wearable(Item item, ContentXElement element) : base(item, element)
         {
             this.item = item;
 
             damageModifiers = new List<DamageModifier>();
-            SkillModifiers = new Dictionary<string, float>();
+            SkillModifiers = new Dictionary<Identifier, float>();
 
             int spriteCount = element.Elements().Count(x => x.Name.ToString() == "sprite");
             Variants = element.GetAttributeInt("variants", 0);
-            variant = Rand.Range(1, Variants + 1, Rand.RandSync.Server);
+            variant = Rand.Range(1, Variants + 1, Rand.RandSync.ServerAndClient);
             wearableSprites = new WearableSprite[spriteCount];
-            wearableElements = new XElement[spriteCount];
+            wearableElements = new ContentXElement[spriteCount];
             limbType    = new LimbType[spriteCount];
             limb        = new Limb[spriteCount];
             AutoEquipWhenFull = element.GetAttributeBool("autoequipwhenfull", true);
             DisplayContainedStatus = element.GetAttributeBool("displaycontainedstatus", false);
             int i = 0;
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
-                switch (subElement.Name.ToString().ToLower())
+                switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "sprite":
-                        if (subElement.Attribute("texture") == null)
+                        if (subElement.GetAttribute("texture") == null)
                         {
                             DebugConsole.ThrowError("Item \"" + item.Name + "\" doesn't have a texture specified!");
                             return;
@@ -295,14 +345,17 @@ namespace Barotrauma.Items.Components
                         wearableSprites[i] = new WearableSprite(subElement, this, variant);
                         wearableElements[i] = subElement;
 
-                        foreach (XElement lightElement in subElement.Elements())
+                        foreach (var lightElement in subElement.Elements())
                         {
                             if (!lightElement.Name.ToString().Equals("lightcomponent", StringComparison.OrdinalIgnoreCase)) { continue; }
-                            wearableSprites[i].LightComponent = new LightComponent(item, lightElement)
+                            wearableSprites[i].LightComponents.Add(new LightComponent(item, lightElement)
                             {
                                 Parent = this
-                            };
-                            item.AddComponent(wearableSprites[i].LightComponent);
+                            });
+                            foreach (var light in wearableSprites[i].LightComponents)
+                            {
+                                item.AddComponent(light);
+                            }
                         }
 
                         i++;
@@ -311,7 +364,7 @@ namespace Barotrauma.Items.Components
                         damageModifiers.Add(new DamageModifier(subElement, item.Name + ", Wearable"));
                         break;
                     case "skillmodifier":
-                        string skillIdentifier = subElement.GetAttributeString("skillidentifier", string.Empty);
+                        Identifier skillIdentifier = subElement.GetAttributeIdentifier("skillidentifier", Identifier.Empty);
                         float skillValue = subElement.GetAttributeFloat("skillvalue", 0f);
                         if (SkillModifiers.ContainsKey(skillIdentifier))
                         {
@@ -322,6 +375,18 @@ namespace Barotrauma.Items.Components
                             SkillModifiers.TryAdd(skillIdentifier, skillValue);
                         }
                         break;
+                    case "statvalue":
+                        StatTypes statType = CharacterAbilityGroup.ParseStatType(subElement.GetAttributeString("stattype", ""), Name);
+                        float statValue = subElement.GetAttributeFloat("value", 0f);
+                        if (WearableStatValues.ContainsKey(statType))
+                        {
+                            WearableStatValues[statType] += statValue;
+                        }
+                        else
+                        {
+                            WearableStatValues.TryAdd(statType, statValue);
+                        }
+                        break;
                 }
             }
         }
@@ -330,19 +395,26 @@ namespace Barotrauma.Items.Components
         {
             foreach (var allowedSlot in allowedSlots)
             {
-                if (allowedSlot != InvSlotType.Any && !character.Inventory.IsInLimbSlot(item, allowedSlot)) { return; }
+                if (allowedSlot == InvSlotType.Any) { continue; }
+                foreach (Enum value in Enum.GetValues(typeof(InvSlotType)))
+                {
+                    var slotType = (InvSlotType)value;
+                    if (slotType == InvSlotType.Any || slotType == InvSlotType.None) { continue; }
+                    if (allowedSlot.HasFlag(slotType) && !character.Inventory.IsInLimbSlot(item, slotType))
+                    {
+                        return;
+                    }
+                }
             }
 
             picker = character;
+
             for (int i = 0; i < wearableSprites.Length; i++ )
             {
                 var wearableSprite = wearableSprites[i];
-                if (!wearableSprite.IsInitialized) { wearableSprite.Init(picker.Info?.Gender ?? Gender.None); }
-                if (picker.Info != null && picker.Info?.Gender != Gender.None && (wearableSprite.Gender != Gender.None))
-                {
-                    // If the item is gender specific (it has a different textures for male and female), we have to change the gender here so that the texture is updated.
-                    wearableSprite.Gender = picker.Info.Gender;
-                }
+                if (!wearableSprite.IsInitialized) { wearableSprite.Init(picker); }
+                // If the item is gender specific (it has a different textures for male and female), we have to change the gender here so that the texture is updated.
+                wearableSprite.Picker = picker;
 
                 Limb equipLimb  = character.AnimController.GetLimb(limbType[i]);
                 if (equipLimb == null) { continue; }
@@ -354,7 +426,10 @@ namespace Barotrauma.Items.Components
                 IsActive = true;
                 if (wearableSprite.LightComponent != null)
                 {
-                    wearableSprite.LightComponent.ParentBody = equipLimb.body;
+                    foreach (var light in wearableSprite.LightComponents)
+                    {
+                        light.ParentBody = equipLimb.body;
+                    }
                 }
 
                 limb[i] = equipLimb;
@@ -379,19 +454,19 @@ namespace Barotrauma.Items.Components
                         return i1.WearableComponent.AllowedSlots.Contains(InvSlotType.OuterClothes).CompareTo(i2.WearableComponent.AllowedSlots.Contains(InvSlotType.OuterClothes));
                     });
                 }
-
 #if CLIENT
                 equipLimb.UpdateWearableTypesToHide();
 #endif
             }
+            character.OnWearablesChanged();
         }
 
         public override void Drop(Character dropper)
         {
+            Character previousPicker = picker;
             Unequip(picker);
-
             base.Drop(dropper);
-
+            previousPicker?.OnWearablesChanged();
             picker = null;
             IsActive = false;
         }
@@ -408,7 +483,10 @@ namespace Barotrauma.Items.Components
 
                 if (wearableSprites[i].LightComponent != null)
                 {
-                    wearableSprites[i].LightComponent.ParentBody = null;
+                    foreach (var light in wearableSprites[i].LightComponents)
+                    {
+                        light.ParentBody = null;
+                    }
                 }
 
                 equipLimb.WearingItems.RemoveAll(w => w != null && w == wearableSprites[i]);
@@ -435,7 +513,6 @@ namespace Barotrauma.Items.Components
             }
 
             item.SetTransform(picker.SimPosition, 0.0f);
-            item.SetContainedItemPositions();
             
             item.ApplyStatusEffects(ActionType.OnWearing, deltaTime, picker);
 
@@ -467,7 +544,7 @@ namespace Barotrauma.Items.Components
         }
 
         private int loadedVariant = -1;
-        public override void Load(XElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
         {
             base.Load(componentElement, usePrefabValues, idRemap);
             loadedVariant = componentElement.GetAttributeInt("variant", -1);
@@ -481,16 +558,16 @@ namespace Barotrauma.Items.Components
                 Variant = loadedVariant;
             }
         }
-        public override void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public override void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
             msg.Write((byte)Variant);
-            base.ServerWrite(msg, c, extraData);
+            base.ServerEventWrite(msg, c, extraData);
         }
 
-        public override void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public override void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             Variant = (int)msg.ReadByte();
-            base.ClientRead(type, msg, sendingTime);
+            base.ClientEventRead(msg, sendingTime);
         }
 
     }

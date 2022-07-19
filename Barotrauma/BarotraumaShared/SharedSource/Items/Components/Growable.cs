@@ -1,13 +1,13 @@
 ﻿#nullable enable
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
 using Barotrauma.Extensions;
 using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Xml.Linq;
 using Vector2 = Microsoft.Xna.Framework.Vector2;
 using Vector4 = Microsoft.Xna.Framework.Vector4;
 
@@ -15,25 +15,30 @@ namespace Barotrauma.Items.Components
 {
     internal class ProducedItem
     {
-        [Serialize(0f, true)]
+        [Serialize(0f, IsPropertySaveable.Yes)]
         public float Probability { get; set; }
 
         public readonly List<StatusEffect> StatusEffects = new List<StatusEffect>();
 
+        public readonly Item Producer;
+        
         public readonly ItemPrefab? Prefab;
 
-        public ProducedItem(ItemPrefab prefab, float probability)
+        public ProducedItem(Item producer, ItemPrefab prefab, float probability)
         {
+            Producer = producer;
             Prefab = prefab;
             Probability = probability;
         }
 
-        public ProducedItem(XElement element)
+        public ProducedItem(Item producer, ContentXElement element)
         {
             SerializableProperty.DeserializeProperties(this, element);
 
-            string itemIdentifier = element.GetAttributeString("identifier", string.Empty);
-            if (!string.IsNullOrWhiteSpace(itemIdentifier))
+            Producer = producer;
+
+            Identifier itemIdentifier = element.GetAttributeIdentifier("identifier", Identifier.Empty);
+            if (!itemIdentifier.IsEmpty)
             {
                 Prefab = ItemPrefab.Find(null, itemIdentifier);
             }
@@ -41,17 +46,17 @@ namespace Barotrauma.Items.Components
             LoadSubElements(element);
         }
 
-        private void LoadSubElements(XElement element)
+        private void LoadSubElements(ContentXElement element)
         {
             if (!element.HasElements) { return; }
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "statuseffect":
                     {
-                        StatusEffect effect = StatusEffect.Load(subElement, Prefab?.Name);
+                        StatusEffect effect = StatusEffect.Load(subElement, Prefab?.Name.Value);
                         if (effect.type != ActionType.OnProduceSpawned)
                         {
                             DebugConsole.ThrowError("Only OnProduceSpawned type can be used in <ProducedItem>.");
@@ -278,7 +283,7 @@ namespace Barotrauma.Items.Components
 
             for (int i = 0, j = 0; i < maxSides; i++)
             {
-                if (!occupiedSides.IsBitSet((TileSide) (1 << i)))
+                if (!occupiedSides.HasFlag((TileSide) (1 << i)))
                 {
                     pool[j] = i;
                     j++;
@@ -303,19 +308,13 @@ namespace Barotrauma.Items.Components
 
         public bool CanGrowMore() => (Sides | BlockedSides).Count() < 4;
 
-        public bool IsSideBlocked(TileSide side) => BlockedSides.IsBitSet(side) || Sides.IsBitSet(side);
+        public bool IsSideBlocked(TileSide side) => BlockedSides.HasFlag(side) || Sides.HasFlag(side);
 
         public static Rectangle CreatePlantRect(Vector2 pos) => new Rectangle((int) pos.X - Size / 2, (int) pos.Y + Size / 2, Size, Size);
     }
 
     internal static class GrowthSideExtension
     {
-        // Enum.HasFlag() sucks
-        public static bool IsBitSet(this TileSide side, TileSide bit)
-        {
-            return ((int) side & (int) bit) != 0;
-        }
-
         // K&R algorithm for counting how many bits are set in a bit field
         public static int Count(this TileSide side)
         {
@@ -331,9 +330,14 @@ namespace Barotrauma.Items.Components
         }
 
         public static TileSide GetOppositeSide(this TileSide side)
-        {
-            return (TileSide) (1 << ((int) Math.Log2((int) side) + 2) % 4);
-        }
+            => side switch
+            {
+                TileSide.Left => TileSide.Right,
+                TileSide.Right => TileSide.Left,
+                TileSide.Bottom => TileSide.Top,
+                TileSide.Top => TileSide.Bottom,
+                _ => throw new ArgumentException($"Expected Left, Right, Bottom or Top, got {side}")
+            };
     }
 
     internal partial class Growable : ItemComponent, IServerSerializable
@@ -341,61 +345,61 @@ namespace Barotrauma.Items.Components
         // used for debugging where a vine failed to grow
         public readonly HashSet<Rectangle> FailedRectangles = new HashSet<Rectangle>();
 
-        [Serialize(1f, true, "How fast the plant grows.")]
+        [Serialize(1f, IsPropertySaveable.Yes, "How fast the plant grows.")]
         public float GrowthSpeed { get; set; }
 
-        [Serialize(100f, true, "How long the plant can go without watering.")]
+        [Serialize(100f, IsPropertySaveable.Yes, "How long the plant can go without watering.")]
         public float MaxHealth { get; set; }
 
-        [Serialize(1f, true, "How much damage the plant takes while in water.")]
+        [Serialize(1f, IsPropertySaveable.Yes, "How much damage the plant takes while in water.")]
         public float FloodTolerance { get; set; }
 
-        [Serialize(1f, true, "How much damage the plant takes while growing.")]
+        [Serialize(1f, IsPropertySaveable.Yes, "How much damage the plant takes while growing.")]
         public float Hardiness { get; set; }
 
-        [Serialize(0.01f, true, "How often a seed is produced.")]
+        [Serialize(0.01f, IsPropertySaveable.Yes, "How often a seed is produced.")]
         public float SeedRate { get; set; }
 
-        [Serialize(0.01f, true, "How often a product item is produced.")]
+        [Serialize(0.01f, IsPropertySaveable.Yes, "How often a product item is produced.")]
         public float ProductRate { get; set; }
 
-        [Serialize(0.5f, true, "Probability of an attribute being randomly modified in a newly produced seed.")]
+        [Serialize(0.5f, IsPropertySaveable.Yes, "Probability of an attribute being randomly modified in a newly produced seed.")]
         public float MutationProbability { get; set; }
 
-        [Serialize("1.0,1.0,1.0,1.0", true, "Color of the flowers.")]
+        [Serialize("1.0,1.0,1.0,1.0", IsPropertySaveable.Yes, "Color of the flowers.")]
         public Color FlowerTint { get; set; }
 
-        [Serialize(3, true, "Number of flowers drawn when fully grown")]
+        [Serialize(3, IsPropertySaveable.Yes, "Number of flowers drawn when fully grown")]
         public int FlowerQuantity { get; set; }
 
-        [Serialize(0.25f, true, "Size of the flower sprites.")]
+        [Serialize(0.25f, IsPropertySaveable.Yes, "Size of the flower sprites.")]
         public float BaseFlowerScale { get; set; }
 
-        [Serialize(0.5f, true, "Size of the leaf sprites.")]
+        [Serialize(0.5f, IsPropertySaveable.Yes, "Size of the leaf sprites.")]
         public float BaseLeafScale { get; set; }
 
-        [Serialize("1.0,1.0,1.0,1.0", true, "Color of the leaves.")]
+        [Serialize("1.0,1.0,1.0,1.0", IsPropertySaveable.Yes, "Color of the leaves.")]
         public Color LeafTint { get; set; }
 
-        [Serialize(0.33f, true, "Chance of a leaf appearing behind a branch.")]
+        [Serialize(0.33f, IsPropertySaveable.Yes, "Chance of a leaf appearing behind a branch.")]
         public float LeafProbability { get; set; }
 
-        [Serialize("1.0,1.0,1.0,1.0", true, "Color of the vines.")]
+        [Serialize("1.0,1.0,1.0,1.0", IsPropertySaveable.Yes, "Color of the vines.")]
         public Color VineTint { get; set; }
 
-        [Serialize(32, true, "Maximum number of vine tiles the plant can grow.")]
+        [Serialize(32, IsPropertySaveable.Yes, "Maximum number of vine tiles the plant can grow.")]
         public int MaximumVines { get; set; }
 
-        [Serialize(0.25f, true, "Size of the vine sprites.")]
+        [Serialize(0.25f, IsPropertySaveable.Yes, "Size of the vine sprites.")]
         public float VineScale { get; set; }
 
-        [Serialize("0.26,0.27,0.29,1.0", true, "Tint of a dead plant.")]
+        [Serialize("0.26,0.27,0.29,1.0", IsPropertySaveable.Yes, "Tint of a dead plant.")]
         public Color DeadTint { get; set; }
 
-        [Serialize("1,1,1,1", true, "Probability for the plant to grow in a direction.")]
+        [Serialize("1,1,1,1", IsPropertySaveable.Yes, "Probability for the plant to grow in a direction.")]
         public Vector4 GrowthWeights { get; set; }
 
-        [Serialize(0.0f, true, "How much damage is taken from fires.")]
+        [Serialize(0.0f, IsPropertySaveable.Yes, "How much damage is taken from fires.")]
         public float FireVulnerability { get; set; }
 
         private const float increasedDeathSpeed = 10f;
@@ -404,8 +408,6 @@ namespace Barotrauma.Items.Components
         private int flowerVariants;
         private int leafVariants;
         private int[] flowerTiles;
-        private const int serverHealthUpdateDelay = 10;
-        private int serverHealthUpdateTimer;
 
         public float Health
         {
@@ -430,7 +432,7 @@ namespace Barotrauma.Items.Components
         private static float MinFlowerScale = 0.5f, MaxFlowerScale = 1.0f, MinLeafScale = 0.5f, MaxLeafScale = 1.0f;
         private const int VineChunkSize = 32;
 
-        public Growable(Item item, XElement element) : base(item, element)
+        public Growable(Item item, ContentXElement element) : base(item, element)
         {
             SerializableProperty.DeserializeProperties(this, element);
 
@@ -438,12 +440,12 @@ namespace Barotrauma.Items.Components
 
             if (element.HasElements)
             {
-                foreach (XElement subElement in element.Elements())
+                foreach (var subElement in element.Elements())
                 {
                     switch (subElement.Name.ToString().ToLowerInvariant())
                     {
                         case "produceditem":
-                            ProducedItems.Add(new ProducedItem(subElement));
+                            ProducedItems.Add(new ProducedItem(this.item, subElement));
                             break;
                         case "vinesprites":
                             LoadVines(subElement);
@@ -452,7 +454,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            ProducedSeed = new ProducedItem(this.item.Prefab, 1.0f);
+            ProducedSeed = new ProducedItem(this.item, this.item.Prefab, 1.0f);
             flowerTiles = new int[FlowerQuantity];
         }
 
@@ -479,7 +481,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        partial void LoadVines(XElement element);
+        partial void LoadVines(ContentXElement element);
 
         public void OnGrowthTick(Planter planter, PlantSlot slot)
         {
@@ -549,7 +551,7 @@ namespace Barotrauma.Items.Components
 
             if (spawnProduct || spawnSeed)
             {
-                VineTile vine = Vines.GetRandom();
+                VineTile vine = Vines.GetRandomUnsynced();
                 spawnPos = vine.GetWorldPosition(planter, slot.Offset);
             }
             else
@@ -559,20 +561,22 @@ namespace Barotrauma.Items.Components
 
             if (spawnProduct && ProducedItems.Any())
             {
-                SpawnItem(ProducedItems.RandomElementByWeight(it => it.Probability), spawnPos);
+                SpawnItem(Item, ProducedItems.RandomElementByWeight(it => it.Probability), spawnPos);
                 return;
             }
 
             if (spawnSeed)
             {
-                SpawnItem(ProducedSeed, spawnPos);
+                SpawnItem(Item, ProducedSeed, spawnPos);
             }
 
-            static void SpawnItem(ProducedItem producedItem, Vector2 pos)
+            static void SpawnItem(Item thisItem, ProducedItem producedItem, Vector2 pos)
             {
                 if (producedItem.Prefab == null) { return; }
 
-                Entity.Spawner?.AddToSpawnQueue(producedItem.Prefab, pos, onSpawned: it =>
+                GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "null") + ":GardeningProduce:" + thisItem.Prefab.Identifier + ":" + producedItem.Prefab.Identifier);
+
+                Entity.Spawner?.AddItemToSpawnQueue(producedItem.Prefab, pos, onSpawned: it =>
                 {
                     foreach (StatusEffect effect in producedItem.StatusEffects)
                     {
@@ -592,8 +596,13 @@ namespace Barotrauma.Items.Components
         {
             if (Decayed) { return true; }
 
-            if (0 >= Health)
+            if (Health <= 0)
             {
+                if (!Decayed)
+                {
+                    GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "null") + ":GardeningDied:" + item.Prefab.Identifier);
+                }
+
                 Decayed = true;
 #if CLIENT
                 foreach (VineTile vine in Vines)
@@ -698,7 +707,7 @@ namespace Barotrauma.Items.Components
 #if SERVER
                 for (int i = 0; i < Vines.Count; i += VineChunkSize)
                 {
-                    GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.GetComponentIndex(this), i });
+                    item.CreateServerEvent(this, new EventData(offset: i));
                 }
 #elif CLIENT
                 ResetPlanterSize();
@@ -780,7 +789,7 @@ namespace Barotrauma.Items.Components
 
                     TileSide oppositeSide = connectingSide.GetOppositeSide();
 
-                    if (otherVine.BlockedSides.IsBitSet(connectingSide))
+                    if (otherVine.BlockedSides.HasFlag(connectingSide))
                     {
                         newVine.BlockedSides |= oppositeSide;
                         continue;
@@ -882,14 +891,14 @@ namespace Barotrauma.Items.Components
             return element;
         }
 
-        public override void Load(XElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
         {
             base.Load(componentElement, usePrefabValues, idRemap);
-            flowerTiles = componentElement.GetAttributeIntArray("flowertiles", new int[0]);
+            flowerTiles = componentElement.GetAttributeIntArray("flowertiles", Array.Empty<int>())!;
             Decayed = componentElement.GetAttributeBool("decayed", false);
 
             Vines.Clear();
-            foreach (XElement element in componentElement.Elements())
+            foreach (var element in componentElement.Elements())
             {
                 if (element.Name.ToString().Equals("vine", StringComparison.OrdinalIgnoreCase))
                 {

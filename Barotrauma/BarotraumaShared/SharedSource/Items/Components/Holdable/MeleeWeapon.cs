@@ -29,45 +29,57 @@ namespace Barotrauma.Items.Components
 
         public Character User { get; private set; }
 
-        [Serialize(0.0f, false, description: "An estimation of how close the item has to be to the target for it to hit. Used by AI characters to determine when they're close enough to hit a target.")]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "An estimation of how close the item has to be to the target for it to hit. Used by AI characters to determine when they're close enough to hit a target.")]
         public float Range
         {
             get { return ConvertUnits.ToDisplayUnits(range); }
             set { range = ConvertUnits.ToSimUnits(value); }
         }
 
-        [Serialize(0.5f, false, description: "How long the user has to wait before they can hit with the weapon again (in seconds).")]
+        [Serialize(0.5f, IsPropertySaveable.No, description: "How long the user has to wait before they can hit with the weapon again (in seconds).")]
         public float Reload
         {
             get { return reload; }
             set { reload = Math.Max(0.0f, value); }
         }
 
-        [Serialize(false, false, description: "Can the weapon hit multiple targets per swing.")]
+        [Serialize(false, IsPropertySaveable.No, description: "Can the weapon hit multiple targets per swing.")]
         public bool AllowHitMultiple
         {
             get;
             set;
         }
 
+        [Editable, Serialize(true, IsPropertySaveable.No)]
+        public bool Swing { get; set; }
+
+        [Editable, Serialize("2.0, 0.0", IsPropertySaveable.No)]
+        public Vector2 SwingPos { get; set; }
+
+        [Editable, Serialize("3.0, -1.0", IsPropertySaveable.No)]
+        public Vector2 SwingForce { get; set; }
+
+        public bool Hitting { get { return hitting; } }
+
         /// <summary>
         /// Defines items that boost the weapon functionality, like battery cell for stun batons.
         /// </summary>
-        public readonly string[] PreferredContainedItems;
+        public readonly Identifier[] PreferredContainedItems;
 
-        public MeleeWeapon(Item item, XElement element)
+        public MeleeWeapon(Item item, ContentXElement element)
             : base(item, element)
         {
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 if (!subElement.Name.ToString().Equals("attack", StringComparison.OrdinalIgnoreCase)) { continue; }
-                Attack = new Attack(subElement, item.Name + ", MeleeWeapon");
-                Attack.DamageRange = item.body == null ? 10.0f : ConvertUnits.ToDisplayUnits(item.body.GetMaxExtent());
+                Attack = new Attack(subElement, item.Name + ", MeleeWeapon", item)
+                {
+                    DamageRange = item.body == null ? 10.0f : ConvertUnits.ToDisplayUnits(item.body.GetMaxExtent())
+                };
             }
             item.IsShootable = true;
-            // TODO: should define this in xml if we have melee weapons that don't require aim to use
-            item.RequireAimToUse = true;
-            PreferredContainedItems = element.GetAttributeStringArray("preferredcontaineditems", new string[0], convertToLowerInvariant: true);
+            item.RequireAimToUse = element.Parent.GetAttributeBool("requireaimtouse", true);
+            PreferredContainedItems = element.GetAttributeIdentifierArray("preferredcontaineditems", Array.Empty<Identifier>());
         }
 
         public override void Equip(Character character)
@@ -80,6 +92,9 @@ namespace Barotrauma.Items.Components
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null || reloadTimer > 0.0f) { return false; }
+#if CLIENT
+            if (!Item.RequireAimToUse && character.IsPlayer && (GUI.MouseOn != null || character.Inventory.visualSlots.Any(s => s.MouseOn()) || Inventory.DraggingItems.Any())) { return false; }
+#endif
             if (Item.RequireAimToUse && !character.IsKeyDown(InputType.Aim) || hitting) { return false; }
 
             //don't allow hitting if the character is already hitting with another weapon
@@ -92,31 +107,42 @@ namespace Barotrauma.Items.Components
 
             SetUser(character);
 
-            if (hitPos < MathHelper.PiOver4) { return false; }
+            if (Item.RequireAimToUse && hitPos < MathHelper.PiOver4) { return false; }
 
             ActivateNearbySleepingCharacters();
             reloadTimer = reload;
+            reloadTimer /= 1f + character.GetStatValue(StatTypes.MeleeAttackSpeed);
+            reloadTimer /= 1f + item.GetQualityModifier(Quality.StatType.StrikingSpeedMultiplier);
+            character.AnimController.LockFlippingUntil = (float)Timing.TotalTime + reloadTimer;
 
             item.body.FarseerBody.CollisionCategories = Physics.CollisionProjectile;
-            item.body.FarseerBody.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall;
+            item.body.FarseerBody.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionItemBlocking;
             item.body.FarseerBody.OnCollision += OnCollision;
             item.body.FarseerBody.IsBullet = true;
             item.body.PhysEnabled = true;
 
-            if (!character.AnimController.InWater)
+            if (Swing && !character.AnimController.InWater)
             {
                 foreach (Limb l in character.AnimController.Limbs)
                 {
                     if (l.IsSevered) { continue; }
-                    if (l.type == LimbType.LeftFoot || l.type == LimbType.LeftThigh || l.type == LimbType.LeftLeg) { continue; }
-                    if (l.type == LimbType.Head || l.type == LimbType.Torso)
+                    Vector2 force = new Vector2(character.AnimController.Dir * SwingForce.X, SwingForce.Y) * l.Mass;
+                    switch (l.type)
                     {
-                        l.body.ApplyLinearImpulse(new Vector2(character.AnimController.Dir * 7.0f, -4.0f));                   
+                        case LimbType.Torso:
+                            force *= 2;
+                            break;
+                        case LimbType.Legs:
+                        case LimbType.LeftFoot:
+                        case LimbType.LeftThigh:
+                        case LimbType.LeftLeg:
+                        case LimbType.RightFoot:
+                        case LimbType.RightThigh:
+                        case LimbType.RightLeg:
+                            force = Vector2.Zero;
+                            break;
                     }
-                    else
-                    {
-                        l.body.ApplyLinearImpulse(new Vector2(character.AnimController.Dir * 5.0f, -2.0f));
-                    }                
+                    l.body.ApplyLinearImpulse(force);
                 }
             }
             
@@ -152,48 +178,69 @@ namespace Barotrauma.Items.Components
         
         public override void Update(float deltaTime, Camera cam)
         {
-            if (!item.body.Enabled) { impactQueue.Clear(); return; }
-            if (picker == null && !picker.HeldItems.Contains(item)) { impactQueue.Clear(); IsActive = false; }
-
+            if (!item.body.Enabled)
+            {
+                impactQueue.Clear();
+                return;
+            }
+            if (picker == null && !picker.HeldItems.Contains(item))
+            {
+                impactQueue.Clear();
+                IsActive = false;
+            }
             while (impactQueue.Count > 0)
             {
                 var impact = impactQueue.Dequeue();
-                HandleImpact(impact.Body);
+                HandleImpact(impact);
             }
             //in case handling the impact does something to the picker
             if (picker == null) { return; }
-
             reloadTimer -= deltaTime;
-            if (reloadTimer < 0) { reloadTimer = 0; }
-
-            if (!picker.IsKeyDown(InputType.Aim) && !hitting) { hitPos = 0.0f; }
-
+            if (reloadTimer < 0)
+            {
+                reloadTimer = 0;
+            }
+            if (!picker.IsKeyDown(InputType.Aim) && !hitting)
+            {
+                hitPos = 0.0f;
+            }
             ApplyStatusEffects(ActionType.OnActive, deltaTime, picker);
-
-            if (item.body.Dir != picker.AnimController.Dir) { item.FlipX(relativeToSub: false); }
-
+            if (item.body.Dir != picker.AnimController.Dir)
+            {
+                item.FlipX(relativeToSub: false);
+            }
             AnimController ac = picker.AnimController;
-
-            //TODO: refactor the hitting logic (get rid of the magic numbers, make it possible to use different kinds of animations for different items)
             if (!hitting)
             {
-                bool aim = picker.AllowInput && picker.IsKeyDown(InputType.Aim) && reloadTimer <= 0 && picker.CanAim;
+                bool aim = item.RequireAimToUse && picker.AllowInput && picker.IsKeyDown(InputType.Aim) && reloadTimer <= 0 && picker.CanAim;
                 if (aim)
                 {
-                    hitPos = MathUtils.WrapAnglePi(Math.Min(hitPos + deltaTime * 5f, MathHelper.PiOver4));
-                    ac.HoldItem(deltaTime, item, handlePos, aimPos, Vector2.Zero, false, hitPos, holdAngle + hitPos);
+                    hitPos = MathUtils.WrapAnglePi(Math.Min(hitPos + deltaTime * 3f, MathHelper.PiOver4));
+                    ac.HoldItem(deltaTime, item, handlePos, aimPos, Vector2.Zero, aim: false, hitPos, holdAngle + hitPos, aimMelee: true);
+                    if (ac.InWater)
+                    {
+                        ac.LockFlippingUntil = (float)Timing.TotalTime + Reload;
+                    }
                 }
                 else
                 {
                     hitPos = 0;
-                    ac.HoldItem(deltaTime, item, handlePos, holdPos, Vector2.Zero, false, holdAngle);
+                    ac.HoldItem(deltaTime, item, handlePos, holdPos, Vector2.Zero, aim: false, holdAngle);
                 }
             }
             else
             {
-                hitPos = MathUtils.WrapAnglePi(hitPos - deltaTime * 15f);
-                ac.HoldItem(deltaTime, item, handlePos, new Vector2(2, 0), Vector2.Zero, false, hitPos, holdAngle + hitPos); // aimPos not used -> zero (new Vector2(-0.3f, 0.2f)), holdPos new Vector2(0.6f, -0.1f)
-                if (hitPos < -MathHelper.PiOver2)
+                // TODO: We might want to make this configurable
+                hitPos -= deltaTime * 15f;
+                if (Swing)
+                {
+                    ac.HoldItem(deltaTime, item, handlePos, SwingPos, Vector2.Zero, aim: false, hitPos, holdAngle);
+                }
+                else
+                {
+                    ac.HoldItem(deltaTime, item, handlePos, holdPos, Vector2.Zero, aim: false, holdAngle);
+                }
+                if (hitPos < -MathHelper.Pi)
                 {
                     RestoreCollision();
                     hitting = false;
@@ -266,16 +313,10 @@ namespace Barotrauma.Items.Components
                 return false;
             }
 
-            Character targetCharacter = null;
-            Limb targetLimb = null;
-            Structure targetStructure = null;
-            Item targetItem = null;
-
-            if (f2.Body.UserData is Limb)
+            if (f2.Body.UserData is Limb targetLimb)
             {
-                targetLimb = (Limb)f2.Body.UserData;
                 if (targetLimb.IsSevered || targetLimb.character == null || targetLimb.character == User) { return false; }
-                targetCharacter = targetLimb.character;
+                var targetCharacter = targetLimb.character;
                 if (targetCharacter == picker) { return false; }
                 if (AllowHitMultiple)
                 {
@@ -287,9 +328,8 @@ namespace Barotrauma.Items.Components
                 }
                 hitTargets.Add(targetCharacter);
             }
-            else if (f2.Body.UserData is Character)
+            else if (f2.Body.UserData is Character targetCharacter)
             {
-                targetCharacter = (Character)f2.Body.UserData;
                 if (targetCharacter == picker || targetCharacter == User) { return false; }
                 targetLimb = targetCharacter.AnimController.GetLimb(LimbType.Torso); //Otherwise armor can be bypassed in strange ways
                 if (AllowHitMultiple)
@@ -302,9 +342,8 @@ namespace Barotrauma.Items.Components
                 }
                 hitTargets.Add(targetCharacter);
             }
-            else if (f2.Body.UserData is Structure)
+            else if ((f2.Body.UserData as Structure ?? f2.UserData as Structure) is Structure targetStructure)
             {
-                targetStructure = (Structure)f2.Body.UserData;
                 if (AllowHitMultiple)
                 {
                     if (hitTargets.Contains(targetStructure)) { return true; }
@@ -315,9 +354,8 @@ namespace Barotrauma.Items.Components
                 }
                 hitTargets.Add(targetStructure);
             }
-            else if (f2.Body.UserData is Item)
+            else if (f2.Body.UserData is Item targetItem)
             {
-                targetItem = (Item)f2.Body.UserData;
                 if (AllowHitMultiple)
                 {
                     if (hitTargets.Contains(targetItem)) { return true; }
@@ -327,6 +365,10 @@ namespace Barotrauma.Items.Components
                     if (hitTargets.Any(t => t is Item)) { return true; }
                 }
                 hitTargets.Add(targetItem);
+            }
+            else if (f2.Body.UserData is Holdable holdable && holdable.CanPush)
+            {
+                hitTargets.Add(holdable.Item);
             }
             else
             {
@@ -338,8 +380,9 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        private void HandleImpact(Body target)
+        private void HandleImpact(Fixture targetFixture)
         {
+            var target = targetFixture.Body;
             if (User == null || User.Removed || target == null)
             {
                 RestoreCollision();
@@ -350,12 +393,11 @@ namespace Barotrauma.Items.Components
             
             Limb targetLimb = target.UserData as Limb;
             Character targetCharacter = targetLimb?.character ?? target.UserData as Character;
-            Structure targetStructure = target.UserData as Structure;
-            Item targetItem = target.UserData as Item;
-            
             if (Attack != null)
             {
                 Attack.SetUser(User);
+                Attack.DamageMultiplier = 1 + User.GetStatValue(StatTypes.MeleeAttackMultiplier);
+                Attack.DamageMultiplier *= 1.0f + item.GetQualityModifier(Quality.StatType.StrikingPowerMultiplier);
 
                 if (targetLimb != null)
                 {
@@ -369,15 +411,23 @@ namespace Barotrauma.Items.Components
                     targetCharacter.LastDamageSource = item;
                     Attack.DoDamage(User, targetCharacter, item.WorldPosition, 1.0f);
                 }
-                else if (targetStructure != null)
+                else if ((target.UserData as Structure ?? targetFixture.UserData as Structure) is Structure targetStructure)
                 {
                     if (targetStructure.Removed) { return; }
                     Attack.DoDamage(User, targetStructure, item.WorldPosition, 1.0f);
                 }
-                else if (targetItem != null && targetItem.Prefab.DamagedByMeleeWeapons && targetItem.Condition > 0)
+                else if (target.UserData is Item targetItem && targetItem.Prefab.DamagedByMeleeWeapons && targetItem.Condition > 0)
                 {
                     if (targetItem.Removed) { return; }
                     Attack.DoDamage(User, targetItem, item.WorldPosition, 1.0f);
+                }
+                else if (target.UserData is Holdable holdable && holdable.CanPush)
+                {
+                    if (holdable.Item.Removed) { return; }
+                    Attack.DoDamage(User, holdable.Item, item.WorldPosition, 1.0f);
+                    RestoreCollision();
+                    hitting = false;
+                    User = null;
                 }
                 else
                 {
@@ -392,13 +442,10 @@ namespace Barotrauma.Items.Components
 #if SERVER
             if (GameMain.Server != null && targetCharacter != null) //TODO: Log structure hits
             {
-                GameMain.Server.CreateEntityEvent(item, new object[] 
-                {
-                    Networking.NetEntityEvent.Type.ApplyStatusEffect,                    
+                GameMain.Server.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(
                     success ? ActionType.OnUse : ActionType.OnFailure,
-                    null, //itemcomponent
-                    targetCharacter.ID, targetLimb
-                });
+                    targetItemComponent: null,
+                    targetCharacter, targetLimb));
 
                 string logStr = picker?.LogName + " used " + item.Name;
                 if (item.ContainedItems != null && item.ContainedItems.Any())
@@ -417,7 +464,7 @@ namespace Barotrauma.Items.Components
 
             if (DeleteOnUse)
             {
-                Entity.Spawner.AddToRemoveQueue(item);
+                Entity.Spawner.AddItemToRemoveQueue(item);
             }
         }
     }

@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Xml.Linq;
 using Microsoft.Xna.Framework;
 
 namespace Barotrauma.Items.Components
@@ -35,7 +34,7 @@ namespace Barotrauma.Items.Components
         public Vector2 Offset;
         public float Size;
 
-        public PlantSlot(XElement element)
+        public PlantSlot(ContentXElement element)
         {
             Offset = element.GetAttributeVector2("offset", Vector2.Zero);
             Size = element.GetAttributeFloat("size", 0.5f);
@@ -64,17 +63,15 @@ namespace Barotrauma.Items.Components
 
         private float fertilizer;
 
-        [Serialize(0f, true, "How much fertilizer the planter has.")]
+        [Serialize(0f, IsPropertySaveable.Yes, "How much fertilizer the planter has.")]
         public float Fertilizer
         {
             get => fertilizer;
             set => fertilizer = Math.Clamp(value, 0, FertilizerCapacity);
         }
 
-        [Serialize(100f, true, "How much fertilizer can the planter hold.")]
+        [Serialize(100f, IsPropertySaveable.Yes, "How much fertilizer can the planter hold.")]
         public float FertilizerCapacity { get; set; }
-
-        public string LastAction { get; set; } = "";
 
         public Growable?[] GrowableSeeds = new Growable?[0];
 
@@ -83,11 +80,13 @@ namespace Barotrauma.Items.Components
         private ItemContainer? container;
         private float growthTickTimer;
 
-        public Planter(Item item, XElement element) : base(item, element)
+        private List<LightComponent>? lightComponents;
+
+        public Planter(Item item, ContentXElement element) : base(item, element)
         {
             canBePicked = true;
             SerializableProperty.DeserializeProperties(this, element);
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -109,17 +108,21 @@ namespace Barotrauma.Items.Components
             base.OnItemLoaded();
             IsActive = true;
 #if CLIENT
-            lightComponent = item.GetComponent<LightComponent>();
-            if (lightComponent != null)
+            var lights = item.GetComponents<LightComponent>();
+            if (lights.Any())
             {
-                lightComponent.Light.Enabled = false;
+                lightComponents = lights.ToList();
+                foreach (var light in lightComponents)
+                {
+                    light.Light.Enabled = false;
+                }
             }
 #endif
             container = item.GetComponent<ItemContainer>();
             GrowableSeeds = new Growable[container.Capacity];
         }
 
-        public override bool HasRequiredItems(Character character, bool addMessage, string msg = null)
+        public override bool HasRequiredItems(Character character, bool addMessage, LocalizedString? msg = null)
         {
             if (container?.Inventory == null) { return false; }
 
@@ -137,9 +140,16 @@ namespace Barotrauma.Items.Components
                 return true;
             }
 
-            Msg = MsgHarvest;
+            if (GrowableSeeds.Any(s => s != null))
+            {
+                Msg = MsgHarvest;
+                ParseMsg();
+                return true;
+            }
+
+            Msg = string.Empty;
             ParseMsg();
-            return true;
+            return false;
         }
 
         public override bool Pick(Character character)
@@ -163,9 +173,16 @@ namespace Barotrauma.Items.Components
             switch (plantItem.Type)
             {
                 case PlantItemType.Seed:
-                    LastAction = "PlantSeed";
                     ApplyStatusEffects(ActionType.OnPicked, 1.0f, character);
-                    return container.Inventory.TryPutItem(plantItem.Item, character, new List<InvSlotType> { InvSlotType.Any });
+                    if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
+                    {
+                        return container.Inventory.TryPutItem(plantItem.Item, character);
+                    }
+                    else
+                    {
+                        //let the server handle moving the item
+                        return false;
+                    }
                 case PlantItemType.Fertilizer when plantItem.Item != null:
                     float canAdd = FertilizerCapacity - Fertilizer;
                     float maxAvailable = plantItem.Item.Condition;
@@ -175,7 +192,6 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                     character.UpdateHUDProgressBar(this, Item.DrawPosition, Fertilizer / FertilizerCapacity, Color.SaddleBrown, Color.SaddleBrown, "entityname.fertilizer");
 #endif
-                    LastAction = "ApplyFertilizer";
                     ApplyStatusEffects(ActionType.OnPicked, 1.0f, character);
                     return false;
             }
@@ -201,9 +217,8 @@ namespace Barotrauma.Items.Components
                 if (!anyDecayed || seed.Decayed || seed.FullyGrown)
                 {
                     container?.Inventory.RemoveItem(seed.Item);
-                    Entity.Spawner?.AddToRemoveQueue(seed.Item);
+                    Entity.Spawner?.AddItemToRemoveQueue(seed.Item);
                     GrowableSeeds[i] = null;
-                    LastAction = "Harvest";
                     ApplyStatusEffects(ActionType.OnPicked, 1.0f, character);
                     return true;
                 }
@@ -217,12 +232,17 @@ namespace Barotrauma.Items.Components
             base.Update(deltaTime, cam);
             
 #if CLIENT
-            if (lightComponent != null)
+            if (lightComponents != null && lightComponents.Count > 0)
             {
                 bool hasSeed = false;
-                foreach (Growable? seed in GrowableSeeds) { hasSeed |= seed != null; }
-
-                lightComponent.Light.Enabled = hasSeed;
+                foreach (Growable? seed in GrowableSeeds)
+                {
+                    hasSeed |= seed != null;
+                }
+                foreach (var light in lightComponents)
+                {
+                    light.Light.Enabled = hasSeed;
+                }
             }
 #endif
 

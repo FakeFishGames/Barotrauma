@@ -98,7 +98,8 @@ namespace Steamworks
 		#endregion
 		internal bool GetQueryUGCPreviewURL( UGCQueryHandle_t handle, uint index, out string pchURL )
 		{
-			IntPtr mempchURL = Helpers.TakeMemory();
+			using var memory = Helpers.TakeMemory();
+			IntPtr mempchURL = memory;
 			var returnValue = _GetQueryUGCPreviewURL( Self, handle, index, mempchURL, (1024 * 32) );
 			pchURL = Helpers.MemoryToString( mempchURL );
 			return returnValue;
@@ -112,7 +113,8 @@ namespace Steamworks
 		#endregion
 		internal bool GetQueryUGCMetadata( UGCQueryHandle_t handle, uint index, out string pchMetadata )
 		{
-			IntPtr mempchMetadata = Helpers.TakeMemory();
+			using var memory = Helpers.TakeMemory();
+			IntPtr mempchMetadata = memory;
 			var returnValue = _GetQueryUGCMetadata( Self, handle, index, mempchMetadata, (1024 * 32) );
 			pchMetadata = Helpers.MemoryToString( mempchMetadata );
 			return returnValue;
@@ -161,8 +163,10 @@ namespace Steamworks
 		#endregion
 		internal bool GetQueryUGCAdditionalPreview( UGCQueryHandle_t handle, uint index, uint previewIndex, out string pchURLOrVideoID, out string pchOriginalFileName, ref ItemPreviewType pPreviewType )
 		{
-			IntPtr mempchURLOrVideoID = Helpers.TakeMemory();
-			IntPtr mempchOriginalFileName = Helpers.TakeMemory();
+			using var memoryUrlOrId = Helpers.TakeMemory();
+			using var memoryFileName = Helpers.TakeMemory();
+			IntPtr mempchURLOrVideoID = memoryUrlOrId;
+			IntPtr mempchOriginalFileName = memoryFileName;
 			var returnValue = _GetQueryUGCAdditionalPreview( Self, handle, index, previewIndex, mempchURLOrVideoID, (1024 * 32), mempchOriginalFileName, (1024 * 32), ref pPreviewType );
 			pchURLOrVideoID = Helpers.MemoryToString( mempchURLOrVideoID );
 			pchOriginalFileName = Helpers.MemoryToString( mempchOriginalFileName );
@@ -188,8 +192,10 @@ namespace Steamworks
 		#endregion
 		internal bool GetQueryUGCKeyValueTag( UGCQueryHandle_t handle, uint index, uint keyValueTagIndex, out string pchKey, out string pchValue )
 		{
-			IntPtr mempchKey = Helpers.TakeMemory();
-			IntPtr mempchValue = Helpers.TakeMemory();
+			using var memoryKey = Helpers.TakeMemory();
+			using var memoryValue = Helpers.TakeMemory();
+			IntPtr mempchKey = memoryKey;
+			IntPtr mempchValue = memoryValue;
 			var returnValue = _GetQueryUGCKeyValueTag( Self, handle, index, keyValueTagIndex, mempchKey, (1024 * 32), mempchValue, (1024 * 32) );
 			pchKey = Helpers.MemoryToString( mempchKey );
 			pchValue = Helpers.MemoryToString( mempchValue );
@@ -204,7 +210,8 @@ namespace Steamworks
 		#endregion
 		internal bool GetQueryUGCKeyValueTag( UGCQueryHandle_t handle, uint index, [MarshalAs( UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof( Utf8StringToNative ) )] string pchKey, out string pchValue )
 		{
-			IntPtr mempchValue = Helpers.TakeMemory();
+			using var memory = Helpers.TakeMemory();
+			IntPtr mempchValue = memory;
 			var returnValue = _GetQueryUGCKeyValueTag( Self, handle, index, pchKey, mempchValue, (1024 * 32) );
 			pchValue = Helpers.MemoryToString( mempchValue );
 			return returnValue;
@@ -793,7 +800,8 @@ namespace Steamworks
 		#endregion
 		internal bool GetItemInstallInfo( PublishedFileId nPublishedFileID, ref ulong punSizeOnDisk, out string pchFolder, ref uint punTimeStamp )
 		{
-			IntPtr mempchFolder = Helpers.TakeMemory();
+			using var memory = Helpers.TakeMemory();
+			IntPtr mempchFolder = memory;
 			var returnValue = _GetItemInstallInfo( Self, nPublishedFileID, ref punSizeOnDisk, mempchFolder, (1024 * 32), ref punTimeStamp );
 			pchFolder = Helpers.MemoryToString( mempchFolder );
 			return returnValue;

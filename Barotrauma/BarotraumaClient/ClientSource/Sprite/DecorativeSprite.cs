@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -18,7 +19,7 @@ namespace Barotrauma
         }
 
         public string Name => $"Decorative Sprite";
-        public Dictionary<string, SerializableProperty> SerializableProperties { get; set; }
+        public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; set; }
 
         public Sprite Sprite { get; private set; }
 
@@ -29,22 +30,22 @@ namespace Barotrauma
             Noise
         }
 
-        [Serialize("0,0", true), Editable]
+        [Serialize("0,0", IsPropertySaveable.Yes), Editable]
         public Vector2 Offset { get; private set; }
 
-        [Serialize("0,0", true), Editable]
+        [Serialize("0,0", IsPropertySaveable.Yes), Editable]
         public Vector2 RandomOffset { get; private set; }
 
-        [Serialize(AnimationType.None, false), Editable]
+        [Serialize(AnimationType.None, IsPropertySaveable.No), Editable]
         public AnimationType OffsetAnim { get; private set; }
 
-        [Serialize(0.0f, true), Editable]
+        [Serialize(0.0f, IsPropertySaveable.Yes), Editable]
         public float OffsetAnimSpeed { get; private set; }
 
         private float rotationSpeedRadians;
         private float absRotationSpeedRadians;
 
-        [Serialize(0.0f, true), Editable]
+        [Serialize(0.0f, IsPropertySaveable.Yes), Editable]
         public float RotationSpeed
         {
             get
@@ -59,7 +60,7 @@ namespace Barotrauma
         }
 
         private float rotationRadians;
-        [Serialize(0.0f, true), Editable]
+        [Serialize(0.0f, IsPropertySaveable.Yes), Editable]
         public float Rotation
         {
             get
@@ -73,7 +74,7 @@ namespace Barotrauma
         }
 
         private Vector2 randomRotationRadians;
-        [Serialize("0,0", true), Editable]
+        [Serialize("0,0", IsPropertySaveable.Yes), Editable]
         public Vector2 RandomRotation
         {
             get
@@ -87,30 +88,30 @@ namespace Barotrauma
         }
 
         private float scale;
-        [Serialize(1.0f, true), Editable]
+        [Serialize(1.0f, IsPropertySaveable.Yes), Editable]
         public float Scale
         {
             get { return scale; }
             private set { scale = MathHelper.Clamp(value, 0.0f, 10.0f); }
         }
 
-        [Serialize("0,0", true), Editable]
+        [Serialize("0,0", IsPropertySaveable.Yes), Editable]
         public Vector2 RandomScale
         {
             get;
             private set;
         }
 
-        [Serialize(AnimationType.None, false), Editable]
+        [Serialize(AnimationType.None, IsPropertySaveable.No), Editable]
         public AnimationType RotationAnim { get; private set; }
 
         /// <summary>
         /// If > 0, only one sprite of the same group is used (chosen randomly)
         /// </summary>
-        [Serialize(0, false, description: "If > 0, only one sprite of the same group is used (chosen randomly)"), Editable(ReadOnly = true)]
+        [Serialize(0, IsPropertySaveable.No, description: "If > 0, only one sprite of the same group is used (chosen randomly)"), Editable(ReadOnly = true)]
         public int RandomGroupID { get; private set; }
 
-        [Serialize("1.0,1.0,1.0,1.0", true), Editable()]
+        [Serialize("1.0,1.0,1.0,1.0", IsPropertySaveable.Yes), Editable()]
         public Color Color { get; set; }
 
         /// <summary>
@@ -122,12 +123,12 @@ namespace Barotrauma
         /// </summary>
         internal List<PropertyConditional> AnimationConditionals { get; private set; } = new List<PropertyConditional>();
 
-        public DecorativeSprite(XElement element, string path = "", string file = "", bool lazyLoad = false)
+        public DecorativeSprite(ContentXElement element, string path = "", string file = "", bool lazyLoad = false)
         {
             Sprite = new Sprite(element, path, file, lazyLoad: lazyLoad);
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
             // load property conditionals
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 //choose which list the new conditional should be placed to
                 List<PropertyConditional> conditionalList = null;
@@ -217,18 +218,18 @@ namespace Barotrauma
             return MathHelper.Lerp(RandomScale.X, RandomScale.Y, randomScaleModifier);
         }
 
-        public static void UpdateSpriteStates(Dictionary<int, List<DecorativeSprite>> spriteGroups, Dictionary<DecorativeSprite, State> animStates,
+        public static void UpdateSpriteStates(ImmutableDictionary<int, ImmutableArray<DecorativeSprite>> spriteGroups, Dictionary<DecorativeSprite, State> animStates,
             int entityID, float deltaTime, Func<PropertyConditional, bool> checkConditional)
         {
             foreach (int spriteGroup in spriteGroups.Keys)
             {
-                for (int i = 0; i < spriteGroups[spriteGroup].Count; i++)
+                for (int i = 0; i < spriteGroups[spriteGroup].Length; i++)
                 {
                     var decorativeSprite = spriteGroups[spriteGroup][i];
                     if (decorativeSprite == null) { continue; }
                     if (spriteGroup > 0)
                     {
-                        int activeSpriteIndex = entityID % spriteGroups[spriteGroup].Count;
+                        int activeSpriteIndex = entityID % spriteGroups[spriteGroup].Length;
                         if (i != activeSpriteIndex)
                         {
                             animStates[decorativeSprite].IsActive = false;

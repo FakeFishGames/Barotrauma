@@ -2,14 +2,14 @@
 {
     partial class DamageModifier
     {
-        [Serialize("", false), Editable]
+        [Serialize("", IsPropertySaveable.No), Editable]
         public string DamageSound
         {
             get;
             private set;
         }
 
-        [Serialize("", false), Editable]
+        [Serialize("", IsPropertySaveable.No), Editable]
         public string DamageParticle
         {
             get;

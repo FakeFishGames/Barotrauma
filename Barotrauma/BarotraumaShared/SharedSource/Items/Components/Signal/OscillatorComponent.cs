@@ -12,25 +12,30 @@ namespace Barotrauma.Items.Components
         public enum WaveType
         {
             Pulse,
+            Sawtooth,
             Sine,
             Square,
+            Triangle,
         }
 
         private float frequency;
 
         private float phase;
 
-        [InGameEditable, Serialize(WaveType.Pulse, true, description: "What kind of a signal the item outputs." +
+        [InGameEditable, Serialize(WaveType.Pulse, IsPropertySaveable.Yes, description: "What kind of a signal the item outputs." +
             " Pulse: periodically sends out a signal of 1." +
+            " Sawtooth: sends out a periodic wave that increases linearly from 0 to 1." +
             " Sine: sends out a sine wave oscillating between -1 and 1." +
-            " Square: sends out a signal that alternates between 0 and 1.", alwaysUseInstanceValues: true)]
+            " Square: sends out a signal that alternates between 0 and 1." +
+            " Triangle: sends out a wave that alternates between increasing linearly from -1 to 1 and decreasing from 1 to -1.",
+                                   alwaysUseInstanceValues: true)]
         public WaveType OutputType
         {
             get;
             set;
         }
 
-        [InGameEditable(DecimalCount = 2), Serialize(1.0f, true, description: "How fast the signal oscillates, or how fast the pulses are sent (in Hz).", alwaysUseInstanceValues: true)]
+        [InGameEditable(DecimalCount = 2), Serialize(1.0f, IsPropertySaveable.Yes, description: "How fast the signal oscillates, or how fast the pulses are sent (in Hz).", alwaysUseInstanceValues: true)]
         public float Frequency
         {
             get { return frequency; }
@@ -42,7 +47,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public OscillatorComponent(Item item, XElement element) : 
+        public OscillatorComponent(Item item, ContentXElement element) : 
             base(item, element)
         {
             IsActive = true;
@@ -63,6 +68,10 @@ namespace Barotrauma.Items.Components
                         phase -= pulseInterval;
                     }
                     break;
+                case WaveType.Sawtooth:
+                    phase = (phase + deltaTime * frequency) % 1.0f;
+                    item.SendSignal(phase.ToString(CultureInfo.InvariantCulture), "signal_out");
+                    break;
                 case WaveType.Square:
                     phase = (phase + deltaTime * frequency) % 1.0f;
                     item.SendSignal(phase < 0.5f ? "0" : "1", "signal_out");
@@ -70,6 +79,11 @@ namespace Barotrauma.Items.Components
                 case WaveType.Sine:
                     phase = (phase + deltaTime * frequency) % 1.0f;
                     item.SendSignal(Math.Sin(phase * MathHelper.TwoPi).ToString(CultureInfo.InvariantCulture), "signal_out");
+                    break;
+                case WaveType.Triangle:
+                    phase = (phase + deltaTime * frequency) % 1.0f;
+                    float output = 4.0f * MathF.Abs(MathUtils.PositiveModulo(phase - 0.25f, 1.0f) - 0.5f) - 1.0f;
+                    item.SendSignal(output.ToString(CultureInfo.InvariantCulture), "signal_out");
                     break;
             }
         }

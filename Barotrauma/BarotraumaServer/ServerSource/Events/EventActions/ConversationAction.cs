@@ -80,7 +80,7 @@ namespace Barotrauma
         partial void ShowDialog(Character speaker, Character targetCharacter)
         {
             targetClients.Clear();
-            if (!string.IsNullOrEmpty(TargetTag))
+            if (!TargetTag.IsEmpty)
             {
                 IEnumerable<Entity> entities = ParentEvent.GetTargets(TargetTag);
                 foreach (Entity e in entities)

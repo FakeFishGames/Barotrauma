@@ -4,7 +4,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class MissionPrefab
+    partial class MissionPrefab : PrefabWithUintIdentifier
     {
         public Sprite Icon
         {
@@ -18,14 +18,60 @@ namespace Barotrauma
             private set;
         }
 
-        partial void InitProjSpecific(XElement element)
+        public bool DisplayTargetHudIcons
         {
-            foreach (XElement subElement in element.Elements())
+            get;
+            private set;
+        }
+
+        public float HudIconMaxDistance
+        {
+            get;
+            private set;
+        }
+
+        public Sprite HudIcon
+        {
+            get
             {
-                if (!subElement.Name.ToString().Equals("icon", StringComparison.OrdinalIgnoreCase)) { continue; }    
-                Icon = new Sprite(subElement);
-                IconColor = subElement.GetAttributeColor("color", Color.White);
+                return hudIcon ?? Icon;
             }
+        }
+
+        public Color HudIconColor
+        {
+            get
+            {
+                return hudIconColor ?? IconColor;
+            }
+        } 
+
+        private Sprite hudIcon;
+        private Color? hudIconColor;
+
+        partial void InitProjSpecific(ContentXElement element)
+        {
+            DisplayTargetHudIcons = element.GetAttributeBool("displaytargethudicons", false);
+            HudIconMaxDistance = element.GetAttributeFloat("hudiconmaxdistance", 1000.0f);
+            foreach (var subElement in element.Elements())
+            {
+                string name = subElement.Name.ToString();
+                if (name.Equals("icon", StringComparison.OrdinalIgnoreCase))
+                {
+                    Icon = new Sprite(subElement);
+                    IconColor = subElement.GetAttributeColor("color", Color.White);
+                }
+                else if (name.Equals("hudicon", StringComparison.OrdinalIgnoreCase))
+                {
+                    hudIcon = new Sprite(subElement);
+                    hudIconColor = subElement.GetAttributeColor("color");
+                }
+            }
+        }
+
+        partial void DisposeProjectSpecific()
+        {
+            Icon?.Remove();
         }
     }
 }

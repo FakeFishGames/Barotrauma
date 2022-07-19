@@ -90,7 +90,7 @@ namespace Barotrauma
 
             checkWallsTimer = Rand.Range(0.0f, CheckWallsInterval, Rand.RandSync.ClientOnly);
 
-            foreach (XElement subElement in prefab.Config.Elements())
+            foreach (var subElement in prefab.Config.Elements())
             {
                 List<SpriteDeformation> deformationList = null;
                 switch (subElement.Name.ToString().ToLowerInvariant())

@@ -1,25 +1,27 @@
 ﻿using System;
 using System.Linq;
+using Barotrauma.Networking;
 
 namespace Barotrauma.Items.Components
 {
-    partial class Wearable
+    partial class Wearable : Pickable, IServerSerializable
     {
-        private void GetDamageModifierText(ref string description, float damageMultiplier, string afflictionIdentifier)
+        private void GetDamageModifierText(ref LocalizedString description, DamageModifier damageModifier, Identifier afflictionIdentifier)
         {
-            int roundedValue = (int)Math.Round((1 - damageMultiplier) * 100);
+            int roundedValue = (int)Math.Round((1 - damageModifier.DamageMultiplier * damageModifier.ProbabilityMultiplier) * 100);
             if (roundedValue == 0) { return; }
-            string colorStr = XMLExtensions.ColorToString(GUI.Style.Green);
-            description += $"\n  ‖color:{colorStr}‖{roundedValue.ToString("-0;+#")}%‖color:end‖ {AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier.Equals(afflictionIdentifier, StringComparison.OrdinalIgnoreCase))?.Name ?? afflictionIdentifier}";
+            string colorStr = XMLExtensions.ToStringHex(GUIStyle.Green);
+
+            LocalizedString afflictionName =
+                AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier == afflictionIdentifier)?.Name ??
+                TextManager.Get($"afflictiontype.{afflictionIdentifier}").Fallback(afflictionIdentifier.Value);
+
+            if (!description.IsNullOrWhiteSpace()) { description += '\n'; }
+            description += $"  ‖color:{colorStr}‖{roundedValue.ToString("-0;+#")}%‖color:end‖ {afflictionName}";
         }
-
-        public override void AddTooltipInfo(ref string description)
+        
+        public override void AddTooltipInfo(ref LocalizedString name, ref LocalizedString description)
         {
-            if (damageModifiers.Any(d => !MathUtils.NearlyEqual(d.DamageMultiplier, 1f)) || SkillModifiers.Any())
-            {
-                description += "\n";
-            }
-
             if (damageModifiers.Any())
             {
                 foreach (DamageModifier damageModifier in damageModifiers)
@@ -29,13 +31,13 @@ namespace Barotrauma.Items.Components
                         continue;
                     }
 
-                    foreach (string afflictionIdentifier in damageModifier.ParsedAfflictionIdentifiers)
+                    foreach (Identifier afflictionIdentifier in damageModifier.ParsedAfflictionIdentifiers)
                     {
-                        GetDamageModifierText(ref description, damageModifier.DamageMultiplier, afflictionIdentifier);
+                        GetDamageModifierText(ref description, damageModifier, afflictionIdentifier);
                     }
-                    foreach (string afflictionIdentifier in damageModifier.ParsedAfflictionTypes)
+                    foreach (Identifier afflictionType in damageModifier.ParsedAfflictionTypes)
                     {
-                        GetDamageModifierText(ref description, damageModifier.DamageMultiplier, afflictionIdentifier);
+                        GetDamageModifierText(ref description, damageModifier, afflictionType);
                     }
                 }
             }
@@ -43,10 +45,11 @@ namespace Barotrauma.Items.Components
             {
                 foreach (var skillModifier in SkillModifiers)
                 {
-                    string colorStr = XMLExtensions.ColorToString(GUI.Style.Green);
+                    string colorStr = XMLExtensions.ToStringHex(GUIStyle.Green);
                     int roundedValue = (int)Math.Round(skillModifier.Value);
                     if (roundedValue == 0) { continue; }
-                    description += $"\n  ‖color:{colorStr}‖{roundedValue.ToString("+0;-#")}‖color:end‖ {TextManager.Get("SkillName." + skillModifier.Key, true) ?? skillModifier.Key}";
+                    if (!description.IsNullOrWhiteSpace()) { description += '\n'; }
+                    description += $"  ‖color:{colorStr}‖{roundedValue.ToString("+0;-#")}‖color:end‖ {TextManager.Get($"SkillName.{skillModifier.Key}").Fallback(skillModifier.Key.Value)}";
                 }
             }
         }

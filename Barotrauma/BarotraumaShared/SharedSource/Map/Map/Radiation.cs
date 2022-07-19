@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 
 namespace Barotrauma
@@ -11,16 +12,18 @@ namespace Barotrauma
     {
         public string Name => nameof(Radiation);
 
-        [Serialize(defaultValue: 0f, isSaveable: true)]
+        [Serialize(defaultValue: 0f, isSaveable: IsPropertySaveable.Yes)]
         public float Amount { get; set; }
 
-        [Serialize(defaultValue: true, isSaveable: true)]
+        [Serialize(defaultValue: true, isSaveable: IsPropertySaveable.Yes)]
         public bool Enabled { get; set; }
 
-        public Dictionary<string, SerializableProperty> SerializableProperties { get; }
+        public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; }
 
         public readonly Map Map;
         public readonly RadiationParams Params;
+
+        private Affliction? radiationAffliction;
 
         private float radiationTimer;
 
@@ -93,6 +96,8 @@ namespace Barotrauma
             increasedAmount = lastIncrease = amount;
         }
 
+
+
         public void UpdateRadiation(float deltaTime)
         {
             if (!(GameMain.GameSession?.IsCurrentLocationRadiated() ?? false)) { return; }
@@ -105,6 +110,8 @@ namespace Barotrauma
                 return;
             }
 
+            radiationAffliction ??= new Affliction(AfflictionPrefab.RadiationSickness, Params.RadiationDamageAmount);
+
             radiationTimer = Params.RadiationDamageDelay;
 
             foreach (Character character in Character.CharacterList)
@@ -113,7 +120,11 @@ namespace Barotrauma
 
                 if (IsEntityRadiated(character))
                 {
-                    health.ApplyAffliction(null, new Affliction(AfflictionPrefab.RadiationSickness, Params.RadiationDamageAmount));
+                    foreach (Limb limb in character.AnimController.Limbs)
+                    {
+                        AttackResult attackResult = limb.AddDamage(limb.SimPosition, radiationAffliction.ToEnumerable(), playSound: false);
+                        character.CharacterHealth.ApplyDamage(limb, attackResult);
+                    }
                 }
             }
         }
@@ -149,7 +160,7 @@ namespace Barotrauma
         public XElement Save()
         {
             XElement element = new XElement(nameof(Radiation));
-            SerializableProperty.SerializeProperties(this, element);
+            SerializableProperty.SerializeProperties(this, element, saveIfDefault: true);
             return element;
         }
     }

@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using System;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,10 +25,22 @@ namespace Barotrauma.Items.Components
         /// </summary>
         public bool AlwaysAllowRewiring
         {
-            get { return item.Submarine?.Info.Type == SubmarineType.BeaconStation; }
+            get 
+            {
+                if (item.Submarine == null) { return true; }
+                switch (item.Submarine.Info.Type)
+                {
+                    case SubmarineType.Wreck:
+                    case SubmarineType.BeaconStation:
+                    case SubmarineType.EnemySubmarine:
+                    case SubmarineType.Ruin:
+                        return true;
+                }
+                return false;
+            }
         }
 
-        [Editable, Serialize(false, true, description: "Locked connection panels cannot be rewired in-game.", alwaysUseInstanceValues: true)]
+        [Editable, Serialize(false, IsPropertySaveable.Yes, description: "Locked connection panels cannot be rewired in-game.", alwaysUseInstanceValues: true)]
         public bool Locked
         {
             get;
@@ -36,7 +49,7 @@ namespace Barotrauma.Items.Components
 
         public bool TemporarilyLocked
         {
-            get { return Level.IsLoadedOutpost && item.GetComponent<DockingPort>() != null; }
+            get { return Level.IsLoadedOutpost && (item.GetComponent<DockingPort>()?.Docked ?? false); }
         }
 
         //connection panels can't be deactivated externally (by signals or status effects)
@@ -51,12 +64,12 @@ namespace Barotrauma.Items.Components
             get { return user; }
         }
 
-        public ConnectionPanel(Item item, XElement element)
+        public ConnectionPanel(Item item, ContentXElement element)
             : base(item, element)
         {
             Connections = new List<Connection>();
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString())
                 {
@@ -86,7 +99,7 @@ namespace Barotrauma.Items.Components
         {
             foreach (Connection c in Connections)
             {
-                c.ConnectLinked();
+                c.InitializeFromLoaded();
             }
 
             if (disconnectedWireIds != null)
@@ -134,20 +147,30 @@ namespace Barotrauma.Items.Components
                 foreach (Wire wire in c.Wires)
                 {
                     if (wire == null) { continue; }
-#if CLIENT
-                    if (wire.Item.IsSelected) { continue; }
-#endif
-                    var wireNodes = wire.GetNodes();
-                    if (wireNodes.Count == 0) { continue; }
+                    TryMoveWire(wire);
+                }
+            }
 
-                    if (Submarine.RectContains(item.Rect, wireNodes[0] + wireNodeOffset))
-                    {
-                        wire.MoveNode(0, amount);
-                    }
-                    else if (Submarine.RectContains(item.Rect, wireNodes[wireNodes.Count - 1] + wireNodeOffset))
-                    {
-                        wire.MoveNode(wireNodes.Count - 1, amount);
-                    }
+            foreach (var wire in DisconnectedWires)
+            {
+                TryMoveWire(wire);
+            }
+
+            void TryMoveWire(Wire wire)
+            {
+#if CLIENT
+                if (wire.Item.IsSelected) { return; }
+#endif
+                var wireNodes = wire.GetNodes();
+                if (wireNodes.Count == 0) { return; }
+
+                if (Submarine.RectContains(item.Rect, wireNodes[0] + wireNodeOffset))
+                {
+                    wire.MoveNode(0, amount);
+                }
+                else if (Submarine.RectContains(item.Rect, wireNodes[wireNodes.Count - 1] + wireNodeOffset))
+                {
+                    wire.MoveNode(wireNodes.Count - 1, amount);
                 }
             }
         }
@@ -215,10 +238,23 @@ namespace Barotrauma.Items.Components
             //no electrocution in sub editor
             if (Screen.Selected == GameMain.SubEditorScreen) { return true; }
 
-            var powered = item.GetComponent<Powered>();
-            if (powered != null)
+            var reactor = item.GetComponent<Reactor>();
+            if (reactor != null)
             {
-                //unpowered panels can be rewired without a risk of electrical shock
+                //reactors that arent generating power atm can be rewired without the risk of electrical shock
+                if (MathUtils.NearlyEqual(reactor.CurrPowerConsumption, 0.0f)) { return true; }
+            }
+            var powerContainer = item.GetComponent<PowerContainer>();
+            if (powerContainer != null)
+            {
+                //empty batteries/supercapacitors can be rewired without the risk of electrical shock
+                //non-empty ones always have a chance of zapping the user
+                if (powerContainer.Charge <= 0.0f) { return true; }
+            }
+            var powered = item.GetComponent<Powered>();
+            if (powered != null && powerContainer == null)
+            {
+                //unpowered panels can be rewired without the risk of electrical shock
                 if (powered.Voltage < 0.1f) { return true; }
             }
 
@@ -229,13 +265,13 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        public override void Load(XElement element, bool usePrefabValues, IdRemap idRemap)
+        public override void Load(ContentXElement element, bool usePrefabValues, IdRemap idRemap)
         {
             base.Load(element, usePrefabValues, idRemap);
 
             List<Connection> loadedConnections = new List<Connection>();
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString())
                 {
@@ -250,28 +286,11 @@ namespace Barotrauma.Items.Components
 
             for (int i = 0; i < loadedConnections.Count && i < Connections.Count; i++)
             {
-                if (loadedConnections[i].wireId.Length == Connections[i].wireId.Length)
-                {
-                    loadedConnections[i].wireId.CopyTo(Connections[i].wireId, 0);
-                }
-                else
-                {
-                    //backwards compatibility when maximum number of wires has changed                    
-                    foreach (ushort id in loadedConnections[i].wireId)
-                    {
-                        for (int j = 0; j < Connections[i].wireId.Length; j++)
-                        {
-                            if (Connections[i].wireId[j] == 0)
-                            {
-                                Connections[i].wireId[j] = id;
-                                break;
-                            }
-                        }
-                    }
-                }
+                Connections[i].LoadedWireIds.Clear();
+                Connections[i].LoadedWireIds.AddRange(loadedConnections[i].LoadedWireIds);
             }
 
-            disconnectedWireIds = element.GetAttributeUshortArray("disconnectedwires", new ushort[0]).ToList();
+            disconnectedWireIds = element.GetAttributeUshortArray("disconnectedwires", Array.Empty<ushort>()).ToList();
             for (int i = 0; i < disconnectedWireIds.Count; i++)
             {
                 disconnectedWireIds[i] = idRemap.GetOffsetId(disconnectedWireIds[i]);
@@ -325,10 +344,8 @@ namespace Barotrauma.Items.Components
             DisconnectedWires.Clear();
             foreach (Connection c in Connections)
             {
-                foreach (Wire wire in c.Wires)
+                foreach (Wire wire in c.Wires.ToArray())
                 {
-                    if (wire == null) { continue; }
-
                     if (wire.OtherConnection(c) == null) //wire not connected to anything else
                     {
 #if CLIENT
@@ -350,6 +367,7 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
+            Connections.Clear();
 
 #if CLIENT
             rewireSoundChannel?.FadeOutAndDispose();
@@ -363,7 +381,7 @@ namespace Barotrauma.Items.Components
         }
 
 
-        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
+        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
 #if CLIENT
             TriggerRewiringSound();
@@ -371,13 +389,14 @@ namespace Barotrauma.Items.Components
 
             foreach (Connection connection in Connections)
             {
+                msg.WriteVariableUInt32((uint)connection.Wires.Count);
                 foreach (Wire wire in connection.Wires)
                 {
                     msg.Write(wire?.Item == null ? (ushort)0 : wire.Item.ID);
                 }
             }
 
-            msg.Write((ushort)DisconnectedWires.Count());
+            msg.Write((ushort)DisconnectedWires.Count);
             foreach (Wire disconnectedWire in DisconnectedWires)
             {
                 msg.Write(disconnectedWire.Item.ID);

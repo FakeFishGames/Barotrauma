@@ -81,35 +81,35 @@ namespace Barotrauma.Items.Components
             get { return connections; }
         }
 
-        [Serialize(5000.0f, false, description: "The maximum distance the wire can extend (in pixels).")]
+        [Serialize(5000.0f, IsPropertySaveable.No, description: "The maximum distance the wire can extend (in pixels).")]
         public float MaxLength
         {
             get;
             set;
         }
 
-        [Serialize(false, false, description: "If enabled, the wire will not be visible in connection panels outside the submarine editor.")]
+        [Serialize(false, IsPropertySaveable.No, description: "If enabled, the wire will not be visible in connection panels outside the submarine editor.")]
         public bool HiddenInGame
         {
             get;
             set;
         }
 
-        [Editable, Serialize(false, true, "If enabled, this wire will be ignored by the \"Lock all default wires\" setting.", alwaysUseInstanceValues: true)]
+        [Editable, Serialize(false, IsPropertySaveable.Yes, "If enabled, this wire will be ignored by the \"Lock all default wires\" setting.", alwaysUseInstanceValues: true)]
         public bool NoAutoLock
         {
             get;
             set;
         }
 
-        [Editable, Serialize(false, true, "If enabled, this wire will use the sprite depth instead of a constant depth.")]
+        [Editable, Serialize(false, IsPropertySaveable.Yes, "If enabled, this wire will use the sprite depth instead of a constant depth.")]
         public bool UseSpriteDepth
         {
             get;
             set;
         }
         
-        public Wire(Item item, XElement element)
+        public Wire(Item item, ContentXElement element)
             : base(item, element)
         {
             nodes = new List<Vector2>();
@@ -121,7 +121,7 @@ namespace Barotrauma.Items.Components
             InitProjSpecific(element);
         }
 
-        partial void InitProjSpecific(XElement element);
+        partial void InitProjSpecific(ContentXElement element);
 
         public Connection OtherConnection(Connection connection)
         {
@@ -133,22 +133,21 @@ namespace Barotrauma.Items.Components
 
         public bool IsConnectedTo(Item item)
         {
-            if (connections[0] != null && connections[0].Item == item) return true;
-            return (connections[1] != null && connections[1].Item == item);
+            if (connections[0] != null && connections[0].Item == item) { return true; }
+            return connections[1] != null && connections[1].Item == item;
         }
 
         public void RemoveConnection(Item item)
         {
             for (int i = 0; i < 2; i++)
             {
-                if (connections[i] == null || connections[i].Item != item) continue;
+                if (connections[i] == null || connections[i].Item != item) { continue; }
 
-                foreach (Wire wire in connections[i].Wires)
+                if (connections[i].Wires.Contains(this))
                 {
-                    if (wire != this) continue;
                     SetConnectedDirty();
 
-                    connections[i].SetWire(connections[i].FindWireIndex(wire), null);
+                    connections[i].DisconnectWire(this);
                 }
 
                 connections[i] = null;
@@ -455,12 +454,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                 if (GameMain.NetworkMember != null)
                 {
-                    GameMain.Client.CreateEntityEvent(item, new object[]
-                    {
-                        NetEntityEvent.Type.ComponentState,
-                        item.GetComponentIndex(this),
-                        nodes.Count
-                    });
+                    item.CreateClientEvent(this, new ClientEventData(nodes.Count));
                 }
 #endif
             }
@@ -482,12 +476,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                 if (GameMain.NetworkMember != null)
                 {
-                    GameMain.Client.CreateEntityEvent(item, new object[]
-                    {
-                        NetEntityEvent.Type.ComponentState,
-                        item.GetComponentIndex(this),
-                        nodes.Count
-                    });
+                    item.CreateClientEvent(this, new ClientEventData(nodes.Count));
                 }
 #endif
             }
@@ -501,13 +490,6 @@ namespace Barotrauma.Items.Components
         {
             ClearConnections(picker);
             return true;
-        }
-
-        public override void Move(Vector2 amount)
-        {
-#if CLIENT
-            if (item.IsSelected) MoveNodes(amount);
-#endif
         }
 
         public List<Vector2> GetNodes()
@@ -614,15 +596,16 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < 2; i++)
             {
                 if (connections[i] == null) { continue; }
-                int wireIndex = connections[i].FindWireIndex(item);
-                if (wireIndex == -1) { continue; }
+
+                var wire = connections[i].FindWireByItem(item);
+                if (wire is null) { continue; }
 #if SERVER
                 if (!connections[i].Item.Removed && (!connections[i].Item.Submarine?.Loading ?? true) && (!Level.Loaded?.Generating ?? true))
                 {
                     connections[i].Item.CreateServerEvent(connections[i].Item.GetComponent<ConnectionPanel>());
                 }
 #endif
-                connections[i].SetWire(wireIndex, null);
+                connections[i].DisconnectWire(wire);
                 connections[i] = null;
             }
 
@@ -756,14 +739,17 @@ namespace Barotrauma.Items.Components
         {
             if (item.ParentInventory != null) { return; }
 #if CLIENT
-            if (!relativeToSub && Screen.Selected != GameMain.SubEditorScreen) { return; }
+            if (!relativeToSub)
+            {
+                if (Screen.Selected != GameMain.SubEditorScreen || (item.Submarine?.Loading ?? false)) { return; }
+            }
 #else
             if (!relativeToSub) { return; }
 #endif
 
             Vector2 refPos = item.Submarine == null ?
                 Vector2.Zero :
-               item.Position - item.Submarine.HiddenSubPosition;
+                item.Position - item.Submarine.HiddenSubPosition;
 
             for (int i = 0; i < nodes.Count; i++)
             {
@@ -789,7 +775,7 @@ namespace Barotrauma.Items.Components
             UpdateSections();
         }
 
-        public override void Load(XElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
         {
             base.Load(componentElement, usePrefabValues, idRemap);
 
@@ -844,10 +830,11 @@ namespace Barotrauma.Items.Components
             ClearConnections();
             base.RemoveComponentSpecific();
 #if CLIENT
+            if (DraggingWire == this) { draggingWire = null; }
             overrideSprite?.Remove();
             overrideSprite = null;
             wireSprite = null;
 #endif
-        }        
+        }
     }
 }

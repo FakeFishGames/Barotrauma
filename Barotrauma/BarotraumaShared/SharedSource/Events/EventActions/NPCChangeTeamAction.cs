@@ -7,18 +7,18 @@ namespace Barotrauma
 {
     class NPCChangeTeamAction : EventAction
     {
-        [Serialize("", true)]
-        public string NPCTag { get; set; }
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier NPCTag { get; set; }
 
-        [Serialize(0, true)]
-        public int TeamTag { get; set; }
+        [Serialize(CharacterTeamType.None, IsPropertySaveable.Yes)]
+        public CharacterTeamType TeamTag { get; set; }
 
-        [Serialize(false, true)]
+        [Serialize(false, IsPropertySaveable.Yes)]
         public bool AddToCrew { get; set; }
 
         private bool isFinished = false;
 
-        public NPCChangeTeamAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) { }
+        public NPCChangeTeamAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
 
         private List<Character> affectedNpcs = null;
 
@@ -29,11 +29,10 @@ namespace Barotrauma
             affectedNpcs = ParentEvent.GetTargets(NPCTag).Where(c => c is Character).Select(c => c as Character).ToList();
             foreach (var npc in affectedNpcs)
             {
-                CharacterTeamType newTeam = (CharacterTeamType)TeamTag;
                 // characters will still remain on friendlyNPC team for rest of the tick
-                npc.SetOriginalTeam(newTeam);
+                npc.SetOriginalTeam(TeamTag);
 
-                if (AddToCrew && (newTeam == CharacterTeamType.Team1 || newTeam == CharacterTeamType.Team2))
+                if (AddToCrew && (TeamTag == CharacterTeamType.Team1 || TeamTag == CharacterTeamType.Team2))
                 {
                     npc.Info.StartItemsGiven = true;
 
@@ -44,11 +43,25 @@ namespace Barotrauma
                         var wifiComponent = item.GetComponent<Items.Components.WifiComponent>();
                         if (wifiComponent != null)
                         {
-                            wifiComponent.TeamID = newTeam;
+                            wifiComponent.TeamID = TeamTag;
+                        }
+                        var idCard = item.GetComponent<Items.Components.IdCard>();
+                        if (idCard != null)
+                        {
+                            idCard.TeamID = TeamTag;
+                            idCard.SubmarineSpecificID = 0;
                         }
                     }
+
+                    WayPoint subWaypoint = 
+                        WayPoint.WayPointList.Find(wp => wp.Submarine == Submarine.MainSub && wp.SpawnType == SpawnType.Human && wp.AssignedJob == npc.Info.Job?.Prefab) ??
+                        WayPoint.WayPointList.Find(wp => wp.Submarine == Submarine.MainSub && wp.SpawnType == SpawnType.Human);
+                    if (subWaypoint != null)
+                    {
+                        npc.GiveIdCardTags(subWaypoint, createNetworkEvent: true);
+                    }
 #if SERVER
-                    GameMain.NetworkMember.CreateEntityEvent(npc, new object[] { NetEntityEvent.Type.AddToCrew, newTeam, npc.Inventory.AllItems.Select(it => it.ID).ToArray() });
+                    GameMain.NetworkMember.CreateEntityEvent(npc, new Character.AddToCrewEventData(TeamTag, npc.Inventory.AllItems));
 #endif
                 }
             }

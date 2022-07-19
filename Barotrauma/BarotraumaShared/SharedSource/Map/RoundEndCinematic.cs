@@ -44,15 +44,15 @@ namespace Barotrauma
 #endif
         }
 
-        private IEnumerable<object> Update(List<Submarine> subs, Camera cam)
+        private IEnumerable<CoroutineStatus> Update(List<Submarine> subs, Camera cam)
         {
             if (!subs.Any()) yield return CoroutineStatus.Success;
 
-            Character.Controlled = null;
-            cam.TargetPos = Vector2.Zero;
 #if CLIENT
+            Character.Controlled = null;
             GameMain.LightManager.LosEnabled = false;
 #endif
+            cam.TargetPos = Vector2.Zero;
 
             Level.Loaded.TopBarrier.Enabled = false;
 

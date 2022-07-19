@@ -15,15 +15,15 @@ namespace Barotrauma
             Faction
         }
 
-        public ReputationAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) { }
+        public ReputationAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
 
-        [Serialize(0.0f, true)]
+        [Serialize(0.0f, IsPropertySaveable.Yes)]
         public float Increase { get; set; }
 
-        [Serialize("", true)]
-        public string Identifier { get; set; }
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier Identifier { get; set; }
 
-        [Serialize(ReputationType.None, true)]
+        [Serialize(ReputationType.None, IsPropertySaveable.Yes)]
         public ReputationType TargetType { get; set; }
 
         private bool isFinished;
@@ -47,10 +47,10 @@ namespace Barotrauma
                 {
                     case ReputationType.Faction:
                     {
-                        Faction faction = campaign.Factions.Find(faction1 => faction1.Prefab.Identifier.Equals(Identifier, StringComparison.OrdinalIgnoreCase));
+                        Faction faction = campaign.Factions.Find(faction1 => faction1.Prefab.Identifier == Identifier);
                         if (faction != null)
                         {
-                            faction.Reputation.Value += Increase;
+                            faction.Reputation.AddReputation(Increase);
                         }
                         else
                         {
@@ -64,14 +64,14 @@ namespace Barotrauma
                         Location location = campaign.Map.CurrentLocation;
                         if (location != null)
                         {
-                            location.Reputation.Value += Increase;
+                            location.Reputation.AddReputation(Increase);
                             IEnumerable<Location> locations = location.Connections.SelectMany(c => c.Locations).Distinct().Where(l => l != null && l != location);
                             foreach (Location connectedLocation in locations)
                             {
                                 Debug.Assert(connectedLocation.Reputation != null, "connectedLocation.Reputation != null");
                                 if (connectedLocation.Reputation != null)
                                 {
-                                    connectedLocation.Reputation.Value += (Increase / 4);
+                                    connectedLocation.Reputation.AddReputation(Increase / 4);
                                 }
                             }
                         }
