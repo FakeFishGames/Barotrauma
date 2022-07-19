@@ -485,6 +485,7 @@ namespace Barotrauma
 
         private void UpdateDepthDamage(float deltaTime)
         {
+
 #if CLIENT
             if (GameMain.GameSession?.GameMode is TestGameMode) { return; }
 #endif
@@ -521,7 +522,12 @@ namespace Barotrauma
                 }
             }
 
-            depthDamageTimer = 10.0f;
+            // Defaults 0.1f, 10.0f, 0.05f -> min time (0.1 seconds) acheived at 200 m below crush depth
+            float minDepthDamageTimer = 0.1f;
+            float maxDepthDamageTimer = 10.0f;
+            float depthToTimeRatio = 0.05f; 
+
+            depthDamageTimer = Math.Clamp(maxDepthDamageTimer - (Submarine.RealWorldDepth - Submarine.RealWorldCrushDepth) * depthToTimeRatio, minDepthDamageTimer, maxDepthDamageTimer);
         }
 
         public void FlipX()
