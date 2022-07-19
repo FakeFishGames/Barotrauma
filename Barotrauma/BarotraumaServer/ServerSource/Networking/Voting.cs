@@ -295,7 +295,7 @@ namespace Barotrauma
                         else
                         {
                             string subName = inc.ReadString();
-                            SubmarineInfo subInfo = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName);
+                            SubmarineInfo subInfo = GameMain.GameSession.OwnedSubmarines.FirstOrDefault(s => s.Name == subName) ?? SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName);
                             bool transferItems = inc.ReadBoolean();
                             if (!ShouldRejectVote(sender, voteType))
                             {
@@ -389,8 +389,9 @@ namespace Barotrauma
                                 case VoteType.PurchaseSub:
                                 case VoteType.PurchaseAndSwitchSub:
                                 case VoteType.SwitchSub:
-                                    msg.Write((ActiveVote as SubmarineVote).Sub.Name);
-                                    msg.Write((ActiveVote as SubmarineVote).TransferItems);
+                                    SubmarineVote vote = ActiveVote as SubmarineVote;
+                                    msg.Write(vote.Sub.Name);
+                                    msg.Write(vote.TransferItems);
                                     break;
                                 case VoteType.TransferMoney:
                                     var transferVote = (ActiveVote as TransferVote);

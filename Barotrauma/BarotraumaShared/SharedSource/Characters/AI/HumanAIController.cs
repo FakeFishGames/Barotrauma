@@ -1297,6 +1297,7 @@ namespace Barotrauma
 
             AIObjectiveCombat.CombatMode DetermineCombatMode(Character c, float cumulativeDamage = 0, bool isWitnessing = false)
             {
+                if (!(c.AIController is HumanAIController humanAI)) { return AIObjectiveCombat.CombatMode.None; }
                 if (!IsFriendly(attacker))
                 {
                     if (c.Submarine == null)
@@ -1306,12 +1307,15 @@ namespace Barotrauma
                     }
                     if (!c.Submarine.GetConnectedSubs().Contains(attacker.Submarine))
                     {
-                        // Attacked from an unconnected submarine.
-                        return c.SelectedConstruction?.GetComponent<Turret>() != null ? AIObjectiveCombat.CombatMode.None : AIObjectiveCombat.CombatMode.Retreat;
+                        // Attacked from an unconnected submarine (pirate/pvp)
+                        return 
+                            humanAI.ObjectiveManager.CurrentOrder is AIObjectiveOperateItem operateOrder && operateOrder.GetTarget() is Controller ? 
+                                AIObjectiveCombat.CombatMode.None : AIObjectiveCombat.CombatMode.Retreat;
                     }
-                    return c.AIController is HumanAIController humanAI &&
-                        (humanAI.ObjectiveManager.IsCurrentOrder<AIObjectiveFightIntruders>() || humanAI.ObjectiveManager.Objectives.Any(o => o is AIObjectiveFightIntruders)) 
-                        ? AIObjectiveCombat.CombatMode.Offensive : AIObjectiveCombat.CombatMode.Defensive;
+                    return 
+                        humanAI.ObjectiveManager.IsCurrentOrder<AIObjectiveFightIntruders>() || 
+                        humanAI.ObjectiveManager.Objectives.Any(o => o is AIObjectiveFightIntruders) ? 
+                            AIObjectiveCombat.CombatMode.Offensive : AIObjectiveCombat.CombatMode.Defensive;
                 }
                 else
                 {
@@ -1362,7 +1366,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        if (c.AIController is HumanAIController humanAI && humanAI.ObjectiveManager.GetActiveObjective<AIObjectiveCombat>()?.Enemy == attacker)
+                        if (humanAI.ObjectiveManager.GetActiveObjective<AIObjectiveCombat>()?.Enemy == attacker)
                         {
                             // Already targeting the attacker -> treat as a more serious threat.
                             cumulativeDamage *= 2;

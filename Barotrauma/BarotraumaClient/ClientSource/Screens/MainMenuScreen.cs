@@ -534,12 +534,6 @@ namespace Barotrauma
                         ShowTutorialSkipWarning(Tab.NewGame);
                         return true;
                     }
-                    if (!GameSettings.CurrentConfig.CampaignDisclaimerShown)
-                    {
-                        selectedTab = Tab.Empty;
-                        GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.NewGame); });
-                        return true;
-                    }
                     campaignSetupUI.RandomizeCrew();
                     campaignSetupUI.SetPage(0);
                     campaignSetupUI.CreateDefaultSaveName();
@@ -559,12 +553,6 @@ namespace Barotrauma
                         ShowTutorialSkipWarning(Tab.JoinServer);
                         return true;
                     }
-                    if (!GameSettings.CurrentConfig.CampaignDisclaimerShown)
-                    {
-                        selectedTab = Tab.Empty;
-                        GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.JoinServer); });
-                        return true;
-                    }
                     GameMain.ServerListScreen.Select();
                     break;
                 case Tab.HostServer:
@@ -574,13 +562,6 @@ namespace Barotrauma
                         ShowTutorialSkipWarning(tab);
                         return true;
                     }
-                    if (!GameSettings.CurrentConfig.CampaignDisclaimerShown)
-                    {
-                        selectedTab = Tab.Empty;
-                        GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.HostServer); });
-                        return true;
-                    }
-                    
                     serverExecutableDropdown.ListBox.Content.Children.ToArray()
                         .Where(c => c.UserData is ServerExecutableFile f && !ContentPackageManager.EnabledPackages.All.Contains(f.ContentPackage))
                         .ForEach(serverExecutableDropdown.ListBox.RemoveChild);
@@ -611,12 +592,6 @@ namespace Barotrauma
                     }
                     break;
                 case Tab.Tutorials:
-                    if (!GameSettings.CurrentConfig.CampaignDisclaimerShown)
-                    {
-                        selectedTab = Tab.Empty;
-                        GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.Tutorials); });
-                        return true;
-                    }
                     UpdateTutorialList();
                     break;
                 case Tab.CharacterEditor:

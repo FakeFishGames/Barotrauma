@@ -39,8 +39,8 @@ namespace Barotrauma
                 float prevValue = Value;
 
                 Metadata.SetValue(metaDataIdentifier, Math.Clamp(value, MinReputation, MaxReputation));
-                OnReputationValueChanged?.Invoke();
-                OnAnyReputationValueChanged?.Invoke();
+                OnReputationValueChanged?.Invoke(this);
+                OnAnyReputationValueChanged?.Invoke(this);
 #if CLIENT
                 int increase = (int)Value - (int)prevValue;
                 if (increase != 0 && Character.Controlled != null)
@@ -73,8 +73,8 @@ namespace Barotrauma
             Value += reputationChange;
         }
 
-        public Action OnReputationValueChanged;
-        public static Action OnAnyReputationValueChanged;
+        public readonly NamedEvent<Reputation> OnReputationValueChanged = new NamedEvent<Reputation>();
+        public static readonly NamedEvent<Reputation> OnAnyReputationValueChanged = new NamedEvent<Reputation>();
 
         public readonly Faction Faction;
         public readonly Location Location;

@@ -52,7 +52,9 @@ namespace Barotrauma
             get { return MainSubs[0]; }
             set { MainSubs[0] = value; }
         }
-        private static List<Submarine> loaded = new List<Submarine>();
+        private static readonly List<Submarine> loaded = new List<Submarine>();
+
+        private readonly Identifier upgradeEventIdentifier;
 
         private static List<MapEntity> visibleEntities;
         public static IEnumerable<MapEntity> VisibleEntities
@@ -1301,6 +1303,7 @@ namespace Barotrauma
 
         public Submarine(SubmarineInfo info, bool showWarningMessages = true, Func<Submarine, List<MapEntity>> loadEntities = null, IdRemap linkedRemap = null) : base(null, Entity.NullEntityID)
         {
+            upgradeEventIdentifier = new Identifier($"Submarine{ID}");
             Loading = true;
             GameMain.World.Enabled = false;
             try
@@ -1462,10 +1465,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (GameMain.GameSession?.Campaign?.UpgradeManager != null)
-                {
-                    GameMain.GameSession.Campaign.UpgradeManager.OnUpgradesChanged += ResetCrushDepth;
-                }
+                GameMain.GameSession?.Campaign?.UpgradeManager?.OnUpgradesChanged.Register(upgradeEventIdentifier, _ => ResetCrushDepth());
 
 #if CLIENT
                 GameMain.LightManager.OnMapLoaded();
@@ -1527,6 +1527,13 @@ namespace Barotrauma
             }
         }
 
+        public bool CheckFuel()
+        {
+            float fuel = GetItems(true).Where(i => i.HasTag("reactorfuel")).Sum(i => i.Condition);
+            Info.LowFuel = fuel < 200;
+            return !Info.LowFuel;
+        }
+
         public void SaveToXElement(XElement element)
         {
             element.Add(new XAttribute("name", Info.Name));
@@ -1534,7 +1541,10 @@ namespace Barotrauma
             element.Add(new XAttribute("checkval", Rand.Int(int.MaxValue)));
             element.Add(new XAttribute("price", Info.Price));
             element.Add(new XAttribute("initialsuppliesspawned", Info.InitialSuppliesSpawned));
+            element.Add(new XAttribute("noitems", Info.NoItems));
+            element.Add(new XAttribute("lowfuel", !CheckFuel()));
             element.Add(new XAttribute("type", Info.Type.ToString()));
+            element.Add(new XAttribute("ismanuallyoutfitted", Info.IsManuallyOutfitted));
             if (Info.IsPlayer && !Info.HasTag(SubmarineTag.Shuttle))
             {
                 element.Add(new XAttribute("class", Info.SubmarineClass.ToString()));
@@ -1623,7 +1633,6 @@ namespace Barotrauma
 
                 e.Save(element);
             }
-
             Info.CheckSubsLeftBehind(element);
         }
 
@@ -1727,10 +1736,7 @@ namespace Barotrauma
             outdoorNodes?.Clear();
             outdoorNodes = null;
 
-            if (GameMain.GameSession?.Campaign?.UpgradeManager != null)
-            {
-                GameMain.GameSession.Campaign.UpgradeManager.OnUpgradesChanged -= ResetCrushDepth;
-            }
+            GameMain.GameSession?.Campaign?.UpgradeManager?.OnUpgradesChanged?.TryDeregister(upgradeEventIdentifier);
 
             if (entityGrid != null)
             {

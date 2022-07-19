@@ -292,7 +292,9 @@ namespace Barotrauma
                             }
                             else
                             {
-                                description = TextManager.GetWithVariables("IDCardNameJob", ("[name]", idName, FormatCapitals.No), ("[job]", idJob, FormatCapitals.Yes));
+                                description = TextManager.GetWithVariables("IDCardNameJob",
+                                    ("[name]", idName, FormatCapitals.No),
+                                    ("[job]", TextManager.Get("jobname." + idJob).Fallback(idJob), FormatCapitals.Yes));
                             }
                             if (!string.IsNullOrEmpty(item.Description))
                             {
@@ -1582,7 +1584,7 @@ namespace Barotrauma
                         DrawItemStateIndicator(spriteBatch, inventory, indicatorSprite, emptyIndicatorSprite, conditionIndicatorArea, item.Condition / item.MaxCondition);
                     }
 
-                    if (itemContainer != null && itemContainer.ShowContainedStateIndicator)
+                    if (itemContainer != null && itemContainer.ShowContainedStateIndicator && itemContainer.Capacity > 0)
                     {
                         float containedState = 0.0f;
                         if (itemContainer.ShowConditionInContainedStateIndicator)

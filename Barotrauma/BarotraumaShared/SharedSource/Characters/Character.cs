@@ -1519,9 +1519,10 @@ namespace Barotrauma
 
             if (skillIdentifier != null)
             {
-                for (int i = 0; i < Inventory.Capacity; i++)
+                foreach (Item item in Inventory.AllItems)
                 {
-                    if (Inventory.SlotTypes[i] != InvSlotType.Any && Inventory.GetItemAt(i)?.GetComponent<Wearable>() is Wearable wearable)
+                    if (item?.GetComponent<Wearable>() is Wearable wearable &&
+                        !Inventory.IsInLimbSlot(item, InvSlotType.Any))
                     {
                         if (wearable.SkillModifiers.TryGetValue(skillIdentifier, out float skillValue))
                         {

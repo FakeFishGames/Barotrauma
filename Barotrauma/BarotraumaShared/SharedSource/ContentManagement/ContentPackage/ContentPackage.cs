@@ -14,7 +14,7 @@ namespace Barotrauma
 {
     public abstract class ContentPackage
     {
-        public static readonly Version MinimumHashCompatibleVersion = new Version(0, 18, 3, 0);
+        public static readonly Version MinimumHashCompatibleVersion = new Version(0, 18, 13, 0);
         
         public const string LocalModsDir = "LocalMods";
         public static readonly string WorkshopModsDir = Barotrauma.IO.Path.Combine(
@@ -180,7 +180,7 @@ namespace Barotrauma
         {
             if (!condition)
             {
-                throw new InvalidOperationException($"Failed to load \"{Name ?? Path}\": {errorMsg}");
+                throw new InvalidOperationException($"Failed to load \"{Name}\" at {Path}: {errorMsg}");
             }
         }
 

@@ -184,24 +184,9 @@ namespace Barotrauma
                 },
                 OnClicked = (btn, userdata) =>
                 {
-                    var availableTransition = GetAvailableTransition(out _, out _);
-                    if (Character.Controlled != null &&
-                        availableTransition == TransitionType.ReturnToPreviousLocation &&
-                        Character.Controlled?.Submarine == Level.Loaded?.StartOutpost)
-                    {
-                        TryEndRound();
-                    }
-                    else if (Character.Controlled != null &&
-                        availableTransition == TransitionType.ProgressToNextLocation &&
-                        Character.Controlled?.Submarine == Level.Loaded?.EndOutpost)
-                    {
-                        TryEndRound();
-                    }
-                    else
-                    {
-                        ShowCampaignUI = true;
-                        CampaignUI.SelectTab(InteractionType.Map);
-                    }
+                    TryEndRoundWithFuelCheck(
+                        onConfirm: () => TryEndRound(),
+                        onReturnToMapScreen: () => { ShowCampaignUI = true; CampaignUI.SelectTab(InteractionType.Map); });
                     return true;
                 }
             };

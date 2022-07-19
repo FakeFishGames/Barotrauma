@@ -191,7 +191,7 @@ namespace Barotrauma.Items.Components
             while (impactQueue.Count > 0)
             {
                 var impact = impactQueue.Dequeue();
-                HandleImpact(impact.Body);
+                HandleImpact(impact);
             }
             //in case handling the impact does something to the picker
             if (picker == null) { return; }
@@ -342,7 +342,7 @@ namespace Barotrauma.Items.Components
                 }
                 hitTargets.Add(targetCharacter);
             }
-            else if (f2.Body.UserData is Structure targetStructure)
+            else if ((f2.Body.UserData as Structure ?? f2.UserData as Structure) is Structure targetStructure)
             {
                 if (AllowHitMultiple)
                 {
@@ -380,8 +380,9 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        private void HandleImpact(Body target)
+        private void HandleImpact(Fixture targetFixture)
         {
+            var target = targetFixture.Body;
             if (User == null || User.Removed || target == null)
             {
                 RestoreCollision();
@@ -410,7 +411,7 @@ namespace Barotrauma.Items.Components
                     targetCharacter.LastDamageSource = item;
                     Attack.DoDamage(User, targetCharacter, item.WorldPosition, 1.0f);
                 }
-                else if (target.UserData is Structure targetStructure)
+                else if ((target.UserData as Structure ?? targetFixture.UserData as Structure) is Structure targetStructure)
                 {
                     if (targetStructure.Removed) { return; }
                     Attack.DoDamage(User, targetStructure, item.WorldPosition, 1.0f);

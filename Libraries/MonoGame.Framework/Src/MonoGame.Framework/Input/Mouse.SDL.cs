@@ -15,16 +15,16 @@ namespace Microsoft.Xna.Framework.Input
         {
             return PrimaryWindow.Handle;
         }
-        
+
         private static void PlatformSetWindowHandle(IntPtr windowHandle)
         {
         }
 
         private static MouseState PlatformGetState(GameWindow window)
         {
-            int x, y;
             var winFlags = Sdl.Window.GetWindowFlags(window.Handle);
-            var state = Sdl.Mouse.GetGlobalState(out x, out y);
+            var state = Sdl.Mouse.GetState(out int x, out int y);
+            var globalState = Sdl.Mouse.GetGlobalState(out int globalX, out int globalY);
 
             if ((winFlags & Sdl.Window.State.MouseFocus) != 0)
             {
@@ -42,8 +42,8 @@ namespace Microsoft.Xna.Framework.Input
             {
                 // Window does not have mouse focus, we need to manually get the position
                 var clientBounds = window.ClientBounds;
-                window.MouseState.X = x - clientBounds.X;
-                window.MouseState.Y = y - clientBounds.Y;
+                window.MouseState.X = globalX - clientBounds.X;
+                window.MouseState.Y = globalY - clientBounds.Y;
             }
 
             return window.MouseState;
@@ -53,7 +53,6 @@ namespace Microsoft.Xna.Framework.Input
         {
             PrimaryWindow.MouseState.X = x;
             PrimaryWindow.MouseState.Y = y;
-            
             Sdl.Mouse.WarpInWindow(PrimaryWindow.Handle, x, y);
         }
 

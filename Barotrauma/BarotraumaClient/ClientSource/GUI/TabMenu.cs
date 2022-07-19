@@ -1885,6 +1885,7 @@ namespace Barotrauma
                 {
                     IgnoreLayoutGroups = true
                 };
+                newCharacterBox.TextBlock.AutoScaleHorizontal = true;
 
                 newCharacterBox.OnClicked = (button, o) =>
                 {

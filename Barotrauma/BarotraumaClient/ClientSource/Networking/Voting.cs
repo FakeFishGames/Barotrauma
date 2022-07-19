@@ -271,7 +271,7 @@ namespace Barotrauma
                             case VoteType.SwitchSub:
                                 string subName1 = inc.ReadString();
                                 bool transferItems = inc.ReadBoolean();
-                                SubmarineInfo info = GameMain.Client.ServerSubmarines.FirstOrDefault(s => s.Name == subName1);
+                                SubmarineInfo info = GameMain.GameSession.OwnedSubmarines.FirstOrDefault(s => s.Name == subName1) ?? GameMain.Client.ServerSubmarines.FirstOrDefault(s => s.Name == subName1);
                                 if (info == null)
                                 {
                                     DebugConsole.ThrowError("Failed to find a matching submarine, vote aborted");
@@ -303,7 +303,7 @@ namespace Barotrauma
                             case VoteType.PurchaseAndSwitchSub:
                             case VoteType.SwitchSub:
                                 string subName2 = inc.ReadString();
-                                var submarineInfo = GameMain.Client.ServerSubmarines.FirstOrDefault(s => s.Name == subName2);
+                                var submarineInfo = GameMain.GameSession.OwnedSubmarines.FirstOrDefault(s => s.Name == subName2) ?? GameMain.Client.ServerSubmarines.FirstOrDefault(s => s.Name == subName2);
                                 bool transferItems = inc.ReadBoolean();
                                 int deliveryFee = inc.ReadInt16();
                                 if (submarineInfo == null)

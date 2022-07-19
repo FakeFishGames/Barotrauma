@@ -360,8 +360,8 @@ namespace Barotrauma.Steam
 
             if (rules == null) { return; }
 
-            if (rules.ContainsKey("message")) serverInfo.ServerMessage = rules["message"];
-            if (rules.ContainsKey("version")) serverInfo.GameVersion = rules["version"];
+            if (rules.ContainsKey("message")) { serverInfo.ServerMessage = rules["message"]; }
+            if (rules.ContainsKey("version")) { serverInfo.GameVersion = rules["version"]; }
 
             if (rules.ContainsKey("playercount"))
             {
@@ -371,8 +371,8 @@ namespace Barotrauma.Steam
             serverInfo.ContentPackageNames.Clear();
             serverInfo.ContentPackageHashes.Clear();
             serverInfo.ContentPackageWorkshopIds.Clear();
-            if (rules.ContainsKey("contentpackage")) serverInfo.ContentPackageNames.AddRange(rules["contentpackage"].Split(','));
-            if (rules.ContainsKey("contentpackagehash")) serverInfo.ContentPackageHashes.AddRange(rules["contentpackagehash"].Split(','));
+            if (rules.ContainsKey("contentpackage")) { serverInfo.ContentPackageNames.AddRange(rules["contentpackage"].Split(',')); }
+            if (rules.ContainsKey("contentpackagehash")) { serverInfo.ContentPackageHashes.AddRange(rules["contentpackagehash"].Split(',')); }
             if (rules.ContainsKey("contentpackageid"))
             {
                 serverInfo.ContentPackageWorkshopIds.AddRange(ParseWorkshopIds(rules["contentpackageid"]));
@@ -383,24 +383,26 @@ namespace Barotrauma.Steam
                 serverInfo.ContentPackageWorkshopIds.AddRange(WorkshopUrlsToIds(workshopUrls));
             }
 
-            if (rules.ContainsKey("usingwhitelist")) serverInfo.UsingWhiteList = rules["usingwhitelist"] == "True";
+            if (rules.ContainsKey("usingwhitelist")) { serverInfo.UsingWhiteList = rules["usingwhitelist"] == "True"; }
             if (rules.ContainsKey("modeselectionmode"))
             {
-                if (Enum.TryParse(rules["modeselectionmode"], out SelectionMode selectionMode)) serverInfo.ModeSelectionMode = selectionMode;
+                if (Enum.TryParse(rules["modeselectionmode"], out SelectionMode selectionMode)) { serverInfo.ModeSelectionMode = selectionMode; }
             }
             if (rules.ContainsKey("subselectionmode"))
             {
-                if (Enum.TryParse(rules["subselectionmode"], out SelectionMode selectionMode)) serverInfo.SubSelectionMode = selectionMode;
+                if (Enum.TryParse(rules["subselectionmode"], out SelectionMode selectionMode)) { serverInfo.SubSelectionMode = selectionMode; }
             }
-            if (rules.ContainsKey("allowspectating")) serverInfo.AllowSpectating = rules["allowspectating"] == "True";
-            if (rules.ContainsKey("allowrespawn")) serverInfo.AllowRespawn = rules["allowrespawn"] == "True";
-            if (rules.ContainsKey("voicechatenabled")) serverInfo.VoipEnabled = rules["voicechatenabled"] == "True";
+            if (rules.ContainsKey("allowspectating")) { serverInfo.AllowSpectating = rules["allowspectating"] == "True"; }
+            if (rules.ContainsKey("allowrespawn")) { serverInfo.AllowRespawn = rules["allowrespawn"] == "True"; }
+            if (rules.ContainsKey("voicechatenabled")) { serverInfo.VoipEnabled = rules["voicechatenabled"] == "True"; }
+            if (rules.ContainsKey("friendlyfireenabled")) { serverInfo.AllowRespawn = rules["friendlyfireenabled"] == "True"; }
+            if (rules.ContainsKey("karmaenabled")) { serverInfo.VoipEnabled = rules["karmaenabled"] == "True"; }
             if (rules.ContainsKey("traitors"))
             {
-                if (Enum.TryParse(rules["traitors"], out YesNoMaybe traitorsEnabled)) serverInfo.TraitorsEnabled = traitorsEnabled;
+                if (Enum.TryParse(rules["traitors"], out YesNoMaybe traitorsEnabled)) { serverInfo.TraitorsEnabled = traitorsEnabled; }
             }
 
-            if (rules.ContainsKey("gamestarted")) serverInfo.GameStarted = rules["gamestarted"] == "True";
+            if (rules.ContainsKey("gamestarted")) { serverInfo.GameStarted = rules["gamestarted"] == "True"; }
             if (rules.ContainsKey("gamemode"))
             {
                 serverInfo.GameMode = rules["gamemode"].ToIdentifier();

@@ -89,7 +89,8 @@ namespace Barotrauma.Items.Components
             if (Light?.LightSprite != null && item.Prefab.CanSpriteFlipX && item.body == null)
             {
                 Light.LightSpriteEffect = Light.LightSpriteEffect == SpriteEffects.None ?
-                    SpriteEffects.FlipHorizontally : SpriteEffects.None;                
+                    SpriteEffects.FlipHorizontally : SpriteEffects.None;
+                SetLightSourceTransformProjSpecific();
             }
         }
 

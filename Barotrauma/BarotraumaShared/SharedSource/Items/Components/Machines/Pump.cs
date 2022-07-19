@@ -142,9 +142,8 @@ namespace Barotrauma.Items.Components
             //less effective when in a bad condition
             currFlow *= MathHelper.Lerp(0.5f, 1.0f, item.Condition / item.MaxCondition);
 
-            item.CurrentHull.WaterVolume += currFlow * deltaTime * Timing.FixedUpdateRate;
+            item.CurrentHull.WaterVolume += currFlow * deltaTime * Timing.FixedUpdateRate; 
             if (item.CurrentHull.WaterVolume > item.CurrentHull.Volume) { item.CurrentHull.Pressure += 30.0f * deltaTime; }
-
         }
 
         public void InfectBallast(Identifier identifier, bool allowMultiplePerShip = false)
