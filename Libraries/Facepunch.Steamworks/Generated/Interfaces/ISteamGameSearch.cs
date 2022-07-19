@@ -82,7 +82,8 @@ namespace Steamworks
 		#endregion
 		internal GameSearchErrorCode_t RetrieveConnectionDetails( SteamId steamIDHost, out string pchConnectionDetails )
 		{
-			IntPtr mempchConnectionDetails = Helpers.TakeMemory();
+			using var memory = Helpers.TakeMemory();
+			IntPtr mempchConnectionDetails = memory;
 			var returnValue = _RetrieveConnectionDetails( Self, steamIDHost, mempchConnectionDetails, (1024 * 32) );
 			pchConnectionDetails = Helpers.MemoryToString( mempchConnectionDetails );
 			return returnValue;

@@ -120,7 +120,7 @@ namespace Barotrauma
             }
         }
 
-        public Gap(MapEntityPrefab prefab, Rectangle rectangle)
+        public Gap(Rectangle rectangle)
             : this(rectangle, Submarine.MainSub)
         {
 #if CLIENT
@@ -136,7 +136,7 @@ namespace Barotrauma
         { }
 
         public Gap(Rectangle rect, bool isHorizontal, Submarine submarine, ushort id = Entity.NullEntityID)
-            : base(MapEntityPrefab.Find(null, "gap"), submarine, id)
+            : base(CoreEntityPrefab.GapPrefab, submarine, id)
         {
             this.rect = rect;
             flowForce = Vector2.Zero;
@@ -148,11 +148,12 @@ namespace Barotrauma
             InsertToList();
 
             float blockerSize = ConvertUnits.ToSimUnits(Math.Max(rect.Width, rect.Height)) / 2;
-            outsideCollisionBlocker = GameMain.World.CreateEdge(-Vector2.UnitX * blockerSize, Vector2.UnitX * blockerSize);
+            outsideCollisionBlocker = GameMain.World.CreateEdge(-Vector2.UnitX * blockerSize, Vector2.UnitX * blockerSize, 
+                BodyType.Static, 
+                Physics.CollisionWall, 
+                Physics.CollisionCharacter,
+                findNewContacts: false);
             outsideCollisionBlocker.UserData = $"CollisionBlocker (Gap {ID})";
-            outsideCollisionBlocker.BodyType = BodyType.Static;
-            outsideCollisionBlocker.CollisionCategories = Physics.CollisionWall;
-            outsideCollisionBlocker.CollidesWith = Physics.CollisionCharacter;
             outsideCollisionBlocker.Enabled = false;
 #if CLIENT
             Resized += newRect => IsHorizontal = newRect.Width < newRect.Height;
@@ -165,7 +166,7 @@ namespace Barotrauma
             return new Gap(rect, IsHorizontal, Submarine);
         }
 
-        public override void Move(Vector2 amount)
+        public override void Move(Vector2 amount, bool ignoreContacts = false)
         {
             if (!MathUtils.IsValid(amount))
             {
@@ -248,16 +249,17 @@ namespace Barotrauma
             }
             linkedTo.Clear();
 
+            int tolerance = 1;
             Vector2[] searchPos = new Vector2[2];
             if (IsHorizontal)
             {
-                searchPos[0] = new Vector2(rect.X, rect.Y - rect.Height / 2);
-                searchPos[1] = new Vector2(rect.Right, rect.Y - rect.Height / 2);
+                searchPos[0] = new Vector2(rect.X - tolerance, rect.Y - rect.Height / 2);
+                searchPos[1] = new Vector2(rect.Right + tolerance, rect.Y - rect.Height / 2);
             }
             else
             {
-                searchPos[0] = new Vector2(rect.Center.X, rect.Y);
-                searchPos[1] = new Vector2(rect.Center.X, rect.Y - rect.Height);
+                searchPos[0] = new Vector2(rect.Center.X, rect.Y + tolerance);
+                searchPos[1] = new Vector2(rect.Center.X, rect.Y - rect.Height - tolerance);
             }
 
             for (int i = 0; i < 2; i++)
@@ -324,14 +326,6 @@ namespace Barotrauma
             else
             {
                 lerpedFlowForce = Vector2.Lerp(lerpedFlowForce, flowForce, deltaTime * 5.0f);
-            }
-            if (FlowTargetHull != null && IsRoomToRoom)
-            {
-                var otherRoom = linkedTo[1] == FlowTargetHull ? linkedTo[0] : linkedTo[1];
-                if ((otherRoom as Hull).Volume < FlowTargetHull.Volume)
-                {
-                    lerpedFlowForce = Vector2.Zero;
-                }
             }
 
             openedTimer -= deltaTime;
@@ -706,7 +700,7 @@ namespace Barotrauma
             base.ShallowRemove();
             GapList.Remove(this);
 
-            foreach (Hull hull in Hull.hullList)
+            foreach (Hull hull in Hull.HullList)
             {
                 hull.ConnectedGaps.Remove(this);
             }
@@ -717,7 +711,7 @@ namespace Barotrauma
             base.Remove();
             GapList.Remove(this);
 
-            foreach (Hull hull in Hull.hullList)
+            foreach (Hull hull in Hull.HullList)
             {
                 hull.ConnectedGaps.Remove(this);
             }
@@ -734,11 +728,11 @@ namespace Barotrauma
             if (!DisableHullRechecks) FindHulls();
         }
 
-        public static Gap Load(XElement element, Submarine submarine, IdRemap idRemap)
+        public static Gap Load(ContentXElement element, Submarine submarine, IdRemap idRemap)
         {
             Rectangle rect = Rectangle.Empty;
 
-            if (element.Attribute("rect") != null)
+            if (element.GetAttribute("rect") != null)
             {
                 rect = element.GetAttributeRect("rect", Rectangle.Empty);
             }
@@ -746,15 +740,15 @@ namespace Barotrauma
             {
                 //backwards compatibility
                 rect = new Rectangle(
-                    int.Parse(element.Attribute("x").Value),
-                    int.Parse(element.Attribute("y").Value),
-                    int.Parse(element.Attribute("width").Value),
-                    int.Parse(element.Attribute("height").Value));
+                    int.Parse(element.GetAttribute("x").Value),
+                    int.Parse(element.GetAttribute("y").Value),
+                    int.Parse(element.GetAttribute("width").Value),
+                    int.Parse(element.GetAttribute("height").Value));
             }
 
             bool isHorizontal = rect.Height > rect.Width;
 
-            var horizontalAttribute = element.Attribute("horizontal");
+            var horizontalAttribute = element.GetAttribute("horizontal");
             if (horizontalAttribute != null)
             {
                 isHorizontal = horizontalAttribute.Value.ToString() == "true";

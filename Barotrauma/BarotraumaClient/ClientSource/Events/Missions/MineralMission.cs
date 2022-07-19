@@ -56,7 +56,7 @@ namespace Barotrauma
 
             for(int i = 0; i < resourceClusters.Count; i++)
             {
-                var identifier = msg.ReadString();
+                var identifier = msg.ReadIdentifier();
                 var count = msg.ReadByte();
                 var resources = new Item[count];
                 for (int j = 0; j < count; j++)

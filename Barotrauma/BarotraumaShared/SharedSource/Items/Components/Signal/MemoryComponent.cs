@@ -7,7 +7,7 @@ namespace Barotrauma.Items.Components
     partial class MemoryComponent : ItemComponent, IServerSerializable
     {
         private int maxValueLength;
-        [Editable, Serialize(200, false, description: "The maximum length of the stored value. Warning: Large values can lead to large memory usage or networking issues.")]
+        [Editable, Serialize(200, IsPropertySaveable.No, description: "The maximum length of the stored value. Warning: Large values can lead to large memory usage or networking issues.")]
         public int MaxValueLength
         {
             get { return maxValueLength; }
@@ -19,7 +19,7 @@ namespace Barotrauma.Items.Components
 
         private string value;
 
-        [InGameEditable, Serialize("", true, description: "The currently stored signal the item outputs.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize("", IsPropertySaveable.Yes, description: "The currently stored signal the item outputs.", alwaysUseInstanceValues: true)]
         public string Value
         {
             get { return value; }
@@ -34,14 +34,14 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(true, true, description: "Can the value stored in the memory component be changed via signals.", alwaysUseInstanceValues: true)]
+        [Editable, Serialize(true, IsPropertySaveable.Yes, description: "Can the value stored in the memory component be changed via signals.", alwaysUseInstanceValues: true)]
         public bool Writeable 
         {
             get; 
             set;            
         }
 
-        public MemoryComponent(Item item, XElement element)
+        public MemoryComponent(Item item, ContentXElement element)
             : base(item, element)
         {
             IsActive = true;

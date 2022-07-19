@@ -10,7 +10,7 @@ namespace Barotrauma.Abilities
     {
         // this should just be its own class, misleading to inherit here
         private readonly string tag;
-        public CharacterAbilityTandemFire(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityTandemFire(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             tag = abilityElement.GetAttributeString("tag", "");
         }

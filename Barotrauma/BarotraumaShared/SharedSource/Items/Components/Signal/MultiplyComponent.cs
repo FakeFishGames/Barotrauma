@@ -4,7 +4,7 @@ namespace Barotrauma.Items.Components
 {
     class MultiplyComponent : ArithmeticComponent
     {
-        public MultiplyComponent(Item item, XElement element)
+        public MultiplyComponent(Item item, ContentXElement element)
             : base(item, element)
         {
         }

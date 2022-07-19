@@ -13,12 +13,12 @@ namespace Barotrauma
 
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[targetname]", "[causeofdeath]", "[targethullname]" });
             public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] 
-            { traitor.Mission.GetTargetNames(Targets) ?? "(unknown)", GetCauseOfDeath(), targetHull != null ? TextManager.Get($"roomname.{targetHull}") : string.Empty });
+            { traitor.Mission.GetTargetNames(Targets) ?? "(unknown)", GetCauseOfDeath().Value, targetHull != null ? TextManager.Get($"roomname.{targetHull}").Value : string.Empty });
 
             private bool isCompleted = false;
             public override bool IsCompleted => isCompleted;
 
-            public override bool IsEnemy(Character character) => base.IsEnemy(character) || (!isCompleted && Targets.Contains(character));
+            public override bool IsEnemy(Character character) => base.IsEnemy(character) || (!isCompleted && Targets.Contains(character));
 
             private CauseOfDeathType requiredCauseOfDeath;
             private string afflictionId;
@@ -102,7 +102,7 @@ namespace Barotrauma
                 return true;
             }
 
-            private string GetCauseOfDeath()
+            private LocalizedString GetCauseOfDeath()
             {
                 if (requiredCauseOfDeath != CauseOfDeathType.Affliction || afflictionId == string.Empty)
                 {

@@ -1,5 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<contentpackage name="ExampleMod" path="Mods\ExampleMod\filelist.xml" corepackage="false" gameversion="0.9.1.1">
-  <Submarine file="Mods\ExampleMod\Humpback2.sub" />
-  <Character file="Mods\ExampleMod\Redcrawler\Redcrawler.xml" />
-</contentpackage>

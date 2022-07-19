@@ -345,7 +345,7 @@ namespace Barotrauma
             };
 
             new GUITextBlock(new RectTransform(new Point(container.Rect.Width, (int)(60 * GUI.Scale)), container.RectTransform) { IsFixedSize = true },
-                "Sprite Deformations", textAlignment: Alignment.BottomCenter, font: GUI.LargeFont);
+                "Sprite Deformations", textAlignment: Alignment.BottomCenter, font: GUIStyle.LargeFont);
 
             var resolutionField = GUI.CreatePointField(new Point(subDivX + 1, subDivY + 1), (int)(30 * GUI.Scale), "Resolution", container.RectTransform, 
                 "How many vertices the deformable sprite has on the x and y axes. Larger values make the deformations look smoother, but are more performance intensive.");
@@ -387,7 +387,7 @@ namespace Barotrauma
             foreach (SpriteDeformation deformation in deformations)
             {
                 var deformEditor = new SerializableEntityEditor(container.RectTransform, deformation.Params,
-                    inGame: false, showName: true, titleFont: GUI.SubHeadingFont);
+                    inGame: false, showName: true, titleFont: GUIStyle.SubHeadingFont);
                 deformEditor.RectTransform.MinSize = new Point(deformEditor.Rect.Width, deformEditor.Rect.Height);
             }
 

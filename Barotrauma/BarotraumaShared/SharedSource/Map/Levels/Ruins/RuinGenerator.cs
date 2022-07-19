@@ -67,7 +67,7 @@ namespace Barotrauma.RuinGeneration
             if (interestingPosCount == 0)
             {
                 //make sure there's at least one PositionsOfInterest in the ruins
-                level.PositionsOfInterest.Add(new Level.InterestingPosition(waypoints.GetRandom(Rand.RandSync.Server).WorldPosition.ToPoint(), Level.PositionType.Ruin, this));
+                level.PositionsOfInterest.Add(new Level.InterestingPosition(waypoints.GetRandom(Rand.RandSync.ServerAndClient).WorldPosition.ToPoint(), Level.PositionType.Ruin, this));
             }
         }
     }

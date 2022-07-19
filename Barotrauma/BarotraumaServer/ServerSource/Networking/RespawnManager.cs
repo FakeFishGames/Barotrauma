@@ -227,7 +227,7 @@ namespace Barotrauma.Networking
             }
 
             var shuttleGaps = Gap.GapList.FindAll(g => g.Submarine == RespawnShuttle && g.ConnectedWall != null);
-            shuttleGaps.ForEach(g => Spawner.AddToRemoveQueue(g));
+            shuttleGaps.ForEach(g => Spawner.AddEntityToRemoveQueue(g));
 
             var dockingPorts = Item.ItemList.FindAll(i => i.Submarine == RespawnShuttle && i.GetComponent<DockingPort>() != null);
             dockingPorts.ForEach(d => d.GetComponent<DockingPort>().Undock());
@@ -355,7 +355,7 @@ namespace Barotrauma.Networking
             {
                 if (campaign?.GetClientCharacterData(c) == null || c.CharacterInfo.Job == null)
                 {
-                    c.CharacterInfo.Job = new Job(c.AssignedJob.First, Rand.RandSync.Unsynced, c.AssignedJob.Second);
+                    c.CharacterInfo.Job = new Job(c.AssignedJob.Prefab, Rand.RandSync.Unsynced, c.AssignedJob.Variant);
                 }
             }
 
@@ -369,17 +369,17 @@ namespace Barotrauma.Networking
             if ((shuttlePos != null && Level.Loaded.GetRealWorldDepth(shuttlePos.Value.Y) > Level.DefaultRealWorldCrushDepth) ||
                 Level.Loaded.GetRealWorldDepth(Submarine.MainSub.WorldPosition.Y) > Level.DefaultRealWorldCrushDepth)
             {
-                divingSuitPrefab = ItemPrefab.Prefabs.FirstOrDefault(it => it.Tags.Any(t => t.Equals("respawnsuitdeep", StringComparison.OrdinalIgnoreCase)));
+                divingSuitPrefab = ItemPrefab.Prefabs.FirstOrDefault(it => it.Tags.Any(t => t == "respawnsuitdeep"));
             }
             if (divingSuitPrefab == null)
             {
                 divingSuitPrefab = 
-                    ItemPrefab.Prefabs.FirstOrDefault(it => it.Tags.Any(t => t.Equals("respawnsuit", StringComparison.OrdinalIgnoreCase))) ??
-                    ItemPrefab.Find(null, "divingsuit");
+                    ItemPrefab.Prefabs.FirstOrDefault(it => it.Tags.Any(t => t == "respawnsuit")) ??
+                    ItemPrefab.Find(null, "divingsuit".ToIdentifier());
             }
-            ItemPrefab oxyPrefab = ItemPrefab.Find(null, "oxygentank");
-            ItemPrefab scooterPrefab = ItemPrefab.Find(null, "underwaterscooter");
-            ItemPrefab batteryPrefab = ItemPrefab.Find(null, "batterycell");
+            ItemPrefab oxyPrefab = ItemPrefab.Find(null, "oxygentank".ToIdentifier());
+            ItemPrefab scooterPrefab = ItemPrefab.Find(null, "underwaterscooter".ToIdentifier());
+            ItemPrefab batteryPrefab = ItemPrefab.Find(null, "batterycell".ToIdentifier());
 
             var cargoSp = WayPoint.WayPointList.Find(wp => wp.Submarine == respawnSub && wp.SpawnType == SpawnType.Cargo);
 
@@ -390,8 +390,16 @@ namespace Barotrauma.Networking
                 characterInfos[i].ClearCurrentOrders();
 
                 bool forceSpawnInMainSub = false;
-                if (!bot && campaign != null)
+                if (!bot)
                 {
+                    //the client has opted to change the name of their new character
+                    //when the character spawns, set the client's name to match
+                    if (clients[i].PendingName == characterInfos[i].Name)
+                    {
+                        GameMain.Server?.TryChangeClientName(clients[i], clients[i].PendingName);
+                        clients[i].PendingName = null;
+                    }
+
                     var matchingData = campaign?.GetClientCharacterData(clients[i]);
                     if (matchingData != null)
                     {
@@ -441,32 +449,43 @@ namespace Barotrauma.Networking
                     GameServer.Log(string.Format("Respawning {0} ({1}) as {2}", GameServer.ClientLogName(clients[i]), clients[i].Connection?.EndPointString, characterInfos[i].Job.Name), ServerLog.MessageType.Spawning);
                 }
 
-                if (divingSuitPrefab != null && oxyPrefab != null && RespawnShuttle != null)
+                if (RespawnShuttle != null)
                 {
                     Vector2 pos = cargoSp == null ? character.Position : cargoSp.Position;
-                    if (divingSuitPrefab != null && oxyPrefab != null)
+                    if (divingSuitPrefab != null)
                     {
                         var divingSuit = new Item(divingSuitPrefab, pos, respawnSub);
-                        Spawner.CreateNetworkEvent(divingSuit, false);
+                        Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(divingSuit));
                         respawnItems.Add(divingSuit);
 
-                        var oxyTank = new Item(oxyPrefab, pos, respawnSub);
-                        Spawner.CreateNetworkEvent(oxyTank, false);
-                        divingSuit.Combine(oxyTank, user: null);
-                        respawnItems.Add(oxyTank);
+                        if (oxyPrefab != null && divingSuit.GetComponent<ItemContainer>() != null)
+                        {
+                            var oxyTank = new Item(oxyPrefab, pos, respawnSub);
+                            Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(oxyTank));
+                            divingSuit.Combine(oxyTank, user: null);
+                            respawnItems.Add(oxyTank);
+                        }
                     }
 
-                    if (scooterPrefab != null && batteryPrefab != null)
+                    if (!(GameMain.GameSession.GameMode is CampaignMode))
                     {
-                        var scooter = new Item(scooterPrefab, pos, respawnSub);
-                        Spawner.CreateNetworkEvent(scooter, false);
-
-                        var battery = new Item(batteryPrefab, pos, respawnSub);
-                        Spawner.CreateNetworkEvent(battery, false);
-
-                        scooter.Combine(battery, user: null);
-                        respawnItems.Add(scooter);
-                        respawnItems.Add(battery);
+                        if (scooterPrefab != null)
+                        {
+                            var scooter = new Item(scooterPrefab, pos, respawnSub);
+                            Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(scooter));
+                            respawnItems.Add(scooter);
+                            if (batteryPrefab != null)
+                            {
+                                var battery = new Item(batteryPrefab, pos, respawnSub);
+                                Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(battery));
+                                scooter.Combine(battery, user: null);
+                                respawnItems.Add(battery);
+                            }
+                        }
+                    }
+                    if (respawnContainer != null)
+                    {
+                        AutoItemPlacer.RegenerateLoot(RespawnShuttle, respawnContainer);
                     }
                 }
 
@@ -504,7 +523,7 @@ namespace Barotrauma.Networking
                 //add the ID card tags they should've gotten when spawning in the shuttle
                 foreach (Item item in character.Inventory.AllItems.Distinct())
                 {
-                    if (item.Prefab.Identifier != "idcard") { continue; }
+                    if (item.GetComponent<IdCard>() == null) { continue; }
                     foreach (string s in shuttleSpawnPoints[i].IdCardTags)
                     {
                         item.AddTag(s);
@@ -520,15 +539,15 @@ namespace Barotrauma.Networking
         public static void ReduceCharacterSkills(CharacterInfo characterInfo)
         {
             if (characterInfo?.Job == null) { return; }
-            foreach (Skill skill in characterInfo.Job.Skills)
+            foreach (Skill skill in characterInfo.Job.GetSkills())
             {
-                var skillPrefab = characterInfo.Job.Prefab.Skills.Find(s => skill.Identifier.Equals(s.Identifier, StringComparison.OrdinalIgnoreCase));
+                var skillPrefab = characterInfo.Job.Prefab.Skills.Find(s => skill.Identifier == s.Identifier);
                 if (skillPrefab == null) { continue; }
                 skill.Level = MathHelper.Lerp(skill.Level, skillPrefab.LevelRange.Start, SkillReductionOnCampaignMidroundRespawn);
             }
         }
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
             msg.WriteRangedInteger((int)CurrentState, 0, Enum.GetNames(typeof(State)).Length);
 

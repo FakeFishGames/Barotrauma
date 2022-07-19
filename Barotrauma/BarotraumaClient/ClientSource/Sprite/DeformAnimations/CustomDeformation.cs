@@ -9,11 +9,11 @@ namespace Barotrauma.SpriteDeformations
     class CustomDeformationParams : SpriteDeformationParams
     {
         [Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f),
-            Serialize(0.0f, true, description: "How fast the deformation \"oscillates\" back and forth. " +
+            Serialize(0.0f, IsPropertySaveable.Yes, description: "How fast the deformation \"oscillates\" back and forth. " +
             "For example, if the sprite is stretched up, setting this value above zero would make it do a wave-like movement up and down.")]
         public override float Frequency { get; set; } = 1;
 
-        [Serialize(1.0f, true, description: "The \"strength\" of the deformation."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "The \"strength\" of the deformation."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
         public float Amplitude { get; set; }
 
         public CustomDeformationParams(XElement element) : base(element)

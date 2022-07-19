@@ -14,7 +14,7 @@ namespace Barotrauma
     {
         public static List<MapEntity> mapEntityList = new List<MapEntity>();
 
-        public readonly MapEntityPrefab prefab;
+        public readonly MapEntityPrefab Prefab;
 
         protected List<ushort> linkedToID;
         public List<ushort> unresolvedLinkedToID;
@@ -27,23 +27,22 @@ namespace Barotrauma
         /// </summary>
         protected readonly List<Upgrade> Upgrades = new List<Upgrade>();
 
-        public HashSet<string> disallowedUpgrades = new HashSet<string>();
-
-        [Editable, Serialize("", true)]
+        public readonly HashSet<Identifier> DisallowedUpgradeSet = new HashSet<Identifier>();
+        
+        [Editable, Serialize("", IsPropertySaveable.Yes)]
         public string DisallowedUpgrades
         {
-            get { return string.Join(",", disallowedUpgrades); }
+            get { return string.Join(",", DisallowedUpgradeSet); }
             set
             {
-                disallowedUpgrades.Clear();
+                DisallowedUpgradeSet.Clear();
                 if (!string.IsNullOrWhiteSpace(value))
                 {
                     string[] splitTags = value.Split(',');
                     foreach (string tag in splitTags)
                     {
                         string[] splitTag = tag.Trim().Split(':');
-                        splitTag[0] = splitTag[0].ToLowerInvariant();
-                        disallowedUpgrades.Add(string.Join(":", splitTag));
+                        DisallowedUpgradeSet.Add(string.Join(":", splitTag).ToIdentifier());
                     }
                 }
             }
@@ -108,19 +107,19 @@ namespace Barotrauma
             get { return false; }
         }
 
-        public List<string> AllowedLinks => prefab == null ? new List<string>() : prefab.AllowedLinks;
+        public IEnumerable<Identifier> AllowedLinks => Prefab == null ? Enumerable.Empty<Identifier>() : Prefab.AllowedLinks;
 
         public bool ResizeHorizontal
         {
-            get { return prefab != null && prefab.ResizeHorizontal; }
+            get { return Prefab != null && Prefab.ResizeHorizontal; }
         }
         public bool ResizeVertical
         {
-            get { return prefab != null && prefab.ResizeVertical; }
+            get { return Prefab != null && Prefab.ResizeVertical; }
         }
 
         //for upgrading the dimensions of the entity from xml
-        [Serialize(0, false)]
+        [Serialize(0, IsPropertySaveable.No)]
         public int RectWidth
         {
             get { return rect.Width; }
@@ -131,7 +130,7 @@ namespace Barotrauma
             }
         }
         //for upgrading the dimensions of the entity from xml
-        [Serialize(0, false)]
+        [Serialize(0, IsPropertySaveable.No)]
         public int RectHeight
         {
             get { return rect.Height; }
@@ -147,7 +146,7 @@ namespace Barotrauma
         public bool SpriteDepthOverrideIsSet { get; private set; }
         public float SpriteOverrideDepth => SpriteDepth;
         private float _spriteOverrideDepth = float.NaN;
-        [Editable(0.001f, 0.999f, decimals: 3), Serialize(float.NaN, true)]
+        [Editable(0.001f, 0.999f, decimals: 3), Serialize(float.NaN, IsPropertySaveable.Yes)]
         public float SpriteDepth
         {
             get
@@ -166,10 +165,10 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(1f, true), Editable(0.01f, 10f, DecimalCount = 3, ValueStep = 0.1f)]
+        [Serialize(1f, IsPropertySaveable.Yes), Editable(0.01f, 10f, DecimalCount = 3, ValueStep = 0.1f)]
         public virtual float Scale { get; set; } = 1;
 
-        [Editable, Serialize(false, true)]
+        [Editable, Serialize(false, IsPropertySaveable.Yes)]
         public bool HiddenInGame
         {
             get;
@@ -225,14 +224,14 @@ namespace Barotrauma
             }
         }
 
-        [Serialize(true, true)]
+        [Serialize(true, IsPropertySaveable.Yes)]
         public bool RemoveIfLinkedOutpostDoorInUse
         {
             get;
             protected set;
         } = true;
 
-        [Serialize("", true, "Submarine editor layer")]
+        [Serialize("", IsPropertySaveable.Yes, "Submarine editor layer")]
         public string Layer { get; set; }
 
         /// <summary>
@@ -249,7 +248,7 @@ namespace Barotrauma
 
         public MapEntity(MapEntityPrefab prefab, Submarine submarine, ushort id) : base(submarine, id)
         {
-            this.prefab = prefab;
+            this.Prefab = prefab;
             Scale = prefab != null ? prefab.Scale : 1;
         }
 
@@ -292,7 +291,7 @@ namespace Barotrauma
             }
         }
 
-        public virtual void Move(Vector2 amount)
+        public virtual void Move(Vector2 amount, bool ignoreContacts = false)
         {
             rect.X += (int)amount.X;
             rect.Y += (int)amount.Y;
@@ -303,12 +302,12 @@ namespace Barotrauma
             return (Submarine.RectContains(WorldRect, position));
         }
 
-        public bool HasUpgrade(string identifier)
+        public bool HasUpgrade(Identifier identifier)
         {
             return GetUpgrade(identifier) != null;
         }
 
-        public Upgrade GetUpgrade(string identifier)
+        public Upgrade GetUpgrade(Identifier identifier)
         {
             return Upgrades.Find(upgrade => upgrade.Identifier == identifier);
         }
@@ -331,7 +330,7 @@ namespace Barotrauma
             {
                 AddUpgrade(upgrade, createNetworkEvent);
             }
-            DebugConsole.Log($"Set (ID: {ID} {prefab.Name})'s \"{upgrade.Prefab.Name}\" upgrade to level {upgrade.Level}");
+            DebugConsole.Log($"Set (ID: {ID} {Prefab.Name})'s \"{upgrade.Prefab.Name}\" upgrade to level {upgrade.Level}");
         }
 
         /// <summary>
@@ -344,7 +343,7 @@ namespace Barotrauma
                 return false;
             }
 
-            if (disallowedUpgrades.Contains(upgrade.Identifier)) { return false; }
+            if (DisallowedUpgradeSet.Contains(upgrade.Identifier)) { return false; }
 
             Upgrade existingUpgrade = GetUpgrade(upgrade.Identifier);
 
@@ -492,25 +491,33 @@ namespace Barotrauma
 
         protected void InsertToList()
         {
-            int i = 0;
-
             if (Sprite == null)
             {
                 mapEntityList.Add(this);
                 return;
             }
 
+            int i = 0;
             while (i < mapEntityList.Count)
             {
                 i++;
-
-                Sprite existingSprite = mapEntityList[i - 1].Sprite;
-                if (existingSprite == null) continue;
-#if CLIENT
-                if (existingSprite.Texture == this.Sprite.Texture) break;
-#endif
+                if (mapEntityList[i - 1]?.Prefab == Prefab)
+                {
+                    mapEntityList.Insert(i, this);
+                    return;
+                }
             }
 
+#if CLIENT
+            i = 0;
+            while (i < mapEntityList.Count)
+            {
+                i++;
+                Sprite existingSprite = mapEntityList[i - 1].Sprite;
+                if (existingSprite == null) { continue; }
+                if (existingSprite.Texture == this.Sprite.Texture) { break; }
+            }
+#endif
             mapEntityList.Insert(i, this);
         }
 
@@ -533,6 +540,7 @@ namespace Barotrauma
             mapEntityList.Remove(this);
 
 #if CLIENT
+            Submarine.ForceRemoveFromVisibleEntities(this);
             if (SelectedList.Contains(this))
             {
                 SelectedList = SelectedList.Where(e => e != this).ToHashSet();
@@ -560,7 +568,11 @@ namespace Barotrauma
         /// </summary>
         public static void UpdateAll(float deltaTime, Camera cam)
         {
-            foreach (Hull hull in Hull.hullList)
+#if CLIENT
+            var sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+#endif
+            foreach (Hull hull in Hull.HullList)
             {
                 hull.Update(deltaTime, cam);
             }
@@ -587,6 +599,11 @@ namespace Barotrauma
                 gapUpdateTimer = 0;
             }
 
+#if CLIENT
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("Update:MapEntity:Misc", sw.ElapsedTicks);
+            sw.Restart();
+#endif
             Powered.UpdatePower(deltaTime);
             foreach (Item item in Item.ItemList)
             {
@@ -595,6 +612,11 @@ namespace Barotrauma
 
             UpdateAllProjSpecific(deltaTime);
 
+#if CLIENT
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("Update:MapEntity:Items", sw.ElapsedTicks);
+            sw.Restart();
+#endif
             Spawner?.Update();
         }
 
@@ -635,7 +657,7 @@ namespace Barotrauma
             IdRemap idRemap = new IdRemap(parentElement, idOffset);
 
             List<MapEntity> entities = new List<MapEntity>();
-            foreach (XElement element in parentElement.Elements())
+            foreach (var element in parentElement.Elements())
             {
                 string typeName = element.Name.ToString();
 
@@ -658,7 +680,7 @@ namespace Barotrauma
                 if (t == typeof(Structure))
                 {
                     string name = element.Attribute("name").Value;
-                    string identifier = element.GetAttributeString("identifier", "");
+                    Identifier identifier = element.GetAttributeIdentifier("identifier", "");
                     StructurePrefab structurePrefab = Structure.FindPrefab(name, identifier);
                     if (structurePrefab == null)
                     {
@@ -672,7 +694,7 @@ namespace Barotrauma
 
                 try
                 {
-                    MethodInfo loadMethod = t.GetMethod("Load", new[] { typeof(XElement), typeof(Submarine), typeof(IdRemap) });
+                    MethodInfo loadMethod = t.GetMethod("Load", new[] { typeof(ContentXElement), typeof(Submarine), typeof(IdRemap) });
                     if (loadMethod == null)
                     {
                         DebugConsole.ThrowError("Could not find the method \"Load\" in " + t + ".");
@@ -683,7 +705,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        object newEntity = loadMethod.Invoke(t, new object[] { element, submarine, idRemap });
+                        object newEntity = loadMethod.Invoke(t, new object[] { element.FromPackage(null), submarine, idRemap });
                         if (newEntity != null)
                         {
                             entities.Add((MapEntity)newEntity);

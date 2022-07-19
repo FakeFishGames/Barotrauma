@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Xml.Linq;
 
 namespace Barotrauma.Abilities
 {
@@ -14,7 +13,7 @@ namespace Barotrauma.Abilities
         /// 
         /// These conditions will return an error if used outside their limited intended use.
         /// </summary>
-        public AbilityConditionData(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement) { }
+        public AbilityConditionData(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement) { }
 
         protected void LogAbilityConditionError(AbilityObject abilityObject, Type expectedData)
         {

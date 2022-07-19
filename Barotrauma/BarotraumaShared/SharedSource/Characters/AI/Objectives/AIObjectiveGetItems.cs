@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     class AIObjectiveGetItems : AIObjective
     {
-        public override string Identifier { get; set; } = "get items";
+        public override Identifier Identifier { get; set; } = "get items".ToIdentifier();
         public override string DebugTag => $"{Identifier}";
         public override bool KeepDivingGearOn => true;
         public override bool AllowMultipleInstances => true;
@@ -24,13 +24,13 @@ namespace Barotrauma
         public bool RequireLoaded { get; set; }
         public bool RequireAllItems { get; set; }
 
-        private readonly ImmutableArray<string> gearTags;
-        private readonly string[] ignoredTags;
+        private readonly ImmutableArray<Identifier> gearTags;
+        private readonly Identifier[] ignoredTags;
         private bool subObjectivesCreated;
 
         public readonly HashSet<Item> achievedItems = new HashSet<Item>();
 
-        public AIObjectiveGetItems(Character character, AIObjectiveManager objectiveManager, IEnumerable<string> identifiersOrTags, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier)
+        public AIObjectiveGetItems(Character character, AIObjectiveManager objectiveManager, IEnumerable<Identifier> identifiersOrTags, float priorityModifier = 1) : base(character, objectiveManager, priorityModifier)
         {
             gearTags = AIObjectiveGetItem.ParseGearTags(identifiersOrTags).ToImmutableArray();
             ignoredTags = AIObjectiveGetItem.ParseIgnoredTags(identifiersOrTags).ToArray();
@@ -47,7 +47,7 @@ namespace Barotrauma
             }
             if (!subObjectivesCreated)
             {
-                foreach (string tag in gearTags)
+                foreach (Identifier tag in gearTags)
                 {
                     if (subObjectives.Any(so => so is AIObjectiveGetItem getItem && getItem.IdentifiersOrTags.Contains(tag))) { continue; }
                     int count = gearTags.Count(t => t == tag);

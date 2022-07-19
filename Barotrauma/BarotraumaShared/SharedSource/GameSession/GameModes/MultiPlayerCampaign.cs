@@ -1,4 +1,5 @@
 ﻿using Barotrauma.IO;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -11,18 +12,59 @@ namespace Barotrauma
     {
         public const int MinimumInitialMoney = 500;
 
-        private UInt16 lastUpdateID;
-        public UInt16 LastUpdateID
+        [Flags]
+        public enum NetFlags : UInt16
         {
-            get
-            {
-#if SERVER
-                if (GameMain.Server != null && lastUpdateID < 1) { lastUpdateID++; }
-#endif
-                return lastUpdateID;
-            }
-            set { lastUpdateID = value; }
+            Misc = 0x1,
+            MapAndMissions = 0x2,
+            UpgradeManager = 0x4,
+            SubList = 0x8,
+            ItemsInBuyCrate = 0x10,
+            ItemsInSellFromSubCrate = 0x20,
+            PurchasedItems = 0x80,
+            SoldItems = 0x100,
+            Reputation = 0x200,
+            CharacterInfo = 0x800
         }
+
+        private readonly Dictionary<NetFlags, UInt16> lastUpdateID;
+
+        public UInt16 GetLastUpdateIdForFlag(NetFlags flag)
+        {
+            if (!ValidateFlag(flag)) { return 0; }
+            return lastUpdateID[flag];
+        }
+        public void SetLastUpdateIdForFlag(NetFlags flag, UInt16 id)
+        {
+            if (!ValidateFlag(flag)) { return; }
+            lastUpdateID[flag] = id;
+        }
+
+        public void IncrementLastUpdateIdForFlag(NetFlags flag)
+        {
+            if (!ValidateFlag(flag)) { return; }
+            if (!lastUpdateID.ContainsKey(flag)) { lastUpdateID[flag] = 0; }
+            lastUpdateID[flag]++;
+        }
+        public void IncrementAllLastUpdateIds()
+        {
+            foreach (NetFlags flag in Enum.GetValues(typeof(NetFlags)))
+            {
+                if (!lastUpdateID.ContainsKey(flag)) { lastUpdateID[flag] = 0; }
+                lastUpdateID[flag]++;
+            }
+        }
+
+        private bool ValidateFlag(NetFlags flag)
+        {
+            if (MathHelper.IsPowerOfTwo((int)flag)) { return true; }
+#if DEBUG
+            throw new InvalidOperationException($"\"{flag}\" is not a valid campaign update flag.");
+#else
+            return false;
+#endif       
+        }
+
 
         private UInt16 lastSaveID;
         public UInt16 LastSaveID
@@ -34,11 +76,11 @@ namespace Barotrauma
 #endif
                 return lastSaveID;
             }
-            set 
+            set
             {
 #if SERVER
                 //trigger a campaign update to notify the clients of the changed save ID
-                lastUpdateID++; 
+                IncrementLastUpdateIdForFlag(NetFlags.Misc);
 #endif
                 lastSaveID = value; 
             }
@@ -51,23 +93,33 @@ namespace Barotrauma
             get; set;
         }
 
-        private MultiPlayerCampaign() : base(GameModePreset.MultiPlayerCampaign)
+        private MultiPlayerCampaign(CampaignSettings settings) : base(GameModePreset.MultiPlayerCampaign, settings)
         {
             currentCampaignID++;
+            lastUpdateID = new Dictionary<NetFlags, ushort>();
+            foreach (NetFlags flag in Enum.GetValues(typeof(NetFlags)))
+            {
+#if SERVER
+                //server starts from a higher ID to ensure we send the initial state
+                lastUpdateID[flag] = 1;
+#else
+                lastUpdateID[flag] = 0;
+#endif
+            }
             CampaignID = currentCampaignID;
             CampaignMetadata = new CampaignMetadata(this);
             UpgradeManager = new UpgradeManager(this);
             InitCampaignData();
         }
 
-        public static MultiPlayerCampaign StartNew(string mapSeed, SubmarineInfo selectedSub, CampaignSettings settings)
+        public static MultiPlayerCampaign StartNew(string mapSeed, CampaignSettings settings)
         {
-            MultiPlayerCampaign campaign = new MultiPlayerCampaign();
+            MultiPlayerCampaign campaign = new MultiPlayerCampaign(settings);
             //only the server generates the map, the clients load it from a save file
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
             {
-                campaign.map = new Map(campaign, mapSeed, settings);
                 campaign.Settings = settings;
+                campaign.map = new Map(campaign, mapSeed);
             }
             campaign.InitProjSpecific();
             return campaign;
@@ -75,7 +127,7 @@ namespace Barotrauma
 
         public static MultiPlayerCampaign LoadNew(XElement element)
         {
-            MultiPlayerCampaign campaign = new MultiPlayerCampaign();
+            MultiPlayerCampaign campaign = new MultiPlayerCampaign(CampaignSettings.Empty);
             campaign.Load(element);
             campaign.InitProjSpecific();
             campaign.IsFirstRound = false;
@@ -99,7 +151,6 @@ namespace Barotrauma
         /// </summary>
         private void Load(XElement element)
         {
-            Money = element.GetAttributeInt("money", 0);
             PurchasedLostShuttles = element.GetAttributeBool("purchasedlostshuttles", false);
             PurchasedHullRepairs = element.GetAttributeBool("purchasedhullrepairs", false);
             PurchasedItemRepairs = element.GetAttributeBool("purchaseditemrepairs", false);
@@ -120,22 +171,21 @@ namespace Barotrauma
 #endif
             }
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
-                    case "campaignsettings":
+                    case CampaignSettings.LowerCaseSaveElementName:
                         Settings = new CampaignSettings(subElement);
 #if CLIENT
-                        GameMain.NetworkMember.ServerSettings.MaxMissionCount = Settings.MaxMissionCount;
-                        GameMain.NetworkMember.ServerSettings.RadiationEnabled = Settings.RadiationEnabled;
+                        GameMain.NetworkMember.ServerSettings.CampaignSettings = Settings;
 #endif
                         break;
                     case "map":
                         if (map == null)
                         {
                             //map not created yet, loading this campaign for the first time
-                            map = Map.Load(this, subElement, Settings);
+                            map = Map.Load(this, subElement);
                         }
                         else
                         {
@@ -155,7 +205,7 @@ namespace Barotrauma
                     case "bots" when GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer:
                         CrewManager.HasBots = subElement.GetAttributeBool("hasbots", false);
                         CrewManager.AddCharacterElements(subElement);
-                        CrewManager.ActiveOrdersElement = subElement.GetChildElement("activeorders");
+                        ActiveOrdersElement = subElement.GetChildElement("activeorders");
                         break;
                     case "cargo":
                         CargoManager?.LoadPurchasedItems(subElement);
@@ -166,6 +216,9 @@ namespace Barotrauma
                     case "stats":
                         LoadStats(subElement);
                         break;
+                    case Wallet.LowerCaseSaveElementName:
+                        Bank = new Wallet(Option<Character>.None(), subElement);
+                        break;
 #if SERVER
                     case "savedexperiencepoints":
                         foreach (XElement savedExp in subElement.Elements())
@@ -175,6 +228,15 @@ namespace Barotrauma
                         break;
 #endif
                 }
+            }
+
+            int oldMoney = element.GetAttributeInt("money", 0);
+            if (oldMoney > 0)
+            {
+                Bank = new Wallet(Option<Character>.None())
+                {
+                    Balance = oldMoney
+                };
             }
 
             CampaignMetadata ??= new CampaignMetadata(this);
@@ -192,14 +254,13 @@ namespace Barotrauma
             {
                 var characterDataDoc = XMLExtensions.TryLoadXml(characterDataPath);
                 if (characterDataDoc?.Root == null) { return; }
-                foreach (XElement subElement in characterDataDoc.Root.Elements())
+                foreach (var subElement in characterDataDoc.Root.Elements())
                 {
                     characterData.Add(new CharacterCampaignData(subElement));
                 }
             }
 #endif
         }
-        
         
         public static List<SubmarineInfo> GetCampaignSubs()
         {
@@ -231,5 +292,78 @@ namespace Barotrauma
             return availableSubs;
         }
 
+        private static void WriteItems(IWriteMessage msg, Dictionary<Identifier, List<PurchasedItem>> purchasedItems)
+        {
+            msg.Write((byte)purchasedItems.Count);
+            foreach (var storeItems in purchasedItems)
+            {
+                msg.Write(storeItems.Key);
+                msg.Write((UInt16)storeItems.Value.Count);
+                foreach (var item in storeItems.Value)
+                {
+                    msg.Write(item.ItemPrefabIdentifier);
+                    msg.WriteRangedInteger(item.Quantity, 0, CargoManager.MaxQuantity);
+                }
+            }
+        }
+
+        private static Dictionary<Identifier, List<PurchasedItem>> ReadPurchasedItems(IReadMessage msg, Client sender)
+        {
+            var items = new Dictionary<Identifier, List<PurchasedItem>>();
+            byte storeCount = msg.ReadByte();
+            for (int i = 0; i < storeCount; i++)
+            {
+                Identifier storeId = msg.ReadIdentifier();
+                items.Add(storeId, new List<PurchasedItem>());
+                UInt16 itemCount = msg.ReadUInt16();
+                for (int j = 0; j < itemCount; j++)
+                {
+                    Identifier itemId = msg.ReadIdentifier();
+                    int quantity = msg.ReadRangedInteger(0, CargoManager.MaxQuantity);
+                    items[storeId].Add(new PurchasedItem(itemId, quantity, sender));
+                }
+            }
+            return items;
+        }
+
+        private static void WriteItems(IWriteMessage msg, Dictionary<Identifier, List<SoldItem>> soldItems)
+        {
+            msg.Write((byte)soldItems.Count);
+            foreach (var storeItems in soldItems)
+            {
+                msg.Write(storeItems.Key);
+                msg.Write((UInt16)storeItems.Value.Count);
+                foreach (var item in storeItems.Value)
+                {
+                    msg.Write(item.ItemPrefab.Identifier);
+                    msg.Write((UInt16)item.ID);
+                    msg.Write(item.Removed);
+                    msg.Write(item.SellerID);
+                    msg.Write((byte)item.Origin);
+                }
+            }
+        }
+
+        private static Dictionary<Identifier, List<SoldItem>> ReadSoldItems(IReadMessage msg)
+        {
+            var soldItems = new Dictionary<Identifier, List<SoldItem>>();
+            byte storeCount = msg.ReadByte();
+            for (int i = 0; i < storeCount; i++)
+            {
+                Identifier storeId = msg.ReadIdentifier();
+                soldItems.Add(storeId, new List<SoldItem>());
+                UInt16 itemCount = msg.ReadUInt16();
+                for (int j = 0; j < itemCount; j++)
+                {
+                    Identifier prefabId = msg.ReadIdentifier();
+                    UInt16 itemId = msg.ReadUInt16();
+                    bool removed = msg.ReadBoolean();
+                    byte sellerId = msg.ReadByte();
+                    byte origin = msg.ReadByte();
+                    soldItems[storeId].Add(new SoldItem(ItemPrefab.Prefabs[prefabId], itemId, removed, sellerId, (SoldItem.SellOrigin)origin));
+                }
+            }
+            return soldItems;
+        }
     }
 }

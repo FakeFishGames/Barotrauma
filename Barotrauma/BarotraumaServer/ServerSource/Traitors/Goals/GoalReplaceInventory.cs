@@ -8,8 +8,8 @@ namespace Barotrauma
     {
         public class GoalReplaceInventory : HumanoidGoal
         {
-            private readonly HashSet<string> sabotageContainerIds = new HashSet<string>();
-            private readonly HashSet<string> validReplacementIds = new HashSet<string>();
+            private readonly HashSet<Identifier> sabotageContainerIds = new HashSet<Identifier>();
+            private readonly HashSet<Identifier> validReplacementIds = new HashSet<Identifier>();
 
             private readonly float replaceAmount;
 
@@ -33,7 +33,7 @@ namespace Barotrauma
                     {
                         continue;
                     }
-                    if (sabotageContainerIds.Contains(item.prefab.Identifier))
+                    if (sabotageContainerIds.Contains(((MapEntity)item).Prefab.Identifier))
                     {
                         ++totalAmount;
                         if (item.OwnInventory.AllItems.All(containedItem => !validReplacementIds.Contains(containedItem.Prefab.Identifier)))
@@ -59,7 +59,7 @@ namespace Barotrauma
                 return true;
             }
 
-            public GoalReplaceInventory(string[] containerIds, string[] replacementIds, float replaceAmount)
+            public GoalReplaceInventory(Identifier[] containerIds, Identifier[] replacementIds, float replaceAmount)
             {
                 sabotageContainerIds.UnionWith(containerIds);
                 validReplacementIds.UnionWith(replacementIds);

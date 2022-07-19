@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using System;
+using Barotrauma.Items.Components;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -14,9 +15,9 @@ namespace Barotrauma.Abilities
 
         private List<Item> items = new List<Item>();
 
-        public AbilityConditionHasItem(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
+        public AbilityConditionHasItem(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
-            tags = conditionElement.GetAttributeStringArray("tags", new string[0], convertToLowerInvariant: true);
+            tags = conditionElement.GetAttributeStringArray("tags", Array.Empty<string>(), convertToLowerInvariant: true);
             requireAll = conditionElement.GetAttributeBool("requireall", false);
             //this.invSlotType = invSlotType;
         }

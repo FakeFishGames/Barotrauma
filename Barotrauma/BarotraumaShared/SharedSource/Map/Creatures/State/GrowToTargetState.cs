@@ -53,7 +53,7 @@ namespace Barotrauma.MapCreatures.Behavior
             List<BallastFloraBranch> newList = new List<BallastFloraBranch>(TargetBranches);
             foreach (BallastFloraBranch branch in newList)
             {
-                if (branch.FailedGrowthAttempts > 8 || !branch.CanGrowMore()) { continue; }
+                if (branch.FailedGrowthAttempts > 8 || branch.DisconnectedFromRoot || !branch.CanGrowMore()) { continue; }
 
                 // Get what side gets us closest to the target
                 TileSide side = GetClosestSide(branch, Target.WorldPosition);

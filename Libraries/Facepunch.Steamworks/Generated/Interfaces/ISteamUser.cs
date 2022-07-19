@@ -93,7 +93,8 @@ namespace Steamworks
 		#endregion
 		internal bool GetUserDataFolder( out string pchBuffer )
 		{
-			IntPtr mempchBuffer = Helpers.TakeMemory();
+			using var memory = Helpers.TakeMemory();
+			IntPtr mempchBuffer = memory;
 			var returnValue = _GetUserDataFolder( Self, mempchBuffer, (1024 * 32) );
 			pchBuffer = Helpers.MemoryToString( mempchBuffer );
 			return returnValue;

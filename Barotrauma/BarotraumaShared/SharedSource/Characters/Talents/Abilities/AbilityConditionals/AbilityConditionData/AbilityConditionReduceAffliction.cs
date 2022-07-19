@@ -1,4 +1,5 @@
-﻿using System.Xml.Linq;
+﻿using System;
+using System.Xml.Linq;
 
 namespace Barotrauma.Abilities
 {
@@ -7,9 +8,9 @@ namespace Barotrauma.Abilities
         private readonly string[] allowedTypes;
         private readonly string identifier;
 
-        public AbilityConditionReduceAffliction(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
+        public AbilityConditionReduceAffliction(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
-            allowedTypes = conditionElement.GetAttributeStringArray("allowedtypes", new string[0], convertToLowerInvariant: true);
+            allowedTypes = conditionElement.GetAttributeStringArray("allowedtypes", Array.Empty<string>(), convertToLowerInvariant: true);
             identifier = conditionElement.GetAttributeString("identifier", "");
         }
 

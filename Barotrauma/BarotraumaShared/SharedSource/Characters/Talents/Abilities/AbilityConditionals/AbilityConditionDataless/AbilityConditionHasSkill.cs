@@ -10,7 +10,7 @@ namespace Barotrauma.Abilities
         private readonly string skillIdentifier;
         private readonly float minValue;
 
-        public AbilityConditionHasSkill(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
+        public AbilityConditionHasSkill(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
             skillIdentifier = conditionElement.GetAttributeString("skillidentifier", string.Empty);
             minValue = conditionElement.GetAttributeFloat("minvalue", 0f);

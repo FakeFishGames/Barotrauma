@@ -128,7 +128,7 @@ namespace Barotrauma
                      clientMemory.PreviousNotifiedKarma >= KickBanThreshold + KarmaNotificationInterval &&
                      client.Karma < KickBanThreshold + KarmaNotificationInterval)
             {
-                GameMain.Server.SendDirectChatMessage(TextManager.Get("KarmaBanWarning"), client);
+                GameMain.Server.SendDirectChatMessage(TextManager.Get("KarmaBanWarning").Value, client);
                 GameServer.Log(GameServer.ClientLogName(client) + " has been warned for having dangerously low karma.", ServerLog.MessageType.Karma);
                 clientMemory.PreviousNotifiedKarma = client.Karma;
                 clientMemory.PreviousKarmaNotificationTime = Timing.TotalTime;
@@ -170,7 +170,7 @@ namespace Barotrauma
                     existingAffliction.Strength = herpesStrength;
                     if (herpesStrength <= 0.0f)
                     {
-                        client.Character.CharacterHealth.ReduceAffliction(null, "invertcontrols", 100.0f);
+                        client.Character.CharacterHealth.ReduceAfflictionOnAllLimbs("invertcontrols".ToIdentifier(), 100.0f);
                     }
                 }
 
@@ -278,12 +278,12 @@ namespace Barotrauma
 
             static bool isValid(Item item)
             {
-                return item.Prefab.Identifier == "idcard" || item.GetComponent<RangedWeapon>() != null || item.GetComponent<MeleeWeapon>() != null;
+                return item.GetComponent<IdCard>() != null || item.GetComponent<RangedWeapon>() != null || item.GetComponent<MeleeWeapon>() != null;
             }
 
             if (foundItem == null) { return; }
 
-            bool isIdCard = foundItem.prefab.Identifier == "idcard";
+            bool isIdCard = foundItem.GetComponent<IdCard>() != null;
             bool isWeapon = foundItem.GetComponent<RangedWeapon>() != null || foundItem.GetComponent<MeleeWeapon>() != null;
 
             if (isIdCard)
@@ -394,8 +394,8 @@ namespace Barotrauma
             }
 
             //attacking/healing clowns has a smaller effect on karma
-            if (target.HasEquippedItem("clownmask") &&
-                target.HasEquippedItem("clowncostume"))
+            if (target.HasEquippedItem("clownmask".ToIdentifier()) &&
+                target.HasEquippedItem("clowncostume".ToIdentifier()))
             {
                 damage *= 0.5f;
                 stun *= 0.5f;
@@ -604,8 +604,8 @@ namespace Barotrauma
             if (client == null) { return; }
 
             //all penalties/rewards are halved when wearing a clown costume
-            if (target.HasEquippedItem("clownmask") &&
-                target.HasEquippedItem("clowncostume"))
+            if (target.HasEquippedItem("clownmask".ToIdentifier()) &&
+                target.HasEquippedItem("clowncostume".ToIdentifier()))
             {
                 amount *= 0.5f;
             }

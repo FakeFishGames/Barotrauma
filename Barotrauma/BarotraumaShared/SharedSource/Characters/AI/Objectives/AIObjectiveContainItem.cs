@@ -7,18 +7,18 @@ namespace Barotrauma
 {
     class AIObjectiveContainItem: AIObjective
     {
-        public override string Identifier { get; set; } = "contain item";
+        public override Identifier Identifier { get; set; } = "contain item".ToIdentifier();
 
         public Func<Item, float> GetItemPriority;
 
-        public string[] ignoredContainerIdentifiers;
+        public Identifier[] ignoredContainerIdentifiers;
         public bool checkInventory = true;
 
         //if the item can't be found, spawn it in the character's inventory (used by outpost NPCs and in some cases also enemy NPCs, like pirates)
         private readonly bool spawnItemIfNotFound;
 
         //can either be a tag or an identifier
-        public readonly string[] itemIdentifiers;
+        public readonly Identifier[] itemIdentifiers;
         public readonly ItemContainer container;
         private readonly Item item;
         public Item ItemToContain { get; private set; }
@@ -60,25 +60,21 @@ namespace Barotrauma
             this.item = item;
         }
 
-        public AIObjectiveContainItem(Character character, string itemIdentifier, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1, bool spawnItemIfNotFound = false)
-            : this(character, new string[] { itemIdentifier }, container, objectiveManager, priorityModifier, spawnItemIfNotFound) { }
+        public AIObjectiveContainItem(Character character, Identifier itemIdentifier, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1, bool spawnItemIfNotFound = false)
+            : this(character, new Identifier[] { itemIdentifier }, container, objectiveManager, priorityModifier, spawnItemIfNotFound) { }
 
-        public AIObjectiveContainItem(Character character, string[] itemIdentifiers, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1, bool spawnItemIfNotFound = false) 
+        public AIObjectiveContainItem(Character character, Identifier[] itemIdentifiers, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1, bool spawnItemIfNotFound = false) 
             : base(character, objectiveManager, priorityModifier)
         {
             this.itemIdentifiers = itemIdentifiers;
             this.spawnItemIfNotFound = spawnItemIfNotFound;
-            for (int i = 0; i < itemIdentifiers.Length; i++)
-            {
-                itemIdentifiers[i] = itemIdentifiers[i].ToLowerInvariant();
-            }
             this.container = container;
         }
 
         protected override bool CheckObjectiveSpecific()
         {
             if (IsCompleted) { return true; }
-            if (container == null || (container.Item != null && container.Item.IsThisOrAnyContainerIgnoredByAI(character)))
+            if (container?.Item == null || !container.Item.HasAccess(character))
             {
                 Abandon = true;
                 return false;
@@ -89,23 +85,28 @@ namespace Barotrauma
             }
             else
             {
-                int containedItemCount = 0;
-                foreach (Item it in container.Inventory.AllItems)
-                {
-                    if (CheckItem(it))
-                    {
-                        containedItemCount++;
-                    }
-                }
-                return containedItemCount >= ItemCount;
+                return CountItems();
             }
         }
 
-        private bool CheckItem(Item i) => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id)) && i.ConditionPercentage >= ConditionLevel && !i.IsThisOrAnyContainerIgnoredByAI(character);
+        private bool CountItems()
+        {
+            int containedItemCount = 0;
+            foreach (Item it in container.Inventory.AllItems)
+            {
+                if (CheckItem(it))
+                {
+                    containedItemCount++;
+                }
+            }
+            return containedItemCount >= ItemCount;
+        }
+
+        private bool CheckItem(Item i) => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id)) && i.ConditionPercentage >= ConditionLevel && i.HasAccess(character);
 
         protected override void Act(float deltaTime)
         {
-            if (container?.Item == null || container.Item.Removed || container.Item.IsThisOrAnyContainerIgnoredByAI(character))
+            if (container?.Item == null)
             {
                 Abandon = true;
                 return;
@@ -141,8 +142,8 @@ namespace Barotrauma
                                     container.Inventory.TryPutItem(item, null);
                                 }
                             }
-                            IsCompleted = true;
                         }
+                        IsCompleted = item != null || CountItems();
                     }
                     else
                     {
@@ -159,7 +160,7 @@ namespace Barotrauma
                     {
                         TargetName = container.Item.Name,
                         AbortCondition = obj =>
-                            container?.Item == null || container.Item.Removed || container.Item.IsThisOrAnyContainerIgnoredByAI(character) || 
+                            container?.Item == null || container.Item.Removed || !container.Item.HasAccess(character) || 
                             (container.Item.GetRootContainer()?.OwnInventory?.Locked ?? false) ||
                             ItemToContain == null || ItemToContain.Removed ||
                             !ItemToContain.IsOwnedBy(character) || container.Item.GetRootInventoryOwner() is Character c && c != character,

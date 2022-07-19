@@ -26,37 +26,37 @@ namespace Barotrauma
         /// </summary>
         const float BlockOtherConversationsDuration = 5.0f;
 
-        [Serialize("", true)]
+        [Serialize("", IsPropertySaveable.Yes)]
         public string Text { get; set; }
 
-        [Serialize(0, true)]
+        [Serialize(0, IsPropertySaveable.Yes)]
         public int DefaultOption { get; set; }
 
-        [Serialize("", true)]
-        public string SpeakerTag { get; set; }
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier SpeakerTag { get; set; }
 
-        [Serialize("", true)]
-        public string TargetTag { get; set; }
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier TargetTag { get; set; }
 
-        [Serialize(true, true)]
+        [Serialize(true, IsPropertySaveable.Yes)]
         public bool WaitForInteraction { get; set; }
 
-        [Serialize("", true, "Tag to assign to whoever invokes the conversation")]
-        public string InvokerTag { get; set; }
+        [Serialize("", IsPropertySaveable.Yes, "Tag to assign to whoever invokes the conversation")]
+        public Identifier InvokerTag { get; set; }
 
-        [Serialize(false, true)]
+        [Serialize(false, IsPropertySaveable.Yes)]
         public bool FadeToBlack { get; set; }
 
-        [Serialize(true, true, "Should the event end if the conversations is interrupted (e.g. if the speaker dies or falls unconscious mid-conversation). Defaults to true.")]
+        [Serialize(true, IsPropertySaveable.Yes, "Should the event end if the conversations is interrupted (e.g. if the speaker dies or falls unconscious mid-conversation). Defaults to true.")]
         public bool EndEventIfInterrupted { get; set; }
 
-        [Serialize("", true)]
+        [Serialize("", IsPropertySaveable.Yes)]
         public string EventSprite { get; set; }
         
-        [Serialize(DialogTypes.Regular, true)]
+        [Serialize(DialogTypes.Regular, IsPropertySaveable.Yes)]
         public DialogTypes DialogType { get; set; }
 
-        [Serialize(false, true)]
+        [Serialize(false, IsPropertySaveable.Yes)]
         public bool ContinueConversation { get; set; }
 
         private Character speaker;
@@ -79,12 +79,12 @@ namespace Barotrauma
 
         private bool interrupt;
 
-        public ConversationAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element)
+        public ConversationAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)
         {
             actionCount++;
             Identifier = actionCount;
             Options = new List<SubactionGroup>();
-            foreach (XElement elem in element.Elements())
+            foreach (var elem in element.Elements())
             {
                 if (elem.Name.LocalName.Equals("option", StringComparison.InvariantCultureIgnoreCase))
                 {
@@ -182,7 +182,7 @@ namespace Barotrauma
             speaker.ActiveConversation = null;
             speaker.SetCustomInteract(null, null);
 #if SERVER
-            GameMain.NetworkMember.CreateEntityEvent(speaker, new object[] { NetEntityEvent.Type.AssignCampaignInteraction });
+            GameMain.NetworkMember.CreateEntityEvent(speaker, new Character.AssignCampaignInteractionEventData());
 #endif
             var humanAI = speaker.AIController as HumanAIController;
             if (humanAI != null && !speaker.IsDead && !speaker.Removed)
@@ -230,7 +230,7 @@ namespace Barotrauma
                     return;
                 }
 
-                if (!string.IsNullOrEmpty(SpeakerTag))
+                if (!SpeakerTag.IsEmpty)
                 {
                     if (speaker != null && !speaker.Removed && speaker.CampaignInteractionType == CampaignMode.InteractionType.Talk && speaker.ActiveConversation?.ParentEvent != this.ParentEvent) { return; }
                     speaker = ParentEvent.GetTargets(SpeakerTag).FirstOrDefault(e => e is Character) as Character;
@@ -254,12 +254,12 @@ namespace Barotrauma
 #if CLIENT
                         speaker.SetCustomInteract(
                             TryStartConversation, 
-                            TextManager.GetWithVariable("CampaignInteraction.Talk", "[key]", GameMain.Config.KeyBindText(InputType.Use)));
+                            TextManager.GetWithVariable("CampaignInteraction.Talk", "[key]", GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Use)));
 #else
                         speaker.SetCustomInteract( 
                             TryStartConversation, 
                             TextManager.Get("CampaignInteraction.Talk"));
-                        GameMain.NetworkMember.CreateEntityEvent(speaker, new object[] { NetEntityEvent.Type.AssignCampaignInteraction });   
+                        GameMain.NetworkMember.CreateEntityEvent(speaker, new Character.AssignCampaignInteractionEventData());   
 #endif
                     }
                     return;
@@ -286,7 +286,7 @@ namespace Barotrauma
         private bool ShouldInterrupt()
         {
             IEnumerable<Entity> targets = Enumerable.Empty<Entity>();
-            if (!string.IsNullOrEmpty(TargetTag))
+            if (!TargetTag.IsEmpty)
             {
                 targets = ParentEvent.GetTargets(TargetTag).Where(e => IsValidTarget(e));
                 if (!targets.Any()) { return true; }
@@ -294,7 +294,7 @@ namespace Barotrauma
 
             if (speaker != null)
             {
-                if (!string.IsNullOrEmpty(TargetTag))
+                if (!TargetTag.IsEmpty)
                 {
                     if (targets.All(t => Vector2.DistanceSquared(t.WorldPosition, speaker.WorldPosition) > InterruptDistance * InterruptDistance)) { return true; }
                 }
@@ -313,10 +313,14 @@ namespace Barotrauma
             bool isValid = e is Character character && !character.Removed && !character.IsDead && !character.IsIncapacitated &&
                 (e == Character.Controlled || character.IsRemotePlayer);
 #if SERVER
-            UpdateIgnoredClients();
-            isValid &= !ignoredClients.Keys.Any(c => c.Character == e);
+            if (!dialogOpened)
+            {
+                UpdateIgnoredClients();
+                isValid &= !ignoredClients.Keys.Any(c => c.Character == e);
+            }
 #elif CLIENT
-            isValid &= (e != Character.Controlled || !GUI.InputBlockingMenuOpen);
+            bool block = GUI.InputBlockingMenuOpen && !dialogOpened;
+            isValid &= (e != Character.Controlled || !block);
 #endif
             return isValid;
         }
@@ -324,7 +328,7 @@ namespace Barotrauma
         private void TryStartConversation(Character speaker, Character targetCharacter = null)
         {
             IEnumerable<Entity> targets = Enumerable.Empty<Entity>();
-            if (!string.IsNullOrEmpty(TargetTag))
+            if (!TargetTag.IsEmpty)
             {
                 targets = ParentEvent.GetTargets(TargetTag).Where(e => IsValidTarget(e));
                 if (!targets.Any() || IsBlockedByAnotherConversation(targets)) { return; }
@@ -335,8 +339,7 @@ namespace Barotrauma
                 prevIdleObjective = humanAI.ObjectiveManager.GetObjective<AIObjectiveIdle>();
                 prevGotoObjective = humanAI.ObjectiveManager.GetObjective<AIObjectiveGoTo>();
                 humanAI.SetForcedOrder(
-                    Order.PrefabList.Find(o => o.Identifier.Equals("wait", StringComparison.OrdinalIgnoreCase)),
-                    option: string.Empty, orderGiver: null);
+                    new Order(OrderPrefab.Prefabs["wait"], Barotrauma.Identifier.Empty, null, orderGiver: null));
                 if (targets.Any()) 
                 {
                     Entity closestTarget = null;
@@ -357,7 +360,7 @@ namespace Barotrauma
                 }
             }
 
-            if (targetCharacter != null && !string.IsNullOrWhiteSpace(InvokerTag))
+            if (targetCharacter != null && !InvokerTag.IsEmpty)
             {
                 ParentEvent.AddTarget(InvokerTag, targetCharacter);
             }
@@ -370,7 +373,7 @@ namespace Barotrauma
                 speaker.CampaignInteractionType = CampaignMode.InteractionType.None;
                 speaker.SetCustomInteract(null, null);
 #if SERVER
-                GameMain.NetworkMember.CreateEntityEvent(speaker, new object[] { NetEntityEvent.Type.AssignCampaignInteraction });
+                GameMain.NetworkMember.CreateEntityEvent(speaker, new Character.AssignCampaignInteractionEventData());
 #endif
             }
         }

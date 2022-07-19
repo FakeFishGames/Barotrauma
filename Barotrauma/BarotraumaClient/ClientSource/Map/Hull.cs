@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
 using Barotrauma.MapCreatures.Behavior;
 
 namespace Barotrauma
@@ -29,7 +30,7 @@ namespace Barotrauma
 
         private float serverUpdateDelay;
         private float remoteWaterVolume, remoteOxygenPercentage;
-        private List<Vector3> remoteFireSources;
+        private NetworkFireSource[] remoteFireSources = null;
         private readonly List<BackgroundSection> remoteBackgroundSections = new List<BackgroundSection>();
         private readonly List<RemoteDecal> remoteDecals = new List<RemoteDecal>();
 
@@ -107,7 +108,7 @@ namespace Barotrauma
             {
                 CanTakeKeyBoardFocus = false
             };
-            new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true, titleFont: GUI.LargeFont);
+            new SerializableEntityEditor(listBox.Content.RectTransform, this, inGame, showName: true, titleFont: GUIStyle.LargeFont);
 
             PositionEditingHUD();
 
@@ -174,15 +175,16 @@ namespace Barotrauma
                     {
                         if (!pendingSectionUpdates.Any() && !pendingDecalUpdates.Any())
                         {
-                            GameMain.NetworkMember?.CreateEntityEvent(this);
+                            GameMain.NetworkMember?.CreateEntityEvent(this, new StatusEventData());
                         }
                         foreach (Decal decal in pendingDecalUpdates)
                         {
-                            GameMain.NetworkMember?.CreateEntityEvent(this, new object[] { decal });
+                            GameMain.NetworkMember?.CreateEntityEvent(this, new DecalEventData(decal));
                         }
+                        pendingDecalUpdates.Clear();
                         foreach (int pendingSectionUpdate in pendingSectionUpdates)
                         {
-                            GameMain.NetworkMember?.CreateEntityEvent(this, new object[] { pendingSectionUpdate });
+                            GameMain.NetworkMember?.CreateEntityEvent(this, new BackgroundSectionsEventData(pendingSectionUpdate));
                         }
                         pendingSectionUpdates.Clear();
                         networkUpdatePending = false;
@@ -285,7 +287,7 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch,
                     new Vector2(drawRect.X, -drawRect.Y),
                     new Vector2(rect.Width, rect.Height),
-                    (IsHighlighted ? Color.LightBlue * 0.8f : GUI.Style.Red * 0.5f) * alpha, false, 0, (int)Math.Max(5.0f / Screen.Selected.Cam.Zoom, 1.0f));
+                    (IsHighlighted ? Color.LightBlue * 0.8f : GUIStyle.Red * 0.5f) * alpha, false, 0, (int)Math.Max(5.0f / Screen.Selected.Cam.Zoom, 1.0f));
             }
 
             GUI.DrawRectangle(spriteBatch,
@@ -295,34 +297,34 @@ namespace Barotrauma
 
             GUI.DrawRectangle(spriteBatch,
                 new Rectangle(drawRect.X, -drawRect.Y, rect.Width, rect.Height),
-                GUI.Style.Red * ((100.0f - OxygenPercentage) / 400.0f) * alpha, true, 0, (int)Math.Max(1.5f / Screen.Selected.Cam.Zoom, 1.0f));
+                GUIStyle.Red * ((100.0f - OxygenPercentage) / 400.0f) * alpha, true, 0, (int)Math.Max(1.5f / Screen.Selected.Cam.Zoom, 1.0f));
 
             if (GameMain.DebugDraw)
             {
-                GUI.SmallFont.DrawString(spriteBatch, "Pressure: " + ((int)pressure - rect.Y).ToString() +
+                GUIStyle.SmallFont.DrawString(spriteBatch, "Pressure: " + ((int)pressure - rect.Y).ToString() +
                     " - Oxygen: " + ((int)OxygenPercentage), new Vector2(drawRect.X + 5, -drawRect.Y + 5), Color.White);
-                GUI.SmallFont.DrawString(spriteBatch, waterVolume + " / " + Volume, new Vector2(drawRect.X + 5, -drawRect.Y + 20), Color.White);
+                GUIStyle.SmallFont.DrawString(spriteBatch, waterVolume + " / " + Volume, new Vector2(drawRect.X + 5, -drawRect.Y + 20), Color.White);
 
                 GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, (int)(100 * Math.Min(waterVolume / Volume, 1.0f))), Color.Cyan, true);
                 if (WaterVolume > Volume)
                 {
                     float maxExcessWater = Volume * MaxCompress;
-                    GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, (int)(100 * (waterVolume - Volume) / maxExcessWater)), GUI.Style.Red, true);
+                    GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, (int)(100 * (waterVolume - Volume) / maxExcessWater)), GUIStyle.Red, true);
                 }
                 GUI.DrawRectangle(spriteBatch, new Rectangle(drawRect.Center.X, -drawRect.Y + drawRect.Height / 2, 10, 100), Color.Black);
 
                 foreach (FireSource fs in FireSources)
                 {
                     Rectangle fireSourceRect = new Rectangle((int)fs.WorldPosition.X, -(int)fs.WorldPosition.Y, (int)fs.Size.X, (int)fs.Size.Y);
-                    GUI.DrawRectangle(spriteBatch, fireSourceRect, GUI.Style.Red, false, 0, 5);
-                    GUI.DrawRectangle(spriteBatch, new Rectangle(fireSourceRect.X - (int)fs.DamageRange, fireSourceRect.Y, fireSourceRect.Width + (int)fs.DamageRange * 2, fireSourceRect.Height), GUI.Style.Orange, false, 0, 5);
+                    GUI.DrawRectangle(spriteBatch, fireSourceRect, GUIStyle.Red, false, 0, 5);
+                    GUI.DrawRectangle(spriteBatch, new Rectangle(fireSourceRect.X - (int)fs.DamageRange, fireSourceRect.Y, fireSourceRect.Width + (int)fs.DamageRange * 2, fireSourceRect.Height), GUIStyle.Orange, false, 0, 5);
                     //GUI.DrawRectangle(spriteBatch, new Rectangle((int)fs.LastExtinguishPos.X, (int)-fs.LastExtinguishPos.Y, 5,5), Color.Yellow, true);
                 }
                 foreach (FireSource fs in FakeFireSources)
                 {
                     Rectangle fireSourceRect = new Rectangle((int)fs.WorldPosition.X, -(int)fs.WorldPosition.Y, (int)fs.Size.X, (int)fs.Size.Y);
-                    GUI.DrawRectangle(spriteBatch, fireSourceRect, GUI.Style.Red, false, 0, 5);
-                    GUI.DrawRectangle(spriteBatch, new Rectangle(fireSourceRect.X - (int)fs.DamageRange, fireSourceRect.Y, fireSourceRect.Width + (int)fs.DamageRange * 2, fireSourceRect.Height), GUI.Style.Orange, false, 0, 5);
+                    GUI.DrawRectangle(spriteBatch, fireSourceRect, GUIStyle.Red, false, 0, 5);
+                    GUI.DrawRectangle(spriteBatch, new Rectangle(fireSourceRect.X - (int)fs.DamageRange, fireSourceRect.Y, fireSourceRect.Width + (int)fs.DamageRange * 2, fireSourceRect.Height), GUIStyle.Orange, false, 0, 5);
                     //GUI.DrawRectangle(spriteBatch, new Rectangle((int)fs.LastExtinguishPos.X, (int)-fs.LastExtinguishPos.Y, 5,5), Color.Yellow, true);
                 }
 
@@ -356,9 +358,9 @@ namespace Barotrauma
                             WorldRect.Width, WorldRect.Height);
 
                     GUI.DrawLine(spriteBatch,
-                    new Vector2(currentHullRect.X, -currentHullRect.Y),
-                    new Vector2(connectedHullRect.X, -connectedHullRect.Y),
-                    GUI.Style.Green, width: 2);
+                        new Vector2(currentHullRect.X, -currentHullRect.Y),
+                        new Vector2(connectedHullRect.X, -connectedHullRect.Y),
+                        GUIStyle.Green, width: 2);
                 }
             }
         }
@@ -376,7 +378,7 @@ namespace Barotrauma
 
                 if (section.ColorStrength < 0.01f || section.Color.A < 1) { continue; }
 
-                if (GameMain.DecalManager.GrimeSprites.Count == 0)
+                if (section.GrimeSprite == null)
                 {
                     GUI.DrawRectangle(spriteBatch,
                         new Vector2(drawOffset.X + rect.X + section.Rect.X, -(drawOffset.Y + rect.Y + section.Rect.Y)),
@@ -387,8 +389,7 @@ namespace Barotrauma
                 {
                     Vector2 sectionPos = new Vector2(drawPos.X + section.Rect.Location.X, -(drawPos.Y + section.Rect.Location.Y));
                     Vector2 randomOffset = new Vector2(section.Noise.X - 0.5f, section.Noise.Y - 0.5f) * 15.0f;
-                    var sprite = GameMain.DecalManager.GrimeSprites[i % GameMain.DecalManager.GrimeSprites.Count];
-                    sprite.Draw(spriteBatch, sectionPos + randomOffset, section.GetStrengthAdjustedColor(), scale: 1.25f);
+                    section.GrimeSprite.Draw(spriteBatch, sectionPos + randomOffset, section.GetStrengthAdjustedColor(), scale: 1.25f);
                 }
             }
         }
@@ -594,132 +595,101 @@ namespace Barotrauma
             }
         }
 
-        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
+        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
-            if (extraData == null)
-            {
-                msg.WriteRangedInteger(0, 0, 2);
-                msg.WriteRangedSingle(MathHelper.Clamp(waterVolume / Volume, 0.0f, 1.5f), 0.0f, 1.5f, 8);
+            if (!(extraData is IEventData eventData)) { throw new Exception($"Malformed hull event: expected {nameof(Hull)}.{nameof(IEventData)}"); }
 
-                msg.Write(FireSources.Count > 0);
-                if (FireSources.Count > 0)
-                {
-                    msg.WriteRangedInteger(Math.Min(FireSources.Count, 16), 0, 16);
-                    for (int i = 0; i < Math.Min(FireSources.Count, 16); i++)
-                    {
-                        var fireSource = FireSources[i];
-                        Vector2 normalizedPos = new Vector2(
-                            (fireSource.Position.X - rect.X) / rect.Width,
-                            (fireSource.Position.Y - (rect.Y - rect.Height)) / rect.Height);
-
-                        msg.WriteRangedSingle(MathHelper.Clamp(normalizedPos.X, 0.0f, 1.0f), 0.0f, 1.0f, 8);
-                        msg.WriteRangedSingle(MathHelper.Clamp(normalizedPos.Y, 0.0f, 1.0f), 0.0f, 1.0f, 8);
-                        msg.WriteRangedSingle(MathHelper.Clamp(fireSource.Size.X / rect.Width, 0.0f, 1.0f), 0, 1.0f, 8);
-                    }
-                }
-            }
-            else if (extraData[0] is Decal decal)
+            msg.WriteRangedInteger((int)eventData.EventType, (int)EventType.MinValue, (int)EventType.MaxValue);
+            switch (eventData)
             {
-                msg.WriteRangedInteger(1, 0, 2);
-                int decalIndex = decals.IndexOf(decal);
-                msg.Write((byte)(decalIndex < 0 ? 255 : decalIndex));
-                msg.WriteRangedSingle(decal.BaseAlpha, 0.0f, 1.0f, 8);
-            }
-            else
-            {
-                msg.WriteRangedInteger(2, 0, 2);
-                int sectorToUpdate = (int)extraData[0];
-                int start = sectorToUpdate * BackgroundSectionsPerNetworkEvent;
-                int end = Math.Min((sectorToUpdate + 1) * BackgroundSectionsPerNetworkEvent, BackgroundSections.Count - 1);
-                msg.WriteRangedInteger(sectorToUpdate, 0, BackgroundSections.Count - 1);
-                for (int i = start; i < end; i++)
-                {
-                    msg.WriteRangedSingle(BackgroundSections[i].ColorStrength, 0.0f, 1.0f, 8);
-                    msg.Write(BackgroundSections[i].Color.PackedValue);
-                }
+                case StatusEventData statusEventData:
+                    SharedStatusWrite(msg);
+                    break;
+                case BackgroundSectionsEventData backgroundSectionsEventData:
+                    SharedBackgroundSectionsWrite(msg, backgroundSectionsEventData);
+                    break;
+                case DecalEventData decalEventData:
+                    var decal = decalEventData.Decal;
+                    int decalIndex = decals.IndexOf(decal);
+                    msg.Write((byte)(decalIndex < 0 ? 255 : decalIndex));
+                    msg.WriteRangedSingle(decal.BaseAlpha, 0.0f, 1.0f, 8);
+                    break;
+                default:
+                    throw new Exception($"Malformed hull event: did not expect {eventData.GetType().Name}");
             }
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage message, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
-            bool isBallastFloraUpdate = message.ReadBoolean();
-            if (isBallastFloraUpdate)
+            EventType eventType = (EventType)msg.ReadRangedInteger((int)EventType.MinValue, (int)EventType.MaxValue);
+            switch (eventType)
             {
-                BallastFloraBehavior.NetworkHeader header = (BallastFloraBehavior.NetworkHeader) message.ReadByte();
-                if (header == BallastFloraBehavior.NetworkHeader.Spawn)
-                {
-                    string identifier = message.ReadString();
-                    float x = message.ReadSingle();
-                    float y = message.ReadSingle();
-                    BallastFlora = new BallastFloraBehavior(this, BallastFloraPrefab.Find(identifier), new Vector2(x, y), firstGrowth: true)
-                    {
-                        PowerConsumptionTimer = message.ReadSingle()
-                    };
-                }
-                else
-                {
-                    BallastFlora?.ClientRead(message, header);
-                }
-                return;
-            }
-            remoteWaterVolume = message.ReadRangedSingle(0.0f, 1.5f, 8) * Volume;
-            remoteOxygenPercentage = message.ReadRangedSingle(0.0f, 100.0f, 8);
-
-            bool hasFireSources = message.ReadBoolean();
-            remoteFireSources = new List<Vector3>();
-            if (hasFireSources)
-            {
-                int fireSourceCount = message.ReadRangedInteger(0, 16);
-                for (int i = 0; i < fireSourceCount; i++)
-                {
-                    remoteFireSources.Add(new Vector3(
-                        MathHelper.Clamp(message.ReadRangedSingle(0.0f, 1.0f, 8), 0.05f, 0.95f),
-                        MathHelper.Clamp(message.ReadRangedSingle(0.0f, 1.0f, 8), 0.05f, 0.95f),
-                        message.ReadRangedSingle(0.0f, 1.0f, 8)));
-                }
-            }
-
-            bool hasExtraData = message.ReadBoolean();
-            if (hasExtraData)
-            {
-                bool hasSectionUpdate = message.ReadBoolean();
-                if (hasSectionUpdate)
-                {
-                    int sectorToUpdate = message.ReadRangedInteger(0, BackgroundSections.Count - 1);
-                    int start = sectorToUpdate * BackgroundSectionsPerNetworkEvent;
-                    int end = Math.Min((sectorToUpdate + 1) * BackgroundSectionsPerNetworkEvent, BackgroundSections.Count - 1);
-                    for (int i = start; i < end; i++)
-                    {
-                        float colorStrength = message.ReadRangedSingle(0.0f, 1.0f, 8);
-                        Color color = new Color(message.ReadUInt32());
-                        var remoteBackgroundSection = remoteBackgroundSections.Find(s => s.Index == i);
-                        if (remoteBackgroundSection != null)
+                case EventType.Status:
+                    remoteOxygenPercentage = msg.ReadRangedSingle(0.0f, 100.0f, 8);
+                    
+                    SharedStatusRead(
+                        msg,
+                        out float newWaterVolume,
+                        out NetworkFireSource[] newFireSources);
+                    
+                    remoteWaterVolume = newWaterVolume;
+                    remoteFireSources = newFireSources;
+                    break;
+                case EventType.BackgroundSections:
+                    SharedBackgroundSectionRead(
+                        msg,
+                        bsnu =>
                         {
-                            remoteBackgroundSection.SetColorStrength(colorStrength);
-                            remoteBackgroundSection.SetColor(color);
-                        }
-                        else
-                        {
-                            remoteBackgroundSections.Add(new BackgroundSection(new Rectangle(0, 0, 1, 1), (ushort)i, colorStrength, color, 0));
-                        }
-                    }
+                            int i = bsnu.SectionIndex;
+                            Color color = bsnu.Color;
+                            float colorStrength = bsnu.ColorStrength;
+                            
+                            var remoteBackgroundSection = remoteBackgroundSections.Find(s => s.Index == i);
+                            if (remoteBackgroundSection != null)
+                            {
+                                remoteBackgroundSection.SetColorStrength(colorStrength);
+                                remoteBackgroundSection.SetColor(color);
+                            }
+                            else
+                            {
+                                remoteBackgroundSections.Add(new BackgroundSection(new Rectangle(0, 0, 1, 1), (ushort)i, colorStrength, color, 0));
+                            }
+                        }, out _);
                     paintAmount = BackgroundSections.Sum(s => s.ColorStrength);
-                }
-                else
-                {
-                    int decalCount = message.ReadRangedInteger(0, MaxDecalsPerHull);
+                    break;
+                case EventType.Decal:
+                    int decalCount = msg.ReadRangedInteger(0, MaxDecalsPerHull);
                     if (decalCount == 0) { decals.Clear(); }
                     remoteDecals.Clear();
                     for (int i = 0; i < decalCount; i++)
                     {
-                        UInt32 decalId = message.ReadUInt32();
-                        int spriteIndex = message.ReadByte();
-                        float normalizedXPos = message.ReadRangedSingle(0.0f, 1.0f, 8);
-                        float normalizedYPos = message.ReadRangedSingle(0.0f, 1.0f, 8);
-                        float decalScale = message.ReadRangedSingle(0.0f, 2.0f, 12);
+                        UInt32 decalId = msg.ReadUInt32();
+                        int spriteIndex = msg.ReadByte();
+                        float normalizedXPos = msg.ReadRangedSingle(0.0f, 1.0f, 8);
+                        float normalizedYPos = msg.ReadRangedSingle(0.0f, 1.0f, 8);
+                        float decalScale = msg.ReadRangedSingle(0.0f, 2.0f, 12);
                         remoteDecals.Add(new RemoteDecal(decalId, spriteIndex, new Vector2(normalizedXPos, normalizedYPos), decalScale));
                     }
-                }
+                    break;
+                case EventType.BallastFlora:
+                    BallastFloraBehavior.NetworkHeader header = (BallastFloraBehavior.NetworkHeader) msg.ReadByte();
+                    if (header == BallastFloraBehavior.NetworkHeader.Spawn)
+                    {
+                        Identifier identifier = msg.ReadIdentifier();
+                        float x = msg.ReadSingle();
+                        float y = msg.ReadSingle();
+                        BallastFlora = new BallastFloraBehavior(this, BallastFloraPrefab.Find(identifier), new Vector2(x, y), firstGrowth: true)
+                        {
+                            PowerConsumptionTimer = msg.ReadSingle()
+                        };
+                    }
+                    else
+                    {
+                        BallastFlora?.ClientRead(msg, header);
+                    }
+                    break;
+                default:
+                    throw new Exception($"Malformed incoming hull event: {eventType} is not a supported event type");
             }
 
             if (serverUpdateDelay > 0.0f) { return; }
@@ -755,17 +725,15 @@ namespace Barotrauma
                 remoteDecals.Clear();
             }
 
-            if (remoteFireSources == null) { return; }
-
+            if (remoteFireSources is null) { return; }
+            
             WaterVolume = remoteWaterVolume;
             OxygenPercentage = remoteOxygenPercentage;
 
-            for (int i = 0; i < remoteFireSources.Count; i++)
+            for (int i = 0; i < remoteFireSources.Length; i++)
             {
-                Vector2 pos = new Vector2(
-                    rect.X + rect.Width * remoteFireSources[i].X,
-                    rect.Y - rect.Height + (rect.Height * remoteFireSources[i].Y));
-                float size = remoteFireSources[i].Z * rect.Width;
+                Vector2 pos = remoteFireSources[i].Position;
+                float size = remoteFireSources[i].Size;
 
                 var newFire = i < FireSources.Count ?
                     FireSources[i] :
@@ -781,7 +749,7 @@ namespace Barotrauma
                 }
             }
 
-            for (int i = FireSources.Count - 1; i >= remoteFireSources.Count; i--)
+            for (int i = FireSources.Count - 1; i >= remoteFireSources.Length; i--)
             {
                 FireSources[i].Remove();
                 if (i < FireSources.Count)

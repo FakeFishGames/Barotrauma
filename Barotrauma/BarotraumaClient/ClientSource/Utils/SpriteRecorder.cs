@@ -214,9 +214,9 @@ namespace Barotrauma
             //try to place commands of the same texture
             //contiguously for optimal buffer generation
             //while maintaining the same visual result
-            for (int i=1;i<commandList.Count;i++)
+            for (int i = 1; i < commandList.Count; i++)
             {
-                if (commandList[i].Texture != commandList[i-1].Texture)
+                if (commandList[i].Texture != commandList[i - 1].Texture)
                 {
                     for (int j = i - 1; j >= 0; j--)
                     {
@@ -244,6 +244,7 @@ namespace Barotrauma
             //requires a vertex buffer to be rendered
             CrossThread.RequestExecutionOnMainThread(() =>
             {
+                if (isDisposed) { return; }
                 if (commandList.Count == 0) { return; }
                 int startIndex = 0;
                 for (int i = 1; i < commandList.Count; i++)
@@ -283,7 +284,7 @@ namespace Barotrauma
                 indexBuffer?.Dispose();
                 indexBuffer = new IndexBuffer(gfxDevice, IndexElementSize.SixteenBits, requiredIndexCount * 2, BufferUsage.WriteOnly);
                 ushort[] indices = new ushort[requiredIndexCount * 2];
-                for (int i=0;i<indices.Length;i+=6)
+                for (int i = 0; i < indices.Length; i += 6)
                 {
                     indices[i + 0] = (ushort)((i / 6) * 4 + 1);
                     indices[i + 1] = (ushort)((i / 6) * 4 + 0);
@@ -296,7 +297,7 @@ namespace Barotrauma
             }
 
             gfxDevice.Indices = indexBuffer;
-            for (int i=0;i<recordedBuffers.Count;i++)
+            for (int i = 0; i < recordedBuffers.Count; i++)
             {
                 gfxDevice.SetVertexBuffer(recordedBuffers[i].VertexBuffer);
                 BasicEffect.Texture = recordedBuffers[i].Texture;

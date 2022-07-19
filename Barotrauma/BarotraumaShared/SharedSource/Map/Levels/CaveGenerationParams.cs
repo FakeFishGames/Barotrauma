@@ -7,23 +7,18 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class CaveGenerationParams : ISerializableEntity
+    class CaveGenerationParams : PrefabWithUintIdentifier, ISerializableEntity
     {
-        public static List<CaveGenerationParams> CaveParams { get; private set; }
+        public readonly static PrefabCollection<CaveGenerationParams> CaveParams = new PrefabCollection<CaveGenerationParams>();
 
-        public string Name
-        {
-            get { return Identifier; }
-        }
-
-        public readonly string Identifier;
+        public string Name => Identifier.Value;
 
         private int minWidth, maxWidth;
         private int minHeight, maxHeight;
 
         private int minBranchCount, maxBranchCount;
 
-        public Dictionary<string, SerializableProperty> SerializableProperties
+        public Dictionary<Identifier, SerializableProperty> SerializableProperties
         {
             get;
             set;
@@ -33,100 +28,107 @@ namespace Barotrauma
         /// Overrides the commonness of the object in a specific level type. 
         /// Key = name of the level type, value = commonness in that level type.
         /// </summary>
-        public readonly Dictionary<string, float> OverrideCommonness = new Dictionary<string, float>();
+        public readonly Dictionary<Identifier, float> OverrideCommonness = new Dictionary<Identifier, float>();
 
-        [Editable, Serialize(1.0f, true)]
+        [Editable, Serialize(1.0f, IsPropertySaveable.Yes)]
         public float Commonness
         {
             get;
             private set;
         }
 
-        [Serialize(8000, true), Editable(MinValueInt = 1000, MaxValueInt = 100000)]
+        [Serialize(8000, IsPropertySaveable.Yes), Editable(MinValueInt = 1000, MaxValueInt = 100000)]
         public int MinWidth
         {
             get { return minWidth; }
             set { minWidth = Math.Max(value, 1000); }
         }
 
-        [Serialize(10000, true), Editable(MinValueInt = 1000, MaxValueInt = 1000000)]
+        [Serialize(10000, IsPropertySaveable.Yes), Editable(MinValueInt = 1000, MaxValueInt = 1000000)]
         public int MaxWidth
         {
             get { return maxWidth; }
             set { maxWidth = Math.Max(value, minWidth); }
         }
 
-        [Serialize(8000, true), Editable(MinValueInt = 1000, MaxValueInt = 100000)]
+        [Serialize(8000, IsPropertySaveable.Yes), Editable(MinValueInt = 1000, MaxValueInt = 100000)]
         public int MinHeight
         { 
             get { return minHeight; }
             set { minHeight = Math.Max(value, 1000); }
         }
 
-        [Serialize(10000, true), Editable(MinValueInt = 1000, MaxValueInt = 1000000)]
+        [Serialize(10000, IsPropertySaveable.Yes), Editable(MinValueInt = 1000, MaxValueInt = 1000000)]
         public int MaxHeight
         {
             get { return maxHeight; }
             set { maxHeight = Math.Max(value, minHeight); }
         }
 
-        [Serialize(2, true), Editable(MinValueInt = 0, MaxValueInt = 10)]
+        [Serialize(2, IsPropertySaveable.Yes), Editable(MinValueInt = 0, MaxValueInt = 10)]
         public int MinBranchCount
         {
             get { return minBranchCount; }
             set { minBranchCount = Math.Max(value, 0); }
         }
 
-        [Serialize(4, true), Editable(MinValueInt = 0, MaxValueInt = 10)]
+        [Serialize(4, IsPropertySaveable.Yes), Editable(MinValueInt = 0, MaxValueInt = 10)]
         public int MaxBranchCount
         {
             get { return maxBranchCount; }
             set { maxBranchCount = Math.Max(value, minBranchCount); }
         }
 
-        [Serialize(50, true), Editable(MinValueInt = 0, MaxValueInt = 1000)]
+        [Serialize(50, IsPropertySaveable.Yes), Editable(MinValueInt = 0, MaxValueInt = 1000)]
         public int LevelObjectAmount
         {
             get;
             set;
         }
 
-        [Serialize(0.1f, true), Editable(MinValueFloat = 0, MaxValueFloat = 1.0f, DecimalCount = 2 )]
+        [Serialize(0.1f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0, MaxValueFloat = 1.0f, DecimalCount = 2 )]
         public float DestructibleWallRatio
         {
             get;
             set;
         }
 
-        public Sprite WallSprite { get; private set; }
-        public Sprite WallEdgeSprite { get; private set; }
+        public readonly Sprite WallSprite;
+        public readonly Sprite WallEdgeSprite;
 
-        public static CaveGenerationParams GetRandom(LevelGenerationParams generationParams, bool abyss, Rand.RandSync rand)
+        public static CaveGenerationParams GetRandom(Level level, bool abyss, Rand.RandSync rand)
         {
-            if (CaveParams.All(p => p.GetCommonness(generationParams, abyss) <= 0.0f))
+            var caveParams = CaveParams.OrderBy(p => p.UintIdentifier).ToList();
+            if (caveParams.All(p => p.GetCommonness(level.LevelData, abyss) <= 0.0f))
             {
-                return CaveParams.First();
+                return caveParams.First();
             }
-            return ToolBox.SelectWeightedRandom(CaveParams, CaveParams.Select(p => p.GetCommonness(generationParams, abyss)).ToList(), rand);
+            return ToolBox.SelectWeightedRandom(caveParams.ToList(), caveParams.Select(p => p.GetCommonness(level.LevelData, abyss)).ToList(), rand);
         }
 
-        public float GetCommonness(LevelGenerationParams generationParams, bool abyss)
+        public float GetCommonness(LevelData levelData, bool abyss)
         {
-            if (generationParams?.Identifier != null &&
-                OverrideCommonness.TryGetValue(abyss ? "abyss" : generationParams.Identifier, out float commonness))
+            if (levelData.GenerationParams != null && levelData.GenerationParams.Identifier != Identifier.Empty &&
+                OverrideCommonness.TryGetValue(abyss ? "abyss".ToIdentifier() : levelData.GenerationParams.Identifier, out float commonness))
             {
                 return commonness;
             }
+            if (levelData?.Biome != null)
+            {
+                if (OverrideCommonness.TryGetValue(levelData.Biome.Identifier, out float biomeCommonness))
+                {
+                    return biomeCommonness;
+                }
+            }
+            
             return Commonness;
         }
 
-        private CaveGenerationParams(XElement element)
+        public CaveGenerationParams(ContentXElement element, CaveGenerationParametersFile file) : base(file, element.GetAttributeIdentifier("identifier", ""))
         {
-            Identifier = element == null ? "default" : element.GetAttributeString("identifier", null) ?? element.Name.ToString();
-            Identifier = Identifier.ToLowerInvariant();
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -137,7 +139,7 @@ namespace Barotrauma
                         WallEdgeSprite = new Sprite(subElement);
                         break;
                     case "overridecommonness":
-                        string levelType = subElement.GetAttributeString("leveltype", "").ToLowerInvariant();
+                        Identifier levelType = subElement.GetAttributeIdentifier("leveltype", "");
                         if (!OverrideCommonness.ContainsKey(levelType))
                         {
                             OverrideCommonness.Add(levelType, subElement.GetAttributeFloat("commonness", 1.0f));
@@ -147,71 +149,16 @@ namespace Barotrauma
             }
         }
 
-        public static void LoadPresets()
-        {
-            CaveParams = new List<CaveGenerationParams>();
-
-            var files = GameMain.Instance.GetFilesOfType(ContentType.CaveGenerationParameters);
-            if (!files.Any())
-            {
-                files = new List<ContentFile>() { new ContentFile("Content/Map/CaveGenerationParameters.xml", ContentType.CaveGenerationParameters) };
-            }
-
-            foreach (ContentFile file in files)
-            {
-                XDocument doc = XMLExtensions.TryLoadXml(file.Path);
-                if (doc == null) { continue; }
-                var mainElement = doc.Root;
-                if (doc.Root.IsOverride())
-                {
-                    mainElement = doc.Root.FirstElement();
-                    CaveParams.Clear();
-                    DebugConsole.NewMessage($"Overriding cave generation parameters with '{file.Path}'", Color.Yellow);
-                }
-
-                foreach (XElement element in mainElement.Elements())
-                {
-                    bool isOverride = element.IsOverride();
-                    if (isOverride)
-                    {
-                        string identifier = element.FirstElement().GetAttributeString("identifier", "");
-                        var existingParams = CaveParams.Find(p => p.Identifier.Equals(identifier, StringComparison.OrdinalIgnoreCase));
-                        if (existingParams != null)
-                        {
-                            DebugConsole.NewMessage($"Overriding the cave generation parameters '{identifier}' using the file '{file.Path}'", Color.Yellow);
-                            CaveParams.Remove(existingParams);
-                        }
-                        CaveParams.Add(new CaveGenerationParams(element.FirstElement()));
-                        
-                    }
-                    else
-                    {
-                        string identifier = element.FirstElement().GetAttributeString("identifier", "");
-                        var existingParams = CaveParams.Find(p => p.Identifier.Equals(identifier, StringComparison.OrdinalIgnoreCase));
-                        if (existingParams != null)
-                        {
-                            DebugConsole.ThrowError($"Duplicate cave generation parameters: '{identifier}' defined in {element.Name} of '{file.Path}'. Use <override></override> tags to override the generation parameters.");
-                            continue;
-                        }
-                        else
-                        {
-                            CaveParams.Add(new CaveGenerationParams(element));
-                        }
-                    }
-                }
-            }
-        }
-
         public void Save(XElement element)
         {
             SerializableProperty.SerializeProperties(this, element, true);
-            foreach (KeyValuePair<string, float> overrideCommonness in OverrideCommonness)
+            foreach (KeyValuePair<Identifier, float> overrideCommonness in OverrideCommonness)
             {
                 bool elementFound = false;
-                foreach (XElement subElement in element.Elements())
+                foreach (var subElement in element.Elements())
                 {
-                    if (subElement.Name.ToString().Equals("overridecommonness", StringComparison.OrdinalIgnoreCase)
-                        && subElement.GetAttributeString("leveltype", "").Equals(overrideCommonness.Key, StringComparison.OrdinalIgnoreCase))
+                    if (subElement.NameAsIdentifier() == "overridecommonness"
+                        && subElement.GetAttributeIdentifier("leveltype", "") == overrideCommonness.Key)
                     {
                         subElement.Attribute("commonness").Value = overrideCommonness.Value.ToString("G", CultureInfo.InvariantCulture);
                         elementFound = true;
@@ -225,6 +172,11 @@ namespace Barotrauma
                         new XAttribute("commonness", overrideCommonness.Value.ToString("G", CultureInfo.InvariantCulture))));
                 }
             }
+        }
+
+        public override void Dispose()
+        {
+            WallSprite?.Remove(); WallEdgeSprite?.Remove();
         }
     }
 }

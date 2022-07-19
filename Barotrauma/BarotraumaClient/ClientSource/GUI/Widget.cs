@@ -17,7 +17,7 @@ namespace Barotrauma
         }
 
         public Shape shape;
-        public string tooltip;
+        public LocalizedString tooltip;
         public bool showTooltip = true;
         public Rectangle DrawRect => new Rectangle((int)(DrawPos.X - (float)size / 2), (int)(DrawPos.Y - (float)size / 2), size, size);
         public Rectangle InputRect
@@ -42,7 +42,7 @@ namespace Barotrauma
         /// </summary>
         public bool isFilled;
         public int inputAreaMargin;
-        public Color color = GUI.Style.Red;
+        public Color color = GUIStyle.Red;
         public Color? secondaryColor;
         public Color textColor = Color.White;
         public Color textBackgroundColor = Color.Black * 0.5f;
@@ -183,7 +183,7 @@ namespace Barotrauma
             }
             if (IsSelected)
             {
-                if (showTooltip && !string.IsNullOrEmpty(tooltip))
+                if (showTooltip && !tooltip.IsNullOrEmpty())
                 {
                     var offset = tooltipOffset ?? new Vector2(size, -size / 2f);
                     GUI.DrawString(spriteBatch, DrawPos + offset, tooltip, textColor, textBackgroundColor);

@@ -6,7 +6,7 @@ namespace Barotrauma
 {
     class AIObjectiveFightIntruders : AIObjectiveLoop<Character>
     {
-        public override string Identifier { get; set; } = "fight intruders";
+        public override Identifier Identifier { get; set; } = "fight intruders".ToIdentifier();
         protected override float IgnoreListClearInterval => 30;
         public override bool IgnoreUnsafeHulls => true;
 
@@ -45,9 +45,9 @@ namespace Barotrauma
                     {
                         //hold fire while the enemy is in the airlock (except if they've attacked us)
                         if (character.GetDamageDoneByAttacker(target) > 0.0f) { return false; }
-                        return target.CurrentHull == null || target.CurrentHull.OutpostModuleTags.Any(t => t.Equals("airlock", System.StringComparison.OrdinalIgnoreCase));
+                        return target.CurrentHull == null || target.CurrentHull.OutpostModuleTags.Any(t => t == "airlock");
                     };
-                    character.Speak(TextManager.Get("dialogenteroutpostwarning"), null, Rand.Range(0.5f, 1.0f), "leaveoutpostwarning", 30.0f);
+                    character.Speak(TextManager.Get("dialogenteroutpostwarning").Value, null, Rand.Range(0.5f, 1.0f), "leaveoutpostwarning".ToIdentifier(), 30.0f);
                 }
             }
             return combatObjective;

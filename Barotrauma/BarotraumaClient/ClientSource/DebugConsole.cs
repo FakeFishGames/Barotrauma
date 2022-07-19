@@ -14,6 +14,7 @@ using FarseerPhysics;
 using Barotrauma.Extensions;
 using Barotrauma.Steam;
 using System.Threading.Tasks;
+using Barotrauma.ClientSource.Settings;
 using Barotrauma.MapCreatures.Behavior;
 using static Barotrauma.FabricationRecipe;
 
@@ -73,8 +74,6 @@ namespace Barotrauma
         
         private static readonly ChatManager chatManager = new ChatManager(true, 64);
 
-        public static Dictionary<Keys, string> Keybinds = new Dictionary<Keys, string>();
-
         public static void Init()
         {
             OpenAL.Alc.SetErrorReasonCallback((string msg) => NewMessage(msg, Color.Orange));
@@ -84,7 +83,7 @@ namespace Barotrauma
 
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), frame.RectTransform, Anchor.Center)) { RelativeSpacing = 0.01f };
 
-            var toggleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform, Anchor.TopLeft), TextManager.Get("DebugConsoleHelpText"), Color.GreenYellow, GUI.SmallFont, Alignment.CenterLeft, style: null);
+            var toggleText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), paddedFrame.RectTransform, Anchor.TopLeft), TextManager.Get("DebugConsoleHelpText"), Color.GreenYellow, GUIStyle.SmallFont, Alignment.CenterLeft, style: null);
 
             var closeButton = new GUIButton(new RectTransform(new Vector2(0.025f, 1.0f), toggleText.RectTransform, Anchor.TopRight), "X", style: null)
             {
@@ -126,7 +125,7 @@ namespace Barotrauma
         {
             if (isOpen)
             {
-                frame.AddToGUIUpdateList();
+                frame.AddToGUIUpdateList(order: 1);
             }
         }
 
@@ -139,7 +138,7 @@ namespace Barotrauma
                     var newMsg = queuedMessages.Dequeue();
                     AddMessage(newMsg);
 
-                    if (GameSettings.SaveDebugConsoleLogs || GameSettings.VerboseLogging)
+                    if (GameSettings.CurrentConfig.SaveDebugConsoleLogs || GameSettings.CurrentConfig.VerboseLogging)
                     {
                         unsavedMessages.Add(newMsg);
                         if (unsavedMessages.Count >= messagesPerFile)
@@ -153,9 +152,9 @@ namespace Barotrauma
 
             if (!IsOpen && GUI.KeyboardDispatcher.Subscriber == null)
             {
-                foreach (var (key, command) in Keybinds)
+                foreach (var (key, command) in DebugConsoleMapping.Instance.Bindings)
                 {
-                    if (PlayerInput.KeyHit(key))
+                    if (key.IsHit())
                     {
                         ExecuteCommand(command);
                     }
@@ -173,6 +172,7 @@ namespace Barotrauma
                 isOpen = false;
                 GUI.ForceMouseOn(null);
                 textBox.Deselect();
+                SoundPlayer.PlayUISound(GUISoundType.Select);
             }
 
             if (isOpen)
@@ -210,7 +210,7 @@ namespace Barotrauma
             isOpen = !isOpen;
             if (isOpen)
             {
-                textBox.Select();
+                textBox.Select(ignoreSelectSound: true);
                 AddToGUIUpdateList();
             }
             else
@@ -218,6 +218,7 @@ namespace Barotrauma
                 GUI.ForceMouseOn(null);
                 textBox.Deselect();
             }
+            SoundPlayer.PlayUISound(GUISoundType.Select);
         }
 
         private static bool IsCommandPermitted(string command, GameClient client)
@@ -275,7 +276,7 @@ namespace Barotrauma
                         AddMessage(newMsg);
                     }
 
-                    if (GameSettings.SaveDebugConsoleLogs || GameSettings.VerboseLogging)
+                    if (GameSettings.CurrentConfig.SaveDebugConsoleLogs || GameSettings.CurrentConfig.VerboseLogging)
                     { 
                         unsavedMessages.Add(newMsg); 
                     }
@@ -313,7 +314,7 @@ namespace Barotrauma
                         }
                     };
                     var textBlock = new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width - 5, 0), textContainer.RectTransform, Anchor.TopLeft) { AbsoluteOffset = new Point(2, 2) },
-                        msg.Text, textAlignment: Alignment.TopLeft, font: GUI.SmallFont, wrap: true)
+                        msg.Text, textAlignment: Alignment.TopLeft, font: GUIStyle.SmallFont, wrap: true)
                     {
                         CanBeFocused = false,
                         TextColor = msg.Color
@@ -324,7 +325,7 @@ namespace Barotrauma
                 else
                 {
                     var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), listBox.Content.RectTransform),
-                    msg.Text, font: GUI.SmallFont, wrap: true)
+                    msg.Text, font: GUIStyle.SmallFont, wrap: true)
                     {
                         CanBeFocused = false,
                         TextColor = msg.Color
@@ -355,7 +356,7 @@ namespace Barotrauma
                 CanBeFocused = false
             };
             var textBlock = new GUITextBlock(new RectTransform(new Point(listBox.Content.Rect.Width - 170, 0), textContainer.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(20, 0) },
-                command.help, textAlignment: Alignment.TopLeft, font: GUI.SmallFont, wrap: true)
+                command.help, textAlignment: Alignment.TopLeft, font: GUIStyle.SmallFont, wrap: true)
             {
                 CanBeFocused = false,
                 TextColor = Color.White
@@ -398,17 +399,15 @@ namespace Barotrauma
 
         private static void InitProjectSpecific()
         {
-#if WINDOWS
             commands.Add(new Command("copyitemnames", "", (string[] args) =>
             {
                 StringBuilder sb = new StringBuilder();
                 foreach (ItemPrefab mp in ItemPrefab.Prefabs)
                 {
-                    sb.AppendLine(mp.Name);
+                    sb.AppendLine(mp.Name.Value);
                 }
                 Clipboard.SetText(sb.ToString());
             }));
-#endif
 
             commands.Add(new Command("autohull", "", (string[] args) =>
             {
@@ -534,8 +533,8 @@ namespace Barotrauma
                     return;
                 }
 
-                string subName = args.Length > 0 ? args[0] : "";
-                if (string.IsNullOrWhiteSpace(subName))
+                Identifier subName = (args.Length > 0 ? args[0] : "").ToIdentifier();
+                if (subName.IsEmpty)
                 {
                     ThrowError("No submarine specified.");
                     return;
@@ -554,7 +553,7 @@ namespace Barotrauma
                     levelGenerationParams = LevelGenerationParams.LevelParams.FirstOrDefault(p => p.Identifier == levelGenerationIdentifier);
                 }
 
-                if (SubmarineInfo.SavedSubmarines.None(s => s.Name.ToLowerInvariant() == subName.ToLowerInvariant()))
+                if (SubmarineInfo.SavedSubmarines.None(s => s.Name == subName))
                 {
                     ThrowError($"Cannot find a sub that matches the name \"{subName}\".");
                     return;
@@ -562,12 +561,11 @@ namespace Barotrauma
 
                 GameMain.MainMenuScreen.QuickStart(fixedSeed: false, subName, difficulty, levelGenerationParams);
 
-            }, getValidArgs: () => new[] { SubmarineInfo.SavedSubmarines.Select(s => s.Name).Distinct().ToArray() }));
+            }, getValidArgs: () => new[] { SubmarineInfo.SavedSubmarines.Select(s => s.Name).Distinct().OrderBy(s => s).ToArray() }));
 
             commands.Add(new Command("steamnetdebug", "steamnetdebug: Toggles Steamworks networking debug logging.", (string[] args) =>
             {
-                SteamManager.NetworkingDebugLog = !SteamManager.NetworkingDebugLog;
-                SteamManager.SetSteamworksNetworkingDebugLog(SteamManager.NetworkingDebugLog);
+                SteamManager.SetSteamworksNetworkingDebugLog(!SteamManager.NetworkingDebugLog);
             }));
 
             commands.Add(new Command("readycheck", "Commence a ready check in multiplayer.", (string[] args) =>
@@ -586,27 +584,26 @@ namespace Barotrauma
                 string keyString = args[0];
                 string command = args[1];
 
-                if (Enum.TryParse(typeof(Keys), keyString, ignoreCase: true, out object outKey) && outKey is Keys key)
+                KeyOrMouse key = Enum.TryParse<Keys>(keyString, ignoreCase: true, out var outKey)
+                    ? outKey
+                    : Enum.TryParse<MouseButton>(keyString, ignoreCase: true, out var outMouseButton)
+                        ? outMouseButton
+                        : (KeyOrMouse)MouseButton.None;
+                
+                if (key.Key == Keys.None && key.MouseButton == MouseButton.None)
                 {
-                    if (Keybinds.ContainsKey(key))
-                    {
-                        Keybinds[key] = command;
-                    }
-                    else
-                    {
-                        Keybinds.Add(key, command);
-                    }
-                    NewMessage($"\"{command}\" bound to {key}.", GUI.Style.Green);
-
-                    if (GameMain.Config.keyMapping.FirstOrDefault(bind => bind.Key != Keys.None && bind.Key == key) is { } existingBind)
-                    {
-                        AddWarning($"\"{key}\" has already been bound to {(InputType)GameMain.Config.keyMapping.IndexOf(existingBind)}. The keybind will perform both actions when pressed.");
-                    }
-
+                    ThrowError($"Invalid key {keyString}.");
                     return;
                 }
+                    
+                DebugConsoleMapping.Instance.Set(key, command);
+                NewMessage($"\"{command}\" bound to {key}.", GUIStyle.Green);
 
-                ThrowError($"Invalid key {keyString}.");
+                if (GameSettings.CurrentConfig.KeyMap.Bindings.FirstOrDefault(bind => bind.Value.Key != Keys.None && bind.Value.Key == key) is { } existingBind && existingBind.Value != null)
+                {
+                    AddWarning($"\"{key}\" has already been bound to {existingBind.Key}. The keybind will perform both actions when pressed.");
+                }
+
             }, isCheat: false, getValidArgs: () => new[] { Enum.GetNames(typeof(Keys)), new[] { "\"\"" } }));
             
             commands.Add(new Command("unbindkey", "unbindkey [key]: Unbinds a command.", (string[] args) =>
@@ -618,40 +615,42 @@ namespace Barotrauma
                 }
 
                 string keyString = args[0];
-                if (Enum.TryParse(typeof(Keys), keyString, ignoreCase: true, out object outKey) && outKey is Keys key)
+                
+                KeyOrMouse key = Enum.TryParse<Keys>(keyString, ignoreCase: true, out var outKey)
+                    ? outKey
+                    : Enum.TryParse<MouseButton>(keyString, ignoreCase: true, out var outMouseButton)
+                        ? outMouseButton
+                        : (KeyOrMouse)MouseButton.None;
+
+                if (key.Key == Keys.None && key.MouseButton == MouseButton.None)
                 {
-                    if (Keybinds.ContainsKey(key))
-                    {
-                        Keybinds.Remove(key);
-                    }
-                    NewMessage("Keybind unbound.", GUI.Style.Green);
+                    ThrowError($"Invalid key {keyString}.");
                     return;
                 }
-                ThrowError($"Invalid key {keyString}.");
-            }, isCheat: false, getValidArgs: () => new[] { Keybinds.Keys.Select(keys => keys.ToString()).Distinct().ToArray() }));
+                DebugConsoleMapping.Instance.Remove(key);
+                NewMessage("Keybind unbound.", GUIStyle.Green);
+                return;                
+            }, isCheat: false, getValidArgs: () => new[] { DebugConsoleMapping.Instance.Bindings.Keys.Select(keys => keys.ToString()).Distinct().OrderBy(k => k).ToArray() }));
             
             commands.Add(new Command("savebinds", "savebinds: Writes current keybinds into the config file.", (string[] args) =>
             {
-                ShowQuestionPrompt($"Some keybinds may render the game unusable, are you sure you want to make these keybinds persistent? ({Keybinds.Count} keybind(s) assigned) Y/N",
+                ShowQuestionPrompt($"Some keybinds may render the game unusable, are you sure you want to make these keybinds persistent? ({DebugConsoleMapping.Instance.Bindings.Count} keybind(s) assigned) Y/N",
                     (option2) =>
                     {
-                        if (option2.ToLowerInvariant() != "y")
+                        if (option2.ToIdentifier() != "y")
                         {
-                            NewMessage("Aborted.", GUI.Style.Red);
+                            NewMessage("Aborted.", GUIStyle.Red);
                             return;
                         }
 
-                        GameSettings.ConsoleKeybinds = new Dictionary<Keys, string>(Keybinds);
-                        GameMain.Config.SaveNewPlayerConfig();
-
-                        NewMessage($"{Keybinds.Count} keybind(s) written to the config file.", GUI.Style.Green);
+                        GameSettings.SaveCurrentConfig();
                     });
             }, isCheat: false));
             
             commands.Add(new Command("togglegrid", "Toggle visual snap grid in sub editor.", (string[] args) =>
             {
                 SubEditorScreen.ShouldDrawGrid = !SubEditorScreen.ShouldDrawGrid;
-                NewMessage(SubEditorScreen.ShouldDrawGrid ? "Enabled submarine grid." : "Disabled submarine grid.", GUI.Style.Green);
+                NewMessage(SubEditorScreen.ShouldDrawGrid ? "Enabled submarine grid." : "Disabled submarine grid.", GUIStyle.Green);
             }));
 
             commands.Add(new Command("spreadsheetexport", "Export items in format recognized by the spreadsheet importer.", (string[] args) =>
@@ -697,6 +696,7 @@ namespace Barotrauma
             AssignRelayToServer("simulatedlatency", false);
             AssignRelayToServer("simulatedloss", false);
             AssignRelayToServer("simulatedduplicateschance", false);
+            AssignRelayToServer("simulatedlongloadingtime", false);
             AssignRelayToServer("storeinfo", false);
 #endif
 
@@ -713,6 +713,7 @@ namespace Barotrauma
             commands.Add(new Command("traitorlist", "", (string[] args) => { }));
             AssignRelayToServer("traitorlist", true);
             AssignRelayToServer("money", true);
+            AssignRelayToServer("showmoney", true);
             AssignRelayToServer("setskill", true);
             AssignRelayToServer("readycheck", true);
 
@@ -801,7 +802,7 @@ namespace Barotrauma
                 string colorString = string.Join(",", add ? args.SkipLast(1) : args);
                 if (colorString.Equals("restore", StringComparison.OrdinalIgnoreCase))
                 {
-                    foreach (Hull hull in Hull.hullList)
+                    foreach (Hull hull in Hull.HullList)
                     {
                         if (hull.OriginalAmbientLight != null)
                         {
@@ -823,7 +824,7 @@ namespace Barotrauma
                     GameMain.LightManager.AmbientLight = add ? GameMain.LightManager.AmbientLight.Add(color) : color;
                 }
 
-                foreach (Hull hull in Hull.hullList)
+                foreach (Hull hull in Hull.HullList)
                 {
                     hull.OriginalAmbientLight ??= hull.AmbientLight;
                     hull.AmbientLight = add ? hull.AmbientLight.Add(color) : color;
@@ -987,14 +988,14 @@ namespace Barotrauma
                     {
                         if (entity is Item item)
                         {
-                            if (item.prefab.Identifier != args[0] && !item.Tags.Contains(args[0])) { continue; }
+                            if (item.Prefab.Identifier != args[0] && !item.Tags.Contains(args[0])) { continue; }
                             item.Reset();
                             if (MapEntity.SelectedList.Contains(item)) { item.CreateEditingHUD(); }
                             entityFound = true;
                         }
                         else if (entity is Structure structure)
                         {
-                            if (structure.prefab.Identifier != args[0] && !structure.Tags.Contains(args[0])) { continue; }
+                            if (structure.Prefab.Identifier != args[0] && !structure.Tags.Contains(args[0])) { continue; }
                             structure.Reset();
                             if (MapEntity.SelectedList.Contains(structure)) { structure.CreateEditingHUD(); }
                             entityFound = true;
@@ -1018,7 +1019,7 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-                    MapEntityPrefab.List.Select(me => me.Identifier).ToArray()
+                    MapEntityPrefab.List.Select(me => me.Identifier.Value).ToArray()
                 };
             }));
 
@@ -1103,63 +1104,6 @@ namespace Barotrauma
                 }
             }, isCheat: true));
 
-            commands.Add(new Command("tutorial", "", (string[] args) =>
-            {
-                TutorialMode.StartTutorial(Tutorials.Tutorial.Tutorials[0]);
-            }));
-
-            commands.Add(new Command("save|savesub", "save [submarine name]: Save the currently loaded submarine using the specified name.", (string[] args) =>
-            {
-                if (args.Length < 1) { return; }
-
-                GameMain.SubEditorScreen.SetMode(SubEditorScreen.Mode.Default);
-
-                string fileName = string.Join(" ", args);
-                if (fileName.Contains("../"))
-                {
-                    ThrowError("Illegal symbols in filename (../)");
-                    return;
-                }
-
-                if (Submarine.MainSub.TrySaveAs(Barotrauma.IO.Path.Combine(SubmarineInfo.SavePath, fileName + ".sub")))
-                {
-                    NewMessage("Sub saved", Color.Green);
-                }
-            }));
-
-            commands.Add(new Command("load|loadsub", "load [submarine name]: Load a submarine.", (string[] args) =>
-            {
-                if (args.Length == 0) { return; }
-
-                if (GameMain.GameSession != null)
-                {
-                    ThrowError("The loadsub command cannot be used when a round is running. You should probably be using spawnsub instead.");
-                    return;
-                }
-
-                string name = string.Join(" ", args);
-                SubmarineInfo subInfo = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => name.Equals(s.Name, StringComparison.OrdinalIgnoreCase));
-                if (subInfo == null)
-                {
-                    string path = Path.Combine(SubmarineInfo.SavePath, name);
-                    if (!File.Exists(path))
-                    {
-                        ThrowError($"Could not find a submarine with the name \"{name}\" or in the path {path}.");
-                        return;
-                    }
-                    subInfo = new SubmarineInfo(path);
-                }
-
-                Submarine.Load(subInfo, true);
-            },
-            () =>
-            {
-                return new string[][]
-                {
-                    SubmarineInfo.SavedSubmarines.Select(s => s.Name).ToArray()
-                };
-            }));
-
             commands.Add(new Command("cleansub", "", (string[] args) =>
             {
                 for (int i = MapEntity.mapEntityList.Count - 1; i >= 0; i--)
@@ -1196,7 +1140,7 @@ namespace Barotrauma
                 var msgBox = new GUIMessageBox(
                     args.Length > 0 ? args[0] : "",
                     args.Length > 1 ? args[1] : "",
-                    buttons: new string[] { "OK" },
+                    buttons: new LocalizedString[] { "OK" },
                     type: args.Length < 3 || args[2] == "default" ? GUIMessageBox.Type.Default : GUIMessageBox.Type.InGame);
 
                 msgBox.Buttons[0].OnClicked = msgBox.Close;
@@ -1217,10 +1161,12 @@ namespace Barotrauma
             {
                 if (args.None() || !bool.TryParse(args[0], out bool state))
                 {
-                    state = !GameMain.Config.DisableVoiceChatFilters;
+                    state = !GameSettings.CurrentConfig.Audio.DisableVoiceChatFilters;
                 }
-                GameMain.Config.DisableVoiceChatFilters = state;
-                NewMessage("Voice chat filters " + (GameMain.Config.DisableVoiceChatFilters ? "disabled" : "enabled"), Color.White);
+                var config = GameSettings.CurrentConfig;
+                config.Audio.DisableVoiceChatFilters = state;
+                GameSettings.SetCurrentConfig(config);
+                NewMessage("Voice chat filters " + (GameSettings.CurrentConfig.Audio.DisableVoiceChatFilters ? "disabled" : "enabled"), Color.White);
             });
             AssignRelayToServer("togglevoicechatfilters", false);
 
@@ -1345,7 +1291,7 @@ namespace Barotrauma
                 List<FabricationRecipe> fabricableItems = new List<FabricationRecipe>();
                 foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
                 {
-                    fabricableItems.AddRange(itemPrefab.FabricationRecipes);
+                    fabricableItems.AddRange(itemPrefab.FabricationRecipes.Values);
                 }
                 foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
                 {
@@ -1439,14 +1385,14 @@ namespace Barotrauma
                 List<FabricationRecipe> fabricableItems = new List<FabricationRecipe>();
                 foreach (ItemPrefab iPrefab in ItemPrefab.Prefabs)
                 {
-                    fabricableItems.AddRange(iPrefab.FabricationRecipes);
+                    fabricableItems.AddRange(iPrefab.FabricationRecipes.Values);
                 }
 
                 string itemNameOrId = args[0].ToLowerInvariant();
 
                 ItemPrefab itemPrefab =
                     (MapEntityPrefab.Find(itemNameOrId, identifier: null, showErrorMessages: false) ??
-                    MapEntityPrefab.Find(null, identifier: itemNameOrId, showErrorMessages: false)) as ItemPrefab;
+                    MapEntityPrefab.Find(null, identifier: itemNameOrId.ToIdentifier(), showErrorMessages: false)) as ItemPrefab;
 
                 if (itemPrefab == null)
                 {
@@ -1459,9 +1405,9 @@ namespace Barotrauma
                 // omega nesting incoming
                 if (fabricationRecipe != null)
                 {
-                    foreach (KeyValuePair<string, PriceInfo> itemLocationPrice in itemPrefab.GetSellPricesOver(0))
+                    foreach (var priceInfo in itemPrefab.GetSellPricesOver(0))
                     {
-                        NewMessage("    If bought at " + itemLocationPrice.Key + " it costs " + itemLocationPrice.Value.Price);
+                        NewMessage($"    If bought at {GetSeller(priceInfo.Value)} it costs {priceInfo.Value.Price}");
                         int totalPrice = 0;
                         int? totalBestPrice = 0;
                         foreach (var ingredient in fabricationRecipe.RequiredItems)
@@ -1469,37 +1415,39 @@ namespace Barotrauma
                             foreach (ItemPrefab ingredientItemPrefab in ingredient.ItemPrefabs)
                             {
                                 int defaultPrice = ingredientItemPrefab.DefaultPrice?.Price ?? 0;
-                                NewMessage("        Its ingredient " + ingredientItemPrefab.Name + " has base cost " + defaultPrice);
+                                NewMessage($"        Its ingredient {ingredientItemPrefab.Name} has base cost {defaultPrice}");
                                 totalPrice += defaultPrice;
                                 totalBestPrice += ingredientItemPrefab.GetMinPrice();
                                 int basePrice = defaultPrice;
-                                foreach (KeyValuePair<string, PriceInfo> ingredientItemLocationPrice in ingredientItemPrefab.GetBuyPricesUnder())
+                                foreach (var ingredientItemPriceInfo in ingredientItemPrefab.GetBuyPricesUnder())
                                 {
-                                    if (basePrice > ingredientItemLocationPrice.Value.Price)
+                                    if (basePrice > ingredientItemPriceInfo.Value.Price)
                                     {
-                                        NewMessage("            Location " + ingredientItemLocationPrice.Key + " sells ingredient " + ingredientItemPrefab.Name + " for cheaper, " + ingredientItemLocationPrice.Value.Price, Color.Yellow);
+                                        NewMessage($"            {GetSeller(ingredientItemPriceInfo.Value).CapitaliseFirstInvariant()} sells ingredient {ingredientItemPrefab.Name} for cheaper, {ingredientItemPriceInfo.Value.Price}", Color.Yellow);
                                     }
                                     else
                                     {
-                                        NewMessage("            Location " + ingredientItemLocationPrice.Key + " sells ingredient " + ingredientItemPrefab.Name + " for more, " + ingredientItemLocationPrice.Value.Price, Color.Teal);
+                                        NewMessage($"            {GetSeller(ingredientItemPriceInfo.Value).CapitaliseFirstInvariant()} sells ingredient {ingredientItemPrefab.Name} for more, {ingredientItemPriceInfo.Value.Price}", Color.Teal);
                                     }
                                 }
                             }
                         }
                         int costDifference = itemPrefab.DefaultPrice.Price - totalPrice;
-                        NewMessage("    Constructing the item from store-bought items provides " + costDifference + " profit with default values.");
+                        NewMessage($"    Constructing the item from store-bought items provides {costDifference} profit with default values.");
 
                         if (totalBestPrice.HasValue)
                         {
-                            int? bestDifference = itemLocationPrice.Value.Price - totalBestPrice;
-                            NewMessage("    Constructing the item from store-bought items provides " + bestDifference + " profit with best-case scenario values.");
+                            int? bestDifference = priceInfo.Value.Price - totalBestPrice;
+                            NewMessage($"    Constructing the item from store-bought items provides {bestDifference} profit with best-case scenario values.");
                         }
+
+                        static string GetSeller(PriceInfo priceInfo) => $"store with identifier \"{priceInfo.StoreIdentifier}\"";
                     }
                 }
             },
             () =>
             {
-                return new string[][] { ItemPrefab.Prefabs.SelectMany(p => p.Aliases).Concat(ItemPrefab.Prefabs.Select(p => p.Identifier)).ToArray() };
+                return new string[][] { ItemPrefab.Prefabs.SelectMany(p => p.Aliases).Concat(ItemPrefab.Prefabs.Select(p => p.Identifier.Value)).ToArray() };
             }, isCheat: false));
 
             commands.Add(new Command("checkcraftingexploits", "checkcraftingexploits: Finds outright item exploits created by buying store-bought ingredients and constructing them into sellable items.", (string[] args) =>
@@ -1507,7 +1455,7 @@ namespace Barotrauma
                 List<FabricationRecipe> fabricableItems = new List<FabricationRecipe>();
                 foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
                 {
-                    fabricableItems.AddRange(itemPrefab.FabricationRecipes);
+                    fabricableItems.AddRange(itemPrefab.FabricationRecipes.Values);
                 }
                 List<Tuple<string, int>> costDifferences = new List<Tuple<string, int>>();
 
@@ -1550,7 +1498,7 @@ namespace Barotrauma
                         if (costDifference > maximumAllowedCost || costDifference < 0f)
                         {
                             float ratio = (float)fabricationCostStore.Value / defaultCost.Value;
-                            string message = "Fabricating \"" + itemPrefab.Name + "\" costs " + (int)(ratio * 100) + "% of the price of the item, or " + costDifference + " more. Item price: " + defaultCost.Value + ", ingredient prices: " + fabricationCostStore.Value;
+                            string message = $"Fabricating \"{itemPrefab.Name}\" costs {(int)(ratio * 100)}% of the price of the item, or {costDifference} more. Item price: {defaultCost.Value}, ingredient prices: {fabricationCostStore.Value}";
                             costDifferences.Add(new Tuple<string, int>(message, costDifference));
                         }
                     }
@@ -1570,7 +1518,7 @@ namespace Barotrauma
                 List<FabricationRecipe> fabricableItems = new List<FabricationRecipe>();
                 foreach (ItemPrefab iP in ItemPrefab.Prefabs)
                 {
-                    fabricableItems.AddRange(iP.FabricationRecipes);
+                    fabricableItems.AddRange(iP.FabricationRecipes.Values);
                 }
                 if (args.Length < 2)
                 {
@@ -1617,7 +1565,7 @@ namespace Barotrauma
                 List<FabricationRecipe> fabricableItems = new List<FabricationRecipe>();
                 foreach (ItemPrefab iP in ItemPrefab.Prefabs)
                 {
-                    fabricableItems.AddRange(iP.FabricationRecipes);
+                    fabricableItems.AddRange(iP.FabricationRecipes.Values);
                 }
                 if (args.Length < 1)
                 {
@@ -1659,8 +1607,8 @@ namespace Barotrauma
                 foreach (DeconstructItem deconstructItem in parentItem.DeconstructItems)
                 {
                     ItemPrefab itemPrefab =
-                        (MapEntityPrefab.Find(deconstructItem.ItemIdentifier, identifier: null, showErrorMessages: false) ??
-                        MapEntityPrefab.Find(null, identifier: deconstructItem.ItemIdentifier, showErrorMessages: false)) as ItemPrefab;
+                        (MapEntityPrefab.Find(deconstructItem.ItemIdentifier.Value, identifier: null, showErrorMessages: false) ??
+                         MapEntityPrefab.Find(null, identifier: deconstructItem.ItemIdentifier, showErrorMessages: false)) as ItemPrefab;
                     if (itemPrefab == null)
                     {
                         ThrowError($"       Couldn't find deconstruct product \"{deconstructItem.ItemIdentifier}\"!");
@@ -1684,7 +1632,7 @@ namespace Barotrauma
                     if (!(me is ISerializableEntity serializableEntity)) { continue; }                    
                     if (serializableEntity.SerializableProperties == null) { continue; }
 
-                    if (serializableEntity.SerializableProperties.TryGetValue(args[0].ToLowerInvariant(), out SerializableProperty property))
+                    if (serializableEntity.SerializableProperties.TryGetValue(args[0].ToIdentifier(), out SerializableProperty property))
                     {
                         propertyFound = true;
                         object prevValue = property.GetValue(me);
@@ -1701,7 +1649,7 @@ namespace Barotrauma
                     {
                         foreach (ItemComponent ic in item.Components)
                         {
-                            ic.SerializableProperties.TryGetValue(args[0].ToLowerInvariant(), out SerializableProperty componentProperty);
+                            ic.SerializableProperties.TryGetValue(args[0].ToIdentifier(), out SerializableProperty componentProperty);
                             if (componentProperty == null) { continue; }
                             propertyFound = true;
                             object prevValue = componentProperty.GetValue(ic);
@@ -1723,7 +1671,7 @@ namespace Barotrauma
             },
             () =>
             {
-                List<string> propertyList = new List<string>();
+                List<Identifier> propertyList = new List<Identifier>();
                 foreach (MapEntity me in MapEntity.SelectedList)
                 {
                     if (!(me is ISerializableEntity serializableEntity)) { continue; }
@@ -1740,57 +1688,102 @@ namespace Barotrauma
 
                 return new string[][]
                 {
-                    propertyList.Distinct().ToArray(),
-                    new string[0]
+                    propertyList.Distinct().Select(i => i.Value).OrderBy(n => n).ToArray(),
+                    Array.Empty<string>()
                 };
             }));
 
             commands.Add(new Command("checkmissingloca", "", (string[] args) =>
             {
-                //key = text tag, value = list of languages the tag is missing from
-                Dictionary<string, HashSet<string>> missingTags = new Dictionary<string, HashSet<string>>();
-                Dictionary<string, HashSet<string>> tags = new Dictionary<string, HashSet<string>>();
-                foreach (string language in TextManager.AvailableLanguages)
+                void SwapLanguage(LanguageIdentifier language)
                 {
-                    TextManager.Language = language;
-                    tags.Add(language, new HashSet<string>(TextManager.GetAllTagTextPairs().Select(t => t.Key)));
+                    var config = GameSettings.CurrentConfig;
+                    config.Language = language;
+                    GameSettings.SetCurrentConfig(config);
+                }
+                
+                //key = text tag, value = list of languages the tag is missing from
+                Dictionary<Identifier, HashSet<LanguageIdentifier>> missingTags = new Dictionary<Identifier, HashSet<LanguageIdentifier>>();
+                Dictionary<LanguageIdentifier, HashSet<Identifier>> tags = new Dictionary<LanguageIdentifier, HashSet<Identifier>>();
+                foreach (LanguageIdentifier language in TextManager.AvailableLanguages)
+                {
+                    SwapLanguage(language);
+                    tags.Add(language, new HashSet<Identifier>(TextManager.GetAllTagTextPairs().Select(t => t.Key)));
                 }
 
-                foreach (string language in TextManager.AvailableLanguages)
+                foreach (LanguageIdentifier language in TextManager.AvailableLanguages)
                 {
                     //check missing mission texts
-                    foreach (var missionPrefab in MissionPrefab.List)
+                    foreach (var missionPrefab in MissionPrefab.Prefabs)
                     {
-                        string missionId = (missionPrefab.ConfigElement.Attribute("textidentifier") == null ? missionPrefab.Identifier : missionPrefab.ConfigElement.GetAttributeString("textidentifier", string.Empty));
-                        string nameIdentifier = "missionname." + missionId;
-                        if (!tags[language].Contains(nameIdentifier))
+                        Identifier missionId = missionPrefab.ConfigElement.GetAttribute("textidentifier") == null ? 
+                            missionPrefab.Identifier : 
+                            missionPrefab.ConfigElement.GetAttributeIdentifier("textidentifier", Identifier.Empty);
+                        
+                        if (!tags[language].Contains(missionPrefab.ConfigElement.GetAttributeIdentifier("name", Identifier.Empty)))
                         {
-                            if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<string>(); }
-                            missingTags[nameIdentifier].Add(language);
+                            addIfMissing($"missionname.{missionId}".ToIdentifier(), language);
                         }
-                        string descriptionIdentifier = "missiondescription." + missionId;
-                        if (!tags[language].Contains(descriptionIdentifier))
+
+                        if (missionPrefab.Type == MissionType.Combat)
                         {
-                            if (!missingTags.ContainsKey(descriptionIdentifier)) { missingTags[descriptionIdentifier] = new HashSet<string>(); }
-                            missingTags[descriptionIdentifier].Add(language);
+                            addIfMissing($"MissionDescriptionNeutral.{missionId}".ToIdentifier(), language);
+                            addIfMissing($"MissionDescription1.{missionId}".ToIdentifier(), language);
+                            addIfMissing($"MissionDescription2.{missionId}".ToIdentifier(), language);
+                            addIfMissing($"MissionTeam1.{missionId}".ToIdentifier(), language);
+                            addIfMissing($"MissionTeam2.{missionId}".ToIdentifier(), language);
+                        }
+                        else
+                        {
+                            if (!tags[language].Contains(missionPrefab.ConfigElement.GetAttributeIdentifier("description", Identifier.Empty)))
+                            {
+                                addIfMissing($"missiondescription.{missionId}".ToIdentifier(), language);
+                            }
+                            if (!tags[language].Contains(missionPrefab.ConfigElement.GetAttributeIdentifier("successmessage", Identifier.Empty)))
+                            {
+                                addIfMissing($"missionsuccess.{missionId}".ToIdentifier(), language);
+                            }
+                            //only check failure message if there's something defined in the xml (otherwise we just use the generic "missionfailed" text)
+                            if (missionPrefab.ConfigElement.GetAttribute("failuremessage") != null &&
+                                !tags[language].Contains(missionPrefab.ConfigElement.GetAttributeIdentifier("failuremessage", Identifier.Empty)))
+                            {
+                                addIfMissing($"missionfailure.{missionId}".ToIdentifier(), language);
+                            }
+                        }
+                        for (int i = 0; i < missionPrefab.Messages.Length; i++)
+                        {
+                            if (missionPrefab.Messages[i].IsNullOrWhiteSpace() || (missionPrefab.Messages[i] as FallbackLString)?.GetLastFallback() is FallbackLString { PrimaryIsLoaded: false })
+                            {
+                                addIfMissing($"MissionMessage{i}.{missionId}".ToIdentifier(), language);
+                            }
+                        }
+                    }
+
+                    foreach (Type itemComponentType in typeof(ItemComponent).Assembly.GetTypes().Where(type => type.IsSubclassOf(typeof(ItemComponent))))
+                    {
+                        foreach (var property in itemComponentType.GetProperties())
+                        {
+                            if (!property.IsDefined(typeof(InGameEditable), false)) { continue; }
+
+                            string propertyTag = $"{property.DeclaringType.Name}.{property.Name}";
+
+                            addIfMissingAll(language, 
+                                propertyTag.ToIdentifier(),
+                                property.Name.ToIdentifier(),
+                                $"sp.{propertyTag}.name".ToIdentifier());
+
+                            addIfMissingAll(language, 
+                                $"sp.{propertyTag}.description".ToIdentifier(),
+                                $"{property.Name.ToIdentifier()}.description".ToIdentifier());
                         }
                     }
 
                     foreach (SubmarineInfo sub in SubmarineInfo.SavedSubmarines)
                     {
-                        if (sub.Type != SubmarineType.Player) { continue; }
-                        string nameIdentifier = "submarine.name." + sub.Name.ToLowerInvariant();
-                        if (!tags[language].Contains(nameIdentifier))
-                        {
-                            if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<string>(); }
-                            missingTags[nameIdentifier].Add(language);
-                        }
-                        string descriptionIdentifier = "submarine.description." + sub.Name.ToLowerInvariant();
-                        if (!tags[language].Contains(descriptionIdentifier))
-                        {
-                            if (!missingTags.ContainsKey(descriptionIdentifier)) { missingTags[descriptionIdentifier] = new HashSet<string>(); }
-                            missingTags[descriptionIdentifier].Add(language);
-                        }
+                        if (sub.Type != SubmarineType.Player || !sub.IsVanillaSubmarine()) { continue; }
+
+                        addIfMissing($"submarine.name.{sub.Name}".ToIdentifier(), language);
+                        addIfMissing(("submarine.description." + sub.Name).ToIdentifier(), language);
                     }
 
                     foreach (AfflictionPrefab affliction in AfflictionPrefab.List)
@@ -1803,85 +1796,181 @@ namespace Barotrauma
                             continue;
                         }
 
-                        string afflictionId = affliction.TranslationOverride ?? affliction.Identifier;
-                        string nameIdentifier = "afflictionname." + afflictionId;
-                        if (!tags[language].Contains(nameIdentifier))
-                        {
-                            if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<string>(); }
-                            missingTags[nameIdentifier].Add(language);
-                        }
-
-                        string descriptionIdentifier = "afflictiondescription." + afflictionId;
-                        if (!tags[language].Contains(descriptionIdentifier))
-                        {
-                            if (!missingTags.ContainsKey(descriptionIdentifier)) { missingTags[descriptionIdentifier] = new HashSet<string>(); }
-                            missingTags[descriptionIdentifier].Add(language);
-                        }
+                        Identifier afflictionId = affliction.TranslationIdentifier;
+                        addIfMissing($"afflictionname.{afflictionId}".ToIdentifier(), language);
+                        addIfMissing($"afflictiondescription.{afflictionId}".ToIdentifier(), language);
                     }
 
                     foreach (var talentTree in TalentTree.JobTalentTrees)
                     {
                         foreach (var talentSubTree in talentTree.TalentSubTrees)
                         {
-                            string nameIdentifier = "talenttree." + talentSubTree.Identifier;
-                            if (!tags[language].Contains(nameIdentifier))
-                            {
-                                if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<string>(); }
-                                missingTags[nameIdentifier].Add(language);
-                            }
+                            addIfMissing($"talenttree.{talentSubTree.Identifier}".ToIdentifier(), language);
                         }
                     }
 
                     foreach (var talent in TalentPrefab.TalentPrefabs)
                     {
-                        string nameIdentifier = "talentname." + talent.Identifier;
-                        if (!tags[language].Contains(nameIdentifier))
-                        {
-                            if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<string>(); }
-                            missingTags[nameIdentifier].Add(language);
-                        }
+                        addIfMissing($"talentname.{talent.Identifier}".ToIdentifier(), language);
                     }
 
                     //check missing entity names
                     foreach (MapEntityPrefab me in MapEntityPrefab.List)
                     {
-                        string nameIdentifier = "entityname." + me.Identifier;
+                        Identifier nameIdentifier = ("entityname." + me.Identifier).ToIdentifier();
                         if (tags[language].Contains(nameIdentifier)) { continue; }
+                        if (me.HideInMenus) { continue; }
+
+                        ContentXElement configElement = null;
+
                         if (me is ItemPrefab itemPrefab)
                         {
-                            nameIdentifier = itemPrefab.ConfigElement?.GetAttributeString("nameidentifier", null) ?? nameIdentifier;
-                            if (nameIdentifier != null)
-                            {
-                                if (tags[language].Contains("entityname." + nameIdentifier)) { continue; }
-                            }
+                            configElement = itemPrefab.ConfigElement;                        
                         }
-
-                        if (!missingTags.ContainsKey(nameIdentifier)) { missingTags[nameIdentifier] = new HashSet<string>(); }
-                        missingTags[nameIdentifier].Add(language);
-                    }
-                }
-
-                foreach (string englishTag in tags["English"])
-                {
-                    foreach (string language in TextManager.AvailableLanguages)
-                    {
-                        if (language == "English") { continue; }
-                        if (!tags[language].Contains(englishTag))
+                        else if (me is StructurePrefab structurePrefab)
                         {
-                            if (!missingTags.ContainsKey(englishTag)) { missingTags[englishTag] = new HashSet<string>(); }
-                            missingTags[englishTag].Add(language);
+                            configElement = structurePrefab.ConfigElement;                       
                         }
+                        if (configElement != null)
+                        {
+                            var overrideIdentifier = configElement.GetAttributeIdentifier("nameidentifier", null);
+                            if (overrideIdentifier != null && tags[language].Contains("entityname." + overrideIdentifier)) { continue; }
+                        }
+
+                        addIfMissing(nameIdentifier, language);
                     }
                 }
 
-                List<string> lines = missingTags.Select(t => "\"" + t.Key + "\"\n    missing from " + string.Join(", ", t.Value)).ToList();
+                foreach (Identifier englishTag in tags[TextManager.DefaultLanguage])
+                {
+                    foreach (LanguageIdentifier language in TextManager.AvailableLanguages)
+                    {
+                        if (language == TextManager.DefaultLanguage) { continue; }
+                        addIfMissing(englishTag, language);
+                    }
+                }
 
+                List<string> lines = new List<string>
+                {
+                    "Missing from English:"
+                };
+
+                Dictionary<string, List<string>> missingByLanguages = new Dictionary<string, List<string>>();
+                List<string> missingFromEnglish = new List<string>();
+                foreach (KeyValuePair<Identifier, HashSet<LanguageIdentifier>> kvp in missingTags)
+                {
+                    if (kvp.Value.Contains(TextManager.DefaultLanguage))
+                    {
+                        missingFromEnglish.Add(kvp.Key.Value);
+                    }
+                    else
+                    {
+                        string languagesStr = string.Join(", ", kvp.Value.OrderBy(v => v.Value.Value));
+                        if (!missingByLanguages.ContainsKey(languagesStr))
+                        {
+                            missingByLanguages.Add(languagesStr, new List<string>());
+                        }
+                        missingByLanguages[languagesStr].Add(kvp.Key.Value);
+                    }
+                }
+                foreach (string text in missingFromEnglish.OrderBy(v => v))
+                {
+                    lines.Add(text);
+                }
+
+                foreach (KeyValuePair<string, List<string>> missingByLanguage in missingByLanguages)
+                {
+                    lines.Add(string.Empty);
+                    lines.Add($"Missing from {missingByLanguage.Key}");
+                    foreach (string text in missingByLanguage.Value.OrderBy(v => v))
+                    {
+                        lines.Add(text);
+                    }
+                }
+                
                 string filePath = "missingloca.txt";
                 Barotrauma.IO.Validation.SkipValidationInDebugBuilds = true;
                 File.WriteAllLines(filePath, lines);
                 Barotrauma.IO.Validation.SkipValidationInDebugBuilds = false;
                 ToolBox.OpenFileWithShell(Path.GetFullPath(filePath));
-                TextManager.Language = "English";
+                SwapLanguage(TextManager.DefaultLanguage);
+
+                void addIfMissing(Identifier tag, LanguageIdentifier language)
+                {
+                    if (!tags[language].Contains(tag))
+                    {
+                        if (!missingTags.ContainsKey(tag)) { missingTags[tag] = new HashSet<LanguageIdentifier>(); }
+                        missingTags[tag].Add(language);
+                    }
+                }
+                void addIfMissingAll(LanguageIdentifier language, params Identifier[] potentialTags)
+                {
+                    if (!potentialTags.Any(t => tags[language].Contains(t)))
+                    {
+                        var tag = potentialTags.First();
+                        if (!missingTags.ContainsKey(tag)) { missingTags[tag] = new HashSet<LanguageIdentifier>(); }
+                        missingTags[tag].Add(language);
+                    }
+                }
+            }));
+
+            commands.Add(new Command("comparelocafiles", "comparelocafiles [file1] [file2]", (string[] args) =>
+            {
+                if (args.Length < 2)
+                {
+                    ThrowError("Please specify two files two compare.");
+                    return;
+                }
+
+                XDocument doc1 = XMLExtensions.TryLoadXml(args[0]);
+                if (doc1?.Root == null)
+                {
+                    ThrowError($"Could not load the file \"{args[0]}\"");
+                    return;
+                }
+                XDocument doc2 = XMLExtensions.TryLoadXml(args[1]);
+                if (doc2?.Root == null)
+                {
+                    ThrowError($"Could not load the file \"{args[1]}\"");
+                    return;
+                }
+
+                var content1 = getContent(doc1.Root);
+                var language1 = doc1.Root.GetAttributeIdentifier("language", string.Empty);
+
+                var content2 = getContent(doc2.Root);
+                var language2 = doc2.Root.GetAttributeIdentifier("language", string.Empty);
+
+                foreach (KeyValuePair<string, string> kvp in content1)
+                {
+                    if (!content2.ContainsKey(kvp.Key))
+                    {
+                        ThrowError($"File 2 doesn't contain the text tag \"{kvp.Key}\"");
+                    }
+                    else if (language1 == language2 && content2[kvp.Key] != kvp.Value)
+                    {
+                        ThrowError($"Texts for the tag \"{kvp.Key}\" don't match:\n1. {kvp.Value}\n2. {content2[kvp.Key]}");                        
+                    }
+                }
+                foreach (KeyValuePair<string, string> kvp in content2)
+                {
+                    if (!content1.ContainsKey(kvp.Key))
+                    {
+                        ThrowError($"File 1 doesn't contain the text tag \"{kvp.Key}\"");
+                    }
+                }
+
+                static Dictionary<string, string> getContent(XElement element)
+                {
+                    Dictionary<string, string> content = new Dictionary<string, string>();
+                    foreach (XElement subElement in element.Elements())
+                    {
+                        string key = subElement.Name.ToString().ToLowerInvariant();
+                        if (content.ContainsKey(key)) { continue; }
+                        content.Add(key, subElement.ElementInnerText());
+                    }
+                    return content;
+                }
             }));
 
             commands.Add(new Command("eventstats", "", (string[] args) =>
@@ -1959,7 +2048,7 @@ namespace Barotrauma
             commands.Add(new Command("showballastflorasprite", "", (string[] args) =>
             {
                 BallastFloraBehavior.AlwaysShowBallastFloraSprite = !BallastFloraBehavior.AlwaysShowBallastFloraSprite;
-                NewMessage("ok", GUI.Style.Green);
+                NewMessage("ok", GUIStyle.Green);
             }));
 
             commands.Add(new Command("printreceivertransfers", "", (string[] args) =>
@@ -2046,8 +2135,8 @@ namespace Barotrauma
                             if (mapEntity is Item item)
                             {
                                 item.Rect = new Rectangle(item.Rect.X, item.Rect.Y,
-                                    (int)(item.Prefab.sprite.size.X * item.Prefab.Scale),
-                                    (int)(item.Prefab.sprite.size.Y * item.Prefab.Scale));
+                                    (int)(item.Prefab.Sprite.size.X * item.Prefab.Scale),
+                                    (int)(item.Prefab.Sprite.size.Y * item.Prefab.Scale));
                             }
                             else if (mapEntity is Structure structure)
                             {
@@ -2196,8 +2285,8 @@ namespace Barotrauma
                 List<string> lines = new List<string>();
                 foreach (MapEntityPrefab me in MapEntityPrefab.List)
                 {
-                    lines.Add("<EntityName." + me.Identifier + ">" + me.Name + "</EntityName." + me.Identifier + ">");
-                    lines.Add("<EntityDescription." + me.Identifier + ">" + me.Description + "</EntityDescription." + me.Identifier + ">");
+                    lines.Add($"<EntityName.{me.Identifier}>{me.Name}</EntityName.{me.Identifier}>");
+                    lines.Add($"<EntityDescription.{me.Identifier}>{me.Description}</EntityDescription.{me.Identifier}>");
                 }
                 Barotrauma.IO.Validation.SkipValidationInDebugBuilds = true;
                 File.WriteAllLines(filePath, lines);
@@ -2213,16 +2302,23 @@ namespace Barotrauma
 
                 foreach (EventPrefab eventPrefab in EventSet.GetAllEventPrefabs())
                 {
-                    if (string.IsNullOrEmpty(eventPrefab.Identifier)) 
+                    if (eventPrefab.Identifier.IsEmpty) 
                     {
                         continue;
                     }
                     docs.Add(eventPrefab.ConfigElement.Document);
-                    getTextsFromElement(eventPrefab.ConfigElement, lines, eventPrefab.Identifier);
+                    getTextsFromElement(eventPrefab.ConfigElement, lines, eventPrefab.Identifier.Value);
                 }
                 Barotrauma.IO.Validation.SkipValidationInDebugBuilds = true;
                 File.WriteAllLines(filePath, lines);
-                ToolBox.OpenFileWithShell(Path.GetFullPath(filePath));
+                try
+                {
+                    ToolBox.OpenFileWithShell(Path.GetFullPath(filePath));
+                }
+                catch (Exception e)
+                {
+                    ThrowError($"Failed to open the file \"{filePath}\".", e);
+                }
 
                 System.Xml.XmlWriterSettings settings = new System.Xml.XmlWriterSettings
                 {
@@ -2250,7 +2346,7 @@ namespace Barotrauma
                     }
 
                     int i = 1;
-                    foreach (XElement subElement in element.Elements())
+                    foreach (var subElement in element.Elements())
                     {
                         switch (subElement.Name.ToString().ToLowerInvariant())
                         {
@@ -2326,7 +2422,7 @@ namespace Barotrauma
 
 
                     
-                    Dictionary<string, SerializableProperty> dictionary = new Dictionary<string, SerializableProperty>();
+                    Dictionary<Identifier, SerializableProperty> dictionary = new Dictionary<Identifier, SerializableProperty>();
                     foreach (var property in properties)
                     {
                         object[] attributes = property.GetCustomAttributes(true);
@@ -2347,10 +2443,10 @@ namespace Barotrauma
                             }
                             propertyTypeName = string.Join("/", valueNames);
                         }
-                        string defaultValueString = serialize.defaultValue?.ToString() ?? "";
+                        string defaultValueString = serialize.DefaultValue?.ToString() ?? "";
                         if (property.PropertyType == typeof(float))
                         {
-                            defaultValueString = ((float)serialize.defaultValue).ToString(CultureInfo.InvariantCulture);
+                            defaultValueString = ((float)serialize.DefaultValue).ToString(CultureInfo.InvariantCulture);
                         }
 
                         lines.Add("  [tr]");
@@ -2412,7 +2508,7 @@ namespace Barotrauma
             commands.Add(new Command("checkduplicates", "Checks the given language for duplicate translation keys and writes to file.", (string[] args) =>
             {
                 if (args.Length != 1) return;
-                TextManager.CheckForDuplicates(args[0]);
+                TextManager.CheckForDuplicates(args[0].ToIdentifier().ToLanguageIdentifier());
             }));
 
             commands.Add(new Command("writetocsv|xmltocsv", "Writes the default language (English) to a .csv file.", (string[] args) =>
@@ -2447,7 +2543,7 @@ namespace Barotrauma
                     var entity = MapEntity.mapEntityList[i] as ISerializableEntity;
                     if (entity != null)
                     {
-                        List<Pair<object, SerializableProperty>> allProperties = new List<Pair<object, SerializableProperty>>();
+                        List<(object obj, SerializableProperty property)> allProperties = new List<(object obj, SerializableProperty property)>();
 
                         if (entity is Item item)
                         {
@@ -2462,16 +2558,16 @@ namespace Barotrauma
 
                             for (int k = 0; k < properties.Count; k++)
                             {
-                                allProperties.Add(new Pair<object, SerializableProperty>(entity, properties[k]));
+                                allProperties.Add((entity, properties[k]));
                             }
                         }
 
                         for (int j = 0; j < allProperties.Count; j++)
                         {
-                            var property = allProperties[j].Second;
-                            string propertyName = (allProperties[j].First.GetType().Name + "." + property.PropertyInfo.Name).ToLowerInvariant();
-                            string displayName = TextManager.Get($"sp.{propertyName}.name", returnNull: true);
-                            if (displayName == null)
+                            var property = allProperties[j].property;
+                            string propertyName = (allProperties[j].obj.GetType().Name + "." + property.PropertyInfo.Name).ToLowerInvariant();
+                            LocalizedString displayName = TextManager.Get($"sp.{propertyName}.name");
+                            if (displayName.IsNullOrEmpty())
                             {
                                 displayName = property.Name.FormatCamelCaseWithSpaces();
 
@@ -2494,26 +2590,28 @@ namespace Barotrauma
 
             commands.Add(new Command("cleanbuild", "", (string[] args) =>
             {
-                GameMain.Config.MusicVolume = 0.5f;
-                GameMain.Config.SoundVolume = 0.5f;
-                GameMain.Config.DynamicRangeCompressionEnabled = true;
-                GameMain.Config.VoipAttenuationEnabled = true;
+                /*GameSettings.CurrentConfig.MusicVolume = 0.5f;
+                GameSettings.CurrentConfig.SoundVolume = 0.5f;
+                GameSettings.CurrentConfig.DynamicRangeCompressionEnabled = true;
+                GameSettings.CurrentConfig.VoipAttenuationEnabled = true;
                 NewMessage("Music and sound volume set to 0.5", Color.Green);
 
-                GameMain.Config.GraphicsWidth = 0;
-                GameMain.Config.GraphicsHeight = 0;
-                GameMain.Config.WindowMode = WindowMode.BorderlessWindowed;
+                GameSettings.CurrentConfig.GraphicsWidth = 0;
+                GameSettings.CurrentConfig.GraphicsHeight = 0;
+                GameSettings.CurrentConfig.WindowMode = WindowMode.BorderlessWindowed;
                 NewMessage("Resolution set to 0 x 0 (screen resolution will be used)", Color.Green);
                 NewMessage("Fullscreen enabled", Color.Green);
 
-                GameSettings.VerboseLogging = false;
+                GameSettings.CurrentConfig.VerboseLogging = false;
 
-                if (GameMain.Config.MasterServerUrl != "http://www.undertowgames.com/baromaster")
+                if (GameSettings.CurrentConfig.MasterServerUrl != "http://www.undertowgames.com/baromaster")
                 {
-                    ThrowError("MasterServerUrl \"" + GameMain.Config.MasterServerUrl + "\"!");
+                    ThrowError("MasterServerUrl \"" + GameSettings.CurrentConfig.MasterServerUrl + "\"!");
                 }
 
-                GameMain.Config.SaveNewPlayerConfig();
+                GameSettings.SaveCurrentConfig();*/
+                throw new NotImplementedException();
+                #warning TODO: reimplement
 
                 var saveFiles = Barotrauma.IO.Directory.GetFiles(SaveUtil.SaveFolder);
 
@@ -2606,10 +2704,11 @@ namespace Barotrauma
                     return;
                 }
 
-                GameMain.Config.SelectCorePackage(GameMain.Config.CurrentCorePackage, true);
+                ContentPackageManager.EnabledPackages.ReloadCore();
             }));
 
-            commands.Add(new Command("ingamemodswap", "", (string[] args) =>
+            #warning TODO: reimplement?
+            /*commands.Add(new Command("ingamemodswap", "", (string[] args) =>
             {
                 ContentPackage.IngameModSwap = !ContentPackage.IngameModSwap;
                 if (ContentPackage.IngameModSwap)
@@ -2620,7 +2719,7 @@ namespace Barotrauma
                 {
                     NewMessage("Disabled ingame mod swapping");
                 }
-            }));
+            }));*/
 
             AssignOnClientExecute(
                 "giveperm",
@@ -2820,7 +2919,7 @@ namespace Barotrauma
                     ThrowError("Please give the location type after the command.");
                     return;
                 }
-                var locationType = LocationType.List.Find(lt => lt.Identifier.Equals(args[0], StringComparison.OrdinalIgnoreCase));
+                var locationType = LocationType.Prefabs.Find(lt => lt.Identifier == args[0]);
                 if (locationType == null)
                 {
                     ThrowError($"Could not find the location type \"{args[0]}\".");
@@ -2832,7 +2931,7 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-                    LocationType.List.Select(lt => lt.Identifier).ToArray()
+                    LocationType.Prefabs.Select(lt => lt.Identifier.Value).ToArray()
                 };
             }));
 #endif
@@ -3028,67 +3127,6 @@ namespace Barotrauma
                 if (Submarine.MainSub.SubBody != null) { Submarine.MainSub?.FlipX(); }
             }, isCheat: true));
 
-            commands.Add(new Command("gender", "Set the gender of the controlled character. Allowed parameters: Male, Female, None.", args =>
-            {
-                var character = Character.Controlled;
-                if (character == null)
-                {
-                    ThrowError("Not controlling any character!");
-                    return;
-                }
-                if (args.Length == 0)
-                {
-                    ThrowError("No parameters provided!");
-                    return;
-                }
-                if (Enum.TryParse(args[0], true, out Gender gender))
-                {
-                    character.Info.Gender = gender;
-                    character.ReloadHead();
-                    foreach (var limb in character.AnimController.Limbs)
-                    {
-                        if (limb.type != LimbType.Head)
-                        {
-                            limb.RecreateSprites();
-                        }
-                        foreach (var wearable in limb.WearingItems)
-                        {
-                            if (wearable.Gender != Gender.None && wearable.Gender != gender)
-                            {
-                                wearable.Gender = gender;
-                            }
-                        }
-                    }
-                }
-            }, isCheat: true));
-
-            commands.Add(new Command("race", "Set race of the controlled character. Allowed parameters: White, Black, Asian, None.", args =>
-            {
-                var character = Character.Controlled;
-                if (character == null)
-                {
-                    ThrowError("Not controlling any character!");
-                    return;
-                }
-                if (args.Length == 0)
-                {
-                    ThrowError("No parameters provided!");
-                    return;
-                }
-                if (Enum.TryParse(args[0], true, out Race race))
-                {
-                    character.Info.Race = race;
-                    character.ReloadHead();
-                    foreach (var limb in character.AnimController.Limbs)
-                    {
-                        if (limb.type != LimbType.Head)
-                        {
-                            limb.RecreateSprites();
-                        }
-                    }
-                }
-            }, isCheat: true));
-
             commands.Add(new Command("head", "Load the head sprite and the wearables (hair etc). Required argument: head id. Optional arguments: hair index, beard index, moustache index, face attachment index.", args =>
             {
                 var character = Character.Controlled;
@@ -3188,7 +3226,7 @@ namespace Barotrauma
             {
                 return new string[][]
                 {
-                    SubmarineInfo.SavedSubmarines.Select(s => s.DisplayName).ToArray()
+                    SubmarineInfo.SavedSubmarines.Select(s => s.DisplayName.Value).ToArray()
                 };
             },
             isCheat: true));
@@ -3276,7 +3314,7 @@ namespace Barotrauma
                     }
                 case "identifier":
                 case "id":
-                    sprites = Sprite.LoadedSprites.Where(s => s.EntityID != null && s.EntityID.Equals(secondArg, StringComparison.OrdinalIgnoreCase));
+                    sprites = Sprite.LoadedSprites.Where(s => s.EntityIdentifier != null && s.EntityIdentifier == secondArg);
                     if (sprites.Any())
                     {
                         foreach (var s in sprites)
@@ -3313,11 +3351,7 @@ namespace Barotrauma
             }
 
             depth += "   ";
-
-            if (newPrice > 0)
-            {
-                newPrices.TryAdd(materialPrefab, newPrice);
-            }
+            newPrices.TryAdd(materialPrefab, newPrice);
 
             int componentCost = 0;
             int newComponentCost = 0;
@@ -3377,7 +3411,7 @@ namespace Barotrauma
                                             PrintItemCosts(newPrices, itemPrefab, fabricableItems, itemPrefab.DefaultPrice.Price, adjustDown, depth, adjustItemType);
                                             break;
                                         case AdjustItemTypes.Additive:
-                                            PrintItemCosts(newPrices, itemPrefab, fabricableItems, itemPrefab.DefaultPrice.Price + (int)((newPrice - materialPrefab.DefaultPrice.Price) / (double)fabricationRecipe.RequiredItems.Count), adjustDown, depth, adjustItemType);
+                                            PrintItemCosts(newPrices, itemPrefab, fabricableItems, itemPrefab.DefaultPrice.Price + (int)((newPrice - materialPrefab.DefaultPrice.Price) / (double)fabricationRecipe.RequiredItems.Length), adjustDown, depth, adjustItemType);
                                             break;
                                         case AdjustItemTypes.Multiplicative:
                                             PrintItemCosts(newPrices, itemPrefab, fabricableItems, (int)(itemPrefab.DefaultPrice.Price * newPriceMult), adjustDown, depth, adjustItemType);

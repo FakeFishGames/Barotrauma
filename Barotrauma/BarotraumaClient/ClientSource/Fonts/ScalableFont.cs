@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using SharpFont;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -19,7 +20,6 @@ namespace Barotrauma
         private Face face;
         private uint size;
         private int baseHeight;
-        //private int lineHeight;
         private Dictionary<uint, GlyphData> texCoords;
         private List<Texture2D> textures;
         private GraphicsDevice graphicsDevice;
@@ -53,6 +53,8 @@ namespace Barotrauma
             }
         }
 
+        public bool ForceUpperCase = false;
+
         public float LineHeight => baseHeight * 1.8f;
 
         private uint[] charRanges;
@@ -79,9 +81,9 @@ namespace Barotrauma
             }
         }
 
-        public ScalableFont(XElement element, GraphicsDevice gd = null)
+        public ScalableFont(ContentXElement element, GraphicsDevice gd = null)
             : this(
-                element.GetAttributeString("file", ""),
+                element.GetAttributeContentPath("file")?.Value,
                 (uint)element.GetAttributeInt("size", 14),
                 gd,
                 element.GetAttributeBool("dynamicloading", false),
@@ -104,10 +106,7 @@ namespace Barotrauma
                         break;
                     }
                 }
-                if (this.face == null)
-                {
-                    this.face = new Face(Lib, filename);
-                }
+                this.face ??= new Face(Lib, filename);
                 this.size = size;
                 this.textures = new List<Texture2D>();
                 this.texCoords = new Dictionary<uint, GlyphData>();
@@ -186,7 +185,7 @@ namespace Barotrauma
                                 GlyphData blankData = new GlyphData(
                                     advance: (float)face.Glyph.Metrics.HorizontalAdvance,
                                     texIndex: -1); //indicates no texture because the glyph is empty
-                                
+
                                 texCoords.Add(j, blankData);
                             }
                             continue;
@@ -399,6 +398,52 @@ namespace Barotrauma
             }
         }
 
+        // TODO: refactor this further
+        private void HandleNewLineAndAlignment(
+            string text,
+            in Vector2 advanceUnit,
+            in Vector2 position,
+            in Vector2 scale,
+            Alignment alignment,
+            int i,
+            ref float lineWidth,
+            ref Vector2 currentLineOffset,
+            ref int lineNum,
+            ref Vector2 currentPos,
+            out uint charIndex,
+            out bool shouldContinue)
+        {
+            if ((alignment.HasFlag(Alignment.CenterX) || alignment.HasFlag(Alignment.Right)) && (lineWidth < 0.0f || text[i] == '\n'))
+            {
+                int startIndex = lineWidth < 0.0f ? i : (i + 1);
+                lineWidth = 0.0f;
+                for (int j = startIndex; j < text.Length; j++)
+                {
+                    if (text[j] == '\n') { break; }
+                    uint chrIndex = text[j];
+
+                    var gd2 = GetGlyphData(chrIndex);
+                    lineWidth += gd2.Advance;
+                }
+                currentLineOffset = -lineWidth * advanceUnit * scale.X;
+                if (alignment.HasFlag(Alignment.CenterX)) { currentLineOffset *= 0.5f; }
+
+                currentLineOffset.X = MathF.Round(currentLineOffset.X);
+                currentLineOffset.Y = MathF.Round(currentLineOffset.Y);
+            }
+            if (text[i] == '\n')
+            {
+                lineNum++;
+                currentPos = position;
+                currentPos.X -= LineHeight * lineNum * advanceUnit.Y * scale.Y;
+                currentPos.Y += LineHeight * lineNum * advanceUnit.X * scale.Y;
+                shouldContinue = true; charIndex = 0; return;
+            }
+
+            shouldContinue = false;
+            charIndex = text[i];
+        }
+
         private GlyphData GetGlyphData(uint charIndex)
         {
             const uint DEFAULT_INDEX = 0x25A1; //U+25A1 = white square
@@ -412,29 +457,27 @@ namespace Barotrauma
             return new GlyphData(texIndex: -1);
         }
 
-        public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects se, float layerDepth)
+        public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects se, float layerDepth, Alignment alignment = Alignment.TopLeft, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit)
         {
             if (textures.Count == 0 && !DynamicLoading) { return; }
+            text = ApplyUpperCase(text, forceUpperCase);
             if (DynamicLoading)
             {
                 DynamicRenderAtlas(graphicsDevice, text);
             }
 
+            float lineWidth = -1.0f;
+            Vector2 currentLineOffset = Vector2.Zero;
+            
             int lineNum = 0;
             Vector2 currentPos = position;
             Vector2 advanceUnit = rotation == 0.0f ? Vector2.UnitX : new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation));
             for (int i = 0; i < text.Length; i++)
             {
-                if (text[i] == '\n')
-                {
-                    lineNum++;
-                    currentPos = position;
-                    currentPos.X -= LineHeight * lineNum * advanceUnit.Y * scale.Y;
-                    currentPos.Y += LineHeight * lineNum * advanceUnit.X * scale.Y;
-                    continue;
-                }
-
-                uint charIndex = text[i];
+                HandleNewLineAndAlignment(text, advanceUnit, position, scale, alignment, i,
+                    ref lineWidth, ref currentLineOffset, ref lineNum, ref currentPos,
+                    out uint charIndex, out bool shouldContinue);
+                if (shouldContinue) { continue; }
 
                 GlyphData gd = GetGlyphData(charIndex);
                 if (gd.TexIndex >= 0)
@@ -444,20 +487,30 @@ namespace Barotrauma
                     drawOffset.X = gd.DrawOffset.X * advanceUnit.X * scale.X - gd.DrawOffset.Y * advanceUnit.Y * scale.Y;
                     drawOffset.Y = gd.DrawOffset.X * advanceUnit.Y * scale.Y + gd.DrawOffset.Y * advanceUnit.X * scale.X;
 
-                    sb.Draw(tex, currentPos + drawOffset, gd.TexCoords, color, rotation, origin, scale, se, layerDepth);
+                    sb.Draw(tex, currentPos + currentLineOffset + drawOffset, gd.TexCoords, color, rotation, origin, scale, se, layerDepth);
                 }
                 currentPos += gd.Advance * advanceUnit * scale.X;
             }
         }
 
-        public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects se, float layerDepth)
+        public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects se, float layerDepth, Alignment alignment = Alignment.TopLeft, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit)
         {
-            DrawString(sb, text, position, color, rotation, origin, new Vector2(scale), se, layerDepth);
+            DrawString(sb, text, position, color, rotation, origin, new Vector2(scale), se, layerDepth, alignment, forceUpperCase);
         }
 
-        public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color)
+        private string ApplyUpperCase(string text, ForceUpperCase forceUpperCase)
+            => forceUpperCase switch
+            {
+                Barotrauma.ForceUpperCase.Inherit => ForceUpperCase ? text.ToUpperInvariant() : text,
+                Barotrauma.ForceUpperCase.Yes => text.ToUpperInvariant(),
+                Barotrauma.ForceUpperCase.No => text
+            };
+        
+        private readonly static VertexPositionColorTexture[] quadVertices = new VertexPositionColorTexture[4];
+        public void DrawString(SpriteBatch sb, string text, Vector2 position, Color color, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit, bool italics = false)
         {
             if (textures.Count == 0 && !DynamicLoading) { return; }
+            text = ApplyUpperCase(text, forceUpperCase);
             if (DynamicLoading)
             {
                 DynamicRenderAtlas(graphicsDevice, text);
@@ -478,21 +531,48 @@ namespace Barotrauma
                 GlyphData gd = GetGlyphData(charIndex);
                 if (gd.TexIndex >= 0)
                 {
+                    float halfCharHeight = gd.TexCoords.Height * 0.5f;
+                    float slantStrength = 0.35f;
+                    float topItalicOffset = italics ? ((halfCharHeight - gd.DrawOffset.Y) * slantStrength) + baseHeight * 0.18f : 0.0f;
+                    float bottomItalicOffset = italics ? ((-halfCharHeight - gd.DrawOffset.Y) * slantStrength) + baseHeight * 0.18f : 0.0f;
+                    
                     Texture2D tex = textures[gd.TexIndex];
-                    sb.Draw(tex, currentPos + gd.DrawOffset, gd.TexCoords, color);
+                    quadVertices[0].Position = new Vector3(currentPos + gd.DrawOffset + (bottomItalicOffset, gd.TexCoords.Height), 0.0f);
+                    quadVertices[0].TextureCoordinate = ((float)gd.TexCoords.Left / tex.Width, (float)gd.TexCoords.Bottom / tex.Height);
+                    quadVertices[0].Color = color;
+
+                    quadVertices[1].Position = new Vector3(currentPos + gd.DrawOffset + (topItalicOffset, 0.0f), 0.0f);
+                    quadVertices[1].TextureCoordinate = ((float)gd.TexCoords.Left / tex.Width, (float)gd.TexCoords.Top / tex.Height);
+                    quadVertices[1].Color = color;
+
+                    quadVertices[2].Position = new Vector3(currentPos + gd.DrawOffset + (gd.TexCoords.Width + bottomItalicOffset, gd.TexCoords.Height), 0.0f);
+                    quadVertices[2].TextureCoordinate = ((float)gd.TexCoords.Right / tex.Width, (float)gd.TexCoords.Bottom / tex.Height);
+                    quadVertices[2].Color = color;
+
+                    quadVertices[3].Position = new Vector3(currentPos + gd.DrawOffset + (gd.TexCoords.Width + topItalicOffset, 0.0f), 0.0f);
+                    quadVertices[3].TextureCoordinate = ((float)gd.TexCoords.Right / tex.Width, (float)gd.TexCoords.Top / tex.Height);
+                    quadVertices[3].Color = color;
+
+                    sb.Draw(tex, quadVertices, 0.0f);
                 }
                 currentPos.X += gd.Advance;
             }
         }
 
-        public void DrawStringWithColors(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects se, float layerDepth, List<RichTextData> richTextData, int rtdOffset = 0)
+        public void DrawStringWithColors(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, float scale, SpriteEffects se, float layerDepth, in ImmutableArray<RichTextData>? richTextData, int rtdOffset = 0, Alignment alignment = Alignment.TopLeft, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit)
         {
-            DrawStringWithColors(sb, text, position, color, rotation, origin, new Vector2(scale), se, layerDepth, richTextData, rtdOffset);
+            DrawStringWithColors(sb, text, position, color, rotation, origin, new Vector2(scale), se, layerDepth, richTextData, rtdOffset, alignment, forceUpperCase);
         }
 
-        public void DrawStringWithColors(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects se, float layerDepth, List<RichTextData> richTextData, int rtdOffset = 0)
+        public void DrawStringWithColors(SpriteBatch sb, string text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects se, float layerDepth, in ImmutableArray<RichTextData>? richTextData, int rtdOffset = 0, Alignment alignment = Alignment.TopLeft, ForceUpperCase forceUpperCase = Barotrauma.ForceUpperCase.Inherit)
         {
             if (textures.Count == 0 && !DynamicLoading) { return; }
+            if (!richTextData.HasValue || richTextData.Value.Length <= 0) { DrawString(sb, text, position, color, rotation, origin, scale, se, layerDepth, forceUpperCase: forceUpperCase); return; }
+
+            text = ApplyUpperCase(text, forceUpperCase);
+            
+            float lineWidth = -1.0f;
+            Vector2 currentLineOffset = Vector2.Zero;
             if (DynamicLoading)
             {
                 DynamicRenderAtlas(graphicsDevice, text);
@@ -503,27 +583,21 @@ namespace Barotrauma
             Vector2 advanceUnit = rotation == 0.0f ? Vector2.UnitX : new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation));
 
             int richTextDataIndex = 0;
-            RichTextData currentRichTextData = richTextData[richTextDataIndex];
+            RichTextData currentRichTextData = richTextData.Value[richTextDataIndex];
 
             for (int i = 0; i < text.Length; i++)
             {
-                if (text[i] == '\n')
-                {
-                    lineNum++;
-                    currentPos = position;
-                    currentPos.X -= LineHeight * lineNum * advanceUnit.Y * scale.Y;
-                    currentPos.Y += LineHeight * lineNum * advanceUnit.X * scale.Y;
-                    continue;
-                }
-
-                uint charIndex = text[i];
+                HandleNewLineAndAlignment(text, advanceUnit, position, scale, alignment, i,
+                    ref lineWidth, ref currentLineOffset, ref lineNum, ref currentPos,
+                    out uint charIndex, out bool shouldContinue);
+                if (shouldContinue) { continue; }
 
                 Color currentTextColor;
 
                 while (currentRichTextData != null && i + rtdOffset > currentRichTextData.EndIndex + lineNum)
                 {
                     richTextDataIndex++;
-                    currentRichTextData = richTextDataIndex < richTextData.Count ? richTextData[richTextDataIndex] : null;
+                    currentRichTextData = richTextDataIndex < richTextData.Value.Length ? richTextData.Value[richTextDataIndex] : null;
                 }
 
                 if (currentRichTextData != null && currentRichTextData.StartIndex + lineNum <= i + rtdOffset && i + rtdOffset <= currentRichTextData.EndIndex + lineNum)
@@ -547,7 +621,7 @@ namespace Barotrauma
                     drawOffset.X = gd.DrawOffset.X * advanceUnit.X * scale.X - gd.DrawOffset.Y * advanceUnit.Y * scale.Y;
                     drawOffset.Y = gd.DrawOffset.X * advanceUnit.Y * scale.Y + gd.DrawOffset.Y * advanceUnit.X * scale.X;
 
-                    sb.Draw(tex, currentPos + drawOffset, gd.TexCoords, currentTextColor, rotation, origin, scale, se, layerDepth);
+                    sb.Draw(tex, currentPos + currentLineOffset + drawOffset, gd.TexCoords, currentTextColor, rotation, origin, scale, se, layerDepth);
                 }
                 currentPos += gd.Advance * advanceUnit * scale.X;
             }
@@ -628,6 +702,8 @@ namespace Barotrauma
                             //A breaker (whitespace or CJK) was found earlier
                             //in this line, so let's break the line there
                             i = lastBreakerIndex.Value + 1;
+                            gd = GetGlyphData(text[i]);
+                            advance = gd.Advance;
                         }
 
                         nextLine();
@@ -648,7 +724,12 @@ namespace Barotrauma
             requestedCharPos = foundCharPos;
             return result;
         }
-        
+
+        public Vector2 MeasureString(LocalizedString str, bool removeExtraSpacing = false)
+        {
+            return MeasureString(str.Value, removeExtraSpacing);
+        }
+
         public Vector2 MeasureString(string text, bool removeExtraSpacing = false)
         {
             if (text == null)

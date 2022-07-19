@@ -75,7 +75,7 @@ namespace Barotrauma
                     case FloodType.Minor:
                         currentFloodState += deltaTime;
                         //lerp the water surface in all hulls 15 units above the floor within 10 seconds
-                        foreach (Hull hull in Hull.hullList)
+                        foreach (Hull hull in Hull.HullList)
                         {
                             for (int i = hull.FakeFireSources.Count - 1; i >= 0; i--)
                             {
@@ -87,7 +87,7 @@ namespace Barotrauma
                     case FloodType.Major:
                         currentFloodState += deltaTime;
                         //create a full flood in 10 seconds
-                        foreach (Hull hull in Hull.hullList)
+                        foreach (Hull hull in Hull.HullList)
                         {
                             for (int i = hull.FakeFireSources.Count - 1; i >= 0; i--)
                             {
@@ -98,7 +98,7 @@ namespace Barotrauma
                         break;
                     case FloodType.HideFlooding:
                         //hide water inside hulls (the player can't see which hulls are flooded)
-                        foreach (Hull hull in Hull.hullList)
+                        foreach (Hull hull in Hull.HullList)
                         {
                             hull.DrawSurface = hull.Rect.Y - hull.Rect.Height;
                         }
@@ -140,7 +140,7 @@ namespace Barotrauma
                 character.Submarine != null &&
                 createFireSourceTimer > MathHelper.Lerp(MaxFakeFireSourceInterval, MinFakeFireSourceInterval, Strength / 100.0f))
             {
-                Hull fireHull = Hull.hullList.GetRandom(h => h.Submarine == character.Submarine);
+                Hull fireHull = Hull.HullList.GetRandomUnsynced(h => h.Submarine == character.Submarine);
                 if (fireHull != null)
                 {
                     var fakeFire = new DummyFireSource(Vector2.One * 500.0f, new Vector2(Rand.Range(fireHull.WorldRect.X, fireHull.WorldRect.Right), fireHull.WorldPosition.Y + 1), fireHull, isNetworkMessage: true)

@@ -19,39 +19,45 @@ namespace Barotrauma
             BeaconStation
         }
 
-        [Serialize("", true, description: "Species name of the character to spawn.")]
-        public string SpeciesName { get; set; }
+        [Serialize("", IsPropertySaveable.Yes, description: "Species name of the character to spawn.")]
+        public Identifier SpeciesName { get; set; }
 
-        [Serialize("", true, description: "Identifier of the NPC set to choose from.")]
-        public string NPCSetIdentifier { get; set; }
+        [Serialize("", IsPropertySaveable.Yes, description: "Identifier of the NPC set to choose from.")]
+        public Identifier NPCSetIdentifier { get; set; }
 
-        [Serialize("", true, description: "Identifier of the NPC.")]
-        public string NPCIdentifier { get; set; }
+        [Serialize("", IsPropertySaveable.Yes, description: "Identifier of the NPC.")]
+        public Identifier NPCIdentifier { get; set; }
 
-        [Serialize(true, true, description: "Should taking the items of this npc be considered as stealing?")]
+        [Serialize(true, IsPropertySaveable.Yes, description: "Should taking the items of this npc be considered as stealing?")]
         public bool LootingIsStealing { get; set; }
 
-        [Serialize("", true, description: "Identifier of the item to spawn.")]
-        public string ItemIdentifier { get; set; }
+        [Serialize("", IsPropertySaveable.Yes, description: "Identifier of the item to spawn.")]
+        public Identifier ItemIdentifier { get; set; }
 
-        [Serialize("", true, description: "The spawned entity will be assigned this tag. The tag can be used to refer to the entity by other actions of the event.")]
-        public string TargetTag { get; set; }
+        [Serialize("", IsPropertySaveable.Yes, description: "The spawned entity will be assigned this tag. The tag can be used to refer to the entity by other actions of the event.")]
+        public Identifier TargetTag { get; set; }
 
-        [Serialize("", true, description: "Tag of an entity with an inventory to spawn the item into.")]
-        public string TargetInventory { get; set; }
+        [Serialize("", IsPropertySaveable.Yes, description: "Tag of an entity with an inventory to spawn the item into.")]
+        public Identifier TargetInventory { get; set; }
 
-        [Serialize(SpawnLocationType.MainSub, true)]
+        [Serialize(SpawnLocationType.MainSub, IsPropertySaveable.Yes)]
         public SpawnLocationType SpawnLocation { get; set; }
 
-        [Serialize(SpawnType.Human, true)] 
+        [Serialize(SpawnType.Human, IsPropertySaveable.Yes)] 
         public SpawnType SpawnPointType { get; set; }
 
-        [Serialize("", true)]
-        public string SpawnPointTag { get; set; }
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier SpawnPointTag { get; set; }
 
-        private readonly HashSet<string> targetModuleTags = new HashSet<string>();
+        [Serialize(CharacterTeamType.FriendlyNPC, IsPropertySaveable.Yes)]
+        public CharacterTeamType Team { get; protected set; }
 
-        [Serialize("", true, "What outpost module tags does the entity prefer to spawn in.")]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Should we spawn the entity even when no spawn points with matching tags were found?")]
+        public bool RequireSpawnPointTag { get; set; }
+
+        private readonly HashSet<Identifier> targetModuleTags = new HashSet<Identifier>();
+
+        [Serialize("", IsPropertySaveable.Yes, "What outpost module tags does the entity prefer to spawn in.")]
         public string TargetModuleTags
         {
             get => string.Join(",", targetModuleTags);
@@ -63,13 +69,13 @@ namespace Barotrauma
                     string[] splitTags = value.Split(',');
                     foreach (var s in splitTags)
                     {
-                        targetModuleTags.Add(s);
+                        targetModuleTags.Add(s.ToIdentifier());
                     }
                 }
             }
         }
 
-        [Serialize(false, true, description: "Should the AI ignore this item. This will prevent outpost NPCs cleaning up or otherwise using important items intended to be left for the players.")]
+        [Serialize(false, IsPropertySaveable.Yes, description: "Should the AI ignore this item. This will prevent outpost NPCs cleaning up or otherwise using important items intended to be left for the players.")]
         public bool IgnoreByAI { get; set; }
 
         private bool spawned;
@@ -77,9 +83,9 @@ namespace Barotrauma
 
         private readonly bool ignoreSpawnPointType;
 
-        public SpawnAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element)
+        public SpawnAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)
         {
-            ignoreSpawnPointType = !element.Attributes().Any(a => a.Name.ToString().Equals("spawnpointtype", StringComparison.OrdinalIgnoreCase));            
+            ignoreSpawnPointType = element.GetAttribute("spawnpointtype") == null;
         }
 
         public override bool IsFinished(ref string goTo)
@@ -104,29 +110,47 @@ namespace Barotrauma
         {
             if (spawned) { return; }
 
-            if (!string.IsNullOrEmpty(NPCSetIdentifier) && !string.IsNullOrEmpty(NPCIdentifier))
+            if (!NPCSetIdentifier.IsEmpty && !NPCIdentifier.IsEmpty)
             {
                 HumanPrefab humanPrefab = NPCSet.Get(NPCSetIdentifier, NPCIdentifier);
                 if (humanPrefab != null)
                 {
                     ISpatialEntity spawnPos = GetSpawnPos();
-                    Entity.Spawner.AddToSpawnQueue(CharacterPrefab.HumanSpeciesName, OffsetSpawnPos(spawnPos?.WorldPosition ?? Vector2.Zero, 100.0f), humanPrefab.GetCharacterInfo(), onSpawn: newCharacter =>
+                    if (spawnPos != null)
                     {
-                        if (newCharacter == null) { return; }
-                        newCharacter.Prefab = humanPrefab;
-                        newCharacter.TeamID = CharacterTeamType.FriendlyNPC;
-                        newCharacter.EnableDespawn = false;
-                        humanPrefab.GiveItems(newCharacter, newCharacter.Submarine);
-                        if (LootingIsStealing)
+                        Entity.Spawner.AddCharacterToSpawnQueue(CharacterPrefab.HumanSpeciesName, OffsetSpawnPos(spawnPos.WorldPosition, 100.0f), humanPrefab.GetCharacterInfo(), onSpawn: newCharacter =>
                         {
-                            foreach (Item item in newCharacter.Inventory.AllItems)
+                            if (newCharacter == null) { return; }
+                            newCharacter.HumanPrefab = humanPrefab;
+                            newCharacter.TeamID = Team;
+                            newCharacter.EnableDespawn = false;
+                            humanPrefab.GiveItems(newCharacter, newCharacter.Submarine);
+                            if (LootingIsStealing)
                             {
-                                item.SpawnedInCurrentOutpost = true;
-                                item.AllowStealing = false;
+                                foreach (Item item in newCharacter.Inventory.AllItems)
+                                {
+                                    item.SpawnedInCurrentOutpost = true;
+                                    item.AllowStealing = false;
+                                }
                             }
-                        }
-                        humanPrefab.InitializeCharacter(newCharacter, spawnPos);
-                        if (!string.IsNullOrEmpty(TargetTag) && newCharacter != null)
+                            humanPrefab.InitializeCharacter(newCharacter, spawnPos);
+                            if (!TargetTag.IsEmpty && newCharacter != null)
+                            {
+                                ParentEvent.AddTarget(TargetTag, newCharacter);
+                            }
+                            spawnedEntity = newCharacter;
+                        });
+                    }
+                }
+            }
+            else if (!SpeciesName.IsEmpty)
+            {
+                ISpatialEntity spawnPos = GetSpawnPos();
+                if (spawnPos != null)
+                {
+                    Entity.Spawner.AddCharacterToSpawnQueue(SpeciesName, OffsetSpawnPos(spawnPos.WorldPosition, 100.0f), onSpawn: newCharacter =>
+                    {
+                        if (!TargetTag.IsEmpty && newCharacter != null)
                         {
                             ParentEvent.AddTarget(TargetTag, newCharacter);
                         }
@@ -134,27 +158,16 @@ namespace Barotrauma
                     });
                 }
             }
-            else if (!string.IsNullOrEmpty(SpeciesName))
+            else if (!ItemIdentifier.IsEmpty)
             {
-                Entity.Spawner.AddToSpawnQueue(SpeciesName, OffsetSpawnPos(GetSpawnPos()?.WorldPosition ?? Vector2.Zero, 100.0f), onSpawn: newCharacter =>
-                {
-                    if (!string.IsNullOrEmpty(TargetTag) && newCharacter != null)
-                    {
-                        ParentEvent.AddTarget(TargetTag, newCharacter);
-                    }
-                    spawnedEntity = newCharacter;
-                });
-            }
-            else if (!string.IsNullOrEmpty(ItemIdentifier))
-            {
-                if (!(MapEntityPrefab.Find(null, identifier: ItemIdentifier) is ItemPrefab itemPrefab))
+                if (!(MapEntityPrefab.FindByIdentifier(ItemIdentifier) is ItemPrefab itemPrefab))
                 {
                     DebugConsole.ThrowError("Error in SpawnAction (item prefab \"" + ItemIdentifier + "\" not found)");
                 }
                 else
                 {
                     Inventory spawnInventory = null;
-                    if (!string.IsNullOrEmpty(TargetInventory))
+                    if (!TargetInventory.IsEmpty)
                     {
                         var targets = ParentEvent.GetTargets(TargetInventory);
                         if (targets.Any())
@@ -178,17 +191,21 @@ namespace Barotrauma
 
                     if (spawnInventory == null)
                     {
-                        Entity.Spawner.AddToSpawnQueue(itemPrefab, OffsetSpawnPos(GetSpawnPos()?.WorldPosition ?? Vector2.Zero, 100.0f), onSpawned: onSpawned);
+                        ISpatialEntity spawnPos = GetSpawnPos();
+                        if (spawnPos != null)
+                        {
+                            Entity.Spawner.AddItemToSpawnQueue(itemPrefab, OffsetSpawnPos(spawnPos.WorldPosition, 100.0f), onSpawned: onSpawned);
+                        }
                     }
                     else
                     {
-                        Entity.Spawner.AddToSpawnQueue(itemPrefab, spawnInventory, onSpawned: onSpawned);
+                        Entity.Spawner.AddItemToSpawnQueue(itemPrefab, spawnInventory, onSpawned: onSpawned);
                     }
                     void onSpawned(Item newItem)
                     {
                         if (newItem != null)
                         {
-                            if (!string.IsNullOrEmpty(TargetTag))
+                            if (!TargetTag.IsEmpty)
                             {
                                 ParentEvent.AddTarget(TargetTag, newItem);
                             }
@@ -221,7 +238,7 @@ namespace Barotrauma
 
         private ISpatialEntity GetSpawnPos()
         {
-            if (!string.IsNullOrWhiteSpace(SpawnPointTag))
+            if (!SpawnPointTag.IsEmpty)
             {
                 List<Item> potentialItems = SpawnLocation switch
                 {
@@ -234,20 +251,20 @@ namespace Barotrauma
                     _ => throw new NotImplementedException()
                 };
 
-                var item = potentialItems.Where(it => it.HasTag(SpawnPointTag)).GetRandom();
+                var item = potentialItems.Where(it => it.HasTag(SpawnPointTag)).GetRandomUnsynced();
                 if (item != null) { return item; }
 
-                var target = ParentEvent.GetTargets(SpawnPointTag).GetRandom();
+                var target = ParentEvent.GetTargets(SpawnPointTag).GetRandomUnsynced();
                 if (target != null) { return target; }
             }
 
             SpawnType? spawnPointType = null;
             if (!ignoreSpawnPointType) { spawnPointType = SpawnPointType; }
 
-            return GetSpawnPos(SpawnLocation, spawnPointType, targetModuleTags, SpawnPointTag.ToEnumerable());
+            return GetSpawnPos(SpawnLocation, spawnPointType, targetModuleTags, SpawnPointTag.ToEnumerable(), requireTaggedSpawnPoint: RequireSpawnPointTag);
         }
 
-        public static WayPoint GetSpawnPos(SpawnLocationType spawnLocation, SpawnType? spawnPointType, IEnumerable<string> moduleFlags = null, IEnumerable<string> spawnpointTags = null, bool asFarAsPossibleFromAirlock = false)
+        public static WayPoint GetSpawnPos(SpawnLocationType spawnLocation, SpawnType? spawnPointType, IEnumerable<Identifier> moduleFlags = null, IEnumerable<Identifier> spawnpointTags = null, bool asFarAsPossibleFromAirlock = false, bool requireTaggedSpawnPoint = false)
         {
             List<WayPoint> potentialSpawnPoints = spawnLocation switch
             {
@@ -274,18 +291,24 @@ namespace Barotrauma
             if (spawnpointTags != null && spawnpointTags.Any())
             {
                 var spawnPoints = potentialSpawnPoints
-                    .Where(wp => spawnpointTags.Any(tag => wp.Tags.Contains(tag)))
-                    .Where(wp => wp.ConnectedDoor == null && !wp.isObstructed);
+                    .Where(wp => spawnpointTags.Any(tag => wp.Tags.Contains(tag) && wp.ConnectedDoor == null && !wp.isObstructed));
 
-                if (spawnPoints.Any())
+                if (requireTaggedSpawnPoint || spawnPoints.Any())
                 {
                     potentialSpawnPoints = spawnPoints.ToList();
                 }
             }
 
-            if (potentialSpawnPoints.Count == 0)
+            if (potentialSpawnPoints.None())
             {
-                DebugConsole.ThrowError($"Could not find a spawn point for a SpawnAction (spawn location: {spawnLocation})");
+                if (requireTaggedSpawnPoint && spawnpointTags != null && spawnpointTags.Any())
+                {
+                    DebugConsole.NewMessage($"Could not find a spawn point for a SpawnAction (spawn location: {spawnLocation} (tag: {string.Join(",", spawnpointTags)}), skipping.", color: Color.White);
+                }
+                else
+                {
+                    DebugConsole.ThrowError($"Could not find a spawn point for a SpawnAction (spawn location: {spawnLocation})");
+                }
                 return null;
             }
 
@@ -301,16 +324,16 @@ namespace Barotrauma
             }
 
             //don't spawn in an airlock module if there are other options
-            var airlockSpawnPoints = potentialSpawnPoints.Where(wp => wp.CurrentHull?.OutpostModuleTags.Contains("airlock") ?? false);
+            var airlockSpawnPoints = potentialSpawnPoints.Where(wp => wp.CurrentHull?.OutpostModuleTags.Contains("airlock".ToIdentifier()) ?? false);
             if (airlockSpawnPoints.Count() < validSpawnPoints.Count())
             {
                 validSpawnPoints = validSpawnPoints.Except(airlockSpawnPoints);
             }
 
-            if (!validSpawnPoints.Any())
+            if (validSpawnPoints.None())
             {
                 DebugConsole.ThrowError($"Could not find a spawn point of the correct type for a SpawnAction (spawn location: {spawnLocation}, type: {spawnPointType}, module flags: {((moduleFlags == null || !moduleFlags.Any()) ? "none" : string.Join(", ", moduleFlags))})");
-                return potentialSpawnPoints.GetRandom();
+                return potentialSpawnPoints.GetRandomUnsynced();
             }
 
             //avoid using waypoints if there's any actual spawnpoints available
@@ -320,7 +343,7 @@ namespace Barotrauma
             }
 
             //if not trying to spawn at a tagged spawnpoint, favor spawnpoints without tags
-            if (spawnpointTags == null || !spawnpointTags.Any())
+            if (spawnpointTags == null || spawnpointTags.None())
             {
                 var spawnPoints = validSpawnPoints.Where(wp => !wp.Tags.Any());
                 if (spawnPoints.Any())
@@ -346,7 +369,7 @@ namespace Barotrauma
             }
             else
             {
-                return validSpawnPoints.GetRandom();
+                return validSpawnPoints.GetRandomUnsynced();
             }
         }
 

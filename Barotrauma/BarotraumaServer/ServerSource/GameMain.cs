@@ -10,6 +10,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -19,7 +20,6 @@ namespace Barotrauma
 
         public static bool IsSingleplayer => NetworkMember == null;
         public static bool IsMultiplayer => NetworkMember != null;
-
 
         private static World world;
         public static World World
@@ -31,7 +31,6 @@ namespace Barotrauma
             }
             set { world = value; }
         }
-        public static GameSettings Config;
 
         public static GameServer Server;
         public static NetworkMember NetworkMember
@@ -58,28 +57,14 @@ namespace Barotrauma
         //TODO: maybe clean up instead of having these constants
         public static readonly Screen SubEditorScreen = UnimplementedScreen.Instance;
 
-        public static DecalManager DecalManager;
-
         public static bool ShouldRun = true;
 
         private static Stopwatch stopwatch;
 
-        private static Queue<int> prevUpdateRates = new Queue<int>();
+        private static readonly Queue<int> prevUpdateRates = new Queue<int>();
         private static int updateCount = 0;
-
-        private static ContentPackage vanillaContent;
-        public static ContentPackage VanillaContent
-        {
-            get
-            {
-                if (vanillaContent == null)
-                {
-                    // TODO: Dynamic method for defining and finding the vanilla content package.
-                    vanillaContent = ContentPackage.CorePackages.SingleOrDefault(cp => Path.GetFileName(cp.Path).Equals("vanilla 0.9.xml", StringComparison.OrdinalIgnoreCase));
-                }
-                return vanillaContent;
-            }
-        }
+        
+        public static ContentPackage VanillaContent => ContentPackageManager.VanillaCorePackage;
 
         public readonly string[] CommandLineArgs;
 
@@ -96,13 +81,14 @@ namespace Barotrauma
             FarseerPhysics.Settings.PositionIterations = 1;
 
             Console.WriteLine("Loading game settings");
-            Config = new GameSettings();
+            GameSettings.Init();
 
             Console.WriteLine("Loading MD5 hash cache");
-            Md5Hash.LoadCache();
+            Md5Hash.Cache.Load();
 
             Console.WriteLine("Initializing SteamManager");
             SteamManager.Initialize();
+
             //TODO: figure out how consent is supposed to work for servers
             //Console.WriteLine("Initializing GameAnalytics");
             //GameAnalyticsManager.InitIfConsented();
@@ -115,36 +101,12 @@ namespace Barotrauma
 
         public void Init()
         {
-            NPCSet.LoadSets();
-            FactionPrefab.LoadFactions();
-            CharacterPrefab.LoadAll();
-            MissionPrefab.Init();
-            TraitorMissionPrefab.Init();
-            MapEntityPrefab.Init();
-            MapGenerationParams.Init();
-            LevelGenerationParams.LoadPresets();
-            CaveGenerationParams.LoadPresets();
-            OutpostGenerationParams.LoadPresets();
-            EventSet.LoadPrefabs();
-            Order.Init();
-            EventManagerSettings.Init();
-            ItemPrefab.LoadAll(GetFilesOfType(ContentType.Item));
-            AfflictionPrefab.LoadAll(GetFilesOfType(ContentType.Afflictions));
-            SkillSettings.Load(GetFilesOfType(ContentType.SkillSettings));
-            StructurePrefab.LoadAll(GetFilesOfType(ContentType.Structure));
-            UpgradePrefab.LoadAll(GetFilesOfType(ContentType.UpgradeModules));
-            JobPrefab.LoadAll(GetFilesOfType(ContentType.Jobs));
-            CorpsePrefab.LoadAll(GetFilesOfType(ContentType.Corpses));
-            NPCConversation.LoadAll(GetFilesOfType(ContentType.NPCConversations));
-            ItemAssemblyPrefab.LoadAll();
-            LevelObjectPrefab.LoadAll();
-            BallastFloraPrefab.LoadAll(GetFilesOfType(ContentType.MapCreature));
-            TalentPrefab.LoadAll(GetFilesOfType(ContentType.Talents));
-            TalentTree.LoadAll(GetFilesOfType(ContentType.TalentTrees));
+            CoreEntityPrefab.InitCorePrefabs();
 
             GameModePreset.Init();
-            DecalManager = new DecalManager();
-            LocationType.Init();
+
+            ContentPackageManager.Init().Consume();
+            ContentPackageManager.LogEnabledRegularPackageErrors();
 
             SubmarineInfo.RefreshSavedSubs();
 
@@ -178,37 +140,6 @@ namespace Barotrauma
                     break;
                 }
             }*/
-        }
-
-        /// <summary>
-        /// Returns the file paths of all files of the given type in the content packages.
-        /// </summary>
-        /// <param name="type"></param>
-        /// <param name="searchAllContentPackages">If true, also returns files in content packages that are installed but not currently selected.</param>
-        public IEnumerable<ContentFile> GetFilesOfType(ContentType type, bool searchAllContentPackages = false)
-        {
-            if (searchAllContentPackages)
-            {
-                return ContentPackage.GetFilesOfType(ContentPackage.AllPackages, type);
-            }
-            else
-            {
-                return ContentPackage.GetFilesOfType(Config.AllEnabledPackages, type);
-            }
-        }
-
-        public bool TryStartChildServerRelay()
-        {            
-            for (int i = 0; i < CommandLineArgs.Length; i++)
-            {
-                switch (CommandLineArgs[i].Trim())
-                {
-                    case "-pipes":
-                        ChildServerRelay.Start(CommandLineArgs[i + 2], CommandLineArgs[i + 1]);
-                        return true;
-                }
-            }
-            return false;
         }
 
         public void StartServer()
@@ -355,7 +286,6 @@ namespace Barotrauma
             Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Items.Components.ItemComponent));
             Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Hull));
 
-            TryStartChildServerRelay();
             Init();
             StartServer();
 
@@ -383,6 +313,9 @@ namespace Barotrauma
                     //otherwise it snowballs and becomes unplayable
                     Timing.Accumulator = Timing.Step;
                 }
+                
+                CrossThread.ProcessTasks();
+                
                 prevTicks = currTicks;
                 while (Timing.Accumulator >= Timing.Step)
                 {
@@ -455,7 +388,8 @@ namespace Barotrauma
 
             SaveUtil.CleanUnnecessarySaveFiles();
 
-            if (GameSettings.SaveDebugConsoleLogs || GameSettings.VerboseLogging) { DebugConsole.SaveLogs(); }
+            if (GameSettings.CurrentConfig.SaveDebugConsoleLogs
+                || GameSettings.CurrentConfig.VerboseLogging) { DebugConsole.SaveLogs(); }
             if (GameAnalyticsManager.SendUserStatistics) { GameAnalyticsManager.ShutDown(); }
 
             MainThread = null;

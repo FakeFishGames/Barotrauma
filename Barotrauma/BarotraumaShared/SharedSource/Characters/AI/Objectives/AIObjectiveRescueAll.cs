@@ -7,7 +7,7 @@ namespace Barotrauma
 {
     class AIObjectiveRescueAll : AIObjectiveLoop<Character>
     {
-        public override string Identifier { get; set; } = "rescue all";
+        public override Identifier Identifier { get; set; } = "rescue all".ToIdentifier();
         public override bool ForceRun => true;
         public override bool InverseTargetEvaluation => true;
         public override bool AllowOutsideSubmarine => true;
@@ -112,11 +112,14 @@ namespace Barotrauma
             {
                 if (GetVitalityFactor(target) >= vitalityThreshold) { return false; }
             }
-            if (target.Submarine != character.Submarine) { return false; }
             if (character.Submarine != null)
             {
                 // Don't allow going into another sub, unless it's connected and of the same team and type.
                 if (!character.Submarine.IsEntityFoundOnThisSub(target.CurrentHull, includingConnectedSubs: true)) { return false; }
+            }
+            else
+            {
+                return target.Submarine == null;
             }
             if (target != character && target.IsBot && HumanAIController.IsActive(target) && target.AIController is HumanAIController targetAI)
             {

@@ -5,9 +5,7 @@ namespace Barotrauma
 {
     partial class Character
     {
-        public static Character Controlled = null;
-
-        partial void InitProjSpecific(XElement mainElement) { }
+        public static Character Controlled => null;
 
         partial void OnAttackedProjSpecific(Character attacker, AttackResult attackResult, float stun)
         {
@@ -20,7 +18,7 @@ namespace Barotrauma
             {
                 if (causeOfDeath == CauseOfDeathType.Affliction)
                 {
-                    GameServer.Log(GameServer.CharacterLogName(this) + " has died (Cause of death: " + causeOfDeathAffliction.Prefab.Name + ")", ServerLog.MessageType.Attack);
+                    GameServer.Log(GameServer.CharacterLogName(this) + " has died (Cause of death: " + causeOfDeathAffliction.Prefab.Name.Value + ")", ServerLog.MessageType.Attack);
                 }
                 else
                 {
@@ -58,7 +56,7 @@ namespace Barotrauma
 
         partial void OnMoneyChanged(int prevAmount, int newAmount)
         {
-            GameMain.NetworkMember.CreateEntityEvent(this, new object[] { NetEntityEvent.Type.UpdateMoney });
+            GameMain.NetworkMember.CreateEntityEvent(this, new UpdateMoneyEventData());
         }
 
         partial void OnTalentGiven(TalentPrefab talentPrefab)

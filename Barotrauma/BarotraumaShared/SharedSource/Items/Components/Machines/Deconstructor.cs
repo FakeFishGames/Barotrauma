@@ -33,15 +33,15 @@ namespace Barotrauma.Items.Components
             get { return outputContainer; }
         }
 
-        [Serialize(false, true)]
+        [Serialize(false, IsPropertySaveable.Yes)]
         public bool DeconstructItemsSimultaneously { get; set; }
 
-        [Editable, Serialize(1.0f, true)]
+        [Editable, Serialize(1.0f, IsPropertySaveable.Yes)]
         public float DeconstructionSpeed { get; set; }
 
         public override bool RecreateGUIOnResolutionChange => true;
 
-        public Deconstructor(Item item, XElement element)
+        public Deconstructor(Item item, ContentXElement element)
             : base(item, element)
         {
             InitProjSpecific(element);
@@ -88,8 +88,7 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
-            if (powerConsumption <= 0.0f) { Voltage = 1.0f; }
-            progressTimer += deltaTime * Math.Min(Voltage, 1.0f);
+            progressTimer += deltaTime * Math.Min(powerConsumption <= 0.0f ? 1 : Voltage, 1.0f);
 
             float tinkeringStrength = 0f;
             if (repairable.IsTinkering)
@@ -114,9 +113,9 @@ namespace Barotrauma.Items.Components
                     foreach (Item targetItem in items)
                     {
                         if ((Entity.Spawner?.IsInRemoveQueue(targetItem) ?? false) || !inputContainer.Inventory.AllItems.Contains(targetItem)) { continue; }
-                        var validDeconstructItems = targetItem.Prefab.DeconstructItems.FindAll(it =>
-                            (it.RequiredDeconstructor.Length == 0 || it.RequiredDeconstructor.Any(r => item.HasTag(r) || item.Prefab.Identifier.Equals(r, StringComparison.OrdinalIgnoreCase))) &&
-                            (it.RequiredOtherItem.Length == 0 || it.RequiredOtherItem.Any(r => items.Any(it => it != targetItem && (it.HasTag(r) || it.Prefab.Identifier.Equals(r, StringComparison.OrdinalIgnoreCase))))));
+                        var validDeconstructItems = targetItem.Prefab.DeconstructItems.Where(it =>
+                            (it.RequiredDeconstructor.Length == 0 || it.RequiredDeconstructor.Any(r => item.HasTag(r) || item.Prefab.Identifier == r)) &&
+                            (it.RequiredOtherItem.Length == 0 || it.RequiredOtherItem.Any(r => items.Any(it => it != targetItem && (it.HasTag(r) || it.Prefab.Identifier == r))))).ToList();
 
                         ProcessItem(targetItem, items, validDeconstructItems, allowRemove: validDeconstructItems.Any() || !targetItem.Prefab.DeconstructItems.Any());                        
                     }
@@ -133,8 +132,8 @@ namespace Barotrauma.Items.Components
                 var targetItem = inputContainer.Inventory.LastOrDefault();
                 if (targetItem == null) { return; }
 
-                var validDeconstructItems = targetItem.Prefab.DeconstructItems.FindAll(it =>
-                    it.RequiredDeconstructor.Length == 0 || it.RequiredDeconstructor.Any(r => item.HasTag(r) || item.Prefab.Identifier.Equals(r, StringComparison.OrdinalIgnoreCase)));
+                var validDeconstructItems = targetItem.Prefab.DeconstructItems.Where(it =>
+                    it.RequiredDeconstructor.Length == 0 || it.RequiredDeconstructor.Any(r => item.HasTag(r) || item.Prefab.Identifier == r)).ToList();
 
                 float deconstructTime = validDeconstructItems.Any() ? targetItem.Prefab.DeconstructTime / (DeconstructionSpeed * deconstructionSpeedModifier) : 1.0f;
 
@@ -222,7 +221,7 @@ namespace Barotrauma.Items.Components
                 }
 
                 float condition = deconstructProduct.CopyCondition ?
-                    percentageHealth * itemPrefab.Health :
+                    percentageHealth * itemPrefab.Health * deconstructProduct.OutConditionMax :
                     itemPrefab.Health * Rand.Range(deconstructProduct.OutConditionMin, deconstructProduct.OutConditionMax);
 
                 if (DeconstructItemsSimultaneously && deconstructProduct.RequiredOtherItem.Length > 0)
@@ -230,30 +229,42 @@ namespace Barotrauma.Items.Components
                     foreach (Item otherItem in inputItems)
                     {
                         if (targetItem == otherItem) { continue; }
-                        if (deconstructProduct.RequiredOtherItem.Any(r => otherItem.HasTag(r) || r.Equals(otherItem.Prefab.Identifier, StringComparison.OrdinalIgnoreCase)))
+                        if (deconstructProduct.RequiredOtherItem.Any(r => otherItem.HasTag(r) || r == otherItem.Prefab.Identifier))
                         {
-                            user?.CheckTalents(AbilityEffectType.OnGeneticMaterialCombinedOrRefined);
-                            foreach (Character character in Character.GetFriendlyCrew(user))
-                            {
-                                character.CheckTalents(AbilityEffectType.OnCrewGeneticMaterialCombinedOrRefined);
-                            }
-
                             var geneticMaterial1 = targetItem.GetComponent<GeneticMaterial>();
                             var geneticMaterial2 = otherItem.GetComponent<GeneticMaterial>();
                             if (geneticMaterial1 != null && geneticMaterial2 != null)
                             {
-                                if (geneticMaterial1.Combine(geneticMaterial2, user))
+                                var result = geneticMaterial1.Combine(geneticMaterial2, user);
+                                if (result == GeneticMaterial.CombineResult.Refined)
                                 {
                                     inputContainer.Inventory.RemoveItem(otherItem);
                                     OutputContainer.Inventory.RemoveItem(otherItem);
-                                    Entity.Spawner.AddToRemoveQueue(otherItem);
+                                    Entity.Spawner.AddItemToRemoveQueue(otherItem);
+                                }
+                                if (result != GeneticMaterial.CombineResult.None)
+                                {
+                                    OnCombinedOrRefined();
                                 }
                                 allowRemove = false;
                                 return;
                             }
-                            inputContainer.Inventory.RemoveItem(otherItem);
-                            OutputContainer.Inventory.RemoveItem(otherItem);
-                            Entity.Spawner.AddToRemoveQueue(otherItem);
+                            else
+                            {
+                                inputContainer.Inventory.RemoveItem(otherItem);
+                                OutputContainer.Inventory.RemoveItem(otherItem);
+                                Entity.Spawner.AddItemToRemoveQueue(otherItem);
+                                OnCombinedOrRefined();
+                            }
+                        }
+                    }
+
+                    void OnCombinedOrRefined()
+                    {
+                        user?.CheckTalents(AbilityEffectType.OnGeneticMaterialCombinedOrRefined);
+                        foreach (Character character in Character.GetFriendlyCrew(user))
+                        {
+                            character.CheckTalents(AbilityEffectType.OnCrewGeneticMaterialCombinedOrRefined);
                         }
                     }
                 }
@@ -268,7 +279,7 @@ namespace Barotrauma.Items.Components
                 int amount = (int)amountMultiplier;
                 for (int i = 0; i < amount; i++)
                 {
-                    Entity.Spawner.AddToSpawnQueue(itemPrefab, outputContainer.Inventory, condition, onSpawned: (Item spawnedItem) =>
+                    Entity.Spawner.AddItemToSpawnQueue(itemPrefab, outputContainer.Inventory, condition, onSpawned: (Item spawnedItem) =>
                     {
                         spawnedItem.StolenDuringRound = targetItem.StolenDuringRound;
                         spawnedItem.AllowStealing = targetItem.AllowStealing;
@@ -300,7 +311,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            GameAnalyticsManager.AddDesignEvent("ItemDeconstructed:" + (GameMain.GameSession?.GameMode?.Preset.Identifier ?? "none") + ":" + targetItem.prefab.Identifier);
+            GameAnalyticsManager.AddDesignEvent("ItemDeconstructed:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "none") + ":" + targetItem.Prefab.Identifier);
 
             if (targetItem.AllowDeconstruct && allowRemove)
             {
@@ -314,7 +325,7 @@ namespace Barotrauma.Items.Components
                     }
                 }
                 inputContainer.Inventory.RemoveItem(targetItem);
-                Entity.Spawner.AddToRemoveQueue(targetItem);
+                Entity.Spawner.AddItemToRemoveQueue(targetItem);
                 MoveInputQueue();
                 PutItemsToLinkedContainer();
             }
@@ -392,16 +403,16 @@ namespace Barotrauma.Items.Components
                 {
                     if (deconstructItem.RequiredDeconstructor.Length > 0)
                     {
-                        if (!deconstructItem.RequiredDeconstructor.Any(r => item.HasTag(r) || item.Prefab.Identifier.Equals(r, StringComparison.OrdinalIgnoreCase))) { continue; }
+                        if (!deconstructItem.RequiredDeconstructor.Any(r => item.HasTag(r) || item.Prefab.Identifier == r)) { continue; }
                     }
                     if (deconstructItem.RequiredOtherItem.Length > 0 && checkRequiredOtherItems)
                     {
-                        if (!deconstructItem.RequiredOtherItem.Any(r => items.Any(it => it.HasTag(r) || it.Prefab.Identifier.Equals(r, StringComparison.OrdinalIgnoreCase)))) { continue; }
+                        if (!deconstructItem.RequiredOtherItem.Any(r => items.Any(it => it.HasTag(r) || it.Prefab.Identifier == r))) { continue; }
                         bool validOtherItemFound = false;
                         foreach (Item otherInputItem in items)
                         {
                             if (otherInputItem == inputItem) { continue; }
-                            if (!deconstructItem.RequiredOtherItem.Any(r => otherInputItem.HasTag(r) || otherInputItem.Prefab.Identifier.Equals(r, StringComparison.OrdinalIgnoreCase))) { continue; }
+                            if (!deconstructItem.RequiredOtherItem.Any(r => otherInputItem.HasTag(r) || otherInputItem.Prefab.Identifier == r)) { continue; }
 
                             var geneticMaterial1 = inputItem.GetComponent<GeneticMaterial>();
                             var geneticMaterial2 = otherInputItem.GetComponent<GeneticMaterial>();
@@ -427,7 +438,7 @@ namespace Barotrauma.Items.Components
             if (inputContainer.Inventory.IsEmpty()) { active = false; }
 
             IsActive = active;
-            currPowerConsumption = IsActive ? powerConsumption : 0.0f;
+            //currPowerConsumption = IsActive ? powerConsumption : 0.0f;
             userDeconstructorSpeedMultiplier = user != null ? 1f + user.GetStatValue(StatTypes.DeconstructorSpeedMultiplier) : 1f;
 
 #if SERVER

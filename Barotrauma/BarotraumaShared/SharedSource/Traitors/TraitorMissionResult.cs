@@ -6,7 +6,7 @@ namespace Barotrauma
     {
         public readonly string EndMessage;
 
-        public readonly string MissionIdentifier;
+        public readonly Identifier MissionIdentifier;
 
         public readonly bool Success;
 

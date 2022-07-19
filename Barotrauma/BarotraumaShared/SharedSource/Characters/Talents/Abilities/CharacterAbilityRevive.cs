@@ -7,7 +7,7 @@ namespace Barotrauma.Abilities
     {
         public override bool AppliesEffectOnIntervalUpdate => true;
 
-        public CharacterAbilityRevive(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityRevive(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
         }
 

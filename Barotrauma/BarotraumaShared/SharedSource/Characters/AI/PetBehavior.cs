@@ -93,15 +93,15 @@ namespace Barotrauma
                 }
                 Rate = element.GetAttributeFloat("rate", 0.016f);
                 totalCommonness = 0.0f;
-                foreach (XElement subElement in element.Elements())
+                foreach (var subElement in element.Elements())
                 {
                     switch (subElement.Name.LocalName.ToLowerInvariant())
                     {
                         case "item":
-                            string identifier = subElement.GetAttributeString("identifier", "");
+                            Identifier identifier = subElement.GetAttributeIdentifier("identifier", Identifier.Empty);
                             Item newItemToProduce = new Item
                             {
-                                Prefab = string.IsNullOrEmpty(identifier) ? null : ItemPrefab.Find("", subElement.GetAttributeString("identifier", "")),
+                                Prefab = identifier.IsEmpty ? null : ItemPrefab.Find("", subElement.GetAttributeIdentifier("identifier", Identifier.Empty)),
                                 Commonness = subElement.GetAttributeFloat("commonness", 0.0f)
                             };
                             totalCommonness += newItemToProduce.Commonness;
@@ -134,8 +134,8 @@ namespace Barotrauma
                         aggregate += Items[i].Commonness;
                         if (aggregate >= r && Items[i].Prefab != null)
                         {
-                            GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier ?? "null") + ":PetProducedItem:" + pet.AiController.Character.SpeciesName + ":" + Items[i].Prefab.Identifier);
-                            Entity.Spawner.AddToSpawnQueue(Items[i].Prefab, pet.AiController.Character.WorldPosition);
+                            GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "null") + ":PetProducedItem:" + pet.AiController.Character.SpeciesName + ":" + Items[i].Prefab.Identifier);
+                            Entity.Spawner.AddItemToSpawnQueue(Items[i].Prefab, pet.AiController.Character.WorldPosition);
                             break;
                         }
                     }
@@ -174,7 +174,7 @@ namespace Barotrauma
 
             PlayForce = element.GetAttributeFloat("playforce", 15.0f);
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.LocalName.ToLowerInvariant())
                 {
@@ -202,7 +202,7 @@ namespace Barotrauma
                 }
             }
 
-            GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier ?? "null") + ":PetSpawned:" + aiController.Character.SpeciesName);
+            GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "null") + ":PetSpawned:" + aiController.Character.SpeciesName);
         }
 
         public StatusIndicatorType GetCurrentStatusIndicatorType()
@@ -218,7 +218,7 @@ namespace Barotrauma
             bool success = OnEat(item.GetTags());
             if (success)
             {
-                GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier ?? "null") + ":PetEat:" + AiController.Character.SpeciesName + ":" + item.prefab.Identifier);
+                GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "null") + ":PetEat:" + AiController.Character.SpeciesName + ":" + item.Prefab.Identifier);
             }
             return success;
         }
@@ -226,28 +226,28 @@ namespace Barotrauma
         public bool OnEat(Character character)
         {
             if (character == null || !character.IsDead) { return false; }
-            bool success = OnEat("dead");
+            bool success = OnEat("dead".ToIdentifier());
             if (success)
             {
-                GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier ?? "null") + ":PetEat:" + AiController.Character.SpeciesName + ":" + character.SpeciesName);
+                GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "null") + ":PetEat:" + AiController.Character.SpeciesName + ":" + character.SpeciesName);
             }
             return success;
         }
 
-        private bool OnEat(IEnumerable<string> tags)
+        private bool OnEat(IEnumerable<Identifier> tags)
         {
-            foreach (string tag in tags)
+            foreach (Identifier tag in tags)
             {
                 if (OnEat(tag)) { return true; }
             }
             return false;
         }
 
-        private bool OnEat(string tag)
+        public bool OnEat(Identifier tag)
         {
             for (int i = 0; i < foods.Count; i++)
             {
-                if (tag.Equals(foods[i].Tag, System.StringComparison.OrdinalIgnoreCase))
+                if (tag == foods[i].Tag)
                 {
                     Hunger += foods[i].Hunger;
                     Happiness += foods[i].Happiness;
@@ -352,7 +352,7 @@ namespace Barotrauma
             }
             else if (Hunger < MaxHunger * 0.1f)
             {
-                character.CharacterHealth.ReduceAffliction(null, null, 8.0f * deltaTime);
+                character.CharacterHealth.ReduceAllAfflictionsOnAllLimbs(8.0f * deltaTime);
             }
 
             if (character.SelectedBy != null)
@@ -404,7 +404,7 @@ namespace Barotrauma
 
         public static void LoadPets(XElement petsElement)
         {
-            foreach (XElement subElement in petsElement.Elements())
+            foreach (var subElement in petsElement.Elements())
             {
                 string speciesName = subElement.GetAttributeString("speciesname", "");
                 string seed = subElement.GetAttributeString("seed", "123");
@@ -418,9 +418,9 @@ namespace Barotrauma
                 else
                 {
                     //try to find a spawnpoint in the main sub
-                    var spawnPoint = WayPoint.WayPointList.Where(wp => wp.SpawnType == SpawnType.Human && wp.Submarine == Submarine.MainSub).GetRandom();
+                    var spawnPoint = WayPoint.WayPointList.Where(wp => wp.SpawnType == SpawnType.Human && wp.Submarine == Submarine.MainSub).GetRandomUnsynced();
                     //if not found, try any player sub (shuttle/drone etc)
-                    spawnPoint ??= WayPoint.WayPointList.Where(wp => wp.SpawnType == SpawnType.Human && wp.Submarine?.Info.Type == SubmarineType.Player).GetRandom();
+                    spawnPoint ??= WayPoint.WayPointList.Where(wp => wp.SpawnType == SpawnType.Human && wp.Submarine?.Info.Type == SubmarineType.Player).GetRandomUnsynced();
                     spawnPos = spawnPoint?.WorldPosition ?? Submarine.MainSub.WorldPosition;
                 }
                 var pet = Character.Create(speciesName, spawnPos, seed);
@@ -439,7 +439,7 @@ namespace Barotrauma
                 var inventoryElement = subElement.Element("inventory");
                 if (inventoryElement != null)
                 {
-                    pet.SpawnInventoryItems(pet.Inventory, inventoryElement);
+                    pet.SpawnInventoryItems(pet.Inventory, inventoryElement.FromPackage(null));
                 }
             }
         }

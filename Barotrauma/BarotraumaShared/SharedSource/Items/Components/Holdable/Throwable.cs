@@ -21,10 +21,10 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
-        [Serialize(1.0f, false, description: "The impulse applied to the physics body of the item when thrown. Higher values make the item be thrown faster.")]
+        [Serialize(1.0f, IsPropertySaveable.No, description: "The impulse applied to the physics body of the item when thrown. Higher values make the item be thrown faster.")]
         public float ThrowForce { get; set; }
 
-        public Throwable(Item item, XElement element)
+        public Throwable(Item item, ContentXElement element)
             : base(item, element)
         {
             //throwForce = ToolBox.GetAttributeFloat(element, "throwforce", 1.0f);
@@ -178,11 +178,11 @@ namespace Barotrauma.Items.Components
                     throwDone = true;
                     IsActive = true;
 
-                    if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+                    if (GameMain.NetworkMember is { IsServer: true })
                     {
-                        GameMain.NetworkMember.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnSecondaryUse, this, CurrentThrower.ID });
+                        GameMain.NetworkMember.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(ActionType.OnSecondaryUse, this, CurrentThrower));
                     }
-                    if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
+                    if (!(GameMain.NetworkMember is { IsClient: true }))
                     {
                         //Stun grenades, flares, etc. all have their throw-related things handled in "onSecondaryUse"
                         ApplyStatusEffects(ActionType.OnSecondaryUse, deltaTime, CurrentThrower, user: CurrentThrower);

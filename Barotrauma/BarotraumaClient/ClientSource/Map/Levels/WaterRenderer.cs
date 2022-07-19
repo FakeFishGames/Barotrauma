@@ -106,7 +106,8 @@ namespace Barotrauma
                 WaterEffect.Parameters["xBlurDistance"].SetValue(BlurAmount / 100.0f);
             }
             else
-            {   WaterEffect.CurrentTechnique = WaterEffect.Techniques["WaterShader"];
+            {
+                WaterEffect.CurrentTechnique = WaterEffect.Techniques["WaterShader"];
             }
 
             Vector2 offset = WavePos;
@@ -229,14 +230,6 @@ namespace Barotrauma
 
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposing) return;
-
             if (WaterEffect != null)
             {
                 WaterEffect.Dispose();
@@ -249,6 +242,5 @@ namespace Barotrauma
                 basicEffect = null;
             }
         }
-
     }
 }

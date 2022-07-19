@@ -6,7 +6,7 @@ namespace Barotrauma
 {
     class AIObjectiveDecontainItem : AIObjective
     {
-        public override string Identifier { get; set; } = "decontain item";
+        public override Identifier Identifier { get; set; } = "decontain item".ToIdentifier();
 
         public Func<Item, float> GetItemPriority;
 
@@ -127,7 +127,7 @@ namespace Barotrauma
                         RemoveExistingPredicate = RemoveExistingPredicate,
                         RemoveMax = RemoveExistingMax,
                         GetItemPriority = GetItemPriority,
-                        ignoredContainerIdentifiers = sourceContainer != null ? new string[] { sourceContainer.Item.Prefab.Identifier } : null
+                        ignoredContainerIdentifiers = sourceContainer != null ? new Identifier[] { sourceContainer.Item.Prefab.Identifier } : null
                     },
                     onCompleted: () => IsCompleted = true,
                     onAbandon: () => Abandon = true);

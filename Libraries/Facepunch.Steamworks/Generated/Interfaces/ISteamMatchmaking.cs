@@ -266,8 +266,10 @@ namespace Steamworks
 		#endregion
 		internal bool GetLobbyDataByIndex( SteamId steamIDLobby, int iLobbyData, out string pchKey, out string pchValue )
 		{
-			IntPtr mempchKey = Helpers.TakeMemory();
-			IntPtr mempchValue = Helpers.TakeMemory();
+			using var memoryKey = Helpers.TakeMemory();
+			using var memoryValue = Helpers.TakeMemory();
+			IntPtr mempchKey = memoryKey;
+			IntPtr mempchValue = memoryValue;
 			var returnValue = _GetLobbyDataByIndex( Self, steamIDLobby, iLobbyData, mempchKey, (1024 * 32), mempchValue, (1024 * 32) );
 			pchKey = Helpers.MemoryToString( mempchKey );
 			pchValue = Helpers.MemoryToString( mempchValue );

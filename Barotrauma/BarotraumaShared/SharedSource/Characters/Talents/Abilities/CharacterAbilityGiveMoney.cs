@@ -7,25 +7,25 @@ namespace Barotrauma.Abilities
         public override bool AppliesEffectOnIntervalUpdate => true;
 
         private readonly int amount;
-        private readonly string scalingStatIdentifier;
+        private readonly Identifier scalingStatIdentifier;
 
-        public CharacterAbilityGiveMoney(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityGiveMoney(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             amount = abilityElement.GetAttributeInt("amount", 0);
-            scalingStatIdentifier = abilityElement.GetAttributeString("scalingstatidentifier", string.Empty);
+            scalingStatIdentifier = abilityElement.GetAttributeIdentifier("scalingstatidentifier", Identifier.Empty);
         }
 
         private void ApplyEffectSpecific(Character targetCharacter)
         {
             float multiplier = 1f;
-            if (!string.IsNullOrEmpty(scalingStatIdentifier))
+            if (!scalingStatIdentifier.IsEmpty)
             {
                 multiplier = 0 + Character.Info.GetSavedStatValue(StatTypes.None, scalingStatIdentifier);
             }
 
             int totalAmount = (int)(multiplier * amount);
             targetCharacter.GiveMoney(totalAmount);
-            GameAnalyticsManager.AddMoneyGainedEvent(totalAmount, GameAnalyticsManager.MoneySource.Ability, CharacterTalent.Prefab.Identifier);
+            GameAnalyticsManager.AddMoneyGainedEvent(totalAmount, GameAnalyticsManager.MoneySource.Ability, CharacterTalent.Prefab.Identifier.Value);
         }
 
         protected override void ApplyEffect(AbilityObject abilityObject)

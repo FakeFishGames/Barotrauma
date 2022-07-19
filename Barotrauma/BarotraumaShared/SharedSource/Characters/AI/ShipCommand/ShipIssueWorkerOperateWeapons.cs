@@ -12,7 +12,7 @@ namespace Barotrauma
 
         public override bool AllowEasySwitching => true;
 
-        public ShipIssueWorkerOperateWeapons(ShipCommandManager shipCommandManager, Order order, Item targetItem, ItemComponent targetItemComponent) : base(shipCommandManager, order, targetItem, targetItemComponent) { }
+        public ShipIssueWorkerOperateWeapons(ShipCommandManager shipCommandManager, Order order) : base(shipCommandManager, order) { }
 
         float GetTargetingImportance(Entity entity)
         {

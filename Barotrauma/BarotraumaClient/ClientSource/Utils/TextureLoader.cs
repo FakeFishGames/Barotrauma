@@ -205,7 +205,7 @@ namespace Barotrauma
                 textureData = Texture2D.TextureDataFromStream(stream, out int width, out int height, out int channels);
 
                 SurfaceFormat format = SurfaceFormat.Color;
-                if (GameMain.Config.TextureCompressionEnabled && compress)
+                if (GameSettings.CurrentConfig.Graphics.CompressTextures && compress)
                 {
                     if (((width & 0x03) == 0) && ((height & 0x03) == 0))
                     {

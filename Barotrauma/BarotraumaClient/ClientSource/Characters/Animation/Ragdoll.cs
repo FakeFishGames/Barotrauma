@@ -469,7 +469,7 @@ namespace Barotrauma
             Color? color = null;
             if (character.ExternalHighlight)
             {
-                color = Color.Lerp(Color.White, GUI.Style.Orange, (float)Math.Sin(Timing.TotalTime * 3.5f));
+                color = Color.Lerp(Color.White, GUIStyle.Orange, (float)Math.Sin(Timing.TotalTime * 3.5f));
             }
 
             float depthOffset = GetDepthOffset();
@@ -564,7 +564,7 @@ namespace Barotrauma
                     Vector2 pos = ConvertUnits.ToDisplayUnits(limb.PullJointWorldAnchorB);
                     if (currentHull?.Submarine != null) pos += currentHull.Submarine.DrawPosition;
                     pos.Y = -pos.Y;
-                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)pos.Y, 5, 5), GUI.Style.Red, true, 0.01f);
+                    GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)pos.Y, 5, 5), GUIStyle.Red, true, 0.01f);
 
                     pos = ConvertUnits.ToDisplayUnits(limb.PullJointWorldAnchorA);
                     if (currentHull?.Submarine != null) pos += currentHull.Submarine.DrawPosition;
@@ -575,8 +575,8 @@ namespace Barotrauma
                 limb.body.DebugDraw(spriteBatch, inWater ? (currentHull == null ? Color.Blue : Color.Cyan) : Color.White);
             }
 
-            Collider.DebugDraw(spriteBatch, frozen ? GUI.Style.Red : (inWater ? Color.SkyBlue : Color.Gray));
-            GUI.Font.DrawString(spriteBatch, Collider.LinearVelocity.X.FormatSingleDecimal(), new Vector2(Collider.DrawPosition.X, -Collider.DrawPosition.Y), Color.Orange);
+            Collider.DebugDraw(spriteBatch, frozen ? GUIStyle.Red : (inWater ? Color.SkyBlue : Color.Gray));
+            GUIStyle.Font.DrawString(spriteBatch, Collider.LinearVelocity.X.FormatSingleDecimal(), new Vector2(Collider.DrawPosition.X, -Collider.DrawPosition.Y), Color.Orange);
 
             foreach (var joint in LimbJoints)
             {
@@ -607,10 +607,10 @@ namespace Barotrauma
             {
                 Vector2 pos = ConvertUnits.ToDisplayUnits(humanoid.RightHandIKPos);
                 if (humanoid.character.Submarine != null) { pos += humanoid.character.Submarine.DrawPosition; }
-                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 4, 4), GUI.Style.Green, true);
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 4, 4), GUIStyle.Green, true);
                 pos = ConvertUnits.ToDisplayUnits(humanoid.LeftHandIKPos);
                 if (humanoid.character.Submarine != null) { pos += humanoid.character.Submarine.DrawPosition; }
-                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 4, 4), GUI.Style.Green, true);
+                GUI.DrawRectangle(spriteBatch, new Rectangle((int)pos.X, (int)-pos.Y, 4, 4), GUIStyle.Green, true);
 
                 Vector2 aimPos = humanoid.AimSourceWorldPos;
                 aimPos.Y = -aimPos.Y;

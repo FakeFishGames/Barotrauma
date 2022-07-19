@@ -6,16 +6,16 @@ namespace Barotrauma
 {
     class NPCWaitAction : EventAction
     {
-        [Serialize("", true)]
-        public string NPCTag { get; set; }
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier NPCTag { get; set; }
 
-        [Serialize(true, true)]
+        [Serialize(true, IsPropertySaveable.Yes)]
         public bool Wait { get; set; }
 
         private bool isFinished = false;
 
 
-        public NPCWaitAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) { }
+        public NPCWaitAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
 
         private IEnumerable<Character> affectedNpcs;
 

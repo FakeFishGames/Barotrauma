@@ -10,8 +10,8 @@ namespace Barotrauma
     {
         public virtual float Devotion => AIObjectiveManager.baseDevotion;
 
-        public abstract string Identifier { get; set; }
-        public virtual string DebugTag => Identifier;
+        public abstract Identifier Identifier { get; set; }
+        public virtual string DebugTag => Identifier.Value;
         public virtual bool ForceRun => false;
         public virtual bool IgnoreUnsafeHulls => false;
         public virtual bool AbandonWhenCannotCompleteSubjectives => true;
@@ -83,7 +83,7 @@ namespace Barotrauma
 
         public readonly Character character;
         public readonly AIObjectiveManager objectiveManager;
-        public string Option { get; private set; }
+        public readonly Identifier Option;
 
         private bool _abandon;
         public bool Abandon
@@ -157,11 +157,11 @@ namespace Barotrauma
             return subObjective == null ? this : subObjective.GetActiveObjective();
         }
 
-        public AIObjective(Character character, AIObjectiveManager objectiveManager, float priorityModifier, string option = null)
+        public AIObjective(Character character, AIObjectiveManager objectiveManager, float priorityModifier, Identifier option = default)
         {
             this.objectiveManager = objectiveManager;
             this.character = character;
-            Option = option ?? string.Empty;
+            Option = option;
             PriorityModifier = priorityModifier;
         }
 
@@ -245,7 +245,7 @@ namespace Barotrauma
         {
             get 
             {
-                if (IgnoreAtOutpost && Level.IsLoadedOutpost && character.TeamID != CharacterTeamType.FriendlyNPC)
+                if (IgnoreAtOutpost && Level.IsLoadedFriendlyOutpost && character.TeamID != CharacterTeamType.FriendlyNPC)
                 {
                     if (Submarine.MainSub != null && Submarine.MainSub.DockedTo.None(s => s.TeamID != CharacterTeamType.FriendlyNPC && s.TeamID != character.TeamID))
                     {

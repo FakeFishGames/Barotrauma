@@ -20,8 +20,8 @@ namespace Barotrauma
                     AbsoluteSpacing = GUI.IntScale(15)
                 };
 
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), TextManager.Get("statisticsconsentheader"), font: GUI.SubHeadingFont, textColor: Color.White);
-                var mainText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), TextManager.Get("statisticsconsenttext"), wrap: true, parseRichText: true);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), TextManager.Get("statisticsconsentheader"), font: GUIStyle.SubHeadingFont, textColor: Color.White);
+                var mainText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), RichString.Rich(TextManager.Get("statisticsconsenttext")), wrap: true);
 
                 foreach (var data in mainText.RichTextData)
                 {
@@ -93,7 +93,7 @@ namespace Barotrauma
                 {
                     if (child is GUITextBlock textBlock)
                     {
-                        textBlock.TextScale = MathHelper.Min(1.0f, 1.0f / GameSettings.TextScale);
+                        textBlock.TextScale = MathHelper.Min(1.0f, 1.0f / GameSettings.CurrentConfig.Graphics.TextScale);
                         textBlock.RectTransform.MinSize = new Point(0, (int)textBlock.TextSize.Y);
                         textBlock.RectTransform.MaxSize = new Point(int.MaxValue, (int)textBlock.TextSize.Y);
                     }

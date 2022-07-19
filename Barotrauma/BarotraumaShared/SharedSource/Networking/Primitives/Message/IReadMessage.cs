@@ -19,6 +19,7 @@ namespace Barotrauma.Networking
         Double ReadDouble();
         UInt32 ReadVariableUInt32();
         String ReadString();
+        Identifier ReadIdentifier();
         Microsoft.Xna.Framework.Color ReadColorR8G8B8();
         Microsoft.Xna.Framework.Color ReadColorR8G8B8A8();
         int ReadRangedInteger(int min, int max);

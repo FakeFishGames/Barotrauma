@@ -9,7 +9,7 @@ namespace Barotrauma.Abilities
 
         private readonly float addedMultiplier;
 
-        public CharacterAbilityModifyAffliction(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityModifyAffliction(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             afflictionIdentifiers = abilityElement.GetAttributeStringArray("afflictionidentifiers", new string[0], convertToLowerInvariant: true);
             addedMultiplier = abilityElement.GetAttributeFloat("addedmultiplier", 0f);

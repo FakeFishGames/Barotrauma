@@ -29,49 +29,49 @@ namespace Barotrauma.Items.Components
 
         private readonly Dictionary<Hull, HullData> hullDatas;
 
-        [Editable, Serialize(false, true, description: "Does the machine require inputs from water detectors in order to show the water levels inside rooms.")]
+        [Editable, Serialize(false, IsPropertySaveable.Yes, description: "Does the machine require inputs from water detectors in order to show the water levels inside rooms.")]
         public bool RequireWaterDetectors
         {
             get;
             set;
         }
 
-        [Editable, Serialize(true, true, description: "Does the machine require inputs from oxygen detectors in order to show the oxygen levels inside rooms.")]
+        [Editable, Serialize(true, IsPropertySaveable.Yes, description: "Does the machine require inputs from oxygen detectors in order to show the oxygen levels inside rooms.")]
         public bool RequireOxygenDetectors
         {
             get;
             set;
         }
 
-        [Editable, Serialize(true, true, description: "Should damaged walls be displayed by the machine.")]
+        [Editable, Serialize(true, IsPropertySaveable.Yes, description: "Should damaged walls be displayed by the machine.")]
         public bool ShowHullIntegrity
         {
             get;
             set;
         }
 
-        [Editable, Serialize(true, true, description: "Enable hull status mode.")]
+        [Editable, Serialize(true, IsPropertySaveable.Yes, description: "Enable hull status mode.")]
         public bool EnableHullStatus
         {
             get;
             set;
         }
 
-        [Editable, Serialize(true, true, description: "Enable electrical view mode.")]
+        [Editable, Serialize(true, IsPropertySaveable.Yes, description: "Enable electrical view mode.")]
         public bool EnableElectricalView
         {
             get;
             set;
         }
 
-        [Editable, Serialize(true, true, description: "Enable item finder mode.")]
+        [Editable, Serialize(true, IsPropertySaveable.Yes, description: "Enable item finder mode.")]
         public bool EnableItemFinder
         {
             get;
             set;
         }
 
-        public MiniMap(Item item, XElement element)
+        public MiniMap(Item item, ContentXElement element)
             : base(item, element)
         {
             IsActive = true;
@@ -114,14 +114,24 @@ namespace Barotrauma.Items.Components
             }
 #endif
 
-            currPowerConsumption = powerConsumption;
-            currPowerConsumption *= MathHelper.Lerp(1.5f, 1.0f, item.Condition / item.MaxCondition);
-
             hasPower = Voltage > MinVoltage;
             if (hasPower)
             {
                 ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
             }
+        }
+
+        /// <summary>
+        /// Power consumption of the MiniMap. Only consume power when active and adjust consumption based on condition.
+        /// </summary>
+        public override float GetCurrentPowerConsumption(Connection connection = null)
+        {
+            if (connection != powerIn || !IsActive)
+            {
+                return 0;
+            }
+
+            return PowerConsumption * MathHelper.Lerp(1.5f, 1.0f, item.Condition / item.MaxCondition);
         }
 
         public override bool Pick(Character picker)
@@ -151,7 +161,7 @@ namespace Barotrauma.Items.Components
                     hullData.ReceivedWaterAmount = null;
                     if (fromWaterDetector)
                     {
-                        hullData.ReceivedWaterAmount = Math.Min(sourceHull.WaterVolume / sourceHull.Volume, 1.0f);
+                        hullData.ReceivedWaterAmount = WaterDetector.GetWaterPercentage(sourceHull);
                     }
                     foreach (var linked in sourceHull.linkedTo)
                     {
@@ -164,7 +174,7 @@ namespace Barotrauma.Items.Components
                         linkedHullData.ReceivedWaterAmount = null;
                         if (fromWaterDetector)
                         {
-                            linkedHullData.ReceivedWaterAmount = Math.Min(linkedHull.WaterVolume / linkedHull.Volume, 1.0f);
+                            linkedHullData.ReceivedWaterAmount = WaterDetector.GetWaterPercentage(linkedHull);
                         }
                     }
                     break;

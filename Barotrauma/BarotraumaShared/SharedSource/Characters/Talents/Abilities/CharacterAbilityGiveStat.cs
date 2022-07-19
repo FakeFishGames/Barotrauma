@@ -7,7 +7,7 @@ namespace Barotrauma.Abilities
         private readonly StatTypes statType;
         private readonly float value;
 
-        public CharacterAbilityGiveStat(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityGiveStat(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             statType = CharacterAbilityGroup.ParseStatType(abilityElement.GetAttributeString("stattype", ""), CharacterTalent.DebugIdentifier);
             value = abilityElement.GetAttributeFloat("value", 0f);

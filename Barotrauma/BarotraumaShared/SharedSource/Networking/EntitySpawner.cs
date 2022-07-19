@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Steamworks.ServerList;
 
 namespace Barotrauma
 {
@@ -117,7 +118,7 @@ namespace Barotrauma
 
         class CharacterSpawnInfo : IEntitySpawnInfo
         {
-            public readonly string identifier;
+            public readonly Identifier Identifier;
             public readonly CharacterInfo CharacterInfo;
 
             public readonly Vector2 Position;
@@ -125,30 +126,32 @@ namespace Barotrauma
 
             private readonly Action<Character> onSpawned;
 
-            public CharacterSpawnInfo(string identifier, Vector2 worldPosition, Action<Character> onSpawn = null)
+            public CharacterSpawnInfo(Identifier identifier, Vector2 worldPosition, Action<Character> onSpawn = null)
             {
-                this.identifier = identifier ?? throw new ArgumentException("ItemSpawnInfo prefab cannot be null.");
+                this.Identifier = identifier;
+                if (identifier.IsEmpty) { throw new ArgumentException($"{nameof(CharacterSpawnInfo)} identifier cannot be null."); }
                 Position = worldPosition;
                 this.onSpawned = onSpawn;
             }
 
-            public CharacterSpawnInfo(string identifier, Vector2 position, Submarine sub, Action<Character> onSpawn = null)
+            public CharacterSpawnInfo(Identifier identifier, Vector2 position, Submarine sub, Action<Character> onSpawn = null)
             {
-                this.identifier = identifier ?? throw new ArgumentException("ItemSpawnInfo prefab cannot be null.");
+                this.Identifier = identifier;
+                if (identifier.IsEmpty) { throw new ArgumentException($"{nameof(CharacterSpawnInfo)} identifier cannot be null."); }
                 Position = position;
                 Submarine = sub;
                 this.onSpawned = onSpawn;
             }
 
-            public CharacterSpawnInfo(string identifier, Vector2 position, CharacterInfo characterInfo, Action<Character> onSpawn = null) : this (identifier, position, onSpawn)
+            public CharacterSpawnInfo(Identifier identifier, Vector2 position, CharacterInfo characterInfo, Action<Character> onSpawn = null) : this (identifier, position, onSpawn)
             {
                 CharacterInfo = characterInfo;
             }
 
             public Entity Spawn()
             {
-                var character = string.IsNullOrEmpty(identifier) ? null :
-                    Character.Create(identifier,
+                var character = Identifier.IsEmpty ? null :
+                    Character.Create(Identifier,
                     Submarine == null ? Position : Submarine.Position + Position,
                     ToolBox.RandomSeed(8), CharacterInfo, createNetworkEvent: false);
                 return character;
@@ -194,48 +197,59 @@ namespace Barotrauma
         private readonly Queue<IEntitySpawnInfo> spawnQueue;
         private readonly Queue<Entity> removeQueue;
 
-        public class SpawnOrRemove
+        public abstract class SpawnOrRemove : NetEntityEvent.IData
         {
             public readonly Entity Entity;
+            public UInt16 ID => Entity.ID;
+            
+            public readonly UInt16 InventoryID;
 
-            public readonly UInt16 OriginalID, OriginalInventoryID;
-
-            public readonly byte OriginalItemContainerIndex;
-
-            public readonly bool Remove = false;
+            public readonly byte ItemContainerIndex;
+            public readonly int SlotIndex;
 
             public override string ToString()
             {
                 return
-                    (Remove ? "Remove" : "Spawn") + "(" +
+                    "(" +
                     ((Entity as MapEntity)?.Name ?? "[NULL]") +
-                    $", {OriginalID}, {OriginalInventoryID})";
+                    $", {ID}, {InventoryID}, {SlotIndex})";
             }
 
-            public SpawnOrRemove(Entity entity, bool remove)
+            protected SpawnOrRemove(Entity entity)
             {
                 Entity = entity;
-                OriginalID = entity.ID;
-                if (entity is Item item && item.ParentInventory?.Owner != null)
+                if (!(entity is Item { ParentInventory: { Owner: { } } } item)) { return; }
+
+                InventoryID = item.ParentInventory.Owner.ID;
+                SlotIndex = item.ParentInventory.FindIndex(item);
+                //find the index of the ItemContainer this item is inside to get the item to
+                //spawn in the correct inventory in multi-inventory items like fabricators
+                if (item.Container == null) { return; }
+
+                foreach (ItemComponent component in item.Container.Components)
                 {
-                    OriginalInventoryID = item.ParentInventory.Owner.ID;
-                    //find the index of the ItemContainer this item is inside to get the item to
-                    //spawn in the correct inventory in multi-inventory items like fabricators
-                    if (item.Container != null)
+                    if (component is ItemContainer container &&
+                        container.Inventory == item.ParentInventory)
                     {
-                        foreach (ItemComponent component in item.Container.Components)
-                        {
-                            if (component is ItemContainer container &&
-                                container.Inventory == item.ParentInventory)
-                            {
-                                OriginalItemContainerIndex = (byte)item.Container.GetComponentIndex(component);
-                                break;
-                            }
-                        }
+                        ItemContainerIndex = (byte)item.Container.GetComponentIndex(component);
+                        break;
                     }
                 }
-                Remove = remove;
             }
+        }
+
+        public sealed class SpawnEntity : SpawnOrRemove
+        {
+            public SpawnEntity(Entity entity) : base(entity) { }
+            public override string ToString()
+                => $"Spawn {base.ToString()}";
+        }
+        
+        public sealed class RemoveEntity : SpawnOrRemove
+        {
+            public RemoveEntity(Entity entity) : base(entity) { }
+            public override string ToString()
+                => $"Remove {base.ToString()}";
         }
         
         public EntitySpawner()
@@ -250,7 +264,7 @@ namespace Barotrauma
             return "EntitySpawner";
         }
 
-        public void AddToSpawnQueue(ItemPrefab itemPrefab, Vector2 worldPosition, float? condition = null, int? quality = null, Action<Item> onSpawned = null)
+        public void AddItemToSpawnQueue(ItemPrefab itemPrefab, Vector2 worldPosition, float? condition = null, int? quality = null, Action<Item> onSpawned = null)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             if (itemPrefab == null)
@@ -263,7 +277,7 @@ namespace Barotrauma
             spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, worldPosition, onSpawned, condition, quality));
         }
 
-        public void AddToSpawnQueue(ItemPrefab itemPrefab, Vector2 position, Submarine sub, float? condition = null, int? quality = null, Action<Item> onSpawned = null)
+        public void AddItemToSpawnQueue(ItemPrefab itemPrefab, Vector2 position, Submarine sub, float? condition = null, int? quality = null, Action<Item> onSpawned = null)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             if (itemPrefab == null)
@@ -276,7 +290,7 @@ namespace Barotrauma
             spawnQueue.Enqueue(new ItemSpawnInfo(itemPrefab, position, sub, onSpawned, condition, quality));
         }
 
-        public void AddToSpawnQueue(ItemPrefab itemPrefab, Inventory inventory, float? condition = null, int? quality = null, Action<Item> onSpawned = null, bool spawnIfInventoryFull = true, bool ignoreLimbSlots = false, InvSlotType slot = InvSlotType.None)
+        public void AddItemToSpawnQueue(ItemPrefab itemPrefab, Inventory inventory, float? condition = null, int? quality = null, Action<Item> onSpawned = null, bool spawnIfInventoryFull = true, bool ignoreLimbSlots = false, InvSlotType slot = InvSlotType.None)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             if (itemPrefab == null)
@@ -294,10 +308,10 @@ namespace Barotrauma
             });
         }
 
-        public void AddToSpawnQueue(string speciesName, Vector2 worldPosition, Action<Character> onSpawn = null)
+        public void AddCharacterToSpawnQueue(Identifier speciesName, Vector2 worldPosition, Action<Character> onSpawn = null)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
-            if (string.IsNullOrEmpty(speciesName))
+            if (speciesName.IsEmpty)
             {
                 string errorMsg = "Attempted to add an empty/null species name to entity spawn queue.\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
@@ -307,10 +321,10 @@ namespace Barotrauma
             spawnQueue.Enqueue(new CharacterSpawnInfo(speciesName, worldPosition, onSpawn));
         }
 
-        public void AddToSpawnQueue(string speciesName, Vector2 position, Submarine sub, Action<Character> onSpawn = null)
+        public void AddCharacterToSpawnQueue(Identifier speciesName, Vector2 position, Submarine sub, Action<Character> onSpawn = null)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
-            if (string.IsNullOrEmpty(speciesName))
+            if (speciesName.IsEmpty)
             {
                 string errorMsg = "Attempted to add an empty/null species name to entity spawn queue.\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
@@ -320,10 +334,10 @@ namespace Barotrauma
             spawnQueue.Enqueue(new CharacterSpawnInfo(speciesName, position, sub, onSpawn));
         }
 
-        public void AddToSpawnQueue(string speciesName, Vector2 worldPosition, CharacterInfo characterInfo, Action<Character> onSpawn = null)
+        public void AddCharacterToSpawnQueue(Identifier speciesName, Vector2 worldPosition, CharacterInfo characterInfo, Action<Character> onSpawn = null)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
-            if (string.IsNullOrEmpty(speciesName))
+            if (speciesName.IsEmpty)
             {
                 string errorMsg = "Attempted to add an empty/null species name to entity spawn queue.\n" + Environment.StackTrace.CleanupStackTrace();
                 DebugConsole.ThrowError(errorMsg);
@@ -333,10 +347,11 @@ namespace Barotrauma
             spawnQueue.Enqueue(new CharacterSpawnInfo(speciesName, worldPosition, characterInfo, onSpawn));
         }
 
-        public void AddToRemoveQueue(Entity entity)
+        public void AddEntityToRemoveQueue(Entity entity)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             if (removeQueue.Contains(entity) || entity.Removed || entity == null || entity.IdFreed) { return; }
+            if (entity is Item item) { AddItemToRemoveQueue(item); return; }
             if (entity is Character)
             {
                 Character character = entity as Character;
@@ -352,7 +367,7 @@ namespace Barotrauma
             removeQueue.Enqueue(entity);
         }
 
-        public void AddToRemoveQueue(Item item)
+        public void AddItemToRemoveQueue(Item item)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
             if (removeQueue.Contains(item) || item.Removed) { return; }
@@ -364,7 +379,7 @@ namespace Barotrauma
             {
                 if (containedItem != null)
                 {
-                    AddToRemoveQueue(containedItem);
+                    AddItemToRemoveQueue(containedItem);
                 }
             }
         }
@@ -392,20 +407,19 @@ namespace Barotrauma
 
         public void Update(bool createNetworkEvents = true)
         {
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+            if (GameMain.NetworkMember is { IsClient: true }) { return; }
             while (spawnQueue.Count > 0)
             {
                 var entitySpawnInfo = spawnQueue.Dequeue();
 
                 var spawnedEntity = entitySpawnInfo.Spawn();
-                if (spawnedEntity != null)
-                {
-                    if (createNetworkEvents) 
-                    { 
-                        CreateNetworkEventProjSpecific(spawnedEntity, false); 
-                    }
-                    entitySpawnInfo.OnSpawned(spawnedEntity);
+                if (spawnedEntity == null) { continue; }
+
+                if (createNetworkEvents) 
+                { 
+                    CreateNetworkEventProjSpecific(new SpawnEntity(spawnedEntity)); 
                 }
+                entitySpawnInfo.OnSpawned(spawnedEntity);
             }
 
             while (removeQueue.Count > 0)
@@ -417,18 +431,21 @@ namespace Barotrauma
                 }
                 if (createNetworkEvents)
                 {
-                    CreateNetworkEventProjSpecific(removedEntity, true);
+                    CreateNetworkEventProjSpecific(new RemoveEntity(removedEntity));
                 }
                 removedEntity.Remove();
             }
         }
 
-        partial void CreateNetworkEventProjSpecific(Entity entity, bool remove);
+        partial void CreateNetworkEventProjSpecific(SpawnOrRemove spawnOrRemove);
 
         public void Reset()
         {
             removeQueue.Clear();
             spawnQueue.Clear();
+#if CLIENT
+            receivedEvents.Clear();
+#endif
         }
     }
 }

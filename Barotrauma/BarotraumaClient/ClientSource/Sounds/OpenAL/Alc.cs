@@ -109,6 +109,14 @@ namespace OpenAL
         public const int CaptureDefaultDeviceSpecifier = 0x311;
         public const int EnumCaptureSamples = 0x312;
         public const int EnumConnected = 0x313;
+        
+        
+        public const int OutputDevicesSpecifier =
+#if OSX
+            DeviceSpecifier;
+#else
+            AllDevicesSpecifier;
+#endif
 
 #endregion
 
@@ -214,7 +222,7 @@ namespace OpenAL
             return Encoding.UTF8.GetString(bytes);
         }
 
-        public static IList<string> GetStringList(IntPtr device, int param)
+        public static IReadOnlyList<string> GetStringList(IntPtr device, int param)
         {
             List<string> retVal = new List<string>();
             IntPtr strPtr = _GetString(device, param);
@@ -224,7 +232,8 @@ namespace OpenAL
             byte currChar = Marshal.ReadByte(strPtr, strEnd);
             if (currChar == '\0') { return retVal; }
             byte prevChar = 255;
-            while (true) {
+            while (true)
+            {
                 strEnd++;
                 prevChar = currChar;
                 currChar = Marshal.ReadByte(strPtr, strEnd);

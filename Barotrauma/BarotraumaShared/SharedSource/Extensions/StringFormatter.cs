@@ -24,9 +24,9 @@ namespace Barotrauma
             return new string(newString.SelectMany(str => str.ToCharArray()).ToArray());
         }
         
-        public static string Remove(this string s, string substring)
+        public static string Remove(this string s, string substring, StringComparison comparisonType = StringComparison.Ordinal)
         {
-            return s.Replace(substring, string.Empty);
+            return s.Replace(substring, string.Empty, comparisonType);
         }
 
         public static string Remove(this string s, Func<char, bool> predicate)

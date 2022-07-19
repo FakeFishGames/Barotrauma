@@ -4,10 +4,10 @@ namespace Barotrauma
 {
     class GoTo : EventAction
     {
-        [Serialize("", true)]
+        [Serialize("", IsPropertySaveable.Yes)]
         public string Name { get; set; }
 
-        public GoTo(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) { }
+        public GoTo(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
 
         public override bool IsFinished(ref string goTo)
         {

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Barotrauma.Extensions;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -63,7 +64,7 @@ namespace Barotrauma
         public struct NetAffliction : INetSerializableStruct
         {
             [NetworkSerialize]
-            public string Identifier;
+            public Identifier Identifier;
 
             [NetworkSerialize]
             public ushort Strength;
@@ -116,7 +117,7 @@ namespace Barotrauma
 
                     foreach (AfflictionPrefab prefab in AfflictionPrefab.List)
                     {
-                        if (prefab.Identifier.Equals(Identifier, StringComparison.OrdinalIgnoreCase))
+                        if (prefab.Identifier == Identifier)
                         {
                             cachedPrefab = prefab;
                             return prefab;
@@ -128,7 +129,7 @@ namespace Barotrauma
                 set
                 {
                     cachedPrefab = value;
-                    Identifier = value?.Identifier ?? string.Empty;
+                    Identifier = value?.Identifier ?? Identifier.Empty;
                     Strength = 0;
                     Price = 0;
                 }
@@ -136,12 +137,12 @@ namespace Barotrauma
 
             public readonly bool AfflictionEquals(AfflictionPrefab prefab)
             {
-                return prefab.Identifier.Equals(Identifier, StringComparison.OrdinalIgnoreCase);
+                return prefab.Identifier == Identifier;
             }
 
             public readonly bool AfflictionEquals(NetAffliction affliction)
             {
-                return affliction.Identifier.Equals(Identifier, StringComparison.OrdinalIgnoreCase);
+                return affliction.Identifier == Identifier;
             }
         }
 
@@ -177,16 +178,19 @@ namespace Barotrauma
             }
         }
 
+        public readonly List<NetCrewMember> PendingHeals = new List<NetCrewMember>();
+
+        public Action? OnUpdate;
+
         private readonly CampaignMode? campaign;
 
         public MedicalClinic(CampaignMode campaign)
         {
             this.campaign = campaign;
+#if CLIENT
+            campaign.OnMoneyChanged.RegisterOverwriteExisting(nameof(MedicalClinic).ToIdentifier(), OnMoneyChanged);
+#endif
         }
-
-        public readonly List<NetCrewMember> PendingHeals = new List<NetCrewMember>();
-
-        public Action? OnUpdate;
 
         private static bool IsOutpostInCombat()
         {
@@ -203,14 +207,13 @@ namespace Barotrauma
             return false;
         }
 
-        private HealRequestResult HealAllPending(bool force = false)
+        private HealRequestResult HealAllPending(bool force = false, Client? client = null)
         {
             int totalCost = GetTotalCost();
             if (!force)
             {
-                if (GetMoney() < totalCost) { return HealRequestResult.InsufficientFunds; }
-
                 if (IsOutpostInCombat()) { return HealRequestResult.Refused; }
+                if (!(campaign?.TryPurchase(client, totalCost) ?? false)) { return HealRequestResult.InsufficientFunds; }
             }
 
             ImmutableArray<CharacterInfo> crew = GetCrewCharacters();
@@ -221,13 +224,8 @@ namespace Barotrauma
 
                 foreach (NetAffliction affliction in crewMember.Afflictions)
                 {
-                    health.ReduceAffliction(null, affliction.Identifier, affliction.Prefab?.MaxStrength ?? affliction.Strength);
+                    health.ReduceAfflictionOnAllLimbs(affliction.Identifier, affliction.Prefab?.MaxStrength ?? affliction.Strength);
                 }
-            }
-
-            if (campaign != null)
-            {
-                campaign.Money -= totalCost;
             }
 
             ClearPendingHeals();
@@ -316,7 +314,7 @@ namespace Barotrauma
 
         private int GetAdjustedPrice(int price) => campaign?.Map?.CurrentLocation is { Type: { HasOutpost: true } } currentLocation ? currentLocation.GetAdjustedHealCost(price) : int.MaxValue;
 
-        public int GetMoney() => campaign?.Money ?? 0;
+        public int GetBalance() => campaign?.GetBalance() ?? 0;
 
         public static ImmutableArray<CharacterInfo> GetCrewCharacters()
         {
@@ -333,21 +331,21 @@ namespace Barotrauma
 #if DEBUG && CLIENT
         private static readonly CharacterInfo[] TestInfos =
         {
-            new CharacterInfo("human"),
-            new CharacterInfo("human"),
-            new CharacterInfo("human"),
-            new CharacterInfo("human"),
-            new CharacterInfo("human"),
-            new CharacterInfo("human"),
-            new CharacterInfo("human")
+            new CharacterInfo(CharacterPrefab.HumanSpeciesName),
+            new CharacterInfo(CharacterPrefab.HumanSpeciesName),
+            new CharacterInfo(CharacterPrefab.HumanSpeciesName),
+            new CharacterInfo(CharacterPrefab.HumanSpeciesName),
+            new CharacterInfo(CharacterPrefab.HumanSpeciesName),
+            new CharacterInfo(CharacterPrefab.HumanSpeciesName),
+            new CharacterInfo(CharacterPrefab.HumanSpeciesName)
         };
 
         private static readonly NetAffliction[] TestAfflictions =
         {
-            new NetAffliction { Identifier = "internaldamage", Strength = 80, Price = 10 },
-            new NetAffliction { Identifier = "blunttrauma", Strength = 50, Price = 10 },
-            new NetAffliction { Identifier = "lacerations", Strength = 20, Price = 10 },
-            new NetAffliction { Identifier = "burn", Strength = 10, Price = 10 }
+            new NetAffliction { Identifier = "internaldamage".ToIdentifier(), Strength = 80, Price = 10 },
+            new NetAffliction { Identifier = "blunttrauma".ToIdentifier(), Strength = 50, Price = 10 },
+            new NetAffliction { Identifier = "lacerations".ToIdentifier(), Strength = 20, Price = 10 },
+            new NetAffliction { Identifier = "burn".ToIdentifier(), Strength = 10, Price = 10 }
         };
 #endif
     }

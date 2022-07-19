@@ -7,7 +7,7 @@ namespace Barotrauma.Abilities
     class AbilityConditionMission : AbilityConditionData
     {
         private readonly MissionType missionType;
-        public AbilityConditionMission(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
+        public AbilityConditionMission(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
             string missionTypeString = conditionElement.GetAttributeString("missiontype", "None");
             if (!Enum.TryParse(missionTypeString, out missionType))

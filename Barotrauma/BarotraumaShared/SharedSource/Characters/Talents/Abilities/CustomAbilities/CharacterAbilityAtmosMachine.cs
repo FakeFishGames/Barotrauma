@@ -8,14 +8,14 @@ namespace Barotrauma.Abilities
     {
         private readonly float addedValue;
         private readonly float multiplyValue;
-        private readonly string[] tags;
+        private readonly Identifier[] tags;
         private readonly int maxMultiplyCount;
-
-        public CharacterAbilityAtmosMachine(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        
+        public CharacterAbilityAtmosMachine(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             addedValue = abilityElement.GetAttributeFloat("addedvalue", 0f);
             multiplyValue = abilityElement.GetAttributeFloat("multiplyvalue", 1f);
-            tags = abilityElement.GetAttributeStringArray("tags", Array.Empty<string>(), convertToLowerInvariant: true);
+            tags = abilityElement.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>());
             maxMultiplyCount = abilityElement.GetAttributeInt("maxmultiplycount", int.MaxValue);
         }
 
