@@ -44,6 +44,7 @@ namespace Barotrauma
         private float minDepthDamageTimer = 0.1f;
         private float maxDepthDamageTimer = 10.0f;
         private float depthToTimeRatio = 0.05f;
+        private float depthDamageTimer = maxDepthDamageTimer;
 
         private readonly Submarine submarine;
 
