@@ -10,27 +10,27 @@ namespace Barotrauma.Items.Components
 {
     partial class GeneticMaterial : ItemComponent, IServerSerializable
     {
-        private readonly string materialName;
+        private readonly LocalizedString materialName;
 
         private Character targetCharacter;
         private AfflictionPrefab selectedEffect, selectedTaintedEffect;
 
-        [Serialize("", true)]
+        [Serialize("", IsPropertySaveable.Yes)]
         public string Effect
         {
             get;
             set;
         }
 
-        [Serialize("geneticmaterialdebuff", true)]
-        public string TaintedEffect
+        [Serialize("geneticmaterialdebuff", IsPropertySaveable.Yes)]
+        public Identifier TaintedEffect
         {
             get;
             set;
         }
 
         private bool tainted;
-        [Serialize(false, true)]
+        [Serialize(false, IsPropertySaveable.Yes)]
         public bool Tainted
         {
             get { return tainted; }
@@ -39,28 +39,27 @@ namespace Barotrauma.Items.Components
                 if (!value) { return; }
                 tainted = true;
                 item.AllowDeconstruct = false;
-                if (!string.IsNullOrEmpty(TaintedEffect))
+                if (!TaintedEffect.IsEmpty)
                 {
                     selectedTaintedEffect = AfflictionPrefab.Prefabs.Where(a =>
-                        a.Identifier.Equals(TaintedEffect, StringComparison.OrdinalIgnoreCase) ||
-                        a.AfflictionType.Equals(TaintedEffect, StringComparison.OrdinalIgnoreCase)).GetRandom();
+                        a.Identifier == TaintedEffect ||
+                        a.AfflictionType == TaintedEffect).GetRandomUnsynced();
                 }
             }
         }
 
         //only for saving the selected tainted effect
-        [Serialize("", true)]
-        public string SelectedTaintedEffect
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier SelectedTaintedEffect
         {
-            get { return selectedTaintedEffect?.Identifier ?? string.Empty; }
+            get { return selectedTaintedEffect?.Identifier ?? Identifier.Empty; }
             private set
             {
-                if (string.IsNullOrEmpty(value)) { return; }
-                selectedTaintedEffect = AfflictionPrefab.Prefabs.Find(a => a.Identifier == value);
+                selectedTaintedEffect = !value.IsEmpty ? AfflictionPrefab.Prefabs.Find(a => a.Identifier == value) : null;
             }
         }
 
-        public GeneticMaterial(Item item, XElement element)
+        public GeneticMaterial(Item item, ContentXElement element)
             : base(item, element)
         {
             string nameId = element.GetAttributeString("nameidentifier", "");
@@ -71,15 +70,15 @@ namespace Barotrauma.Items.Components
             if (!string.IsNullOrEmpty(Effect))
             {
                 selectedEffect = AfflictionPrefab.Prefabs.Where(a =>
-                    a.Identifier.Equals(Effect, StringComparison.OrdinalIgnoreCase) ||
-                    a.AfflictionType.Equals(Effect, StringComparison.OrdinalIgnoreCase)).GetRandom();
+                    a.Identifier == Effect ||
+                    a.AfflictionType == Effect).GetRandomUnsynced();
             }
         }
 
-        [Serialize(3.0f, false)]
+        [Serialize(3.0f, IsPropertySaveable.No)]
         public float ConditionIncreaseOnCombineMin  { get; set; }
 
-        [Serialize(8.0f, false)]
+        [Serialize(8.0f, IsPropertySaveable.No)]
         public float ConditionIncreaseOnCombineMax { get; set; }
 
         public bool CanBeCombinedWith(GeneticMaterial otherGeneticMaterial)
@@ -94,37 +93,28 @@ namespace Barotrauma.Items.Components
 
             if (targetCharacter != null) { return; }
 
-            if (tainted)
-            {
-                if (selectedTaintedEffect != null)
-                {
-                    float selectedTaintedEffectStrength = item.ConditionPercentage / 100.0f * selectedTaintedEffect.MaxStrength;
-                    character.CharacterHealth.ApplyAffliction(null, selectedTaintedEffect.Instantiate(selectedTaintedEffectStrength));
-                    var existingAffliction = character.CharacterHealth.GetAllAfflictions().FirstOrDefault(a => a.Prefab == selectedTaintedEffect);
-                    if (existingAffliction != null)
-                    {
-                        existingAffliction.Strength = selectedTaintedEffectStrength;
-                    }
-                    targetCharacter = character;
-#if SERVER
-                    item.CreateServerEvent(this);
-#endif      
-                }
-            }
             if (selectedEffect != null)
             {
-                ApplyStatusEffects(ActionType.OnWearing, 1.0f);
-                float selectedEffectStrength = item.ConditionPercentage / 100.0f * selectedEffect.MaxStrength;
-                character.CharacterHealth.ApplyAffliction(null, selectedEffect.Instantiate(selectedEffectStrength));
-                var existingAffliction = character.CharacterHealth.GetAllAfflictions().FirstOrDefault(a => a.Prefab == selectedEffect);
-                if (existingAffliction != null)
-                {
-                    existingAffliction.Strength = selectedEffectStrength;
-                }
                 targetCharacter = character;
+                ApplyStatusEffects(ActionType.OnWearing, 1.0f);
+                float selectedEffectStrength = GetCombinedEffectStrength();
+                character.CharacterHealth.ApplyAffliction(null, selectedEffect.Instantiate(selectedEffectStrength));
+                var affliction = character.CharacterHealth.GetAllAfflictions().FirstOrDefault(a => a.Prefab == selectedEffect);
+                if (affliction != null) { affliction.Strength = selectedEffectStrength; }
 #if SERVER
                 item.CreateServerEvent(this);
 #endif      
+            }
+            if (tainted && selectedTaintedEffect != null)
+            {
+                float selectedTaintedEffectStrength = GetCombinedTaintedEffectStrength();
+                character.CharacterHealth.ApplyAffliction(null, selectedTaintedEffect.Instantiate(selectedTaintedEffectStrength));
+                var affliction = character.CharacterHealth.GetAllAfflictions().FirstOrDefault(a => a.Prefab == selectedTaintedEffect);
+                if (affliction != null) { affliction.Strength = selectedTaintedEffectStrength; }
+                targetCharacter = character;
+#if SERVER
+                item.CreateServerEvent(this);
+#endif
             }
             foreach (Item containedItem in item.ContainedItems)
             {
@@ -142,23 +132,31 @@ namespace Barotrauma.Items.Components
                     (rootContainer == null || !targetCharacter.HasEquippedItem(rootContainer) || !targetCharacter.Inventory.IsInLimbSlot(rootContainer, InvSlotType.HealthInterface)))
                 {
                     item.ApplyStatusEffects(ActionType.OnSevered, 1.0f, targetCharacter);
-                    targetCharacter.CharacterHealth.ReduceAffliction(null, selectedEffect.Identifier, selectedEffect.MaxStrength);
-                    if (tainted)
-                    {
-                        targetCharacter.CharacterHealth.ReduceAffliction(null, selectedTaintedEffect.Identifier, selectedTaintedEffect.MaxStrength);
-                    }
-                    targetCharacter = null;
                     IsActive = false;
+
+                    var affliction = targetCharacter.CharacterHealth.GetAllAfflictions().FirstOrDefault(a => a.Prefab == selectedEffect);
+                    if (affliction != null) { affliction.Strength = GetCombinedEffectStrength(); }
+                    var taintedAffliction = targetCharacter.CharacterHealth.GetAllAfflictions().FirstOrDefault(a => a.Prefab == selectedTaintedEffect);
+                    if (taintedAffliction != null) { taintedAffliction.Strength = GetCombinedTaintedEffectStrength(); }
+
+                    targetCharacter = null;
                 }
             }
         }
 
-        public bool Combine(GeneticMaterial otherGeneticMaterial, Character user)
+        public enum CombineResult
         {
-            if (!CanBeCombinedWith(otherGeneticMaterial)) { return false; }
+            None,
+            Refined,
+            Combined
+        }
+
+        public CombineResult Combine(GeneticMaterial otherGeneticMaterial, Character user)
+        {
+            if (!CanBeCombinedWith(otherGeneticMaterial)) { return CombineResult.None; }
 
             float conditionIncrease = Rand.Range(ConditionIncreaseOnCombineMin, ConditionIncreaseOnCombineMax);
-            conditionIncrease += user.GetStatValue(StatTypes.GeneticMaterialRefineBonus);
+            conditionIncrease += user?.GetStatValue(StatTypes.GeneticMaterialRefineBonus) ?? 0.0f;
             if (item.Prefab == otherGeneticMaterial.item.Prefab)
             {
                 item.Condition = Math.Max(item.Condition, otherGeneticMaterial.item.Condition) + conditionIncrease;
@@ -167,7 +165,7 @@ namespace Barotrauma.Items.Components
                 {
                     MakeTainted();
                 }
-                return true;
+                return CombineResult.Refined;
             }
             else
             {
@@ -180,8 +178,38 @@ namespace Barotrauma.Items.Components
                 {
                     MakeTainted();
                 }
-                return false;
+                return CombineResult.Combined;
             }
+        }
+
+        private float GetCombinedEffectStrength()
+        {
+            float effectStrength = 0.0f;
+            foreach (Item otherItem in targetCharacter.Inventory.FindAllItems(recursive: true))
+            {
+                var geneticMaterial = otherItem.GetComponent<GeneticMaterial>();
+                if (geneticMaterial == null || !geneticMaterial.IsActive) { continue; }
+                if (geneticMaterial.selectedEffect == selectedEffect)
+                {
+                    effectStrength += otherItem.ConditionPercentage / 100.0f * selectedEffect.MaxStrength;
+                }
+            }
+            return effectStrength;
+        }
+
+        private float GetCombinedTaintedEffectStrength()
+        {
+            float taintedEffectStrength = 0.0f;
+            foreach (Item otherItem in targetCharacter.Inventory.FindAllItems(recursive: true))
+            {
+                var geneticMaterial = otherItem.GetComponent<GeneticMaterial>();
+                if (geneticMaterial == null || !geneticMaterial.IsActive) { continue; }
+                if (selectedTaintedEffect != null && geneticMaterial.selectedTaintedEffect == selectedTaintedEffect)
+                {
+                    taintedEffectStrength += otherItem.ConditionPercentage / 100.0f * selectedTaintedEffect.MaxStrength;
+                }
+            }
+            return taintedEffectStrength;
         }
 
         private float GetTaintedProbabilityOnRefine(Character user)
@@ -208,16 +236,16 @@ namespace Barotrauma.Items.Components
 #endif            
         }
 
-        public static string TryCreateName(ItemPrefab prefab, XElement element)
+        public static LocalizedString TryCreateName(ItemPrefab prefab, XElement element)
         {
             foreach (XElement subElement in element.Elements())
             {
-                if (subElement.Name.ToString().Equals(nameof(GeneticMaterial), StringComparison.OrdinalIgnoreCase))
+                if (subElement.NameAsIdentifier() == nameof(GeneticMaterial))
                 {
-                    string nameId = subElement.GetAttributeString("nameidentifier", "");
-                    if (!string.IsNullOrEmpty(nameId))
+                    Identifier nameId = subElement.GetAttributeIdentifier("nameidentifier", "");
+                    if (!nameId.IsEmpty)
                     {
-                        return prefab.Name.Replace("[type]", TextManager.Get(nameId, returnNull: true) ?? nameId);
+                        return prefab.Name.Replace("[type]", TextManager.Get(nameId).Fallback(nameId.Value));
                     }
                 }
             }

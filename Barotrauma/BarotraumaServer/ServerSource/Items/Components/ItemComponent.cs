@@ -1,10 +1,12 @@
-﻿using System.Xml.Linq;
+﻿using System;
+using System.Xml.Linq;
+using Barotrauma.Networking;
 
 namespace Barotrauma.Items.Components
 {
     partial class ItemComponent : ISerializableEntity
     {
-        private bool LoadElemProjSpecific(XElement subElement)
+        private bool LoadElemProjSpecific(ContentXElement subElement)
         {
             switch (subElement.Name.ToString().ToLowerInvariant())
             {
@@ -18,7 +20,7 @@ namespace Barotrauma.Items.Components
             return true; //element processed
         }
 
-        public virtual void ServerAppendExtraData(ref object[] extraData) { }
+        public virtual IEventData ServerGetEventData() => null;
     }
 
 }

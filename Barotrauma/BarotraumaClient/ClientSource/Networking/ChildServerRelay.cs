@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO.Pipes;
+using System.Linq;
 
 namespace Barotrauma.Networking
 {
@@ -12,6 +13,9 @@ namespace Barotrauma.Networking
 
         public static void Start(ProcessStartInfo processInfo)
         {
+            CrashString = null;
+            CrashReportFilePath = null;
+            
             writePipe = new AnonymousPipeServerStream(PipeDirection.Out, System.IO.HandleInheritability.Inheritable);
             readPipe = new AnonymousPipeServerStream(PipeDirection.In, System.IO.HandleInheritability.Inheritable);
 
@@ -42,8 +46,8 @@ namespace Barotrauma.Networking
 
         public static void ClosePipes()
         {
-            writePipe?.Close();
-            readPipe?.Close(); 
+            writePipe?.Dispose(); writePipe = null;
+            readPipe?.Dispose(); readPipe = null;
             shutDown = true;
         }
 
@@ -53,6 +57,21 @@ namespace Barotrauma.Networking
             writePipe = null; readPipe = null;
 
             PrivateShutDown();
+        }
+
+        public static string CrashString { get; private set; }
+        public static string CrashReportFilePath { get; private set; }
+
+        public static LocalizedString CrashMessage
+            => string.IsNullOrEmpty(CrashReportFilePath)
+                ? TextManager.Get("ServerProcessClosed")
+                : TextManager.GetWithVariable("ServerProcessCrashed", "[reportfilepath]", CrashReportFilePath);
+        
+        static partial void HandleCrashString(string str)
+        {
+            DebugConsole.ThrowError($"The server has crashed: {str}");
+            CrashReportFilePath = str.Split("||").FirstOrDefault() ?? "servercrashreport.log";
+            CrashString = str;
         }
     }
 }

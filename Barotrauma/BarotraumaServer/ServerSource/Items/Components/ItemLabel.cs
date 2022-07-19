@@ -11,40 +11,40 @@ namespace Barotrauma.Items.Components
         private string lastSentText;
         private float sendStateTimer;
 
-        [Serialize("", true, description: "The text to display on the label.", alwaysUseInstanceValues: true), Editable(100)]
+        [Serialize("", IsPropertySaveable.Yes, description: "The text to display on the label.", alwaysUseInstanceValues: true), Editable(100)]
         public string Text
         {
             get;
             set;
         }
 
-        [Editable, Serialize("0,0,0,255", true, description: "The color of the text displayed on the label.", alwaysUseInstanceValues: true)]
+        [Editable, Serialize("0,0,0,255", IsPropertySaveable.Yes, description: "The color of the text displayed on the label.", alwaysUseInstanceValues: true)]
         public Color TextColor
         {
             get;
             set;
         }
         
-        [Editable, Serialize(1.0f, true, description: "The scale of the text displayed on the label.", alwaysUseInstanceValues: true)]
+        [Editable, Serialize(1.0f, IsPropertySaveable.Yes, description: "The scale of the text displayed on the label.", alwaysUseInstanceValues: true)]
         public float TextScale
         {
             get;
             set;
         }
 
-        [Serialize("0,0,0,0", true, description: "The amount of padding around the text in pixels (left,top,right,bottom).")]
+        [Serialize("0,0,0,0", IsPropertySaveable.Yes, description: "The amount of padding around the text in pixels (left,top,right,bottom).")]
         public Vector4 Padding
         {
             get;
             set;
         }
 
-        public override void Move(Vector2 amount)
+        public override void Move(Vector2 amount, bool ignoreContacts = false)
         {
             //do nothing
         }
 
-        public ItemLabel(Item item, XElement element)
+        public ItemLabel(Item item, ContentXElement element)
             : base(item, element)
         {
         }
@@ -58,7 +58,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private IEnumerable<object> SendStateAfterDelay()
+        private IEnumerable<CoroutineStatus> SendStateAfterDelay()
         {
             while (sendStateTimer > 0.0f)
             {
@@ -76,7 +76,7 @@ namespace Barotrauma.Items.Components
             yield return CoroutineStatus.Success;
         }
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
             msg.Write(Text);
             lastSentText = Text;

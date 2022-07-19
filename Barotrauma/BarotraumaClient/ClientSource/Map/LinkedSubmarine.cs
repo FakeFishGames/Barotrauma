@@ -1,10 +1,12 @@
-﻿using Barotrauma.Items.Components;
+﻿using System;
+using Barotrauma.IO;
+using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -25,14 +27,14 @@ namespace Barotrauma
                 GUI.DrawLine(spriteBatch,
                              new Vector2(WorldPosition.X, -WorldPosition.Y),
                              new Vector2(e.WorldPosition.X, -e.WorldPosition.Y),
-                             isLinkAllowed ? GUI.Style.Green * 0.5f : GUI.Style.Red * 0.5f, width: 3);
+                             isLinkAllowed ? GUIStyle.Green * 0.5f : GUIStyle.Red * 0.5f, width: 3);
             }
         }
 
         public void Draw(SpriteBatch spriteBatch, Vector2 drawPos, float alpha = 1.0f)
         {
-            Color color = (IsHighlighted) ? GUI.Style.Orange : GUI.Style.Green;
-            if (IsSelected) { color = GUI.Style.Red; }
+            Color color = (IsHighlighted) ? GUIStyle.Orange : GUIStyle.Green;
+            if (IsSelected) { color = GUIStyle.Red; }
 
             Vector2 pos = drawPos;
 
@@ -75,10 +77,12 @@ namespace Barotrauma
                 if (linkedTo.Contains(entity))
                 {
                     linkedTo.Remove(entity);
+                    entity.linkedTo.Remove(this);
                 }
                 else
                 {
                     linkedTo.Add(entity);
+                    if (!entity.linkedTo.Contains(this)) { entity.linkedTo.Add(this); }
                 }
             }
         }
@@ -96,16 +100,35 @@ namespace Barotrauma
             };
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform),
-                TextManager.Get("LinkedSub"), font: GUI.LargeFont);
+                TextManager.Get("LinkedSub"), font: GUIStyle.LargeFont);
 
             if (!inGame)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), 
-                    TextManager.Get("LinkLinkedSub"), textColor: GUI.Style.Orange, font: GUI.SmallFont);
+                    TextManager.Get("LinkLinkedSub"), textColor: GUIStyle.Orange, font: GUIStyle.SmallFont);
             }
 
             var pathContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.2f), paddedFrame.RectTransform), isHorizontal: true);
-            var pathBox = new GUITextBox(new RectTransform(new Vector2(0.75f, 1.0f), pathContainer.RectTransform), filePath, font: GUI.SmallFont);
+
+            string filePath = this.filePath;
+            if (filePath.StartsWith("Submarines"))
+            {
+                //this is the old submarines path, try to find a local mod that has a submarine with this name
+                string subName = Path.GetFileNameWithoutExtension(filePath);
+                string foundPath = ContentPackageManager.LocalPackages.Concat(ContentPackageManager.VanillaCorePackage.ToEnumerable())
+                    .SelectMany(p => p.GetFiles<SubmarineFile>())
+                    .FirstOrDefault(f => Path.GetFileNameWithoutExtension(f.Path.Value).Equals(subName, StringComparison.OrdinalIgnoreCase))
+                    ?.Path.Value;
+                if (foundPath.IsNullOrEmpty())
+                {
+                    //no such sub found among the local mods, just guess the correct path
+                    foundPath = Path.Combine(ContentPackage.LocalModsDir, subName, $"{subName}.sub");
+                }
+
+                filePath = foundPath;
+            }
+            
+            var pathBox = new GUITextBox(new RectTransform(new Vector2(0.75f, 1.0f), pathContainer.RectTransform), filePath, font: GUIStyle.SmallFont);
             var reloadButton = new GUIButton(new RectTransform(new Vector2(0.25f / pathBox.RectTransform.RelativeSize.X, 1.0f), pathBox.RectTransform, Anchor.CenterRight, Pivot.CenterLeft), 
                                              TextManager.Get("ReloadLinkedSub"), style: "GUIButtonSmall")
             {
@@ -130,20 +153,21 @@ namespace Barotrauma
             if (!File.Exists(pathBox.Text))
             {
                 new GUIMessageBox(TextManager.Get("Error"), TextManager.GetWithVariable("ReloadLinkedSubError", "[file]", pathBox.Text));
-                pathBox.Flash(GUI.Style.Red);
+                pathBox.Flash(GUIStyle.Red);
                 pathBox.Text = filePath;
                 return false;
             }
 
             XDocument doc = SubmarineInfo.OpenFile(pathBox.Text);
-            if (doc == null || doc.Root == null) return false;
+            if (doc == null || doc.Root == null) { return false; }
             doc.Root.SetAttributeValue("filepath", pathBox.Text);
 
-            pathBox.Flash(GUI.Style.Green);
+            pathBox.Flash(GUIStyle.Green);
 
             GenerateWallVertices(doc.Root);
             saveElement = doc.Root;
             saveElement.Name = "LinkedSubmarine";
+            CargoCapacity = doc.Root.GetAttributeInt("cargocapacity", 0);
 
             filePath = pathBox.Text;
 

@@ -7,14 +7,12 @@ namespace Barotrauma
 {
     class GUINumberInput : GUIComponent
     {
-        public enum NumberType
-        {
-            Int, Float
-        }
+        public delegate void OnValueEnteredHandler(GUINumberInput numberInput);
+        public OnValueEnteredHandler OnValueEntered;
 
         public delegate void OnValueChangedHandler(GUINumberInput numberInput);
         public OnValueChangedHandler OnValueChanged;
-        
+
         public GUITextBox TextBox { get; private set; }
 
         public GUIButton PlusButton { get; private set; }
@@ -162,7 +160,7 @@ namespace Barotrauma
             }
         }
 
-        public override ScalableFont Font
+        public override GUIFont Font
         {
             get
             {
@@ -184,7 +182,7 @@ namespace Barotrauma
         public float valueStep;
 
         private float pressedTimer;
-        private float pressedDelay = 0.5f;
+        private readonly float pressedDelay = 0.5f;
         private bool IsPressedTimerRunning { get { return pressedTimer > 0; } }
 
         public GUINumberInput(RectTransform rectT, NumberType inputType, string style = "", Alignment textAlignment = Alignment.Center, float? relativeButtonAreaWidth = null, bool hidePlusMinusButtons = false) : base(style, rectT)
@@ -209,6 +207,8 @@ namespace Barotrauma
                 {
                     ClampFloatValue();
                 }
+
+                OnValueEntered?.Invoke(this);
             };
             TextBox.OnEnterPressed += (textBox, text) =>
             {
@@ -220,12 +220,15 @@ namespace Barotrauma
                 {
                     ClampFloatValue();
                 }
+
+                OnValueEntered?.Invoke(this);
                 return true;
             };
 
             var buttonArea = new GUIFrame(new RectTransform(new Vector2(_relativeButtonAreaWidth, 1.0f), LayoutGroup.RectTransform, Anchor.CenterRight), style: null);
             PlusButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.5f), buttonArea.RectTransform), style: null);
-            GUI.Style.Apply(PlusButton, "PlusButton", this);
+            GUIStyle.Apply(PlusButton, "PlusButton", this);
+            PlusButton.ClickSound = GUISoundType.Increase;
             PlusButton.OnButtonDown += () =>
             {
                 pressedTimer = pressedDelay;
@@ -246,7 +249,8 @@ namespace Barotrauma
             };
 
             MinusButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.5f), buttonArea.RectTransform, Anchor.BottomRight), style: null);
-            GUI.Style.Apply(MinusButton, "MinusButton", this);
+            GUIStyle.Apply(MinusButton, "MinusButton", this);
+            MinusButton.ClickSound = GUISoundType.Decrease;
             MinusButton.OnButtonDown += () =>
             {
                 pressedTimer = pressedDelay;
@@ -421,8 +425,8 @@ namespace Barotrauma
                 intValue = Math.Min(intValue, MaxValueInt.Value);
                 UpdateText();
             }
-            PlusButton.Enabled = intValue < MaxValueInt;
-            MinusButton.Enabled = intValue > MinValueInt;
+            PlusButton.Enabled = MaxValueInt == null || intValue < MaxValueInt;
+            MinusButton.Enabled = MinValueInt == null || intValue > MinValueInt;
         }
 
         private void UpdateText()

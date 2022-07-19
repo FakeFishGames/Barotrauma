@@ -35,7 +35,7 @@ namespace FarseerPhysics.Content
 
             foreach (FixtureTemplate fixtureTemplate in Fixtures)
             {
-                Fixture fixture = body.CreateFixture(fixtureTemplate.Shape);
+                Fixture fixture = body.CreateFixture(fixtureTemplate.Shape, Category.Cat1, Category.All);
                 fixture.UserData = fixtureTemplate.Name;
                 fixture.Restitution = fixtureTemplate.Restitution;
                 fixture.Friction = fixtureTemplate.Friction;

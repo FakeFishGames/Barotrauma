@@ -88,6 +88,7 @@ namespace Barotrauma
             Circle, Rectangle, Capsule, HorizontalCapsule
         };
 
+        public const float MinDensity = 0.01f;
         public const float DefaultAngularDamping = 5.0f;
 
         private static readonly List<PhysicsBody> list = new List<PhysicsBody>();
@@ -226,7 +227,14 @@ namespace Barotrauma
         public bool PhysEnabled
         {
             get { return FarseerBody.Enabled; }
-            set { isPhysEnabled = value; if (Enabled) FarseerBody.Enabled = value; }
+            set
+            {
+                isPhysEnabled = value;
+                if (Enabled)
+                {
+                    FarseerBody.Enabled = value;
+                }
+            }
         }
 
         public Vector2 SimPosition
@@ -307,23 +315,43 @@ namespace Barotrauma
             set { FarseerBody.BodyType = value; }
         }
 
+        private Category _collisionCategories;
+
         public Category CollisionCategories
         {
-            set { FarseerBody.CollisionCategories = value; }
+            set
+            {
+                _collisionCategories = value;
+                FarseerBody.CollisionCategories = value;
+            }
+            get
+            {
+                return _collisionCategories;
+            }
         }
 
+        private Category _collidesWith;
         public Category CollidesWith
         {
-            set { FarseerBody.CollidesWith = value; }
+            set
+            {
+                _collidesWith = value;
+                FarseerBody.CollidesWith = value;
+            }
+            get
+            {
+                return _collidesWith;
+            }
         }
 
-        public PhysicsBody(XElement element, float scale = 1.0f) : this(element, Vector2.Zero, scale) { }
-        public PhysicsBody(ColliderParams cParams) : this(cParams, Vector2.Zero) { }
-        public PhysicsBody(LimbParams lParams) : this(lParams, Vector2.Zero) { }
+        public PhysicsBody(XElement element, float scale = 1.0f, bool findNewContacts = true) : this(element, Vector2.Zero, scale, findNewContacts: findNewContacts) { }
+        public PhysicsBody(ColliderParams cParams, bool findNewContacts = true) : this(cParams, Vector2.Zero, findNewContacts) { }
+        public PhysicsBody(LimbParams lParams, bool findNewContacts = true) : this(lParams, Vector2.Zero, findNewContacts) { }
 
-        public PhysicsBody(float width, float height, float radius, float density)
+        public PhysicsBody(float width, float height, float radius, float density, BodyType bodyType, Category collisionCategory, Category collidesWith, bool findNewContacts = true)
         {
-            CreateBody(width, height, radius, density);
+            density = Math.Max(density, MinDensity);
+            CreateBody(width, height, radius, density, bodyType, collisionCategory, collidesWith, findNewContacts);
             LastSentPosition = FarseerBody.Position;
             list.Add(this);
         }
@@ -331,21 +359,21 @@ namespace Barotrauma
         public PhysicsBody(Body farseerBody)
         {
             FarseerBody = farseerBody;
-            if (FarseerBody.UserData == null) FarseerBody.UserData = this;
+            if (FarseerBody.UserData == null) { FarseerBody.UserData = this; }
             LastSentPosition = FarseerBody.Position;
             list.Add(this);
         }
 
-        public PhysicsBody(ColliderParams colliderParams, Vector2 position)
+        public PhysicsBody(ColliderParams colliderParams, Vector2 position, bool findNewContacts = true)
         {
             float radius = ConvertUnits.ToSimUnits(colliderParams.Radius) * colliderParams.Ragdoll.LimbScale;
             float height = ConvertUnits.ToSimUnits(colliderParams.Height) * colliderParams.Ragdoll.LimbScale;
             float width = ConvertUnits.ToSimUnits(colliderParams.Width) * colliderParams.Ragdoll.LimbScale;
             density = 10;
-            CreateBody(width, height, radius, density);
-            FarseerBody.BodyType = BodyType.Dynamic;
-            FarseerBody.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
-            FarseerBody.CollisionCategories = Physics.CollisionCharacter;
+            CreateBody(width, height, radius, density, BodyType.Dynamic,
+                Physics.CollisionCharacter,
+                Physics.CollisionWall | Physics.CollisionLevel, 
+                findNewContacts);
             FarseerBody.AngularDamping = DefaultAngularDamping;
             FarseerBody.FixedRotation = true;
             FarseerBody.Friction = 0.05f;
@@ -355,37 +383,46 @@ namespace Barotrauma
             list.Add(this);
         }
 
-        public PhysicsBody(LimbParams limbParams, Vector2 position)
+        public PhysicsBody(LimbParams limbParams, Vector2 position, bool findNewContacts = true)
         {
             float radius = ConvertUnits.ToSimUnits(limbParams.Radius) * limbParams.Scale * limbParams.Ragdoll.LimbScale;
             float height = ConvertUnits.ToSimUnits(limbParams.Height) * limbParams.Scale * limbParams.Ragdoll.LimbScale;
             float width = ConvertUnits.ToSimUnits(limbParams.Width) * limbParams.Scale * limbParams.Ragdoll.LimbScale;
-            density = limbParams.Density;
-            CreateBody(width, height, radius, density);
-            FarseerBody.BodyType = BodyType.Dynamic;
-            FarseerBody.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel;
-            FarseerBody.CollisionCategories = Physics.CollisionItem;
+            density = Math.Max(limbParams.Density, MinDensity);
+
+            Category collisionCategory =  Physics.CollisionCharacter;
+            Category collidesWith =  Physics.CollisionAll & ~Physics.CollisionCharacter & ~Physics.CollisionItem & ~Physics.CollisionItemBlocking;
+            if (limbParams.IgnoreCollisions)
+            {
+                collisionCategory = Category.None;
+                collidesWith = Category.None;
+            }
+            CreateBody(width, height, radius, density, BodyType.Dynamic,
+                collisionCategory: collisionCategory,
+                collidesWith: collidesWith,
+                findNewContacts: findNewContacts);
             FarseerBody.Friction = limbParams.Friction;
             FarseerBody.Restitution = limbParams.Restitution;
             FarseerBody.AngularDamping = limbParams.AngularDamping;
             FarseerBody.UserData = this;
+            _collisionCategories = collisionCategory;
+            _collidesWith = collidesWith;
             SetTransformIgnoreContacts(position, 0.0f);
             LastSentPosition = position;
             list.Add(this);
         }
         
-        public PhysicsBody(XElement element, Vector2 position, float scale = 1.0f)
+        public PhysicsBody(XElement element, Vector2 position, float scale = 1.0f, float? forceDensity = null, Category collisionCategory = Physics.CollisionItem, Category collidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform, bool findNewContacts = true)
         {
             float radius = ConvertUnits.ToSimUnits(element.GetAttributeFloat("radius", 0.0f)) * scale;
             float height = ConvertUnits.ToSimUnits(element.GetAttributeFloat("height", 0.0f)) * scale;
             float width = ConvertUnits.ToSimUnits(element.GetAttributeFloat("width", 0.0f)) * scale;
-            density = element.GetAttributeFloat("density", 10.0f);
-            CreateBody(width, height, radius, density);
+            density = Math.Max(forceDensity ?? element.GetAttributeFloat("density", 10.0f), MinDensity);
             Enum.TryParse(element.GetAttributeString("bodytype", "Dynamic"), out BodyType bodyType);
-            FarseerBody.BodyType = bodyType;
-            FarseerBody.CollisionCategories = Physics.CollisionItem;
-            FarseerBody.CollidesWith = Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionPlatform;
-            FarseerBody.Friction = element.GetAttributeFloat("friction", 0.3f);
+            CreateBody(width, height, radius, density, bodyType, collisionCategory, collidesWith, findNewContacts);
+            _collisionCategories = collisionCategory;
+            _collidesWith = collidesWith;
+            FarseerBody.Friction = element.GetAttributeFloat("friction", 0.5f);
             FarseerBody.Restitution = element.GetAttributeFloat("restitution", 0.05f);                    
             FarseerBody.UserData = this;
             SetTransformIgnoreContacts(position, 0.0f);
@@ -393,7 +430,7 @@ namespace Barotrauma
             list.Add(this);
         }
 
-        private void CreateBody(float width, float height, float radius, float density)
+        private void CreateBody(float width, float height, float radius, float density, BodyType bodyType, Category collisionCategory, Category collidesWith, bool findNewContacts = true)
         {
             if (IsValidShape(radius, height, width))
             {
@@ -401,16 +438,16 @@ namespace Barotrauma
                 switch (bodyShape)
                 {
                     case Shape.Capsule:
-                        FarseerBody = GameMain.World.CreateCapsule(height, radius, density);
+                        FarseerBody = GameMain.World.CreateCapsule(height, radius, density, bodyType: bodyType, collisionCategory: collisionCategory, collidesWith: collidesWith, findNewContacts: findNewContacts); ;
                         break;
                     case Shape.HorizontalCapsule:
-                        FarseerBody = GameMain.World.CreateCapsuleHorizontal(width, radius, density);
+                        FarseerBody = GameMain.World.CreateCapsuleHorizontal(width, radius, density, bodyType: bodyType, collisionCategory: collisionCategory, collidesWith: collidesWith, findNewContacts: findNewContacts);
                         break;
                     case Shape.Circle:
-                        FarseerBody = GameMain.World.CreateCircle(radius, density);
+                        FarseerBody = GameMain.World.CreateCircle(radius, density, bodyType: bodyType, collisionCategory: collisionCategory, collidesWith: collidesWith, findNewContacts: findNewContacts);
                         break;
                     case Shape.Rectangle:
-                        FarseerBody = GameMain.World.CreateRectangle(width, height, density);
+                        FarseerBody = GameMain.World.CreateRectangle(width, height, density, bodyType: bodyType, collisionCategory: collisionCategory, collidesWith: collidesWith, findNewContacts: findNewContacts);
                         break;
                     default:
                         throw new NotImplementedException(bodyShape.ToString());
@@ -423,6 +460,8 @@ namespace Barotrauma
             this.width = width;
             this.height = height;
             this.radius = radius;
+            _collisionCategories = collisionCategory;
+            _collidesWith = collidesWith;
         }
 
         /// <summary>
@@ -536,10 +575,10 @@ namespace Barotrauma
                 }
                 errorMsg += "\n" + Environment.StackTrace.CleanupStackTrace();
 
-                if (GameSettings.VerboseLogging) DebugConsole.ThrowError(errorMsg);
+                if (GameSettings.CurrentConfig.VerboseLogging) DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce(
                     "PhysicsBody.SetPosition:InvalidPosition" + userData,
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.ErrorSeverity.Error,
                     errorMsg);
                 return false;
             }
@@ -563,10 +602,10 @@ namespace Barotrauma
                 }
                 errorMsg += "\n" + Environment.StackTrace.CleanupStackTrace();
 
-                if (GameSettings.VerboseLogging) DebugConsole.ThrowError(errorMsg);
+                if (GameSettings.CurrentConfig.VerboseLogging) DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce(
                     "PhysicsBody.SetPosition:InvalidPosition" + userData,
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.ErrorSeverity.Error,
                     errorMsg);
                 return false;
             }

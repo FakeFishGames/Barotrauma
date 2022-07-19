@@ -1,5 +1,4 @@
-﻿using Barotrauma.Extensions;
-using Barotrauma.Items.Components;
+﻿using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
@@ -32,6 +31,17 @@ namespace Barotrauma
                     if (_previousAiTarget != null)
                     {
                         _lastAiTarget = _previousAiTarget;
+                        if (_selectedAiTarget != null)
+                        {
+                            if (_selectedAiTarget.Entity is Item i && _previousAiTarget.Entity is Character c)
+                            {
+                                if (i.IsOwnedBy(c)) { return; }
+                            }
+                            else if (_previousAiTarget.Entity is Item it && _selectedAiTarget.Entity is Character ch)
+                            {
+                                if (it.IsOwnedBy(ch)) { return; }
+                            }
+                        }
                     }
                     OnTargetChanged(_previousAiTarget, _selectedAiTarget);
                 }
@@ -124,6 +134,8 @@ namespace Barotrauma
             avoidLookAheadDistance = Math.Max(Math.Max(colliderWidth, colliderLength) * 3, 1.5f);
             minGapSize = ConvertUnits.ToDisplayUnits(Math.Min(colliderWidth, colliderLength));
         }
+
+        public virtual void OnHealed(Character healer, float healAmount) { }
 
         public virtual void OnAttacked(Character attacker, AttackResult attackResult) { }
 
@@ -296,6 +308,7 @@ namespace Barotrauma
                         }
                     }
                 }
+                if (targetSlot < 0) { return false; }
                 return targetInventory.TryPutItem(item, targetSlot, allowSwapping, allowCombine: false, Character);
             }
             else
@@ -306,14 +319,15 @@ namespace Barotrauma
 
         public void UnequipEmptyItems(Item parentItem, bool avoidDroppingInSea = true) => UnequipEmptyItems(Character, parentItem, avoidDroppingInSea);
 
-        public void UnequipContainedItems(Item parentItem, Func<Item, bool> predicate = null, bool avoidDroppingInSea = true) => UnequipContainedItems(Character, parentItem, predicate, avoidDroppingInSea);
+        public void UnequipContainedItems(Item parentItem, Func<Item, bool> predicate = null, bool avoidDroppingInSea = true, int? unequipMax = null) => UnequipContainedItems(Character, parentItem, predicate, avoidDroppingInSea, unequipMax);
 
         public static void UnequipEmptyItems(Character character, Item parentItem, bool avoidDroppingInSea = true) => UnequipContainedItems(character, parentItem, it => it.Condition <= 0, avoidDroppingInSea);
 
-        public static void UnequipContainedItems(Character character, Item parentItem, Func<Item, bool> predicate, bool avoidDroppingInSea = true)
+        public static void UnequipContainedItems(Character character, Item parentItem, Func<Item, bool> predicate, bool avoidDroppingInSea = true, int? unequipMax = null)
         {
             var inventory = parentItem.OwnInventory;
             if (inventory == null) { return; }
+            int removed = 0;
             if (predicate == null || inventory.AllItems.Any(predicate))
             {
                 foreach (Item containedItem in inventory.AllItemsMod)
@@ -326,10 +340,12 @@ namespace Barotrauma
                             // If we are not inside a friendly sub (= same team), try to put the item in the inventory instead dropping it.
                             if (character.Inventory.TryPutItem(containedItem, character, CharacterInventory.anySlot))
                             {
+                                if (unequipMax.HasValue && ++removed >= unequipMax) { return; }
                                 continue;
                             }
                         }
                         containedItem.Drop(character);
+                        if (unequipMax.HasValue && ++removed >= unequipMax) { return; }
                     }
                 }
             }

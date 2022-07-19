@@ -30,11 +30,11 @@ namespace Barotrauma.Items.Components
 
         private Color color;
 
-        partial void InitProjSpecific(XElement element)
+        partial void InitProjSpecific(ContentXElement element)
         {
             currentCrossHairPointerScale = element.GetAttributeFloat("crosshairscale", 0.1f);
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -243,7 +243,7 @@ namespace Barotrauma.Items.Components
             if (liquidItem == null) { return; }
 
             bool isCleaning = false;
-            liquidColors.TryGetValue(liquidItem.prefab.Identifier, out color);
+            liquidColors.TryGetValue(liquidItem.Prefab.Identifier, out color);
 
             // Ethanol or other cleaning solvent
             if (color.A == 0) { isCleaning = true; }
@@ -256,12 +256,20 @@ namespace Barotrauma.Items.Components
                 {
                     targetHull.IncreaseSectionColorOrStrength(targetSections[i], color, sizeAdjustedSprayStrength * deltaTime, true, false);
                 }
+                if (GameMain.GameSession != null)
+                {
+                    GameMain.GameSession.TimeSpentCleaning += deltaTime;
+                }
             }
             else
             {
                 for (int i = 0; i < targetSections.Count; i++)
                 {
                     targetHull.CleanSection(targetSections[i], -sizeAdjustedSprayStrength * deltaTime, true);
+                }
+                if (GameMain.GameSession != null)
+                {
+                    GameMain.GameSession.TimeSpentPainting += deltaTime;
                 }
             }
 

@@ -5,14 +5,14 @@ namespace Barotrauma.Abilities
 {
     class AbilityConditionHasPermanentStat : AbilityConditionDataless
     {
-        private readonly string statIdentifier;
+        private readonly Identifier statIdentifier;
         private readonly StatTypes statType;
         private readonly float min;
 
-        public AbilityConditionHasPermanentStat(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
+        public AbilityConditionHasPermanentStat(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
-            statIdentifier = conditionElement.GetAttributeString("statidentifier", string.Empty);
-            if (string.IsNullOrEmpty(statIdentifier))
+            statIdentifier = conditionElement.GetAttributeIdentifier("statidentifier", Identifier.Empty);
+            if (statIdentifier.IsEmpty)
             {
                 DebugConsole.ThrowError($"No stat identifier defined for {this} in talent {characterTalent.DebugIdentifier}!");
             }

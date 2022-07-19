@@ -18,7 +18,7 @@ namespace Barotrauma
 
             if (SelectedAiTarget?.Entity != null)
             {
-                //GUI.DrawLine(spriteBatch, pos, new Vector2(SelectedAiTarget.WorldPosition.X, -SelectedAiTarget.WorldPosition.Y), GUI.Style.Red);
+                //GUI.DrawLine(spriteBatch, pos, new Vector2(SelectedAiTarget.WorldPosition.X, -SelectedAiTarget.WorldPosition.Y), GUIStyle.Red);
                 //GUI.DrawString(spriteBatch, pos + textOffset, $"AI TARGET: {SelectedAiTarget.Entity.ToString()}", Color.White, Color.Black);
             }
 
@@ -87,7 +87,7 @@ namespace Barotrauma
                             new Vector2(previousNode.DrawPosition.X, -previousNode.DrawPosition.Y),
                             Color.Blue * 0.5f, 0, 3);
 
-                        GUI.SmallFont.DrawString(spriteBatch,
+                        GUIStyle.SmallFont.DrawString(spriteBatch,
                             currentNode.ID.ToString(),
                             new Vector2(currentNode.DrawPosition.X - 10, -currentNode.DrawPosition.Y - 30),
                             Color.Blue);

@@ -1,4 +1,6 @@
-﻿using Barotrauma.Items.Components;
+using System;
+using Barotrauma.Items.Components;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -6,28 +8,33 @@ namespace Barotrauma.Abilities
 {
     class AbilityConditionAttackData : AbilityConditionData
     {
+        [Flags]
         private enum WeaponType
         {
             Any = 0, 
             Melee = 1, 
-            Ranged = 2
+            Ranged = 2,
+            HandheldRanged = 4,
+            Turret = 8,
+            NoWeapon = 16
         };
+
+        private static readonly List<WeaponType> WeaponTypeValues = Enum.GetValues(typeof(WeaponType)).Cast<WeaponType>().ToList();
 
         private readonly string itemIdentifier;
         private readonly string[] tags;
         private readonly WeaponType weapontype;
-        public AbilityConditionAttackData(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
+        private readonly bool ignoreNonHarmfulAttacks;
+        public AbilityConditionAttackData(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
-            itemIdentifier = conditionElement.GetAttributeString("itemidentifier", "");
-            tags = conditionElement.GetAttributeStringArray("tags", new string[0], convertToLowerInvariant: true);
-            switch (conditionElement.GetAttributeString("weapontype", ""))
+            itemIdentifier = conditionElement.GetAttributeString("itemidentifier", string.Empty);
+            tags = conditionElement.GetAttributeStringArray("tags", Array.Empty<string>(), convertToLowerInvariant: true);
+            ignoreNonHarmfulAttacks = conditionElement.GetAttributeBool("ignorenonharmfulattacks", false);
+
+            string weaponTypeStr = conditionElement.GetAttributeString("weapontype", "Any");
+            if (!Enum.TryParse(weaponTypeStr, ignoreCase: true, out weapontype))
             {
-                case "melee":
-                    weapontype = WeaponType.Melee;
-                    break;
-                case "ranged":
-                    weapontype = WeaponType.Ranged;
-                    break;
+                DebugConsole.ThrowError($"Error in talent \"{characterTalent.DebugIdentifier}\": \"{weaponTypeStr}\" is not a valid weapon type.");
             }
         }
 
@@ -35,17 +42,19 @@ namespace Barotrauma.Abilities
         {
             if (abilityObject is AbilityAttackData attackData)
             {
-                Item item = attackData?.SourceAttack?.SourceItem;
-
-                if (item == null)
+                if (ignoreNonHarmfulAttacks && attackData.SourceAttack != null)
                 {
-                    DebugConsole.AddWarning($"Source Item was not found in {this} for talent {characterTalent.DebugIdentifier}!");
-                    return false;
+                    if (attackData.SourceAttack.Stun <= 0.0f && (attackData.SourceAttack.Afflictions?.All(a => a.Key.Prefab.IsBuff) ?? true)) 
+                    { 
+                        return false;
+                    }
                 }
+
+                Item item = attackData?.SourceAttack?.SourceItem;
 
                 if (!string.IsNullOrEmpty(itemIdentifier))
                 {
-                    if (item.prefab.Identifier != itemIdentifier)
+                    if (item?.Prefab.Identifier != itemIdentifier)
                     {
                         return false;
                     }
@@ -53,19 +62,47 @@ namespace Barotrauma.Abilities
 
                 if (tags.Any())
                 {
-                    if (!tags.All(t => item.HasTag(t)))
+                    if (!tags.All(t => item?.HasTag(t) ?? false))
                     {
                         return false;
                     }
                 }
 
-                switch (weapontype)
+                if (weapontype != WeaponType.Any)
                 {
-                    case WeaponType.Melee:
-                        return item.GetComponent<MeleeWeapon>() != null;
-                    case WeaponType.Ranged:
-                        return item.GetComponent<RangedWeapon>() != null;
-                }
+                    foreach (WeaponType wt in WeaponTypeValues)
+                    {
+                        if (wt == WeaponType.Any || !weapontype.HasFlag(wt)) { continue; }
+                        switch (wt)
+                        {
+                            // it is possible that an item that has both a melee and a projectile component will return true
+                            // even when not used as a melee/ranged weapon respectively
+                            // attackdata should contain data regarding whether the attack is melee or not
+                            case WeaponType.Melee:
+                                if (item?.GetComponent<MeleeWeapon>() != null) { return true; }
+                                break;
+                            case WeaponType.Ranged:
+                                if (item?.GetComponent<Projectile>() != null) { return true; }
+                                break;
+                            case WeaponType.HandheldRanged:
+                                {
+                                    var projectile = item?.GetComponent<Projectile>();
+                                    if (projectile?.Launcher?.GetComponent<Holdable>() != null) { return true; }
+                                }
+                                break;
+                            case WeaponType.Turret:
+                                {
+                                    var projectile = item?.GetComponent<Projectile>();
+                                    if (projectile?.Launcher?.GetComponent<Turret>() != null) { return true; }
+                                }
+                                break;
+                            case WeaponType.NoWeapon:
+                                if (item == null) { return true; }
+                                break;
+                        }
+                    }
+                    return false;
+                }                
 
                 return true;
             }

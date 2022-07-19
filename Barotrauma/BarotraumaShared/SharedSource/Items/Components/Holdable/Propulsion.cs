@@ -17,15 +17,15 @@ namespace Barotrauma.Items.Components
 
         private float useState;
 
-        [Serialize(UseEnvironment.Both, false, description: "Can the item be used in air, underwater or both.")]
+        [Serialize(UseEnvironment.Both, IsPropertySaveable.No, description: "Can the item be used in air, underwater or both.")]
         public UseEnvironment UsableIn { get; set; }
 
-        [Serialize(0.0f, false, description: "The force to apply to the user's body."), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "The force to apply to the user's body."), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
         public float Force { get; set; }
 
 #if CLIENT
         private string particles;
-        [Serialize("", false, description: "The name of the particle prefab the item emits when used.")]
+        [Serialize("", IsPropertySaveable.No, description: "The name of the particle prefab the item emits when used.")]
         public string Particles
         {
             get { return particles; }
@@ -33,14 +33,14 @@ namespace Barotrauma.Items.Components
         }
 #endif
 
-        public Propulsion(Item item, XElement element)
+        public Propulsion(Item item, ContentXElement element)
             : base(item,element)
         {
         }
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            if (character == null || character.Removed) return false;
+            if (character == null || character.Removed) { return false; }
             if (!character.IsKeyDown(InputType.Aim) || character.Stun > 0.0f) { return false; }
 
             IsActive = true;
@@ -55,12 +55,11 @@ namespace Barotrauma.Items.Components
                 if (UsableIn == UseEnvironment.Water) { return true; }
             }
 
-            Vector2 dir = Vector2.Normalize(character.CursorPosition - character.Position);
-            //move upwards if the cursor is at the position of the character
-            if (!MathUtils.IsValid(dir)) dir = Vector2.UnitY;
-
+            Vector2 dir = character.CursorPosition - character.Position;
+            if (!MathUtils.IsValid(dir)) { return true; }
+            float length = 200;
+            dir = dir.ClampLength(length) / length;
             Vector2 propulsion = dir * Force * character.PropulsionSpeedMultiplier;
-
             if (character.AnimController.InWater && Force > 0.0f) { character.AnimController.TargetMovement = dir; }
 
             foreach (Limb limb in character.AnimController.Limbs)

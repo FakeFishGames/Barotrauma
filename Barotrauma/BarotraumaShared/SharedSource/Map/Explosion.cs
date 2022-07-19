@@ -39,6 +39,8 @@ namespace Barotrauma
 
         private readonly float itemRepairStrength;
 
+        public readonly HashSet<Submarine> IgnoredSubmarines = new HashSet<Submarine>();
+
         public float EmpStrength { get; set; }
         
         public float BallastFloraDamage { get; set; }
@@ -57,19 +59,18 @@ namespace Barotrauma
             smoke = true;
             flames = true;
             underwaterBubble = true;
-            ignoreFireEffectsForTags = new string[0];
+            ignoreFireEffectsForTags = Array.Empty<string>();
         }
         
-        public Explosion(XElement element, string parentDebugName)
+        public Explosion(ContentXElement element, string parentDebugName)
         {
             Attack = new Attack(element, parentDebugName + ", Explosion");
 
             force = element.GetAttributeFloat("force", 0.0f);
 
-            abilityExplosion = element.GetAttributeBool("abilityexplosion", false);
             applyToSelf = element.GetAttributeBool("applytoself", true);
 
-            bool showEffects = !abilityExplosion;
+            bool showEffects = !element.GetAttributeBool("abilityexplosion", false) && element.GetAttributeBool("showeffects", true);
             sparks = element.GetAttributeBool("sparks", showEffects);
             shockwave = element.GetAttributeBool("shockwave", showEffects);
             flames = element.GetAttributeBool("flames", showEffects);
@@ -79,7 +80,7 @@ namespace Barotrauma
             playTinnitus = element.GetAttributeBool("playtinnitus", showEffects);
 
             applyFireEffects = element.GetAttributeBool("applyfireeffects", flames && showEffects);
-            ignoreFireEffectsForTags = element.GetAttributeStringArray("ignorefireeffectsfortags", new string[0], convertToLowerInvariant: true);
+            ignoreFireEffectsForTags = element.GetAttributeStringArray("ignorefireeffectsfortags", Array.Empty<string>(), convertToLowerInvariant: true);
 
             ignoreCover = element.GetAttributeBool("ignorecover", false);
             onlyInside = element.GetAttributeBool("onlyinside", false);
@@ -87,7 +88,7 @@ namespace Barotrauma
 
             flash           = element.GetAttributeBool("flash", showEffects);
             flashDuration   = element.GetAttributeFloat("flashduration", 0.05f);
-            if (element.Attribute("flashrange") != null) { flashRange = element.GetAttributeFloat("flashrange", 100.0f); }
+            if (element.GetAttribute("flashrange") != null) { flashRange = element.GetAttributeFloat("flashrange", 100.0f); }
             flashColor = element.GetAttributeColor("flashcolor", Color.LightYellow);
 
             EmpStrength = element.GetAttributeFloat("empstrength", 0.0f);
@@ -132,6 +133,7 @@ namespace Barotrauma
             {
                 displayRange *= 1.0f + sourceItem.GetQualityModifier(Quality.StatType.ExplosionRadius);
                 Attack.DamageMultiplier *= 1.0f + sourceItem.GetQualityModifier(Quality.StatType.ExplosionDamage);
+                Attack.SourceItem ??= sourceItem;
             }
 
             Vector2 cameraPos = GameMain.GameScreen.Cam.Position;
@@ -149,7 +151,7 @@ namespace Barotrauma
 
             if (!MathUtils.NearlyEqual(Attack.GetStructureDamage(1.0f), 0.0f) || !MathUtils.NearlyEqual(Attack.GetLevelWallDamage(1.0f), 0.0f))
             {
-                RangedStructureDamage(worldPosition, displayRange, Attack.GetStructureDamage(1.0f), Attack.GetLevelWallDamage(1.0f), attacker);
+                RangedStructureDamage(worldPosition, displayRange, Attack.GetStructureDamage(1.0f), Attack.GetLevelWallDamage(1.0f), attacker, IgnoredSubmarines, Attack.EmitStructureDamageParticles);
             }
 
             if (BallastFloraDamage > 0.0f)
@@ -236,9 +238,9 @@ namespace Barotrauma
                         if (!fireProof)
                         {
                             item.ApplyStatusEffects(ActionType.OnFire, 1.0f);
-                            if (item.Condition <= 0.0f && GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+                            if (item.Condition <= 0.0f && GameMain.NetworkMember is { IsServer: true })
                             {
-                                GameMain.NetworkMember.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFire });
+                                GameMain.NetworkMember.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(ActionType.OnFire));
                             }
                         }                        
                     }
@@ -336,11 +338,17 @@ namespace Barotrauma
                         }
                     }
 
+                    AbilityAttackData attackData = new AbilityAttackData(Attack, c, attacker);
+                    if (attackData.Afflictions != null)
+                    {
+                        modifiedAfflictions.AddRange(attackData.Afflictions);
+                    }
+
                     //use a position slightly from the limb's position towards the explosion
                     //ensures that the attack hits the correct limb and that the direction of the hit can be determined correctly in the AddDamage methods
                     Vector2 dir = worldPosition - limb.WorldPosition;
                     Vector2 hitPos = limb.WorldPosition + (dir.LengthSquared() <= 0.001f ? Rand.Vector(1.0f) : Vector2.Normalize(dir)) * 0.01f;
-                    AttackResult attackResult = c.AddDamage(hitPos, modifiedAfflictions, attack.Stun * distFactor, false, attacker: attacker, damageMultiplier: attack.DamageMultiplier);
+                    AttackResult attackResult = c.AddDamage(hitPos, modifiedAfflictions, attack.Stun * distFactor, false, attacker: attacker, damageMultiplier: attack.DamageMultiplier * attackData.DamageMultiplier);
                     damages.Add(limb, attackResult.Damage);
                     
                     if (attack.StatusEffects != null && attack.StatusEffects.Any())
@@ -386,7 +394,7 @@ namespace Barotrauma
                         {
                             if (damages.TryGetValue(limb, out float damage))
                             {
-                                c.TrySeverLimbJoints(limb, attack.SeverLimbsProbability * distFactor, damage, allowBeheading: true);
+                                c.TrySeverLimbJoints(limb, attack.SeverLimbsProbability * distFactor, damage, allowBeheading: true, attacker: attacker);
                             }
                         }
                     }
@@ -394,34 +402,37 @@ namespace Barotrauma
             }
         }
 
+        private static readonly List<Structure> damagedStructureList = new List<Structure>();
+        private static readonly Dictionary<Structure, float> damagedStructures = new Dictionary<Structure, float>();
         /// <summary>
         /// Returns a dictionary where the keys are the structures that took damage and the values are the amount of damage taken
         /// </summary>
-        public static Dictionary<Structure, float> RangedStructureDamage(Vector2 worldPosition, float worldRange, float damage, float levelWallDamage, Character attacker = null)
+        public static Dictionary<Structure, float> RangedStructureDamage(Vector2 worldPosition, float worldRange, float damage, float levelWallDamage, Character attacker = null, IEnumerable<Submarine> ignoredSubmarines = null, bool emitWallDamageParticles = true)
         {
-            List<Structure> structureList = new List<Structure>();            
             float dist = 600.0f;
+            damagedStructureList.Clear();
             foreach (MapEntity entity in MapEntity.mapEntityList)
             {
                 if (!(entity is Structure structure)) { continue; }
+                if (ignoredSubmarines != null && entity.Submarine != null && ignoredSubmarines.Contains(entity.Submarine)) { continue; }
 
                 if (structure.HasBody &&
                     !structure.IsPlatform &&
                     Vector2.Distance(structure.WorldPosition, worldPosition) < dist * 3.0f)
                 {
-                    structureList.Add(structure);
+                    damagedStructureList.Add(structure);
                 }
             }
 
-            Dictionary<Structure, float> damagedStructures = new Dictionary<Structure, float>();
-            foreach (Structure structure in structureList)
+            damagedStructures.Clear();
+            foreach (Structure structure in damagedStructureList)
             {
                 for (int i = 0; i < structure.SectionCount; i++)
                 {
                     float distFactor = 1.0f - (Vector2.Distance(structure.SectionPosition(i, true), worldPosition) / worldRange);
                     if (distFactor <= 0.0f) { continue; }
 
-                    structure.AddDamage(i, damage * distFactor, attacker);
+                    structure.AddDamage(i, damage * distFactor, attacker, emitParticles: emitWallDamageParticles);
 
                     if (damagedStructures.ContainsKey(structure))
                     {
@@ -478,7 +489,7 @@ namespace Barotrauma
         {
             List<BallastFloraBehavior> ballastFlorae = new List<BallastFloraBehavior>();
 
-            foreach (Hull hull in Hull.hullList)
+            foreach (Hull hull in Hull.HullList)
             {
                 if (hull.BallastFlora != null) { ballastFlorae.Add(hull.BallastFlora); }
             }

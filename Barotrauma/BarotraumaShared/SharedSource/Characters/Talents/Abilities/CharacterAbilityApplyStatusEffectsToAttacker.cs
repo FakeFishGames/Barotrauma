@@ -1,11 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Xml.Linq;
-
-namespace Barotrauma.Abilities
+﻿namespace Barotrauma.Abilities
 {
     class CharacterAbilityApplyStatusEffectsToAttacker : CharacterAbilityApplyStatusEffects
     {
-        public CharacterAbilityApplyStatusEffectsToAttacker(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityApplyStatusEffectsToAttacker(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
         }
 

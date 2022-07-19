@@ -1,8 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -21,7 +23,7 @@ namespace Barotrauma
             /// <summary>
             /// The change can only happen if there's at least one of the given types of locations near this one
             /// </summary>
-            public readonly List<string> RequiredLocations;
+            public readonly ImmutableArray<Identifier> RequiredLocations;
 
             /// <summary>
             /// How close the location needs to be to one of the RequiredLocations for the change to occur
@@ -55,7 +57,7 @@ namespace Barotrauma
 
             public Requirement(XElement element, LocationTypeChange change)
             {
-                RequiredLocations = element.GetAttributeStringArray("requiredlocations", element.GetAttributeStringArray("requiredadjacentlocations", new string[0])).ToList();
+                RequiredLocations = element.GetAttributeIdentifierArray("requiredlocations", element.GetAttributeIdentifierArray("requiredadjacentlocations", Array.Empty<Identifier>())).ToImmutableArray();
                 RequiredProximity = Math.Max(element.GetAttributeInt("requiredproximity", 1), 1);
                 ProximityProbabilityIncrease = element.GetAttributeFloat("proximityprobabilityincrease", 0.0f);
                 RequiredProximityForProbabilityIncrease = element.GetAttributeInt("requiredproximityforprobabilityincrease", -1);
@@ -124,9 +126,9 @@ namespace Barotrauma
             }
         }
 
-        public readonly string CurrentType;
+        public readonly Identifier CurrentType;
 
-        public readonly string ChangeToType;
+        public readonly Identifier ChangeToType;
 
         /// <summary>
         /// Base probability per turn for the location to change if near one of the RequiredLocations
@@ -137,12 +139,33 @@ namespace Barotrauma
 
         public List<Requirement> Requirements = new List<Requirement>();
 
-        public List<string> Messages = new List<string>();
+        private readonly bool requireChangeMessages;
+        private readonly string messageTag;
+        private ImmutableArray<string>? messages = null;
+        public IReadOnlyList<string> Messages
+        {
+            get
+            {
+                if (!messages.HasValue)
+                {
+                    messages = TextManager.GetAll(messageTag).ToImmutableArray();
+                    if (messages.Value.None())
+                    {
+                        if (requireChangeMessages)
+                        {
+                            DebugConsole.ThrowError($"No messages defined for the location type change {CurrentType} -> {ChangeToType}");
+                        }
+                    }
+                }
+
+                return messages.Value;
+            }
+        }
 
         /// <summary>
         /// The change can't happen if there's one or more of the given types of locations near this one
         /// </summary>
-        public readonly List<string> DisallowedAdjacentLocations;
+        public readonly ImmutableArray<Identifier> DisallowedAdjacentLocations;
 
         /// <summary>
         /// How close the location needs to be to one of the DisallowedAdjacentLocations for the change to be disabled
@@ -156,14 +179,14 @@ namespace Barotrauma
 
         public readonly Point RequiredDurationRange;
 
-        public LocationTypeChange(string currentType, XElement element, bool requireChangeMessages, float defaultProbability = 0.0f)
+        public LocationTypeChange(Identifier currentType, XElement element, bool requireChangeMessages, float defaultProbability = 0.0f)
         {
             CurrentType = currentType;
-            ChangeToType = element.GetAttributeString("type", element.GetAttributeString("to", ""));
+            ChangeToType = element.GetAttributeIdentifier("type", element.GetAttributeIdentifier("to", ""));
 
             RequireDiscovered = element.GetAttributeBool("requirediscovered", false);
 
-            DisallowedAdjacentLocations = element.GetAttributeStringArray("disallowedadjacentlocations", new string[0]).ToList();
+            DisallowedAdjacentLocations = element.GetAttributeIdentifierArray("disallowedadjacentlocations", Array.Empty<Identifier>()).ToImmutableArray();
             DisallowedProximity = Math.Max(element.GetAttributeInt("disallowedproximity", 1), 1);
 
             RequiredDurationRange = element.GetAttributePoint("requireddurationrange", Point.Zero);
@@ -184,19 +207,10 @@ namespace Barotrauma
                 RequiredDurationRange = new Point(element.GetAttributeInt("requiredduration", 0));
             }
 
-            string messageTag = element.GetAttributeString("messagetag", "LocationChange." + currentType + ".ChangeTo." + ChangeToType);
+            this.requireChangeMessages = requireChangeMessages;
+            messageTag = element.GetAttributeString("messagetag", "LocationChange." + currentType + ".ChangeTo." + ChangeToType);
 
-            Messages = TextManager.GetAll(messageTag);
-            if (Messages == null)
-            {
-                if (requireChangeMessages)
-                {
-                    DebugConsole.ThrowError("No messages defined for the location type change " + currentType + " -> " + ChangeToType);
-                }
-                Messages = new List<string>();
-            }
-
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 if (subElement.Name.ToString().Equals("requirement", StringComparison.OrdinalIgnoreCase))
                 {

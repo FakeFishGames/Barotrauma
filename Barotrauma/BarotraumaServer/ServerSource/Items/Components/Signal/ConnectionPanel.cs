@@ -7,7 +7,7 @@ namespace Barotrauma.Items.Components
 {
     partial class ConnectionPanel : ItemComponent, IServerSerializable, IClientSerializable
     {
-        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
+        public void ServerEventRead(IReadMessage msg, Client c)
         {
             List<Wire>[] wires = new List<Wire>[Connections.Count];
 
@@ -15,7 +15,8 @@ namespace Barotrauma.Items.Components
             for (int i = 0; i < Connections.Count; i++)
             {
                 wires[i] = new List<Wire>();
-                for (int j = 0; j < Connections[i].MaxWires; j++)
+                uint wireCount = msg.ReadVariableUInt32();
+                for (int j = 0; j < wireCount; j++)
                 {
                     ushort wireId = msg.ReadUInt16();
 
@@ -84,19 +85,15 @@ namespace Barotrauma.Items.Components
                         if (!selectedWire.Item.Removed) { selectedWire.CreateNetworkEvent(); }
                     }, 1.0f);
                 }
-                GameMain.Server?.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFailure, this, c.Character.ID });
+                GameMain.Server?.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(ActionType.OnFailure, this, c.Character));
                 return;
             }
 
             //go through existing wire links
             for (int i = 0; i < Connections.Count; i++)
             {
-                int j = -1;
-                foreach (Wire existingWire in Connections[i].Wires)
+                foreach (Wire existingWire in Connections[i].Wires.ToArray())
                 {
-                    j++;
-                    if (existingWire == null) { continue; }
-
                     //existing wire not in the list of new wires -> disconnect it
                     if (!wires[i].Contains(existingWire))
                     {
@@ -163,7 +160,7 @@ namespace Barotrauma.Items.Components
                             }*/
                         }
 
-                        Connections[i].SetWire(j, null);
+                        Connections[i].DisconnectWire(existingWire);
                     }
                 }
             }
@@ -188,11 +185,10 @@ namespace Barotrauma.Items.Components
                     //already connected, no need to do anything
                     if (Connections[i].Wires.Contains(newWire)) { continue; }
 
-                    Connections[i].TryAddLink(newWire);
                     newWire.Connect(Connections[i], true, true);
+                    Connections[i].TryAddLink(newWire);
 
                     var otherConnection = newWire.OtherConnection(Connections[i]);
-
                     if (otherConnection == null)
                     {
                         GameServer.Log(GameServer.CharacterLogName(c.Character) + " connected a wire to " +
@@ -210,10 +206,10 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
             msg.Write(user == null ? (ushort)0 : user.ID);
-            ClientWrite(msg, extraData);
+            ClientEventWrite(msg, extraData);
         }
     }
 }

@@ -6,6 +6,16 @@ namespace Barotrauma.Items.Components
 {
     partial class Wire : ItemComponent, IDrawableComponent, IServerSerializable
     {
+        private readonly struct ServerEventData : IEventData
+        {
+            public readonly int EventIndex;
+            
+            public ServerEventData(int eventIndex)
+            {
+                EventIndex = eventIndex;
+            }
+        }
+        
         public void CreateNetworkEvent()
         {
             if (GameMain.Server == null) return;
@@ -13,13 +23,17 @@ namespace Barotrauma.Items.Components
             int eventCount = Math.Max((int)Math.Ceiling(nodes.Count / (float)MaxNodesPerNetworkEvent), 1);
             for (int i = 0; i < eventCount; i++)
             {
-                GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.GetComponentIndex(this), i });
+                item.CreateServerEvent(this, new ServerEventData(i));
             }
         }
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public override bool ValidateEventData(NetEntityEvent.IData data)
+            => TryExtractEventData<ServerEventData>(data, out _);
+
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            int eventIndex = (int)extraData[2];
+            var eventData = ExtractEventData<ServerEventData>(extraData);
+            int eventIndex = eventData.EventIndex;
             int nodeStartIndex = eventIndex * MaxNodesPerNetworkEvent;
             int nodeCount = MathHelper.Clamp(nodes.Count - nodeStartIndex, 0, MaxNodesPerNetworkEvent);
 
@@ -32,7 +46,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
+        public void ServerEventRead(IReadMessage msg, Client c)
         {
             int nodeCount = msg.ReadByte();
             Vector2 lastNodePos = Vector2.Zero;

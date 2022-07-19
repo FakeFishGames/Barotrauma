@@ -97,12 +97,12 @@ namespace Barotrauma.Networking
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedPlayerFrame.RectTransform),
                     bannedPlayer.ExpirationTime == null ? 
                         TextManager.Get("BanPermanent") :  TextManager.GetWithVariable("BanExpires", "[time]", bannedPlayer.ExpirationTime.Value.ToString()),
-                    font: GUI.SmallFont);
+                    font: GUIStyle.SmallFont);
 
                 var reasonText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedPlayerFrame.RectTransform),
                     TextManager.Get("BanReason") + " " +
                         (string.IsNullOrEmpty(bannedPlayer.Reason) ? TextManager.Get("None") : bannedPlayer.Reason),
-                    font: GUI.SmallFont, wrap: true)
+                    font: GUIStyle.SmallFont, wrap: true)
                 {
                     ToolTip = bannedPlayer.Reason
                 };

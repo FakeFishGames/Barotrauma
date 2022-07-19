@@ -60,7 +60,8 @@ namespace Steamworks
 		#endregion
 		internal bool GetOPFStringForApp( AppId unVideoAppID, out string pchBuffer, ref int pnBufferSize )
 		{
-			IntPtr mempchBuffer = Helpers.TakeMemory();
+			using var memory = Helpers.TakeMemory();
+			IntPtr mempchBuffer = memory;
 			var returnValue = _GetOPFStringForApp( Self, unVideoAppID, mempchBuffer, ref pnBufferSize );
 			pchBuffer = Helpers.MemoryToString( mempchBuffer );
 			return returnValue;

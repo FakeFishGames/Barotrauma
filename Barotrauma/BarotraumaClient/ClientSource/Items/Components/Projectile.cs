@@ -1,11 +1,9 @@
 ﻿using Barotrauma.Networking;
 using Barotrauma.Particles;
-using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -13,7 +11,7 @@ namespace Barotrauma.Items.Components
     {
         private readonly List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             bool launch = msg.ReadBoolean();
             if (launch)
@@ -115,9 +113,9 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        partial void InitProjSpecific(XElement element)
+        partial void InitProjSpecific(ContentXElement element)
         {
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {

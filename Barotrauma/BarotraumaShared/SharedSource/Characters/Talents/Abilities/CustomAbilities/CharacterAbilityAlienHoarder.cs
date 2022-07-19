@@ -11,7 +11,7 @@ namespace Barotrauma.Abilities
         private readonly float maxAddedDamageMultiplier;
         private readonly string[] tags;
 
-        public CharacterAbilityAlienHoarder(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityAlienHoarder(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             addedDamageMultiplierPerItem = abilityElement.GetAttributeFloat("addeddamagemultiplierperitem", 0f);
             maxAddedDamageMultiplier = abilityElement.GetAttributeFloat("maxaddedddamagemultiplier", float.MaxValue);
@@ -34,7 +34,7 @@ namespace Barotrauma.Abilities
             }
             else
             {
-                LogabilityObjectMismatch();
+                LogAbilityObjectMismatch();
             }
         }
     }

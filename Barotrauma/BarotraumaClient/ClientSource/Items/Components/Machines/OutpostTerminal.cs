@@ -14,11 +14,11 @@ namespace Barotrauma.Items.Components
 
             if (selectionUI == null)
             {
-                selectionUI = new SubmarineSelection(true, null, GUICanvas.Instance.ItemComponentHolder);
+                selectionUI = new SubmarineSelection(true, null, GUI.Canvas);
             }
 
             GuiFrame = selectionUI.GuiFrame;
-            selectionUI.RefreshSubmarineDisplay(true);
+            selectionUI.RefreshSubmarineDisplay(true, setTransferOptionToTrue: true);
             IsActive = true;
             return base.Select(character);
         }
@@ -34,6 +34,16 @@ namespace Barotrauma.Items.Components
             base.Update(deltaTime, cam);
 
             selectionUI?.Update();
+        }
+
+        protected override void RemoveComponentSpecific()
+        {
+            base.RemoveComponentSpecific();
+            if (selectionUI != null)
+            {
+                selectionUI.GuiFrame.RectTransform.Parent = null;
+                selectionUI = null;
+            }
         }
     }
 }

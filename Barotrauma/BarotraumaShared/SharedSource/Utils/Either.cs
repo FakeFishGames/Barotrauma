@@ -30,12 +30,20 @@ namespace Barotrauma
         }
 
         public override bool TryGet(out T t) { t = Value; return true; }
-        public override bool TryGet(out U u) { u = default(U); return false; }
+        public override bool TryGet(out U u) { u = default; return false; }
 
         public override bool TryCast<V>(out V v)
         {
-            if (Value is V result) { v = result; return true; }
-            else { v = default(V); return false; }
+            if (Value is V result)
+            {
+                v = result;
+                return true;
+            }
+            else
+            {
+                v = default;
+                return false;
+            }
         }
     }
 
@@ -50,13 +58,21 @@ namespace Barotrauma
             return Value.ToString();
         }
 
-        public override bool TryGet(out T t) { t = default(T); return false; }
+        public override bool TryGet(out T t) { t = default; return false; }
         public override bool TryGet(out U u) { u = Value; return true; }
 
         public override bool TryCast<V>(out V v)
         {
-            if (Value is V result) { v = result; return true; }
-            else { v = default(V); return false; }
+            if (Value is V result)
+            {
+                v = result;
+                return true;
+            }
+            else
+            {
+                v = default;
+                return false;
+            }
         }
     }
 }

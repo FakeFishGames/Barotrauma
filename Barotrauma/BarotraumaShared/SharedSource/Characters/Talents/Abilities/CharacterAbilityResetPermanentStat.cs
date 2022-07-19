@@ -8,7 +8,7 @@ namespace Barotrauma.Abilities
         public override bool AppliesEffectOnIntervalUpdate => true;
         public override bool AllowClientSimulation => true;
 
-        public CharacterAbilityResetPermanentStat(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityResetPermanentStat(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             statIdentifier = abilityElement.GetAttributeString("statidentifier", "").ToLowerInvariant();
         }

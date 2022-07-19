@@ -12,16 +12,16 @@ namespace Barotrauma
             Add
         }
         
-        public SetDataAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) { }
+        public SetDataAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
 
-        [Serialize(OperationType.Set, true)]
+        [Serialize(OperationType.Set, IsPropertySaveable.Yes)]
         public OperationType Operation { get; set; }
 
-        [Serialize(null, true)]
+        [Serialize(null, IsPropertySaveable.Yes)]
         public string Value { get; set; } = null!;
 
-        [Serialize("", true)]
-        public string Identifier { get; set; }
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier Identifier { get; set; }
 
         private bool isFinished;
 
@@ -47,7 +47,7 @@ namespace Barotrauma
             isFinished = true;
         }
 
-        public static void PerformOperation(CampaignMetadata metadata, string identifier, object value, OperationType operation)
+        public static void PerformOperation(CampaignMetadata metadata, Identifier identifier, object value, OperationType operation)
         {
             if (metadata == null) { return; }
 

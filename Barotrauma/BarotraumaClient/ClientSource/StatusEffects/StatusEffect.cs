@@ -14,20 +14,21 @@ namespace Barotrauma
     {
         private List<ParticleEmitter> particleEmitters;
 
-        private static HashSet<StatusEffect> ActiveLoopingSounds = new HashSet<StatusEffect>();
+        private readonly static HashSet<StatusEffect> ActiveLoopingSounds = new HashSet<StatusEffect>();
         private static double LastMuffleCheckTime;
         private readonly List<RoundSound> sounds = new List<RoundSound>();
+        public IEnumerable<RoundSound> Sounds { get { return sounds; } }
         private SoundSelectionMode soundSelectionMode;
         private SoundChannel soundChannel;
         private Entity soundEmitter;
         private double loopStartTime;
         private bool loopSound;
 
-        partial void InitProjSpecific(XElement element, string parentDebugName)
+        partial void InitProjSpecific(ContentXElement element, string parentDebugName)
         {
             particleEmitters = new List<ParticleEmitter>();
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -35,11 +36,11 @@ namespace Barotrauma
                         particleEmitters.Add(new ParticleEmitter(subElement));
                         break;
                     case "sound":
-                        var sound = Submarine.LoadRoundSound(subElement);
+                        var sound = RoundSound.Load(subElement);
                         if (sound?.Sound != null)
                         {
                             loopSound = subElement.GetAttributeBool("loop", false);
-                            if (subElement.Attribute("selectionmode") != null)
+                            if (subElement.GetAttribute("selectionmode") != null)
                             {
                                 if (Enum.TryParse(subElement.GetAttributeString("selectionmode", "Random"), out SoundSelectionMode selectionMode))
                                 {
@@ -53,7 +54,7 @@ namespace Barotrauma
             }
         }
 
-        partial void ApplyProjSpecific(float deltaTime, Entity entity, IEnumerable<ISerializableEntity> targets, Hull hull, Vector2 worldPosition, bool playSound)
+        partial void ApplyProjSpecific(float deltaTime, Entity entity, IReadOnlyList<ISerializableEntity> targets, Hull hull, Vector2 worldPosition, bool playSound)
         {
             if (playSound)
             {
@@ -64,6 +65,7 @@ namespace Barotrauma
             {
                 float angle = 0.0f;
                 float particleRotation = 0.0f;
+                bool mirrorAngle = false;
                 if (emitter.Prefab.Properties.CopyEntityAngle)
                 {
                     Limb targetLimb = null;
@@ -71,7 +73,11 @@ namespace Barotrauma
                     {
                         angle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
                         particleRotation = -item.body.Rotation;
-                        if (item.body.Dir < 0.0f) { particleRotation += MathHelper.Pi; }
+                        if (item.body.Dir < 0.0f)
+                        {
+                            particleRotation += MathHelper.Pi;
+                            mirrorAngle = true;
+                        }
                     }
                     else if (entity is Character c && !c.Removed && targetLimbs?.FirstOrDefault(l => l != LimbType.None) is LimbType l)
                     {
@@ -79,17 +85,28 @@ namespace Barotrauma
                     }
                     else
                     {
-                        targetLimb = targets.FirstOrDefault(t => t is Limb) as Limb;
+                        for (int i = 0; i < targets.Count; i++)
+                        {
+                            if (targets[i] is Limb limb)
+                            {
+                                targetLimb = limb;
+                                break;
+                            }
+                        }
                     }
                     if (targetLimb != null && !targetLimb.Removed)
                     {
                         angle = targetLimb.body.Rotation + ((targetLimb.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
                         particleRotation = -targetLimb.body.Rotation;
-                        if (targetLimb.body.Dir < 0.0f) { particleRotation += MathHelper.Pi; }
+                        if (targetLimb.body.Dir < 0.0f)
+                        {
+                            particleRotation += MathHelper.Pi;
+                            mirrorAngle = true;
+                        }
                     }
                 }
 
-                emitter.Emit(deltaTime, worldPosition, hull, angle: angle, particleRotation: particleRotation);
+                emitter.Emit(deltaTime, worldPosition, hull, angle: angle, particleRotation: particleRotation, mirrorAngle: mirrorAngle);
             }            
         }
 
@@ -108,7 +125,7 @@ namespace Barotrauma
                         if (sound?.Sound == null)
                         {
                             string errorMsg = $"Error in StatusEffect.ApplyProjSpecific1 (sound \"{sound?.Filename ?? "unknown"}\" was null)\n" + Environment.StackTrace.CleanupStackTrace();
-                            GameAnalyticsManager.AddErrorEventOnce("StatusEffect.ApplyProjSpecific:SoundNull1" + Environment.StackTrace.CleanupStackTrace(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                            GameAnalyticsManager.AddErrorEventOnce("StatusEffect.ApplyProjSpecific:SoundNull1" + Environment.StackTrace.CleanupStackTrace(), GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                             return;
                         }
                         soundChannel = SoundPlayer.PlaySound(sound.Sound, worldPosition, sound.Volume, sound.Range, hullGuess: hull, ignoreMuffling: sound.IgnoreMuffling);
@@ -135,12 +152,8 @@ namespace Barotrauma
                     if (selectedSound?.Sound == null)
                     {
                         string errorMsg = $"Error in StatusEffect.ApplyProjSpecific2 (sound \"{selectedSound?.Filename ?? "unknown"}\" was null)\n" + Environment.StackTrace.CleanupStackTrace();
-                        GameAnalyticsManager.AddErrorEventOnce("StatusEffect.ApplyProjSpecific:SoundNull2" + Environment.StackTrace.CleanupStackTrace(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                        GameAnalyticsManager.AddErrorEventOnce("StatusEffect.ApplyProjSpecific:SoundNull2" + Environment.StackTrace.CleanupStackTrace(), GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                         return;
-                    }
-                    if (selectedSound.Sound.Disposed)
-                    {
-                        Submarine.ReloadRoundSound(selectedSound);
                     }
                     soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, worldPosition, selectedSound.Volume, selectedSound.Range, hullGuess: hull, ignoreMuffling: selectedSound.IgnoreMuffling);
                     ignoreMuffling = selectedSound.IgnoreMuffling;

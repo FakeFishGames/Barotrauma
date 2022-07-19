@@ -9,7 +9,7 @@ namespace Barotrauma.Abilities
         bool lastState;
         public override bool AllowClientSimulation => true;
 
-        public CharacterAbilityModifyStat(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityModifyStat(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             statType = CharacterAbilityGroup.ParseStatType(abilityElement.GetAttributeString("stattype", ""), CharacterTalent.DebugIdentifier);
             value = abilityElement.GetAttributeFloat("value", 0f);

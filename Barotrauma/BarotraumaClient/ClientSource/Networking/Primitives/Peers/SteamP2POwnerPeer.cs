@@ -11,7 +11,13 @@ namespace Barotrauma.Networking
         private bool isActive;
 
         private readonly UInt64 selfSteamID;
+        private UInt64 ownerKey64 => unchecked((UInt64)ownerKey);
 
+        private UInt64 ReadSteamId(IReadMessage inc)
+            => inc.ReadUInt64() ^ ownerKey64;
+        private void WriteSteamId(IWriteMessage msg, UInt64 val)
+            => msg.Write(val ^ ownerKey64);
+        
         private long sentBytes, receivedBytes;
 
         class RemotePeer
@@ -58,6 +64,8 @@ namespace Barotrauma.Networking
         {
             if (isActive) { return; }
 
+            this.ownerKey = ownerKey;
+
             initializationStep = ConnectionInitialization.SteamTicketAndVersion;
 
             ServerConnection = new PipeConnection(selfSteamID);
@@ -103,7 +111,7 @@ namespace Barotrauma.Networking
                     //known now
                     int prevBitPosition = msg.Message.BitPosition;
                     msg.Message.BitPosition = sizeof(ulong) * 8;
-                    msg.Message.Write(ownerID);
+                    WriteSteamId(msg.Message, ownerID);
                     msg.Message.BitPosition = prevBitPosition;
                     byte[] msgToSend = (byte[])msg.Message.Buffer.Clone();
                     Array.Resize(ref msgToSend, msg.Message.LengthBytes);
@@ -141,24 +149,19 @@ namespace Barotrauma.Networking
             }
 
             IWriteMessage outMsg = new WriteOnlyMessage();
-            outMsg.Write(steamId);
-            outMsg.Write(remotePeer.OwnerSteamID);
+            WriteSteamId(outMsg, steamId);
+            WriteSteamId(outMsg, remotePeer.OwnerSteamID);
             outMsg.Write(data, 1, dataLength - 1);
 
             DeliveryMethod deliveryMethod = (DeliveryMethod)data[0];
 
-            byte incByte = data[1];
-            bool isCompressed = (incByte & (byte)PacketHeader.IsCompressed) != 0;
-            bool isConnectionInitializationStep = (incByte & (byte)PacketHeader.IsConnectionInitializationStep) != 0;
-            bool isDisconnectMessage = (incByte & (byte)PacketHeader.IsDisconnectMessage) != 0;
-            bool isServerMessage = (incByte & (byte)PacketHeader.IsServerMessage) != 0;
-            bool isHeartbeatMessage = (incByte & (byte)PacketHeader.IsHeartbeatMessage) != 0;
+            PacketHeader packetHeader = (PacketHeader)data[1];
 
-            if (!remotePeer.Authenticated & !remotePeer.Authenticating && isConnectionInitializationStep)
+            if (!remotePeer.Authenticated & !remotePeer.Authenticating && packetHeader.IsConnectionInitializationStep())
             {
                 remotePeer.DisconnectTime = null;
 
-                IReadMessage authMsg = new ReadOnlyMessage(data, isCompressed, 2, dataLength - 2, null);
+                IReadMessage authMsg = new ReadOnlyMessage(data, packetHeader.IsCompressed(), 2, dataLength - 2, null);
                 ConnectionInitialization initializationStep = (ConnectionInitialization)authMsg.ReadByte();
                 if (initializationStep == ConnectionInitialization.SteamTicketAndVersion)
                 {
@@ -198,7 +201,7 @@ namespace Barotrauma.Networking
             if (ChildServerRelay.HasShutDown || (ChildServerRelay.Process?.HasExited ?? true))
             {
                 Close();
-                var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), TextManager.Get("ServerProcessClosed"));
+                var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), ChildServerRelay.CrashMessage);
                 msgBox.Buttons[0].OnClicked += (btn, obj) => { GameMain.MainMenuScreen.Select(); return false; };
                 return;
             }
@@ -237,22 +240,16 @@ namespace Barotrauma.Networking
         {
             if (!isActive) { return; }
 
-            UInt64 recipientSteamId = inc.ReadUInt64();
+            UInt64 recipientSteamId = ReadSteamId(inc);
             DeliveryMethod deliveryMethod = (DeliveryMethod)inc.ReadByte();
 
             int p2pDataStart = inc.BytePosition;
 
-            byte incByte = inc.ReadByte();
-
-            bool isCompressed = (incByte & (byte)PacketHeader.IsCompressed) != 0;
-            bool isConnectionInitializationStep = (incByte & (byte)PacketHeader.IsConnectionInitializationStep) != 0;
-            bool isDisconnectMessage = (incByte & (byte)PacketHeader.IsDisconnectMessage) != 0;
-            bool isServerMessage = (incByte & (byte)PacketHeader.IsServerMessage) != 0;
-            bool isHeartbeatMessage = (incByte & (byte)PacketHeader.IsHeartbeatMessage) != 0;
+            PacketHeader packetHeader = (PacketHeader)inc.ReadByte();
 
             if (recipientSteamId != selfSteamID)
             {
-                if (!isServerMessage)
+                if (!packetHeader.IsServerMessage())
                 {
                     DebugConsole.ThrowError("Received non-server message meant for remote peer");
                     return;
@@ -262,7 +259,7 @@ namespace Barotrauma.Networking
                 
                 if (peer == null) { return; }
 
-                if (isDisconnectMessage)
+                if (packetHeader.IsDisconnectMessage())
                 {
                     DisconnectPeer(peer, inc.ReadString());
                     return;
@@ -273,8 +270,8 @@ namespace Barotrauma.Networking
                 {
                     case DeliveryMethod.Reliable:
                     case DeliveryMethod.ReliableOrdered:
-                        //the documentation seems to suggest that the Reliable send type
-                        //enforces packet order (TODO: verify)
+                        //the documentation seems to suggest that the
+                        //Reliable send type enforces packet order
                         sendType = Steamworks.P2PSend.Reliable;
                         break;
                     default:
@@ -284,17 +281,31 @@ namespace Barotrauma.Networking
 
                 byte[] p2pData;
 
-                if (isConnectionInitializationStep)
+                if (packetHeader.IsConnectionInitializationStep())
                 {
                     p2pData = new byte[inc.LengthBytes - p2pDataStart + 8];
                     p2pData[0] = inc.Buffer[p2pDataStart];
-                    Lidgren.Network.NetBitWriter.WriteUInt64(SteamManager.CurrentLobbyID, 64, p2pData, 8);
-                    Array.Copy(inc.Buffer, p2pDataStart+1, p2pData, 9, inc.LengthBytes - p2pDataStart - 1);
+                    Lidgren.Network.NetBitWriter.WriteUInt64(SteamManager.CurrentLobbyID, 8 * 8, p2pData, 1 * 8);
+                    Array.Copy(inc.Buffer, p2pDataStart+1, p2pData, 1 + 8, inc.LengthBytes - p2pDataStart - 1);
                 }
                 else
                 {
                     p2pData = new byte[inc.LengthBytes - p2pDataStart];
                     Array.Copy(inc.Buffer, p2pDataStart, p2pData, 0, p2pData.Length);
+
+                    if (!packetHeader.IsHeartbeatMessage() && !packetHeader.IsDisconnectMessage())
+                    {
+                        UInt16 length = Lidgren.Network.NetBitWriter.ReadUInt16(p2pData, 16, 8);
+                        if (length > p2pData.Length - 2)
+                        {
+                            string errorMsg = $"Length written in message to send to client is larger than buffer size ({length} > {p2pData.Length - 2})";
+                            DebugConsole.ThrowError(errorMsg);
+                            GameAnalyticsManager.AddErrorEventOnce(
+                                "SteamP2POwnerPeerLengthValidationFail",
+                                GameAnalyticsManager.ErrorSeverity.Error,
+                                errorMsg);
+                        }
+                    }
                 }
 
                 if (p2pData.Length + 4 >= MsgConstants.MTU)
@@ -323,25 +334,25 @@ namespace Barotrauma.Networking
             }
             else
             {
-                if (isDisconnectMessage)
+                if (packetHeader.IsDisconnectMessage())
                 {
                     DebugConsole.ThrowError("Received disconnect message from owned server");
                     return;
                 }
-                if (!isServerMessage)
+                if (!packetHeader.IsServerMessage())
                 {
                     DebugConsole.ThrowError("Received non-server message from owned server");
                     return;
                 }
-                if (isHeartbeatMessage)
+                if (packetHeader.IsHeartbeatMessage())
                 {
-                    return; //timeout is handled by Lidgren, ignore this message
+                    return; //no timeout since we're using pipes, ignore this message
                 }
-                if (isConnectionInitializationStep)
+                if (packetHeader.IsConnectionInitializationStep())
                 {
                     IWriteMessage outMsg = new WriteOnlyMessage();
-                    outMsg.Write(selfSteamID);
-                    outMsg.Write(selfSteamID);
+                    WriteSteamId(outMsg, selfSteamID);
+                    WriteSteamId(outMsg, selfSteamID);
                     outMsg.Write((byte)(PacketHeader.IsConnectionInitializationStep));
                     outMsg.Write(Name);
 
@@ -358,7 +369,7 @@ namespace Barotrauma.Networking
                         initializationStep = ConnectionInitialization.Success;
                     }
                     UInt16 length = inc.ReadUInt16();
-                    IReadMessage msg = new ReadOnlyMessage(inc.Buffer, isCompressed, inc.BytePosition, length, ServerConnection);
+                    IReadMessage msg = new ReadOnlyMessage(inc.Buffer, packetHeader.IsCompressed(), inc.BytePosition, length, ServerConnection);
                     OnMessageReceived?.Invoke(msg);
 
                     return;
@@ -426,15 +437,15 @@ namespace Barotrauma.Networking
             Steamworks.SteamUser.OnValidateAuthTicketResponse -= OnAuthChange;
         }
 
-        public override void Send(IWriteMessage msg, DeliveryMethod deliveryMethod)
+        public override void Send(IWriteMessage msg, DeliveryMethod deliveryMethod, bool compressPastThreshold = true)
         {
             if (!isActive) { return; }
 
             IWriteMessage msgToSend = new WriteOnlyMessage();
             byte[] msgData = new byte[msg.LengthBytes];
-            msg.PrepareForSending(ref msgData, out bool isCompressed, out int length);
-            msgToSend.Write(selfSteamID);
-            msgToSend.Write(selfSteamID);
+            msg.PrepareForSending(ref msgData, compressPastThreshold, out bool isCompressed, out int length);
+            WriteSteamId(msgToSend, selfSteamID);
+            WriteSteamId(msgToSend, selfSteamID);
             msgToSend.Write((byte)(isCompressed ? PacketHeader.IsCompressed : PacketHeader.None));
             msgToSend.Write((UInt16)length);
             msgToSend.Write(msgData, 0, length);
@@ -442,12 +453,6 @@ namespace Barotrauma.Networking
             byte[] bufToSend = (byte[])msgToSend.Buffer.Clone();
             Array.Resize(ref bufToSend, msgToSend.LengthBytes);
             ChildServerRelay.Write(bufToSend);
-        }
-
-        ~SteamP2POwnerPeer()
-        {
-            OnDisconnect = null;
-            Close();
         }
 
         protected override void SendMsgInternal(DeliveryMethod deliveryMethod, IWriteMessage msg)

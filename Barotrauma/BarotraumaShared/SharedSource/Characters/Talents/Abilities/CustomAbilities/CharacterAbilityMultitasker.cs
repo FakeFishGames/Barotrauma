@@ -5,20 +5,20 @@ namespace Barotrauma.Abilities
 {
     class CharacterAbilityMultitasker : CharacterAbility
     {
-        private string lastSkillIdentifier;
+        private Identifier lastSkillIdentifier;
 
-        public CharacterAbilityMultitasker(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityMultitasker(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
         }
 
         protected override void ApplyEffect(AbilityObject abilityObject)
         {
-            if ((abilityObject as IAbilityString)?.String is string skillIdentifier)
+            if (abilityObject is IAbilitySkillIdentifier { SkillIdentifier: Identifier skillIdentifier })
             {
                 if (skillIdentifier != lastSkillIdentifier)
                 {
                     lastSkillIdentifier = skillIdentifier;
-                    Character.Info?.IncreaseSkillLevel(skillIdentifier, 1.0f);
+                    Character.Info?.IncreaseSkillLevel(skillIdentifier, 1.0f, gainedFromAbility: true);
                 }
             }
         }

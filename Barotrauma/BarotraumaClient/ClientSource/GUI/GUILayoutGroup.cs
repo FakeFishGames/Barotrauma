@@ -92,29 +92,19 @@ namespace Barotrauma
                 foreach (RectTransform child in RectTransform.Children)
                 {
                     if (child.GUIComponent.IgnoreLayoutGroups) { continue; }
-                    if (child.ScaleBasis == ScaleBasis.BothHeight) { child.MinSize = new Point(child.Rect.Height, child.MinSize.Y); }
-                    if (child.ScaleBasis == ScaleBasis.BothWidth) { child.MinSize = new Point(child.MinSize.X, child.Rect.Width); }
-                    if (child.ScaleBasis == ScaleBasis.Smallest)
+
+                    switch (child.ScaleBasis)
                     {
-                        if (Rect.Width < Rect.Height)
-                        {
-                            child.MinSize = new Point(child.MinSize.X, child.Rect.Width);
-                        }
-                        else
-                        {
-                            child.MinSize = new Point(child.Rect.Height, child.MinSize.Y);
-                        }
-                    }
-                    if (child.ScaleBasis == ScaleBasis.Largest)
-                    {
-                        if (Rect.Width > Rect.Height)
-                        {
-                            child.MinSize = new Point(child.MinSize.X, child.Rect.Width);
-                        }
-                        else
-                        {
-                            child.MinSize = new Point(child.Rect.Height, child.MinSize.Y);
-                        }
+                        case ScaleBasis.BothHeight:
+                        case ScaleBasis.Smallest when Rect.Height <= Rect.Width:
+                        case ScaleBasis.Largest when Rect.Height > Rect.Width:
+                            child.MinSize = new Point((int)((child.Rect.Height * child.RelativeSize.X) / child.RelativeSize.Y), child.MinSize.Y);
+                            break;
+                        case ScaleBasis.BothWidth:
+                        case ScaleBasis.Smallest when Rect.Width <= Rect.Height:
+                        case ScaleBasis.Largest when Rect.Width > Rect.Height:
+                            child.MinSize = new Point(child.MinSize.X, (int)((child.Rect.Width * child.RelativeSize.Y) / child.RelativeSize.X));
+                            break;
                     }
                 }
 
@@ -144,42 +134,65 @@ namespace Barotrauma
             foreach (var child in RectTransform.Children)
             {
                 if (child.GUIComponent.IgnoreLayoutGroups) { continue; }
+
+                float currentStretchFactor = child.ScaleBasis == ScaleBasis.Normal ? stretchFactor : 1.0f;
                 child.SetPosition(childAnchor);
+
+                void advancePositionsAndCalculateChildSizes(
+                    ref int childNonScaledSize,
+                    ref float childRelativeSize,
+                    int childMinSize,
+                    int childMaxSize,
+                    int childRectSize,
+                    int selfRectSize)
+                {
+                    if (child.IsFixedSize)
+                    {
+                        absPos += childNonScaledSize + absoluteSpacing;
+                    }
+                    else
+                    {
+                        absPos += (int)Math.Round(MathHelper.Clamp(childRectSize * currentStretchFactor, childMinSize, childMaxSize) + (absoluteSpacing * currentStretchFactor));
+                        if (stretch)
+                        {
+                            float relativeSize =
+                                MathF.Round(childRelativeSize * currentStretchFactor * selfRectSize) / selfRectSize;
+                            childRelativeSize = relativeSize;
+                        }
+                    }
+                }
+
+                Point childNonScaledSize = child.NonScaledSize;
+                Vector2 childRelativeSize = child.RelativeSize;
                 if (isHorizontal)
                 {
                     child.RelativeOffset = new Vector2(relPos, child.RelativeOffset.Y);
                     child.AbsoluteOffset = new Point(absPos, child.AbsoluteOffset.Y);
-                    if (child.IsFixedSize)
-                    {
-                        absPos += child.NonScaledSize.X + absoluteSpacing;
-                    }
-                    else
-                    {
-                        absPos += (int)(MathHelper.Clamp(child.Rect.Width * stretchFactor, child.MinSize.X, child.MaxSize.X) + (absoluteSpacing * stretchFactor));
-                        if (stretch)
-                        {
-                            child.RelativeSize = new Vector2(child.RelativeSize.X * stretchFactor, child.RelativeSize.Y);
-                        }
-                    }
+                    advancePositionsAndCalculateChildSizes(
+                        ref childNonScaledSize.X,
+                        ref childRelativeSize.X,
+                        child.MinSize.X,
+                        child.MaxSize.X,
+                        child.Rect.Width,
+                        Rect.Width);
                 }
                 else
                 {
                     child.RelativeOffset = new Vector2(child.RelativeOffset.X, relPos);
                     child.AbsoluteOffset = new Point(child.AbsoluteOffset.X, absPos);
-                    if (child.IsFixedSize)
-                    {
-                        absPos += child.NonScaledSize.Y + absoluteSpacing;
-                    }
-                    else
-                    {
-                        absPos += (int)(MathHelper.Clamp(child.Rect.Height * stretchFactor, child.MinSize.Y, child.MaxSize.Y) + (absoluteSpacing * stretchFactor));
-                        if (stretch)
-                        {
-                            child.RelativeSize = new Vector2(child.RelativeSize.X, child.RelativeSize.Y * stretchFactor);
-                        }
-                    }
+                    advancePositionsAndCalculateChildSizes(
+                        ref childNonScaledSize.Y,
+                        ref childRelativeSize.Y,
+                        child.MinSize.Y,
+                        child.MaxSize.Y,
+                        child.Rect.Height,
+                        Rect.Height);
                 }
+                child.NonScaledSize = childNonScaledSize;
+                child.RelativeSize = childRelativeSize;
                 relPos += relativeSpacing * stretchFactor;
+                if (isHorizontal) { relPos = MathF.Round(relPos * Rect.Width) / Rect.Width; }
+                else { relPos = MathF.Round(relPos * Rect.Height) / Rect.Height; }
             }
             needsToRecalculate = false;
         }

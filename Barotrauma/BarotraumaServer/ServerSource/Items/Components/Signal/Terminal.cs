@@ -1,12 +1,25 @@
 ﻿using Barotrauma.Networking;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma.Items.Components
 {
     partial class Terminal : ItemComponent, IClientSerializable, IServerSerializable
     {
-        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
+        private readonly struct ServerEventData : IEventData
+        {
+            public readonly int MsgIndex;
+            public readonly string MsgToSend;
+            
+            public ServerEventData(int msgIndex, string msgToSend)
+            {
+                MsgIndex = msgIndex;
+                MsgToSend = msgToSend;
+            }
+        }
+        
+        public void ServerEventRead(IReadMessage msg, Client c)
         {
             string newOutputValue = msg.ReadString();
 
@@ -19,17 +32,17 @@ namespace Barotrauma.Items.Components
                 GameServer.Log(GameServer.CharacterLogName(c.Character) + " entered \"" + newOutputValue + "\" on " + item.Name,
                     ServerLog.MessageType.ItemInteraction);
                 OutputValue = newOutputValue;
-                ShowOnDisplay(newOutputValue, addToHistory: true);
+                ShowOnDisplay(newOutputValue, addToHistory: true, TextColor);
                 item.SendSignal(newOutputValue, "signal_out");
                 item.CreateServerEvent(this);
             }
         }
 
-        partial void ShowOnDisplay(string input, bool addToHistory)
+        partial void ShowOnDisplay(string input, bool addToHistory, Color color)
         {
             if (addToHistory)
             {
-                messageHistory.Add(input);
+                messageHistory.Add(new TerminalMessage(input, color));
                 while (messageHistory.Count > MaxMessages)
                 {
                     messageHistory.RemoveAt(0);
@@ -41,12 +54,12 @@ namespace Barotrauma.Items.Components
         {
             //split too long messages to multiple parts
             int msgIndex = 0;
-            foreach (string str in messageHistory)
+            foreach (var (str, _) in messageHistory)
             {
                 string msgToSend = str;
                 if (string.IsNullOrEmpty(msgToSend))
                 {
-                    item.CreateServerEvent(this, new object[] { msgIndex, msgToSend });
+                    item.CreateServerEvent(this, new ServerEventData(msgIndex, msgToSend));
                     msgIndex++;
                     continue;
                 }
@@ -72,23 +85,23 @@ namespace Barotrauma.Items.Components
                             if (!splitMessage.Any()) { break; }
                             tempMsg += " ";
                         } while (tempMsg.Length + splitMessage[0].Length < MaxMessageLength);
-                        item.CreateServerEvent(this, new object[] { msgIndex, tempMsg });
+                        item.CreateServerEvent(this, new ServerEventData(msgIndex, tempMsg));
                         msgToSend = msgToSend.Remove(0, tempMsg.Length);
                     }
                 }
                 if (!string.IsNullOrEmpty(msgToSend))
                 {
-                    item.CreateServerEvent(this, new object[] { msgIndex, msgToSend });
+                    item.CreateServerEvent(this, new ServerEventData(msgIndex, msgToSend));
                 }
                 msgIndex++;
             }
         }
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            if (extraData.Length > 3 && extraData[3] is string str)
+            if (TryExtractEventData(extraData, out ServerEventData eventData))
             {
-                msg.Write(str);
+                msg.Write(eventData.MsgToSend);
             }
             else
             {

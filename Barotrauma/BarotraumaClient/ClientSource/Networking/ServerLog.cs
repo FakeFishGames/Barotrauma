@@ -49,7 +49,7 @@ namespace Barotrauma.Networking
             List<GUITickBox> tickBoxes = new List<GUITickBox>();
             foreach (MessageType msgType in Enum.GetValues(typeof(MessageType)))
             {
-                var tickBox = new GUITickBox(new RectTransform(new Point(tickBoxContainer.Rect.Width, 30), tickBoxContainer.RectTransform), TextManager.Get("ServerLog." + messageTypeName[msgType]), font: GUI.SmallFont)
+                var tickBox = new GUITickBox(new RectTransform(new Point(tickBoxContainer.Rect.Width, 30), tickBoxContainer.RectTransform), TextManager.Get("ServerLog." + messageTypeName[msgType]), font: GUIStyle.SmallFont)
                 {
                     Selected = true,
                     TextColor = messageColor[msgType],
@@ -84,8 +84,8 @@ namespace Barotrauma.Networking
                 isHorizontal: true, childAnchor: Anchor.CenterLeft);
 
             new GUITextBlock(new RectTransform(new Vector2(0.2f, 1.0f), filterArea.RectTransform), TextManager.Get("ServerLog.Filter"), 
-                font: GUI.SubHeadingFont);            
-            GUITextBox searchBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterArea.RectTransform), font: GUI.SmallFont, createClearButton: true);
+                font: GUIStyle.SubHeadingFont);            
+            GUITextBox searchBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1.0f), filterArea.RectTransform), font: GUIStyle.SmallFont, createClearButton: true);
             searchBox.OnTextChanged += (textBox, text) =>
             {
                 msgFilter = text;
@@ -146,7 +146,7 @@ namespace Barotrauma.Networking
             List<GUITickBox> tickBoxes = new List<GUITickBox>();
             foreach (MessageType msgType in Enum.GetValues(typeof(MessageType)))
             {
-                var tickBox = new GUITickBox(new RectTransform(new Point(tickBoxContainer.Rect.Width, (int)(25 * GUI.Scale)), tickBoxContainer.RectTransform), TextManager.Get("ServerLog." + messageTypeName[msgType]), font: GUI.SmallFont)
+                var tickBox = new GUITickBox(new RectTransform(new Point(tickBoxContainer.Rect.Width, (int)(25 * GUI.Scale)), tickBoxContainer.RectTransform), TextManager.Get("ServerLog." + messageTypeName[msgType]), font: GUIStyle.SmallFont)
                 {
                     Selected = true,
                     TextColor = messageColor[msgType],
@@ -191,9 +191,10 @@ namespace Barotrauma.Networking
 
             Anchor anchor = Anchor.TopLeft;
             Pivot pivot = Pivot.TopLeft;
-            if (line.RichData != null)
+            RichString richString = line.Text as RichString;
+            if (richString != null && richString.RichTextData.HasValue)
             {
-                foreach (var data in line.RichData)
+                foreach (var data in richString.RichTextData.Value)
                 {
                     if (!UInt64.TryParse(data.Metadata, out ulong id)) { return; }
                     Client client = GameMain.Client.ConnectedClients.Find(c => c.SteamID == id)
@@ -215,7 +216,7 @@ namespace Barotrauma.Networking
             }
 
             var textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), (textContainer ?? listBox.Content).RectTransform, anchor, pivot),
-                line.RichData, line.SanitizedText, wrap: true, font: GUI.SmallFont)
+                line.Text, wrap: true, font: GUIStyle.SmallFont)
             {
                 TextColor = messageColor[line.Type],
                 Visible = !msgTypeHidden[(int)line.Type],
@@ -235,14 +236,15 @@ namespace Barotrauma.Networking
                 textBlock.RectTransform.SetAsFirstChild();
             }
 
-            if (line.RichData != null)
+            if (richString != null && richString.RichTextData.HasValue)
             {
-                foreach (var data in line.RichData)
+                foreach (var data in richString.RichTextData.Value)
                 {
                     textBlock.ClickableAreas.Add(new GUITextBlock.ClickableArea()
                     {
                         Data = data,
-                        OnClick = GameMain.NetLobbyScreen.SelectPlayer
+                        OnClick = GameMain.NetLobbyScreen.SelectPlayer,
+                        OnSecondaryClick = GameMain.NetLobbyScreen.ShowPlayerContextMenu
                     });
                 }
             }

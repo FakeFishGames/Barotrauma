@@ -18,42 +18,49 @@ namespace Barotrauma.Items.Components
 
         private Vector2 barrelPos;
 
-        [Serialize("0.0,0.0", false, description: "The position of the barrel as an offset from the item's center (in pixels). Determines where the projectiles spawn.")]
+        [Serialize("0.0,0.0", IsPropertySaveable.No, description: "The position of the barrel as an offset from the item's center (in pixels). Determines where the projectiles spawn.")]
         public string BarrelPos
         {
             get { return XMLExtensions.Vector2ToString(ConvertUnits.ToDisplayUnits(barrelPos)); }
             set { barrelPos = ConvertUnits.ToSimUnits(XMLExtensions.ParseVector2(value)); }
         }
 
-        [Serialize(1.0f, false, description: "How long the user has to wait before they can fire the weapon again (in seconds).")]
+        [Serialize(1.0f, IsPropertySaveable.No, description: "How long the user has to wait before they can fire the weapon again (in seconds).")]
         public float Reload
         {
             get { return reload; }
             set { reload = Math.Max(value, 0.0f); }
         }
 
-        [Serialize(1, false, description: "How projectiles the weapon launches when fired once.")]
+        [Serialize(false, IsPropertySaveable.No, description: "Tells the AI to hold the trigger down when it uses this weapon")]
+        public bool HoldTrigger
+        {
+            get;
+            set;
+        }
+
+        [Serialize(1, IsPropertySaveable.No, description: "How projectiles the weapon launches when fired once.")]
         public int ProjectileCount
         {
             get;
             set;
         }
 
-        [Serialize(0.0f, false, description: "Random spread applied to the firing angle of the projectiles when used by a character with sufficient skills to use the weapon (in degrees).")]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "Random spread applied to the firing angle of the projectiles when used by a character with sufficient skills to use the weapon (in degrees).")]
         public float Spread
         {
             get;
             set;
         }
 
-        [Serialize(0.0f, false, description: "Random spread applied to the firing angle of the projectiles when used by a character with insufficient skills to use the weapon (in degrees).")]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "Random spread applied to the firing angle of the projectiles when used by a character with insufficient skills to use the weapon (in degrees).")]
         public float UnskilledSpread
         {
             get;
             set;
         }
 
-        [Serialize(0f, true, description: "The time required for a charge-type turret to charge up before able to fire.")]
+        [Serialize(0f, IsPropertySaveable.Yes, description: "The time required for a charge-type turret to charge up before able to fire.")]
         public float MaxChargeTime
         {
             get;
@@ -72,7 +79,7 @@ namespace Barotrauma.Items.Components
         {
             get
             {
-                Matrix bodyTransform = Matrix.CreateRotationZ(item.body == null ? MathHelper.ToRadians(item.Rotation) : item.body.Rotation);
+                Matrix bodyTransform = Matrix.CreateRotationZ(item.body == null ? item.RotationRad : item.body.Rotation);
                 Vector2 flippedPos = barrelPos;
                 if (item.body != null && item.body.Dir < 0.0f) { flippedPos.X = -flippedPos.X; }
                 return Vector2.Transform(flippedPos, bodyTransform) * item.Scale;
@@ -85,7 +92,7 @@ namespace Barotrauma.Items.Components
         private float currentChargeTime;
         private bool tryingToCharge;
 
-        public RangedWeapon(Item item, XElement element)
+        public RangedWeapon(Item item, ContentXElement element)
             : base(item, element)
         {
             item.IsShootable = true;
@@ -95,7 +102,7 @@ namespace Barotrauma.Items.Components
             InitProjSpecific(element);
         }
 
-        partial void InitProjSpecific(XElement element);
+        partial void InitProjSpecific(ContentXElement element);
 
         public override void Equip(Character character)
         {
@@ -110,9 +117,7 @@ namespace Barotrauma.Items.Components
             if (ReloadTimer < 0.0f)
             {
                 ReloadTimer = 0.0f;
-                // was this an optimization or related to something else? it cannot occur for charge-type weapons
-                //IsActive = false;
-                if (MaxChargeTime == 0.0f)
+                if (MaxChargeTime <= 0f)
                 {
                     IsActive = false;
                     return;
@@ -147,12 +152,13 @@ namespace Barotrauma.Items.Components
 
         private float GetSpread(Character user)
         {
-            float degreeOfFailure = 1.0f - DegreeOfSuccess(user);
+            float degreeOfFailure = MathHelper.Clamp(1.0f - DegreeOfSuccess(user), 0.0f, 1.0f);
             degreeOfFailure *= degreeOfFailure;
-            return MathHelper.ToRadians(MathHelper.Lerp(Spread, UnskilledSpread, degreeOfFailure));
+            float spread = MathHelper.Lerp(Spread, UnskilledSpread, degreeOfFailure) / (1f + user.GetStatValue(StatTypes.RangedSpreadReduction));
+            return MathHelper.ToRadians(spread);
         }
 
-        private readonly List<Body> limbBodies = new List<Body>();
+        private readonly List<Body> ignoredBodies = new List<Body>();
         public override bool Use(float deltaTime, Character character = null)
         {
             tryingToCharge = true;
@@ -166,8 +172,8 @@ namespace Barotrauma.Items.Components
 
             if (character != null)
             {
-                var abilityItem = new AbilityItem(item);
-                character.CheckTalents(AbilityEffectType.OnUseRangedWeapon, abilityItem);
+                var abilityRangedWeapon = new AbilityRangedWeapon(item);
+                character.CheckTalents(AbilityEffectType.OnUseRangedWeapon, abilityRangedWeapon);
             }
 
             if (item.AiTarget != null)
@@ -176,11 +182,20 @@ namespace Barotrauma.Items.Components
                 item.AiTarget.SightRange = item.AiTarget.MaxSightRange;
             }
 
-            limbBodies.Clear();
+            ignoredBodies.Clear();
             foreach (Limb l in character.AnimController.Limbs)
             {
                 if (l.IsSevered) { continue; }
-                limbBodies.Add(l.body.FarseerBody);
+                ignoredBodies.Add(l.body.FarseerBody);
+            }
+
+            foreach (Item heldItem in character.HeldItems)
+            {
+                var holdable = heldItem.GetComponent<Holdable>();
+                if (holdable?.Pusher != null)
+                {
+                    ignoredBodies.Add(holdable.Pusher.FarseerBody);
+                }
             }
 
             float degreeOfFailure = 1.0f - DegreeOfSuccess(character);
@@ -203,8 +218,9 @@ namespace Barotrauma.Items.Components
                     {
                         lastProjectile?.Item.GetComponent<Rope>()?.Snap();
                     }
-                    float damageMultiplier = 1f + item.GetQualityModifier(Quality.StatType.AttackMultiplier);
-                    projectile.Shoot(character, character.AnimController.AimSourceSimPos, barrelPos, rotation + spread, ignoredBodies: limbBodies.ToList(), createNetworkEvent: false, damageMultiplier);
+                    float damageMultiplier = 1f + item.GetQualityModifier(Quality.StatType.FirepowerMultiplier);
+                    projectile.Launcher = item;
+                    projectile.Shoot(character, character.AnimController.AimSourceSimPos, barrelPos, rotation + spread, ignoredBodies: ignoredBodies.ToList(), createNetworkEvent: false, damageMultiplier);
                     projectile.Item.GetComponent<Rope>()?.Attach(Item, projectile.Item);
                     if (i == 0)
                     {
@@ -262,5 +278,13 @@ namespace Barotrauma.Items.Components
         }
 
         partial void LaunchProjSpecific();
+    }
+    class AbilityRangedWeapon : AbilityObject, IAbilityItem
+    {
+        public AbilityRangedWeapon(Item item)
+        {
+            Item = item;
+        }
+        public Item Item { get; set; }
     }
 }

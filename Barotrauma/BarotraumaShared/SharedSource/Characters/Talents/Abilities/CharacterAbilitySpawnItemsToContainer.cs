@@ -12,7 +12,7 @@ namespace Barotrauma.Abilities
         private readonly float randomChance;
         private readonly bool oncePerContainer;
 
-        public CharacterAbilitySpawnItemsToContainer(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilitySpawnItemsToContainer(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             statusEffects = CharacterAbilityGroup.ParseStatusEffects(CharacterTalent, abilityElement.GetChildElement("statuseffects"));
             randomChance = abilityElement.GetAttributeFloat("randomchance", 1f);
@@ -37,7 +37,7 @@ namespace Barotrauma.Abilities
             }
             else
             {
-                LogabilityObjectMismatch();
+                LogAbilityObjectMismatch();
             }
         }
     }

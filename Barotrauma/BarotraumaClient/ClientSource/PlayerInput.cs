@@ -24,11 +24,11 @@ namespace Barotrauma
 
     public class KeyOrMouse
     {
-        public Keys Key { get; private set; }
+        public readonly Keys Key;
 
-        private string name;
+        private LocalizedString name;
 
-        public string Name
+        public LocalizedString Name
         {
             get
             {
@@ -39,6 +39,9 @@ namespace Barotrauma
 
         public MouseButton MouseButton { get; private set; }
 
+        public static implicit operator KeyOrMouse(Keys key) { return new KeyOrMouse(key); }
+        public static implicit operator KeyOrMouse(MouseButton mouseButton) { return new KeyOrMouse(mouseButton); }
+
         public KeyOrMouse(Keys keyBinding)
         {
             this.Key = keyBinding;
@@ -47,6 +50,7 @@ namespace Barotrauma
 
         public KeyOrMouse(MouseButton mouseButton)
         {
+            this.Key = Keys.None;
             this.MouseButton = mouseButton;
         }
 
@@ -112,19 +116,74 @@ namespace Barotrauma
         {
             if (obj is KeyOrMouse keyOrMouse)
             {
-                if (MouseButton != MouseButton.None)
-                {
-                    return keyOrMouse.MouseButton == MouseButton;
-                }
-                else
-                {
-                    return keyOrMouse.Key.Equals(Key);
-                }
+                return this == keyOrMouse;
             }
             else
             {
                 return false;
             }
+        }
+
+        public static bool operator ==(KeyOrMouse a, KeyOrMouse b)
+        {
+            if (a is null)
+            {
+                return b is null;
+            }
+            else if (a.MouseButton != MouseButton.None)
+            {
+                return a.MouseButton == b.MouseButton;
+            }
+            else
+            {
+                return a.Key.Equals(b.Key);
+            }
+        }
+
+        public static bool operator !=(KeyOrMouse a, KeyOrMouse b)
+        {
+            return !(a == b);
+        }
+
+        public static bool operator ==(KeyOrMouse keyOrMouse, Keys key)
+        {
+            if (keyOrMouse.MouseButton != MouseButton.None) { return false; }
+            return keyOrMouse.Key == key;
+        }
+
+        public static bool operator !=(KeyOrMouse keyOrMouse, Keys key)
+        {
+            return !(keyOrMouse == key);
+        }
+
+        public static bool operator ==(Keys key, KeyOrMouse keyOrMouse)
+        {
+            return keyOrMouse == key;
+        }
+
+        public static bool operator !=(Keys key, KeyOrMouse keyOrMouse)
+        {
+            return keyOrMouse != key;
+        }
+
+        public static bool operator ==(KeyOrMouse keyOrMouse, MouseButton mb)
+        {
+            return keyOrMouse.MouseButton == mb && keyOrMouse.Key == Keys.None;
+        }
+
+        public static bool operator !=(KeyOrMouse keyOrMouse, MouseButton mb)
+        {
+            return !(keyOrMouse == mb);
+        }
+
+        public static bool operator ==(MouseButton mb, KeyOrMouse keyOrMouse)
+        {
+            return keyOrMouse == mb;
+        }
+
+        public static bool operator !=(MouseButton mb, KeyOrMouse keyOrMouse)
+        {
+            return keyOrMouse != mb;
         }
 
         public override string ToString()
@@ -146,7 +205,7 @@ namespace Barotrauma
             return hashCode;
         }
 
-        public string GetName()
+        public LocalizedString GetName()
         {
             if (PlayerInput.NumberKeys.Contains(Key))
             {
@@ -196,10 +255,11 @@ namespace Barotrauma
 #if WINDOWS
         [DllImport("user32.dll")]
         static extern int GetSystemMetrics(int smIndex);
+        private const int SM_SWAPBUTTON = 23;
 
         public static bool MouseButtonsSwapped()
         {
-            return GetSystemMetrics(23) != 0; //SM_SWAPBUTTON
+            return GetSystemMetrics(SM_SWAPBUTTON) != 0;
         }
 #else
         public static bool MouseButtonsSwapped()
@@ -428,17 +488,17 @@ namespace Barotrauma
 
         public static bool KeyHit(InputType inputType)
         {
-            return AllowInput && GameMain.Config.KeyBind(inputType).IsHit();
+            return AllowInput && GameSettings.CurrentConfig.KeyMap.Bindings[inputType].IsHit();
         }
 
         public static bool KeyDown(InputType inputType)
         {
-            return AllowInput && GameMain.Config.KeyBind(inputType).IsDown();
+            return AllowInput && GameSettings.CurrentConfig.KeyMap.Bindings[inputType].IsDown();
         }
 
         public static bool KeyUp(InputType inputType)
         {
-            return AllowInput && !GameMain.Config.KeyBind(inputType).IsDown();
+            return AllowInput && !GameSettings.CurrentConfig.KeyMap.Bindings[inputType].IsDown();
         }
 
         public static bool KeyHit(Keys button)
@@ -449,7 +509,7 @@ namespace Barotrauma
         public static bool InventoryKeyHit(int index)
         {
             if (index == -1) return false;
-            return AllowInput && GameMain.Config.InventoryKeyBind(index).IsHit();
+            return AllowInput && GameSettings.CurrentConfig.InventoryKeyMap.Bindings[index].IsHit();
         }
 
         public static bool KeyDown(Keys button)

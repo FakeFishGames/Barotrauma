@@ -1,3 +1,4 @@
+using Barotrauma.Extensions;
 using Barotrauma.Networking;
 
 namespace Barotrauma
@@ -12,13 +13,16 @@ namespace Barotrauma
                 if (state != value)
                 {
                     base.State = value;
-                    if (state == HostagesKilledState && !string.IsNullOrEmpty(hostagesKilledMessage))
+                    if (state == HostagesKilledState && !hostagesKilledMessage.IsNullOrEmpty())
                     {
                         CreateMessageBox(string.Empty, hostagesKilledMessage);
                     }
                 }
             }
         }
+
+        public override bool DisplayAsCompleted => State > 0 && requireRescue.None();
+        public override bool DisplayAsFailed => State == HostagesKilledState;
 
         public override void ClientReadInitial(IReadMessage msg)
         {

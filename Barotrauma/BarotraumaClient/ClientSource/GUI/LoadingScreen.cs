@@ -1,12 +1,11 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Media;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
-using System.Xml.Linq;
-using Barotrauma.Media;
 using System.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -15,7 +14,7 @@ namespace Barotrauma
         private readonly Texture2D defaultBackgroundTexture, overlay;
         private readonly SpriteSheet decorativeGraph, decorativeMap;
         private Texture2D currentBackgroundTexture;
-        private Sprite noiseSprite;
+        private readonly Sprite noiseSprite;
 
         private string randText = "";
 
@@ -69,14 +68,10 @@ namespace Barotrauma
             }
         }
 
-        private string selectedTip;
-        private List<RichTextData> selectedTipRichTextData;
-        private bool selectedTipRichTextUnparsed;
-        private void SetSelectedTip(string tip)
+        private RichString selectedTip;
+        private void SetSelectedTip(LocalizedString tip)
         {
-            selectedTip = tip;
-            selectedTipRichTextData = null;
-            selectedTipRichTextUnparsed = true;
+            selectedTip = RichString.Rich(tip);
         }
 
         private readonly object loadMutex = new object();
@@ -113,6 +108,8 @@ namespace Barotrauma
             set;
         }
 
+        public LanguageIdentifier[] AvailableLanguages = null;
+
         public LoadingScreen(GraphicsDevice graphics)
         {
             defaultBackgroundTexture = TextureLoader.FromFile("Content/Map/LocationPortraits/AlienRuins.png");
@@ -123,12 +120,12 @@ namespace Barotrauma
             overlay = TextureLoader.FromFile("Content/UI/LoadingScreenOverlay.png");
             noiseSprite = new Sprite("Content/UI/noise.png", Vector2.Zero);
             DrawLoadingText = true;
-            SetSelectedTip(TextManager.Get("LoadingScreenTip", true));
+            SetSelectedTip(TextManager.Get("LoadingScreenTip"));
         }
 
         public void Draw(SpriteBatch spriteBatch, GraphicsDevice graphics, float deltaTime)
         {
-            if (GameMain.Config.EnableSplashScreen)
+            if (GameSettings.CurrentConfig.EnableSplashScreen)
             {
                 try
                 {
@@ -138,11 +135,11 @@ namespace Barotrauma
                 catch (Exception e)
                 {
                     DebugConsole.ThrowError("Playing splash screen video failed", e);
-                    GameMain.Config.EnableSplashScreen = false;
+                    DisableSplashScreen();
                 }
             }
-
-            var titleStyle = GUI.Style?.GetComponentStyle("TitleText");
+        
+            var titleStyle = GUIStyle.GetComponentStyle("TitleText");
             Sprite titleSprite = null;
             if (!WaitForLanguageSelection && titleStyle != null && titleStyle.Sprites.ContainsKey(GUIComponent.ComponentState.None))
             {
@@ -187,67 +184,58 @@ namespace Barotrauma
             }
             else if (DrawLoadingText)
             {
-                if (TextManager.Initialized)
+                LocalizedString loadText;
+                if (LoadState == 100.0f)
                 {
-                    string loadText;
-                    if (LoadState == 100.0f)
+#if DEBUG
+                    if (GameSettings.CurrentConfig.AutomaticQuickStartEnabled || GameSettings.CurrentConfig.AutomaticCampaignLoadEnabled || (GameSettings.CurrentConfig.TestScreenEnabled && GameMain.FirstLoad))
                     {
-#if DEBUG
-                        if (GameMain.Config.AutomaticQuickStartEnabled || GameMain.Config.AutomaticCampaignLoadEnabled || GameMain.Config.TestScreenEnabled && GameMain.FirstLoad)
-                        {
-                            loadText = "QUICKSTARTING ...";
-                        }
-                        else
-                        {
-#endif
-                            loadText = TextManager.Get("PressAnyKey");
-#if DEBUG
-                        }
-#endif
+                        loadText = "QUICKSTARTING ...";
                     }
                     else
                     {
-                        loadText = TextManager.Get("Loading");
-                        if (LoadState != null)
-                        {
-                            loadText += " " + (int)LoadState + " %";
+#endif
+                        loadText = TextManager.Get("PressAnyKey");
+#if DEBUG
+                    }
+#endif
+                }
+                else
+                {
+                    loadText = TextManager.Get("Loading");
+                    if (LoadState != null)
+                    {
+                        loadText += " " + (int)LoadState + " %";
 
 #if DEBUG
-                            if (GameMain.FirstLoad && GameMain.CancelQuickStart)
-                            {
-                                loadText += " (Quickstart aborted)";
-                            }
-#endif
+                        if (GameMain.FirstLoad && GameMain.CancelQuickStart)
+                        {
+                            loadText += " (Quickstart aborted)";
                         }
-                    }
-                    if (GUI.LargeFont != null)
-                    {
-                        GUI.LargeFont.DrawString(spriteBatch, loadText.ToUpper(),
-                            new Vector2(GameMain.GraphicsWidth / 2.0f - GUI.LargeFont.MeasureString(loadText.ToUpper()).X / 2.0f, GameMain.GraphicsHeight * 0.75f),
-                            Color.White);
+#endif
                     }
                 }
-
-                if (GUI.Font != null && selectedTip != null)
+                if (GUIStyle.LargeFont.HasValue)
                 {
-                    if (selectedTipRichTextUnparsed)
-                    {
-                        selectedTipRichTextData = RichTextData.GetRichTextData(selectedTip, out selectedTip);
-                        selectedTipRichTextUnparsed = false;
-                    }
+                    GUIStyle.LargeFont.DrawString(spriteBatch, loadText.ToUpper(),
+                        new Vector2(GameMain.GraphicsWidth / 2.0f - GUIStyle.LargeFont.MeasureString(loadText.ToUpper()).X / 2.0f, GameMain.GraphicsHeight * 0.75f),
+                        Color.White);
+                }
 
-                    string wrappedTip = ToolBox.WrapText(selectedTip, GameMain.GraphicsWidth * 0.5f, GUI.Font);
+                if (GUIStyle.Font.HasValue && selectedTip != null)
+                {
+                    string wrappedTip = ToolBox.WrapText(selectedTip.SanitizedValue, GameMain.GraphicsWidth * 0.5f, GUIStyle.Font.Value);
                     string[] lines = wrappedTip.Split('\n');
-                    float lineHeight = GUI.Font.MeasureString(selectedTip).Y;
+                    float lineHeight = GUIStyle.Font.MeasureString(selectedTip).Y;
 
-                    if (selectedTipRichTextData != null)
+                    if (selectedTip.RichTextData != null)
                     {
                         int rtdOffset = 0;
                         for (int i = 0; i < lines.Length; i++)
                         {
-                            GUI.Font.DrawStringWithColors(spriteBatch, lines[i],
-                                new Vector2((int)(GameMain.GraphicsWidth / 2.0f - GUI.Font.MeasureString(lines[i]).X / 2.0f), (int)(GameMain.GraphicsHeight * 0.8f + i * lineHeight)), Color.White,
-                                0f, Vector2.Zero, 1f, SpriteEffects.None, 0f, selectedTipRichTextData, rtdOffset);
+                            GUIStyle.Font.DrawStringWithColors(spriteBatch, lines[i],
+                                new Vector2((int)(GameMain.GraphicsWidth / 2.0f - GUIStyle.Font.MeasureString(lines[i]).X / 2.0f), (int)(GameMain.GraphicsHeight * 0.8f + i * lineHeight)), Color.White,
+                                0f, Vector2.Zero, 1f, SpriteEffects.None, 0f, selectedTip.RichTextData.Value, rtdOffset);
                             rtdOffset += lines[i].Length;
                         }
                     }
@@ -255,13 +243,13 @@ namespace Barotrauma
                     {
                         for (int i = 0; i < lines.Length; i++)
                         {
-                            GUI.Font.DrawString(spriteBatch, lines[i],
-                                new Vector2((int)(GameMain.GraphicsWidth / 2.0f - GUI.Font.MeasureString(lines[i]).X / 2.0f), (int)(GameMain.GraphicsHeight * 0.8f + i * lineHeight)), Color.White);
+                            GUIStyle.Font.DrawString(spriteBatch, lines[i],
+                                new Vector2((int)(GameMain.GraphicsWidth / 2.0f - GUIStyle.Font.MeasureString(lines[i]).X / 2.0f), (int)(GameMain.GraphicsHeight * 0.8f + i * lineHeight)), Color.White);
                         }
                     }
                 }
-
             }
+            GUI.DrawMessageBoxesOnly(spriteBatch);
             spriteBatch.End();
 
             spriteBatch.Begin(blendState: BlendState.Additive);
@@ -280,7 +268,7 @@ namespace Barotrauma
             if (noiseVal < 0.2f)
             {
                 //SCP-CB reference
-                randText = (new string[] { "NIL", "black white gray", "Sometimes we would have had time to scream", "e8m106]af", "NO" }).GetRandom();
+                randText = (new string[] { "NIL", "black white gray", "Sometimes we would have had time to scream", "e8m106]af", "NO" }).GetRandomUnsynced();
             }
             else if (noiseVal < 0.3f)
             {
@@ -295,15 +283,20 @@ namespace Barotrauma
                     Rand.Int(100).ToString().PadLeft(2, '0');
             }
 
-            GUI.LargeFont?.DrawString(spriteBatch, randText,
-                new Vector2(GameMain.GraphicsWidth - decorativeMap.FrameSize.X * decorativeScale.X * 0.8f, GameMain.GraphicsHeight * 0.57f),
-                Color.White * (1.0f - noiseVal));
+            if (GUIStyle.LargeFont.HasValue)
+            {
+                GUIStyle.LargeFont.DrawString(spriteBatch, randText,
+                    new Vector2(GameMain.GraphicsWidth - decorativeMap.FrameSize.X * decorativeScale.X * 0.8f, GameMain.GraphicsHeight * 0.57f),
+                    Color.White * (1.0f - noiseVal));
+            }
 
             spriteBatch.End();
         }
 
         private void DrawLanguageSelectionPrompt(SpriteBatch spriteBatch, GraphicsDevice graphicsDevice)
         {
+            if (AvailableLanguages is null) { return; }
+
             if (languageSelectionFont == null)
             {
                 languageSelectionFont = new ScalableFont("Content/Fonts/NotoSans/NotoSans-Bold.ttf",
@@ -320,8 +313,8 @@ namespace Barotrauma
             }
 
             Vector2 textPos = new Vector2(GameMain.GraphicsWidth / 2, GameMain.GraphicsHeight * 0.3f);
-            Vector2 textSpacing = new Vector2(0.0f, (GameMain.GraphicsHeight * 0.5f) / TextManager.AvailableLanguages.Count());
-            foreach (string language in TextManager.AvailableLanguages)
+            Vector2 textSpacing = new Vector2(0.0f, (GameMain.GraphicsHeight * 0.5f) / AvailableLanguages.Length);
+            foreach (LanguageIdentifier language in AvailableLanguages)
             {
                 string localizedLanguageName = TextManager.GetTranslatedLanguageName(language);
                 var font = TextManager.IsCJK(localizedLanguageName) ? languageSelectionFontCJK : languageSelectionFont;
@@ -335,11 +328,11 @@ namespace Barotrauma
                     hover ? Color.White : Color.White * 0.6f);
                 if (hover && PlayerInput.PrimaryMouseButtonClicked())
                 {
-                    GameMain.Config.Language = language;
+                    var config = GameSettings.CurrentConfig;
+                    config.Language = language;
+                    GameSettings.SetCurrentConfig(config);
                     //reload tip in the selected language
-                    SetSelectedTip(TextManager.Get("LoadingScreenTip", true));
-                    GameMain.Config.SetDefaultBindings(legacy: false);
-                    GameMain.Config.CheckBindings(useDefaults: true);
+                    SetSelectedTip(TextManager.Get("LoadingScreenTip"));
                     WaitForLanguageSelection = false;
                     languageSelectionFont?.Dispose(); languageSelectionFont = null;
                     languageSelectionFontCJK?.Dispose(); languageSelectionFontCJK = null;
@@ -368,7 +361,7 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    GameMain.Config.EnableSplashScreen = false;
+                    DisableSplashScreen();
                     DebugConsole.ThrowError("Playing the splash screen \"" + fileName + "\" failed.", e);
                     PendingSplashScreens.Clear();
                     currSplashScreen = null;
@@ -379,11 +372,42 @@ namespace Barotrauma
 
             if (currSplashScreen.IsPlaying)
             {
+                graphics.Clear(Color.Black);
+                float videoAspectRatio = (float)currSplashScreen.Width / (float)currSplashScreen.Height;
+                int width; int height;
+                if (GameMain.GraphicsHeight * videoAspectRatio > GameMain.GraphicsWidth)
+                {
+                    width = GameMain.GraphicsWidth;
+                    height = (int)(GameMain.GraphicsWidth / videoAspectRatio);
+                }
+                else
+                {
+                    width = (int)(GameMain.GraphicsHeight * videoAspectRatio);
+                    height = GameMain.GraphicsHeight;
+                }
+
                 spriteBatch.Begin();
-                spriteBatch.Draw(currSplashScreen.GetTexture(), new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight), Color.White);
+                spriteBatch.Draw(
+                    currSplashScreen.GetTexture(),
+                    destinationRectangle: new Rectangle(
+                        GameMain.GraphicsWidth / 2 - width / 2,
+                        GameMain.GraphicsHeight / 2 - height / 2,
+                        width,
+                        height),
+                    sourceRectangle: new Rectangle(0, 0, currSplashScreen.Width, currSplashScreen.Height),
+                    Color.White,
+                    rotation: 0.0f,
+                    origin: Vector2.Zero,
+                    SpriteEffects.None,
+                    layerDepth: 0.0f);
                 spriteBatch.End();
 
-                if (DateTime.Now > videoStartTime + new TimeSpan(0, 0, 0, 0, milliseconds: 500) && GameMain.WindowActive && (PlayerInput.KeyHit(Keys.Escape) || PlayerInput.KeyHit(Keys.Space) || PlayerInput.KeyHit(Keys.Enter) || PlayerInput.PrimaryMouseButtonDown()))
+                if (DateTime.Now > videoStartTime + new TimeSpan(0, 0, 0, 0, milliseconds: 500)
+                    && GameMain.WindowActive
+                    && (PlayerInput.KeyHit(Keys.Escape)
+                        || PlayerInput.KeyHit(Keys.Space)
+                        || PlayerInput.KeyHit(Keys.Enter)
+                        || PlayerInput.PrimaryMouseButtonDown()))
                 {
                     currSplashScreen.Dispose(); currSplashScreen = null;
                 }
@@ -394,13 +418,20 @@ namespace Barotrauma
             }
         }
 
+        private void DisableSplashScreen()
+        {
+            var config = GameSettings.CurrentConfig;
+            config.EnableSplashScreen = false;
+            GameSettings.SetCurrentConfig(config);
+        }
+        
         bool drawn;
-        public IEnumerable<object> DoLoading(IEnumerable<object> loader)
+        public IEnumerable<CoroutineStatus> DoLoading(IEnumerable<CoroutineStatus> loader)
         {
             drawn = false;
             LoadState = null;
-            SetSelectedTip(TextManager.Get("LoadingScreenTip", true));
-            currentBackgroundTexture = LocationType.List.GetRandom()?.GetPortrait(Rand.Int(int.MaxValue))?.Texture;
+            SetSelectedTip(TextManager.Get("LoadingScreenTip"));
+            currentBackgroundTexture = LocationType.Prefabs.GetRandomUnsynced()?.GetPortrait(Rand.Int(int.MaxValue))?.Texture;
 
             while (!drawn)
             {

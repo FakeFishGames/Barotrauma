@@ -1,8 +1,7 @@
-﻿using System;
-using System.Linq;
-using System.Xml.Linq;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -49,25 +48,25 @@ namespace Barotrauma.Items.Components
         /// <summary>
         /// Depth at which the contained sprites are drawn. If not set, the original depth of the item sprites is used.
         /// </summary>
-        [Serialize(-1.0f, false, description: "Depth at which the contained sprites are drawn. If not set, the original depth of the item sprites is used.")]
+        [Serialize(-1.0f, IsPropertySaveable.No, description: "Depth at which the contained sprites are drawn. If not set, the original depth of the item sprites is used.")]
         public float ContainedSpriteDepth { get; set; }
 
-        [Serialize(null, false, description: "An optional text displayed above the item's inventory.")]
+        [Serialize(null, IsPropertySaveable.No, description: "An optional text displayed above the item's inventory.")]
         public string UILabel { get; set; }
 
         public GUIComponentStyle IndicatorStyle { get; set; }
 
-        [Serialize(null, false)]
+        [Serialize(null, IsPropertySaveable.No)]
         public string ContainedStateIndicatorStyle { get; set; }
 
-        [Serialize(-1, false, description: "Can be used to make the contained state indicator display the condition of the item in a specific slot even when the container's capacity is more than 1.")]
+        [Serialize(-1, IsPropertySaveable.No, description: "Can be used to make the contained state indicator display the condition of the item in a specific slot even when the container's capacity is more than 1.")]
         public int ContainedStateIndicatorSlot { get; set; }
 
-        [Serialize(true, false, description: "Should an indicator displaying the state of the contained items be displayed on this item's inventory slot. "+
-            "If this item can only contain one item, the indicator will display the condition of the contained item, otherwise it will indicate how full the item is.")]
+        [Serialize(true, IsPropertySaveable.No, description: "Should an indicator displaying the state of the contained items be displayed on this item's inventory slot. "+
+                                                             "If this item can only contain one item, the indicator will display the condition of the contained item, otherwise it will indicate how full the item is.")]
         public bool ShowContainedStateIndicator { get; set; }
 
-        [Serialize(false, false, description: "If enabled, the condition of this item is displayed in the indicator that would normally show the state of the contained items." +
+        [Serialize(false, IsPropertySaveable.No, description: "If enabled, the condition of this item is displayed in the indicator that would normally show the state of the contained items." +
             " May be useful for items such as ammo boxes and magazines that spawn projectiles as needed," +
             " and use the condition to determine how many projectiles can be spawned in total.")]
         public bool ShowConditionInContainedStateIndicator
@@ -76,10 +75,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(false, false, description: "Should the inventory of this item be kept open when the item is equipped by a character.")]
+        [Serialize(false, IsPropertySaveable.No, description: "If true, the contained state indicator calculates how full the item is based on the total amount of items that can be stacked inside it, as opposed to how many of the inventory slots are occupied.")]
+        public bool ShowTotalStackCapacityInContainedStateIndicator { get; set; }
+
+        [Serialize(false, IsPropertySaveable.No, description: "Should the inventory of this item be kept open when the item is equipped by a character.")]
         public bool KeepOpenWhenEquipped { get; set; }
 
-        [Serialize(false, false, description: "Can the inventory of this item be moved around on the screen by the player.")]
+        [Serialize(false, IsPropertySaveable.No, description: "Can the inventory of this item be moved around on the screen by the player.")]
         public bool MovableFrame { get; set; }
 
         public Vector2 DrawSize
@@ -88,10 +90,10 @@ namespace Barotrauma.Items.Components
             get { return Vector2.Zero; }
         }
 
-        partial void InitProjSpecific(XElement element)
+        partial void InitProjSpecific(ContentXElement element)
         {
             slotIcons = new Sprite[capacity];
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -129,12 +131,12 @@ namespace Barotrauma.Items.Components
                 //if neither a style or a custom sprite is defined, use default style
                 if (ContainedStateIndicator == null)
                 {
-                    IndicatorStyle = GUI.Style.GetComponentStyle("ContainedStateIndicator.Default");
+                    IndicatorStyle = GUIStyle.GetComponentStyle("ContainedStateIndicator.Default");
                 }
             }
             else
             {
-                IndicatorStyle = GUI.Style.GetComponentStyle("ContainedStateIndicator." + ContainedStateIndicatorStyle);
+                IndicatorStyle = GUIStyle.GetComponentStyle("ContainedStateIndicator." + ContainedStateIndicatorStyle);
                 if (ContainedStateIndicator != null || ContainedStateIndicatorEmpty != null)
                 {
                     DebugConsole.AddWarning($"Item \"{item.Name}\" defines both a contained state indicator style and a custom indicator sprite. Will use the custom sprite...");
@@ -162,7 +164,7 @@ namespace Barotrauma.Items.Components
                 CreateGUI();
             }
 
-            containedSpriteDepths = element.GetAttributeFloatArray("containedspritedepths", new float[0]);
+            containedSpriteDepths = element.GetAttributeFloatArray("containedspritedepths", Array.Empty<float>());
         }
 
         protected override void CreateGUI()
@@ -173,12 +175,12 @@ namespace Barotrauma.Items.Components
                 CanBeFocused = false
             };
 
-            string labelText = GetUILabel();
+            LocalizedString labelText = GetUILabel();
             GUITextBlock label = null;
-            if (!string.IsNullOrEmpty(labelText))
+            if (!labelText.IsNullOrEmpty())
             {
                 label = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform, Anchor.TopCenter), 
-                    labelText, font: GUI.SubHeadingFont, textAlignment: Alignment.Center, wrap: true);
+                    labelText, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Center, wrap: true);
             }
 
             float minInventoryAreaSize = 0.5f;
@@ -209,12 +211,12 @@ namespace Barotrauma.Items.Components
             Inventory.RectTransform = guiCustomComponent.RectTransform;
         }
 
-        public string GetUILabel()
+        public LocalizedString GetUILabel()
         {
             if (UILabel == string.Empty) { return string.Empty; }
             if (UILabel != null)
             {
-                return TextManager.Get("UILabel." + UILabel, returnNull: true) ?? TextManager.Get(UILabel);
+                return TextManager.Get("UILabel." + UILabel).Fallback(TextManager.Get(UILabel));
             }
             else
             {
@@ -278,9 +280,9 @@ namespace Barotrauma.Items.Components
                 transformedItemPos += new Vector2(item.Rect.X, item.Rect.Y);
                 if (item.Submarine != null) { transformedItemPos += item.Submarine.DrawPosition; }
 
-                if (Math.Abs(item.Rotation) > 0.01f)
+                if (Math.Abs(item.RotationRad) > 0.01f)
                 {
-                    Matrix transform = Matrix.CreateRotationZ(MathHelper.ToRadians(-item.Rotation));
+                    Matrix transform = Matrix.CreateRotationZ(-item.RotationRad);
                     transformedItemPos = Vector2.Transform(transformedItemPos - item.DrawPosition, transform) + item.DrawPosition;
                     transformedItemInterval = Vector2.Transform(transformedItemInterval, transform);
                     transformedItemIntervalHorizontal = Vector2.Transform(transformedItemIntervalHorizontal, transform);

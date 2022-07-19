@@ -30,7 +30,7 @@ namespace Barotrauma
                 {
                     GameAnalyticsManager.AddErrorEventOnce(
                         "GUIProgressBar.BarSize_setter", 
-                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        GameAnalyticsManager.ErrorSeverity.Error,
                         "Attempted to set the BarSize of a GUIProgressBar to an invalid value (" + value + ")\n" + Environment.StackTrace.CleanupStackTrace());
                     return;
                 }
@@ -47,9 +47,9 @@ namespace Barotrauma
             }
             isHorizontal = (Rect.Width > Rect.Height);
             frame = new GUIFrame(new RectTransform(Vector2.One, rectT));
-            GUI.Style.Apply(frame, "", this);
+            GUIStyle.Apply(frame, "", this);
             slider = new GUIFrame(new RectTransform(Vector2.One, rectT));
-            GUI.Style.Apply(slider, "Slider", this);
+            GUIStyle.Apply(slider, "Slider", this);
             this.showFrame = showFrame;
             this.barSize = barSize;
             Enabled = true;
@@ -62,10 +62,10 @@ namespace Barotrauma
         public Rectangle GetSliderRect(float fillAmount)
         {
             Rectangle sliderArea = new Rectangle(
-                frame.Rect.X + (int)style.Padding.X,
-                frame.Rect.Y + (int)style.Padding.Y,
-                (int)(frame.Rect.Width - style.Padding.X - style.Padding.Z),
-                (int)(frame.Rect.Height - style.Padding.Y - style.Padding.W));
+                frame.Rect.X + (int)Style.Padding.X,
+                frame.Rect.Y + (int)Style.Padding.Y,
+                (int)(frame.Rect.Width - Style.Padding.X - Style.Padding.Z),
+                (int)(frame.Rect.Height - Style.Padding.Y - Style.Padding.W));
 
             Vector4 sliceBorderSizes = Vector4.Zero;
             if (slider.sprites.ContainsKey(slider.State) && (slider.sprites[slider.State].First()?.Slice ?? false))
@@ -105,7 +105,7 @@ namespace Barotrauma
                 {
                     GameAnalyticsManager.AddErrorEventOnce(
                         "GUIProgressBar.Draw:GetProgress",
-                        GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                        GameAnalyticsManager.ErrorSeverity.Error,
                         "ProgressGetter of a GUIProgressBar (" + ProgressGetter.Target.ToString() + " - " + ProgressGetter.Method.ToString() + ") returned an invalid value (" + newSize + ")\n" + Environment.StackTrace.CleanupStackTrace());
                 }
                 else
@@ -116,10 +116,10 @@ namespace Barotrauma
 
             var sliderRect = GetSliderRect(barSize);
 
-            slider.RectTransform.AbsoluteOffset = new Point((int)style.Padding.X, (int)style.Padding.Y);
+            slider.RectTransform.AbsoluteOffset = new Point((int)Style.Padding.X, (int)Style.Padding.Y);
             slider.RectTransform.MaxSize = new Point(
-                (int)(Rect.Width - style.Padding.X + style.Padding.Z), 
-                (int)(Rect.Height - style.Padding.Y + style.Padding.W));
+                (int)(Rect.Width - Style.Padding.X + Style.Padding.Z), 
+                (int)(Rect.Height - Style.Padding.Y + Style.Padding.W));
             frame.Visible = showFrame;
             slider.Visible = BarSize > 0.0f;
 

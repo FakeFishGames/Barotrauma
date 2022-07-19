@@ -16,7 +16,7 @@ namespace Barotrauma.Abilities
         private readonly HashSet<LimbType> limbTypes = new HashSet<LimbType>();
 
         public override bool AppliesEffectOnIntervalUpdate => true;
-        public CharacterAbilityApplyForce(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityApplyForce(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             force = abilityElement.GetAttributeFloat("force", 0f);
             maxVelocity = abilityElement.GetAttributeFloat("maxvelocity", 10f);

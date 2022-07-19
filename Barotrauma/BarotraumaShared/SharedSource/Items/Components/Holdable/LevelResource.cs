@@ -3,7 +3,6 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -15,14 +14,14 @@ namespace Barotrauma.Items.Components
 
         private float deattachTimer;
 
-        [Serialize(1.0f, false, description: "How long it takes to deattach the item from the level walls (in seconds).")]
+        [Serialize(1.0f, IsPropertySaveable.No, description: "How long it takes to deattach the item from the level walls (in seconds).")]
         public float DeattachDuration
         {
             get;
             set;
         }
         
-        [Serialize(0.0f, false, description: "How far along the item is to being deattached. When the timer goes above DeattachDuration, the item is deattached.")]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "How far along the item is to being deattached. When the timer goes above DeattachDuration, the item is deattached.")]
         public float DeattachTimer
         {
             get { return deattachTimer; }
@@ -51,14 +50,18 @@ namespace Barotrauma.Items.Components
 #else
                 if (deattachTimer >= DeattachDuration)
                 {
-                    holdable.DeattachFromWall();
+                    if (holdable.Attached)
+                    {
+                        GameAnalyticsManager.AddDesignEvent("ResourceCollected:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "none") + ":" + item.Prefab.Identifier);
+                        holdable.DeattachFromWall();
+                    }
                     trigger.Enabled = false;
                 }
 #endif
             }
         }
 
-        [Serialize(1.0f, false, description: "How much the position of the item can vary from the wall the item spawns on.")]
+        [Serialize(1.0f, IsPropertySaveable.No, description: "How much the position of the item can vary from the wall the item spawns on.")]
         public float RandomOffsetFromWall
         {
             get;
@@ -70,16 +73,23 @@ namespace Barotrauma.Items.Components
             get { return holdable != null && holdable.Attached; }
         }
                 
-        public LevelResource(Item item, XElement element) : base(item, element)
+        public LevelResource(Item item, ContentXElement element) : base(item, element)
         {
             IsActive = true;
         }
 
-        public override void Move(Vector2 amount)
+        public override void Move(Vector2 amount, bool ignoreContacts = false)
         {
             if (trigger != null && amount.LengthSquared() > 0.00001f)
             {
-                trigger.SetTransform(item.SimPosition, 0.0f);
+                if (ignoreContacts)
+                {
+                    trigger.SetTransformIgnoreContacts(item.SimPosition, 0.0f);
+                }
+                else
+                {
+                    trigger.SetTransform(item.SimPosition, 0.0f);
+                }
             }
         }
 
@@ -115,17 +125,19 @@ namespace Barotrauma.Items.Components
             }
 
             var body = item.body ?? holdable.Body;
-            
+
             if (body != null)
             {
-                trigger = new PhysicsBody(body.width, body.height, body.radius, body.Density)
+                trigger = new PhysicsBody(body.width, body.height, body.radius, 
+                    body.Density,
+                    BodyType.Static,
+                    Physics.CollisionWall,
+                    Physics.CollisionNone,
+                    findNewContacts: false)
                 {
                     UserData = item
                 };
                 trigger.FarseerBody.SetIsSensor(true);
-                trigger.FarseerBody.BodyType = BodyType.Static;
-                trigger.FarseerBody.CollisionCategories = Physics.CollisionWall;
-                trigger.FarseerBody.CollidesWith = Physics.CollisionNone;
             }
         }
 

@@ -16,11 +16,11 @@ namespace Barotrauma
             foreach (var kvp in spawnedResources)
             {
                 msg.Write((byte)kvp.Value.Count);
-                var rotation = resourceClusters[kvp.Key].rotation;
+                var rotation = resourceClusters[kvp.Key].Rotation;
                 msg.Write(rotation);
                 foreach (var r in kvp.Value)
                 {
-                    r.WriteSpawnData(msg, r.ID, Entity.NullEntityID, 0);
+                    r.WriteSpawnData(msg, r.ID, Entity.NullEntityID, 0, -1);
                 }
             }
 

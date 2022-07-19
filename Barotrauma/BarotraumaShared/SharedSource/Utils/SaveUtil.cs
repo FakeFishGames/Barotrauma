@@ -7,11 +7,13 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Xml.Linq;
-using Microsoft.Xna.Framework;
+using Steamworks.Data;
+using Color = Microsoft.Xna.Framework.Color;
+using System.Text.RegularExpressions;
 
 namespace Barotrauma
 {
-    partial class SaveUtil
+    static class SaveUtil
     {
         private static readonly string LegacySaveFolder = Path.Combine("Data", "Saves");
         private static readonly string LegacyMultiplayerSaveFolder = Path.Combine(LegacySaveFolder, "Multiplayer");
@@ -66,6 +68,7 @@ namespace Barotrauma
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Failed to clear folder", e);
+                return;
             }
 
             try
@@ -75,6 +78,7 @@ namespace Barotrauma
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Error saving gamesession", e);
+                return;
             }
 
             try
@@ -107,6 +111,7 @@ namespace Barotrauma
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Error saving submarine", e);
+                return;
             }
 
             try
@@ -121,6 +126,10 @@ namespace Barotrauma
 
         public static void LoadGame(string filePath)
         {
+            //ensure there's no gamesession/sub loaded because it'd lead to issues when starting a new one (e.g. trying to determine which level to load based on the placement of the sub)
+            //can happen if a gamesession is interrupted ungracefully (exception during loading)
+            Submarine.Unload();
+            GameMain.GameSession = null;
             DebugConsole.Log("Loading save file: " + filePath);
             DecompressToDirectory(filePath, TempPath, null);
 
@@ -146,7 +155,7 @@ namespace Barotrauma
             if (ownedSubsElement != null)
             {
                 ownedSubmarines = new List<SubmarineInfo>();
-                foreach (XElement subElement in ownedSubsElement.Elements())
+                foreach (var subElement in ownedSubsElement.Elements())
                 {
                     string subName = subElement.GetAttributeString("name", "");
                     string ownedSubPath = Path.Combine(TempPath, subName + ".sub");
@@ -223,7 +232,7 @@ namespace Barotrauma
             return Path.Combine(folder, saveName);
         }
 
-        public static IEnumerable<string> GetSaveFiles(SaveType saveType, bool includeInCompatible = true)
+        public static IReadOnlyList<CampaignMode.SaveInfo> GetSaveFiles(SaveType saveType, bool includeInCompatible = true)
         {
             string folder = saveType == SaveType.Singleplayer ? SaveFolder : MultiplayerSaveFolder;
             if (!Directory.Exists(folder))
@@ -246,18 +255,61 @@ namespace Barotrauma
                 files.AddRange(Directory.GetFiles(legacyFolder, "*.save", System.IO.SearchOption.TopDirectoryOnly));
             }
 
-            if (!includeInCompatible)
+            List<CampaignMode.SaveInfo> saveInfos = new List<CampaignMode.SaveInfo>();   
+            foreach (string file in files)
             {
-                for (int i = files.Count - 1; i >= 0; i--)
+                XDocument doc = LoadGameSessionDoc(file);
+                if (!includeInCompatible && !IsSaveFileCompatible(doc))
                 {
-                    XDocument doc = LoadGameSessionDoc(files[i]);
-                    if (!IsSaveFileCompatible(doc))
+                    continue;
+                }
+                if (doc?.Root == null)
+                {
+                    saveInfos.Add(new CampaignMode.SaveInfo()
                     {
-                        files.RemoveAt(i);
+                        FilePath = file
+                    });
+                }
+                else
+                {
+                    List<string> enabledContentPackageNames = new List<string>();
+
+                    //backwards compatibility
+                    string enabledContentPackagePathsStr = doc.Root.GetAttributeStringUnrestricted("selectedcontentpackages", string.Empty);
+                    foreach (string packagePath in enabledContentPackagePathsStr.Split('|'))
+                    {
+                        if (string.IsNullOrEmpty(packagePath)) { continue; }
+                        //change paths to names
+                        string fileName = Path.GetFileNameWithoutExtension(packagePath);
+                        if (fileName == "filelist")
+                        { 
+                            enabledContentPackageNames.Add(Path.GetFileName(Path.GetDirectoryName(packagePath)));
+                        }
+                        else
+                        {
+                            enabledContentPackageNames.Add(fileName);
+                        }
                     }
+
+                    string enabledContentPackageNamesStr = doc.Root.GetAttributeStringUnrestricted("selectedcontentpackagenames", string.Empty);
+                    //split on pipes, excluding pipes preceded by \
+                    foreach (string packageName in Regex.Split(enabledContentPackageNamesStr, @"(?<!(?<!\\)*\\)\|"))
+                    {
+                        if (string.IsNullOrEmpty(packageName)) { continue; }                        
+                        enabledContentPackageNames.Add(packageName.Replace(@"\|", "|"));                        
+                    }
+
+                    saveInfos.Add(new CampaignMode.SaveInfo()
+                    {
+                        FilePath = file,
+                        SubmarineName = doc?.Root?.GetAttributeStringUnrestricted("submarine", ""),
+                        SaveTime = doc.Root.GetAttributeInt("savetime", 0),
+                        EnabledContentPackageNames = enabledContentPackageNames.ToArray(),
+                    });
                 }
             }
-            return files;
+            
+            return saveInfos;
         }
 
         public static string CreateSavePath(SaveType saveType, string fileName = "Save_Default")
@@ -267,7 +319,7 @@ namespace Barotrauma
             string folder = saveType == SaveType.Singleplayer ? SaveFolder : MultiplayerSaveFolder;
             if (fileName == "Save_Default")
             {
-                fileName = TextManager.Get("SaveFile.DefaultName", true);
+                fileName = TextManager.Get("SaveFile.DefaultName").Value;
                 if (fileName.Length == 0) fileName = "Save";
             }
 
@@ -356,10 +408,10 @@ namespace Barotrauma
         private static bool DecompressFile(bool writeFile, string sDir, GZipStream zipStream, ProgressDelegate progress, out string fileName)
         {
             fileName = null;
-            
+
             //Decompress file name
             byte[] bytes = new byte[sizeof(int)];
-            int Readed = zipStream.Read(bytes, 0, sizeof(int));
+            int Readed = Read(zipStream, bytes, sizeof(int));
             if (Readed < sizeof(int))
                 return false;
 
@@ -373,29 +425,29 @@ namespace Barotrauma
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < iNameLen; i++)
             {
-                zipStream.Read(bytes, 0, sizeof(char));
+                Read(zipStream, bytes, sizeof(char));
                 char c = BitConverter.ToChar(bytes, 0);
                 sb.Append(c);
             }
-            string sFileName = sb.ToString();
-            
+            string sFileName = sb.ToString().Replace('\\', '/');
+
             fileName = sFileName;
             progress?.Invoke(sFileName);
 
             //Decompress file content
             bytes = new byte[sizeof(int)];
-            zipStream.Read(bytes, 0, sizeof(int));
+            Read(zipStream, bytes, sizeof(int));
             int iFileLen = BitConverter.ToInt32(bytes, 0);
 
             bytes = new byte[iFileLen];
-            zipStream.Read(bytes, 0, bytes.Length);
+            Read(zipStream, bytes, bytes.Length);
 
             string sFilePath = Path.Combine(sDir, sFileName);
             string sFinalDir = Path.GetDirectoryName(sFilePath);
 
             string sDirFull = (string.IsNullOrEmpty(sDir) ? Directory.GetCurrentDirectory() : Path.GetFullPath(sDir)).CleanUpPathCrossPlatform(correctFilenameCase: false);
             string sFinalDirFull = (string.IsNullOrEmpty(sFinalDir) ? Directory.GetCurrentDirectory() : Path.GetFullPath(sFinalDir)).CleanUpPathCrossPlatform(correctFilenameCase: false);
-            
+
             if (!sFinalDirFull.StartsWith(sDirFull, StringComparison.OrdinalIgnoreCase))
             {
                 throw new InvalidOperationException(
@@ -425,6 +477,26 @@ namespace Barotrauma
                 }
             }
             return true;
+        }
+
+        private static int Read(GZipStream zipStream, byte[] bytes, int amount)
+        {
+            int read = 0;
+
+            // BUG workaround for .NET6 causing save decompression to fail
+#if NET6_0
+            for (int i = 0; i < amount; i++)
+            {
+                int result = zipStream.ReadByte();
+                if (result < 0) { break; }
+
+                bytes[i] = (byte) result;
+                read++;
+            }
+#else
+            read = zipStream.Read(bytes, 0, amount);
+#endif
+            return read;
         }
 
         public static void DecompressToDirectory(string sCompressedFile, string sDir, ProgressDelegate progress)

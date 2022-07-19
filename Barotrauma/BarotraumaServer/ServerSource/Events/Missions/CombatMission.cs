@@ -1,5 +1,4 @@
-﻿using Barotrauma.Networking;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma
@@ -8,13 +7,15 @@ namespace Barotrauma
     {
         private readonly bool[] teamDead = new bool[2];
 
+        private List<Character>[] crews;
+
         private bool initialized = false;
 
-        public override string Description
+        public override LocalizedString Description
         {
             get
             {
-                if (descriptions == null) return "";
+                if (descriptions == null) { return ""; }
                 
                 //non-team-specific description
                 return descriptions[0];

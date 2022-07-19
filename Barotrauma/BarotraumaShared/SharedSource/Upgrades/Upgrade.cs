@@ -14,7 +14,7 @@ namespace Barotrauma
     {
         public object? OriginalValue { get; private set; }
 
-        public readonly string Name;
+        public readonly Identifier Name;
 
         private readonly string Multiplier;
 
@@ -22,7 +22,7 @@ namespace Barotrauma
 
         private readonly Upgrade upgrade;
 
-        private PropertyReference(string name, string multiplier, Upgrade upgrade)
+        private PropertyReference(Identifier name, string multiplier, Upgrade upgrade)
         {
             this.Name = name;
             this.Multiplier = multiplier;
@@ -114,7 +114,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    float multiplier = UpgradePrefab.ParsePercentage(Multiplier, "", suppressWarnings: true);
+                    float multiplier = UpgradePrefab.ParsePercentage(Multiplier, Identifier.Empty, suppressWarnings: true);
                     return ApplyPercentage(value, multiplier, level);
                 }
             }
@@ -131,7 +131,7 @@ namespace Barotrauma
 
             foreach (var savedValue in savedElement.Elements())
             {
-                if (string.Equals(savedValue.Name.ToString(), Name, StringComparison.OrdinalIgnoreCase))
+                if (savedValue.NameAsIdentifier() == Name)
                 {
                     OriginalValue = savedValue.GetAttributeFloat("value", 0.0f);
                 }
@@ -152,7 +152,7 @@ namespace Barotrauma
 
         public static PropertyReference[] ParseAttributes(IEnumerable<XAttribute> attributes, Upgrade upgrade)
         {
-            return attributes.Select(attribute => new PropertyReference(attribute.Name.ToString(), attribute.Value, upgrade)).ToArray();
+            return attributes.Select(attribute => new PropertyReference(attribute.NameAsIdentifier(), attribute.Value, upgrade)).ToArray();
         }
 
         private float ParseValue()
@@ -186,13 +186,13 @@ namespace Barotrauma
 
         public UpgradePrefab Prefab { get; }
 
-        public string Identifier => Prefab.Identifier;
+        public Identifier Identifier => Prefab.Identifier;
 
         public int Level { get; set; }
 
         public bool Disposed { get; private set; }
 
-        private readonly XElement sourceElement;
+        private readonly ContentXElement sourceElement;
 
         public Upgrade(ISerializableEntity targetEntity, UpgradePrefab prefab, int level, XContainer? saveElement = null)
         {
@@ -205,7 +205,7 @@ namespace Barotrauma
 
             List<XElement>? saveElements = saveElement?.Elements().ToList();
 
-            foreach (XElement subElement in prefab.SourceElement.Elements())
+            foreach (var subElement in prefab.SourceElement.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -275,11 +275,12 @@ namespace Barotrauma
             {
                 if (TargetComponents.SelectMany(pair => pair.Value)
                                     .Select(@ref => @ref.Name)
-                                    .Any(@string => string.Equals(@string, element.Name.ToString(), StringComparison.OrdinalIgnoreCase))) { continue; }
+                                    .Any(@identifier => @identifier == element.NameAsIdentifier())) { continue; }
 
                 string value = element.GetAttributeString("value", string.Empty);
-                string name = element.Name.ToString();
-                string componentName = element.Parent.Name.ToString();
+                Identifier name = element.NameAsIdentifier();
+                XElement parentElement = element.Parent ?? throw new NullReferenceException("Unable to reset properties: Parent element is null.");
+                string componentName = parentElement.Name.ToString();
 
                 DebugConsole.AddWarning($"Upgrade \"{Prefab.Name}\" in {TargetEntity.Name} does not affect the property \"{name}\" but the save file suggest it has done so before (has it been overriden?). \n" +
                                         $"The property has been reset to the original value of {value} and will be ignored from now on.");
@@ -339,12 +340,12 @@ namespace Barotrauma
 
                 string name = key is ItemComponent ? key.Name : "This";
 
-                XElement subElement = new XElement(name);
+                var subElement = new XElement(name);
                 foreach (PropertyReference propertyRef in value)
                 {
                     if (propertyRef.OriginalValue != null)
                     {
-                        subElement.Add(new XElement(propertyRef.Name,
+                        subElement.Add(new XElement(propertyRef.Name.Value,
                             new XAttribute("value", propertyRef.OriginalValue)));
                     }
                     else if (!Prefab.SuppressWarnings)
@@ -390,10 +391,10 @@ namespace Barotrauma
                         int closestMatch = int.MaxValue;
                         foreach (var (propertyName, _) in entity.SerializableProperties)
                         {
-                            int match = ToolBox.LevenshteinDistance(propertyName, propertyReference.Name);
+                            int match = ToolBox.LevenshteinDistance(propertyName.Value, propertyReference.Name.Value);
                             if (match < closestMatch)
                             {
-                                matchingString = propertyName;
+                                matchingString = propertyName.Value ?? "";
                                 closestMatch = match;
                             }
                         }
@@ -405,23 +406,14 @@ namespace Barotrauma
             }
         }
 
-        private void Dispose(bool disposing)
+        public void Dispose()
         {
             if (!Disposed)
             {
-                if (disposing)
-                {
-                    TargetComponents.Clear();
-                }
+                TargetComponents.Clear();
             }
 
             Disposed = true;
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
         }
     }
 }

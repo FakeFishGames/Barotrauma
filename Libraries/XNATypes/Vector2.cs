@@ -247,6 +247,7 @@ namespace Microsoft.Xna.Framework
             return value1.X != value2.X || value1.Y != value2.Y;
         }
 
+        public static implicit operator Vector2((float X, float Y) tuple) => new Vector2(tuple.X, tuple.Y);
         #endregion
 
         #region Public Methods

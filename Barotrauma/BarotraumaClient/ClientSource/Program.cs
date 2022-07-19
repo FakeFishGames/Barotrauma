@@ -1,11 +1,9 @@
 ﻿#region Using Statements
 
 using System;
-using System.Collections.Generic;
 using Barotrauma.IO;
 using System.Linq;
 using System.Text;
-using GameAnalyticsSDK.Net;
 using Barotrauma.Steam;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -106,9 +104,7 @@ namespace Barotrauma
             try
             {
                 string exePath = System.Reflection.Assembly.GetEntryAssembly().Location;
-                var md5 = System.Security.Cryptography.MD5.Create();
-                byte[] exeBytes = File.ReadAllBytes(exePath);
-                exeHash = new Md5Hash(exeBytes);
+                exeHash = Md5Hash.CalculateForFile(exePath, Md5Hash.StringHashOptions.BytePerfect);
             }
             catch
             {
@@ -127,19 +123,17 @@ namespace Barotrauma
                 {
                     //exception occurred in loading screen:
                     //assume content packages are the culprit and reset them
-                    XDocument doc = XMLExtensions.TryLoadXml(GameSettings.PlayerSavePath);
-                    XDocument baseDoc = XMLExtensions.TryLoadXml(GameSettings.SavePath);
-                    if (doc != null && baseDoc != null)
+                    XDocument doc = XMLExtensions.TryLoadXml(GameSettings.PlayerConfigPath);
+                    if (doc?.Root != null)
                     {
                         XElement newElement = new XElement(doc.Root.Name);
                         newElement.Add(doc.Root.Attributes());
-                        string[] contentPackageTags = { "contentpackage", "contentpackages" };
-                        bool elementNameMatches(XElement element)
-                            => contentPackageTags.Any(t => element.Name.LocalName.Equals(t, StringComparison.InvariantCultureIgnoreCase));
-                        newElement.Add(doc.Root.Elements().Where(e => !elementNameMatches(e)));
-                        newElement.Add(baseDoc.Root.Elements().Where(e => elementNameMatches(e)));
+                        Identifier[] contentPackageTags = { "contentpackage".ToIdentifier(), "contentpackages".ToIdentifier() };
+                        newElement.Add(doc.Root.Elements().Where(e => !contentPackageTags.Contains(e.NameAsIdentifier())));
+                        newElement.Add(new XElement("core",
+                            new XAttribute("path", ContentPackageManager.VanillaFileList)));
                         XDocument newDoc = new XDocument(newElement);
-                        newDoc.Save(GameSettings.PlayerSavePath);
+                        newDoc.Save(GameSettings.PlayerConfigPath);
                         sb.AppendLine("To prevent further startup errors, installed mods will be disabled the next time you launch the game.");
                         sb.AppendLine("\n");
                     }
@@ -150,22 +144,19 @@ namespace Barotrauma
                 //welp i guess we couldn't reset the config!
             }
 
-            if (exeHash?.Hash != null)
+            if (exeHash?.StringRepresentation != null)
             {
-                sb.AppendLine(exeHash.Hash);
+                sb.AppendLine(exeHash.StringRepresentation);
             }
             sb.AppendLine("\n");
             sb.AppendLine("Game version " + GameMain.Version +
             " (" + AssemblyInfo.BuildString + ", branch " + AssemblyInfo.GitBranch + ", revision " + AssemblyInfo.GitRevision + ")");
-            if (GameMain.Config != null)
+            sb.AppendLine($"Graphics mode: {GameSettings.CurrentConfig.Graphics.Width}x{GameSettings.CurrentConfig.Graphics.Height} ({GameSettings.CurrentConfig.Graphics.DisplayMode})");
+            sb.AppendLine("VSync " + (GameSettings.CurrentConfig.Graphics.VSync ? "ON" : "OFF"));
+            sb.AppendLine("Language: " + GameSettings.CurrentConfig.Language);
+            if (ContentPackageManager.EnabledPackages.All != null)
             {
-                sb.AppendLine("Graphics mode: " + GameMain.Config.GraphicsWidth + "x" + GameMain.Config.GraphicsHeight + " (" + GameMain.Config.WindowMode.ToString() + ")");
-                sb.AppendLine("VSync " + (GameMain.Config.VSyncEnabled ? "ON" : "OFF"));
-                sb.AppendLine("Language: " + (GameMain.Config.Language ?? "none"));
-                if (GameMain.Config.AllEnabledPackages != null)
-                {
-                    sb.AppendLine("Selected content packages: " + (!GameMain.Config.AllEnabledPackages.Any() ? "None" : string.Join(", ", GameMain.Config.AllEnabledPackages.Select(c => c.Name))));
-                }
+                sb.AppendLine("Selected content packages: " + (!ContentPackageManager.EnabledPackages.All.Any() ? "None" : string.Join(", ", ContentPackageManager.EnabledPackages.All.Select(c => c.Name))));
             }
             sb.AppendLine("Level seed: " + ((Level.Loaded == null) ? "no level loaded" : Level.Loaded.Seed));
             sb.AppendLine("Loaded submarine: " + ((Submarine.MainSub == null) ? "None" : Submarine.MainSub.Info.Name + " (" + Submarine.MainSub.Info.MD5Hash + ")"));
@@ -245,6 +236,18 @@ namespace Barotrauma
                 }
             }
 
+            if (GameAnalyticsManager.SendUserStatistics)
+            {
+                //send crash report before appending debug console messages (which may contain non-anonymous information)
+                string crashHeader = exception.Message;
+                if (exception.TargetSite != null)
+                {
+                    crashHeader += " " + exception.TargetSite.ToString();
+                }
+                GameAnalyticsManager.AddErrorEvent(GameAnalyticsManager.ErrorSeverity.Critical, crashHeader + "\n\n" + sb.ToString());
+                GameAnalyticsManager.ShutDown();
+            }
+
             sb.AppendLine("Last debug messages:");
             for (int i = DebugConsole.Messages.Count - 1; i >= 0; i--)
             {
@@ -255,13 +258,12 @@ namespace Barotrauma
 
             File.WriteAllText(filePath, crashReport);
 
-            if (GameSettings.SaveDebugConsoleLogs) DebugConsole.SaveLogs();
-
-            if (GameSettings.SendUserStatistics)
+            if (GameSettings.CurrentConfig.SaveDebugConsoleLogs
+                || GameSettings.CurrentConfig.VerboseLogging) { DebugConsole.SaveLogs(); }
+            
+            if (GameAnalyticsManager.SendUserStatistics)
             {
                 CrashMessageBox("A crash report (\"" + filePath + "\") was saved in the root folder of the game and sent to the developers.", filePath);
-                GameAnalytics.AddErrorEvent(EGAErrorSeverity.Critical, crashReport);
-                GameAnalytics.OnQuit();
             }
             else
             {

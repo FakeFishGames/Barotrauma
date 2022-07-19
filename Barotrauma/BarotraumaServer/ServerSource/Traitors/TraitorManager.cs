@@ -169,7 +169,8 @@ namespace Barotrauma
                     else
                     {
                         var mission = TraitorMissionPrefab.RandomPrefab()?.Instantiate();
-                        if (mission != null) {
+                        if (mission != null)
+                        {
                             if (mission.CanBeStarted(server, this, CharacterTeamType.None))
                             {
                                 if (mission.Start(server, this, CharacterTeamType.None))

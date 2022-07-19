@@ -13,7 +13,6 @@ namespace Barotrauma
         SelectNextCharacter,
         SelectPreviousCharacter,
         Voice,
-        LocalVoice,
         Deselect,
         Shoot,
         Command,
@@ -21,6 +20,8 @@ namespace Barotrauma
         TakeOneFromInventorySlot,
         TakeHalfFromInventorySlot,
         NextFireMode,
-        PreviousFireMode
+        PreviousFireMode,
+        ActiveChat,
+        ToggleChatMode,
     }
 }

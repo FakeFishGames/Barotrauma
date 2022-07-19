@@ -5,7 +5,7 @@ namespace Barotrauma.Abilities
     class AbilityConditionGeneHarvester : AbilityConditionData
     {
 
-        public AbilityConditionGeneHarvester(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement) { }
+        public AbilityConditionGeneHarvester(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement) { }
 
         protected override bool MatchesConditionSpecific(AbilityObject abilityObject)
         {

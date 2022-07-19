@@ -9,19 +9,19 @@ namespace Barotrauma
 
         private int actionIndex;
 
-        [Serialize("", true)]
-        public string TargetTag { get; set; }
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier TargetTag { get; set; }
 
-        public StatusEffectAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) 
+        public StatusEffectAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) 
         {
             actionIndex = 0;
-            foreach (XElement subElement in parentEvent.Prefab.ConfigElement.Descendants())
+            foreach (var subElement in parentEvent.Prefab.ConfigElement.Descendants())
             {
                 if (subElement == element) { break; }
                 actionIndex++;
             }
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {

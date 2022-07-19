@@ -6,35 +6,16 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class TraitorMissionPrefab
+    class TraitorMissionPrefab : Prefab
     {
-        public static readonly List<TraitorMissionPrefab> List = new List<TraitorMissionPrefab>();
-
-        public readonly string Identifier;
+        public static readonly PrefabCollection<TraitorMissionPrefab> Prefabs = new PrefabCollection<TraitorMissionPrefab>();
 
         public readonly Sprite Icon;
         public readonly Color IconColor;
 
-        public static void Init()
+        public TraitorMissionPrefab(ContentXElement element, TraitorMissionsFile file) : base(file, element.GetAttributeIdentifier("identifier", Identifier.Empty))
         {
-            List.Clear();
-            var files = GameMain.Instance.GetFilesOfType(ContentType.TraitorMissions);
-            foreach (ContentFile file in files)
-            {
-                XDocument doc = XMLExtensions.TryLoadXml(file.Path);
-                if (doc?.Root == null) { continue; }
-
-                foreach (XElement element in doc.Root.Elements())
-                {
-                    List.Add(new TraitorMissionPrefab(element));
-                }
-            }
-        }
-
-        private TraitorMissionPrefab(XElement element)
-        {
-            Identifier = element.GetAttributeString("identifier", "");
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 if (subElement.Name.ToString().Equals("icon", StringComparison.OrdinalIgnoreCase))
                 {
@@ -42,6 +23,11 @@ namespace Barotrauma
                     IconColor = subElement.GetAttributeColor("color", Color.White);
                 }
             }
+        }
+
+        public override void Dispose()
+        {
+            Icon?.Remove();
         }
     }
 }

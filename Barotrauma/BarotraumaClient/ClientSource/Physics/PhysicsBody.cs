@@ -66,7 +66,7 @@ namespace Barotrauma
 
                 GUI.DrawRectangle(spriteBatch,
                     new Vector2(pos.X - 5, -(pos.Y + 5)),
-                    Vector2.One * 10.0f, GUI.Style.Red, false, 0, 3);
+                    Vector2.One * 10.0f, GUIStyle.Red, false, 0, 3);
             }
 
             if (drawOffset != Vector2.Zero)
@@ -153,7 +153,7 @@ namespace Barotrauma
             }
         }
 
-        public PosInfo ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime, string parentDebugName)
+        public PosInfo ClientRead(IReadMessage msg, float sendingTime, string parentDebugName)
         {
             float MaxVel            = NetConfig.MaxPhysicsBodyVelocity;
             float MaxAngularVel     = NetConfig.MaxPhysicsBodyAngularVelocity;
@@ -201,7 +201,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError(errorMsg);
 #endif
                 GameAnalyticsManager.AddErrorEventOnce("PhysicsBody.ClientRead:InvalidData" + parentDebugName,
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.ErrorSeverity.Error,
                     errorMsg);
                 return null;
             }

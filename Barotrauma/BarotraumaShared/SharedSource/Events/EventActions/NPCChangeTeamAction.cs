@@ -7,18 +7,18 @@ namespace Barotrauma
 {
     class NPCChangeTeamAction : EventAction
     {
-        [Serialize("", true)]
-        public string NPCTag { get; set; }
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier NPCTag { get; set; }
 
-        [Serialize(CharacterTeamType.None, true)]
+        [Serialize(CharacterTeamType.None, IsPropertySaveable.Yes)]
         public CharacterTeamType TeamTag { get; set; }
 
-        [Serialize(false, true)]
+        [Serialize(false, IsPropertySaveable.Yes)]
         public bool AddToCrew { get; set; }
 
         private bool isFinished = false;
 
-        public NPCChangeTeamAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) { }
+        public NPCChangeTeamAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
 
         private List<Character> affectedNpcs = null;
 
@@ -61,7 +61,7 @@ namespace Barotrauma
                         npc.GiveIdCardTags(subWaypoint, createNetworkEvent: true);
                     }
 #if SERVER
-                    GameMain.NetworkMember.CreateEntityEvent(npc, new object[] { NetEntityEvent.Type.AddToCrew, TeamTag, npc.Inventory.AllItems.Select(it => it.ID).ToArray() });
+                    GameMain.NetworkMember.CreateEntityEvent(npc, new Character.AddToCrewEventData(TeamTag, npc.Inventory.AllItems));
 #endif
                 }
             }

@@ -26,29 +26,28 @@ namespace Barotrauma.Items.Components
         private readonly List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
         private readonly List<ParticleEmitter> particleEmitterCharges = new List<ParticleEmitter>();
 
-        [Serialize(1.0f, false, description: "The scale of the crosshair sprite (if there is one).")]
+        [Serialize(1.0f, IsPropertySaveable.No, description: "The scale of the crosshair sprite (if there is one).")]
         public float CrossHairScale
         {
             get;
             private set;
         }
 
-        partial void InitProjSpecific(XElement element)
+        partial void InitProjSpecific(ContentXElement element)
         {
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
+                string textureDir = GetTextureDirectory(subElement);
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "crosshair":
                         {
-                            string texturePath = subElement.GetAttributeString("texture", "");
-                            crosshairSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.FilePath));
+                            crosshairSprite = new Sprite(subElement, path: textureDir);
                         }
                         break;
                     case "crosshairpointer":
                         {
-                            string texturePath = subElement.GetAttributeString("texture", "");
-                            crosshairPointerSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.FilePath));
+                            crosshairPointerSprite = new Sprite(subElement, path: textureDir);
                         }
                         break;
                     case "particleemitter":
@@ -58,7 +57,7 @@ namespace Barotrauma.Items.Components
                         particleEmitterCharges.Add(new ParticleEmitter(subElement));
                         break;
                     case "chargesound":
-                        chargeSound = Submarine.LoadRoundSound(subElement, false);
+                        chargeSound = RoundSound.Load(subElement, false);
                         break;
                 }
             }
@@ -108,7 +107,7 @@ namespace Barotrauma.Items.Components
                     float sizeMultiplier = Math.Clamp(chargeRatio, 0.1f, 1f);
                     foreach (ParticleEmitter emitter in particleEmitterCharges)
                     {
-                        emitter.Emit(deltaTime, particlePos, hullGuess: null, sizeMultiplier: sizeMultiplier, colorMultiplier: emitter.Prefab.Properties.ColorMultiplier);
+                        emitter.Emit(deltaTime, particlePos, hullGuess: item.CurrentHull, sizeMultiplier: sizeMultiplier, colorMultiplier: emitter.Prefab.Properties.ColorMultiplier);
                     }
 
                     if (chargeSoundChannel == null || !chargeSoundChannel.IsPlaying)
@@ -157,6 +156,14 @@ namespace Barotrauma.Items.Components
                 crosshairSprite?.Draw(spriteBatch, crosshairPos, Color.White, 0, currentCrossHairScale);
                 crosshairPointerSprite?.Draw(spriteBatch, crosshairPointerPos, 0, currentCrossHairPointerScale);
             }
+
+            if (GameMain.DebugDraw)
+            {
+                Vector2 barrelPos = item.DrawPosition + ConvertUnits.ToDisplayUnits(TransformedBarrelPos);
+                barrelPos = Screen.Selected.Cam.WorldToScreen(barrelPos);
+                GUI.DrawLine(spriteBatch, barrelPos - Vector2.UnitY * 3, barrelPos + Vector2.UnitY * 3, Color.Red);
+                GUI.DrawLine(spriteBatch, barrelPos - Vector2.UnitX * 3, barrelPos + Vector2.UnitX * 3, Color.Red);
+            }
         }
 
         partial void LaunchProjSpecific()
@@ -166,7 +173,7 @@ namespace Barotrauma.Items.Components
 			if (item.body.Dir < 0.0f) { rotation += MathHelper.Pi; }
             foreach (ParticleEmitter emitter in particleEmitters)
             {
-                emitter.Emit(1.0f, particlePos, hullGuess: null, angle: rotation, particleRotation: rotation);
+                emitter.Emit(1.0f, particlePos, hullGuess: item.CurrentHull, angle: rotation, particleRotation: rotation);
             }
         }
 

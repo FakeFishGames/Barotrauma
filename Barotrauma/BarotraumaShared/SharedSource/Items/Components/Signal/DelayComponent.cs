@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Xml.Linq;
-
+using Microsoft.Xna.Framework;
 namespace Barotrauma.Items.Components
 {
     class DelayComponent : ItemComponent
@@ -24,12 +25,12 @@ namespace Barotrauma.Items.Components
         private int signalQueueSize;
         private int delayTicks;
 
-        private readonly Queue<DelayedSignal> signalQueue;
+        private readonly Queue<DelayedSignal> signalQueue = new Queue<DelayedSignal>();
 
         private DelayedSignal prevQueuedSignal;
         
         private float delay;
-        [InGameEditable(MinValueFloat = 0.0f, MaxValueFloat = 60.0f, DecimalCount = 2), Serialize(1.0f, true, description: "How long the item delays the signals (in seconds).", alwaysUseInstanceValues: true)]
+        [InGameEditable(MinValueFloat = 0.0f, MaxValueFloat = 60.0f, DecimalCount = 2), Serialize(1.0f, IsPropertySaveable.Yes, description: "How long the item delays the signals (in seconds).", alwaysUseInstanceValues: true)]
         public float Delay
         {
             get { return delay; }
@@ -39,42 +40,47 @@ namespace Barotrauma.Items.Components
                 delay = value;
                 delayTicks = (int)(delay / Timing.Step);
                 signalQueueSize = Math.Max(delayTicks, 1) * 2;
+                signalQueue.Clear();
             }
         }
 
-        [InGameEditable, Serialize(false, true, description: "Should the component discard previously received signals when a new one is received.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize(false, IsPropertySaveable.Yes, description: "Should the component discard previously received signals when a new one is received.", alwaysUseInstanceValues: true)]
         public bool ResetWhenSignalReceived
         {
             get;
             set;
         }
 
-        [InGameEditable, Serialize(false, true, description: "Should the component discard previously received signals when the incoming signal changes.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize(false, IsPropertySaveable.Yes, description: "Should the component discard previously received signals when the incoming signal changes.", alwaysUseInstanceValues: true)]
         public bool ResetWhenDifferentSignalReceived
         {
             get;
             set;
         }
 
-        public DelayComponent(Item item, XElement element)
+        public DelayComponent(Item item, ContentXElement element)
             : base (item, element)
         {
-            signalQueue = new Queue<DelayedSignal>();
             IsActive = true;
         }
 
         public override void Update(float deltaTime, Camera cam)
         {
+            if (signalQueue.Count == 0)
+            {
+                IsActive = false;
+                return;
+            }
+
             foreach (var val in signalQueue)
             {
                 val.SendTimer -= 1;
             }
-
             while (signalQueue.Count > 0 && signalQueue.Peek().SendTimer <= 0)
             {
                 var signalOut = signalQueue.Peek();
                 signalOut.SendDuration -= 1;
-                item.SendSignal(new Signal(signalOut.Signal.value, strength: signalOut.Signal.strength), "signal_out");
+                item.SendSignal(new Signal(signalOut.Signal.value, sender: signalOut.Signal.sender, strength: signalOut.Signal.strength), "signal_out");
                 if (signalOut.SendDuration <= 0) 
                 { 
                     signalQueue.Dequeue(); 
@@ -113,6 +119,19 @@ namespace Barotrauma.Items.Components
                         SendDuration = 1
                     };
                     signalQueue.Enqueue(prevQueuedSignal);
+                    IsActive = true;
+                    break;
+                case "set_delay":
+                    if (float.TryParse(signal.value, NumberStyles.Any, CultureInfo.InvariantCulture, out float newDelay))
+                    {
+						newDelay = MathHelper.Clamp(newDelay, 0, 60);
+                        if (signalQueue.Count > 0 && newDelay != Delay)
+                        {
+                            prevQueuedSignal = null;
+                            signalQueue.Clear();
+                        }
+                        Delay = newDelay;
+                    }
                     break;
             }
         }

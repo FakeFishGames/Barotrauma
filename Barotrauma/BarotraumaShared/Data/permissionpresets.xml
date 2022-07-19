@@ -8,7 +8,7 @@
   <Preset 
     name="Moderator" 
     description="Allowed to manage round settings, kick players and access server logs." 
-    permissions="ManageRound,Kick,SelectSub,SelectMode,ManageCampaign,ConsoleCommands,ServerLog">
+    permissions="ManageRound,Kick,SelectSub,SelectMode,ManageCampaign,ConsoleCommands,ServerLog,ManageSettings,ManageMoney">
     <Command name="clientlist"/>
     <Command name="readycheck"/>
     <Command name="autorestart"/>

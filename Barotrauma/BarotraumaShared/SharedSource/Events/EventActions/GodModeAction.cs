@@ -7,13 +7,13 @@ namespace Barotrauma
 {
     class GodModeAction : EventAction
     {
-        [Serialize(true, true)]
+        [Serialize(true, IsPropertySaveable.Yes)]
         public bool Enabled { get; set; }
 
-        [Serialize("", true)]
-        public string TargetTag { get; set; }
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier TargetTag { get; set; }
 
-        public GodModeAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) { }
+        public GodModeAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
 
         private bool isFinished = false;
 

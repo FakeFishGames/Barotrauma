@@ -5,9 +5,9 @@ namespace Barotrauma.Items.Components
 {
     partial class Scanner : ItemComponent
     {
-        [Serialize(1.0f, false, description: "How long it takes for the scan to be completed.")]
+        [Serialize(1.0f, IsPropertySaveable.No, description: "How long it takes for the scan to be completed.")]
         public float ScanDuration { get; set; }
-        [Serialize(0.0f, false, description: "How far along the scan is. When the timer goes above ScanDuration, the scan is completed.")]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "How far along the scan is. When the timer goes above ScanDuration, the scan is completed.")]
         public float ScanTimer
         {
             get
@@ -33,9 +33,9 @@ namespace Barotrauma.Items.Components
 #endif
             }
         }
-        [Serialize(1.0f, false, description: "How far the scanner can be from the target for the scan to be successful.")]
+        [Serialize(1.0f, IsPropertySaveable.No, description: "How far the scanner can be from the target for the scan to be successful.")]
         public float ScanRadius { get; set; }
-        [Serialize(true, false, description: "Should the progress bar always be displayed when the item has been attached.")]
+        [Serialize(true, IsPropertySaveable.No, description: "Should the progress bar always be displayed when the item has been attached.")]
         public bool AlwaysDisplayProgressBar { get; set; }
 
         private Holdable Holdable { get; set; }
@@ -49,7 +49,7 @@ namespace Barotrauma.Items.Components
 
         public Action<Scanner> OnScanStarted, OnScanCompleted;
 
-        public Scanner(Item item, XElement element) : base(item, element)
+        public Scanner(Item item, ContentXElement element) : base(item, element)
         {
             IsActive = true;
         }

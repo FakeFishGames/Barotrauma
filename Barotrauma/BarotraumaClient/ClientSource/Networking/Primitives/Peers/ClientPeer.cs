@@ -2,6 +2,7 @@
 using Barotrauma.Steam;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -10,30 +11,37 @@ namespace Barotrauma.Networking
 {
     abstract class ClientPeer
     {
-        protected class ServerContentPackage
+        public class ServerContentPackage
         {
             public readonly string Name;
-            public readonly string Hash;
+            public readonly Md5Hash Hash;
             public readonly UInt64 WorkshopId;
             public readonly DateTime InstallTime;
 
-            public ContentPackage RegularPackage
+            public RegularPackage RegularPackage
             {
                 get
                 {
-                    return ContentPackage.RegularPackages.Find(p => p.MD5hash.Hash.Equals(Hash));
+                    return ContentPackageManager.RegularPackages.FirstOrDefault(p => p.Hash.Equals(Hash));
                 }
             }
 
-            public ContentPackage CorePackage
+            public CorePackage CorePackage
             {
                 get
                 {
-                    return ContentPackage.CorePackages.Find(p => p.MD5hash.Hash.Equals(Hash));
+                    return ContentPackageManager.CorePackages.FirstOrDefault(p => p.Hash.Equals(Hash));
                 }
             }
 
-            public ServerContentPackage(string name, string hash, UInt64 workshopId, DateTime installTime)
+            public ContentPackage ContentPackage
+                => (ContentPackage)RegularPackage ?? CorePackage;
+            
+            
+            public string GetPackageStr()
+                => $"\"{Name}\" (hash {Hash.ShortRepresentation})";
+
+            public ServerContentPackage(string name, Md5Hash hash, UInt64 workshopId, DateTime installTime)
             {
                 Name = name;
                 Hash = hash;
@@ -42,14 +50,8 @@ namespace Barotrauma.Networking
             }
         }
 
-        protected string GetPackageStr(ContentPackage contentPackage)
-        {
-            return $"\"{contentPackage.Name}\" (hash {contentPackage.MD5hash.ShortHash})";
-        }
-        protected string GetPackageStr(ServerContentPackage contentPackage)
-        {
-            return $"\"{contentPackage.Name}\" (hash {Md5Hash.GetShortHash(contentPackage.Hash)})";
-        }
+        public ImmutableArray<ServerContentPackage> ServerContentPackages { get; set; } =
+            ImmutableArray<ServerContentPackage>.Empty;
 
         public delegate void MessageCallback(IReadMessage message);
         public delegate void DisconnectCallback(bool disableReconnect);
@@ -72,7 +74,7 @@ namespace Barotrauma.Networking
         public abstract void Start(object endPoint, int ownerKey);
         public abstract void Close(string msg = null, bool disableReconnect = false);
         public abstract void Update(float deltaTime);
-        public abstract void Send(IWriteMessage msg, DeliveryMethod deliveryMethod);
+        public abstract void Send(IWriteMessage msg, DeliveryMethod deliveryMethod, bool compressPastThreshold = true);
         public abstract void SendPassword(string password);
 
         protected abstract void SendMsgInternal(DeliveryMethod deliveryMethod, IWriteMessage msg);
@@ -108,7 +110,7 @@ namespace Barotrauma.Networking
                         outMsg.Write(steamAuthTicket.Data, 0, steamAuthTicket.Data.Length);
                     }
                     outMsg.Write(GameMain.Version.ToString());
-                    outMsg.Write(GameMain.Config.Language);
+                    outMsg.Write(GameSettings.CurrentConfig.Language.Value);
 
                     SendMsgInternal(DeliveryMethod.Reliable, outMsg);
                     break;
@@ -122,121 +124,26 @@ namespace Barotrauma.Networking
 
                     string serverName = inc.ReadString();
 
-                    UInt32 cpCount = inc.ReadVariableUInt32();
-                    ServerContentPackage corePackage = null;
-                    List<ServerContentPackage> regularPackages = new List<ServerContentPackage>();
-                    List<ServerContentPackage> missingPackages = new List<ServerContentPackage>();
-                    for (int i = 0; i < cpCount; i++)
+                    UInt32 packageCount = inc.ReadVariableUInt32();
+                    List<ServerContentPackage> serverPackages = new List<ServerContentPackage>();
+                    for (int i = 0; i < packageCount; i++)
                     {
                         string name = inc.ReadString();
-                        string hash = inc.ReadString();
+                        UInt32 hashByteCount = inc.ReadVariableUInt32();
+                        byte[] hashBytes = inc.ReadBytes((int)hashByteCount);
                         UInt64 workshopId = inc.ReadUInt64();
                         UInt32 installTimeDiffSeconds = inc.ReadUInt32();
                         DateTime installTime = DateTime.UtcNow + TimeSpan.FromSeconds(installTimeDiffSeconds);
 
-                        var pkg = new ServerContentPackage(name, hash, workshopId, installTime);
-                        if (pkg.CorePackage != null)
-                        {
-                            corePackage = pkg;
-                        }
-                        else if (pkg.RegularPackage != null)
-                        {
-                            regularPackages.Add(pkg);
-                        }
-                        else
-                        {
-                            missingPackages.Add(pkg);
-                        }
-                    }
-
-                    if (missingPackages.Count > 0)
-                    {
-                        var nonDownloadable = missingPackages.Where(p => p.WorkshopId == 0);
-                        var mismatchedButDownloaded = missingPackages.Where(remote =>
-                        {
-                            return ContentPackage.AllPackages.Any(local =>
-                                local.SteamWorkshopId != 0 && /* is a Workshop item */
-                                remote.WorkshopId == local.SteamWorkshopId && /* ids match */
-                                remote.InstallTime < local.InstallTime/* remote is older than local */);
-                        });
-
-                        if (mismatchedButDownloaded.Any())
-                        {
-                            string disconnectMsg;
-                            if (mismatchedButDownloaded.Count() == 1)
-                            {
-                                disconnectMsg = $"DisconnectMessage.MismatchedWorkshopMod~[incompatiblecontentpackage]={GetPackageStr(mismatchedButDownloaded.First())}";
-                            }
-                            else
-                            {
-                                List<string> packageStrs = new List<string>();
-                                mismatchedButDownloaded.ForEach(cp => packageStrs.Add(GetPackageStr(cp)));
-                                disconnectMsg = $"DisconnectMessage.MismatchedWorkshopMods~[incompatiblecontentpackages]={string.Join(", ", packageStrs)}";
-                            }
-                            Close(disconnectMsg, disableReconnect: true);
-                            OnDisconnectMessageReceived?.Invoke(DisconnectReason.MissingContentPackage + "/" + disconnectMsg);
-                        }
-                        else if (nonDownloadable.Any())
-                        {
-                            string disconnectMsg;
-                            if (nonDownloadable.Count() == 1)
-                            {
-                                disconnectMsg = $"DisconnectMessage.MissingContentPackage~[missingcontentpackage]={GetPackageStr(nonDownloadable.First())}";
-                            }
-                            else
-                            {
-                                List<string> packageStrs = new List<string>();
-                                nonDownloadable.ForEach(cp => packageStrs.Add(GetPackageStr(cp)));
-                                disconnectMsg = $"DisconnectMessage.MissingContentPackages~[missingcontentpackages]={string.Join(", ", packageStrs)}";
-                            }
-                            Close(disconnectMsg, disableReconnect: true);
-                            OnDisconnectMessageReceived?.Invoke(DisconnectReason.MissingContentPackage + "/" + disconnectMsg);
-                        }
-                        else
-                        {
-                            Close(disableReconnect: true);
-
-                            string missingModNames = "\n";
-                            int displayedModCount = 0;
-                            foreach (ServerContentPackage missingPackage in missingPackages)
-                            {
-                                missingModNames += "\n- " + GetPackageStr(missingPackage);
-                                displayedModCount++;
-                                if (GUI.Font.MeasureString(missingModNames).Y > GameMain.GraphicsHeight * 0.5f)
-                                {
-                                    missingModNames += "\n\n" + TextManager.GetWithVariable("workshopitemdownloadprompttruncated", "[number]", (missingPackages.Count - displayedModCount).ToString());
-                                    break;
-                                }
-                            }
-                            missingModNames += "\n\n";
-
-                            var msgBox = new GUIMessageBox(
-                                TextManager.Get("WorkshopItemDownloadTitle"),
-                                TextManager.GetWithVariable("WorkshopItemDownloadPrompt", "[items]", missingModNames),
-                                new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
-                            msgBox.Buttons[0].OnClicked = (yesBtn, userdata) =>
-                            {
-                                GameMain.ServerListScreen.Select();
-                                IEnumerable<ServerListScreen.PendingWorkshopDownload> downloads =
-                                    missingPackages.Select(p => new ServerListScreen.PendingWorkshopDownload(p.Hash, p.WorkshopId));
-                                GameMain.ServerListScreen.DownloadWorkshopItems(downloads, serverName, ServerConnection.EndPointString);
-                                return true;
-                            };
-                            msgBox.Buttons[0].OnClicked += msgBox.Close;
-                            msgBox.Buttons[1].OnClicked = msgBox.Close;
-                        }
-
-                        return;
+                        var pkg = new ServerContentPackage(name, Md5Hash.BytesAsHash(hashBytes), workshopId, installTime);
+                        serverPackages.Add(pkg);
                     }
 
                     if (!contentPackageOrderReceived)
                     {
-                        GameMain.Config.BackUpModOrder();
-                        GameMain.Config.SwapPackages(corePackage.CorePackage, regularPackages.Select(p => p.RegularPackage).ToList());
-                        contentPackageOrderReceived = true;
+                        ServerContentPackages = serverPackages.ToImmutableArray();
+                        SendMsgInternal(DeliveryMethod.Reliable, outMsg);
                     }
-
-                    SendMsgInternal(DeliveryMethod.Reliable, outMsg);
                     break;
                 case ConnectionInitialization.Password:
                     if (initializationStep == ConnectionInitialization.SteamTicketAndVersion) { initializationStep = ConnectionInitialization.Password; }

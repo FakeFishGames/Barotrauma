@@ -6,30 +6,30 @@ namespace Barotrauma.Items.Components
 {
     partial class Sprayer : RangedWeapon
     {
-        [Serialize(0.0f, false, description: "The distance at which the item can spray walls.")]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "The distance at which the item can spray walls.")]
         public float Range { get; set; }
 
-        [Serialize(1.0f, false, description: "How fast the item changes the color of the walls.")]
+        [Serialize(1.0f, IsPropertySaveable.No, description: "How fast the item changes the color of the walls.")]
         public float SprayStrength { get; set; }
 
-        private readonly Dictionary<string, Color> liquidColors;
+        private readonly Dictionary<Identifier, Color> liquidColors;
         private ItemContainer liquidContainer;
 
-        public Sprayer(Item item, XElement element) : base(item, element)
+        public Sprayer(Item item, ContentXElement element) : base(item, element)
         {
             item.IsShootable = true;
             item.RequireAimToUse = true;
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "paintcolors":
                         {
-                            liquidColors = new Dictionary<string, Color>();
+                            liquidColors = new Dictionary<Identifier, Color>();
                             foreach (XElement paintElement in subElement.Elements())
                             {
-                                string paintName = paintElement.GetAttributeString("paintitem", string.Empty);
+                                Identifier paintName = paintElement.GetAttributeIdentifier("paintitem", Identifier.Empty);
                                 Color paintColor = paintElement.GetAttributeColor("color", Color.Transparent);
 
                                 if (paintName != string.Empty)
@@ -49,7 +49,7 @@ namespace Barotrauma.Items.Components
             liquidContainer = item.GetComponent<ItemContainer>();
         }
 
-        partial void InitProjSpecific(XElement element);
+        partial void InitProjSpecific(ContentXElement element);
 
 #if SERVER
         public override bool Use(float deltaTime, Character character = null)

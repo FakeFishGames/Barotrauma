@@ -19,17 +19,18 @@ namespace Barotrauma
             private set;
         }
 
-        public bool Slice
-        {
-            get;
-            set;
-        }
+        public bool Slice => Slices != null;
 
         public Rectangle[] Slices
         {
             get;
             set;
         }
+
+        /// <summary>
+        /// The size of fixed area around the slice area
+        /// </summary>
+        public Point NonSliceSize { get; set; }
 
         public bool MaintainAspectRatio
         {
@@ -54,7 +55,7 @@ namespace Barotrauma
 
         public TransitionMode TransitionMode { get; private set; }
 
-        public UISprite(XElement element)
+        public UISprite(ContentXElement element)
         {
             Sprite = new Sprite(element);
             MaintainAspectRatio = element.GetAttributeBool("maintainaspectratio", false);
@@ -69,14 +70,15 @@ namespace Barotrauma
             }
 
             Vector4 sliceVec = element.GetAttributeVector4("slice", Vector4.Zero);
+            Slices = null;
             if (sliceVec != Vector4.Zero)
             {
                 minBorderScale = element.GetAttributeFloat("minborderscale", 0.1f);
                 maxBorderScale = element.GetAttributeFloat("minborderscale", 10.0f);
 
                 Rectangle slice = new Rectangle((int)sliceVec.X, (int)sliceVec.Y, (int)(sliceVec.Z - sliceVec.X), (int)(sliceVec.W - sliceVec.Y));
+                NonSliceSize = new Point(Sprite.SourceRect.Width - slice.Width, Sprite.SourceRect.Height - slice.Height);
 
-                Slice = true;
                 Slices = new Rectangle[9];
 
                 //top-left

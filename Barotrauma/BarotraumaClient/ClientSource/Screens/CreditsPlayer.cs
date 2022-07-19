@@ -8,7 +8,7 @@ namespace Barotrauma
     {
         private GUIListBox listBox;
 
-        private XElement configElement;
+        private ContentXElement configElement;
 
         private float scrollSpeed;
 
@@ -48,7 +48,7 @@ namespace Barotrauma
 
             var doc = XMLExtensions.TryLoadXml(configFile);
             if (doc == null) { return; }
-            configElement = doc.Root;
+            configElement = doc.Root.FromPackage(ContentPackageManager.VanillaCorePackage);
 
             Load();
         }
@@ -63,7 +63,7 @@ namespace Barotrauma
                 Spacing = spacing
             };
 
-            foreach (XElement subElement in configElement.Elements())
+            foreach (var subElement in configElement.Elements())
             {
                 FromXML(subElement, listBox.Content.RectTransform);
             }

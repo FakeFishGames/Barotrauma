@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Xml.Linq;
 using Microsoft.Xna.Framework;
+using File = Barotrauma.IO.File;
 #if DEBUG
 using System.IO;
 using System.Xml;
@@ -16,11 +17,13 @@ namespace Barotrauma
         public string Name { get; private set; }
         public string FileName { get; private set; }
         public string Folder { get; private set; }
-        public string FullPath { get; private set; }
-        public Dictionary<string, SerializableProperty> SerializableProperties { get; protected set; }
+        public ContentPath Path { get; protected set; } = ContentPath.Empty;
+        public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; protected set; }
 
+        protected ContentXElement rootElement;
         protected XDocument doc;
-        public XDocument Doc
+
+        private XDocument Doc
         {
             get
             {
@@ -31,16 +34,30 @@ namespace Barotrauma
                 }
                 return doc;
             }
-            protected set
+            set
             {
                 doc = value;
             }
         }
 
-        public virtual XElement MainElement => doc.Root;
-        public XElement OriginalElement { get; protected set; }
+        public virtual ContentXElement MainElement
+        {
+            get
+            {
+                if (rootElement?.Element != doc.Root)
+                {
+                    rootElement = doc.Root.FromPackage(Path.ContentPackage);
+                }
+                return rootElement;
+            }
+        }
+        
+        public ContentXElement OriginalElement { get; protected set; }
 
-        protected virtual string GetName() => Path.GetFileNameWithoutExtension(FullPath).FormatCamelCaseWithSpaces();
+        protected ContentXElement CreateElement(string name, params object[] attrs)
+            => new XElement(name, attrs).FromPackage(Path.ContentPackage);
+
+        protected virtual string GetName() => System.IO.Path.GetFileNameWithoutExtension(Path.Value).FormatCamelCaseWithSpaces();
 
         protected virtual bool Deserialize(XElement element = null)
         {
@@ -61,22 +78,22 @@ namespace Barotrauma
             return true;
         }
 
-        protected virtual bool Load(string file)
+        protected virtual bool Load(ContentPath file)
         {
             UpdatePath(file);
-            doc = XMLExtensions.TryLoadXml(FullPath);
+            doc = XMLExtensions.TryLoadXml(Path);
             if (doc == null) { return false; }
             IsLoaded = Deserialize(MainElement);
-            OriginalElement = new XElement(MainElement);
+            OriginalElement = new XElement(MainElement).FromPackage(MainElement.ContentPackage);
             return IsLoaded;
         }
 
-        protected virtual void UpdatePath(string fullPath)
+        protected virtual void UpdatePath(ContentPath fullPath)
         {
-            FullPath = fullPath;
+            Path = fullPath;
             Name = GetName();
-            FileName = Path.GetFileName(FullPath);
-            Folder = Path.GetDirectoryName(FullPath);
+            FileName = System.IO.Path.GetFileName(Path.Value);
+            Folder = System.IO.Path.GetDirectoryName(Path.Value);
         }
 
         public virtual bool Save(string fileNameWithoutExtension = null, System.Xml.XmlWriterSettings settings = null)
@@ -98,9 +115,9 @@ namespace Barotrauma
             }
             if (fileNameWithoutExtension != null)
             {
-                UpdatePath(Path.Combine(Folder, $"{fileNameWithoutExtension}.xml"));
+                UpdatePath(ContentPath.FromRaw(Path.ContentPackage, System.IO.Path.Combine(Folder, $"{fileNameWithoutExtension}.xml")));
             }
-            using (var writer = XmlWriter.Create(FullPath, settings))
+            using (var writer = XmlWriter.Create(Path.Value, settings))
             {
                 Doc.WriteTo(writer);
                 writer.Flush();
@@ -112,7 +129,7 @@ namespace Barotrauma
         {
             if (forceReload)
             {
-                return Load(FullPath);
+                return Load(Path);
             }
             return Deserialize(OriginalElement);
         }
@@ -126,7 +143,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError("[Params] Not loaded!");
                 return;
             }
-            SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, false, true, titleFont: GUI.LargeFont);
+            SerializableEntityEditor = new SerializableEntityEditor(editor.EditorBox.Content.RectTransform, this, false, true, titleFont: GUIStyle.LargeFont);
             if (space > 0)
             {
                 new GUIFrame(new RectTransform(new Point(editor.EditorBox.Rect.Width, space), editor.EditorBox.Content.RectTransform), style: null, color: ParamsEditor.Color)
