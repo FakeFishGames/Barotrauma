@@ -40,11 +40,13 @@ namespace Barotrauma
             private set;
         }
 
-        // Defaults 0.1f, 10.0f, 0.05f -> min time (0.1 seconds) acheived at 200 m below crush depth
-        private float minDepthDamageTimer = 0.1f;
-        private float maxDepthDamageTimer = 10.0f;
-        private float depthToTimeRatio = 0.05f;
-        private float depthDamageTimer = maxDepthDamageTimer;
+        private const float minDepthDamageInterval = 0.1f;
+        private const float maxDepthDamageInterval = 10.0f;
+        private const float maxIntervalChangeDepth = 200.0f; // Effects won't become any more severe after this point below crush depth
+        private float depthDamageTimer = maxDepthDamageInterval;
+
+        private const float maxWallDamageFromCrushing = 250.0f; // Damage applied to walls at the fast end of the crush depth interval
+        private const float maxScreenShakeFromCrushing = 10.0f; // Amount of screen shake applied at the fast end of the crush depth interval
 
         private readonly Submarine submarine;
 
@@ -489,15 +491,21 @@ namespace Barotrauma
 
         private void UpdateDepthDamage(float deltaTime)
         {
-
 #if CLIENT
             if (GameMain.GameSession?.GameMode is TestGameMode) { return; }
 #endif
             if (Level.Loaded == null) { return; }
 
-            //camera shake and sounds start playing 500 meters before crush depth
-            float depthEffectThreshold = 500.0f;
-            if (Submarine.RealWorldDepth < Level.Loaded.RealWorldCrushDepth - depthEffectThreshold || Submarine.RealWorldDepth < Submarine.RealWorldCrushDepth - depthEffectThreshold)
+            // Deep Diver class subs have 20% extra crush depth
+            float crushDepthMultiplier = 1.0f;
+            if (submarine.Info.SubmarineClass == SubmarineClass.DeepDiver) { crushDepthMultiplier = 1.2f; }
+
+            float pastCrushDepth = Submarine.RealWorldDepth - (Submarine.RealWorldCrushDepth * crushDepthMultiplier);
+            float pastCrushDepthRatio = Math.Clamp(pastCrushDepth / maxIntervalChangeDepth, 0.0f, 1.0f);
+
+            // Creaking sounds and the timer start 500 meters before crush depth
+            float depthEffectThreshold = -500.0f;
+            if (Submarine.RealWorldDepth < Level.Loaded.RealWorldCrushDepth - -depthEffectThreshold || pastCrushDepth < depthEffectThreshold)
             {
                 return;
             }
@@ -506,27 +514,27 @@ namespace Barotrauma
             if (depthDamageTimer > 0.0f) { return; }
 
 #if CLIENT
-            SoundPlayer.PlayDamageSound("pressure", Rand.Range(0.0f, 100.0f), submarine.WorldPosition + Rand.Vector(Rand.Range(0.0f, Math.Min(submarine.Borders.Width, submarine.Borders.Height))), 20000.0f);
+            SoundPlayer.PlayDamageSound("pressure", Math.Max(1.0f, maxWallDamageFromCrushing * pastCrushDepthRatio), submarine.WorldPosition, Math.Max(Submarine.Borders.Width, Submarine.Borders.Height));
 #endif
 
-            foreach (Structure wall in Structure.WallList)
+            // Wall damage and camera shake only happens below crush depth
+            if (Submarine.RealWorldDepth < Level.Loaded.RealWorldCrushDepth || pastCrushDepth > 0)
             {
-                if (wall.Submarine != submarine) { continue; }
-
-                float wallCrushDepth = wall.CrushDepth;
-                if (submarine.Info.SubmarineClass == SubmarineClass.DeepDiver) { wallCrushDepth *= 1.2f; }
-                float pastCrushDepth = submarine.RealWorldDepth - wallCrushDepth;
-                if (pastCrushDepth > 0)
+                foreach (Structure wall in Structure.WallList)
                 {
-                    Explosion.RangedStructureDamage(wall.WorldPosition, 100.0f, pastCrushDepth * 0.1f, levelWallDamage: 0.0f);
+                    if (wall.Submarine == submarine)
+                    {
+                        Explosion.RangedStructureDamage(wall.WorldPosition, 50.0f, maxWallDamageFromCrushing * pastCrushDepthRatio, 0.0f, emitWallDamageParticles: false);
+                    }
                 }
+
                 if (Character.Controlled != null && Character.Controlled.Submarine == submarine)
                 {
-                    GameMain.GameScreen.Cam.Shake = Math.Max(GameMain.GameScreen.Cam.Shake, MathHelper.Clamp(pastCrushDepth * 0.001f, 1.0f, 50.0f));
+                    GameMain.GameScreen.Cam.Shake = Math.Max(GameMain.GameScreen.Cam.Shake, maxScreenShakeFromCrushing * pastCrushDepthRatio);
                 }
             }
 
-            depthDamageTimer = Math.Clamp(maxDepthDamageTimer - (Submarine.RealWorldDepth - Submarine.RealWorldCrushDepth) * depthToTimeRatio, minDepthDamageTimer, maxDepthDamageTimer);
+            depthDamageTimer = MathHelper.Lerp(maxDepthDamageInterval, minDepthDamageInterval, pastCrushDepthRatio);
         }
 
         public void FlipX()
