@@ -40,7 +40,10 @@ namespace Barotrauma
             private set;
         }
 
-        private float depthDamageTimer = 10.0f;
+        // Defaults 0.1f, 10.0f, 0.05f -> min time (0.1 seconds) acheived at 200 m below crush depth
+        private float minDepthDamageTimer = 0.1f;
+        private float maxDepthDamageTimer = 10.0f;
+        private float depthToTimeRatio = 0.05f;
 
         private readonly Submarine submarine;
 
@@ -521,11 +524,6 @@ namespace Barotrauma
                     GameMain.GameScreen.Cam.Shake = Math.Max(GameMain.GameScreen.Cam.Shake, MathHelper.Clamp(pastCrushDepth * 0.001f, 1.0f, 50.0f));
                 }
             }
-
-            // Defaults 0.1f, 10.0f, 0.05f -> min time (0.1 seconds) acheived at 200 m below crush depth
-            float minDepthDamageTimer = 0.1f;
-            float maxDepthDamageTimer = 10.0f;
-            float depthToTimeRatio = 0.05f; 
 
             depthDamageTimer = Math.Clamp(maxDepthDamageTimer - (Submarine.RealWorldDepth - Submarine.RealWorldCrushDepth) * depthToTimeRatio, minDepthDamageTimer, maxDepthDamageTimer);
         }
