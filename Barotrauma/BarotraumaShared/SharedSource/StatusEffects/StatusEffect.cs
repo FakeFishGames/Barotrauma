@@ -339,8 +339,9 @@ namespace Barotrauma
 
         private readonly int useItemCount;
 
-        private readonly bool removeItem, dropContainedItems, removeCharacter, breakLimb, hideLimb;
+        private readonly bool removeItem, dropContainedItems, removeCharacter, reviveCharacter, breakLimb, hideLimb;
         private readonly float hideLimbTimer;
+        private readonly bool reviveNoSeveredLimbs;
 
         public readonly ActionType type = ActionType.OnActive;
 
@@ -635,6 +636,10 @@ namespace Barotrauma
                         break;
                     case "removecharacter":
                         removeCharacter = true;
+                        break;
+                    case "revivecharacter":
+                        reviveCharacter = true;
+                        reviveNoSeveredLimbs = subElement.GetAttributeBool("noseveredlimbs", false);
                         break;
                     case "breaklimb":
                         breakLimb = true;
@@ -1294,6 +1299,32 @@ namespace Barotrauma
                     else if (target is Limb limb)
                     {
                         Entity.Spawner?.AddEntityToRemoveQueue(limb.character);
+                    }
+                }
+            }
+            if (reviveCharacter)
+            {
+                foreach (var target in targets)
+                {
+                    if (target is Character revivedcharacter)
+                    {
+                        if (reviveNoSeveredLimbs && revivedcharacter.AnimController?.LimbJoints != null)
+                        {
+                            foreach (var limbJoint in revivedcharacter.AnimController.LimbJoints)
+                            {
+                                if (limbJoint.IsSevered) { return; }
+                            }
+                        }
+                        revivedcharacter.Revive();
+#if SERVER
+                        foreach (Client c in GameMain.Server.ConnectedClients)
+                        {
+                            if (c.Deadcharacter == revivedcharacter)
+                            { 
+                                GameMain.Server.SetClientCharacter(c, revivedcharacter); 
+                            }
+                        }
+#endif
                     }
                 }
             }
