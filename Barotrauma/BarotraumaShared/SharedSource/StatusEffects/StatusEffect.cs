@@ -341,6 +341,8 @@ namespace Barotrauma
 
         private readonly bool removeItem, dropContainedItems, removeCharacter, breakLimb, hideLimb;
         private readonly float hideLimbTimer;
+        private readonly bool removeCharacterAndSaveItems;
+        private readonly string saveItemsContainerIdentifier;
 
         public readonly ActionType type = ActionType.OnActive;
 
@@ -635,6 +637,8 @@ namespace Barotrauma
                         break;
                     case "removecharacter":
                         removeCharacter = true;
+                        removeCharacterAndSaveItems = subElement.GetAttributeBool("saveitems", false);
+                        saveItemsContainerIdentifier = subElement.GetAttributeString("containeridentifier", null);
                         break;
                     case "breaklimb":
                         breakLimb = true;
@@ -1284,15 +1288,74 @@ namespace Barotrauma
             }
             if (removeCharacter)
             {
+                void SpawnDespawnContainer(Character character)
+                {
+                    ItemPrefab containerPrefab;
+                    if (saveItemsContainerIdentifier == null) // If no custom identifier is specified for the container item, use the default ones.
+                    {
+                        containerPrefab =
+                        ItemPrefab.Prefabs.Find(me => me.Tags.Contains("despawncontainer")) ??
+                        (MapEntityPrefab.FindByIdentifier("metalcrate".ToIdentifier()) as ItemPrefab);
+                    }
+                    else
+                    {
+                        containerPrefab = ItemPrefab.Prefabs.Find(me => me.Identifier == saveItemsContainerIdentifier);
+                    }
+
+                    if (containerPrefab == null)
+                    {
+                        if (saveItemsContainerIdentifier == null)
+                        {
+                            DebugConsole.NewMessage("Could not spawn a container for a removed character's items. No item with the tag \"despawncontainer\" or the identifier \"metalcrate\" found.", Color.Red);
+                        }
+                        else
+                        {
+                            DebugConsole.NewMessage($"Could not spawn a container for a removed character's items. No item with the identifier “{saveItemsContainerIdentifier}” found.", Color.Red);
+                        }
+                    }
+                    else
+                    {
+                        Entity.Spawner?.AddItemToSpawnQueue(containerPrefab, position, onSpawned: onItemContainerSpawned);
+                    }
+
+                    void onItemContainerSpawned(Item item)
+                    {
+                        if (character.Inventory == null) { return; }
+
+                        item.UpdateTransform();
+                        item.AddTag("name:" + character.Name);
+                        if (character.Info?.Job != null) { item.AddTag($"job:{character.Info.Job.Name}"); }
+
+                        var itemContainer = item?.GetComponent<ItemContainer>();
+                        if (itemContainer == null) { return; }
+                        List<Item> inventoryItems = new List<Item>(character.Inventory.AllItemsMod);
+                        foreach (Item inventoryItem in inventoryItems)
+                        {
+                            if (!itemContainer.Inventory.TryPutItem(inventoryItem, user: null, createNetworkEvent: true))
+                            {
+                                //if the item couldn't be put inside the despawn container, just drop it
+                                inventoryItem.Drop(dropper: character, createNetworkEvent: true);
+                            }
+                        }
+                    }
+                }
                 for (int i = 0; i < targets.Count; i++)
                 {
                     var target = targets[i];
-                    if (target is Character character) 
-                    { 
+                    if (target is Character character)
+                    {
+                        if (removeCharacterAndSaveItems) // Before removing the character, place their items in a container.
+                        {
+                            SpawnDespawnContainer(character);
+                        }
                         Entity.Spawner?.AddEntityToRemoveQueue(character); 
                     }
                     else if (target is Limb limb)
                     {
+                        if (removeCharacterAndSaveItems)
+                        {
+                            SpawnDespawnContainer(limb.character);
+                        }
                         Entity.Spawner?.AddEntityToRemoveQueue(limb.character);
                     }
                 }
