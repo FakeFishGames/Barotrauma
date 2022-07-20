@@ -59,7 +59,7 @@ namespace Barotrauma.Items.Components
         public override bool ShouldDrawHUD(Character character)
         {
             if (item.HiddenInGame) { return false; }
-            if (!HasRequiredItems(character, false) || character.SelectedConstruction != item) { return false; }
+            if (!HasRequiredItems(character, false) || character.SelectedItem != item) { return false; }
             if (character.IsTraitor && item.ConditionPercentage > MinSabotageCondition) { return true; }
 
             float defaultMaxCondition = item.MaxCondition / item.MaxRepairConditionMultiplier;
@@ -110,6 +110,7 @@ namespace Barotrauma.Items.Components
             if (GuiFrame != null)
             {
                 GuiFrame.ClearChildren();
+                TryCreateDragHandle();
                 CreateGUI();
             }
         }
@@ -265,7 +266,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (CurrentFixer != null && CurrentFixer.SelectedConstruction == item)
+            if (CurrentFixer != null && CurrentFixer.SelectedItem == item)
             {
                 if (repairSoundChannel == null || !repairSoundChannel.IsPlaying)
                 {

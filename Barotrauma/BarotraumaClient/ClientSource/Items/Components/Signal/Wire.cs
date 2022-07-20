@@ -311,7 +311,7 @@ namespace Barotrauma.Items.Components
             Wire equippedWire = Character.Controlled.HeldItems.FirstOrDefault(it => it.GetComponent<Wire>() != null)?.GetComponent<Wire>();
             if (equippedWire != null && GUI.MouseOn == null)
             {
-                if (PlayerInput.PrimaryMouseButtonClicked() && Character.Controlled.SelectedConstruction == null)
+                if (PlayerInput.PrimaryMouseButtonClicked() && Character.Controlled.SelectedItem == null)
                 {
                     equippedWire.Use(1.0f, Character.Controlled);
                 }

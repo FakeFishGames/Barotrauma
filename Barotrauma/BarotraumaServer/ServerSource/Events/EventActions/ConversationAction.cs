@@ -58,7 +58,7 @@ namespace Barotrauma
             Reset();
         }
 
-        private bool IsBlockedByAnotherConversation(IEnumerable<Entity> targets)
+        private bool IsBlockedByAnotherConversation(IEnumerable<Entity> targets, float duration)
         {
             foreach (Entity e in targets)
             {
@@ -68,7 +68,7 @@ namespace Barotrauma
                 {
                     if (lastActiveAction.ContainsKey(targetClient) && 
                         lastActiveAction[targetClient].ParentEvent != ParentEvent && 
-                        Timing.TotalTime < lastActiveAction[targetClient].lastActiveTime + BlockOtherConversationsDuration)
+                        Timing.TotalTime < lastActiveAction[targetClient].lastActiveTime + duration)
                     {
                         return true;
                     }
@@ -91,7 +91,7 @@ namespace Barotrauma
                     {
                         targetClients.Add(targetClient);
                         lastActiveAction[targetClient] = this;
-                        ServerWrite(speaker, targetClient); 
+                        ServerWrite(speaker, targetClient, interrupt); 
                     }
                 }
             }
@@ -105,14 +105,14 @@ namespace Barotrauma
                         {
                             targetClients.Add(c);
                             lastActiveAction[c] = this;
-                            ServerWrite(speaker, c);
+                            ServerWrite(speaker, c, interrupt);
                         }
                     }
                 }
             }
         }
 
-        private void ServerWrite(Character speaker, Client client)
+        public void ServerWrite(Character speaker, Client client, bool interrupt)
         {
             IWriteMessage outmsg = new WriteOnlyMessage();
             outmsg.Write((byte)ServerPacketHeader.EVENTACTION);

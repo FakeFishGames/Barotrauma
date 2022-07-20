@@ -55,13 +55,27 @@ namespace Barotrauma
                             if (vitalityMultipliers != null)
                             {
                                 float multiplier = subElement.GetAttributeFloat("multiplier", 1.0f);
-                                vitalityMultipliers.ForEach(i => VitalityMultipliers.Add(i, multiplier));
+                                foreach (var vitalityMultiplier in vitalityMultipliers)
+                                {
+                                    VitalityMultipliers.Add(vitalityMultiplier, multiplier);
+                                    if (AfflictionPrefab.Prefabs.None(p => p.Identifier == vitalityMultiplier))
+                                    {
+                                        DebugConsole.AddWarning($"Potentially incorrectly defined vitality multiplier in \"{characterHealth.Character.Name}\". Could not find any afflictions with the identifier \"{vitalityMultiplier}\". Did you mean to define the afflictions by type instead?");
+                                    }
+                                }
                             }
                             var vitalityTypeMultipliers = subElement.GetAttributeIdentifierArray("type", null) ?? subElement.GetAttributeIdentifierArray("types", null);
                             if (vitalityTypeMultipliers != null)
                             {
                                 float multiplier = subElement.GetAttributeFloat("multiplier", 1.0f);
-                                vitalityTypeMultipliers.ForEach(i => VitalityTypeMultipliers.Add(i, multiplier));
+                                foreach (var vitalityTypeMultiplier in vitalityTypeMultipliers)
+                                {
+                                    VitalityTypeMultipliers.Add(vitalityTypeMultiplier, multiplier);
+                                    if (AfflictionPrefab.Prefabs.None(p => p.AfflictionType == vitalityTypeMultiplier))
+                                    {
+                                        DebugConsole.AddWarning($"Potentially incorrectly defined vitality multiplier in \"{characterHealth.Character.Name}\". Could not find any afflictions of the type \"{vitalityTypeMultiplier}\". Did you mean to define the afflictions by identifier instead?");
+                                    }
+                                }
                             }
                             if (vitalityMultipliers == null && VitalityTypeMultipliers == null)
                             {

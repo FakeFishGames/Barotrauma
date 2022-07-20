@@ -395,8 +395,8 @@ namespace Barotrauma.Steam
             if (rules.ContainsKey("allowspectating")) { serverInfo.AllowSpectating = rules["allowspectating"] == "True"; }
             if (rules.ContainsKey("allowrespawn")) { serverInfo.AllowRespawn = rules["allowrespawn"] == "True"; }
             if (rules.ContainsKey("voicechatenabled")) { serverInfo.VoipEnabled = rules["voicechatenabled"] == "True"; }
-            if (rules.ContainsKey("friendlyfireenabled")) { serverInfo.AllowRespawn = rules["friendlyfireenabled"] == "True"; }
-            if (rules.ContainsKey("karmaenabled")) { serverInfo.VoipEnabled = rules["karmaenabled"] == "True"; }
+            if (rules.ContainsKey("friendlyfireenabled")) { serverInfo.FriendlyFireEnabled = rules["friendlyfireenabled"] == "True"; }
+            if (rules.ContainsKey("karmaenabled")) { serverInfo.KarmaEnabled = rules["karmaenabled"] == "True"; }
             if (rules.ContainsKey("traitors"))
             {
                 if (Enum.TryParse(rules["traitors"], out YesNoMaybe traitorsEnabled)) { serverInfo.TraitorsEnabled = traitorsEnabled; }

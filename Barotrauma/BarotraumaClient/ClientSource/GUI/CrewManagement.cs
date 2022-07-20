@@ -528,7 +528,7 @@ namespace Barotrauma
             if (characterInfo.PersonalityTrait is NPCPersonalityTrait trait)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, blockHeight), infoLabelGroup.RectTransform), TextManager.Get("PersonalityTrait"));
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, blockHeight), infoValueGroup.RectTransform), TextManager.Get("personalitytrait." + trait.Name.Replace(" ".ToIdentifier(), Identifier.Empty)));
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, blockHeight), infoValueGroup.RectTransform), trait.DisplayName);
             }
             infoLabelGroup.Recalculate();
             infoValueGroup.Recalculate();

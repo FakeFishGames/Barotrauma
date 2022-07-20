@@ -79,7 +79,7 @@ namespace Barotrauma
         /// </summary>
         public static IReadOnlyDictionary<Identifier, float> ItemRepairPriorities => _itemRepairPriorities;
 
-        public static JobPrefab Get(string identifier)
+        public static JobPrefab Get(Identifier identifier)
         {
             if (Prefabs.ContainsKey(identifier))
             {

@@ -162,11 +162,7 @@ namespace Barotrauma
                         openHealthWindow.characterName.Text = value.Character.Info.DisplayName;
                         value.Character.Info.CheckDisguiseStatus(false);
                     }
-
-                    if (Character.Controlled.SelectedConstruction != null && Character.Controlled.SelectedConstruction.GetComponent<Ladder>() == null)
-                    {
-                        Character.Controlled.SelectedConstruction = null;
-                    }
+                    Character.Controlled.SelectedItem = null;
                 }
 
                 HintManager.OnShowHealthInterface();
@@ -724,7 +720,7 @@ namespace Barotrauma
                     //emulate a Health input to get the character to deselect the item server-side
                     if (GameMain.Client != null)
                     {
-                        Character.Controlled.Keys[(int)InputType.Health].Hit = true;
+                        Character.Controlled.EmulateInput(InputType.Health);
                     }
                     OpenHealthWindow = null;
                 }
@@ -2014,7 +2010,7 @@ namespace Barotrauma
             FaceTint = DefaultFaceTint;
             BodyTint = Color.TransparentBlack;
 
-            if (!(Character?.Params?.Health.ApplyAfflictionColors ?? false)) { return; }
+            if (!Character.Params.Health.ApplyAfflictionColors) { return; }
 
             foreach (KeyValuePair<Affliction, LimbHealth> kvp in afflictions)
             {
@@ -2031,15 +2027,21 @@ namespace Barotrauma
             foreach (Limb limb in Character.AnimController.Limbs)
             {
                 if (limb.HealthIndex < 0 || limb.HealthIndex >= limbHealths.Count) { continue; }
-
                 limb.BurnOverlayStrength = 0.0f;
                 limb.DamageOverlayStrength = 0.0f;
                 foreach (KeyValuePair<Affliction, LimbHealth> kvp in afflictions)
                 {
-                    if (kvp.Value != limbHealths[limb.HealthIndex]) { continue; }
                     var affliction = kvp.Key;
-                    limb.BurnOverlayStrength += affliction.Strength / Math.Min(affliction.Prefab.MaxStrength, 100) * affliction.Prefab.BurnOverlayAlpha;
-                    limb.DamageOverlayStrength += affliction.Strength / Math.Min(affliction.Prefab.MaxStrength, 100) * affliction.Prefab.DamageOverlayAlpha;
+                    float burnStrength = affliction.Strength / Math.Min(affliction.Prefab.MaxStrength, 100) * affliction.Prefab.BurnOverlayAlpha;
+                    if (kvp.Value == limbHealths[limb.HealthIndex])
+                    {
+                        limb.BurnOverlayStrength += burnStrength;
+                        limb.DamageOverlayStrength += affliction.Strength / Math.Min(affliction.Prefab.MaxStrength, 100) * affliction.Prefab.DamageOverlayAlpha;
+                    }
+                    else
+                    {
+                        limb.BurnOverlayStrength += burnStrength / 2;
+                    }
                 }
             }
         }

@@ -1,12 +1,10 @@
-﻿using Barotrauma.Networking;
-using FarseerPhysics;
+﻿using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -292,7 +290,6 @@ namespace Barotrauma.Items.Components
             item.body.PhysEnabled = false;
         }
 
-
         private bool OnCollision(Fixture f1, Fixture f2, Contact contact)
         {
             if (User == null || User.Removed)
@@ -419,7 +416,18 @@ namespace Barotrauma.Items.Components
                 else if (target.UserData is Item targetItem && targetItem.Prefab.DamagedByMeleeWeapons && targetItem.Condition > 0)
                 {
                     if (targetItem.Removed) { return; }
-                    Attack.DoDamage(User, targetItem, item.WorldPosition, 1.0f);
+                    var attackResult = Attack.DoDamage(User, targetItem, item.WorldPosition, 1.0f);
+#if CLIENT
+                    if (attackResult.Damage > 0.0f)
+                    {
+                        Character.Controlled?.UpdateHUDProgressBar(targetItem,
+                            targetItem.WorldPosition,
+                            targetItem.Condition / targetItem.MaxCondition,
+                            emptyColor: GUIStyle.HealthBarColorLow,
+                            fullColor: GUIStyle.HealthBarColorHigh,
+                            textTag: targetItem.Name);
+                    }
+#endif
                 }
                 else if (target.UserData is Holdable holdable && holdable.CanPush)
                 {

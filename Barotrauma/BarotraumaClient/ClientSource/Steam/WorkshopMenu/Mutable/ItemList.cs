@@ -283,6 +283,7 @@ namespace Barotrauma.Steam
                     {
                         CanBeFocused = false
                     };
+                unpublishedLayout.Recalculate();
             }
 
             if (publishedGuiComponents.Any())
@@ -456,6 +457,7 @@ namespace Barotrauma.Steam
                         {
                             CreateSubscribeButton(workshopItem, new RectTransform(Vector2.One, itemLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight), spriteScale: 0.4f);
                         }
+                        itemLayout.Recalculate();
                     }
                     onFill?.Invoke(workshopItems);
                 });
@@ -550,6 +552,7 @@ namespace Barotrauma.Steam
         
         private void PopulateFrameWithItemInfo(Steamworks.Ugc.Item workshopItem, GUIFrame parentFrame)
         {
+            ViewingItemDetails = true;
             taskCancelSrc = taskCancelSrc.IsCancellationRequested ? new CancellationTokenSource() : taskCancelSrc;
 
             var contentPackage

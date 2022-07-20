@@ -101,7 +101,7 @@ namespace Barotrauma
             {
                 if (InWater || !CanWalk)
                 {
-                    return TargetMovement.LengthSquared() > MathUtils.Pow2(SwimSlowParams.MovementSpeed);
+                    return TargetMovement.LengthSquared() > MathUtils.Pow2(SwimSlowParams.MovementSpeed + 0.0001f);
                 }
                 else
                 {
@@ -134,8 +134,11 @@ namespace Barotrauma
             }
         }
 
-        public enum Animation { None, Climbing, UsingConstruction, Struggle, CPR };
+        public enum Animation { None, Climbing, UsingItem, Struggle, CPR, UsingItemWhileClimbing };
         public Animation Anim;
+
+        public bool IsUsingItem => Anim == Animation.UsingItem || Anim == Animation.UsingItemWhileClimbing;
+        public bool IsClimbing => Anim == Animation.Climbing || Anim == Animation.UsingItemWhileClimbing;
 
         public Vector2 AimSourceWorldPos
         {
@@ -280,7 +283,7 @@ namespace Barotrauma
         public void UpdateUseItem(bool allowMovement, Vector2 handWorldPos)
         {
             useItemTimer = 0.5f;
-            Anim = Animation.UsingConstruction;
+            StartUsingItem();
 
             if (!allowMovement)
             {
@@ -359,8 +362,13 @@ namespace Barotrauma
 
             Vector2 itemPos = aim ? aimPos : holdPos;
 
-            var controller = character.SelectedConstruction?.GetComponent<Controller>();
+            var controller = character.SelectedItem?.GetComponent<Controller>();
             bool usingController = controller != null && !controller.AllowAiming;
+            if (!usingController)
+            {
+                controller = character.SelectedSecondaryItem?.GetComponent<Controller>();
+                usingController = controller != null && !controller.AllowAiming;
+            }
             bool isClimbing = character.IsClimbing && Math.Abs(character.AnimController.TargetMovement.Y) > 0.01f;
             float itemAngle;
             Holdable holdable = item.GetComponent<Holdable>();
@@ -722,5 +730,45 @@ namespace Barotrauma
                 CalculateArmLengths();
             }
         }
+
+        private void StartAnimation(Animation animation)
+        {
+            if (animation == Animation.UsingItem)
+            {
+                Anim = IsClimbing ? Animation.UsingItemWhileClimbing : Animation.UsingItem;
+            }
+            else if (animation == Animation.Climbing)
+            {
+                Anim = IsUsingItem ? Animation.UsingItemWhileClimbing : Animation.Climbing;
+            }
+            else
+            {
+                Anim = animation;
+            }
+        }
+
+        private void StopAnimation(Animation animation)
+        {
+            if (animation == Animation.UsingItem)
+            {
+                Anim = IsClimbing ? Animation.Climbing : Animation.None;
+            }
+            else if (animation == Animation.Climbing)
+            {
+                Anim = IsUsingItem ? Animation.UsingItem : Animation.None;
+            }
+            else
+            {
+                Anim = Animation.None;
+            }
+        }
+
+        public void StartUsingItem() => StartAnimation(Animation.UsingItem);
+
+        public void StartClimbing() => StartAnimation(Animation.Climbing);
+
+        public void StopUsingItem() => StopAnimation(Animation.UsingItem);
+
+        public void StopClimbing() => StopAnimation(Animation.Climbing);
     }
 }

@@ -17,7 +17,7 @@ namespace Barotrauma.Abilities
 
         protected override void ApplyEffect()
         {
-            if (Character.SelectedConstruction == null || !Character.SelectedConstruction.HasTag(tag)) { return; }
+            if (!SelectedItemHasTag(Character)) { return; }
 
             Character closestCharacter = null;
             float closestDistance = squaredMaxDistance;
@@ -31,13 +31,17 @@ namespace Barotrauma.Abilities
                 }
             }
 
-            if (closestCharacter?.SelectedConstruction == null || !closestCharacter.SelectedConstruction.HasTag(tag)) { return; }
+            if (!SelectedItemHasTag(closestCharacter)) { return; }
 
             if (closestDistance < squaredMaxDistance)
             {
                 ApplyEffectSpecific(Character);
                 ApplyEffectSpecific(closestCharacter);
             }
+
+            bool SelectedItemHasTag(Character character) =>
+                (character.SelectedItem != null && character.SelectedItem.HasTag(tag)) ||
+                (character.SelectedSecondaryItem != null && character.SelectedSecondaryItem.HasTag(tag));
         }
     }
 }

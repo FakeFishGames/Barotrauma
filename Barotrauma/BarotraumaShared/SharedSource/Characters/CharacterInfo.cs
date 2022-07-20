@@ -261,6 +261,10 @@ namespace Barotrauma
 
         public string Name;
 
+        public LocalizedString Title;
+
+        public (Identifier NpcSetIdentifier, Identifier NpcIdentifier) HumanPrefabIds;
+
         public string DisplayName
         {
             get
@@ -649,15 +653,12 @@ namespace Barotrauma
                 {
                     Name = name;
                 }
-                else if (!npcIdentifier.IsEmpty && TextManager.Get("npctitle." + npcIdentifier) is { Loaded: true } npcTitle)
-                {
-                    Name = npcTitle.Value;
-                }
                 else
                 {
                     Name = GetRandomName(randSync);
                 }
-                
+
+                TryLoadNameAndTitle(npcIdentifier);
                 SetPersonalityTrait();
 
                 Salary = CalculateSalary();
@@ -727,7 +728,7 @@ namespace Barotrauma
         }
 
         // Used for loading the data
-        public CharacterInfo(XElement infoElement)
+        public CharacterInfo(XElement infoElement, Identifier npcIdentifier = default)
         {
             ID = idCounter;
             idCounter++;
@@ -774,6 +775,8 @@ namespace Barotrauma
                 Head.FacialHairColor = infoElement.GetAttributeColor("facialhaircolor", Color.White);
                 CheckColors();
 
+                TryLoadNameAndTitle(npcIdentifier);
+
                 if (string.IsNullOrEmpty(Name))
                 {
                     var nameElement = CharacterConfigElement.GetChildElement("names");
@@ -794,8 +797,20 @@ namespace Barotrauma
             ragdollFileName = infoElement.GetAttributeString("ragdoll", string.Empty);
             if (personalityName != Identifier.Empty)
             {
-                PersonalityTrait = NPCPersonalityTrait.Get(GameSettings.CurrentConfig.Language, personalityName);
+                if (NPCPersonalityTrait.Traits.TryGet(personalityName, out var trait) ||
+                    NPCPersonalityTrait.Traits.TryGet(personalityName.Replace(" ".ToIdentifier(), Identifier.Empty), out trait))
+                {
+                    PersonalityTrait = trait;
+                }
+                else
+                {
+                    DebugConsole.ThrowError($"Error in CharacterInfo \"{OriginalName}\": could not find a personality trait with the identifier \"{personalityName}\".");
+                }
             }
+
+            HumanPrefabIds = (
+                element.GetAttributeIdentifier("npcsetid", Identifier.Empty), 
+                element.GetAttributeIdentifier("npcid", Identifier.Empty));
 
             MissionsCompletedSinceDeath = infoElement.GetAttributeInt("missionscompletedsincedeath", 0);
 
@@ -836,6 +851,19 @@ namespace Barotrauma
                 }
             }
             LoadHeadAttachments();
+        }
+
+        private void TryLoadNameAndTitle(Identifier npcIdentifier)
+        {
+            if (!npcIdentifier.IsEmpty)
+            {
+                Title = TextManager.Get("npctitle." + npcIdentifier);
+                string nameTag = "charactername." + npcIdentifier;
+                if (TextManager.ContainsTag(nameTag))
+                {
+                    Name = TextManager.Get(nameTag).Value;
+                }
+            }
         }
 
         private List<ContentXElement> hairs;
@@ -1292,8 +1320,15 @@ namespace Barotrauma
                 new XAttribute("facialhaircolor", XMLExtensions.ColorToString(Head.FacialHairColor)),
                 new XAttribute("startitemsgiven", StartItemsGiven),
                 new XAttribute("ragdoll", ragdollFileName),
-                new XAttribute("personality", PersonalityTrait?.Name.Value ?? ""));
+                new XAttribute("personality", PersonalityTrait?.Identifier ?? Identifier.Empty));
                 // TODO: animations?
+
+            if (HumanPrefabIds != default)
+            {
+                charElement.Add(
+                    new XAttribute("npcsetid", HumanPrefabIds.NpcSetIdentifier),
+                    new XAttribute("npcid", HumanPrefabIds.NpcIdentifier));
+            }
 
             charElement.Add(new XAttribute("missionscompletedsincedeath", MissionsCompletedSinceDeath));
 
@@ -1323,11 +1358,8 @@ namespace Barotrauma
                 }
             }
 
-
-
             charElement.Add(savedStatElement);
-
-            parentElement.Add(charElement);
+            parentElement?.Add(charElement);
             return charElement;
         }
 

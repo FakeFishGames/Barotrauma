@@ -196,10 +196,7 @@ namespace Barotrauma
                 character.AIController.SteeringManager.Reset();
                 return;
             }
-            if (!character.IsClimbing)
-            {
-                character.SelectedConstruction = null;
-            }
+            character.SelectedItem = null;
             if (Target is Entity e)
             {
                 if (e.Removed)
@@ -647,7 +644,7 @@ namespace Barotrauma
             {
                 if (character.IsClimbing)
                 {
-                    if (SteeringManager == PathSteering && PathSteering.CurrentPath != null && !PathSteering.CurrentPath.Finished && PathSteering.IsCurrentNodeLadder)
+                    if (SteeringManager == PathSteering && PathSteering.CurrentPath != null && !PathSteering.CurrentPath.Finished && PathSteering.IsCurrentNodeLadder && !PathSteering.CurrentPath.IsAtEndNode)
                     {
                         if (Target.WorldPosition.Y > character.WorldPosition.Y)
                         {
@@ -694,7 +691,7 @@ namespace Barotrauma
                     {
                         if (Target is Item item)
                         {
-                            if (!character.IsClimbing && character.CanInteractWith(item, out _, checkLinked: false)) { IsCompleted = true; }
+                            if (character.CanInteractWith(item, out _, checkLinked: false)) { IsCompleted = true; }
                         }
                         else if (Target is Character targetCharacter)
                         {

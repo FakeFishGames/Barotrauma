@@ -232,8 +232,7 @@ namespace Barotrauma
                 {
                     foreach (MapEntity e in mapEntityList)
                     {
-                        if (!e.SelectableInEditor) continue;
-
+                        if (!e.SelectableInEditor) { continue; }
                         if (e.IsMouseOn(position))
                         {
                             int i = 0;
@@ -243,9 +242,7 @@ namespace Barotrauma
                             {
                                 i++;
                             }
-
                             highlightedEntities.Insert(i, e);
-
                             if (i == 0) highLightedEntity = e;
                         }
                     }
@@ -741,7 +738,14 @@ namespace Barotrauma
         /// </summary>
         public static void DrawSelecting(SpriteBatch spriteBatch, Camera cam)
         {
-            if (GUI.MouseOn != null) return;
+            if (Screen.Selected is SubEditorScreen subEditor)
+            {
+                if (subEditor.IsMouseOnEditorGUI()) { return; }
+            }
+            else if (GUI.MouseOn != null) 
+            { 
+                return; 
+            }
 
             Vector2 position = PlayerInput.MousePosition;
             position = cam.ScreenToWorld(position);
@@ -1093,6 +1097,10 @@ namespace Barotrauma
                         resizeDirY = y;
                         resizing = true;
                         startMovingPos = Vector2.Zero;
+                        foreach (var mapEntity in mapEntityList)
+                        {
+                            if (mapEntity != this) { mapEntity.isHighlighted = false; }
+                        }
                     }
                 }
             }

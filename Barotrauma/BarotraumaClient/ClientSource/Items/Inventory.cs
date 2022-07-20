@@ -364,7 +364,7 @@ namespace Barotrauma
             get
             {
                 return Character.Controlled != null &&
-                  Character.Controlled.SelectedConstruction == null &&
+                  !Character.Controlled.HasSelectedAnyItem &&
                   CharacterHealth.OpenHealthWindow == null &&
                   DraggingItems.Any();
             }
@@ -924,9 +924,9 @@ namespace Barotrauma
                 }
             }
 
-            if (Character.Controlled.SelectedConstruction != null)
+            if (Character.Controlled.SelectedItem != null)
             {
-                foreach (var ic in Character.Controlled.SelectedConstruction.ActiveHUDs)
+                foreach (var ic in Character.Controlled.SelectedItem.ActiveHUDs)
                 {
                     var itemContainer = ic as ItemContainer;
                     if (itemContainer?.Inventory?.visualSlots == null) { continue; }
@@ -1003,9 +1003,9 @@ namespace Barotrauma
                 }
             }
             
-            if (character.SelectedConstruction != null)
+            if (character.SelectedItem != null)
             {
-                foreach (var ic in character.SelectedConstruction.ActiveHUDs)
+                foreach (var ic in character.SelectedItem.ActiveHUDs)
                 {
                     var itemContainer = ic as ItemContainer;
                     if (itemContainer?.Inventory?.visualSlots == null) { continue; }
@@ -1341,27 +1341,29 @@ namespace Barotrauma
             }
             else
             {
-                var rootOwner = (selectedSlot.ParentInventory?.Owner as Item)?.GetRootInventoryOwner();
-                if (selectedSlot.ParentInventory?.Owner != Character.Controlled &&
-                   selectedSlot.ParentInventory?.Owner != Character.Controlled.SelectedCharacter &&
-                   selectedSlot.ParentInventory?.Owner != Character.Controlled.SelectedConstruction &&
-                   !(Character.Controlled.SelectedConstruction?.linkedTo.Contains(selectedSlot.ParentInventory?.Owner) ?? false) &&
-                   rootOwner != Character.Controlled &&
-                   rootOwner != Character.Controlled.SelectedCharacter &&
-                   rootOwner != Character.Controlled.SelectedConstruction &&
-                   !(Character.Controlled.SelectedConstruction?.linkedTo.Contains(rootOwner) ?? false))
+                static bool OwnerInaccessible(Entity owner) =>
+                    owner != Character.Controlled &&
+                    owner != Character.Controlled.SelectedCharacter &&
+                    owner != Character.Controlled.SelectedItem &&
+                    (Character.Controlled.SelectedItem == null || !Character.Controlled.SelectedItem.linkedTo.Contains(owner));
+
+                Entity owner = selectedSlot.ParentInventory?.Owner;
+                Entity rootOwner = (owner as Item)?.GetRootInventoryOwner();
+                if (OwnerInaccessible(owner) && (rootOwner == owner || OwnerInaccessible(rootOwner)))
                 {
                     return false;
                 }
-                var parentItem = (selectedSlot?.ParentInventory?.Owner as Item) ?? selectedSlot?.Item;
-                if ((parentItem?.GetRootInventoryOwner() is Character ownerCharacter) &&
-                    ownerCharacter == Character.Controlled &&
-                    CharacterHealth.OpenHealthWindow?.Character != ownerCharacter &&
-                    ownerCharacter.Inventory.IsInLimbSlot(parentItem, InvSlotType.HealthInterface) &&
-                    Screen.Selected != GameMain.SubEditorScreen)
+                Item parentItem = (owner as Item) ?? selectedSlot?.Item;
+                if (parentItem?.GetRootInventoryOwner() is Character ownerCharacter)
                 {
-                    highlightedSubInventorySlots.RemoveWhere(s => s.Item == parentItem);
-                    return false;
+                    if (ownerCharacter == Character.Controlled &&
+                        CharacterHealth.OpenHealthWindow?.Character != ownerCharacter &&
+                        ownerCharacter.Inventory.IsInLimbSlot(parentItem, InvSlotType.HealthInterface) &&
+                        Screen.Selected != GameMain.SubEditorScreen)
+                    {
+                        highlightedSubInventorySlots.RemoveWhere(s => s.Item == parentItem);
+                        return false;
+                    }
                 }
             }
             return true;
@@ -1725,7 +1727,8 @@ namespace Barotrauma
             if (inventory != null &&
                 !inventory.Locked &&
                 Character.Controlled?.Inventory == inventory &&
-                slot.InventoryKeyIndex != -1)
+                slot.InventoryKeyIndex != -1 &&
+                slot.InventoryKeyIndex < GameSettings.CurrentConfig.InventoryKeyMap.Bindings.Length)
             {
                 spriteBatch.Draw(slotHotkeySprite.Texture, rect.ScaleSize(1.15f), slotHotkeySprite.SourceRect, slotColor);
                 GUI.DrawString(spriteBatch, rect.Location.ToVector2() + new Vector2((int)(4.25f * UIScale), (int)Math.Ceiling(-1.5f * UIScale)), GameSettings.CurrentConfig.InventoryKeyMap.Bindings[slot.InventoryKeyIndex].Name, Color.Black, font: GUIStyle.HotkeyFont);

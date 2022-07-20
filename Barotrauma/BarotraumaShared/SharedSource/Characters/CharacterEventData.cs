@@ -54,6 +54,15 @@ namespace Barotrauma
         public struct CharacterStatusEventData : IEventData
         {
             public EventType EventType => EventType.Status;
+
+#if SERVER
+            public bool ForceAfflictionData;
+
+            public CharacterStatusEventData(bool forceAfflictionData)
+            {
+                ForceAfflictionData = forceAfflictionData;
+            }
+#endif
         }
 
         public struct TreatmentEventData : IEventData

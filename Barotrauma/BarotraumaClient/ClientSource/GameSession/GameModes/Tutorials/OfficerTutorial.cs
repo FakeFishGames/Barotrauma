@@ -510,7 +510,7 @@ namespace Barotrauma.Tutorials
 
         private bool IsSelectedItem(Item item)
         {
-            return officer?.SelectedConstruction == item;
+            return officer?.SelectedItem == item;
         }
 
         private Character SpawnMonster(string speciesName, Vector2 pos)

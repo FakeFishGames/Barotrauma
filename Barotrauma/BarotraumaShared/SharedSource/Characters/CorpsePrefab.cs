@@ -46,7 +46,7 @@ namespace Barotrauma
         [Serialize(0, IsPropertySaveable.No)]
         public int MaxMoney { get; private set; }
 
-        public CorpsePrefab(ContentXElement element, CorpsesFile file) : base(element, file) { }
+        public CorpsePrefab(ContentXElement element, CorpsesFile file) : base(element, file, npcSetIdentifier: Identifier.Empty) { }
 
         public static CorpsePrefab Random(Rand.RandSync sync = Rand.RandSync.Unsynced) => Prefabs.GetRandom(sync);
     }

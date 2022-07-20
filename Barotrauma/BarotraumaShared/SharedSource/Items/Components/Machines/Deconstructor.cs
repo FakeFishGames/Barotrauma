@@ -3,6 +3,7 @@ using Barotrauma.Extensions;
 using Barotrauma.Networking;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -62,10 +63,17 @@ namespace Barotrauma.Items.Components
             inputContainer = containers[0];
             outputContainer = containers[1];
 
+#if CLIENT
+            Identifier eventIdentifier = new Identifier(nameof(Deconstructor));
+            inputContainer.OnContainedItemsChanged.RegisterOverwriteExisting(eventIdentifier, OnItemSlotsChanged);
+#endif
+
             OnItemLoadedProjSpecific();
         }
 
         partial void OnItemLoadedProjSpecific();
+
+        partial void OnItemSlotsChanged(ItemContainer container);
 
         public override void Update(float deltaTime, Camera cam)
         {
@@ -281,6 +289,7 @@ namespace Barotrauma.Items.Components
                 {
                     Entity.Spawner.AddItemToSpawnQueue(itemPrefab, outputContainer.Inventory, condition, onSpawned: (Item spawnedItem) =>
                     {
+                        spawnedItem.SpawnedInCurrentOutpost = item.SpawnedInCurrentOutpost;
                         spawnedItem.StolenDuringRound = targetItem.StolenDuringRound;
                         spawnedItem.AllowStealing = targetItem.AllowStealing;
                         for (int i = 0; i < outputContainer.Capacity; i++)

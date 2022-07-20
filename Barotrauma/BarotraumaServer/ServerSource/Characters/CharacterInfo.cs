@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -66,19 +65,16 @@ namespace Barotrauma
 
             if (Job != null)
             {
-                msg.Write(Job.Prefab.Identifier);
+                msg.Write(Job.Prefab.UintIdentifier);
                 msg.Write((byte)Job.Variant);
-                var skills = Job.GetSkills();
-                msg.Write((byte)skills.Count());
-                foreach (Skill skill in skills)
+                foreach (SkillPrefab skillPrefab in Job.Prefab.Skills.OrderBy(s => s.Identifier))
                 {
-                    msg.Write(skill.Identifier);
-                    msg.Write(skill.Level);
+                    msg.Write(Job.GetSkill(skillPrefab.Identifier).Level);
                 }
             }
             else
             {
-                msg.Write("");
+                msg.Write((uint)0);
                 msg.Write((byte)0);
             }
 

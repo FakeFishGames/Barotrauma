@@ -237,13 +237,14 @@ namespace Barotrauma
 
         public override void UpdateAnim(float deltaTime)
         {
-            if (Frozen) return;
+            if (Frozen) { return; }
             if (MainLimb == null) { return; }
 
             levitatingCollider = !IsHanging;
             ColliderIndex = Crouching && !swimming ? 1 : 0;
-            if (character.SelectedConstruction?.GetComponent<Controller>()?.ControlCharacterPose ?? false ||
-                character.SelectedConstruction?.GetComponent<Ladder>() != null ||
+            if ((character.SelectedItem?.GetComponent<Controller>()?.ControlCharacterPose ?? false) ||
+                (character.SelectedSecondaryItem?.GetComponent<Controller>()?.ControlCharacterPose ?? false) ||
+                character.SelectedSecondaryItem?.GetComponent<Ladder>() != null ||
                 (ForceSelectAnimationType != AnimationType.Crouch && ForceSelectAnimationType != AnimationType.NotDefined))
             {
                 Crouching = false;
@@ -354,11 +355,15 @@ namespace Barotrauma
             {
                 ApplyTestPose();
             }
-            else
+            else if (Anim != Animation.UsingItem)
             {
-                if (Anim != Animation.UsingConstruction)
+                if (Anim != Animation.UsingItemWhileClimbing)
                 {
                     ResetPullJoints();
+                }
+                else
+                {
+                    ResetPullJoints(l => l.IsLowerBody);
                 }
             }
 
@@ -377,47 +382,51 @@ namespace Barotrauma
             switch (Anim)
             {
                 case Animation.Climbing:
+                case Animation.UsingItemWhileClimbing:
                     levitatingCollider = false;
                     UpdateClimbing();
+                    UpdateUseItemTimer();
                     break;
                 case Animation.CPR:
                     UpdateCPR(deltaTime);
                     break;
-                case Animation.UsingConstruction:
+                case Animation.UsingItem:
                 default:
-                    if (Anim == Animation.UsingConstruction)
-                    {
-                        useItemTimer -= deltaTime;
-                        if (useItemTimer <= 0.0f) Anim = Animation.None;
-                    }
-
+                    UpdateUseItemTimer();
                     swimmingStateLockTimer -= deltaTime;
-
                     if (forceStanding || character.AnimController.AnimationTestPose)
                     {
                         swimming = false;
                     }
-                    else
+                    else if (swimming != inWater && swimmingStateLockTimer <= 0.0f)
                     {
                         //0.5 second delay for switching between swimming and walking
                         //prevents rapid switches between swimming/walking if the water level is fluctuating around the minimum swimming depth
-                        if (swimming != inWater && swimmingStateLockTimer <= 0.0f)
-                        {
-                            swimming = inWater;
-                            swimmingStateLockTimer = 0.5f;
-                        }
+                        swimming = inWater;
+                        swimmingStateLockTimer = 0.5f;
                     }
-
                     if (swimming)
                     {
                         UpdateSwimming();
                     }
-                    else
+                    else if (character.SelectedItem == null || !(character.SelectedSecondaryItem?.GetComponent<Controller>() is { } controller) ||
+                             !controller.ControlCharacterPose || !controller.UserInCorrectPosition)
                     {
                         UpdateStanding();
                     }
-
                     break;
+            }
+
+            void UpdateUseItemTimer()
+            {
+                if (IsUsingItem)
+                {
+                    useItemTimer -= deltaTime;
+                    if (useItemTimer <= 0.0f)
+                    {
+                        StopUsingItem();
+                    }
+                }
             }
 
             if (Timing.TotalTime > LockFlippingUntil && TargetDir != dir && !IsStuck)
@@ -841,7 +850,9 @@ namespace Barotrauma
             float targetSpeed = TargetMovement.Length();
             if (targetSpeed > 0.1f && !character.IsRemotelyControlled && !Aiming)
             {
-                if (Anim != Animation.UsingConstruction && !(character.SelectedConstruction?.GetComponent<Controller>()?.ControlCharacterPose ?? false))
+                if (!IsUsingItem &&
+                    !(character.SelectedItem?.GetComponent<Controller>()?.ControlCharacterPose ?? false) &&
+                    !(character.SelectedSecondaryItem?.GetComponent<Controller>()?.ControlCharacterPose ?? false))
                 {
                     if (rotation > 20 && rotation < 170)
                     {
@@ -1041,10 +1052,15 @@ namespace Barotrauma
 
         void UpdateClimbing()
         {
-            var ladder = character.SelectedConstruction?.GetComponent<Ladder>();
-            if (ladder == null || character.IsIncapacitated)
+            var ladder = character.SelectedSecondaryItem?.GetComponent<Ladder>();
+            if (character.IsIncapacitated)
             {
                 Anim = Animation.None;
+                return;
+            }
+            else if (ladder == null)
+            {
+                StopClimbing();
                 return;
             }
 
@@ -1209,15 +1225,21 @@ namespace Barotrauma
             {
                 RotateHead(head);
             }
+            else if (Anim == Animation.UsingItemWhileClimbing && character.SelectedItem is { } selectedItem)
+            {
+                Vector2 diff = (selectedItem.WorldPosition - head.WorldPosition) * Dir;
+                float targetRotation = MathHelper.WrapAngle(MathUtils.VectorToAngle(diff) - MathHelper.PiOver4 * Dir);
+                head.body.SmoothRotate(targetRotation, force: WalkParams.HeadTorque);
+            }
             else
             {
                 float movementMultiplier = targetMovement.Y < 0 ? 0 : 1;
-                head.body.SmoothRotate(MathHelper.PiOver4 * movementMultiplier * Dir, WalkParams.HeadTorque);
+                head.body.SmoothRotate(MathHelper.PiOver4 * movementMultiplier * Dir, force: WalkParams.HeadTorque);
             }
             
-            if (!ladder.Item.Prefab.Triggers.Any())
+            if (ladder.Item.Prefab.Triggers.None())
             {
-                character.SelectedConstruction = null;
+                character.SelectedSecondaryItem = null;
                 return;
             }
 
@@ -1247,8 +1269,7 @@ namespace Barotrauma
 
             if (!isClimbing)
             {
-                Anim = Animation.None;
-                character.SelectedConstruction = null;
+                character.StopClimbing();
                 IgnorePlatforms = false;
             }
 
@@ -1487,7 +1508,7 @@ namespace Barotrauma
                 target.AnimController.ResetPullJoints();
             }
 
-            if (Anim == Animation.Climbing)
+            if (IsClimbing)
             {
                 //cannot drag up ladders if the character is conscious
                 if (target.AllowInput && (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient))

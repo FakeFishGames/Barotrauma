@@ -26,7 +26,7 @@ namespace Barotrauma
         private bool IsRepairing() => IsRepairing(character, Item);
         private readonly bool isPriority;
 
-        public static bool IsRepairing(Character character, Item item) => character.SelectedConstruction == item && item.Repairables.Any(r => r.CurrentFixer == character);
+        public static bool IsRepairing(Character character, Item item) => character.SelectedItem == item && item.Repairables.Any(r => r.CurrentFixer == character);
 
         public AIObjectiveRepairItem(Character character, Item item, AIObjectiveManager objectiveManager, float priorityModifier = 1, bool isPriority = false)
             : base(character, objectiveManager, priorityModifier)
@@ -165,7 +165,7 @@ namespace Barotrauma
                     return;
                 }
             }
-            if (!character.IsClimbing && character.CanInteractWith(Item, out _, checkLinked: false))
+            if (character.CanInteractWith(Item, out _, checkLinked: false))
             {
                 waitTimer += deltaTime;
                 if (waitTimer < WaitTimeBeforeRepair) { return; }
@@ -184,12 +184,12 @@ namespace Barotrauma
                     }
                     if (!Abandon)
                     {
-                        if (character.SelectedConstruction != Item)
+                        if (character.SelectedItem != Item)
                         {
                             if (Item.TryInteract(character, ignoreRequiredItems: true, forceSelectKey: true) ||
                                 Item.TryInteract(character, ignoreRequiredItems: true, forceUseKey: true))
                             {
-                                character.SelectedConstruction = Item;
+                                character.SelectedItem = Item;
                             }
                             else
                             {
@@ -232,8 +232,6 @@ namespace Barotrauma
                         previousCondition = -1;
                         var objective = new AIObjectiveGoTo(Item, character, objectiveManager)
                         {
-                            // Don't stop in ladders, because we can't interact with other items while holding the ladders.
-                            endNodeFilter = node => node.Waypoint.Ladders == null,
                             TargetName = Item.Name
                         };
                         if (repairTool != null)

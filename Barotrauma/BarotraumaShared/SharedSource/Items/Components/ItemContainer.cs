@@ -49,6 +49,8 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public readonly NamedEvent<ItemContainer> OnContainedItemsChanged = new NamedEvent<ItemContainer>();
+
         private bool alwaysContainedItemsSpawned;
 
         public ItemInventory Inventory;
@@ -347,6 +349,7 @@ namespace Barotrauma.Items.Components
 
             //no need to Update() if this item has no statuseffects and no physics body
             IsActive = activeContainedItems.Count > 0 || Inventory.AllItems.Any(it => it.body != null);
+            OnContainedItemsChanged.Invoke(this);
         }
 
         public override void Move(Vector2 amount, bool ignoreContacts = false)
@@ -360,6 +363,7 @@ namespace Barotrauma.Items.Components
 
             //deactivate if the inventory is empty
             IsActive = activeContainedItems.Count > 0 || Inventory.AllItems.Any(it => it.body != null);
+            OnContainedItemsChanged.Invoke(this);
         }
 
         public bool CanBeContained(Item item)
@@ -496,7 +500,7 @@ namespace Barotrauma.Items.Components
                     return false;
                 }
             }
-            if (AutoInteractWithContained && character.SelectedConstruction == null)
+            if (AutoInteractWithContained && character.SelectedItem == null)
             {
                 foreach (Item contained in Inventory.AllItems)
                 {
@@ -510,7 +514,15 @@ namespace Barotrauma.Items.Components
             var abilityItem = new AbilityItemContainer(item);
             character.CheckTalents(AbilityEffectType.OnOpenItemContainer, abilityItem);
 
-            return base.Select(character);
+            if (item.ParentInventory?.Owner == character)
+            {
+                //can't select ItemContainers in the character's inventory (the inventory is drawn by hovering the cursor over the inventory slot, not as a GUIFrame)
+                return false;
+            }
+            else
+            {
+                return base.Select(character);
+            }
         }
 
         public override bool Pick(Character picker)

@@ -12,7 +12,7 @@ namespace Barotrauma
         Ragdoll, Health, Grab,
         SelectNextCharacter,
         SelectPreviousCharacter,
-        Voice,
+        Voice, RadioVoice, LocalVoice,
         Deselect,
         Shoot,
         Command,

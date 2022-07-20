@@ -13,6 +13,8 @@ namespace Barotrauma.Steam
     {
         private CorePackage EnabledCorePackage => enabledCoreDropdown.SelectedData as CorePackage ?? throw new Exception("Valid core package not selected");
 
+        public bool ViewingItemDetails { get; private set; }
+
         private readonly GUIDropDown enabledCoreDropdown;
         private readonly GUIListBox enabledRegularModsList;
         private readonly GUIListBox disabledRegularModsList;
@@ -167,7 +169,7 @@ namespace Barotrauma.Steam
                 swapSoundType = null;
             }
         }
-        
+
         private void CreateInstalledModsTab(
             out GUIDropDown enabledCoreDropdown,
             out GUIListBox enabledRegularModsList,
@@ -523,6 +525,7 @@ namespace Barotrauma.Steam
         
         public void PopulateInstalledModLists(bool forceRefreshEnabled = false, bool refreshDisabled = true)
         {
+            ViewingItemDetails = false;
             bulkUpdateButton.Enabled = false;
             bulkUpdateButton.ToolTip = "";
             ContentPackageManager.UpdateContentPackageList();

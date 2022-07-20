@@ -864,7 +864,7 @@ namespace Barotrauma
                 double roundDuration = Timing.TotalTime - RoundStartTime;
                 GameAnalyticsManager.AddProgressionEvent(
                     success ? GameAnalyticsManager.ProgressionStatus.Complete : GameAnalyticsManager.ProgressionStatus.Fail,
-                    GameMode?.Name?.Value ?? "none",
+                    GameMode?.Preset.Identifier.Value ?? "none",
                     roundDuration);
                 string eventId = "EndRound:" + (GameMode?.Preset?.Identifier.Value ?? "none") + ":";
                 LogEndRoundStats(eventId);

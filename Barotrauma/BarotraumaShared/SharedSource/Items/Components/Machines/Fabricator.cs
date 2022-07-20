@@ -556,8 +556,20 @@ namespace Barotrauma.Items.Components
 
             const int MaxCraftingSkill = 100;
 
+            //having a higher-than-100 skill (e.g. due to talents) gives +1 quality
             quality += fabricatedItem.RequiredSkills.All(s => user.GetSkillLevel(s.Identifier) >= MaxCraftingSkill) ? 1 : 0;
-            quality += FabricationDegreeOfSuccess(user, fabricatedItem.RequiredSkills) >= 0.5f ? 1 : 0;
+            foreach (var skill in fabricatedItem.RequiredSkills)
+            {
+                //+1 quality if the character's skill level is >20% from the min requirement towards max skill
+                //e.g. if the skill requirement is 10 -> 28
+                //40 -> 52
+                //90 -> 92
+                float skillRequirement = MathHelper.Lerp(skill.Level, MaxCraftingSkill, 0.2f);
+                if (user.GetSkillLevel(skill.Identifier) > skillRequirement)
+                {
+                    quality += 1;
+                }
+            }
             return quality;
         }
 

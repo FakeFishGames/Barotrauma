@@ -290,6 +290,8 @@ namespace Barotrauma
                         { InputType.CrewOrders, Keys.C },
 
                         { InputType.Voice, Keys.V },
+                        { InputType.RadioVoice, Keys.None },
+                        { InputType.LocalVoice, Keys.None },
                         { InputType.ToggleChatMode, Keys.R },
                         { InputType.Command, MouseButton.MiddleMouse },
                         { InputType.PreviousFireMode, MouseButton.MouseWheelDown },
@@ -333,16 +335,15 @@ namespace Barotrauma
                     }
 
                     bool playerConfigContainsNewChatBinds = false;
+                    bool playerConfigContainsRestoredVoipBinds = false;
                     foreach (XElement element in elements)
                     {
                         foreach (XAttribute attribute in element.Attributes())
                         {
                             if (Enum.TryParse(attribute.Name.LocalName, out InputType result))
                             {
-                                if (!playerConfigContainsNewChatBinds)
-                                {
-                                    playerConfigContainsNewChatBinds = result == InputType.ActiveChat;
-                                }
+                                playerConfigContainsNewChatBinds |= result == InputType.ActiveChat;
+                                playerConfigContainsRestoredVoipBinds |= result == InputType.RadioVoice;
                                 bindings[result] = element.GetAttributeKeyOrMouse(attribute.Name.LocalName, bindings[result]);
                             }
                         }
@@ -351,14 +352,15 @@ namespace Barotrauma
                     // Clear the old chat binds for configs saved before the introduction of the new chat binds
                     if (!playerConfigContainsNewChatBinds)
                     {
-                        if (bindings.ContainsKey(InputType.Chat))
-                        {
-                            bindings[InputType.Chat] = Keys.None;
-                        }
-                        if (bindings.ContainsKey(InputType.RadioChat))
-                        {
-                            bindings[InputType.RadioChat] = Keys.None;
-                        }
+                        bindings[InputType.Chat] = Keys.None;
+                        bindings[InputType.RadioChat] = Keys.None;
+                    }
+
+                    // Clear old VOIP binds to make sure we have no overlapping binds
+                    if (!playerConfigContainsRestoredVoipBinds)
+                    {
+                        bindings[InputType.LocalVoice] = Keys.None;
+                        bindings[InputType.RadioVoice] = Keys.None;
                     }
 
                     Bindings = bindings.ToImmutableDictionary();
@@ -511,6 +513,7 @@ namespace Barotrauma
             if (hudScaleChanged)
             {
                 HUDLayoutSettings.CreateAreas();
+                GameMain.GameSession?.HUDScaleChanged();
             }
             
             GameMain.SoundManager?.ApplySettings();

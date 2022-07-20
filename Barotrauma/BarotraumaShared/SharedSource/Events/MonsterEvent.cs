@@ -125,7 +125,8 @@ namespace Barotrauma
             var file = CharacterPrefab.FindBySpeciesName(SpeciesName)?.ContentFile;
             if (file == null)
             {
-                DebugConsole.ThrowError($"Failed to find config file for species \"{SpeciesName}\"");
+                DebugConsole.ThrowError($"Failed to find config file for species \"{SpeciesName}\". Content package: \"{prefab.ConfigElement?.ContentPackage?.Name ?? "unknown"}\".");
+                disallowed = true;
                 yield break;
             }
             else
@@ -535,10 +536,10 @@ namespace Barotrauma
                         Character createdCharacter = Character.Create(SpeciesName, pos, seed, characterInfo: null, isRemotePlayer: false, hasAi: true, createNetworkEvent: true, throwErrorIfNotFound: false);
                         if (createdCharacter == null)
                         {
+                            DebugConsole.AddWarning($"Error in MonsterEvent: failed to spawn the character \"{SpeciesName}\". Content package: \"{prefab.ConfigElement?.ContentPackage?.Name ?? "unknown"}\".");
                             disallowed = true;
                             return;
                         }
-                        
                         var eventManager = GameMain.GameSession.EventManager;
                         if (eventManager != null)
                         {

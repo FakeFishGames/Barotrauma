@@ -301,7 +301,7 @@ namespace Barotrauma.Items.Components
 
             float userSkill = 0.0f;
             if (user != null && controlledSub != null &&
-                (user.SelectedConstruction == item || item.linkedTo.Contains(user.SelectedConstruction)))
+                (user.SelectedItem == item || item.linkedTo.Contains(user.SelectedItem)))
             {
                 userSkill = user.GetSkillLevel("helm") / 100.0f;
             }
@@ -333,7 +333,7 @@ namespace Barotrauma.Items.Components
             {
                 showIceSpireWarning = false;
                 if (user != null && user.Info != null && 
-                    user.SelectedConstruction == item && 
+                    user.SelectedItem == item && 
                     controlledSub != null && controlledSub.Velocity.LengthSquared() > 0.01f)
                 {
                     IncreaseSkillLevel(user, deltaTime);
@@ -389,7 +389,7 @@ namespace Barotrauma.Items.Components
             }
 
             // if our tactical AI pilot has left, revert back to maintaining position
-            if (navigateTactically && (user == null || user.SelectedConstruction != item))
+            if (navigateTactically && (user == null || user.SelectedItem != item))
             {
                 navigateTactically = false;
                 AIRamTimer = 0f;
@@ -722,7 +722,7 @@ namespace Barotrauma.Items.Components
             character.AIController.SteeringManager.Reset();
             if (objective.Override)
             {
-                if (user != character && user != null && user.SelectedConstruction == item && character.IsOnPlayerTeam)
+                if (user != character && user != null && user.SelectedItem == item && character.IsOnPlayerTeam)
                 {
                     character.Speak(TextManager.Get("DialogSteeringTaken").Value, null, 0.0f, "steeringtaken".ToIdentifier(), 10.0f);
                 }

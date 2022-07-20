@@ -798,7 +798,55 @@ namespace Barotrauma
                    eventPrefabs.Select(prefab => prefab.Identifier).Distinct().Select(id => id.Value).ToArray()
                 };
             }));
-            
+
+            commands.Add(new Command("unlockmission", "unlockmission [identifier/tag]: Unlocks a mission in a random adjacent level.", (string[] args) =>
+            {
+                if (!(GameMain.GameSession?.GameMode is CampaignMode campaign))
+                {
+                    ThrowError("The unlockmission command is only usable in the campaign mode.");
+                    return;
+                }
+                if (args.Length == 0)
+                {
+                    ThrowError("Please enter the identifier or a tag of the mission you want to unlock.");
+                    return;
+                }
+                var currentLocation = campaign.Map.CurrentLocation;
+                if (MissionPrefab.Prefabs.Any(p => p.Identifier == args[0]))
+                {
+                    currentLocation.UnlockMissionByIdentifier(args[0].ToIdentifier());
+                }
+                else
+                {
+                    currentLocation.UnlockMissionByTag(args[0].ToIdentifier());
+                }
+                if (campaign is MultiPlayerCampaign mpCampaign)
+                {
+                    mpCampaign.IncrementLastUpdateIdForFlag(MultiPlayerCampaign.NetFlags.MapAndMissions);
+                }
+            }, isCheat: true, getValidArgs: () =>
+            {
+                return new[]
+                {
+                   MissionPrefab.Prefabs.Select(p => p.Identifier.ToString()).ToArray()
+                };
+            }));
+
+            commands.Add(new Command("setcampaignmetadata", "setcampaignmetadata [identifier] [value]: Sets the specified campaign metadata value.", (string[] args) =>
+            {
+                if (!(GameMain.GameSession?.GameMode is CampaignMode campaign))
+                {
+                    ThrowError("The setcampaignmetadata command is only usable in the campaign mode.");
+                    return;
+                }
+                if (args.Length < 2)
+                {
+                    ThrowError("Please specify an identifier and a value.");
+                    return;
+                }
+                SetDataAction.PerformOperation(campaign.CampaignMetadata, args[0].ToIdentifier(), args[1], SetDataAction.OperationType.Set);
+            }, isCheat: true));
+
             commands.Add(new Command("setskill", "setskill [all/identifier] [max/level] [character]: Set your skill level.", (string[] args) =>
             {
                 if (args.Length < 2)
@@ -2532,9 +2580,12 @@ namespace Barotrauma
 #if CLIENT
             GameMain.DebugDraw = false;
             GameMain.LightManager.LightingEnabled = true;
+            Character.DebugDrawInteract = false;
 #endif
             Hull.EditWater = false;
             Hull.EditFire = false;
+            EnemyAIController.DisableEnemyAI = false;
+            HumanAIController.DisableCrewAI = false;
         }
     }
 }

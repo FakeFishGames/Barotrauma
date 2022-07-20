@@ -871,13 +871,11 @@ namespace Barotrauma.Items.Components
                 posToMaintain = item.Submarine.WorldPosition;
             }
             MaintainPos = true;
-            if (userdata is Vector2)
+            if (userdata is Vector2 nudgeAmount)
             {
-                Sonar sonar = item.GetComponent<Sonar>();
-                Vector2 nudgeAmount = (Vector2)userdata;
-                if (sonar != null)
+                if (item.GetComponent<Sonar>() is Sonar sonar)
                 {
-                    nudgeAmount *= sonar == null ? 500.0f : 500.0f / sonar.Zoom;
+                    nudgeAmount *= 500.0f / sonar.Zoom;
                 }
                 PosToMaintain += nudgeAmount;
             }

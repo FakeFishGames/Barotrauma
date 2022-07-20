@@ -329,7 +329,7 @@ namespace Barotrauma
                     if (Server == null) { break; }
                     SteamManager.Update((float)Timing.Step);
                     TaskPool.Update();
-                    CoroutineManager.Update((float)Timing.Step, (float)Timing.Step);
+                    CoroutineManager.Update(paused: false, (float)Timing.Step);
 
                     Timing.Accumulator -= Timing.Step;
                     updateCount++;

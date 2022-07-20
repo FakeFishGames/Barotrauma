@@ -61,16 +61,6 @@ namespace Barotrauma
         public const bool UpgradeAlsoConnectedSubs = true;
 
         /// <summary>
-        /// Prevents the player from upgrading the submarine when we are switching to a new one.
-        /// </summary>
-        /// <remarks>
-        /// In singleplayer we check if CampaignMode.PendingSubmarineSwitch is not null indicating we are switching submarines
-        /// but in multiplayer that value is not synced so we use this variable instead by setting it to false in <see cref="UpgradeManager.ClientRead"/> 
-        /// and then set it back to true when the round ends in <see cref="MultiPlayerCampaign.End"/>
-        /// </remarks>
-        public bool CanUpgrade = true;
-
-        /// <summary>
         /// This is used by the client in multiplayer, acts like a secondary PendingUpgrades list
         /// but is not affected by server messages.
         /// </summary>
@@ -713,9 +703,9 @@ namespace Barotrauma
 
         public bool CanUpgradeSub()
         {
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return CanUpgrade; }
-
-            return Campaign.PendingSubmarineSwitch == null;
+            return 
+                Campaign.PendingSubmarineSwitch == null || 
+                Campaign.PendingSubmarineSwitch.Name == Submarine.MainSub.Info.Name;
         }
 
         public void Save(XElement? parent)

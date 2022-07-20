@@ -471,6 +471,7 @@ namespace Barotrauma
         public void SetBackgroundIcon(Sprite icon)
         {
             if (icon == null) { return; }
+            if (icon == BackgroundIcon.Sprite) { return; }
             GUIImage newIcon = new GUIImage(new RectTransform(icon.size.ToPoint(), RectTransform), icon)
             {
                 IgnoreLayoutGroups = true,
@@ -593,7 +594,7 @@ namespace Barotrauma
                     {
                         newBackgroundIcon.SetAsFirstChild();
                         newBackgroundIcon.RectTransform.AbsoluteOffset = new Point(InnerFrame.Rect.Location.X - (int)(newBackgroundIcon.Rect.Size.X / 1.25f), (int)defaultPos.Y - newBackgroundIcon.Rect.Size.Y / 2);
-                        newBackgroundIcon.Color = ToolBox.GradientLerp(iconState, Color.Transparent, Color.White);
+                        newBackgroundIcon.Color = Color.Lerp(Color.Transparent, Color.White, iconState);
                         if (newBackgroundIcon.Color.A == 255)
                         {
                             BackgroundIcon = newBackgroundIcon;

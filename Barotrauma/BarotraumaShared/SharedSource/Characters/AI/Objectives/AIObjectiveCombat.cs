@@ -512,6 +512,23 @@ namespace Barotrauma
             foreach (var weapon in weaponList)
             {
                 float priority = weapon.CombatPriority;
+                if (weapon is RepairTool repairTool)
+                {
+                    switch (repairTool.UsableIn)
+                    {
+                        case RepairTool.UseEnvironment.Air:
+                            if (character.InWater) { continue; }
+                            break;
+                        case RepairTool.UseEnvironment.Water:
+                            if (!character.InWater) { continue; }
+                            break;
+                        case RepairTool.UseEnvironment.None:
+                            continue;
+                        case RepairTool.UseEnvironment.Both:
+                        default:
+                            break;
+                    }
+                }
                 if (prioritizeMelee)
                 {
                     if (weapon is MeleeWeapon)

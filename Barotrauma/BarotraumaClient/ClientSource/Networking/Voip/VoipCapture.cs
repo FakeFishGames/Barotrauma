@@ -227,10 +227,13 @@ namespace Barotrauma.Networking
                     bool allowEnqueue = overrideSound != null;
                     if (GameMain.WindowActive && SettingsMenu.Instance is null)
                     {
-                        bool pttDown = PlayerInput.KeyDown(InputType.Voice) && GUI.KeyboardDispatcher.Subscriber == null;
+                        bool usingActiveMode = PlayerInput.KeyDown(InputType.Voice);
+                        bool usingLocalMode = PlayerInput.KeyDown(InputType.LocalVoice);
+                        bool usingRadioMode = PlayerInput.KeyDown(InputType.RadioVoice);
+                        bool pttDown = (usingActiveMode || usingLocalMode || usingRadioMode) && GUI.KeyboardDispatcher.Subscriber == null;
                         if (pttDown || captureTimer <= 0)
                         {
-                            ForceLocal = GameMain.ActiveChatMode == ChatMode.Local;
+                            ForceLocal = (usingActiveMode && GameMain.ActiveChatMode == ChatMode.Local) || usingLocalMode;
                         }
                         if (GameSettings.CurrentConfig.Audio.VoiceSetting == VoiceMode.Activity)
                         {

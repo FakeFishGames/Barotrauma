@@ -34,7 +34,7 @@ namespace Barotrauma
         public double TotalPlayTime;
         public int TotalPassedLevels;
 
-        public enum InteractionType { None, Talk, Examine, Map, Crew, Store, Repair, Upgrade, PurchaseSub, MedicalClinic, Cargo }
+        public enum InteractionType { None, Talk, Examine, Map, Crew, Store, Upgrade, PurchaseSub, MedicalClinic, Cargo }
 
         public static bool BlocksInteraction(InteractionType interactionType)
         {
@@ -85,7 +85,9 @@ namespace Barotrauma
 
         public bool CheatsEnabled;
 
-        public const int HullRepairCost = 500, ItemRepairCost = 500, ShuttleReplaceCost = 1000;
+        public const float HullRepairCostPerDamage = 0.5f, ItemRepairCostPerRepairDuration = 1.0f;
+        public const int ShuttleReplaceCost = 1000;
+        public const int MaxHullRepairCost = 2000, MaxItemRepairCost = 2000;
 
         protected bool wasDocked;
 
@@ -152,8 +154,9 @@ namespace Barotrauma
             {
                 if (!(e.ChangedData.BalanceChanged is Some<int> { Value: var changed })) { return; }
 
-                bool isGain = changed > 0;
+                if (changed != 0) { return; }
 
+                bool isGain = changed > 0;
                 Color clr = isGain ? GUIStyle.Yellow : GUIStyle.Red;
 
                 switch (e.Owner)
@@ -258,6 +261,39 @@ namespace Barotrauma
             PurchasedLostShuttles = false;
             var connectedSubs = Submarine.MainSub.GetConnectedSubs();
             wasDocked = Level.Loaded.StartOutpost != null && connectedSubs.Contains(Level.Loaded.StartOutpost);
+        }
+
+        public int GetHullRepairCost()
+        {
+            float totalDamage = 0;
+            foreach (Structure wall in Structure.WallList)
+            {
+                if (wall.Submarine == null || wall.Submarine.Info.Type != SubmarineType.Player) { continue; }
+                if (wall.Submarine == Submarine.MainSub || Submarine.MainSub.DockedTo.Contains(wall.Submarine))
+                {
+                    for (int i = 0; i < wall.SectionCount; i++)
+                    {
+                        totalDamage += wall.SectionDamage(i);
+                    }
+                }
+            }
+            return (int)Math.Min(totalDamage * HullRepairCostPerDamage, MaxHullRepairCost);
+        }
+
+        public int GetItemRepairCost()
+        {
+            float totalRepairDuration = 0.0f;
+            foreach (Item item in Item.ItemList)
+            {
+                if (item.Submarine == null || item.Submarine.Info.Type != SubmarineType.Player) { continue; }
+                if (item.Submarine == Submarine.MainSub || Submarine.MainSub.DockedTo.Contains(item.Submarine))
+                {
+                    var repairable = item.GetComponent<Repairable>();
+                    if (repairable == null) { continue; }
+                    totalRepairDuration += repairable.FixDurationHighSkill * (1.0f - item.Condition / item.MaxCondition);
+                }
+            }
+            return (int)Math.Min(totalRepairDuration * ItemRepairCostPerRepairDuration, MaxItemRepairCost);
         }
 
         public void InitCampaignData()

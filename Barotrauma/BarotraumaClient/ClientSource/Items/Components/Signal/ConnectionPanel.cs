@@ -33,10 +33,16 @@ namespace Barotrauma.Items.Components
             originalMaxSize = GuiFrame.RectTransform.MaxSize;
             originalRelativeSize = GuiFrame.RectTransform.RelativeSize;
             CheckForLabelOverlap();
-            new GUICustomComponent(new RectTransform(Vector2.One, GuiFrame.RectTransform), DrawConnections, null)
+            var content = new GUICustomComponent(new RectTransform(Vector2.One, GuiFrame.RectTransform), DrawConnections, null)
             {
                 UserData = this
             };
+            content.RectTransform.SetAsFirstChild();
+
+            //prevents inputs from going through the GUICustomComponent to the drag handle
+            var blocker = new GUIFrame(new RectTransform(GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin, GuiFrame.RectTransform, Anchor.Center) 
+            { AbsoluteOffset = GUIStyle.ItemFrameOffset },
+            style: null);
         }
 
         public void TriggerRewiringSound()
@@ -62,7 +68,7 @@ namespace Barotrauma.Items.Components
             }
 
             rewireSoundTimer -= deltaTime;
-            if (user != null && user.SelectedConstruction == item && rewireSoundTimer > 0.0f)
+            if (user != null && user.SelectedItem == item && rewireSoundTimer > 0.0f)
             {
                 if (rewireSoundChannel == null || !rewireSoundChannel.IsPlaying)
                 {
@@ -85,12 +91,12 @@ namespace Barotrauma.Items.Components
         
         public override bool ShouldDrawHUD(Character character)
         {
-            return character == Character.Controlled && character == user && character.SelectedConstruction == item;
+            return character == Character.Controlled && character == user && character.SelectedItem == item;
         }
         
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
-            if (character != Character.Controlled || character != user || character.SelectedConstruction != item) { return; }
+            if (character != Character.Controlled || character != user || character.SelectedItem != item) { return; }
             
             if (HighlightedWire != null)
             {

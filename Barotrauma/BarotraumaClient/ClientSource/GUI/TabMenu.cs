@@ -403,7 +403,7 @@ namespace Barotrauma
                     CreateSubmarineInfo(infoFrameHolder, Submarine.MainSub);
                     break;
                 case InfoFrameTab.Talents:
-                    CreateTalentInfo(infoFrameHolder);
+                    CreateCharacterInfo(infoFrameHolder);
                     break;
             }
         }
@@ -1803,39 +1803,28 @@ namespace Barotrauma
             { TalentTree.TalentTreeStageState.Highlighted, new Color(50,47,33,255) },
         }.ToImmutableDictionary();
 
-        private void CreateTalentInfo(GUIFrame infoFrame)
+        private void CreateCharacterInfo(GUIFrame infoFrame)
         {
             infoFrame.ClearChildren();
             talentButtons.Clear();
             talentCornerIcons.Clear();
 
-            GUIFrame talentFrameBackground = new GUIFrame(new RectTransform(Vector2.One, infoFrame.RectTransform, Anchor.TopCenter), style: "GUIFrameListBox");
+            GUIFrame background = new GUIFrame(new RectTransform(Vector2.One, infoFrame.RectTransform, Anchor.TopCenter), style: "GUIFrameListBox");
             int padding = GUI.IntScale(15);
-            GUIFrame talentFrameContent = new GUIFrame(new RectTransform(new Point(talentFrameBackground.Rect.Width - padding, talentFrameBackground.Rect.Height - padding), infoFrame.RectTransform, Anchor.Center), style: null);
+            GUIFrame frame = new GUIFrame(new RectTransform(new Point(background.Rect.Width - padding, background.Rect.Height - padding), infoFrame.RectTransform, Anchor.Center), style: null);
 
-            GUIFrame paddedTalentFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.9f), talentFrameContent.RectTransform, Anchor.Center), style: null);
-
-            GUIFrame talentFrameMain = new GUIFrame(new RectTransform(Vector2.One, paddedTalentFrame.RectTransform), style: null);
+            GUIFrame content = new GUIFrame(new RectTransform(new Vector2(0.98f), frame.RectTransform, Anchor.Center), style: null);
 
             GUIFrame characterSettingsFrame = null;
             GUILayoutGroup characterLayout = null;
             if (!(GameMain.NetworkMember is null))
             {
-                characterSettingsFrame = new GUIFrame(new RectTransform(Vector2.One, talentFrameContent.RectTransform), style: null) { Visible = false };
+                characterSettingsFrame = new GUIFrame(new RectTransform(Vector2.One, frame.RectTransform), style: null) { Visible = false };
                 characterLayout = new GUILayoutGroup(new RectTransform(Vector2.One, characterSettingsFrame.RectTransform));
                 GUIFrame containerFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.9f), characterLayout.RectTransform), style: null);
                 GUIFrame playerFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.7f), containerFrame.RectTransform, Anchor.Center), style: null);
                 GameMain.NetLobbyScreen.CreatePlayerFrame(playerFrame, alwaysAllowEditing: true, createPendingText: false);
             }
-
-            /*Character controlledCharacter = Character.Controlled;
-            if (controlledCharacter == null) { return; }
-
-            if (controlledCharacter.Info is null)
-            {
-                DebugConsole.ThrowError("No character info found for talent UI");
-                return;
-            }*/
 
             Character controlledCharacter = Character.Controlled;
             CharacterInfo info = controlledCharacter?.Info ?? GameMain.Client?.CharacterInfo;
@@ -1843,121 +1832,92 @@ namespace Barotrauma
 
             Job job = info.Job;
 
-            GUILayoutGroup talentFrameLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), talentFrameMain.RectTransform, anchor: Anchor.Center), childAnchor: Anchor.TopCenter)
+            GUILayoutGroup contentLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), content.RectTransform, anchor: Anchor.Center), childAnchor: Anchor.TopCenter)
             {
-                AbsoluteSpacing = GUI.IntScale(5)
+                AbsoluteSpacing = GUI.IntScale(10),
+                Stretch = true
             };
             
-            GUILayoutGroup talentInfoLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), talentFrameLayoutGroup.RectTransform, Anchor.Center), isHorizontal: true);
+            GUILayoutGroup topLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), contentLayout.RectTransform, Anchor.Center), isHorizontal: true);
             
-
-            new GUICustomComponent(new RectTransform(new Vector2(0.25f, 1f), talentInfoLayoutGroup.RectTransform), onDraw: (batch, component) =>
+            new GUICustomComponent(new RectTransform(new Vector2(0.25f, 1f), topLayout.RectTransform), onDraw: (batch, component) =>
             {
                 float posY = component.Rect.Center.Y - component.Rect.Width / 2;
                 info.DrawPortrait(batch, new Vector2(component.Rect.X, posY), Vector2.Zero, component.Rect.Width, false, false);
             });
 
-            GUILayoutGroup nameLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 1f), talentInfoLayoutGroup.RectTransform)) { RelativeSpacing = 0.05f };
+            GUILayoutGroup nameLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 1f), topLayout.RectTransform)) 
+            { 
+                AbsoluteSpacing = GUI.IntScale(5), 
+                CanBeFocused = true 
+            };
 
-            Vector2 nameSize = GUIStyle.SubHeadingFont.MeasureString(info.Name);
-            GUITextBlock nameBlock = new GUITextBlock(new RectTransform(Vector2.One, nameLayout.RectTransform), info.Name, font: GUIStyle.SubHeadingFont);
-            nameBlock.RectTransform.NonScaledSize = nameSize.Pad(nameBlock.Padding).ToPoint();
+            GUITextBlock nameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), nameLayout.RectTransform), info.Name, font: GUIStyle.SubHeadingFont);
 
             if (!info.OmitJobInMenus)
             {
                 nameBlock.TextColor = job.Prefab.UIColor;
-                Vector2 jobSize = GUIStyle.SmallFont.MeasureString(job.Name);
-                GUITextBlock jobBlock = new GUITextBlock(new RectTransform(Vector2.One, nameLayout.RectTransform), job.Name, font: GUIStyle.SmallFont) { TextColor = job.Prefab.UIColor };
-                jobBlock.RectTransform.NonScaledSize = jobSize.Pad(jobBlock.Padding).ToPoint();
+                GUITextBlock jobBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), nameLayout.RectTransform), job.Name, font: GUIStyle.SmallFont) { TextColor = job.Prefab.UIColor };
             }
 
-            LocalizedString traitString = TextManager.AddPunctuation(':', TextManager.Get("PersonalityTrait"), TextManager.Get("personalitytrait." + info.PersonalityTrait.Name.Replace(" ", "")));
+            LocalizedString traitString = TextManager.AddPunctuation(':', TextManager.Get("PersonalityTrait"), info.PersonalityTrait.DisplayName);
             Vector2 traitSize = GUIStyle.SmallFont.MeasureString(traitString);
             GUITextBlock traitBlock = new GUITextBlock(new RectTransform(Vector2.One, nameLayout.RectTransform), traitString, font: GUIStyle.SmallFont);
             traitBlock.RectTransform.NonScaledSize = traitSize.Pad(traitBlock.Padding).ToPoint();
 
-            GUIFrame talentsOutsideTreeFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.35f), nameLayout.RectTransform, Anchor.BottomCenter), style: null);
-
-            if (!(GameMain.NetworkMember is null))
+            IEnumerable<TalentPrefab> talentsOutsideTree = info.GetUnlockedTalentsOutsideTree().Select(e => TalentPrefab.TalentPrefabs.Find(c => c.Identifier == e));
+            if (talentsOutsideTree.Count() > 0)
             {
-                GUIButton newCharacterBox = new GUIButton(new RectTransform(new Vector2(0.675f, 1f), talentsOutsideTreeFrame.RectTransform, Anchor.TopLeft), 
-                    text: GameMain.NetLobbyScreen.CampaignCharacterDiscarded ? TextManager.Get("settings") : TextManager.Get("createnew"))
+                //spacing
+                new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), nameLayout.RectTransform), style: null);
+
+                GUILayoutGroup extraTalentLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), nameLayout.RectTransform), childAnchor: Anchor.TopCenter);
+
+                talentPointText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), extraTalentLayout.RectTransform, anchor: Anchor.Center), TextManager.Get("talentmenu.extratalents"), font: GUIStyle.SubHeadingFont);
+                talentPointText.RectTransform.MaxSize = new Point(int.MaxValue, (int)talentPointText.TextSize.Y);
+
+                var extraTalentList = new GUIListBox(new RectTransform(new Vector2(0.9f, 0.8f), extraTalentLayout.RectTransform, anchor: Anchor.Center), isHorizontal: true)
                 {
-                    IgnoreLayoutGroups = true
+                    AutoHideScrollBar = false,
+                    ResizeContentToMakeSpaceForScrollBar = false
                 };
-                newCharacterBox.TextBlock.AutoScaleHorizontal = true;
+                extraTalentList.ScrollBar.RectTransform.SetPosition(Anchor.BottomCenter, Pivot.TopCenter);
+                extraTalentList.RectTransform.MinSize = new Point(0, GUI.IntScale(65));
+                extraTalentLayout.Recalculate();
+                extraTalentList.ForceLayoutRecalculation();
 
-                newCharacterBox.OnClicked = (button, o) =>
+                foreach (var extraTalent in talentsOutsideTree)
                 {
-                    if (!GameMain.NetLobbyScreen.CampaignCharacterDiscarded)
+                    var img = new GUIImage(new RectTransform(new Point(extraTalentList.Content.Rect.Height), extraTalentList.Content.RectTransform), sprite: extraTalent.Icon, scaleToFit: true)
                     {
-                        GameMain.NetLobbyScreen.TryDiscardCampaignCharacter(() =>
-                        {
-                            newCharacterBox.Text = TextManager.Get("settings");
-
-                            if (pendingChangesFrame != null)
-                            {
-                                NetLobbyScreen.CreateChangesPendingFrame(pendingChangesFrame);
-                            }
-                            OpenMenu();
-                        });
-                        return true;
-                    }
-
-                    OpenMenu();
-                    return true;
-
-                    void OpenMenu()
-                    {
-                        characterSettingsFrame!.Visible = true;
-                        talentFrameMain.Visible = false;
-                    }
-                };
-
-                if (!(characterLayout is null))
-                {
-                    GUILayoutGroup characterCloseButtonLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.1f), characterLayout.RectTransform), childAnchor: Anchor.BottomRight);
-                    new GUIButton(new RectTransform(new Vector2(0.4f, 1f), characterCloseButtonLayout.RectTransform), TextManager.Get("ApplySettingsButton")) //TODO: Is this text appropriate for this circumstance for all languages?
-                    {
-                        OnClicked = (button, o) =>
-                        {
-                            GameMain.Client?.SendCharacterInfo(GameMain.Client.PendingName);
-                            characterSettingsFrame!.Visible = false;
-                            talentFrameMain.Visible = true;
-                            return true;
-                        }
+                        ToolTip = RichString.Rich($"‖color:{Color.White.ToStringHex()}‖{extraTalent.DisplayName}‖color:end‖" + "\n\n" + extraTalent.Description),
+                        Color = GUIStyle.Green
                     };
+                    img.RectTransform.SizeChanged += () =>
+                     {
+                         img.RectTransform.MaxSize = new Point(img.Rect.Height);
+                     };
                 }
             }
 
-            IEnumerable<TalentPrefab> talentsOutsideTree = info.GetUnlockedTalentsOutsideTree().Select(e => TalentPrefab.TalentPrefabs.Find(c => c.Identifier == e));
+            GUILayoutGroup skillLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.45f, 1f), topLayout.RectTransform), childAnchor: Anchor.TopRight) 
+            { 
+                AbsoluteSpacing = GUI.IntScale(5), 
+                Stretch = true 
+            };
 
-            if (talentsOutsideTree.Count() > 0)
-            {
-                //TODO: replace with something more generic
-                GUIImage endocrineIcon = new GUIImage(new RectTransform(new Vector2(0.275f, 1f), talentsOutsideTreeFrame.RectTransform, anchor: Anchor.TopRight, scaleBasis: ScaleBasis.Normal), style: "EndocrineReminderIcon")
-                {
-                    ToolTip = $"{TextManager.Get("afflictionname.endocrineboost")}\n\n{string.Join(", ", talentsOutsideTree.Select(e => e.DisplayName))}"
-                };
-            }
-
-            GUILayoutGroup skillLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.45f, 1f), talentInfoLayoutGroup.RectTransform)) { Stretch = true };
-
-            LocalizedString skillString = TextManager.Get("skills");
-            Vector2 skillSize = GUIStyle.SubHeadingFont.MeasureString(skillString);
-            GUITextBlock skillBlock = new GUITextBlock(new RectTransform(Vector2.One, skillLayout.RectTransform), skillString, font: GUIStyle.SubHeadingFont);
-            skillBlock.RectTransform.NonScaledSize = skillSize.Pad(skillBlock.Padding).ToPoint();
+            GUITextBlock skillBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillLayout.RectTransform), TextManager.Get("skills"), font: GUIStyle.SubHeadingFont);
 
             skillListBox = new GUIListBox(new RectTransform(new Vector2(1f, 1f - skillBlock.RectTransform.RelativeSize.Y), skillLayout.RectTransform), style: null);
-            CreateTalentSkillList(controlledCharacter, info, skillListBox);
+            CreateSkillList(controlledCharacter, info, skillListBox);
 
             if (controlledCharacter != null)
             {
                 if (!TalentTree.JobTalentTrees.TryGet(info.Job.Prefab.Identifier, out TalentTree talentTree)) { return; }
 
-                new GUIFrame(new RectTransform(new Vector2(1f, 1f), talentFrameLayoutGroup.RectTransform), style: "HorizontalLine");
+                new GUIFrame(new RectTransform(new Vector2(1f, 1f), contentLayout.RectTransform), style: "HorizontalLine");
 
-                GUIListBox talentTreeListBox = new GUIListBox(new RectTransform(new Vector2(1f, 0.7f), talentFrameLayoutGroup.RectTransform, Anchor.TopCenter), isHorizontal: true, style: null);
+                GUIListBox talentTreeListBox = new GUIListBox(new RectTransform(new Vector2(1f, 0.6f), contentLayout.RectTransform, Anchor.TopCenter), isHorizontal: true, style: null);
 
                 selectedTalents = info.GetUnlockedTalentsInTree().ToList();
 
@@ -2008,10 +1968,9 @@ namespace Barotrauma
                             };
 
                             GUIFrame croppedTalentFrame = new GUIFrame(new RectTransform(Vector2.One, talentFrame.RectTransform, anchor: Anchor.Center, scaleBasis: ScaleBasis.BothHeight), style: null);
-
                             GUIButton talentButton = new GUIButton(new RectTransform(Vector2.One, croppedTalentFrame.RectTransform, anchor: Anchor.Center), style: null)
                             {
-                                ToolTip = RichString.Rich(talent.DisplayName + "\n\n" + talent.Description),
+                                ToolTip = RichString.Rich($"‖color:{Color.White.ToStringHex()}‖{talent.DisplayName}‖color:end‖" + "\n\n" + talent.Description),
                                 UserData = talent.Identifier,
                                 PressedColor = pressedColor,
                                 Enabled = controlledCharacter != null,
@@ -2078,9 +2037,13 @@ namespace Barotrauma
                 }
                 GUITextBlock.AutoScaleAndNormalize(subTreeNames);
 
-                GUILayoutGroup talentBottomFrame = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.07f), talentFrameLayoutGroup.RectTransform, Anchor.TopCenter), isHorizontal: true) { RelativeSpacing = 0.01f };
+                GUILayoutGroup bottomLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.07f), contentLayout.RectTransform, Anchor.TopCenter), isHorizontal: true) 
+                { 
+                    RelativeSpacing = 0.01f, 
+                    Stretch = true 
+                };
 
-                GUILayoutGroup experienceLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.59f, 1f), talentBottomFrame.RectTransform));
+                GUILayoutGroup experienceLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.59f, 1f), bottomLayout.RectTransform));
                 GUIFrame experienceBarFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.5f), experienceLayout.RectTransform), style: null);
 
                 experienceBar = new GUIProgressBar(new RectTransform(new Vector2(1f, 1f), experienceBarFrame.RectTransform, Anchor.CenterLeft),
@@ -2097,30 +2060,84 @@ namespace Barotrauma
 
                 talentPointText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), experienceLayout.RectTransform, anchor: Anchor.Center), "", font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterRight) { AutoScaleVertical = true };
 
-                talentResetButton = new GUIButton(new RectTransform(new Vector2(0.19f, 1f), talentBottomFrame.RectTransform), text: TextManager.Get("reset"), style: "GUIButtonFreeScale")
+                talentResetButton = new GUIButton(new RectTransform(new Vector2(0.19f, 1f), bottomLayout.RectTransform), text: TextManager.Get("reset"), style: "GUIButtonFreeScale")
                 {
                     OnClicked = ResetTalentSelection
                 };
-                talentApplyButton = new GUIButton(new RectTransform(new Vector2(0.19f, 1f), talentBottomFrame.RectTransform), text: TextManager.Get("applysettingsbutton"), style: "GUIButtonFreeScale")
+                talentApplyButton = new GUIButton(new RectTransform(new Vector2(0.19f, 1f), bottomLayout.RectTransform), text: TextManager.Get("applysettingsbutton"), style: "GUIButtonFreeScale")
                 {
                     OnClicked = ApplyTalentSelection,
                 };
                 GUITextBlock.AutoScaleAndNormalize(talentResetButton.TextBlock, talentApplyButton.TextBlock);
             }
 
+            if (!(GameMain.NetworkMember is null))
+            {
+                GUIButton newCharacterBox = new GUIButton(new RectTransform(new Vector2(0.5f, 0.2f), skillLayout.RectTransform, Anchor.BottomRight),
+                    text: GameMain.NetLobbyScreen.CampaignCharacterDiscarded ? TextManager.Get("settings") : TextManager.Get("createnew"), style: "GUIButtonSmall")
+                {
+                    IgnoreLayoutGroups = false
+                };
+                newCharacterBox.TextBlock.AutoScaleHorizontal = true;
+
+                newCharacterBox.OnClicked = (button, o) =>
+                {
+                    if (!GameMain.NetLobbyScreen.CampaignCharacterDiscarded)
+                    {
+                        GameMain.NetLobbyScreen.TryDiscardCampaignCharacter(() =>
+                        {
+                            newCharacterBox.Text = TextManager.Get("settings");
+                            if (pendingChangesFrame != null)
+                            {
+                                NetLobbyScreen.CreateChangesPendingFrame(pendingChangesFrame);
+                            }
+                            OpenMenu();
+                        });
+                        return true;
+                    }
+
+                    OpenMenu();
+                    return true;
+
+                    void OpenMenu()
+                    {
+                        characterSettingsFrame!.Visible = true;
+                        content.Visible = false;
+                    }
+                };
+
+                if (!(characterLayout is null))
+                {
+                    GUILayoutGroup characterCloseButtonLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.1f), characterLayout.RectTransform), childAnchor: Anchor.BottomCenter);
+                    new GUIButton(new RectTransform(new Vector2(0.4f, 1f), characterCloseButtonLayout.RectTransform), TextManager.Get("ApplySettingsButton")) //TODO: Is this text appropriate for this circumstance for all languages?
+                    {
+                        OnClicked = (button, o) =>
+                        {
+                            GameMain.Client?.SendCharacterInfo(GameMain.Client.PendingName);
+                            characterSettingsFrame!.Visible = false;
+                            content.Visible = true;
+                            return true;
+                        }
+                    };
+                }
+            }
+
             UpdateTalentInfo();
         }
 
-        private void CreateTalentSkillList(Character character, CharacterInfo info, GUIListBox parent)
+        private void CreateSkillList(Character character, CharacterInfo info, GUIListBox parent)
         {
             parent.Content.ClearChildren();
             List<GUITextBlock> skillNames = new List<GUITextBlock>();
             foreach (Skill skill in info.Job.GetSkills())
             {
-                GUILayoutGroup skillContainer = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.2f), parent.Content.RectTransform), isHorizontal: true) { CanBeFocused = false };
-
-                skillNames.Add(new GUITextBlock(new RectTransform(new Vector2(0.7f, 1f), skillContainer.RectTransform), TextManager.Get($"skillname.{skill.Identifier}").Fallback(skill.Identifier.Value)));
-                new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), skillContainer.RectTransform), Math.Floor(skill.Level).ToString("F0"), textAlignment: Alignment.CenterRight) { Padding = new Vector4(0, 0, 4, 0) };
+                GUILayoutGroup skillContainer = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.0f), parent.Content.RectTransform), isHorizontal: true) { CanBeFocused = true };
+                var skillName = new GUITextBlock(new RectTransform(new Vector2(0.7f, 0.0f), skillContainer.RectTransform), TextManager.Get($"skillname.{skill.Identifier}").Fallback(skill.Identifier.Value));
+                skillNames.Add(skillName);
+                skillName.RectTransform.MinSize = new Point(0, skillName.Rect.Height);
+                skillContainer.RectTransform.MinSize = new Point(0, skillName.Rect.Height);
+                
+                new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), skillContainer.RectTransform), Math.Floor(skill.Level).ToString("F0"), textAlignment: Alignment.TopRight);
 
                 float modifiedSkillLevel = character?.GetSkillLevel(skill.Identifier) ?? skill.Level;
                 if (!MathUtils.NearlyEqual(MathF.Floor(modifiedSkillLevel), MathF.Floor(skill.Level)))
@@ -2129,15 +2146,15 @@ namespace Barotrauma
                     //TODO: if/when we upgrade to C# 9, do neater pattern matching here
                     string stringColor = true switch
                     {
-                        true when skillChange > 0 => XMLExtensions.ColorToString(GUIStyle.Green),
-                        true when skillChange < 0 => XMLExtensions.ColorToString(GUIStyle.Red),
-                        _ => XMLExtensions.ColorToString(GUIStyle.TextColorNormal)
+                        true when skillChange > 0 => XMLExtensions.ToStringHex(GUIStyle.Green),
+                        true when skillChange < 0 => XMLExtensions.ToStringHex(GUIStyle.Red),
+                        _ => XMLExtensions.ToStringHex(GUIStyle.TextColorNormal)
                     };
 
                     RichString changeText = RichString.Rich($"(‖color:{stringColor}‖{(skillChange > 0 ? "+" : string.Empty) + skillChange}‖color:end‖)");
                     new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), skillContainer.RectTransform), changeText) { Padding = Vector4.Zero };
                 }
-                skillContainer.Recalculate();
+                //skillContainer.Recalculate();
             }
 
             parent.RecalculateChildren();
@@ -2216,7 +2233,7 @@ namespace Barotrauma
                 talentButton.icon.HoverColor = hoverColor;
             }
 
-            CreateTalentSkillList(controlledCharacter, controlledCharacter.Info, skillListBox);
+            CreateSkillList(controlledCharacter, controlledCharacter.Info, skillListBox);
         }
 
         private void ApplyTalents(Character controlledCharacter)

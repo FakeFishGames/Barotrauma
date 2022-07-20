@@ -303,6 +303,17 @@ namespace Barotrauma
         public Vector2 DebugTargetPos;
         public Vector2 DebugRefPos;
 
+        public bool IsLowerBody =>
+            type == LimbType.LeftLeg ||
+            type == LimbType.RightLeg ||
+            type == LimbType.LeftFoot ||
+            type == LimbType.RightFoot ||
+            type == LimbType.Tail ||
+            type == LimbType.Legs ||
+            type == LimbType.RightThigh ||
+            type == LimbType.LeftThigh ||
+            type == LimbType.Waist;
+
         public bool IsSevered
         {
             get { return isSevered; }

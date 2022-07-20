@@ -161,10 +161,7 @@ namespace Barotrauma
                 character.DeselectCharacter();
             }
 
-            if (!character.IsClimbing)
-            {
-                character.SelectedConstruction = null;
-            }
+            character.SelectedItem = null;
 
             CleanupItems(deltaTime);
 
@@ -310,7 +307,7 @@ namespace Barotrauma
                 if (character.AnimController.GetHeightFromFloor() < 0.1f)
                 {
                     character.AnimController.Anim = AnimController.Animation.None;
-                    character.SelectedConstruction = null;
+                    character.SelectedSecondaryItem = null;
                 }
                 return;
             }
@@ -375,7 +372,7 @@ namespace Barotrauma
                     }
 
                     chairCheckTimer -= deltaTime;
-                    if (chairCheckTimer <= 0.0f && character.SelectedConstruction == null)
+                    if (chairCheckTimer <= 0.0f && character.SelectedSecondaryItem == null)
                     {
                         foreach (Item item in Item.ItemList)
                         {

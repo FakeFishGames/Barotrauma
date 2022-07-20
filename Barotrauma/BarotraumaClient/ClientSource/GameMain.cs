@@ -814,7 +814,7 @@ namespace Barotrauma
                         else if ((Character.Controlled == null || !itemHudActive())
                             && CharacterHealth.OpenHealthWindow == null
                             && !CrewManager.IsCommandInterfaceOpen
-                            && !(Screen.Selected is SubEditorScreen editor && !editor.WiringMode && Character.Controlled?.SelectedConstruction != null))
+                            && !(Screen.Selected is SubEditorScreen editor && !editor.WiringMode && Character.Controlled?.SelectedItem != null))
                         {
                             // Otherwise toggle pausing, unless another window/interface is open.
                             GUI.TogglePauseMenu();
@@ -822,9 +822,9 @@ namespace Barotrauma
 
                         static bool itemHudActive()
                         {
-                            if (Character.Controlled?.SelectedConstruction == null) { return false; }
+                            if (Character.Controlled?.SelectedItem == null) { return false; }
                             return
-                                Character.Controlled.SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null) ||
+                                Character.Controlled.SelectedItem.ActiveHUDs.Any(ic => ic.GuiFrame != null) ||
                                 ((Character.Controlled.ViewTarget as Item)?.Prefab?.FocusOnSelected ?? false);
                         }
                     }
@@ -919,7 +919,7 @@ namespace Barotrauma
 #endif
                 }
 
-                CoroutineManager.Update((float)Timing.Step, Paused ? 0.0f : (float)Timing.Step);
+                CoroutineManager.Update(Paused, (float)Timing.Step);
 
                 SteamManager.Update((float)Timing.Step);
 
@@ -1098,7 +1098,7 @@ namespace Barotrauma
                 GameAnalyticsManager.AddDesignEvent(eventId + "EventManager:CurrentIntensity", GameSession.EventManager.CurrentIntensity);
                 foreach (var activeEvent in GameSession.EventManager.ActiveEvents)
                 {
-                    GameAnalyticsManager.AddDesignEvent(eventId + "EventManager:ActiveEvents:" + activeEvent.ToString());
+                    GameAnalyticsManager.AddDesignEvent(eventId + "EventManager:ActiveEvents:" + activeEvent.Prefab.Identifier);
                 }
                 GameSession.LogEndRoundStats(eventId);
                 if (GameSession.GameMode is TutorialMode tutorialMode)

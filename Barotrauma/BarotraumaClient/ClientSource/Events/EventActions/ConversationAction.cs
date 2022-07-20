@@ -32,12 +32,12 @@ namespace Barotrauma
 
         private static bool shouldFadeToBlack;
 
-        private bool IsBlockedByAnotherConversation(IEnumerable<Entity> _)
+        private bool IsBlockedByAnotherConversation(IEnumerable<Entity> _, float duration)
         {
             return 
                 lastActiveAction != null && 
                 lastActiveAction.ParentEvent != ParentEvent && 
-                Timing.TotalTime < lastActiveAction.lastActiveTime + BlockOtherConversationsDuration;
+                Timing.TotalTime < lastActiveAction.lastActiveTime + duration;
         }
 
         partial void ShowDialog(Character speaker, Character targetCharacter)

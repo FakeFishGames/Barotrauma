@@ -18,6 +18,7 @@ namespace Barotrauma.Items.Components
         };
 
         private readonly HashSet<Identifier> fixableEntities;
+        private readonly HashSet<Identifier> nonFixableEntities;
         private Vector2 pickedPosition;
         private float activeTimer;
 
@@ -135,6 +136,7 @@ namespace Barotrauma.Items.Components
             }
 
             fixableEntities = new HashSet<Identifier>();
+            nonFixableEntities = new HashSet<Identifier>();
             foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -147,7 +149,16 @@ namespace Barotrauma.Items.Components
                         }
                         else
                         {
-                            fixableEntities.Add(subElement.GetAttributeIdentifier("identifier", ""));
+                            foreach (Identifier id in subElement.GetAttributeIdentifierArray("identifier", Array.Empty<Identifier>()))
+                            {
+                                fixableEntities.Add(id);
+                            }
+                        }
+                        break;
+                    case "nonfixable":
+                        foreach (Identifier id in subElement.GetAttributeIdentifierArray("identifier", Array.Empty<Identifier>()))
+                        {
+                            nonFixableEntities.Add(id);
                         }
                         break;
                 }
@@ -523,6 +534,7 @@ namespace Barotrauma.Items.Components
                 if (sectionIndex < 0) { return false; }
 
                 if (!fixableEntities.Contains("structure") && !fixableEntities.Contains(targetStructure.Prefab.Identifier)) { return true; }
+                if (nonFixableEntities.Contains(targetStructure.Prefab.Identifier) || nonFixableEntities.Any(t => targetStructure.Tags.Contains(t))) { return false; }
 
                 ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, structure: targetStructure);
                 FixStructureProjSpecific(user, deltaTime, targetStructure, sectionIndex);

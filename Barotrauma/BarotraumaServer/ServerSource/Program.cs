@@ -55,6 +55,10 @@ namespace Barotrauma
 
 #if LINUX
             setLinuxEnv();
+            AppDomain.CurrentDomain.ProcessExit += (s, e) => 
+            {
+                GameMain.ShouldRun = false;
+            };
 #endif
             Console.WriteLine("Barotrauma Dedicated Server " + GameMain.Version +
                 " (" + AssemblyInfo.BuildString + ", branch " + AssemblyInfo.GitBranch + ", revision " + AssemblyInfo.GitRevision + ")");
@@ -93,7 +97,7 @@ namespace Barotrauma
         
         private static void CrashHandler(object sender, UnhandledExceptionEventArgs args)
         {
-            void swallowExceptions(Action action)
+            static void swallowExceptions(Action action)
             {
                 try
                 {

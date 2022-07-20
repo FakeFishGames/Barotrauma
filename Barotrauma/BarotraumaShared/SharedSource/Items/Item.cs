@@ -303,6 +303,10 @@ namespace Barotrauma
                     {
                         light.SetLightSourceTransform();
                     }
+                    foreach (var turret in GetComponents<Turret>())
+                    {
+                        turret.UpdateLightComponents();
+                    }
                 }
 #endif
             }
@@ -458,7 +462,7 @@ namespace Barotrauma
 
         [Serialize(0.0f, IsPropertySaveable.No)]
         /// <summary>
-        /// Can be used by status effects or conditionals to modify the sound range
+        /// Can be used by status effects or conditionals to modify the sight range
         /// </summary>
         public new float SightRange
         {
@@ -806,6 +810,10 @@ namespace Barotrauma
             }
         }
 
+        public bool IsLadder { get; }
+
+        public bool IsSecondaryItem { get; }
+
         public Item(ItemPrefab itemPrefab, Vector2 position, Submarine submarine, ushort id = Entity.NullEntityID, bool callOnItemLoaded = true)
             : this(new Rectangle(
                 (int)(position.X - itemPrefab.Sprite.size.X / 2 * itemPrefab.Scale), 
@@ -1012,6 +1020,9 @@ namespace Barotrauma
             }
 
             qualityComponent = GetComponent<Quality>();
+
+            IsLadder = GetComponent<Ladder>() != null;
+            IsSecondaryItem = IsLadder || GetComponent<Controller>() is { IsSecondaryItem: true };
 
             InitProjSpecific();
 
@@ -2491,16 +2502,30 @@ namespace Barotrauma
 
             if (user != null)
             {
-                if (user.SelectedConstruction == this)
+                if (user.SelectedItem == this)
                 {
                     if (user.IsKeyHit(InputType.Select) || forceSelectKey)
                     {
-                        user.SelectedConstruction = null;
+                        user.SelectedItem = null;
+                    }
+                }
+                else if (user.SelectedSecondaryItem == this)
+                {
+                    if (user.IsKeyHit(InputType.Select) || forceSelectKey)
+                    {
+                        user.SelectedSecondaryItem = null;
                     }
                 }
                 else if (selected)
                 {
-                    user.SelectedConstruction = this;
+                    if (IsSecondaryItem)
+                    {
+                        user.SelectedSecondaryItem = this;
+                    }
+                    else
+                    {
+                        user.SelectedItem = this;
+                    }
                 }
             }
 
@@ -3245,7 +3270,7 @@ namespace Barotrauma
                     relativeOrigin = MathUtils.RotatePoint(relativeOrigin, -item.RotationRad);
                     Vector2 origin = new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2) + relativeOrigin;
 
-                    item.rect.Location -= (origin - oldOrigin).ToPoint();
+                    item.rect.Location -= ((origin - oldOrigin) * scaleRelativeToPrefab).ToPoint();
                 }
 
                 if (item.PurchasedNewSwap && !string.IsNullOrEmpty(appliedSwap.SwappableItem?.SpawnWithId))
@@ -3433,7 +3458,8 @@ namespace Barotrauma
 
             foreach (Character character in Character.CharacterList)
             {
-                if (character.SelectedConstruction == this) { character.SelectedConstruction = null; }
+                if (character.SelectedItem == this) { character.SelectedItem = null; }
+                if (character.SelectedSecondaryItem == this) { character.SelectedSecondaryItem = null; }
             }
 
             Door door = GetComponent<Door>();

@@ -2081,7 +2081,7 @@ namespace Barotrauma.Networking
                 float waitForResponseTimer = 5.0f;
                 while (connectedClients.Any(c => !c.ReadyToStart) && waitForResponseTimer > 0.0f)
                 {
-                    waitForResponseTimer -= CoroutineManager.UnscaledDeltaTime;
+                    waitForResponseTimer -= CoroutineManager.DeltaTime;
                     yield return CoroutineStatus.Running;
                 }
 
@@ -2090,7 +2090,7 @@ namespace Barotrauma.Networking
                     float waitForTransfersTimer = 20.0f;
                     while (FileSender.ActiveTransfers.Count > 0 && waitForTransfersTimer > 0.0f)
                     {
-                        waitForTransfersTimer -= CoroutineManager.UnscaledDeltaTime;
+                        waitForTransfersTimer -= CoroutineManager.DeltaTime;
                         yield return CoroutineStatus.Running;
                     }
                 }
@@ -3278,7 +3278,8 @@ namespace Barotrauma.Networking
 
             Client.UpdateKickVotes(connectedClients);
 
-            int minimumKickVotes = Math.Max(1, (int)(connectedClients.Count * serverSettings.KickVoteRequiredRatio));
+            var kickVoteEligibleClients = connectedClients.Where(c => (DateTime.Now - c.JoinTime).TotalSeconds > ServerSettings.DisallowKickVoteTime);
+            int minimumKickVotes = Math.Max(2, (int)(kickVoteEligibleClients.Count() * serverSettings.KickVoteRequiredRatio));
             var clientsToKick = connectedClients.FindAll(c =>
                 c.Connection != OwnerConnection &&
                 !c.HasPermission(ClientPermissions.Kick) &&
@@ -3581,14 +3582,14 @@ namespace Barotrauma.Networking
 
             List<JobVariant> jobPreferences = new List<JobVariant>();
             int count = message.ReadByte();
-            // TODO: modding support?
             for (int i = 0; i < Math.Min(count, 3); i++)
             {
                 string jobIdentifier = message.ReadString();
                 int variant = message.ReadByte();
-                if (JobPrefab.Prefabs.ContainsKey(jobIdentifier))
+                if (JobPrefab.Prefabs.TryGet(jobIdentifier, out JobPrefab jobPrefab))
                 {
-                    jobPreferences.Add(new JobVariant(JobPrefab.Prefabs[jobIdentifier], variant));
+                    if (jobPrefab.HiddenJob) { continue; }
+                    jobPreferences.Add(new JobVariant(jobPrefab, variant));
                 }
             }
 

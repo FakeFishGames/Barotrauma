@@ -115,12 +115,16 @@ namespace Barotrauma
 
         partial void InitProjSpecific()
         {
-            var buttonContainer = new GUILayoutGroup(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ButtonAreaTop, GUI.Canvas),
-                isHorizontal: true, childAnchor: Anchor.CenterRight)
-            {
-                CanBeFocused = false
-            };
+            CreateButtons();
+        }
 
+        public override void HUDScaleChanged()
+        {
+            CreateButtons();
+        }
+
+        private void CreateButtons()
+        {
             int buttonHeight = (int) (GUI.Scale * 40),
                 buttonWidth = GUI.IntScale(450),
                 buttonCenter = buttonHeight / 2,
@@ -166,8 +170,6 @@ namespace Barotrauma
                 },
                 UserData = "ReadyCheckButton"
             };
-            
-            buttonContainer.Recalculate();
         }
 
         private void InitCampaignUI()
@@ -311,7 +313,7 @@ namespace Barotrauma
 
             if (prevControlled != null)
             {
-                prevControlled.SelectedConstruction = null;
+                prevControlled.SelectedItem = prevControlled.SelectedSecondaryItem = null;
                 if (prevControlled.AIController != null)
                 {
                     prevControlled.AIController.Enabled = true;
@@ -362,7 +364,7 @@ namespace Barotrauma
             float t = 0.0f;
             while (t < fadeOutDuration || endTransition.Running)
             {
-                t += CoroutineManager.UnscaledDeltaTime;
+                t += CoroutineManager.DeltaTime;
                 overlayColor = Color.Lerp(Color.Transparent, Color.White, t / fadeOutDuration);
                 yield return CoroutineStatus.Running;
             }
@@ -469,7 +471,6 @@ namespace Barotrauma
         {
             base.End(transitionType);
             ForceMapUI = ShowCampaignUI = false;
-            UpgradeManager.CanUpgrade = true;
             
             // remove all event dialogue boxes
             GUIMessageBox.MessageBoxes.ForEachMod(mb =>

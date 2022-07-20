@@ -1,11 +1,10 @@
+using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using FarseerPhysics;
 using System.Diagnostics;
 using System.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -79,21 +78,27 @@ namespace Barotrauma
 
         public override void AddToGUIUpdateList()
         {
-            if (Character.Controlled != null && Character.Controlled.SelectedConstruction != null && Character.Controlled.CanInteractWith(Character.Controlled.SelectedConstruction))
+            if (Character.Controlled != null)
             {
-                Character.Controlled.SelectedConstruction.AddToGUIUpdateList();
-            }
-            if (Character.Controlled?.Inventory != null)
-            {
-                foreach (Item item in Character.Controlled.Inventory.AllItems)
+                if (Character.Controlled.SelectedItem is { } selectedItem && Character.Controlled.CanInteractWith(selectedItem))
                 {
-                    if (Character.Controlled.HasEquippedItem(item))
+                    selectedItem.AddToGUIUpdateList();
+                }
+                if (Character.Controlled.SelectedSecondaryItem is { } selectedSecondaryItem && Character.Controlled.CanInteractWith(selectedSecondaryItem))
+                {
+                    selectedSecondaryItem.AddToGUIUpdateList();
+                }
+                if (Character.Controlled.Inventory != null)
+                {
+                    foreach (Item item in Character.Controlled.Inventory.AllItems)
                     {
-                        item.AddToGUIUpdateList();
+                        if (Character.Controlled.HasEquippedItem(item))
+                        {
+                            item.AddToGUIUpdateList();
+                        }
                     }
                 }
             }
-
             GameMain.GameSession?.AddToGUIUpdateList();
             Character.AddAllToGUIUpdateList();
         }
@@ -260,11 +265,7 @@ namespace Barotrauma
             //Draw the rest of the structures, characters and front structures
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, null, DepthStencilState.None, null, null, cam.Transform);
             Submarine.DrawBack(spriteBatch, false, e => !(e is Structure) || e.SpriteDepth < 0.9f);
-            foreach (Character c in Character.CharacterList)
-            {
-                if (!c.IsVisible || c.AnimController.Limbs.Any(l => l.DeformSprite != null)) { continue; }
-                c.Draw(spriteBatch, Cam);
-            }
+            DrawCharacters(deformed: false, firstPass: true);
             spriteBatch.End();
 
             sw.Stop();
@@ -272,11 +273,12 @@ namespace Barotrauma
             sw.Restart();
 
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, DepthStencilState.None, null, null, cam.Transform);
-            DrawDeformed(firstPass: true);
-            DrawDeformed(firstPass: false);
+            DrawCharacters(deformed: true, firstPass: true);
+            DrawCharacters(deformed: true, firstPass: false);
+            DrawCharacters(deformed: false, firstPass: false);
             spriteBatch.End();
 
-            void DrawDeformed(bool firstPass)
+            void DrawCharacters(bool deformed, bool firstPass)
             {
                 //backwards order to render the most recently spawned characters in front (characters spawned later have a larger sprite depth)
                 for (int i = Character.CharacterList.Count - 1; i >= 0; i--)
@@ -284,7 +286,14 @@ namespace Barotrauma
                     Character c = Character.CharacterList[i];
                     if (!c.IsVisible) { continue; }
                     if (c.Params.DrawLast == firstPass) { continue; }
-                    if (c.AnimController.Limbs.All(l => l.DeformSprite == null)) { continue; }
+                    if (deformed)
+                    {
+                        if (c.AnimController.Limbs.All(l => l.DeformSprite == null)) { continue; }
+                    }
+                    else
+                    {
+                        if (c.AnimController.Limbs.Any(l => l.DeformSprite != null)) { continue; }
+                    }
                     c.Draw(spriteBatch, Cam);
                 }
             }

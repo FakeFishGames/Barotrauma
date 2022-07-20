@@ -522,13 +522,11 @@ namespace Barotrauma.Items.Components
                     if (soundSelectionModes == null) soundSelectionModes = new Dictionary<ActionType, SoundSelectionMode>();
                     if (!soundSelectionModes.ContainsKey(type) || soundSelectionModes[type] == SoundSelectionMode.Random)
                     {
-                        SoundSelectionMode selectionMode = SoundSelectionMode.Random;
-                        Enum.TryParse(subElement.GetAttributeString("selectionmode", "Random"), out selectionMode);
+                        Enum.TryParse(subElement.GetAttributeString("selectionmode", "Random"), out SoundSelectionMode selectionMode);
                         soundSelectionModes[type] = selectionMode;
                     }
 
-                    List<ItemSound> soundList = null;
-                    if (!sounds.TryGetValue(itemSound.Type, out soundList))
+                    if (!sounds.TryGetValue(itemSound.Type, out List<ItemSound> soundList))
                     {
                         soundList = new List<ItemSound>();
                         sounds.Add(itemSound.Type, soundList);
@@ -566,12 +564,31 @@ namespace Barotrauma.Items.Components
             }
             string style = GuiFrameSource.Attribute("style") == null ? null : GuiFrameSource.GetAttributeString("style", "");
             GuiFrame = new GUIFrame(RectTransform.Load(GuiFrameSource, GUI.Canvas, Anchor.Center), style, color);
+
+            TryCreateDragHandle();
+
             DefaultLayout = GUILayoutSettings.Load(GuiFrameSource);
             if (GuiFrame != null)
             {
                 GuiFrame.RectTransform.ParentChanged += OnGUIParentChanged;
             }
             GameMain.Instance.ResolutionChanged += OnResolutionChanged;
+        }
+
+        protected void TryCreateDragHandle()
+        {
+            if (GuiFrame != null && GuiFrameSource.GetAttributeBool("draggable", true))
+            {
+                var handle = new GUIDragHandle(new RectTransform(Vector2.One, GuiFrame.RectTransform, Anchor.Center),
+                    GuiFrame.RectTransform, style: null)
+                {
+                    DragArea = HUDLayoutSettings.ItemHUDArea
+                };
+
+                int iconHeight = GUIStyle.ItemFrameMargin.Y / 4;
+                new GUIImage(new RectTransform(new Point(GuiFrame.Rect.Width, iconHeight), handle.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, iconHeight / 2) },
+                    style: "GUIDragIndicatorHorizontal");
+            }
         }
 
         /// <summary>

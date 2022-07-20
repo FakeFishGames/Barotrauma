@@ -205,7 +205,7 @@ namespace Barotrauma
                 if (!character.IsClimbing && character.CanInteractWith(target.Item, out _, checkLinked: false))
                 {
                     HumanAIController.FaceTarget(target.Item);
-                    if (character.SelectedConstruction != target.Item)
+                    if (character.SelectedItem != target.Item)
                     {
                         target.Item.TryInteract(character, forceSelectKey: true);
                     }

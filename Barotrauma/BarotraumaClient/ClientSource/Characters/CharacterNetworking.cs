@@ -1,5 +1,4 @@
-﻿using Barotrauma.Extensions;
-using Barotrauma.Items.Components;
+﻿using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
@@ -44,7 +43,8 @@ namespace Barotrauma
                         LastNetworkUpdateID,
                         AnimController.TargetDir,
                         SelectedCharacter,
-                        SelectedConstruction,
+                        SelectedItem,
+                        SelectedSecondaryItem,
                         AnimController.Anim);
 
                     memLocalState.Add(posInfo);
@@ -219,15 +219,17 @@ namespace Barotrauma
 
             bool entitySelected = msg.ReadBoolean();
             Character selectedCharacter = null;
-            Item selectedItem = null;
+            Item selectedItem = null, selectedSecondaryItem = null;
 
             AnimController.Animation animation = AnimController.Animation.None;
             if (entitySelected)
             {
                 ushort characterID = msg.ReadUInt16();
                 ushort itemID = msg.ReadUInt16();
+                ushort secondaryItemID = msg.ReadUInt16();
                 selectedCharacter = FindEntityByID(characterID) as Character;
                 selectedItem = FindEntityByID(itemID) as Item;
+                selectedSecondaryItem = FindEntityByID(secondaryItemID) as Item;
                 if (characterID != NullEntityID)
                 {
                     bool doingCpr = msg.ReadBoolean();
@@ -274,7 +276,7 @@ namespace Barotrauma
                     pos, rotation,
                     networkUpdateID,
                     facingRight ? Direction.Right : Direction.Left,
-                    selectedCharacter, selectedItem, animation);
+                    selectedCharacter, selectedItem, selectedSecondaryItem, animation);
 
                 while (index < memState.Count && NetIdUtils.IdMoreRecent(posInfo.ID, memState[index].ID))
                     index++;
@@ -286,7 +288,7 @@ namespace Barotrauma
                     pos, rotation,
                     linearVelocity, angularVelocity,
                     sendingTime, facingRight ? Direction.Right : Direction.Left,
-                    selectedCharacter, selectedItem, animation);
+                    selectedCharacter, selectedItem, selectedSecondaryItem, animation);
 
                 while (index < memState.Count && posInfo.Timestamp > memState[index].Timestamp)
                     index++;
@@ -375,9 +377,15 @@ namespace Barotrauma
                     if (attackLimbIndex == 255 || Removed) { break; }
                     if (attackLimbIndex >= AnimController.Limbs.Length)
                     {
-                        string errorMsg = $"Received invalid {(eventType == EventType.SetAttackTarget ? "SetAttackTarget" : "ExecuteAttack")} message. Limb index out of bounds (character: {Name}, limb index: {attackLimbIndex}, limb count: {AnimController.Limbs.Length})";
-                        DebugConsole.ThrowError(errorMsg);
-                        GameAnalyticsManager.AddErrorEventOnce("Character.ClientEventRead:AttackLimbOutOfBounds", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                        //it's possible to get these errors when mid-round syncing, as the client may not
+                        //yet know about afflictions that have given the character extra limbs (e.g. spineling genes)
+                        //ignoring the error should be safe though, not executing the attack should not cause any further issues
+                        if (!GameMain.Client.MidRoundSyncing)
+                        {
+                            string errorMsg = $"Received invalid {(eventType == EventType.SetAttackTarget ? "SetAttackTarget" : "ExecuteAttack")} message. Limb index out of bounds (character: {Name}, limb index: {attackLimbIndex}, limb count: {AnimController.Limbs.Length})";
+                            DebugConsole.ThrowError(errorMsg);
+                            GameAnalyticsManager.AddErrorEventOnce("Character.ClientEventRead:AttackLimbOutOfBounds", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                        }
                         break;
                     }
                     Limb attackLimb = AnimController.Limbs[attackLimbIndex];
@@ -673,16 +681,17 @@ namespace Barotrauma
                 AfflictionPrefab causeOfDeathAffliction = null;
                 if (causeOfDeathType == CauseOfDeathType.Affliction)
                 {
-                    string afflictionName = msg.ReadString();
-                    if (!AfflictionPrefab.Prefabs.ContainsKey(afflictionName))
+                    uint afflictionId = msg.ReadUInt32();
+                    AfflictionPrefab afflictionPrefab = AfflictionPrefab.Prefabs.Find(p => p.UintIdentifier == afflictionId);
+                    if (afflictionPrefab == null)
                     {
-                        string errorMsg = $"Error in CharacterNetworking.ReadStatus: affliction not found ({afflictionName})";
+                        string errorMsg = $"Error in CharacterNetworking.ReadStatus: affliction not found (id {afflictionId})";
                         causeOfDeathType = CauseOfDeathType.Unknown;
-                        GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ReadStatus:AfflictionIndexOutOfBounts", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                        GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ReadStatus:AfflictionNotFound", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                     }
                     else
                     {
-                        causeOfDeathAffliction = AfflictionPrefab.Prefabs[afflictionName];
+                        causeOfDeathAffliction = afflictionPrefab;
                     }
                 }
                 bool containsAfflictionData = msg.ReadBoolean();

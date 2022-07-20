@@ -944,14 +944,19 @@ namespace Barotrauma
         {
             foreach (Location location in Locations)
             {
+                location.LevelData.EventsExhausted = false;
                 if (location.Discovered)
                 {
-                    if (furthestDiscoveredLocation == null || 
+                    if (furthestDiscoveredLocation == null ||
                         location.MapPosition.X > furthestDiscoveredLocation.MapPosition.X)
                     {
                         furthestDiscoveredLocation = location;
                     }
                 }
+            }
+            foreach (LocationConnection connection in Connections)
+            {
+                connection.LevelData.EventsExhausted = false;
             }
 
             foreach (Location location in Locations)

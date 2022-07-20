@@ -49,7 +49,7 @@ namespace Barotrauma
                 //scaling the bar linearly with the resolution tends to make them too large on large resolutions
                 float desiredSize = 25.0f;
                 float scaledSize = desiredSize * GUI.Scale;
-                return (int)((desiredSize + scaledSize) / 2.0f);
+                return (int)Math.Min((desiredSize + scaledSize) / 2.0f, Rect.Height / 3);
             }
         }
 
@@ -72,6 +72,8 @@ namespace Barotrauma
         }
 
         public bool HideChildrenOutsideFrame = true;
+
+        public bool ResizeContentToMakeSpaceForScrollBar = true;
 
         private bool useGridLayout;
 
@@ -419,7 +421,7 @@ namespace Barotrauma
         {
             dimensionsNeedsRecalculation = false;
             ContentBackground.RectTransform.Resize(Rect.Size);
-            bool reduceScrollbarSize = KeepSpaceForScrollBar ? ScrollBarEnabled : ScrollBarVisible;
+            bool reduceScrollbarSize = ResizeContentToMakeSpaceForScrollBar && (KeepSpaceForScrollBar ? ScrollBarEnabled : ScrollBarVisible);
             Point contentSize = reduceScrollbarSize ? CalculateFrameSize(ScrollBar.IsHorizontal, ScrollBarSize) : Rect.Size;
             Content.RectTransform.Resize(new Point((int)(contentSize.X - Padding.X - Padding.Z), (int)(contentSize.Y - Padding.Y - Padding.W)));
             if (!IsScrollBarOnDefaultSide) { Content.RectTransform.SetPosition(Anchor.BottomRight); }

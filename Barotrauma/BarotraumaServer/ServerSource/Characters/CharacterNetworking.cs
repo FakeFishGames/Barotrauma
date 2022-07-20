@@ -359,11 +359,12 @@ namespace Barotrauma
                 tempBuffer.Write(AnimController.Dir > 0.0f);
             }
 
-            if (SelectedCharacter != null || SelectedConstruction != null)
+            if (SelectedCharacter != null || HasSelectedAnyItem)
             {
                 tempBuffer.Write(true);
                 tempBuffer.Write(SelectedCharacter != null ? SelectedCharacter.ID : NullEntityID);
-                tempBuffer.Write(SelectedConstruction != null ? SelectedConstruction.ID : NullEntityID);
+                tempBuffer.Write(SelectedItem != null ? SelectedItem.ID : NullEntityID);
+                tempBuffer.Write(SelectedSecondaryItem != null ? SelectedSecondaryItem.ID : NullEntityID);
                 if (SelectedCharacter != null)
                 {
                     tempBuffer.Write(AnimController.Anim == AnimController.Animation.CPR);
@@ -424,8 +425,8 @@ namespace Barotrauma
                     msg.Write(owner == c && owner.Character == this);
                     msg.Write(owner != null && owner.Character == this && GameMain.Server.ConnectedClients.Contains(owner) ? owner.ID : (byte)0);
                     break;
-                case CharacterStatusEventData _:
-                    WriteStatus(msg);
+                case CharacterStatusEventData statusEventData:
+                    WriteStatus(msg, statusEventData.ForceAfflictionData);
                     break;
                 case UpdateSkillsEventData _:
                     if (Info?.Job == null)
@@ -573,7 +574,7 @@ namespace Barotrauma
                 msg.WriteRangedInteger((int)CauseOfDeath.Type, 0, Enum.GetValues(typeof(CauseOfDeathType)).Length - 1);
                 if (CauseOfDeath.Type == CauseOfDeathType.Affliction)
                 {
-                    msg.Write(CauseOfDeath.Affliction.Identifier);
+                    msg.Write(CauseOfDeath.Affliction.UintIdentifier);
                 }
                 msg.Write(forceAfflictionData);
                 if (forceAfflictionData)

@@ -102,7 +102,7 @@ namespace Barotrauma
             if (PersonalityTrait != null)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), headerTextArea.RectTransform),
-                    TextManager.AddPunctuation(':', TextManager.Get("PersonalityTrait"), TextManager.Get("personalitytrait." + PersonalityTrait.Name.Replace(" ".ToIdentifier(), "".ToIdentifier()))),
+                    TextManager.AddPunctuation(':', TextManager.Get("PersonalityTrait"), PersonalityTrait.DisplayName),
                     font: font)
                 {
                     Padding = Vector4.Zero
@@ -523,22 +523,20 @@ namespace Barotrauma
             Color facialHairColor = inc.ReadColorR8G8B8();
             string ragdollFile = inc.ReadString();
 
-            string jobIdentifier = inc.ReadString();
+            uint jobIdentifier = inc.ReadUInt32();
             int variant = inc.ReadByte();
 
             JobPrefab jobPrefab = null;
             Dictionary<Identifier, float> skillLevels = new Dictionary<Identifier, float>();
-            if (!string.IsNullOrEmpty(jobIdentifier))
-            {
-                jobPrefab = JobPrefab.Get(jobIdentifier);
-                byte skillCount = inc.ReadByte();
-                for (int i = 0; i < skillCount; i++)
+            if (jobIdentifier > 0)
+            { 
+                jobPrefab = JobPrefab.Prefabs.Find(jp => jp.UintIdentifier == jobIdentifier);
+                foreach (SkillPrefab skillPrefab in jobPrefab.Skills.OrderBy(s => s.Identifier))
                 {
-                    Identifier skillIdentifier = inc.ReadIdentifier();
                     float skillLevel = inc.ReadSingle();
-                    skillLevels.Add(skillIdentifier, skillLevel);
-                }
-            }
+                    skillLevels.Add(skillPrefab.Identifier, skillLevel);
+                }         
+            }            
 
             // TODO: animations
             CharacterInfo ch = new CharacterInfo(speciesName, newName, originalName, jobPrefab, ragdollFile, variant)
@@ -777,7 +775,21 @@ namespace Barotrauma
                 
                 createColorSelector($"Customization.{nameof(info.Head.SkinColor)}".ToIdentifier(), info.SkinColors, () => info.Head.SkinColor,
                     (color) => info.Head.SkinColor = color);
-
+#if DEBUG
+                new GUIButton(new RectTransform(Vector2.One * 0.12f,
+                        parentComponent.RectTransform,
+                        anchor: Anchor.BottomRight, scaleBasis: ScaleBasis.Smallest)
+                { RelativeOffset = new Vector2(0.01f, 0.005f) }, style: "SaveButton", color: Color.Magenta)
+                {
+                    ToolTip = "DEBUG ONLY: copy the character info XML to clipboard",
+                    OnClicked = (button, o) =>
+                    {
+                        XElement element = info.Save(null);
+                        Clipboard.SetText(element.ToString());
+                        return false;
+                    }
+                };
+#endif
                 RandomizeButton = new GUIButton(new RectTransform(Vector2.One * 0.12f,
                         parentComponent.RectTransform,
                         anchor: Anchor.BottomRight, scaleBasis: ScaleBasis.Smallest)

@@ -253,12 +253,18 @@ namespace Barotrauma
             if (flipHorizontal)
             {
                 float diff = targetSize.X % (sourceRect.Width * scale.X);
-                flippedDrawOffset.X = (int)((sourceRect.Width * scale.X - diff) / scale.X);
+                flippedDrawOffset.X = (sourceRect.Width * scale.X - diff) / scale.X;
+                flippedDrawOffset.X =
+                    MathUtils.NearlyEqual(flippedDrawOffset.X, MathF.Round(flippedDrawOffset.X)) ?
+                    MathF.Round(flippedDrawOffset.X) : flippedDrawOffset.X;
             }
             if (flipVertical)
             {
                 float diff = targetSize.Y % (sourceRect.Height * scale.Y);
-                flippedDrawOffset.Y = (int)((sourceRect.Height * scale.Y - diff) / scale.Y);
+                flippedDrawOffset.Y = (sourceRect.Height * scale.Y - diff) / scale.Y;
+                flippedDrawOffset.Y =
+                    MathUtils.NearlyEqual(flippedDrawOffset.Y, MathF.Round(flippedDrawOffset.Y)) ?
+                    MathF.Round(flippedDrawOffset.Y) : flippedDrawOffset.Y;
             }
             drawOffset += flippedDrawOffset;
 

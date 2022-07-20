@@ -1202,6 +1202,8 @@ namespace Barotrauma.Networking
                 connected = false;
 
                 var prevContentPackages = clientPeer.ServerContentPackages;
+                //decrement lobby update ID to make sure we update the lobby when we reconnect
+                GameMain.NetLobbyScreen.LastUpdateID--;
                 ConnectToServer(serverEndpoint, serverName);
                 if (clientPeer != null)
                 {
@@ -3271,8 +3273,8 @@ namespace Barotrauma.Networking
 
             if (gameStarted && Screen.Selected == GameMain.GameScreen)
             {
-                var controller = Character.Controlled?.SelectedConstruction?.GetComponent<Controller>();
-                bool disableButtons = Character.Controlled != null && (controller != null && controller.HideHUD);
+                bool disableButtons = Character.Controlled?.SelectedItem?.GetComponent<Controller>() is Controller c1 && c1.HideHUD ||
+                    Character.Controlled?.SelectedSecondaryItem?.GetComponent<Controller>() is Controller c2 && c2.HideHUD;
                 buttonContainer.Visible = !disableButtons;
                 
                 if (!GUI.DisableHUD && !GUI.DisableUpperHUD)

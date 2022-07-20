@@ -92,7 +92,13 @@ namespace Barotrauma
         
         public readonly bool ChooseRandom;
 
-        public readonly int EventCount = 1;
+        private readonly int eventCount = 1;
+        private readonly Dictionary<Identifier, int> overrideEventCount = new Dictionary<Identifier, int>();
+
+        /// <summary>
+        /// 'Exhaustible' sets won't appear in the same level until after one world step (~10 min, see Map.ProgressWorld) has passed.
+        /// </summary>
+        public readonly bool Exhaustible;
 
         public readonly float MinDistanceTraveled;
         public readonly float MinMissionTime;
@@ -250,7 +256,8 @@ namespace Barotrauma
             MaxIntensity = Math.Max(element.GetAttributeFloat("maxintensity", 100.0f), MinIntensity);
 
             ChooseRandom = element.GetAttributeBool("chooserandom", false);
-            EventCount = element.GetAttributeInt("eventcount", 1);
+            eventCount = element.GetAttributeInt("eventcount", 1);
+            Exhaustible = element.GetAttributeBool("exhaustible", false);
             MinDistanceTraveled = element.GetAttributeFloat("mindistancetraveled", 0.0f);
             MinMissionTime = element.GetAttributeFloat("minmissiontime", 0.0f);
 
@@ -287,6 +294,13 @@ namespace Barotrauma
                         break;
                     case "eventset":
                         childSets.Add(new EventSet(subElement, file, this));
+                        break;
+                    case "overrideeventcount":
+                        Identifier locationType = subElement.GetAttributeIdentifier("locationtype", "");
+                        if (!overrideEventCount.ContainsKey(locationType))
+                        {
+                            overrideEventCount.Add(locationType, subElement.GetAttributeInt("eventcount", eventCount));
+                        }
                         break;
                     default:
                         //an element with just an identifier = reference to an event prefab
@@ -332,6 +346,12 @@ namespace Barotrauma
             return OverrideCommonness.ContainsKey(key) ? OverrideCommonness[key] : DefaultCommonness;
         }
 
+        public int GetEventCount(Level level)
+        {
+            if (level?.StartLocation == null || !overrideEventCount.TryGetValue(level.StartLocation.Type.Identifier, out int count)) { return eventCount; }
+            return count;
+        }
+
         public static List<string> GetDebugStatistics(int simulatedRoundCount = 100, Func<MonsterEvent, bool> filter = null, bool fullLog = false)
         {
             List<string> debugLines = new List<string>();
@@ -358,7 +378,7 @@ namespace Barotrauma
                     var unusedEvents = thisSet.EventPrefabs.ToList();
                     if (unusedEvents.Any())
                     {
-                        for (int i = 0; i < thisSet.EventCount; i++)
+                        for (int i = 0; i < thisSet.eventCount; i++)
                         {
                             var eventPrefab = ToolBox.SelectWeightedRandom(unusedEvents, unusedEvents.Select(e => e.Commonness).ToList(), Rand.RandSync.Unsynced);
                             if (eventPrefab.EventPrefabs.Any(p => p != null))

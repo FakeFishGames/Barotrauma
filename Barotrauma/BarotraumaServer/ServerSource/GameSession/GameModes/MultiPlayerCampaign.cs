@@ -354,6 +354,7 @@ namespace Barotrauma
                 LeaveUnconnectedSubs(leavingSub);
                 NextLevel = newLevel;
                 GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);
+                GameMain.GameSession.EventManager.RegisterEventHistory();
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
             else
@@ -530,8 +531,9 @@ namespace Barotrauma
                 if (wallet.HasTransactions())
                 {
                     NetWalletTransaction transaction = wallet.DequeueAndMergeTransactions(id);
-                    if (transaction.ChangedData.BalanceChanged.IsNone() && transaction.ChangedData.RewardDistributionChanged.IsNone()) { continue; }
+                    if (!wallet.ShouldForceUpdate && transaction.ChangedData.BalanceChanged.IsNone() && transaction.ChangedData.RewardDistributionChanged.IsNone()) { continue; }
                     transactions.Add(transaction);
+                    wallet.ShouldForceUpdate = false;
                 }
             }
 
@@ -790,11 +792,19 @@ namespace Barotrauma
                 purchasedItemSwaps.Add(new PurchasedItemSwap(itemToRemove, itemToInstall));
             }
 
+            int hullRepairCost = GetHullRepairCost();
+            int itemRepairCost = GetItemRepairCost();
+            int shuttleRetrieveCost = CampaignMode.ShuttleReplaceCost;
             Location location = Map.CurrentLocation;
-            int hullRepairCost = location?.GetAdjustedMechanicalCost(HullRepairCost) ?? HullRepairCost;
-            int itemRepairCost = location?.GetAdjustedMechanicalCost(ItemRepairCost) ?? ItemRepairCost;
-            int shuttleRetrieveCost = location?.GetAdjustedMechanicalCost(ShuttleReplaceCost) ?? ShuttleReplaceCost;
+            if (location != null)
+            {
+                hullRepairCost = location.GetAdjustedMechanicalCost(hullRepairCost);
+                itemRepairCost = location.GetAdjustedMechanicalCost(itemRepairCost);
+                shuttleRetrieveCost = location.GetAdjustedMechanicalCost(shuttleRetrieveCost);
+            }
+
             Wallet personalWallet = GetWallet(sender);
+            personalWallet?.ForceUpdate();
 
             if (purchasedHullRepairs != PurchasedHullRepairs)
             {
@@ -875,6 +885,9 @@ namespace Barotrauma
             {
                 foreach (var item in store.Value.ToList())
                 {
+                    if (map?.CurrentLocation?.Stores == null || !map.CurrentLocation.Stores.ContainsKey(store.Key)) { continue; }
+                    item.Quantity = Math.Min(map.CurrentLocation.Stores[store.Key].Stock.Find(s => s.ItemPrefab == item.ItemPrefab)?.Quantity ?? 0, item.Quantity);
+                    if (item.Quantity <= 0) { continue; }
                     CargoManager.ModifyItemQuantityInBuyCrate(store.Key, item.ItemPrefab, item.Quantity, sender);
                 }
             }

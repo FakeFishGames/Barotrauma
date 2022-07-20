@@ -246,6 +246,7 @@ namespace Barotrauma.Items.Components
         protected override void CreateGUI()
         {
             GuiFrame.ClearChildren();
+            TryCreateDragHandle();
 
             GuiFrame.RectTransform.RelativeOffset = new Vector2(0.05f, 0.0f);
             GuiFrame.CanBeFocused = true;

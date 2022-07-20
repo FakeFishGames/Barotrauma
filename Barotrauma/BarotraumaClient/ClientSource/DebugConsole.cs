@@ -1,21 +1,18 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.ClientSource.Settings;
+using Barotrauma.Extensions;
+using Barotrauma.IO;
+using Barotrauma.Items.Components;
+using Barotrauma.MapCreatures.Behavior;
 using Barotrauma.Networking;
+using Barotrauma.Steam;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
-using Barotrauma.IO;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
-using System.Globalization;
-using FarseerPhysics;
-using Barotrauma.Extensions;
-using Barotrauma.Steam;
-using System.Threading.Tasks;
-using Barotrauma.ClientSource.Settings;
-using Barotrauma.MapCreatures.Behavior;
 using static Barotrauma.FabricationRecipe;
 
 namespace Barotrauma
@@ -1299,7 +1296,7 @@ namespace Barotrauma
                     int? fabricationCost = null;
                     int? deconstructProductCost = null;
 
-                    var fabricationRecipe = fabricableItems.Find(f => f.TargetItem == itemPrefab);
+                    var fabricationRecipe = fabricableItems.Find(f => f.TargetItem == itemPrefab && f.RequiredItems.Any());
                     if (fabricationRecipe != null)
                     {
                         foreach (var ingredient in fabricationRecipe.RequiredItems)
@@ -1334,6 +1331,21 @@ namespace Barotrauma
                         if (fabricationRecipe != null)
                         {
                             var ingredient = fabricationRecipe.RequiredItems.Find(r => r.ItemPrefabs.Contains(targetItem));
+
+                            if (ingredient == null)
+                            {
+                                foreach (var requiredItem in fabricationRecipe.RequiredItems)
+                                {
+                                    foreach (var itemPrefab2 in requiredItem.ItemPrefabs)
+                                    {
+                                        foreach (var recipe in itemPrefab2.FabricationRecipes.Values)
+                                        {
+                                            ingredient ??= recipe.RequiredItems.Find(r => r.ItemPrefabs.Contains(targetItem));
+                                        }
+                                    }
+                                }
+                            }
+
                             if (ingredient == null)
                             {
                                 NewMessage("Deconstructing \"" + itemPrefab.Name + "\" produces \"" + deconstructItem.ItemIdentifier + "\", which isn't required in the fabrication recipe of the item.", Color.Red);
@@ -2077,7 +2089,17 @@ namespace Barotrauma
                 var prefab = MapEntityPrefab.Find(null, args[0]);
                 if (prefab != null)
                 {
-                    DebugConsole.NewMessage(prefab.Name + " " + prefab.Identifier + " " + prefab.GetType().ToString());
+                    NewMessage(prefab.Name + " " + prefab.Identifier + " " + prefab.GetType().ToString());
+                }
+            }));
+
+            commands.Add(new Command("copycharacterinfotoclipboard", "", (string[] args) =>
+            {
+                if (Character.Controlled?.Info != null)
+                {
+                    XElement element = Character.Controlled?.Info.Save(null);
+                    Clipboard.SetText(element.ToString());
+                    DebugConsole.NewMessage($"Copied the characterinfo of {Character.Controlled.Name} to clipboard.");
                 }
             }));
 
@@ -2507,7 +2529,7 @@ namespace Barotrauma
 
             commands.Add(new Command("checkduplicates", "Checks the given language for duplicate translation keys and writes to file.", (string[] args) =>
             {
-                if (args.Length != 1) return;
+                if (args.Length != 1) { return; }
                 TextManager.CheckForDuplicates(args[0].ToIdentifier().ToLanguageIdentifier());
             }));
 
@@ -2517,9 +2539,20 @@ namespace Barotrauma
                 NPCConversation.WriteToCSV();
             }));
 
-            commands.Add(new Command("csvtoxml", "csvtoxml [language] -> Converts .csv localization files in Content/NPCConversations & Content/Texts to .xml for use in-game.", (string[] args) =>
+            commands.Add(new Command("csvtoxml", "csvtoxml -> Converts .csv localization files Content/Texts/Texts.csv and Content/Texts/NPCConversations.csv to .xml for use in-game.", (string[] args) =>
             {
-                LocalizationCSVtoXML.Convert();
+                ShowQuestionPrompt("Do you want to save the text files to the project folder (../../../BarotraumaShared/Content/Texts/)? If not, they are saved in the current working directory. Y/N",
+                    (option1) => 
+                    {
+                        ShowQuestionPrompt("Do you want to convert the NPC conversations as well? Y/N",
+                            (option2) =>
+                            {
+                                LocalizationCSVtoXML.ConvertMasterLocalizationKit(
+                                    option1.ToLowerInvariant() == "y" ? "../../../BarotraumaShared/Content/Texts/" : "Content/Texts",
+                                    option1.ToLowerInvariant() == "y" ? "../../../BarotraumaShared/Content/NPCConversations/" : "Content/NPCConversations",
+                                    convertConversations: option2.ToLowerInvariant() == "y");
+                            });
+                    });
             }));
 
             commands.Add(new Command("printproperties", "Goes through the currently collected property list for missing localizations and writes them to a file.", (string[] args) =>

@@ -81,6 +81,11 @@ namespace Barotrauma
             get; private set;
         }
 
+        public static Rectangle ItemHUDArea
+        {
+            get; private set;
+        }
+
         public static int Padding
         {
             get; private set;
@@ -168,6 +173,8 @@ namespace Barotrauma
 
             // Height is based on text content
             VotingArea = new Rectangle(votingAreaX, votingAreaY, votingAreaWidth, 0);
+
+            ItemHUDArea = new Rectangle(0, ButtonAreaTop.Bottom, GameMain.GraphicsWidth, GameMain.GraphicsHeight - ButtonAreaTop.Bottom - InventoryAreaLower.Height);
         }
 
         public static void Draw(SpriteBatch spriteBatch)
@@ -181,6 +188,7 @@ namespace Barotrauma
             GUI.DrawRectangle(spriteBatch, InventoryAreaLower, Color.Yellow * 0.5f);
             GUI.DrawRectangle(spriteBatch, HealthWindowAreaLeft, Color.Red * 0.5f);
             GUI.DrawRectangle(spriteBatch, BottomRightInfoArea, Color.Green * 0.5f);
+            GUI.DrawRectangle(spriteBatch, ItemHUDArea, Color.Magenta * 0.3f);
         }
     }
 

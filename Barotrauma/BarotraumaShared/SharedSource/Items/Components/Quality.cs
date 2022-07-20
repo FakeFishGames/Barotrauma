@@ -47,7 +47,7 @@ namespace Barotrauma.Items.Components
 
         private int qualityLevel;
 
-        [Editable, Serialize(0, IsPropertySaveable.Yes)]
+        [Editable(MinValueInt = 0, MaxValueInt = MaxQuality), Serialize(0, IsPropertySaveable.Yes)]
         public int QualityLevel
         {
             get { return qualityLevel; }

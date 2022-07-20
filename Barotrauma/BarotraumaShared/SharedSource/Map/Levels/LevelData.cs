@@ -57,6 +57,8 @@ namespace Barotrauma
         public readonly List<EventPrefab> EventHistory = new List<EventPrefab>();
         public readonly List<EventPrefab> NonRepeatableEvents = new List<EventPrefab>();
 
+        public bool EventsExhausted { get; set; }
+
         public float CrushDepth
         {
             get
@@ -130,6 +132,8 @@ namespace Barotrauma
 
             string[] nonRepeatablePrefabNames = element.GetAttributeStringArray("nonrepeatableevents", new string[] { });
             NonRepeatableEvents.AddRange(EventPrefab.Prefabs.Where(p => nonRepeatablePrefabNames.Any(n => p.Identifier == n)));
+
+            EventsExhausted = element.GetAttributeBool(nameof(EventsExhausted).ToLower(), false);
         }
 
 
@@ -238,7 +242,8 @@ namespace Barotrauma
                     new XAttribute("difficulty", Difficulty.ToString("G", CultureInfo.InvariantCulture)),
                     new XAttribute("size", XMLExtensions.PointToString(Size)),
                     new XAttribute("generationparams", GenerationParams.Identifier),
-                    new XAttribute("initialdepth", InitialDepth));
+                    new XAttribute("initialdepth", InitialDepth),
+                    new XAttribute(nameof(EventsExhausted).ToLower(), EventsExhausted));
 
             if (HasBeaconStation)
             {

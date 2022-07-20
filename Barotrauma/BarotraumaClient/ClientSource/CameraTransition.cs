@@ -159,7 +159,7 @@ namespace Barotrauma
                     GameMain.LightManager.LosEnabled = true;
                 }
 #endif
-                timer += CoroutineManager.UnscaledDeltaTime;
+                timer += CoroutineManager.DeltaTime;
 
                 yield return CoroutineStatus.Running;
             }

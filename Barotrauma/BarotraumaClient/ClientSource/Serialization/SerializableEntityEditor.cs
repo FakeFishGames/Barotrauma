@@ -1448,7 +1448,9 @@ namespace Barotrauma
                             var component = otherComponents[componentIndex];
                             Debug.Assert(component.GetType() == parentObject.GetType());                            
                             SafeAdd(component, property);
-                            if (value is string stringValue && Enum.TryParse(property.PropertyType, stringValue, out var enumValue))
+                            if (value is string stringValue && 
+                                property.PropertyType.IsEnum &&
+                                Enum.TryParse(property.PropertyType, stringValue, out var enumValue))
                             {
                                 property.PropertyInfo.SetValue(component, enumValue);
                             }

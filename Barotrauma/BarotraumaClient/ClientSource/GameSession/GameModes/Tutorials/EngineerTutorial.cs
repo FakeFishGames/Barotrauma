@@ -400,7 +400,7 @@ namespace Barotrauma.Tutorials
                 wait -= 0.1f;
                 engineer_reactor.AutoTemp = true;
             } while (wait > 0.0f);
-            engineer.SelectedConstruction = null;
+            engineer.SelectedItem = null;
             engineer_reactor.CanBeSelected = false;
             RemoveCompletedObjective(2);
             GameAnalyticsManager.AddDesignEvent("Tutorial:EngineerTutorial:Objective2");
@@ -513,7 +513,7 @@ namespace Barotrauma.Tutorials
 
         private bool IsSelectedItem(Item item)
         {
-            return engineer?.SelectedConstruction == item;
+            return engineer?.SelectedItem == item;
         }
 
         private IEnumerable<CoroutineStatus> ReactorOperatedProperly()
@@ -568,7 +568,7 @@ namespace Barotrauma.Tutorials
 
         private void HandleJunctionBoxWiringHighlights()
         {
-            Item selected = engineer.SelectedConstruction;
+            Item selected = engineer.SelectedItem;
 
             if (!engineer.HasEquippedItem("screwdriver".ToIdentifier()))
             {

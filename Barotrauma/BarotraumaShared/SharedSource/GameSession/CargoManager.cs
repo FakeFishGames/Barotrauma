@@ -302,6 +302,10 @@ namespace Barotrauma
             var itemsInStoreCrate = GetBuyCrateItems(storeIdentifier, create: true);
             foreach (PurchasedItem item in itemsToPurchase)
             {
+                // Exchange money
+                int itemValue = item.Quantity * buyValues[item.ItemPrefab];
+                if (!campaign.TryPurchase(client, itemValue)) { continue; }
+
                 // Add to the purchased items
                 var purchasedItem = itemsPurchasedFromStore.Find(pi => pi.ItemPrefab == item.ItemPrefab);
                 if (purchasedItem != null)
@@ -313,9 +317,6 @@ namespace Barotrauma
                     purchasedItem = new PurchasedItem(item.ItemPrefab, item.Quantity, client);
                     itemsPurchasedFromStore.Add(purchasedItem);
                 }
-                // Exchange money
-                int itemValue = item.Quantity * buyValues[item.ItemPrefab];
-                campaign.TryPurchase(client, itemValue);
                 if (GameMain.IsSingleplayer)
                 {
                     GameAnalyticsManager.AddMoneySpentEvent(itemValue, GameAnalyticsManager.MoneySink.Store, item.ItemPrefab.Identifier.Value);

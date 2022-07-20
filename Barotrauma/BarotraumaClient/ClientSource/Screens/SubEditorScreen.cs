@@ -813,8 +813,13 @@ namespace Barotrauma
             var itemCount = new GUITextBlock(new RectTransform(new Vector2(0.33f, 1.0f), itemCountText.RectTransform, Anchor.TopRight, Pivot.TopLeft), "", textAlignment: Alignment.CenterRight);
             itemCount.TextGetter = () =>
             {
-                itemCount.TextColor = Item.ItemList.Count > MaxItems ? GUIStyle.Red : Color.Lerp(GUIStyle.Green, GUIStyle.Orange, Item.ItemList.Count / (float)MaxItems);
-                return Item.ItemList.Count.ToString();
+                int count = Item.ItemList.Count;
+                if (dummyCharacter?.Inventory != null)
+                {
+                    count -= dummyCharacter.Inventory.AllItems.Count();
+                }
+                itemCount.TextColor = count > MaxItems ? GUIStyle.Red : Color.Lerp(GUIStyle.Green, GUIStyle.Orange, count / (float)MaxItems);
+                return count.ToString();
             };
 
             var structureCountText = new GUITextBlock(new RectTransform(new Vector2(0.75f, 0.0f), paddedEntityCountPanel.RectTransform), TextManager.Get("Structures"),
@@ -1497,7 +1502,7 @@ namespace Barotrauma
         /// <returns></returns>
         private static IEnumerable<CoroutineStatus> AutoSaveCoroutine()
         {
-            DateTime target = DateTime.Now.AddMinutes(GameSettings.CurrentConfig.AutoSaveIntervalSeconds);
+            DateTime target = DateTime.Now.AddSeconds(GameSettings.CurrentConfig.AutoSaveIntervalSeconds);
             DateTime tempTarget = DateTime.Now;
 
             bool wasPaused = false;
@@ -1549,7 +1554,9 @@ namespace Barotrauma
             MapEntity.DeselectAll();
             ClearUndoBuffer();
 
+#if !DEBUG
             DebugConsole.DeactivateCheats();
+#endif
 
             SetMode(Mode.Default);
 
@@ -3337,23 +3344,21 @@ namespace Barotrauma
         {
             if (!(userData is XElement element)) { return; }
 
-            #warning TODO: revise
+#warning TODO: revise
             string filePath = element.GetAttributeStringUnrestricted("file", "");
             if (string.IsNullOrWhiteSpace(filePath)) { return; }
 
             var loadedSub = Submarine.Load(new SubmarineInfo(filePath), true);
 
-            // set the submarine file path to the "default" value
-            var unspecifiedFileName = TextManager.Get("UnspecifiedSubFileName");
-            loadedSub.Info.FilePath = Path.Combine(ContentPackage.LocalModsDir, unspecifiedFileName.Value, $"{unspecifiedFileName}.sub");
-            loadedSub.Info.Name = unspecifiedFileName.Value;
             try
             {
-                loadedSub.Info.Name = loadedSub.Info.SubmarineElement.GetAttributeString("name",  loadedSub.Info.Name);
+                loadedSub.Info.Name = loadedSub.Info.SubmarineElement.GetAttributeString("name", loadedSub.Info.Name);
             }
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Failed to find a name for the submarine.", e);
+                var unspecifiedFileName = TextManager.Get("UnspecifiedSubFileName");
+                loadedSub.Info.Name = unspecifiedFileName.Value;
             }
             MainSub = loadedSub;
             MainSub.SetPrevTransform(MainSub.Position);
@@ -3726,7 +3731,6 @@ namespace Barotrauma
             }
             else
             {
-
                 List<ContextMenuOption> availableLayerOptions = new List<ContextMenuOption>
                 {
                     new ContextMenuOption("editor.layer.nolayer", true, onSelected: () => { MoveToLayer(null, targets); })
@@ -3769,7 +3773,8 @@ namespace Barotrauma
                         {
                             if (!me.Removed) { me.Remove(); }
                         }
-                    }));
+                    }),
+                    new ContextMenuOption(TextManager.Get("editortip.shiftforextraoptions") + '\n' + TextManager.Get("editortip.altforruler"), isEnabled: false, onSelected: null));
             }
         }
 
@@ -4257,7 +4262,7 @@ namespace Barotrauma
             MapEntity.SelectedList.Clear();
             MapEntity.FilteredSelectedList.Clear();
             MapEntity.SelectEntity(itemContainer);
-            dummyCharacter.SelectedConstruction = itemContainer;
+            dummyCharacter.SelectedItem = itemContainer;
             FilterEntities(entityFilterBox.Text);
         }
 
@@ -4268,9 +4273,9 @@ namespace Barotrauma
         {
             if (dummyCharacter == null) { return; }
             //nothing to close -> return
-            if (DraggedItemPrefab == null && dummyCharacter?.SelectedConstruction == null && OpenedItem == null) { return; }
+            if (DraggedItemPrefab == null && dummyCharacter?.SelectedItem == null && OpenedItem == null) { return; }
             DraggedItemPrefab = null;
-            dummyCharacter.SelectedConstruction = null;
+            dummyCharacter.SelectedItem = null;
             OpenedItem?.Drop(dummyCharacter);
             OpenedItem?.SetTransform(oldItemPosition, 0f);
             OpenedItem = null;
@@ -4347,9 +4352,9 @@ namespace Barotrauma
                 }
             }
 
-            if (dummyCharacter?.SelectedConstruction != null)
+            if (dummyCharacter?.SelectedItem != null)
             {
-                var inv = dummyCharacter?.SelectedConstruction?.OwnInventory;
+                var inv = dummyCharacter?.SelectedItem?.OwnInventory;
                 if (inv != null)
                 {
                     switch (obj)
@@ -4779,9 +4784,9 @@ namespace Barotrauma
             if (dummyCharacter != null)
             {
                 CharacterHUD.AddToGUIUpdateList(dummyCharacter);
-                if (dummyCharacter.SelectedConstruction != null)
+                if (dummyCharacter.SelectedItem != null)
                 {
-                    dummyCharacter.SelectedConstruction.AddToGUIUpdateList();
+                    dummyCharacter.SelectedItem.AddToGUIUpdateList();
                 }
                 else if (WiringMode && MapEntity.SelectedList.FirstOrDefault() is Item item && item.GetComponent<Wire>() != null)
                 {
@@ -4801,7 +4806,7 @@ namespace Barotrauma
         /// <summary>
         /// GUI.MouseOn doesn't get updated while holding primary mouse and we need it to
         /// </summary>
-        private bool IsMouseOnEditorGUI()
+        public bool IsMouseOnEditorGUI()
         {
             if (GUI.MouseOn == null) { return false; }
 
@@ -5143,7 +5148,7 @@ namespace Barotrauma
                 {
                     if (dummyCharacter != null)
                     {
-                        if (dummyCharacter.SelectedConstruction == null)
+                        if (dummyCharacter.SelectedItem == null)
                         {
                             foreach (var entity in MapEntity.mapEntityList)
                             {
@@ -5285,7 +5290,7 @@ namespace Barotrauma
                         me.IsHighlighted = false;
                     }
 
-                    if (dummyCharacter.SelectedConstruction == null)
+                    if (dummyCharacter.SelectedItem == null)
                     {
                         List<Wire> wires = new List<Wire>();
                         foreach (Item item in Item.ItemList)
@@ -5308,8 +5313,8 @@ namespace Barotrauma
                     });
                 }
 
-                if (dummyCharacter.SelectedConstruction == null ||
-                    dummyCharacter.SelectedConstruction.GetComponent<Pickable>() != null)
+                if (dummyCharacter.SelectedItem == null ||
+                    dummyCharacter.SelectedItem.GetComponent<Pickable>() != null)
                 {
                     if (WiringMode && PlayerInput.IsShiftDown())
                     {
@@ -5341,7 +5346,7 @@ namespace Barotrauma
                         TeleportDummyCharacter(oldItemPosition);
                     }
 
-                    if (WiringMode && dummyCharacter?.SelectedConstruction == null)
+                    if (WiringMode && dummyCharacter?.SelectedItem == null)
                     {
                         TeleportDummyCharacter(FarseerPhysics.ConvertUnits.ToSimUnits(dummyCharacter.CursorPosition));
                     }
@@ -5358,7 +5363,7 @@ namespace Barotrauma
             }
 
             // Deposit item from our "infinite stack" into inventory slots
-            var inv = dummyCharacter?.SelectedConstruction?.OwnInventory;
+            var inv = dummyCharacter?.SelectedItem?.OwnInventory;
             if (inv?.visualSlots != null && !PlayerInput.IsCtrlDown())
             {
                 var dragginMouse = MouseDragStart != Vector2.Zero && Vector2.Distance(PlayerInput.MousePosition, MouseDragStart) >= GUI.Scale * 20;
@@ -5524,7 +5529,7 @@ namespace Barotrauma
             }
 
             if (!saveAssemblyFrame.Rect.Contains(PlayerInput.MousePosition) && !snapToGridFrame.Rect.Contains(PlayerInput.MousePosition)  &&
-                dummyCharacter?.SelectedConstruction == null && !WiringMode && GUI.MouseOn == null)
+                dummyCharacter?.SelectedItem == null && !WiringMode && GUI.MouseOn == null)
             {
                 if (layerList is { Visible: true } && GUI.KeyboardDispatcher.Subscriber == layerList)
                 {
@@ -5549,7 +5554,7 @@ namespace Barotrauma
 
             if (!WiringMode)
             {
-                bool shouldCloseHud = dummyCharacter?.SelectedConstruction != null && HUD.CloseHUD(dummyCharacter.SelectedConstruction.Rect) && DraggedItemPrefab == null;
+                bool shouldCloseHud = dummyCharacter?.SelectedItem != null && HUD.CloseHUD(dummyCharacter.SelectedItem.Rect) && DraggedItemPrefab == null;
 
                 if (MapEntityPrefab.Selected != null && GUI.MouseOn == null)
                 {
@@ -5565,7 +5570,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            if (dummyCharacter?.SelectedConstruction == null)
+                            if (dummyCharacter?.SelectedItem == null)
                             {
                                 CreateContextMenu();
                             }
@@ -5622,11 +5627,11 @@ namespace Barotrauma
                     wire?.Update((float)deltaTime, cam);
                 }
 
-                if (dummyCharacter.SelectedConstruction != null)
+                if (dummyCharacter.SelectedItem != null)
                 {
-                    if (MapEntity.SelectedList.Contains(dummyCharacter.SelectedConstruction) || WiringMode)
+                    if (MapEntity.SelectedList.Contains(dummyCharacter.SelectedItem) || WiringMode)
                     {
-                        dummyCharacter.SelectedConstruction?.UpdateHUD(cam, dummyCharacter, (float)deltaTime);
+                        dummyCharacter.SelectedItem?.UpdateHUD(cam, dummyCharacter, (float)deltaTime);
                     }
                     else
                     {

@@ -118,7 +118,7 @@ namespace Barotrauma
                     ISpatialEntity spawnPos = GetSpawnPos();
                     if (spawnPos != null)
                     {
-                        Entity.Spawner.AddCharacterToSpawnQueue(CharacterPrefab.HumanSpeciesName, OffsetSpawnPos(spawnPos.WorldPosition, 100.0f), humanPrefab.GetCharacterInfo(), onSpawn: newCharacter =>
+                        Entity.Spawner.AddCharacterToSpawnQueue(CharacterPrefab.HumanSpeciesName, OffsetSpawnPos(spawnPos.WorldPosition, 100.0f), humanPrefab.CreateCharacterInfo(), onSpawn: newCharacter =>
                         {
                             if (newCharacter == null) { return; }
                             newCharacter.HumanPrefab = humanPrefab;

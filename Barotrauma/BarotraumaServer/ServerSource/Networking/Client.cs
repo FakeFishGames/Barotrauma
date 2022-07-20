@@ -62,6 +62,8 @@ namespace Barotrauma.Networking
 
         public float DeleteDisconnectedTimer;
 
+        public DateTime JoinTime;
+
         private CharacterInfo characterInfo;
         public CharacterInfo CharacterInfo
         {
@@ -114,6 +116,8 @@ namespace Barotrauma.Networking
 
             //initialize to infinity, gets set to a proper value when initializing midround syncing
             MidRoundSyncTimeOut = double.PositiveInfinity;
+
+            JoinTime = DateTime.Now;
         }
 
         partial void DisposeProjSpecific()

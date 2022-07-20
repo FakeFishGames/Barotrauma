@@ -2606,8 +2606,8 @@ namespace Barotrauma.CharacterEditor
             animationControls = new GUIFrame(new RectTransform(Vector2.One, centerArea.RectTransform), style: null) { CanBeFocused = false };
             var layoutGroupAnimation = new GUILayoutGroup(new RectTransform(Vector2.One, animationControls.RectTransform), childAnchor: Anchor.TopLeft) { CanBeFocused = false };
             var animationSelectionElement = new GUIFrame(new RectTransform(new Point(elementSize.X * 2 - (int)(5 * GUI.xScale), elementSize.Y), layoutGroupAnimation.RectTransform), style: null);
-            var animationSelectionText = new GUITextBlock(new RectTransform(new Point(elementSize.X, elementSize.Y), animationSelectionElement.RectTransform), GetCharacterEditorTranslation("SelectedAnimation") + ": ", Color.WhiteSmoke, textAlignment: Alignment.Center);
-            animSelection = new GUIDropDown(new RectTransform(new Point((int)(100 * GUI.xScale), elementSize.Y), animationSelectionElement.RectTransform, Anchor.TopRight), elementCount: 5);
+            var animationSelectionText = new GUITextBlock(new RectTransform(new Point(elementSize.X, elementSize.Y), animationSelectionElement.RectTransform), GetCharacterEditorTranslation("SelectedAnimation"), Color.WhiteSmoke, textAlignment: Alignment.CenterRight);
+            animSelection = new GUIDropDown(new RectTransform(new Point((int)(150 * GUI.xScale), elementSize.Y), animationSelectionElement.RectTransform, Anchor.Center, Pivot.CenterLeft), elementCount: 5);
             if (character.AnimController.CanWalk)
             {
                 animSelection.AddItem(AnimationType.Walk.ToString(), AnimationType.Walk);

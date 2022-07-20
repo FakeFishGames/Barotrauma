@@ -922,12 +922,13 @@ namespace Barotrauma
         {
             limb.MoveToPos(pos, amount, pullFromCenter);
         }
-                
-        public void ResetPullJoints()
+
+        public void ResetPullJoints(Func<Limb, bool> condition = null)
         {
             for (int i = 0; i < Limbs.Length; i++)
             {
                 if (Limbs[i] == null) { continue; }
+                if (condition != null && !condition(Limbs[i])) { continue; }
                 Limbs[i].PullJointEnabled = false;
             }
         }

@@ -1,8 +1,6 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
-using Barotrauma.Networking;
 using FarseerPhysics;
-using FarseerPhysics.Collision;
 using FarseerPhysics.Common;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
@@ -898,13 +896,15 @@ namespace Barotrauma
                 }
 
                 bool holdingOntoSomething = false;
-                if (c.SelectedConstruction != null)
+                if (c.SelectedSecondaryItem != null)
                 {
-                    holdingOntoSomething =
-                        c.SelectedConstruction.GetComponent<Ladder>() != null ||
-                        (c.SelectedConstruction.GetComponent<Controller>()?.LimbPositions.Any() ?? false);
+                    holdingOntoSomething = c.SelectedSecondaryItem.IsLadder ||
+                        (c.SelectedSecondaryItem.GetComponent<Controller>()?.LimbPositions.Any() ?? false);
                 }
-
+                if (!holdingOntoSomething && c.SelectedItem != null)
+                {
+                    holdingOntoSomething = c.SelectedItem.GetComponent<Controller>()?.LimbPositions.Any() ?? false;
+                }
                 if (!holdingOntoSomething)
                 {
                     c.AnimController.Collider.ApplyLinearImpulse(c.AnimController.Collider.Mass * impulse, 10.0f);

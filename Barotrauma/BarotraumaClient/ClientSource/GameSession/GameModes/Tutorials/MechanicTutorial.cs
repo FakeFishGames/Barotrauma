@@ -440,7 +440,7 @@ namespace Barotrauma.Tutorials
             bool gotSodium = false;
             do
             {
-                if (mechanic.SelectedConstruction == mechanic_craftingCabinet.Item)
+                if (mechanic.SelectedItem == mechanic_craftingCabinet.Item)
                 {
                     for (int i = 0; i < mechanic.Inventory.Capacity; i++)
                     {
@@ -702,7 +702,7 @@ namespace Barotrauma.Tutorials
 
         private bool IsSelectedItem(Item item)
         {
-            return mechanic?.SelectedConstruction == item;
+            return mechanic?.SelectedItem == item;
         }
 
         private bool WallHasDamagedSections(Structure wall)

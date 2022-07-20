@@ -851,7 +851,7 @@ namespace Barotrauma.Items.Components
             }
             else if (target.Body.UserData is Limb limb)
             {
-                if (!FriendlyFire && User != null && limb.character.IsFriendly(User))
+                if (!FriendlyFire && User != null && limb.character.IsFriendly(User) && HumanAIController.IsOnFriendlyTeam(limb.character, User))
                 {
                     return false;
                 }
@@ -872,7 +872,18 @@ namespace Barotrauma.Items.Components
                 if (targetItem.Removed) { return false; }
                 if (Attack != null && targetItem.Prefab.DamagedByProjectiles && targetItem.Condition > 0) 
                 {
-                    attackResult = Attack.DoDamage(User ?? Attacker, targetItem, item.WorldPosition, 1.0f); 
+                    attackResult = Attack.DoDamage(User ?? Attacker, targetItem, item.WorldPosition, 1.0f);
+#if CLIENT
+                    if (attackResult.Damage > 0.0f)
+                    {
+                        Character.Controlled?.UpdateHUDProgressBar(targetItem,
+                            targetItem.WorldPosition,
+                            targetItem.Condition / targetItem.MaxCondition,
+                            emptyColor: GUIStyle.HealthBarColorLow,
+                            fullColor: GUIStyle.HealthBarColorHigh,
+                            textTag: targetItem.Name);
+                    }
+#endif
                 }
             }
             else if (target.Body.UserData is IDamageable damageable)

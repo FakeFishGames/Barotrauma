@@ -189,7 +189,7 @@ namespace Barotrauma.Items.Components
                 onDraw: (SpriteBatch spriteBatch, GUICustomComponent component) => { Inventory.Draw(spriteBatch); },
                 onUpdate: null)
             {
-                CanBeFocused = false
+                CanBeFocused = true
             };
 
             // Expand the frame vertically if it's too small to fit the text
@@ -381,10 +381,15 @@ namespace Barotrauma.Items.Components
                 guiCustomComponent.RectTransform.Parent = Inventory.RectTransform;
             }
 
+            if (item.ParentInventory?.Owner == character && character.SelectedItem == item)
+            {
+                character.SelectedItem = null;
+            }
+
             //if the item is in the character's inventory, no need to update the item's inventory 
-            //because the player can see it by hovering the cursor over the item
-            guiCustomComponent.Visible = item.ParentInventory?.Owner != character && DrawInventory;
-            if (!guiCustomComponent.Visible) { return; }
+            //because the player can see it by hovering the cursor over the item        
+            guiCustomComponent.Visible = DrawInventory && item.ParentInventory?.Owner != character;
+            if (!guiCustomComponent.Visible) { return; }           
 
             Inventory.Update(deltaTime, cam);
         }

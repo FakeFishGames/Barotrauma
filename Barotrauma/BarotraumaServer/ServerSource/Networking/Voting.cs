@@ -254,15 +254,21 @@ namespace Barotrauma
                     break;
                 case VoteType.Kick:
                     byte kickedClientID = inc.ReadByte();
-
-                    Client kicked = GameMain.Server.ConnectedClients.Find(c => c.ID == kickedClientID);
-                    if (kicked != null && kicked.Connection != GameMain.Server.OwnerConnection && !kicked.HasKickVoteFrom(sender))
+                    if ((DateTime.Now - sender.JoinTime).TotalSeconds > GameMain.Server.ServerSettings.DisallowKickVoteTime)
                     {
-                        kicked.AddKickVote(sender);
-                        Client.UpdateKickVotes(GameMain.Server.ConnectedClients);
-                        GameMain.Server.SendChatMessage($"ServerMessage.HasVotedToKick~[initiator]={sender.Name}~[target]={kicked.Name}", ChatMessageType.Server, null);
-                    }
+                        GameMain.Server.SendDirectChatMessage($"ServerMessage.kickvotedisallowed", sender);
 
+                    }
+                    else
+                    {
+                        Client kicked = GameMain.Server.ConnectedClients.Find(c => c.ID == kickedClientID);
+                        if (kicked != null && kicked.Connection != GameMain.Server.OwnerConnection && !kicked.HasKickVoteFrom(sender))
+                        {
+                            kicked.AddKickVote(sender);
+                            Client.UpdateKickVotes(GameMain.Server.ConnectedClients);
+                            GameMain.Server.SendChatMessage($"ServerMessage.HasVotedToKick~[initiator]={sender.Name}~[target]={kicked.Name}", ChatMessageType.Server, null);
+                        }
+                    }
                     break;
                 case VoteType.StartRound:
                     bool ready = inc.ReadBoolean();

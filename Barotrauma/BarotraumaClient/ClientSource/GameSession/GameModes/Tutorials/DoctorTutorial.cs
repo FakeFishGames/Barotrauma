@@ -119,7 +119,7 @@ namespace Barotrauma.Tutorials
             var patientHull2 = WayPoint.WayPointList.Find(wp => wp.IdCardDesc == "airlock").CurrentHull;
             medBay = WayPoint.WayPointList.Find(wp => wp.IdCardDesc == "medbay").CurrentHull;
 
-            var assistantInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: JobPrefab.Get("assistant"))
+            var assistantInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: JobPrefab.Get("assistant".ToIdentifier()))
             {
                 TeamID = CharacterTeamType.Team1
             };
@@ -130,7 +130,7 @@ namespace Barotrauma.Tutorials
             patient1.AddDamage(patient1.WorldPosition, new List<Affliction>() { new Affliction(AfflictionPrefab.Burn, 15.0f) }, stun: 0, playSound: false);
             patient1.AIController.Enabled = false;
 
-            assistantInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: JobPrefab.Get("assistant"))
+            assistantInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: JobPrefab.Get("assistant".ToIdentifier()))
             {
                 TeamID = CharacterTeamType.Team1
             };
@@ -139,7 +139,7 @@ namespace Barotrauma.Tutorials
             patient2.CanSpeak = false;
             patient2.AIController.Enabled = false;
 
-            var mechanicInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: JobPrefab.Get("engineer"))
+            var mechanicInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: JobPrefab.Get("engineer".ToIdentifier()))
             {
                 TeamID = CharacterTeamType.Team1
             };
@@ -148,13 +148,13 @@ namespace Barotrauma.Tutorials
             subPatient1.AddDamage(patient1.WorldPosition, new List<Affliction>() { new Affliction(AfflictionPrefab.Burn, 40.0f) }, stun: 0, playSound: false);
             subPatients.Add(subPatient1);
 
-            var securityInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: JobPrefab.Get("securityofficer"));
+            var securityInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: JobPrefab.Get("securityofficer".ToIdentifier()));
             var subPatient2 = Character.Create(securityInfo, WayPoint.GetRandom(SpawnType.Human, securityInfo.Job?.Prefab, Submarine.MainSub).WorldPosition, "3");
             subPatient2.TeamID = CharacterTeamType.Team1;
             subPatient2.AddDamage(patient1.WorldPosition, new List<Affliction>() { new Affliction(AfflictionPrefab.InternalDamage, 40.0f) }, stun: 0, playSound: false);
             subPatients.Add(subPatient2);
 
-            var engineerInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: JobPrefab.Get("engineer"))
+            var engineerInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: JobPrefab.Get("engineer".ToIdentifier()))
             {
                 TeamID = CharacterTeamType.Team1
             };
@@ -262,7 +262,7 @@ namespace Barotrauma.Tutorials
                         HighlightInventorySlot(doctor_suppliesCabinet.Inventory, i, highlightColor, .5f, .5f, 0f);
                     }
                 }
-                if (doctor.SelectedConstruction == doctor_suppliesCabinet.Item)
+                if (doctor.SelectedItem == doctor_suppliesCabinet.Item)
                 {
                     for (int i = 0; i < doctor.Inventory.Capacity; i++)
                     {
@@ -373,7 +373,7 @@ namespace Barotrauma.Tutorials
                         HighlightInventorySlot(doctor_medBayCabinet.Inventory, i, highlightColor, .5f, .5f, 0f);
                     }
                 }
-                if (doctor.SelectedConstruction == doctor_medBayCabinet.Item)
+                if (doctor.SelectedItem == doctor_medBayCabinet.Item)
                 {
                     for (int i = 0; i < doctor.Inventory.Capacity; i++)
                     {

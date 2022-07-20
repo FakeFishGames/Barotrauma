@@ -169,7 +169,7 @@ namespace Barotrauma.Items.Components
                 //attempting to pick does not select the item, so if it is selected at this point, another ItemComponent
                 //must have been selected and we should not keep deattaching (happens when for example interacting with
                 //an electrical component while holding both a screwdriver and a wrench).
-                if (picker.SelectedConstruction == item || 
+                if (picker.IsAnySelectedItem(item)||
                     picker.IsKeyDown(InputType.Aim) || 
                     !picker.CanInteractWith(item) ||
                     item.Removed || item.ParentInventory != null)
@@ -187,7 +187,7 @@ namespace Barotrauma.Items.Components
                     !string.IsNullOrWhiteSpace(PickingMsg) ? PickingMsg : this is Door ? "progressbar.opening" : "progressbar.deattaching");
 #endif
                 
-                picker.AnimController.UpdateUseItem(true, item.WorldPosition + new Vector2(0.0f, 100.0f) * ((pickTimer / 10.0f) % 0.1f));
+                picker.AnimController.UpdateUseItem(!picker.IsClimbing, item.WorldPosition + new Vector2(0.0f, 100.0f) * ((pickTimer / 10.0f) % 0.1f));
                 pickTimer += CoroutineManager.DeltaTime;
 
                 yield return CoroutineStatus.Running;
@@ -208,7 +208,7 @@ namespace Barotrauma.Items.Components
         {
             if (picker != null)
             {
-                picker.AnimController.Anim = AnimController.Animation.None;
+                picker.AnimController.StopUsingItem();
                 picker.PickingItem = null;
             }
             if (pickingCoroutine != null)

@@ -982,7 +982,7 @@ namespace Barotrauma
             List<GUIComponent> elementsToMove = new List<GUIComponent>();
 
             if (editingHUD != null && editingHUD.UserData == this &&
-                ((HasInGameEditableProperties && Character.Controlled?.SelectedConstruction == this) || Screen.Selected == GameMain.SubEditorScreen))
+                ((HasInGameEditableProperties && Character.Controlled?.SelectedItem == this) || Screen.Selected == GameMain.SubEditorScreen))
             {
                 elementsToMove.Add(editingHUD);
             }
@@ -1042,7 +1042,7 @@ namespace Barotrauma
         public void UpdateHUD(Camera cam, Character character, float deltaTime)
         {
             bool editingHUDCreated = false;
-            if ((HasInGameEditableProperties && (character.SelectedConstruction == this || EditableWhenEquipped)) ||
+            if ((HasInGameEditableProperties && (character.SelectedItem == this || EditableWhenEquipped)) ||
                 Screen.Selected == GameMain.SubEditorScreen)
             {
                 GUIComponent prevEditingHUD = editingHUD;
@@ -1126,7 +1126,7 @@ namespace Barotrauma
                 foreach (Character otherCharacter in Character.CharacterList)
                 {
                     if (otherCharacter != character &&
-                        otherCharacter.SelectedConstruction == this)
+                        otherCharacter.SelectedItem == this)
                     {
                         ItemInUseWarning.Visible = true;
                         if (mergedHUDRect.Width > GameMain.GraphicsWidth / 2) { mergedHUDRect.Inflate(-GameMain.GraphicsWidth / 4, 0); }
@@ -1145,7 +1145,7 @@ namespace Barotrauma
 
         public void DrawHUD(SpriteBatch spriteBatch, Camera cam, Character character)
         {
-            if (HasInGameEditableProperties && (character.SelectedConstruction == this || EditableWhenEquipped))
+            if (HasInGameEditableProperties && (character.SelectedItem == this || EditableWhenEquipped))
             {
                 DrawEditing(spriteBatch, cam);
             }
@@ -1215,6 +1215,7 @@ namespace Barotrauma
                     if (ic.DisplayMsg.IsNullOrEmpty()) { continue; }
                     if (!ic.CanBePicked && !ic.CanBeSelected) { continue; }
                     if (ic is Holdable holdable && !holdable.CanBeDeattached()) { continue; }
+                    if (ic is ConnectionPanel connectionPanel && !connectionPanel.CanRewire()) { continue; }
 
                     Color color = Color.Gray;
                     if (ic.HasRequiredItems(character, false))
@@ -1246,15 +1247,15 @@ namespace Barotrauma
             }
             else
             {
-                if (HasInGameEditableProperties && Character.Controlled != null && (Character.Controlled.SelectedConstruction == this || EditableWhenEquipped))
+                if (HasInGameEditableProperties && Character.Controlled != null && (Character.Controlled.SelectedItem == this || EditableWhenEquipped))
                 {
                     if (editingHUD != null && editingHUD.UserData == this) { editingHUD.AddToGUIUpdateList(); }
                 }
             }
 
-            if (Character.Controlled != null && Character.Controlled.SelectedConstruction != this && GetComponent<RemoteController>() == null)
+            if (Character.Controlled != null && Character.Controlled.SelectedItem != this && GetComponent<RemoteController>() == null)
             {
-                if (Character.Controlled.SelectedConstruction?.GetComponent<RemoteController>()?.TargetItem != this &&
+                if (Character.Controlled.SelectedItem?.GetComponent<RemoteController>()?.TargetItem != this &&
                     !Character.Controlled.HeldItems.Any(it => it.GetComponent<RemoteController>()?.TargetItem == this))
                 {
                     return;

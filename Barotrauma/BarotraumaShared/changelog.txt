@@ -1,4 +1,109 @@
 ---------------------------------------------------------------------------------------------------------
+v0.19.0.0
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Device/item UIs can be moved around by dragging.
+- Allow using devices while on a ladder or sitting on a chair.
+- Readded the option to have separate push-to-talk binds for local and radio voice chat (by default not bind to anything). 
+- The deconstructor UI shows what the input items deconstruct to (particularly important now with the lossy deconstruction recipes - it can be risky to deconstruct something just to see what materials it gives out if that results in material loss).
+- Wall and device repair costs in outposts are calculated based on the amount of damage in your sub, instead of always having a fixed price.
+- Inflamed lung doesn't affect characters that don't need oxygen.
+- Added swarm behavior for crawler husks.
+- Added some more oomph to nuclear explosions.
+- Adjust the alpha of the outpost service icons according to distance to make it easier to estimate where the NPC is at, show the title of the NPC when hovering the cursor over the icon.
+- Added "unlockmission" console command.
+- Added "setcampaignmetadata" console command (may be useful for modders creating custom scripted events for the campaign?).
+- Changed how NPC "titles" work. Previously we defined "titles" for the pirates (e.g. "Pirate Lord" and such), and the title replaced the name of the NPC (which made their dialog a little awkward). Now we display both the name and the title over the character, and special outpost NPCs also have titles.
+- Gave diving masks to most NPCs.
+- Changed the burn overlay formula: now also the non-affected limbs get half of the effect, because it looks weird if there's a sharp contrast between the limbs.
+- Restored the 3 shell railgun rack as a legacy option.
+- Reworded the "respawn with penalty" prompt to make it less confusing: you always get a penalty to your skills when you die now, and Reaper's Tax is an "extra penalty" you get on top of that if you opt to respawn mid-round. The intention behind this is to incur a cost to respawning: it shouldn't be possible to get unlimited free reinforcements and supplies mid-round.
+- Made SIGTERM close the linux server gracefully.
+- Made respawn items (suits, scooters) spawn in the respawn shuttle's cabinets when possible.
+- Show a healthbar on items (e.g. eggs and thalamus organs) when damaging them with handheld weapons (melee or ranged).
+
+Balance:
+- "Mission cheesing" by repeatedly undocking and redocking to an outpost to reroll the mission events no longer works: new mission events don't reappear until one "world step" has passed (~10 minutes or traversing through one level).
+- Balance pass on handheld weapons: adjusted reload times, damages, stun durations, recoil and ammo stack sizes.
+- Reduced tools' structure damages (dual-wielded storage containers no longer chew through submarine walls in seconds).
+- Increased heavy ruin wall health to make it less easy to cheese your way in to the artifact room in ruins.
+- Made boomstick fire in bursts of 2 (similar to deadeye carbide) to prevent ridiculous fire rates with quick-reloading.
+- Added EMP effect to nuclear depth charges for consistency.
+- Changed how skill levels affect the quality of fabricated items. Previously having a skill level equal to or higher than the item's skill requirement would result in a good quality item, meaning that practically everyone could e.g. fabricate good quality oxygen tanks. Now your skill needs to be >20% from the minimum skill requirement towards 100, (e.g. if the item requires 20 skill to fabricate, 36 results in a higher quality item).
+- Reduced PUCS's radiation resistance from 100% to 90%. Complete invulnerability to radiation has way too much potential for exploits and overpowered strategies.
+- Adjusted supplies in pirate submarines.
+- Turn some weapons' burn damage into explosion damage (wip).
+- Terminal ignores empty signals.
+
+Multiplayer:
+- Clients who've recently joined (by default 2 minutes) are not allowed to vote to kick others, and vote kicking someone always requires at least 2 votes.
+- Fixed "missing entity" errors in a specific situation in multiplayer. Occurred when a respawn shuttle was enabled and loaded on the server (= i.e. in a non-outpost level), and a client disconnected and immediately reconnected. This would cause the client to deselect the respawn shuttle, and make them start the round without loading one, leading to the "missing entity" issues due to the shuttle only existing server-side.
+- Fixes damage visuals not showing on characters who've died off-screen.
+- Servers doent allow selecting hidden jobs (jobs only used by NPCs) as job preferences.
+- Fixed ability to upgrade the sub when there's a switch pending in multiplayer.
+- Fixed friendly fire and karma always showing up as disabled on dedicated servers in the server list.
+- Fixed spineling spikes fired by a human with spineling genes not damaging any human characters (enemies in PvP, pirates in pirate missions) when friendly fire is disabled.
+- Fixed "invalid ExecuteAttack message: limb index out of bounds" errors when you join a server where a character has fired spineling spikes with spineling genes mid-round.
+- Fixed "entity not found" errors if a shuttle or submarine ends up absurdly deep in multiplayer (> 100 km). I don't even know how someone managed to pull this off.
+- Fixed rapidly clicking on the mission giver with the Use input set to LMB sometimes not giving all the available missions. Happened because the conversation logic didn't check if there's another conversation active, causing the server to show a new conversation when clicking the NPC, without interrupting/continuing the previous conversation. 
+- Made shockjock event only show for the player triggering the event (making it visible for everyone works kind of weirdly, when the event involves talking to an NPC next to the character who triggered the event).
+- Fixed outpost events getting stuck at the last ConversationAction if another client has finished the action.
+
+Submarines:
+- Changed default reactor output from 10,000 kW to 5000 kW.
+- Decreased Winterhalter reactor output, increased fuel consumption rate.
+- Fixed some gap issues in Winterhalter.
+- Fixed medics not having access to the toxin cabinet in Barsuk.
+- Fixed medic, engineer and mechanic spawnpoints having no tags in Typhon.
+
+Fixes: 
+- Fixed fire, breach and intruder report icons not being shown to anyone.
+- Fixed missing/unwired lighting in ResearchModule_02_Colony.
+- Remove particles when switching screens (otherwise e.g. particles from the previous round are still in the level if you happen to be looking at the right spot).
+- Thalamus or ice walls can't be welded.
+- Quick-reloading tries to reload the item whose contained items have the lowest condition. In other words, if you've equipped 2 weapons, quick-reloading reloads the one with the least ammo instead of the one that's the first in your inventory.
+- Fixed messed up dementonite and depleted fuel tool recipes.
+- Fixed swapping a scaled turret/hardpoint causing the new one to be misplaced.
+- Fixed inability to upgrade the sub or do maintenance if you buy and opt to switch to a new sub, and then go to the submarine switch terminal to cancel the switching.
+- Fixed stolen items becoming non-stolen when deconstructed.
+- Fixed ItemContainer UI popping up (with no visible inventory slot) when you pick one up. For example when you pick up a detonator from the floor.
+- Fixed "[E] Rewire" hover text being shown on attachable items that haven't been attached to a wall (even though they can't be rewired until attached).
+- Fixed trying to bind multiple console commands to the same key with the "binkey" command crashing the game.
+- Fixed high-quality revolvers having no difference to normal-quality ones. They should get a 10% damage boost per quality level, but didn't due to incorrectly configured quality stats.
+- Fixed multiple monster missions sometimes spawning the monsters close to each other, causing them to attack each other.
+- Fix monsters sometimes using wrong animation parameters while idling (or moving slowly).
+- Fixed nuclear depth decoy using the same sprite as the normal depth decoy.
+- Fixed fractal guardian VitalityMultipliers being configured incorrectly (using the "type" attribute but with affliction identifiers instead of types).
+- Fixed incorrectly sized thalamus wall colliders, added background sprites to the walls.
+- Fixed "tried to overwrite a submarine that's not in a local package" error when loading and trying to save a submarine autosave file.
+- Fixed location portraits sometimes not showing up in the mission tab. Happened when we initialized the mission tab before the portrait had been loaded.
+- Fixed coilguns and chainguns not always playing the firing sound when fired. Happened because their audio clips were so long (albeit mostly silence) that firing the them continously lead to a ton of clips playing simultaneously, exhausting the available audio channels.
+- Fixed monster missions' sonar marker being placed incorrectly if a monster ends up inside the sub, making it look as if the monster was far outside the level. This often made it look like the monster was moving away from the sub when trying to "approach it".
+- Fixed security officer tutorial getting stuck if you equip the weapons and gear before the objective to do so appears.
+- Fixed bandolier (and other items that give bonuses when worn) giving the bonuses when the item is held.
+- Fixed mod texts being briefly misaligned when scrolling down the list of unpublished mods.
+- Fixed light sprite rotation not getting refreshed when placing an attachable item on a wall when lighting has been disabled with console commands.
+- Fixed supercapacitors showing 1% as the initial recharge rate because the recharge rate defaulted to 10.
+- Fixed some ending options of the "good samaritan" outpost event not ending the event.
+- Fixed random (non-mission) events disappearing from outposts when you save and quit.
+
+Submarine editor:
+- Fixed crashing when trying to multi-edit a string value in the sub editor.
+- Fixed dragged object becoming invisible if you bring the cursor over an UI element in the sub editor.
+- Fixed screwdrivers and wires in your "inventory" being included in the total item count in the sub editor's wiring mode.
+- Fixed entities that were below the cursor when starting to resize a structure staying highlighted during resizing.
+- Fixed sub editor treating the autosave interval as minutes instead of seconds (saving every 300 minutes instead of 300 seconds).
+
+Modding:
+- Made NPC personality traits a separate content type instead of defining them in the localization files.
+- Fixed OnDeath status effects defined in afflictions not working. Did not affect any vanilla content.
+- Fixed crash when controlling a character with more than 10 "Any" inventory slots. Did not affect any vanilla content.
+- Fixed custom husk appendages' textures failing to load.
+- Added new properties to StatusEffect's SpawnCharacter feature: Stun, AfflictionOnSpawn, AfflictionStrength, TransferControl, RemovePreviousCharacter, TransferBuffs, TransferAfflictions, TransferInventory.
+- Fixed bots always choosing their "personality trait" from the first 6 even if more are modded in.
+
+---------------------------------------------------------------------------------------------------------
 v0.18.15.0
 ---------------------------------------------------------------------------------------------------------
 
@@ -41,12 +146,10 @@ Fixes:
 - Fixed non-player-team interactable items getting transferred on sub switch.
 - Fixed ballast flora root emitting particles when damaged client-side, even if it's already been destroyed.
 - Fixed recycle recipes for Piercing Ammunition Box and Pulse Tri-Laser Fuel Box.
-- Fixed friendly fire and karma always showing up as disabled on dedicated servers in the server list.
 - Fixed some lights (e.g. vending machines, neon lights, holographics displays) looking different in the sub editor than they do in-game.
 - Fixed undocked shuttles remaining undocked if you save and start a new game with the same submarine during the same session. Restarting the game fixed the issue though. 
 - Fixed sonar markers going crazy if the start and end locations have the same name + added some more variety to location names to prevent duplicate location names.
 - Fixed multiediting an ItemComponent modifying all the components of that type in all the selected items (e.g. when editing the 1st light component of a switch, all lights in all switches would be edited).
-- Fixed spineling spikes fired by a human with spineling genes not damaging any human characters (enemies in PvP, pirates in pirate missions) when friendly fire is disabled.
 - Fixed melee weapons not damaging structures from outside.
 
 Modding:

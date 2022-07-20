@@ -117,9 +117,6 @@ namespace Barotrauma.Items.Components
         [Serialize(false, IsPropertySaveable.Yes, description: "If true, the recharge speed (and power consumption) of the device goes up exponentially as the recharge rate is increased.")]
         public bool ExponentialRechargeSpeed { get; set; }
 
-        [Editable(minValue: 0.0f, maxValue: 10.0f, decimals: 2), Serialize(0.5f, IsPropertySaveable.Yes)]
-        public float RechargeAdjustSpeed { get; set; }
-
         private float efficiency;
         [Editable(minValue: 0.0f, maxValue: 1.0f, decimals: 2), Serialize(0.95f, IsPropertySaveable.Yes, description: "The amount of power you can get out of a item relative to the amount of power that's put into it.")]
         public float Efficiency

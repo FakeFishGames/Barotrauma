@@ -695,8 +695,13 @@ namespace Barotrauma
             gamesession.StartRound(fixedSeed ? "abcd" : ToolBox.RandomSeed(8), difficulty, levelGenerationParams);
             GameMain.GameScreen.Select();
             // TODO: modding support
-            string[] jobIdentifiers = new string[] { "captain", "engineer", "mechanic", "securityofficer", "medicaldoctor" };
-            foreach (string job in jobIdentifiers)
+            Identifier[] jobIdentifiers = new Identifier[] { 
+                "captain".ToIdentifier(), 
+                "engineer".ToIdentifier(), 
+                "mechanic".ToIdentifier(), 
+                "securityofficer".ToIdentifier(), 
+                "medicaldoctor".ToIdentifier() };
+            foreach (Identifier job in jobIdentifiers)
             {
                 var jobPrefab = JobPrefab.Get(job);
                 var variant = Rand.Range(0, jobPrefab.Variants);

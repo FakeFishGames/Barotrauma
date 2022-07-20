@@ -125,7 +125,7 @@ namespace Barotrauma.Networking
             return characterToRespawnCount >= GetMinCharactersToRespawn();
         }
 
-        partial void UpdateWaiting(float deltaTime)
+        partial void UpdateWaiting(float _)
         {
             if (RespawnShuttle != null)
             {
@@ -486,6 +486,20 @@ namespace Barotrauma.Networking
                     if (respawnContainer != null)
                     {
                         AutoItemPlacer.RegenerateLoot(RespawnShuttle, respawnContainer);
+                    }
+
+                    //try to put the items in containers in the shuttle
+                    foreach (var respawnItem in respawnItems)
+                    {
+                        foreach (Item shuttleItem in RespawnShuttle.GetItems(alsoFromConnectedSubs: false))
+                        {
+                            if (shuttleItem.NonInteractable || shuttleItem.NonPlayerTeamInteractable) { continue; }
+                            var container = shuttleItem.GetComponent<ItemContainer>();
+                            if (container != null && container.Inventory.TryPutItem(respawnItem, user: null))
+                            {
+                                break;
+                            }
+                        }
                     }
                 }
 

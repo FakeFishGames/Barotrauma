@@ -10,7 +10,7 @@ namespace Barotrauma
     class HumanPrefab : PrefabWithUintIdentifier
     {
         [Serialize("any", IsPropertySaveable.No)]
-        public string Job { get; protected set; }
+        public Identifier Job { get; protected set; }
 
         [Serialize(1f, IsPropertySaveable.No)]
         public float Commonness { get; protected set; }
@@ -82,17 +82,19 @@ namespace Barotrauma
         public XElement Element { get; protected set; }
         
 
-        public readonly Dictionary<XElement, float> ItemSets = new Dictionary<XElement, float>();
-        public readonly Dictionary<XElement, float> CustomNPCSets = new Dictionary<XElement, float>();
+        public readonly List<(XElement element, float commonness)> ItemSets = new List<(XElement element, float commonness)>();
+        public readonly List<(XElement element, float commonness)> CustomCharacterInfos = new List<(XElement element, float commonness)>();
 
-        public HumanPrefab(ContentXElement element, ContentFile file) : base(file, element.GetAttributeIdentifier("identifier", ""))
+        private readonly Identifier npcSetIdentifier;
+
+        public HumanPrefab(ContentXElement element, ContentFile file, Identifier npcSetIdentifier) : base(file, element.GetAttributeIdentifier("identifier", ""))
         {
             SerializableProperty.DeserializeProperties(this, element);
-            Job = Job.ToLowerInvariant();
             Element = element;
-            element.GetChildElements("itemset").ForEach(e => ItemSets.Add(e, e.GetAttributeFloat("commonness", 1)));
-            element.GetChildElements("character").ForEach(e => CustomNPCSets.Add(e, e.GetAttributeFloat("commonness", 1)));
+            element.GetChildElements("itemset").ForEach(e => ItemSets.Add((e, e.GetAttributeFloat("commonness", 1))));
+            element.GetChildElements("character").ForEach(e => CustomCharacterInfos.Add((e, e.GetAttributeFloat("commonness", 1))));
             PreferredOutpostModuleTypes = element.GetAttributeIdentifierArray("preferredoutpostmoduletypes", Array.Empty<Identifier>());
+            this.npcSetIdentifier = npcSetIdentifier;
         }
 
         public IEnumerable<Identifier> GetModuleFlags()
@@ -107,7 +109,7 @@ namespace Barotrauma
 
         public JobPrefab GetJobPrefab(Rand.RandSync randSync = Rand.RandSync.Unsynced, Func<JobPrefab, bool> predicate = null)
         {
-            return Job != null && Job != "any" ? JobPrefab.Get(Job) : JobPrefab.Random(randSync, predicate);
+            return !Job.IsEmpty && Job != "any" ? JobPrefab.Get(Job) : JobPrefab.Random(randSync, predicate);
         }
 
         public void InitializeCharacter(Character npc, ISpatialEntity positionToStayIn = null)
@@ -146,23 +148,43 @@ namespace Barotrauma
             }
         }
 
-        public void GiveItems(Character character, Submarine submarine, Rand.RandSync randSync = Rand.RandSync.Unsynced, bool createNetworkEvents = true)
+        public bool GiveItems(Character character, Submarine submarine, Rand.RandSync randSync = Rand.RandSync.Unsynced, bool createNetworkEvents = true)
         {
-            if (ItemSets == null || !ItemSets.Any()) { return; }
-            var spawnItems = ToolBox.SelectWeightedRandom(ItemSets.Keys.ToList(), ItemSets.Values.ToList(), randSync);
+            if (ItemSets == null || !ItemSets.Any()) { return false; }
+            var spawnItems = ToolBox.SelectWeightedRandom(ItemSets, it => it.commonness, randSync).element;
             if (spawnItems != null)
             {
                 foreach (XElement itemElement in spawnItems.GetChildElements("item"))
                 {
-                    InitializeItem(character, itemElement, submarine, this, createNetworkEvents: createNetworkEvents);
+                    int amount = itemElement.GetAttributeInt("amount", 1);
+                    for (int i = 0; i < amount; i++)
+                    {
+                        InitializeItem(character, itemElement, submarine, this, createNetworkEvents: createNetworkEvents);
+                    }
                 }
             }
+            return true;
         }
 
-        public CharacterInfo GetCharacterInfo(Rand.RandSync randSync = Rand.RandSync.Unsynced)
+        /// <summary>
+        /// Creates a character info from the human prefab. If there are custom character infos defined, those are used, otherwise a randomized info is generated.
+        /// </summary>
+        /// <param name="randSync"></param>
+        /// <returns></returns>
+        public CharacterInfo CreateCharacterInfo(Rand.RandSync randSync = Rand.RandSync.Unsynced)
         {
-            var characterElement = ToolBox.SelectWeightedRandom(CustomNPCSets.Keys.ToList(), CustomNPCSets.Values.ToList(), randSync);
-            return characterElement != null ? new CharacterInfo(characterElement) : null;
+            var characterElement = ToolBox.SelectWeightedRandom(CustomCharacterInfos, info => info.commonness, randSync).element;
+            CharacterInfo characterInfo;
+            if (characterElement == null)
+            {
+                characterInfo= new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: GetJobPrefab(randSync), npcIdentifier: Identifier);
+            }
+            else
+            {
+                characterInfo = new CharacterInfo(characterElement, Identifier);
+            }
+            characterInfo.HumanPrefabIds = (npcSetIdentifier, Identifier);
+            return characterInfo;
         }
 
         public static void InitializeItem(Character character, XElement itemElement, Submarine submarine, HumanPrefab humanPrefab, Item parentItem = null, bool createNetworkEvents = true)
@@ -229,7 +251,11 @@ namespace Barotrauma
             parentItem?.Combine(item, user: null);
             foreach (XElement childItemElement in itemElement.Elements())
             {
-                InitializeItem(character, childItemElement, submarine, humanPrefab, item, createNetworkEvents);
+                int amount = childItemElement.GetAttributeInt("amount", 1);
+                for (int i = 0; i < amount; i++)
+                {
+                    InitializeItem(character, childItemElement, submarine, humanPrefab, item, createNetworkEvents);
+                }
             }
         }
 

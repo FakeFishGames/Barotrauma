@@ -188,9 +188,9 @@ namespace Barotrauma
                     }
                 }                
                 
-                if (client.Character?.Info?.Job.Prefab.Identifier == "captain" && client.Character.SelectedConstruction != null)
+                if (client.Character?.Info?.Job.Prefab.Identifier == "captain" && client.Character.SelectedItem != null)
                 {
-                    if (client.Character.SelectedConstruction.GetComponent<Steering>() != null)
+                    if (client.Character.SelectedItem.GetComponent<Steering>() != null)
                     {
                         AdjustKarma(client.Character, SteerSubKarmaIncrease * deltaTime, "Steering the sub");
                     }

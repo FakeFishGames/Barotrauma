@@ -108,7 +108,7 @@ namespace Barotrauma
 
         private static bool ShouldDrawInventory(Character character)
         {
-            var controller = character.SelectedConstruction?.GetComponent<Controller>();
+            var controller = character.SelectedItem?.GetComponent<Controller>();
 
             return 
                 character?.Inventory != null && 
@@ -417,13 +417,17 @@ namespace Barotrauma
 
                         visibleRange = new Range<float>(-100f, 500f);
                     }
+                    float dist = Vector2.Distance(character.WorldPosition, npc.WorldPosition);
+                    float distFactor = 1.0f - MathUtils.InverseLerp(1000.0f, 3000.0f, dist);
+                    float alpha = MathHelper.Lerp(0.3f, 1.0f, distFactor);
                     GUI.DrawIndicator(
                         spriteBatch,
                         npc.WorldPosition,
                         cam,
                         visibleRange,
                         iconStyle.GetDefaultSprite(),
-                        iconStyle.Color);
+                        iconStyle.Color * alpha,
+                        label: npc.Info?.Title);
                 }
 
                 foreach (Item item in Item.ItemList)
@@ -436,10 +440,10 @@ namespace Barotrauma
                 }
             }
 
-            if (character.SelectedConstruction != null && 
-                (character.CanInteractWith(character.SelectedConstruction) || Screen.Selected == GameMain.SubEditorScreen))
+            if (character.SelectedItem != null && 
+                (character.CanInteractWith(character.SelectedItem) || Screen.Selected == GameMain.SubEditorScreen))
             {
-                character.SelectedConstruction.DrawHUD(spriteBatch, cam, character);
+                character.SelectedItem.DrawHUD(spriteBatch, cam, character);
             }
             if (character.Inventory != null)
             {
@@ -561,8 +565,14 @@ namespace Barotrauma
 
             Color nameColor = character.FocusedCharacter.GetNameColor();
             GUI.DrawString(spriteBatch, textPos, focusName, nameColor, Color.Black * 0.7f, 2, GUIStyle.SubHeadingFont, ForceUpperCase.No);
-            textPos.X += 10.0f * GUI.Scale;
             textPos.Y += GUIStyle.SubHeadingFont.MeasureString(focusName).Y;
+
+            if (character.FocusedCharacter.Info?.Title != null && !character.FocusedCharacter.Info.Title.IsNullOrEmpty())
+            {
+                GUI.DrawString(spriteBatch, textPos, character.FocusedCharacter.Info.Title, nameColor, Color.Black * 0.7f, 2, GUIStyle.SubHeadingFont, ForceUpperCase.No);
+                textPos.Y += GUIStyle.SubHeadingFont.MeasureString(character.FocusedCharacter.Info.Title.Value).Y;
+            }
+            textPos.X += 10.0f * GUI.Scale;
 
             if (!character.FocusedCharacter.IsIncapacitated && character.FocusedCharacter.IsPet)
             {

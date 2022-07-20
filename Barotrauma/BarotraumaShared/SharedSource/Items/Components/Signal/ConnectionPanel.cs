@@ -179,7 +179,7 @@ namespace Barotrauma.Items.Components
         {
             UpdateProjSpecific(deltaTime);
 
-            if (user == null || user.SelectedConstruction != item)
+            if (user == null || user.SelectedItem != item)
             {
 #if SERVER
                 if (user != null) { item.CreateServerEvent(this); }
@@ -196,7 +196,7 @@ namespace Barotrauma.Items.Components
                 return; 
             }
 
-            user.AnimController.UpdateUseItem(true, item.WorldPosition + new Vector2(0.0f, 100.0f) * (((float)Timing.TotalTime / 10.0f) % 0.1f));
+            user.AnimController.UpdateUseItem(!user.IsClimbing, item.WorldPosition + new Vector2(0.0f, 100.0f) * (((float)Timing.TotalTime / 10.0f) % 0.1f));
         }
 
         public override void UpdateBroken(float deltaTime, Camera cam)
@@ -206,11 +206,20 @@ namespace Barotrauma.Items.Components
 
         partial void UpdateProjSpecific(float deltaTime);
 
-        public override bool Select(Character picker)
+        public bool CanRewire()
         {
             //attaching wires to items with a body is not allowed
             //(signal items remove their bodies when attached to a wall)
             if (item.body != null && item.body.BodyType == FarseerPhysics.BodyType.Dynamic)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public override bool Select(Character picker)
+        {
+            if (!CanRewire())
             {
                 return false;
             }

@@ -986,14 +986,6 @@ namespace Barotrauma
                 subBody.Body.ResetDynamics();
                 subBody.Body.Enabled = false;
 
-                foreach (MapEntity e in MapEntity.mapEntityList)
-                {
-                    if (e.Submarine == this)
-                    {
-                        Spawner.AddEntityToRemoveQueue(e);
-                    }
-                }
-
                 foreach (Character c in Character.CharacterList)
                 {
                     if (c.Submarine == this)

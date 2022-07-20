@@ -810,6 +810,13 @@ namespace Barotrauma.Networking
             private set;
         }
 
+        [Serialize(120.0f, IsPropertySaveable.Yes)]
+        public float DisallowKickVoteTime
+        {
+            get;
+            private set;
+        }
+
         [Serialize(300.0f, IsPropertySaveable.Yes)]
         public float KillDisconnectedTime
         {

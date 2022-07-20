@@ -525,7 +525,7 @@ namespace Barotrauma.Items.Components
             UpdateLightComponents();
         }
 
-        private void UpdateLightComponents()
+        public void UpdateLightComponents()
         {
             if (lightComponents != null)
             {

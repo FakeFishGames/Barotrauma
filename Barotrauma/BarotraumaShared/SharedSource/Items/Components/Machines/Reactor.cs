@@ -226,7 +226,7 @@ namespace Barotrauma.Items.Components
             // (= bots turn autotemp back on when leaving the reactor)
             if (LastAIUser != null)
             {
-                if (LastAIUser.SelectedConstruction != item && LastAIUser.CanInteractWith(item))
+                if (LastAIUser.SelectedItem != item && LastAIUser.CanInteractWith(item))
                 {
                     AutoTemp = true;
                     if (GameMain.NetworkMember?.IsServer ?? false) { unsentChanges = true; }
@@ -505,7 +505,7 @@ namespace Barotrauma.Items.Components
             {
                 fireTimer += MathHelper.Lerp(deltaTime * 2.0f, deltaTime, item.Condition / item.MaxCondition);
 #if SERVER
-                if (fireTimer > Math.Min(5.0f, FireDelay / 2) && blameOnBroken?.Character?.SelectedConstruction == item)
+                if (fireTimer > Math.Min(5.0f, FireDelay / 2) && blameOnBroken?.Character?.SelectedItem == item)
                 {
                     GameMain.Server.KarmaManager.OnReactorOverHeating(item, blameOnBroken.Character, deltaTime);
                 }
@@ -705,7 +705,7 @@ namespace Barotrauma.Items.Components
             {
                 if (lastUser != null && lastUser != character && lastUser != LastAIUser)
                 {
-                    if (lastUser.SelectedConstruction == item && character.IsOnPlayerTeam)
+                    if (lastUser.SelectedItem == item && character.IsOnPlayerTeam)
                     {
                         character.Speak(TextManager.Get("DialogReactorTaken").Value, null, 0.0f, "reactortaken".ToIdentifier(), 10.0f);
                     }

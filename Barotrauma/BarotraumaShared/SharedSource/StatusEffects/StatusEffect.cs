@@ -264,11 +264,35 @@ namespace Barotrauma
             public string Name => $"Character Spawn Info ({SpeciesName})";
             public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; set; }
 
+            [Serialize(false, IsPropertySaveable.No)]
+            public bool TransferBuffs { get; private set; }
+
+            [Serialize(false, IsPropertySaveable.No)]
+            public bool TransferAfflictions { get; private set; }
+
+            [Serialize(false, IsPropertySaveable.No)]
+            public bool TransferInventory { get; private set; }
+
             [Serialize("", IsPropertySaveable.No)]
             public Identifier SpeciesName { get; private set; }
 
             [Serialize(1, IsPropertySaveable.No)]
             public int Count { get; private set; }
+
+            [Serialize(0, IsPropertySaveable.No)]
+            public int Stun { get; private set; }
+
+            [Serialize("", IsPropertySaveable.No)]
+            public Identifier AfflictionOnSpawn { get; private set; }
+
+            [Serialize(1, IsPropertySaveable.No)]
+            public int AfflictionStrength { get; private set; }
+
+            [Serialize(false, IsPropertySaveable.No)]
+            public bool TransferControl { get; private set; }
+
+            [Serialize(false, IsPropertySaveable.No)]
+            public bool RemovePreviousCharacter { get; private set; }
 
             [Serialize(0f, IsPropertySaveable.No)]
             public float Spread { get; private set; }
@@ -1596,6 +1620,64 @@ namespace Barotrauma
                                 {
                                     SwarmBehavior.CreateSwarm(characters.Cast<AICharacter>());
                                 }
+                                if (!characterSpawnInfo.AfflictionOnSpawn.IsEmpty)
+                                {
+                                    if (!AfflictionPrefab.Prefabs.TryGet(characterSpawnInfo.AfflictionOnSpawn, out AfflictionPrefab afflictionPrefab))
+                                    {
+                                        DebugConsole.NewMessage($"Could not apply an affliction to the spawned character(s). No affliction with the identifier \"{characterSpawnInfo.AfflictionOnSpawn}\" found.", Color.Red);
+                                        return;
+                                    }
+                                    newCharacter.CharacterHealth.ApplyAffliction(newCharacter.AnimController.MainLimb, afflictionPrefab.Instantiate(characterSpawnInfo.AfflictionStrength));
+                                }
+                                if (characterSpawnInfo.Stun > 0)
+                                {
+                                    newCharacter.SetStun(characterSpawnInfo.Stun);
+                                }
+                                foreach (var target in targets)
+                                {
+                                    if (!(target is Character character)) { continue; }
+                                    if (characterSpawnInfo.TransferInventory && character.Inventory != null && newCharacter.Inventory != null)
+                                    {
+                                        if (character.Inventory.Capacity != newCharacter.Inventory.Capacity) { return; }
+                                        for (int i = 0; i < character.Inventory.Capacity && i < newCharacter.Inventory.Capacity; i++)
+                                        {
+                                            character.Inventory.GetItemsAt(i).ForEachMod(item => newCharacter.Inventory.TryPutItem(item, i, allowSwapping: true, allowCombine: false, user: null));
+                                        }
+                                    }
+                                    if (characterSpawnInfo.TransferBuffs || characterSpawnInfo.TransferAfflictions)
+                                    {
+                                        foreach (Affliction affliction in character.CharacterHealth.GetAllAfflictions())
+                                        {
+                                            if (!characterSpawnInfo.TransferAfflictions && characterSpawnInfo.TransferBuffs && affliction.Prefab.IsBuff)
+                                            {
+                                                newCharacter.CharacterHealth.ApplyAffliction(newCharacter.AnimController.MainLimb, affliction.Prefab.Instantiate(affliction.Strength));
+                                            }
+                                            if (characterSpawnInfo.TransferAfflictions)
+                                            {
+                                                newCharacter.CharacterHealth.ApplyAffliction(newCharacter.AnimController.MainLimb, affliction.Prefab.Instantiate(affliction.Strength));
+                                            }
+                                        }
+                                    }
+                                    if (i == characterSpawnInfo.Count) // Only perform the below actions if this is the last character being spawned.
+                                    {
+                                        if (characterSpawnInfo.TransferControl)
+                                        {
+#if CLIENT
+                                            if (Character.Controlled == target)
+                                            {
+                                                Character.Controlled = newCharacter;
+                                            }
+#elif SERVER
+                                            foreach (Client c in GameMain.Server.ConnectedClients)
+                                            {
+                                                if (c.Character != target) { continue; }                                                
+                                                GameMain.Server.SetClientCharacter(c, newCharacter);                                                
+                                            }
+#endif
+                                        }
+                                        if (characterSpawnInfo.RemovePreviousCharacter) { Entity.Spawner?.AddEntityToRemoveQueue(character); }
+                                    }                                    
+                                }
                             });
                     }
                 }
@@ -1897,7 +1979,7 @@ namespace Barotrauma
                         {
                             continue;
                         }
-                        element.Parent.ApplyToProperty(target, property, n, CoroutineManager.UnscaledDeltaTime);
+                        element.Parent.ApplyToProperty(target, property, n, CoroutineManager.DeltaTime);
                     }
 
                     foreach (Affliction affliction in element.Parent.Afflictions)

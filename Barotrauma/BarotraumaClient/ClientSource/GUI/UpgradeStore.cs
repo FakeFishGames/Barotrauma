@@ -432,13 +432,21 @@ namespace Barotrauma
             };
 
             Location location = Campaign.Map.CurrentLocation;
-            int hullRepairCost      = location?.GetAdjustedMechanicalCost(CampaignMode.HullRepairCost)     ?? CampaignMode.HullRepairCost;
-            int itemRepairCost      = location?.GetAdjustedMechanicalCost(CampaignMode.ItemRepairCost)     ?? CampaignMode.ItemRepairCost;
-            int shuttleRetrieveCost = location?.GetAdjustedMechanicalCost(CampaignMode.ShuttleReplaceCost) ?? CampaignMode.ShuttleReplaceCost;
+
+            int hullRepairCost = Campaign.GetHullRepairCost();
+            int itemRepairCost = Campaign.GetItemRepairCost();
+            int shuttleRetrieveCost = CampaignMode.ShuttleReplaceCost;
+            if (location != null)
+            {
+                hullRepairCost = location.GetAdjustedMechanicalCost(hullRepairCost);
+                itemRepairCost = location.GetAdjustedMechanicalCost(itemRepairCost);
+                shuttleRetrieveCost = location.GetAdjustedMechanicalCost(shuttleRetrieveCost);
+            }
 
             CreateRepairEntry(currentStoreLayout.Content, TextManager.Get("repairallwalls"), "RepairHullButton", hullRepairCost, (button, o) =>
             {
-                if (Campaign.PurchasedHullRepairs)
+                //cost is zero = nothing to repair
+                if (Campaign.PurchasedHullRepairs || hullRepairCost <= 0)
                 {
                     button.Enabled = false;
                     return false;
@@ -471,7 +479,7 @@ namespace Barotrauma
                     return false;
                 }
                 return true;
-            }, Campaign.PurchasedHullRepairs || !HasPermission, isHovered =>
+            }, Campaign.PurchasedHullRepairs || !HasPermission || hullRepairCost <= 0, isHovered =>
             {
                 highlightWalls = isHovered;
                 return true;
@@ -479,7 +487,8 @@ namespace Barotrauma
 
             CreateRepairEntry(currentStoreLayout.Content, TextManager.Get("repairallitems"), "RepairItemsButton", itemRepairCost, (button, o) =>
             {
-                if (PlayerBalance >= itemRepairCost && !Campaign.PurchasedItemRepairs)
+                //cost is zero = nothing to repair
+                if (PlayerBalance >= itemRepairCost && !Campaign.PurchasedItemRepairs && itemRepairCost > 0)
                 {
                     LocalizedString body = TextManager.GetWithVariable("ItemRepairs.PurchasePromptBody", "[amount]", itemRepairCost.ToString());
                     currectConfirmation = EventEditorScreen.AskForConfirmation(TextManager.Get("Upgrades.PurchasePromptTitle"), body, () =>
@@ -505,9 +514,8 @@ namespace Barotrauma
                     button.Enabled = false;
                     return false;
                 }
-
                 return true;
-            }, Campaign.PurchasedItemRepairs || !HasPermission, isHovered =>
+            }, Campaign.PurchasedItemRepairs || !HasPermission || itemRepairCost <= 0, isHovered =>
             {
                 foreach (var (item, itemFrame) in itemPreviews)
                 {
