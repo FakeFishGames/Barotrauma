@@ -7,7 +7,7 @@ namespace Barotrauma.Abilities
     {
         private readonly float velocity;
 
-        public AbilityConditionHasVelocity(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
+        public AbilityConditionHasVelocity(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
             velocity = conditionElement.GetAttributeFloat("velocity", 0f);
         }

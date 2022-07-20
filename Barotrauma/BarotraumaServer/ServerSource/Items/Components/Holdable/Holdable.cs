@@ -5,9 +5,9 @@ namespace Barotrauma.Items.Components
 {
     partial class Holdable : Pickable, IServerSerializable, IClientSerializable
     {
-        public override void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public override void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            base.ServerWrite(msg, c, extraData);
+            base.ServerEventWrite(msg, c, extraData);
 
             bool writeAttachData = attachable && body != null;
             msg.Write(writeAttachData);
@@ -19,7 +19,7 @@ namespace Barotrauma.Items.Components
             msg.Write(item.Submarine?.ID ?? Entity.NullEntityID);
         }
 
-        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
+        public void ServerEventRead(IReadMessage msg, Client c)
         {
             Vector2 simPosition = new Vector2(msg.ReadSingle(), msg.ReadSingle());
 

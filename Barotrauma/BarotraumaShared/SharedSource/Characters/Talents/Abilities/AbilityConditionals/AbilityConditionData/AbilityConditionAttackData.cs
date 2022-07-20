@@ -1,5 +1,5 @@
-﻿using Barotrauma.Items.Components;
 using System;
+using Barotrauma.Items.Components;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -25,10 +25,10 @@ namespace Barotrauma.Abilities
         private readonly string[] tags;
         private readonly WeaponType weapontype;
         private readonly bool ignoreNonHarmfulAttacks;
-        public AbilityConditionAttackData(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
+        public AbilityConditionAttackData(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
             itemIdentifier = conditionElement.GetAttributeString("itemidentifier", string.Empty);
-            tags = conditionElement.GetAttributeStringArray("tags", new string[0], convertToLowerInvariant: true);
+            tags = conditionElement.GetAttributeStringArray("tags", Array.Empty<string>(), convertToLowerInvariant: true);
             ignoreNonHarmfulAttacks = conditionElement.GetAttributeBool("ignorenonharmfulattacks", false);
 
             string weaponTypeStr = conditionElement.GetAttributeString("weapontype", "Any");
@@ -54,7 +54,7 @@ namespace Barotrauma.Abilities
 
                 if (!string.IsNullOrEmpty(itemIdentifier))
                 {
-                    if (item?.prefab.Identifier != itemIdentifier)
+                    if (item?.Prefab.Identifier != itemIdentifier)
                     {
                         return false;
                     }

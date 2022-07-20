@@ -11,7 +11,13 @@ namespace Barotrauma.Networking
         private bool isActive;
 
         private readonly UInt64 selfSteamID;
+        private UInt64 ownerKey64 => unchecked((UInt64)ownerKey);
 
+        private UInt64 ReadSteamId(IReadMessage inc)
+            => inc.ReadUInt64() ^ ownerKey64;
+        private void WriteSteamId(IWriteMessage msg, UInt64 val)
+            => msg.Write(val ^ ownerKey64);
+        
         private long sentBytes, receivedBytes;
 
         class RemotePeer
@@ -58,6 +64,8 @@ namespace Barotrauma.Networking
         {
             if (isActive) { return; }
 
+            this.ownerKey = ownerKey;
+
             initializationStep = ConnectionInitialization.SteamTicketAndVersion;
 
             ServerConnection = new PipeConnection(selfSteamID);
@@ -103,7 +111,7 @@ namespace Barotrauma.Networking
                     //known now
                     int prevBitPosition = msg.Message.BitPosition;
                     msg.Message.BitPosition = sizeof(ulong) * 8;
-                    msg.Message.Write(ownerID);
+                    WriteSteamId(msg.Message, ownerID);
                     msg.Message.BitPosition = prevBitPosition;
                     byte[] msgToSend = (byte[])msg.Message.Buffer.Clone();
                     Array.Resize(ref msgToSend, msg.Message.LengthBytes);
@@ -141,8 +149,8 @@ namespace Barotrauma.Networking
             }
 
             IWriteMessage outMsg = new WriteOnlyMessage();
-            outMsg.Write(steamId);
-            outMsg.Write(remotePeer.OwnerSteamID);
+            WriteSteamId(outMsg, steamId);
+            WriteSteamId(outMsg, remotePeer.OwnerSteamID);
             outMsg.Write(data, 1, dataLength - 1);
 
             DeliveryMethod deliveryMethod = (DeliveryMethod)data[0];
@@ -193,7 +201,7 @@ namespace Barotrauma.Networking
             if (ChildServerRelay.HasShutDown || (ChildServerRelay.Process?.HasExited ?? true))
             {
                 Close();
-                var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), TextManager.Get("ServerProcessClosed"));
+                var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), ChildServerRelay.CrashMessage);
                 msgBox.Buttons[0].OnClicked += (btn, obj) => { GameMain.MainMenuScreen.Select(); return false; };
                 return;
             }
@@ -232,7 +240,7 @@ namespace Barotrauma.Networking
         {
             if (!isActive) { return; }
 
-            UInt64 recipientSteamId = inc.ReadUInt64();
+            UInt64 recipientSteamId = ReadSteamId(inc);
             DeliveryMethod deliveryMethod = (DeliveryMethod)inc.ReadByte();
 
             int p2pDataStart = inc.BytePosition;
@@ -343,8 +351,8 @@ namespace Barotrauma.Networking
                 if (packetHeader.IsConnectionInitializationStep())
                 {
                     IWriteMessage outMsg = new WriteOnlyMessage();
-                    outMsg.Write(selfSteamID);
-                    outMsg.Write(selfSteamID);
+                    WriteSteamId(outMsg, selfSteamID);
+                    WriteSteamId(outMsg, selfSteamID);
                     outMsg.Write((byte)(PacketHeader.IsConnectionInitializationStep));
                     outMsg.Write(Name);
 
@@ -429,15 +437,15 @@ namespace Barotrauma.Networking
             Steamworks.SteamUser.OnValidateAuthTicketResponse -= OnAuthChange;
         }
 
-        public override void Send(IWriteMessage msg, DeliveryMethod deliveryMethod)
+        public override void Send(IWriteMessage msg, DeliveryMethod deliveryMethod, bool compressPastThreshold = true)
         {
             if (!isActive) { return; }
 
             IWriteMessage msgToSend = new WriteOnlyMessage();
             byte[] msgData = new byte[msg.LengthBytes];
-            msg.PrepareForSending(ref msgData, out bool isCompressed, out int length);
-            msgToSend.Write(selfSteamID);
-            msgToSend.Write(selfSteamID);
+            msg.PrepareForSending(ref msgData, compressPastThreshold, out bool isCompressed, out int length);
+            WriteSteamId(msgToSend, selfSteamID);
+            WriteSteamId(msgToSend, selfSteamID);
             msgToSend.Write((byte)(isCompressed ? PacketHeader.IsCompressed : PacketHeader.None));
             msgToSend.Write((UInt16)length);
             msgToSend.Write(msgData, 0, length);
@@ -445,12 +453,6 @@ namespace Barotrauma.Networking
             byte[] bufToSend = (byte[])msgToSend.Buffer.Clone();
             Array.Resize(ref bufToSend, msgToSend.LengthBytes);
             ChildServerRelay.Write(bufToSend);
-        }
-
-        ~SteamP2POwnerPeer()
-        {
-            OnDisconnect = null;
-            Close();
         }
 
         protected override void SendMsgInternal(DeliveryMethod deliveryMethod, IWriteMessage msg)

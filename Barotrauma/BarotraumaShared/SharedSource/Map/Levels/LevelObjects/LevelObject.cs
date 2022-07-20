@@ -81,7 +81,7 @@ namespace Barotrauma
 
         public string Name => Prefab?.Name ?? "LevelObject (null)";
 
-        public Dictionary<string, SerializableProperty> SerializableProperties { get; } = new Dictionary<string, SerializableProperty>();
+        public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; } = new Dictionary<Identifier, SerializableProperty>();
 
         public Level.Cave ParentCave;
 
@@ -93,7 +93,7 @@ namespace Barotrauma
             Rotation = rotation;
             Health = prefab.Health;
 
-            spriteIndex = ActivePrefab.Sprites.Any() ? Rand.Int(ActivePrefab.Sprites.Count, Rand.RandSync.Server) : -1;
+            spriteIndex = ActivePrefab.Sprites.Any() ? Rand.Int(ActivePrefab.Sprites.Count, Rand.RandSync.ServerAndClient) : -1;
 
             if (Sprite != null && prefab.SpriteSpecificPhysicsBodyElements.ContainsKey(Sprite))
             {
@@ -115,7 +115,7 @@ namespace Barotrauma
                     Physics.CollisionWall | Physics.CollisionCharacter;
             }
 
-            foreach (XElement triggerElement in prefab.LevelTriggerElements)
+            foreach (var triggerElement in prefab.LevelTriggerElements)
             {
                 Triggers ??= new List<LevelTrigger>();
                 Vector2 triggerPosition = triggerElement.GetAttributeVector2("position", Vector2.Zero) * scale;
@@ -147,7 +147,7 @@ namespace Barotrauma
                     if (overrideProperties == null) { continue; }
                     if (overrideProperties.Sprites.Count > 0)
                     {
-                        spriteIndex = Rand.Int(overrideProperties.Sprites.Count, Rand.RandSync.Server);
+                        spriteIndex = Rand.Int(overrideProperties.Sprites.Count, Rand.RandSync.ServerAndClient);
                         break;
                     }
                 }

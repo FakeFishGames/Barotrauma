@@ -15,7 +15,7 @@ namespace Barotrauma
             msg.Write((ushort)spawnedItems.Count);
             foreach (Item item in spawnedItems)
             {
-                item.WriteSpawnData(msg, item.ID, Entity.NullEntityID, 0);
+                item.WriteSpawnData(msg, item.ID, Entity.NullEntityID, 0, -1);
             }
 
             msg.Write((byte)characters.Count);
@@ -27,7 +27,7 @@ namespace Barotrauma
                 msg.Write((ushort)characterItems[character].Count());
                 foreach (Item item in characterItems[character])
                 {
-                    item.WriteSpawnData(msg, item.ID, item.ParentInventory?.Owner?.ID ?? Entity.NullEntityID, 0);
+                    item.WriteSpawnData(msg, item.ID, item.ParentInventory?.Owner?.ID ?? Entity.NullEntityID, 0, item.ParentInventory?.FindIndex(item) ?? -1);
                 }
             }
         }

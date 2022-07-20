@@ -1,0 +1,6 @@
+﻿
+This folder is the place where your own mods go.
+Mods installed via the Workshop go elsewhere; if
+you've published a mod and you don't have a copy
+in this folder, go into the Publish tab and the
+game should be able to create a copy for you.

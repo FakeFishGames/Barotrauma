@@ -8,13 +8,13 @@ namespace Barotrauma
 {
     class FireAction : EventAction
     {
-        [Serialize(10.0f, true)]
+        [Serialize(10.0f, IsPropertySaveable.Yes)]
         public float Size { get; set; }
 
-        [Serialize("", true)]
-        public string TargetTag { get; set; }
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier TargetTag { get; set; }
 
-        public FireAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) { }
+        public FireAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
 
         private bool isFinished = false;
 

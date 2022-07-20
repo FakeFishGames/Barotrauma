@@ -9,12 +9,12 @@ namespace Barotrauma
 {
     class AIObjectiveRepairItems : AIObjectiveLoop<Item>
     {
-        public override string Identifier { get; set; } = "repair items";
+        public override Identifier Identifier { get; set; } = "repair items".ToIdentifier();
 
         /// <summary>
         /// If set, only fix items where required skill matches this.
         /// </summary>
-        public string RelevantSkill;
+        public Identifier RelevantSkill;
 
         public Item PrioritizedItem { get; private set; }
 
@@ -72,9 +72,9 @@ namespace Barotrauma
                     if (NearlyFullCondition(item)) { return false; }
                 }
             }
-            if (!string.IsNullOrWhiteSpace(RelevantSkill))
+            if (!RelevantSkill.IsEmpty)
             {
-                if (item.Repairables.None(r => r.requiredSkills.Any(s => s.Identifier.Equals(RelevantSkill, StringComparison.OrdinalIgnoreCase)))) { return false; }
+                if (item.Repairables.None(r => r.requiredSkills.Any(s => s.Identifier == RelevantSkill))) { return false; }
             }
             return !HumanAIController.IsItemRepairedByAnother(item, out _);
         }
@@ -136,7 +136,7 @@ namespace Barotrauma
             return MathHelper.Lerp(0, 100, MathHelper.Clamp(damagePriority * successFactor, 0, 1));
         }
 
-        protected override IEnumerable<Item> GetList() => Item.ItemList;
+        protected override IEnumerable<Item> GetList() => Item.RepairableItems;
 
         protected override AIObjective ObjectiveConstructor(Item item) 
             => new AIObjectiveRepairItem(character, item, objectiveManager, priorityModifier: PriorityModifier, isPriority: item == PrioritizedItem);
@@ -151,10 +151,14 @@ namespace Barotrauma
             if (!item.IsInteractable(character)) { return false; }
             if (item.IsFullCondition) { return false; }
             if (item.Submarine == null || character.Submarine == null) { return false; }
+            if (item.IsClaimedByBallastFlora) { return false; } 
             //player crew ignores items in outposts
             if (character.IsOnPlayerTeam && item.Submarine.Info.IsOutpost) { return false; }
             if (!character.Submarine.IsEntityFoundOnThisSub(item, includingConnectedSubs: true)) { return false; }
             if (item.Repairables.None()) { return false; }
+
+            System.Diagnostics.Debug.Assert(item.Repairables.Any(), "Invalid target in AIObjectiveRepairItems - the objective should only be checking items that have a Repairable component (Item.RepairableItems)");
+
             return true;
         }
     }

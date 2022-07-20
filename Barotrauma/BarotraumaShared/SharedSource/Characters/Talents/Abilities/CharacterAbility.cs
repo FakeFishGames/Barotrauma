@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Xml.Linq;
 
 namespace Barotrauma.Abilities
 {
@@ -27,7 +24,7 @@ namespace Barotrauma.Abilities
         /// </summary>
         protected float EffectDeltaTime => CharacterAbilityGroup is CharacterAbilityGroupInterval abilityGroupInterval ? abilityGroupInterval.TimeSinceLastUpdate : DefaultEffectTime;
 
-        public CharacterAbility(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement)
+        public CharacterAbility(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement)
         {
             CharacterAbilityGroup = characterAbilityGroup;
             CharacterTalent = characterAbilityGroup.CharacterTalent;
@@ -93,7 +90,7 @@ namespace Barotrauma.Abilities
         }
 
         // XML
-        public static CharacterAbility Load(XElement abilityElement, CharacterAbilityGroup characterAbilityGroup, bool errorMessages = true)
+        public static CharacterAbility Load(ContentXElement abilityElement, CharacterAbilityGroup characterAbilityGroup, bool errorMessages = true)
         {
             Type abilityType;
             string type = abilityElement.Name.ToString().ToLowerInvariant();

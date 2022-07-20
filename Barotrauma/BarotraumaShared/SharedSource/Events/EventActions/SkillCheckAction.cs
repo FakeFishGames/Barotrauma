@@ -7,21 +7,21 @@ namespace Barotrauma
 {
     class SkillCheckAction : BinaryOptionAction
     {
-        [Serialize("", true)]
-        public string RequiredSkill { get; set; }
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier RequiredSkill { get; set; }
 
-        [Serialize(0.0f, true)]
+        [Serialize(0.0f, IsPropertySaveable.Yes)]
         public float RequiredLevel { get; set; }
 
-        [Serialize(true, true)]
+        [Serialize(true, IsPropertySaveable.Yes)]
         public bool ProbabilityBased { get; set; }
 
-        [Serialize("", true)]
-        public string TargetTag { get; set; }
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier TargetTag { get; set; }
 
-        public SkillCheckAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) 
+        public SkillCheckAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) 
         { 
-            if (string.IsNullOrEmpty(TargetTag))
+            if (TargetTag.IsEmpty)
             {
                 DebugConsole.ThrowError($"Error in event \"{parentEvent.Prefab.Identifier}\": SkillCheckAction without a target tag (the action needs to know whose skill to check).");
             }
@@ -33,11 +33,11 @@ namespace Barotrauma
 
             if (ProbabilityBased)
             {
-                return potentialTargets.Any(chr => chr.GetSkillLevel(RequiredSkill?.ToLowerInvariant()) / RequiredLevel > Rand.Range(0.0f, 1.0f, Rand.RandSync.Unsynced));
+                return potentialTargets.Any(chr => chr.GetSkillLevel(RequiredSkill) / RequiredLevel > Rand.Range(0.0f, 1.0f, Rand.RandSync.Unsynced));
             }
             else
             {
-                return potentialTargets.Any(chr => chr.GetSkillLevel(RequiredSkill?.ToLowerInvariant()) >= RequiredLevel);
+                return potentialTargets.Any(chr => chr.GetSkillLevel(RequiredSkill) >= RequiredLevel);
             }
         }
 

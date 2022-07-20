@@ -38,7 +38,7 @@ namespace Barotrauma.Networking
 
         public void Write(IWriteMessage msg, Client recipient)
         {
-            serializable.ServerWrite(msg, recipient, Data);
+            serializable.ServerEventWrite(msg, recipient, Data);
         }
     }
 
@@ -111,7 +111,7 @@ namespace Barotrauma.Networking
             lastWarningTime = -10.0;
         }
 
-        public void CreateEvent(IServerSerializable entity, object[] extraData = null)
+        public void CreateEvent(IServerSerializable entity, NetEntityEvent.IData extraData = null)
         {
             if (!ValidateEntity(entity)) { return; }
 
@@ -179,7 +179,7 @@ namespace Barotrauma.Networking
                 catch (Exception e)
                 {
                     string entityName = bufferedEvent.TargetEntity == null ? "null" : bufferedEvent.TargetEntity.ToString();
-                    if (GameSettings.VerboseLogging)
+                    if (GameSettings.CurrentConfig.VerboseLogging)
                     {
                         string errorMsg = "Failed to read server event for entity \"" + entityName + "\"!";
                         GameServer.Log(errorMsg + "\n" + e.StackTrace.CleanupStackTrace(), ServerLog.MessageType.Error);
@@ -291,12 +291,6 @@ namespace Barotrauma.Networking
             bufferedEvents.Add(bufferedEvent);
         }
 
-        public void RefreshEntityIDs()
-        {
-            events.ForEach(e => e.RefreshEntityID());
-            uniqueEvents.ForEach(e => e.RefreshEntityID());
-        }
-
         /// <summary>
         /// Writes all the events that the client hasn't received yet into the outgoing message
         /// </summary>
@@ -310,15 +304,7 @@ namespace Barotrauma.Networking
         /// </summary>
         public void Write(Client client, IWriteMessage msg, out List<NetEntityEvent> sentEvents)
         {
-            List<NetEntityEvent> eventsToSync = null;
-            if (client.NeedsMidRoundSync)
-            {
-                eventsToSync = GetEventsToSync(client);
-            }
-            else
-            {
-                eventsToSync = GetEventsToSync(client);
-            }
+            List<NetEntityEvent> eventsToSync = GetEventsToSync(client);
 
             if (eventsToSync.Count == 0)
             {
@@ -347,7 +333,7 @@ namespace Barotrauma.Networking
                         count++;
                         if (count > 3) { break; }
                     }
-                    if (GameSettings.VerboseLogging)
+                    if (GameSettings.CurrentConfig.VerboseLogging)
                     {
                         GameServer.Log(warningMsg, ServerLog.MessageType.Error);
                     }
@@ -460,6 +446,7 @@ namespace Barotrauma.Networking
         /// </summary>
         public void Read(IReadMessage msg, Client sender = null)
         {
+            msg.ReadPadBits();
             UInt16 firstEventID = msg.ReadUInt16();
             int eventCount = msg.ReadByte();
 
@@ -470,7 +457,6 @@ namespace Barotrauma.Networking
 
                 if (entityID == Entity.NullEntityID)
                 {
-                    msg.ReadPadBits();
                     if (thisEventID == (UInt16)(sender.LastSentEntityEventID + 1)) sender.LastSentEntityEventID++;
                     continue;
                 }
@@ -482,7 +468,7 @@ namespace Barotrauma.Networking
                 //skip the event if we've already received it
                 if (thisEventID != (UInt16)(sender.LastSentEntityEventID + 1))
                 {
-                    if (GameSettings.VerboseLogging)
+                    if (GameSettings.CurrentConfig.VerboseLogging)
                     {
                         DebugConsole.NewMessage("Received msg " + thisEventID + ", expecting " + sender.LastSentEntityEventID, Color.Red);
                     }
@@ -490,10 +476,10 @@ namespace Barotrauma.Networking
                 }
                 else if (entity == null)
                 {
-                    //entity not found -> consider the even read and skip over it
+                    //entity not found -> consider the event read and skip over it
                     //(can happen, for example, when a client uses a medical item repeatedly 
                     //and creates an event for it before receiving the event about it being removed)
-                    if (GameSettings.VerboseLogging)
+                    if (GameSettings.CurrentConfig.VerboseLogging)
                     {
                         DebugConsole.NewMessage(
                             "Received msg " + thisEventID + ", entity " + entityID + " not found",
@@ -504,7 +490,7 @@ namespace Barotrauma.Networking
                 }
                 else
                 {
-                    if (GameSettings.VerboseLogging)
+                    if (GameSettings.CurrentConfig.VerboseLogging)
                     {
                         DebugConsole.NewMessage("Received msg " + thisEventID, Microsoft.Xna.Framework.Color.Green);
                     }
@@ -519,7 +505,6 @@ namespace Barotrauma.Networking
 
                     sender.LastSentEntityEventID++;
                 }
-                msg.ReadPadBits();
             }
         }
 
@@ -536,7 +521,7 @@ namespace Barotrauma.Networking
             var clientEntity = entity as IClientSerializable;
             if (clientEntity == null) return;
             
-            clientEntity.ServerRead(ClientNetObject.ENTITY_STATE, buffer, sender);
+            clientEntity.ServerEventRead(buffer, sender);
         }
         
         public void Clear()

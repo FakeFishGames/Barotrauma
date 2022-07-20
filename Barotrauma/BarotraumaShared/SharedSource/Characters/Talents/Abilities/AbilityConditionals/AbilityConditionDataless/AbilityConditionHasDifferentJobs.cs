@@ -7,7 +7,7 @@ namespace Barotrauma.Abilities
     class AbilityConditionHasDifferentJobs : AbilityConditionDataless
     {
         private readonly int amount;
-        public AbilityConditionHasDifferentJobs(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
+        public AbilityConditionHasDifferentJobs(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
             amount = conditionElement.GetAttributeInt("amount", 0);
         }

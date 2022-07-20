@@ -59,10 +59,10 @@ namespace Barotrauma
             smoke = true;
             flames = true;
             underwaterBubble = true;
-            ignoreFireEffectsForTags = new string[0];
+            ignoreFireEffectsForTags = Array.Empty<string>();
         }
         
-        public Explosion(XElement element, string parentDebugName)
+        public Explosion(ContentXElement element, string parentDebugName)
         {
             Attack = new Attack(element, parentDebugName + ", Explosion");
 
@@ -80,7 +80,7 @@ namespace Barotrauma
             playTinnitus = element.GetAttributeBool("playtinnitus", showEffects);
 
             applyFireEffects = element.GetAttributeBool("applyfireeffects", flames && showEffects);
-            ignoreFireEffectsForTags = element.GetAttributeStringArray("ignorefireeffectsfortags", new string[0], convertToLowerInvariant: true);
+            ignoreFireEffectsForTags = element.GetAttributeStringArray("ignorefireeffectsfortags", Array.Empty<string>(), convertToLowerInvariant: true);
 
             ignoreCover = element.GetAttributeBool("ignorecover", false);
             onlyInside = element.GetAttributeBool("onlyinside", false);
@@ -88,7 +88,7 @@ namespace Barotrauma
 
             flash           = element.GetAttributeBool("flash", showEffects);
             flashDuration   = element.GetAttributeFloat("flashduration", 0.05f);
-            if (element.Attribute("flashrange") != null) { flashRange = element.GetAttributeFloat("flashrange", 100.0f); }
+            if (element.GetAttribute("flashrange") != null) { flashRange = element.GetAttributeFloat("flashrange", 100.0f); }
             flashColor = element.GetAttributeColor("flashcolor", Color.LightYellow);
 
             EmpStrength = element.GetAttributeFloat("empstrength", 0.0f);
@@ -133,6 +133,7 @@ namespace Barotrauma
             {
                 displayRange *= 1.0f + sourceItem.GetQualityModifier(Quality.StatType.ExplosionRadius);
                 Attack.DamageMultiplier *= 1.0f + sourceItem.GetQualityModifier(Quality.StatType.ExplosionDamage);
+                Attack.SourceItem ??= sourceItem;
             }
 
             Vector2 cameraPos = GameMain.GameScreen.Cam.Position;
@@ -237,9 +238,9 @@ namespace Barotrauma
                         if (!fireProof)
                         {
                             item.ApplyStatusEffects(ActionType.OnFire, 1.0f);
-                            if (item.Condition <= 0.0f && GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+                            if (item.Condition <= 0.0f && GameMain.NetworkMember is { IsServer: true })
                             {
-                                GameMain.NetworkMember.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ApplyStatusEffect, ActionType.OnFire });
+                                GameMain.NetworkMember.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(ActionType.OnFire));
                             }
                         }                        
                     }
@@ -337,11 +338,17 @@ namespace Barotrauma
                         }
                     }
 
+                    AbilityAttackData attackData = new AbilityAttackData(Attack, c, attacker);
+                    if (attackData.Afflictions != null)
+                    {
+                        modifiedAfflictions.AddRange(attackData.Afflictions);
+                    }
+
                     //use a position slightly from the limb's position towards the explosion
                     //ensures that the attack hits the correct limb and that the direction of the hit can be determined correctly in the AddDamage methods
                     Vector2 dir = worldPosition - limb.WorldPosition;
                     Vector2 hitPos = limb.WorldPosition + (dir.LengthSquared() <= 0.001f ? Rand.Vector(1.0f) : Vector2.Normalize(dir)) * 0.01f;
-                    AttackResult attackResult = c.AddDamage(hitPos, modifiedAfflictions, attack.Stun * distFactor, false, attacker: attacker, damageMultiplier: attack.DamageMultiplier);
+                    AttackResult attackResult = c.AddDamage(hitPos, modifiedAfflictions, attack.Stun * distFactor, false, attacker: attacker, damageMultiplier: attack.DamageMultiplier * attackData.DamageMultiplier);
                     damages.Add(limb, attackResult.Damage);
                     
                     if (attack.StatusEffects != null && attack.StatusEffects.Any())
@@ -482,7 +489,7 @@ namespace Barotrauma
         {
             List<BallastFloraBehavior> ballastFlorae = new List<BallastFloraBehavior>();
 
-            foreach (Hull hull in Hull.hullList)
+            foreach (Hull hull in Hull.HullList)
             {
                 if (hull.BallastFlora != null) { ballastFlorae.Add(hull.BallastFlora); }
             }

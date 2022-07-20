@@ -6,7 +6,7 @@ namespace Barotrauma.Abilities
     {
         private readonly bool ignoreAbilitySkillGain;
 
-        public CharacterAbilityApprenticeship(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityApprenticeship(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             ignoreAbilitySkillGain = abilityElement.GetAttributeBool("ignoreabilityskillgain", true);
         }

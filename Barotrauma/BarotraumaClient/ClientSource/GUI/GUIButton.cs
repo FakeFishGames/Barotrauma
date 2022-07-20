@@ -111,37 +111,42 @@ namespace Barotrauma
             set { textBlock.SelectedTextColor = value; }
         }
 
+        public Color DisabledTextColor
+        {
+            get { return textBlock.DisabledTextColor; }
+        }
+
         public override float FlashTimer
         {
             get { return Frame.FlashTimer; }
         }
 
-        public override ScalableFont Font
+        public override GUIFont Font
         {
             get
             {
-                return (textBlock == null) ? GUI.Font : textBlock.Font;
+                return (textBlock == null) ? GUIStyle.Font : textBlock.Font;
             }
             set
             {
                 base.Font = value;
-                if (textBlock != null) textBlock.Font = value;
+                if (textBlock != null) { textBlock.Font = value; }
             }
         }
         
-        public string Text
+        public LocalizedString Text
         {
             get { return textBlock.Text; }
             set { textBlock.Text = value; }
         }
 
-        public bool ForceUpperCase
+        public ForceUpperCase ForceUpperCase
         {
             get { return textBlock.ForceUpperCase; }
             set { textBlock.ForceUpperCase = value; }
         }
 
-        public override string ToolTip
+        public override RichString ToolTip
         {
             get
             {
@@ -159,40 +164,39 @@ namespace Barotrauma
         private float pulseExpand;
         private bool flashed;
 
-        public GUISoundType ClickSound { get; set; } = GUISoundType.Click;
-        
-        public GUIButton(RectTransform rectT, string text = "", Alignment textAlignment = Alignment.Center, string style = "", Color? color = null) : base(style, rectT)
+        public GUISoundType ClickSound { get; set; } = GUISoundType.Select;
+
+        public override bool PlaySoundOnSelect { get; set; } = true;
+
+        public GUIButton(RectTransform rectT, Alignment textAlignment = Alignment.Center, string style = "", Color? color = null) : this(rectT, new RawLString(""), textAlignment, style, color) { }
+
+        public GUIButton(RectTransform rectT, LocalizedString text, Alignment textAlignment = Alignment.Center, string style = "", Color? color = null) : base(style, rectT)
         {
             CanBeFocused = true;
             HoverCursor = CursorState.Hand;
 
             frame = new GUIFrame(new RectTransform(Vector2.One, rectT), style) { CanBeFocused = false };
-            if (style != null) { GUI.Style.Apply(frame, style == "" ? "GUIButton" : style); }
+            if (style != null) { GUIStyle.Apply(frame, style == "" ? "GUIButton" : style); }
             if (color.HasValue)
             {
                 this.color = frame.Color = color.Value;
             }
+
+            var selfStyle = Style;
             textBlock = new GUITextBlock(new RectTransform(Vector2.One, rectT, Anchor.Center), text, textAlignment: textAlignment, style: null)
             {
-                TextColor = this.style == null ? Color.Black : this.style.TextColor,
-                HoverTextColor = this.style == null ? Color.Black : this.style.HoverTextColor,
-                SelectedTextColor = this.style == null ? Color.Black : this.style.SelectedTextColor,
+                TextColor = selfStyle?.TextColor ?? Color.Black,
+                HoverTextColor = selfStyle?.HoverTextColor ?? Color.Black,
+                SelectedTextColor = selfStyle?.SelectedTextColor ?? Color.Black,
                 CanBeFocused = false
             };
-            if (rectT.Rect.Height == 0 && !string.IsNullOrEmpty(text))
+            if (rectT.Rect.Height == 0 && !text.IsNullOrEmpty())
             {
                 RectTransform.Resize(new Point(RectTransform.Rect.Width, (int)Font.MeasureString(textBlock.Text).Y));
                 RectTransform.MinSize = textBlock.RectTransform.MinSize = new Point(0, System.Math.Max(rectT.MinSize.Y, Rect.Height));
                 TextBlock.SetTextPos();
             }
-            GUI.Style.Apply(textBlock, "", this);
-
-            //if the text is in chinese/korean/japanese and we're not using a CJK-compatible font,
-            //use the default CJK font as a fallback
-            if (TextManager.IsCJK(textBlock.Text) && !textBlock.Font.IsCJK)
-            {
-                textBlock.Font = GUI.CJKFont;
-            }
+            GUIStyle.Apply(textBlock, "", this);
 
             Enabled = true;
         }
@@ -217,7 +221,7 @@ namespace Barotrauma
                 float expand = (pulseExpand * 20.0f) * GUI.Scale;
                 expandRect.Inflate(expand, expand);
                 
-                GUI.Style.ButtonPulse.Draw(spriteBatch, expandRect, ToolBox.GradientLerp(pulseExpand, Color.White, Color.White, Color.Transparent));
+                GUIStyle.EndRoundButtonPulse.Draw(spriteBatch, expandRect, ToolBox.GradientLerp(pulseExpand, Color.White, Color.White, Color.Transparent));
             }
         }
 
@@ -250,7 +254,10 @@ namespace Barotrauma
                 }
                 else if (PlayerInput.PrimaryMouseButtonClicked())
                 {
-                    SoundPlayer.PlayUISound(ClickSound);
+                    if (PlaySoundOnSelect)
+                    {
+                        SoundPlayer.PlayUISound(ClickSound);
+                    }
                     if (OnClicked != null)
                     {
                         if (OnClicked(this, UserData))

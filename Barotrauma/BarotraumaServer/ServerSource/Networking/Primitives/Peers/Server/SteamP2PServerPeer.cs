@@ -16,14 +16,21 @@ namespace Barotrauma.Networking
             private set;
         }
 
-        public SteamP2PServerPeer(UInt64 steamId, ServerSettings settings)
+        private UInt64 ownerKey64 => unchecked((UInt64)ownerKey.Value);
+        
+        private UInt64 ReadSteamId(IReadMessage inc)
+            => inc.ReadUInt64() ^ ownerKey64;
+        private void WriteSteamId(IWriteMessage msg, UInt64 val)
+            => msg.Write(val ^ ownerKey64);
+
+        public SteamP2PServerPeer(UInt64 steamId, int ownerKey, ServerSettings settings)
         {
             serverSettings = settings;
 
             connectedClients = new List<NetworkConnection>();
             pendingClients = new List<PendingClient>();
 
-            ownerKey = null;
+            this.ownerKey = ownerKey;
 
             OwnerSteamID = steamId;
 
@@ -33,7 +40,7 @@ namespace Barotrauma.Networking
         public override void Start()
         {
             IWriteMessage outMsg = new WriteOnlyMessage();
-            outMsg.Write(OwnerSteamID);
+            WriteSteamId(outMsg, OwnerSteamID);
             outMsg.Write((byte)DeliveryMethod.Reliable);
             outMsg.Write((byte)(PacketHeader.IsConnectionInitializationStep | PacketHeader.IsServerMessage));
 
@@ -106,7 +113,7 @@ namespace Barotrauma.Networking
 #if DEBUG
                 DebugConsole.ThrowError(errorMsg);
 #else
-                if (GameSettings.VerboseLogging) { DebugConsole.ThrowError(errorMsg); }
+                if (GameSettings.CurrentConfig.VerboseLogging) { DebugConsole.ThrowError(errorMsg); }
 #endif
             }
 
@@ -122,8 +129,8 @@ namespace Barotrauma.Networking
         {
             if (!started) { return; }
 
-            UInt64 senderSteamId = inc.ReadUInt64();
-            UInt64 ownerSteamId = inc.ReadUInt64();
+            UInt64 senderSteamId = ReadSteamId(inc);
+            UInt64 ownerSteamId = ReadSteamId(inc);
 
             PacketHeader packetHeader = (PacketHeader)inc.ReadByte();
             
@@ -223,7 +230,7 @@ namespace Barotrauma.Networking
                         string ownerName = inc.ReadString();
                         OwnerConnection = new SteamP2PConnection(ownerName, OwnerSteamID)
                         {
-                            Language = GameMain.Config.Language
+                            Language = GameSettings.CurrentConfig.Language
                         };
                         OwnerConnection.SetOwnerSteamIDIfUnknown(OwnerSteamID);
 
@@ -250,7 +257,7 @@ namespace Barotrauma.Networking
             throw new InvalidOperationException("Called InitializeSteamServerCallbacks on SteamP2PServerPeer!");
         }
         
-        public override void Send(IWriteMessage msg, NetworkConnection conn, DeliveryMethod deliveryMethod)
+        public override void Send(IWriteMessage msg, NetworkConnection conn, DeliveryMethod deliveryMethod, bool compressPastThreshold = true)
         {
             if (!started) { return; }
 
@@ -263,8 +270,8 @@ namespace Barotrauma.Networking
 
             IWriteMessage msgToSend = new WriteOnlyMessage();
             byte[] msgData = new byte[16];
-            msg.PrepareForSending(ref msgData, out bool isCompressed, out int length);
-            msgToSend.Write(conn.SteamID);
+            msg.PrepareForSending(ref msgData, compressPastThreshold, out bool isCompressed, out int length);
+            WriteSteamId(msgToSend, conn.SteamID);
             msgToSend.Write((byte)deliveryMethod);
             msgToSend.Write((byte)((isCompressed ? PacketHeader.IsCompressed : PacketHeader.None) | PacketHeader.IsServerMessage));
             msgToSend.Write((UInt16)length);
@@ -281,7 +288,7 @@ namespace Barotrauma.Networking
             if (string.IsNullOrWhiteSpace(msg)) { return; }
 
             IWriteMessage msgToSend = new WriteOnlyMessage();
-            msgToSend.Write(steamId);
+            WriteSteamId(msgToSend, steamId);
             msgToSend.Write((byte)DeliveryMethod.Reliable);
             msgToSend.Write((byte)(PacketHeader.IsDisconnectMessage | PacketHeader.IsServerMessage));
             msgToSend.Write(msg);
@@ -318,7 +325,7 @@ namespace Barotrauma.Networking
         protected override void SendMsgInternal(NetworkConnection conn, DeliveryMethod deliveryMethod, IWriteMessage msg)
         {
             IWriteMessage msgToSend = new WriteOnlyMessage();
-            msgToSend.Write(conn.SteamID);
+            WriteSteamId(msgToSend, conn.SteamID);
             msgToSend.Write((byte)deliveryMethod);
             msgToSend.Write(msg.Buffer, 0, msg.LengthBytes);
             byte[] bufToSend = (byte[])msgToSend.Buffer.Clone();

@@ -9,7 +9,7 @@ namespace Barotrauma
             GameMain.Server.KarmaManager.OnStructureHealthChanged(this, attacker, damageAmount);
         }
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
             msg.Write((byte)Sections.Length);
             for (int i = 0; i < Sections.Length; i++)

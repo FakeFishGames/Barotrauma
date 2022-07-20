@@ -32,7 +32,7 @@
 
     interface IAbilitySkillIdentifier
     {
-        public string SkillIdentifier { get; set; }
+        public Identifier SkillIdentifier { get; set; }
     }
 
     interface IAbilityAffliction

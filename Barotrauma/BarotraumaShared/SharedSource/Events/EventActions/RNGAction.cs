@@ -6,10 +6,10 @@ namespace Barotrauma
 {
     class RNGAction : BinaryOptionAction
     {
-        [Serialize(0.0f, true)]
+        [Serialize(0.0f, IsPropertySaveable.Yes)]
         public float Chance { get; set; }
 
-        public RNGAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) 
+        public RNGAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) 
         { 
             if (Chance >= 1.0f)
             {

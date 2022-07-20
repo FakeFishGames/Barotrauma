@@ -28,13 +28,13 @@ namespace Barotrauma
                 {
                     if (item.Prefab.BrokenSprites.None())
                     {
-                        Color c = item.prefab.SpriteColor;
+                        Color c = item.Prefab.SpriteColor;
                         item.SpriteColor = new Color(c.R / 255f * m, c.G / 255f * m, c.B / 255f * m, c.A / 255f);
                     }
                 }
                 foreach (var structure in thalamusStructures)
                 {
-                    Color c = structure.prefab.SpriteColor;
+                    Color c = structure.Prefab.SpriteColor;
                     structure.SpriteColor = new Color(c.R / 255f * m, c.G / 255f * m, c.B / 255f * m, c.A / 255f);
                 }
                 yield return CoroutineStatus.Running;
@@ -42,7 +42,7 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             IsAlive = msg.ReadBoolean();
         }

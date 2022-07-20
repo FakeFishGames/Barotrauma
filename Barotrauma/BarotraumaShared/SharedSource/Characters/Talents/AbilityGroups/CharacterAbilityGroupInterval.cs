@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Xml.Linq;
-
-namespace Barotrauma.Abilities
+﻿namespace Barotrauma.Abilities
 {
     class CharacterAbilityGroupInterval : CharacterAbilityGroup
     {
@@ -15,7 +9,7 @@ namespace Barotrauma.Abilities
         private float effectDelayTimer;
 
 
-        public CharacterAbilityGroupInterval(AbilityEffectType abilityEffectType, CharacterTalent characterTalent, XElement abilityElementGroup) : 
+        public CharacterAbilityGroupInterval(AbilityEffectType abilityEffectType, CharacterTalent characterTalent, ContentXElement abilityElementGroup) : 
             base(abilityEffectType, characterTalent, abilityElementGroup)
         {            
             // too many overlapping intervals could cause hitching? maybe randomize a little
@@ -49,7 +43,14 @@ namespace Barotrauma.Abilities
         private bool IsApplicable()
         {
             if (timesTriggered >= maxTriggerCount) { return false; }
-            return abilityConditions.All(c => c.MatchesCondition());
+            foreach (var abilityCondition in abilityConditions)
+            {
+                if (!abilityCondition.MatchesCondition())
+                {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }

@@ -69,19 +69,13 @@ namespace Steamworks.Ugc
 		public Editor WithContent( System.IO.DirectoryInfo t ) { this.ContentFolder = t; return this; }
 		public Editor WithContent( string folderName ) { return WithContent( new System.IO.DirectoryInfo( folderName ) ); }
 
-		RemoteStoragePublishedFileVisibility? Visibility;
+		public Visibility? Visibility;
 
-		public Editor WithPublicVisibility() { Visibility = RemoteStoragePublishedFileVisibility.Public; return this; }
-		public Editor WithFriendsOnlyVisibility() { Visibility = RemoteStoragePublishedFileVisibility.FriendsOnly; return this; }
-		public Editor WithPrivateVisibility() { Visibility = RemoteStoragePublishedFileVisibility.Private; return this; }
+		public Editor WithVisibility(Visibility visibility) { Visibility = visibility; return this; }
 
 		public List<string> Tags { get; private set; }
-		Dictionary<string, List<string>> KeyValueTags;
-		HashSet<string> KeyValueTagsToRemove;
-
-		public bool IsPublic => Visibility == RemoteStoragePublishedFileVisibility.Public;
-		public bool IsFriendsOnly => Visibility == RemoteStoragePublishedFileVisibility.FriendsOnly;
-		public bool IsPrivate => Visibility == RemoteStoragePublishedFileVisibility.Private;
+		Dictionary<string, List<string>> keyValueTags;
+		HashSet<string> keyValueTagsToRemove;
 
 		public Editor WithTag( string tag )
 		{
@@ -117,13 +111,13 @@ namespace Steamworks.Ugc
 		/// </summary>
 		public Editor AddKeyValueTag(string key, string value)
 		{
-			if (KeyValueTags == null) 
-				KeyValueTags = new Dictionary<string, List<string>>();
+			if (keyValueTags == null) 
+				keyValueTags = new Dictionary<string, List<string>>();
 
-			if ( KeyValueTags.TryGetValue( key, out var list ) )
+			if ( keyValueTags.TryGetValue( key, out var list ) )
 				list.Add( value );
 			else
-				KeyValueTags[key] = new List<string>() { value };
+				keyValueTags[key] = new List<string>() { value };
 
 			return this;
 		}
@@ -135,10 +129,10 @@ namespace Steamworks.Ugc
 		/// </summary>
 		public Editor RemoveKeyValueTags(string key)
 		{
-			if (KeyValueTagsToRemove == null)
-				KeyValueTagsToRemove = new HashSet<string>();
+			if (keyValueTagsToRemove == null)
+				keyValueTagsToRemove = new HashSet<string>();
 
-			KeyValueTagsToRemove.Add(key);
+			keyValueTagsToRemove.Add(key);
 			return this;
 		}
 
@@ -207,7 +201,7 @@ namespace Steamworks.Ugc
 				if ( Language != null ) SteamUGC.Internal.SetItemUpdateLanguage( handle, Language );
 				if ( ContentFolder != null ) SteamUGC.Internal.SetItemContent( handle, ContentFolder.FullName );
 				if ( PreviewFile != null ) SteamUGC.Internal.SetItemPreview( handle, PreviewFile );
-				if ( Visibility.HasValue ) SteamUGC.Internal.SetItemVisibility( handle, Visibility.Value );
+				if ( Visibility.HasValue ) SteamUGC.Internal.SetItemVisibility( handle, (RemoteStoragePublishedFileVisibility)Visibility.Value );
 				if ( Tags != null && Tags.Count > 0 )
 				{
 					using ( var a = SteamParamStringArray.From( Tags.ToArray() ) )
@@ -217,15 +211,15 @@ namespace Steamworks.Ugc
 					}
 				}
 
-				if ( KeyValueTagsToRemove != null)
+				if ( keyValueTagsToRemove != null)
 				{
-					foreach ( var key in KeyValueTagsToRemove )
+					foreach ( var key in keyValueTagsToRemove )
 						SteamUGC.Internal.RemoveItemKeyValueTags( handle, key );
 				}
 
-				if ( KeyValueTags != null )
+				if ( keyValueTags != null )
 				{
-					foreach ( var keyWithValues in KeyValueTags )
+					foreach ( var keyWithValues in keyValueTags )
 					{
 						var key = keyWithValues.Key;
 						foreach ( var value in keyWithValues.Value )

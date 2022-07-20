@@ -3,16 +3,56 @@ using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
 using Microsoft.Xna.Framework;
 using System;
-using System.Linq;
 using System.Collections.Generic;
-using System.Xml.Linq;
+using System.Globalization;
+using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
     partial class TriggerComponent : ItemComponent 
     {
-        [Editable, Serialize(0.0f, true, description: "The maximum amount of force applied to the triggering entitites.", alwaysUseInstanceValues: true)]
+        [Editable, Serialize(0.0f, IsPropertySaveable.Yes, description: "The maximum amount of force applied to the triggering entitites.", alwaysUseInstanceValues: true)]
         public float Force { get; set; }
+        [Editable, Serialize(false, IsPropertySaveable.Yes, description: "Determines if the force gets higher the closer the triggerer is to the center of the trigger.", alwaysUseInstanceValues: true)]
+        public bool DistanceBasedForce { get; set; }
+        [Editable, Serialize(false, IsPropertySaveable.Yes, description: "Determines if the force fluctuates over time or if it stays constant.", alwaysUseInstanceValues: true)]
+        public bool ForceFluctuation { get; set; }
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "How much the fluctuation affects the force. 1 is the maximum fluctuation, 0 is no fluctuation.", alwaysUseInstanceValues: true)]
+        private float ForceFluctuationStrength
+        {
+            get
+            {
+                return forceFluctuationStrength;
+            }
+            set
+            {
+                forceFluctuationStrength = Math.Clamp(value, 0.0f, 1.0f);
+            }
+        }
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "How fast (cycles per second) the force fluctuates.", alwaysUseInstanceValues: true)]
+        private float ForceFluctuationFrequency
+        {
+            get
+            {
+                return forceFluctuationFrequency;
+            }
+            set
+            {
+                forceFluctuationFrequency = Math.Max(value, 0.01f);
+            }
+        }
+        [Serialize(0.01f, IsPropertySaveable.Yes, description: "How often (in seconds) the force fluctuation is calculated.", alwaysUseInstanceValues: true)]
+        private float ForceFluctuationInterval
+        {
+            get
+            {
+                return forceFluctuationInterval;
+            }
+            set
+            {
+                forceFluctuationInterval = Math.Max(value, 0.01f);
+            }
+        }
 
         public PhysicsBody PhysicsBody { get; private set; }
         private float Radius { get; set; }
@@ -39,11 +79,6 @@ namespace Barotrauma.Items.Components
         private readonly LevelTrigger.TriggererType triggeredBy;
         private readonly HashSet<Entity> triggerers = new HashSet<Entity>();
         private readonly bool triggerOnce;
-        private readonly bool distanceBasedForce;
-        private readonly bool forceFluctuation;
-        private readonly float forceFluctuationStrength;
-        private readonly float forceFluctuationFrequency;
-        private readonly float forceFluctuationInterval;
         private readonly List<ISerializableEntity> statusEffectTargets = new List<ISerializableEntity>();
         /// <summary>
         /// Effects applied to entities inside the trigger
@@ -54,7 +89,11 @@ namespace Barotrauma.Items.Components
         /// </summary>
         private readonly List<Attack> attacks = new List<Attack>();
 
-        public TriggerComponent(Item item, XElement element) : base(item, element)
+        private float forceFluctuationStrength;
+        private float forceFluctuationFrequency;
+        private float forceFluctuationInterval;
+
+        public TriggerComponent(Item item, ContentXElement element) : base(item, element)
         {
             string triggeredByAttribute = element.GetAttributeString("triggeredby", "Character");
             if (!Enum.TryParse(triggeredByAttribute, out triggeredBy))
@@ -62,17 +101,8 @@ namespace Barotrauma.Items.Components
                 DebugConsole.ThrowError($"Error in ForceComponent config: \"{triggeredByAttribute}\" is not a valid triggerer type.");
             }
             triggerOnce = element.GetAttributeBool("triggeronce", false);
-            distanceBasedForce = element.GetAttributeBool("distancebasedforce", false);
-            forceFluctuation = element.GetAttributeBool("forcefluctuation", false);
-            forceFluctuationStrength = element.GetAttributeFloat("forcefluctuationstrength", 1.0f);
-            forceFluctuationStrength = Math.Clamp(forceFluctuationStrength, 0.0f, 1.0f);
-            forceFluctuationFrequency = element.GetAttributeFloat("fluctuationfrequency", 1.0f);
-            forceFluctuationFrequency = Math.Max(forceFluctuationFrequency, 0.01f);
-            forceFluctuationInterval = element.GetAttributeFloat("fluctuationinterval", 0.01f);
-            forceFluctuationInterval = Math.Max(forceFluctuationInterval, 0.01f);
-
             string parentDebugName = $"TriggerComponent in {item.Name}";
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -93,13 +123,11 @@ namespace Barotrauma.Items.Components
             base.OnItemLoaded();
             float radiusAttribute = originalElement.GetAttributeFloat("radius", 10.0f);
             Radius = ConvertUnits.ToSimUnits(radiusAttribute * item.Scale);
-            PhysicsBody = new PhysicsBody(0.0f, 0.0f, Radius, 1.5f)
+            PhysicsBody = new PhysicsBody(0.0f, 0.0f, Radius, 1.5f, BodyType.Static, Physics.CollisionWall, LevelTrigger.GetCollisionCategories(triggeredBy))
             {
-                BodyType = BodyType.Static,
-                CollidesWith = LevelTrigger.GetCollisionCategories(triggeredBy),
-                CollisionCategories = Physics.CollisionWall,
                 UserData = item
             };
+            PhysicsBody.SetTransformIgnoreContacts(item.SimPosition, 0.0f);
             PhysicsBody.FarseerBody.SetIsSensor(true);
             PhysicsBody.FarseerBody.OnCollision += OnCollision;
             PhysicsBody.FarseerBody.OnSeparation += OnSeparation;
@@ -156,14 +184,14 @@ namespace Barotrauma.Items.Components
 
             TriggerActive = triggerers.Any();
 
-            if (forceFluctuation && TriggerActive && (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer))
+            if (ForceFluctuation && TriggerActive && (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer))
             {
                 ForceFluctuationTimer += deltaTime;
-                if (ForceFluctuationTimer >= forceFluctuationInterval)
+                if (ForceFluctuationTimer >= ForceFluctuationInterval)
                 {
-                    float v = MathF.Sin(2 * MathF.PI * forceFluctuationFrequency * TimeInLevel);
+                    float v = MathF.Sin(2 * MathF.PI * ForceFluctuationFrequency * TimeInLevel);
                     float amount = MathUtils.InverseLerp(-1.0f, 1.0f, v);
-                    CurrentForceFluctuation = MathHelper.Lerp(1.0f - forceFluctuationStrength, 1.0f, amount);
+                    CurrentForceFluctuation = MathHelper.Lerp(1.0f - ForceFluctuationStrength, 1.0f, amount);
                     ForceFluctuationTimer = 0.0f;
                     GameMain.NetworkMember?.CreateEntityEvent(this);
                 }
@@ -182,7 +210,7 @@ namespace Barotrauma.Items.Components
                     LevelTrigger.ApplyAttacks(attacks, item.WorldPosition, deltaTime);
                 }
 
-                if (Force < 0.01f)
+                if (Math.Abs(Force) < 0.01f)
                 {
                     // Just ignore very minimal forces
                     continue;
@@ -208,21 +236,65 @@ namespace Barotrauma.Items.Components
         {
             Vector2 diff = ConvertUnits.ToDisplayUnits(PhysicsBody.SimPosition - body.SimPosition);
             if (diff.LengthSquared() < 0.0001f) { return; }
-            float distanceFactor = distanceBasedForce ? LevelTrigger.GetDistanceFactor(body, PhysicsBody, RadiusInDisplayUnits) : 1.0f;
+            float distanceFactor = DistanceBasedForce ? LevelTrigger.GetDistanceFactor(body, PhysicsBody, RadiusInDisplayUnits) : 1.0f;
             if (distanceFactor <= 0.0f) { return; }
             Vector2 force = distanceFactor * (CurrentForceFluctuation * Force) * Vector2.Normalize(diff);
             if (force.LengthSquared() < 0.01f) { return; }
             body.ApplyForce(force);
         }
 
-        public override void Move(Vector2 amount)
+        public override void Move(Vector2 amount, bool ignoreContacts = false)
         {
-            base.Move(amount);
             if (PhysicsBody != null)
             {
-                PhysicsBody.SetTransform(PhysicsBody.SimPosition + ConvertUnits.ToSimUnits(amount), 0.0f);
+                if (ignoreContacts)
+                {
+                    PhysicsBody.SetTransformIgnoreContacts(PhysicsBody.SimPosition + ConvertUnits.ToSimUnits(amount), 0.0f);
+                }
+                else
+                {
+                    PhysicsBody.SetTransform(PhysicsBody.SimPosition + ConvertUnits.ToSimUnits(amount), 0.0f);
+                }
                 PhysicsBody.Submarine = item.Submarine;
+            }
+        }
+
+        public override void ReceiveSignal(Signal signal, Connection connection)
+        {
+            base.ReceiveSignal(signal, connection);
+            switch (connection.Name)
+            {
+                case "set_force":
+                    if (!FloatTryParse(signal, out float force)) { break; }
+                    Force = force;
+                    break;
+                case "set_distancebasedforce":
+                    if (!bool.TryParse(signal.value, out bool distanceBasedForce)) { break; }
+                    DistanceBasedForce = distanceBasedForce;
+                    break;
+                case "set_forcefluctuation":
+                    if (!bool.TryParse(signal.value, out bool forceFluctuation)) { break; }
+                    ForceFluctuation = forceFluctuation;
+                    break;
+                case "set_forcefluctuationstrength":
+                    if (!FloatTryParse(signal, out float forceFluctuationStrength)) { break; }
+                    ForceFluctuationStrength = forceFluctuationStrength;
+                    break;
+                case "set_forcefluctuationfrequency":
+                    if (!FloatTryParse(signal, out float forceFluctuationFrequency)) { break; }
+                    ForceFluctuationFrequency = forceFluctuationFrequency;
+                    break;
+                case "set_forcefluctuationinterval":
+                    if (!FloatTryParse(signal, out float forceFluctuationInterval)) { break; }
+                    ForceFluctuationInterval = forceFluctuationInterval;
+                    break;
+            }
+
+            static bool FloatTryParse(Signal signal, out float value)
+            {
+                return float.TryParse(signal.value, NumberStyles.Any, CultureInfo.InvariantCulture, out value);
             }
         }
     }
 }
+ 

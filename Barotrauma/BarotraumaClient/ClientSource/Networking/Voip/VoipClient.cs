@@ -43,7 +43,7 @@ namespace Barotrauma.Networking
 
         public void SendToServer()
         {
-            if (GameMain.Config.VoiceSetting == GameSettings.VoiceMode.Disabled)
+            if (GameSettings.CurrentConfig.Audio.VoiceSetting == VoiceMode.Disabled)
             {
                 if (VoipCapture.Instance != null)
                 {
@@ -54,8 +54,18 @@ namespace Barotrauma.Networking
             }
             else
             {
-                if (VoipCapture.Instance == null) VoipCapture.Create(GameMain.Config.VoiceCaptureDevice, storedBufferID);
-                if (VoipCapture.Instance == null || VoipCapture.Instance.EnqueuedTotalLength <= 0) return;
+                try
+                {
+                    if (VoipCapture.Instance == null) { VoipCapture.Create(GameSettings.CurrentConfig.Audio.VoiceCaptureDevice, storedBufferID); }
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError($"VoipCature.Create failed: {e.Message} {e.StackTrace.CleanupStackTrace()}");
+                    var config = GameSettings.CurrentConfig;
+                    config.Audio.VoiceSetting = VoiceMode.Disabled;
+                    GameSettings.SetCurrentConfig(config);
+                }
+                if (VoipCapture.Instance == null || VoipCapture.Instance.EnqueuedTotalLength <= 0) { return; }
             }
 
             if (DateTime.Now >= lastSendTime + VoipConfig.SEND_INTERVAL)
@@ -80,7 +90,7 @@ namespace Barotrauma.Networking
             if (queue == null)
             {
 #if DEBUG
-                DebugConsole.NewMessage("Couldn't find VoipQueue with id " + queueId.ToString() + "!", GUI.Style.Red);
+                DebugConsole.NewMessage("Couldn't find VoipQueue with id " + queueId.ToString() + "!", GUIStyle.Red);
 #endif
                 return;
             }
@@ -102,7 +112,7 @@ namespace Barotrauma.Networking
                     var messageType = !client.VoipQueue.ForceLocal && ChatMessage.CanUseRadio(client.Character, out radio) ? ChatMessageType.Radio : ChatMessageType.Default;
                     client.Character.ShowSpeechBubble(1.25f, ChatMessage.MessageColor[(int)messageType]);
 
-                    client.VoipSound.UseRadioFilter = messageType == ChatMessageType.Radio && !GameMain.Config.DisableVoiceChatFilters;
+                    client.VoipSound.UseRadioFilter = messageType == ChatMessageType.Radio && !GameSettings.CurrentConfig.Audio.DisableVoiceChatFilters;
                     if (messageType == ChatMessageType.Radio)
                     {
                         client.VoipSound.SetRange(radio.Range * 0.8f, radio.Range);
@@ -111,7 +121,7 @@ namespace Barotrauma.Networking
                     {
                         client.VoipSound.SetRange(ChatMessage.SpeakRange * 0.4f, ChatMessage.SpeakRange);
                     }
-                    if (messageType != ChatMessageType.Radio && Character.Controlled != null && !GameMain.Config.DisableVoiceChatFilters)
+                    if (messageType != ChatMessageType.Radio && Character.Controlled != null && !GameSettings.CurrentConfig.Audio.DisableVoiceChatFilters)
                     {
                         client.VoipSound.UseMuffleFilter = SoundPlayer.ShouldMuffleSound(Character.Controlled, client.Character.WorldPosition, ChatMessage.SpeakRange, client.Character.CurrentHull);
                     }
@@ -144,9 +154,9 @@ namespace Barotrauma.Networking
         {
             if (voiceIconSheetRects == null)
             {
-                var soundIconStyle = GUI.Style.GetComponentStyle("GUISoundIcon");
+                var soundIconStyle = GUIStyle.GetComponentStyle("GUISoundIcon");
                 Rectangle sourceRect = soundIconStyle.Sprites.First().Value.First().Sprite.SourceRect;
-                var indexPieces = soundIconStyle.Element.Attribute("sheetindices").Value.Split(';');
+                var indexPieces = soundIconStyle.Element.GetAttribute("sheetindices").Value.Split(';');
                 voiceIconSheetRects = new Rectangle[indexPieces.Length];
                 for (int i = 0; i < indexPieces.Length; i++)
                 {

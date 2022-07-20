@@ -1,11 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Xml.Linq;
-
-namespace Barotrauma.Abilities
+﻿namespace Barotrauma.Abilities
 {
     class CharacterAbilityApplyStatusEffectsToLastOrderedCharacter : CharacterAbilityApplyStatusEffects
     {
-        public CharacterAbilityApplyStatusEffectsToLastOrderedCharacter(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityApplyStatusEffectsToLastOrderedCharacter(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
         }
 

@@ -36,7 +36,7 @@ namespace Barotrauma
         private readonly DelayTypes delayType;
         private readonly float delay;
 
-        public DelayedEffect(XElement element, string parentDebugName)
+        public DelayedEffect(ContentXElement element, string parentDebugName)
             : base(element, parentDebugName)
         {
             string delayTypeStr = element.GetAttributeString("delaytype", "timer");
@@ -94,7 +94,13 @@ namespace Barotrauma
 
         public override void Apply(ActionType type, float deltaTime, Entity entity, IReadOnlyList<ISerializableEntity> targets, Vector2? worldPosition = null)
         {
-            if (this.type != type || !HasRequiredItems(entity)) { return; }
+            if (this.type != type) { return; }
+            if (intervalTimer > 0.0f)
+            {
+                intervalTimer -= deltaTime;
+                return;
+            }
+            if (!HasRequiredItems(entity)) { return; }
             if (delayType == DelayTypes.ReachCursor && Character.Controlled == null) { return; }
             if (!Stackable) 
             { 

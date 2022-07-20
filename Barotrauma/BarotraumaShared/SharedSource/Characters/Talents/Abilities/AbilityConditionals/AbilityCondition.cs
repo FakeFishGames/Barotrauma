@@ -14,7 +14,7 @@ namespace Barotrauma.Abilities
 
         public virtual bool AllowClientSimulation => true;
 
-        public AbilityCondition(CharacterTalent characterTalent, XElement conditionElement) 
+        public AbilityCondition(CharacterTalent characterTalent, ContentXElement conditionElement) 
         {
             this.characterTalent = characterTalent;
             character = characterTalent.Character;

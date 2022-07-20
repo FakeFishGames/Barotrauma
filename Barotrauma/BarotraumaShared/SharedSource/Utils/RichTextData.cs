@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace Barotrauma
 {
@@ -20,18 +21,17 @@ namespace Barotrauma
         private const string metadataDefinition = "metadata";
         private const string endDefinition = "end";
 
-        public static List<RichTextData> GetRichTextData(string text, out string sanitizedText)
+        public static ImmutableArray<RichTextData>? GetRichTextData(string text, out string sanitizedText)
         {
-            List<RichTextData> textColors = null;
             sanitizedText = text;
-            if (!string.IsNullOrEmpty(text) && text.Contains(definitionIndicator))
+            if (!string.IsNullOrEmpty(text) && text.Contains(definitionIndicator, System.StringComparison.Ordinal))
             {
                 text = text.Replace("\r", "");
                 string[] segments = text.Split(definitionIndicator);
 
                 sanitizedText = string.Empty;
 
-                textColors = new List<RichTextData>();
+                List<RichTextData> textColors = new List<RichTextData>();
                 RichTextData tempData = null;
 
                 int prevIndex = 0;
@@ -49,7 +49,7 @@ namespace Barotrauma
                         string[] attributes = segments[i].Split(attributeSeparator);
                         for (int j = 0; j < attributes.Length; j++)
                         {
-                            if (attributes[j].Contains(endDefinition))
+                            if (attributes[j].Contains(endDefinition, System.StringComparison.OrdinalIgnoreCase))
                             {
                                 if (tempData != null)
                                 {
@@ -59,7 +59,7 @@ namespace Barotrauma
                                 }
                                 tempData = null;
                             }
-                            else if (attributes[j].StartsWith(colorDefinition))
+                            else if (attributes[j].StartsWith(colorDefinition, System.StringComparison.OrdinalIgnoreCase))
                             {
                                 if (tempData == null) { tempData = new RichTextData(); }
                                 string valueStr = attributes[j].Substring(attributes[j].IndexOf(keyValueSeparator) + 1);
@@ -72,7 +72,7 @@ namespace Barotrauma
                                     tempData.Color = XMLExtensions.ParseColor(valueStr);
                                 }
                             }
-                            else if (attributes[j].StartsWith(metadataDefinition))
+                            else if (attributes[j].StartsWith(metadataDefinition, System.StringComparison.OrdinalIgnoreCase))
                             {
                                 if (tempData == null) { tempData = new RichTextData(); }
                                 tempData.Metadata = attributes[j].Substring(attributes[j].IndexOf(keyValueSeparator) + 1);
@@ -80,9 +80,9 @@ namespace Barotrauma
                         }
                     }
                 }
+                return textColors.ToImmutableArray();
             }
-
-            return textColors;
+            return null;
         }
     }
 }

@@ -36,8 +36,8 @@ namespace Barotrauma
         public MonsterMission(MissionPrefab prefab, Location[] locations, Submarine sub)
             : base(prefab, locations, sub)
         {
-            string speciesName = prefab.ConfigElement.GetAttributeString("monsterfile", null);
-            if (!string.IsNullOrEmpty(speciesName))
+            Identifier speciesName = prefab.ConfigElement.GetAttributeIdentifier("monsterfile", Identifier.Empty);
+            if (!speciesName.IsEmpty)
             {
                 var characterPrefab = CharacterPrefab.FindBySpeciesName(speciesName);
                 if (characterPrefab != null)
@@ -62,7 +62,7 @@ namespace Barotrauma
 
             foreach (var monsterElement in prefab.ConfigElement.GetChildElements("monster"))
             {
-                speciesName = monsterElement.GetAttributeString("character", string.Empty);
+                speciesName = monsterElement.GetAttributeIdentifier("character", Identifier.Empty);
                 int defaultCount = monsterElement.GetAttributeInt("count", -1);
                 if (defaultCount < 0)
                 {
@@ -83,10 +83,10 @@ namespace Barotrauma
 
             if (monsterPrefabs.Any())
             {
-                var characterParams = new CharacterParams(monsterPrefabs.First().character.FilePath);
+                var characterParams = new CharacterParams(monsterPrefabs.First().character.ContentFile as CharacterFile);
                 description = description.Replace("[monster]",
-                    TextManager.Get("character." + characterParams.SpeciesTranslationOverride, returnNull: true) ??
-                    TextManager.Get("character." + characterParams.SpeciesName));
+                    TextManager.Get("character." + characterParams.SpeciesTranslationOverride).Fallback(
+                    TextManager.Get("character." + characterParams.SpeciesName)));
             }
         }
 
@@ -135,8 +135,10 @@ namespace Barotrauma
                 monster.Enabled = false;
                 if (monster.Params.AI != null && monster.Params.AI.EnforceAggressiveBehaviorForMissions)
                 {
+                    monster.Params.AI.FleeHealthThreshold = 0;
                     foreach (var targetParam in monster.Params.AI.Targets)
                     {
+                        if (targetParam.Tag.Equals("engine", StringComparison.OrdinalIgnoreCase)) { continue; }
                         switch (targetParam.State)
                         {
                             case AIState.Avoid:
@@ -228,7 +230,7 @@ namespace Barotrauma
             }
             GiveReward();
             completed = true;
-            if (level?.LevelData != null && Prefab.Tags.Any(t => t.Equals("huntinggrounds", StringComparison.OrdinalIgnoreCase) || t.Equals("huntinggroundsnoreward", StringComparison.OrdinalIgnoreCase)))
+            if (level?.LevelData != null && Prefab.Tags.Any(t => t.Equals("huntinggrounds", StringComparison.OrdinalIgnoreCase)))
             {
                 level.LevelData.HasHuntingGrounds = false;
             }

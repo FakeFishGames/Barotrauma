@@ -10,7 +10,7 @@ namespace Barotrauma
 {
     class AIObjectiveLoadItem : AIObjective
     {
-        public override string Identifier { get; set; } = "load item";
+        public override Identifier Identifier { get; set; } = "load item".ToIdentifier();
         public override bool IsLoop
         {
             get => true;
@@ -20,9 +20,9 @@ namespace Barotrauma
         private AIObjectiveLoadItems.ItemCondition TargetItemCondition { get; }
         private Item Container { get; }
         private ItemContainer ItemContainer { get; }
-        private ImmutableArray<string> TargetContainerTags { get; }
-        private ImmutableHashSet<string> ValidContainableItemIdentifiers { get; }
-        private static Dictionary<ItemPrefab, ImmutableHashSet<string>> AllValidContainableItemIdentifiers { get; } = new Dictionary<ItemPrefab, ImmutableHashSet<string>>();
+        private ImmutableArray<Identifier> TargetContainerTags { get; }
+        private ImmutableHashSet<Identifier> ValidContainableItemIdentifiers { get; }
+        private static Dictionary<ItemPrefab, ImmutableHashSet<Identifier>> AllValidContainableItemIdentifiers { get; } = new Dictionary<ItemPrefab, ImmutableHashSet<Identifier>>();
 
         private int itemIndex = 0;
         private AIObjectiveDecontainItem decontainObjective;
@@ -30,7 +30,7 @@ namespace Barotrauma
         private Item targetItem;
         private readonly string abandonGetItemDialogueIdentifier = "dialogcannotfindloadable";
 
-        public AIObjectiveLoadItem(Item container, ImmutableArray<string> targetTags, AIObjectiveLoadItems.ItemCondition targetCondition, string option, Character character, AIObjectiveManager objectiveManager, float priorityModifier)
+        public AIObjectiveLoadItem(Item container, ImmutableArray<Identifier> targetTags, AIObjectiveLoadItems.ItemCondition targetCondition, Identifier option, Character character, AIObjectiveManager objectiveManager, float priorityModifier)
             : base(character, objectiveManager, priorityModifier)
         {
             Container = container;
@@ -42,7 +42,7 @@ namespace Barotrauma
             }
             TargetContainerTags = targetTags;
             TargetItemCondition = targetCondition;
-            if (!string.IsNullOrEmpty(option))
+            if (!option.IsEmpty)
             {
                 string optionSpecificDialogueIdentifier = $"{abandonGetItemDialogueIdentifier}.{option}";
                 if (TextManager.ContainsTag(optionSpecificDialogueIdentifier))
@@ -63,7 +63,7 @@ namespace Barotrauma
 
         private enum CheckStatus { Unfinished, Finished }
 
-        private ImmutableHashSet<string> GetValidContainableItemIdentifiers()
+        private ImmutableHashSet<Identifier> GetValidContainableItemIdentifiers()
         {
             if (AllValidContainableItemIdentifiers.TryGetValue(Container.Prefab, out var existingIdentifiers))
             {
@@ -75,7 +75,7 @@ namespace Barotrauma
             var potentialContainablePrefabs = MapEntityPrefab.List
                 .Where(mep => mep is ItemPrefab ip && ItemContainer.ContainableItemIdentifiers.Any(i => i == ip.Identifier || ip.Tags.Contains(i)))
                 .Cast<ItemPrefab>();
-            var validContainableItemIdentifiers = new HashSet<string>();
+            var validContainableItemIdentifiers = new HashSet<Identifier>();
             foreach (var component in Container.Components)
             {
                 if (CheckComponent() == CheckStatus.Finished)
@@ -125,7 +125,7 @@ namespace Barotrauma
                             useDefaultContainableItemIdentifiers = false;
                             if (statusEffect.TargetIdentifiers != null)
                             {
-                                foreach (string target in statusEffect.TargetIdentifiers)
+                                foreach (Identifier target in statusEffect.TargetIdentifiers)
                                 {
                                     foreach (var prefab in potentialContainablePrefabs)
                                     {
@@ -308,11 +308,9 @@ namespace Barotrauma
             if (rootInventoryOwner is Item parentItem)
             {
                 if (parentItem.HasTag("donttakeitems")) { return false; }
-                if (!(parentItem.GetComponent<ItemContainer>()?.HasAccess(character) ?? true)) { return false; }
             }
-            if (item.IsThisOrAnyContainerIgnoredByAI(character)) { return false; }
+            if (!item.HasAccess(character)) { return false; }
             if (!character.HasItem(item) && !CanEquip(item)) { return false; }
-            if (!ItemContainer.HasAccess(character)) { return false; }
             if (!ItemContainer.CanBeContained(item)) { return false; }
             if (AIObjectiveLoadItems.ItemMatchesTargetCondition(item, TargetItemCondition)) { return false; }
             if (TargetItemCondition == AIObjectiveLoadItems.ItemCondition.Full)

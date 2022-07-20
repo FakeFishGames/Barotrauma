@@ -9,7 +9,7 @@ namespace Barotrauma.Abilities
         private float minimumPercentage;
 
 
-        public AbilityConditionHasAffliction(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
+        public AbilityConditionHasAffliction(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
             afflictionIdentifier = conditionElement.GetAttributeString("afflictionidentifier", "");
             minimumPercentage = conditionElement.GetAttributeFloat("minimumpercentage", 0f);

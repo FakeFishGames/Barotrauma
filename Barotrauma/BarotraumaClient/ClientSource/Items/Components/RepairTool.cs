@@ -23,17 +23,17 @@ namespace Barotrauma.Items.Components
         }
 #endif
 
-        private List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
-        private List<ParticleEmitter> particleEmitterHitStructure = new List<ParticleEmitter>();
-        private List<ParticleEmitter> particleEmitterHitCharacter = new List<ParticleEmitter>();
-        private List<Pair<RelatedItem, ParticleEmitter>> particleEmitterHitItem = new List<Pair<RelatedItem, ParticleEmitter>>();
+        private readonly List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
+        private readonly List<ParticleEmitter> particleEmitterHitStructure = new List<ParticleEmitter>();
+        private readonly List<ParticleEmitter> particleEmitterHitCharacter = new List<ParticleEmitter>();
+        private readonly List<(RelatedItem relatedItem, ParticleEmitter emitter)> particleEmitterHitItem = new List<(RelatedItem relatedItem, ParticleEmitter emitter)>();
 
         private float prevProgressBarState;
         private Item prevProgressBarTarget = null;
 
-        partial void InitProjSpecific(XElement element)
+        partial void InitProjSpecific(ContentXElement element)
         {
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -41,15 +41,12 @@ namespace Barotrauma.Items.Components
                         particleEmitters.Add(new ParticleEmitter(subElement));
                         break;
                     case "particleemitterhititem":
-                        string[] identifiers = subElement.GetAttributeStringArray("identifiers", new string[0]);
-                        if (identifiers.Length == 0) identifiers = subElement.GetAttributeStringArray("identifier", new string[0]);
-                        string[] excludedIdentifiers = subElement.GetAttributeStringArray("excludedidentifiers", new string[0]);
-                        if (excludedIdentifiers.Length == 0) excludedIdentifiers = subElement.GetAttributeStringArray("excludedidentifier", new string[0]);
+                        Identifier[] identifiers = subElement.GetAttributeIdentifierArray("identifiers", Array.Empty<Identifier>());
+                        if (identifiers.Length == 0) { identifiers = subElement.GetAttributeIdentifierArray("identifier", Array.Empty<Identifier>()); }
+                        Identifier[] excludedIdentifiers = subElement.GetAttributeIdentifierArray("excludedidentifiers", Array.Empty<Identifier>());
+                        if (excludedIdentifiers.Length == 0) { excludedIdentifiers = subElement.GetAttributeIdentifierArray("excludedidentifier", Array.Empty<Identifier>()); }
                         
-                        particleEmitterHitItem.Add(
-                            new Pair<RelatedItem, ParticleEmitter>(
-                                new RelatedItem(identifiers, excludedIdentifiers), 
-                                new ParticleEmitter(subElement)));
+                        particleEmitterHitItem.Add((new RelatedItem(identifiers, excludedIdentifiers), new ParticleEmitter(subElement)));
                         break;
                     case "particleemitterhitstructure":
                         particleEmitterHitStructure.Add(new ParticleEmitter(subElement));
@@ -89,7 +86,7 @@ namespace Barotrauma.Items.Components
                 targetStructure.ID * 1000 + sectionIndex, //unique "identifier" for each wall section
                 progressBarPos,
                 MathUtils.InverseLerp(targetStructure.Prefab.MinHealth, targetStructure.Health, targetStructure.Health - targetStructure.SectionDamage(sectionIndex)),
-                GUI.Style.Red, GUI.Style.Green);
+                GUIStyle.Red, GUIStyle.Green);
 
             if (progressBar != null) progressBar.Size = new Vector2(60.0f, 20.0f);
 
@@ -128,7 +125,7 @@ namespace Barotrauma.Items.Components
                             targetItem,
                             progressBarPos,
                             progressBarState,
-                            GUI.Style.Red, GUI.Style.Green,
+                            GUIStyle.Red, GUIStyle.Green,
                             progressBarState < prevProgressBarState ? "progressbar.cutting" : "");
                         if (progressBar != null) { progressBar.Size = new Vector2(60.0f, 20.0f); }
                     }
@@ -139,11 +136,11 @@ namespace Barotrauma.Items.Components
 
             Vector2 particlePos = ConvertUnits.ToDisplayUnits(pickedPosition);
             if (targetItem.Submarine != null) particlePos += targetItem.Submarine.DrawPosition;
-            foreach (var emitter in particleEmitterHitItem)
+            foreach ((RelatedItem relatedItem, ParticleEmitter emitter) in particleEmitterHitItem)
             {
-                if (!emitter.First.MatchesItem(targetItem)) { continue; }
+                if (!relatedItem.MatchesItem(targetItem)) { continue; }
                 float particleAngle = item.body.Rotation + MathHelper.ToRadians(BarrelRotation) + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
-                emitter.Second.Emit(deltaTime, particlePos, item.CurrentHull, particleAngle + MathHelper.Pi, -particleAngle + MathHelper.Pi);
+                emitter.Emit(deltaTime, particlePos, item.CurrentHull, particleAngle + MathHelper.Pi, -particleAngle + MathHelper.Pi);
             }            
         }
 #if DEBUG

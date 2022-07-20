@@ -1292,6 +1292,7 @@ namespace Microsoft.Xna.Framework
             return value1;
         }
 
+        public static implicit operator Vector4((float X, float Y, float Z, float W) tuple) => new Vector4(tuple.X, tuple.Y, tuple.Z, tuple.W);
         #endregion
     }
 }

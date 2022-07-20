@@ -16,13 +16,13 @@ namespace Barotrauma.Items.Components
             SquareRoot
         }
 
-        [Serialize(FunctionType.Round, false, description: "Which kind of function to run the input through.", alwaysUseInstanceValues: true)]
+        [Serialize(FunctionType.Round, IsPropertySaveable.No, description: "Which kind of function to run the input through.", alwaysUseInstanceValues: true)]
         public FunctionType Function
         {
             get; set;
         }
 
-        public FunctionComponent(Item item, XElement element)
+        public FunctionComponent(Item item, ContentXElement element)
             : base(item, element)
         {
             IsActive = true;

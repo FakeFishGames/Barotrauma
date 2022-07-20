@@ -6,23 +6,6 @@ using System.Linq;
 
 namespace Barotrauma.Networking
 {
-    struct TempClient
-    {
-        public string Name;
-        public string PreferredJob;
-        public CharacterTeamType PreferredTeam;
-        public UInt16 NameID;
-        public UInt64 SteamID;
-        public byte ID;
-        public UInt16 CharacterID;
-        public float Karma;
-        public bool Muted;
-        public bool InGame;
-        public bool HasPermissions;
-        public bool IsOwner;
-        public bool AllowKicking;
-    }
-
     partial class Client : IDisposable
     {
         public VoipSound VoipSound
@@ -50,6 +33,8 @@ namespace Barotrauma.Networking
 
         public bool AllowKicking;
 
+        public bool IsDownloading;
+
         public float Karma;
 
         public void UpdateSoundPosition()
@@ -66,7 +51,7 @@ namespace Barotrauma.Networking
 
             if (character != null)
             {
-                if (GameMain.Config.UseDirectionalVoiceChat)
+                if (GameSettings.CurrentConfig.Audio.UseDirectionalVoiceChat)
                 {
                     VoipSound.SetPosition(new Vector3(character.WorldPosition.X, character.WorldPosition.Y, 0.0f));
                 }
@@ -93,7 +78,7 @@ namespace Barotrauma.Networking
             VoipSound = null;
         }
 
-        public void SetPermissions(ClientPermissions permissions, List<string> permittedConsoleCommands)
+        public void SetPermissions(ClientPermissions permissions, IEnumerable<string> permittedConsoleCommands)
         {
             List<DebugConsole.Command> permittedCommands = new List<DebugConsole.Command>();
             foreach (string commandName in permittedConsoleCommands)
@@ -107,14 +92,18 @@ namespace Barotrauma.Networking
             SetPermissions(permissions, permittedCommands);
         }
 
-        public void SetPermissions(ClientPermissions permissions, List<DebugConsole.Command> permittedConsoleCommands)
+        public void SetPermissions(ClientPermissions permissions, IEnumerable<DebugConsole.Command> permittedConsoleCommands)
         {
             if (GameMain.Client == null)
             {
                 return;
             }
             Permissions = permissions;
-            PermittedConsoleCommands.Clear(); PermittedConsoleCommands.AddRange(permittedConsoleCommands);
+            PermittedConsoleCommands.Clear();
+            foreach (var command in permittedConsoleCommands)
+            {
+                PermittedConsoleCommands.Add(command);
+            }
         }
 
         public void GivePermission(ClientPermissions permission)
@@ -123,7 +112,7 @@ namespace Barotrauma.Networking
             {
                 return;
             }
-            if (!Permissions.HasFlag(permission)) Permissions |= permission;
+            if (!Permissions.HasFlag(permission)) { Permissions |= permission; }
         }
 
         public void RemovePermission(ClientPermissions permission)
@@ -132,7 +121,7 @@ namespace Barotrauma.Networking
             {
                 return;
             }
-            if (Permissions.HasFlag(permission)) Permissions &= ~permission;
+            if (Permissions.HasFlag(permission)) { Permissions &= ~permission; }
         }
 
         public bool HasPermission(ClientPermissions permission)

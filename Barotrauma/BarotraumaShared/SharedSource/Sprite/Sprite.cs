@@ -39,7 +39,7 @@ namespace Barotrauma
         /// <summary>
         /// Reference to the xml element from where the sprite was created. Can be null if the sprite was not defined in xml!
         /// </summary>
-        public XElement SourceElement { get; private set; }
+        public ContentXElement SourceElement { get; private set; }
 
         //the area in the texture that is supposed to be drawn
         private Rectangle sourceRect;
@@ -108,9 +108,9 @@ namespace Barotrauma
 
         public Vector2 RelativeSize { get; private set; }
 
-        public string FilePath { get; private set; }
+        public ContentPath FilePath { get; private set; }
 
-        public string FullPath { get; private set; }
+        public string FullPath => FilePath.FullPath;
 
         public bool Compress { get; private set; }
 
@@ -119,11 +119,11 @@ namespace Barotrauma
             return FilePath + ": " + sourceRect;
         }
 
-        public string ID { get; private set; }
+        public Identifier Identifier { get; private set; }
         /// <summary>
-        /// ID of the Map Entity so that we can link the sprite to it's owner.
+        /// Identifier of the Map Entity so that we can link the sprite to its owner.
         /// </summary>
-        public string EntityID { get; set; }
+        public Identifier EntityIdentifier { get; set; }
         public string Name { get; set; }
 
         partial void LoadTexture(ref Vector4 sourceVector, ref bool shouldReturn);
@@ -138,9 +138,9 @@ namespace Barotrauma
             }
         }
 
-        public Sprite(XElement element, string path = "", string file = "", bool lazyLoad = false)
+        public Sprite(ContentXElement element, string path = "", string file = "", bool lazyLoad = false)
         {
-            if (element == null) { return; }
+            if (element is null) { return; }
             this.LazyLoad = lazyLoad;
             SourceElement = element;
             if (!ParseTexturePath(path, file)) { return; }
@@ -171,7 +171,7 @@ namespace Barotrauma
             size.Y *= sourceRect.Height;
             RelativeOrigin = SourceElement.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));
             Depth = SourceElement.GetAttributeFloat("depth", 0.001f);
-            ID = GetID(SourceElement);
+            Identifier = GetIdentifier(SourceElement);
             AddToList(this);
         }
 
@@ -201,11 +201,7 @@ namespace Barotrauma
         
         private void Init(string newFile, Rectangle? sourceRectangle = null, Vector2? newOrigin = null, Vector2? newOffset = null, float newRotation = 0)
         {
-            FilePath = newFile;
-            if (!string.IsNullOrEmpty(FilePath))
-            {
-                FullPath = Path.GetFullPath(FilePath);
-            }
+            FilePath = ContentPath.FromRaw(newFile);
             Vector4 sourceVector = Vector4.Zero;
             bool shouldReturn = false;
             LoadTexture(ref sourceVector, ref shouldReturn);
@@ -228,14 +224,15 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Creates a supposedly unique id from the parent element. If the parent element is not found, uses the sprite element.
+        /// Creates a supposedly unique identifier from the parent element. If the parent element is not found, uses the sprite element.
         /// TODO: If there are multiple elements with exactly the same data, the ids will fail. -> Is there a better way to identify the sprites?
+        /// ALSO TODO: delete :)
         /// </summary>
-        public static string GetID(XElement sourceElement)
+        public static Identifier GetIdentifier(XElement sourceElement)
         {
-            if (sourceElement == null) { return string.Empty; }
+            if (sourceElement == null) { return "".ToIdentifier(); }
             var parentElement = sourceElement.Parent;
-            return parentElement != null ? sourceElement.ToString() + parentElement.ToString() : sourceElement.ToString();
+            return $"{sourceElement}{parentElement?.ToString() ?? ""}".ToIdentifier();
         }
 
         public void Remove()
@@ -268,13 +265,13 @@ namespace Barotrauma
             }
             var doc = XMLExtensions.TryLoadXml(path);
             if (doc == null) { return; }
-            if (string.IsNullOrWhiteSpace(Name) && string.IsNullOrWhiteSpace(EntityID)) { return; }
+            if (string.IsNullOrWhiteSpace(Name) && string.IsNullOrWhiteSpace(EntityIdentifier.Value)) { return; }
             var spriteElements = doc.Descendants("sprite").Concat(doc.Descendants("Sprite"));
             var sourceElements = spriteElements.Where(e => e.GetAttributeString("name", null) == Name);
             if (sourceElements.None())
             {
                 // Try parents by first comparing the entity id and then the name, if no match was found.
-                sourceElements = spriteElements.Where(e => e.Parent?.GetAttributeString("identifier", null) == EntityID);
+                sourceElements = spriteElements.Where(e => e.Parent?.GetAttributeString("identifier", null) == EntityIdentifier);
                 if (sourceElements.None())
                 {
                     sourceElements = spriteElements.Where(e => e.Parent?.GetAttributeString("name", null) == Name);
@@ -282,15 +279,15 @@ namespace Barotrauma
             }
             if (sourceElements.Multiple())
             {
-                DebugConsole.NewMessage($"[Sprite] Multiple matching elements found by name ({Name}) or identifier ({EntityID})!: {SourceElement.ToString()}", Color.Yellow);
+                DebugConsole.NewMessage($"[Sprite] Multiple matching elements found by name ({Name}) or identifier ({EntityIdentifier})!: {SourceElement}", Color.Yellow);
             }
             else if (sourceElements.None())
             {
-                DebugConsole.NewMessage($"[Sprite] Cannot find matching source element by comparing the name attribute ({Name}) or identifier ({EntityID})! Cannot reload the xml for sprite element \"{SourceElement.ToString()}\"!", Color.Yellow);
+                DebugConsole.NewMessage($"[Sprite] Cannot find matching source element by comparing the name attribute ({Name}) or identifier ({EntityIdentifier})! Cannot reload the xml for sprite element \"{SourceElement.ToString()}\"!", Color.Yellow);
             }
             else
             {
-                SourceElement = sourceElements.Single();
+                SourceElement = sourceElements.Single().FromPackage(SourceElement.ContentPackage);
             }
             if (SourceElement != null)
             {
@@ -311,7 +308,7 @@ namespace Barotrauma
                 size.Y *= sourceRect.Height;
                 RelativeOrigin = SourceElement.GetAttributeVector2("origin", new Vector2(0.5f, 0.5f));
                 Depth = SourceElement.GetAttributeFloat("depth", 0.001f);
-                ID = GetID(SourceElement);
+                Identifier = GetIdentifier(SourceElement);
             }
         }
 
@@ -319,11 +316,11 @@ namespace Barotrauma
         {
             if (file == "")
             {
-                file = SourceElement.GetAttributeString("texture", "");
+                file = SourceElement.GetAttributeStringUnrestricted("texture", "");
                 var overrideElement = GetLocalizationOverrideElement();
                 if (overrideElement != null)
                 {
-                    string overrideFile = overrideElement.GetAttributeString("texture", "");
+                    string overrideFile = overrideElement.GetAttributeStringUnrestricted("texture", "");
                     if (!string.IsNullOrEmpty(overrideFile)) { file = overrideFile; }
                 }
             }
@@ -336,22 +333,18 @@ namespace Barotrauma
             {
                 if (!path.EndsWith("/")) path += "/";
             }
-            FilePath = (path + file).CleanUpPathCrossPlatform(correctFilenameCase: true);
-            if (!string.IsNullOrEmpty(FilePath))
-            {
-                FullPath = Path.GetFullPath(FilePath);
-            }
+            FilePath = ContentPath.FromRaw(SourceElement.ContentPackage, (path + file).CleanUpPathCrossPlatform(correctFilenameCase: true));
             return true;
         }
 
         private XElement GetLocalizationOverrideElement()
         {
-            foreach (XElement subElement in SourceElement.Elements())
+            foreach (var subElement in SourceElement.Elements())
             {
                 if (subElement.Name.ToString().Equals("override", StringComparison.OrdinalIgnoreCase))
                 {
-                    string language = subElement.GetAttributeString("language", "");
-                    if (TextManager.Language.Equals(language, StringComparison.InvariantCultureIgnoreCase))
+                    LanguageIdentifier language = subElement.GetAttributeIdentifier("language", "").ToLanguageIdentifier();
+                    if (GameSettings.CurrentConfig.Language == language)
                     {
                         return subElement;
                     }

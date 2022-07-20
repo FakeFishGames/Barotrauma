@@ -234,7 +234,7 @@ namespace Barotrauma.Sounds
                 int alError = Al.GetError();
                 if (alError != Al.NoError)
                 {
-                    DebugConsole.ThrowError("Failed to set source's gain: " + debugName + ", " + Al.GetErrorString(alError), appendStackTrace: true);
+                    DebugConsole.ThrowError($"Failed to set source's gain to {gain} (effective gain {effectiveGain}): {debugName}, {Al.GetErrorString(alError)}", appendStackTrace: true);
                     return;
                 }
             }

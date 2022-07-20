@@ -14,7 +14,7 @@ namespace Barotrauma
             public override IEnumerable<string> StatusTextValues(Traitor traitor)
             {
                 var values = base.StatusTextValues(traitor).ToArray();
-                values[1] = TextManager.GetServerMessage(StatusValueTextId);
+                values[1] = TextManager.FormatServerMessage(StatusValueTextId);
                 return values;
             }
 
@@ -24,7 +24,7 @@ namespace Barotrauma
             protected internal override string GetInfoText(Traitor traitor, string textId, IEnumerable<string> keys, IEnumerable<string> values)
             {
                 var infoText = base.GetInfoText(traitor, textId, keys, values);
-                return !string.IsNullOrEmpty(optionalInfoTextId) ? TextManager.FormatServerMessage(optionalInfoTextId, new[] { "[infotext]" }, new[] { infoText }) : infoText;
+                return !string.IsNullOrEmpty(optionalInfoTextId) ? TextManager.FormatServerMessage(optionalInfoTextId, ("[infotext]", infoText)) : infoText;
             }
 
             public GoalIsOptional(Goal goal, string optionalInfoTextId) : base(goal)

@@ -6,22 +6,22 @@ namespace Barotrauma
 {
     class CheckItemAction : BinaryOptionAction
     {
-        [Serialize("", true)]
-        public string TargetTag { get; set; }
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier TargetTag { get; set; }
 
-        [Serialize("", true)]
+        [Serialize("", IsPropertySaveable.Yes)]
         public string ItemIdentifiers { get; set; }
 
-        [Serialize("", true)]
+        [Serialize("", IsPropertySaveable.Yes)]
         public string ItemTags { get; set; }
         
-        private readonly string[] itemIdentifierSplit;
-        private readonly string[] itemTags;
+        private readonly Identifier[] itemIdentifierSplit;
+        private readonly Identifier[] itemTags;
 
-        public CheckItemAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element)
+        public CheckItemAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)
         {
-            itemIdentifierSplit = ItemIdentifiers.Split(',');
-            itemTags = ItemTags.Split(",");
+            itemIdentifierSplit = ItemIdentifiers.Split(',').ToIdentifiers();
+            itemTags = ItemTags.Split(",").ToIdentifiers();
         }
 
         protected override bool? DetermineSuccess()

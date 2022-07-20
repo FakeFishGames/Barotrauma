@@ -749,7 +749,7 @@ namespace Barotrauma
 
                     Vector2 normal = Vector2.Normalize(endSegment - startSegment);
                     normal = new Vector2(-normal.Y, normal.X);
-                    midPoint += normal * Rand.Range(-offsetAmount, offsetAmount, Rand.RandSync.Server);
+                    midPoint += normal * Rand.Range(-offsetAmount, offsetAmount, Rand.RandSync.ServerAndClient);
 
                     if (bounds.HasValue)
                     {

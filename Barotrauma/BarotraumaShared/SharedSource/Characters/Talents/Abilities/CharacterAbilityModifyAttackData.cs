@@ -11,9 +11,9 @@ namespace Barotrauma.Abilities
         private readonly float addedPenetration;
         private readonly bool implode;
 
-        public CharacterAbilityModifyAttackData(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityModifyAttackData(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
-            if (abilityElement.GetChildElement("afflictions") is XElement afflictionElements)
+            if (abilityElement.GetChildElement("afflictions") is ContentXElement afflictionElements)
             {
                 afflictions = CharacterAbilityGroup.ParseAfflictions(CharacterTalent, afflictionElements);
             }

@@ -13,7 +13,7 @@ namespace Barotrauma
                 if (state != value)
                 {
                     base.State = value;
-                    if (state == HostagesKilledState && !string.IsNullOrEmpty(hostagesKilledMessage))
+                    if (state == HostagesKilledState && !hostagesKilledMessage.IsNullOrEmpty())
                     {
                         CreateMessageBox(string.Empty, hostagesKilledMessage);
                     }

@@ -31,6 +31,17 @@ namespace Barotrauma
                     if (_previousAiTarget != null)
                     {
                         _lastAiTarget = _previousAiTarget;
+                        if (_selectedAiTarget != null)
+                        {
+                            if (_selectedAiTarget.Entity is Item i && _previousAiTarget.Entity is Character c)
+                            {
+                                if (i.IsOwnedBy(c)) { return; }
+                            }
+                            else if (_previousAiTarget.Entity is Item it && _selectedAiTarget.Entity is Character ch)
+                            {
+                                if (it.IsOwnedBy(ch)) { return; }
+                            }
+                        }
                     }
                     OnTargetChanged(_previousAiTarget, _selectedAiTarget);
                 }
@@ -297,6 +308,7 @@ namespace Barotrauma
                         }
                     }
                 }
+                if (targetSlot < 0) { return false; }
                 return targetInventory.TryPutItem(item, targetSlot, allowSwapping, allowCombine: false, Character);
             }
             else

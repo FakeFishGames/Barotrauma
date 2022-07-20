@@ -111,7 +111,7 @@ namespace Barotrauma.Networking
             timeout = Screen.Selected == GameMain.GameScreen ?
                 NetworkConnection.TimeoutThresholdInGame :
                 NetworkConnection.TimeoutThreshold;
-
+            
             PacketHeader packetHeader = (PacketHeader)data[0];
 
             if (!packetHeader.IsServerMessage()) { return; }
@@ -153,7 +153,10 @@ namespace Barotrauma.Networking
         {
             if (!isActive) { return; }
 
-            timeout -= deltaTime;
+            if (GameMain.Client == null || !GameMain.Client.RoundStarting)
+            {
+                timeout -= deltaTime;
+            }
             heartbeatTimer -= deltaTime;
 
             if (initializationStep != ConnectionInitialization.Password &&
@@ -242,7 +245,7 @@ namespace Barotrauma.Networking
             incomingDataMessages.Clear();
         }
 
-        public override void Send(IWriteMessage msg, DeliveryMethod deliveryMethod)
+        public override void Send(IWriteMessage msg, DeliveryMethod deliveryMethod, bool compressPastThreshold = true)
         {
             if (!isActive) { return; }
 
@@ -250,7 +253,7 @@ namespace Barotrauma.Networking
             buf[0] = (byte)deliveryMethod;
 
             byte[] bufAux = new byte[msg.LengthBytes];
-            msg.PrepareForSending(ref bufAux, out bool isCompressed, out int length);
+            msg.PrepareForSending(ref bufAux, compressPastThreshold, out bool isCompressed, out int length);
 
             buf[1] = (byte)(isCompressed ? PacketHeader.IsCompressed : PacketHeader.None);
 
@@ -368,12 +371,6 @@ namespace Barotrauma.Networking
             hostSteamId = 0;
 
             OnDisconnect?.Invoke(disableReconnect);
-        }
-
-        ~SteamP2PClientPeer()
-        {
-            OnDisconnect = null;
-            Close();
         }
 
         protected override void SendMsgInternal(DeliveryMethod deliveryMethod, IWriteMessage msg)

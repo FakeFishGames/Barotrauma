@@ -6,17 +6,17 @@ namespace Barotrauma.Items.Components
 {
     partial class GeneticMaterial : ItemComponent
     {
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, IsPropertySaveable.No)]
         public float TooltipValueMin { get; set; }
 
-        [Serialize(0.0f, false)]
+        [Serialize(0.0f, IsPropertySaveable.No)]
         public float TooltipValueMax { get; set; }
 
-        public override void AddTooltipInfo(ref string name, ref string description)
+        public override void AddTooltipInfo(ref LocalizedString name, ref LocalizedString description)
         {
-            if (!string.IsNullOrEmpty(materialName) && item.ContainedItems.Count() > 0)
+            if (!materialName.IsNullOrEmpty() && item.ContainedItems.Count() > 0)
             {
-                string mergedMaterialName = materialName;
+                LocalizedString mergedMaterialName = materialName;
                 foreach (Item containedItem in item.ContainedItems)
                 {
                     var containedMaterial = containedItem.GetComponent<GeneticMaterial>();
@@ -31,30 +31,30 @@ namespace Barotrauma.Items.Components
                 name = TextManager.GetWithVariable("entityname.taintedgeneticmaterial", "[geneticmaterialname]", name);
             }
 
-            if (TextManager.ContainsTag("entitydescription." + Item.prefab.Identifier))
+            if (TextManager.ContainsTag("entitydescription." + Item.Prefab.Identifier))
             {
                 int value = (int)MathHelper.Lerp(TooltipValueMin, TooltipValueMax, item.ConditionPercentage / 100.0f);
-                description = TextManager.GetWithVariable("entitydescription." + Item.prefab.Identifier, "[value]", value.ToString());
+                description = TextManager.GetWithVariable("entitydescription." + Item.Prefab.Identifier, "[value]", value.ToString());
             }
             foreach (Item containedItem in item.ContainedItems)
             {
                 var containedGeneticMaterial = containedItem.GetComponent<GeneticMaterial>();
                 if (containedGeneticMaterial == null) { continue; }
-                string _ = string.Empty;
-                string containedDescription = containedItem.Description;
+                LocalizedString _ = string.Empty;
+                LocalizedString containedDescription = containedItem.Description;
                 containedGeneticMaterial.AddTooltipInfo(ref _, ref containedDescription);
-                if (!string.IsNullOrEmpty(containedDescription))
+                if (!containedDescription.IsNullOrEmpty())
                 {
                     description += '\n' + containedDescription;
                 }
             }
         }
 
-        public void ModifyDeconstructInfo(Deconstructor deconstructor, ref string buttonText, ref string infoText)
+        public void ModifyDeconstructInfo(Deconstructor deconstructor, ref LocalizedString buttonText, ref LocalizedString infoText)
         {
             if (deconstructor.InputContainer.Inventory.AllItems.Count() == 2)
             {
-                if (!deconstructor.InputContainer.Inventory.AllItems.All(it => it.prefab == item.prefab))
+                if (!deconstructor.InputContainer.Inventory.AllItems.All(it => it.Prefab == item.Prefab))
                 {
                     buttonText = TextManager.Get("researchstation.combine");
                     infoText = TextManager.Get("researchstation.combine.infotext");
@@ -68,18 +68,18 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             Tainted = msg.ReadBoolean();
             if (Tainted)
             {
                 uint selectedTaintedEffectId = msg.ReadUInt32();
-                selectedTaintedEffect = AfflictionPrefab.Prefabs.Find(a => a.UIntIdentifier == selectedTaintedEffectId);
+                selectedTaintedEffect = AfflictionPrefab.Prefabs.Find(a => a.UintIdentifier == selectedTaintedEffectId);
             }
             else
             {
                 uint selectedEffectId = msg.ReadUInt32();
-                selectedEffect = AfflictionPrefab.Prefabs.Find(a => a.UIntIdentifier == selectedEffectId);
+                selectedEffect = AfflictionPrefab.Prefabs.Find(a => a.UintIdentifier == selectedEffectId);
             }
         }
     }

@@ -7,7 +7,7 @@ namespace Barotrauma.Abilities
     {
         private string effectIdentifier;
 
-        public AbilityConditionStatusEffectIdentifier(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
+        public AbilityConditionStatusEffectIdentifier(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
             effectIdentifier = conditionElement.GetAttributeString("effectidentifier", "").ToLowerInvariant();
         }

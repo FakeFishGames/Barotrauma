@@ -6,7 +6,7 @@ namespace Barotrauma
 {
     class AIObjectiveFixLeaks : AIObjectiveLoop<Gap>
     {
-        public override string Identifier { get; set; } = "fix leaks";
+        public override Identifier Identifier { get; set; } = "fix leaks".ToIdentifier();
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
         public override bool AllowInAnySub => true;

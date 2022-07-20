@@ -103,7 +103,7 @@ namespace Barotrauma.Particles
         {
             return debugName;
         }
-        public void Init(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation, Hull hullGuess = null, bool drawOnTop = false, float collisionIgnoreTimer = 0f, Tuple<Vector2, Vector2> tracerPoints = null)
+        public void Init(ParticlePrefab prefab, Vector2 position, Vector2 speed, float rotation, Hull hullGuess = null, bool drawOnTop = false, float collisionIgnoreTimer = 0f, float lifeTimeMultiplier = 1f, Tuple<Vector2, Vector2> tracerPoints = null)
         {
             this.prefab = prefab;
 #if DEBUG
@@ -149,13 +149,13 @@ namespace Barotrauma.Particles
           
             if (prefab.LifeTimeMin <= 0.0f)
             {
-                totalLifeTime = prefab.LifeTime;
-                lifeTime = prefab.LifeTime;
+                totalLifeTime = prefab.LifeTime * lifeTimeMultiplier;
+                lifeTime = prefab.LifeTime * lifeTimeMultiplier;
             }
             else
             {
-                totalLifeTime = Rand.Range(prefab.LifeTimeMin, prefab.LifeTime);
-                lifeTime = totalLifeTime;
+                totalLifeTime = Rand.Range(prefab.LifeTimeMin, prefab.LifeTime) * lifeTimeMultiplier;
+                lifeTime = totalLifeTime * lifeTimeMultiplier;
             }
 
             startDelay = Rand.Range(prefab.StartDelayMin, prefab.StartDelayMax);
@@ -336,7 +336,7 @@ namespace Barotrauma.Particles
                 Hull collidedHull = Hull.FindHull(position);
                 if (collidedHull != null)
                 {
-                    if (prefab.DeleteOnCollision) return UpdateResult.Delete;
+                    if (prefab.DeleteOnCollision) { return UpdateResult.Delete; }
                     OnWallCollisionOutside(collidedHull);
                 }
             }
@@ -346,20 +346,10 @@ namespace Barotrauma.Particles
                 Vector2 collisionNormal = Vector2.Zero;
                 if (velocity.Y < 0.0f && position.Y - prefab.CollisionRadius * size.Y < hullRect.Y - hullRect.Height)
                 {
-                    if (prefab.DeleteOnCollision)
-                    {
-                        OnCollision?.Invoke(position, currentHull);
-                        return UpdateResult.Delete; 
-                    }
                     collisionNormal = new Vector2(0.0f, 1.0f);
                 }
                 else if (velocity.Y > 0.0f && position.Y + prefab.CollisionRadius * size.Y > hullRect.Y)
                 {
-                    if (prefab.DeleteOnCollision)
-                    {
-                        OnCollision?.Invoke(position, currentHull);
-                        return UpdateResult.Delete; 
-                    }
                     collisionNormal = new Vector2(0.0f, -1.0f);
                 }
 
@@ -379,18 +369,21 @@ namespace Barotrauma.Particles
                         break;
                     }
 
+                    if (prefab.DeleteOnCollision && !gapFound)
+                    {
+                        OnCollision?.Invoke(position, currentHull);
+                        return UpdateResult.Delete; 
+                    }
                     handleCollision(gapFound, collisionNormal);
                 }
 
                 collisionNormal = Vector2.Zero;
                 if (velocity.X < 0.0f && position.X - prefab.CollisionRadius * size.X < hullRect.X)
                 {
-                    if (prefab.DeleteOnCollision) { return UpdateResult.Delete; }
                     collisionNormal = new Vector2(1.0f, 0.0f);
                 }
                 else if (velocity.X > 0.0f && position.X + prefab.CollisionRadius * size.X > hullRect.Right)
                 {
-                    if (prefab.DeleteOnCollision) { return UpdateResult.Delete; }
                     collisionNormal = new Vector2(-1.0f, 0.0f);
                 }
 
@@ -408,7 +401,11 @@ namespace Barotrauma.Particles
                         gapFound = true;
                         break;
                     }
-
+                    if (prefab.DeleteOnCollision && !gapFound)
+                    {
+                        OnCollision?.Invoke(position, currentHull);
+                        return UpdateResult.Delete; 
+                    }
                     handleCollision(gapFound, collisionNormal);
                 }
 
@@ -512,7 +509,7 @@ namespace Barotrauma.Particles
         {
             Rectangle hullRect = collisionHull.WorldRect;
 
-            Vector2 center = new Vector2(hullRect.X + hullRect.Width /2, hullRect.Y - hullRect.Height / 2);
+            Vector2 center = new Vector2(hullRect.X + hullRect.Width / 2, hullRect.Y - hullRect.Height / 2);
 
             if (position.Y < center.Y)
             {

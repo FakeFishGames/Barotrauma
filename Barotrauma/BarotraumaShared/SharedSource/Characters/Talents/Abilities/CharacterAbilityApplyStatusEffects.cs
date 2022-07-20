@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Xml.Linq;
 
 namespace Barotrauma.Abilities
 {
@@ -18,7 +17,7 @@ namespace Barotrauma.Abilities
 
         readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
 
-        public CharacterAbilityApplyStatusEffects(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityApplyStatusEffects(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             statusEffects = CharacterAbilityGroup.ParseStatusEffects(CharacterTalent, abilityElement.GetChildElement("statuseffects"));
             applyToSelf = abilityElement.GetAttributeBool("applytoself", false);

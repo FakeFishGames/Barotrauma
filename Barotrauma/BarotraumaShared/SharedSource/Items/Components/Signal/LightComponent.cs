@@ -2,6 +2,7 @@
 using System;
 using System.Xml.Linq;
 using Barotrauma.Networking;
+using Barotrauma.Extensions;
 #if CLIENT
 using Microsoft.Xna.Framework.Graphics;
 using Barotrauma.Lights;
@@ -30,7 +31,7 @@ namespace Barotrauma.Items.Components
 
         private Turret turret;
 
-        [Serialize(100.0f, true, description: "The range of the emitted light. Higher values are more performance-intensive.", alwaysUseInstanceValues: true),
+        [Serialize(100.0f, IsPropertySaveable.Yes, description: "The range of the emitted light. Higher values are more performance-intensive.", alwaysUseInstanceValues: true),
             Editable(MinValueFloat = 0.0f, MaxValueFloat = 2048.0f)]
         public float Range
         {
@@ -56,8 +57,8 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(true, true, description: "Should structures cast shadows when light from this light source hits them. " +
-            "Disabling shadows increases the performance of the game, and is recommended for lights with a short range.", alwaysUseInstanceValues: true)]
+        [Editable, Serialize(true, IsPropertySaveable.Yes, description: "Should structures cast shadows when light from this light source hits them. " +
+            "Disabling shadows increases the performance of the game, and is recommended for lights with a short range. Lights that are set to be drawn behind subs don't cast shadows, regardless of this setting.", alwaysUseInstanceValues: true)]
         public bool CastShadows
         {
             get { return castShadows; }
@@ -70,7 +71,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(false, true, description: "Lights drawn behind submarines don't cast any shadows and are much faster to draw than shadow-casting lights. " +
+        [Editable, Serialize(false, IsPropertySaveable.Yes, description: "Lights drawn behind submarines don't cast any shadows and are much faster to draw than shadow-casting lights. " +
             "It's recommended to enable this on decorative lights outside the submarine's hull.", alwaysUseInstanceValues: true)]
         public bool DrawBehindSubs
         {
@@ -84,7 +85,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(false, true, description: "Is the light currently on.", alwaysUseInstanceValues: true)]
+        [Editable, Serialize(false, IsPropertySaveable.Yes, description: "Is the light currently on.", alwaysUseInstanceValues: true)]
         public bool IsOn
         {
             get { return isOn; }
@@ -98,7 +99,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(0.0f, false, description: "How heavily the light flickers. 0 = no flickering, 1 = the light will alternate between completely dark and full brightness.")]
+        [Editable, Serialize(0.0f, IsPropertySaveable.No, description: "How heavily the light flickers. 0 = no flickering, 1 = the light will alternate between completely dark and full brightness.")]
         public float Flicker
         {
             get { return flicker; }
@@ -111,7 +112,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(1.0f, false, description: "How fast the light flickers.")]
+        [Editable, Serialize(1.0f, IsPropertySaveable.No, description: "How fast the light flickers.")]
         public float FlickerSpeed
         {
             get { return flickerSpeed; }
@@ -124,7 +125,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(0.0f, true, description: "How rapidly the light pulsates (in Hz). 0 = no blinking.")]
+        [Editable, Serialize(0.0f, IsPropertySaveable.Yes, description: "How rapidly the light pulsates (in Hz). 0 = no blinking.")]
         public float PulseFrequency
         {
             get { return pulseFrequency; }
@@ -137,7 +138,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, DecimalCount = 2), Serialize(0.0f, true, description: "How much light pulsates (in Hz). 0 = not at all, 1 = alternates between full brightness and off.")]
+        [Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f, DecimalCount = 2), Serialize(0.0f, IsPropertySaveable.Yes, description: "How much light pulsates (in Hz). 0 = not at all, 1 = alternates between full brightness and off.")]
         public float PulseAmount
         {
             get { return pulseAmount; }
@@ -150,7 +151,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(0.0f, true, description: "How rapidly the light blinks on and off (in Hz). 0 = no blinking.")]
+        [Editable, Serialize(0.0f, IsPropertySaveable.Yes, description: "How rapidly the light blinks on and off (in Hz). 0 = no blinking.")]
         public float BlinkFrequency
         {
             get { return blinkFrequency; }
@@ -163,7 +164,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [InGameEditable(FallBackTextTag = "connection.setcolor"), Serialize("255,255,255,255", true, description: "The color of the emitted light (R,G,B,A).", alwaysUseInstanceValues: true)]
+        [InGameEditable(FallBackTextTag = "connection.setcolor"), Serialize("255,255,255,255", IsPropertySaveable.Yes, description: "The color of the emitted light (R,G,B,A).", alwaysUseInstanceValues: true)]
         public Color LightColor
         {
             get { return lightColor; }
@@ -173,20 +174,20 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                 if (Light != null)
                 {
-                    Light.Color = IsOn ? lightColor : Color.Transparent;
+                    Light.Color = IsOn ? lightColor.Multiply(currentBrightness) : Color.Transparent;
                 }
 #endif
             }
         }
 
-        [Serialize(false, false, description: "If enabled, the component will ignore continuous signals received in the toggle input (i.e. a continuous signal will only toggle it once).")]
+        [Serialize(false, IsPropertySaveable.No, description: "If enabled, the component will ignore continuous signals received in the toggle input (i.e. a continuous signal will only toggle it once).")]
         public bool IgnoreContinuousToggle
         {
             get;
             set;
         }
 
-        public override void Move(Vector2 amount)
+        public override void Move(Vector2 amount, bool ignoreContacts = false)
         {
 #if CLIENT
             Light.Position += amount;
@@ -208,7 +209,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public LightComponent(Item item, XElement element)
+        public LightComponent(Item item, ContentXElement element)
             : base(item, element)
         {
 #if CLIENT
@@ -237,6 +238,12 @@ namespace Barotrauma.Items.Components
             base.OnItemLoaded();
             SetLightSourceState(IsActive, lightBrightness);
             turret = item.GetComponent<Turret>();
+#if CLIENT
+            if (Screen.Selected.IsEditor)
+            {
+                OnMapLoaded();
+            }
+#endif
         }
 
         public override void OnMapLoaded()
@@ -264,8 +271,6 @@ namespace Barotrauma.Items.Components
             }
             UpdateOnActiveEffects(deltaTime);
 
-            if (powerIn == null && powerConsumption > 0.0f) { Voltage -= deltaTime; }
-
 #if CLIENT
             Light.ParentSub = item.Submarine;
 #endif
@@ -284,7 +289,7 @@ namespace Barotrauma.Items.Components
                 return;                
             }
 
-            currPowerConsumption = powerConsumption;
+            //currPowerConsumption = powerConsumption;
             if (Rand.Range(0.0f, 1.0f) < 0.05f && Voltage < Rand.Range(0.0f, MinVoltage))
             {
 #if CLIENT

@@ -26,29 +26,28 @@ namespace Barotrauma.Items.Components
         private readonly List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
         private readonly List<ParticleEmitter> particleEmitterCharges = new List<ParticleEmitter>();
 
-        [Serialize(1.0f, false, description: "The scale of the crosshair sprite (if there is one).")]
+        [Serialize(1.0f, IsPropertySaveable.No, description: "The scale of the crosshair sprite (if there is one).")]
         public float CrossHairScale
         {
             get;
             private set;
         }
 
-        partial void InitProjSpecific(XElement element)
+        partial void InitProjSpecific(ContentXElement element)
         {
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
+                string textureDir = GetTextureDirectory(subElement);
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "crosshair":
                         {
-                            string texturePath = subElement.GetAttributeString("texture", "");
-                            crosshairSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.FilePath));
+                            crosshairSprite = new Sprite(subElement, path: textureDir);
                         }
                         break;
                     case "crosshairpointer":
                         {
-                            string texturePath = subElement.GetAttributeString("texture", "");
-                            crosshairPointerSprite = new Sprite(subElement, texturePath.Contains("/") ? "" : Path.GetDirectoryName(item.Prefab.FilePath));
+                            crosshairPointerSprite = new Sprite(subElement, path: textureDir);
                         }
                         break;
                     case "particleemitter":
@@ -58,7 +57,7 @@ namespace Barotrauma.Items.Components
                         particleEmitterCharges.Add(new ParticleEmitter(subElement));
                         break;
                     case "chargesound":
-                        chargeSound = Submarine.LoadRoundSound(subElement, false);
+                        chargeSound = RoundSound.Load(subElement, false);
                         break;
                 }
             }

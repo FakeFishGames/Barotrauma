@@ -47,7 +47,7 @@ namespace Barotrauma.Items.Components
 
         private int qualityLevel;
 
-        [Editable, Serialize(0, true)]
+        [Editable, Serialize(0, IsPropertySaveable.Yes)]
         public int QualityLevel
         {
             get { return qualityLevel; }
@@ -56,7 +56,8 @@ namespace Barotrauma.Items.Components
                 if (value == qualityLevel) { return; }
 
                 bool wasInFullCondition = item.IsFullCondition;
-                qualityLevel = MathHelper.Clamp(value, 0, MaxQuality); 
+                qualityLevel = MathHelper.Clamp(value, 0, MaxQuality);
+                item.RecalculateConditionValues();
                 //set the condition to the new max condition
                 if (wasInFullCondition && statValues.ContainsKey(StatType.Condition))
                 {
@@ -65,7 +66,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public Quality(Item item, XElement element) : base(item, element)
+        public Quality(Item item, ContentXElement element) : base(item, element)
         {
             foreach (XElement subElement in element.Elements())
             {
@@ -77,7 +78,7 @@ namespace Barotrauma.Items.Components
                         string statTypeString = subElement.GetAttributeString("stattype", "");
                         if (!Enum.TryParse(statTypeString, true, out StatType statType))
                         {
-                            DebugConsole.ThrowError("Invalid stat type type \"" + statTypeString + "\" in item (" + item.prefab.Identifier + ")");
+                            DebugConsole.ThrowError("Invalid stat type type \"" + statTypeString + "\" in item (" + ((MapEntity)item).Prefab.Identifier + ")");
                         }
                         float statValue = subElement.GetAttributeFloat("value", 0f);
                         statValues.TryAdd(statType, statValue);                        

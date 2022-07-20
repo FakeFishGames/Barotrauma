@@ -44,8 +44,6 @@ namespace Barotrauma.Particles
         }
         private Particle[] particles;
 
-        public readonly PrefabCollection<ParticlePrefab> Prefabs = new PrefabCollection<ParticlePrefab>();
-
         private Camera cam;
 
         public Camera Camera
@@ -58,62 +56,9 @@ namespace Barotrauma.Particles
         {
             this.cam = cam;
 
-            MaxParticles = GameMain.Config.ParticleLimit;
+            MaxParticles = GameSettings.CurrentConfig.Graphics.ParticleLimit;
         }
 
-        public void LoadPrefabs()
-        {
-            foreach (ContentFile configFile in GameMain.Instance.GetFilesOfType(ContentType.Particles))
-            {
-                LoadPrefabsFromFile(configFile);
-            }
-        }
-
-        public void LoadPrefabsFromFile(ContentFile configFile)
-        {
-            var particleElements = new Dictionary<string, XElement>();
-
-            XDocument doc = XMLExtensions.TryLoadXml(configFile.Path);
-            if (doc == null) { return; }
-
-            bool allowOverriding = false;
-            var mainElement = doc.Root;
-            if (doc.Root.IsOverride())
-            {
-                mainElement = doc.Root.FirstElement();
-                allowOverriding = true;
-            }
-
-            foreach (XElement sourceElement in mainElement.Elements())
-            {
-                var element = sourceElement.IsOverride() ? sourceElement.FirstElement() : sourceElement;
-                string name = element.Name.ToString().ToLowerInvariant();
-                if (Prefabs.ContainsKey(name) || particleElements.ContainsKey(name))
-                {
-                    if (allowOverriding || sourceElement.IsOverride())
-                    {
-                        DebugConsole.NewMessage($"Overriding the existing particle prefab '{name}' using the file '{configFile.Path}'", Color.Yellow);
-                    }
-                    else
-                    {
-                        DebugConsole.ThrowError($"Error in '{configFile.Path}': Duplicate particle prefab '{name}' found in '{configFile.Path}'! Each particle prefab must have a unique name. " +
-                            "Use <override></override> tags to override prefabs.");
-                        continue;
-                    }
-                }
-                particleElements.Add(name, element);
-            }
-
-            foreach (var kvp in particleElements)
-            {
-                Prefabs.Add(new ParticlePrefab(kvp.Value, configFile), allowOverriding);
-            }
-        }
-
-        public void RemovePrefabsByFile(string configFile)
-        {
-            Prefabs.RemoveByFile(configFile);
-        }
         public Particle CreateParticle(string prefabName, Vector2 position, float angle, float speed, Hull hullGuess = null, float collisionIgnoreTimer = 0f, Tuple<Vector2, Vector2> tracerPoints = null)
         {
             return CreateParticle(prefabName, position, new Vector2((float)Math.Cos(angle), (float)-Math.Sin(angle)) * speed, angle, hullGuess, collisionIgnoreTimer, tracerPoints: tracerPoints);
@@ -131,7 +76,7 @@ namespace Barotrauma.Particles
             return CreateParticle(prefab, position, velocity, rotation, hullGuess, collisionIgnoreTimer: collisionIgnoreTimer, tracerPoints:tracerPoints);
         }
 
-        public Particle CreateParticle(ParticlePrefab prefab, Vector2 position, Vector2 velocity, float rotation = 0.0f, Hull hullGuess = null, bool drawOnTop = false, float collisionIgnoreTimer = 0f, Tuple<Vector2, Vector2> tracerPoints = null)
+        public Particle CreateParticle(ParticlePrefab prefab, Vector2 position, Vector2 velocity, float rotation = 0.0f, Hull hullGuess = null, bool drawOnTop = false, float collisionIgnoreTimer = 0f, float lifeTimeMultiplier = 1f, Tuple<Vector2, Vector2> tracerPoints = null)
         {
             if (prefab == null || prefab.Sprites.Count == 0) { return null; }
 
@@ -170,7 +115,7 @@ namespace Barotrauma.Particles
 
             if (particles[particleCount] == null) { particles[particleCount] = new Particle(); }
 
-            particles[particleCount].Init(prefab, position, velocity, rotation, hullGuess, drawOnTop, collisionIgnoreTimer, tracerPoints: tracerPoints);
+            particles[particleCount].Init(prefab, position, velocity, rotation, hullGuess, drawOnTop, collisionIgnoreTimer, lifeTimeMultiplier, tracerPoints: tracerPoints);
 
             particleCount++;
 
@@ -179,12 +124,12 @@ namespace Barotrauma.Particles
 
         public List<ParticlePrefab> GetPrefabList()
         {
-            return Prefabs.ToList();
+            return ParticlePrefab.Prefabs.ToList();
         }
 
         public ParticlePrefab FindPrefab(string prefabName)
         {
-            return Prefabs.Find(p => p.Identifier.Equals(prefabName, StringComparison.OrdinalIgnoreCase));
+            return ParticlePrefab.Prefabs.Find(p => p.Identifier == prefabName);
         }
 
         private void RemoveParticle(int index)
@@ -211,7 +156,7 @@ namespace Barotrauma.Particles
 
         public void Update(float deltaTime)
         {
-            MaxParticles = GameMain.Config.ParticleLimit;
+            MaxParticles = GameSettings.CurrentConfig.Graphics.ParticleLimit;
 
             for (int i = 0; i < particleCount; i++)
             {

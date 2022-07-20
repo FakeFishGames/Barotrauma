@@ -57,7 +57,7 @@ namespace Barotrauma.Sounds
             {
                 if (soundChannel == null) { return; }
                 gain = value;
-                soundChannel.Gain = value * GameMain.Config.VoiceChatVolume;
+                soundChannel.Gain = value * GameSettings.CurrentConfig.Audio.VoiceChatVolume;
             }
         }
 
@@ -105,9 +105,9 @@ namespace Barotrauma.Sounds
             {
                 float fVal = ShortToFloat(buffer[i]);
 
-                if (gain * GameMain.Config.VoiceChatVolume > 1.0f) //TODO: take distance into account?
+                if (gain * GameSettings.CurrentConfig.Audio.VoiceChatVolume > 1.0f) //TODO: take distance into account?
                 {
-                    fVal = Math.Clamp(fVal * gain * GameMain.Config.VoiceChatVolume, -1f, 1f);
+                    fVal = Math.Clamp(fVal * gain * GameSettings.CurrentConfig.Audio.VoiceChatVolume, -1f, 1f);
                 }
 
                 if (UseMuffleFilter)

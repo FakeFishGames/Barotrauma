@@ -6,7 +6,7 @@ namespace Barotrauma.Abilities
     class AbilityConditionCrouched : AbilityConditionDataless
     {
 
-        public AbilityConditionCrouched(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
+        public AbilityConditionCrouched(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
         }
 

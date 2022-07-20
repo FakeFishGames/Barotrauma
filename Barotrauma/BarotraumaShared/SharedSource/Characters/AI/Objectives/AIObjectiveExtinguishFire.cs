@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     class AIObjectiveExtinguishFire : AIObjective
     {
-        public override string Identifier { get; set; } = "extinguish fire";
+        public override Identifier Identifier { get; set; } = "extinguish fire".ToIdentifier();
         public override bool ForceRun => true;
         public override bool ConcurrentObjectives => true;
         public override bool KeepDivingGearOn => true;
@@ -77,16 +77,16 @@ namespace Barotrauma
         private float sinTime;
         protected override void Act(float deltaTime)
         {
-            var extinguisherItem = character.Inventory.FindItemByTag("fireextinguisher");
+            var extinguisherItem = character.Inventory.FindItemByTag("fireextinguisher".ToIdentifier());
             if (extinguisherItem == null || extinguisherItem.Condition <= 0.0f || !character.HasEquippedItem(extinguisherItem))
             {
                 TryAddSubObjective(ref getExtinguisherObjective, () =>
                 {
-                    if (character.IsOnPlayerTeam && !character.HasEquippedItem("fireextinguisher", allowBroken: false))
+                    if (character.IsOnPlayerTeam && !character.HasEquippedItem("fireextinguisher".ToIdentifier(), allowBroken: false))
                     {
-                        character.Speak(TextManager.Get("DialogFindExtinguisher"), null, 2.0f, "findextinguisher", 30.0f);
+                        character.Speak(TextManager.Get("DialogFindExtinguisher").Value, null, 2.0f, "findextinguisher".ToIdentifier(), 30.0f);
                     }
-                    var getItemObjective = new AIObjectiveGetItem(character, "fireextinguisher", objectiveManager, equip: true)
+                    var getItemObjective = new AIObjectiveGetItem(character, "fireextinguisher".ToIdentifier(), objectiveManager, equip: true)
                     {
                         AllowStealing = true,
                         // If the item is inside an unsafe hull, decrease the priority
@@ -94,7 +94,7 @@ namespace Barotrauma
                     };
                     if (objectiveManager.HasOrder<AIObjectiveExtinguishFires>())
                     {
-                        getItemObjective.Abandoned += () => character.Speak(TextManager.Get("dialogcannotfindfireextinguisher"), null, 0.0f, "dialogcannotfindfireextinguisher", 10.0f);
+                        getItemObjective.Abandoned += () => character.Speak(TextManager.Get("dialogcannotfindfireextinguisher").Value, null, 0.0f, "dialogcannotfindfireextinguisher".ToIdentifier(), 10.0f);
                     };
                     return getItemObjective;
                 });
@@ -112,6 +112,13 @@ namespace Barotrauma
                 }
                 foreach (FireSource fs in targetHull.FireSources)
                 {
+                    if (fs == null) { continue; }
+                    if (fs.Removed) { continue; }
+                    if (character.CurrentHull == null)
+                    {
+                        Abandon = true;
+                        break;
+                    }
                     float xDist = Math.Abs(character.WorldPosition.X - fs.WorldPosition.X) - fs.DamageRange;
                     float yDist = Math.Abs(character.WorldPosition.Y - fs.WorldPosition.Y);
                     bool inRange = xDist + yDist < extinguisher.Range;
@@ -139,7 +146,7 @@ namespace Barotrauma
                         extinguisher.Use(deltaTime, character);
                         if (!targetHull.FireSources.Contains(fs))
                         {
-                            character.Speak(TextManager.GetWithVariable("DialogPutOutFire", "[roomname]", targetHull.DisplayName, true), null, 0, "putoutfire", 10.0f);
+                            character.Speak(TextManager.GetWithVariable("DialogPutOutFire", "[roomname]", targetHull.DisplayName, FormatCapitals.Yes).Value, null, 0, "putoutfire".ToIdentifier(), 10.0f);
                         }
                     }
                     if (move)
@@ -147,13 +154,13 @@ namespace Barotrauma
                         //go to the first firesource
                         if (TryAddSubObjective(ref gotoObjective, () => new AIObjectiveGoTo(fs, character, objectiveManager, closeEnough: Math.Max(fs.DamageRange, extinguisher.Range * 0.7f))
                             {
-                                DialogueIdentifier = "dialogcannotreachfire",
+                                DialogueIdentifier = "dialogcannotreachfire".ToIdentifier(),
                                 TargetName = fs.Hull.DisplayName
                             }, 
                                 onAbandon: () =>  Abandon = true, 
                                 onCompleted: () => RemoveSubObjective(ref gotoObjective)))
                         {
-                            gotoObjective.requiredCondition = () => targetHull == null || character.CanSeeTarget(targetHull);
+                            gotoObjective.requiredCondition = () => character.CanSeeTarget(targetHull);
                         }
                     }
                     else

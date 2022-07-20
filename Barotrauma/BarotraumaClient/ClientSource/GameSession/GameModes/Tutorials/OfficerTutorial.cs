@@ -72,62 +72,90 @@ namespace Barotrauma.Tutorials
         private PowerContainer officer_subSuperCapacitor_2;
 
         // Variables
-        private string radioSpeakerName;
+        private LocalizedString radioSpeakerName;
         private Character officer;
         private float superCapacitorRechargeRate = 10;
         private Sprite officer_gunIcon;
         private Color officer_gunIconColor;
 
-        public OfficerTutorial(XElement element) : base(element)
+        public OfficerTutorial() : base("tutorial.securityofficertraining".ToIdentifier(),
+            new Segment(
+                "Mechanic.Equipment".ToIdentifier(),
+                "Mechanic.EquipmentObjective".ToIdentifier(),
+                TutorialContentType.TextOnly,
+                textContent: new Segment.Text { Tag = "Mechanic.EquipmentText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center }),
+            new Segment(
+                "Officer.MeleeWeapon".ToIdentifier(),
+                "Officer.MeleeWeaponObjective".ToIdentifier(),
+                TutorialContentType.TextOnly,
+                textContent: new Segment.Text { Tag = "Officer.MeleeWeaponText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center }),
+            new Segment(
+                "Officer.Crawler".ToIdentifier(),
+                "Officer.CrawlerObjective".ToIdentifier(),
+                TutorialContentType.TextOnly,
+                textContent: new Segment.Text { Tag = "Officer.CrawlerText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center }),
+            new Segment(
+                "Officer.SomethingBig".ToIdentifier(),
+                "Officer.SomethingBigObjective".ToIdentifier(),
+                TutorialContentType.ManualVideo,
+                textContent: new Segment.Text { Tag = "Officer.SomethingBigText".ToIdentifier(), Width = 700, Height = 80, Anchor = Anchor.Center },
+                videoContent: new Segment.Video { File = "tutorial_loaders.webm", TextTag = "Officer.SomethingBigText".ToIdentifier(), Width = 700, Height = 80 }),
+            new Segment(
+                "Officer.Hammerhead".ToIdentifier(),
+                "Officer.HammerheadObjective".ToIdentifier(),
+                TutorialContentType.TextOnly,
+                textContent: new Segment.Text { Tag = "Officer.HammerheadText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center }),
+            new Segment(
+                "Officer.RangedWeapon".ToIdentifier(),
+                "Officer.RangedWeaponObjective".ToIdentifier(),
+                TutorialContentType.ManualVideo,
+                textContent: new Segment.Text { Tag = "Officer.RangedWeaponText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center },
+                videoContent: new Segment.Video { File = "tutorial_ranged.webm", TextTag = "Officer.RangedWeaponText".ToIdentifier(), Width = 450, Height = 80 }),
+            new Segment(
+                "Officer.Mudraptor".ToIdentifier(),
+                "Officer.MudraptorObjective".ToIdentifier(),
+                TutorialContentType.TextOnly,
+                textContent: new Segment.Text { Tag = "Officer.MudraptorText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center }),
+            new Segment(
+                "Officer.ArmSubmarine".ToIdentifier(),
+                "Officer.ArmSubmarineObjective".ToIdentifier(),
+                TutorialContentType.TextOnly,
+                textContent: new Segment.Text { Tag = "Officer.ArmSubmarineText".ToIdentifier(), Width = 450, Height = 80, Anchor = Anchor.Center }))
+        { }
+
+        protected override CharacterInfo GetCharacterInfo()
         {
+            return new CharacterInfo(
+                CharacterPrefab.HumanSpeciesName,
+                jobOrJobPrefab: new Job(
+                    JobPrefab.Prefabs["securityofficer"], Rand.RandSync.Unsynced, 0,
+                    new Skill("medical".ToIdentifier(), 20),
+                    new Skill("weapons".ToIdentifier(), 70),
+                    new Skill("mechanical".ToIdentifier(), 20),
+                    new Skill("electrical".ToIdentifier(), 20),
+                    new Skill("helm".ToIdentifier(), 20)));
         }
 
-        public override void Start()
+        protected override void Initialize()
         {
-            base.Start();
-
             radioSpeakerName = TextManager.Get("Tutorial.Radio.Speaker");
             officer = Character.Controlled;
 
-            var handcuffs = FindOrGiveItem(officer, "handcuffs");
-            handcuffs.Unequip(officer);
-            officer.Inventory.RemoveItem(handcuffs);
+            foreach (Item item in officer.Inventory.AllItemsMod)
+            {
+                if (item.HasTag("clothing") || item.HasTag("identitycard") || item.HasTag("mobileradio")) { continue; }
+                item.Unequip(officer);
+                officer.Inventory.RemoveItem(item);
+            }
 
-            var stunbaton = FindOrGiveItem(officer, "stunbaton");
-            stunbaton.Unequip(officer);
-            officer.Inventory.RemoveItem(stunbaton);
-
-            var smg = FindOrGiveItem(officer, "smg");
-            smg.Unequip(officer);
-            officer.Inventory.RemoveItem(smg);
-
-            var divingknife = FindOrGiveItem(officer, "divingknife");
-            divingknife.Unequip(officer);
-            officer.Inventory.RemoveItem(divingknife);
-
-            var steroids = FindOrGiveItem(officer, "steroids");
-            steroids.Unequip(officer);
-            officer.Inventory.RemoveItem(steroids);
-
-            var ballistichelmet =
-                officer.Inventory.FindItemByIdentifier("ballistichelmet1") ??
-                officer.Inventory.FindItemByIdentifier("ballistichelmet2") ??
-                FindOrGiveItem(officer, "ballistichelmet3");
-            ballistichelmet.Unequip(officer);
-            officer.Inventory.RemoveItem(ballistichelmet);
-
-            var bodyarmor = FindOrGiveItem(officer, "bodyarmor");
-            bodyarmor.Unequip(officer);
-            officer.Inventory.RemoveItem(bodyarmor);
-
-            var gunOrder = Order.GetPrefab("operateweapons");
+            var gunOrder = OrderPrefab.Prefabs["operateweapons"];
             officer_gunIcon = gunOrder.SymbolSprite;
             officer_gunIconColor = gunOrder.Color;
 
-            var bandage = FindOrGiveItem(officer, "antibleeding1");
+            var bandage = FindOrGiveItem(officer, "antibleeding1".ToIdentifier());
             bandage.Unequip(officer);
             officer.Inventory.RemoveItem(bandage);
-            FindOrGiveItem(officer, "antibleeding1");
+            FindOrGiveItem(officer, "antibleeding1".ToIdentifier());
 
             // Other tutorial items
             tutorial_mechanicFinalDoorLight = Item.ItemList.Find(i => i.HasTag("tutorial_mechanicfinaldoorlight")).GetComponent<LightComponent>();
@@ -199,6 +227,9 @@ namespace Barotrauma.Tutorials
             officer_subSuperCapacitor_2 = Item.ItemList.Find(i => i.HasTag("officer_subsupercapacitor_2")).GetComponent<PowerContainer>();
             officer_subAmmoShelf = Item.ItemList.Find(i => i.HasTag("officer_subammoshelf")).GetComponent<ItemContainer>();
             SetDoorAccess(tutorial_submarineDoor, tutorial_submarineDoorLight, true);
+
+            GameAnalyticsManager.AddDesignEvent("Tutorial:OfficerTutorial:Started");
+            GameAnalyticsManager.AddDesignEvent("Tutorial:Started");
         }
 
         public override IEnumerable<CoroutineStatus> UpdateState()
@@ -222,7 +253,7 @@ namespace Barotrauma.Tutorials
             do { yield return null; } while (!officer_equipmentObjectiveSensor.MotionDetected);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Officer.Radio.Equipment"), ChatMessageType.Radio, null);
             yield return new WaitForSeconds(3f, false);
-            //TriggerTutorialSegment(0, GameMain.Config.KeyBind(InputType.Select), GameMain.Config.KeyBind(InputType.Deselect)); // Retrieve equipment
+            //TriggerTutorialSegment(0, GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Select], GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Deselect]); // Retrieve equipment
             SetHighlight(officer_equipmentCabinet.Item, true);
             bool firstSlotRemoved = false;
             bool secondSlotRemoved = false;
@@ -258,26 +289,28 @@ namespace Barotrauma.Tutorials
                 yield return null;
             } while (!officer_equipmentCabinet.Inventory.IsEmpty()); // Wait until looted
             //RemoveCompletedObjective(segments[0]);
+            GameAnalyticsManager.AddDesignEvent("Tutorial:OfficerTutorial:Objective0");
             SetHighlight(officer_equipmentCabinet.Item, false);
             do { yield return null; } while (IsSelectedItem(officer_equipmentCabinet.Item));
-            TriggerTutorialSegment(1, GameMain.Config.KeyBindText(InputType.Aim), GameMain.Config.KeyBindText(InputType.Shoot)); // Equip melee weapon & armor
+            TriggerTutorialSegment(1, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Aim), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Shoot)); // Equip melee weapon & armor
             do
             {
-                if (!officer.HasEquippedItem("stunbaton"))
+                if (!officer.HasEquippedItem("stunbaton".ToIdentifier()))
                 {
-                    HighlightInventorySlot(officer.Inventory, "stunbaton", highlightColor, .5f, .5f, 0f);
+                    HighlightInventorySlot(officer.Inventory, "stunbaton".ToIdentifier(), highlightColor, .5f, .5f, 0f);
                 }
-                if (!officer.HasEquippedItem("bodyarmor"))
+                if (!officer.HasEquippedItem("bodyarmor".ToIdentifier()))
                 {
-                    HighlightInventorySlot(officer.Inventory, "bodyarmor", highlightColor, .5f, .5f, 0f);
+                    HighlightInventorySlot(officer.Inventory, "bodyarmor".ToIdentifier(), highlightColor, .5f, .5f, 0f);
                 }
-                if (!officer.HasEquippedItem("ballistichelmet1"))
+                if (!officer.HasEquippedItem("ballistichelmet1".ToIdentifier()))
                 {
-                    HighlightInventorySlot(officer.Inventory, "ballistichelmet1", highlightColor, .5f, .5f, 0f);
+                    HighlightInventorySlot(officer.Inventory, "ballistichelmet1".ToIdentifier(), highlightColor, .5f, .5f, 0f);
                 }
                 yield return new WaitForSeconds(1f, false);
-            } while (!officer.HasEquippedItem("stunbaton") || !officer.HasEquippedItem("bodyarmor") || !officer.HasEquippedItem("ballistichelmet1"));
-            RemoveCompletedObjective(segments[1]);
+            } while (!officer.HasEquippedItem("stunbaton".ToIdentifier()) || !officer.HasEquippedItem("bodyarmor".ToIdentifier()) || !officer.HasEquippedItem("ballistichelmet1".ToIdentifier()));
+            RemoveCompletedObjective(1);
+            GameAnalyticsManager.AddDesignEvent("Tutorial:OfficerTutorial:Objective1");
             SetDoorAccess(officer_firstDoor, officer_firstDoorLight, true);
 
             // Room 3
@@ -285,7 +318,8 @@ namespace Barotrauma.Tutorials
             TriggerTutorialSegment(2);
             officer_crawler = SpawnMonster("crawler", officer_crawlerSpawnPos);
             do { yield return null; } while (!officer_crawler.IsDead);
-            RemoveCompletedObjective(segments[2]);
+            RemoveCompletedObjective(2);
+            GameAnalyticsManager.AddDesignEvent("Tutorial:OfficerTutorial:Objective2");
             Heal(officer);
             yield return new WaitForSeconds(1f, false);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Officer.Radio.CrawlerDead"), ChatMessageType.Radio, null);
@@ -305,7 +339,7 @@ namespace Barotrauma.Tutorials
                 SetHighlight(officer_ammoShelf_2.Item, officer_coilgunLoader.Item.ExternalHighlight );
                 if (IsSelectedItem(officer_coilgunLoader.Item))
                 {
-                    HighlightInventorySlot(officer.Inventory, "coilgunammobox", highlightColor, .5f, .5f, 0f);
+                    HighlightInventorySlot(officer.Inventory, "coilgunammobox".ToIdentifier(), highlightColor, .5f, .5f, 0f);
                 }
             yield return null;
             } while (officer_coilgunLoader.Inventory.GetItemAt(0) == null || officer_superCapacitor.RechargeSpeed < superCapacitorRechargeRate || officer_coilgunLoader.Inventory.GetItemAt(0).Condition == 0);
@@ -313,9 +347,11 @@ namespace Barotrauma.Tutorials
             SetHighlight(officer_superCapacitor.Item, false);
             SetHighlight(officer_ammoShelf_1.Item, false);
             SetHighlight(officer_ammoShelf_2.Item, false);
-            RemoveCompletedObjective(segments[3]);
+            RemoveCompletedObjective(3);
+            GameAnalyticsManager.AddDesignEvent("Tutorial:OfficerTutorial:Objective3");
+
             yield return new WaitForSeconds(2f, false);
-            TriggerTutorialSegment(4, GameMain.Config.KeyBindText(InputType.Select), GameMain.Config.KeyBindText(InputType.Shoot), GameMain.Config.KeyBindText(InputType.Deselect)); // Kill hammerhead
+            TriggerTutorialSegment(4, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Select), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Shoot), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Deselect)); // Kill hammerhead
             officer_hammerhead = SpawnMonster("hammerhead", officer_hammerheadSpawnPos);
             officer_hammerhead.Params.AI.AvoidAbyss = false;
             officer_hammerhead.Params.AI.StayInAbyss = false;
@@ -348,7 +384,9 @@ namespace Barotrauma.Tutorials
             while(!officer_hammerhead.IsDead);
             Heal(officer);
             SetHighlight(officer_coilgunPeriscope, false);
-            RemoveCompletedObjective(segments[4]);
+            RemoveCompletedObjective(4);
+            GameAnalyticsManager.AddDesignEvent("Tutorial:OfficerTutorial:Objective4");
+
             yield return new WaitForSeconds(1f, false);
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Officer.Radio.HammerheadDead"), ChatMessageType.Radio, null);
             SetDoorAccess(officer_thirdDoor, officer_thirdDoorLight, true);
@@ -357,16 +395,16 @@ namespace Barotrauma.Tutorials
             //do { yield return null; } while (!officer_rangedWeaponSensor.MotionDetected);
             do { yield return null; } while (!officer_thirdDoor.IsOpen);
             yield return new WaitForSeconds(3f, false);
-            TriggerTutorialSegment(5, GameMain.Config.KeyBindText(InputType.Aim), GameMain.Config.KeyBindText(InputType.Shoot)); // Ranged weapons
+            TriggerTutorialSegment(5, GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Aim), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Shoot)); // Ranged weapons
             SetHighlight(officer_rangedWeaponHolder.Item, true);
             do { yield return null; } while (!officer_rangedWeaponHolder.Inventory.IsEmpty()); // Wait until looted
             SetHighlight(officer_rangedWeaponHolder.Item, false);
             do
             {
-                HighlightInventorySlot(officer.Inventory, "shotgun", highlightColor, 0.5f, 0.5f, 0f);
+                HighlightInventorySlot(officer.Inventory, "shotgun".ToIdentifier(), highlightColor, 0.5f, 0.5f, 0f);
                 yield return null;
-            } while (!officer.HasEquippedItem("shotgun")); // Wait until equipped
-            ItemContainer shotGunChamber = officer.Inventory.FindItemByIdentifier("shotgun").GetComponent<ItemContainer>();
+            } while (!officer.HasEquippedItem("shotgun".ToIdentifier())); // Wait until equipped
+            ItemContainer shotGunChamber = officer.Inventory.FindItemByIdentifier("shotgun".ToIdentifier()).GetComponent<ItemContainer>();
             SetHighlight(officer_rangedWeaponCabinet.Item, true);
             do
             {
@@ -392,13 +430,14 @@ namespace Barotrauma.Tutorials
                     }
                 }
 
-                if (officer.Inventory.FindItemByIdentifier("shotgunshell") != null || (IsSelectedItem(officer_rangedWeaponCabinet.Item) && officer_rangedWeaponCabinet.Inventory.FindItemByIdentifier("shotgunshell") != null))
+                if (officer.Inventory.FindItemByIdentifier("shotgunshell".ToIdentifier()) != null || (IsSelectedItem(officer_rangedWeaponCabinet.Item) && officer_rangedWeaponCabinet.Inventory.FindItemByIdentifier("shotgunshell".ToIdentifier()) != null))
                 {
-                    HighlightInventorySlot(officer.Inventory, "shotgun", highlightColor, 0.5f, 0.5f, 0f);
+                    HighlightInventorySlot(officer.Inventory, "shotgun".ToIdentifier(), highlightColor, 0.5f, 0.5f, 0f);
                 }
                 yield return null;
             } while (!shotGunChamber.Inventory.IsFull(takeStacksIntoAccount: true)); // Wait until all six harpoons loaded
-            RemoveCompletedObjective(segments[5]);
+            RemoveCompletedObjective(5);
+            GameAnalyticsManager.AddDesignEvent("Tutorial:OfficerTutorial:Objective5");
             SetHighlight(officer_rangedWeaponCabinet.Item, false);
             SetDoorAccess(officer_fourthDoor, officer_fourthDoorLight, true);
 
@@ -408,7 +447,8 @@ namespace Barotrauma.Tutorials
             officer_mudraptor = SpawnMonster("mudraptor", officer_mudraptorSpawnPos);
             do { yield return null; } while (!officer_mudraptor.IsDead);
             Heal(officer);
-            RemoveCompletedObjective(segments[6]);
+            RemoveCompletedObjective(6);
+            GameAnalyticsManager.AddDesignEvent("Tutorial:OfficerTutorial:Objective6");
             SetDoorAccess(tutorial_securityFinalDoor, tutorial_securityFinalDoorLight, true);
 
             // Submarine
@@ -459,10 +499,12 @@ namespace Barotrauma.Tutorials
             officer.RemoveActiveObjectiveEntity(officer_subSuperCapacitor_2.Item);
             officer.RemoveActiveObjectiveEntity(officer_subAmmoBox_1);
             officer.RemoveActiveObjectiveEntity(officer_subAmmoBox_2);
-            RemoveCompletedObjective(segments[7]);
+            RemoveCompletedObjective(7);
+            GameAnalyticsManager.AddDesignEvent("Tutorial:OfficerTutorial:Objective7");
             GameMain.GameSession?.CrewManager.AddSinglePlayerChatMessage(radioSpeakerName, TextManager.Get("Officer.Radio.Complete"), ChatMessageType.Radio, null);
 
             yield return new WaitForSeconds(4f, false);
+            GameAnalyticsManager.AddDesignEvent("Tutorial:OfficerTutorial:Completed");
             CoroutineManager.StartCoroutine(TutorialCompleted());
         }
 

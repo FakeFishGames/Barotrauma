@@ -7,7 +7,7 @@ namespace Barotrauma.Items.Components
     {
         private int maxOutputLength;
 
-        [Editable, Serialize(256, false, description: "The maximum length of the output string. Warning: Large values can lead to large memory usage or networking load.")]
+        [Editable, Serialize(256, IsPropertySaveable.No, description: "The maximum length of the output string. Warning: Large values can lead to large memory usage or networking load.")]
         public int MaxOutputLength
         {
             get { return maxOutputLength; }
@@ -17,14 +17,14 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize("", false)]
+        [InGameEditable, Serialize("", IsPropertySaveable.No)]
         public string Separator
         {
             get;
             set;
         }
 
-        public ConcatComponent(Item item, XElement element)
+        public ConcatComponent(Item item, ContentXElement element)
             : base(item, element)
         {
         }

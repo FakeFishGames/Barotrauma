@@ -27,7 +27,7 @@ namespace Barotrauma
             get { return preset.IsSinglePlayer; }
         }
 
-        public string Name
+        public LocalizedString Name
         {
             get { return preset.Name; }
         }

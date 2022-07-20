@@ -5,6 +5,16 @@ namespace Barotrauma.Items.Components
 {
     partial class Steering : Powered, IServerSerializable, IClientSerializable
     {
+        private readonly struct EventData : IEventData
+        {
+            public readonly bool DockingButtonClicked;
+            
+            public EventData(bool dockingButtonClicked)
+            {
+                DockingButtonClicked = dockingButtonClicked;
+            }
+        }
+        
         // TODO: an enumeration would be much cleaner
         public bool MaintainPos;
         public bool LevelStartSelected;
@@ -23,7 +33,7 @@ namespace Barotrauma.Items.Components
         }
 
 
-        public void ServerRead(ClientNetObject type, IReadMessage msg, Barotrauma.Networking.Client c)
+        public void ServerEventRead(IReadMessage msg, Client c)
         {
             bool autoPilot = msg.ReadBoolean();
             bool dockingButtonClicked = msg.ReadBoolean();
@@ -58,7 +68,7 @@ namespace Barotrauma.Items.Components
             if (dockingButtonClicked)
             {
                 item.SendSignal(new Signal("1", sender: c.Character), "toggle_docking");
-                GameMain.Server.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.GetComponentIndex(this), true });
+                item.CreateServerEvent(this, new EventData(dockingButtonClicked: true));
             }
 
             if (!AutoPilot)
@@ -88,10 +98,11 @@ namespace Barotrauma.Items.Components
             unsentChanges = true;
         }
 
-        public void ServerWrite(IWriteMessage msg, Barotrauma.Networking.Client c, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Barotrauma.Networking.Client c, NetEntityEvent.IData extraData = null)
         {
             msg.Write(autoPilot);
-            msg.Write(extraData.Length > 2 && extraData[2] is bool && (bool)extraData[2]);
+            msg.Write(TryExtractEventData<EventData>(extraData, out var eventData) && eventData.DockingButtonClicked);
+            msg.Write(user?.ID ?? Entity.NullEntityID);
 
             if (!autoPilot)
             {

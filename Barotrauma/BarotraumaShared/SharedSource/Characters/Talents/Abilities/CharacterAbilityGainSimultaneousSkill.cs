@@ -5,12 +5,12 @@ namespace Barotrauma.Abilities
 {
     class CharacterAbilityGainSimultaneousSkill : CharacterAbility
     {
-        private readonly string skillIdentifier;
+        private readonly Identifier skillIdentifier;
         private readonly bool ignoreAbilitySkillGain;
 
-        public CharacterAbilityGainSimultaneousSkill(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityGainSimultaneousSkill(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
-            skillIdentifier = abilityElement.GetAttributeString("skillidentifier", "").ToLowerInvariant();
+            skillIdentifier = abilityElement.GetAttributeIdentifier("skillidentifier", "");
             ignoreAbilitySkillGain = abilityElement.GetAttributeBool("ignoreabilityskillgain", true);
         }
 

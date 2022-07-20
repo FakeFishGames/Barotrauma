@@ -39,7 +39,7 @@ namespace Barotrauma
                     {
                         var statusText = goal.StatusText(Traitor);
                         var startIndex = statusText.LastIndexOf('/') + 1;
-                        return $"{statusText.Substring(0, startIndex)}[{index}.st]={statusText.Substring(startIndex)}/[{index}.sl]={TextManager.FormatServerMessage(GoalInfoFormatId, new string[] { "[statustext]" }, new string[] { $"[{index}.st]" })}";
+                        return $"{statusText.Substring(0, startIndex)}[{index}.st]={statusText.Substring(startIndex)}/[{index}.sl]={TextManager.FormatServerMessage(GoalInfoFormatId, ("[statustext]", $"[{index}.st]"))}";
                     }).ToArray()),
                     string.Join("", activeGoals.Select((goal, index) => $"[{index}.sl]").ToArray()));
 
@@ -49,7 +49,7 @@ namespace Barotrauma
                     {
                         var statusText = goal.StatusText(Traitor);
                         var startIndex = statusText.LastIndexOf('/') + 1;
-                        return $"{statusText.Substring(0, startIndex)}[{index}.st]={statusText.Substring(startIndex)}/[{index}.sl]={TextManager.FormatServerMessage(GoalInfoFormatId, new string[] { "[statustext]" }, new string[] { $"[{index}.st]" })}";
+                        return $"{statusText.Substring(0, startIndex)}[{index}.st]={statusText.Substring(startIndex)}/[{index}.sl]={TextManager.FormatServerMessage(GoalInfoFormatId, ("[statustext]", $"[{index}.st]"))}";
                     }).ToArray()),
                     string.Join("", allGoals.Select((goal, index) => $"[{index}.sl]").ToArray()));
 
@@ -57,13 +57,14 @@ namespace Barotrauma
             public virtual IEnumerable<string> StartMessageKeys => new string[] { "[traitorgoalinfos]" };
             public virtual IEnumerable<string> StartMessageValues => new string[] { GoalInfos };
 
-            public virtual string StartMessageText => TextManager.FormatServerMessageWithGenderPronouns(Traitor?.Character?.Info?.Gender ?? Gender.None, StartMessageTextId, StartMessageKeys, StartMessageValues);
+            public virtual LocalizedString StartMessageText
+                => TextManager.FormatServerMessageWithPronouns(Traitor.Character.Info, StartMessageTextId, StartMessageKeys.Zip(StartMessageValues, (k,v) => (k,v)).ToArray());
 
             public virtual string StartMessageServerTextId { get; set; } = "TraitorObjectiveStartMessageServer";
             public virtual IEnumerable<string> StartMessageServerKeys => StartMessageKeys.Concat(new string[] { "[traitorname]" });
             public virtual IEnumerable<string> StartMessageServerValues => StartMessageValues.Concat(new string[] { Traitor?.Character?.Name ?? "(unknown)" });
 
-            public virtual string StartMessageServerText => TextManager.FormatServerMessageWithGenderPronouns(Traitor?.Character?.Info?.Gender ?? Gender.None, StartMessageServerTextId, StartMessageServerKeys, StartMessageServerValues);
+            public virtual LocalizedString StartMessageServerText => TextManager.FormatServerMessageWithPronouns(Traitor.Character.Info, StartMessageServerTextId, StartMessageServerKeys.Zip(StartMessageServerValues, (k,v) => (k,v)).ToArray());
 
             public virtual string EndMessageSuccessTextId { get; set; } = "TraitorObjectiveEndMessageSuccess";
             public virtual string EndMessageSuccessDeadTextId { get; set; } = "TraitorObjectiveEndMessageSuccessDead";
@@ -83,7 +84,7 @@ namespace Barotrauma
                     var messageId = IsCompleted
                         ? (traitorIsDead ? EndMessageSuccessDeadTextId : traitorIsDetained ? EndMessageSuccessDetainedTextId : EndMessageSuccessTextId)
                         : (traitorIsDead ? EndMessageFailureDeadTextId : traitorIsDetained ? EndMessageFailureDetainedTextId : EndMessageFailureTextId);
-                    return TextManager.FormatServerMessageWithGenderPronouns(Traitor?.Character?.Info?.Gender ?? Gender.None, messageId, EndMessageKeys.ToArray(), EndMessageValues.ToArray());
+                    return TextManager.FormatServerMessageWithPronouns(Traitor.Character.Info, messageId, EndMessageKeys.Zip(EndMessageValues, (k,v)=>(k,v)).ToArray());
                 }
             }
 
@@ -133,21 +134,21 @@ namespace Barotrauma
 
                 IsStarted = true;
 
-                traitor.SendChatMessageBox(StartMessageText, traitor.Mission?.Identifier);
-                traitor.UpdateCurrentObjective(GoalInfos, traitor.Mission?.Identifier);
+                traitor.SendChatMessageBox(StartMessageText.Value, traitor.Mission.Identifier);
+                traitor.UpdateCurrentObjective(GoalInfos, traitor.Mission.Identifier);
 
                 return true;
             }
 
             public void StartMessage()
             {
-                Traitor.SendChatMessage(StartMessageText, Traitor.Mission?.Identifier);
+                Traitor.SendChatMessage(StartMessageText.Value, Traitor.Mission.Identifier);
             }
 
             public void EndMessage()
             {
-                Traitor.SendChatMessageBox(EndMessageText, Traitor.Mission?.Identifier);
-                Traitor.SendChatMessage(EndMessageText, Traitor.Mission?.Identifier);
+                Traitor.SendChatMessageBox(EndMessageText, Traitor.Mission.Identifier);
+                Traitor.SendChatMessage(EndMessageText, Traitor.Mission.Identifier);
             }
 
             public void Update(float deltaTime)
@@ -170,12 +171,12 @@ namespace Barotrauma
                         pendingGoals.RemoveAt(i);
                         if (GameMain.Server != null)
                         {
-                            Traitor.SendChatMessage(goal.CompletedText(Traitor), Traitor.Mission?.Identifier);
+                            Traitor.SendChatMessage(goal.CompletedText(Traitor), Traitor.Mission.Identifier);
                             if (pendingGoals.Count > 0)
                             {
-                                Traitor.SendChatMessageBox(goal.CompletedText(Traitor), Traitor.Mission?.Identifier);
+                                Traitor.SendChatMessageBox(goal.CompletedText(Traitor), Traitor.Mission.Identifier);
                             }
-                            Traitor.UpdateCurrentObjective(GoalInfos, Traitor.Mission?.Identifier);
+                            Traitor.UpdateCurrentObjective(GoalInfos, Traitor.Mission.Identifier);
                         }
                     }
                 }

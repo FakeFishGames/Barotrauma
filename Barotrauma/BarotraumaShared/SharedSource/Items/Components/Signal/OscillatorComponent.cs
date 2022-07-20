@@ -22,7 +22,7 @@ namespace Barotrauma.Items.Components
 
         private float phase;
 
-        [InGameEditable, Serialize(WaveType.Pulse, true, description: "What kind of a signal the item outputs." +
+        [InGameEditable, Serialize(WaveType.Pulse, IsPropertySaveable.Yes, description: "What kind of a signal the item outputs." +
             " Pulse: periodically sends out a signal of 1." +
             " Sawtooth: sends out a periodic wave that increases linearly from 0 to 1." +
             " Sine: sends out a sine wave oscillating between -1 and 1." +
@@ -35,7 +35,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [InGameEditable(DecimalCount = 2), Serialize(1.0f, true, description: "How fast the signal oscillates, or how fast the pulses are sent (in Hz).", alwaysUseInstanceValues: true)]
+        [InGameEditable(DecimalCount = 2), Serialize(1.0f, IsPropertySaveable.Yes, description: "How fast the signal oscillates, or how fast the pulses are sent (in Hz).", alwaysUseInstanceValues: true)]
         public float Frequency
         {
             get { return frequency; }
@@ -47,7 +47,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public OscillatorComponent(Item item, XElement element) : 
+        public OscillatorComponent(Item item, ContentXElement element) : 
             base(item, element)
         {
             IsActive = true;

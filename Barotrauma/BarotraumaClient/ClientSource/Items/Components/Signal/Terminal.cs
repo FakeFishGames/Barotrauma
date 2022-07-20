@@ -7,6 +7,16 @@ namespace Barotrauma.Items.Components
 {
     partial class Terminal : ItemComponent, IClientSerializable, IServerSerializable
     {
+        private readonly struct ClientEventData : IEventData
+        {
+            public readonly string Text;
+            
+            public ClientEventData(string text)
+            {
+                Text = text;
+            }
+        }
+        
         private GUIListBox historyBox;
         private GUITextBlock fillerBlock;
         private GUITextBox inputBox;
@@ -42,12 +52,14 @@ namespace Barotrauma.Items.Components
                     }
                     else
                     {
-                        item.CreateClientEvent(this, new object[] { text });
+                        item.CreateClientEvent(this, new ClientEventData(text));
                     }
                     textBox.Text = string.Empty;
                     return true;
                 }
             };
+
+            layoutGroup.Recalculate();
         }
 
         // Create fillerBlock to cover historyBox so new values appear at the bottom of historyBox
@@ -90,7 +102,7 @@ namespace Barotrauma.Items.Components
             GUITextBlock newBlock = new GUITextBlock(
                     new RectTransform(new Vector2(1, 0), historyBox.Content.RectTransform, anchor: Anchor.TopCenter),
                     "> " + input,
-                    textColor: color, wrap: true, font: UseMonospaceFont ? GUI.MonospacedFont : GUI.GlobalFont)
+                    textColor: color, wrap: true, font: UseMonospaceFont ? GUIStyle.MonospacedFont : GUIStyle.Font)
             {
                 CanBeFocused = false
             };
@@ -133,17 +145,15 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
+        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
-            if (extraData is null) { return; }
-
-            if (extraData[2] is string str)
+            if (TryExtractEventData(extraData, out ClientEventData eventData))
             {
-                msg.Write(str);
+                msg.Write(eventData.Text);
             }
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             SendOutput(msg.ReadString());
         }

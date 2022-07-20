@@ -17,7 +17,7 @@ namespace Barotrauma
         public DeformableSprite DeformableSprite { get; private set; }
         public Sprite ActiveSprite => Sprite ?? DeformableSprite.Sprite;
 
-        public ConditionalSprite(XElement element, ISerializableEntity target, string file = "", bool lazyLoad = false)
+        public ConditionalSprite(ContentXElement element, ISerializableEntity target, string file = "", bool lazyLoad = false)
         {
             Target = target;
             Exclusive = element.GetAttributeBool("exclusive", Exclusive);
@@ -26,7 +26,7 @@ namespace Barotrauma
             {
                 Enum.TryParse(comparison, ignoreCase: true, out Comparison);
             }
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {

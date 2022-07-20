@@ -9,15 +9,15 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class LevelObjectPrefab
+    partial class LevelObjectPrefab : PrefabWithUintIdentifier, ISerializableEntity
     {
         public class SoundConfig
         {
-            public readonly XElement SoundElement;
+            public readonly ContentXElement SoundElement;
             public readonly Vector2 Position;
             public readonly int TriggerIndex;
 
-            public SoundConfig(XElement element, int triggerIndex)
+            public SoundConfig(ContentXElement element, int triggerIndex)
             {
                 SoundElement = element;
                 Position = element.GetAttributeVector2("position", Vector2.Zero);
@@ -67,14 +67,14 @@ namespace Barotrauma
             private set;
         } = new List<SpriteDeformation>();
 
-        partial void InitProjSpecific(XElement element)
+        partial void InitProjSpecific(ContentXElement element)
         {
             LoadElementsProjSpecific(element, -1);
         }
 
-        private void LoadElementsProjSpecific(XElement element, int parentTriggerIndex)
+        private void LoadElementsProjSpecific(ContentXElement element, int parentTriggerIndex)
         {
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -121,7 +121,7 @@ namespace Barotrauma
 
             SerializableProperty.SerializeProperties(this, element);
 
-            foreach (XElement subElement in element.Elements().ToList())
+            foreach (var subElement in element.Elements().ToList())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -144,7 +144,7 @@ namespace Barotrauma
             {
                 int elementIndex = 0;
                 bool wasSaved = false;
-                foreach (XElement subElement in element.Elements().ToList())
+                foreach (var subElement in element.Elements().ToList())
                 {
                     switch (subElement.Name.ToString().ToLowerInvariant())
                     {
@@ -175,13 +175,13 @@ namespace Barotrauma
                     new XAttribute("maxcount", childObj.MaxCount)));
             }
 
-            foreach (KeyValuePair<string, float> overrideCommonness in OverrideCommonness)
+            foreach (KeyValuePair<Identifier, float> overrideCommonness in OverrideCommonness)
             {
                 bool elementFound = false;
-                foreach (XElement subElement in element.Elements())
+                foreach (var subElement in element.Elements())
                 {
                     if (subElement.Name.ToString().Equals("overridecommonness", System.StringComparison.OrdinalIgnoreCase)
-                        && subElement.GetAttributeString("leveltype", "").Equals(overrideCommonness.Key, System.StringComparison.OrdinalIgnoreCase))
+                        && subElement.GetAttributeIdentifier("leveltype", Identifier.Empty) == overrideCommonness.Key)
                     {
                         subElement.Attribute("commonness").Value = overrideCommonness.Value.ToString("G", CultureInfo.InvariantCulture);
                         elementFound = true;

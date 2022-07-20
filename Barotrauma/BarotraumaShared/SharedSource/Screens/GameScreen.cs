@@ -58,10 +58,13 @@ namespace Barotrauma
                 cam.Position = Submarine.MainSub.WorldPosition;
                 cam.UpdateTransform(true);
             }
+            GameMain.GameSession?.CrewManager?.AutoShowCrewList();
 #endif
 
             foreach (MapEntity entity in MapEntity.mapEntityList)
+            {
                 entity.IsHighlighted = false;
+            }
 
 #if RUN_PHYSICS_IN_SEPARATE_THREAD
             var physicsThread = new Thread(ExecutePhysics)
@@ -76,11 +79,18 @@ namespace Barotrauma
         public override void Deselect()
         {
             base.Deselect();
-
 #if CLIENT
-            GameMain.Config.SaveNewPlayerConfig();
+            var config = GameSettings.CurrentConfig;
+            config.CrewMenuOpen = CrewManager.PreferCrewMenuOpen;
+            config.ChatOpen = ChatBox.PreferChatBoxOpen;
+            GameSettings.SetCurrentConfig(config);
+            GameSettings.SaveCurrentConfig();
             GameMain.SoundManager.SetCategoryMuffle("default", false);
             GUI.ClearMessages();
+            if (GameMain.GameSession?.GameMode is TestGameMode)
+            {
+                DebugConsole.DeactivateCheats();
+            }
 #endif
         }
 
@@ -116,37 +126,6 @@ namespace Barotrauma
                     }
                 }
             }
-            
-#if LINUX
-            // disgusting
-            if (PlayerInput.KeyDown(Keys.RightShift) && Character.Controlled is { CharacterHealth: { } health } && PlayerInput.MouseSpeed != Vector2.Zero)
-            {
-                AfflictionPrefab radiationPrefab = AfflictionPrefab.RadiationSickness;
-                float afflictionAmount = (PlayerInput.MousePosition.X / GameMain.GraphicsWidth) * radiationPrefab.MaxStrength;
-                Affliction affliction = health.GetAffliction(radiationPrefab.Identifier, true);
-
-                if (affliction == null)
-                {
-                    health.ApplyAffliction(null, new Affliction(radiationPrefab, Math.Abs(afflictionAmount)));
-                }
-                else
-                {
-                    float diff = affliction.Strength - afflictionAmount;
-
-                    if (!MathUtils.NearlyEqual(diff, 0))
-                    {
-                        if (diff > 0)
-                        {
-                            health.ReduceAffliction(null, radiationPrefab.Identifier, Math.Abs(diff));
-                        }
-                        else if (diff < 0)
-                        {
-                            health.ApplyAffliction(null, new Affliction(radiationPrefab, Math.Abs(diff)));
-                        }
-                    }
-                }
-            }
-#endif
 #endif
 
 #if CLIENT
@@ -164,21 +143,28 @@ namespace Barotrauma
                 e.IsHighlighted = false;
             }
 
-            if (GameMain.GameSession != null) GameMain.GameSession.Update((float)deltaTime);
 #if CLIENT
             var sw = new System.Diagnostics.Stopwatch();
             sw.Start();
+#endif
+
+            GameMain.GameSession?.Update((float)deltaTime);
+
+#if CLIENT
+            sw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("Update:GameSession", sw.ElapsedTicks);
+            sw.Restart();
 
             GameMain.ParticleManager.Update((float)deltaTime); 
             
             sw.Stop();
-            GameMain.PerformanceCounter.AddElapsedTicks("ParticleUpdate", sw.ElapsedTicks);
+            GameMain.PerformanceCounter.AddElapsedTicks("Update:Particles", sw.ElapsedTicks);
             sw.Restart();  
 
             if (Level.Loaded != null) Level.Loaded.Update((float)deltaTime, cam);
 
             sw.Stop();
-            GameMain.PerformanceCounter.AddElapsedTicks("LevelUpdate", sw.ElapsedTicks);
+            GameMain.PerformanceCounter.AddElapsedTicks("Update:Level", sw.ElapsedTicks);
 
             if (Character.Controlled != null)
             {
@@ -210,7 +196,7 @@ namespace Barotrauma
 
 #if CLIENT
             sw.Stop();
-            GameMain.PerformanceCounter.AddElapsedTicks("CharacterUpdate", sw.ElapsedTicks);
+            GameMain.PerformanceCounter.AddElapsedTicks("Update:Character", sw.ElapsedTicks);
             sw.Restart(); 
 #endif
 
@@ -218,7 +204,7 @@ namespace Barotrauma
 
 #if CLIENT
             sw.Stop();
-            GameMain.PerformanceCounter.AddElapsedTicks("StatusEffectUpdate", sw.ElapsedTicks);
+            GameMain.PerformanceCounter.AddElapsedTicks("Update:StatusEffects", sw.ElapsedTicks);
             sw.Restart(); 
 
             if (Character.Controlled != null && 
@@ -270,7 +256,7 @@ namespace Barotrauma
 
 #if CLIENT
             sw.Stop();
-            GameMain.PerformanceCounter.AddElapsedTicks("MapEntityUpdate", sw.ElapsedTicks);
+            GameMain.PerformanceCounter.AddElapsedTicks("Update:MapEntity", sw.ElapsedTicks);
             sw.Restart(); 
 #endif
             Character.UpdateAnimAll((float)deltaTime);
@@ -283,7 +269,7 @@ namespace Barotrauma
 
 #if CLIENT
             sw.Stop();
-            GameMain.PerformanceCounter.AddElapsedTicks("AnimUpdate", sw.ElapsedTicks);
+            GameMain.PerformanceCounter.AddElapsedTicks("Update:Ragdolls", sw.ElapsedTicks);
             sw.Restart(); 
 #endif
 
@@ -294,7 +280,7 @@ namespace Barotrauma
 
 #if CLIENT
             sw.Stop();
-            GameMain.PerformanceCounter.AddElapsedTicks("SubmarineUpdate", sw.ElapsedTicks);
+            GameMain.PerformanceCounter.AddElapsedTicks("Update:Submarine", sw.ElapsedTicks);
             sw.Restart();
 #endif
 
@@ -314,7 +300,7 @@ namespace Barotrauma
 
 #if CLIENT
             sw.Stop();
-            GameMain.PerformanceCounter.AddElapsedTicks("Physics", sw.ElapsedTicks);
+            GameMain.PerformanceCounter.AddElapsedTicks("Update:Physics", sw.ElapsedTicks);
 #endif
             UpdateProjSpecific(deltaTime);
 

@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
-using StoreBalanceStatus = Barotrauma.LocationType.StoreBalanceStatus;
 
 namespace Barotrauma
 {
@@ -16,10 +15,10 @@ namespace Barotrauma
         {
             public readonly ushort OriginalID;
             public readonly ushort ModuleIndex;
-            public readonly string Identifier;
+            public readonly Identifier Identifier;
             public readonly int OriginalContainerIndex;
 
-            public TakenItem(string identifier, UInt16 originalID, int originalContainerIndex, ushort moduleIndex)
+            public TakenItem(Identifier identifier, UInt16 originalID, int originalContainerIndex, ushort moduleIndex)
             {
                 OriginalID = originalID;
                 OriginalContainerIndex = originalContainerIndex;
@@ -34,7 +33,7 @@ namespace Barotrauma
                 OriginalContainerIndex = item.OriginalContainerIndex;
                 OriginalID = item.ID;
                 ModuleIndex = (ushort) item.OriginalModuleIndex;
-                Identifier = item.prefab.Identifier;
+                Identifier = ((MapEntity)item).Prefab.Identifier;
             }
 
             public bool IsEqual(TakenItem obj)
@@ -46,11 +45,11 @@ namespace Barotrauma
             {
                 if (item.OriginalContainerIndex != Entity.NullEntityID)
                 {
-                    return item.OriginalContainerIndex == OriginalContainerIndex && item.OriginalModuleIndex == ModuleIndex && item.prefab.Identifier == Identifier;
+                    return item.OriginalContainerIndex == OriginalContainerIndex && item.OriginalModuleIndex == ModuleIndex && ((MapEntity)item).Prefab.Identifier == Identifier;
                 }
                 else
                 {
-                    return item.ID == OriginalID && item.OriginalModuleIndex == ModuleIndex && item.prefab.Identifier == Identifier;
+                    return item.ID == OriginalID && item.OriginalModuleIndex == ModuleIndex && ((MapEntity)item).Prefab.Identifier == Identifier;
                 }
             }
         }
@@ -89,46 +88,248 @@ namespace Barotrauma
         public int TurnsInRadiation { get; set; }
 
         #region Store
+
+        public class StoreInfo
+        {
+            public Identifier Identifier { get; }
+            public int Balance { get; set; }
+            public List<PurchasedItem> Stock { get; } = new List<PurchasedItem>();
+            public List<ItemPrefab> DailySpecials { get; } = new List<ItemPrefab>();
+            public List<ItemPrefab> RequestedGoods { get; } = new List<ItemPrefab>();
+            /// <summary>
+            /// In percentages. Larger values make buying more expensive and selling less profitable, and vice versa.
+            /// </summary>
+            public int PriceModifier { get; set; }
+            public Location Location { get; }
+
+            private StoreInfo(Location location)
+            {
+                Location = location;
+            }
+
+            /// <summary>
+            /// Create new StoreInfo
+            /// </summary>
+            public StoreInfo(Location location, Identifier identifier) : this(location)
+            {
+                Identifier = identifier;
+                Balance = location.StoreInitialBalance;
+                Stock = CreateStock();
+                GenerateSpecials();
+                GeneratePriceModifier();
+            }
+
+            /// <summary>
+            /// Load previously saved StoreInfo
+            /// </summary>
+            public StoreInfo(Location location, XElement storeElement) : this(location)
+            {
+                Identifier = storeElement.GetAttributeIdentifier("identifier", "");
+                Balance = storeElement.GetAttributeInt("balance", location.StoreInitialBalance);
+                PriceModifier = storeElement.GetAttributeInt("pricemodifier", 0);
+                // Backwards compatibility: before introducing support for multiple stores, this value was saved as a store element attribute
+                if (storeElement.Attribute("stepssincespecialsupdated") != null)
+                {
+                    location.StepsSinceSpecialsUpdated = storeElement.GetAttributeInt("stepssincespecialsupdated", 0);
+                }
+                foreach (var stockElement in storeElement.GetChildElements("stock"))
+                {
+                    var identifier = stockElement.GetAttributeIdentifier("id", Identifier.Empty);
+                    if (identifier.IsEmpty || !(ItemPrefab.FindByIdentifier(identifier) is ItemPrefab prefab)) { continue; }
+                    int qty = stockElement.GetAttributeInt("qty", 0);
+                    if (qty < 1) { continue; }
+                    Stock.Add(new PurchasedItem(prefab, qty, buyer: null));
+                }
+                if (storeElement.GetChildElement("dailyspecials") is XElement specialsElement)
+                {
+                    var loadedDailySpecials = LoadStoreSpecials(specialsElement);
+                    DailySpecials.AddRange(loadedDailySpecials);
+                }
+                if (storeElement.GetChildElement("requestedgoods") is XElement goodsElement)
+                {
+                    var loadedRequestedGoods = LoadStoreSpecials(goodsElement);
+                    RequestedGoods.AddRange(loadedRequestedGoods);
+                }
+
+                static List<ItemPrefab> LoadStoreSpecials(XElement element)
+                {
+                    var specials = new List<ItemPrefab>();
+                    foreach (var childElement in element.GetChildElements("item"))
+                    {
+                        var id = childElement.GetAttributeIdentifier("id", Identifier.Empty);
+                        if (id.IsEmpty || !(ItemPrefab.FindByIdentifier(id) is ItemPrefab prefab)) { continue; }
+                        specials.Add(prefab);
+                    }
+                    return specials;
+                }
+            }
+
+            public List<PurchasedItem> CreateStock()
+            {
+                var stock = new List<PurchasedItem>();
+                foreach (var prefab in ItemPrefab.Prefabs)
+                {
+                    if (!prefab.CanBeBoughtFrom(this, out var priceInfo)) { continue; }
+                    int quantity = PriceInfo.DefaultAmount;
+                    if (priceInfo.MaxAvailableAmount > 0)
+                    {
+                        if (priceInfo.MaxAvailableAmount > priceInfo.MinAvailableAmount)
+                        {
+                            quantity = Rand.Range(priceInfo.MinAvailableAmount, priceInfo.MaxAvailableAmount + 1);
+                        }
+                        else
+                        {
+                            quantity = priceInfo.MaxAvailableAmount;
+                        }
+                    }
+                    else if (priceInfo.MinAvailableAmount > 0)
+                    {
+                        quantity = priceInfo.MinAvailableAmount;
+                    }
+                    stock.Add(new PurchasedItem(prefab, quantity, buyer: null));
+                }
+                return stock;
+            }
+
+            public void AddStock(List<SoldItem> items)
+            {
+                if (items == null || items.None()) { return; }
+                DebugConsole.NewMessage($"Adding items to stock for \"{Identifier}\" at \"{Location}\"", Color.Purple, debugOnly: true);
+                foreach (var item in items)
+                {
+                    if (Stock.FirstOrDefault(i => i.ItemPrefab == item.ItemPrefab) is PurchasedItem stockItem)
+                    {
+                        stockItem.Quantity += 1;
+                        DebugConsole.NewMessage($"Added 1x {item.ItemPrefab.Name}, new total: {stockItem.Quantity}", Color.Cyan, debugOnly: true);
+                    }
+                    else
+                    {
+                        DebugConsole.NewMessage($"{item.ItemPrefab.Name} not sold at location, can't add", Color.Cyan, debugOnly: true);
+                    }
+                }
+            }
+
+            public void RemoveStock(List<PurchasedItem> items)
+            {
+                if (items == null || items.None()) { return; }
+                DebugConsole.NewMessage($"Removing items from stock for \"{Identifier}\" at \"{Location}\"", Color.Purple, debugOnly: true);
+                foreach (PurchasedItem item in items)
+                {
+                    if (Stock.FirstOrDefault(i => i.ItemPrefab == item.ItemPrefab) is PurchasedItem stockItem)
+                    {
+                        stockItem.Quantity = Math.Max(stockItem.Quantity - item.Quantity, 0);
+                        DebugConsole.NewMessage($"Removed {item.Quantity}x {item.ItemPrefab.Name}, new total: {stockItem.Quantity}", Color.Cyan, debugOnly: true);
+                    }
+                }
+            }
+
+            public void GenerateSpecials()
+            {
+                var availableStock = new Dictionary<ItemPrefab, float>();
+                foreach (var stockItem in Stock)
+                {
+                    if (stockItem.Quantity < 1) { continue; }
+                    float weight = 1.0f;
+                    if (stockItem.ItemPrefab.GetPriceInfo(this) is PriceInfo priceInfo)
+                    {
+                        if (!priceInfo.CanBeSpecial) { continue; }
+                        var baseQuantity = priceInfo.MinAvailableAmount > 0 ? priceInfo.MinAvailableAmount : PriceInfo.DefaultAmount;
+                        weight += (float)(stockItem.Quantity - baseQuantity) / baseQuantity;
+                        if (weight < 0.0f) { continue; }
+                    }
+                    availableStock.Add(stockItem.ItemPrefab, weight);
+                }
+                DailySpecials.Clear();
+                int extraSpecialSalesCount = Location.GetExtraSpecialSalesCount();
+                for (int i = 0; i < Location.DailySpecialsCount + extraSpecialSalesCount; i++)
+                {
+                    if (availableStock.None()) { break; }
+                    var item = ToolBox.SelectWeightedRandom(availableStock.Keys.ToList(), availableStock.Values.ToList(), Rand.RandSync.Unsynced);
+                    if (item == null) { break; }
+                    DailySpecials.Add(item);
+                    availableStock.Remove(item);
+                }
+                RequestedGoods.Clear();
+                for (int i = 0; i < Location.RequestedGoodsCount; i++)
+                {
+                    var item = ItemPrefab.Prefabs.GetRandom(p =>
+                        p.CanBeSold && !RequestedGoods.Contains(p) &&
+                        p.GetPriceInfo(this) is PriceInfo pi && pi.CanBeSpecial, Rand.RandSync.Unsynced);
+                    if (item == null) { break; }
+                    RequestedGoods.Add(item);
+                }
+                Location.StepsSinceSpecialsUpdated = 0;
+            }
+
+            public void GeneratePriceModifier()
+            {
+                PriceModifier = Rand.Range(-Location.StorePriceModifierRange, Location.StorePriceModifierRange + 1);
+            }
+
+            /// <param name="priceInfo">If null, item.GetPriceInfo() will be used to get it.</param>
+            /// /// <param name="considerDailySpecials">If false, the price won't be affected by <see cref="DailySpecialPriceModifier"/></param>
+            public int GetAdjustedItemBuyPrice(ItemPrefab item, PriceInfo priceInfo = null, bool considerDailySpecials = true)
+            {
+                priceInfo ??= item?.GetPriceInfo(this);
+                if (priceInfo == null) { return 0; }
+                float price = priceInfo.Price;
+                // Adjust by random price modifier
+                price = (100 + PriceModifier) / 100.0f * price;
+                price *= priceInfo.BuyingPriceMultiplier;
+                // Adjust by daily special status
+                if (considerDailySpecials && DailySpecials.Contains(item))
+                {
+                    price = Location.DailySpecialPriceModifier * price;
+                }
+                // Adjust by current location reputation
+                price *= Location.GetStoreReputationModifier(true);
+                // Price should never go below 1 mk
+                return Math.Max((int)price, 1);
+            }
+
+            /// <param name="priceInfo">If null, item.GetPriceInfo() will be used to get it.</param>
+            /// <param name="considerRequestedGoods">If false, the price won't be affected by <see cref="RequestGoodPriceModifier"/></param>
+            public int GetAdjustedItemSellPrice(ItemPrefab item, PriceInfo priceInfo = null, bool considerRequestedGoods = true)
+            {
+                priceInfo ??= item?.GetPriceInfo(this);
+                if (priceInfo == null) { return 0; }
+                float price = Location.StoreSellPriceModifier * priceInfo.Price;
+                // Adjust by random price modifier
+                price = (100 - PriceModifier) / 100.0f * price;
+                // Adjust by requested good status
+                if (considerRequestedGoods && RequestedGoods.Contains(item))
+                {
+                    price = Location.RequestGoodPriceModifier * price;
+                }
+                // Adjust by current location reputation
+                price *= Location.GetStoreReputationModifier(false);
+                // Price should never go below 1 mk
+                return Math.Max((int)price, 1);
+            }
+
+            public override string ToString()
+            {
+                return Identifier.Value;
+            }
+        }
+
+        public Dictionary<Identifier, StoreInfo> Stores { get; set; }
+
         private float StoreMaxReputationModifier => Type.StoreMaxReputationModifier;
         private float StoreSellPriceModifier => Type.StoreSellPriceModifier;
         private float DailySpecialPriceModifier => Type.DailySpecialPriceModifier;
         private float RequestGoodPriceModifier => Type.RequestGoodPriceModifier;
         public int StoreInitialBalance => Type.StoreInitialBalance;
         private int StorePriceModifierRange => Type.StorePriceModifierRange;
-        /// <summary>
-        /// In percentages. Larger values make buying more expensive and selling less profitable, and vice versa.
-        /// </summary>
-        public int StorePriceModifier { get; private set; }
-
-        public Color BalanceColor => ActiveStoreBalanceStatus.Color;
-        public StoreBalanceStatus ActiveStoreBalanceStatus { get; private set; }
-        private List<StoreBalanceStatus> StoreBalanceStatuses => Type.StoreBalanceStatuses;
-
-        private int storeCurrentBalance;
-        public int StoreCurrentBalance
-        {
-            get
-            {
-                return storeCurrentBalance;
-            }
-            set
-            {
-                storeCurrentBalance = value;
-                ActiveStoreBalanceStatus = GetStoreBalanceStatus(value);
-            }
-        }
-
-        public List<PurchasedItem> StoreStock { get; set; }
-        public List<ItemPrefab> DailySpecials { get; } = new List<ItemPrefab>();
-        public List<ItemPrefab> RequestedGoods { get; } = new List<ItemPrefab>();
 
         /// <summary>
         /// How many map progress steps it takes before the discounts should be updated.
         /// </summary>
         private const int SpecialsUpdateInterval = 3;
-        private const int DailySpecialsCount = 3;
-        private const int RequestedGoodsCount = 3;
+        public int DailySpecialsCount => Type.DailySpecialsCount;
+        public int RequestedGoodsCount => Type.RequestedGoodsCount;
         private int StepsSinceSpecialsUpdated { get; set; }
+        public HashSet<Identifier> StoreIdentifiers { get; } = new HashSet<Identifier>();
 
         #endregion
 
@@ -252,7 +453,7 @@ namespace Barotrauma
             return $"Location ({Name ?? "null"})";
         }
 
-        public Location(Vector2 mapPosition, int? zone, Random rand, bool requireOutpost = false, LocationType? forceLocationType = null, IEnumerable<Location> existingLocations = null)
+        public Location(Vector2 mapPosition, int? zone, Random rand, bool requireOutpost = false, LocationType forceLocationType = null, IEnumerable<Location> existingLocations = null)
         {
             Type = OriginalType = forceLocationType ?? LocationType.Random(rand, zone, requireOutpost);
             Name = RandomName(Type, rand, existingLocations);
@@ -261,34 +462,18 @@ namespace Barotrauma
             Connections = new List<LocationConnection>(); 
         }
 
+        /// <summary>
+        /// Create a location from save data
+        /// </summary>
         public Location(XElement element)
         {
-            string locationType = element.GetAttributeString("type", "");
-            Type = LocationType.List.Find(lt => lt.Identifier.Equals(locationType, StringComparison.OrdinalIgnoreCase));
-            bool typeNotFound = false;
-            if (Type == null)
-            {
-                //turn lairs into abandoned outposts
-                if (locationType.Equals("lair", StringComparison.OrdinalIgnoreCase))
-                {
-                    Type ??= LocationType.List.Find(lt => lt.Identifier.Equals("Abandoned", StringComparison.OrdinalIgnoreCase));
-                    addInitialMissionsForType = Type;                    
-                }
-                if (Type == null)
-                {
-                    DebugConsole.AddWarning($"Could not find location type \"{locationType}\". Using location type \"None\" instead.");
-                    Type ??= LocationType.List.Find(lt => lt.Identifier.Equals("None", StringComparison.OrdinalIgnoreCase));
-                    Type ??= LocationType.List.First();
-                }
-                if (Type != null)
-                {
-                    element.SetAttributeValue("type", Type.Identifier);
-                }
-                typeNotFound = true;
-            }
+            Identifier locationTypeId = element.GetAttributeIdentifier("type", "");
+            bool typeNotFound = GetTypeOrFallback(locationTypeId, out LocationType type);
+            Type = type;
 
-            string originalLocationType = element.GetAttributeString("originaltype", locationType);
-            OriginalType = LocationType.List.Find(lt => lt.Identifier.Equals(locationType, StringComparison.OrdinalIgnoreCase));
+            Identifier originalLocationTypeId = element.GetAttributeIdentifier("originaltype", locationTypeId);
+            GetTypeOrFallback(originalLocationTypeId, out LocationType originalType);
+            OriginalType = originalType;
 
             baseName        = element.GetAttributeString("basename", "");
             Name            = element.GetAttributeString("name", "");
@@ -298,6 +483,20 @@ namespace Barotrauma
             IsGateBetweenBiomes         = element.GetAttributeBool("isgatebetweenbiomes", false);
             MechanicalPriceMultiplier   = element.GetAttributeFloat("mechanicalpricemultipler", 1.0f);
             TurnsInRadiation            = element.GetAttributeInt(nameof(TurnsInRadiation).ToLower(), 0);
+            StepsSinceSpecialsUpdated   = element.GetAttributeInt("stepssincespecialsupdated", 0);
+
+            Identifier biomeId = element.GetAttributeIdentifier("biome", Identifier.Empty);
+            if (biomeId != Identifier.Empty)
+            {
+                if (Biome.Prefabs.TryGet(biomeId, out Biome biome))
+                {
+                    Biome = biome;
+                }
+                else
+                {
+                    DebugConsole.ThrowError($"Error while loading the campaign map: could not find a biome with the identifier \"{biomeId}\".");
+                }
+            }
 
             if (!typeNotFound)
             {
@@ -312,7 +511,7 @@ namespace Barotrauma
                 LoadLocationTypeChange(element);
             }
 
-            string[] takenItemStr = element.GetAttributeStringArray("takenitems", new string[0]);
+            string[] takenItemStr = element.GetAttributeStringArray("takenitems", Array.Empty<string>());
             foreach (string takenItem in takenItemStr)
             {
                 string[] takenItemSplit = takenItem.Split(';');
@@ -336,30 +535,58 @@ namespace Barotrauma
                     DebugConsole.ThrowError($"Error in saved location: could not parse taken item module index \"{takenItemSplit[3]}\"");
                     continue;
                 }
-                takenItems.Add(new TakenItem(takenItemSplit[0], id, containerIndex, moduleIndex));
+                takenItems.Add(new TakenItem(takenItemSplit[0].ToIdentifier(), id, containerIndex, moduleIndex));
             }
 
-            killedCharacterIdentifiers = element.GetAttributeIntArray("killedcharacters", new int[0]).ToHashSet();
+            killedCharacterIdentifiers = element.GetAttributeIntArray("killedcharacters", Array.Empty<int>()).ToHashSet();
 
-            System.Diagnostics.Debug.Assert(Type != null, $"Could not find the location type \"{locationType}\"!");
+            System.Diagnostics.Debug.Assert(Type != null, $"Could not find the location type \"{locationTypeId}\"!");
             if (Type == null)
             {
-                Type = LocationType.List.First();
+                Type = LocationType.Prefabs.First();
             }
 
             LevelData = new LevelData(element.Element("Level"));
 
             PortraitId = ToolBox.StringToInt(Name);
 
-            LoadStore(element);
+            LoadStores(element);
             LoadMissions(element);
+
+            bool GetTypeOrFallback(Identifier identifier, out LocationType type)
+            {
+                if (!LocationType.Prefabs.TryGet(identifier, out type))
+                {
+                    //turn lairs into abandoned outposts
+                    if (identifier == "lair")
+                    {
+                        LocationType.Prefabs.TryGet("Abandoned".ToIdentifier(), out type);
+                        addInitialMissionsForType = Type;
+                    }
+                    if (type == null)
+                    {
+                        DebugConsole.AddWarning($"Could not find location type \"{identifier}\". Using location type \"None\" instead.");
+                        LocationType.Prefabs.TryGet("None".ToIdentifier(), out type);
+                        if (type == null)
+                        {
+                            type = LocationType.Prefabs.First();
+                        }
+                    }
+                    if (type != null)
+                    {
+                        element.SetAttributeValue("type", type.Identifier);
+                    }
+                    return false;
+                }
+                return true;
+            }
         }
 
         public void LoadLocationTypeChange(XElement locationElement)
         {
             TimeSinceLastTypeChange = locationElement.GetAttributeInt("timesincelasttypechange", 0);
             LocationTypeChangeCooldown = locationElement.GetAttributeInt("locationtypechangecooldown", 0);
-            foreach (XElement subElement in locationElement.Elements())
+            foreach (var subElement in locationElement.Elements())
             {
                 switch (subElement.Name.ToString())
                 {
@@ -377,8 +604,8 @@ namespace Barotrauma
                         }
                         else
                         {
-                            string missionIdentifier = subElement.GetAttributeString("missionidentifier", "");
-                            var mission = MissionPrefab.List.Find(mp => mp.Identifier.Equals(missionIdentifier, StringComparison.OrdinalIgnoreCase));
+                            Identifier missionIdentifier = subElement.GetAttributeIdentifier("missionidentifier", "");
+                            var mission = MissionPrefab.Prefabs[missionIdentifier];
                             if (mission == null)
                             {
                                 DebugConsole.AddWarning($"Failed to activate a location type change from the mission \"{missionIdentifier}\" in location \"{Name}\". Matching mission not found.");
@@ -400,7 +627,7 @@ namespace Barotrauma
                 {
                     var id = childElement.GetAttributeString("prefabid", null);
                     if (string.IsNullOrWhiteSpace(id)) { continue; }
-                    var prefab = MissionPrefab.List.Find(p => p.Identifier.Equals(id, StringComparison.OrdinalIgnoreCase));
+                    var prefab = MissionPrefab.Prefabs.Find(p => p.Identifier == id);
                     if (prefab == null) { continue; }
                     var destination = childElement.GetAttributeInt("destinationindex", -1);
                     var selected = childElement.GetAttributeBool("selected", false);
@@ -409,8 +636,7 @@ namespace Barotrauma
             }
         }
 
-
-        public static Location CreateRandom(Vector2 position, int? zone, Random rand, bool requireOutpost, LocationType? forceLocationType = null, IEnumerable<Location> existingLocations = null)
+        public static Location CreateRandom(Vector2 position, int? zone, Random rand, bool requireOutpost, LocationType forceLocationType = null, IEnumerable<Location> existingLocations = null)
         {
             return new Location(position, zone, rand, requireOutpost, forceLocationType, existingLocations);
         }
@@ -428,29 +654,29 @@ namespace Barotrauma
             DebugConsole.Log("Location " + baseName + " changed it's type from " + Type + " to " + newType);
 
             Type = newType;
-            Name = Type.NameFormats == null ? baseName : Type.NameFormats[nameFormatIndex % Type.NameFormats.Count].Replace("[name]", baseName);
+            Name = Type.NameFormats == null || !Type.NameFormats.Any() ? baseName : Type.NameFormats[nameFormatIndex % Type.NameFormats.Count].Replace("[name]", baseName);
 
             if (Type.MissionIdentifiers.Any())
             {
-                UnlockMissionByIdentifier(Type.MissionIdentifiers.GetRandom());
+                UnlockMissionByIdentifier(Type.MissionIdentifiers.GetRandomUnsynced());
             }
             if (Type.MissionTags.Any())
             {
-                UnlockMissionByTag(Type.MissionTags.GetRandom());
+                UnlockMissionByTag(Type.MissionTags.GetRandomUnsynced());
             }
 
-            CreateStore(force: true);
+            CreateStores(force: true);
         }
 
         public void UnlockInitialMissions()
         {
             if (Type.MissionIdentifiers.Any())
             {
-                UnlockMissionByIdentifier(Type.MissionIdentifiers.GetRandom(Rand.RandSync.Server));
+                UnlockMissionByIdentifier(Type.MissionIdentifiers.GetRandom(Rand.RandSync.ServerAndClient));
             }
             if (Type.MissionTags.Any())
             {
-                UnlockMissionByTag(Type.MissionTags.GetRandom(Rand.RandSync.Server));
+                UnlockMissionByTag(Type.MissionTags.GetRandom(Rand.RandSync.ServerAndClient));
             }
         }
 
@@ -474,11 +700,11 @@ namespace Barotrauma
 #endif
         }
 
-        public MissionPrefab UnlockMissionByIdentifier(string identifier)
+        public MissionPrefab UnlockMissionByIdentifier(Identifier identifier)
         {
-            if (AvailableMissions.Any(m => m.Prefab.Identifier.Equals(identifier, StringComparison.OrdinalIgnoreCase))) { return null; }
+            if (AvailableMissions.Any(m => m.Prefab.Identifier == identifier)) { return null; }
 
-            var missionPrefab = MissionPrefab.List.Find(mp => mp.Identifier.Equals(identifier, StringComparison.OrdinalIgnoreCase));
+            var missionPrefab = MissionPrefab.Prefabs.Find(mp => mp.Identifier == identifier);
             if (missionPrefab == null)
             {
                 DebugConsole.ThrowError($"Failed to unlock a mission with the identifier \"{identifier}\": matching mission not found.");
@@ -500,9 +726,9 @@ namespace Barotrauma
             return null;
         }
 
-        public MissionPrefab UnlockMissionByTag(string tag)
+        public MissionPrefab UnlockMissionByTag(Identifier tag)
         {
-            var matchingMissions = MissionPrefab.List.FindAll(mp => mp.Tags.Any(t => t.Equals(tag, StringComparison.OrdinalIgnoreCase)));
+            var matchingMissions = MissionPrefab.Prefabs.Where(mp => mp.Tags.Any(t => t == tag));
             if (!matchingMissions.Any())
             {
                 DebugConsole.ThrowError($"Failed to unlock a mission with the tag \"{tag}\": no matching missions not found.");
@@ -560,22 +786,41 @@ namespace Barotrauma
             
             static float GetConnectionWeight(Location location, LocationConnection c)
             {
-                float weight = c.Passed ? 1.0f : 5.0f;
                 Location destination = c.OtherLocation(location);
-                if (destination != null)
+                if (destination == null) { return 0; }
+                float minWeight = 0.0001f;
+                float lowWeight = 0.2f;
+                float normalWeight = 1.0f;
+                float maxWeight = 2.0f;
+                float weight = c.Passed ? lowWeight : normalWeight;
+                if (location.Biome.AllowedZones.Contains(1))
                 {
-                    if (destination.MapPosition.X > location.MapPosition.X) { weight *= 2.0f; }
-                    int missionCount = location.availableMissions.Count(m => m.Locations.Contains(destination));
-                    if (missionCount > 0) 
-                    { 
-                        weight /= missionCount * 2;
-                    }
-                    if (destination.IsRadiated())
+                    // In the first biome, give a stronger preference for locations that are farther to the right)
+                    float diff = destination.MapPosition.X - location.MapPosition.X;
+                    if (diff < 0)
                     {
-                        weight *= 0.001f;
+                        weight *= 0.1f;
+                    }
+                    else
+                    {
+                        float maxRelevantDiff = 300;
+                        weight = MathHelper.Lerp(weight, maxWeight, MathUtils.InverseLerp(0, maxRelevantDiff, diff));
                     }
                 }
-                return weight;
+                else if (destination.MapPosition.X > location.MapPosition.X)
+                {
+                    weight *= 2.0f;
+                }
+                int missionCount = location.availableMissions.Count(m => m.Locations.Contains(destination));
+                if (missionCount > 0) 
+                { 
+                    weight /= missionCount * 2;
+                }
+                if (destination.IsRadiated())
+                {
+                    weight *= 0.001f;
+                }
+                return MathHelper.Clamp(weight, minWeight, maxWeight);
             }
 
             return InstantiateMission(prefab, connection);
@@ -623,11 +868,11 @@ namespace Barotrauma
             {
                 if (addInitialMissionsForType.MissionIdentifiers.Any())
                 {
-                    UnlockMissionByIdentifier(addInitialMissionsForType.MissionIdentifiers.GetRandom());
+                    UnlockMissionByIdentifier(addInitialMissionsForType.MissionIdentifiers.GetRandomUnsynced());
                 }
                 if (addInitialMissionsForType.MissionTags.Any())
                 {
-                    UnlockMissionByTag(addInitialMissionsForType.MissionTags.GetRandom());
+                    UnlockMissionByTag(addInitialMissionsForType.MissionTags.GetRandomUnsynced());
                 }
                 addInitialMissionsForType = null;
             }
@@ -661,7 +906,7 @@ namespace Barotrauma
 
         public LocationType GetLocationType()
         {
-            if (IsCriticallyRadiated() && LocationType.List.FirstOrDefault(lt => lt.Identifier.Equals(Type.ReplaceInRadiation, StringComparison.OrdinalIgnoreCase)) is { } newLocationType)
+            if (IsCriticallyRadiated() && LocationType.Prefabs[Type.ReplaceInRadiation] is { } newLocationType)
             {
                 return newLocationType;
             }
@@ -715,89 +960,49 @@ namespace Barotrauma
             return type.NameFormats[nameFormatIndex].Replace("[name]", baseName);
         }
 
-        public void LoadStore(XElement locationElement)
+        public void LoadStores(XElement locationElement)
         {
-            StoreStock?.Clear();
-            DailySpecials.Clear();
-            RequestedGoods.Clear();
-
-            if (locationElement.GetChildElement("store") is XElement storeElement)
+            UpdateStoreIdentifiers();
+            Stores?.Clear();
+            foreach (var storeElement in locationElement.GetChildElements("store"))
             {
-                StoreCurrentBalance = storeElement.GetAttributeInt("balance", StoreInitialBalance);
-                StorePriceModifier = storeElement.GetAttributeInt("pricemodifier", 0);
-
-                StoreStock ??= new List<PurchasedItem>();
-                foreach (XElement stockElement in storeElement.GetChildElements("stock"))
+                Stores ??= new Dictionary<Identifier, StoreInfo>();
+                var identifier = storeElement.GetAttributeIdentifier("identifier", "");
+                if (identifier.IsEmpty)
                 {
-                    var id = stockElement.GetAttributeString("id", null);
-                    if (string.IsNullOrWhiteSpace(id)) { continue; }
-                    var prefab = ItemPrefab.Prefabs.Find(p => p.Identifier == id);
-                    if (prefab == null) { continue; }
-                    var qty = stockElement.GetAttributeInt("qty", 0);
-                    if (qty < 1) { continue; }
-                    StoreStock.Add(new PurchasedItem(prefab, qty));
+                    // Previously saved store data (with no identifier) is discarded and new store data will be created
+                    continue;
                 }
-
-                StepsSinceSpecialsUpdated = storeElement.GetAttributeInt("stepssincespecialsupdated", 0);
-
-                if (storeElement.GetChildElement("dailyspecials") is XElement specialsElement)
+                if (StoreIdentifiers.Contains(identifier))
                 {
-                    var loadedDailySpecials = LoadStoreSpecials(specialsElement);
-                    DailySpecials.AddRange(loadedDailySpecials);
-                }
-
-                if (storeElement.GetChildElement("requestedgoods") is XElement goodsElement)
-                {
-                    var loadedRequestedGoods = LoadStoreSpecials(goodsElement);
-                    RequestedGoods.AddRange(loadedRequestedGoods);
-                }
-
-                static List<ItemPrefab> LoadStoreSpecials(XElement element)
-                {
-                    List<ItemPrefab> specials = new List<ItemPrefab>();
-                    foreach (var childElement in element.GetChildElements("item"))
+                    if (!Stores.ContainsKey(identifier))
                     {
-                        var id = childElement.GetAttributeString("id", null);
-                        if (string.IsNullOrWhiteSpace(id)) { continue; }
-                        var prefab = ItemPrefab.Find(null, id);
-                        if (prefab == null) { continue; }
-                        specials.Add(prefab);
+                        Stores.Add(identifier, new StoreInfo(this, storeElement));
                     }
-                    return specials;
+                    else
+                    {
+                        string msg = $"Error loading store info for \"{identifier}\" at location {Name} of type \"{Type.Identifier}\": duplicate identifier.";
+                        DebugConsole.ThrowError(msg);
+                        GameAnalyticsManager.AddErrorEventOnce("Location.LoadStore:DuplicateStoreInfo", GameAnalyticsManager.ErrorSeverity.Error, msg);
+                        continue;
+                    }
                 }
+                else
+                {
+                    string msg = $"Error loading store info for \"{identifier}\" at location {Name} of type \"{Type.Identifier}\": location shouldn't contain a store with this identifier.";
+                    DebugConsole.ThrowError(msg);
+                    GameAnalyticsManager.AddErrorEventOnce("Location.LoadStore:IncorrectStoreIdentifier", GameAnalyticsManager.ErrorSeverity.Error, msg);
+                    continue;
+                }
+            }
+            // Backwards compatibility: create new stores for any identifiers not present in the save data
+            foreach (var id in StoreIdentifiers)
+            {
+                AddNewStore(id);
             }
         }
 
         public bool IsRadiated() => GameMain.GameSession?.Map?.Radiation != null && GameMain.GameSession.Map.Radiation.Enabled && GameMain.GameSession.Map.Radiation.Contains(this);
-
-        private List<PurchasedItem> CreateStoreStock()
-        {
-            var stock = new List<PurchasedItem>();
-            foreach (ItemPrefab prefab in ItemPrefab.Prefabs)
-            {
-                if (prefab.CanBeBoughtAtLocation(this, out PriceInfo priceInfo))
-                {
-                    int quantity = PriceInfo.DefaultAmount;
-                    if (priceInfo.MaxAvailableAmount > 0)
-                    {
-                        if (priceInfo.MaxAvailableAmount > priceInfo.MinAvailableAmount)
-                        {
-                            quantity = Rand.Range(priceInfo.MinAvailableAmount, priceInfo.MaxAvailableAmount + 1);
-                        }
-                        else
-                        {
-                            quantity = priceInfo.MaxAvailableAmount;
-                        }
-                    }
-                    else if (priceInfo.MinAvailableAmount > 0)
-                    {
-                        quantity = priceInfo.MinAvailableAmount;
-                    }
-                    stock.Add(new PurchasedItem(prefab, quantity));
-                }
-            }
-            return stock;
-        }
 
         /// <summary>
         /// Mark the items that have been taken from the outpost to prevent them from spawning when re-entering the outpost
@@ -837,73 +1042,6 @@ namespace Barotrauma
             }
         }
 
-        /// <param name="priceInfo">If null, item.GetPriceInfo() will be used to get it.</param>
-        /// /// <param name="considerDailySpecials">If false, the price won't be affected by <see cref="DailySpecialPriceModifier"/></param>
-        public int GetAdjustedItemBuyPrice(ItemPrefab item, PriceInfo priceInfo = null, bool considerDailySpecials = true)
-        {
-            priceInfo ??= item?.GetPriceInfo(this);
-            if (priceInfo == null) { return 0; }
-            float price = priceInfo.Price;
-
-            // Adjust by random price modifier
-            price = ((100 + StorePriceModifier) / 100.0f) * price;
-
-            price *= priceInfo.BuyingPriceMultiplier;
-
-            // Adjust by daily special status
-            if (considerDailySpecials && DailySpecials.Contains(item))
-            {
-                price = DailySpecialPriceModifier * price;
-            }
-
-            // Adjust by current location reputation
-            if (Reputation.Value > 0.0f)
-            {
-                price = MathHelper.Lerp(1.0f, 1.0f - StoreMaxReputationModifier, Reputation.Value / Reputation.MaxReputation) * price;
-            }
-            else
-            {
-                price = MathHelper.Lerp(1.0f, 1.0f + StoreMaxReputationModifier, Reputation.Value / Reputation.MinReputation) * price;
-            }
-
-            // Price should never go below 1 mk
-            return Math.Max((int)price, 1);
-        }
-
-        /// <param name="priceInfo">If null, item.GetPriceInfo() will be used to get it.</param>
-        /// <param name="considerRequestedGoods">If false, the price won't be affected by <see cref="RequestGoodPriceModifier"/></param>
-        public int GetAdjustedItemSellPrice(ItemPrefab item, PriceInfo priceInfo = null, bool considerRequestedGoods = true)
-        {
-            priceInfo ??= item?.GetPriceInfo(this);
-            if (priceInfo == null) { return 0; }
-            float price = StoreSellPriceModifier * priceInfo.Price;
-
-            // Adjust by random price modifier
-            price = ((100 - StorePriceModifier) / 100.0f) * price;
-
-            // Adjust by current store balance
-            price = ActiveStoreBalanceStatus.SellPriceModifier * price;
-
-            // Adjust by requested good status
-            if (considerRequestedGoods && RequestedGoods.Contains(item))
-            {
-                price = RequestGoodPriceModifier * price;
-            }
-
-            // Adjust by current location reputation
-            if (Reputation.Value > 0.0f)
-            {
-                price = MathHelper.Lerp(1.0f, 1.0f + StoreMaxReputationModifier, Reputation.Value / Reputation.MaxReputation) * price;
-            }
-            else
-            {
-                price = MathHelper.Lerp(1.0f, 1.0f - StoreMaxReputationModifier, Reputation.Value / Reputation.MinReputation) * price;
-            }
-
-            // Price should never go below 1 mk
-            return Math.Max((int)price, 1);
-        }
-
         public int GetAdjustedMechanicalCost(int cost)
         {
             float discount = Reputation.Value / Reputation.MaxReputation * (MechanicalMaxDiscountPercentage / 100.0f);
@@ -916,200 +1054,206 @@ namespace Barotrauma
             return (int) Math.Ceiling((1.0f - discount) * cost * PriceMultiplier);
         }
 
-        /// <param name="force">If true, the store will be recreated if it already exists.</param>
-        public void CreateStore(bool force = false)
+        public StoreInfo GetStore(Identifier identifier)
+        {
+            if (Stores != null && Stores.TryGetValue(identifier, out var store))
+            {
+                return store;
+            }
+            return null;
+        }
+
+        /// <param name="force">If true, the stores will be recreated if they already exists.</param>
+        public void CreateStores(bool force = false)
         {
             // In multiplayer, stores should be created by the server and loaded from save data by clients
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
-
-            if (!force && StoreStock != null) { return; }
-
-            if (StoreStock != null)
+            if (!force && Stores != null) { return; }
+            UpdateStoreIdentifiers();
+            if (Stores != null)
             {
-                StoreCurrentBalance = Math.Max(StoreCurrentBalance, StoreInitialBalance);
-                var newStock = CreateStoreStock();
-                foreach (PurchasedItem oldStockItem in StoreStock)
+                // Remove any stores with no corresponding merchants at the location
+                foreach (var storeIdentifier in Stores.Keys)
                 {
-                    if (newStock.Find(i => i.ItemPrefab == oldStockItem.ItemPrefab) is PurchasedItem newStockItem)
+                    if (!StoreIdentifiers.Contains(storeIdentifier))
                     {
-                        if (oldStockItem.Quantity > newStockItem.Quantity)
-                        {
-                            newStockItem.Quantity = oldStockItem.Quantity;
-                        }
+                        Stores.Remove(storeIdentifier);
                     }
                 }
-                StoreStock = newStock;
-            }
-            else
-            {
-                StoreCurrentBalance = StoreInitialBalance;
-                StoreStock = CreateStoreStock();
-            }
-
-            GenerateRandomPriceModifier();
-            CreateStoreSpecials();
-        }
-
-        public void UpdateStore()
-        {
-            // In multiplayer, stores should be updated by the server and loaded from save data by clients
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
-
-            if (StoreStock == null)
-            {
-                CreateStore();
-                return;
-            }
-
-            if (StoreCurrentBalance < StoreInitialBalance)
-            {
-                StoreCurrentBalance = Math.Min(StoreCurrentBalance + (int)(StoreInitialBalance / 10.0f), StoreInitialBalance);
-            }
-
-            GenerateRandomPriceModifier();
-
-            var stock = StoreStock;
-            var stockToRemove = new List<PurchasedItem>();
-            foreach (PurchasedItem item in stock)
-            {
-                if (item.ItemPrefab.CanBeBoughtAtLocation(this, out PriceInfo priceInfo))
+                foreach (var identifier in StoreIdentifiers)
                 {
-                    item.Quantity += 1;
-                    if (priceInfo.MaxAvailableAmount > 0)
+                    if (Stores.TryGetValue(identifier, out var store))
                     {
-                        item.Quantity = Math.Min(item.Quantity, priceInfo.MaxAvailableAmount);
+                        store.Balance = Math.Max(store.Balance, StoreInitialBalance);
+                        var newStock = store.CreateStock();
+                        foreach (var oldStockItem in store.Stock)
+                        {
+                            if (newStock.Find(i => i.ItemPrefab == oldStockItem.ItemPrefab) is { } newStockItem)
+                            {
+                                if (oldStockItem.Quantity > newStockItem.Quantity)
+                                {
+                                    newStockItem.Quantity = oldStockItem.Quantity;
+                                }
+                            }
+                        }
+                        store.Stock.Clear();
+                        store.Stock.AddRange(newStock);
+                        store.GenerateSpecials();
+                        store.GeneratePriceModifier();
                     }
                     else
                     {
-                        item.Quantity = Math.Min(item.Quantity, CargoManager.MaxQuantity);
+                        AddNewStore(identifier);
                     }
                 }
-                else
-                {
-                    stockToRemove.Add(item);
-                }
             }
-            stockToRemove.ForEach(i => stock.Remove(i));
-            StoreStock = stock;
-
-            int extraSpecialSalesCount = GetExtraSpecialSalesCount();
-
-            if (++StepsSinceSpecialsUpdated >= SpecialsUpdateInterval || 
-                DailySpecials.Count() != DailySpecialsCount + extraSpecialSalesCount)
+            else
             {
-                CreateStoreSpecials();
+                foreach (var identifier in StoreIdentifiers)
+                {
+                    AddNewStore(identifier);
+                }
             }
         }
 
-        private int GetExtraSpecialSalesCount()
+        public void UpdateStores()
         {
-            var characters = GameSession.GetSessionCrewCharacters();
+            // In multiplayer, stores should be updated by the server and loaded from save data by clients
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+            if (Stores == null)
+            {
+                CreateStores();
+                return;
+            }
+            var storesToRemove = new HashSet<Identifier>();
+            foreach (var store in Stores.Values)
+            {
+                if (!StoreIdentifiers.Contains(store.Identifier))
+                {
+                    storesToRemove.Add(store.Identifier);
+                    continue;
+                }
+                if (store.Balance < StoreInitialBalance)
+                {
+                    store.Balance = Math.Min(store.Balance + (int)(StoreInitialBalance / 10.0f), StoreInitialBalance);
+                }
+                var stock = new List<PurchasedItem>(store.Stock);
+                var stockToRemove = new List<PurchasedItem>();
+                foreach (var item in stock)
+                {
+                    if (item.ItemPrefab.CanBeBoughtFrom(store, out PriceInfo priceInfo))
+                    {
+                        item.Quantity += 1;
+                        if (priceInfo.MaxAvailableAmount > 0)
+                        {
+                            item.Quantity = Math.Min(item.Quantity, priceInfo.MaxAvailableAmount);
+                        }
+                        else
+                        {
+                            item.Quantity = Math.Min(item.Quantity, CargoManager.MaxQuantity);
+                        }
+                    }
+                    else
+                    {
+                        stockToRemove.Add(item);
+                    }
+                }
+                stockToRemove.ForEach(i => stock.Remove(i));
+                store.Stock.Clear();
+                store.Stock.AddRange(stock);
+                int extraSpecialSalesCount = GetExtraSpecialSalesCount();
+                if (++StepsSinceSpecialsUpdated >= SpecialsUpdateInterval || store.DailySpecials.Count() != DailySpecialsCount + extraSpecialSalesCount)
+                {
+                    store.GenerateSpecials();
+                }
+                store.GeneratePriceModifier();
+            }
+            foreach (var identifier in storesToRemove)
+            {
+                Stores.Remove(identifier);
+            }
+            foreach (var identifier in StoreIdentifiers)
+            {
+                AddNewStore(identifier);
+            }
+        }
+
+        private void UpdateStoreIdentifiers()
+        {
+            StoreIdentifiers.Clear();
+            foreach (var outpostParam in OutpostGenerationParams.OutpostParams)
+            {
+                if (!outpostParam.AllowedLocationTypes.Contains(Type.Identifier)) { continue; }
+                foreach (var identifier in outpostParam.GetStoreIdentifiers())
+                {
+                    StoreIdentifiers.Add(identifier);
+                }
+            }
+        }
+
+        private void AddNewStore(Identifier identifier)
+        {
+            Stores ??= new Dictionary<Identifier, StoreInfo>();
+            if (Stores.ContainsKey(identifier)) { return; }
+            var newStore = new StoreInfo(this, identifier);
+            Stores.Add(identifier, newStore);
+        }
+
+        public void AddStock(Dictionary<Identifier, List<SoldItem>> items)
+        {
+            if (items == null) { return; }
+            foreach (var storeItems in items)
+            {
+                if (GetStore(storeItems.Key) is { } store)
+                {
+                    store.AddStock(storeItems.Value);
+                }
+            }
+        }
+
+        public void RemoveStock(Dictionary<Identifier, List<PurchasedItem>> items)
+        {
+            if (items == null) { return; }
+            foreach (var storeItems in items)
+            {
+                if (GetStore(storeItems.Key) is { } store)
+                {
+                    store.RemoveStock(storeItems.Value);
+                }
+            }
+        }
+
+        public float GetStoreReputationModifier(bool buying)
+        {
+            if (buying)
+            {
+                if (Reputation.Value > 0.0f)
+                {
+                    return MathHelper.Lerp(1.0f, 1.0f - StoreMaxReputationModifier, Reputation.Value / Reputation.MaxReputation);
+                }
+                else
+                {
+                    return MathHelper.Lerp(1.0f, 1.0f + StoreMaxReputationModifier, Reputation.Value / Reputation.MinReputation);
+                }
+            }
+            else
+            {
+                if (Reputation.Value > 0.0f)
+                {
+                    return MathHelper.Lerp(1.0f, 1.0f + StoreMaxReputationModifier, Reputation.Value / Reputation.MaxReputation);
+                }
+                else
+                {
+                    return MathHelper.Lerp(1.0f, 1.0f - StoreMaxReputationModifier, Reputation.Value / Reputation.MinReputation);
+                }
+            }
+        }
+
+        public int GetExtraSpecialSalesCount()
+        {
+            var characters = GameSession.GetSessionCrewCharacters(CharacterType.Both);
             if (!characters.Any()) { return 0; }
             return characters.Max(c => (int)c.GetStatValue(StatTypes.ExtraSpecialSalesCount));
-        }
-
-        private void GenerateRandomPriceModifier()
-        {
-            StorePriceModifier = Rand.Range(-StorePriceModifierRange, StorePriceModifierRange + 1);
-        }
-
-        private void CreateStoreSpecials()
-        {
-            DailySpecials.Clear();
-            var availableStock = new Dictionary<ItemPrefab, float>();
-            foreach (var stockItem in StoreStock)
-            {
-                if (stockItem.Quantity < 1) { continue; }
-                var weight = 1.0f;
-                var priceInfo = stockItem.ItemPrefab.GetPriceInfo(this);
-                if (priceInfo != null)
-                {
-                    if (!priceInfo.CanBeSpecial) { continue; }
-                    var baseQuantity = priceInfo.MinAvailableAmount > 0 ? priceInfo.MinAvailableAmount : PriceInfo.DefaultAmount;
-                    weight += (float)(stockItem.Quantity - baseQuantity) / baseQuantity;
-                    if (weight < 0.0f) { continue; }
-                }
-                availableStock.Add(stockItem.ItemPrefab, weight);
-            }
-
-            int extraSpecialSalesCount = GetExtraSpecialSalesCount();
-            for (int i = 0; i < DailySpecialsCount + extraSpecialSalesCount; i++)
-            {
-                if (availableStock.None()) { break; }
-                var item = ToolBox.SelectWeightedRandom(availableStock.Keys.ToList(), availableStock.Values.ToList(), Rand.RandSync.Unsynced);
-                if (item == null) { break; }
-                DailySpecials.Add(item);
-                availableStock.Remove(item);
-            }
-
-            RequestedGoods.Clear();
-            for (int i = 0; i < RequestedGoodsCount; i++)
-            {
-                var item = ItemPrefab.Prefabs.GetRandom(p =>
-                    p.CanBeSold && !RequestedGoods.Contains(p) &&
-                    p.GetPriceInfo(this) is PriceInfo pi && pi.CanBeSpecial);
-                if (item == null) { break; }
-                RequestedGoods.Add(item);
-            }
-
-            StepsSinceSpecialsUpdated = 0;
-        }
-
-        public void AddToStock(List<SoldItem> items)
-        {
-            if (StoreStock == null || items == null) { return; }
-#if DEBUG
-            if (items.Any()) { DebugConsole.NewMessage("Adding items to stock at " + Name, Color.Purple); }
-#endif
-            foreach (SoldItem item in items)
-            {
-                if (StoreStock.FirstOrDefault(i => i.ItemPrefab == item.ItemPrefab) is PurchasedItem stockItem)
-                {
-                    stockItem.Quantity += 1;
-#if DEBUG
-                    DebugConsole.NewMessage("Added 1x " + item.ItemPrefab.Name + ", new total: " + stockItem.Quantity, Color.Cyan);
-#endif
-                }
-#if DEBUG
-                else
-                {
-                    DebugConsole.NewMessage(item.ItemPrefab.Name + " not sold at location, can't add", Color.Cyan);
-                }
-#endif
-            }
-        }
-
-        public void RemoveFromStock(List<PurchasedItem> items)
-        {
-            if (StoreStock == null || items == null) { return; }
-#if DEBUG
-            if (items.Any()) { DebugConsole.NewMessage("Removing items from stock at " + Name, Color.Purple); }
-#endif
-            foreach (PurchasedItem item in items)
-            {
-                if (StoreStock.FirstOrDefault(i => i.ItemPrefab == item.ItemPrefab) is PurchasedItem stockItem)
-                {
-                    stockItem.Quantity = Math.Max(stockItem.Quantity - item.Quantity, 0);
-#if DEBUG
-                    DebugConsole.NewMessage("Removed " + item.Quantity + "x " + item.ItemPrefab.Name + ", new total: " + stockItem.Quantity, Color.Cyan);
-#endif
-                }
-            }
-        }
-
-        public StoreBalanceStatus GetStoreBalanceStatus(int balance)
-        {
-            StoreBalanceStatus nextStatus = StoreBalanceStatuses[0];
-            for (int i = 1; i < StoreBalanceStatuses.Count; i++)
-            {
-                var status = StoreBalanceStatuses[i];
-                if (status.PercentageOfInitialBalance < nextStatus.PercentageOfInitialBalance &&
-                    ((float)balance / StoreInitialBalance) < status.PercentageOfInitialBalance)
-                {
-                    nextStatus = status;
-                }
-            }
-            return nextStatus;
         }
 
         public void Discover(bool checkTalents = true)
@@ -1118,7 +1262,7 @@ namespace Barotrauma
             Discovered = true;
             if (checkTalents)
             {
-                GameSession.GetSessionCrewCharacters().ForEach(c => c.CheckTalents(AbilityEffectType.OnLocationDiscovered, new AbilityLocation(this)));
+                GameSession.GetSessionCrewCharacters(CharacterType.Both).ForEach(c => c.CheckTalents(AbilityEffectType.OnLocationDiscovered, new AbilityLocation(this)));
             }
         }
 
@@ -1129,7 +1273,7 @@ namespace Barotrauma
                 ChangeType(OriginalType);
                 PendingLocationTypeChange = null;
             }
-            CreateStore(force: true);
+            CreateStores(force: true);
             ClearMissions();
             LevelData?.EventHistory?.Clear();
             UnlockInitialMissions();
@@ -1143,13 +1287,15 @@ namespace Barotrauma
                 new XAttribute("originaltype", (Type ?? OriginalType).Identifier),
                 new XAttribute("basename", BaseName),
                 new XAttribute("name", Name),
+                new XAttribute("biome", Biome?.Identifier.Value ?? string.Empty),
                 new XAttribute("discovered", Discovered),
                 new XAttribute("position", XMLExtensions.Vector2ToString(MapPosition)),
                 new XAttribute("pricemultiplier", PriceMultiplier),
                 new XAttribute("isgatebetweenbiomes", IsGateBetweenBiomes),
                 new XAttribute("mechanicalpricemultipler", MechanicalPriceMultiplier),
                 new XAttribute("timesincelasttypechange", TimeSinceLastTypeChange),
-                new XAttribute(nameof(TurnsInRadiation).ToLower(), TurnsInRadiation));
+                new XAttribute(nameof(TurnsInRadiation).ToLower(), TurnsInRadiation),
+                new XAttribute("stepssincespecialsupdated", StepsSinceSpecialsUpdated));
             LevelData.Save(locationElement);
 
             for (int i = 0; i < Type.CanChangeTo.Count; i++)
@@ -1202,44 +1348,43 @@ namespace Barotrauma
                 locationElement.Add(new XAttribute("killedcharacters", string.Join(',', killedCharacterIdentifiers)));
             }
 
-            if (StoreStock != null)
+            if (Stores != null)
             {
-                var storeElement = new XElement("store",
-                    new XAttribute("balance", StoreCurrentBalance),
-                    new XAttribute("pricemodifier", StorePriceModifier),
-                    new XAttribute("stepssincespecialsupdated", StepsSinceSpecialsUpdated));
-
-                foreach (PurchasedItem item in StoreStock)
+                foreach (var store in Stores.Values)
                 {
-                    if (item?.ItemPrefab == null) { continue; }
-                    storeElement.Add(new XElement("stock",
-                        new XAttribute("id", item.ItemPrefab.Identifier),
-                        new XAttribute("qty", item.Quantity)));
-                }
-
-                if (DailySpecials.Any())
-                {
-                    var dailySpecialElement = new XElement("dailyspecials");
-                    foreach (var item in DailySpecials)
+                    var storeElement = new XElement("store",
+                        new XAttribute("identifier", store.Identifier.Value),
+                        new XAttribute("balance", store.Balance),
+                        new XAttribute("pricemodifier", store.PriceModifier));
+                    foreach (PurchasedItem item in store.Stock)
                     {
-                        dailySpecialElement.Add(new XElement("item",
-                            new XAttribute("id", item.Identifier)));
+                        if (item?.ItemPrefab == null) { continue; }
+                        storeElement.Add(new XElement("stock",
+                            new XAttribute("id", item.ItemPrefab.Identifier),
+                            new XAttribute("qty", item.Quantity)));
                     }
-                    storeElement.Add(dailySpecialElement);
-                }
-
-                if (RequestedGoods.Any())
-                {
-                    var requestedGoodsElement = new XElement("requestedgoods");
-                    foreach (var item in RequestedGoods)
+                    if (store.DailySpecials.Any())
                     {
-                        requestedGoodsElement.Add(new XElement("item",
-                            new XAttribute("id", item.Identifier)));
+                        var dailySpecialElement = new XElement("dailyspecials");
+                        foreach (var item in store.DailySpecials)
+                        {
+                            dailySpecialElement.Add(new XElement("item",
+                                new XAttribute("id", item.Identifier)));
+                        }
+                        storeElement.Add(dailySpecialElement);
                     }
-                    storeElement.Add(requestedGoodsElement);
+                    if (store.RequestedGoods.Any())
+                    {
+                        var requestedGoodsElement = new XElement("requestedgoods");
+                        foreach (var item in store.RequestedGoods)
+                        {
+                            requestedGoodsElement.Add(new XElement("item",
+                                new XAttribute("id", item.Identifier)));
+                        }
+                        storeElement.Add(requestedGoodsElement);
+                    }
+                    locationElement.Add(storeElement);
                 }
-
-                locationElement.Add(storeElement);
             }
 
             if (AvailableMissions is List<Mission> missions && missions.Any())

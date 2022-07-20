@@ -9,14 +9,14 @@ namespace Barotrauma.Items.Components
         private RoundSound powerOnSound;
         private bool powerOnSoundPlayed;
         
-        partial void InitProjectSpecific(XElement element)
+        partial void InitProjectSpecific(ContentXElement element)
         {
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "poweronsound":
-                        powerOnSound = Submarine.LoadRoundSound(subElement, false);
+                        powerOnSound = RoundSound.Load(subElement, false);
                         break;
                 }
             }

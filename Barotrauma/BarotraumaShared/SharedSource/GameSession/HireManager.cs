@@ -29,8 +29,8 @@ namespace Barotrauma
                 JobPrefab job = location.Type.GetRandomHireable();
                 if (job == null) { return; }
 
-                var variant = Rand.Range(0, job.Variants, Rand.RandSync.Server);
-                AvailableCharacters.Add(new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: job, variant: variant));
+                var variant = Rand.Range(0, job.Variants, Rand.RandSync.ServerAndClient);
+                AvailableCharacters.Add(new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: job, variant: variant));
             }
         }
 

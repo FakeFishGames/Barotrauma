@@ -40,8 +40,6 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private LightComponent lightComponent;
-
         public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
         {
             for (var i = 0; i < GrowableSeeds.Length; i++)

@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using System;
 
 namespace Barotrauma.Networking
@@ -9,14 +10,15 @@ namespace Barotrauma.Networking
         {
             msg.Write((byte)ClientNetObject.CHAT_MESSAGE);
             msg.Write(NetStateID);
-            msg.Write((byte)Type);
+            msg.WriteRangedInteger((int)Type, 0, Enum.GetValues(typeof(ChatMessageType)).Length - 1);
+            msg.WriteRangedInteger((int)ChatMode, 0, Enum.GetValues(typeof(ChatMode)).Length - 1);
             msg.Write(Text);
         }
 
         public static void ClientRead(IReadMessage msg)
         {
             UInt16 id = msg.ReadUInt16();
-            ChatMessageType type = (ChatMessageType)msg.ReadByte();
+            ChatMessageType type = (ChatMessageType)msg.ReadRangedInteger(0, Enum.GetValues(typeof(ChatMessageType)).Length - 1);
             PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None;
             string txt = "";
             string styleSetting = string.Empty;
@@ -61,25 +63,27 @@ namespace Barotrauma.Networking
                     break;
                 case ChatMessageType.Order:
                     var orderMessageInfo = OrderChatMessage.ReadOrder(msg);
-                    if (orderMessageInfo.OrderIndex < 0 || orderMessageInfo.OrderIndex >= Order.PrefabList.Count)
+                    if (orderMessageInfo.OrderIdentifier == Identifier.Empty)
                     {
                         DebugConsole.ThrowError("Invalid order message - order index out of bounds.");
                         if (NetIdUtils.IdMoreRecent(id, LastID)) { LastID = id; }
                         return;
                     }
-                    var orderPrefab = orderMessageInfo.OrderPrefab ?? Order.PrefabList[orderMessageInfo.OrderIndex];
-                    string orderOption = orderMessageInfo.OrderOption;
-                    orderOption ??= orderMessageInfo.OrderOptionIndex.HasValue && orderMessageInfo.OrderOptionIndex >= 0 && orderMessageInfo.OrderOptionIndex < orderPrefab.Options.Length ?
-                        orderPrefab.Options[orderMessageInfo.OrderOptionIndex.Value] : "";
+                    var orderPrefab = orderMessageInfo.OrderPrefab ?? OrderPrefab.Prefabs[orderMessageInfo.OrderIdentifier];
+                    Identifier orderOption = orderMessageInfo.OrderOption;
+                    orderOption = orderOption.IfEmpty(
+                        orderMessageInfo.OrderOptionIndex.HasValue && orderMessageInfo.OrderOptionIndex >= 0 && orderMessageInfo.OrderOptionIndex < orderPrefab.Options.Length
+                            ? orderPrefab.Options[orderMessageInfo.OrderOptionIndex.Value]
+                            : Identifier.Empty);
                     string targetRoom;
 
                     if (orderMessageInfo.TargetEntity is Hull targetHull)
                     {
-                        targetRoom = targetHull.DisplayName;
+                        targetRoom = targetHull.DisplayName.Value;
                     }
                     else
                     {
-                        targetRoom = senderCharacter?.CurrentHull?.DisplayName;
+                        targetRoom = senderCharacter?.CurrentHull?.DisplayName?.Value;
                     }
 
                     txt = orderPrefab.GetChatMessage(orderMessageInfo.TargetCharacter?.Name, targetRoom,
@@ -93,18 +97,19 @@ namespace Barotrauma.Networking
                         switch (orderMessageInfo.TargetType)
                         {
                             case Order.OrderTargetType.Entity:
-                                order = new Order(orderPrefab, orderMessageInfo.TargetEntity, orderPrefab.GetTargetItemComponent(orderMessageInfo.TargetEntity as Item), orderGiver: senderCharacter);
+                                order = new Order(orderPrefab, orderOption, orderMessageInfo.TargetEntity, orderPrefab.GetTargetItemComponent(orderMessageInfo.TargetEntity as Item), orderGiver: senderCharacter);
                                 break;
                             case Order.OrderTargetType.Position:
-                                order = new Order(orderPrefab, orderMessageInfo.TargetPosition, orderGiver: senderCharacter);
+                                order = new Order(orderPrefab, orderOption, orderMessageInfo.TargetPosition, orderGiver: senderCharacter);
                                 break;
                             case Order.OrderTargetType.WallSection:
-                                order = new Order(orderPrefab, orderMessageInfo.TargetEntity as Structure, orderMessageInfo.WallSectionIndex, orderGiver: senderCharacter);
+                                order = new Order(orderPrefab, orderOption, orderMessageInfo.TargetEntity as Structure, orderMessageInfo.WallSectionIndex, orderGiver: senderCharacter);
                                 break;
                         }
 
                         if (order != null)
                         {
+                            order = order.WithManualPriority(orderMessageInfo.Priority);
                             if (order.TargetAllCharacters)
                             {
                                 var fadeOutTime = !orderPrefab.IsIgnoreOrder ? (float?)orderPrefab.FadeOutTime : null;
@@ -112,24 +117,40 @@ namespace Barotrauma.Networking
                             }
                             else
                             {
-                                orderMessageInfo.TargetCharacter?.SetOrder(order, orderOption, orderMessageInfo.Priority, senderCharacter);
+                                orderMessageInfo.TargetCharacter?.SetOrder(order, orderMessageInfo.IsNewOrder);
                             }
                         }
                     }
 
                     if (NetIdUtils.IdMoreRecent(id, LastID))
                     {
+                        Order order = null;
+                        if (orderMessageInfo.TargetPosition != null)
+                        {
+                            order = new Order(orderPrefab, orderOption, orderMessageInfo.TargetPosition, orderGiver: senderCharacter)
+                                .WithManualPriority(orderMessageInfo.Priority);
+                        }
+                        else if (orderMessageInfo.WallSectionIndex != null)
+                        {
+                            order = new Order(orderPrefab, orderOption, orderMessageInfo.TargetEntity as Structure, orderMessageInfo.WallSectionIndex, orderGiver: senderCharacter)
+                                .WithManualPriority(orderMessageInfo.Priority);
+                        }
+                        else
+                        {
+                            order = new Order(orderPrefab, orderOption, orderMessageInfo.TargetEntity, orderPrefab.GetTargetItemComponent(orderMessageInfo.TargetEntity as Item), orderGiver: senderCharacter)
+                                .WithManualPriority(orderMessageInfo.Priority);
+                        }
                         GameMain.Client.AddChatMessage(
-                            new OrderChatMessage(orderPrefab, orderOption, orderMessageInfo.Priority, txt, orderMessageInfo.TargetPosition ?? orderMessageInfo.TargetEntity as ISpatialEntity, orderMessageInfo.TargetCharacter, senderCharacter));
+                            new OrderChatMessage(order, txt, orderMessageInfo.TargetCharacter, senderCharacter));
                         LastID = id;
                     }
                     return;
                 case ChatMessageType.ServerMessageBox:
-                    txt = TextManager.GetServerMessage(txt);
+                    txt = TextManager.GetServerMessage(txt).Value;
                     break;
                 case ChatMessageType.ServerMessageBoxInGame:
                     styleSetting = msg.ReadString();
-                    txt = TextManager.GetServerMessage(txt);
+                    txt = TextManager.GetServerMessage(txt).Value;
                     break;
             }
 
@@ -148,7 +169,7 @@ namespace Barotrauma.Networking
                         break;
                     case ChatMessageType.ServerMessageBoxInGame:
                         {
-                            GUIMessageBox messageBox = new GUIMessageBox("", txt, new string[0], type: GUIMessageBox.Type.InGame, iconStyle: styleSetting);
+                            GUIMessageBox messageBox = new GUIMessageBox("", txt, Array.Empty<LocalizedString>(), type: GUIMessageBox.Type.InGame, iconStyle: styleSetting);
                             if (textColor != null) { messageBox.Text.TextColor = textColor.Value; }
                         }
                         break;
@@ -164,6 +185,11 @@ namespace Barotrauma.Networking
                         break;
                     default:
                         GameMain.Client.AddChatMessage(txt, type, senderName, senderClient, senderCharacter, changeType, textColor: textColor);
+                        if (type == ChatMessageType.Radio && CanUseRadio(senderCharacter, out WifiComponent radio))
+                        {
+                            Signal s = new Signal(txt, sender: senderCharacter, source: radio.Item);
+                            radio.TransmitSignal(s, sentFromChat: true);
+                        }
                         break;
                 }
                 LastID = id;

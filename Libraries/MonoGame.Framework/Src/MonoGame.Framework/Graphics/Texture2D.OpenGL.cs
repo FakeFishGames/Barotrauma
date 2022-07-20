@@ -35,6 +35,7 @@ namespace Microsoft.Xna.Framework.Graphics
             format.GetGLFormat(GraphicsDevice, out glInternalFormat, out glFormat, out glType);
             Threading.BlockOnUIThread(() =>
             {
+                var prev = GraphicsExtensions.GetBoundTexture2D();
                 GenerateGLTextureIfRequired();
                 int w = width;
                 int h = height;
@@ -80,6 +81,8 @@ namespace Microsoft.Xna.Framework.Graphics
                         h = h / 2;
                     ++level;
                 }
+
+                GL.BindTexture(TextureTarget.Texture2D, prev);
             });
         }
 

@@ -61,29 +61,29 @@ namespace Barotrauma.Networking
             GUI.DrawRectangle(spriteBatch, rect, Color.Black * 0.4f, true);
 
             graphs[(int)NetStatType.ReceivedBytes].Draw(spriteBatch, rect, color: Color.Cyan);
-            graphs[(int)NetStatType.SentBytes].Draw(spriteBatch, rect, null, color: GUI.Style.Orange);
+            graphs[(int)NetStatType.SentBytes].Draw(spriteBatch, rect, null, color: GUIStyle.Orange);
             if (graphs[(int)NetStatType.ResentMessages].Average() > 0)
             {
-                graphs[(int)NetStatType.ResentMessages].Draw(spriteBatch, rect, color: GUI.Style.Red);
-                GUI.SmallFont.DrawString(spriteBatch, "Peak resent: " + graphs[(int)NetStatType.ResentMessages].LargestValue() + " messages/s",
-                    new Vector2(rect.Right + 10, rect.Y + 50), GUI.Style.Red);
+                graphs[(int)NetStatType.ResentMessages].Draw(spriteBatch, rect, color: GUIStyle.Red);
+                GUIStyle.SmallFont.DrawString(spriteBatch, "Peak resent: " + graphs[(int)NetStatType.ResentMessages].LargestValue() + " messages/s",
+                    new Vector2(rect.Right + 10, rect.Y + 50), GUIStyle.Red);
             }
 
-            GUI.SmallFont.DrawString(spriteBatch,
+            GUIStyle.SmallFont.DrawString(spriteBatch,
                 "Peak received: " + MathUtils.GetBytesReadable((int)graphs[(int)NetStatType.ReceivedBytes].LargestValue()) + "/s      " +
                 "Avg received: " + MathUtils.GetBytesReadable((int)graphs[(int)NetStatType.ReceivedBytes].Average()) + "/s",
                 new Vector2(rect.Right + 10, rect.Y + 10), Color.Cyan);
 
-            GUI.SmallFont.DrawString(spriteBatch, "Peak sent: " + MathUtils.GetBytesReadable((int)graphs[(int)NetStatType.SentBytes].LargestValue()) + "/s      " +
+            GUIStyle.SmallFont.DrawString(spriteBatch, "Peak sent: " + MathUtils.GetBytesReadable((int)graphs[(int)NetStatType.SentBytes].LargestValue()) + "/s      " +
                 "Avg sent: " + MathUtils.GetBytesReadable((int)graphs[(int)NetStatType.SentBytes].Average()) + "/s",
-                new Vector2(rect.Right + 10, rect.Y + 30), GUI.Style.Orange);
+                new Vector2(rect.Right + 10, rect.Y + 30), GUIStyle.Orange);
 #if DEBUG
             /*int y = 10;
 
             foreach (KeyValuePair<string, long> msgBytesSent in server.messageCount.OrderBy(key => -key.Value))
             {
-                GUI.SmallFont.DrawString(spriteBatch, msgBytesSent.Key + ": " + MathUtils.GetBytesReadable(msgBytesSent.Value),
-                    new Vector2(rect.Right - 200, rect.Y + y), GUI.Style.Red);
+                GUIStyle.SmallFont.DrawString(spriteBatch, msgBytesSent.Key + ": " + MathUtils.GetBytesReadable(msgBytesSent.Value),
+                    new Vector2(rect.Right - 200, rect.Y + y), GUIStyle.Red);
 
                 y += 15;
             }

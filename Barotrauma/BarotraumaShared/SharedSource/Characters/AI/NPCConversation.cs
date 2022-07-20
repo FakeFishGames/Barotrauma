@@ -3,182 +3,88 @@ using System.Collections.Generic;
 using Barotrauma.IO;
 using System.Linq;
 using System.Xml.Linq;
+using System.Collections.Immutable;
 
 namespace Barotrauma
 {
+    class NPCConversationCollection : Prefab
+    {
+        public static readonly Dictionary<LanguageIdentifier, PrefabCollection<NPCConversationCollection>> Collections = new Dictionary<LanguageIdentifier, PrefabCollection<NPCConversationCollection>>();
+
+        public readonly LanguageIdentifier Language;
+
+        public readonly List<NPCConversation> Conversations;
+        public readonly Dictionary<Identifier, NPCPersonalityTrait> PersonalityTraits;
+
+        public NPCConversationCollection(NPCConversationsFile file, ContentXElement element) : base(file, element.GetAttributeIdentifier("identifier", ""))
+        {
+            Language = element.GetAttributeIdentifier("language", "English").ToLanguageIdentifier();
+            Conversations = new List<NPCConversation>();
+            PersonalityTraits = new Dictionary<Identifier, NPCPersonalityTrait>();
+            foreach (var subElement in element.Elements())
+            {
+                Identifier elemName = new Identifier(subElement.Name.LocalName);
+                if (elemName == "Conversation")
+                {
+                    Conversations.Add(new NPCConversation(subElement));
+                }
+                else if (elemName == "PersonalityTrait")
+                {
+                    var personalityTrait = new NPCPersonalityTrait(subElement);
+                    PersonalityTraits.Add(personalityTrait.Name, personalityTrait);
+                }
+            }
+        }
+
+        public override void Dispose() { }
+    }
+
     class NPCConversation
     {
         const int MaxPreviousConversations = 20;
 
-        private class ConversationCollection
-        {
-            public readonly string Identifier;
-
-            public readonly Dictionary<string, List<NPCConversation>> Conversations;
-
-            public ConversationCollection(string identifier)
-            {
-                Identifier = identifier;
-                Conversations = new Dictionary<string, List<NPCConversation>>();
-            }
-
-            public void Add(string language, string filePath, XElement subElement)
-            {
-                if (!Conversations.ContainsKey(language))
-                {
-                    Conversations.Add(language, new List<NPCConversation>());
-                }
-                Conversations[language].Add(new NPCConversation(subElement, filePath));
-            }
-
-            public void RemoveByFile(string filePath)
-            {
-                List<string> keysToRemove = new List<string>();
-                foreach (var kpv in Conversations)
-                {
-                    kpv.Value.RemoveAll(c => c.FilePath == filePath);
-                    if (kpv.Value.Count == 0) { keysToRemove.Add(kpv.Key); }
-                }
-
-                foreach (var key in keysToRemove)
-                {
-                    Conversations.Remove(key);
-                }
-            }
-        }
-
-        private static Dictionary<string, ConversationCollection> allConversations = new Dictionary<string, ConversationCollection>();
-
-        public readonly string FilePath;
-
         public readonly string Line;
 
-        public readonly List<JobPrefab> AllowedJobs;
+        public readonly ImmutableHashSet<Identifier> AllowedJobs;
 
-        public readonly List<string> Flags;
+        public readonly ImmutableHashSet<Identifier> Flags;
 
         //The line can only be selected when eventmanager intensity is between these values
         //null = no restriction
-        public float? maxIntensity, minIntensity;
+        public readonly float? maxIntensity, minIntensity;
 
-        public readonly List<NPCConversation> Responses;
+        public readonly ImmutableArray<NPCConversation> Responses;
         private readonly int speakerIndex;
-        private readonly List<string> allowedSpeakerTags;
+        private readonly ImmutableHashSet<Identifier> allowedSpeakerTags;
         private readonly bool requireNextLine;
-        // used primarily for team1 characters interacting with escorted personnel (TODO: not used anywhere)
-        private readonly bool requireSight;
 
-        public static void LoadAll(IEnumerable<ContentFile> files)
+        public NPCConversation(XElement element)
         {
-            foreach (var file in files)
-            {
-                if (Path.GetExtension(file.Path) == ".csv") continue; // .csv files are not supported
-                LoadFromFile(file);
-            }
-        }
-
-        public static void LoadFromFile(ContentFile file)
-        {
-            XDocument doc = XMLExtensions.TryLoadXml(file.Path);
-            if (doc == null) { return; }
-
-            string language = doc.Root.GetAttributeString("Language", "English");
-            string identifier = doc.Root.GetAttributeString("identifier", null);
-            if (string.IsNullOrWhiteSpace(identifier))
-            {
-                DebugConsole.ThrowError($"Conversations file '{file.Path}' has no identifier!");
-                return;
-            }
-
-            foreach (XElement subElement in doc.Root.Elements())
-            {
-                switch (subElement.Name.ToString().ToLowerInvariant())
-                {
-                    case "conversation":
-                        if (!allConversations.ContainsKey(identifier))
-                        {
-                            allConversations.Add(identifier, new ConversationCollection(identifier));
-                        }
-                        allConversations[identifier].Add(language, file.Path, subElement);
-                        break;
-                    case "personalitytrait":
-                        new NPCPersonalityTrait(subElement, file.Path);
-                        break;
-                }
-            }
-        }
-
-        public static void RemoveByFile(string filePath)
-        {
-            List<string> keysToRemove = new List<string>();
-            foreach (var kpv in allConversations)
-            {
-                kpv.Value.RemoveByFile(filePath);
-                if (!kpv.Value.Conversations.Any())
-                {
-                    keysToRemove.Add(kpv.Key);
-                }
-            }
-
-            foreach (string key in keysToRemove)
-            {
-                allConversations.Remove(key);
-            }
-
-            NPCPersonalityTrait.List.RemoveAll(npt => npt.FilePath == filePath);
-        }
-
-        public NPCConversation(XElement element, string filePath)
-        {
-            FilePath = filePath;
-
             Line = element.GetAttributeString("line", "");
 
             speakerIndex = element.GetAttributeInt("speaker", 0);
 
-            AllowedJobs = new List<JobPrefab>();
-            string allowedJobsStr = element.GetAttributeString("allowedjobs", "");
-            foreach (string allowedJobIdentifier in allowedJobsStr.Split(','))
-            {
-                string key = allowedJobIdentifier.ToLowerInvariant();
-                if (JobPrefab.Prefabs.ContainsKey(key))
-                {
-                    AllowedJobs.Add(JobPrefab.Prefabs[key]);
-                }
-            }
-
-            Flags = new List<string>(element.GetAttributeStringArray("flags", new string[0]));
-
-            allowedSpeakerTags = new List<string>();
-            string allowedSpeakerTagsStr = element.GetAttributeString("speakertags", "");
-            foreach (string tag in allowedSpeakerTagsStr.Split(','))
-            {
-                if (string.IsNullOrEmpty(tag)) continue;
-                allowedSpeakerTags.Add(tag.Trim().ToLowerInvariant());                
-            }
+            AllowedJobs = element.GetAttributeIdentifierArray("allowedjobs", Array.Empty<Identifier>()).ToImmutableHashSet();
+            Flags = element.GetAttributeIdentifierArray("flags", Array.Empty<Identifier>()).ToImmutableHashSet();
+            allowedSpeakerTags =  element.GetAttributeIdentifierArray("speakertags", Array.Empty<Identifier>()).ToImmutableHashSet();
 
             if (element.Attribute("minintensity") != null) minIntensity = element.GetAttributeFloat("minintensity", 0.0f);
             if (element.Attribute("maxintensity") != null) maxIntensity = element.GetAttributeFloat("maxintensity", 1.0f);
 
-            Responses = new List<NPCConversation>();
-            foreach (XElement subElement in element.Elements())
-            {
-                Responses.Add(new NPCConversation(subElement, filePath));
-            }
+            Responses = element.Elements().Select(s => new NPCConversation(s)).ToImmutableArray();
             requireNextLine = element.GetAttributeBool("requirenextline", false);
-            requireSight = element.GetAttributeBool("requiresight", false);
         }
 
-        private static List<string> GetCurrentFlags(Character speaker)
+        private static List<Identifier> GetCurrentFlags(Character speaker)
         {
-            var currentFlags = new List<string>();
-            if (Submarine.MainSub != null && Submarine.MainSub.AtDamageDepth) { currentFlags.Add("SubmarineDeep"); }
+            var currentFlags = new List<Identifier>();
+            if (Submarine.MainSub != null && Submarine.MainSub.AtDamageDepth) { currentFlags.Add("SubmarineDeep".ToIdentifier()); }
 
             if (GameMain.GameSession != null && Level.Loaded != null)
             {
                 if (Level.Loaded.Type == LevelData.LevelType.LocationConnection)
                 {
-                    if (Timing.TotalTime < GameMain.GameSession.RoundStartTime + 30.0f) { currentFlags.Add("Initial"); }
+                    if (Timing.TotalTime < GameMain.GameSession.RoundStartTime + 30.0f) { currentFlags.Add("Initial".ToIdentifier()); }
                 }
                 else if (Level.Loaded.Type == LevelData.LevelType.Outpost)
                 {
@@ -187,30 +93,30 @@ namespace Barotrauma
                         (speaker.TeamID == CharacterTeamType.FriendlyNPC || speaker.TeamID == CharacterTeamType.None) && 
                         Character.CharacterList.Any(c => c.TeamID != speaker.TeamID && c.CurrentHull == speaker.CurrentHull)) 
                     {
-                        currentFlags.Add("EnterOutpost"); 
+                        currentFlags.Add("EnterOutpost".ToIdentifier()); 
                     }
                 }
                 if (GameMain.GameSession.EventManager.CurrentIntensity <= 0.2f)
                 {
-                    currentFlags.Add("Casual");
+                    currentFlags.Add("Casual".ToIdentifier());
                 }
 
                 if (GameMain.GameSession.IsCurrentLocationRadiated())
                 {
-                    currentFlags.Add("InRadiation");
+                    currentFlags.Add("InRadiation".ToIdentifier());
                 }
             }
 
             if (speaker != null)
             {
-                if (speaker.AnimController.InWater) { currentFlags.Add("Underwater"); }
-                currentFlags.Add(speaker.CurrentHull == null ? "Outside" : "Inside");
+                if (speaker.AnimController.InWater) { currentFlags.Add("Underwater".ToIdentifier()); }
+                currentFlags.Add((speaker.CurrentHull == null ? "Outside" : "Inside").ToIdentifier());
 
                 if (Character.Controlled != null)
                 {
                     if (Character.Controlled.CharacterHealth.GetAffliction("psychosis") != null)
                     {
-                        currentFlags.Add(speaker != Character.Controlled ? "Psychosis" : "PsychosisSelf");
+                        currentFlags.Add((speaker != Character.Controlled ? "Psychosis" : "PsychosisSelf").ToIdentifier());
                     }
                 }
 
@@ -218,7 +124,7 @@ namespace Barotrauma
                 foreach (Affliction affliction in afflictions)
                 {
                     var currentEffect = affliction.GetActiveEffect();
-                    if (currentEffect != null && !string.IsNullOrEmpty(currentEffect.DialogFlag) && !currentFlags.Contains(currentEffect.DialogFlag))
+                    if (currentEffect != null && !string.IsNullOrEmpty(currentEffect.DialogFlag.Value) && !currentFlags.Contains(currentEffect.DialogFlag))
                     {
                         currentFlags.Add(currentEffect.DialogFlag);
                     }
@@ -226,51 +132,66 @@ namespace Barotrauma
 
                 if (speaker.TeamID == CharacterTeamType.FriendlyNPC && speaker.Submarine != null && speaker.Submarine.Info.IsOutpost)
                 {
-                    currentFlags.Add("OutpostNPC");
+                    currentFlags.Add("OutpostNPC".ToIdentifier());
                 }
                 if (speaker.CampaignInteractionType != CampaignMode.InteractionType.None)
                 {
-                    currentFlags.Add("CampaignNPC." + speaker.CampaignInteractionType);
+                    currentFlags.Add($"CampaignNPC.{speaker.CampaignInteractionType}".ToIdentifier());
                 }
                 if (GameMain.GameSession?.GameMode is CampaignMode campaignMode && 
-                    (campaignMode.Map?.CurrentLocation?.Type?.Identifier.Equals("abandoned", StringComparison.OrdinalIgnoreCase) ?? false))
+                    (campaignMode.Map?.CurrentLocation?.Type?.Identifier == "abandoned"))
                 {
                     if (speaker.TeamID == CharacterTeamType.None)
                     {
-                        currentFlags.Add("Bandit");
+                        currentFlags.Add("Bandit".ToIdentifier());
                     }
                     else if (speaker.TeamID == CharacterTeamType.FriendlyNPC)
                     {
-                        currentFlags.Add("Hostage");
+                        currentFlags.Add("Hostage".ToIdentifier());
                     }
                 }
                 if (speaker.IsEscorted)
                 {
-                    currentFlags.Add("escort");
+                    currentFlags.Add("escort".ToIdentifier());
                 }
             }
 
             return currentFlags;
         }
 
-        private static List<NPCConversation> previousConversations = new List<NPCConversation>();
+        private static readonly List<NPCConversation> previousConversations = new List<NPCConversation>();
         
-        public static List<Pair<Character, string>> CreateRandom(List<Character> availableSpeakers)
+        public static List<(Character speaker, string line)> CreateRandom(List<Character> availableSpeakers)
         {
             Dictionary<int, Character> assignedSpeakers = new Dictionary<int, Character>();
-            List<Pair<Character, string>> lines = new List<Pair<Character, string>>();
+            List<(Character speaker, string line)> lines = new List<(Character speaker, string line)>();
+
+            var language = GameSettings.CurrentConfig.Language;
+            if (language != TextManager.DefaultLanguage && !NPCConversationCollection.Collections.ContainsKey(language))
+            {
+                DebugConsole.AddWarning($"Could not find NPC conversations for the language \"{language}\". Using \"{TextManager.DefaultLanguage}\" instead..");
+                language = TextManager.DefaultLanguage;
+            }
 
             CreateConversation(availableSpeakers, assignedSpeakers, null, lines,
-                availableConversations: allConversations.Values.SelectMany(cc => cc.Conversations.Where(kpv => kpv.Key == TextManager.Language).SelectMany(kpv => kpv.Value)).ToList());
+                availableConversations: NPCConversationCollection.Collections[language].SelectMany(cc => cc.Conversations).ToList());
             return lines;
         }
 
-        public static List<Pair<Character, string>> CreateRandom(List<Character> availableSpeakers, IEnumerable<string> requiredFlags)
+        public static List<(Character speaker, string line)> CreateRandom(List<Character> availableSpeakers, IEnumerable<Identifier> requiredFlags)
         {
             Dictionary<int, Character> assignedSpeakers = new Dictionary<int, Character>();
-            List<Pair<Character, string>> lines = new List<Pair<Character, string>>();
-            var availableConversations = allConversations.Values.SelectMany(cc => cc.Conversations.SelectMany(
-                    kpv => kpv.Value.Where(conversation => kpv.Key == TextManager.Language && requiredFlags.All(f => conversation.Flags.Contains(f))))).ToList();
+            List<(Character speaker, string line)> lines = new List<(Character speaker, string line)>();
+
+            var language = GameSettings.CurrentConfig.Language;
+            if (language != TextManager.DefaultLanguage && !NPCConversationCollection.Collections.ContainsKey(language))
+            {
+                DebugConsole.AddWarning($"Could not find NPC conversations for the language \"{language}\". Using \"{TextManager.DefaultLanguage}\" instead..");
+                language = TextManager.DefaultLanguage;
+            }
+
+            var availableConversations = NPCConversationCollection.Collections[language]
+                .SelectMany(cc => cc.Conversations.Where(c => requiredFlags.All(f => c.Flags.Contains(f)))).ToList();
             if (availableConversations.Count > 0)
             {
                 CreateConversation(availableSpeakers, assignedSpeakers, null, lines, availableConversations: availableConversations, ignoreFlags: false);
@@ -282,11 +203,11 @@ namespace Barotrauma
             List<Character> availableSpeakers, 
             Dictionary<int, Character> assignedSpeakers, 
             NPCConversation baseConversation, 
-            List<Pair<Character, string>> lineList,
-            List<NPCConversation> availableConversations,
+            IList<(Character speaker, string line)> lineList,
+            IList<NPCConversation> availableConversations,
             bool ignoreFlags = false)
         {
-            List<NPCConversation> conversations = baseConversation == null ? availableConversations : baseConversation.Responses;
+            IList<NPCConversation> conversations = baseConversation == null ? availableConversations : baseConversation.Responses;
             if (conversations.Count == 0) { return; }
 
             int conversationIndex = Rand.Int(conversations.Count);
@@ -362,7 +283,7 @@ namespace Barotrauma
                 previousConversations.Insert(0, selectedConversation);
                 if (previousConversations.Count > MaxPreviousConversations) previousConversations.RemoveAt(MaxPreviousConversations);
             }
-            lineList.Add(new Pair<Character, string>(speaker, selectedConversation.Line));
+            lineList.Add((speaker, selectedConversation.Line));
             CreateConversation(availableSpeakers, assignedSpeakers, selectedConversation, lineList, availableConversations);
         }
 
@@ -390,7 +311,8 @@ namespace Barotrauma
             //check if the character has an appropriate job to say the line
             if ((potentialSpeaker.Info?.Job != null && potentialSpeaker.Info.Job.Prefab.OnlyJobSpecificDialog) || selectedConversation.AllowedJobs.Count > 0)
             {
-                if (!selectedConversation.AllowedJobs.Contains(potentialSpeaker.Info?.Job.Prefab)) { return false; }
+                if (!(potentialSpeaker.Info?.Job?.Prefab is { } speakerJobPrefab)
+                    || !selectedConversation.AllowedJobs.Contains(speakerJobPrefab.Identifier)) { return false; }
             }
 
             //check if the character has all required flags to say the line
@@ -450,17 +372,13 @@ namespace Barotrauma
         {
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
 
-            foreach (string key in allConversations.Keys)
+            foreach (Identifier identifier in NPCConversationCollection.Collections[GameSettings.CurrentConfig.Language].Keys)
             {
-                foreach (string lang in allConversations[key].Conversations.Keys)
+                foreach (var current in NPCConversationCollection.Collections[GameSettings.CurrentConfig.Language][identifier].Conversations)
                 {
-                    if (lang != TextManager.Language) { continue; }
-                    foreach (var current in allConversations[key].Conversations[lang])
-                    {
-                        WriteConversation(sb, current, 0);
-                        WriteSubConversations(sb, current.Responses, 1);
-                        WriteEmptyRow(sb);
-                    }
+                    WriteConversation(sb, current, 0);
+                    WriteSubConversations(sb, current.Responses, 1);
+                    WriteEmptyRow(sb);
                 }
             }
 
@@ -480,15 +398,7 @@ namespace Barotrauma
             sb.Append(string.Join(",", conv.Flags));                // Flags
             sb.Append('*');
 
-            for (int i = 0; i < conv.AllowedJobs.Count; i++)        // Jobs
-            {
-                sb.Append(conv.AllowedJobs[i].Identifier);
-
-                if (i < conv.AllowedJobs.Count - 1)
-                {
-                    sb.Append(",");
-                }
-            }
+            sb.Append(string.Join(',', conv.AllowedJobs));
 
             sb.Append('*');
             sb.Append(string.Join(",", conv.allowedSpeakerTags));   // Traits
@@ -501,13 +411,13 @@ namespace Barotrauma
             sb.AppendLine();
         }
 
-        private static void WriteSubConversations(System.Text.StringBuilder sb, List<NPCConversation> responses, int depthIndex)
+        private static void WriteSubConversations(System.Text.StringBuilder sb, IList<NPCConversation> responses, int depthIndex)
         {
             for (int i = 0; i < responses.Count; i++)
             {
                 WriteConversation(sb, responses[i], depthIndex);
 
-                if (responses[i].Responses != null && responses[i].Responses.Count > 0)
+                if (responses[i].Responses != null && responses[i].Responses.Length > 0)
                 {
                     WriteSubConversations(sb, responses[i].Responses, depthIndex + 1);
                 }

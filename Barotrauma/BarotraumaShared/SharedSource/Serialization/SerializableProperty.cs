@@ -3,12 +3,15 @@ using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
 using Barotrauma.Networking;
+
+//TODO: come back to this later, clever use of reflection would make this nicer >:)
 
 namespace Barotrauma
 {
@@ -77,7 +80,8 @@ namespace Barotrauma
             //I would love to see a better way to do this
             AllowLinkingWifiToChat,
             IsSwappableItem,
-            AllowRotating
+            AllowRotating,
+            Attachable
         }
 
         public bool IsEditable(ISerializableEntity entity)
@@ -94,18 +98,27 @@ namespace Barotrauma
                     {
                         return entity is Item item && item.body == null && item.Prefab.AllowRotatingInEditor && Screen.Selected == GameMain.SubEditorScreen;
                     }
+                case ConditionType.Attachable:
+                    {
+                        return entity is Holdable holdable && holdable.Attachable && Screen.Selected == GameMain.SubEditorScreen;
+                    }
             }
             return false;
         }
     }
 
+    public enum IsPropertySaveable
+    {
+        Yes,
+        No
+    }
 
     [AttributeUsage(AttributeTargets.Property)]
     public class Serialize : Attribute
     {
-        public object defaultValue;
-        public bool isSaveable;
-        public string translationTextTag;
+        public readonly object DefaultValue;
+        public readonly IsPropertySaveable IsSaveable;
+        public readonly Identifier TranslationTextTag;
 
         /// <summary>
         /// If set to true, the instance values saved in a submarine file will always override the prefab values, even if using a mod that normally overrides instance values.
@@ -122,48 +135,49 @@ namespace Barotrauma
         /// <param name="translationTextTag">If set to anything else than null, SerializableEntityEditors will show what the text gets translated to or warn if the text is not found in the language files.
         /// <param name="alwaysUseInstanceValues">If set to true, the instance values saved in a submarine file will always override the prefab values, even if using a mod that normally overrides instance values.
         /// Setting the value to a non-empty string will let the user select the text from one whose tag starts with the given string (e.g. RoomName. would show all texts with a RoomName.* tag)</param>
-        public Serialize(object defaultValue, bool isSaveable, string description = "", string translationTextTag = null, bool alwaysUseInstanceValues = false)
+        public Serialize(object defaultValue, IsPropertySaveable isSaveable, string description = "", string translationTextTag = "", bool alwaysUseInstanceValues = false)
         {
-            this.defaultValue = defaultValue;
-            this.isSaveable = isSaveable;
-            this.translationTextTag = translationTextTag;
+            this.DefaultValue = defaultValue;
+            this.IsSaveable = isSaveable;
+            this.TranslationTextTag = translationTextTag.ToIdentifier();
             Description = description;
             AlwaysUseInstanceValues = alwaysUseInstanceValues;
         }
     }
 
-    class SerializableProperty
+    public class SerializableProperty
     {
-        private static Dictionary<Type, string> supportedTypes = new Dictionary<Type, string>
+        private readonly static ImmutableDictionary<Type, string> supportedTypes = new Dictionary<Type, string>
         {
             { typeof(bool), "bool" },
             { typeof(int), "int" },
             { typeof(float), "float" },
             { typeof(string), "string" },
+            { typeof(Identifier), "identifier" },
+            { typeof(LocalizedString), "localizedstring" },
             { typeof(Point), "point" },
             { typeof(Vector2), "vector2" },
             { typeof(Vector3), "vector3" },
             { typeof(Vector4), "vector4" },
             { typeof(Rectangle), "rectangle" },
             { typeof(Color), "color" },
-            { typeof(string[]), "stringarray" }
-        };
+            { typeof(string[]), "stringarray" },
+            { typeof(Identifier[]), "identifierarray" }
+        }.ToImmutableDictionary();
 
-        private static readonly Dictionary<Type, Dictionary<string, SerializableProperty>> cachedProperties = 
-            new Dictionary<Type, Dictionary<string, SerializableProperty>>();
+        private static readonly Dictionary<Type, Dictionary<Identifier, SerializableProperty>> cachedProperties = 
+            new Dictionary<Type, Dictionary<Identifier, SerializableProperty>>();
         public readonly string Name;
-        public readonly string NameToLowerInvariant;
         public readonly AttributeCollection Attributes;
         public readonly Type PropertyType;
 
         public readonly bool OverridePrefabValues;
 
-        public PropertyInfo PropertyInfo { get; private set; }
+        public readonly PropertyInfo PropertyInfo;
 
         public SerializableProperty(PropertyDescriptor property)
         {
             Name = property.Name;
-            NameToLowerInvariant = Name.ToLowerInvariant();
             PropertyInfo = property.ComponentType.GetProperty(property.Name);
             PropertyType = property.PropertyType;
             Attributes = property.Attributes;
@@ -215,8 +229,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject + "\" to " + value);
-                    DebugConsole.ThrowError("(Type not supported)");
+                    DebugConsole.ThrowError($"Failed to set the value of the property \"{Name}\" of \"{parentObject}\" to {value} (Type \"{PropertyType.Name}\" not supported)");
 
                     return false;
                 }
@@ -274,12 +287,20 @@ namespace Barotrauma
                     case "rectangle":
                         PropertyInfo.SetValue(parentObject, XMLExtensions.ParseRect(value, true));
                         break;
+                    case "identifier":
+                        PropertyInfo.SetValue(parentObject, value.ToIdentifier());
+                        break;
+                    case "localizedstring":
+                        PropertyInfo.SetValue(parentObject, new RawLString(value));
+                        break;
                     case "stringarray":
                         PropertyInfo.SetValue(parentObject, XMLExtensions.ParseStringArray(value));
                         break;
+                    case "identifierarray":
+                        PropertyInfo.SetValue(parentObject, XMLExtensions.ParseStringArray(value).ToIdentifiers().ToArray());
+                        break;
                 }
             }
-
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject.ToString() + "\" to " + value.ToString(), e);
@@ -307,7 +328,8 @@ namespace Barotrauma
                         }
                         catch (Exception e)
                         {
-                            DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject + "\" to " + value + " (not a valid " + PropertyInfo.PropertyType + ")", e);
+                            DebugConsole.ThrowError(
+                                $"Failed to set the value of the property \"{Name}\" of \"{parentObject}\" to {value} (not a valid {PropertyInfo.PropertyType})", e);
                             return false;
                         }
                         PropertyInfo.SetValue(parentObject, enumVal);
@@ -315,8 +337,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject + "\" to " + value);
-                        DebugConsole.ThrowError("(Type not supported)");
+                        DebugConsole.ThrowError($"Failed to set the value of the property \"{Name}\" of \"{parentObject}\" to {value} (Type \"{PropertyType.Name}\" not supported)");
 
                         return false;
                     }
@@ -349,9 +370,18 @@ namespace Barotrauma
                             case "rectangle":
                                 PropertyInfo.SetValue(parentObject, XMLExtensions.ParseRect((string)value, false));
                                 return true;
+                            case "identifier":
+                                PropertyInfo.SetValue(parentObject, new Identifier((string)value));
+                                return true;
+                            case "localizedstring":
+                                PropertyInfo.SetValue(parentObject, new RawLString((string)value));
+                                return true;
                             case "stringarray":
                                 PropertyInfo.SetValue(parentObject, XMLExtensions.ParseStringArray((string)value));
-                                break;
+                                return true;
+                            case "identifierarray":
+                                PropertyInfo.SetValue(parentObject, XMLExtensions.ParseStringArray((string)value).ToIdentifiers().ToArray());
+                                return true;
                             default:
                                 DebugConsole.ThrowError("Failed to set the value of the property \"" + Name + "\" of \"" + parentObject.ToString() + "\" to " + value.ToString());
                                 DebugConsole.ThrowError("(Cannot convert a string to a " + PropertyType.ToString() + ")");
@@ -527,6 +557,35 @@ namespace Barotrauma
             return typeName;
         }
 
+        private readonly ImmutableDictionary<Identifier, Func<object, object>> valueGetters =
+            new Dictionary<Identifier, Func<object, object>>()
+            {
+                {"Voltage".ToIdentifier(), (obj) => obj is Powered p ? p.Voltage : (object) null},
+                {"Charge".ToIdentifier(), (obj) => obj is PowerContainer p ? p.Charge : (object) null},
+                {"Overload".ToIdentifier(), (obj) => obj is PowerTransfer p ? p.Overload : (object) null},
+                {"AvailableFuel".ToIdentifier(), (obj) => obj is Reactor r ? r.AvailableFuel : (object) null},
+                {"FissionRate".ToIdentifier(), (obj) => obj is Reactor r ? r.FissionRate : (object) null},
+                {"OxygenFlow".ToIdentifier(), (obj) => obj is Vent v ? v.OxygenFlow : (object) null},
+                {
+                    "CurrFlow".ToIdentifier(),
+                    (obj) => obj is Pump p ? (object) p.CurrFlow :
+                                   obj is OxygenGenerator o ? (object)o.CurrFlow :
+                                   null
+                },
+                {"CurrentVolume".ToIdentifier(), (obj) => obj is Engine e ? e.CurrentVolume : (object)null},
+                {"MotionDetected".ToIdentifier(), (obj) => obj is MotionSensor m ? m.MotionDetected : (object)null},
+                {"Oxygen".ToIdentifier(), (obj) => obj is Character c ? c.Oxygen : (object)null},
+                {"Health".ToIdentifier(), (obj) => obj is Character c ? c.Health : (object)null},
+                {"OxygenAvailable".ToIdentifier(), (obj) => obj is Character c ? c.OxygenAvailable : (object)null},
+                {"PressureProtection".ToIdentifier(), (obj) => obj is Character c ? c.PressureProtection : (object)null},
+                {"IsDead".ToIdentifier(), (obj) => obj is Character c ? c.IsDead : (object)null},
+                {"IsHuman".ToIdentifier(), (obj) => obj is Character c ? c.IsHuman : (object)null},
+                {"IsOn".ToIdentifier(), (obj) => obj is LightComponent l ? l.IsOn : (object)null},
+                {"Condition".ToIdentifier(), (obj) => obj is Item i ? i.Condition : (object)null},
+                {"ContainerIdentifier".ToIdentifier(), (obj) => obj is Item i ? i.ContainerIdentifier : (object)null},
+                {"PhysicsBodyActive".ToIdentifier(), (obj) => obj is Item i ? i.PhysicsBodyActive : (object)null},
+            }.ToImmutableDictionary();
+        
         /// <summary>
         /// Try getting the values of some commonly used properties directly without reflection
         /// </summary>
@@ -558,6 +617,11 @@ namespace Barotrauma
                 case nameof(Powered.Voltage):
                     {
                         if (parentObject is Powered powered) { value = powered.Voltage; return true; }
+                    }
+                    break;
+                case nameof(Powered.RelativeVoltage):
+                    {
+                        if (parentObject is Powered powered) { value = powered.RelativeVoltage; return true; }
                     }
                     break;
                 case nameof(Powered.CurrPowerConsumption):
@@ -683,7 +747,7 @@ namespace Barotrauma
             {
                 case nameof(Item.ContainerIdentifier):
                     {
-                        if (parentObject is Item item) { value = item.ContainerIdentifier; return true; }
+                        if (parentObject is Item item) { value = item.ContainerIdentifier.Value; return true; }
                     }
                     break;
             }
@@ -727,6 +791,9 @@ namespace Barotrauma
                 case nameof(Character.HealthMultiplier):
                     { if (parentObject is Character character) { character.StackHealthMultiplier(value); return true; } }
                     break;
+                case nameof(Character.PropulsionSpeedMultiplier):
+                    { if (parentObject is Character character) { character.PropulsionSpeedMultiplier = value; return true; } }
+                    break;
             }
             return false;
         }
@@ -739,6 +806,12 @@ namespace Barotrauma
             {
                 case nameof(Character.ObstructVision):
                     { if (parentObject is Character character) { character.ObstructVision = value; return true; } }
+                    break;
+                case nameof(Character.HideFace):
+                    { if (parentObject is Character character) { character.HideFace = value; return true; } }
+                    break;
+                case nameof(Character.UseHullOxygen):
+                    { if (parentObject is Character character) { character.UseHullOxygen = value; return true; } }
                     break;
                 case nameof(LightComponent.IsOn):
                     { if (parentObject is LightComponent lightComponent) { lightComponent.IsOn = value; return true; } }
@@ -761,7 +834,7 @@ namespace Barotrauma
             return editableProperties;
         }
 
-        public static Dictionary<string, SerializableProperty> GetProperties(object obj)
+        public static Dictionary<Identifier, SerializableProperty> GetProperties(object obj)
         {
             Type objType = obj.GetType();
             if (cachedProperties.ContainsKey(objType))
@@ -770,11 +843,11 @@ namespace Barotrauma
             }
 
             var properties = TypeDescriptor.GetProperties(obj.GetType()).Cast<PropertyDescriptor>();
-            Dictionary<string, SerializableProperty> dictionary = new Dictionary<string, SerializableProperty>();
+            Dictionary<Identifier, SerializableProperty> dictionary = new Dictionary<Identifier, SerializableProperty>();
             foreach (var property in properties)
             {
                 var serializableProperty = new SerializableProperty(property);
-                dictionary.Add(serializableProperty.NameToLowerInvariant, serializableProperty);
+                dictionary.Add(serializableProperty.Name.ToIdentifier(), serializableProperty);
             }
 
             cachedProperties[objType] = dictionary;
@@ -782,16 +855,16 @@ namespace Barotrauma
             return dictionary;
         }
         
-        public static Dictionary<string, SerializableProperty> DeserializeProperties(object obj, XElement element = null)
+        public static Dictionary<Identifier, SerializableProperty> DeserializeProperties(object obj, XElement element = null)
         {
-            Dictionary<string, SerializableProperty> dictionary = GetProperties(obj);
+            Dictionary<Identifier, SerializableProperty> dictionary = GetProperties(obj);
 
             foreach (var property in dictionary.Values)
             {
                 //set the value of the property to the default value if there is one
                 foreach (var ini in property.Attributes.OfType<Serialize>())
                 {
-                    property.TrySetValue(obj, ini.defaultValue);
+                    property.TrySetValue(obj, ini.DefaultValue);
                     break;
                 }
             }
@@ -802,7 +875,7 @@ namespace Barotrauma
                 //and set the value of the matching property if it is initializable
                 foreach (XAttribute attribute in element.Attributes())
                 {
-                    if (!dictionary.TryGetValue(attribute.Name.ToString().ToLowerInvariant(), out SerializableProperty property)) { continue; }
+                    if (!dictionary.TryGetValue(attribute.NameAsIdentifier(), out SerializableProperty property)) { continue; }
                     if (!property.Attributes.OfType<Serialize>().Any()) { continue; }
                     property.TrySetValue(obj, attribute.Value);
                 }
@@ -827,7 +900,7 @@ namespace Barotrauma
                     bool save = false;
                     foreach (var attribute in property.Attributes.OfType<Serialize>())
                     {
-                        if ((attribute.isSaveable && !attribute.defaultValue.Equals(value)) ||
+                        if ((attribute.IsSaveable == IsPropertySaveable.Yes && !attribute.DefaultValue.Equals(value)) ||
                             (!ignoreEditable && property.Attributes.OfType<Editable>().Any()))
                         {
                             save = true;
@@ -881,14 +954,17 @@ namespace Barotrauma
                             string[] stringArray = (string[])value;
                             stringValue =  stringArray != null ? string.Join(';', stringArray) : "";
                             break;
+                        case "identifierarray":
+                            Identifier[] identifierArray = (Identifier[])value;
+                            stringValue =  identifierArray != null ? string.Join(';', identifierArray) : "";
+                            break;
                         default:
                             stringValue = value.ToString();
                             break;
                     }
                 }
-
-                element.Attribute(property.Name)?.Remove();
-                element.SetAttributeValue(property.NameToLowerInvariant, stringValue);
+                element.GetAttribute(property.Name)?.Remove();
+                element.SetAttributeValue(property.Name, stringValue);
             }
         }
 
@@ -899,9 +975,9 @@ namespace Barotrauma
         /// <param name="entity">The entity to upgrade</param>
         /// <param name="configElement">The XML element to get the upgrade instructions from (e.g. the config of an item prefab)</param>
         /// <param name="savedVersion">The game version the entity was saved with</param>
-        public static void UpgradeGameVersion(ISerializableEntity entity, XElement configElement, Version savedVersion)
+        public static void UpgradeGameVersion(ISerializableEntity entity, ContentXElement configElement, Version savedVersion)
         {
-            foreach (XElement subElement in configElement.Elements())
+            foreach (var subElement in configElement.Elements())
             {
                 if (!subElement.Name.ToString().Equals("upgrade", StringComparison.OrdinalIgnoreCase)) { continue; }
                 var upgradeVersion = new Version(subElement.GetAttributeString("gameversion", "0.0.0.0"));
@@ -909,7 +985,7 @@ namespace Barotrauma
 
                 foreach (XAttribute attribute in subElement.Attributes())
                 {
-                    string attributeName = attribute.Name.ToString().ToLowerInvariant();
+                    var attributeName = attribute.NameAsIdentifier();
                     if (attributeName == "gameversion") { continue; }
 
                     if (attributeName == "refreshrect")
@@ -1024,19 +1100,19 @@ namespace Barotrauma
 
                 if (entity is Item item2)
                 {
-                    XElement componentElement = subElement.FirstElement();
+                    var componentElement = subElement.FirstElement();
                     if (componentElement == null) { continue; }
                     ItemComponent itemComponent = item2.Components.First(c => c.Name == componentElement.Name.ToString());
                     if (itemComponent == null) { continue; }
                     foreach (XAttribute attribute in componentElement.Attributes())
                     {
-                        string attributeName = attribute.Name.ToString().ToLowerInvariant();
+                        var attributeName = attribute.NameAsIdentifier();
                         if (itemComponent.SerializableProperties.TryGetValue(attributeName, out SerializableProperty property))
                         {
                             FixValue(property, itemComponent, attribute);
                         }
                     }
-                    foreach (XElement element in componentElement.Elements())
+                    foreach (var element in componentElement.Elements())
                     {
                         switch (element.Name.ToString().ToLowerInvariant())
                         {
@@ -1045,10 +1121,15 @@ namespace Barotrauma
                                 itemComponent.requiredItems.Clear();
                                 itemComponent.DisabledRequiredItems.Clear();
 
-                                itemComponent.SetRequiredItems(element);
+                                itemComponent.SetRequiredItems(element, allowEmpty: true);
                                 break;
                         }
-                    }                   
+                    }          
+                    if (itemComponent is ItemContainer itemContainer &&
+                        (componentElement.GetChildElement("containable") != null || componentElement.GetChildElement("subcontainer") != null))
+                    {
+                        itemContainer.ReloadContainableRestrictions(componentElement);
+                    }
                 }
             }
         }

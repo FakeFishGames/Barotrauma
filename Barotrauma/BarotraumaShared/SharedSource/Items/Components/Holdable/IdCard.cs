@@ -1,64 +1,110 @@
 using Microsoft.Xna.Framework;
-using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
+using System.Collections.Immutable;
 
 namespace Barotrauma.Items.Components
 {
     partial class IdCard : Pickable
     {
-        [Serialize(CharacterTeamType.None, true, alwaysUseInstanceValues: true)]
+        [Serialize(CharacterTeamType.None, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
         public CharacterTeamType TeamID
         {
             get;
             set;
         }
 
-        [Serialize(0, true, alwaysUseInstanceValues: true)]
+        [Serialize(0, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
         public int SubmarineSpecificID
         {
             get;
             set;
         }
 
-        private JobPrefab cachedJobPrefab;
-        private string cachedName;
-
-        public IdCard(Item item, XElement element) : base(item, element)
+        [Serialize("", IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
+        public string OwnerTags
         {
-
+            get => string.Join(',', OwnerTagSet);
+            set => OwnerTagSet = value.Split(',').ToIdentifiers().ToImmutableHashSet();
         }
 
-        public void Initialize(CharacterInfo info)
+        [Serialize("", IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
+        public string Description
         {
+            get;
+            set;
+        }
+
+        public ImmutableHashSet<Identifier> OwnerTagSet { get; set; }
+
+        [Serialize("", IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
+        public string OwnerName { get; set; }
+        
+        [Serialize("", IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
+        public Identifier OwnerJobId { get; set; }
+
+        public JobPrefab OwnerJob => JobPrefab.Prefabs.TryGet(OwnerJobId, out var prefab) ? prefab : null;
+        
+        [Serialize(-1, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
+        public int OwnerHairIndex { get; set; }
+
+        [Serialize(-1, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
+        public int OwnerBeardIndex { get; set; }
+
+        [Serialize(-1, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
+        public int OwnerMoustacheIndex { get; set; }
+
+        [Serialize(-1, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
+        public int OwnerFaceAttachmentIndex { get; set; }
+        
+        [Serialize("#ffffff", IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
+        public Color OwnerHairColor { get; set; }
+        
+        [Serialize("#ffffff", IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
+        public Color OwnerFacialHairColor { get; set; }
+        
+        [Serialize("#ffffff", IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
+        public Color OwnerSkinColor { get; set; }
+
+        [Serialize("0,0", IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
+        public Vector2 OwnerSheetIndex { get; set; }
+
+        public IdCard(Item item, ContentXElement element) : base(item, element) { }
+
+        public void Initialize(WayPoint spawnPoint, Character character)
+        {
+            item.AddTag("name:" + character.Name);
+
+            CharacterInfo info = character.Info;
             if (info == null) { return; }
 
-            if (info.Job?.Prefab != null)
+            if (spawnPoint != null)
             {
-                item.AddTag("jobid:" + info.Job.Prefab.Identifier);
+                foreach (string s in spawnPoint.IdCardTags)
+                {
+                    item.AddTag(s);
+                }
+                if (!string.IsNullOrWhiteSpace(spawnPoint.IdCardDesc)) 
+                { 
+                    item.Description = Description = spawnPoint.IdCardDesc; 
+                }
             }
 
             TeamID = info.TeamID;
 
             var head = info.Head;
-
             if (head == null) { return; }
-            
-            if (info.HasGenders) { item.AddTag($"gender:{head.gender.ToString().ToLowerInvariant()}"); }
-            if (info.HasRaces) { item.AddTag($"race:{head.race}"); }
-            item.AddTag($"headspriteid:{info.HeadSpriteId}");
-            item.AddTag($"hairindex:{head.HairIndex}");
-            item.AddTag($"beardindex:{head.BeardIndex}");
-            item.AddTag($"moustacheindex:{head.MoustacheIndex}");
-            item.AddTag($"faceattachmentindex:{head.FaceAttachmentIndex}");
-            item.AddTag($"haircolor:{head.HairColor.ToStringHex()}");
-            item.AddTag($"facialhaircolor:{head.FacialHairColor.ToStringHex()}");
-            item.AddTag($"skincolor:{head.SkinColor.ToStringHex()}");
 
-            if (head.SheetIndex != null)
-            {
-                item.AddTag($"sheetindex:{head.SheetIndex.Value.X};{head.SheetIndex.Value.Y}");
-            }
+            OwnerName = info.Name;
+            OwnerJobId = info.Job?.Prefab.Identifier ?? Identifier.Empty;
+            item.AddTag($"jobid:{OwnerJobId}");
+            OwnerTagSet = info.Head.Preset.TagSet;
+            OwnerHairIndex = head.HairIndex;
+            OwnerBeardIndex = head.BeardIndex;
+            OwnerMoustacheIndex = head.MoustacheIndex;
+            OwnerFaceAttachmentIndex = head.FaceAttachmentIndex;
+            OwnerHairColor = head.HairColor;
+            OwnerFacialHairColor = head.FacialHairColor;
+            OwnerSkinColor = head.SkinColor;
+            OwnerSheetIndex = head.SheetIndex;
         }
 
         public override void Equip(Character character)
@@ -72,48 +118,12 @@ namespace Barotrauma.Items.Components
             base.Unequip(character);
             character.Info?.CheckDisguiseStatus(true, this);
         }
-
-        public JobPrefab GetJob()
+        public override void OnItemLoaded()
         {
-            if (cachedJobPrefab != null)
+            if (!string.IsNullOrEmpty(Description))
             {
-                return cachedJobPrefab;
+                item.Description = Description;
             }
-
-            foreach (string tag in item.GetTags())
-            {
-                if (tag.StartsWith("jobid:"))
-                {
-                    string jobIdentifier = tag.Split(':').Last();
-                    if (JobPrefab.Get(jobIdentifier) is { } jobPrefab)
-                    {
-                        cachedJobPrefab = jobPrefab;
-                        return jobPrefab;
-                    }
-                }
-            }
-
-            return null;
-        }
-        
-        public string GetName()
-        {
-            if (cachedName != null)
-            {
-                return cachedName;
-            }
-
-            foreach (string tag in item.GetTags())
-            {
-                if (tag.StartsWith("name:"))
-                {
-                    string ownerName = tag.Split(':').Last();
-                    cachedName = ownerName;
-                    return ownerName;
-                }
-            }
-
-            return null;
         }
     }
 }

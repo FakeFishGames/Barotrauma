@@ -38,7 +38,7 @@ namespace Barotrauma.Networking
 
         public bool CompareTo(string endpointCompare)
         {
-            if (string.IsNullOrEmpty(EndPoint) || string.IsNullOrEmpty(EndPoint)) { return false; }
+            if (string.IsNullOrEmpty(EndPoint) || string.IsNullOrEmpty(endpointCompare)) { return false; }
             if (!IsRangeBan)
             {
                 return endpointCompare == EndPoint;

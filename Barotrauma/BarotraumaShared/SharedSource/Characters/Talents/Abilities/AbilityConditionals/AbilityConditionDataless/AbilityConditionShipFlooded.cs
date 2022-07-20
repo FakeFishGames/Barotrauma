@@ -6,7 +6,7 @@ namespace Barotrauma.Abilities
     class AbilityConditionShipFlooded : AbilityConditionDataless
     {
         private readonly float floodPercentage;
-        public AbilityConditionShipFlooded(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
+        public AbilityConditionShipFlooded(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
             floodPercentage = conditionElement.GetAttributeFloat("floodpercentage", 0f);
         }

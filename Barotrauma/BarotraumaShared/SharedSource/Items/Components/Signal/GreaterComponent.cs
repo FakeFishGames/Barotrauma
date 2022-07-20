@@ -7,7 +7,7 @@ namespace Barotrauma.Items.Components
     {
         private float val1, val2;
 
-        public GreaterComponent(Item item, XElement element)
+        public GreaterComponent(Item item, ContentXElement element)
             : base(item, element)
         {
             IsActive = true;

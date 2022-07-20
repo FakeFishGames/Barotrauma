@@ -26,18 +26,25 @@ namespace Barotrauma.Items.Components
 
         public float PowerLoad
         {
-            get { return powerLoad; }
+            get
+            {
+                if (this is RelayComponent || PowerConnections.Count == 0 || PowerConnections[0].Grid == null)
+                {
+                    return powerLoad;
+                }
+                return PowerConnections[0].Grid.Load;
+            }
             set { powerLoad = value; }
         }
 
-        [Editable, Serialize(true, true, description: "Can the item be damaged if too much power is supplied to the power grid.")]
+        [Editable, Serialize(true, IsPropertySaveable.Yes, description: "Can the item be damaged if too much power is supplied to the power grid.")]
         public bool CanBeOverloaded
         {
             get;
             set;
         }
 
-        [Editable(MinValueFloat = 1.0f), Serialize(2.0f, true, description:
+        [Editable(MinValueFloat = 1.0f), Serialize(2.0f, IsPropertySaveable.Yes, description:
             "How much power has to be supplied to the grid relative to the load before item starts taking damage. "
             + "E.g. a value of 2 means that the grid has to be receiving twice as much power as the devices in the grid are consuming.")]
         public float OverloadVoltage
@@ -46,14 +53,14 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(0.15f, true, description: "The probability for a fire to start when the item breaks."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
+        [Serialize(0.15f, IsPropertySaveable.Yes, description: "The probability for a fire to start when the item breaks."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
         public float FireProbability
         {
             get;
             set;
         }
 
-        [Serialize(false, false, description: "Is the item currently overloaded. Intended to be used by StatusEffect conditionals (setting the value from XML is not recommended).")]
+        [Serialize(false, IsPropertySaveable.No, description: "Is the item currently overloaded. Intended to be used by StatusEffect conditionals (setting the value from XML is not recommended).")]
         public bool Overload
         {
             get;
@@ -62,6 +69,7 @@ namespace Barotrauma.Items.Components
 
         private float extraLoad;
         private float extraLoadSetTime;
+
         /// <summary>
         /// Additional load coming from somewhere else than the devices connected to the junction box (e.g. ballast flora or piezo crystals).
         /// Goes back to zero automatically if you stop setting the value.
@@ -71,7 +79,7 @@ namespace Barotrauma.Items.Components
             get { return extraLoad; }
             set 
             {
-                extraLoad = Math.Max(value, 0.0f);
+                extraLoad = value;
                 extraLoadSetTime = (float)Timing.TotalTime;
             }
         }
@@ -112,7 +120,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public PowerTransfer(Item item, XElement element)
+        public PowerTransfer(Item item, ContentXElement element)
             : base(item, element)
         {
             IsActive = true;
@@ -170,7 +178,15 @@ namespace Barotrauma.Items.Components
 
             if (Timing.TotalTime > extraLoadSetTime + 1.0)
             {
-                extraLoad = Math.Max(extraLoad - 1000.0f * deltaTime, 0);
+                //Decay the extra load to 0 from either positive or negative
+                if (extraLoad > 0)
+                {
+                    extraLoad = Math.Max(extraLoad - 1000.0f * deltaTime, 0);
+                }
+                else
+                {
+                    extraLoad = Math.Min(extraLoad + 1000.0f * deltaTime, 0);
+                }
             }
 
             if (!CanTransfer) { return; }
@@ -183,24 +199,40 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
-            //if the item can't be fixed, don't allow it to break
-            if (!item.Repairables.Any() || !CanBeOverloaded) { return; }
-
-            if (prevSentPowerValue != (int)-CurrPowerConsumption || powerSignal == null)
+            float powerReadingOut = 0;
+            float loadReadingOut = ExtraLoad;
+            if (powerLoad < 0)
             {
-                prevSentPowerValue = (int)Math.Round(-CurrPowerConsumption);
+                powerReadingOut = -powerLoad;
+                loadReadingOut = 0;
+            }
+
+            if (powerOut != null && powerOut.Grid != null)
+            {
+                powerReadingOut = powerOut.Grid.Power;
+                loadReadingOut = powerOut.Grid.Load;
+            }
+
+            if (prevSentPowerValue != (int)powerReadingOut || powerSignal == null)
+            {
+                prevSentPowerValue = (int)Math.Round(powerReadingOut);
                 powerSignal = prevSentPowerValue.ToString();
             }
-            if (prevSentLoadValue != (int)powerLoad || loadSignal == null)
+            if (prevSentLoadValue != (int)loadReadingOut || loadSignal == null)
             {
-                prevSentLoadValue = (int)Math.Round(powerLoad);
+                prevSentLoadValue = (int)Math.Round(loadReadingOut);
                 loadSignal = prevSentLoadValue.ToString();
             }
             item.SendSignal(powerSignal, "power_value_out");
             item.SendSignal(loadSignal, "load_value_out");
 
+            //if the item can't be fixed, don't allow it to break
+            if (!item.Repairables.Any() || !CanBeOverloaded) { return; }
+
             float maxOverVoltage = Math.Max(OverloadVoltage, 1.0f);
-            Overload = -currPowerConsumption > Math.Max(powerLoad, 200.0f) * maxOverVoltage;
+
+            Overload = Voltage > maxOverVoltage;
+
             if (Overload && (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer))
             {
                 if (overloadCooldownTimer > 0.0f)
@@ -237,6 +269,11 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
+        }
+
+        public override float GetConnectionPowerOut(Connection conn, float power, PowerRange minMaxPower, float load)
+        {
+            return conn == powerOut ? PowerConsumption + ExtraLoad : 0;
         }
 
         public override bool Pick(Character picker)
@@ -374,25 +411,6 @@ namespace Barotrauma.Items.Components
             }
 
             SetAllConnectionsDirty();
-        }
-
-        public override void ReceivePowerProbeSignal(Connection connection, Item source, float power)
-        {
-            //we've already received this signal
-            if (lastPowerProbeRecipients.Contains(this)) { return; }
-            if (item.Condition <= 0.0f) { return; }
-
-            lastPowerProbeRecipients.Add(this);
-
-            if (power < 0.0f)
-            {
-                powerLoad -= power;
-            }
-            else
-            {
-                currPowerConsumption -= power;
-            }
-            powerOut?.SendPowerProbeSignal(source, power);
         }
 
         public override void ReceiveSignal(Signal signal, Connection connection)

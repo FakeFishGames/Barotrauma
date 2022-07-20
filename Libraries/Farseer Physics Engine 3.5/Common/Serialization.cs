@@ -614,7 +614,7 @@ namespace FarseerPhysics.Common
                 {
                     foreach (XMLFragmentElement element in fixtureElement.Elements)
                     {
-                        Fixture fixture = new Fixture();
+                        Fixture fixture = new Fixture(Category.Cat1, Category.All);
 
                         if (element.Name.ToLower() != "fixture")
                             throw new Exception();

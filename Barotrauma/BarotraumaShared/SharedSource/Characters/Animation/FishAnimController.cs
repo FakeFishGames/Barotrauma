@@ -22,8 +22,8 @@ namespace Barotrauma
             {
                 if (_ragdollParams == null)
                 {
-                    _ragdollParams = FishRagdollParams.GetDefaultRagdollParams(character.VariantOf ?? character.SpeciesName);
-                    if (character.VariantOf != null)
+                    _ragdollParams = FishRagdollParams.GetDefaultRagdollParams(character.SpeciesName);
+                    if (!character.VariantOf.IsEmpty)
                     {
                         _ragdollParams.ApplyVariantScale(character.Params.VariantFile);
                     }
@@ -192,7 +192,7 @@ namespace Barotrauma
                 strongestImpact = 0.0f;
             }
 
-            if (aiming)
+            if (Aiming)
             {
                 TargetMovement = TargetMovement.ClampLength(2);
             }
@@ -232,7 +232,7 @@ namespace Barotrauma
             //don't flip when simply physics is enabled
             if (SimplePhysicsEnabled) { return; }
             
-            if (!character.IsRemotelyControlled && (character.AIController == null || character.AIController.CanFlip) && !aiming)
+            if (!character.IsRemotelyControlled && (character.AIController == null || character.AIController.CanFlip) && !Aiming)
             {
                 if (!inWater || (CurrentSwimParams != null && CurrentSwimParams.Mirror))
                 {
@@ -421,7 +421,7 @@ namespace Barotrauma
                             }
 
                             //only one limb left, the character is now full eaten
-                            Entity.Spawner?.AddToRemoveQueue(target);
+                            Entity.Spawner?.AddEntityToRemoveQueue(target);
 
                             if (Character.AIController is EnemyAIController enemyAi)
                             {
@@ -432,10 +432,10 @@ namespace Barotrauma
                         }
                         else //sever a random joint
                         {
-                            target.AnimController.SeverLimbJoint(nonSeveredJoints.GetRandom());
+                            target.AnimController.SeverLimbJoint(nonSeveredJoints.GetRandomUnsynced());
                         }
                     }
-                }                
+                }
             }
         }
 
@@ -447,21 +447,18 @@ namespace Barotrauma
             movement = TargetMovement;
             bool isMoving = movement.LengthSquared() > 0.00001f;
             var mainLimb = MainLimb;
-            if (isMoving)
+            float t = 0.5f;
+            if (isMoving && !SimplePhysicsEnabled && CurrentSwimParams.RotateTowardsMovement)
             {
-                float t = 0.5f;
-                if (!SimplePhysicsEnabled && CurrentSwimParams.RotateTowardsMovement)
+                Vector2 forward = VectorExtensions.Forward(Collider.Rotation + MathHelper.PiOver2);
+                float dot = Vector2.Dot(forward, Vector2.Normalize(movement));
+                if (dot < 0)
                 {
-                    Vector2 forward = VectorExtensions.Forward(Collider.Rotation + MathHelper.PiOver2);
-                    float dot = Vector2.Dot(forward, Vector2.Normalize(movement));
-                    if (dot < 0)
-                    {
-                        // Reduce the linear movement speed when not facing the movement direction
-                        t = MathHelper.Clamp((1 + dot) / 10, 0.01f, 0.1f);
-                    }
+                    // Reduce the linear movement speed when not facing the movement direction
+                    t = MathHelper.Clamp((1 + dot) / 10, 0.01f, 0.1f);
                 }
-                Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement, t);
             }
+            Collider.LinearVelocity = Vector2.Lerp(Collider.LinearVelocity, movement, t);
             //limbs are disabled when simple physics is enabled, no need to move them
             if (SimplePhysicsEnabled) { return; }
             mainLimb.PullJointEnabled = true;
@@ -1016,24 +1013,29 @@ namespace Barotrauma
             {
                 if (l.IsSevered) { continue; }
 
+                float rotation = l.body.Rotation;
+                if (l.DoesFlip)
+                {
+                    if (RagdollParams.IsSpritesheetOrientationHorizontal)
+                    {
+                        //horizontally oriented sprites can be mirrored by rotating 180 deg and inverting the angle
+                        rotation = -(l.body.Rotation + MathHelper.Pi);
+                    }
+                    else
+                    {
+                        //vertically oriented limbs can be mirrored by inverting the angle (neutral angle is straight upwards)
+                        rotation = -l.body.Rotation;
+                    }
+                }
+
                 TrySetLimbPosition(l,
                     centerOfMass,
                     new Vector2(centerOfMass.X - (l.SimPosition.X - centerOfMass.X), l.SimPosition.Y),
+                    rotation,
                     lerp);
 
                 l.body.PositionSmoothingFactor = 0.8f;
-
-                if (!l.DoesFlip) { continue; }
-                if (RagdollParams.IsSpritesheetOrientationHorizontal)
-				{
-                    //horizontally oriented sprites can be mirrored by rotating 180 deg and inverting the angle
-                    l.body.SetTransform(l.SimPosition, -(l.body.Rotation + MathHelper.Pi));
-				}    
-                else
-				{
-                    //vertically oriented limbs can be mirrored by inverting the angle (neutral angle is straight upwards)
-                    l.body.SetTransform(l.SimPosition, -l.body.Rotation);
-				}        
+     
             }
             if (character.SelectedCharacter != null && CanDrag(character.SelectedCharacter))
             {
