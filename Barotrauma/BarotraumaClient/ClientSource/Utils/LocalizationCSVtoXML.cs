@@ -26,7 +26,7 @@ namespace Barotrauma
 
         public static void Convert()
         {
-            if (TextManager.Language != "English")
+            if (GameSettings.CurrentConfig.Language != TextManager.DefaultLanguage)
             {
                 DebugConsole.ThrowError("Use the english localization when converting .csv to allow copying values");
                 return;
@@ -89,7 +89,17 @@ namespace Barotrauma
 
                 for (int j = 0; j < infoTextFiles.Count; j++)
                 {
-                    List<string> xmlContent = ConvertInfoTextToXML(File.ReadAllLines(infoTextFiles[j], Encoding.UTF8), language);
+
+                    List<string> xmlContent = null;
+                    try
+                    {
+                        xmlContent = ConvertInfoTextToXML(File.ReadAllLines(infoTextFiles[j], Encoding.UTF8), language);
+                    }
+                    catch (Exception e)
+                    {
+                        DebugConsole.ThrowError("InfoText Localization .csv to .xml conversion failed for: " + infoTextFiles[j], e);
+                        continue;
+                    }
                     if (xmlContent == null)
                     {
                         DebugConsole.ThrowError("InfoText Localization .csv to .xml conversion failed for: " + infoTextFiles[j]);
@@ -113,8 +123,10 @@ namespace Barotrauma
 
         private static List<string> ConvertInfoTextToXML(string[] csvContent, string language)
         {
-            List<string> xmlContent = new List<string>();
-            xmlContent.Add(xmlHeader);
+            List<string> xmlContent = new List<string>
+            {
+                xmlHeader
+            };
 
             string translatedName = GetTranslatedName(language);
             bool nowhitespace = TextManager.IsCJK(translatedName);
@@ -141,6 +153,7 @@ namespace Barotrauma
                             split[1] = split[2];
                             split[2] = string.Empty;
                         }
+                        split[1] = split[1].Replace(" & ", " &amp; ");
                         xmlContent.Add($"<{split[0]}>{split[1]}</{split[0]}>");
                     }
                     else if (split[0].Contains(".") && !split[0].Any(char.IsUpper)) // An empty field
@@ -210,15 +223,16 @@ namespace Barotrauma
             }
 
             //DebugConsole.NewMessage("Count: " + NPCPersonalityTrait.List.Count);
-            for (int i = 0; i < NPCPersonalityTrait.List.Count; i++) // Traits
+            var traits = NPCPersonalityTrait.GetAll(language.ToLanguageIdentifier()).ToArray();
+            for (int i = 0; i < traits.Length; i++) // Traits
             {
                 //string[] split = SplitCSV(csvContent[traitStart + i].Trim(separator));
                 string[] split = csvContent[traitStart + i].Split(separator);
                 xmlContent.Add(
                     $"<PersonalityTrait " +
                     $"{GetVariable("name", split[1])}" +
-                    $"{GetVariable("alloweddialogtags", string.Join(",", NPCPersonalityTrait.List[i].AllowedDialogTags))}" +
-                    $"{GetVariable("commonness", NPCPersonalityTrait.List[i].Commonness.ToString(CultureInfo.InvariantCulture))}/>");
+                    $"{GetVariable("alloweddialogtags", string.Join(",", traits[i].AllowedDialogTags))}" +
+                    $"{GetVariable("commonness", traits[i].Commonness.ToString(CultureInfo.InvariantCulture))}/>");
             }
 
             xmlContent.Add(string.Empty);

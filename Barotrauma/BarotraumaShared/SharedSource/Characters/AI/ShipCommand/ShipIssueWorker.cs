@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Items.Components;
+using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 
 namespace Barotrauma
@@ -7,7 +8,7 @@ namespace Barotrauma
     {
         public const float MaxImportance = 100f;
         public const float MinImportance = 0f;
-        public Order SuggestedOrderPrefab { get; }
+        public Order SuggestedOrder { get; }
 
         private float importance;
         public float Importance 
@@ -24,11 +25,11 @@ namespace Barotrauma
         public float CurrentRedundancy { get; set; }
 
         public readonly ShipCommandManager shipCommandManager;
-        public string Option { get; set; }
+        public Identifier Option => SuggestedOrder.Option;
         public Character OrderedCharacter { get; set; }
         public Order CurrentOrder { get; private set; }
-        public ItemComponent TargetItemComponent { get; protected set; }
-        public Item TargetItem { get; protected set; }
+        public ItemComponent TargetItemComponent => SuggestedOrder.TargetItemComponent;
+        public Item TargetItem => SuggestedOrder.TargetEntity as Item;
         public bool Active { get; protected set; } = true; // used to turn off the instance if errors are detected
 
         protected virtual Character CommandingCharacter => shipCommandManager.character;
@@ -37,24 +38,29 @@ namespace Barotrauma
         public virtual bool StopDuringEmergency => true; // limit certain issue assessments when invaded by the enemies
         public virtual bool AllowEasySwitching => false;
 
-        public ShipIssueWorker(ShipCommandManager shipCommandManager, Order suggestedOrderPrefab, string option = null)
+        public ShipIssueWorker(ShipCommandManager shipCommandManager, Order suggestedOrder)
         {
             this.shipCommandManager = shipCommandManager;
-            SuggestedOrderPrefab = suggestedOrderPrefab;
-            Option = option;
+            SuggestedOrder = suggestedOrder;
         }
 
         public void SetOrder(Character orderedCharacter)
         {
             OrderedCharacter = orderedCharacter;
-            if (orderedCharacter != CommandingCharacter)
+            if (OrderedCharacter.AIController is HumanAIController humanAI && humanAI.ObjectiveManager.CurrentOrders.None(o => o.MatchesOrder(SuggestedOrder.Identifier, Option)))
             {
-                CommandingCharacter.Speak(SuggestedOrderPrefab.GetChatMessage(OrderedCharacter.Name, "", false));
+                if (orderedCharacter != CommandingCharacter)
+                {
+                    CommandingCharacter.Speak(SuggestedOrder.GetChatMessage(OrderedCharacter.Name, "", false), minDurationBetweenSimilar: 5);
+                }
+                CurrentOrder = SuggestedOrder
+                    .WithOption(Option)
+                    .WithItemComponent(TargetItem, TargetItemComponent)
+                    .WithOrderGiver(CommandingCharacter)
+                    .WithManualPriority(CharacterInfo.HighestManualOrderPriority);
+                OrderedCharacter.SetOrder(CurrentOrder, CommandingCharacter != OrderedCharacter);
+                OrderedCharacter.Speak(TextManager.Get("DialogAffirmative").Value, delay: 1.0f, minDurationBetweenSimilar: 5);
             }
-
-            // not sure if new orders are supposed to be created each time. TODO m61: check later
-            CurrentOrder = new Order(SuggestedOrderPrefab, TargetItem, TargetItemComponent, CommandingCharacter); 
-            OrderedCharacter.SetOrder(CurrentOrder, Option, priority: 3, CommandingCharacter, CommandingCharacter != OrderedCharacter);
             TimeSinceLastAttempt = 0f;
         }
 
@@ -110,7 +116,7 @@ namespace Barotrauma
             }
 
             // accept only the highest priority order
-            if (CurrentOrder != null && OrderedCharacter.GetCurrentOrderWithTopPriority()?.Order != CurrentOrder)
+            if (CurrentOrder != null && OrderedCharacter.GetCurrentOrderWithTopPriority() != CurrentOrder)
             {
 #if DEBUG
                 ShipCommandManager.ShipCommandLog($"Order {CurrentOrder.Name} did not match current order for character {OrderedCharacter} in {this}");

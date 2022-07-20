@@ -92,7 +92,8 @@ namespace Steamworks
 		#endregion
 		internal void ConvertPingLocationToString( ref NetPingLocation location, out string pszBuf )
 		{
-			IntPtr mempszBuf = Helpers.TakeMemory();
+			using var memory = Helpers.TakeMemory();
+			IntPtr mempszBuf = memory;
 			_ConvertPingLocationToString( Self, ref location, mempszBuf, (1024 * 32) );
 			pszBuf = Helpers.MemoryToString( mempszBuf );
 		}
@@ -323,7 +324,8 @@ namespace Steamworks
 		#endregion
 		internal void SteamNetworkingIPAddr_ToString( ref NetAddress addr, out string buf, [MarshalAs( UnmanagedType.U1 )] bool bWithPort )
 		{
-			IntPtr membuf = Helpers.TakeMemory();
+			using var memory = Helpers.TakeMemory();
+			IntPtr membuf = memory;
 			_SteamNetworkingIPAddr_ToString( Self, ref addr, membuf, (1024 * 32), bWithPort );
 			buf = Helpers.MemoryToString( membuf );
 		}
@@ -347,7 +349,8 @@ namespace Steamworks
 		#endregion
 		internal void SteamNetworkingIdentity_ToString( ref NetIdentity identity, out string buf )
 		{
-			IntPtr membuf = Helpers.TakeMemory();
+			using var memory = Helpers.TakeMemory();
+			IntPtr membuf = memory;
 			_SteamNetworkingIdentity_ToString( Self, ref identity, membuf, (1024 * 32) );
 			buf = Helpers.MemoryToString( membuf );
 		}

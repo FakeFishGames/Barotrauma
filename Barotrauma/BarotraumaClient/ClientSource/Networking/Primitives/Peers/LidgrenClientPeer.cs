@@ -36,7 +36,7 @@ namespace Barotrauma.Networking
 
             netPeerConfiguration = new NetPeerConfiguration("barotrauma")
             {
-                UseDualModeSockets = GameMain.Config.UseDualModeSockets
+                UseDualModeSockets = GameSettings.CurrentConfig.UseDualModeSockets
             };
 
             netPeerConfiguration.DisableMessageType(NetIncomingMessageType.DebugMessage | NetIncomingMessageType.WarningMessage | NetIncomingMessageType.Receipt
@@ -84,7 +84,7 @@ namespace Barotrauma.Networking
             if (ownerKey != 0 && (ChildServerRelay.Process?.HasExited ?? true))
             {
                 Close();
-                var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), TextManager.Get("ServerProcessClosed"));
+                var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), ChildServerRelay.CrashMessage);
                 msgBox.Buttons[0].OnClicked += (btn, obj) => { GameMain.MainMenuScreen.Select(); return false; };
                 return;
             }
@@ -115,13 +115,9 @@ namespace Barotrauma.Networking
         {
             if (!isActive) { return; }
 
-            byte incByte = inc.ReadByte();
-            bool isCompressed = (incByte & (byte)PacketHeader.IsCompressed) != 0;
-            bool isConnectionInitializationStep = (incByte & (byte)PacketHeader.IsConnectionInitializationStep) != 0;
+            PacketHeader packetHeader = (PacketHeader)inc.ReadByte();
 
-            //Console.WriteLine(isCompressed + " " + isConnectionInitializationStep + " " + (int)incByte);
-
-            if (isConnectionInitializationStep && initializationStep != ConnectionInitialization.Success)
+            if (packetHeader.IsConnectionInitializationStep() && initializationStep != ConnectionInitialization.Success)
             {
                 ReadConnectionInitializationStep(new ReadWriteMessage(inc.Data, (int)inc.Position, inc.LengthBits, false));
             }
@@ -133,7 +129,7 @@ namespace Barotrauma.Networking
                     initializationStep = ConnectionInitialization.Success;
                 }
                 UInt16 length = inc.ReadUInt16();
-                IReadMessage msg = new ReadOnlyMessage(inc.Data, isCompressed, inc.PositionInBytes, length, ServerConnection);
+                IReadMessage msg = new ReadOnlyMessage(inc.Data, packetHeader.IsCompressed(), inc.PositionInBytes, length, ServerConnection);
                 OnMessageReceived?.Invoke(msg);
             }
         }
@@ -177,13 +173,13 @@ namespace Barotrauma.Networking
 
             isActive = false;
 
-            netClient.Shutdown(msg ?? TextManager.Get("Disconnecting"));
+            netClient.Shutdown(msg ?? TextManager.Get("Disconnecting").Value);
             netClient = null;
             steamAuthTicket?.Cancel(); steamAuthTicket = null;
             OnDisconnect?.Invoke(disableReconnect);
         }
 
-        public override void Send(IWriteMessage msg, DeliveryMethod deliveryMethod)
+        public override void Send(IWriteMessage msg, DeliveryMethod deliveryMethod, bool compressPastThreshold = true)
         {
             if (!isActive) { return; }
 
@@ -210,7 +206,7 @@ namespace Barotrauma.Networking
 
             NetOutgoingMessage lidgrenMsg = netClient.CreateMessage();
             byte[] msgData = new byte[msg.LengthBytes];
-            msg.PrepareForSending(ref msgData, out bool isCompressed, out int length);
+            msg.PrepareForSending(ref msgData, compressPastThreshold, out bool isCompressed, out int length);
             lidgrenMsg.Write((byte)(isCompressed ? PacketHeader.IsCompressed : PacketHeader.None));
             lidgrenMsg.Write((UInt16)length);
             lidgrenMsg.Write(msgData, 0, length);

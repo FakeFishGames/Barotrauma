@@ -4,9 +4,7 @@ namespace Barotrauma
 {
     class ShipIssueWorkerPowerUpReactor : ShipIssueWorkerItem
     {
-        public ShipIssueWorkerPowerUpReactor(ShipCommandManager shipCommandManager, Order order, Item targetItem, ItemComponent targetItemComponent, string option) : base(shipCommandManager, order, targetItem, targetItemComponent, option)
-        {
-        }
+        public ShipIssueWorkerPowerUpReactor(ShipCommandManager shipCommandManager, Order order) : base(shipCommandManager, order) { }
 
         public override void CalculateImportanceSpecific()
         {

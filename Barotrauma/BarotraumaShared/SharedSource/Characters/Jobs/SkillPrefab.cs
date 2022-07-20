@@ -5,9 +5,9 @@ namespace Barotrauma
 {
     class SkillPrefab
     {
-        public readonly string Identifier;
+        public readonly Identifier Identifier;
 
-        public Vector2 LevelRange { get; private set; }
+        public Range<float> LevelRange { get; private set; }
 
         /// <summary>
         /// How much this skill affects characters' hiring cost
@@ -16,19 +16,20 @@ namespace Barotrauma
 
         public bool IsPrimarySkill { get; }
 
-        public SkillPrefab(XElement element) 
+        public SkillPrefab(ContentXElement element) 
         {
-            Identifier = element.GetAttributeString("identifier", "");
+            Identifier = element.GetAttributeIdentifier("identifier", "");
             PriceMultiplier = element.GetAttributeFloat("pricemultiplier", 25.0f);
             var levelString = element.GetAttributeString("level", "");
             if (levelString.Contains(","))
             {
-                LevelRange = XMLExtensions.ParseVector2(levelString, false);
+                var rangeVector2 = XMLExtensions.ParseVector2(levelString, false);
+                LevelRange = new Range<float>(rangeVector2.X, rangeVector2.Y);
             }
             else
             {
                 float skillLevel = float.Parse(levelString, System.Globalization.CultureInfo.InvariantCulture);
-                LevelRange = new Vector2(skillLevel, skillLevel);
+                LevelRange = new Range<float>(skillLevel, skillLevel);
             }
 
             IsPrimarySkill = element.GetAttributeBool("primary", false);

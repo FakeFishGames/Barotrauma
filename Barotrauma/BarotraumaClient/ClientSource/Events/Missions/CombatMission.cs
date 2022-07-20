@@ -4,7 +4,7 @@ namespace Barotrauma
 {
     partial class CombatMission : Mission
     {
-        public override string Description
+        public override LocalizedString Description
         {
             get
             {
@@ -20,5 +20,8 @@ namespace Barotrauma
                 return descriptions[GameMain.Client.Character.TeamID == CharacterTeamType.Team1 ? 1 : 2];
             }
         }
+
+        public override bool DisplayAsCompleted => false;
+        public override bool DisplayAsFailed => false;
     }
 }

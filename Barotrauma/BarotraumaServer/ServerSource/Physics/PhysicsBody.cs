@@ -6,7 +6,7 @@ namespace Barotrauma
 {
     partial class PhysicsBody
     {
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerWrite(IWriteMessage msg)
         {
             float MaxVel = NetConfig.MaxPhysicsBodyVelocity;
             float MaxAngularVel = NetConfig.MaxPhysicsBodyAngularVelocity;

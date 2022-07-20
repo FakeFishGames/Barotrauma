@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
-    public class GUIColorPicker : GUIComponent
+    public class GUIColorPicker : GUIComponent, IDisposable
     {
         public delegate bool OnColorSelectedHandler(GUIColorPicker component, Color color);
         public OnColorSelectedHandler? OnColorSelected;
@@ -33,11 +33,6 @@ namespace Barotrauma
                                transparentBlack = Color.Black * 0.8f;
 
         public GUIColorPicker(RectTransform rectT, string? style = null) : base(style, rectT) { }
-
-        ~GUIColorPicker()
-        {
-            DisposeTextures();
-        }
 
         private void Init()
         {
@@ -170,10 +165,12 @@ namespace Barotrauma
             }
         }
 
-        public void DisposeTextures()
+        public void Dispose()
         {
             mainTexture?.Dispose();
+            mainTexture = null;
             hueTexture?.Dispose();
+            hueTexture = null;
         }
 
         public void RefreshHue()

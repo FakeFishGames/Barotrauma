@@ -8,7 +8,7 @@ namespace Barotrauma.Abilities
     class AbilityConditionAffliction : AbilityConditionData
     {
         private readonly string[] afflictions;
-        public AbilityConditionAffliction(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
+        public AbilityConditionAffliction(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
             afflictions = conditionElement.GetAttributeStringArray("afflictions", new string[0], convertToLowerInvariant: true);
         }

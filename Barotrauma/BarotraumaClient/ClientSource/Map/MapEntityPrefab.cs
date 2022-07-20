@@ -5,15 +5,13 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    abstract partial class MapEntityPrefab : IPrefab, IDisposable
+    abstract partial class MapEntityPrefab : PrefabWithUintIdentifier
     {
-        public readonly Dictionary<string, List<DecorativeSprite>> UpgradeOverrideSprites = new Dictionary<string, List<DecorativeSprite>>();
-        
         public virtual void UpdatePlacing(Camera cam)
         {
             if (PlayerInput.SecondaryMouseButtonClicked())
             {
-                selected = null;
+                Selected = null;
                 return;
             }
             
@@ -47,7 +45,7 @@ namespace Barotrauma
                     placePosition = Vector2.Zero;
                     if (!PlayerInput.IsShiftDown())
                     {
-                        selected = null;
+                        Selected = null;
                     }
                 }
 
@@ -97,7 +95,7 @@ namespace Barotrauma
         }
         public void DrawListLine(SpriteBatch spriteBatch, Vector2 pos, Color color)
         {
-            GUI.Font.DrawString(spriteBatch, originalName, pos, color);
+            GUIStyle.Font.DrawString(spriteBatch, OriginalName, pos, color);
         }
     }
 }

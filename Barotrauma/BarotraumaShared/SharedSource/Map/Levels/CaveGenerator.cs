@@ -157,9 +157,6 @@ namespace Barotrauma
 
         public static List<VoronoiCell> GeneratePath(List<VoronoiCell> targetCells, List<VoronoiCell> cells)
         {
-            Stopwatch sw2 = new Stopwatch();
-            sw2.Start();
-
             List<VoronoiCell> pathCells = new List<VoronoiCell>();
 
             if (targetCells.Count == 0) { return pathCells; }
@@ -212,10 +209,6 @@ namespace Barotrauma
                 }
 
             } while (currentCell != targetCells[targetCells.Count - 1] && iterationsLeft > 0);
-
-
-            Debug.WriteLine("gettooclose: " + sw2.ElapsedMilliseconds + " ms");
-            sw2.Restart();
 
             return pathCells;
         }
@@ -279,7 +272,7 @@ namespace Barotrauma
                     {
 
                         float centerF = 0.5f - Math.Abs(0.5f - (i / (float)pointCount));
-                        float randomVariance = Rand.Range(0, irregularity, Rand.RandSync.Server);
+                        float randomVariance = Rand.Range(0, irregularity, Rand.RandSync.ServerAndClient);
                         Vector2 extrudedPoint = 
                             edge.Point1 +
                             edgeDir * (i / (float)pointCount) +
@@ -351,7 +344,7 @@ namespace Barotrauma
                 BodyType = BodyType.Static,
                 CollisionCategories = Physics.CollisionLevel
             };
-            GameMain.World.Add(cellBody);
+            GameMain.World.Add(cellBody, findNewContacts: false);
 
             for (int n = cells.Count - 1; n >= 0; n-- )
             {
@@ -429,7 +422,9 @@ namespace Barotrauma
 
                     Vertices bodyVertices = new Vertices(triangles[i]);
                     PolygonShape polygon = new PolygonShape(bodyVertices, 5.0f);
-                    Fixture fixture = new Fixture(polygon)
+                    Fixture fixture = new Fixture(polygon,
+                        Physics.CollisionLevel,
+                        Physics.CollisionAll)
                     {
                         UserData = cell
                     };
@@ -440,14 +435,12 @@ namespace Barotrauma
                         DebugConsole.ThrowError("Invalid triangle created by CaveGenerator (" + triangles[i][0] + ", " + triangles[i][1] + ", " + triangles[i][2] + ")");
                         GameAnalyticsManager.AddErrorEventOnce(
                             "CaveGenerator.GeneratePolygons:InvalidTriangle",
-                            GameAnalyticsSDK.Net.EGAErrorSeverity.Warning,
+                            GameAnalyticsManager.ErrorSeverity.Warning,
                             "Invalid triangle created by CaveGenerator (" + triangles[i][0] + ", " + triangles[i][1] + ", " + triangles[i][2] + "). Seed: " + level.Seed);
                     }
                 }                
                 cell.Body = cellBody;
             }
-
-            cellBody.CollisionCategories = Physics.CollisionLevel;
             cellBody.ResetMassData();
 
             return cellBody;
@@ -469,7 +462,7 @@ namespace Barotrauma
             for (int i = 0; i < vertexCount; i++)
             {
                 Vector2 dir = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
-                verts.Add(new Vector2(dir.X * width / 2, dir.Y * height / 2) + dir * Rand.Range(-radiusVariance, radiusVariance, Rand.RandSync.Server));
+                verts.Add(new Vector2(dir.X * width / 2, dir.Y * height / 2) + dir * Rand.Range(-radiusVariance, radiusVariance, Rand.RandSync.ServerAndClient));
                 angle += angleStep;
             }
             return verts;

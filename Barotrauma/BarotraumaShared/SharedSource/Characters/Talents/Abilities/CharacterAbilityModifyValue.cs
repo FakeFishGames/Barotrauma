@@ -7,7 +7,7 @@ namespace Barotrauma.Abilities
         private readonly float addedValue;
         private readonly float multiplyValue;
 
-        public CharacterAbilityModifyValue(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityModifyValue(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             addedValue = abilityElement.GetAttributeFloat("addedvalue", 0f);
             multiplyValue = abilityElement.GetAttributeFloat("multiplyvalue", 1f);

@@ -7,7 +7,7 @@ namespace Barotrauma.Abilities
         private readonly float randomChance = 0f;
         public override bool AllowClientSimulation => false;
 
-        public AbilityConditionServerRandom(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
+        public AbilityConditionServerRandom(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
             randomChance = conditionElement.GetAttributeFloat("randomchance", 1f);
         }

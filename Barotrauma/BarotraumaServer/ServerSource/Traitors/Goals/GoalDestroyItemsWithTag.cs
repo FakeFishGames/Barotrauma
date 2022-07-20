@@ -51,11 +51,11 @@ namespace Barotrauma
                     {
                         continue;
                     }
-                    var identifierMatches = matchIdentifier && item.prefab.Identifier == tag;
+                    var identifierMatches = matchIdentifier && ((MapEntity)item).Prefab.Identifier == tag;
                     if (identifierMatches && tagPrefabName == null)
                     {
                         var textId = item.Prefab.GetItemNameTextId();
-                        tagPrefabName = textId != null ? TextManager.FormatServerMessage(textId) : item.Prefab.Name;
+                        tagPrefabName = textId != null ? TextManager.FormatServerMessage(textId) : item.Prefab.Name.Value;
                     }
                     if (identifierMatches || (matchTag && item.HasTag(tag)))
                     {

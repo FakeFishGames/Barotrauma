@@ -1,15 +1,13 @@
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Collections.Generic;
 
 namespace Barotrauma
 {
     public class GUITickBox : GUIComponent
     {
-        private GUILayoutGroup layoutGroup;
-        private GUIFrame box;
-        private GUITextBlock text;
+        private readonly GUILayoutGroup layoutGroup;
+        private readonly GUIFrame box;
+        private readonly GUITextBlock text;
 
         public delegate bool OnSelectedHandler(GUITickBox obj);
         public OnSelectedHandler OnSelected;
@@ -20,18 +18,18 @@ namespace Barotrauma
 
         public override bool Selected
         {
-            get { return selected; }
+            get { return isSelected; }
             set 
             {
-                if (value == selected) { return; } 
+                if (value == isSelected) { return; } 
                 if (radioButtonGroup != null && radioButtonGroup.SelectedRadioButton == this)
                 {
-                    selected = true;
+                    isSelected = true;
                     return;
                 }
                 
-                selected = value;
-                State = selected ? ComponentState.Selected : ComponentState.None;
+                isSelected = value;
+                State = isSelected ? ComponentState.Selected : ComponentState.None;
                 if (value && radioButtonGroup != null)
                 {
                     radioButtonGroup.SelectRadioButton(this);
@@ -88,7 +86,7 @@ namespace Barotrauma
             }
         }*/
 
-        public override ScalableFont Font
+        public override GUIFont Font
         {
             get
             {
@@ -112,7 +110,7 @@ namespace Barotrauma
             get { return text; }
         }
 
-        public override string ToolTip
+        public override RichString ToolTip
         {
             get { return base.ToolTip; }
             set
@@ -123,13 +121,19 @@ namespace Barotrauma
             }
         }
 
-        public string Text
+        public LocalizedString Text
         {
             get { return text.Text; }
             set { text.Text = value; }
         }
 
-        public GUITickBox(RectTransform rectT, string label, ScalableFont font = null, string style = "") : base(null, rectT)
+        public float ContentWidth { get; private set; }
+
+        public GUISoundType SoundType { private get; set; } = GUISoundType.TickBox;
+
+        public override bool PlaySoundOnSelect { get; set; } = true;
+
+        public GUITickBox(RectTransform rectT, LocalizedString label, GUIFont font = null, string style = "") : base(null, rectT)
         {
             CanBeFocused = true;
             HoverCursor = CursorState.Hand;
@@ -145,7 +149,7 @@ namespace Barotrauma
                 SelectedColor = Color.DarkGray,
                 CanBeFocused = false
             };
-            GUI.Style.Apply(box, style == "" ? "GUITickBox" : style);
+            GUIStyle.Apply(box, style == "" ? "GUITickBox" : style);
             if (box.RectTransform.MinSize.Y > 0)
             {
                 RectTransform.MinSize = box.RectTransform.MinSize;
@@ -159,7 +163,7 @@ namespace Barotrauma
             {
                 CanBeFocused = false
             };
-            GUI.Style.Apply(text, "GUITextBlock", this);
+            GUIStyle.Apply(text, "GUITextBlock", this);
             Enabled = true;
 
             ResizeBox();
@@ -180,6 +184,7 @@ namespace Barotrauma
             box.RectTransform.MinSize = new Point(Rect.Height);
             box.RectTransform.Resize(box.RectTransform.MinSize);
             text.SetTextPos();
+            ContentWidth = box.Rect.Width + text.Padding.X + text.TextSize.X + text.Padding.Z;
         }
         
         protected override void Update(float deltaTime)
@@ -205,13 +210,17 @@ namespace Barotrauma
                     {
                         Selected = !Selected;
                     }
-                    else if (!selected)
+                    else if (!isSelected)
                     {
                         Selected = true;
                     }
+                    if (PlaySoundOnSelect)
+                    {
+                        SoundPlayer.PlayUISound(SoundType);
+                    }
                 }
             }
-            else if (selected)
+            else if (isSelected)
             {
                 State = ComponentState.Selected;
             }

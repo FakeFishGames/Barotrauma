@@ -1,15 +1,14 @@
-﻿using Barotrauma.Extensions;
-using Barotrauma.Items.Components;
+﻿using Barotrauma.Items.Components;
 using Barotrauma.Networking;
-using Microsoft.Xna.Framework;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Barotrauma
 {
     partial class MineralMission : Mission
     {
+        public override bool DisplayAsCompleted => false;
+        public override bool DisplayAsFailed => false;
+
         public override void ClientReadInitial(IReadMessage msg)
         {
             base.ClientReadInitial(msg);
@@ -57,7 +56,7 @@ namespace Barotrauma
 
             for(int i = 0; i < resourceClusters.Count; i++)
             {
-                var identifier = msg.ReadString();
+                var identifier = msg.ReadIdentifier();
                 var count = msg.ReadByte();
                 var resources = new Item[count];
                 for (int j = 0; j < count; j++)

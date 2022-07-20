@@ -10,7 +10,7 @@ namespace Barotrauma.Abilities
         private readonly int experienceAmount;
         private readonly int max;
 
-        public CharacterAbilityByTheBook(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityByTheBook(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             moneyAmount = abilityElement.GetAttributeInt("moneyamount", 0);
             experienceAmount = abilityElement.GetAttributeInt("experienceamount", 0);
@@ -30,6 +30,7 @@ namespace Barotrauma.Abilities
                 if (!enemyCharacter.LockHands) { continue; }
                 if (timesGiven > max) { continue; }
                 Character.GiveMoney(moneyAmount);
+                GameAnalyticsManager.AddMoneyGainedEvent(moneyAmount, GameAnalyticsManager.MoneySource.Ability, CharacterTalent.Prefab.Identifier.Value);
                 foreach (Character character in Character.GetFriendlyCrew(Character))
                 {
                     character.Info?.GiveExperience(experienceAmount);

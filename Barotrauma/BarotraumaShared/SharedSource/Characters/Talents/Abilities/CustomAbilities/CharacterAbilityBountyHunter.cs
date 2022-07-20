@@ -7,7 +7,7 @@ namespace Barotrauma.Abilities
     {
         private float vitalityPercentage;
 
-        public CharacterAbilityBountyHunter(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityBountyHunter(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             vitalityPercentage = abilityElement.GetAttributeFloat("vitalitypercentage", 0f);
         }
@@ -16,7 +16,9 @@ namespace Barotrauma.Abilities
         {
             if ((abilityObject as IAbilityCharacter)?.Character is Character character)
             {
-                Character.GiveMoney((int)(vitalityPercentage * character.MaxVitality));
+                int totalAmount = (int)(vitalityPercentage * character.MaxVitality);
+                Character.GiveMoney(totalAmount);
+                GameAnalyticsManager.AddMoneyGainedEvent(totalAmount, GameAnalyticsManager.MoneySource.Ability, CharacterTalent.Prefab.Identifier.Value);
             }
         }
     }

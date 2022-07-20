@@ -146,7 +146,7 @@ namespace Barotrauma.Items.Components
     {
         private GUIFrame submarineContainer;
 
-        private GUIFrame hullInfoFrame;
+        private GUIFrame? hullInfoFrame;
         private GUIScissorComponent? scissorComponent;
         private GUIComponent? miniMapContainer;
         private GUIComponent miniMapFrame;
@@ -160,7 +160,7 @@ namespace Barotrauma.Items.Components
 
         private GUITextBlock tooltipHeader, tooltipFirstLine, tooltipSecondLine, tooltipThirdLine;
 
-        private string noPowerTip = string.Empty;
+        private LocalizedString noPowerTip = string.Empty;
 
         private readonly List<Submarine> displayedSubs = new List<Submarine>();
 
@@ -183,6 +183,7 @@ namespace Barotrauma.Items.Components
         private ImmutableDictionary<MapEntity, MiniMapGUIComponent> electricalMapComponents;
         private ImmutableDictionary<MiniMapGUIComponent, GUIComponent> electricalChildren;
         private ImmutableDictionary<MiniMapGUIComponent, GUIComponent> doorChildren;
+        private ImmutableDictionary<MiniMapGUIComponent, GUIComponent> weaponChildren;
 
         private ImmutableHashSet<ItemPrefab>? itemsFoundOnSub;
 
@@ -212,7 +213,7 @@ namespace Barotrauma.Items.Components
         public static readonly Color MiniMapBaseColor = new Color(15, 178, 107);
 
         private static readonly Color WetHullColor = new Color(11, 122, 205),
-                                      DoorIndicatorColor = GUI.Style.Green,
+                                      DoorIndicatorColor = GUIStyle.Green,
                                       NoPowerDoorColor = DoorIndicatorColor * 0.1f,
                                       DefaultNeutralColor = MiniMapBaseColor * 0.8f,
                                       HoverColor = Color.White,
@@ -220,7 +221,7 @@ namespace Barotrauma.Items.Components
                                       HullWaterColor = new Color(17, 173, 179) * 0.5f,
                                       HullWaterLineColor = Color.LightBlue * 0.5f,
                                       NoPowerColor = MiniMapBaseColor * 0.1f,
-                                      ElectricalBaseColor = GUI.Style.Orange,
+                                      ElectricalBaseColor = GUIStyle.Orange,
                                       NoPowerElectricalColor = ElectricalBaseColor * 0.1f;
 
         partial void InitProjSpecific()
@@ -291,7 +292,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            List<Order> reports = Order.PrefabList.FindAll(o => o.IsReport && o.SymbolSprite != null && !o.Hidden);
+            OrderPrefab[] reports = OrderPrefab.Prefabs.Where(o => o.IsReport && o.SymbolSprite != null && !o.Hidden).ToArray();
 
             GUIFrame bottomFrame = new GUIFrame(new RectTransform(new Vector2(0.5f, 0.15f), paddedContainer.RectTransform, Anchor.BottomCenter) { MaxSize = new Point(int.MaxValue, GUI.IntScale(40)) }, style: null)
             {
@@ -332,6 +333,7 @@ namespace Barotrauma.Items.Components
 
             GUIListBox listBox = new GUIListBox(new RectTransform(Vector2.One, searchAutoComplete.RectTransform))
             {
+                PlaySoundOnSelect = true,
                 OnSelected = (component, o) =>
                 {
                     if (o is ItemPrefab prefab)
@@ -366,8 +368,8 @@ namespace Barotrauma.Items.Components
 
             hullInfoFrame = new GUIFrame(new RectTransform(new Vector2(0.13f, 0.13f), GUI.Canvas, minSize: new Point(250, 150)), style: "GUIToolTip")
             {
-                CanBeFocused = false
-
+                CanBeFocused = false,
+                Visible = false
             };
 
             var hullInfoContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), hullInfoFrame.RectTransform, Anchor.Center))
@@ -395,7 +397,7 @@ namespace Barotrauma.Items.Components
 
         private bool VisibleOnItemFinder(Item it)
         {
-            if (it.Submarine != item.Submarine) { return false; }
+            if (!item.Submarine.IsEntityFoundOnThisSub(it, includingConnectedSubs: true)) { return false; }
             if (it.NonInteractable || it.HiddenInGame) { return false; }
             if (it.GetComponent<Pickable>() == null) { return false; }
 
@@ -413,7 +415,7 @@ namespace Barotrauma.Items.Components
         public override void AddToGUIUpdateList(int order = 0)
         {
             base.AddToGUIUpdateList(order);
-            hullInfoFrame.AddToGUIUpdateList(order: order + 1);
+            hullInfoFrame?.AddToGUIUpdateList(order: order + 1);
             if (currentMode == MiniMapMode.ItemFinder && searchBar.Selected)
             {
                 searchAutoComplete?.AddToGUIUpdateList(order: order + 1);
@@ -431,10 +433,10 @@ namespace Barotrauma.Items.Components
             scissorComponent = new GUIScissorComponent(new RectTransform(Vector2.One, submarineContainer.RectTransform, Anchor.Center));
             miniMapContainer = new GUIFrame(new RectTransform(Vector2.One, scissorComponent.Content.RectTransform, Anchor.Center), style: null) { CanBeFocused = false };
 
-            ImmutableHashSet<Item> hullPointsOfInterest = Item.ItemList.Where(it => it.Submarine == item.Submarine && !it.HiddenInGame && !it.NonInteractable && it.Prefab.ShowInStatusMonitor && it.GetComponent<Door>() != null).ToImmutableHashSet();
+            ImmutableHashSet<Item> hullPointsOfInterest = Item.ItemList.Where(it => item.Submarine.IsEntityFoundOnThisSub(it, includingConnectedSubs: true) && !it.HiddenInGame && !it.NonInteractable && it.Prefab.ShowInStatusMonitor && (it.GetComponent<Door>() != null || it.GetComponent<Turret>() != null)).ToImmutableHashSet();
             miniMapFrame = CreateMiniMap(item.Submarine, submarineContainer, MiniMapSettings.Default, hullPointsOfInterest, out hullStatusComponents);
 
-            IEnumerable<Item> electrialPointsOfInterest = Item.ItemList.Where(it => it.Submarine == item.Submarine && !it.HiddenInGame && !it.NonInteractable && it.GetComponent<Repairable>() != null);
+            IEnumerable<Item> electrialPointsOfInterest = Item.ItemList.Where(it => item.Submarine.IsEntityFoundOnThisSub(it, includingConnectedSubs: true) && !it.HiddenInGame && !it.NonInteractable && it.GetComponent<Repairable>() != null);
             electricalFrame = CreateMiniMap(item.Submarine, miniMapContainer, new MiniMapSettings(createHullElements: false), electrialPointsOfInterest, out electricalMapComponents);
 
             Dictionary<MiniMapGUIComponent, GUIComponent> electricChildren = new Dictionary<MiniMapGUIComponent, GUIComponent>();
@@ -460,29 +462,63 @@ namespace Barotrauma.Items.Components
             electricalChildren = electricChildren.ToImmutableDictionary();
 
             Dictionary<MiniMapGUIComponent, GUIComponent> doorChilds = new Dictionary<MiniMapGUIComponent, GUIComponent>();
+            Dictionary<MiniMapGUIComponent, GUIComponent> weaponChilds = new Dictionary<MiniMapGUIComponent, GUIComponent>();
 
             foreach (var (entity, component) in hullStatusComponents)
             {
                 if (!hullPointsOfInterest.Contains(entity)) { continue; }
 
-                const int minSize = 8;
+                if (!(entity is Item it)) { continue; }
                 const int borderMaxSize = 2;
 
-                Point size = component.BorderComponent.Rect.Size;
-
-                size.X = Math.Max(size.X, minSize);
-                size.Y = Math.Max(size.Y, minSize);
-                float width = Math.Min(borderMaxSize, Math.Min(size.X, size.Y) / 8f);
-
-                GUIFrame frame = new GUIFrame(new RectTransform(size, component.RectComponent.RectTransform, anchor: Anchor.Center), style: "ScanLines", color: DoorIndicatorColor)
+                if (it.GetComponent<Door>() is { })
                 {
-                    OutlineColor = GUI.Style.Green,
-                    OutlineThickness = width
-                };
-                doorChilds.Add(component, frame);
+                    const int minSize = 8;
+
+                    Point size = component.BorderComponent.Rect.Size;
+
+                    size.X = Math.Max(size.X, minSize);
+                    size.Y = Math.Max(size.Y, minSize);
+                    float width = Math.Min(borderMaxSize, Math.Min(size.X, size.Y) / 8f);
+
+                    GUIFrame frame = new GUIFrame(new RectTransform(size, component.RectComponent.RectTransform, anchor: Anchor.Center), style: "ScanLines", color: DoorIndicatorColor)
+                    {
+                        OutlineColor = DoorIndicatorColor,
+                        OutlineThickness = width
+                    };
+                    doorChilds.Add(component, frame);
+                } 
+                else if (it.GetComponent<Turret>() is { } turret)
+                {
+                    int parentWidth = (int) (submarineContainer.Rect.Width / 16f);
+                    GUICustomComponent frame = new GUICustomComponent(new RectTransform(new Point(parentWidth, parentWidth), component.RectComponent.RectTransform, anchor: Anchor.Center), (batch, customComponent) =>
+                    {
+                        Vector2 center = customComponent.Center;
+                        float rotation = turret.Rotation;
+
+                        if (!hasPower)
+                        {
+                            float minRotation = MathHelper.ToRadians(Math.Min(turret.RotationLimits.X, turret.RotationLimits.Y)),
+                                  maxRotation = MathHelper.ToRadians(Math.Max(turret.RotationLimits.X, turret.RotationLimits.Y));
+
+                            rotation = (minRotation + maxRotation) / 2;
+                        }
+
+                        if (turret.WeaponIndicatorSprite is { } weaponSprite)
+                        {
+                            Vector2 origin = weaponSprite.Origin;
+                            float scale = parentWidth / Math.Max(weaponSprite.size.X, weaponSprite.size.Y);
+                            Color color = !hasPower ? NoPowerColor : turret.ActiveUser is null ? Color.DimGray : GUIStyle.Green;
+                            weaponSprite.Draw(batch, center, color, origin, rotation, scale, it.SpriteEffects);
+                        }
+                    });
+
+                    weaponChilds.Add(component, frame);
+                }
             }
 
             doorChildren = doorChilds.ToImmutableDictionary();
+            weaponChildren = weaponChilds.ToImmutableDictionary();
 
             Rectangle parentRect = miniMapFrame.Rect;
 
@@ -502,9 +538,9 @@ namespace Barotrauma.Items.Components
             if (item.Submarine == null && displayedSubs.Count > 0 ||                                         // item not inside a sub anymore, but display is still showing subs
                 item.Submarine is { } itemSub &&
                 (
-                    !displayedSubs.Contains(itemSub) ||                                                      // current sub not displayed
-                    itemSub.DockedTo.Any(s => !displayedSubs.Contains(s)) ||                                 // some of the docked subs not displayed
-                    displayedSubs.Any(s => s != itemSub && !itemSub.DockedTo.Contains(s))                    // displaying a sub that shouldn't be displayed
+                    !displayedSubs.Contains(itemSub) ||                                                                     // current sub not displayed
+                    itemSub.DockedTo.Any(s => !displayedSubs.Contains(s) && itemSub.ConnectedDockingPorts[s].IsLocked) ||   // some of the docked subs not displayed
+                    displayedSubs.Any(s => s != itemSub && !itemSub.DockedTo.Contains(s))                                   // displaying a sub that shouldn't be displayed
                 ) ||
                 prevResolution.X != GameMain.GraphicsWidth || prevResolution.Y != GameMain.GraphicsHeight || // resolution changed
                 !submarineContainer.Children.Any())                                                          // We lack a GUI
@@ -521,7 +557,7 @@ namespace Barotrauma.Items.Components
                         dragMapStart = PlayerInput.MousePosition;
                     }
                 }
-
+                
                 if (currentMode != MiniMapMode.HullStatus && Math.Abs(PlayerInput.ScrollWheelSpeed) > 0 && (GUI.MouseOn == scissorComponent || scissorComponent.IsParentOf(GUI.MouseOn)))
                 {
                     float newZoom = Math.Clamp(Zoom + PlayerInput.ScrollWheelSpeed / 1000.0f * Zoom, minZoom, maxZoom);
@@ -578,7 +614,7 @@ namespace Barotrauma.Items.Components
                     if (hullData.Distort)
                     {
                         hullData.ReceivedOxygenAmount = Rand.Range(0.0f, 100.0f);
-                        hullData.ReceivedWaterAmount = Rand.Range(0.0f, 1.0f);
+                        hullData.ReceivedWaterAmount = Rand.Range(0.0f, 100.0f);
                     }
                     hullData.DistortionTimer = Rand.Range(1.0f, 10.0f);
                 }
@@ -629,52 +665,69 @@ namespace Barotrauma.Items.Components
         {
             if (Voltage < MinVoltage)
             {
-                Vector2 textSize = GUI.Font.MeasureString(noPowerTip);
+                Vector2 textSize = GUIStyle.Font.MeasureString(noPowerTip);
                 Vector2 textPos = GuiFrame.Rect.Center.ToVector2();
-                Color noPowerColor = GUI.Style.Orange * (float)Math.Abs(Math.Sin(Timing.TotalTime));
+                Color noPowerColor = GUIStyle.Orange * (float)Math.Abs(Math.Sin(Timing.TotalTime));
 
-                GUI.DrawString(spriteBatch, textPos - textSize / 2, noPowerTip, noPowerColor, Color.Black * 0.8f, font: GUI.SubHeadingFont);
+                GUI.DrawString(spriteBatch, textPos - textSize / 2, noPowerTip, noPowerColor, Color.Black * 0.8f, font: GUIStyle.SubHeadingFont);
                 return;
             }
 
-            if (currentMode == MiniMapMode.HullStatus)
+            if (currentMode == MiniMapMode.HullStatus && item.Submarine != null)
             {
                 Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
                 spriteBatch.End();
                 spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
                 spriteBatch.GraphicsDevice.ScissorRectangle = submarineContainer.Rect;
 
-                if (item.Submarine != null)
+                var sprite = GUIStyle.UIGlowSolidCircular.Value?.Sprite;
+                float alpha = (MathF.Sin(blipState / maxBlipState * MathHelper.TwoPi) + 1.5f) * 0.5f;
+                if (sprite != null && ShowHullIntegrity)
                 {
-                    var sprite = GUI.Style.UIGlowSolidCircular?.Sprite;
-                    float alpha = (MathF.Sin(blipState / maxBlipState * MathHelper.TwoPi) + 1.5f) * 0.5f;
-                    if (sprite != null)
+                    Vector2 spriteSize = sprite.size;
+                    Rectangle worldBorders = item.Submarine.GetDockedBorders();
+                    worldBorders.Location += item.Submarine.WorldPosition.ToPoint();
+                    foreach (Gap gap in Gap.GapList)
                     {
-                        Vector2 spriteSize = sprite.size;
-                        Rectangle worldBorders = item.Submarine.GetDockedBorders();
-                        worldBorders.Location += item.Submarine.WorldPosition.ToPoint();
-                        foreach (Gap gap in Gap.GapList)
-                        {
-                            if (gap.IsRoomToRoom || gap.Submarine != item.Submarine || gap.ConnectedDoor != null) { continue; }
-                            RectangleF entityRect = ScaleRectToUI(gap, miniMapFrame.Rect, worldBorders);
+                        if (gap.IsRoomToRoom || gap.linkedTo.Count == 0 || gap.Submarine != item.Submarine || gap.ConnectedDoor != null || gap.HiddenInGame) { continue; }
+                        RectangleF entityRect = ScaleRectToUI(gap, miniMapFrame.Rect, worldBorders);
 
-                            Vector2 scale = new Vector2(entityRect.Size.X / spriteSize.X, entityRect.Size.Y / spriteSize.Y) * 2.0f;
+                        Vector2 scale = new Vector2(entityRect.Size.X / spriteSize.X, entityRect.Size.Y / spriteSize.Y) * 2.0f;
 
-                            Color color = ToolBox.GradientLerp(gap.Open, GUI.Style.HealthBarColorMedium, GUI.Style.HealthBarColorLow) * alpha;
-                            sprite.Draw(spriteBatch,
-                                miniMapFrame.Rect.Location.ToVector2() + entityRect.Center,
-                                color, origin: sprite.Origin, rotate: 0.0f, scale: scale);
-                        }
+                        Color color = ToolBox.GradientLerp(gap.Open, GUIStyle.HealthBarColorMedium, GUIStyle.HealthBarColorLow) * alpha;
+                        sprite.Draw(spriteBatch,
+                            miniMapFrame.Rect.Location.ToVector2() + entityRect.Center,
+                            color, origin: sprite.Origin, rotate: 0.0f, scale: scale);
                     }
-                }
+                }                
 
-                if (currentMode == MiniMapMode.HullStatus)
+                if (currentMode == MiniMapMode.HullStatus && hullStatusComponents != null)
                 {
                     foreach (var (entity, component) in hullStatusComponents)
                     {
                         if (!(entity is Hull hull)) { continue; }
                         if (!hullDatas.TryGetValue(hull, out HullData? hullData) || hullData is null) { continue; }
                         DrawHullCards(spriteBatch, hull, hullData, component.RectComponent);
+
+                        if (item.CurrentHull is { } currentHull && currentHull == hull)
+                        {
+                            Sprite pingCircle = GUIStyle.YouAreHereCircle.Value.Sprite;
+                            if (pingCircle is null) { continue; }
+
+                            Vector2 charPos = item.WorldPosition;
+                            Vector2 hullPos = hull.WorldRect.Location.ToVector2(),
+                                    hullSize = hull.WorldRect.Size.ToVector2();
+                            Vector2 relativePos = (charPos - hullPos) / hullSize * component.RectComponent.Rect.Size.ToVector2();
+                            relativePos.Y = -relativePos.Y;
+
+                            float parentWidth = submarineContainer.Rect.Width / 64f;
+                            float spriteSize = pingCircle.size.X * (parentWidth / pingCircle.size.X);
+
+                            Vector2 drawPos = component.RectComponent.Rect.Location.ToVector2() + relativePos;
+                            drawPos -= new Vector2(spriteSize, spriteSize) / 2f;
+
+                            pingCircle.Draw(spriteBatch, drawPos, GUIStyle.Red * 0.8f, Vector2.Zero, 0f, parentWidth / pingCircle.size.X);
+                        }
                     }
                 }
 
@@ -692,11 +745,11 @@ namespace Barotrauma.Items.Components
 
             if (key == Keys.Down)
             {
-                listBox.SelectNext(true, autoScroll: true);
+                listBox.SelectNext(force: GUIListBox.Force.Yes, playSelectSound: GUIListBox.PlaySelectSound.Yes);
             }
             else if (key == Keys.Up)
             {
-                listBox.SelectPrevious(true, autoScroll: true);
+                listBox.SelectPrevious(force: GUIListBox.Force.Yes, playSelectSound: GUIListBox.PlaySelectSound.Yes);
             }
             else if (key == Keys.Enter)
             {
@@ -730,7 +783,7 @@ namespace Barotrauma.Items.Components
 
                     if (component.Visible && first)
                     {
-                        listBox.Select(i, force: true, autoScroll: false);
+                        listBox.Select(i, GUIListBox.Force.Yes, GUIListBox.AutoScroll.Disabled);
                         first = false;
                     }
                 }
@@ -753,7 +806,7 @@ namespace Barotrauma.Items.Components
 
         private void CreateItemFrame(ItemPrefab prefab, RectTransform parent)
         {
-            Sprite sprite = prefab.InventoryIcon ?? prefab.sprite;
+            Sprite sprite = prefab.InventoryIcon ?? prefab.Sprite;
             if (sprite is null) { return; }
             GUIFrame frame = new GUIFrame(new RectTransform(new Vector2(1f, 0.25f), parent), style: "ListBoxElement")
             {
@@ -769,7 +822,7 @@ namespace Barotrauma.Items.Components
                 Color = prefab.InventoryIconColor,
                 UserData = prefab
             };
-
+            
             var nameText = new GUITextBlock(new RectTransform(Vector2.One, layout.RectTransform), prefab.Name);
             nameText.RectTransform.SizeChanged += () =>
             {
@@ -785,7 +838,7 @@ namespace Barotrauma.Items.Components
 
                 if (first is null)
                 {
-                    searchBar.Flash(GUI.Style.Red);
+                    searchBar.Flash(GUIStyle.Red);
                     return;
                 }
                 searchedPrefab = first;
@@ -838,7 +891,7 @@ namespace Barotrauma.Items.Components
         {
             if (item.Submarine == null) { return; }
 
-            hullInfoFrame.Visible = false;
+            if (hullInfoFrame != null) { hullInfoFrame.Visible = false; }
             reportFrame.Visible = false;
             searchBarFrame.Visible = false;
             electricalFrame.Visible = false;
@@ -936,16 +989,48 @@ namespace Barotrauma.Items.Components
                     continue;
                 }
 
-                hullData.HullOxygenAmount = RequireOxygenDetectors ? hullData.ReceivedOxygenAmount : hull.OxygenPercentage;
-                hullData.HullWaterAmount = RequireWaterDetectors ? hullData.ReceivedWaterAmount : Math.Min(hull.WaterVolume / hull.Volume, 1.0f);
+                if (RequireOxygenDetectors)
+                {
+                    hullData.HullOxygenAmount = hullData.ReceivedOxygenAmount;
+                }
+                else if (hullData.LinkedHulls.Any())
+                {
+                    hullData.HullOxygenAmount = 0.0f;
+                    foreach (Hull linkedHull in hullData.LinkedHulls)
+                    {
+                        hullData.HullOxygenAmount += linkedHull.OxygenPercentage;
+                    }
+                    hullData.HullOxygenAmount /= hullData.LinkedHulls.Count;
+                }
+                else
+                {
+                    hullData.HullOxygenAmount = hull.OxygenPercentage;
+                }
+                if (RequireWaterDetectors)
+                {
+                    hullData.HullWaterAmount = hullData.ReceivedWaterAmount;
+                }
+                else if (hullData.LinkedHulls.Any())
+                {
+                    hullData.HullWaterAmount = 0.0f;
+                    foreach (Hull linkedHull in hullData.LinkedHulls)
+                    {
+                        hullData.HullWaterAmount += WaterDetector.GetWaterPercentage(linkedHull);
+                    }
+                    hullData.HullWaterAmount /= hullData.LinkedHulls.Count;
+                }
+                else
+                {
+                    hullData.HullWaterAmount = WaterDetector.GetWaterPercentage(hull);
+                }
 
                 float gapOpenSum = 0.0f;
 
                 if (ShowHullIntegrity)
                 {
                     float amount = 1f + hullData.LinkedHulls.Count;
-                    gapOpenSum = hull.ConnectedGaps.Concat(hullData.LinkedHulls.SelectMany(h => h.ConnectedGaps)).Where(g => !g.IsRoomToRoom).Sum(g => g.Open) / amount;
-                    borderColor = Color.Lerp(neutralColor, GUI.Style.Red, Math.Min(gapOpenSum, 1.0f));
+                    gapOpenSum = hull.ConnectedGaps.Concat(hullData.LinkedHulls.SelectMany(h => h.ConnectedGaps)).Where(g => !g.IsRoomToRoom && !g.HiddenInGame).Sum(g => g.Open) / amount;
+                    borderColor = Color.Lerp(neutralColor, GUIStyle.Red, Math.Min(gapOpenSum, 1.0f));
                 }
 
                 bool isHoveringOver = canHoverOverHull && GUI.MouseOn == component;
@@ -953,37 +1038,28 @@ namespace Barotrauma.Items.Components
                 // When drawing tooltip we are only interested in the component we are hovering over
                 if (isHoveringOver)
                 {
-                    string header = hull.DisplayName;
+                    LocalizedString header = hull.DisplayName;
 
                     float? oxygenAmount = hullData.HullOxygenAmount,
                            waterAmount = hullData.HullWaterAmount;
 
-                    foreach (Hull linkedHull in hullData.LinkedHulls)
-                    {
-                        oxygenAmount += linkedHull.OxygenPercentage;
-                        waterAmount += Math.Min(linkedHull.WaterVolume / linkedHull.Volume, 1.0f);
-                    }
+                    LocalizedString line1 = gapOpenSum > 0.1f ? TextManager.Get("MiniMapHullBreach") : string.Empty;
+                    Color line1Color = GUIStyle.Red;
 
-                    oxygenAmount /= (hullData.LinkedHulls.Count + 1);
-                    waterAmount /= (hullData.LinkedHulls.Count + 1);
-
-                    string line1 = gapOpenSum > 0.1f ? TextManager.Get("MiniMapHullBreach") : string.Empty;
-                    Color line1Color = GUI.Style.Red;
-
-                    string line2 = oxygenAmount == null ?
+                    LocalizedString line2 = oxygenAmount == null ?
                         TextManager.Get("MiniMapAirQualityUnavailable") :
                         TextManager.AddPunctuation(':', TextManager.Get("MiniMapAirQuality"), (int)Math.Round(oxygenAmount.Value) + "%");
-                    Color line2Color = oxygenAmount == null ? GUI.Style.Red : Color.Lerp(GUI.Style.Red, Color.LightGreen, (float)oxygenAmount / 100.0f);
+                    Color line2Color = oxygenAmount == null ? GUIStyle.Red : Color.Lerp(GUIStyle.Red, Color.LightGreen, (float)oxygenAmount / 100.0f);
 
-                    string line3 = waterAmount == null ?
+                    LocalizedString line3 = waterAmount == null ?
                         TextManager.Get("MiniMapWaterLevelUnavailable") :
-                        TextManager.AddPunctuation(':', TextManager.Get("MiniMapWaterLevel"), (int)Math.Round(waterAmount.Value * 100.0f) + "%");
-                    Color line3Color = waterAmount == null ? GUI.Style.Red : Color.Lerp(Color.LightGreen, GUI.Style.Red, (float)waterAmount);
+                        TextManager.AddPunctuation(':', TextManager.Get("MiniMapWaterLevel"), (int)Math.Round(waterAmount.Value) + "%");
+                    Color line3Color = waterAmount == null ? GUIStyle.Red : Color.Lerp(Color.LightGreen, GUIStyle.Red, (float)waterAmount / 100.0f);
 
                     SetTooltip(borderComponent.Rect.Center, header, line1, line2, line3, line1Color, line2Color, line3Color);
                 }
 
-                bool draggingReport = GameMain.GameSession?.CrewManager?.DraggedOrder != null;
+                bool draggingReport = GameMain.GameSession?.CrewManager?.DraggedOrderPrefab != null;
                 // When setting the colors we want to know the linked hulls too or else the linked hull will not realize its being hovered over and reset the border color
                 foreach (Hull linkedHull in hullData.LinkedHulls)
                 {
@@ -1015,7 +1091,13 @@ namespace Barotrauma.Items.Components
             foreach (var (entity, miniMapGuiComponent) in electricalMapComponents)
             {
                 if (!(entity is Item it)) { continue; }
-                if (!electricalChildren.TryGetValue(miniMapGuiComponent, out GUIComponent component)) { continue; }
+                if (!electricalChildren.TryGetValue(miniMapGuiComponent, out GUIComponent? component)) { continue; }
+
+                if (entity.Removed)
+                {
+                    component.Visible = false;
+                    continue;
+                }
 
                 if (item.Submarine == null || !hasPower)
                 {
@@ -1025,12 +1107,12 @@ namespace Barotrauma.Items.Components
                 if (Voltage < MinVoltage || !miniMapGuiComponent.RectComponent.Visible) { continue; }
 
                 int durability = (int)(it.Condition / (it.MaxCondition / it.MaxRepairConditionMultiplier) * 100f);
-                Color color = ToolBox.GradientLerp(durability / 100f, GUI.Style.Red, GUI.Style.Orange, GUI.Style.Green, GUI.Style.Green);
+                Color color = ToolBox.GradientLerp(durability / 100f, GUIStyle.Red, GUIStyle.Orange, GUIStyle.Green, GUIStyle.Green);
 
                 if (GUI.MouseOn == component)
                 {
-                    string line1 = string.Empty;
-                    string line2 = string.Empty;
+                    LocalizedString line1 = string.Empty;
+                    LocalizedString line2 = string.Empty;
 
                     if (it.GetComponent<PowerContainer>() is { } battery)
                     {
@@ -1039,14 +1121,21 @@ namespace Barotrauma.Items.Components
                     }
                     else if (it.GetComponent<PowerTransfer>() is { } powerTransfer)
                     {
-                        int current = (int) -powerTransfer.CurrPowerConsumption,
-                            load = (int) powerTransfer.PowerLoad;
+                        int current = 0, load = 0;
+                        if (powerTransfer.PowerConnections.Count > 0 && powerTransfer.PowerConnections[0].Grid != null)
+                        {
+                            current = (int)powerTransfer.PowerConnections[0].Grid.Power;
+                            load = (int)powerTransfer.PowerConnections[0].Grid.Load;
+                        }
 
-                        line1 = TextManager.GetWithVariable("statusmonitor.junctioncurrent.tooltip", "[amount]", current.ToString());
-                        line2 = TextManager.GetWithVariable("statusmonitor.junctionload.tooltip", "[amount]", load.ToString());
+                        line1 = TextManager.GetWithVariable("statusmonitor.junctionpower.tooltip", "[amount]", current.ToString())
+                            .Fallback(TextManager.GetWithVariable("statusmonitor.junctioncurrent.tooltip", "[amount]", current.ToString()));
+                        line2 = TextManager.GetWithVariables("statusmonitor.junctionload.tooltip",
+                                ("[amount]", load.ToString()),
+                                ("[load]", load.ToString()));
                     }
 
-                    string line3 = TextManager.GetWithVariable("statusmonitor.durability.tooltip", "[amount]", durability.ToString());
+                    LocalizedString line3 = TextManager.GetWithVariable("statusmonitor.durability.tooltip", "[amount]", durability.ToString());
                     SetTooltip(component.Rect.Center, it.Prefab.Name, line1, line2,  line3, line3Color: color);
                     color = HoverColor;
                 }
@@ -1057,10 +1146,9 @@ namespace Barotrauma.Items.Components
 
         private void DrawHUDBack(SpriteBatch spriteBatch, GUICustomComponent container)
         {
-            if (item.Submarine != null)
-            {
-                DrawSubmarine(spriteBatch);
-            }
+            if (item.Submarine == null) { return; }
+            
+            DrawSubmarine(spriteBatch);            
 
             if (Voltage < MinVoltage) { return; }
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
@@ -1075,49 +1163,54 @@ namespace Barotrauma.Items.Components
                     foreach (Vector2 blip in MiniMapBlips)
                     {
                         Vector2 parentSize = miniMapFrame.Rect.Size.ToVector2();
-                        Sprite pingCircle = GUI.Style.PingCircle.Sprite;
+                        Sprite pingCircle = GUIStyle.PingCircle.Value.Sprite;
                         Vector2 targetSize = new Vector2(parentSize.X / 4f);
                         Vector2 spriteScale = targetSize / pingCircle.size;
                         float scale = Math.Min(blipState, maxBlipState / 2f);
                         float alpha = 1.0f - Math.Clamp((blipState - maxBlipState * 0.25f) * 2f, 0f, 1f);
-                        pingCircle.Draw(spriteBatch, electricalFrame.Rect.Location.ToVector2() + blip * Zoom, GUI.Style.Red * alpha, pingCircle.Origin, 0f, spriteScale * scale, SpriteEffects.None);
+                        pingCircle.Draw(spriteBatch, electricalFrame.Rect.Location.ToVector2() + blip * Zoom, GUIStyle.Red * alpha, pingCircle.Origin, 0f, spriteScale * scale, SpriteEffects.None);
                     }
                 }
             }
             else
             {
-                bool hullsVisible = currentMode == MiniMapMode.HullStatus;
+                bool hullsVisible = currentMode == MiniMapMode.HullStatus && item.Submarine != null;
 
-                foreach (var (entity, component) in hullStatusComponents)
+                if (hullStatusComponents != null)
                 {
-                    if (!(entity is Hull hull)) { continue; }
-                    if (!hullDatas.TryGetValue(hull, out HullData? hullData) || hullData is null) { continue; }
-
-                    if (hullData.Distort) { continue; }
-
-                    GUIComponent hullFrame = component.RectComponent;
-
-                    if (hullsVisible && hullData.HullWaterAmount is { } waterAmount)
+                    foreach (var (entity, component) in hullStatusComponents)
                     {
-                        if (hullFrame.Rect.Height * waterAmount > 3.0f)
+                        if (!(entity is Hull hull)) { continue; }
+                        if (!hullDatas.TryGetValue(hull, out HullData? hullData) || hullData is null) { continue; }
+
+                        if (hullData.Distort) { continue; }
+
+                        GUIComponent hullFrame = component.RectComponent;
+
+                        if (hullsVisible && hullData.HullWaterAmount is { } waterAmount)
                         {
-                            RectangleF waterRect = new RectangleF(hullFrame.Rect.X, hullFrame.Rect.Y + hullFrame.Rect.Height * (1.0f - waterAmount), hullFrame.Rect.Width, hullFrame.Rect.Height * waterAmount);
-
-                            const float width = 1f;
-
-                            GUI.DrawFilledRectangle(spriteBatch, waterRect, HullWaterColor);
-
-                            if (!MathUtils.NearlyEqual(waterAmount, 1.0f))
+                            if (!RequireWaterDetectors) { waterAmount = WaterDetector.GetWaterPercentage(hull); }
+                            waterAmount /= 100.0f;
+                            if (hullFrame.Rect.Height * waterAmount > 1.0f)
                             {
-                                Vector2 offset = new Vector2(0, width);
-                                GUI.DrawLine(spriteBatch, waterRect.Location + offset, new Vector2(waterRect.Right, waterRect.Y) + offset, HullWaterLineColor, width: width);
+                                RectangleF waterRect = new RectangleF(hullFrame.Rect.X, hullFrame.Rect.Y + hullFrame.Rect.Height * (1.0f - waterAmount), hullFrame.Rect.Width, hullFrame.Rect.Height * waterAmount);
+
+                                const float width = 1f;
+
+                                GUI.DrawFilledRectangle(spriteBatch, waterRect, HullWaterColor);
+
+                                if (!MathUtils.NearlyEqual(waterAmount, 1.0f))
+                                {
+                                    Vector2 offset = new Vector2(0, width);
+                                    GUI.DrawLine(spriteBatch, waterRect.Location + offset, new Vector2(waterRect.Right, waterRect.Y) + offset, HullWaterLineColor, width: width);
+                                }
                             }
                         }
-                    }
 
-                    if (hullsVisible && hullData.HullOxygenAmount is { } oxygenAmount)
-                    {
-                        GUI.DrawRectangle(spriteBatch, hullFrame.Rect, Color.Lerp(GUI.Style.Red * 0.5f, GUI.Style.Green * 0.3f, oxygenAmount / 100.0f), true);
+                        if (hullsVisible && hullData.HullOxygenAmount is { } oxygenAmount)
+                        {
+                            GUI.DrawRectangle(spriteBatch, hullFrame.Rect, Color.Lerp(GUIStyle.Red * 0.5f, GUIStyle.Green * 0.3f, oxygenAmount / 100.0f), true);
+                        }
                     }
                 }
             }
@@ -1127,8 +1220,9 @@ namespace Barotrauma.Items.Components
             spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
         }
 
-        private void SetTooltip(Point pos, string header, string line1, string line2, string line3, Color? line1Color = null, Color? line2Color = null, Color? line3Color = null)
+        private void SetTooltip(Point pos, LocalizedString header, LocalizedString line1, LocalizedString line2, LocalizedString line3, Color? line1Color = null, Color? line2Color = null, Color? line3Color = null)
         {
+            if (hullInfoFrame == null) { return; }
             hullInfoFrame.RectTransform.ScreenSpaceOffset = pos;
 
             if (hullInfoFrame.Rect.Left > submarineContainer.Rect.Right) { hullInfoFrame.RectTransform.ScreenSpaceOffset = new Point(submarineContainer.Rect.Right, hullInfoFrame.RectTransform.ScreenSpaceOffset.Y); }
@@ -1141,13 +1235,13 @@ namespace Barotrauma.Items.Components
             tooltipHeader.Text = header;
 
             tooltipFirstLine.Text = line1;
-            tooltipFirstLine.TextColor = line1Color ?? GUI.Style.TextColor;
+            tooltipFirstLine.TextColor = line1Color ?? GUIStyle.TextColorNormal;
 
             tooltipSecondLine.Text = line2;
-            tooltipSecondLine.TextColor = line2Color ?? GUI.Style.TextColor;
+            tooltipSecondLine.TextColor = line2Color ?? GUIStyle.TextColorNormal;
 
             tooltipThirdLine.Text = line3;
-            tooltipThirdLine.TextColor = line3Color ?? GUI.Style.TextColor;
+            tooltipThirdLine.TextColor = line3Color ?? GUIStyle.TextColorNormal;
         }
 
         private void BakeSubmarine(Submarine sub, Rectangle container)
@@ -1221,7 +1315,7 @@ namespace Barotrauma.Items.Components
             Vector2 spriteScale = new Vector2(entityRect.Size.X / sprite.size.X, entityRect.Size.Y / sprite.size.Y);
             Vector2 origin = new Vector2(sprite.Origin.X * spriteScale.X, sprite.Origin.Y * spriteScale.Y);
 
-            if (item.GetComponent<Turret>() is { } turret)
+            if (!item.Prefab.ShowInStatusMonitor && item.GetComponent<Turret>() is { } turret)
             {
                 Vector2 drawPos = turret.GetDrawPos();
                 drawPos.Y = -drawPos.Y;
@@ -1235,7 +1329,7 @@ namespace Barotrauma.Items.Components
             pos.X += inflate;
             pos.Y += inflate;
 
-            sprite.Draw(spriteBatch, pos, item.SpriteColor, sprite.Origin, MathHelper.ToRadians(item.Rotation), spriteScale, item.SpriteEffects);
+            sprite.Draw(spriteBatch, pos, item.SpriteColor, sprite.Origin, item.RotationRad, spriteScale, item.SpriteEffects);
 
             void DrawAdditionalSprite(Vector2 basePos, Sprite addSprite, float rotation)
             {
@@ -1252,7 +1346,7 @@ namespace Barotrauma.Items.Components
 
             RectangleF entityRect = ScaleRectToUI(structure, parent, border);
             Vector2 spriteScale = new Vector2(entityRect.Size.X / sprite.size.X, entityRect.Size.Y / sprite.size.Y);
-            sprite.Draw(spriteBatch, new Vector2(entityRect.Location.X + inflate, entityRect.Location.Y + inflate), structure.SpriteColor, Vector2.Zero, 0f, spriteScale, structure.SpriteEffects);
+            sprite.Draw(spriteBatch, new Vector2(entityRect.Location.X + inflate, entityRect.Location.Y + inflate), structure.SpriteColor, Vector2.Zero, 0f, spriteScale, sprite.effects ^ structure.SpriteEffects);
         }
 
         private static RectangleF ScaleRectToUI(MapEntity entity, RectangleF parentRect, RectangleF worldBorders)
@@ -1272,9 +1366,9 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.GameSession?.CrewManager is { ActiveOrders: { } orders })
             {
-                foreach (var pair in orders)
+                foreach (var activeOrder in orders)
                 {
-                    Order order = pair.First;
+                    Order order = activeOrder.Order;
                     if (order is { SymbolSprite: { }, TargetEntity: Hull _ } && order.TargetEntity == hull)
                     {
                         cardsToDraw.Add(new MiniMapSprite(order));
@@ -1284,7 +1378,7 @@ namespace Barotrauma.Items.Components
 
             foreach (IdCard card in data.Cards)
             {
-                if (card.GetJob() is { Icon: { }} job)
+                if (card.OwnerJob is { Icon: { }} job)
                 {
                     cardsToDraw.Add(new MiniMapSprite(job));
                 }
@@ -1332,16 +1426,17 @@ namespace Barotrauma.Items.Components
                     if (amountLeft > 0)
                     {
                         string text = $"+{amountLeft}"; // TODO localization
-                        var (sizeX, sizeY) = GUI.SubHeadingFont.MeasureString(text); // TODO expensive, move to a global variable
+                        var (sizeX, sizeY) = GUIStyle.SubHeadingFont.MeasureString(text); // TODO expensive, move to a global variable
                         float maxWidth = Math.Max(sizeX, sizeY);
                         Vector2 drawPos = new Vector2(frame.Rect.Right - sizeX, frame.Rect.Y - sizeY / 2f);
 
-                        UISprite icon = GUI.Style.IconOverflowIndicator;
-
-                        const int iconPadding = 4;
-                        icon.Draw(spriteBatch, new Rectangle((int) drawPos.X - iconPadding, (int) drawPos.Y - iconPadding, (int) maxWidth + iconPadding * 2, (int) maxWidth + iconPadding * 2), Color.White, SpriteEffects.None);
-
-                        GUI.DrawString(spriteBatch, drawPos, text, GUI.Style.TextColor, font: GUI.SubHeadingFont);
+                        UISprite icon = GUIStyle.IconOverflowIndicator;
+                        if (icon != null)
+                        {
+                            const int iconPadding = 4;
+                            icon.Draw(spriteBatch, new Rectangle((int)drawPos.X - iconPadding, (int)drawPos.Y - iconPadding, (int)maxWidth + iconPadding * 2, (int)maxWidth + iconPadding * 2), Color.White, SpriteEffects.None);
+                        }
+                        GUI.DrawString(spriteBatch, drawPos, text, GUIStyle.TextColorNormal, font: GUIStyle.SubHeadingFont);
                     }
                     break;
                 }
@@ -1361,7 +1456,7 @@ namespace Barotrauma.Items.Components
             {
                 if (linkedEntity is Hull linkedHull)
                 {
-                    if (linkedHulls.Contains(linkedHull)) { continue; }
+                    if (linkedHulls.Contains(linkedHull) || linkedHull.HiddenInGame) { continue; }
                     linkedHulls.Add(linkedHull);
                     GetLinkedHulls(linkedHull, linkedHulls);
                 }
@@ -1401,7 +1496,7 @@ namespace Barotrauma.Items.Components
 
             if (settings.CreateHullElements)
             {
-                hullList = Hull.hullList.Where(IsPartofSub).ToImmutableArray();
+                hullList = Hull.HullList.Where(IsPartofSub).ToImmutableArray();
                 combinedHulls = CombinedHulls(hullList);
             }
 
@@ -1541,7 +1636,7 @@ namespace Barotrauma.Items.Components
 
             bool IsPartofSub(MapEntity entity)
             {
-                if (entity.Submarine != sub && !connectedSubs.Contains(entity.Submarine)) { return false; }
+                if (entity.Submarine != sub && !connectedSubs.Contains(entity.Submarine) || entity.HiddenInGame) { return false; }
                 return !settings.IgnoreOutposts || sub.IsEntityFoundOnThisSub(entity, true);
             }
 
@@ -1634,6 +1729,21 @@ namespace Barotrauma.Items.Components
             }
 
             return new MiniMapHullData(scaledPolygon, worldRect, parentRect.Size, snappedRectangles, hullRefs.ToImmutableArray());
+        }
+
+        protected override void RemoveComponentSpecific()
+        {
+            base.RemoveComponentSpecific();
+            if (searchAutoComplete != null)
+            {
+                searchAutoComplete.RectTransform.Parent = null;
+                searchAutoComplete = null;
+            }
+            if (hullInfoFrame != null)
+            {
+                hullInfoFrame.RectTransform.Parent = null;
+                hullInfoFrame = null;
+            }
         }
     }
 }

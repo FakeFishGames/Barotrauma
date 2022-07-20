@@ -11,10 +11,10 @@ namespace Barotrauma.Items.Components
 
         private string output = "0,0,0,0";
 
-        [InGameEditable, Serialize(false, true, description: "When enabled makes the component translate the signal from HSV into RGB where red is the hue between 0 and 360, green is the saturation between 0 and 1 and blue is the value between 0 and 1.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize(false, IsPropertySaveable.Yes, description: "When enabled makes the component translate the signal from HSV into RGB where red is the hue between 0 and 360, green is the saturation between 0 and 1 and blue is the value between 0 and 1.", alwaysUseInstanceValues: true)]
         public bool UseHSV { get; set; }
 
-        public ColorComponent(Item item, XElement element)
+        public ColorComponent(Item item, ContentXElement element)
             : base(item, element)
         {
             receivedSignal = new float[4];
@@ -36,9 +36,9 @@ namespace Barotrauma.Items.Components
             if (UseHSV)
             {
                 Color hsvColor = ToolBox.HSVToRGB(signalR, signalG, signalB);
-                signalR = hsvColor.R / (float) byte.MaxValue;
-                signalG = hsvColor.G / (float) byte.MaxValue;
-                signalB = hsvColor.B / (float) byte.MaxValue;
+                signalR = hsvColor.R;
+                signalG = hsvColor.G;
+                signalB = hsvColor.B;
             }
 
             output = signalR.ToString("G", CultureInfo.InvariantCulture);

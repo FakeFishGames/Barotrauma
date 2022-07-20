@@ -37,15 +37,10 @@ namespace Barotrauma
                         targetItems.Add(item);
                     }
                 }
-                //only target items in the main sub if there are any
-                if (targetItems.Count > 1 && targetItems.Any(it => it.Submarine == Submarine.MainSub))
-                {
-                    targetItems.RemoveAll(it => it.Submarine != Submarine.MainSub);
-                }
                 if (targetItems.Count > 0)
                 {
                     var textId = targetItems[0].Prefab.GetItemNameTextId();
-                    targetItemPrefabName = TextManager.FormatServerMessage(textId) ?? targetItems[0].Prefab.Name;
+                    targetItemPrefabName = TextManager.FormatServerMessage(textId) ?? targetItems[0].Prefab.Name.Value;
                 }
                 return targetItems.Count > 0;
             }

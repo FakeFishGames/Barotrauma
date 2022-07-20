@@ -17,18 +17,20 @@ namespace Barotrauma.Items.Components
             public readonly Item Item;
             public readonly StatusEffect StatusEffect;
             public readonly bool ExcludeBroken;
-            public ActiveContainedItem(Item item, StatusEffect statusEffect, bool excludeBroken)
+            public readonly bool ExcludeFullCondition;
+            public ActiveContainedItem(Item item, StatusEffect statusEffect, bool excludeBroken, bool excludeFullCondition)
             {
                 Item = item;
                 StatusEffect = statusEffect;
                 ExcludeBroken = excludeBroken;
+                ExcludeFullCondition = excludeFullCondition;
             }
         }
 
         class SlotRestrictions
         {
             public readonly int MaxStackSize;
-            public readonly List<RelatedItem> ContainableItems;
+            public List<RelatedItem> ContainableItems;
 
             public SlotRestrictions(int maxStackSize, List<RelatedItem> containableItems)
             {
@@ -57,7 +59,7 @@ namespace Barotrauma.Items.Components
 
         //how many items can be contained
         private int capacity;
-        [Serialize(5, false, description: "How many items can be contained inside this item.")]
+        [Serialize(5, IsPropertySaveable.No, description: "How many items can be contained inside this item.")]
         public int Capacity
         {
             get { return capacity; }
@@ -66,7 +68,7 @@ namespace Barotrauma.Items.Components
 
         //how many items can be contained
         private int maxStackSize;
-        [Serialize(64, false, description: "How many items can be stacked in one slot. Does not increase the maximum stack size of the items themselves, e.g. a stack of bullets could have a maximum size of 8 but the number of bullets in a specific weapon could be restricted to 6.")]
+        [Serialize(64, IsPropertySaveable.No, description: "How many items can be stacked in one slot. Does not increase the maximum stack size of the items themselves, e.g. a stack of bullets could have a maximum size of 8 but the number of bullets in a specific weapon could be restricted to 6.")]
         public int MaxStackSize
         {
             get { return maxStackSize; }
@@ -74,7 +76,7 @@ namespace Barotrauma.Items.Components
         }
 
         private bool hideItems;
-        [Serialize(true, false, description: "Should the items contained inside this item be hidden."
+        [Serialize(true, IsPropertySaveable.No, description: "Should the items contained inside this item be hidden."
             + " If set to false, you should use the ItemPos and ItemInterval properties to determine where the items get rendered.")]
         public bool HideItems
         {
@@ -85,55 +87,55 @@ namespace Barotrauma.Items.Components
                 Drawable = !hideItems;
             }
         }
-
-        [Serialize("0.0,0.0", false, description: "The position where the contained items get drawn at (offset from the upper left corner of the sprite in pixels).")]
+        
+        [Serialize("0.0,0.0", IsPropertySaveable.No, description: "The position where the contained items get drawn at (offset from the upper left corner of the sprite in pixels).")]
         public Vector2 ItemPos { get; set; }
 
-        [Serialize("0.0,0.0", false, description: "The interval at which the contained items are spaced apart from each other (in pixels).")]
+        [Serialize("0.0,0.0", IsPropertySaveable.No, description: "The interval at which the contained items are spaced apart from each other (in pixels).")]
         public Vector2 ItemInterval { get; set; }
 
-        [Serialize(100, false, description: "How many items are placed in a row before starting a new row.")]
+        [Serialize(100, IsPropertySaveable.No, description: "How many items are placed in a row before starting a new row.")]
         public int ItemsPerRow { get; set; }
 
-        [Serialize(true, false, description: "Should the inventory of this item be visible when the item is selected.")]
+        [Serialize(true, IsPropertySaveable.No, description: "Should the inventory of this item be visible when the item is selected.")]
         public bool DrawInventory
         {
             get;
             set;
         }
 
-        [Serialize(true, false, "Allow dragging and dropping items to deposit items into this inventory.")]
+        [Serialize(true, IsPropertySaveable.No, "Allow dragging and dropping items to deposit items into this inventory.")]
         public bool AllowDragAndDrop
         {
             get;
             set;
         }
-
-        [Serialize(true, false)]
+        
+        [Serialize(true, IsPropertySaveable.No)]
         public bool AllowSwappingContainedItems
         {
             get;
             set;
         }
 
-        [Serialize(false, false, description: "If set to true, interacting with this item will make the character interact with the contained item(s), automatically picking them up if they can be picked up.")]
+        [Serialize(false, IsPropertySaveable.No, description: "If set to true, interacting with this item will make the character interact with the contained item(s), automatically picking them up if they can be picked up.")]
         public bool AutoInteractWithContained
         {
             get;
             set;
         }
 
-        [Serialize(true, false)]
+        [Serialize(true, IsPropertySaveable.No)]
         public bool AllowAccess { get; set; }
 
-        [Serialize(false, false)]
+        [Serialize(false, IsPropertySaveable.No)]
         public bool AccessOnlyWhenBroken { get; set; }
 
-        [Serialize(5, false, description: "How many inventory slots the inventory has per row.")]
+        [Serialize(5, IsPropertySaveable.No, description: "How many inventory slots the inventory has per row.")]
         public int SlotsPerRow { get; set; }
 
         private readonly HashSet<string> containableRestrictions = new HashSet<string>();
-        [Editable, Serialize("", true, description: "Define items (by identifiers or tags) that bots should place inside this container. If empty, no restrictions are applied.")]
+        [Editable, Serialize("", IsPropertySaveable.Yes, description: "Define items (by identifiers or tags) that bots should place inside this container. If empty, no restrictions are applied.")]
         public string ContainableRestrictions
         {
             get { return string.Join(",", containableRestrictions); }
@@ -143,49 +145,57 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(true, true, description: "Should this container be automatically filled with items?")]
+        [Editable, Serialize(true, IsPropertySaveable.Yes, description: "Should this container be automatically filled with items?")]
         public bool AutoFill { get; set; }
 
         private float itemRotation;
-        [Serialize(0.0f, false, description: "The rotation in which the contained sprites are drawn (in degrees).")]
+        [Serialize(0.0f, IsPropertySaveable.No, description: "The rotation in which the contained sprites are drawn (in degrees).")]
         public float ItemRotation
         {
             get { return MathHelper.ToDegrees(itemRotation); }
             set { itemRotation = MathHelper.ToRadians(value); }
         }
 
-        [Serialize("", false, description: "Specify an item for the container to spawn with.")]
+        [Serialize("", IsPropertySaveable.No, description: "Specify an item for the container to spawn with.")]
         public string SpawnWithId
         {
             get;
             set;
         }
 
-        [Serialize(false, false, description: "Should the items configured using SpawnWithId spawn if this item is broken.")]
+        [Serialize(false, IsPropertySaveable.No, description: "Should the items configured using SpawnWithId spawn if this item is broken.")]
         public bool SpawnWithIdWhenBroken
         {
             get;
             set;
         }
-
-        [Serialize(false, false, description: "Should the items be injected into the user.")]
+        
+        [Serialize(false, IsPropertySaveable.No, description: "Should the items be injected into the user.")]
         public bool AutoInject
         {
             get;
             set;
         }
 
-        [Serialize(0.5f, false, description: "The health threshold that the user must reach in order to activate the autoinjection.")]
+        [Serialize(0.5f, IsPropertySaveable.No, description: "The health threshold that the user must reach in order to activate the autoinjection.")]
         public float AutoInjectThreshold
         {
             get;
             set;
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, IsPropertySaveable.No)]
         public bool RemoveContainedItemsOnDeconstruct { get; set; }
 
-        private SlotRestrictions[] slotRestrictions;
+        private readonly ImmutableArray<SlotRestrictions> slotRestrictions;
+
+        readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
+
+        private Vector2 prevContainedItemPositions;
+
+        private float autoInjectCooldown = 1.0f;
+        const float AutoInjectInterval = 1.0f;
+
 
         public bool ShouldBeContained(string[] identifiersOrTags, out bool isRestrictionsDefined)
         {
@@ -202,19 +212,20 @@ namespace Barotrauma.Items.Components
             if (!isRestrictionsDefined) { return true; }
             return containableRestrictions.Any(id => item.Prefab.Identifier == id || item.HasTag(id));
         }
-
-        private ImmutableHashSet<string> containableItemIdentifiers;
-        public IEnumerable<string> ContainableItemIdentifiers => containableItemIdentifiers;
+        
+        private ImmutableHashSet<Identifier> containableItemIdentifiers;
+        public IEnumerable<Identifier> ContainableItemIdentifiers => containableItemIdentifiers;
 
         public override bool RecreateGUIOnResolutionChange => true;
 
-        public ItemContainer(Item item, XElement element)
+        public List<RelatedItem> ContainableItems { get; }
+
+        public ItemContainer(Item item, ContentXElement element)
             : base(item, element)
         {
             int totalCapacity = capacity;
 
-            List<RelatedItem> containableItems = null;
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -222,11 +233,11 @@ namespace Barotrauma.Items.Components
                         RelatedItem containable = RelatedItem.Load(subElement, returnEmpty: false, parentDebugName: item.Name);
                         if (containable == null)
                         {
-                            DebugConsole.ThrowError("Error in item config \"" + item.ConfigFile + "\" - containable with no identifiers.");
+                            DebugConsole.ThrowError("Error in item config \"" + item.ConfigFilePath + "\" - containable with no identifiers.");
                             continue;
                         }
-                        containableItems ??= new List<RelatedItem>();
-                        containableItems.Add(containable);
+                        ContainableItems ??= new List<RelatedItem>();
+                        ContainableItems.Add(containable);
                         break;
                     case "subcontainer":
                         totalCapacity += subElement.GetAttributeInt("capacity", 1);
@@ -234,14 +245,15 @@ namespace Barotrauma.Items.Components
                 }
             }
             Inventory = new ItemInventory(item, this, totalCapacity, SlotsPerRow);
-            slotRestrictions = new SlotRestrictions[totalCapacity];
+           
+            List<SlotRestrictions> newSlotRestrictions = new List<SlotRestrictions>(totalCapacity);
             for (int i = 0; i < capacity; i++)
             {
-                slotRestrictions[i] = new SlotRestrictions(maxStackSize, containableItems);
+                newSlotRestrictions.Add(new SlotRestrictions(maxStackSize, ContainableItems));
             }
 
             int subContainerIndex = capacity;
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 if (subElement.Name.ToString().ToLowerInvariant() != "subcontainer") { continue; }
        
@@ -249,14 +261,14 @@ namespace Barotrauma.Items.Components
                 int subMaxStackSize = subElement.GetAttributeInt("maxstacksize", maxStackSize);
 
                 List<RelatedItem> subContainableItems = null;
-                foreach (XElement subSubElement in subElement.Elements())
+                foreach (var subSubElement in subElement.Elements())
                 {
                     if (subSubElement.Name.ToString().ToLowerInvariant() != "containable") { continue; }
 
                     RelatedItem containable = RelatedItem.Load(subSubElement, returnEmpty: false, parentDebugName: item.Name);
                     if (containable == null)
                     {
-                        DebugConsole.ThrowError("Error in item config \"" + item.ConfigFile + "\" - containable with no identifiers.");
+                        DebugConsole.ThrowError("Error in item config \"" + item.ConfigFilePath + "\" - containable with no identifiers.");
                         continue;
                     }
                     subContainableItems ??= new List<RelatedItem>();
@@ -265,12 +277,35 @@ namespace Barotrauma.Items.Components
 
                 for (int i = subContainerIndex; i < subContainerIndex + subCapacity; i++)
                 {
-                    slotRestrictions[i] = new SlotRestrictions(subMaxStackSize, subContainableItems);
+                    newSlotRestrictions.Add(new SlotRestrictions(subMaxStackSize, subContainableItems));
                 }
                 subContainerIndex += subCapacity;
             }
             capacity = totalCapacity;
+            slotRestrictions = newSlotRestrictions.ToImmutableArray();
+            System.Diagnostics.Debug.Assert(totalCapacity == slotRestrictions.Length);
             InitProjSpecific(element);
+        }
+
+        public void ReloadContainableRestrictions(ContentXElement element)
+        {
+            int containableIndex = 0;
+            foreach (var subElement in element.GetChildElements("containable"))
+            {
+                RelatedItem containable = RelatedItem.Load(subElement, returnEmpty: false, parentDebugName: item.Name);
+                if (containable == null)
+                {
+                    DebugConsole.ThrowError("Error when loading containable restrictions for \"" + item.Name + "\" - containable with no identifiers.");
+                    continue;
+                }
+                ContainableItems[containableIndex] = containable;
+                containableIndex++;
+                if (containableIndex >= ContainableItems.Count) { break; }            
+            }
+            for (int i = 0; i < capacity; i++)
+            {
+                slotRestrictions[i].ContainableItems = ContainableItems;
+            }
         }
 
         public int GetMaxStackSize(int slotIndex)
@@ -282,7 +317,7 @@ namespace Barotrauma.Items.Components
             return slotRestrictions[slotIndex].MaxStackSize;
         }
 
-        partial void InitProjSpecific(XElement element);
+        partial void InitProjSpecific(ContentXElement element);
 
         public void OnItemContained(Item containedItem)
         {
@@ -299,17 +334,22 @@ namespace Barotrauma.Items.Components
                         if (!containableItem.MatchesItem(containedItem)) { continue; }
                         foreach (StatusEffect effect in containableItem.statusEffects)
                         {
-                            activeContainedItems.Add(new ActiveContainedItem(containedItem, effect, containableItem.ExcludeBroken));
+                            activeContainedItems.Add(new ActiveContainedItem(containedItem, effect, containableItem.ExcludeBroken, containableItem.ExcludeFullCondition));
                         }
                     }
                 }
-            }            
+            }
+
+            if (item.GetComponent<Planter>() != null)
+            {
+                GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "null") + ":GardeningPlanted:" + containedItem.Prefab.Identifier);
+            }
 
             //no need to Update() if this item has no statuseffects and no physics body
             IsActive = activeContainedItems.Count > 0 || Inventory.AllItems.Any(it => it.body != null);
         }
 
-        public override void Move(Vector2 amount)
+        public override void Move(Vector2 amount, bool ignoreContacts = false)
         {
             SetContainedItemPositions();
         }
@@ -344,22 +384,46 @@ namespace Barotrauma.Items.Components
             return slotRestrictions[index].MatchesItem(itemPrefab);
         }
 
-        readonly List<ISerializableEntity> targets = new List<ISerializableEntity>();
+        public bool ContainsItemsWithSameIdentifier(Item item)
+        {
+            if (item == null) { return false; }
+            foreach (var containedItem in Inventory.AllItems)
+            {
+                if (containedItem.Prefab.Identifier == item.Prefab.Identifier)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
 
         public override void Update(float deltaTime, Camera cam)
         {
             if (!string.IsNullOrEmpty(SpawnWithId) && !alwaysContainedItemsSpawned)
             {
                 SpawnAlwaysContainedItems();
+                alwaysContainedItemsSpawned = true;
             }
 
             if (item.ParentInventory is CharacterInventory ownerInventory)
             {
-                item.SetContainedItemPositions();
+                if (Vector2.DistanceSquared(prevContainedItemPositions, item.Position) > 10.0f)
+                {
+                    SetContainedItemPositions();
+                    prevContainedItemPositions = item.Position;
+                }
 
                 if (AutoInject)
                 {
-                    if (ownerInventory?.Owner is Character ownerCharacter && 
+                    //normally autoinjection should delete the (medical) item, so it only gets applied once
+                    //but in multiplayer clients aren't allowed to remove items themselves, so they may be able to trigger this dozens of times
+                    //before the server notifies them of the item being removed, leading to a sharp lag spike.
+                    //this can also happen with mods, if there's a way to autoinject something that doesn't get removed On Use.
+                    //so let's ensure the item is only applied once per second at most.
+
+                    autoInjectCooldown -= deltaTime;
+                    if (autoInjectCooldown <= 0.0f &&
+                        ownerInventory?.Owner is Character ownerCharacter && 
                         ownerCharacter.HealthPercentage / 100f <= AutoInjectThreshold &&
                         ownerCharacter.HasEquippedItem(item))
                     {
@@ -367,6 +431,7 @@ namespace Barotrauma.Items.Components
                         {
                             item.ApplyStatusEffects(ActionType.OnUse, 1.0f, ownerCharacter);
                             item.GetComponent<GeneticMaterial>()?.Equip(ownerCharacter);
+                            autoInjectCooldown = AutoInjectInterval;
                         }
                     }
                 }
@@ -376,7 +441,7 @@ namespace Barotrauma.Items.Components
                 item.body.Enabled &&
                 item.body.FarseerBody.Awake)
             {
-                item.SetContainedItemPositions();
+                SetContainedItemPositions();
             }
             else if (activeContainedItems.Count == 0)
             {
@@ -389,6 +454,7 @@ namespace Barotrauma.Items.Components
                 Item contained = activeContainedItem.Item;
 
                 if (activeContainedItem.ExcludeBroken && contained.Condition <= 0.0f) { continue; }
+                if (activeContainedItem.ExcludeFullCondition && contained.IsFullCondition) { continue; }
                 StatusEffect effect = activeContainedItem.StatusEffect;
 
                 if (effect.HasTargetType(StatusEffect.TargetType.This))                 
@@ -405,7 +471,16 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override bool HasRequiredItems(Character character, bool addMessage, string msg = null)
+        public override void UpdateBroken(float deltaTime, Camera cam)
+        {
+            //update when the item is broken too to get OnContaining effects to execute and contained item positions to update
+            if (IsActive)
+            {
+                Update(deltaTime, cam);
+            }
+        }
+
+        public override bool HasRequiredItems(Character character, bool addMessage, LocalizedString msg = null)
         {
             return AllowAccess && (!AccessOnlyWhenBroken || Item.Condition <= 0) && base.HasRequiredItems(character, addMessage, msg);
         }
@@ -432,7 +507,7 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
-            var abilityItem = new AbilityItem(item);
+            var abilityItem = new AbilityItemContainer(item);
             character.CheckTalents(AbilityEffectType.OnOpenItemContainer, abilityItem);
 
             return base.Select(character);
@@ -470,7 +545,9 @@ namespace Barotrauma.Items.Components
             if (!AllowDragAndDrop && user != null) { return false; }
             if (!slotRestrictions.Any(s => s.MatchesItem(item))) { return false; }
             if (user != null && !user.CanAccessInventory(Inventory)) { return false; }
-            
+            //genetic materials use special logic for combining, don't allow doing it by placing them inside each other here
+            if (this.Item.GetComponent<GeneticMaterial>() != null) { return false; }
+
             if (Inventory.TryPutItem(item, user))
             {            
                 IsActive = true;
@@ -490,6 +567,21 @@ namespace Barotrauma.Items.Components
         public override void Equip(Character character)
         {
             IsActive = true;
+        }
+
+        public override void ReceiveSignal(Signal signal, Connection connection)
+        {
+            switch (connection.Name)
+            {
+                case "activate":
+                case "use":
+                case "trigger_in":
+                    if (signal.value != "0")
+                    {
+                        item.Use(1.0f, signal.sender);
+                    }
+                    break;
+            }
         }
 
         public void SetContainedItemPositions()
@@ -524,7 +616,7 @@ namespace Barotrauma.Items.Components
                     transformedItemPos += new Vector2(item.Rect.X, item.Rect.Y);
                     if (Math.Abs(item.Rotation) > 0.01f)
                     {
-                        Matrix transform = Matrix.CreateRotationZ(MathHelper.ToRadians(-item.Rotation));
+                        Matrix transform = Matrix.CreateRotationZ(-item.RotationRad);
                         transformedItemPos = Vector2.Transform(transformedItemPos - item.Position, transform) + item.Position;
                         transformedItemInterval = Vector2.Transform(transformedItemInterval, transform);
                         transformedItemIntervalHorizontal = Vector2.Transform(transformedItemIntervalHorizontal, transform);
@@ -555,7 +647,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                currentRotation += MathHelper.ToRadians(-item.Rotation);
+                currentRotation += -item.RotationRad;
             }
 
             int i = 0;
@@ -575,7 +667,7 @@ namespace Barotrauma.Items.Components
                     {
                         DebugConsole.Log("SetTransformIgnoreContacts threw an exception in SetContainedItemPositions (" + e.Message + ")\n" + e.StackTrace.CleanupStackTrace());
                         GameAnalyticsManager.AddErrorEventOnce("ItemContainer.SetContainedItemPositions.InvalidPosition:" + contained.Name,
-                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                            GameAnalyticsManager.ErrorSeverity.Error,
                             "SetTransformIgnoreContacts threw an exception in SetContainedItemPositions (" + e.Message + ")\n" + e.StackTrace.CleanupStackTrace());
                     }
                     contained.body.Submarine = item.Submarine;
@@ -612,7 +704,7 @@ namespace Barotrauma.Items.Components
         public override void OnItemLoaded()
         {
             Inventory.AllowSwappingContainedItems = AllowSwappingContainedItems;
-            containableItemIdentifiers = slotRestrictions.SelectMany(s => s.ContainableItems?.SelectMany(ri => ri.Identifiers) ?? Enumerable.Empty<string>()).ToImmutableHashSet();
+            containableItemIdentifiers = slotRestrictions.SelectMany(s => s.ContainableItems?.SelectMany(ri => ri.Identifiers) ?? Enumerable.Empty<Identifier>()).ToImmutableHashSet();
             if (item.Submarine == null || !item.Submarine.Loading)
             {
                 SpawnAlwaysContainedItems();
@@ -680,13 +772,12 @@ namespace Barotrauma.Items.Components
                         else
                         {
                             IsActive = true;
-                            Entity.Spawner?.AddToSpawnQueue(prefab, Inventory, spawnIfInventoryFull: false, onSpawned: (Item item) => { alwaysContainedItemsSpawned = true; });
+                            Entity.Spawner?.AddItemToSpawnQueue(prefab, Inventory, spawnIfInventoryFull: false, onSpawned: (Item item) => { alwaysContainedItemsSpawned = true; });
                         }
                     }
                 }
             }
         }
-
 
         protected override void ShallowRemoveComponentSpecific()
         {
@@ -707,10 +798,14 @@ namespace Barotrauma.Items.Components
                 return;
             }
 #endif
-            Inventory.AllItemsMod.ForEach(it => it.Drop(null));
+            //if we're unloading the whole sub, no need to drop anything (everything's going to be removed anyway)
+            if (!Submarine.Unloading)
+            {
+                Inventory.AllItemsMod.ForEach(it => it.Drop(null));
+            }
         }
 
-        public override void Load(XElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
         {
             base.Load(componentElement, usePrefabValues, idRemap);
 
@@ -740,5 +835,14 @@ namespace Barotrauma.Items.Components
             componentElement.Add(new XAttribute("contained", string.Join(',', itemIdStrings)));
             return componentElement;
         }
+    }
+
+    class AbilityItemContainer : AbilityObject, IAbilityItem
+    {
+        public AbilityItemContainer(Item item)
+        {
+            Item = item;
+        }
+        public Item Item { get; set; }
     }
 }

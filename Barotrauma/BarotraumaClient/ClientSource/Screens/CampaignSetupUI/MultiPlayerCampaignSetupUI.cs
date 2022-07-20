@@ -1,12 +1,10 @@
-using Barotrauma.Tutorials;
+using Barotrauma.Extensions;
+using Barotrauma.IO;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using Barotrauma.IO;
-using System.Linq;
-using System.Xml.Linq;
 using System.Globalization;
-using Barotrauma.Extensions;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -14,61 +12,50 @@ namespace Barotrauma
     {
         private GUIButton deleteMpSaveButton;
         
-        public MultiPlayerCampaignSetupUI(GUIComponent newGameContainer, GUIComponent loadGameContainer, IEnumerable<SubmarineInfo> submarines, IEnumerable<string> saveFiles = null)
+        public MultiPlayerCampaignSetupUI(GUIComponent newGameContainer, GUIComponent loadGameContainer, List<CampaignMode.SaveInfo> saveFiles = null)
             : base(newGameContainer, loadGameContainer)
         {
-            var columnContainer = new GUILayoutGroup(new RectTransform(Vector2.One, newGameContainer.RectTransform), isHorizontal: true)
+            var verticalLayout = new GUILayoutGroup(new RectTransform(Vector2.One, newGameContainer.RectTransform), isHorizontal: false)
             {
                 Stretch = true,
-                RelativeSpacing = 0.0f
+                RelativeSpacing = 0.05f
             };
 
-            var leftColumn = new GUILayoutGroup(new RectTransform(Vector2.One, columnContainer.RectTransform))
-            {
-                Stretch = true,
-                RelativeSpacing = 0.015f
-            };
-
-            var rightColumn = new GUILayoutGroup(new RectTransform(Vector2.Zero, columnContainer.RectTransform))
-            {
-                Stretch = true,
-                RelativeSpacing = 0.015f
-            };
-
-            columnContainer.Recalculate();
-
-            // New game left side
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SaveName"), font: GUI.SubHeadingFont);
-            saveNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, string.Empty)
-            {
-                textFilterFunction = (string str) => { return ToolBox.RemoveInvalidFileNameChars(str); }
-            };
-
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.02f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("MapSeed"), font: GUI.SubHeadingFont);
-            seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.05f), leftColumn.RectTransform) { MinSize = new Point(0, 20) }, ToolBox.RandomSeed(8));
-
-            // Spacing to fix the multiplayer campaign setup layout
-            CreateMultiplayerCampaignSubList(leftColumn.RectTransform);
-
-            //spacing
-            //new GUIFrame(new RectTransform(new Vector2(1.0f, 0.25f), leftColumn.RectTransform), style: null);
-
-            // New game right side
-            subPreviewContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 1.0f), rightColumn.RectTransform))
+            GUILayoutGroup nameSeedLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), verticalLayout.RectTransform), isHorizontal: false)
             {
                 Stretch = true
             };
 
-            var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.12f),
-                leftColumn.RectTransform) { MaxSize = new Point(int.MaxValue, 60) }, childAnchor: Anchor.BottomRight, isHorizontal: true);
+            GUILayoutGroup campaignSettingLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.6f), verticalLayout.RectTransform), isHorizontal: false)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.05f
+            };
 
-            StartButton = new GUIButton(new RectTransform(new Vector2(0.4f, 1f), buttonContainer.RectTransform, Anchor.BottomRight) { MaxSize = new Point(350, 60) }, TextManager.Get("StartCampaignButton"))
+            // New game
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.03f), nameSeedLayout.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SaveName"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.BottomLeft);
+            saveNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.03f), nameSeedLayout.RectTransform) { MinSize = new Point(0, 20) }, string.Empty)
+            {
+                textFilterFunction = ToolBox.RemoveInvalidFileNameChars
+            };
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.03f), nameSeedLayout.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("MapSeed"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.BottomLeft);
+            seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.03f), nameSeedLayout.RectTransform) { MinSize = new Point(0, 20) }, ToolBox.RandomSeed(8));
+
+            nameSeedLayout.RectTransform.MinSize = new Point(0, nameSeedLayout.Children.Sum(c => c.RectTransform.MinSize.Y));
+
+            CampaignSettingElements elements = CreateCampaignSettingList(campaignSettingLayout, CampaignSettings.Empty);
+
+            var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.1f),
+                verticalLayout.RectTransform) { MaxSize = new Point(int.MaxValue, 60) }, childAnchor: Anchor.BottomRight, isHorizontal: true);
+
+            StartButton = new GUIButton(new RectTransform(new Vector2(0.4f, 1f), buttonContainer.RectTransform, Anchor.BottomRight), TextManager.Get("StartCampaignButton"))
             {
                 OnClicked = (GUIButton btn, object userData) =>
                 {
                     if (string.IsNullOrWhiteSpace(saveNameBox.Text))
                     {
-                        saveNameBox.Flash(GUI.Style.Red);
+                        saveNameBox.Flash(GUIStyle.Red);
                         return false;
                     }
 
@@ -76,36 +63,31 @@ namespace Barotrauma
 
                     if (GameMain.NetLobbyScreen.SelectedSub == null) { return false; }
                     selectedSub = GameMain.NetLobbyScreen.SelectedSub;
-                    
+
                     if (selectedSub.SubmarineClass == SubmarineClass.Undefined)
                     {
                         new GUIMessageBox(TextManager.Get("error"), TextManager.Get("undefinedsubmarineselected"));
                         return false;
                     }
 
-                    if (string.IsNullOrEmpty(selectedSub.MD5Hash.Hash))
+                    if (string.IsNullOrEmpty(selectedSub.MD5Hash.StringRepresentation))
                     {
-                        ((GUITextBlock)subList.SelectedComponent).TextColor = Color.DarkRed * 0.8f;
-                        subList.SelectedComponent.CanBeFocused = false;
-                        subList.Deselect();
+                        new GUIMessageBox(TextManager.Get("error"), TextManager.Get("nohashsubmarineselected"));
                         return false;
                     }
 
                     string savePath = SaveUtil.CreateSavePath(SaveUtil.SaveType.Multiplayer, saveNameBox.Text);
                     bool hasRequiredContentPackages = selectedSub.RequiredContentPackagesInstalled;
 
-                    CampaignSettings settings = new CampaignSettings();
+                    CampaignSettings settings = elements.CreateSettings();
 
-                    settings.RadiationEnabled = GameMain.NetLobbyScreen.IsRadiationEnabled();
-                    settings.MaxMissionCount = GameMain.NetLobbyScreen.GetMaxMissionCount();
-                    
                     if (selectedSub.HasTag(SubmarineTag.Shuttle) || !hasRequiredContentPackages)
                     {
                         if (!hasRequiredContentPackages)
                         {
                             var msgBox = new GUIMessageBox(TextManager.Get("ContentPackageMismatch"),
                                 TextManager.GetWithVariable("ContentPackageMismatchWarning", "[requiredcontentpackages]", string.Join(", ", selectedSub.RequiredContentPackages)),
-                                new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                                new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") });
 
                             msgBox.Buttons[0].OnClicked = msgBox.Close;
                             msgBox.Buttons[0].OnClicked += (button, obj) =>
@@ -125,7 +107,7 @@ namespace Barotrauma
                         {
                             var msgBox = new GUIMessageBox(TextManager.Get("ShuttleSelected"),
                                 TextManager.Get("ShuttleWarning"),
-                                new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                                new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") });
 
                             msgBox.Buttons[0].OnClicked = (button, obj) => 
                             {
@@ -148,12 +130,18 @@ namespace Barotrauma
                     return true;
                 }
             };
+            StartButton.RectTransform.MaxSize = RectTransform.MaxPoint;
+            StartButton.Children.ForEach(c => c.RectTransform.MaxSize = RectTransform.MaxPoint);
 
-            InitialMoneyText = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1f), buttonContainer.RectTransform), "", font: GUI.Style.SmallFont, textColor: GUI.Style.Green)
+            InitialMoneyText = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1f), buttonContainer.RectTransform), "", font: GUIStyle.SmallFont, textColor: GUIStyle.Green)
             {
                 TextGetter = () =>
                 {
-                    int initialMoney = CampaignMode.InitialMoney;
+                    int initialMoney = 8000;
+                    if (CampaignModePresets.Definitions.TryGetValue(nameof(StartingBalanceAmount).ToIdentifier(), out var definition))
+                    {
+                        initialMoney = definition.GetInt(elements.StartingFunds.GetValue().ToIdentifier());
+                    }
                     if (GameMain.NetLobbyScreen.SelectedSub != null)
                     {
                         initialMoney -= GameMain.NetLobbyScreen.SelectedSub.Price;
@@ -163,119 +151,16 @@ namespace Barotrauma
                 }
             };
 
-            columnContainer.Recalculate();
-            leftColumn.Recalculate();
-            rightColumn.Recalculate();
+            verticalLayout.Recalculate();
 
-            if (submarines != null) { UpdateSubList(submarines); }
             UpdateLoadMenu(saveFiles);
         }
 
-        private void CreateMultiplayerCampaignSubList(RectTransform parent)
-        {
-            GUILayoutGroup subHolder = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.725f), parent))
-            {
-                RelativeSpacing = 0.005f,
-                Stretch = true
-            };
-
-            var subLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.055f), subHolder.RectTransform) { MinSize = new Point(0, 25) }, TextManager.Get("purchasablesubmarines", fallBackTag: "workshoplabelsubmarines"), font: GUI.SubHeadingFont);
-
-            var filterContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), subHolder.RectTransform), isHorizontal: true)
-            {
-                Stretch = true
-            };
-            var searchTitle = new GUITextBlock(new RectTransform(new Vector2(0.001f, 1.0f), filterContainer.RectTransform), TextManager.Get("serverlog.filter"), textAlignment: Alignment.CenterLeft, font: GUI.Font);
-            var searchBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 1.0f), filterContainer.RectTransform, Anchor.CenterRight), font: GUI.Font, createClearButton: true);
-            filterContainer.RectTransform.MinSize = searchBox.RectTransform.MinSize;
-            searchBox.OnSelected += (sender, userdata) => { searchTitle.Visible = false; };
-            searchBox.OnDeselected += (sender, userdata) => { searchTitle.Visible = true; };
-            searchBox.OnTextChanged += (textBox, text) =>
-            {
-                foreach (GUIComponent child in subList.Content.Children)
-                {
-                    if (!(child.UserData is SubmarineInfo sub)) { continue; }
-                    child.Visible = string.IsNullOrEmpty(text) ? true : sub.DisplayName.ToLower().Contains(text.ToLower());
-                }
-                return true;
-            };
-
-            subList = new GUIListBox(new RectTransform(Vector2.One, subHolder.RectTransform));
-            subTickBoxes = new List<GUITickBox>();
-
-            for (int i = 0; i < GameMain.Client.ServerSubmarines.Count; i++)
-            {
-                SubmarineInfo sub = GameMain.Client.ServerSubmarines[i];
-
-                if (!sub.IsCampaignCompatible) continue;
-
-                var frame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), subList.Content.RectTransform) { MinSize = new Point(0, 20) },
-                    style: "ListBoxElement")
-                {
-                    ToolTip = sub.Description,
-                    UserData = sub
-                };
-
-                int buttonSize = (int)(frame.Rect.Height * 0.8f);
-
-                GUITickBox tickBox = new GUITickBox(new RectTransform(new Vector2(0.8f, 1.0f), frame.RectTransform, Anchor.CenterLeft), ToolBox.LimitString(sub.DisplayName, GUI.Font, subList.Content.Rect.Width - 65))
-                {
-                    UserData = sub,
-                    OnSelected = (GUITickBox box) =>
-                    {
-                        GameMain.Client.RequestCampaignSub(box.UserData as SubmarineInfo, box.Selected);
-                        return true;
-                    }
-                };
-                subTickBoxes.Add(tickBox);
-                tickBox.Selected = GameMain.NetLobbyScreen.CampaignSubmarines.Contains(sub);
-
-                frame.RectTransform.MinSize = new Point(0, tickBox.RectTransform.MinSize.Y);
-
-                var subTextBlock = tickBox.TextBlock;
-
-                var matchingSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == sub.Name && s.MD5Hash?.Hash == sub.MD5Hash?.Hash);
-                if (matchingSub == null) matchingSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == sub.Name);
-
-                if (matchingSub == null)
-                {
-                    subTextBlock.TextColor = new Color(subTextBlock.TextColor, 0.5f);
-                    frame.ToolTip = TextManager.Get("SubNotFound");
-                }
-                else if (matchingSub?.MD5Hash == null || matchingSub.MD5Hash?.Hash != sub.MD5Hash?.Hash)
-                {
-                    subTextBlock.TextColor = new Color(subTextBlock.TextColor, 0.5f);
-                    frame.ToolTip = TextManager.Get("SubDoesntMatch");
-                }
-
-                if (!sub.RequiredContentPackagesInstalled)
-                {
-                    subTextBlock.TextColor = Color.Lerp(subTextBlock.TextColor, Color.DarkRed, 0.5f);
-                    frame.ToolTip = TextManager.Get("ContentPackageMismatch") + "\n\n" + frame.RawToolTip;
-                }
-
-                var classText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), frame.RectTransform, Anchor.CenterRight),
-                TextManager.Get($"submarineclass.{sub.SubmarineClass}"), textAlignment: Alignment.CenterRight, font: GUI.SmallFont)
-                {
-                    TextColor = subTextBlock.TextColor * 0.8f,
-                    ToolTip = subTextBlock.RawToolTip
-                };
-            }
-        }
-
-        public void RefreshMultiplayerCampaignSubUI(List<SubmarineInfo> campaignSubs)
-        {
-            for (int i = 0; i < subTickBoxes.Count; i++)
-            {
-                subTickBoxes[i].Selected = campaignSubs.Contains(subTickBoxes[i].UserData as SubmarineInfo);
-            }
-        }
-
-        private IEnumerable<object> WaitForCampaignSetup()
+        private IEnumerable<CoroutineStatus> WaitForCampaignSetup()
         {
             GUI.SetCursorWaiting();
-            string headerText = TextManager.Get("CampaignStartingPleaseWait");
-            var msgBox = new GUIMessageBox(headerText, TextManager.Get("CampaignStarting"), new string[] { TextManager.Get("Cancel") });
+            var headerText = TextManager.Get("CampaignStartingPleaseWait");
+            var msgBox = new GUIMessageBox(headerText, TextManager.Get("CampaignStarting"), new LocalizedString[] { TextManager.Get("Cancel") });
 
             msgBox.Buttons[0].OnClicked = (btn, userdata) =>
             {
@@ -298,66 +183,7 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        public void UpdateSubList(IEnumerable<SubmarineInfo> submarines)
-        {
-            List<SubmarineInfo> subsToShow;
-            string downloadFolder = Path.GetFullPath(SaveUtil.SubmarineDownloadFolder);
-            subsToShow = submarines.Where(s => s.IsCampaignCompatibleIgnoreClass && Path.GetDirectoryName(Path.GetFullPath(s.FilePath)) != downloadFolder).ToList();
-
-            subsToShow.Sort((s1, s2) => 
-            {
-                int p1 = s1.Price > CampaignMode.InitialMoney ? 10 : 0;
-                int p2 = s2.Price > CampaignMode.InitialMoney ? 10 : 0;
-                return p1.CompareTo(p2) * 100 + s1.Name.CompareTo(s2.Name); 
-            });
-
-            subList.ClearChildren();
-
-            foreach (SubmarineInfo sub in subsToShow)
-            {
-                var textBlock = new GUITextBlock(
-                    new RectTransform(new Vector2(1, 0.1f), subList.Content.RectTransform) { MinSize = new Point(0, 30) },
-                    ToolBox.LimitString(sub.DisplayName, GUI.Font, subList.Rect.Width - 65), style: "ListBoxElement")
-                    {
-                        ToolTip = sub.Description,
-                        UserData = sub
-                    };
-                               
-                if (!sub.RequiredContentPackagesInstalled)
-                {
-                    textBlock.TextColor = Color.Lerp(textBlock.TextColor, Color.DarkRed, .5f);
-                    textBlock.ToolTip = TextManager.Get("ContentPackageMismatch") + "\n\n" + textBlock.RawToolTip;
-                }
-
-                var priceText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), textBlock.RectTransform, Anchor.CenterRight),
-                    TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", sub.Price)), textAlignment: Alignment.CenterRight, font: GUI.SmallFont)
-                {
-                    TextColor = sub.Price > CampaignMode.InitialMoney ? GUI.Style.Red : textBlock.TextColor * 0.8f,
-                    ToolTip = textBlock.ToolTip
-                };
-#if !DEBUG
-                if (!GameMain.DebugDraw)
-                {
-                    if (sub.Price > CampaignMode.InitialMoney || !sub.IsCampaignCompatible)
-                    {
-                        textBlock.CanBeFocused = false;
-                        textBlock.TextColor *= 0.5f;
-                    }
-                }
-#endif
-            }
-            if (SubmarineInfo.SavedSubmarines.Any())
-            {
-                var validSubs = subsToShow.Where(s => s.IsCampaignCompatible && s.Price <= CampaignMode.InitialMoney).ToList();
-                if (validSubs.Count > 0)
-                {
-                    subList.Select(validSubs[Rand.Int(validSubs.Count)]);
-                }
-            }
-        }
-
-        private List<string> prevSaveFiles;
-        public void UpdateLoadMenu(IEnumerable<string> saveFiles = null)
+        public void UpdateLoadMenu(IEnumerable<CampaignMode.SaveInfo> saveFiles = null)
         {
             prevSaveFiles?.Clear();
             prevSaveFiles = null;
@@ -376,69 +202,13 @@ namespace Barotrauma
 
             saveList = new GUIListBox(new RectTransform(Vector2.One, leftColumn.RectTransform))
             {
+                PlaySoundOnSelect = true,
                 OnSelected = SelectSaveFile
             };
 
-            foreach (string saveFile in saveFiles)
+            foreach (CampaignMode.SaveInfo saveInfo in saveFiles)
             {
-                string fileName = saveFile;
-                string subName = "";
-                string saveTime = "";
-                string contentPackageStr = "";
-                var saveFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), saveList.Content.RectTransform) { MinSize = new Point(0, 45) }, style: "ListBoxElement")
-                {
-                    UserData = saveFile
-                };
-
-                var nameText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), saveFrame.RectTransform), "")
-                {
-                    CanBeFocused = false
-                };
-
-                bool isCompatible = true;
-                prevSaveFiles ??= new List<string>();
-
-                prevSaveFiles?.Add(saveFile);
-                string[] splitSaveFile = saveFile.Split(';');
-                saveFrame.UserData = splitSaveFile[0];
-                fileName = nameText.Text = Path.GetFileNameWithoutExtension(splitSaveFile[0]);
-                if (splitSaveFile.Length > 1) { subName = splitSaveFile[1]; }
-                if (splitSaveFile.Length > 2) { saveTime = splitSaveFile[2]; }
-                if (splitSaveFile.Length > 3) { contentPackageStr = splitSaveFile[3]; }
-                
-                if (!string.IsNullOrEmpty(saveTime) && long.TryParse(saveTime, out long unixTime))
-                {
-                    DateTime time = ToolBox.Epoch.ToDateTime(unixTime);
-                    saveTime = time.ToString();
-                }
-                if (!string.IsNullOrEmpty(contentPackageStr))
-                {
-                    List<string> contentPackagePaths = contentPackageStr.Split('|').ToList();
-                    if (!GameSession.IsCompatibleWithEnabledContentPackages(contentPackagePaths, out string errorMsg))
-                    {
-                        nameText.TextColor = GUI.Style.Red;
-                        saveFrame.ToolTip = string.Join("\n", errorMsg, TextManager.Get("campaignmode.contentpackagemismatchwarning"));
-                    }
-                }
-                if (!isCompatible)
-                {
-                    nameText.TextColor = GUI.Style.Red;
-                    saveFrame.ToolTip = TextManager.Get("campaignmode.incompatiblesave");
-                }
-
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), saveFrame.RectTransform, Anchor.BottomLeft),
-                    text: subName, font: GUI.SmallFont)
-                {
-                    CanBeFocused = false,
-                    UserData = fileName
-                };
-
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), saveFrame.RectTransform),
-                    text: saveTime, textAlignment: Alignment.Right, font: GUI.SmallFont)
-                {
-                    CanBeFocused = false,
-                    UserData = fileName
-                };
+                CreateSaveElement(saveInfo);
             }
 
             saveList.Content.RectTransform.SortChildren((c1, c2) =>
@@ -452,7 +222,7 @@ namespace Barotrauma
                     file1WriteTime = File.GetLastWriteTime(file1);
                 }
                 catch
-                { 
+                {
                     //do nothing - DateTime.MinValue will be used and the element will get sorted at the bottom of the list 
                 };
                 try
@@ -504,13 +274,13 @@ namespace Barotrauma
             string saveFile = obj as string;
             if (obj == null) { return false; }
 
-            string header = TextManager.Get("deletedialoglabel");
-            string body = TextManager.GetWithVariable("deletedialogquestion", "[file]", Path.GetFileNameWithoutExtension(saveFile));
+            var header = TextManager.Get("deletedialoglabel");
+            var body = TextManager.GetWithVariable("deletedialogquestion", "[file]", Path.GetFileNameWithoutExtension(saveFile));
 
             EventEditorScreen.AskForConfirmation(header, body, () =>
             {
                 SaveUtil.DeleteSave(saveFile);
-                prevSaveFiles?.RemoveAll(s => s.StartsWith(saveFile));
+                prevSaveFiles?.RemoveAll(s => s.FilePath == saveFile);
                 UpdateLoadMenu(prevSaveFiles.ToList());
                 return true;
             });

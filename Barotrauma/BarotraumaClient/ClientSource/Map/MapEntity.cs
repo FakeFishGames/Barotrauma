@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Barotrauma.Lights;
 
@@ -35,9 +36,6 @@ namespace Barotrauma
         public static List<MapEntity> CopiedList = new List<MapEntity>();
 
         private static List<MapEntity> highlightedList = new List<MapEntity>();
-
-        // Test feature. Not yet saved.
-        public static Dictionary<MapEntity, HashSet<MapEntity>> SelectionGroups { get; private set; } = new Dictionary<MapEntity, HashSet<MapEntity>>();
 
         private static float highlightTimer;
 
@@ -197,7 +195,7 @@ namespace Barotrauma
                     {
                         Paste(cam.ScreenToWorld(PlayerInput.MousePosition));
                     }
-                    else if (PlayerInput.KeyHit(Keys.G))
+                    /*else if (PlayerInput.KeyHit(Keys.G))
                     {
                         if (SelectedList.Any())
                         {
@@ -217,7 +215,7 @@ namespace Barotrauma
                                 }
                             }
                         }
-                    }
+                    }*/
                 }
             }
 
@@ -360,14 +358,15 @@ namespace Barotrauma
                 {
                     if (highLightedEntity != null)
                     {
-                        if (SelectionGroups.TryGetValue(highLightedEntity, out HashSet<MapEntity> group))
+                        if (SubEditorScreen.IsLayerLinked(highLightedEntity)/*SelectionGroups.TryGetValue(highLightedEntity, out HashSet<MapEntity> group)*/)
                         {
-                            foreach (MapEntity entity in group.Where(e => !newSelection.Contains(e)))
+                            ImmutableHashSet<MapEntity> entitiesInSameLayer = SubEditorScreen.GetEntitiesInSameLayer(highLightedEntity);
+                            foreach (MapEntity entity in entitiesInSameLayer.Where(e => !newSelection.Contains(e)))
                             {
                                 newSelection.Add(entity);
                             }
 
-                            foreach (MapEntity entity in group)
+                            foreach (MapEntity entity in entitiesInSameLayer)
                             {
                                 entity.IsIncludedInSelection = true;
                             }
@@ -611,7 +610,7 @@ namespace Barotrauma
 
             foreach (MapEntity entity in highlightedEntities)
             {
-                var tooltip = string.Empty;
+                LocalizedString tooltip = string.Empty;
 
                 if (wiringMode && entity is Item item)
                 {
@@ -623,9 +622,9 @@ namespace Barotrauma
                             var conn = wire.Connections[i];
                             if (conn != null)
                             {
-                                string[] tags = { "[item]", "[pin]" };
-                                string[] values = { conn.Item?.Name, conn.Name };
-                                tooltip += TextManager.GetWithVariables("wirelistformat",tags , values);
+                                tooltip += TextManager.GetWithVariables("wirelistformat",
+                                    ("[item]", conn.Item?.Name),
+                                    ("[pin]", conn.Name));
                             }
                             if (i != wire.Connections.Length - 1) { tooltip += '\n'; }
                         }
@@ -633,7 +632,7 @@ namespace Barotrauma
                 }
 
                 var textBlock = new GUITextBlock(new RectTransform(new Point(highlightedListBox.Content.Rect.Width, 15), highlightedListBox.Content.RectTransform),
-                                                 ToolBox.LimitString(entity.Name, GUI.SmallFont, 140), font: GUI.SmallFont)
+                                                 ToolBox.LimitString(entity.Name, GUIStyle.SmallFont, 140), font: GUIStyle.SmallFont)
                 {
                     ToolTip = tooltip,
                     UserData = entity
@@ -769,36 +768,42 @@ namespace Barotrauma
                         switch (e)
                         {
                             case Item item:
-                            {
-                                if (item.FlippedX && item.Prefab.CanSpriteFlipX) spriteEffects ^= SpriteEffects.FlipHorizontally;
-                                if (item.flippedY && item.Prefab.CanSpriteFlipY) spriteEffects ^= SpriteEffects.FlipVertically;
-                                break;
-                            }
+                                {
+                                    if (item.FlippedX && item.Prefab.CanSpriteFlipX) { spriteEffects ^= SpriteEffects.FlipHorizontally; }
+                                    if (item.flippedY && item.Prefab.CanSpriteFlipY) { spriteEffects ^= SpriteEffects.FlipVertically; }
+                                    var wire = item.GetComponent<Wire>();
+                                    if (wire != null && wire.Item.body != null && !wire.Item.body.Enabled)
+                                    {
+                                        wire.Draw(spriteBatch, editing: false, new Vector2(moveAmount.X, -moveAmount.Y));
+                                        continue;
+                                    }
+                                    break;
+                                }
                             case Structure structure:
-                            {
-                                if (structure.FlippedX && structure.Prefab.CanSpriteFlipX) spriteEffects ^= SpriteEffects.FlipHorizontally;
-                                if (structure.flippedY && structure.Prefab.CanSpriteFlipY) spriteEffects ^= SpriteEffects.FlipVertically;
-                                break;
-                            }
+                                {
+                                    if (structure.FlippedX && structure.Prefab.CanSpriteFlipX) { spriteEffects ^= SpriteEffects.FlipHorizontally; }
+                                    if (structure.flippedY && structure.Prefab.CanSpriteFlipY) { spriteEffects ^= SpriteEffects.FlipVertically; }
+                                    break;
+                                }
                             case WayPoint wayPoint:
-                            {
-                                Vector2 drawPos = e.WorldPosition;
-                                drawPos.Y = -drawPos.Y;
-                                drawPos += moveAmount;
-                                wayPoint.Draw(spriteBatch, drawPos);
-                                continue;
-                            }
+                                {
+                                    Vector2 drawPos = e.WorldPosition;
+                                    drawPos.Y = -drawPos.Y;
+                                    drawPos += moveAmount;
+                                    wayPoint.Draw(spriteBatch, drawPos);
+                                    continue;
+                                }
                             case LinkedSubmarine linkedSub:
-                            {
-                                var ma = moveAmount;
-                                ma.Y = -ma.Y;
-                                Vector2 lPos = linkedSub.Position;
-                                lPos += ma;
-                                linkedSub.Draw(spriteBatch, lPos, alpha: 0.5f);
-                                break;
-                            }
+                                {
+                                    var ma = moveAmount;
+                                    ma.Y = -ma.Y;
+                                    Vector2 lPos = linkedSub.Position;
+                                    lPos += ma;
+                                    linkedSub.Draw(spriteBatch, lPos, alpha: 0.5f);
+                                    break;
+                                }
                         }
-                        e.prefab?.DrawPlacing(spriteBatch,
+                        e.Prefab?.DrawPlacing(spriteBatch,
                             new Rectangle(e.WorldRect.Location + new Point((int)moveAmount.X, (int)-moveAmount.Y), e.WorldRect.Size), e.Scale, spriteEffects);
                         GUI.DrawRectangle(spriteBatch,
                             new Vector2(e.WorldRect.X, -e.WorldRect.Y) + moveAmount,
@@ -825,7 +830,7 @@ namespace Barotrauma
                     new Vector2(posX, posY + sizeY)
                 };
 
-                Color selectionColor = GUI.Style.Blue;
+                Color selectionColor = GUIStyle.Blue;
                 float thickness = Math.Max(2f, 2f / Screen.Selected.Cam.Zoom);
 
                 GUI.DrawFilledRectangle(spriteBatch, corners[0], selectionSize, selectionColor * 0.1f);
@@ -1197,14 +1202,24 @@ namespace Barotrauma
 
             Rectangle selectionRect = Submarine.AbsRect(pos, size);
 
-            foreach (MapEntity e in mapEntityList)
+            foreach (MapEntity entity in mapEntityList)
             {
-                if (!e.SelectableInEditor) continue;
+                if (!entity.SelectableInEditor) { continue; }
 
-                if (Submarine.RectsOverlap(selectionRect, e.rect))
+                if (Submarine.RectsOverlap(selectionRect, entity.rect))
                 {
-                    foundEntities.Add(e);
-                    e.IsIncludedInSelection = true;
+                    foundEntities.Add(entity);
+                    entity.IsIncludedInSelection = true;
+
+                    if (SubEditorScreen.IsLayerLinked(entity))
+                    {
+                        ImmutableHashSet<MapEntity> entitiesInSameLayer = SubEditorScreen.GetEntitiesInSameLayer(entity);
+                        foreach (MapEntity layerEntity in entitiesInSameLayer.Where(e => !foundEntities.Contains(e)))
+                        {
+                            foundEntities.Add(layerEntity);
+                            layerEntity.IsIncludedInSelection = true;
+                        }
+                    }
                 }
             }
 

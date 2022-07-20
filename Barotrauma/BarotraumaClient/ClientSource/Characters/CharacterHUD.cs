@@ -3,7 +3,6 @@ using Barotrauma.Items.Components;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,23 +34,23 @@ namespace Barotrauma
                     MinSize = new Point(100, 50),
                     RelativeOffset = new Vector2(0.0f, 0.01f)
                 }, isHorizontal: false, childAnchor: Anchor.TopCenter);
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), TopContainer.RectTransform), character.DisplayName, textAlignment: Alignment.Center, textColor: GUI.Style.Red);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), TopContainer.RectTransform), character.DisplayName, textAlignment: Alignment.Center, textColor: GUIStyle.Red);
                 TopHealthBar = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.6f), TopContainer.RectTransform)
                 {
                     MinSize = new Point(100, HUDLayoutSettings.HealthBarArea.Size.Y)
                 }, barSize: 0.0f, style: "CharacterHealthBarCentered")
                 {
-                    Color = GUI.Style.Red
+                    Color = GUIStyle.Red
                 };
 
                 SideContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), bossHealthContainer.RectTransform)
                 {
                     MinSize = new Point(80, 60)
                 }, isHorizontal: false, childAnchor: Anchor.TopRight);
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), SideContainer.RectTransform), character.DisplayName, textAlignment: Alignment.CenterRight, textColor: GUI.Style.Red);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), SideContainer.RectTransform), character.DisplayName, textAlignment: Alignment.CenterRight, textColor: GUIStyle.Red);
                 SideHealthBar = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.7f), SideContainer.RectTransform), barSize: 0.0f, style: "CharacterHealthBar")
                 {
-                    Color = GUI.Style.Red
+                    Color = GUIStyle.Red
                 };
 
                 TopContainer.Visible = SideContainer.Visible = false;
@@ -72,7 +71,7 @@ namespace Barotrauma
 
         private static readonly List<BossHealthBar> bossHealthBars = new List<BossHealthBar>();
 
-        private static readonly Dictionary<string, string> cachedHudTexts = new Dictionary<string, string>();
+        private static readonly Dictionary<Identifier, LocalizedString> cachedHudTexts = new Dictionary<Identifier, LocalizedString>();
 
         private static GUILayoutGroup bossHealthContainer;
 
@@ -113,20 +112,18 @@ namespace Barotrauma
 
             return 
                 character?.Inventory != null && 
-                character.AllowInput &&
+                !character.Removed && !character.IsKnockedDown &&
                 (controller?.User != character || !controller.HideHUD) &&
                 !IsCampaignInterfaceOpen &&
                 !ConversationAction.FadeScreenToBlack;
         }
 
-        public static string GetCachedHudText(string textTag, string keyBind)
+        public static LocalizedString GetCachedHudText(string textTag, InputType keyBind)
         {
-            if (cachedHudTexts.TryGetValue(textTag + keyBind, out string text))
-            {
-                return text;
-            }
-            text = TextManager.GetWithVariable(textTag, "[key]", keyBind);
-            cachedHudTexts.Add(textTag + keyBind, text);
+            Identifier key = (textTag + keyBind).ToIdentifier();
+            if (cachedHudTexts.TryGetValue(key, out LocalizedString text)) { return text; }
+            text = TextManager.GetWithVariable(textTag, "[key]", GameSettings.CurrentConfig.KeyMap.KeyBindText(keyBind)).Value;
+            cachedHudTexts.Add(key, text);
             return text;
         }
         
@@ -235,7 +232,7 @@ namespace Barotrauma
                 foreach (Item item in Item.ItemList)
                 {
                     if (item.Submarine == null || item.Submarine.TeamID != character.TeamID || item.Submarine.Info.IsWreck) { continue; }
-                    if (!item.Repairables.Any(r => item.ConditionPercentage <= r.RepairIconThreshold)) { continue; }
+                    if (!item.Repairables.Any(r => r.IsBelowRepairIconThreshold)) { continue; }
                     if (Submarine.VisibleEntities != null && !Submarine.VisibleEntities.Contains(item)) { continue; }
 
                     Vector2 diff = item.WorldPosition - character.WorldPosition;
@@ -256,24 +253,24 @@ namespace Barotrauma
             if (GameMain.GameSession?.CrewManager != null)
             {
                 orderIndicatorCount.Clear();
-                foreach (Pair<Order, float?> activeOrder in GameMain.GameSession.CrewManager.ActiveOrders)
+                foreach (CrewManager.ActiveOrder activeOrder in GameMain.GameSession.CrewManager.ActiveOrders)
                 {
-                    if (!DrawIcon(activeOrder.First)) { continue; }
+                    if (!DrawIcon(activeOrder.Order)) { continue; }
 
-                    if (activeOrder.Second.HasValue)
+                    if (activeOrder.FadeOutTime.HasValue)
                     {
-                        DrawOrderIndicator(spriteBatch, cam, character, activeOrder.First, iconAlpha: MathHelper.Clamp(activeOrder.Second.Value / 10.0f, 0.2f, 1.0f));
+                        DrawOrderIndicator(spriteBatch, cam, character, activeOrder.Order, iconAlpha: MathHelper.Clamp(activeOrder.FadeOutTime.Value / 10.0f, 0.2f, 1.0f));
                     }
                     else
                     {
-                        float iconAlpha = GetDistanceBasedIconAlpha(activeOrder.First.TargetSpatialEntity, maxDistance: 450.0f);
+                        float iconAlpha = GetDistanceBasedIconAlpha(activeOrder.Order.TargetSpatialEntity, maxDistance: 450.0f);
                         if (iconAlpha <= 0.0f) { continue; }
-                        DrawOrderIndicator(spriteBatch, cam, character, activeOrder.First,
+                        DrawOrderIndicator(spriteBatch, cam, character, activeOrder.Order,
                             iconAlpha: iconAlpha, createOffset: false, scaleMultiplier: 0.5f, overrideAlpha: true);
                     }
                 }
 
-                if (character.GetCurrentOrderWithTopPriority()?.Order is Order currentOrder && DrawIcon(currentOrder))
+                if (character.GetCurrentOrderWithTopPriority() is Order currentOrder && DrawIcon(currentOrder))
                 {
                     DrawOrderIndicator(spriteBatch, cam, character, currentOrder, 1.0f);
                 }
@@ -310,8 +307,8 @@ namespace Barotrauma
                 if (!brokenItem.IsInteractable(character)) { continue; }
                 float alpha = GetDistanceBasedIconAlpha(brokenItem);
                 if (alpha <= 0.0f) continue;
-                GUI.DrawIndicator(spriteBatch, brokenItem.DrawPosition, cam, 100.0f, GUI.BrokenIcon, 
-                    Color.Lerp(GUI.Style.Red, GUI.Style.Orange * 0.5f, brokenItem.Condition / brokenItem.MaxCondition) * alpha);
+                GUI.DrawIndicator(spriteBatch, brokenItem.DrawPosition, cam, 100.0f, GUIStyle.BrokenIcon.Value.Sprite, 
+                    Color.Lerp(GUIStyle.Red, GUIStyle.Orange * 0.5f, brokenItem.Condition / brokenItem.MaxCondition) * alpha);
             }
 
             float GetDistanceBasedIconAlpha(ISpatialEntity target, float maxDistance = 1000.0f)
@@ -344,12 +341,12 @@ namespace Barotrauma
                     circleSize = MathHelper.Clamp(circleSize, 45.0f, 100.0f) * Math.Min((focusedItemOverlayTimer - 1.0f) * 5.0f, 1.0f);
                     if (circleSize > 0.0f)
                     {
-                        Vector2 scale = new Vector2(circleSize / GUI.Style.FocusIndicator.FrameSize.X);
-                        GUI.Style.FocusIndicator.Draw(spriteBatch,
-                            (int)((focusedItemOverlayTimer - 1.0f) * GUI.Style.FocusIndicator.FrameCount * 3.0f),
+                        Vector2 scale = new Vector2(circleSize / GUIStyle.FocusIndicator.FrameSize.X);
+                        GUIStyle.FocusIndicator.Draw(spriteBatch,
+                            (int)((focusedItemOverlayTimer - 1.0f) * GUIStyle.FocusIndicator.FrameCount * 3.0f),
                             circlePos,
                             Color.LightBlue * 0.3f,
-                            origin: GUI.Style.FocusIndicator.FrameSize.ToVector2() / 2,
+                            origin: GUIStyle.FocusIndicator.FrameSize.ToVector2() / 2,
                             rotate: (float)Timing.TotalTime,
                             scale: scale);
                     }
@@ -367,8 +364,8 @@ namespace Barotrauma
 
                         int dir = Math.Sign(focusedItem.WorldPosition.X - character.WorldPosition.X);
 
-                        Vector2 textSize = GUI.Font.MeasureString(hudTexts.First().Text);
-                        Vector2 largeTextSize = GUI.SubHeadingFont.MeasureString(hudTexts.First().Text);
+                        Vector2 textSize = GUIStyle.Font.MeasureString(hudTexts.First().Text);
+                        Vector2 largeTextSize = GUIStyle.SubHeadingFont.MeasureString(hudTexts.First().Text);
 
                         Vector2 startPos = cam.WorldToScreen(focusedItem.DrawPosition);
                         startPos.Y -= (hudTexts.Count + 1) * textSize.Y;
@@ -383,14 +380,14 @@ namespace Barotrauma
 
                         float alpha = MathHelper.Clamp((focusedItemOverlayTimer - ItemOverlayDelay) * 2.0f, 0.0f, 1.0f);
 
-                        GUI.DrawString(spriteBatch, textPos, hudTexts.First().Text, hudTexts.First().Color * alpha, Color.Black * alpha * 0.7f, 2, font: GUI.SubHeadingFont);
+                        GUI.DrawString(spriteBatch, textPos, hudTexts.First().Text, hudTexts.First().Color * alpha, Color.Black * alpha * 0.7f, 2, font: GUIStyle.SubHeadingFont, ForceUpperCase.No);
                         startPos.X += dir * 10.0f * GUI.Scale;
                         textPos.X += dir * 10.0f * GUI.Scale;
                         textPos.Y += largeTextSize.Y;
                         foreach (ColoredText coloredText in hudTexts.Skip(1))
                         {
-                            if (dir == -1) textPos.X = (int)(startPos.X - GUI.SmallFont.MeasureString(coloredText.Text).X);
-                            GUI.DrawString(spriteBatch, textPos, coloredText.Text, coloredText.Color * alpha, Color.Black * alpha * 0.7f, 2, GUI.SmallFont);
+                            if (dir == -1) textPos.X = (int)(startPos.X - GUIStyle.SmallFont.MeasureString(coloredText.Text).X);
+                            GUI.DrawString(spriteBatch, textPos, coloredText.Text, coloredText.Color * alpha, Color.Black * alpha * 0.7f, 2, GUIStyle.SmallFont);
                             textPos.Y += textSize.Y;
                         }
                     }                    
@@ -405,7 +402,8 @@ namespace Barotrauma
                 {
                     if (npc.CampaignInteractionType == CampaignMode.InteractionType.None || npc.Submarine != character.Submarine || npc.IsDead || npc.IsIncapacitated) { continue; }
 
-                    var iconStyle = GUI.Style.GetComponentStyle("CampaignInteractionIcon." + npc.CampaignInteractionType);
+                    var iconStyle = GUIStyle.GetComponentStyle("CampaignInteractionIcon." + npc.CampaignInteractionType);
+                    if (iconStyle == null) { continue; }
                     Range<float> visibleRange = new Range<float>(npc.CurrentHull == Character.Controlled.CurrentHull ? 500.0f : 100.0f, float.PositiveInfinity);
                     if (npc.CampaignInteractionType == CampaignMode.InteractionType.Examine)
                     {
@@ -431,7 +429,7 @@ namespace Barotrauma
                 foreach (Item item in Item.ItemList)
                 {
                     if (item.IconStyle is null || item.Submarine != character.Submarine) { continue; }
-                    if (Vector2.DistanceSquared(character.Position, item.Position) > 500f*500f) { continue; }
+                    if (Vector2.DistanceSquared(character.Position, item.Position) > 500f * 500f) { continue; }
                     var body = Submarine.CheckVisibility(character.SimPosition, item.SimPosition, ignoreLevel: true);
                     if (body != null && body.UserData as Item != item) { continue; }
                     GUI.DrawIndicator(spriteBatch, item.WorldPosition + new Vector2(0f, item.RectHeight * 0.65f), cam, new Range<float>(-100f, 500.0f), item.IconStyle.GetDefaultSprite(), item.IconStyle.Color, createOffset: false);
@@ -485,12 +483,14 @@ namespace Barotrauma
                                 (int)(HUDLayoutSettings.BottomRightInfoArea.Y + HUDLayoutSettings.BottomRightInfoArea.Height * 0.1f),
                                 (int)(HUDLayoutSettings.BottomRightInfoArea.Width / 2),
                                 (int)(HUDLayoutSettings.BottomRightInfoArea.Height * 0.7f)), character.Info.IsDisguisedAsAnother);
-                        character.Info.DrawPortrait(spriteBatch, HUDLayoutSettings.PortraitArea.Location.ToVector2(), new Vector2(-12 * GUI.Scale, 4 * GUI.Scale), targetWidth: HUDLayoutSettings.PortraitArea.Width, true, character.Info.IsDisguisedAsAnother);
+                        float yOffset = (GameMain.GameSession?.Campaign is MultiPlayerCampaign ? -10 : 4) * GUI.Scale;
+                        character.Info.DrawPortrait(spriteBatch, HUDLayoutSettings.PortraitArea.Location.ToVector2(), new Vector2(-12 * GUI.Scale, yOffset), targetWidth: HUDLayoutSettings.PortraitArea.Width, true, character.Info.IsDisguisedAsAnother);
+                        character.Info.DrawForeground(spriteBatch);
                     }
                     mouseOnPortrait = HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition) && !character.ShouldLockHud();
                     if (mouseOnPortrait)
                     {
-                        GUI.UIGlow.Draw(spriteBatch, HUDLayoutSettings.BottomRightInfoArea, GUI.Style.Green * 0.5f);
+                        GUIStyle.UIGlow.Draw(spriteBatch, HUDLayoutSettings.BottomRightInfoArea, GUIStyle.Green * 0.5f);
                     }
                 }
                 if (ShouldDrawInventory(character))
@@ -554,28 +554,28 @@ namespace Barotrauma
 
             string focusName = character.FocusedCharacter.Info == null ? character.FocusedCharacter.DisplayName : character.FocusedCharacter.Info.DisplayName;
             Vector2 textPos = startPos;
-            Vector2 textSize = GUI.Font.MeasureString(focusName);
-            Vector2 largeTextSize = GUI.SubHeadingFont.MeasureString(focusName);
+            Vector2 textSize = GUIStyle.Font.MeasureString(focusName);
+            Vector2 largeTextSize = GUIStyle.SubHeadingFont.MeasureString(focusName);
 
             textPos -= new Vector2(textSize.X / 2, textSize.Y);
 
             Color nameColor = character.FocusedCharacter.GetNameColor();
-            GUI.DrawString(spriteBatch, textPos, focusName, nameColor, Color.Black * 0.7f, 2, GUI.SubHeadingFont);
+            GUI.DrawString(spriteBatch, textPos, focusName, nameColor, Color.Black * 0.7f, 2, GUIStyle.SubHeadingFont, ForceUpperCase.No);
             textPos.X += 10.0f * GUI.Scale;
-            textPos.Y += GUI.SubHeadingFont.MeasureString(focusName).Y;
+            textPos.Y += GUIStyle.SubHeadingFont.MeasureString(focusName).Y;
 
             if (!character.FocusedCharacter.IsIncapacitated && character.FocusedCharacter.IsPet)
             {
-                GUI.DrawString(spriteBatch, textPos, GetCachedHudText("PlayHint", GameMain.Config.KeyBindText(InputType.Use)),
-                    GUI.Style.Green, Color.Black, 2, GUI.SmallFont);
+                GUI.DrawString(spriteBatch, textPos, GetCachedHudText("PlayHint", InputType.Use),
+                    GUIStyle.Green, Color.Black, 2, GUIStyle.SmallFont);
                 textPos.Y += largeTextSize.Y;
             }
 
             if (character.FocusedCharacter.CanBeDragged)
             {
                 string text = character.CanEat ? "EatHint" : "GrabHint";
-                GUI.DrawString(spriteBatch, textPos, GetCachedHudText(text, GameMain.Config.KeyBindText(InputType.Grab)),
-                    GUI.Style.Green, Color.Black, 2, GUI.SmallFont);
+                GUI.DrawString(spriteBatch, textPos, GetCachedHudText(text, InputType.Grab),
+                    GUIStyle.Green, Color.Black, 2, GUIStyle.SmallFont);
                 textPos.Y += largeTextSize.Y;
             }
 
@@ -584,13 +584,13 @@ namespace Barotrauma
                 character.FocusedCharacter.CharacterHealth.UseHealthWindow &&
                 character.CanInteractWith(character.FocusedCharacter, 160f, false))
             {
-                GUI.DrawString(spriteBatch, textPos, GetCachedHudText("HealHint", GameMain.Config.KeyBindText(InputType.Health)),
-                    GUI.Style.Green, Color.Black, 2, GUI.SmallFont);
+                GUI.DrawString(spriteBatch, textPos, GetCachedHudText("HealHint", InputType.Health),
+                    GUIStyle.Green, Color.Black, 2, GUIStyle.SmallFont);
                 textPos.Y += textSize.Y;
             }
-            if (!string.IsNullOrEmpty(character.FocusedCharacter.customInteractHUDText) && character.FocusedCharacter.AllowCustomInteract)
+            if (!character.FocusedCharacter.CustomInteractHUDText.IsNullOrEmpty() && character.FocusedCharacter.AllowCustomInteract)
             {
-                GUI.DrawString(spriteBatch, textPos, character.FocusedCharacter.customInteractHUDText, GUI.Style.Green, Color.Black, 2, GUI.SmallFont);
+                GUI.DrawString(spriteBatch, textPos, character.FocusedCharacter.CustomInteractHUDText, GUIStyle.Green, Color.Black, 2, GUIStyle.SmallFont);
                 textPos.Y += textSize.Y;
             }
         }

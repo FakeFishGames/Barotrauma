@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
 using Microsoft.Xna.Framework;
+using static Barotrauma.CharacterInfo;
 
 namespace Barotrauma
 {
-    class CharacterPrefab : IPrefab, IDisposable
+    class CharacterPrefab : PrefabWithUintIdentifier, IImplementsVariants<CharacterPrefab>
     {
         public readonly static PrefabCollection<CharacterPrefab> Prefabs = new PrefabCollection<CharacterPrefab>();
 
         private bool disposed = false;
-        public void Dispose()
+        public override void Dispose()
         {
             if (disposed) { return; }
             disposed = true;
@@ -19,36 +21,51 @@ namespace Barotrauma
             Character.RemoveByPrefab(this);
         }
 
-        public string OriginalName { get; private set; }
-        public string Name { get; private set; }
-        public string Identifier { get; private set; }
-        public string FilePath { get; private set; }
-        public string VariantOf { get; private set; }
+        public string Name => Identifier.Value;
+        public Identifier VariantOf { get; }
+        public void InheritFrom(CharacterPrefab parent)
+        {
+            ConfigElement = CharacterParams.CreateVariantXml(originalElement, parent.ConfigElement).FromPackage(ConfigElement.ContentPackage);
+            ParseConfigElement();
+        }
 
-        public ContentPackage ContentPackage { get; private set; }
+        private void ParseConfigElement()
+        {
+            var headsElement = ConfigElement.GetChildElement("Heads");
+            var varsElement = ConfigElement.GetChildElement("Vars");
+            var menuCategoryElement = ConfigElement.GetChildElement("MenuCategory");
+            var pronounsElement = ConfigElement.GetChildElement("Pronouns");
 
-        public XDocument XDocument { get; private set; }
+            if (headsElement != null)
+            {
+                CharacterInfoPrefab = new CharacterInfoPrefab(headsElement, varsElement, menuCategoryElement, pronounsElement);
+            }
+        }
 
-        public static IEnumerable<string> ConfigFilePaths => Prefabs.Select(p => p.FilePath);
-        public static IEnumerable<XDocument> ConfigFiles => Prefabs.Select(p => p.XDocument);
+        private XElement originalElement;
+        public ContentXElement ConfigElement { get; private set; }
 
-        public const string HumanSpeciesName = "human";
-        public static string HumanConfigFile => FindBySpeciesName(HumanSpeciesName).FilePath;
+        public CharacterInfoPrefab CharacterInfoPrefab { get; private set; }
+
+        public static IEnumerable<ContentXElement> ConfigElements => Prefabs.Select(p => p.ConfigElement);
+
+        public static readonly Identifier HumanSpeciesName = "human".ToIdentifier();
+        public static CharacterFile HumanConfigFile => HumanPrefab.ContentFile as CharacterFile;
+        public static CharacterPrefab HumanPrefab => FindBySpeciesName(HumanSpeciesName);
 
         /// <summary>
         /// Searches for a character config file from all currently selected content packages, 
         /// or from a specific package if the contentPackage parameter is given.
         /// </summary>
-        public static CharacterPrefab FindBySpeciesName(string speciesName)
+        public static CharacterPrefab FindBySpeciesName(Identifier speciesName)
         {
-            speciesName = speciesName.ToLowerInvariant();
             if (!Prefabs.ContainsKey(speciesName)) { return null; }
             return Prefabs[speciesName];
         }
 
         public static CharacterPrefab FindByFilePath(string filePath)
         {
-            return Prefabs.Find(p => p.FilePath.CleanUpPath() == filePath.CleanUpPath());
+            return Prefabs.Find(p => p.ContentFile.Path == filePath);
         }
 
         public static CharacterPrefab Find(Predicate<CharacterPrefab> predicate)
@@ -56,91 +73,38 @@ namespace Barotrauma
             return Prefabs.Find(predicate);
         }
 
-        public static void RemoveByFile(string file)
+        public CharacterPrefab(ContentXElement mainElement, CharacterFile file) : base(file, ParseName(mainElement, file))
         {
-            Prefabs.RemoveByFile(file);
+            originalElement = mainElement;
+            ConfigElement = mainElement;
+            VariantOf = mainElement.VariantOf();
+
+            ParseConfigElement();
         }
 
-        public static bool LoadFromFile(ContentFile file, bool forceOverride=false)
+        public static Identifier ParseName(XElement element, CharacterFile file)
         {
-            return LoadFromFile(file.Path, file.ContentPackage, forceOverride);
-        }
-
-        public static bool LoadFromFile(string filePath, ContentPackage contentPackage, bool forceOverride=false)
-        {
-            XDocument doc = XMLExtensions.TryLoadXml(filePath);
-            if (doc == null)
+            string name = element.GetAttributeString("name", null);
+            if (!string.IsNullOrEmpty(name))
             {
-                DebugConsole.ThrowError($"Loading character file failed: {filePath}");
-                return false;
-            }
-            if (Prefabs.AllPrefabs.Any(kvp => kvp.Value.Any(cf => cf?.FilePath == filePath)))
-            {
-                DebugConsole.ThrowError($"Duplicate path: {filePath}");
-                return false;
-            }
-            XElement mainElement = doc.Root;
-            if (doc.Root.IsCharacterVariant())
-            {
-                if (!CheckSpeciesName(mainElement, filePath, out string n)) { return false; }
-                string inherit = mainElement.GetAttributeString("inherit", null);
-                string id = n.ToLowerInvariant();
-                Prefabs.Add(new CharacterPrefab
-                {
-                    Name = n,
-                    OriginalName = n,
-                    Identifier = id,
-                    FilePath = filePath,
-                    ContentPackage = contentPackage,
-                    XDocument = doc,
-                    VariantOf = inherit
-                }, isOverride: false);
-                return true;
-            }
-            else if (doc.Root.IsOverride())
-            {
-                mainElement = doc.Root.FirstElement();
-            }
-            if (!CheckSpeciesName(mainElement, filePath, out string name)) { return false; }
-            string identifier = name.ToLowerInvariant();
-            Prefabs.Add(new CharacterPrefab
-            {
-                Name = name,
-                OriginalName = name,
-                Identifier = identifier,
-                FilePath = filePath,
-                ContentPackage = contentPackage,
-                XDocument = doc
-            }, forceOverride || doc.Root.IsOverride());
-
-            return true;
-        }
-
-        public static bool CheckSpeciesName(XElement mainElement, string filePath, out string name)
-        {
-            name = mainElement.GetAttributeString("name", null);
-            if (name != null)
-            {
-                DebugConsole.NewMessage($"Error in {filePath}: 'name' is deprecated! Use 'speciesname' instead.", Color.Orange);
+                DebugConsole.NewMessage($"Error in {file.Path}: 'name' is deprecated! Use 'speciesname' instead.", Color.Orange);
             }
             else
             {
-                name = mainElement.GetAttributeString("speciesname", string.Empty);
+                name = element.GetAttributeString("speciesname", string.Empty);
             }
-            if (string.IsNullOrWhiteSpace(name))
+            return new Identifier(name);
+        }
+
+        public static bool CheckSpeciesName(XElement mainElement, CharacterFile file, out Identifier name)
+        {
+            name = ParseName(mainElement, file);
+            if (name == Identifier.Empty)
             {
-                DebugConsole.ThrowError($"No species name defined for: {filePath}");
+                DebugConsole.ThrowError($"No species name defined for: {file.Path}");
                 return false;
             }
             return true;
-        }
-
-        public static void LoadAll()
-        {
-            foreach (ContentFile file in ContentPackage.GetFilesOfType(GameMain.Config.AllEnabledPackages, ContentType.Character))
-            {
-                LoadFromFile(file);
-            }
         }
     }
 }

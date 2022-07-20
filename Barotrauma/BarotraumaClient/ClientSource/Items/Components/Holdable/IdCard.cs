@@ -21,108 +21,44 @@ namespace Barotrauma.Items.Components
             public Color FacialHairColor;
             public Color SkinColor;
 
-            public void ExtractJobPrefab(string[] tags)
+            public void ExtractJobPrefab(IReadOnlyDictionary<Identifier, string> tags)
             {
-                string jobIdTag = tags.FirstOrDefault(s => s.StartsWith("jobid:"));
-
-                if (jobIdTag != null && jobIdTag.Length > 6)
+                if (!tags.TryGetValue("jobid".ToIdentifier(), out string jobId)) { return; }
+                
+                if (!jobId.IsNullOrEmpty())
                 {
-                    string jobId = jobIdTag.Substring(6);
-                    if (jobId != string.Empty)
-                    {
-                        JobPrefab = JobPrefab.Get(jobId);
-                    }
+                    JobPrefab = JobPrefab.Get(jobId);
                 }
             }
 
-            public void ExtractAppearance(CharacterInfo characterInfo, string[] tags)
+            public void ExtractAppearance(CharacterInfo characterInfo, IdCard idCard)
             {
-                Gender disguisedGender = Gender.None;
-                Race disguisedRace = Race.None;
-                int disguisedHeadSpriteId = -1;
-                int disguisedHairIndex = -1;
-                int disguisedBeardIndex = -1;
-                int disguisedMoustacheIndex = -1;
-                int disguisedFaceAttachmentIndex = -1;
-                Color hairColor = Color.Black;
-                Color facialHairColor = Color.Black;
-                Color skinColor = Color.Black;
+                int disguisedHairIndex = idCard.OwnerHairIndex;
+                int disguisedBeardIndex = idCard.OwnerBeardIndex;
+                int disguisedMoustacheIndex = idCard.OwnerMoustacheIndex;
+                int disguisedFaceAttachmentIndex = idCard.OwnerFaceAttachmentIndex;
+                Color hairColor = idCard.OwnerHairColor;
+                Color facialHairColor = idCard.OwnerFacialHairColor;
+                Color skinColor = idCard.OwnerSkinColor;
+                var tags = idCard.OwnerTagSet;
 
-                foreach (string tag in tags)
-                {
-                    string[] s = tag.Split(':');
-
-                    switch (s[0].ToLowerInvariant())
-                    {
-                        case "haircolor":
-                            hairColor = XMLExtensions.ParseColor(s[1]);
-                            break;
-                        
-                        case "facialhaircolor":
-                            facialHairColor = XMLExtensions.ParseColor(s[1]);
-                            break;
-                        
-                        case "skincolor":
-                            skinColor = XMLExtensions.ParseColor(s[1]);
-                            break;
-                            
-                        case "gender":
-                            Enum.TryParse(s[1], ignoreCase: true, out disguisedGender);
-                            break;
-
-                        case "race":
-                            Enum.TryParse(s[1], ignoreCase: true, out disguisedRace);
-                            break;
-
-                        case "headspriteid":
-                            int.TryParse(s[1], NumberStyles.Any, CultureInfo.InvariantCulture, out disguisedHeadSpriteId);
-                            break;
-
-                        case "hairindex":
-                            disguisedHairIndex = int.Parse(s[1]);
-                            break;
-
-                        case "beardindex":
-                            disguisedBeardIndex = int.Parse(s[1]);
-                            break;
-
-                        case "moustacheindex":
-                            disguisedMoustacheIndex = int.Parse(s[1]);
-                            break;
-
-                        case "faceattachmentindex":
-                            disguisedFaceAttachmentIndex = int.Parse(s[1]);
-                            break;
-
-                        case "sheetindex":
-                            string[] vectorValues = s[1].Split(";");
-                            SheetIndex = new Vector2(float.Parse(vectorValues[0]), float.Parse(vectorValues[1]));
-                            break;
-                    }
-                }
-
-                if ((characterInfo.HasGenders && disguisedGender == Gender.None)
-                    || (characterInfo.HasRaces && disguisedRace == Race.None)
-                    || disguisedHeadSpriteId <= 0)
+                if ((characterInfo.HasSpecifierTags && !tags.Any()))
                 {
                     Portrait = null;
                     Attachments = null;
                     return;
                 }
 
-                foreach (XElement limbElement in characterInfo.Ragdoll.MainElement.Elements())
+                foreach (ContentXElement limbElement in characterInfo.Ragdoll.MainElement.Elements())
                 {
                     if (!limbElement.GetAttributeString("type", "").Equals("head", StringComparison.OrdinalIgnoreCase)) { continue; }
 
-                    XElement spriteElement = limbElement.Element("sprite");
+                    ContentXElement spriteElement = limbElement.GetChildElement("sprite");
                     if (spriteElement == null) { continue; }
 
-                    string spritePath = spriteElement.Attribute("texture").Value;
+                    ContentPath contentPath = spriteElement.GetAttributeContentPath("texture");
 
-                    spritePath = spritePath.Replace("[GENDER]", disguisedGender.ToString().ToLowerInvariant());
-                    spritePath = spritePath.Replace("[RACE]", disguisedRace.ToString().ToLowerInvariant());
-                    spritePath = spritePath.Replace("[HEADID]", disguisedHeadSpriteId.ToString());
-
+                    string spritePath = characterInfo.ReplaceVars(contentPath.Value);
                     string fileName = Path.GetFileNameWithoutExtension(spritePath);
 
                     //go through the files in the directory to find a matching sprite
@@ -144,13 +80,11 @@ namespace Barotrauma.Items.Components
 
                 if (characterInfo.Wearables != null)
                 {
-                    float baldnessChance = disguisedGender == Gender.Female ? 0.05f : 0.2f;
+                    float baldnessChance = 0.1f;
 
-                    List<XElement> createElementList(WearableType wearableType, float emptyCommonness = 1.0f)
+                    List<ContentXElement> createElementList(WearableType wearableType, float emptyCommonness = 1.0f)
                         => CharacterInfo.AddEmpty(
-                            characterInfo.FilterByTypeAndHeadID(
-                                characterInfo.FilterElementsByGenderAndRace(characterInfo.Wearables, disguisedGender, disguisedRace),
-                                wearableType, disguisedHeadSpriteId),
+                            characterInfo.FilterElements(characterInfo.Wearables, tags, wearableType),
                             wearableType, emptyCommonness);
 
                     var disguisedHairs = createElementList(WearableType.Hair, baldnessChance);
@@ -158,10 +92,10 @@ namespace Barotrauma.Items.Components
                     var disguisedMoustaches = createElementList(WearableType.Moustache);
                     var disguisedFaceAttachments = createElementList(WearableType.FaceAttachment);
 
-                    XElement getElementFromList(List<XElement> list, int index)
+                    ContentXElement getElementFromList(List<ContentXElement> list, int index)
                         => CharacterInfo.IsValidIndex(index, list)
                             ? list[index]
-                            : characterInfo.GetRandomElement(list);
+                            : null;
                     
                     var disguisedHairElement = getElementFromList(disguisedHairs, disguisedHairIndex);
                     var disguisedBeardElement = getElementFromList(disguisedBeards, disguisedBeardIndex);
@@ -170,9 +104,9 @@ namespace Barotrauma.Items.Components
                     
                     Attachments = new List<WearableSprite>();
 
-                    void loadAttachments(List<WearableSprite> attachments, XElement element, WearableType wearableType)
+                    void loadAttachments(List<WearableSprite> attachments, ContentXElement element, WearableType wearableType)
                     {
-                        foreach (var s in element?.Elements("sprite") ?? Enumerable.Empty<XElement>())
+                        foreach (var s in element?.GetChildElements("sprite") ?? Enumerable.Empty<ContentXElement>())
                         {
                             attachments.Add(new WearableSprite(s, wearableType));
                         }
@@ -182,12 +116,6 @@ namespace Barotrauma.Items.Components
                     loadAttachments(Attachments, disguisedBeardElement, WearableType.Beard);
                     loadAttachments(Attachments, disguisedMoustacheElement, WearableType.Moustache);
                     loadAttachments(Attachments, disguisedHairElement, WearableType.Hair);
-
-                    loadAttachments(Attachments,
-                        characterInfo.OmitJobInPortraitClothing
-                            ? JobPrefab.NoJobElement?.Element("PortraitClothing")
-                            : JobPrefab?.ClothingElement,
-                        WearableType.JobIndicator);
                 }
 
                 HairColor = hairColor;

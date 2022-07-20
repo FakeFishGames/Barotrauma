@@ -125,11 +125,11 @@ namespace Barotrauma.Networking
             catch (Exception e)
             {
                 string errorMsg = "Server failed to read an incoming message. {" + e + "}\n" + e.StackTrace.CleanupStackTrace();
-                GameAnalyticsManager.AddErrorEventOnce("LidgrenServerPeer.Update:ClientReadException" + e.TargetSite.ToString(), GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("LidgrenServerPeer.Update:ClientReadException" + e.TargetSite.ToString(), GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
 #if DEBUG
                 DebugConsole.ThrowError(errorMsg);
 #else
-                if (GameSettings.VerboseLogging) { DebugConsole.ThrowError(errorMsg); }
+                if (GameSettings.CurrentConfig.VerboseLogging) { DebugConsole.ThrowError(errorMsg); }
 #endif
             }
 
@@ -208,15 +208,13 @@ namespace Barotrauma.Networking
 
             PendingClient pendingClient = pendingClients.Find(c => (c.Connection is LidgrenConnection l) && l.NetConnection == inc.SenderConnection);
 
-            byte incByte = inc.ReadByte();
-            bool isCompressed = (incByte & (byte)PacketHeader.IsCompressed) != 0;
-            bool isConnectionInitializationStep = (incByte & (byte)PacketHeader.IsConnectionInitializationStep) != 0;
+            PacketHeader packetHeader = (PacketHeader)inc.ReadByte();
 
-            if (isConnectionInitializationStep && pendingClient != null)
+            if (packetHeader.IsConnectionInitializationStep() && pendingClient != null)
             {
                 ReadConnectionInitializationStep(pendingClient, new ReadWriteMessage(inc.Data, (int)inc.Position, inc.LengthBits, false));
             }
-            else if (!isConnectionInitializationStep)
+            else if (!packetHeader.IsConnectionInitializationStep())
             {
                 LidgrenConnection conn = connectedClients.Find(c => (c is LidgrenConnection l) && l.NetConnection == inc.SenderConnection) as LidgrenConnection;
                 if (conn == null)
@@ -242,7 +240,7 @@ namespace Barotrauma.Networking
 
                 //DebugConsole.NewMessage(isCompressed + " " + isConnectionInitializationStep + " " + (int)incByte + " " + length);
 
-                IReadMessage msg = new ReadOnlyMessage(inc.Data, isCompressed, inc.PositionInBytes, length, conn);
+                IReadMessage msg = new ReadOnlyMessage(inc.Data, packetHeader.IsCompressed(), inc.PositionInBytes, length, conn);
                 OnMessageReceived?.Invoke(conn, msg);
             }
         }
@@ -328,7 +326,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public override void Send(IWriteMessage msg, NetworkConnection conn, DeliveryMethod deliveryMethod)
+        public override void Send(IWriteMessage msg, NetworkConnection conn, DeliveryMethod deliveryMethod, bool compressPastThreshold = true)
         {
             if (netServer == null) { return; }
 
@@ -353,9 +351,16 @@ namespace Barotrauma.Networking
                     break;
             }
 
+#if DEBUG
+            netPeerConfiguration.SimulatedDuplicatesChance = GameMain.Server.SimulatedDuplicatesChance;
+            netPeerConfiguration.SimulatedMinimumLatency = GameMain.Server.SimulatedMinimumLatency;
+            netPeerConfiguration.SimulatedRandomLatency = GameMain.Server.SimulatedRandomLatency;
+            netPeerConfiguration.SimulatedLoss = GameMain.Server.SimulatedLoss;
+#endif
+
             NetOutgoingMessage lidgrenMsg = netServer.CreateMessage();
             byte[] msgData = new byte[msg.LengthBytes];
-            msg.PrepareForSending(ref msgData, out bool isCompressed, out int length);
+            msg.PrepareForSending(ref msgData, compressPastThreshold, out bool isCompressed, out int length);
             lidgrenMsg.Write((byte)(isCompressed ? PacketHeader.IsCompressed : PacketHeader.None));
             lidgrenMsg.Write((UInt16)length);
             lidgrenMsg.Write(msgData, 0, length);
@@ -424,7 +429,7 @@ namespace Barotrauma.Networking
         {
             if (pendingClient.SteamID == null)
             {
-                bool requireSteamAuth = GameMain.Config.RequireSteamAuthentication;
+                bool requireSteamAuth = GameSettings.CurrentConfig.RequireSteamAuthentication;
 #if DEBUG
                 requireSteamAuth = false;
 #endif

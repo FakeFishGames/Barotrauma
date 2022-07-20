@@ -4,18 +4,18 @@ namespace Barotrauma.Abilities
 {
     class CharacterAbilityModifyResistance : CharacterAbility
     {
-        private readonly string resistanceId;
+        private readonly Identifier resistanceId;
         private readonly float resistance;
         bool lastState;
         public override bool AllowClientSimulation => true;
 
         // should probably be split to different classes
-        public CharacterAbilityModifyResistance(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityModifyResistance(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
-            resistanceId = abilityElement.GetAttributeString("resistanceid", "");
+            resistanceId = abilityElement.GetAttributeIdentifier("resistanceid", "");
             resistance = abilityElement.GetAttributeFloat("resistance", 1f);
 
-            if (string.IsNullOrEmpty(resistanceId))
+            if (resistanceId.IsEmpty)
             {
                 DebugConsole.ThrowError("Error in CharacterAbilityModifyResistance - resistance identifier not set.");
             }

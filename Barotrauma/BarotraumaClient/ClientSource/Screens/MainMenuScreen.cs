@@ -9,11 +9,13 @@ using Microsoft.Xna.Framework.Graphics;
 using RestSharp;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Diagnostics;
 using Barotrauma.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using Barotrauma.Steam;
 
@@ -21,7 +23,7 @@ namespace Barotrauma
 {
     class MainMenuScreen : Screen
     {
-        public enum Tab
+        private enum Tab
         {
             NewGame = 0,
             LoadGame = 1,
@@ -38,20 +40,21 @@ namespace Barotrauma
 
         private readonly GUIComponent buttonsParent;
 
-        private readonly GUIFrame[] menuTabs;
+        private readonly Dictionary<Tab, GUIFrame> menuTabs;
 
         private SinglePlayerCampaignSetupUI campaignSetupUI;
 
-        private GUITextBox serverNameBox, /*portBox, queryPortBox,*/ passwordBox, maxPlayersBox;
+        private GUITextBox serverNameBox, passwordBox, maxPlayersBox;
         private GUITickBox isPublicBox, wrongPasswordBanBox, karmaBox;
-        private readonly GUIFrame downloadingModsContainer, enableModsContainer;
+        private GUIDropDown serverExecutableDropdown;
         private readonly GUIButton joinServerButton, hostServerButton, steamWorkshopButton;
         private readonly GameMain game;
 
         private GUIImage playstyleBanner;
         private GUITextBlock playstyleDescription;
 
-        private GUIComponent remoteContentContainer;
+        private const string RemoteContentUrl = "http://www.barotraumagame.com/gamedata/";
+        private readonly GUIComponent remoteContentContainer;
         private XDocument remoteContentDoc;
 
         private Tab selectedTab = Tab.Empty;
@@ -62,28 +65,33 @@ namespace Barotrauma
 
         private readonly CreditsPlayer creditsPlayer;
 
-#if OSX
-        private bool firstLoadOnMac = true;
-#endif
+        public static readonly Queue<ulong> WorkshopItemsToUpdate = new Queue<ulong>();
 
-#region Creation
+        #region Creation
         public MainMenuScreen(GameMain game)
         {
             GameMain.Instance.ResolutionChanged += () =>
             {
-                if (Selected == this && selectedTab == Tab.Settings)
-                {
-                    GameMain.Config.ResetSettingsFrame();
-                    SelectTab(Tab.Settings);
-                }
                 CreateHostServerFields();
                 CreateCampaignSetupUI();
+                SettingsMenu.Create(menuTabs[Tab.Settings].RectTransform);
                 if (remoteContentDoc?.Root != null)
                 {
                     remoteContentContainer.ClearChildren();
-                    foreach (XElement subElement in remoteContentDoc.Root.Elements())
+                    try
                     {
-                        GUIComponent.FromXML(subElement, remoteContentContainer.RectTransform);
+                        foreach (var subElement in remoteContentDoc.Root.Elements())
+                        {
+                            GUIComponent.FromXML(subElement.FromPackage(null), remoteContentContainer.RectTransform);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+#if DEBUG
+                        DebugConsole.ThrowError("Reading received remote main menu content failed.", e);
+#endif
+                        GameAnalyticsManager.AddErrorEventOnce("MainMenuScreen.RemoteContentParse:Exception", GameAnalyticsManager.ErrorSeverity.Error,
+                            "Reading received remote main menu content failed. " + e.Message);
                     }
                 }
             };
@@ -115,12 +123,12 @@ namespace Barotrauma
 
 #if TEST_REMOTE_CONTENT
 
-            var doc = XMLExtensions.TryLoadXml("Content/UI/MenuTextTest.xml");
+            var doc = XMLExtensions.TryLoadXml("Content/UI/MenuContent.xml");
             if (doc?.Root != null)
             {
-                foreach (XElement subElement in doc?.Root.Elements())
+                foreach (var subElement in doc?.Root.Elements())
                 {
-                    GUIComponent.FromXML(subElement, remoteContentContainer.RectTransform);
+                    GUIComponent.FromXML(subElement.FromPackage(null), remoteContentContainer.RectTransform);
                 }
             }   
 #else
@@ -144,7 +152,7 @@ namespace Barotrauma
             var campaignNavigation = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 0.75f), parent: campaignHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.25f) });
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, labelHeight), campaignNavigation.RectTransform),
-                TextManager.Get("CampaignLabel"), textAlignment: Alignment.Left, font: GUI.LargeFont, textColor: Color.Black, style: "MainMenuGUITextBlock") { ForceUpperCase = true };
+                TextManager.Get("CampaignLabel"), textAlignment: Alignment.Left, font: GUIStyle.LargeFont, textColor: Color.Black, style: "MainMenuGUITextBlock") { ForceUpperCase = ForceUpperCase.Yes };
 
             var campaignButtons = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), parent: campaignNavigation.RectTransform), style: "MainMenuGUIFrame");
 
@@ -156,7 +164,7 @@ namespace Barotrauma
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), campaignList.RectTransform), TextManager.Get("TutorialButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
-                ForceUpperCase = true,
+                ForceUpperCase = ForceUpperCase.Yes,
                 UserData = Tab.Tutorials,
                 OnClicked = (tb, userdata) =>
                 {
@@ -167,7 +175,7 @@ namespace Barotrauma
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), campaignList.RectTransform), TextManager.Get("LoadGameButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
-                ForceUpperCase = true,
+                ForceUpperCase = ForceUpperCase.Yes,
                 UserData = Tab.LoadGame,
                 OnClicked = (tb, userdata) =>
                 {
@@ -178,7 +186,7 @@ namespace Barotrauma
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), campaignList.RectTransform), TextManager.Get("NewGameButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
-                ForceUpperCase = true,
+                ForceUpperCase = ForceUpperCase.Yes,
                 UserData = Tab.NewGame,
                 OnClicked = (tb, userdata) =>
                 {
@@ -201,7 +209,7 @@ namespace Barotrauma
             var multiplayerNavigation = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 0.75f), parent: multiplayerHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.25f) });
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, labelHeight), multiplayerNavigation.RectTransform),
-                TextManager.Get("MultiplayerLabel"), textAlignment: Alignment.Left, font: GUI.LargeFont, textColor: Color.Black, style: "MainMenuGUITextBlock") { ForceUpperCase = true };
+                TextManager.Get("MultiplayerLabel"), textAlignment: Alignment.Left, font: GUIStyle.LargeFont, textColor: Color.Black, style: "MainMenuGUITextBlock") { ForceUpperCase = ForceUpperCase.Yes };
 
             var multiplayerButtons = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), parent: multiplayerNavigation.RectTransform), style: "MainMenuGUIFrame");
 
@@ -213,7 +221,7 @@ namespace Barotrauma
 
             joinServerButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), multiplayerList.RectTransform), TextManager.Get("JoinServerButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
-                ForceUpperCase = true,
+                ForceUpperCase = ForceUpperCase.Yes,
                 UserData = Tab.JoinServer,
                 OnClicked = (tb, userdata) =>
                 {
@@ -223,7 +231,7 @@ namespace Barotrauma
             };
             hostServerButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), multiplayerList.RectTransform), TextManager.Get("HostServerButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
-                ForceUpperCase = true,
+                ForceUpperCase = ForceUpperCase.Yes,
                 UserData = Tab.HostServer,
                 OnClicked = (tb, userdata) =>
                 {
@@ -246,7 +254,7 @@ namespace Barotrauma
             var customizeNavigation = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 0.75f), parent: customizeHolder.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.25f) });
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, labelHeight), customizeNavigation.RectTransform),
-                TextManager.Get("CustomizeLabel"), textAlignment: Alignment.Left, font: GUI.LargeFont, textColor: Color.Black, style: "MainMenuGUITextBlock") { ForceUpperCase = true };
+                TextManager.Get("CustomizeLabel"), textAlignment: Alignment.Left, font: GUIStyle.LargeFont, textColor: Color.Black, style: "MainMenuGUITextBlock") { ForceUpperCase = ForceUpperCase.Yes };
 
             var customizeButtons = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), parent: customizeNavigation.RectTransform), style: "MainMenuGUIFrame");
 
@@ -257,36 +265,18 @@ namespace Barotrauma
             };
 
 #if USE_STEAM
-            var steamWorkshopButtonContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), style: null);
-
-            steamWorkshopButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), steamWorkshopButtonContainer.RectTransform), TextManager.Get("SteamWorkshopButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            steamWorkshopButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SteamWorkshopButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
-                ForceUpperCase = true,
-                Enabled = false,
+                ForceUpperCase = ForceUpperCase.Yes,
+                Enabled = true,
                 UserData = Tab.SteamWorkshop,
                 OnClicked = SelectTab
             };
-
-            downloadingModsContainer = new GUIFrame(new RectTransform(new Vector2(1.4f, 0.9f), steamWorkshopButtonContainer.RectTransform,
-                Anchor.CenterRight, Pivot.CenterLeft)
-            { RelativeOffset = new Vector2(0.3f, 0.0f) },
-                "MainMenuNotifBackground", Color.Yellow)
-            {
-                CanBeFocused = false,
-                UserData = "workshopnotif",
-                Visible = false
-            };
-            new GUITextBlock(new RectTransform(Vector2.One * 0.9f, downloadingModsContainer.RectTransform, Anchor.CenterLeft, Pivot.CenterLeft) { RelativeOffset = new Vector2(0.05f, 0.0f) },
-                TextManager.Get("ModsDownloadingNotif"), Color.Black)
-            {
-                CanBeFocused = false,
-            };
-
 #endif
-
+            
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SubEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
-                ForceUpperCase = true,
+                ForceUpperCase = ForceUpperCase.Yes,
                 UserData = Tab.SubmarineEditor,
                 OnClicked = (tb, userdata) =>
                 {
@@ -297,7 +287,7 @@ namespace Barotrauma
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("CharacterEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
-                ForceUpperCase = true,
+                ForceUpperCase = ForceUpperCase.Yes,
                 UserData = Tab.CharacterEditor,
                 OnClicked = (tb, userdata) =>
                 {
@@ -329,51 +319,37 @@ namespace Barotrauma
 
             new GUIButton(new RectTransform(Vector2.One, settingsButtonContainer.RectTransform), TextManager.Get("SettingsButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
-                ForceUpperCase = true,
+                ForceUpperCase = ForceUpperCase.Yes,
                 UserData = Tab.Settings,
                 OnClicked = SelectTab
-            };
-            
-            enableModsContainer = new GUIFrame(new RectTransform(new Vector2(1.4f, 0.9f), settingsButtonContainer.RectTransform,
-                Anchor.CenterRight, Pivot.CenterLeft) { RelativeOffset = new Vector2(0.5f, 0.0f) },
-                "MainMenuNotifBackground", Color.Yellow)
-            {
-                CanBeFocused = false,
-                UserData = "settingsnotif",
-                Visible = false
-            };
-            new GUITextBlock(new RectTransform(Vector2.One * 0.9f, enableModsContainer.RectTransform, Anchor.CenterLeft, Pivot.CenterLeft) { RelativeOffset = new Vector2(0.05f, 0.0f) },
-                TextManager.Get("ModsInstalledNotif"), Color.Black)
-            {
-                CanBeFocused = false
             };
 
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), optionList.RectTransform), TextManager.Get("EditorDisclaimerWikiLink"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
-                ForceUpperCase = true,
+                ForceUpperCase = ForceUpperCase.Yes,
                 OnClicked = (button, userData) =>
                 {
-                    string url = TextManager.Get("EditorDisclaimerWikiUrl", returnNull: true) ?? "https://barotraumagame.com/wiki";
+                    string url = TextManager.Get("EditorDisclaimerWikiUrl").Fallback("https://barotraumagame.com/wiki").Value;
                     GameMain.Instance.ShowOpenUrlInWebBrowserPrompt(url, promptExtensionTag: "wikinotice");
                     return true;
                 }
             };
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), optionList.RectTransform), TextManager.Get("CreditsButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
-                ForceUpperCase = true,
+                ForceUpperCase = ForceUpperCase.Yes,
                 UserData = Tab.Credits,
                 OnClicked = SelectTab
             };
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), optionList.RectTransform), TextManager.Get("QuitButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
-                ForceUpperCase = true,
+                ForceUpperCase = ForceUpperCase.Yes,
                 OnClicked = QuitClicked
             };
 
             //debug button for quickly starting a new round
 #if DEBUG
             new GUIButton(new RectTransform(new Point(300, 30), Frame.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(40, 80) },
-                "Quickstart (dev)", style: "GUIButtonLarge", color: GUI.Style.Red)
+                "Quickstart (dev)", style: "GUIButtonLarge", color: GUIStyle.Red)
             {
                 IgnoreLayoutGroups = true,
                 UserData = Tab.Empty,
@@ -387,7 +363,7 @@ namespace Barotrauma
                 }
             };
             new GUIButton(new RectTransform(new Point(300, 30), Frame.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(40, 130) },
-                "Profiling", style: "GUIButtonLarge", color: GUI.Style.Red)
+                "Profiling", style: "GUIButtonLarge", color: GUIStyle.Red)
             {
                 IgnoreLayoutGroups = true,
                 UserData = Tab.Empty,
@@ -404,7 +380,7 @@ namespace Barotrauma
                 }
             };
             new GUIButton(new RectTransform(new Point(300, 30), Frame.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(40, 180) },
-                "Join Localhost", style: "GUIButtonLarge", color: GUI.Style.Red)
+                "Join Localhost", style: "GUIButtonLarge", color: GUIStyle.Red)
             {
                 IgnoreLayoutGroups = true,
                 UserData = Tab.Empty,
@@ -413,7 +389,7 @@ namespace Barotrauma
                 {
                     SelectTab(tb, userdata);
 
-                    GameMain.Client = new GameClient(string.IsNullOrEmpty(GameMain.Config.PlayerName) ? SteamManager.GetUsername() : GameMain.Config.PlayerName,
+                    GameMain.Client = new GameClient(MultiplayerPreferences.Instance.PlayerName.FallbackNullOrEmpty(SteamManager.GetUsername()),
                                                      IPAddress.Loopback.ToString(), 0, "localhost", 0, false);
 
                     return true;
@@ -430,18 +406,19 @@ namespace Barotrauma
             var pivot = Pivot.CenterRight;
             Vector2 relativeSpacing = new Vector2(0.05f, 0.0f);
             
-            menuTabs = new GUIFrame[Enum.GetValues(typeof(Tab)).Length + 1];
+            menuTabs = new Dictionary<Tab, GUIFrame>();
 
-            menuTabs[(int)Tab.Settings] = new GUIFrame(new RectTransform(new Vector2(relativeSize.X, 0.8f), GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing },
+            menuTabs[Tab.Settings] = new GUIFrame(new RectTransform(new Vector2(relativeSize.X, 0.8f), GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing },
                 style: null);
+            menuTabs[Tab.Settings].CanBeFocused = false;
 
-            menuTabs[(int)Tab.NewGame] = new GUIFrame(new RectTransform(relativeSize * new Vector2(1.0f, 1.15f), GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing });
-            menuTabs[(int)Tab.LoadGame] = new GUIFrame(new RectTransform(relativeSize, GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing });
+            menuTabs[Tab.NewGame] = new GUIFrame(new RectTransform(relativeSize * new Vector2(1.0f, 1.15f), GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing });
+            menuTabs[Tab.LoadGame] = new GUIFrame(new RectTransform(relativeSize, GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing });
 
             CreateCampaignSetupUI();
 
             var hostServerScale = new Vector2(0.7f, 1.2f);
-            menuTabs[(int)Tab.HostServer] = new GUIFrame(new RectTransform(
+            menuTabs[Tab.HostServer] = new GUIFrame(new RectTransform(
                 Vector2.Multiply(relativeSize, hostServerScale), GUI.Canvas, anchor, pivot, minSize.Multiply(hostServerScale), maxSize.Multiply(hostServerScale))
             { RelativeOffset = relativeSpacing });
 
@@ -449,36 +426,48 @@ namespace Barotrauma
 
             //----------------------------------------------------------------------
 
-            menuTabs[(int)Tab.Tutorials] = new GUIFrame(new RectTransform(relativeSize, GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing });
+            menuTabs[Tab.Tutorials] = new GUIFrame(new RectTransform(relativeSize, GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing });
 
             //PLACEHOLDER
             var tutorialList = new GUIListBox(
-                new RectTransform(new Vector2(0.95f, 0.85f), menuTabs[(int)Tab.Tutorials].RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.1f) });
-            foreach (Tutorial tutorial in Tutorial.Tutorials)
+                new RectTransform(new Vector2(0.95f, 0.85f), menuTabs[Tab.Tutorials].RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.1f) })
             {
-                var tutorialText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), tutorialList.Content.RectTransform), tutorial.DisplayName, textAlignment: Alignment.Center, font: GUI.LargeFont)
+                PlaySoundOnSelect = true,
+            };
+            var tutorialTypes = new List<Type>()
+            {
+                typeof(MechanicTutorial),
+                typeof(EngineerTutorial),
+                typeof(DoctorTutorial),
+                typeof(OfficerTutorial),
+                typeof(CaptainTutorial),
+            };
+            foreach (Type tutorialType in tutorialTypes)
+            {
+                Tutorial tutorial = (Tutorial)Activator.CreateInstance(tutorialType);
+                var tutorialText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), tutorialList.Content.RectTransform), tutorial.DisplayName, textAlignment: Alignment.Center, font: GUIStyle.LargeFont)
                 {
                     UserData = tutorial
                 };
             }
             tutorialList.OnSelected += (component, obj) =>
             {
-                TutorialMode.StartTutorial(obj as Tutorial);
+                (obj as Tutorial).Start();
                 return true;
             };
 
             this.game = game;
 
-            menuTabs[(int)Tab.Credits] = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: null)
+            menuTabs[Tab.Credits] = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: null)
             {
                 CanBeFocused = false
             };
-            new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, menuTabs[(int)Tab.Credits].RectTransform, Anchor.Center), style: "GUIBackgroundBlocker")
+            new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, menuTabs[Tab.Credits].RectTransform, Anchor.Center), style: "GUIBackgroundBlocker")
             {
                 CanBeFocused = false
             };
 
-            var creditsContainer = new GUIFrame(new RectTransform(new Vector2(0.75f, 1.5f), menuTabs[(int)Tab.Credits].RectTransform, Anchor.CenterRight), style: "OuterGlow", color: Color.Black * 0.8f);
+            var creditsContainer = new GUIFrame(new RectTransform(new Vector2(0.75f, 1.5f), menuTabs[Tab.Credits].RectTransform, Anchor.CenterRight), style: "OuterGlow", color: Color.Black * 0.8f);
             creditsPlayer = new CreditsPlayer(new RectTransform(Vector2.One, creditsContainer.RectTransform), "Content/Texts/Credits.xml");
         }
 #endregion
@@ -486,6 +475,14 @@ namespace Barotrauma
         #region Selection
         public override void Select()
         {
+            if (WorkshopItemsToUpdate.Any())
+            {
+                while (WorkshopItemsToUpdate.TryDequeue(out ulong workshopId))
+                {
+                    SteamManager.Workshop.OnItemDownloadComplete(workshopId, forceInstall: true);
+                }
+            }
+            
             GUI.PreventPauseMenuToggle = false;
 
             base.Select();
@@ -500,32 +497,6 @@ namespace Barotrauma
             Submarine.Unload();
             
             ResetButtonStates(null);
-
-            GameAnalyticsManager.SetCustomDimension01("");
-
-            if (GameMain.SteamWorkshopScreen != null)
-            {
-                CoroutineManager.StartCoroutine(GameMain.SteamWorkshopScreen.RefreshDownloadState());
-            }
-
-#if OSX
-            // Hack for adjusting the viewport properly after splash screens on older Macs
-            if (firstLoadOnMac)
-            {
-                firstLoadOnMac = false;
-
-                menuTabs[(int)Tab.Empty] = new GUIFrame(new RectTransform(new Vector2(1f, 1f), GUI.Canvas), "", Color.Transparent)
-                {
-                    CanBeFocused = false
-                };
-                var emptyList = new GUIListBox(new RectTransform(new Vector2(0.0f, 0.0f), menuTabs[(int)Tab.Empty].RectTransform))
-                {
-                    CanBeFocused = false
-                };
-
-                SelectTab(null, Tab.Empty);
-            }
-#endif
         }
 
         public override void Deselect()
@@ -551,47 +522,16 @@ namespace Barotrauma
         private bool SelectTab(Tab tab)
         {
             titleText.Visible = true;
-            if (GameMain.Config.UnsavedSettings)
-            {
-                var applyBox = new GUIMessageBox(
-                    TextManager.Get("ApplySettingsLabel"),
-                    TextManager.Get("ApplySettingsQuestion"),
-                    new string[] { TextManager.Get("ApplySettingsYes"), TextManager.Get("ApplySettingsNo") });
-                applyBox.Buttons[0].UserData = tab;
-                applyBox.Buttons[0].OnClicked = (tb, userdata) =>
-                {
-                    applyBox.Close();
-                    ApplySettings();
-                    SelectTab(tab);
-                    return true;
-                };
-
-                applyBox.Buttons[1].UserData = tab;
-                applyBox.Buttons[1].OnClicked = (tb, userdata) =>
-                {
-                    applyBox.Close();
-                    DiscardSettings();
-                    SelectTab(tab);
-                    return true;
-                };
-                return false;
-            }
-
-            GameMain.Config.ResetSettingsFrame();
+            SettingsMenu.Instance?.Close();
+            #warning TODO: reimplement settings confirmation dialog
 
             switch (tab)
             {
                 case Tab.NewGame:
-                    if (GameMain.Config.ShowTutorialSkipWarning)
+                    if (GameSettings.CurrentConfig.TutorialSkipWarning)
                     {
                         selectedTab = Tab.Empty;
                         ShowTutorialSkipWarning(Tab.NewGame);
-                        return true;
-                    }
-                    if (!GameMain.Config.CampaignDisclaimerShown)
-                    {
-                        selectedTab = Tab.Empty;
-                        GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.NewGame); });
                         return true;
                     }
                     campaignSetupUI.RandomizeCrew();
@@ -604,53 +544,54 @@ namespace Barotrauma
                     campaignSetupUI.UpdateLoadMenu();
                     break;
                 case Tab.Settings:
-                    GameMain.MainMenuScreen?.SetEnableModsNotification(false);
-                    menuTabs[(int)Tab.Settings].RectTransform.ClearChildren();
-                    GameMain.Config.SettingsFrame.RectTransform.Parent = menuTabs[(int)Tab.Settings].RectTransform;
-                    GameMain.Config.SettingsFrame.RectTransform.RelativeSize = Vector2.One;
+                    SettingsMenu.Create(menuTabs[Tab.Settings].RectTransform);
                     break;
                 case Tab.JoinServer:
-                    if (GameMain.Config.ShowTutorialSkipWarning)
+                    if (GameSettings.CurrentConfig.TutorialSkipWarning)
                     {
                         selectedTab = Tab.Empty;
                         ShowTutorialSkipWarning(Tab.JoinServer);
                         return true;
                     }
-                    if (!GameMain.Config.CampaignDisclaimerShown)
-                    {
-                        selectedTab = Tab.Empty;
-                        GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.JoinServer); });
-                        return true;
-                    }
                     GameMain.ServerListScreen.Select();
                     break;
                 case Tab.HostServer:
-                    if (GameMain.Config.ContentPackageSelectionDirty)
-                    {
-                        new GUIMessageBox(TextManager.Get("RestartRequiredLabel"), TextManager.Get("ServerRestartRequiredContentPackage", fallBackTag: "RestartRequiredGeneric"));
-                        selectedTab = Tab.Empty;
-                        return false;
-                    }
-                    if (GameMain.Config.ShowTutorialSkipWarning)
+                    if (GameSettings.CurrentConfig.TutorialSkipWarning)
                     {
                         selectedTab = Tab.Empty;
                         ShowTutorialSkipWarning(tab);
                         return true;
                     }
-                    if (!GameMain.Config.CampaignDisclaimerShown)
+                    serverExecutableDropdown.ListBox.Content.Children.ToArray()
+                        .Where(c => c.UserData is ServerExecutableFile f && !ContentPackageManager.EnabledPackages.All.Contains(f.ContentPackage))
+                        .ForEach(serverExecutableDropdown.ListBox.RemoveChild);
+                    var newServerExes
+                        = ContentPackageManager.EnabledPackages.All.SelectMany(p => p.GetFiles<ServerExecutableFile>())
+                            .Where(f => serverExecutableDropdown.ListBox.Content.Children.None(c => c.UserData == f))
+                            .ToArray();
+                    foreach (var newServerExe in newServerExes)
                     {
-                        selectedTab = Tab.Empty;
-                        GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.HostServer); });
-                        return true;
+                        serverExecutableDropdown.AddItem($"{newServerExe.ContentPackage.Name} - {Path.GetFileNameWithoutExtension(newServerExe.Path.Value)}", userData: newServerExe);
+                    }
+                    serverExecutableDropdown.ListBox.Content.Children.ForEach(c =>
+                    {
+                        c.RectTransform.RelativeSize = (1.0f, c.RectTransform.RelativeSize.Y);
+                        c.ForceLayoutRecalculation();
+                    });
+                    bool serverExePickable = serverExecutableDropdown.ListBox.Content.CountChildren > 1;
+                    bool wasPickable = serverExecutableDropdown.Parent.Visible;
+                    if (wasPickable != serverExePickable)
+                    {
+                        serverExecutableDropdown.Parent.Visible = serverExePickable;
+                        serverExecutableDropdown.Parent.IgnoreLayoutGroups = !serverExePickable;
+                        (serverExecutableDropdown.Parent.Parent as GUILayoutGroup)?.Recalculate();
+                        if (serverExecutableDropdown.SelectedComponent is null)
+                        {
+                            serverExecutableDropdown.Select(0);
+                        }
                     }
                     break;
                 case Tab.Tutorials:
-                    if (!GameMain.Config.CampaignDisclaimerShown)
-                    {
-                        selectedTab = Tab.Empty;
-                        GameMain.Instance.ShowCampaignDisclaimer(() => { SelectTab(null, Tab.Tutorials); });
-                        return true;
-                    }
                     UpdateTutorialList();
                     break;
                 case Tab.CharacterEditor:
@@ -661,8 +602,9 @@ namespace Barotrauma
                     CoroutineManager.StartCoroutine(SelectScreenWithWaitCursor(GameMain.SubEditorScreen));
                     break;
                 case Tab.SteamWorkshop:
-                    if (!Steam.SteamManager.IsInitialized) return false;
-                    CoroutineManager.StartCoroutine(SelectScreenWithWaitCursor(GameMain.SteamWorkshopScreen));
+                    var settings = SettingsMenu.Create(menuTabs[Tab.Settings].RectTransform);
+                    settings.SelectTab(SettingsMenu.Tab.Mods);
+                    tab = Tab.Settings;
                     break;
                 case Tab.Credits:
                     titleText.Visible = false;
@@ -679,7 +621,7 @@ namespace Barotrauma
             return true;
         }
 
-        private IEnumerable<object> SelectScreenWithWaitCursor(Screen screen)
+        private IEnumerable<CoroutineStatus> SelectScreenWithWaitCursor(Screen screen)
         {
             GUI.SetCursorWaiting();
             //tiny delay to get the cursor to render
@@ -719,7 +661,7 @@ namespace Barotrauma
         }
 #endregion
 
-        public void QuickStart(bool fixedSeed = false, string sub = null)
+        public void QuickStart(bool fixedSeed = false, Identifier sub = default, float difficulty = 50, LevelGenerationParams levelGenerationParams = null)
         {
             if (fixedSeed)
             {
@@ -728,13 +670,12 @@ namespace Barotrauma
             }
 
             SubmarineInfo selectedSub = null;
-            string subName = sub ?? GameMain.Config.QuickStartSubmarineName;
-            if (!string.IsNullOrEmpty(subName))
+            Identifier subName = sub.IfEmpty(GameSettings.CurrentConfig.QuickStartSub);
+            if (!subName.IsEmpty)
             {
                 DebugConsole.NewMessage($"Loading the predefined quick start sub \"{subName}\"", Color.White);
-                selectedSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s =>
-                    s.Name.ToLower() == subName.ToLower());
 
+                selectedSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName);
                 if (selectedSub == null)
                 {
                     DebugConsole.NewMessage($"Cannot find a sub that matches the name \"{subName}\".", Color.Red);
@@ -751,7 +692,7 @@ namespace Barotrauma
                 GameModePreset.DevSandbox,
                 missionPrefabs: null);
             //(gamesession.GameMode as SinglePlayerCampaign).GenerateMap(ToolBox.RandomSeed(8));
-            gamesession.StartRound(fixedSeed ? "abcd" : ToolBox.RandomSeed(8), difficulty: 40);
+            gamesession.StartRound(fixedSeed ? "abcd" : ToolBox.RandomSeed(8), difficulty, levelGenerationParams);
             GameMain.GameScreen.Select();
             // TODO: modding support
             string[] jobIdentifiers = new string[] { "captain", "engineer", "mechanic", "securityofficer", "medicaldoctor" };
@@ -759,7 +700,7 @@ namespace Barotrauma
             {
                 var jobPrefab = JobPrefab.Get(job);
                 var variant = Rand.Range(0, jobPrefab.Variants);
-                var characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: jobPrefab, variant: variant);
+                var characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: jobPrefab, variant: variant);
                 if (characterInfo.Job == null)
                 {
                     DebugConsole.ThrowError("Failed to find the job \"" + job + "\"!");
@@ -769,46 +710,35 @@ namespace Barotrauma
             gamesession.CrewManager.InitSinglePlayerRound();
         }
 
-        public void SetEnableModsNotification(bool visible)
-        {
-            if (enableModsContainer != null) { enableModsContainer.Visible = visible; }
-        }
-
-        public void SetDownloadingModsNotification(bool visible)
-        {
-            if (downloadingModsContainer != null) { downloadingModsContainer.Visible = visible; }
-        }
-
         private void ShowTutorialSkipWarning(Tab tabToContinueTo)
         {
-            var tutorialSkipWarning = new GUIMessageBox("", TextManager.Get("tutorialskipwarning"), new string[] { TextManager.Get("tutorialwarningskiptutorials"), TextManager.Get("tutorialwarningplaytutorials") });
-            tutorialSkipWarning.Buttons[0].OnClicked += (btn, userdata) =>
-            {
-                GameMain.Config.ShowTutorialSkipWarning = false;
-                GameMain.Config.SaveNewPlayerConfig();
-                tutorialSkipWarning.Close();
-                SelectTab(tabToContinueTo);
-                return true;
-            };
-            tutorialSkipWarning.Buttons[1].OnClicked += (btn, userdata) =>
-            {
-                GameMain.Config.ShowTutorialSkipWarning = false;
-                GameMain.Config.SaveNewPlayerConfig();
-                tutorialSkipWarning.Close();
-                SelectTab(Tab.Tutorials);
-                return true;
-            };
+            var tutorialSkipWarning = new GUIMessageBox("", TextManager.Get("tutorialskipwarning"), new LocalizedString[] { TextManager.Get("tutorialwarningskiptutorials"), TextManager.Get("tutorialwarningplaytutorials") });
+            
+            GUIButton.OnClickedHandler proceedToTab(Tab tab)
+                => (btn, userdata) =>
+                {
+                    var config = GameSettings.CurrentConfig;
+                    config.TutorialSkipWarning = false;
+                    GameSettings.SetCurrentConfig(config);
+                    GameSettings.SaveCurrentConfig();
+                    tutorialSkipWarning.Close();
+                    SelectTab(tab);
+                    return true;
+                };
+
+            tutorialSkipWarning.Buttons[0].OnClicked += proceedToTab(tabToContinueTo);
+            tutorialSkipWarning.Buttons[1].OnClicked += proceedToTab(Tab.Tutorials);
         }
 
         private void UpdateTutorialList()
         {
-            var tutorialList = menuTabs[(int)Tab.Tutorials].GetChild<GUIListBox>();
+            var tutorialList = menuTabs[Tab.Tutorials].GetChild<GUIListBox>();
 
             int completedTutorials = 0;
 
             foreach (GUITextBlock tutorialText in tutorialList.Content.Children)
             {
-                if (((Tutorial)tutorialText.UserData).Completed)
+                if (CompletedTutorials.Instance.Contains(((Tutorial)tutorialText.UserData).Identifier))
                 {
                     completedTutorials++;
                 }
@@ -818,7 +748,7 @@ namespace Barotrauma
             {
                 if (i < completedTutorials + 1)
                 {
-                    (tutorialList.Content.GetChild(i) as GUITextBlock).TextColor = GUI.Style.Green;
+                    (tutorialList.Content.GetChild(i) as GUITextBlock).TextColor = GUIStyle.Green;
 #if !DEBUG
                     (tutorialList.Content.GetChild(i) as GUITextBlock).CanBeFocused = true;
 #endif
@@ -833,37 +763,6 @@ namespace Barotrauma
             }
         }
 
-        public void ResetSettingsFrame(GameSettings.Tab selectedTab = GameSettings.Tab.Graphics)
-        {
-            menuTabs[(int)Tab.Settings].RectTransform.ClearChildren();
-            GameMain.Config.ResetSettingsFrame();
-            GameMain.Config.CreateSettingsFrame(selectedTab);
-            GameMain.Config.SettingsFrame.RectTransform.Parent = menuTabs[(int)Tab.Settings].RectTransform;
-            GameMain.Config.SettingsFrame.RectTransform.RelativeSize = Vector2.One;
-        }
-
-        private bool ApplySettings()
-        {
-            GameMain.Config.SaveNewPlayerConfig();
-
-            if (GameMain.GraphicsWidth != GameMain.Config.GraphicsWidth || 
-                GameMain.GraphicsHeight != GameMain.Config.GraphicsHeight)
-            {
-                new GUIMessageBox(
-                    TextManager.Get("RestartRequiredLabel"),
-                    TextManager.Get("RestartRequiredGeneric"));
-            }
-
-            return true;
-        }
-
-        private bool DiscardSettings()
-        {
-            GameMain.Config.LoadPlayerConfig();
-
-            return true;
-        }
-        
         private bool ChangeMaxPlayers(GUIButton button, object obj)
         {
             int.TryParse(maxPlayersBox.Text, out int currMaxPlayers);
@@ -876,7 +775,7 @@ namespace Barotrauma
         {
             if (SubmarineInfo.SavedSubmarines.Any(s => s.CalculatingHash))
             {
-                var waitBox = new GUIMessageBox(TextManager.Get("pleasewait"), TextManager.Get("waitforsubmarinehashcalculations"), new string[] { TextManager.Get("cancel") });
+                var waitBox = new GUIMessageBox(TextManager.Get("pleasewait"), TextManager.Get("waitforsubmarinehashcalculations"), new LocalizedString[] { TextManager.Get("cancel") });
                 var waitCoroutine = CoroutineManager.StartCoroutine(WaitForSubmarineHashCalculations(waitBox), "WaitForSubmarineHashCalculations");
                 waitBox.Buttons[0].OnClicked += (btn, userdata) =>
                 {
@@ -890,9 +789,9 @@ namespace Barotrauma
             }
         }
 
-        private IEnumerable<object> WaitForSubmarineHashCalculations(GUIMessageBox messageBox)
+        private IEnumerable<CoroutineStatus> WaitForSubmarineHashCalculations(GUIMessageBox messageBox)
         {
-            string originalText = messageBox.Text.Text;
+            LocalizedString originalText = messageBox.Text.Text;
             int doneCount = 0;
             do
             {
@@ -909,23 +808,16 @@ namespace Barotrauma
         {
             string name = serverNameBox.Text;
 
-            GameMain.NetLobbyScreen?.Release();
-            GameMain.NetLobbyScreen = new NetLobbyScreen();
+            GameMain.ResetNetLobbyScreen();
             try
             {
-                string exeName = ContentPackage.GetFilesOfType(GameMain.Config.AllEnabledPackages, ContentType.ServerExecutable)?.FirstOrDefault()?.Path;
-                if (string.IsNullOrEmpty(exeName))
-                {
-                    DebugConsole.ThrowError("No server executable defined in the selected content packages. Attempting to use the default executable...");
-                    exeName = "DedicatedServer.exe";
-                }
+                string exeName = serverExecutableDropdown.SelectedComponent?.UserData is ServerExecutableFile f ? f.Path.Value : "DedicatedServer";
 
                 string arguments = "-name \"" + ToolBox.EscapeCharacters(name) + "\"" +
                                    " -public " + isPublicBox.Selected.ToString() +
                                    " -playstyle " + ((PlayStyle)playstyleBanner.UserData).ToString()  +
                                    " -banafterwrongpassword " + wrongPasswordBanBox.Selected.ToString() +
                                    " -karmaenabled " + (!karmaBox.Selected).ToString() +
-                                   " -karmapreset default" +
                                    " -maxplayers " + maxPlayersBox.Text;
 
                 if (!string.IsNullOrWhiteSpace(passwordBox.Text))
@@ -937,26 +829,27 @@ namespace Barotrauma
                     arguments += " -nopassword";
                 }
 
-                int ownerKey = 0;
                 if (Steam.SteamManager.GetSteamID() != 0)
                 {
                     arguments += " -steamid " + Steam.SteamManager.GetSteamID();
                 }
-                else
-                {
-                    ownerKey = Math.Max(CryptoRandom.Instance.Next(), 1);
-                    arguments += " -ownerkey " + ownerKey;
-                }
+                int ownerKey = Math.Max(CryptoRandom.Instance.Next(), 1);
+                arguments += " -ownerkey " + ownerKey;
 
-                string filename = exeName;
-#if LINUX || OSX
-                filename = "./" + Path.GetFileNameWithoutExtension(exeName);
-                //arguments = ToolBox.EscapeCharacters(arguments);
+                string filename = Path.Combine(
+                    Path.GetDirectoryName(exeName),
+                    Path.GetFileNameWithoutExtension(exeName));
+#if WINDOWS
+                filename += ".exe";
+#else
+                filename = "./" + exeName;
 #endif
+                
                 var processInfo = new ProcessStartInfo
                 {
                     FileName = filename,
                     Arguments = arguments,
+                    WorkingDirectory = Directory.GetCurrentDirectory(),
 #if !DEBUG
                     CreateNoWindow = true,
                     UseShellExecute = false,
@@ -966,7 +859,8 @@ namespace Barotrauma
                 ChildServerRelay.Start(processInfo);
                 Thread.Sleep(1000); //wait until the server is ready before connecting
 
-                GameMain.Client = new GameClient(string.IsNullOrEmpty(GameMain.Config.PlayerName) ? name : GameMain.Config.PlayerName, 
+                GameMain.Client = new GameClient(MultiplayerPreferences.Instance.PlayerName.FallbackNullOrEmpty(
+                            SteamManager.GetUsername().FallbackNullOrEmpty(name)),
                     System.Net.IPAddress.Loopback.ToString(), Steam.SteamManager.GetSteamID(), name, ownerKey, true);
             }
             catch (Exception e)
@@ -984,9 +878,9 @@ namespace Barotrauma
         public override void AddToGUIUpdateList()
         {
             Frame.AddToGUIUpdateList();
-            if (selectedTab < Tab.Empty && menuTabs[(int)selectedTab] != null)
+            if (selectedTab < Tab.Empty && menuTabs.TryGetValue(selectedTab, out GUIFrame tab) && tab != null)
             {
-                menuTabs[(int)selectedTab].AddToGUIUpdateList();
+                tab.AddToGUIUpdateList();
                 switch (selectedTab)
                 {
                     case Tab.NewGame:
@@ -999,9 +893,9 @@ namespace Barotrauma
         public override void Update(double deltaTime)
         {
 #if !DEBUG && USE_STEAM
-            if (GameMain.Config.UseSteamMatchmaking)
+            if (GameSettings.CurrentConfig.UseSteamMatchmaking)
             {
-                hostServerButton.Enabled =  Steam.SteamManager.IsInitialized;
+                hostServerButton.Enabled = Steam.SteamManager.IsInitialized;
             }
             steamWorkshopButton.Enabled = Steam.SteamManager.IsInitialized;
 #elif USE_STEAM
@@ -1021,7 +915,10 @@ namespace Barotrauma
 
             if (backgroundSprite == null)
             {
-                backgroundSprite = (LocationType.List.Where(l => l.UseInMainMenu).GetRandom())?.GetPortrait(0);
+#if UNSTABLE
+                backgroundSprite = new Sprite("Content/UnstableBackground.png", sourceRectangle: null);
+#endif
+                backgroundSprite ??= (LocationType.Prefabs.Where(l => l.UseInMainMenu).GetRandomUnsynced())?.GetPortrait(0);
             }
 
             if (backgroundSprite != null)
@@ -1030,7 +927,7 @@ namespace Barotrauma
                     aberrationStrength: 0.0f);
             }
 
-            var vignette = GUI.Style.GetComponentStyle("mainmenuvignette")?.GetDefaultSprite();
+            var vignette = GUIStyle.GetComponentStyle("mainmenuvignette")?.GetDefaultSprite();
             if (vignette != null)
             {
                 spriteBatch.Begin(blendState: BlendState.NonPremultiplied);
@@ -1040,9 +937,9 @@ namespace Barotrauma
             }
         }
 
-        readonly string[] legalCrap = new string[]
+        readonly LocalizedString[] legalCrap = new LocalizedString[]
         {
-            TextManager.Get("privacypolicy", returnNull: true) ?? "Privacy policy",
+            TextManager.Get("privacypolicy").Fallback("Privacy policy"),
             "© " + DateTime.Now.Year + " Undertow Games & FakeFish. All rights reserved.",
             "© " + DateTime.Now.Year + " Daedalic Entertainment GmbH. The Daedalic logo is a trademark of Daedalic Entertainment GmbH, Germany. All rights reserved."
         };
@@ -1055,22 +952,27 @@ namespace Barotrauma
 
             GUI.Draw(Cam, spriteBatch);
 
-#if !UNSTABLE
-            string versionString = "Barotrauma v" + GameMain.Version + " (" + AssemblyInfo.BuildString + ", branch " + AssemblyInfo.GitBranch + ", revision " + AssemblyInfo.GitRevision + ")";
-            GUI.SmallFont.DrawString(spriteBatch, versionString, new Vector2(HUDLayoutSettings.Padding, GameMain.GraphicsHeight - GUI.SmallFont.MeasureString(versionString).Y - HUDLayoutSettings.Padding * 0.75f), Color.White * 0.7f);
-#endif
             if (selectedTab != Tab.Credits)
             {
+#if !UNSTABLE
+                string versionString = "Barotrauma v" + GameMain.Version + " (" + AssemblyInfo.BuildString + ", branch " + AssemblyInfo.GitBranch + ", revision " + AssemblyInfo.GitRevision + ")";
+                GUIStyle.SmallFont.DrawString(spriteBatch, versionString, new Vector2(HUDLayoutSettings.Padding, GameMain.GraphicsHeight - GUIStyle.SmallFont.MeasureString(versionString).Y - HUDLayoutSettings.Padding * 0.75f), Color.White * 0.7f);
+#endif
+                LocalizedString gameAnalyticsStatus = TextManager.Get($"GameAnalyticsStatus.{GameAnalyticsManager.UserConsented}");
+                Vector2 textSize = GUIStyle.SmallFont.MeasureString(gameAnalyticsStatus).ToPoint().ToVector2();
+                GUIStyle.SmallFont.DrawString(spriteBatch, gameAnalyticsStatus, new Vector2(HUDLayoutSettings.Padding, GameMain.GraphicsHeight - GUIStyle.SmallFont.LineHeight * 2 - HUDLayoutSettings.Padding * 0.75f), Color.White * 0.7f);
+
+
                 Vector2 textPos = new Vector2(GameMain.GraphicsWidth - HUDLayoutSettings.Padding, GameMain.GraphicsHeight - HUDLayoutSettings.Padding * 0.75f);
                 for (int i = legalCrap.Length - 1; i >= 0; i--)
                 {
-                    Vector2 textSize = GUI.SmallFont.MeasureString(legalCrap[i]);
-                    textSize = new Vector2((int)textSize.X, (int)textSize.Y);
+                    textSize = GUIStyle.SmallFont.MeasureString(legalCrap[i])
+                        .ToPoint().ToVector2();
                     bool mouseOn = i == 0 &&
-                        PlayerInput.MousePosition.X > textPos.X - textSize.X && PlayerInput.MousePosition.X < textPos.X &&
-                        PlayerInput.MousePosition.Y > textPos.Y - textSize.Y && PlayerInput.MousePosition.Y < textPos.Y;
+                                   PlayerInput.MousePosition.X > textPos.X - textSize.X && PlayerInput.MousePosition.X < textPos.X &&
+                                   PlayerInput.MousePosition.Y > textPos.Y - textSize.Y && PlayerInput.MousePosition.Y < textPos.Y;
 
-                    GUI.SmallFont.DrawString(spriteBatch,
+                    GUIStyle.SmallFont.DrawString(spriteBatch,
                         legalCrap[i], textPos - textSize,
                         mouseOn ? Color.White : Color.White * 0.7f);
 
@@ -1089,13 +991,12 @@ namespace Barotrauma
             spriteBatch.End();
         }
 
-        private void StartGame(SubmarineInfo selectedSub, string saveName, string mapSeed, CampaignSettings settings)
+        private void StartGame(SubmarineInfo selectedSub, string savePath, string mapSeed, CampaignSettings settings)
         {
-            if (string.IsNullOrEmpty(saveName)) return;
+            if (string.IsNullOrEmpty(savePath)) { return; }
 
             var existingSaveFiles = SaveUtil.GetSaveFiles(SaveUtil.SaveType.Singleplayer);
-
-            if (existingSaveFiles.Any(s => s == saveName))
+            if (existingSaveFiles.Any(s => s.FilePath == savePath))
             {
                 new GUIMessageBox(TextManager.Get("SaveNameInUseHeader"), TextManager.Get("SaveNameInUseText"));
                 return;
@@ -1121,14 +1022,14 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Copying the file \"" + selectedSub.FilePath + "\" failed. The file may have been deleted or in use by another process. Try again or select another submarine.", e);
                 GameAnalyticsManager.AddErrorEventOnce(
                     "MainMenuScreen.StartGame:IOException" + selectedSub.Name,
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                    "Copying the file \"" + selectedSub.FilePath + "\" failed.\n" + e.Message + "\n" + Environment.StackTrace.CleanupStackTrace());
+                    GameAnalyticsManager.ErrorSeverity.Error,
+                    "Copying a submarine file failed. " + e.Message + "\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
 
             selectedSub = new SubmarineInfo(Path.Combine(SaveUtil.TempPath, selectedSub.Name + ".sub"));
             
-            GameMain.GameSession = new GameSession(selectedSub, saveName, GameModePreset.SinglePlayerCampaign, settings, mapSeed);
+            GameMain.GameSession = new GameSession(selectedSub, savePath, GameModePreset.SinglePlayerCampaign, settings, mapSeed);
             GameMain.GameSession.CrewManager.CharacterInfos.Clear();
             foreach (var characterInfo in campaignSetupUI.CharacterMenus.Select(m => m.CharacterInfo))
             {
@@ -1155,13 +1056,13 @@ namespace Barotrauma
             //GameMain.LobbyScreen.Select();
         }
 
-        #region UI Methods
+#region UI Methods
         private void CreateCampaignSetupUI()
         {
-            menuTabs[(int)Tab.NewGame].ClearChildren();
-            menuTabs[(int)Tab.LoadGame].ClearChildren();
+            menuTabs[Tab.NewGame].ClearChildren();
+            menuTabs[Tab.LoadGame].ClearChildren();
 
-            var innerNewGame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), menuTabs[(int)Tab.NewGame].RectTransform, Anchor.Center))
+            var innerNewGame = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), menuTabs[Tab.NewGame].RectTransform, Anchor.Center))
             {
                 Stretch = true,
                 RelativeSpacing = 0.02f
@@ -1169,7 +1070,7 @@ namespace Barotrauma
             var newGameContent = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.95f), innerNewGame.RectTransform, Anchor.Center),
                 style: "InnerFrame");
 
-            var paddedLoadGame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), menuTabs[(int)Tab.LoadGame].RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 10) },
+            var paddedLoadGame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), menuTabs[Tab.LoadGame].RectTransform, Anchor.Center) { AbsoluteOffset = new Point(0, 10) },
                 style: null);
 
             campaignSetupUI = new SinglePlayerCampaignSetupUI(newGameContent, paddedLoadGame, SubmarineInfo.SavedSubmarines)
@@ -1181,7 +1082,7 @@ namespace Barotrauma
 
         private void CreateHostServerFields()
         {
-            menuTabs[(int)Tab.HostServer].ClearChildren();
+            menuTabs[Tab.HostServer].ClearChildren();
 
             string name = "";
             string password = "";
@@ -1217,18 +1118,19 @@ namespace Barotrauma
                 }
             }
 
-            Vector2 textLabelSize = new Vector2(1.0f, 0.1f);
+            Vector2 textLabelSize = new Vector2(1.0f, 0.05f);
             Alignment textAlignment = Alignment.CenterLeft;
             Vector2 textFieldSize = new Vector2(0.5f, 1.0f);
-            Vector2 tickBoxSize = new Vector2(0.4f, 0.07f);
-            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 0.9f), menuTabs[(int)Tab.HostServer].RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
+            Vector2 tickBoxSize = new Vector2(0.4f, 0.04f);
+            var content = new GUILayoutGroup(new RectTransform(new Vector2(0.7f, 0.9f), menuTabs[Tab.HostServer].RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter)
             {
-                RelativeSpacing = 0.02f,
+                RelativeSpacing = 0.01f,
                 Stretch = true
             };
             GUIComponent parent = content;
 
-            new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("HostServerButton"), textAlignment: Alignment.Center, font: GUI.LargeFont) { ForceUpperCase = true };
+            var header = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("HostServerButton"), textAlignment: Alignment.Center, font: GUIStyle.LargeFont) { ForceUpperCase = ForceUpperCase.Yes };
+            header.RectTransform.IsFixedSize = true;
 
             //play style -----------------------------------------------------
 
@@ -1245,7 +1147,7 @@ namespace Barotrauma
             new GUIFrame(new RectTransform(Vector2.One, playstyleBanner.RectTransform), "InnerGlow", color: Color.Black);
 
             new GUITextBlock(new RectTransform(new Vector2(0.15f, 0.05f), playstyleBanner.RectTransform) { RelativeOffset = new Vector2(0.01f, 0.03f) },
-                "playstyle name goes here", font: GUI.SmallFont, textAlignment: Alignment.Center, textColor: Color.White, style: "GUISlopedHeader");
+                "playstyle name goes here", font: GUIStyle.SmallFont, textAlignment: Alignment.Center, textColor: Color.White, style: "GUISlopedHeader");
             
             new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), playstyleContainer.RectTransform, Anchor.CenterLeft) 
                 { RelativeOffset = new Vector2(0.02f, 0.0f), MaxSize = new Point(int.MaxValue, (int)(150 * GUI.Scale)) }, 
@@ -1273,10 +1175,10 @@ namespace Barotrauma
                 }
             };
 
-            string longestPlayStyleStr = "";
+            LocalizedString longestPlayStyleStr = "";
             foreach (PlayStyle playStyle in Enum.GetValues(typeof(PlayStyle)))
             {
-                string playStyleStr = TextManager.Get("servertagdescription." + playStyle);
+                LocalizedString playStyleStr = TextManager.Get("servertagdescription." + playStyle);
                 if (playStyleStr.Length > longestPlayStyleStr.Length) { longestPlayStyleStr = playStyleStr; }
             }
 
@@ -1284,7 +1186,7 @@ namespace Barotrauma
                 longestPlayStyleStr, style: null, wrap: true)
             {
                 Color = Color.Black * 0.8f,
-                TextColor = GUI.Style.GetComponentStyle("GUITextBlock").TextColor
+                TextColor = GUIStyle.GetComponentStyle("GUITextBlock").TextColor
             };
             playstyleDescription.Padding = Vector4.One * 10.0f * GUI.Scale;
             playstyleDescription.CalculateHeightFromText(padding: (int)(15 * GUI.Scale));
@@ -1306,18 +1208,19 @@ namespace Barotrauma
                 MaxTextLength = NetConfig.ServerNameMaxLength,
                 OverflowClip = true
             };
-            label.RectTransform.MaxSize = serverNameBox.RectTransform.MaxSize;
+            label.RectTransform.IsFixedSize = true;
 
             var maxPlayersLabel = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("MaxPlayers"), textAlignment: textAlignment);
-            var buttonContainer = new GUILayoutGroup(new RectTransform(textFieldSize, maxPlayersLabel.RectTransform, Anchor.CenterRight), isHorizontal: true)
+            var buttonContainer = new GUILayoutGroup(new RectTransform(textFieldSize, maxPlayersLabel.RectTransform, Anchor.CenterRight), isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
                 Stretch = true,
                 RelativeSpacing = 0.1f
             };
-            new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIMinusButton", textAlignment: Alignment.Center)
+            new GUIButton(new RectTransform(Vector2.One, buttonContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIMinusButton", textAlignment: Alignment.Center)
             {
                 UserData = -1,
-                OnClicked = ChangeMaxPlayers
+                OnClicked = ChangeMaxPlayers,
+                ClickSound = GUISoundType.Decrease
             };
             maxPlayersBox = new GUITextBox(new RectTransform(new Vector2(0.6f, 1.0f), buttonContainer.RectTransform), textAlignment: Alignment.Center)
             {
@@ -1334,19 +1237,56 @@ namespace Barotrauma
                 currMaxPlayers = (int)MathHelper.Clamp(currMaxPlayers, 1, NetConfig.MaxPlayers);
                 maxPlayersBox.Text = currMaxPlayers.ToString();
             };
-            new GUIButton(new RectTransform(new Vector2(0.2f, 1.0f), buttonContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIPlusButton", textAlignment: Alignment.Center)
+            new GUIButton(new RectTransform(Vector2.One, buttonContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIPlusButton", textAlignment: Alignment.Center)
             {
                 UserData = 1,
-                OnClicked = ChangeMaxPlayers
+                OnClicked = ChangeMaxPlayers,
+                ClickSound = GUISoundType.Increase
             };
-            maxPlayersLabel.RectTransform.MaxSize = maxPlayersBox.RectTransform.MaxSize;
+            maxPlayersLabel.RectTransform.IsFixedSize = true;
 
             label = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform), TextManager.Get("Password"), textAlignment: textAlignment);
             passwordBox = new GUITextBox(new RectTransform(textFieldSize, label.RectTransform, Anchor.CenterRight), text: password, textAlignment: textAlignment)
             {
                 Censor = true
             };
-            label.RectTransform.MaxSize = passwordBox.RectTransform.MaxSize;
+            label.RectTransform.IsFixedSize = true;
+
+            var serverExecutableLabel = new GUITextBlock(new RectTransform(textLabelSize, parent.RectTransform),
+                TextManager.Get("ServerExecutable"), textAlignment: textAlignment);
+            const string vanillaServerOption = "Vanilla";
+            serverExecutableDropdown
+                = new GUIDropDown(new RectTransform(textFieldSize, serverExecutableLabel.RectTransform, Anchor.CenterRight),
+                    vanillaServerOption);
+            var listBoxSize = serverExecutableDropdown.ListBox.RectTransform.RelativeSize;
+            serverExecutableDropdown.ListBox.RectTransform.RelativeSize = new Vector2(listBoxSize.X * 1.5f, listBoxSize.Y);
+            serverExecutableDropdown.AddItem(vanillaServerOption, userData: null);
+            serverExecutableDropdown.OnSelected = (selected, userData) =>
+            {
+                if (userData != null)
+                {
+                    var warningBox = new GUIMessageBox(headerText: TextManager.Get("Warning"),
+                        text: TextManager.GetWithVariable("ModServerExesAtYourOwnRisk", "[exename]", serverExecutableDropdown.Text),
+                        new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                    warningBox.Buttons[0].OnClicked = (_, __) =>
+                    {
+                        warningBox.Close();
+                        return false;
+                    };
+                    warningBox.Buttons[1].OnClicked = (_, __) =>
+                    {
+                        serverExecutableDropdown.Select(0);
+                        warningBox.Close();
+                        return false;
+                    };
+                }
+                
+                serverExecutableDropdown.Text = ToolBox.LimitString(serverExecutableDropdown.Text,
+                    serverExecutableDropdown.Font, serverExecutableDropdown.Rect.Width * 8 / 10);
+
+                return true;
+            };
+            serverExecutableLabel.RectTransform.IsFixedSize = true;
 
             // tickbox upper ---------------
 
@@ -1363,7 +1303,7 @@ namespace Barotrauma
                 Selected = banAfterWrongPassword
             };
 
-            tickboxAreaUpper.RectTransform.MaxSize = isPublicBox.RectTransform.MaxSize;
+            tickboxAreaUpper.RectTransform.IsFixedSize = true;
 
             // tickbox lower ---------------
 
@@ -1375,7 +1315,7 @@ namespace Barotrauma
                 ToolTip = TextManager.Get("hostserverkarmasettingtooltip")
             };
 
-            tickboxAreaLower.RectTransform.MaxSize = karmaBox.RectTransform.MaxSize;
+            tickboxAreaLower.RectTransform.IsFixedSize = true;
 
             //spacing
             new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), content.RectTransform), style: null);
@@ -1391,11 +1331,11 @@ namespace Barotrauma
                         return false;
                     }
 
-                    if (ForbiddenWordFilter.IsForbidden(name, out string forbiddenWord))
+                    if (isPublicBox.Selected && ForbiddenWordFilter.IsForbidden(name, out string forbiddenWord))
                     {
                         var msgBox = new GUIMessageBox("", 
-                            TextManager.GetWithVariables("forbiddenservernameverification", new string[] { "[forbiddenword]", "[servername]" }, new string[] { forbiddenWord, name }), 
-                            new string[] { TextManager.Get("yes"), TextManager.Get("no") });
+                            TextManager.GetWithVariables("forbiddenservernameverification", ("[forbiddenword]", forbiddenWord), ("[servername]", name)), 
+                            new LocalizedString[] { TextManager.Get("yes"), TextManager.Get("no") });
                         msgBox.Buttons[0].OnClicked += (_, __) =>
                         {
                             TryStartServer();
@@ -1428,17 +1368,17 @@ namespace Barotrauma
             playstyleDescription.TextAlignment = playstyleDescription.WrappedText.Contains('\n') ?
                Alignment.CenterLeft : Alignment.Center;
         }
-        #endregion
+#endregion
 
         private void FetchRemoteContent()
         {
-            if (string.IsNullOrEmpty(GameMain.Config.RemoteContentUrl)) { return; }
+            if (string.IsNullOrEmpty(RemoteContentUrl)) { return; }
             try
             {
-                var client = new RestClient(GameMain.Config.RemoteContentUrl);
+                var client = new RestClient(RemoteContentUrl);
                 var request = new RestRequest("MenuContent.xml", Method.GET);
-                client.ExecuteAsync(request, RemoteContentReceived);
-                CoroutineManager.StartCoroutine(WairForRemoteContentReceived());
+                TaskPool.Add("RequestMainMenuRemoteContent", client.ExecuteAsync(request),
+                    RemoteContentReceived);
             }
 
             catch (Exception e)
@@ -1446,64 +1386,37 @@ namespace Barotrauma
 #if DEBUG
                 DebugConsole.ThrowError("Fetching remote content to the main menu failed.", e);
 #endif
-                GameAnalyticsManager.AddErrorEventOnce("MainMenuScreen.FetchRemoteContent:Exception", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                GameAnalyticsManager.AddErrorEventOnce("MainMenuScreen.FetchRemoteContent:Exception", GameAnalyticsManager.ErrorSeverity.Error,
                     "Fetching remote content to the main menu failed. " + e.Message);
                 return;
             }
         }
 
-        private IEnumerable<object> WairForRemoteContentReceived()
+        private void RemoteContentReceived(Task t)
         {
-            while (true)
+            try
             {
-                lock (remoteContentLock)
+                if (!t.TryGetResult(out IRestResponse remoteContentResponse)) { throw new Exception("Task did not return a valid result"); }
+                string xml = remoteContentResponse.Content;
+                int index = xml.IndexOf('<');
+                if (index > 0) { xml = xml.Substring(index, xml.Length - index); }
+                if (!string.IsNullOrWhiteSpace(xml))
                 {
-                    if (remoteContentResponse != null) { break; }
-                }
-                yield return new WaitForSeconds(0.1f);
-            }
-            lock (remoteContentLock)
-            {
-                if (remoteContentResponse.ResponseStatus != ResponseStatus.Completed || remoteContentResponse.StatusCode != HttpStatusCode.OK)
-                {
-                    yield return CoroutineStatus.Success;
-                }
-
-                try
-                {
-                    string xml = remoteContentResponse.Content;
-                    int index = xml.IndexOf('<');
-                    if (index > 0) { xml = xml.Substring(index, xml.Length - index); }
-                    if (!string.IsNullOrWhiteSpace(xml))
+                    remoteContentDoc = XDocument.Parse(xml);
+                    foreach (var subElement in remoteContentDoc?.Root.Elements())
                     {
-                        remoteContentDoc = XDocument.Parse(xml);
-                        foreach (XElement subElement in remoteContentDoc?.Root.Elements())
-                        {
-                            GUIComponent.FromXML(subElement, remoteContentContainer.RectTransform);
-                        }
+                        GUIComponent.FromXML(subElement.FromPackage(null), remoteContentContainer.RectTransform);
                     }
                 }
-
-                catch (Exception e)
-                {
-#if DEBUG
-                    DebugConsole.ThrowError("Reading received remote main menu content failed.", e);
-#endif
-                    GameAnalyticsManager.AddErrorEventOnce("MainMenuScreen.WairForRemoteContentReceived:Exception", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                        "Reading received remote main menu content failed. " + e.Message);
-                }
             }
-            yield return CoroutineStatus.Success;            
-        }
 
-        private readonly object remoteContentLock = new object();
-        private IRestResponse remoteContentResponse;
-
-        private void RemoteContentReceived(IRestResponse response, RestRequestAsyncHandle handle)
-        {
-            lock (remoteContentLock)
+            catch (Exception e)
             {
-                remoteContentResponse = response;
+#if DEBUG
+                DebugConsole.ThrowError("Reading received remote main menu content failed.", e);
+#endif
+                GameAnalyticsManager.AddErrorEventOnce("MainMenuScreen.RemoteContentReceived:Exception", GameAnalyticsManager.ErrorSeverity.Error,
+                    "Reading received remote main menu content failed. " + e.Message);
             }
         }
     }

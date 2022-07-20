@@ -153,6 +153,7 @@ namespace Microsoft.Xna.Framework
             return !a.Equals(b);
         }
 
+        public static implicit operator Point((int X, int Y) tuple) => new Point(tuple.X, tuple.Y);
         #endregion
 
         #region Public methods

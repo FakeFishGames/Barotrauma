@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace Barotrauma
@@ -14,12 +15,13 @@ namespace Barotrauma
 
             public override IEnumerable<string> InfoTextKeys => base.InfoTextKeys.Concat(new string[] { "[duration]" });
 
-            public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] { requiredDuration.ToString() });
+            public override IEnumerable<string> InfoTextValues(Traitor traitor) => base.InfoTextValues(traitor).Concat(new string[] { requiredDuration.ToString(CultureInfo.InvariantCulture) });
 
             protected internal override string GetInfoText(Traitor traitor, string textId, IEnumerable<string> keys, IEnumerable<string> values)
             {
                 var infoText = base.GetInfoText(traitor, textId, keys, values);
-                return !string.IsNullOrEmpty(durationInfoTextId) && !infoText.Contains("[duration]") ? TextManager.FormatServerMessage(durationInfoTextId, new[] { "[infotext]", "[duration]" }, new[] { infoText, requiredDuration.ToString() }) : infoText;
+                return !string.IsNullOrEmpty(durationInfoTextId) && !infoText.Contains("[duration]") ? TextManager.FormatServerMessage(durationInfoTextId,
+                    ("[infotext]", infoText), ("[duration]", requiredDuration.ToString(CultureInfo.InvariantCulture))) : infoText;
             }
 
             private bool isCompleted = false;

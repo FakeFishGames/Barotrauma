@@ -1,23 +1,25 @@
-﻿using Microsoft.Xna.Framework;
-using System.Collections.Generic;
-using System.Xml.Linq;
+﻿using System.Xml.Linq;
 
 namespace Barotrauma.Abilities
 {
     class CharacterAbilityPutItem : CharacterAbility
     {
-        private readonly string itemIdentifier;
+        private readonly Identifier itemIdentifier;
         private readonly int amount;
         public override bool AppliesEffectOnIntervalUpdate => true;
-        public CharacterAbilityPutItem(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityPutItem(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
-            itemIdentifier = abilityElement.GetAttributeString("itemidentifier", "");
+            itemIdentifier = abilityElement.GetAttributeIdentifier("itemidentifier", "");
             amount = abilityElement.GetAttributeInt("amount", 1);
+            if (itemIdentifier.IsEmpty)
+            {
+                DebugConsole.ThrowError($"Error in talent \"{characterAbilityGroup.CharacterTalent.DebugIdentifier}\" - itemIdentifier not defined.");
+            }
         }
 
         protected override void ApplyEffect()
         {
-            if (string.IsNullOrEmpty(itemIdentifier))
+            if (itemIdentifier.IsEmpty)
             {
                 DebugConsole.ThrowError("Cannot put item in inventory - itemIdentifier not defined.");
                 return;
@@ -34,11 +36,17 @@ namespace Barotrauma.Abilities
                 if (GameMain.GameSession?.RoundEnding ?? true)
                 {
                     Item item = new Item(itemPrefab, Character.WorldPosition, Character.Submarine);
-                    Character.Inventory.TryPutItem(item, Character, new List<InvSlotType>() { InvSlotType.Any });
+                    if (!Character.Inventory.TryPutItem(item, Character, item.AllowedSlots))
+                    {
+                        foreach (Item containedItem in Character.Inventory.AllItemsMod)
+                        {
+                            if (containedItem.OwnInventory?.TryPutItem(item, Character) ?? false) { break; }
+                        }
+                    }
                 }
                 else
                 {
-                    Entity.Spawner.AddToSpawnQueue(itemPrefab, Character.Inventory);
+                    Entity.Spawner.AddItemToSpawnQueue(itemPrefab, Character.Inventory);
                 }
             }
         }

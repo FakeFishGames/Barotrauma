@@ -15,7 +15,9 @@ namespace Barotrauma.Items.Components
         //the output is sent if both inputs have received a signal within the timeframe
         protected float timeFrame;
 
-        [Serialize(999999.0f, true, description: "The output of the item is restricted below this value.", alwaysUseInstanceValues: true),
+        protected readonly Character[] signalSender = new Character[2];
+
+        [Serialize(999999.0f, IsPropertySaveable.Yes, description: "The output of the item is restricted below this value.", alwaysUseInstanceValues: true),
             InGameEditable(MinValueFloat = -999999.0f, MaxValueFloat = 999999.0f)]
         public float ClampMax
         {
@@ -23,7 +25,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(-999999.0f, true, description: "The output of the item is restricted above this value.", alwaysUseInstanceValues: true),
+        [Serialize(-999999.0f, IsPropertySaveable.Yes, description: "The output of the item is restricted above this value.", alwaysUseInstanceValues: true),
             InGameEditable(MinValueFloat = -999999.0f, MaxValueFloat = 999999.0f)]
         public float ClampMin
         {
@@ -32,18 +34,22 @@ namespace Barotrauma.Items.Components
         }
 
         [InGameEditable(DecimalCount = 2),
-            Serialize(0.0f, true, description: "The item must have received signals to both inputs within this timeframe to output the result." +
-            " If set to 0, the inputs must be received at the same time.", alwaysUseInstanceValues: true)]
+            Serialize(0.0f, IsPropertySaveable.Yes, description: "The item must have received signals to both inputs within this timeframe to output the result." +
+            " If set to 0, the inputs must be received at the same time.", alwaysUseInstanceValues: true, translationTextTag: "sp.")]
         public float TimeFrame
         {
             get { return timeFrame; }
             set
             {
+                if (value > timeFrame)
+                {
+                    timeSinceReceived[0] = timeSinceReceived[1] = Math.Max(value * 2.0f, 0.1f);
+                }
                 timeFrame = Math.Max(0.0f, value);
             }
         }
 
-        public ArithmeticComponent(Item item, XElement element)
+        public ArithmeticComponent(Item item, ContentXElement element)
             : base(item, element)
         {
             timeSinceReceived = new float[] { Math.Max(timeFrame * 2.0f, 0.1f), Math.Max(timeFrame * 2.0f, 0.1f) };
@@ -67,7 +73,7 @@ namespace Barotrauma.Items.Components
             float output = Calculate(receivedSignal[0], receivedSignal[1]);
             if (MathUtils.IsValid(output))
             {
-                item.SendSignal(MathHelper.Clamp(output, ClampMin, ClampMax).ToString("G", CultureInfo.InvariantCulture), "signal_out");
+                item.SendSignal(new Signal(MathHelper.Clamp(output, ClampMin, ClampMax).ToString("G", CultureInfo.InvariantCulture), sender: signalSender[0] ?? signalSender[1]), "signal_out");
             }           
         }
 
@@ -79,11 +85,13 @@ namespace Barotrauma.Items.Components
             {
                 case "signal_in1":
                     float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[0]);
+                    signalSender[0] = signal.sender;
                     timeSinceReceived[0] = 0.0f;
                     IsActive = true;
                     break;
                 case "signal_in2":
                     float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out receivedSignal[1]);
+                    signalSender[1] = signal.sender;
                     timeSinceReceived[1] = 0.0f;
                     IsActive = true;
                     break;

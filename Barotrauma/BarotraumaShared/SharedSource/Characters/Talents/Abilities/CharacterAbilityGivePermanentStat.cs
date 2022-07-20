@@ -18,7 +18,7 @@ namespace Barotrauma.Abilities
         public override bool AllowClientSimulation => true;
         public override bool AppliesEffectOnIntervalUpdate => true;
 
-        public CharacterAbilityGivePermanentStat(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityGivePermanentStat(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             statIdentifier = abilityElement.GetAttributeString("statidentifier", "").ToLowerInvariant();
             string statTypeName = abilityElement.GetAttributeString("stattype", string.Empty);
@@ -26,7 +26,7 @@ namespace Barotrauma.Abilities
             value = abilityElement.GetAttributeFloat("value", 0f);
             maxValue = abilityElement.GetAttributeFloat("maxvalue", float.MaxValue);
             targetAllies = abilityElement.GetAttributeBool("targetallies", false);
-            removeOnDeath = abilityElement.GetAttributeBool("removeondeath", true);
+            removeOnDeath = abilityElement.GetAttributeBool("removeondeath", false);
             giveOnAddingFirstTime = abilityElement.GetAttributeBool("giveonaddingfirsttime", characterAbilityGroup.AbilityEffectType == AbilityEffectType.None);
             setValue = abilityElement.GetAttributeBool("setvalue", false);
         }

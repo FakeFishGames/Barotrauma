@@ -64,17 +64,17 @@ namespace Barotrauma
                         DebugConsole.ThrowError(errorMsg);
                         GameAnalyticsManager.AddErrorEventOnce(
                             "Ragdoll.Limbs:AccessRemoved",
-                            GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                            "Attempted to access a potentially removed ragdoll. Character: " + character.Name + ", id: " + character.ID + ", removed: " + character.Removed + ", ragdoll removed: " + !list.Contains(this) + "\n" + Environment.StackTrace.CleanupStackTrace());
+                            GameAnalyticsManager.ErrorSeverity.Error,
+                            "Attempted to access a potentially removed ragdoll. Character: " + character.SpeciesName + ", id: " + character.ID + ", removed: " + character.Removed + ", ragdoll removed: " + !list.Contains(this) + "\n" + Environment.StackTrace.CleanupStackTrace());
                         accessRemovedCharacterErrorShown = true;
                     }
-                    return new Limb[0];
+                    return Array.Empty<Limb>();
                 }
                 return limbs;
             }
         }
 
-        public bool HasMultipleLimbsOfSameType => limbs == null ? false : Limbs.Length > limbDictionary.Count;
+        public bool HasMultipleLimbsOfSameType => limbs != null && limbs.Length > limbDictionary.Count;
 
         private bool frozen;
         public bool Frozen
@@ -121,6 +121,7 @@ namespace Barotrauma
         protected Vector2 overrideTargetMovement;
         
         protected float floorY, standOnFloorY;
+        protected Fixture floorFixture;
         protected Vector2 floorNormal = Vector2.UnitY;
         protected float surfaceY;
         
@@ -226,9 +227,13 @@ namespace Barotrauma
                     {
                         mainLimb = Limbs.FirstOrDefault(l => IsValid(l));
                     }
+                    if (mainLimb == null)
+                    {
+                        DebugConsole.ThrowError("Couldn't find a valid main limb. The limb can't be hidden nor be set to ignore collisions!");
+                        mainLimb = Limbs.FirstOrDefault();
+                    }
                 }
-
-                bool IsValid(Limb limb) => limb != null && !limb.IsSevered && !limb.IgnoreCollisions && !limb.Hidden;
+                static bool IsValid(Limb limb) => limb != null && !limb.IsSevered && !limb.IgnoreCollisions && !limb.Hidden;
                 return mainLimb;
             }
         }
@@ -303,7 +308,27 @@ namespace Barotrauma
         public abstract float? TorsoPosition { get; }
         public abstract float? TorsoAngle { get; }
 
-        public float ImpactTolerance => RagdollParams.ImpactTolerance;
+        float? impactTolerance;
+        public float ImpactTolerance
+        {
+            get
+            {
+                if (impactTolerance == null)
+                {
+                    impactTolerance = RagdollParams.ImpactTolerance;
+                    if (character.Params.VariantFile != null)
+                    {
+                        float? tolerance = character.Params.VariantFile.Root.GetChildElement("ragdoll")?.GetAttributeFloat("impacttolerance", impactTolerance.Value);
+                        if (tolerance.HasValue)
+                        {
+                            impactTolerance = tolerance;
+                        }
+                    }
+                }
+                return impactTolerance.Value;
+            }
+        }
+
         public bool Draggable => RagdollParams.Draggable;
         public bool CanEnterSubmarine => RagdollParams.CanEnterSubmarine;
 
@@ -402,13 +427,13 @@ namespace Barotrauma
 #endif
 
                 var characterPrefab = CharacterPrefab.FindByFilePath(character.ConfigPath);
-                if (characterPrefab?.XDocument != null)
+                if (characterPrefab?.ConfigElement != null)
                 {
-                    var mainElement = characterPrefab.XDocument.Root.IsOverride() ? characterPrefab.XDocument.Root.FirstElement() : characterPrefab.XDocument.Root;
+                    var mainElement = characterPrefab.ConfigElement;
                     foreach (var huskAppendage in mainElement.GetChildElements("huskappendage"))
                     {
                         if (!inEditor && huskAppendage.GetAttributeBool("onlyfromafflictions", false)) { continue; }
-                        AfflictionHusk.AttachHuskAppendage(character, huskAppendage.GetAttributeString("affliction", string.Empty), huskAppendage, ragdoll: this);
+                        AfflictionHusk.AttachHuskAppendage(character, huskAppendage.GetAttributeIdentifier("affliction", Identifier.Empty), huskAppendage, ragdoll: this);
                     }
                 }
             }
@@ -488,6 +513,7 @@ namespace Barotrauma
             limbDictionary = new Dictionary<LimbType, Limb>();
             limbs = new Limb[RagdollParams.Limbs.Count];
             RagdollParams.Limbs.ForEach(l => AddLimb(l));
+            if (limbs.Contains(null)) { return; }
             SetupDrawOrder();
         }
 
@@ -548,19 +574,23 @@ namespace Barotrauma
             byte ID = Convert.ToByte(limbParams.ID);
             Limb limb = new Limb(this, character, limbParams);
             limb.body.FarseerBody.OnCollision += OnLimbCollision;
+            if (ID >= Limbs.Length)
+            {
+                throw new Exception($"Failed to add a limb to the character \"{Character?.ConfigPath ?? "null"}\" (limb index {ID} out of bounds). The ragdoll file may be configured incorrectly.");
+            }
             Limbs[ID] = limb;
             Mass += limb.Mass;
-            if (!limbDictionary.ContainsKey(limb.type)) limbDictionary.Add(limb.type, limb);
+            if (!limbDictionary.ContainsKey(limb.type)) { limbDictionary.Add(limb.type, limb); }
         }
 
         public void AddLimb(Limb limb)
         {
-            if (Limbs.Contains(limb)) return;
+            if (Limbs.Contains(limb)) { return; }
             limb.body.FarseerBody.OnCollision += OnLimbCollision;
             Array.Resize(ref limbs, Limbs.Length + 1);
             Limbs[Limbs.Length - 1] = limb;
             Mass += limb.Mass;
-            if (!limbDictionary.ContainsKey(limb.type)) limbDictionary.Add(limb.type, limb);
+            if (!limbDictionary.ContainsKey(limb.type)) { limbDictionary.Add(limb.type, limb); }
             SetupDrawOrder();
         }
 
@@ -750,8 +780,8 @@ namespace Barotrauma
             if (limbDiff.LengthSquared() < 0.0001f) { limbDiff = Rand.Vector(1.0f); }
             limbDiff = Vector2.Normalize(limbDiff);
             float mass = limbJoint.BodyA.Mass + limbJoint.BodyB.Mass;
-            limbJoint.LimbA.body.ApplyLinearImpulse(limbDiff * mass, (limbJoint.LimbA.SimPosition + limbJoint.LimbB.SimPosition) / 2.0f);
-            limbJoint.LimbB.body.ApplyLinearImpulse(-limbDiff * mass, (limbJoint.LimbA.SimPosition + limbJoint.LimbB.SimPosition) / 2.0f);
+            limbJoint.LimbA.body.ApplyLinearImpulse(limbDiff * Math.Min(mass, limbJoint.BodyA.Mass * 500), (limbJoint.LimbA.SimPosition + limbJoint.LimbB.SimPosition) / 2.0f);
+            limbJoint.LimbB.body.ApplyLinearImpulse(-limbDiff * Math.Min(mass, limbJoint.BodyB.Mass * 500), (limbJoint.LimbA.SimPosition + limbJoint.LimbB.SimPosition) / 2.0f);
 
             connectedLimbs.Clear();
             checkedJoints.Clear();
@@ -777,9 +807,9 @@ namespace Barotrauma
             }
 
             SeverLimbJointProjSpecific(limbJoint, playSound: true);
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+            if (GameMain.NetworkMember is { IsServer: true })
             {
-                GameMain.NetworkMember.CreateEntityEvent(character, new object[] { NetEntityEvent.Type.Status });
+                GameMain.NetworkMember.CreateEntityEvent(character, new Character.CharacterStatusEventData());
             }
             return true;
         }
@@ -879,7 +909,7 @@ namespace Barotrauma
                 string errorMsg = "Ragdoll.GetCenterOfMass returned an invalid value (" + centerOfMass + "). Limb positions: {"
                     + string.Join(", ", limbs.Select(l => l.SimPosition)) + "}, total mass: " + totalMass + ".";
                 DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("Ragdoll.GetCenterOfMass", GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Ragdoll.GetCenterOfMass", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 return Collider.SimPosition;
             }
 
@@ -917,14 +947,14 @@ namespace Barotrauma
             {
                 GameAnalyticsManager.AddErrorEventOnce(
                     "Ragdoll.FindHull:InvalidPosition",
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                    GameAnalyticsManager.ErrorSeverity.Error,
                     "Attempted to find a hull at an invalid position (" + findPos + ")\n" + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
 
             Hull newHull = Hull.FindHull(findPos, currentHull);
-            
-            if (newHull == currentHull) return;
+
+            if (newHull == currentHull) { return; }
 
             if (!CanEnterSubmarine || (character.AIController != null && !character.AIController.CanEnterSubmarine))
             {
@@ -957,16 +987,16 @@ namespace Barotrauma
                 if (newHull?.Submarine == null && currentHull?.Submarine != null)
                 {
                     //don't teleport out yet if the character is going through a gap
-                    if (Gap.FindAdjacent(currentHull.ConnectedGaps, findPos, 150.0f) != null) { return; }
                     if (Gap.FindAdjacent(Gap.GapList.Where(g => g.Submarine == currentHull.Submarine), findPos, 150.0f) != null) { return; }
+                    if (Limbs.Any(l => Gap.FindAdjacent(currentHull.ConnectedGaps, l.WorldPosition, ConvertUnits.ToDisplayUnits(l.body.GetSize().Combine())) != null)) { return; }
                     character.MemLocalState?.Clear();
-                    Teleport(ConvertUnits.ToSimUnits(currentHull.Submarine.Position), currentHull.Submarine.Velocity);
+                    Teleport(ConvertUnits.ToSimUnits(currentHull.Submarine.Position), currentHull.Submarine.Velocity, detachProjectiles: false);
                 }
                 //out -> in
                 else if (currentHull == null && newHull.Submarine != null)
                 {
                     character.MemLocalState?.Clear();
-                    Teleport(-ConvertUnits.ToSimUnits(newHull.Submarine.Position), -newHull.Submarine.Velocity);
+                    Teleport(-ConvertUnits.ToSimUnits(newHull.Submarine.Position), -newHull.Submarine.Velocity, detachProjectiles: false);
                 }
                 //from one sub to another
                 else if (newHull != null && currentHull != null && newHull.Submarine != currentHull.Submarine)
@@ -974,13 +1004,13 @@ namespace Barotrauma
                     character.MemLocalState?.Clear();
                     Vector2 newSubPos = newHull.Submarine == null ? Vector2.Zero : newHull.Submarine.Position;
                     Vector2 prevSubPos = currentHull.Submarine == null ? Vector2.Zero : currentHull.Submarine.Position;
-
-                    Teleport(ConvertUnits.ToSimUnits(prevSubPos - newSubPos), Vector2.Zero);
+                    Teleport(ConvertUnits.ToSimUnits(prevSubPos - newSubPos), Vector2.Zero, detachProjectiles: false);
                 }
             }
             
             CurrentHull = newHull;
             character.Submarine = currentHull?.Submarine;
+            character.AttachedProjectiles.ForEach(p => p?.Item?.UpdateTransform());
         }
 
         private void PreventOutsideCollision()
@@ -1013,7 +1043,7 @@ namespace Barotrauma
             }
         }
 
-        public void Teleport(Vector2 moveAmount, Vector2 velocityChange)
+        public void Teleport(Vector2 moveAmount, Vector2 velocityChange, bool detachProjectiles = true)
         {
             foreach (Limb limb in Limbs)
             {
@@ -1036,7 +1066,7 @@ namespace Barotrauma
 
             character.DisableImpactDamageTimer = 0.25f;
 
-            SetPosition(Collider.SimPosition + moveAmount);
+            SetPosition(Collider.SimPosition + moveAmount, detachProjectiles: detachProjectiles);
             character.CursorPosition += moveAmount;
 
             Collider?.UpdateDrawPosition();
@@ -1166,14 +1196,10 @@ namespace Barotrauma
             {
                 headInWater = false;
                 inWater = false;
-                if (currentHull.WaterVolume > currentHull.Volume * 0.95f)
+                RefreshFloorY(ignoreStairs: Stairs == null);
+                if (currentHull.WaterPercentage > 0.001f)
                 {
-                    inWater = true;
-                }
-                else
-                {
-                    RefreshFloorY(ignoreStairs: Stairs == null);
-                    float waterSurface = ConvertUnits.ToSimUnits(currentHull.Surface);
+                    float waterSurface = ConvertUnits.ToSimUnits(GetSurfaceY());
                     if (targetMovement.Y < 0.0f)
                     {
                         Vector2 colliderBottom = GetColliderBottom();
@@ -1186,11 +1212,8 @@ namespace Barotrauma
                             if (lowerHull != null) floorY = ConvertUnits.ToSimUnits(lowerHull.Rect.Y - lowerHull.Rect.Height);
                         }
                     }
-                    float standHeight =
-                        HeadPosition.HasValue ? HeadPosition.Value :
-                        TorsoPosition.HasValue ? TorsoPosition.Value :
-                        Collider.GetMaxExtent() * 0.5f;
-                    if (Collider.SimPosition.Y < waterSurface && waterSurface - floorY > standHeight * 0.95f)
+                    float standHeight = HeadPosition ?? TorsoPosition ?? Collider.GetMaxExtent() * 0.5f;
+                    if (Collider.SimPosition.Y < waterSurface && waterSurface - floorY > standHeight * 0.8f)
                     {
                         inWater = true;
                     }
@@ -1348,19 +1371,19 @@ namespace Barotrauma
             string errorMsg = null;
             if (!MathUtils.IsValid(body.SimPosition) || Math.Abs(body.SimPosition.X) > 1e10f || Math.Abs(body.SimPosition.Y) > 1e10f)
             {
-                errorMsg = GetBodyName() + " position invalid (" + body.SimPosition + ", character: " + character.Name + ").";
+                errorMsg = GetBodyName() + " position invalid (" + body.SimPosition + ", character: [name]).";
             }
             else if (!MathUtils.IsValid(body.LinearVelocity) || Math.Abs(body.LinearVelocity.X) > 1000f || Math.Abs(body.LinearVelocity.Y) > 1000f)
             {
-                errorMsg = GetBodyName() + " velocity invalid (" + body.LinearVelocity + ", character: " + character.Name + ").";
+                errorMsg = GetBodyName() + " velocity invalid (" + body.LinearVelocity + ", character: [name]).";
             }
             else if (!MathUtils.IsValid(body.Rotation))
             {
-                errorMsg = GetBodyName() + " rotation invalid (" + body.Rotation + ", character: " + character.Name + ").";
+                errorMsg = GetBodyName() + " rotation invalid (" + body.Rotation + ", character: [name]).";
             }
             else if (!MathUtils.IsValid(body.AngularVelocity) || Math.Abs(body.AngularVelocity) > 1000f)
             {
-                errorMsg = GetBodyName() + " angular velocity invalid (" + body.AngularVelocity + ", character: " + character.Name + ").";
+                errorMsg = GetBodyName() + " angular velocity invalid (" + body.AngularVelocity + ", character: [name]).";
             }
             if (errorMsg != null)
             {
@@ -1378,11 +1401,11 @@ namespace Barotrauma
                 }
 
 #if DEBUG
-                DebugConsole.ThrowError(errorMsg);
+                DebugConsole.ThrowError(errorMsg.Replace("[name]", Character.Name));
 #else
-                DebugConsole.NewMessage(errorMsg, Color.Red);
+                DebugConsole.NewMessage(errorMsg.Replace("[name]", Character.Name), Color.Red);
 #endif
-                GameAnalyticsManager.AddErrorEventOnce("Ragdoll.CheckValidity:" + character.ID, GameAnalyticsSDK.Net.EGAErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce("Ragdoll.CheckValidity:" + character.ID, GameAnalyticsManager.ErrorSeverity.Error, errorMsg.Replace("[name]", Character.SpeciesName.Value));
 
                 if (!MathUtils.IsValid(Collider.SimPosition) || Math.Abs(Collider.SimPosition.X) > 1e10f || Math.Abs(Collider.SimPosition.Y) > 1e10f)
                 {
@@ -1495,11 +1518,11 @@ namespace Barotrauma
             }
         }
 
-
         private float GetFloorY(Vector2 simPosition, bool ignoreStairs = false)
         {
             onGround = false;
             Stairs = null;
+            floorFixture = null;
             Vector2 rayStart = simPosition;
             float height = ColliderHeightFromFloor;
             if (HeadPosition.HasValue && MathUtils.IsValid(HeadPosition.Value)) { height = Math.Max(height, HeadPosition.Value); }
@@ -1572,6 +1595,7 @@ namespace Barotrauma
 
             if (standOnFloorFixture != null && !IsHanging)
             {
+                floorFixture = standOnFloorFixture;
                 standOnFloorY = rayStart.Y + (rayEnd.Y - rayStart.Y) * standOnFloorFraction;
                 if (rayStart.Y - standOnFloorY < Collider.height * 0.5f + Collider.radius + ColliderHeightFromFloor * 1.2f)
                 {
@@ -1612,25 +1636,85 @@ namespace Barotrauma
             }
         }
 
-        public void SetPosition(Vector2 simPosition, bool lerp = false, bool ignorePlatforms = true, bool forceMainLimbToCollider = false)
+        public float GetSurfaceY()
+        {
+            //check both hulls: the hull whose coordinate space the ragdoll is in, and the hull whose bounds the character's origin actually is inside
+            if (currentHull == null || character.CurrentHull == null)
+            {
+                return float.PositiveInfinity;
+            }
+            
+            float surfacePos = currentHull.Surface;
+            float surfaceThreshold = ConvertUnits.ToDisplayUnits(Collider.SimPosition.Y + 1.0f);
+            //if the hull is almost full of water, check if there's a water-filled hull above it
+            //and use its water surface instead of the current hull's 
+            if (currentHull.Rect.Y - currentHull.Surface < 5.0f)
+            {
+                GetSurfacePos(currentHull, ref surfacePos);
+                void GetSurfacePos(Hull hull, ref float prevSurfacePos)
+                {
+                    if (prevSurfacePos > surfaceThreshold) { return; }
+                    foreach (Gap gap in hull.ConnectedGaps)
+                    {
+                        if (gap.IsHorizontal || gap.Open <= 0.0f || gap.WorldPosition.Y < hull.WorldPosition.Y) { continue; }
+                        if (Collider.SimPosition.X < ConvertUnits.ToSimUnits(gap.Rect.X) || Collider.SimPosition.X > ConvertUnits.ToSimUnits(gap.Rect.Right)) { continue; }
+
+                        //if the gap is above us and leads outside, there's no surface to limit the movement
+                        if (!gap.IsRoomToRoom && gap.Position.Y > hull.Position.Y)
+                        {
+                            prevSurfacePos += 100000.0f;
+                            return;
+                        }
+
+                        foreach (var linkedTo in gap.linkedTo)
+                        {
+                            if (linkedTo is Hull otherHull && otherHull != hull && otherHull != currentHull)
+                            {
+                                prevSurfacePos = Math.Max(surfacePos, otherHull.Surface);
+                                GetSurfacePos(otherHull, ref prevSurfacePos);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            return surfacePos;            
+        }
+
+        public void SetPosition(Vector2 simPosition, bool lerp = false, bool ignorePlatforms = true, bool forceMainLimbToCollider = false, bool detachProjectiles = true)
         {
             if (!MathUtils.IsValid(simPosition))
             {
                 DebugConsole.ThrowError("Attempted to move a ragdoll (" + character.Name + ") to an invalid position (" + simPosition + "). " + Environment.StackTrace.CleanupStackTrace());
                 GameAnalyticsManager.AddErrorEventOnce(
                     "Ragdoll.SetPosition:InvalidPosition",
-                    GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
-                    "Attempted to move a ragdoll (" + character.Name + ") to an invalid position (" + simPosition + "). " + Environment.StackTrace.CleanupStackTrace());
+                    GameAnalyticsManager.ErrorSeverity.Error,
+                    "Attempted to move a ragdoll (" + character.SpeciesName + ") to an invalid position (" + simPosition + "). " + Environment.StackTrace.CleanupStackTrace());
                 return;
             }
             if (MainLimb == null) { return; }
 
+            // A Work-around for an issue with teleporting the characters:
+            // Detach every latcher when either one of the latchers or the target is teleported,
+            // because otherwise all the characters are teleported to invalid positions.
             if (Character.AIController is EnemyAIController enemyAI && enemyAI.LatchOntoAI != null && enemyAI.LatchOntoAI.IsAttached)
             {
+                var target = enemyAI.LatchOntoAI.TargetCharacter;
+                if (target != null)
+                {
+                    target.Latchers.ForEachMod(l => l?.DeattachFromBody(reset: true));
+                    target.Latchers.Clear();
+                }
                 enemyAI.LatchOntoAI.DeattachFromBody(reset: true);
             }
-            Character.Latchers.ForEachMod(l => l.DeattachFromBody(reset: true));
+            Character.Latchers.ForEachMod(l => l?.DeattachFromBody(reset: true));
             Character.Latchers.Clear();
+
+            if (detachProjectiles)
+            {
+                character.AttachedProjectiles.ForEachMod(p => p?.Unstick());
+                character.AttachedProjectiles.Clear();
+            }
 
             Vector2 limbMoveAmount = forceMainLimbToCollider ? simPosition - MainLimb.SimPosition : simPosition - Collider.SimPosition;
             if (lerp)
@@ -1650,7 +1734,7 @@ namespace Barotrauma
                     if (limb.IsSevered) { continue; }
                     //check visibility from the new position of the collider to the new position of this limb
                     Vector2 movePos = limb.SimPosition + limbMoveAmount;
-                    TrySetLimbPosition(limb, simPosition, movePos, lerp, ignorePlatforms);
+                    TrySetLimbPosition(limb, simPosition, movePos, limb.Rotation, lerp, ignorePlatforms);
                 }
             }
         }
@@ -1665,7 +1749,7 @@ namespace Barotrauma
             IsHanging = true;
         }
 
-        protected void TrySetLimbPosition(Limb limb, Vector2 original, Vector2 simPosition, bool lerp = false, bool ignorePlatforms = true)
+        protected void TrySetLimbPosition(Limb limb, Vector2 original, Vector2 simPosition, float rotation, bool lerp = false, bool ignorePlatforms = true)
         {
             Vector2 movePos = simPosition;
 
@@ -1687,11 +1771,12 @@ namespace Barotrauma
             if (lerp)
             {
                 limb.body.TargetPosition = movePos;
-                limb.body.MoveToTargetPosition(true);                
+                limb.body.TargetRotation = rotation;
+                limb.body.MoveToTargetPosition(true);
             }
             else
             {
-                limb.body.SetTransform(movePos, limb.Rotation);
+                limb.body.SetTransform(movePos, rotation);
                 limb.PullJointWorldAnchorB = limb.PullJointWorldAnchorA;
                 limb.PullJointEnabled = false;
             }
@@ -1712,7 +1797,7 @@ namespace Barotrauma
             if (distSqrd > resetDist * resetDist)
             {
                 //ragdoll way too far, reset position
-                SetPosition(Collider.SimPosition, true, forceMainLimbToCollider: true);
+                SetPosition(Collider.SimPosition, lerp: true, forceMainLimbToCollider: true);
             }
             if (distSqrd > allowedDist * allowedDist)
             {
@@ -1732,7 +1817,7 @@ namespace Barotrauma
             else if (collisionsDisabled)
             {
                 //set the position of the ragdoll to make sure limbs don't get stuck inside walls when re-enabling collisions
-                SetPosition(Collider.SimPosition, true);
+                SetPosition(Collider.SimPosition, lerp: true);
                 collisionsDisabled = false;
                 //force collision categories to be updated
                 prevCollisionCategory = Category.None;
@@ -1769,35 +1854,29 @@ namespace Barotrauma
         }
         
         /// <summary>
-        /// Note that if there are multiple limbs of the same type, only the first of them is found in the dictionary.
+        /// Note that if there are multiple limbs of the same type, only the first (valid) limb is returned.
         /// </summary>
         public Limb GetLimb(LimbType limbType, bool excludeSevered = true)
         {
-            Limb limb = null;
-            if (HasMultipleLimbsOfSameType)
+            if (limbDictionary.TryGetValue(limbType, out Limb limb))
             {
-                for (int i = 0; i < 10; i++)
+                if (excludeSevered && limb.IsSevered)
                 {
-                    limbDictionary.TryGetValue(limbType, out limb);
-                    if (limb == null)
+                    limb = null;
+                }
+            }
+            if (limb == null && HasMultipleLimbsOfSameType)
+            {
+                // Didn't find a (valid) limb of the matching type. If there's multiple limbs of the same type, check the other limbs.
+                foreach (var l in limbs)
+                {
+                    if (l.type != limbType) { continue; }
+                    if (!excludeSevered || !l.IsSevered)
                     {
-                        // No limbs found
-                        break;
-                    }
-                    if (!excludeSevered || !limb.IsSevered)
-                    {
-                        // Found a valid limb
+                        limb = l;
                         break;
                     }
                 }
-            }
-            else
-            {
-                limbDictionary.TryGetValue(limbType, out limb);
-            }
-            if (excludeSevered && limb != null && limb.IsSevered)
-            {
-                limb = null;
             }
             return limb;
         }
@@ -1810,7 +1889,7 @@ namespace Barotrauma
             float sin = (float)Math.Sin(mouthLimb.Rotation);
             Vector2 bodySize = mouthLimb.body.GetSize();
             Vector2 offset = new Vector2(mouthLimb.MouthPos.X * bodySize.X / 2, mouthLimb.MouthPos.Y * bodySize.Y / 2);
-            return mouthLimb.SimPosition + new Vector2(offset.X * cos - offset.Y * sin, offset.X * sin + offset.Y * cos) * mouthLimb.Scale * RagdollParams.LimbScale;
+            return mouthLimb.SimPosition + new Vector2(offset.X * cos - offset.Y * sin, offset.X * sin + offset.Y * cos);
         }
 
         public Vector2 GetColliderBottom()

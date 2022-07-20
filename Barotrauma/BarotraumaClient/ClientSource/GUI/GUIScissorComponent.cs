@@ -29,6 +29,12 @@ namespace Barotrauma
             ClampChildMouseRects(Content);
         }
 
+        public override void DrawChildren(SpriteBatch spriteBatch, bool recursive)
+        {
+            //do nothing (the children have to be drawn in the Draw method after the ScissorRectangle has been set)
+            return;
+        }
+
         protected override void Draw(SpriteBatch spriteBatch)
         {
             if (!Visible) { return; }

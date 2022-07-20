@@ -1,5 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Diagnostics;
+using System.Linq;
+using Barotrauma.IO;
 using Voronoi2;
 
 namespace Barotrauma
@@ -8,19 +13,24 @@ namespace Barotrauma
     {
         public enum RandSync
         {
-            Unsynced = -1, //not synced, used for unimportant details like minor particle properties
-            Server = 0, //synced with the server (used for gameplay elements that the players can interact with)
-            ClientOnly = 1 //set to match between clients (used for misc elements that the server doesn't track, but clients want to match anyway)
+            Unsynced, //not synced, used for unimportant details like minor particle properties
+            ServerAndClient, //synced with the server (used for gameplay elements that the players can interact with)
+#if CLIENT
+            ClientOnly //set to match between clients (used for misc elements that the server doesn't track, but clients want to match anyway)
+#endif
         }
 
         private static Random localRandom = new Random();
-        private static readonly Random[] syncedRandom = new MTRandom[] {
-            new MTRandom(), new MTRandom()
+        private static readonly Dictionary<RandSync, Random> syncedRandom = new Dictionary<RandSync, Random> {
+            { RandSync.ServerAndClient, new MTRandom() },
+#if CLIENT
+            { RandSync.ClientOnly, new MTRandom() }
+#endif
         };
 
         public static Random GetRNG(RandSync randSync)
         {
-            return randSync == RandSync.Unsynced ? localRandom : syncedRandom[(int)randSync];
+            return randSync == RandSync.Unsynced ? localRandom : syncedRandom[randSync];
         }
 
         public static void SetLocalRandom(int seed)
@@ -30,21 +40,30 @@ namespace Barotrauma
 
         public static void SetSyncedSeed(int seed)
         {
-            syncedRandom[(int)RandSync.Server] = new MTRandom(seed);
-            syncedRandom[(int)RandSync.ClientOnly] = new MTRandom(seed);
+            syncedRandom[RandSync.ServerAndClient] = new MTRandom(seed);
+#if CLIENT
+            syncedRandom[RandSync.ClientOnly] = new MTRandom(seed);
+#endif
         }
 
         public static int ThreadId = 0;
         private static void CheckRandThreadSafety(RandSync sync)
         {
-            if (ThreadId != 0 && sync == RandSync.Server)
+            if (ThreadId != 0 && sync == RandSync.Unsynced)
+            {
+                if (System.Threading.Thread.CurrentThread.ManagedThreadId != ThreadId)
+                {
+                    Debug.WriteLine($"Unsynced rand used in synced thread! {Environment.StackTrace}");
+                }
+            }
+            if (ThreadId != 0 && sync == RandSync.ServerAndClient)
             {
                 if (System.Threading.Thread.CurrentThread.ManagedThreadId != ThreadId)
                 {
 #if DEBUG
-                    throw new Exception("Unauthorized multithreaded access to RandSync.Server");
+                    throw new Exception("Unauthorized multithreaded access to RandSync.ServerAndClient");
 #else
-                    DebugConsole.ThrowError("Unauthorized multithreaded access to RandSync.Server\n" + Environment.StackTrace.CleanupStackTrace());
+                    DebugConsole.ThrowError("Unauthorized multithreaded access to RandSync.ServerAndClient\n" + Environment.StackTrace.CleanupStackTrace());
 #endif
                 }
             }
@@ -53,25 +72,28 @@ namespace Barotrauma
         public static float Range(float minimum, float maximum, RandSync sync=RandSync.Unsynced)
         {
             CheckRandThreadSafety(sync);
-            return (float)(sync == RandSync.Unsynced ? localRandom : (syncedRandom[(int)sync])).NextDouble() * (maximum - minimum) + minimum;
+            return (float)(sync == RandSync.Unsynced ? localRandom : (syncedRandom[sync])).NextDouble() * (maximum - minimum) + minimum;
         }
 
         public static double Range(double minimum, double maximum, RandSync sync = RandSync.Unsynced)
         {
             CheckRandThreadSafety(sync);
-            return (sync == RandSync.Unsynced ? localRandom : (syncedRandom[(int)sync])).NextDouble() * (maximum - minimum) + minimum;
+            return (sync == RandSync.Unsynced ? localRandom : (syncedRandom[sync])).NextDouble() * (maximum - minimum) + minimum;
         }
 
+        /// <summary>
+        /// Min inclusive, Max exclusive!
+        /// </summary>
         public static int Range(int minimum, int maximum, RandSync sync = RandSync.Unsynced)
         {
             CheckRandThreadSafety(sync);
-            return (sync == RandSync.Unsynced ? localRandom : (syncedRandom[(int)sync])).Next(maximum - minimum) + minimum;
+            return (sync == RandSync.Unsynced ? localRandom : (syncedRandom[sync])).Next(maximum - minimum) + minimum;
         }
 
         public static int Int(int max, RandSync sync = RandSync.Unsynced)
         {
             CheckRandThreadSafety(sync);
-            return (sync == RandSync.Unsynced ? localRandom : (syncedRandom[(int)sync])).Next(max);
+            return (sync == RandSync.Unsynced ? localRandom : (syncedRandom[sync])).Next(max);
         }
 
         public static Vector2 Vector(float length, RandSync sync = RandSync.Unsynced)

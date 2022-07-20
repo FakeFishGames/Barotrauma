@@ -15,7 +15,6 @@ namespace Steamworks.Ugc
 		AppId consumerApp;
 		AppId creatorApp;
         string searchText;
-        bool returnLongDescription;
 
 		public Query( UgcType type ) : this()
 		{
@@ -105,18 +104,6 @@ namespace Steamworks.Ugc
 			return this;
 		}
 		#endregion
-
-        public Query WithLongDescription()
-        {
-            returnLongDescription = true;
-            return this;
-        }
-
-        public Query WithSummaryDescription()
-        {
-            returnLongDescription = false;
-            return this;
-        }
 
 		public async Task<ResultPage?> GetPageAsync( int page )
 		{
@@ -255,8 +242,6 @@ namespace Steamworks.Ugc
             {
                 SteamUGC.Internal.SetSearchText( handle, searchText );
             }
-
-            SteamUGC.Internal.SetReturnLongDescription( handle, returnLongDescription );
 		}
 
         #endregion

@@ -10,6 +10,12 @@ namespace Barotrauma.Items.Components
         private GUIProgressBar chargeIndicator;
         private GUIScrollBar rechargeSpeedSlider;
 
+        [Serialize(0.0f, IsPropertySaveable.Yes)]
+        public float RechargeWarningIndicatorLow { get; set; }
+
+        [Serialize(0.0f, IsPropertySaveable.Yes)]
+        public float RechargeWarningIndicatorHigh { get; set; }
+
         public Vector2 DrawSize
         {
             //use the extents of the item as the draw size
@@ -28,19 +34,38 @@ namespace Barotrauma.Items.Components
             var upperArea = new GUIFrame(new RectTransform(new Vector2(1, 0.4f), paddedFrame.RectTransform, Anchor.TopCenter), style: null);
             var lowerArea = new GUIFrame(new RectTransform(new Vector2(1, 0.6f), paddedFrame.RectTransform, Anchor.BottomCenter), style: null);
 
-
-            string rechargeStr = TextManager.Get("PowerContainerRechargeRate");
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), upperArea.RectTransform, Anchor.TopCenter),
-                "RechargeRate", textColor: GUI.Style.TextColor, font: GUI.SubHeadingFont, textAlignment: Alignment.Center)
+            var rechargeRateContainer = new GUIFrame(new RectTransform(new Vector2(1, 0.4f), upperArea.RectTransform), style: null);
+            var rechargeLabel = new GUITextBlock(new RectTransform(new Vector2(0.4f, 0.0f), rechargeRateContainer.RectTransform, Anchor.CenterLeft),
+                TextManager.Get("rechargerate"), textColor: GUIStyle.TextColorNormal, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft);
+            LocalizedString kW = TextManager.Get("kilowatt");
+            var rechargeText = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), rechargeRateContainer.RectTransform, Anchor.CenterRight),
+                "", textColor: GUIStyle.TextColorNormal, font: GUIStyle.Font, textAlignment: Alignment.CenterRight)
             {
-                TextGetter = () =>
-                {
-                    return rechargeStr.Replace("[rate]", ((int)((rechargeSpeed / maxRechargeSpeed) * 100.0f)).ToString());
-                }
+                TextGetter = () => $"{(int)MathF.Round(currPowerConsumption)} {kW} ({(int)MathF.Round(RechargeRatio * 100)} %)"
             };
+            if (rechargeText.TextSize.X > rechargeText.Rect.Width) { rechargeText.Font = GUIStyle.SmallFont; }
 
-            rechargeSpeedSlider = new GUIScrollBar(new RectTransform(new Vector2(0.9f, 0.4f), upperArea.RectTransform, Anchor.BottomCenter), 
-                barSize: 0.15f, style: "DeviceSlider")
+            var rechargeSliderContainer = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.4f), upperArea.RectTransform, Anchor.BottomCenter));
+            
+            if (RechargeWarningIndicatorLow > 0.0f || RechargeWarningIndicatorHigh > 0.0f)
+            {
+                var rechargeSliderFill = new GUICustomComponent(new RectTransform(new Vector2(0.95f, 0.9f), rechargeSliderContainer.RectTransform, Anchor.Center), (SpriteBatch sb, GUICustomComponent c) =>
+                {
+                    if (RechargeWarningIndicatorLow > 0.0f)
+                    {
+                        float warningLow = c.Rect.Width * RechargeWarningIndicatorLow;
+                        GUI.DrawRectangle(sb, new Vector2(c.Rect.X + warningLow, c.Rect.Y), new Vector2(c.Rect.Width - warningLow, c.Rect.Height), GUIStyle.Orange, isFilled: true);
+                    }
+                    if (RechargeWarningIndicatorHigh > 0.0f)
+                    {
+                        float warningHigh = c.Rect.Width * RechargeWarningIndicatorHigh;
+                        GUI.DrawRectangle(sb, new Vector2(c.Rect.X + warningHigh, c.Rect.Y), new Vector2(c.Rect.Width - warningHigh, c.Rect.Height), GUIStyle.Red, isFilled: true);
+                    }
+                });
+            }
+
+            rechargeSpeedSlider = new GUIScrollBar(new RectTransform(Vector2.One, rechargeSliderContainer.RectTransform, Anchor.Center), 
+                barSize: 0.15f, style: "DeviceSliderSeeThrough")
             {
                 Step = 0.1f,
                 OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
@@ -61,19 +86,19 @@ namespace Barotrauma.Items.Components
             
             // lower area --------------------------
 
-            var textArea = new GUIFrame(new RectTransform(new Vector2(1, 0.4f), lowerArea.RectTransform), style: null);
-            var chargeLabel = new GUITextBlock(new RectTransform(new Vector2(0.4f, 0.0f), textArea.RectTransform, Anchor.CenterLeft),
-                TextManager.Get("charge"), textColor: GUI.Style.TextColor, font: GUI.SubHeadingFont, textAlignment: Alignment.CenterLeft)
+            var chargeTextContainer = new GUIFrame(new RectTransform(new Vector2(1, 0.4f), lowerArea.RectTransform), style: null);
+            var chargeLabel = new GUITextBlock(new RectTransform(new Vector2(0.4f, 0.0f), chargeTextContainer.RectTransform, Anchor.CenterLeft),
+                TextManager.Get("charge"), textColor: GUIStyle.TextColorNormal, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft)
             {
                 ToolTip = TextManager.Get("PowerTransferTipPower")
             };
-            string kWmin = TextManager.Get("kilowattminute");
-            var chargeText = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), textArea.RectTransform, Anchor.CenterRight), 
-                "", textColor: GUI.Style.TextColor, font: GUI.Font, textAlignment: Alignment.CenterRight)
+            LocalizedString kWmin = TextManager.Get("kilowattminute");
+            var chargeText = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), chargeTextContainer.RectTransform, Anchor.CenterRight), 
+                "", textColor: GUIStyle.TextColorNormal, font: GUIStyle.Font, textAlignment: Alignment.CenterRight)
             {
-                TextGetter = () => $"{(int)Math.Round(charge)}/{(int)capacity} {kWmin} ({(int)Math.Round(MathUtils.Percentage(charge, capacity))} %)"
+                TextGetter = () => $"{(int)MathF.Round(charge)}/{(int)capacity} {kWmin} ({(int)MathF.Round(MathUtils.Percentage(charge, capacity))} %)"
             };
-            if (chargeText.TextSize.X > chargeText.Rect.Width) { chargeText.Font = GUI.SmallFont; }
+            if (chargeText.TextSize.X > chargeText.Rect.Width) { chargeText.Font = GUIStyle.SmallFont; }
 
             chargeIndicator = new GUIProgressBar(new RectTransform(new Vector2(1.1f, 0.5f), lowerArea.RectTransform, Anchor.BottomCenter)
             {
@@ -138,16 +163,16 @@ namespace Barotrauma.Items.Components
                 indicatorSize * item.Scale, Color.Black, depth: item.SpriteDepth - 0.000015f);
         }
 
-        public void ClientWrite(IWriteMessage msg, object[] extraData)
+        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData)
         {
             msg.WriteRangedInteger((int)(rechargeSpeed / MaxRechargeSpeed * 10), 0, 10);
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             if (correctionTimer > 0.0f)
             {
-                StartDelayedCorrection(type, msg.ExtractBits(4 + 8), sendingTime);
+                StartDelayedCorrection(msg.ExtractBits(4 + 8), sendingTime);
                 return;
             }
 

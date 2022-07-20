@@ -26,7 +26,7 @@ namespace Barotrauma
 
         private readonly List<Affliction> huskInfection = new List<Affliction>();
 
-        [Serialize(0f, true), Editable]
+        [Serialize(0f, IsPropertySaveable.Yes), Editable]
         public override float Strength
         {
             get { return _strength; }
@@ -41,9 +41,11 @@ namespace Barotrauma
                 if (previousValue > 0.0f && value <= 0.0f)
                 {
                     DeactivateHusk();
+                    highestStrength = 0;
                 }
             }
         }
+        private float highestStrength;
 
         public InfectionState State
         {
@@ -52,27 +54,35 @@ namespace Barotrauma
             {
                 if (state == value) { return; }
                 state = value;
-                if (character != null && character == Character.Controlled)
-                {
-                    UpdateMessages();
-                }
             }
         }
 
-        private float DormantThreshold => (Prefab as AfflictionPrefabHusk)?.DormantThreshold ?? Prefab.MaxStrength * 0.5f;
-        private float ActiveThreshold => (Prefab as AfflictionPrefabHusk)?.ActiveThreshold ?? Prefab.MaxStrength * 0.75f;
+        private readonly AfflictionPrefabHusk HuskPrefab;
 
-        private float TransitionThreshold => (Prefab as AfflictionPrefabHusk)?.TransitionThreshold ?? Prefab.MaxStrength * 0.75f;
+        private float DormantThreshold => HuskPrefab.DormantThreshold;
+        private float ActiveThreshold => HuskPrefab.ActiveThreshold;
+        private float TransitionThreshold => HuskPrefab.TransitionThreshold;
+        private float TransformThresholdOnDeath => HuskPrefab.TransformThresholdOnDeath;
 
-        private float TransformThresholdOnDeath => (Prefab as AfflictionPrefabHusk)?.TransformThresholdOnDeath ?? ActiveThreshold;
-
-        public AfflictionHusk(AfflictionPrefab prefab, float strength) : base(prefab, strength) { }
+        public AfflictionHusk(AfflictionPrefab prefab, float strength) : base(prefab, strength)
+        {
+            HuskPrefab = prefab as AfflictionPrefabHusk;
+            if (HuskPrefab == null)
+            {
+                DebugConsole.ThrowError("Error in husk affliction definition: the prefab is of wrong type!");
+            }
+        }
 
         public override void Update(CharacterHealth characterHealth, Limb targetLimb, float deltaTime)
         {
+            if (HuskPrefab == null) { return; }
             base.Update(characterHealth, targetLimb, deltaTime);
+            highestStrength = Math.Max(_strength, highestStrength);
             character = characterHealth.Character;
             if (character == null) { return; }
+
+            UpdateMessages();
+
             if (!subscribedToDeathEvent)
             {
                 character.OnDeath += CharacterDead;
@@ -91,7 +101,7 @@ namespace Barotrauma
                 DeactivateHusk();
                 if (Prefab is AfflictionPrefabHusk { CauseSpeechImpediment: true })
                 {
-                    character.SpeechImpediment = 100;
+                    character.SpeechImpediment = 30;
                 }
                 State = InfectionState.Transition;
             }
@@ -99,7 +109,11 @@ namespace Barotrauma
             {
                 if (State != InfectionState.Active && stun)
                 {
-                    character.SetStun(Rand.Range(2, 4));
+                    character.SetStun(Rand.Range(2f, 3f));
+                }
+                if (Prefab is AfflictionPrefabHusk { CauseSpeechImpediment: true })
+                {
+                    character.SpeechImpediment = 100;
                 }
                 State = InfectionState.Active;
                 ActivateHusk();
@@ -113,7 +127,57 @@ namespace Barotrauma
             }
         }
 
-        partial void UpdateMessages();
+        private InfectionState? prevDisplayedMessage;
+        private void UpdateMessages()
+        {
+            if (Prefab is AfflictionPrefabHusk { SendMessages: false }) { return; }
+            if (prevDisplayedMessage.HasValue && prevDisplayedMessage.Value == State) { return; }
+            if (highestStrength > Strength) { return; }
+
+            switch (State)
+            {
+                case InfectionState.Dormant:
+                    if (Strength < DormantThreshold * 0.5f)
+                    {
+                        return;
+                    }
+                    if (character == Character.Controlled)
+                    {
+#if CLIENT
+                        GUI.AddMessage(TextManager.Get("HuskDormant"), GUIStyle.Red);
+#endif
+                    }
+                    else if (character.IsBot)
+                    {
+                        character.Speak(TextManager.Get("dialoghuskdormant").Value, delay: Rand.Range(0.5f, 5.0f), identifier: "huskdormant".ToIdentifier());
+                    }
+                    break;
+                case InfectionState.Transition:
+                    if (character == Character.Controlled)
+                    {
+#if CLIENT
+                        GUI.AddMessage(TextManager.Get("HuskCantSpeak"), GUIStyle.Red);
+#endif
+                    }
+                    else if (character.IsBot)
+                    {
+                        character.Speak(TextManager.Get("dialoghuskcantspeak").Value, delay: Rand.Range(0.5f, 5.0f), identifier: "huskcantspeak".ToIdentifier());
+                    }
+                    break;
+                case InfectionState.Active:
+#if CLIENT
+                    if (character == Character.Controlled && character.Params.UseHuskAppendage)
+                    {
+                        GUI.AddMessage(TextManager.GetWithVariable("HuskActivate", "[Attack]", GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Attack)), GUIStyle.Red);
+                    }
+#endif
+                    break;
+                case InfectionState.Final:
+                default:
+                    break;
+            }
+            prevDisplayedMessage = State;
+        }
 
         private void ApplyDamage(float deltaTime, bool applyForce)
         {
@@ -174,7 +238,8 @@ namespace Barotrauma
         private void CharacterDead(Character character, CauseOfDeath causeOfDeath)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
-            if (Strength < TransformThresholdOnDeath || character.Removed) 
+            if (Strength < TransformThresholdOnDeath || character.Removed || 
+                character.CharacterHealth.GetAllAfflictions().Any(a => a.GetActiveEffect()?.BlockTransformation.Contains(Prefab.Identifier) ?? false)) 
             {
                 UnsubscribeFromDeathEvent();
                 return; 
@@ -193,7 +258,7 @@ namespace Barotrauma
             CoroutineManager.StartCoroutine(CreateAIHusk());
         }
 
-        private IEnumerable<object> CreateAIHusk()
+        private IEnumerable<CoroutineStatus> CreateAIHusk()
         {
             //character already in remove queue (being removed by something else, for example a modded affliction that uses AfflictionHusk as the base)
             // -> don't spawn the AI husk
@@ -201,12 +266,14 @@ namespace Barotrauma
             {
                 yield return CoroutineStatus.Success;
             }
-
+#if SERVER
+            var client = GameMain.Server?.ConnectedClients.FirstOrDefault(c => c.Character == character);
+#endif
             character.Enabled = false;
-            Entity.Spawner.AddToRemoveQueue(character);
+            Entity.Spawner.AddEntityToRemoveQueue(character);
             UnsubscribeFromDeathEvent();
 
-            string huskedSpeciesName = GetHuskedSpeciesName(character.SpeciesName, Prefab as AfflictionPrefabHusk);
+            Identifier huskedSpeciesName = GetHuskedSpeciesName(character.SpeciesName, Prefab as AfflictionPrefabHusk);
             CharacterPrefab prefab = CharacterPrefab.FindBySpeciesName(huskedSpeciesName);
 
             if (prefab == null)
@@ -222,8 +289,8 @@ namespace Barotrauma
             if (huskCharacterInfo != null)
             {
                 var bodyTint = GetBodyTint();
-                huskCharacterInfo.SkinColor =
-                        Color.Lerp(huskCharacterInfo.SkinColor, bodyTint.Opaque(), bodyTint.A / 255.0f);
+                huskCharacterInfo.Head.SkinColor =
+                        Color.Lerp(huskCharacterInfo.Head.SkinColor, bodyTint.Opaque(), bodyTint.A / 255.0f);
             }
 
             var husk = Character.Create(huskedSpeciesName, character.WorldPosition, ToolBox.RandomSeed(8), huskCharacterInfo, isRemotePlayer: false, hasAi: true);
@@ -238,7 +305,6 @@ namespace Barotrauma
                 if (huskPrefab.ControlHusk)
                 {
 #if SERVER
-                    var client = GameMain.Server?.ConnectedClients.FirstOrDefault(c => c.CharacterInfo.Character == character);
                     if (client != null)
                     {
                         GameMain.Server.SetClientCharacter(client, husk);
@@ -271,11 +337,13 @@ namespace Barotrauma
 
             if ((Prefab as AfflictionPrefabHusk)?.TransferBuffs ?? false)
             {
-                foreach (Affliction affliction in character.CharacterHealth.Afflictions)
+                foreach (Affliction affliction in character.CharacterHealth.GetAllAfflictions())
                 {
                     if (affliction.Prefab.IsBuff)
                     {
-                        husk.CharacterHealth.ApplyAffliction(null, affliction.Prefab.Instantiate(affliction.Strength));
+                        husk.CharacterHealth.ApplyAffliction(
+                            character.CharacterHealth.GetAfflictionLimb(affliction), 
+                            affliction.Prefab.Instantiate(affliction.Strength));
                     }
                 }
             }
@@ -296,7 +364,7 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        public static List<Limb> AttachHuskAppendage(Character character, string afflictionIdentifier, XElement appendageDefinition = null, Ragdoll ragdoll = null)
+        public static List<Limb> AttachHuskAppendage(Character character, Identifier afflictionIdentifier, ContentXElement appendageDefinition = null, Ragdoll ragdoll = null)
         {
             var appendage = new List<Limb>();
             if (!(AfflictionPrefab.List.FirstOrDefault(ap => ap.Identifier == afflictionIdentifier) is AfflictionPrefabHusk matchingAffliction))
@@ -304,26 +372,26 @@ namespace Barotrauma
                 DebugConsole.ThrowError($"Could not find an affliction of type 'huskinfection' that matches the affliction '{afflictionIdentifier}'!");
                 return appendage;
             }
-            string nonhuskedSpeciesName = GetNonHuskedSpeciesName(character.SpeciesName, matchingAffliction);
-            string huskedSpeciesName = GetHuskedSpeciesName(nonhuskedSpeciesName, matchingAffliction);
+            Identifier nonhuskedSpeciesName = GetNonHuskedSpeciesName(character.SpeciesName, matchingAffliction);
+            Identifier huskedSpeciesName = GetHuskedSpeciesName(nonhuskedSpeciesName, matchingAffliction);
             CharacterPrefab huskPrefab = CharacterPrefab.FindBySpeciesName(huskedSpeciesName);
-            if (huskPrefab?.XDocument == null)
+            if (huskPrefab?.ConfigElement == null)
             {
                 DebugConsole.ThrowError($"Failed to find the config file for the husk infected species with the species name '{huskedSpeciesName}'!");
                 return appendage;
             }
-            var mainElement = huskPrefab.XDocument.Root.IsOverride() ? huskPrefab.XDocument.Root.FirstElement() : huskPrefab.XDocument.Root;
+            var mainElement = huskPrefab.ConfigElement;
             var element = appendageDefinition;
             if (element == null)
             {
-                element = mainElement.GetChildElements("huskappendage").FirstOrDefault(e => e.GetAttributeString("affliction", string.Empty).Equals(afflictionIdentifier));
+                element = mainElement.GetChildElements("huskappendage").FirstOrDefault(e => e.GetAttributeIdentifier("affliction", Identifier.Empty) == afflictionIdentifier);
             }
             if (element == null)
             {
                 DebugConsole.ThrowError($"Error in '{huskPrefab.FilePath}': Failed to find a huskappendage that matches the affliction with an identifier '{afflictionIdentifier}'!");
                 return appendage;
             }
-            string pathToAppendage = element.GetAttributeString("path", string.Empty);
+            ContentPath pathToAppendage = element.GetAttributeContentPath("path") ?? ContentPath.Empty;
             XDocument doc = XMLExtensions.TryLoadXml(pathToAppendage);
             if (doc == null) { return appendage; }
             if (ragdoll == null)
@@ -334,10 +402,12 @@ namespace Barotrauma
             {
                 ragdoll.Flip();
             }
-            var limbElements = doc.Root.Elements("limb").ToDictionary(e => e.GetAttributeString("id", null), e => e);
-            foreach (var jointElement in doc.Root.Elements("joint"))
+
+            var root = doc.Root.FromPackage(pathToAppendage.ContentPackage);
+            var limbElements = root.GetChildElements("limb").ToDictionary(e => e.GetAttributeString("id", null), e => e);
+            foreach (var jointElement in root.GetChildElements("joint"))
             {
-                if (limbElements.TryGetValue(jointElement.GetAttributeString("limb2", null), out XElement limbElement))
+                if (limbElements.TryGetValue(jointElement.GetAttributeString("limb2", null), out ContentXElement limbElement))
                 {
                     var jointParams = new RagdollParams.JointParams(jointElement, ragdoll.RagdollParams);
                     Limb attachLimb = null;
@@ -378,15 +448,15 @@ namespace Barotrauma
             return appendage;
         }
 
-        public static string GetHuskedSpeciesName(string speciesName, AfflictionPrefabHusk prefab)
+        public static Identifier GetHuskedSpeciesName(Identifier speciesName, AfflictionPrefabHusk prefab)
         {
             return prefab.HuskedSpeciesName.Replace(AfflictionPrefabHusk.Tag, speciesName);
         }
 
-        public static string GetNonHuskedSpeciesName(string huskedSpeciesName, AfflictionPrefabHusk prefab)
+        public static Identifier GetNonHuskedSpeciesName(Identifier huskedSpeciesName, AfflictionPrefabHusk prefab)
         {
-            string nonTag = prefab.HuskedSpeciesName.Remove(AfflictionPrefabHusk.Tag);
-            return huskedSpeciesName.ToLowerInvariant().Remove(nonTag);
+            Identifier nonTag = prefab.HuskedSpeciesName.Remove(AfflictionPrefabHusk.Tag);
+            return huskedSpeciesName.Remove(nonTag);
         }
     }
 }

@@ -1,16 +1,27 @@
-﻿using System;
-using System.ComponentModel;
-using System.Linq;
+﻿using Barotrauma.Networking;
+using System;
 using System.Xml.Linq;
-using Barotrauma.Networking;
 
 namespace Barotrauma.Items.Components
 {
     internal partial class Growable
     {
-        partial void LoadVines(XElement element)
+        private readonly struct EventData : IEventData
         {
-            foreach (XElement subElement in element.Elements())
+            public readonly int Offset;
+            
+            public EventData(int offset)
+            {
+                Offset = offset;
+            }
+        }
+        
+        private const int serverHealthUpdateDelay = 10;
+        private int serverHealthUpdateTimer;
+
+        partial void LoadVines(ContentXElement element)
+        {
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -24,11 +35,12 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
             msg.WriteRangedSingle(Health, 0f, (float) MaxHealth, 8);
-            if (extraData != null && extraData.Length >= 3 && extraData[2] is int offset)
+            if (TryExtractEventData(extraData, out EventData eventData))
             {
+                int offset = eventData.Offset;
                 int amountToSend = Math.Min(Vines.Count - offset, VineChunkSize);
                 msg.WriteRangedInteger(offset, -1, MaximumVines);
                 msg.WriteRangedInteger(amountToSend, 0, VineChunkSize);

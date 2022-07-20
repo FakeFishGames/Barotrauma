@@ -16,7 +16,7 @@ namespace Barotrauma.Abilities
         // seems like a minor issue for now
         private readonly List<Item> openedContainers = new List<Item>();
 
-        public CharacterAbilityRegenerateLoot(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityRegenerateLoot(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             randomChance = abilityElement.GetAttributeFloat("randomchance", 1f);
         }

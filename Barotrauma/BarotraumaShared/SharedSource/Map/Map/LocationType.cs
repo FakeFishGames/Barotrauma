@@ -1,29 +1,29 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.IO;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Globalization;
-using Barotrauma.IO;
 using System.Linq;
-using System.Xml.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
-    class LocationType
+    class LocationType : PrefabWithUintIdentifier
     {
-        public static readonly List<LocationType> List = new List<LocationType>();
+        public static readonly PrefabCollection<LocationType> Prefabs = new PrefabCollection<LocationType>();
+
         private readonly List<string> names;
         private readonly List<Sprite> portraits = new List<Sprite>();
 
         //<name, commonness>
-        private readonly List<Tuple<JobPrefab, float>> hireableJobs;
+        private readonly ImmutableArray<(Identifier Name, float Commonness)> hireableJobs;
         private readonly float totalHireableWeight;
-        
-        public Dictionary<int, float> CommonnessPerZone = new Dictionary<int, float>();
 
-        public readonly string Identifier;
-        public readonly string Name;
+        public readonly Dictionary<int, float> CommonnessPerZone = new Dictionary<int, float>();
+        public readonly Dictionary<int, int> MinCountPerZone = new Dictionary<int, int>();
+
+        public readonly LocalizedString Name;
 
         public readonly float BeaconStationChance;
 
@@ -31,8 +31,8 @@ namespace Barotrauma
 
         public readonly List<LocationTypeChange> CanChangeTo = new List<LocationTypeChange>();
 
-        public readonly List<string> MissionIdentifiers = new List<string>();
-        public readonly List<string> MissionTags = new List<string>();
+        public readonly ImmutableArray<Identifier> MissionIdentifiers;
+        public readonly ImmutableArray<Identifier> MissionTags;
 
         public readonly List<string> HideEntitySubcategories = new List<string>();
 
@@ -44,7 +44,15 @@ namespace Barotrauma
             private set;
         }
 
-        public List<string> NameFormats { get; private set; }
+        private ImmutableArray<string>? nameFormats = null;
+        public IReadOnlyList<string> NameFormats
+        {
+            get
+            {
+                nameFormats ??= TextManager.GetAll($"LocationNameFormat.{Identifier}").ToImmutableArray();
+                return nameFormats;
+            }
+        }
 
         public bool HasHireableCharacters
         {
@@ -56,7 +64,7 @@ namespace Barotrauma
             get;
             private set;
         }
-        
+
         public string ReplaceInRadiation { get; }
 
         public Sprite Sprite { get; private set; }
@@ -68,45 +76,63 @@ namespace Barotrauma
             private set;
         }
 
+        public float StoreMaxReputationModifier { get; } = 0.1f;
+        public float StoreSellPriceModifier { get; } = 0.8f;
+        public float DailySpecialPriceModifier { get; } = 0.5f;
+        public float RequestGoodPriceModifier { get; } = 1.5f;
+        public int StoreInitialBalance { get; } = 5000;
+        /// <summary>
+        /// In percentages
+        /// </summary>
+        public int StorePriceModifierRange { get; } = 5;
+        public int DailySpecialsCount { get; } = 1;
+        public int RequestedGoodsCount { get; } = 1;
+
         public override string ToString()
         {
             return $"LocationType (" + Identifier + ")";
         }
 
-        private LocationType(XElement element)
+        public LocationType(ContentXElement element, LocationTypesFile file) : base(file, element.GetAttributeIdentifier("identifier", element.Name.LocalName))
         {
-            Identifier = element.GetAttributeString("identifier", element.Name.ToString());
-            Name = TextManager.Get("LocationName." + Identifier, fallBackTag: "unknown");
+            Name = TextManager.Get("LocationName." + Identifier, "unknown");
 
             BeaconStationChance = element.GetAttributeFloat("beaconstationchance", 0.0f);
 
-            NameFormats = TextManager.GetAll("LocationNameFormat." + Identifier);
             UseInMainMenu = element.GetAttributeBool("useinmainmenu", false);
             HasOutpost = element.GetAttributeBool("hasoutpost", true);
             IsEnterable = element.GetAttributeBool("isenterable", HasOutpost);
 
-            MissionIdentifiers = element.GetAttributeStringArray("missionidentifiers", new string[0]).ToList();
-            MissionTags = element.GetAttributeStringArray("missiontags", new string[0]).ToList();
+            MissionIdentifiers = element.GetAttributeIdentifierArray("missionidentifiers", Array.Empty<Identifier>()).ToImmutableArray();
+            MissionTags = element.GetAttributeIdentifierArray("missiontags", Array.Empty<Identifier>()).ToImmutableArray();
 
-            HideEntitySubcategories = element.GetAttributeStringArray("hideentitysubcategories", new string[0]).ToList();
+            HideEntitySubcategories = element.GetAttributeStringArray("hideentitysubcategories", Array.Empty<string>()).ToList();
 
             ReplaceInRadiation = element.GetAttributeString(nameof(ReplaceInRadiation).ToLower(), "");
 
             string teamStr = element.GetAttributeString("outpostteam", "FriendlyNPC");
             Enum.TryParse(teamStr, out OutpostTeam);
 
-            string nameFile = element.GetAttributeString("namefile", "Content/Map/locationNames.txt");
-            try
+            string[] rawNamePaths = element.GetAttributeStringArray("namefile", new string[] { "Content/Map/locationNames.txt" });
+            names = new List<string>();
+            foreach (string rawPath in rawNamePaths)
             {
-                names = File.ReadAllLines(nameFile).ToList();
+                try
+                {
+                    var path = ContentPath.FromRaw(element.ContentPackage, rawPath.Trim());
+                    names.AddRange(File.ReadAllLines(path.Value).ToList());
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError($"Failed to read name file \"rawPath\" for location type \"{Identifier}\"!", e);
+                }
             }
-            catch (Exception e)
+            if (!names.Any())
             {
-                DebugConsole.ThrowError("Failed to read name file for location type \"" + Identifier + "\"!", e);
-                names = new List<string>() { "Name file not found" };
+                names.Add("ERROR: No names found");
             }
 
-            string[] commonnessPerZoneStrs = element.GetAttributeStringArray("commonnessperzone", new string[] { "" });
+            string[] commonnessPerZoneStrs = element.GetAttributeStringArray("commonnessperzone", Array.Empty<string>());
             foreach (string commonnessPerZoneStr in commonnessPerZoneStrs)
             {
                 string[] splitCommonnessPerZone = commonnessPerZoneStr.Split(':');                
@@ -114,37 +140,36 @@ namespace Barotrauma
                     !int.TryParse(splitCommonnessPerZone[0].Trim(), out int zoneIndex) ||
                     !float.TryParse(splitCommonnessPerZone[1].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float zoneCommonness))
                 {
-                    DebugConsole.ThrowError("Failed to read commonness values for location type \"" + Identifier + "\" - commonness should be given in the format \"zone0index: zone0commonness, zone1index: zone1commonness\"");
+                    DebugConsole.ThrowError("Failed to read commonness values for location type \"" + Identifier + "\" - commonness should be given in the format \"zone1index: zone1commonness, zone2index: zone2commonness\"");
                     break;
                 }
                 CommonnessPerZone[zoneIndex] = zoneCommonness;
             }
 
-            hireableJobs = new List<Tuple<JobPrefab, float>>();
-            foreach (XElement subElement in element.Elements())
+            string[] minCountPerZoneStrs = element.GetAttributeStringArray("mincountperzone", Array.Empty<string>());
+            foreach (string minCountPerZoneStr in minCountPerZoneStrs)
+            {
+                string[] splitMinCountPerZone = minCountPerZoneStr.Split(':');
+                if (splitMinCountPerZone.Length != 2 ||
+                    !int.TryParse(splitMinCountPerZone[0].Trim(), out int zoneIndex) ||
+                    !int.TryParse(splitMinCountPerZone[1].Trim(), out int minCount))
+                {
+                    DebugConsole.ThrowError("Failed to read minimum count values for location type \"" + Identifier + "\" - minimum counts should be given in the format \"zone1index: zone1mincount, zone2index: zone2mincount\"");
+                    break;
+                }
+                MinCountPerZone[zoneIndex] = minCount;
+            }
+
+            var hireableJobs = new List<(Identifier, float)>();
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "hireable":
-                        string jobIdentifier = subElement.GetAttributeString("identifier", "");
-                        JobPrefab jobPrefab = null;
-                        if (jobIdentifier == "")
-                        {
-                            DebugConsole.ThrowError("Error in location type \""+ Identifier + "\" - hireable jobs should be configured using identifiers instead of names.");
-                        }
-                        else
-                        {
-                            jobPrefab = JobPrefab.Get(jobIdentifier.ToLowerInvariant());
-                        }
-                        if (jobPrefab == null)
-                        {
-                            DebugConsole.ThrowError("Error in  in location type " + Identifier + " - could not find a job with the identifier \"" + jobIdentifier + "\".");
-                            continue;
-                        }
+                        Identifier jobIdentifier = subElement.GetAttributeIdentifier("identifier", Identifier.Empty);
                         float jobCommonness = subElement.GetAttributeFloat("commonness", 1.0f);
                         totalHireableWeight += jobCommonness;
-                        Tuple<JobPrefab, float> hireableJob = new Tuple<JobPrefab, float>(jobPrefab, jobCommonness);
-                        hireableJobs.Add(hireableJob);
+                        hireableJobs.Add((jobIdentifier, jobCommonness));
                         break;
                     case "symbol":
                         Sprite = new Sprite(subElement, lazyLoad: true);
@@ -163,18 +188,29 @@ namespace Barotrauma
                             portraits.Add(portrait);
                         }
                         break;
+                    case "store":
+                        StoreMaxReputationModifier = subElement.GetAttributeFloat("maxreputationmodifier", StoreMaxReputationModifier);
+                        StoreSellPriceModifier = subElement.GetAttributeFloat("sellpricemodifier", StoreSellPriceModifier);
+                        DailySpecialPriceModifier = subElement.GetAttributeFloat("dailyspecialpricemodifier", DailySpecialPriceModifier);
+                        RequestGoodPriceModifier = subElement.GetAttributeFloat("requestgoodpricemodifier", RequestGoodPriceModifier);
+                        StoreInitialBalance = subElement.GetAttributeInt("initialbalance", StoreInitialBalance);
+                        StorePriceModifierRange = subElement.GetAttributeInt("pricemodifierrange", StorePriceModifierRange);
+                        DailySpecialsCount = subElement.GetAttributeInt("dailyspecialscount", DailySpecialsCount);
+                        RequestedGoodsCount = subElement.GetAttributeInt("requestedgoodscount", RequestedGoodsCount);
+                        break;
                 }
             }
+            this.hireableJobs = hireableJobs.ToImmutableArray();
         }
 
         public JobPrefab GetRandomHireable()
         {
-            float randFloat = Rand.Range(0.0f, totalHireableWeight, Rand.RandSync.Server);
+            float randFloat = Rand.Range(0.0f, totalHireableWeight, Rand.RandSync.ServerAndClient);
 
-            foreach (Tuple<JobPrefab, float> hireable in hireableJobs)
+            foreach ((Identifier jobIdentifier, float commonness) in hireableJobs)
             {
-                if (randFloat < hireable.Item2) return hireable.Item1;
-                randFloat -= hireable.Item2;
+                if (randFloat < commonness) { return JobPrefab.Prefabs[jobIdentifier]; }
+                randFloat -= commonness;
             }
 
             return null;
@@ -201,12 +237,13 @@ namespace Barotrauma
 
         public static LocationType Random(Random rand, int? zone = null, bool requireOutpost = false)
         {
-            Debug.Assert(List.Count > 0, "LocationType.list.Count == 0, you probably need to initialize LocationTypes");
+            Debug.Assert(Prefabs.Any(), "LocationType.list.Count == 0, you probably need to initialize LocationTypes");
 
-            List<LocationType> allowedLocationTypes = 
-                List.FindAll(lt => (!zone.HasValue || lt.CommonnessPerZone.ContainsKey(zone.Value)) && (!requireOutpost || lt.HasOutpost));
+            LocationType[] allowedLocationTypes =
+                Prefabs.Where(lt => (!zone.HasValue || lt.CommonnessPerZone.ContainsKey(zone.Value)) && (!requireOutpost || lt.HasOutpost))
+                    .OrderBy(p => p.UintIdentifier).ToArray();
 
-            if (allowedLocationTypes.Count == 0)
+            if (allowedLocationTypes.Length == 0)
             {
                 DebugConsole.ThrowError("Could not generate a random location type - no location types for the zone " + zone + " found!");
             }
@@ -215,82 +252,15 @@ namespace Barotrauma
             {
                 return ToolBox.SelectWeightedRandom(
                     allowedLocationTypes, 
-                    allowedLocationTypes.Select(a => a.CommonnessPerZone[zone.Value]).ToList(),
+                    allowedLocationTypes.Select(a => a.CommonnessPerZone[zone.Value]).ToArray(),
                     rand);
             }
             else
             {
-                return allowedLocationTypes[rand.Next() % allowedLocationTypes.Count];
+                return allowedLocationTypes[rand.Next() % allowedLocationTypes.Length];
             }
         }
 
-        public static void Init()
-        {
-            List.Clear();
-            var locationTypeFiles = GameMain.Instance.GetFilesOfType(ContentType.LocationTypes);
-            if (!locationTypeFiles.Any())
-            {
-                DebugConsole.ThrowError("No location types configured in any of the selected content packages. Attempting to load from the vanilla content package...");
-                locationTypeFiles = ContentPackage.GetFilesOfType(GameMain.VanillaContent.ToEnumerable(), ContentType.LocationTypes);
-                if (!locationTypeFiles.Any())
-                {
-                    throw new Exception("No location types configured in any of the selected content packages. Please try uninstalling mods or reinstalling the game.");
-                }
-            }
-
-            foreach (ContentFile file in locationTypeFiles)
-            {
-                XDocument doc = XMLExtensions.TryLoadXml(file.Path);
-                if (doc == null) { continue; }
-                var mainElement = doc.Root;
-                if (doc.Root.IsOverride())
-                {
-                    mainElement = doc.Root.FirstElement();
-                    DebugConsole.NewMessage($"Overriding all location types with '{file.Path}'", Color.Yellow);
-                    List.Clear();
-                }
-                else if (List.Any())
-                {
-                    DebugConsole.NewMessage($"Loading additional location types from file '{file.Path}'");
-                }
-                foreach (XElement sourceElement in mainElement.Elements())
-                {
-                    var element = sourceElement;
-                    bool allowOverriding = false;
-                    if (sourceElement.IsOverride())
-                    {
-                        element = sourceElement.FirstElement();
-                        allowOverriding = true;
-                    }
-                    string identifier = element.GetAttributeString("identifier", null);
-                    if (string.IsNullOrWhiteSpace(identifier))
-                    {
-                        DebugConsole.ThrowError($"Error in '{file.Path}': No identifier defined for {element.Name.ToString()}");
-                        continue;
-                    }
-                    var duplicate = List.FirstOrDefault(l => l.Identifier == identifier);
-                    if (duplicate != null)
-                    {
-                        if (allowOverriding)
-                        {
-                            List.Remove(duplicate);
-                            DebugConsole.NewMessage($"Overriding the location type with the identifier '{identifier}' with '{file.Path}'", Color.Yellow);
-                        }
-                        else
-                        {
-                            DebugConsole.ThrowError($"Error in '{file.Path}': Duplicate identifier defined with the identifier '{identifier}'");
-                            continue;
-                        }
-                    }
-                    LocationType locationType = new LocationType(element);
-                    List.Add(locationType);
-                }
-            }
-
-            foreach (EventSet eventSet in EventSet.List)
-            {
-                eventSet.CheckLocationTypeErrors();
-            }
-        }
+        public override void Dispose() { }
     }
 }

@@ -2,8 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using Color = Microsoft.Xna.Framework.Color;
 
 namespace Barotrauma
@@ -126,7 +126,7 @@ namespace Barotrauma
                 Vector2 newPoint = new Vector2(point.X, point.Y);
                 foreach (Vector2 otherPoint in toCheck.Concat(newPoints))
                 {
-                    float diffX = Math.Abs(newPoint.X - otherPoint.X), 
+                    float diffX = Math.Abs(newPoint.X - otherPoint.X),
                           diffY = Math.Abs(newPoint.Y - otherPoint.Y);
 
                     if (diffX <= treshold)
@@ -141,7 +141,7 @@ namespace Barotrauma
                 }
                 newPoints.Add(newPoint);
             }
-            
+
             return newPoints;
         }
 
@@ -274,7 +274,7 @@ namespace Barotrauma
                 return pts;
             }
         }
-        
+
         // Convert an RGB value into an HLS value.
         public static Vector3 RgbToHLS(this Color color)
         {
@@ -319,7 +319,7 @@ namespace Barotrauma
             if (hue < 240) return q1 + (q2 - q1) * (240 - hue) / 60;
             return q1;
         }
-        
+
         /// <summary>
         /// Convert a RGB value into a HSV value.
         /// </summary>
@@ -328,7 +328,7 @@ namespace Barotrauma
         /// <returns>
         /// Vector3 where X is the hue (0-360 or NaN)
         /// Y is the saturation (0-1)
-        /// Z is the value (0-1) 
+        /// Z is the value (0-1)
         /// </returns>
         public static Vector3 RGBToHSV(Color color)
         {
@@ -394,9 +394,17 @@ namespace Barotrauma
                 sourceColor.A - color.A);
         }
 
+        public static LocalizedString LimitString(LocalizedString str, GUIFont font, int maxWidth)
+        {
+            return new LimitLString(str, font, maxWidth);
+        }
+
+        public static LocalizedString LimitString(string str, GUIFont font, int maxWidth)
+            => LimitString((LocalizedString)str, font, maxWidth);
+
         public static string LimitString(string str, ScalableFont font, int maxWidth)
         {
-            if (maxWidth <= 0 || string.IsNullOrWhiteSpace(str)) return "";
+            if (maxWidth <= 0 || string.IsNullOrWhiteSpace(str)) { return ""; }
 
             float currWidth = font.MeasureString("...").X;
             for (int i = 0; i < str.Length; i++)
@@ -421,7 +429,7 @@ namespace Barotrauma
 #if DEBUG
                 DebugConsole.ThrowError("Empty color array passed to the GradientLerp method.\n" + Environment.StackTrace.CleanupStackTrace());
 #endif
-                GameAnalyticsManager.AddErrorEventOnce("ToolBox.GradientLerp:EmptyColorArray", GameAnalyticsSDK.Net.EGAErrorSeverity.Error,
+                GameAnalyticsManager.AddErrorEventOnce("ToolBox.GradientLerp:EmptyColorArray", GameAnalyticsManager.ErrorSeverity.Error,
                     "Empty color array passed to the GradientLerp method.\n" + Environment.StackTrace.CleanupStackTrace());
                 return Color.Black;
             }
@@ -434,130 +442,13 @@ namespace Barotrauma
             return Color.Lerp(gradient[(int)scaledT], gradient[(int)Math.Min(scaledT + 1, gradient.Length - 1)], (scaledT - (int)scaledT));
         }
 
-        public static string WrapText(string text, float lineLength, ScalableFont font, float textScale = 1.0f, bool playerInput = false) //TODO: could integrate this into the ScalableFont class directly
+        public static LocalizedString WrapText(LocalizedString text, float lineLength, GUIFont font, float textScale = 1.0f)
         {
-            Vector2 textSize = font.MeasureString(text);
-            if (textSize.X <= lineLength) { return text; }
-
-            if (!playerInput)
-            {
-                text = text.Replace("\n", " \n ");
-            }
-
-            List<string> words = new List<string>();
-            string currWord = "";
-
-            for (int i = 0; i < text.Length; i++)
-            {
-                if (TextManager.IsCJK(text[i].ToString()))
-                {
-                    if (currWord.Length > 0)
-                    {
-                        words.Add(currWord);
-                        currWord = "";
-                    }
-                    words.Add(text[i].ToString());
-                }
-                else if (text[i] == ' ')
-                {
-                    if (currWord.Length > 0)
-                    {
-                        words.Add(currWord);
-                        currWord = "";
-                    }
-                    words.Add(string.Empty);
-                }
-                else
-                {
-                    currWord += text[i];
-                }
-            }
-            if (currWord.Length > 0)
-            {
-                words.Add(currWord);
-                currWord = "";
-            }
-
-            StringBuilder wrappedText = new StringBuilder();
-            float linePos = 0f;
-            Vector2 spaceSize = font.MeasureString(" ") * textScale;
-            for (int i = 0; i < words.Count; ++i)
-            {
-                string currentWord = words[i];
-                if (currentWord.Length == 0)
-                {
-                    // space
-                    currentWord = " ";
-                }
-                else if (string.IsNullOrWhiteSpace(currentWord) && currentWord != "\n")
-                {
-                    continue;
-                }
-
-                Vector2 size = words[i].Length == 0 ? spaceSize : font.MeasureString(currentWord) * textScale;
-
-                if (size.X > lineLength)
-                {
-                    float splitSize = 0.0f;
-                    List<string> splitWord = new List<string>() { string.Empty };
-                    int k = 0;
-
-                    for (int j = 0; j < currentWord.Length; j++)
-                    {
-                        splitWord[k] += currentWord[j];
-                        splitSize += (font.MeasureString(currentWord[j].ToString()) * textScale).X;
-
-                        if (splitSize + linePos > lineLength)
-                        {
-                            linePos = splitSize = 0.0f;
-                            splitWord[k] = splitWord[k].Remove(splitWord[k].Length - 1) + "\n";
-                            if (splitWord[k].Length <= 1) { break; }
-                            j--;
-                            splitWord.Add(string.Empty);
-                            k++;
-                        }
-                    }
-
-                    for (int j = 0; j < splitWord.Count; j++)
-                    {
-                        wrappedText.Append(splitWord[j]);
-                    }
-
-                    linePos = splitSize;
-                }
-                else
-                {
-                    if (linePos + size.X < lineLength)
-                    {
-                        wrappedText.Append(currentWord);
-                        if (currentWord == "\n")
-                        {
-                            linePos = 0.0f;
-                        }
-                        else
-                        {
-                            linePos += size.X;
-                        }
-                    }
-                    else
-                    {
-                        wrappedText.Append("\n");
-                        wrappedText.Append(currentWord);
-
-                        linePos = size.X;
-                    }
-                }
-            }
-
-            if (!playerInput)
-            {
-                return wrappedText.ToString().Replace(" \n ", "\n");
-            }
-            else
-            {
-                return wrappedText.ToString();
-            }
+            return new WrappedLString(text, lineLength, font, textScale);
         }
+
+        public static string WrapText(string text, float lineLength, ScalableFont font, float textScale = 1.0f)
+            => font.WrapText(text, lineLength / textScale);
 
         public static void ParseConnectCommand(string[] args, out string name, out string endpoint, out UInt64 lobbyId)
         {
@@ -585,6 +476,35 @@ namespace Barotrauma
             if (b.Build > a.Build) { return true; }
             if (b.Build < a.Build) { return false; }
             return false;
+        }
+
+        public static void OpenFileWithShell(string filename)
+        {
+            ProcessStartInfo startInfo = new ProcessStartInfo()
+            {
+                FileName = filename,
+                UseShellExecute = true
+            };
+            Process.Start(startInfo);
+        }
+
+        public static Vector2 PaddingSizeParentRelative(RectTransform parent, float padding)
+        {
+            var (sizeX, sizeY) = parent.NonScaledSize.ToVector2();
+
+            float higher = sizeX,
+                  lower = sizeY;
+            bool swap = lower > higher;
+            if (swap) { (higher, lower) = (lower, higher); }
+
+            float diffY = lower - lower * padding;
+
+            float paddingX = (higher - diffY) / higher,
+                  paddingY = padding;
+
+            if (swap) { (paddingX, paddingY) = (paddingY, paddingX); }
+
+            return new Vector2(paddingX, paddingY);
         }
     }
 }

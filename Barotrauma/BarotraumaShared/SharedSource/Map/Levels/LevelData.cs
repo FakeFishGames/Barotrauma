@@ -20,7 +20,7 @@ namespace Barotrauma
 
         public readonly string Seed;
 
-        public float Difficulty;
+        public readonly float Difficulty;
 
         public readonly Biome Biome;
 
@@ -31,7 +31,19 @@ namespace Barotrauma
 
         public bool HasHuntingGrounds, OriginallyHadHuntingGrounds;
 
+        /// <summary>
+        /// Minimum difficulty of the level before hunting grounds can appear.
+        /// </summary>
+        public const float HuntingGroundsDifficultyThreshold = 25;
+
+        /// <summary>
+        /// Probability of hunting grounds appearing in 100% difficulty levels.
+        /// </summary>
+        public const float MaxHuntingGroundsProbability = 0.3f;
+
         public OutpostGenerationParams ForceOutpostGenerationParams;
+
+        public bool AllowInvalidOutpost;
 
         public readonly Point Size;
 
@@ -78,10 +90,10 @@ namespace Barotrauma
                 (int)MathUtils.Round(generationParams.Height, Level.GridCellSize));
         }
 
-        public LevelData(XElement element)
+        public LevelData(XElement element, float? forceDifficulty = null)
         {
             Seed = element.GetAttributeString("seed", "");
-            Difficulty = element.GetAttributeFloat("difficulty", 0.0f);
+            Difficulty = forceDifficulty ?? element.GetAttributeFloat("difficulty", 0.0f);
             Size = element.GetAttributePoint("size", new Point(1000));
             Enum.TryParse(element.GetAttributeString("type", "LocationConnection"), out Type);
 
@@ -92,7 +104,7 @@ namespace Barotrauma
             OriginallyHadHuntingGrounds = element.GetAttributeBool("originallyhadhuntinggrounds", HasHuntingGrounds);
 
             string generationParamsId = element.GetAttributeString("generationparams", "");
-            GenerationParams = LevelGenerationParams.LevelParams.Find(l => l.Identifier == generationParamsId || l.OldIdentifier == generationParamsId);
+            GenerationParams = LevelGenerationParams.LevelParams.Find(l => l.Identifier == generationParamsId || (!l.OldIdentifier.IsEmpty && l.OldIdentifier == generationParamsId));
             if (GenerationParams == null)
             {
                 DebugConsole.ThrowError($"Error while loading a level. Could not find level generation params with the ID \"{generationParamsId}\".");
@@ -106,18 +118,18 @@ namespace Barotrauma
             InitialDepth = element.GetAttributeInt("initialdepth", GenerationParams.InitialDepthMin);
 
             string biomeIdentifier = element.GetAttributeString("biome", "");
-            Biome = LevelGenerationParams.GetBiomes().FirstOrDefault(b => b.Identifier == biomeIdentifier || b.OldIdentifier == biomeIdentifier);
+            Biome = Biome.Prefabs.FirstOrDefault(b => b.Identifier == biomeIdentifier || (!b.OldIdentifier.IsEmpty && b.OldIdentifier == biomeIdentifier));
             if (Biome == null)
             {
                 DebugConsole.ThrowError($"Error in level data: could not find the biome \"{biomeIdentifier}\".");
-                Biome = LevelGenerationParams.GetBiomes().First();
+                Biome = Biome.Prefabs.First();
             }
 
             string[] prefabNames = element.GetAttributeStringArray("eventhistory", new string[] { });
-            EventHistory.AddRange(EventSet.PrefabList.Where(p => prefabNames.Any(n => p.Identifier.Equals(n, StringComparison.InvariantCultureIgnoreCase))));
+            EventHistory.AddRange(EventPrefab.Prefabs.Where(p => prefabNames.Any(n => p.Identifier == n)));
 
             string[] nonRepeatablePrefabNames = element.GetAttributeStringArray("nonrepeatableevents", new string[] { });
-            NonRepeatableEvents.AddRange(EventSet.PrefabList.Where(p => nonRepeatablePrefabNames.Any(n => p.Identifier.Equals(n, StringComparison.InvariantCultureIgnoreCase))));
+            NonRepeatableEvents.AddRange(EventPrefab.Prefabs.Where(p => nonRepeatablePrefabNames.Any(n => p.Identifier == n)));
         }
 
 
@@ -129,8 +141,8 @@ namespace Barotrauma
             Seed = locationConnection.Locations[0].BaseName + locationConnection.Locations[1].BaseName;
             Biome = locationConnection.Biome;
             Type = LevelType.LocationConnection;
-            GenerationParams = LevelGenerationParams.GetRandom(Seed, LevelType.LocationConnection, Biome);
             Difficulty = locationConnection.Difficulty;
+            GenerationParams = LevelGenerationParams.GetRandom(Seed, LevelType.LocationConnection, Difficulty, Biome.Identifier);
 
             float sizeFactor = MathUtils.InverseLerp(
                 MapGenerationParams.Instance.SmallLevelConnectionLength,
@@ -143,27 +155,29 @@ namespace Barotrauma
 
             var rand = new MTRandom(ToolBox.StringToInt(Seed));
             InitialDepth = (int)MathHelper.Lerp(GenerationParams.InitialDepthMin, GenerationParams.InitialDepthMax, (float)rand.NextDouble());
-
-            //minimum difficulty of the level before hunting grounds can appear
-            float huntingGroundsDifficultyThreshold = 25;
-            //probability of hunting grounds appearing in 100% difficulty levels
-            float maxHuntingGroundsProbability = 0.3f;
-            HasHuntingGrounds = OriginallyHadHuntingGrounds = rand.NextDouble() < MathUtils.InverseLerp(huntingGroundsDifficultyThreshold, 100.0f, Difficulty) * maxHuntingGroundsProbability;
-
-            HasBeaconStation = !HasHuntingGrounds && rand.NextDouble() < locationConnection.Locations.Select(l => l.Type.BeaconStationChance).Max();              
+            if (Biome.IsEndBiome)
+            {
+                HasHuntingGrounds = false;
+                HasBeaconStation = false;
+            }
+            else
+            {
+                HasHuntingGrounds = OriginallyHadHuntingGrounds = rand.NextDouble() < MathUtils.InverseLerp(HuntingGroundsDifficultyThreshold, 100.0f, Difficulty) * MaxHuntingGroundsProbability;
+                HasBeaconStation = !HasHuntingGrounds && rand.NextDouble() < locationConnection.Locations.Select(l => l.Type.BeaconStationChance).Max();
+            }            
             IsBeaconActive = false;
         }
 
         /// <summary>
         /// Instantiates level data using the properties of the location
         /// </summary>
-        public LevelData(Location location)
+        public LevelData(Location location, float difficulty)
         {
             Seed = location.BaseName;
             Biome = location.Biome;
             Type = LevelType.Outpost;
-            GenerationParams = LevelGenerationParams.GetRandom(Seed, LevelType.Outpost, Biome);
-            Difficulty = 0.0f;
+            Difficulty = difficulty;
+            GenerationParams = LevelGenerationParams.GetRandom(Seed, LevelType.Outpost, Difficulty, Biome.Identifier);
 
             var rand = new MTRandom(ToolBox.StringToInt(Seed));
             int width = (int)MathHelper.Lerp(GenerationParams.MinWidth, GenerationParams.MaxWidth, (float)rand.NextDouble());
@@ -177,7 +191,7 @@ namespace Barotrauma
         {
             if (string.IsNullOrEmpty(seed))
             {
-                seed = Rand.Range(0, int.MaxValue, Rand.RandSync.Server).ToString();
+                seed = Rand.Range(0, int.MaxValue, Rand.RandSync.ServerAndClient).ToString();
             }
 
             Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
@@ -186,20 +200,22 @@ namespace Barotrauma
                 (requireOutpost ? LevelType.Outpost : LevelType.LocationConnection) :
                  generationParams.Type;
 
-            if (generationParams == null) { generationParams = LevelGenerationParams.GetRandom(seed, type); }
+            float selectedDifficulty = difficulty ?? Rand.Range(30.0f, 80.0f, Rand.RandSync.ServerAndClient);
+
+            if (generationParams == null) { generationParams = LevelGenerationParams.GetRandom(seed, type, selectedDifficulty); }
             var biome =
-                LevelGenerationParams.GetBiomes().FirstOrDefault(b => generationParams.AllowedBiomes.Contains(b)) ??
-                LevelGenerationParams.GetBiomes().GetRandom(Rand.RandSync.Server);
+                Biome.Prefabs.FirstOrDefault(b => generationParams?.AllowedBiomeIdentifiers.Contains(b.Identifier) ?? false) ??
+                Biome.Prefabs.GetRandom(Rand.RandSync.ServerAndClient);
 
             var levelData = new LevelData(
                 seed,
-                difficulty ?? Rand.Range(30.0f, 80.0f, Rand.RandSync.Server),
-                Rand.Range(0.0f, 1.0f, Rand.RandSync.Server),
+                selectedDifficulty,
+                Rand.Range(0.0f, 1.0f, Rand.RandSync.ServerAndClient),
                 generationParams,
                 biome);
             if (type == LevelType.LocationConnection)
             {
-                float beaconRng = Rand.Range(0.0f, 1.0f, Rand.RandSync.Server);
+                float beaconRng = Rand.Range(0.0f, 1.0f, Rand.RandSync.ServerAndClient);
                 levelData.HasBeaconStation = beaconRng < 0.5f;
                 levelData.IsBeaconActive = beaconRng > 0.25f;
             }

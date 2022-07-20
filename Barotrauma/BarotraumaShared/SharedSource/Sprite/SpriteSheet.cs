@@ -19,8 +19,8 @@ namespace Barotrauma
             get;
             private set;
         }
-        
-        public SpriteSheet(XElement element, string path = "", string file = "")
+
+        public SpriteSheet(ContentXElement element, string path = "", string file = "")
             : base(element, path, file)
         {
             int columnCount = Math.Max(element.GetAttributeInt("columns", 1), 1);

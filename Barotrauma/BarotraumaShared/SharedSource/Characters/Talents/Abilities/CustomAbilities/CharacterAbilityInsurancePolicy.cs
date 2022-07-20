@@ -12,9 +12,7 @@ namespace Barotrauma.Abilities
 
         private readonly int moneyPerMission;
 
-        private static List<Client> clientsAlreadyUsed = new List<Client>();
-
-        public CharacterAbilityInsurancePolicy(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityInsurancePolicy(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             moneyPerMission = abilityElement.GetAttributeInt("moneypermission", 0);
         }
@@ -23,7 +21,9 @@ namespace Barotrauma.Abilities
         {
             if (Character?.Info is CharacterInfo info)
             {
-                Character.GiveMoney(moneyPerMission * info.MissionsCompletedSinceDeath);
+                int totalAmount = moneyPerMission * info.MissionsCompletedSinceDeath;
+                Character.GiveMoney(totalAmount);
+                GameAnalyticsManager.AddMoneyGainedEvent(totalAmount, GameAnalyticsManager.MoneySource.Ability, CharacterTalent.Prefab.Identifier.Value);
             }
         }
     }

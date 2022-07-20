@@ -151,9 +151,8 @@ namespace Barotrauma
         /// </summary>
         public static void DrawPoint(this SpriteBatch spriteBatch, Vector2 position, Color color, float size = 1f)
         {
-            var scale = Vector2.One * size;
             var offset = new Vector2(0.5f) - new Vector2(size * 0.5f);
-            spriteBatch.Draw(GetTexture(spriteBatch), position + offset, null, color, 0.0f, Vector2.Zero, Vector2.One, SpriteEffects.None, 0);
+            spriteBatch.Draw(GetTexture(spriteBatch), position + offset, null, color, 0.0f, Vector2.Zero, new Vector2(size), SpriteEffects.None, 0);
         }
 
         public static void DrawCircle(this SpriteBatch spriteBatch, Vector2 center, float radius, int sides, Color color,

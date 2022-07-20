@@ -5,12 +5,15 @@ using System.Collections.Generic;
 namespace Barotrauma
 {
     class Event
-    {        
+    {
+        public event Action Finished;
         protected bool isFinished;
 
         protected readonly EventPrefab prefab;
         
         public EventPrefab Prefab => prefab;
+
+        public EventSet ParentSet { get; private set; }
 
         public Func<Level.InterestingPosition, bool> SpawnPosFilter;
 
@@ -42,23 +45,20 @@ namespace Barotrauma
             yield break;
         }
 
-        public virtual void Init(bool affectSubImmediately)
+        public virtual void Init(EventSet parentSet = null)
         {
+            ParentSet = parentSet;
         }
 
         public virtual void Update(float deltaTime)
         {
         }
 
-        public virtual void Finished()
+        public virtual void Finish()
         {
             isFinished = true;
-        }
-        
-        public virtual bool CanAffectSubImmediately(Level level)
-        {
-            return true;
-        }
+            Finished?.Invoke();
+        } 
 
         public virtual bool LevelMeetsRequirements()
         {

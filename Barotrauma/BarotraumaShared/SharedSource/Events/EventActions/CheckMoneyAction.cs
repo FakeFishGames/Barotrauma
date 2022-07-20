@@ -1,21 +1,45 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
     class CheckMoneyAction : BinaryOptionAction
     {
-        [Serialize(0, true)]
+        [Serialize(0, IsPropertySaveable.Yes)]
         public int Amount { get; set; }
 
-        public CheckMoneyAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element)
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier TargetTag { get; set; }
+
+        public CheckMoneyAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)
         {
         }
 
         protected override bool? DetermineSuccess()
         {
+            Client matchingClient = null;
+            bool hasTag = !TargetTag.IsEmpty;
+#if SERVER
+            IEnumerable<Entity> targets = ParentEvent.GetTargets(TargetTag);
+
+            if (hasTag)
+            {
+                foreach (Entity entity in targets)
+                {
+                    if (entity is Character && GameMain.Server?.ConnectedClients.FirstOrDefault(c => c.Character == entity) is { } matchingCharacter)
+                    {
+                        matchingClient = matchingCharacter;
+                        break;
+                    }
+                }
+            }
+#endif
+
             if (GameMain.GameSession?.GameMode is CampaignMode campaign)
             {
-                return campaign.Money >= Amount;
+                return !hasTag ? campaign.Bank.CanAfford(Amount) : campaign.GetWallet(matchingClient).CanAfford(Amount);
             }
             return false;
         }

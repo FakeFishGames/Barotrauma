@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -221,7 +222,7 @@ namespace Steamworks
 			}
 
 			// Remove it before we do anything, incase the continuation throws exceptions
-			ResultCallbacks.Remove( result.AsyncCall );
+			ResultCallbacks.Remove( result.AsyncCall, out _ );
 
 			// At this point whatever async routine called this 
 			// continues running.
@@ -262,7 +263,7 @@ namespace Steamworks
 			public bool server;
 		}
 
-		static Dictionary<ulong, ResultCallback> ResultCallbacks = new Dictionary<ulong, ResultCallback>();
+		static ConcurrentDictionary<ulong, ResultCallback> ResultCallbacks = new ConcurrentDictionary<ulong, ResultCallback>();
 
 		/// <summary>
 		/// Watch for a steam api call
@@ -305,6 +306,15 @@ namespace Steamworks
 			} );
 		}
 
+		private static void RemoveCallbacks(Func<KeyValuePair<ulong, ResultCallback>, bool> predicate)
+		{
+			var toRemove = ResultCallbacks.Where( predicate ).Select(kvp => kvp.Key).ToArray();
+			foreach (var key in toRemove)
+			{
+				ResultCallbacks.Remove(key, out _);
+			}
+		}
+		
 		internal static void ShutdownServer()
 		{
 			ServerPipe = 0;
@@ -314,8 +324,7 @@ namespace Steamworks
 				Callbacks[callback.Key].RemoveAll( x => x.server );
 			}
 
-			ResultCallbacks = ResultCallbacks.Where( x => !x.Value.server )
-											 .ToDictionary( x => x.Key, x => x.Value );
+			RemoveCallbacks(x => x.Value.server);
 		}
 
 		internal static void ShutdownClient()
@@ -327,8 +336,7 @@ namespace Steamworks
 				Callbacks[callback.Key].RemoveAll( x => !x.server );
 			}
 
-			ResultCallbacks = ResultCallbacks.Where( x => x.Value.server )
-											 .ToDictionary( x => x.Key, x => x.Value );
+			RemoveCallbacks(x => !x.Value.server);
 		}
 	}
 }

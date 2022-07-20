@@ -6,8 +6,8 @@
     karmadecaythreshold="50"
     karmaincrease="0.05"
     karmaincreasethreshold="50"
-    structurerepairkarmaincrease="0.01"
-    structuredamagekarmadecrease="0.05"
+    structurerepairkarmaincrease="0.005"
+    structuredamagekarmadecrease="0.025"
     itemrepairkarmaincrease="0.03"
     reactoroverheatkarmadecrease="0.5"
     reactormeltdownkarmadecrease="30"
@@ -25,15 +25,18 @@
     resetkarmabetweenrounds="true"
     dangerousitemstealkarmadecrease="15"
     dangerousitemstealbots="false"
-    ballastflorakarmaincrease="0.05" />
+    ballastflorakarmaincrease="0.05"
+    dangerousitemcontainkarmadecrease="5.0"
+    isdangerousitemcontainkarmadecreaseincremental="true"
+    maxdangerousitemcontainkarmadecrease="30" />
   <Preset
     name="Strict"
     karmadecay="0.08"
     karmadecaythreshold="50"
     karmaincrease="0.04"
     karmaincreasethreshold="45"
-    structurerepairkarmaincrease="0.01"
-    structuredamagekarmadecrease="0.2"
+    structurerepairkarmaincrease="0.005"
+    structuredamagekarmadecrease="0.1"
     itemrepairkarmaincrease="0.03"
     reactoroverheatkarmadecrease="1.0"
     reactormeltdownkarmadecrease="35"
@@ -51,7 +54,10 @@
     resetkarmabetweenrounds="true"
     dangerousitemstealkarmadecrease="15"
     dangerousitemstealbots="true"
-    ballastflorakarmaincrease="0.03" />
+    ballastflorakarmaincrease="0.03"
+    dangerousitemcontainkarmadecrease="5.0"
+    isdangerousitemcontainkarmadecreaseincremental="true"
+    maxdangerousitemcontainkarmadecrease="30" />
   <Preset
     name="Custom"
     karmadecay="0.08"
@@ -77,5 +83,8 @@
     resetkarmabetweenrounds="true"
     dangerousitemstealkarmadecrease="15"
     dangerousitemstealbots="false"
-    ballastflorakarmaincrease="0.05" />
+    ballastflorakarmaincrease="0.05"
+    dangerousitemcontainkarmadecrease="5.0"
+    isdangerousitemcontainkarmadecreaseincremental="true"
+    maxdangerousitemcontainkarmadecrease="30" />
 </KarmaManager>

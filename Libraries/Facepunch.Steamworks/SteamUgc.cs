@@ -29,14 +29,7 @@ namespace Steamworks
 			{
 				if (x.AppID == SteamClient.AppId)
 				{
-					OnDownloadItemResult?.Invoke(x.Result);
-
-					Ugc.Item item = new Ugc.Item(x.PublishedFileId);
-					if (item.IsInstalled && (onItemInstalled?.ContainsKey(x.PublishedFileId) ?? false))
-					{
-						onItemInstalled[x.PublishedFileId]?.Invoke();
-						onItemInstalled.Remove(x.PublishedFileId);
-					}
+					OnDownloadItemResult?.Invoke(x.Result, x.PublishedFileId);
 				}
 			}, server );
 			Dispatch.Install<ItemInstalled_t>(x =>
@@ -44,11 +37,6 @@ namespace Steamworks
 				if (x.AppID == SteamClient.AppId)
 				{
 					GlobalOnItemInstalled?.Invoke(x.PublishedFileId);
-					if (onItemInstalled?.ContainsKey(x.PublishedFileId) ?? false)
-					{
-						onItemInstalled[x.PublishedFileId]?.Invoke();
-						onItemInstalled.Remove(x.PublishedFileId);
-					}
 				}
 			}, server);
 		}
@@ -56,7 +44,7 @@ namespace Steamworks
 		/// <summary>
 		/// Posted after Download call
 		/// </summary>
-		public static event Action<Result> OnDownloadItemResult;
+		public static event Action<Result, ulong> OnDownloadItemResult;
 
 		public static async Task<bool> DeleteFileAsync( PublishedFileId fileId )
 		{
@@ -70,20 +58,8 @@ namespace Steamworks
 		/// <param name="fileId">The ID of the file you want to download</param>
 		/// <param name="highPriority">If true this should go straight to the top of the download list</param>
 		/// <returns>true if nothing went wrong and the download is started</returns>
-		public static bool Download( PublishedFileId fileId, Action onInstalled = null, bool highPriority = false )
+		public static bool Download( PublishedFileId fileId, bool highPriority = false )
 		{
-            if (onInstalled != null)
-            {
-                onItemInstalled ??= new Dictionary<PublishedFileId, Action>();
-                if (!onItemInstalled.ContainsKey(fileId))
-                {
-                    onItemInstalled.Add(fileId, onInstalled);
-                }
-                else
-                {
-                    onItemInstalled[fileId] += onInstalled;
-                }
-            }
 			return Internal.DownloadItem( fileId, highPriority );
 		}
 
@@ -104,7 +80,7 @@ namespace Steamworks
 
 			progress?.Invoke( 0.0f );
 
-			if ( Download( fileId, null, true ) == false )
+			if ( Download( fileId, highPriority: true ) == false )
 				return item.IsInstalled;
 
 			// Steam docs about Download:
@@ -114,20 +90,31 @@ namespace Steamworks
 
 			// Wait for DownloadItemResult_t
 			{
-				Action<Result> onDownloadStarted = null;
+				Action<Result, ulong> onDownloadStarted = null;
 
 				try
 				{
 					var downloadStarted = false;
 					
-					onDownloadStarted = r => downloadStarted = true;
+					onDownloadStarted = (r, id) => downloadStarted = true;
 					OnDownloadItemResult += onDownloadStarted;
 
+					int iters = 0;
 					while ( downloadStarted == false )
 					{
-						if ( ct.IsCancellationRequested )
-							break;
+						ct.ThrowIfCancellationRequested();
 
+						iters++;
+						if (iters >= 1000 / milisecondsUpdateDelay)
+						{
+							if (!item.IsDownloading && !item.IsInstalled)
+							{
+								//force download to start if it's not started
+								if ( Download( fileId, highPriority: true ) == false )
+									return item.IsInstalled;
+							}
+							iters = 0;
+						}
 						await Task.Delay( milisecondsUpdateDelay );
 					}
 				}
@@ -144,8 +131,7 @@ namespace Steamworks
 			{
 				while ( true )
 				{
-					if ( ct.IsCancellationRequested )
-						break;
+					ct.ThrowIfCancellationRequested();
 
 					progress?.Invoke( 0.2f + item.DownloadAmount * 0.8f );
 
@@ -199,11 +185,17 @@ namespace Steamworks
 			return result.Value.Result == Result.OK;
 		}
 
-		private static Dictionary<PublishedFileId, Action> onItemInstalled;
-
-		public static event Action<ulong> GlobalOnItemInstalled;
+		public static Action<ulong> GlobalOnItemInstalled;
 
 		public static uint NumSubscribedItems { get { return Internal.GetNumSubscribedItems(); } }
+
+		public static PublishedFileId[] GetSubscribedItems()
+		{
+			uint numSubscribed = NumSubscribedItems;
+			PublishedFileId[] ids = new PublishedFileId[numSubscribed];
+			Internal.GetSubscribedItems(ids, numSubscribed);
+			return ids;
+		}
 	}
 }
 

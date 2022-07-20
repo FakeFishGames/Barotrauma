@@ -7,7 +7,7 @@ namespace Barotrauma
     {
         public TraitorMissionResult(IReadMessage inc)
         {
-            MissionIdentifier = inc.ReadString();
+            MissionIdentifier = inc.ReadIdentifier();
             EndMessage = inc.ReadString();
             Success = inc.ReadBoolean();
             byte characterCount = inc.ReadByte();

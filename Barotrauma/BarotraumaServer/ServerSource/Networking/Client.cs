@@ -10,6 +10,9 @@ namespace Barotrauma.Networking
 
         public UInt16 LastRecvClientListUpdate = 0;
 
+        public UInt16 LastSentServerSettingsUpdate = 0;
+        public UInt16 LastRecvServerSettingsUpdate = 0;
+        
         public UInt16 LastRecvLobbyUpdate = 0;
 
         public UInt16 LastSentChatMsgID = 0; //last msg this client said
@@ -18,10 +21,10 @@ namespace Barotrauma.Networking
         public UInt16 LastSentEntityEventID = 0;
         public UInt16 LastRecvEntityEventID = 0;
 
-        public UInt16 LastRecvCampaignUpdate = 0;
+        public readonly Dictionary<MultiPlayerCampaign.NetFlags, UInt16> LastRecvCampaignUpdate = new Dictionary<MultiPlayerCampaign.NetFlags, ushort>();
         public UInt16 LastRecvCampaignSave = 0;
 
-        public Pair<UInt16, float> LastCampaignSaveSendTime;
+        public (UInt16 saveId, float time) LastCampaignSaveSendTime;
 
         public readonly List<ChatMessage> ChatMsgQueue = new List<ChatMessage>();
         public UInt16 LastChatMsgQueueID;
@@ -54,8 +57,8 @@ namespace Barotrauma.Networking
 
         public bool ReadyToStart;
 
-        public List<Pair<JobPrefab, int>> JobPreferences;
-        public Pair<JobPrefab, int> AssignedJob;
+        public List<JobVariant> JobPreferences;
+        public JobVariant AssignedJob;
 
         public float DeleteDisconnectedTimer;
 
@@ -70,6 +73,9 @@ namespace Barotrauma.Networking
                 characterInfo = value;
             }
         }
+
+        public string PendingName;
+
         public NetworkConnection Connection { get; set; }
 
         public bool SpectateOnly;
@@ -101,7 +107,7 @@ namespace Barotrauma.Networking
 
         partial void InitProjSpecific()
         {
-            JobPreferences = new List<Pair<JobPrefab, int>>();
+            JobPreferences = new List<JobVariant>();
 
             VoipQueue = new VoipQueue(ID, true, true);
             GameMain.Server.VoipServer.RegisterQueue(VoipQueue);
@@ -114,8 +120,14 @@ namespace Barotrauma.Networking
         {
             GameMain.Server.VoipServer.UnregisterQueue(VoipQueue);
             VoipQueue.Dispose();
-            characterInfo?.Remove();
-            characterInfo = null;
+            if (characterInfo != null)
+            {
+                if (characterInfo.Character == null || characterInfo.Character.Removed)
+                {
+                    characterInfo?.Remove();
+                    characterInfo = null;
+                }
+            }
         }
 
         public void InitClientSync()
@@ -133,12 +145,14 @@ namespace Barotrauma.Networking
 
         public static bool IsValidName(string name, ServerSettings serverSettings)
         {
+            if (string.IsNullOrWhiteSpace(name)) { return false; }
+            
             char[] disallowedChars = new char[] { ';', ',', '<', '>', '/', '\\', '[', ']', '"', '?' };
-            if (name.Any(c => disallowedChars.Contains(c))) return false;
+            if (name.Any(c => disallowedChars.Contains(c))) { return false; }
 
             foreach (char character in name)
             {
-                if (!serverSettings.AllowedClientNameChars.Any(charRange => (int)character >= charRange.First && (int)character <= charRange.Second)) return false;
+                if (!serverSettings.AllowedClientNameChars.Any(charRange => (int)character >= charRange.Start && (int)character <= charRange.End)) { return false; }
             }
 
             return true;
@@ -149,10 +163,14 @@ namespace Barotrauma.Networking
             return Connection.EndpointMatches(endPoint);
         }
 
-        public void SetPermissions(ClientPermissions permissions, List<DebugConsole.Command> permittedConsoleCommands)
+        public void SetPermissions(ClientPermissions permissions, IEnumerable<DebugConsole.Command> permittedConsoleCommands)
         {
             this.Permissions = permissions;
-            this.PermittedConsoleCommands = new List<DebugConsole.Command>(permittedConsoleCommands);
+            this.PermittedConsoleCommands.Clear();
+            foreach (var command in permittedConsoleCommands)
+            {
+                this.PermittedConsoleCommands.Add(command);
+            }
         }
 
         public void GivePermission(ClientPermissions permission)

@@ -11,6 +11,16 @@ namespace Barotrauma.Items.Components
 {
     partial class Wire : ItemComponent, IDrawableComponent, IServerSerializable, IClientSerializable
     {
+        private readonly struct ClientEventData : IEventData
+        {
+            public readonly int NodeCount;
+            
+            public ClientEventData(int nodeCount)
+            {
+                NodeCount = nodeCount;
+            }
+        }
+        
         public static Color higlightColor = Color.LightGreen;
         public static Color editorHighlightColor = Color.Yellow;
         public static Color editorSelectedColor = Color.Red;
@@ -62,7 +72,7 @@ namespace Barotrauma.Items.Components
                 if (width <= 0f) { return; }
                 RecalculateVertices(wire, width);
 
-                for (int i=0;i<vertices.Length;i++)
+                for (int i = 0; i < vertices.Length; i++)
                 {
                     shiftedVertices[i].Color = color;
                     shiftedVertices[i].Position = vertices[i].Position;
@@ -96,7 +106,7 @@ namespace Barotrauma.Items.Components
         private static int? selectedNodeIndex;
         private static int? highlightedNodeIndex;
 
-        [Serialize(0.3f, false)]
+        [Serialize(0.3f, IsPropertySaveable.No)]
         public float Width
         {
             get;
@@ -113,7 +123,7 @@ namespace Barotrauma.Items.Components
             get => draggingWire;
         }
 
-        partial void InitProjSpecific(XElement element)
+        partial void InitProjSpecific(ContentXElement element)
         {
             if (defaultWireSprite == null)
             {
@@ -123,7 +133,7 @@ namespace Barotrauma.Items.Components
                 };
             }
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 if (subElement.Name.ToString().Equals("wiresprite", StringComparison.OrdinalIgnoreCase))
                 {
@@ -135,7 +145,13 @@ namespace Barotrauma.Items.Components
             wireSprite = overrideSprite ?? defaultWireSprite;
         }
 
+
         public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
+        {
+            Draw(spriteBatch, editing, Vector2.Zero, itemDepth);
+        }
+
+        public void Draw(SpriteBatch spriteBatch, bool editing, Vector2 offset, float itemDepth = -1)
         {
             if (sections.Count == 0 && !IsActive || Hidden)
             {
@@ -155,6 +171,8 @@ namespace Barotrauma.Items.Components
             {
                 drawOffset = sub.DrawPosition + sub.HiddenSubPosition;
             }
+
+            drawOffset += offset;
 
             float baseDepth = UseSpriteDepth ? item.SpriteDepth : wireSprite.Depth;
             float depth = item.IsSelected ? 0.0f : SubEditorScreen.IsWiringMode() ? 0.02f : baseDepth + (item.ID % 100) * 0.000001f;// item.GetDrawDepth(wireSprite.Depth, wireSprite);
@@ -278,14 +296,13 @@ namespace Barotrauma.Items.Components
             WireSection.Draw(
                 spriteBatch, this,
                 start, endPos,
-                GUI.Style.Orange, depth + 0.00001f, 0.2f);
+                GUIStyle.Orange, depth + 0.00001f, 0.2f);
 
             WireSection.Draw(
                 spriteBatch, this,
                 start, start + (endPos - start) * 0.7f,
                 item.Color, depth, 0.3f);
         }
-
 
         public static void UpdateEditing(List<Wire> wires)
         {
@@ -509,6 +526,31 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public override void Move(Vector2 amount, bool ignoreContacts = false)
+        {
+            //only used in the sub editor, hence only in the client project
+            if (!item.IsSelected) { return; }
+
+            Vector2 wireNodeOffset = item.Submarine == null ? Vector2.Zero : item.Submarine.HiddenSubPosition + amount;            
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                if (i == 0 || i == nodes.Count - 1)
+                {
+                    if (connections[0]?.Item != null && !connections[0].Item.IsSelected && 
+                        (Submarine.RectContains(connections[0].Item.Rect, nodes[i] + wireNodeOffset) || Submarine.RectContains(connections[0].Item.Rect, nodes[i] + wireNodeOffset - amount)))
+                    {
+                        continue;
+                    }
+                    else if (connections[1]?.Item != null && !connections[1].Item.IsSelected && 
+                        (Submarine.RectContains(connections[1].Item.Rect, nodes[i] + wireNodeOffset) || Submarine.RectContains(connections[1].Item.Rect, nodes[i] + wireNodeOffset - amount)))
+                    {
+                        continue;
+                    }
+                }                
+                nodes[i] += amount;
+            }
+            UpdateSections();
+        }
         public bool IsMouseOn()
         {
             if (GUI.MouseOn == null)
@@ -523,7 +565,7 @@ namespace Barotrauma.Items.Components
             return false;
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             int eventIndex = msg.ReadRangedInteger(0, (int)Math.Ceiling(MaxNodeCount / (float)MaxNodesPerNetworkEvent));
             int nodeCount = msg.ReadRangedInteger(0, MaxNodesPerNetworkEvent);
@@ -554,9 +596,13 @@ namespace Barotrauma.Items.Components
                 (item.ParentInventory is CharacterInventory characterInventory && ((characterInventory.Owner as Character)?.HasEquippedItem(item) ?? false));
         }
 
-        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
+        public override bool ValidateEventData(NetEntityEvent.IData data)
+            => TryExtractEventData<ClientEventData>(data, out _);
+
+        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
-            int nodeCount = (int)extraData[2];
+            var eventData = ExtractEventData<ClientEventData>(extraData);
+            int nodeCount = eventData.NodeCount;
             msg.Write((byte)nodeCount);
             if (nodeCount > 0)
             {

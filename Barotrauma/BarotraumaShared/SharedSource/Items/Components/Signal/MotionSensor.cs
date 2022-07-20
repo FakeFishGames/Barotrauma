@@ -1,7 +1,6 @@
 ﻿using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
-using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -14,25 +13,26 @@ namespace Barotrauma.Items.Components
 
         private float updateTimer;
 
+        [Flags]
         public enum TargetType
         {
-            Any,
-            Human,
-            Monster,
-            Wall
+            Human = 1,
+            Monster = 2,
+            Wall = 4,
+            Any = Human | Monster | Wall,
         }
 
-        [Serialize(false, false, description: "Has the item currently detected movement. Intended to be used by StatusEffect conditionals (setting this value in XML has no effect).")]
+        [Serialize(false, IsPropertySaveable.No, description: "Has the item currently detected movement. Intended to be used by StatusEffect conditionals (setting this value in XML has no effect).")]
         public bool MotionDetected { get; set; }
 
-        [InGameEditable, Serialize(TargetType.Any, true, description: "Which kind of targets can trigger the sensor?", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize(TargetType.Any, IsPropertySaveable.Yes, description: "Which kind of targets can trigger the sensor?", alwaysUseInstanceValues: true)]
         public TargetType Target
         {
             get;
             set;
         }
 
-        [InGameEditable, Serialize(false, true, description: "Should the sensor ignore the bodies of dead characters?", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize(false, IsPropertySaveable.Yes, description: "Should the sensor ignore the bodies of dead characters?", alwaysUseInstanceValues: true)]
         public bool IgnoreDead
         {
             get;
@@ -40,7 +40,7 @@ namespace Barotrauma.Items.Components
         }
 
 
-        [InGameEditable, Serialize(0.0f, true, description: "Horizontal detection range.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize(0.0f, IsPropertySaveable.Yes, description: "Horizontal detection range.", alwaysUseInstanceValues: true)]
         public float RangeX
         {
             get { return rangeX; }
@@ -52,7 +52,7 @@ namespace Barotrauma.Items.Components
 #endif
             }
         }
-        [InGameEditable, Serialize(0.0f, true, description: "Vertical movement detection range.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize(0.0f, IsPropertySaveable.Yes, description: "Vertical movement detection range.", alwaysUseInstanceValues: true)]
         public float RangeY
         {
             get { return rangeY; }
@@ -62,7 +62,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [InGameEditable, Serialize("0,0", true, description: "The position to detect the movement at relative to the item. For example, 0,100 would detect movement 100 units above the item.")]
+        [InGameEditable, Serialize("0,0", IsPropertySaveable.Yes, description: "The position to detect the movement at relative to the item. For example, 0,100 would detect movement 100 units above the item.")]
         public Vector2 DetectOffset
         {
             get { return detectOffset; }
@@ -74,7 +74,18 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable(MinValueFloat = 0.1f, MaxValueFloat = 100.0f, DecimalCount = 2), Serialize(0.1f, true, description: "How often the sensor checks if there's something moving near it. Higher values are better for performance.", alwaysUseInstanceValues: true)]
+        public Vector2 TransformedDetectOffset
+        {
+            get
+            {
+                Vector2 transformedDetectOffset = detectOffset;
+                if (item.FlippedX) { transformedDetectOffset.X = -transformedDetectOffset.X; }
+                if (item.FlippedY) { transformedDetectOffset.Y = -transformedDetectOffset.Y; }
+                return transformedDetectOffset;
+            }
+        }
+
+        [Editable(MinValueFloat = 0.1f, MaxValueFloat = 100.0f, DecimalCount = 2), Serialize(0.1f, IsPropertySaveable.Yes, description: "How often the sensor checks if there's something moving near it. Higher values are better for performance.", alwaysUseInstanceValues: true)]
         public float UpdateInterval
         {
             get;
@@ -82,7 +93,7 @@ namespace Barotrauma.Items.Components
         }
 
         private int maxOutputLength;
-        [Editable, Serialize(200, false, description: "The maximum length of the output strings. Warning: Large values can lead to large memory usage or networking issues.")]
+        [Editable, Serialize(200, IsPropertySaveable.No, description: "The maximum length of the output strings. Warning: Large values can lead to large memory usage or networking issues.")]
         public int MaxOutputLength
         {
             get { return maxOutputLength; }
@@ -93,7 +104,7 @@ namespace Barotrauma.Items.Components
         }
 
         private string output;
-        [InGameEditable, Serialize("1", true, description: "The signal the item outputs when it has detected movement.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize("1", IsPropertySaveable.Yes, description: "The signal the item outputs when it has detected movement.", alwaysUseInstanceValues: true)]
         public string Output
         {
             get { return output; }
@@ -109,7 +120,7 @@ namespace Barotrauma.Items.Components
         }
 
         private string falseOutput;
-        [InGameEditable, Serialize("", true, description: "The signal the item outputs when it has not detected movement.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize("", IsPropertySaveable.Yes, description: "The signal the item outputs when it has not detected movement.", alwaysUseInstanceValues: true)]
         public string FalseOutput
         {
             get { return falseOutput; }
@@ -124,20 +135,27 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable(DecimalCount = 3), Serialize(0.01f, true, description: "How fast the objects within the detector's range have to be moving (in m/s).", alwaysUseInstanceValues: true)]
+        [Editable(DecimalCount = 3), Serialize(0.01f, IsPropertySaveable.Yes, description: "How fast the objects within the detector's range have to be moving (in m/s).", alwaysUseInstanceValues: true)]
         public float MinimumVelocity
         {
             get;
             set;
         }
 
-        public MotionSensor(Item item, XElement element)
+        [Serialize(true, IsPropertySaveable.Yes, description: "Should the sensor trigger when the item itself moves.")]
+        public bool DetectOwnMotion
+        {
+            get;
+            set;
+        }
+
+        public MotionSensor(Item item, ContentXElement element)
             : base(item, element)
         {
             IsActive = true;
 
             //backwards compatibility
-            if (element.Attribute("range") != null)
+            if (element.GetAttribute("range") != null)
             {
                 rangeX = rangeY = element.GetAttributeFloat("range", 0.0f);
             }
@@ -146,7 +164,7 @@ namespace Barotrauma.Items.Components
             updateTimer = Rand.Range(0.0f, UpdateInterval);
         }
 
-        public override void Load(XElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
         {
             base.Load(componentElement, usePrefabValues, idRemap);
             //backwards compatibility
@@ -162,13 +180,18 @@ namespace Barotrauma.Items.Components
 
             if (!string.IsNullOrEmpty(signalOut)) { item.SendSignal(new Signal(signalOut, 1), "state_out"); }
 
+            if (MotionDetected)
+            {
+                ApplyStatusEffects(ActionType.OnUse, deltaTime);
+            }
+
             updateTimer -= deltaTime;
             if (updateTimer > 0.0f) { return; }
 
             MotionDetected = false;
             updateTimer = UpdateInterval;
 
-            if (item.body != null && item.body.Enabled)
+            if (item.body != null && item.body.Enabled && DetectOwnMotion)
             {
                 if (Math.Abs(item.body.LinearVelocity.X) > MinimumVelocity || Math.Abs(item.body.LinearVelocity.Y) > MinimumVelocity)
                 {
@@ -177,15 +200,14 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            Vector2 detectPos = item.WorldPosition + detectOffset;
+            Vector2 detectPos = item.WorldPosition + TransformedDetectOffset;
             Rectangle detectRect = new Rectangle((int)(detectPos.X - rangeX), (int)(detectPos.Y - rangeY), (int)(rangeX * 2), (int)(rangeY * 2));
             float broadRangeX = Math.Max(rangeX * 2, 500);
             float broadRangeY = Math.Max(rangeY * 2, 500);
 
-            if (item.CurrentHull == null && item.Submarine != null && Level.Loaded != null &&
-                (Target == TargetType.Wall || Target == TargetType.Any))
+            if (item.CurrentHull == null && item.Submarine != null && Target.HasFlag(TargetType.Wall))
             {
-                if (Math.Abs(item.Submarine.Velocity.X) > MinimumVelocity || Math.Abs(item.Submarine.Velocity.Y) > MinimumVelocity)
+                if (Level.Loaded != null && (Math.Abs(item.Submarine.Velocity.X) > MinimumVelocity || Math.Abs(item.Submarine.Velocity.Y) > MinimumVelocity))
                 {
                     var cells = Level.Loaded.GetCells(item.WorldPosition, 1);
                     foreach (var cell in cells)
@@ -231,7 +253,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (Target != TargetType.Wall)
+            if (Target.HasFlag(TargetType.Human) || Target.HasFlag(TargetType.Monster))
             {
                 foreach (Character c in Character.CharacterList)
                 {
@@ -241,14 +263,13 @@ namespace Barotrauma.Items.Components
                     //makes it possible to detect when a spawned character moves without triggering the detector immediately as the ragdoll spawns and drops to the ground
                     if (c.SpawnTime > Timing.TotalTime - 1.0) { continue; }
 
-                    switch (Target)
+                    if (c.IsHuman)
                     {
-                        case TargetType.Human:
-                            if (!c.IsHuman) { continue; }
-                            break;
-                        case TargetType.Monster:
-                            if (c.IsHuman || c.IsPet) { continue; }
-                            break;
+                        if (!Target.HasFlag(TargetType.Human)) { continue; }
+                    }
+                    else if (!c.IsPet)
+                    {
+                        if (!Target.HasFlag(TargetType.Monster)) { continue; }
                     }
 
                     //do a rough check based on the position of the character's collider first
@@ -261,7 +282,7 @@ namespace Barotrauma.Items.Components
                     foreach (Limb limb in c.AnimController.Limbs)
                     {
                         if (limb.IsSevered) { continue; }
-                        if (limb.LinearVelocity.LengthSquared() <= MinimumVelocity * MinimumVelocity) { continue; }
+                        if (limb.LinearVelocity.LengthSquared() < MinimumVelocity * MinimumVelocity) { continue; }
                         if (MathUtils.CircleIntersectsRectangle(limb.WorldPosition, ConvertUnits.ToDisplayUnits(limb.body.GetMaxExtent()), detectRect))
                         {
                             MotionDetected = true;
@@ -269,23 +290,12 @@ namespace Barotrauma.Items.Components
                         }
                     }
                 }
-            }           
+            }
         }
 
-        public override void FlipX(bool relativeToSub)
-        {
-            detectOffset.X = -detectOffset.X;
-        }
-        public override void FlipY(bool relativeToSub)
-        {
-            detectOffset.Y = -detectOffset.Y;
-        }
         public override XElement Save(XElement parentElement)
         {
             Vector2 prevDetectOffset = detectOffset;
-            //undo flipping before saving
-            if (item.FlippedX) { detectOffset.X = -detectOffset.X; }
-            if (item.FlippedY) { detectOffset.Y = -detectOffset.Y; }
             XElement element = base.Save(parentElement);
             detectOffset = prevDetectOffset;
             return element;

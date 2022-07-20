@@ -1,0 +1,71 @@
+1. Name and contact data of the controllers responsible for processing, as well as the company data protection officer
+
+This data protection information applies to data processing by:
+
+Controller: 	
+   Daedalic Entertainment GmbH
+   Papenreye 51
+   22453 Hamburg
+
+represented by the CEO Carsten Fichtelmann and the COO Stephan Harms, 			
+   e-mail:	info@daedalic.com,								
+   fax: 	+ 49 40 356 741 36
+
+The companies’ data protection officer is 
+		
+   Frederik Bockslaff 	
+    
+who can be reached under:
+
+   Nimrod Rechtsanwälte
+   Emser Straße  9
+   10719 Berlin
+   E-mail: 	info@nimrod-rechtsanwaelte.de
+   tel: 	+49 (0)30 544 61 793
+   fax: 	+49 (0)30 544 61 794
+
+2. Collection and storage of personal data and the purpose of their use
+Your personal data will be processed by Valve Corporation as the provider of the Steam store. You can find further relevant information regarding your rights in this respect in the privacy statements of Valve Corporation under the following link:
+
+https://store.steampowered.com/privacy_agreement/  
+
+Additionally, subject to your consent, for the purposes of quality management, analytics and marketing purposes the following personal data is processed and controlled by GameAnalytics Ltd:
+    • Time spent playing different game modes
+    • Round statistics (e.g. selected submarine, duration, mission success/failure, difficulty, selected job, visited caves/wrecks/ruins etc...)
+    • Campaign statistics (e.g. number of visited outposts and completed missions, amount of money, time used per campaign, purchased/sold items, radiation enabled/disabled, etc...)
+    • Tutorial completion
+    • Purchased submarine upgrades
+    • Character deaths and causes of death
+    • Info of server settings (anti-griefing and traitor settings)
+    • Enabled mods
+    • Error messages
+    • Crash logs
+
+The legal basis for the data processing is Art. 6 (1) lit. b, f GDPR. Our legitimate interest is derived from the purposes listed above for data collection.
+For more information about privacy related to GameAnalytics Ltd, see the following link: https://gameanalytics.com/privacy/
+
+3. Duration of personal data processing
+The personal data which is processed according to clause 2, is processed as long, as your player client is active. If you delete your account, any personal data processed so far will be erased. 
+
+4. Forwarding data
+Unless stated otherwise under clause 2, your personal data will not be transferred to any third party for any purpose other than those listed below.
+We shall forward your personal data to third parties only
+    • if you have given your explicit consent, in accordance with Art. 6 (1) lit. a GDPR
+    • if under Art. 6 (1) lit. f GDPR the transfer is necessary for the establishment, exercise or defence of legal claims, and there is no reason to assume that you have an overriding interest, which must be protected, in the non-forwarding of your data
+    • in the event that there is a legal obligation to forward the data under Art. 6 (1) lit. c GDPR and
+    • if this is legally permissible and necessary under Art. 6 (1) lit. b GDPR for the processing of contractual relationships with you.
+
+5. Data subject rights
+You have the right:
+• pursuant to Art. 15 GDPR, to demand information about your personal data that we have processed. In particular, you can obtain information about the purposes of the processing, The categories of personal data concerned, the recipients or category of recipients to whom you data have been or will be disclosed, the envisaged period for which the data will be stored, the existence of the right to request rectification, erasure, or restriction of the processing, or to object to it, the right to lodge a complaint with a supervisory authority, the source of your data, if these have not been collected by us, and on the existence of automated decision-making, including profiling, and any other meaningful information about their details or the logic involved;
+
+    • pursuant to Art. 16 GDPR, to demand the immediate rectification or completion of inaccurate personal data stored by us;
+    • pursuant to Art. 17 GDPR, to demand the erasure of personal data stored by us, unless their processing is necessary for exercising the right of freedom of expression and information, for compliance with a legal obligation, for reasons of public interest, or for the establishment, exercise or defence of legal claims;
+    • pursuant to Art. 18 GDPR, to demand the restriction of the processing of your personal data in cases where you contest the accuracy of the data, where the processing is unlawful yet you oppose the erasure of the personal data, where we no longer need the data but you still require them to establish, exercise or defend legal claims, or where you have objected to the processing of the data pursuant to Art. 21 GDPR;
+    • pursuant to Art. 20 GDPR, to obtain your personal data that you have provided to us in a structured, commonly used and machine-readable format and to demand the transfer of these data to another controller;
+    • pursuant to Art. 7 (3) GDPR, to withdraw your consent at any time, which will mean that in future we may no longer carry out the data processing that was contingent upon this consent and
+    • pursuant to Art. 77 GDPR, to lodge a complaint with a supervisory authority. In general, you can contact the supervisory authority of your usual residence or place of employment, or that of our company headquarters for this purpose.
+
+6. Right of objection
+Insofar as your personal data is processed on the basis of legitimate interests in accordance with Art. 6 (1) f GDPR, you have the right, under Art. 21 GDPR, to object to the processing of your personal data, provided there are reasons relating to your particular situation or if the objection relates to direct marketing. In the latter case, you have a general right to object, which shall be implemented by us without any reference to a particular situation.
+If you wish to avail of your right to withdraw or object, an e-mail to info@nimrod-rechtsanwaelte.de will suffice.

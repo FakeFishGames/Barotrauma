@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Xml.Linq;
 
 namespace Barotrauma.Abilities
 {
@@ -14,17 +13,17 @@ namespace Barotrauma.Abilities
         /// 
         /// These conditions will return an error if used outside their limited intended use.
         /// </summary>
-        public AbilityConditionData(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement) { }
+        public AbilityConditionData(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement) { }
 
         protected void LogAbilityConditionError(AbilityObject abilityObject, Type expectedData)
         {
-            DebugConsole.ThrowError($"Used data-reliant ability condition when data is incompatible! Expected {expectedData}, but received {abilityObject}");
+            DebugConsole.ThrowError($"Used data-reliant ability condition when data is incompatible! Expected {expectedData}, but received {abilityObject} in talent {characterTalent.DebugIdentifier}");
         }
 
         protected abstract bool MatchesConditionSpecific(AbilityObject abilityObject);
         public override bool MatchesCondition()
         {
-            DebugConsole.ThrowError("Used data-reliant ability condition in a state-based ability! This is not allowed.");
+            DebugConsole.ThrowError($"Used data-reliant ability condition in a state-based ability in talent {characterTalent.DebugIdentifier}! This is not allowed.");
             return false;
         }
         public override bool MatchesCondition(AbilityObject abilityObject)

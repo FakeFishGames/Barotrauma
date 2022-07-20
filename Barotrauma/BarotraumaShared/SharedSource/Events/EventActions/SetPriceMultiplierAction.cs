@@ -19,16 +19,16 @@ namespace Barotrauma
             Mechanical
         }
 
-        [Serialize(1.0f, true)]
+        [Serialize(1.0f, IsPropertySaveable.Yes)]
         public float Multiplier { get; set; }
 
-        [Serialize(OperationType.Set, true)]
+        [Serialize(OperationType.Set, IsPropertySaveable.Yes)]
         public OperationType Operation { get; set; }
 
-        [Serialize(PriceMultiplierType.Store, true)]
+        [Serialize(PriceMultiplierType.Store, IsPropertySaveable.Yes)]
         public PriceMultiplierType TargetMultiplier { get; set; }
 
-        public SetPriceMultiplierAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) { }
+        public SetPriceMultiplierAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
 
         private bool isFinished = false;
 

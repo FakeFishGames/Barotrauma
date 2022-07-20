@@ -10,29 +10,36 @@ namespace Barotrauma.Items.Components
     {
         private Sprite sprite, startSprite, endSprite;
 
-        [Serialize(5, false)]
+        [Serialize(5, IsPropertySaveable.No)]
         public int SpriteWidth
         {
             get;
             set;
         }
 
-        [Serialize("255,255,255,255", false)]
+        [Serialize("255,255,255,255", IsPropertySaveable.No)]
         public Color SpriteColor
         {
             get;
             set;
         }
 
-        [Serialize(false, false)]
+        [Serialize(false, IsPropertySaveable.No)]
         public bool Tile
         {
             get;
             set;
         }
 
-        [Serialize("0.5,0.5)", false)]
+        [Serialize("0.5,0.5)", IsPropertySaveable.No)]
         public Vector2 Origin { get; set; } = new Vector2(0.5f, 0.5f);
+
+        [Serialize(true, IsPropertySaveable.No, description: "")]
+        public bool BreakFromMiddle
+        {
+            get;
+            set;
+        }
 
         public Vector2 DrawSize
         {
@@ -62,9 +69,9 @@ namespace Barotrauma.Items.Components
             return sourcePos;
         }
 
-        partial void InitProjSpecific(XElement element)
+        partial void InitProjSpecific(ContentXElement element)
         {
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -85,6 +92,8 @@ namespace Barotrauma.Items.Components
         {
             if (target == null || target.Removed) { return; }
             if (target.ParentInventory != null) { return; }
+            if (source is Limb limb && limb.Removed) { return; }
+            if (source is Entity e && e.Removed) { return; }
 
             Vector2 startPos = GetSourcePos();
             startPos.Y = -startPos.Y;
@@ -124,9 +133,14 @@ namespace Barotrauma.Items.Components
 
                 int width = (int)(SpriteWidth * snapState);
                 if (width > 0.0f) 
-                { 
-                    DrawRope(spriteBatch, endPos - diff * snapState * 0.5f, endPos, width);
-                    DrawRope(spriteBatch, startPos, startPos + diff * snapState * 0.5f, width);
+                {
+                    float positionMultiplier = snapState;
+                    if (BreakFromMiddle)
+                    {
+                        positionMultiplier /= 2;
+                        DrawRope(spriteBatch, endPos - diff * positionMultiplier, endPos, width);
+                    }
+                    DrawRope(spriteBatch, startPos, startPos + diff * positionMultiplier, width);
                 }
             }
             else
@@ -143,7 +157,7 @@ namespace Barotrauma.Items.Components
                     float depth = Math.Min(item.GetDrawDepth() + (startSprite.Depth - item.Sprite.Depth), 0.999f);
                     startSprite?.Draw(spriteBatch, startPos, SpriteColor, angle, depth: depth);
                 }
-                if (endSprite != null)
+                if (endSprite != null && (!Snapped || BreakFromMiddle))
                 {
                     float depth = Math.Min(item.GetDrawDepth() + (endSprite.Depth - item.Sprite.Depth), 0.999f);
                     endSprite?.Draw(spriteBatch, endPos, SpriteColor, angle, depth: depth);
@@ -196,9 +210,29 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             snapped = msg.ReadBoolean();
+
+            if (!snapped)
+            {
+                UInt16 targetId = msg.ReadUInt16();
+                UInt16 sourceId = msg.ReadUInt16();
+                byte limbIndex = msg.ReadByte();
+
+                Item target = Entity.FindEntityByID(targetId) as Item;
+                if (target == null) { return; }
+                var source = Entity.FindEntityByID(sourceId);
+                if (source is Character sourceCharacter && limbIndex >= 0 && limbIndex < sourceCharacter.AnimController.Limbs.Length)
+                {
+                    Limb sourceLimb = sourceCharacter.AnimController.Limbs[limbIndex];
+                    Attach(sourceLimb, target);
+                }
+                else if (source is ISpatialEntity spatialEntity)
+                {
+                    Attach(spatialEntity, target);
+                }
+            }
         }
 
         protected override void RemoveComponentSpecific()

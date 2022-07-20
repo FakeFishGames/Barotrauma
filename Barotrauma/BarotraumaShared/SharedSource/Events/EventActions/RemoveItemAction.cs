@@ -7,20 +7,20 @@ namespace Barotrauma
 {
     class RemoveItemAction : EventAction
     {
-        [Serialize("", true)]
-        public string TargetTag { get; set; }
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier TargetTag { get; set; }
 
-        [Serialize("", true)]
-        public string ItemIdentifier { get; set; }
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier ItemIdentifier { get; set; }
 
-        [Serialize(1, true)]
+        [Serialize(1, IsPropertySaveable.Yes)]
         public int Amount { get; set; }
 
-        public RemoveItemAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) 
+        public RemoveItemAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) 
         { 
-            if (string.IsNullOrWhiteSpace(ItemIdentifier))
+            if (ItemIdentifier.IsEmpty)
             {
-                ItemIdentifier = element.GetAttributeString("itemidentifiers", null) ?? element.GetAttributeString("identifier", "");
+                ItemIdentifier = element.GetAttributeIdentifier("itemidentifiers", element.GetAttributeIdentifier("identifier", Identifier.Empty));
             }
         }
 
@@ -62,17 +62,17 @@ namespace Barotrauma
                         var item = inventory.FindItem(it => 
                             it != null && 
                             !removedItems.Contains(it) &&
-                            (string.IsNullOrEmpty(ItemIdentifier) || it.Prefab.Identifier.Equals(ItemIdentifier, StringComparison.InvariantCultureIgnoreCase)), recursive: true);
+                            (ItemIdentifier.IsEmpty || it.Prefab.Identifier == ItemIdentifier), recursive: true);
                         if (item == null) { break; }
-                        Entity.Spawner.AddToRemoveQueue(item);
+                        Entity.Spawner.AddItemToRemoveQueue(item);
                         removedItems.Add(item);
                     }                    
                 }
                 else if (target is Item item)
                 {
-                    if (string.IsNullOrEmpty(ItemIdentifier) || item.Prefab.Identifier.Equals(ItemIdentifier, StringComparison.InvariantCultureIgnoreCase))
+                    if (ItemIdentifier.IsEmpty || item.Prefab.Identifier == ItemIdentifier)
                     {
-                        Entity.Spawner.AddToRemoveQueue(item);
+                        Entity.Spawner.AddItemToRemoveQueue(item);
                         removedItems.Add(item);
                         if (removedItems.Count >= Amount) { break; }
                     }

@@ -8,11 +8,13 @@ namespace Steamworks.Data
 	public struct Lobby
 	{
 		public SteamId Id { get; internal set; }
+		public Result Result { get; internal set; }
 
 
 		public Lobby( SteamId id )
 		{
 			Id = id;
+			Result = Result.OK;
 		}
 
 		/// <summary>

@@ -17,24 +17,26 @@ namespace Barotrauma.Items.Components
             Atan,
         }
 
-        private float[] receivedSignal = new float[2];
-        private float[] timeSinceReceived = new float[2];
+        private readonly float[] receivedSignal = new float[2];
+        private readonly float[] timeSinceReceived = new float[2];
 
-        [Serialize(FunctionType.Sin, false, description: "Which kind of function to run the input through.", alwaysUseInstanceValues: true)]
+        protected Character signalSender;
+
+        [Serialize(FunctionType.Sin, IsPropertySaveable.No, description: "Which kind of function to run the input through.", alwaysUseInstanceValues: true)]
         public FunctionType Function
         {
             get; set;
         }
 
 
-        [InGameEditable, Serialize(false, true, description: "If set to true, the trigonometric function uses radians instead of degrees.", alwaysUseInstanceValues: true)]
+        [InGameEditable, Serialize(false, IsPropertySaveable.Yes, description: "If set to true, the trigonometric function uses radians instead of degrees.", alwaysUseInstanceValues: true)]
         public bool UseRadians
         {
             get; set;
         }
 
 
-        public TrigonometricFunctionComponent(Item item, XElement element)
+        public TrigonometricFunctionComponent(Item item, ContentXElement element)
             : base(item, element)
         {
             IsActive = true;
@@ -56,7 +58,7 @@ namespace Barotrauma.Items.Components
                 {
                     float angle = (float)Math.Atan2(receivedSignal[1], receivedSignal[0]);
                     if (!UseRadians) { angle = MathHelper.ToDegrees(angle); }
-                    item.SendSignal(angle.ToString("G", CultureInfo.InvariantCulture), "signal_out");
+                    item.SendSignal(new Signal(angle.ToString("G", CultureInfo.InvariantCulture), sender: signalSender), "signal_out");
                 }
             }
         }
@@ -65,6 +67,7 @@ namespace Barotrauma.Items.Components
         {
             float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float value);
             bool sendOutputImmediately = true;
+            signalSender = signal.sender;
             switch (Function)
             {
                 case FunctionType.Sin:

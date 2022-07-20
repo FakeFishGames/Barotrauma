@@ -7,6 +7,16 @@ namespace Barotrauma.Items.Components
 {
     partial class Terminal : ItemComponent, IClientSerializable, IServerSerializable
     {
+        private readonly struct ClientEventData : IEventData
+        {
+            public readonly string Text;
+            
+            public ClientEventData(string text)
+            {
+                Text = text;
+            }
+        }
+        
         private GUIListBox historyBox;
         private GUITextBlock fillerBlock;
         private GUITextBox inputBox;
@@ -26,16 +36,11 @@ namespace Barotrauma.Items.Components
                 AutoHideScrollBar = false
             };
 
-            // Create fillerBlock to cover historyBox so new values appear at the bottom of historyBox
-            // This could be removed if GUIListBox supported aligning its children
-            fillerBlock = new GUITextBlock(new RectTransform(new Vector2(1, 1), historyBox.Content.RectTransform, anchor: Anchor.TopCenter), string.Empty)
-            {
-                CanBeFocused = false
-            };
+            CreateFillerBlock();
 
             new GUIFrame(new RectTransform(new Vector2(0.9f, 0.01f), layoutGroup.RectTransform), style: "HorizontalLine");
 
-            inputBox = new GUITextBox(new RectTransform(new Vector2(1, .1f), layoutGroup.RectTransform), textColor: Color.LimeGreen)
+            inputBox = new GUITextBox(new RectTransform(new Vector2(1, .1f), layoutGroup.RectTransform), textColor: TextColor)
             {
                 MaxTextLength = MaxMessageLength,
                 OverflowClip = true,
@@ -47,11 +52,23 @@ namespace Barotrauma.Items.Components
                     }
                     else
                     {
-                        item.CreateClientEvent(this, new object[] { text });
+                        item.CreateClientEvent(this, new ClientEventData(text));
                     }
                     textBox.Text = string.Empty;
                     return true;
                 }
+            };
+
+            layoutGroup.Recalculate();
+        }
+
+        // Create fillerBlock to cover historyBox so new values appear at the bottom of historyBox
+        // This could be removed if GUIListBox supported aligning its children
+        public void CreateFillerBlock()
+        {
+            fillerBlock = new GUITextBlock(new RectTransform(new Vector2(1, 1), historyBox.Content.RectTransform, anchor: Anchor.TopCenter), string.Empty)
+            {
+                CanBeFocused = false
             };
         }
 
@@ -63,15 +80,15 @@ namespace Barotrauma.Items.Components
             }
 
             OutputValue = input;
-            ShowOnDisplay(input, addToHistory: true);
+            ShowOnDisplay(input, addToHistory: true, TextColor);
             item.SendSignal(input, "signal_out");
         }
 
-        partial void ShowOnDisplay(string input, bool addToHistory)
+        partial void ShowOnDisplay(string input, bool addToHistory, Color color)
         {
             if (addToHistory)
             {
-                messageHistory.Add(input);
+                messageHistory.Add(new TerminalMessage(input, color));
                 while (messageHistory.Count > MaxMessages)
                 {
                     messageHistory.RemoveAt(0);
@@ -85,7 +102,7 @@ namespace Barotrauma.Items.Components
             GUITextBlock newBlock = new GUITextBlock(
                     new RectTransform(new Vector2(1, 0), historyBox.Content.RectTransform, anchor: Anchor.TopCenter),
                     "> " + input,
-                    textColor: Color.LimeGreen, wrap: true, font: UseMonospaceFont ? GUI.MonospacedFont : GUI.GlobalFont)
+                    textColor: color, wrap: true, font: UseMonospaceFont ? GUIStyle.MonospacedFont : GUIStyle.Font)
             {
                 CanBeFocused = false
             };
@@ -128,12 +145,15 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
+        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
-            msg.Write((string)extraData[2]);
+            if (TryExtractEventData(extraData, out ClientEventData eventData))
+            {
+                msg.Write(eventData.Text);
+            }
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             SendOutput(msg.ReadString());
         }

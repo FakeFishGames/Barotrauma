@@ -9,8 +9,8 @@ namespace Barotrauma.Abilities
     class CharacterAbilityTandemFire : CharacterAbilityApplyStatusEffectsToNearestAlly
     {
         // this should just be its own class, misleading to inherit here
-        private string tag;
-        public CharacterAbilityTandemFire(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        private readonly string tag;
+        public CharacterAbilityTandemFire(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             tag = abilityElement.GetAttributeString("tag", "");
         }
@@ -20,7 +20,7 @@ namespace Barotrauma.Abilities
             if (Character.SelectedConstruction == null || !Character.SelectedConstruction.HasTag(tag)) { return; }
 
             Character closestCharacter = null;
-            float closestDistance = float.MaxValue;
+            float closestDistance = squaredMaxDistance;
 
             foreach (Character crewCharacter in Character.GetFriendlyCrew(Character))
             {
@@ -31,7 +31,7 @@ namespace Barotrauma.Abilities
                 }
             }
 
-            if (closestCharacter.SelectedConstruction == null || !closestCharacter.SelectedConstruction.HasTag(tag)) { return; }
+            if (closestCharacter?.SelectedConstruction == null || !closestCharacter.SelectedConstruction.HasTag(tag)) { return; }
 
             if (closestDistance < squaredMaxDistance)
             {

@@ -44,8 +44,8 @@ namespace Barotrauma.Items.Components
                         UserData = ciElement
                     };
                     new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), layoutGroup.RectTransform), 
-                        TextManager.Get(ciElement.Label, returnNull: true) ?? ciElement.Label);
-                    if (!ciElement.IsIntegerInput)
+                        TextManager.Get(ciElement.Label).Fallback(ciElement.Label));
+                    if (!ciElement.IsNumberInput)
                     {
                         var textBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), layoutGroup.RectTransform), ciElement.Signal, style: "GUITextBoxNoIcon")
                         {
@@ -77,29 +77,71 @@ namespace Barotrauma.Items.Components
                     }
                     else
                     {
-                        int.TryParse(ciElement.Signal, out int signal);
-                        var numberInput = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1.0f), layoutGroup.RectTransform), GUINumberInput.NumberType.Int)
+                        GUINumberInput numberInput = null;
+                        if (ciElement.NumberType == NumberType.Float)
                         {
-                            UserData = ciElement,
-                            MinValueInt = ciElement.NumberInputMin,
-                            MaxValueInt = ciElement.NumberInputMax,
-                            IntValue = Math.Clamp(signal, ciElement.NumberInputMin, ciElement.NumberInputMax)
-                        };
-                        //reset size restrictions set by the Style to make sure the elements can fit the interface
-                        numberInput.RectTransform.MinSize = numberInput.LayoutGroup.RectTransform.MinSize = new Point(0, 0);
-                        numberInput.RectTransform.MaxSize = numberInput.LayoutGroup.RectTransform.MaxSize = new Point(int.MaxValue, int.MaxValue);
-                        numberInput.OnValueChanged += (ni) =>
+                            TryParseFloatInvariantCulture(ciElement.Signal, out float floatSignal);
+                            TryParseFloatInvariantCulture(ciElement.NumberInputMin, out float numberInputMin);
+                            TryParseFloatInvariantCulture(ciElement.NumberInputMax, out float numberInputMax);
+                            TryParseFloatInvariantCulture(ciElement.NumberInputStep, out float numberInputStep);
+                            numberInput = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1.0f), layoutGroup.RectTransform), NumberType.Float)
+                            {
+                                UserData = ciElement,
+                                MinValueFloat = numberInputMin,
+                                MaxValueFloat = numberInputMax,
+                                FloatValue = Math.Clamp(floatSignal, numberInputMin, numberInputMax),
+                                DecimalsToDisplay = ciElement.NumberInputDecimalPlaces,
+                                valueStep = numberInputStep,
+                                OnValueChanged = (ni) =>
+                                {
+                                    if (GameMain.Client == null)
+                                    {
+                                        ValueChanged(ni.UserData as CustomInterfaceElement, ni.FloatValue);
+                                    }
+                                    else
+                                    {
+                                        item.CreateClientEvent(this);
+                                    }
+                                }
+                            };
+                        }
+                        else if (ciElement.NumberType == NumberType.Int)
                         {
-                            if (GameMain.Client == null)
+                            int.TryParse(ciElement.Signal, out int intSignal);
+                            int.TryParse(ciElement.NumberInputMin, out int numberInputMin);
+                            int.TryParse(ciElement.NumberInputMax, out int numberInputMax);
+                            TryParseFloatInvariantCulture(ciElement.NumberInputStep, out float numberInputStep);
+                            numberInput = new GUINumberInput(new RectTransform(new Vector2(0.5f, 1.0f), layoutGroup.RectTransform), NumberType.Int)
                             {
-                                ValueChanged(ni.UserData as CustomInterfaceElement, ni.IntValue);
-                            }
-                            else
-                            {
-                                item.CreateClientEvent(this);
-                            }
-                        };
-                        uiElements.Add(numberInput);
+                                UserData = ciElement,
+                                MinValueInt = numberInputMin,
+                                MaxValueInt = numberInputMax,
+                                IntValue = Math.Clamp(intSignal, numberInputMin, numberInputMax),
+                                valueStep = numberInputStep,
+                                OnValueChanged = (ni) =>
+                                {
+                                    if (GameMain.Client == null)
+                                    {
+                                        ValueChanged(ni.UserData as CustomInterfaceElement, ni.IntValue);
+                                    }
+                                    else
+                                    {
+                                        item.CreateClientEvent(this);
+                                    }
+                                }
+                            };
+                        }
+                        else
+                        {
+                            DebugConsole.ShowError($"Error creating a CustomInterface component: unexpected NumberType \"{(ciElement.NumberType.HasValue ? ciElement.NumberType.Value.ToString() : "none")}\"");
+                        }
+                        if (numberInput != null)
+                        {
+                            //reset size restrictions set by the Style to make sure the elements can fit the interface
+                            numberInput.RectTransform.MinSize = numberInput.LayoutGroup.RectTransform.MinSize = new Point(0, 0);
+                            numberInput.RectTransform.MaxSize = numberInput.LayoutGroup.RectTransform.MaxSize = new Point(int.MaxValue, int.MaxValue);
+                            uiElements.Add(numberInput);
+                        }
                     }
                 }
                 else if (ciElement.ContinuousSignal)
@@ -107,7 +149,7 @@ namespace Barotrauma.Items.Components
                     var tickBox = new GUITickBox(new RectTransform(new Vector2(1.0f, elementSize), uiElementContainer.RectTransform)
                     {
                         MaxSize = ElementMaxSize
-                    }, TextManager.Get(ciElement.Label, returnNull: true) ?? ciElement.Label)
+                    }, TextManager.Get(ciElement.Label).Fallback(ciElement.Label))
                     {
                         UserData = ciElement
                     };
@@ -131,19 +173,20 @@ namespace Barotrauma.Items.Components
                 else
                 {
                     var btn = new GUIButton(new RectTransform(new Vector2(1.0f, elementSize), uiElementContainer.RectTransform),
-                        TextManager.Get(ciElement.Label, returnNull: true) ?? ciElement.Label, style: "DeviceButton")
+                        TextManager.Get(ciElement.Label).Fallback(ciElement.Label), style: "DeviceButton")
                     {
                         UserData = ciElement
                     };
                     btn.OnClicked += (_, userdata) =>
                     {
+                        CustomInterfaceElement btnElement = userdata as CustomInterfaceElement;;
                         if (GameMain.Client == null)
                         {
-                            ButtonClicked(userdata as CustomInterfaceElement);
+                            ButtonClicked(btnElement);
                         }
                         else
                         {
-                            GameMain.Client.CreateEntityEvent(item, new object[] { NetEntityEvent.Type.ComponentState, item.GetComponentIndex(this), userdata as CustomInterfaceElement });
+                            item.CreateClientEvent(this, new EventData(btnElement));
                         }
                         return true;
                     };
@@ -197,18 +240,19 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        partial void UpdateProjSpecific()
+        public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
             bool elementVisibilityChanged = false;
             int visibleElementCount = 0;
             foreach (var uiElement in uiElements)
             {
                 if (!(uiElement.UserData is CustomInterfaceElement element)) { continue; }
-                bool visible = Screen.Selected == GameMain.SubEditorScreen || element.StatusEffects.Any() || element.HasPropertyName || (element.Connection != null && element.Connection.Wires.Any(w => w != null));
+                bool visible = Screen.Selected == GameMain.SubEditorScreen || element.StatusEffects.Any() || element.HasPropertyName || (element.Connection != null && element.Connection.Wires.Count > 0);
                 if (visible) { visibleElementCount++; }
                 if (uiElement.Visible != visible)
                 {
                     uiElement.Visible = visible;
+                    uiElement.IgnoreLayoutGroups = !uiElement.Visible;
                     elementVisibilityChanged = true;
                 }
             }
@@ -223,6 +267,7 @@ namespace Barotrauma.Items.Components
                     uiElement.RectTransform.RelativeSize = new Vector2(1.0f, elementSize);
                 }
                 GuiFrame.Visible = visibleElementCount > 0;
+                uiElementContainer.Recalculate();
             }
         }
 
@@ -248,7 +293,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            string CreateLabelText(int elementIndex)
+            LocalizedString CreateLabelText(int elementIndex)
             {
                 return string.IsNullOrWhiteSpace(customInterfaceElementList[elementIndex].Label) ?
                     TextManager.GetWithVariable("connection.signaloutx", "[num]", (elementIndex + 1).ToString()) :
@@ -290,7 +335,7 @@ namespace Barotrauma.Items.Components
                 }
                 else if (uiElements[i] is GUINumberInput ni)
                 {
-                    if (ni.InputType == GUINumberInput.NumberType.Int)
+                    if (ni.InputType == NumberType.Int)
                     {
                         int.TryParse(customInterfaceElementList[i].Signal, out int value);
                         ni.IntValue = value;
@@ -299,60 +344,79 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
+        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
             //extradata contains an array of buttons clicked by the player (or nothing if the player didn't click anything)
             for (int i = 0; i < customInterfaceElementList.Count; i++)
             {
-                if (customInterfaceElementList[i].HasPropertyName)
+                var element = customInterfaceElementList[i];
+                if (element.HasPropertyName)
                 {
-                    if (!customInterfaceElementList[i].IsIntegerInput)
+                    if (!element.IsNumberInput)
                     {
                         msg.Write(((GUITextBox)uiElements[i]).Text);
                     }
                     else
                     {
-                        msg.Write(((GUINumberInput)uiElements[i]).IntValue.ToString());
+                        switch (element.NumberType)
+                        {
+                            case NumberType.Float:
+                                msg.Write(((GUINumberInput)uiElements[i]).FloatValue.ToString());
+                                break;
+                            case NumberType.Int:
+                            default:
+                                msg.Write(((GUINumberInput)uiElements[i]).IntValue.ToString());
+                                break;
+                        }
                     }
                 }
-                else if (customInterfaceElementList[i].ContinuousSignal)
+                else if (element.ContinuousSignal)
                 {
                     msg.Write(((GUITickBox)uiElements[i]).Selected);
                 }
                 else
                 {
-                    msg.Write(extraData != null && extraData.Any(d => d as CustomInterfaceElement == customInterfaceElementList[i]));
+                    msg.Write(extraData is Item.ComponentStateEventData { ComponentData: EventData eventData } && eventData.BtnElement == customInterfaceElementList[i]);
                 }
             }
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             for (int i = 0; i < customInterfaceElementList.Count; i++)
             {
-                if (customInterfaceElementList[i].HasPropertyName)
+                var element = customInterfaceElementList[i];
+                if (element.HasPropertyName)
                 {
-                    if (!customInterfaceElementList[i].IsIntegerInput)
+                    string newValue = msg.ReadString();
+                    if (!element.IsNumberInput)
                     {
-                        TextChanged(customInterfaceElementList[i], msg.ReadString());
+                        TextChanged(element, newValue);
                     }
                     else
                     {
-                        int.TryParse(msg.ReadString(), out int value);
-                        ValueChanged(customInterfaceElementList[i], value);
+                        switch (element.NumberType)
+                        {
+                            case NumberType.Int when int.TryParse(newValue, out int value):
+                                ValueChanged(element, value);
+                                break;
+                            case NumberType.Float when TryParseFloatInvariantCulture(newValue, out float value):
+                                ValueChanged(element, value);
+                                break;
+                        }
                     }
                 }
                 else
                 {
                     bool elementState = msg.ReadBoolean();
-                    if (customInterfaceElementList[i].ContinuousSignal)
+                    if (element.ContinuousSignal)
                     {
                         ((GUITickBox)uiElements[i]).Selected = elementState;
-                        TickBoxToggled(customInterfaceElementList[i], elementState);
+                        TickBoxToggled(element, elementState);
                     }
                     else if (elementState)
                     {
-                        ButtonClicked(customInterfaceElementList[i]);
+                        ButtonClicked(element);
                     }
                 }
             }

@@ -39,7 +39,7 @@ namespace Barotrauma
         public Vector2 Size;
 
         private readonly Submarine parentSub;
-        public string Text
+        public LocalizedString Text
         {
             get;
             private set;
@@ -58,7 +58,7 @@ namespace Barotrauma
         }
 
         public HUDProgressBar(Vector2 worldPosition, string textTag, Submarine parentSubmarine = null)
-            : this(worldPosition, parentSubmarine, GUI.Style.Red, GUI.Style.Green, textTag)
+            : this(worldPosition, parentSubmarine, GUIStyle.Red, GUIStyle.Green, textTag)
         {
         }
 
@@ -73,7 +73,7 @@ namespace Barotrauma
             if (!string.IsNullOrEmpty(textTag))
             {
                 this.textTag = textTag;
-                Text = TextManager.Get(textTag);
+                Text = TextManager.Get(textTag).Fallback(textTag);
             }
         }
 
@@ -101,12 +101,12 @@ namespace Barotrauma
                 color * a,
                 Color.White * a * 0.8f);
 
-            if (!string.IsNullOrEmpty(Text))
+            if (!Text.IsNullOrEmpty())
             {
-                Vector2 textSize = GUI.SmallFont.MeasureString(Text);
+                Vector2 textSize = GUIStyle.SmallFont.MeasureString(Text);
                 Vector2 textPos = new Vector2(pos.X + (Size.X - textSize.X) / 2, pos.Y - textSize.Y * 1.2f);
-                GUI.DrawString(spriteBatch, textPos - Vector2.One, Text, Color.Black * a, font: GUI.SmallFont);
-                GUI.DrawString(spriteBatch, textPos, Text, Color.White * a, font: GUI.SmallFont);
+                GUI.DrawString(spriteBatch, textPos - Vector2.One, Text, Color.Black * a, font: GUIStyle.SmallFont);
+                GUI.DrawString(spriteBatch, textPos, Text, Color.White * a, font: GUIStyle.SmallFont);
             }
 
         }

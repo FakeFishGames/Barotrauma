@@ -8,21 +8,11 @@ namespace Barotrauma
 {
     partial class Inventory : IServerSerializable, IClientSerializable
     {
-        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
+        public void ServerEventRead(IReadMessage msg, Client c)
         {
             List<Item> prevItems = new List<Item>(AllItems.Distinct());
 
-            byte slotCount = msg.ReadByte();
-            List<ushort>[] newItemIDs = new List<ushort>[slotCount];            
-            for (int i = 0; i < slotCount; i++)
-            {
-                newItemIDs[i] = new List<ushort>();
-                int itemCount = msg.ReadRangedInteger(0, MaxStackSize);
-                for (int j = 0; j < itemCount; j++)
-                {
-                    newItemIDs[i].Add(msg.ReadUInt16());
-                }
-            }
+            SharedRead(msg, out var newItemIDs);
 
             if (c == null || c.Character == null) { return; }
 
@@ -33,7 +23,7 @@ namespace Barotrauma
                 {
                     accessible = false;
                 }
-                else if (!characterInventory.AccessibleWhenAlive && !ownerCharacter.IsDead)
+                else if (!characterInventory.AccessibleWhenAlive && !ownerCharacter.IsDead && !characterInventory.AccessibleByOwner)
                 {
                     accessible = false;
                 }
@@ -175,7 +165,7 @@ namespace Barotrauma
             }
         }
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
             SharedWrite(msg, extraData);
         }

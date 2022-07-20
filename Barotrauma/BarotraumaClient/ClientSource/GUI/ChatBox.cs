@@ -25,11 +25,13 @@ namespace Barotrauma
             get { return _toggleOpen; }
             set
             {
-                _toggleOpen = GameMain.Config.ChatOpen = value;
-                if (value) hideableElements.Visible = true;
+                _toggleOpen = PreferChatBoxOpen = value;
+                if (value) { hideableElements.Visible = true; }
             }
         }
         private float openState;
+
+        public static bool PreferChatBoxOpen = true;
 
         public bool CloseAfterMessageSent;
 
@@ -79,6 +81,8 @@ namespace Barotrauma
         public const int ToggleButtonWidthRaw = 30;
         private int popupMessageOffset;
 
+        private GUIDropDown ChatModeDropDown { get; set; }
+
         public ChatBox(GUIComponent parent, bool isSinglePlayer)
         {
             this.IsSinglePlayer = isSinglePlayer;
@@ -99,11 +103,13 @@ namespace Barotrauma
             var channelSettingsContent = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.9f), channelSettingsFrame.RectTransform, Anchor.Center), isHorizontal: true, childAnchor: Anchor.CenterLeft)
             {
                 Stretch = true,
+                CanBeFocused = true,
                 RelativeSpacing = 0.01f
             };
 
             var buttonLeft = new GUIButton(new RectTransform(new Vector2(0.1f, 0.8f), channelSettingsContent.RectTransform), style: "DeviceButton")
             {
+                PlaySoundOnSelect = false,
                 OnClicked = (btn, userdata) =>
                 {
                     if (Character.Controlled != null && ChatMessage.CanUseRadio(Character.Controlled, out WifiComponent radio))
@@ -119,9 +125,9 @@ namespace Barotrauma
                 Color = new Color(51, 59, 46),
                 SpriteEffects = Microsoft.Xna.Framework.Graphics.SpriteEffects.FlipHorizontally
             };
-            arrowIcon.HoverColor = arrowIcon.PressedColor = arrowIcon.PressedColor = arrowIcon.Color;
+            arrowIcon.HoverColor = arrowIcon.PressedColor = arrowIcon.SelectedColor = arrowIcon.Color;
 
-            channelText = new GUITextBox(new RectTransform(new Vector2(0.25f, 0.8f), channelSettingsContent.RectTransform), style: "DigitalFrameLight", textAlignment: Alignment.Center, font: GUI.DigitalFont)
+            channelText = new GUITextBox(new RectTransform(new Vector2(0.25f, 0.8f), channelSettingsContent.RectTransform), style: "DigitalFrameLight", textAlignment: Alignment.Center, font: GUIStyle.DigitalFont)
             {
                 textFilterFunction = text => 
                 {
@@ -147,6 +153,7 @@ namespace Barotrauma
 
             var buttonRight = new GUIButton(new RectTransform(new Vector2(0.1f, 0.8f), channelSettingsContent.RectTransform), style: "DeviceButton")
             {
+                PlaySoundOnSelect = false,
                 OnClicked = (btn, userdata) =>
                 {
                     if (Character.Controlled != null && ChatMessage.CanUseRadio(Character.Controlled, out WifiComponent radio))
@@ -173,8 +180,9 @@ namespace Barotrauma
                 new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), channelPickerContent.RectTransform), i.ToString(), style: "GUITextBlock")
                 {
                     TextColor = new Color(51, 59, 46),
-                    SelectedTextColor = GUI.Style.Green,
+                    SelectedTextColor = GUIStyle.Green,
                     UserData = i,
+                    PlaySoundOnSelect = false,
                     OnClicked = (btn, userdata) =>
                     {
                         if (Character.Controlled != null && ChatMessage.CanUseRadio(Character.Controlled, out WifiComponent radio))
@@ -185,13 +193,13 @@ namespace Barotrauma
                                 int.TryParse(channelText.Text, out int newChannel);
                                 radio.SetChannelMemory(index, newChannel);
                                 btn.ToolTip = TextManager.GetWithVariables("radiochannelpreset",
-                                    new string[] { "[index]", "[channel]" },
-                                    new string[] { index.ToString(), radio.GetChannelMemory(index).ToString() });
+                                    ("[index]", index.ToString()),
+                                    ("[channel]", radio.GetChannelMemory(index).ToString()));
                                 channelMemPending = false;
                                 channelPickerContent.Children.First().CanBeFocused = true;
                                 memButton.Enabled = true;
-                                channelPickerContent.Flash(GUI.Style.Green);
-                                channelText.Flash(GUI.Style.Green);
+                                channelPickerContent.Flash(GUIStyle.Green);
+                                channelText.Flash(GUIStyle.Green);
                             }
                             SetChannel(radio.GetChannelMemory(index), setText: true);
                             SoundPlayer.PlayUISound(GUISoundType.PopupMenu);
@@ -220,11 +228,57 @@ namespace Barotrauma
 
             // ---------------------------------------------------------------------------------------------
 
-            InputBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.125f), hideableElements.RectTransform, Anchor.BottomLeft),
+            var bottomContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.125f), hideableElements.RectTransform, Anchor.BottomLeft), isHorizontal: true)
+            {
+                Stretch = true
+            };
+
+            var dropdownRt = new RectTransform(new Vector2(0.1f, 1.0f), bottomContainer.RectTransform)
+            {
+                // The chat mode selection dropdown will take a maximum of 45% of the horizontal space
+                MaxSize = new Point((int)(0.45f * bottomContainer.RectTransform.NonScaledSize.X), int.MaxValue)
+            };
+            var chatModes = new ChatMode[] { ChatMode.Local, ChatMode.Radio };
+            ChatModeDropDown = new GUIDropDown(dropdownRt, elementCount: chatModes.Length, dropAbove: true)
+            {
+                OnSelected = (component, userdata) =>
+                {
+                    GameMain.ActiveChatMode = (ChatMode)userdata;
+                    if (InputBox != null && InputBox.Text.StartsWith(RadioChatString) && GameMain.ActiveChatMode == ChatMode.Local)
+                    {
+                        string text = InputBox.Text;
+                        InputBox.Text = text.Remove(0, RadioChatString.Length);
+                    }
+                    return true;
+                }
+            };
+            float longestDropDownOption = 0.0f;
+            foreach (ChatMode mode in chatModes)
+            {
+                var text = TextManager.Get($"chatmode.{mode}");
+                ChatModeDropDown.AddItem(text, userData: mode);
+                if (ChatModeDropDown.ListBox.Content.GetChildByUserData(mode) is GUITextBlock textBlock)
+                {
+                    if (textBlock.TextSize.X > longestDropDownOption)
+                    {
+                        longestDropDownOption = textBlock.TextSize.X;
+                    }
+                }
+            }
+            ChatModeDropDown.SelectItem(GameMain.ActiveChatMode);
+
+            float minDropDownWidth = longestDropDownOption + ChatModeDropDown.Padding.X +
+               (ChatModeDropDown.DropDownIcon?.RectTransform.NonScaledSize.X ?? 0) +
+               (ChatModeDropDown.DropDownIcon?.RectTransform.AbsoluteOffset.X ?? 0) * 2;
+            ChatModeDropDown.RectTransform.MinSize = new Point(
+                Math.Max((int)minDropDownWidth, ChatModeDropDown.RectTransform.MinSize.X),
+                ChatModeDropDown.RectTransform.MinSize.Y);
+
+            InputBox = new GUITextBox(new RectTransform(new Vector2(0.9f, 1.0f), bottomContainer.RectTransform),
                 style: "ChatTextBox")
             {
                 OverflowClip = true,
-                Font = GUI.SmallFont,
+                Font = GUIStyle.SmallFont,
                 MaxTextLength = ChatMessage.MaxLength
             };
 
@@ -233,6 +287,11 @@ namespace Barotrauma
             InputBox.OnDeselected += (gui, Keys) =>
             {
                 ChatManager.Clear();
+                if (GUIFrame.IsParentOf(GUI.MouseOn))
+                {
+                    CloseAfterMessageSent = false;
+                    return;
+                }
                 ChatMessage.GetChatMessageCommand(InputBox.Text, out var message);
                 if (string.IsNullOrEmpty(message))
                 {
@@ -242,8 +301,6 @@ namespace Barotrauma
                         CloseAfterMessageSent = false;
                     }
                 }
-                
-                //gui.Text = "";
             };
 
             var chatSendButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.7f), InputBox.RectTransform, Anchor.CenterRight, scaleBasis: ScaleBasis.BothHeight), style: "GUIButtonToggleRight");
@@ -265,7 +322,7 @@ namespace Barotrauma
             };
 
             showNewMessagesButton.Visible = false;
-            ToggleOpen = GameMain.Config.ChatOpen;
+            ToggleOpen = PreferChatBoxOpen = GameSettings.CurrentConfig.ChatOpen;
         }
 
         public bool TypingChatMessage(GUITextBox textBox, string text)
@@ -299,6 +356,10 @@ namespace Barotrauma
                     else if (command != "") //PMing
                     {
                         textColor = ChatMessage.MessageColor[(int)ChatMessageType.Private];
+                    }
+                    else if (GameMain.ActiveChatMode == ChatMode.Radio)
+                    {
+                        textColor = ChatMessage.MessageColor[(int)ChatMessageType.Radio];
                     }
                     else
                     {
@@ -337,7 +398,7 @@ namespace Barotrauma
                     color: ((chatBox.Content.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f);
 
             GUITextBlock senderNameTimestamp = new GUITextBlock(new RectTransform(new Vector2(0.98f, 0.0f), msgHolder.RectTransform) { AbsoluteOffset = new Point((int)(5 * GUI.Scale), 0) },
-                ChatMessage.GetTimeStamp(), textColor: Color.LightGray, font: GUI.SmallFont, textAlignment: Alignment.TopLeft, style: null)
+                ChatMessage.GetTimeStamp(), textColor: Color.LightGray, font: GUIStyle.SmallFont, textAlignment: Alignment.TopLeft, style: null)
             {
                 CanBeFocused = true
             };
@@ -350,20 +411,25 @@ namespace Barotrauma
                     {
                         Padding = Vector4.Zero
                     },
-                    Font = GUI.SmallFont,
+                    Font = GUIStyle.SmallFont,
                     CanBeFocused = true,
-                    ForceUpperCase = false,
+                    ForceUpperCase = ForceUpperCase.No,
                     UserData = message.SenderClient,
+                    PlaySoundOnSelect = false,
                     OnClicked = (_, o) =>
                     {
                         if (!(o is Client client)) { return false; }
-                        GameMain.NetLobbyScreen?.SelectPlayer(client);
+                        if (GameMain.NetLobbyScreen != null)
+                        {
+                            GameMain.NetLobbyScreen.SelectPlayer(client);
+                            SoundPlayer.PlayUISound(GUISoundType.Select);
+                        }
                         return true;
                     },
                     OnSecondaryClicked = (_, o) =>
                     {
                         if (!(o is Client client)) { return false; }
-                        GameMain.GameSession?.CrewManager?.CreateModerationContextMenu(PlayerInput.MousePosition.ToPoint(), client);
+                        NetLobbyScreen.CreateModerationContextMenu(client);
                         return true;
                     },
                     Text = senderName
@@ -379,8 +445,8 @@ namespace Barotrauma
 
             var msgText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), msgHolder.RectTransform)
                 { AbsoluteOffset = new Point((int)(10 * GUI.Scale), senderNameTimestamp == null ? 0 : senderNameTimestamp.Rect.Height) },
-                displayedText, textColor: message.Color, font: GUI.SmallFont, textAlignment: Alignment.TopLeft, style: null, wrap: true,
-                color: ((chatBox.Content.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f, parseRichText: true)
+                RichString.Rich(displayedText), textColor: message.Color, font: GUIStyle.SmallFont, textAlignment: Alignment.TopLeft, style: null, wrap: true,
+                color: ((chatBox.Content.CountChildren % 2) == 0) ? Color.Transparent : Color.Black * 0.1f)
             {
                 UserData = message.SenderName,
                 CanBeFocused = false
@@ -397,6 +463,7 @@ namespace Barotrauma
                     if (GameMain.NetLobbyScreen != null && GameMain.NetworkMember != null)
                     {
                         clickableArea.OnClick = GameMain.NetLobbyScreen.SelectPlayer;
+                        clickableArea.OnSecondaryClick = GameMain.NetLobbyScreen.ShowPlayerContextMenu;
                     }
                     msgText.ClickableAreas.Add(clickableArea);
                 }
@@ -453,7 +520,7 @@ namespace Barotrauma
                 if (!string.IsNullOrEmpty(senderName))
                 {
                     var senderText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform),
-                        senderName, textColor: senderColor, style: null, font: GUI.SmallFont)
+                        senderName, textColor: senderColor, style: null, font: GUIStyle.SmallFont)
                     {
                         CanBeFocused = false
                     };
@@ -461,7 +528,7 @@ namespace Barotrauma
                     senderText.RectTransform.MinSize = new Point(0, senderText.Rect.Height);
                 }
                 var msgPopupText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform),
-                    displayedText, textColor: message.Color, font: GUI.SmallFont, textAlignment: Alignment.BottomLeft, style: null, wrap: true, parseRichText: true)
+                    RichString.Rich(displayedText), textColor: message.Color, font: GUIStyle.SmallFont, textAlignment: Alignment.BottomLeft, style: null, wrap: true)
                 {
                     CanBeFocused = false
                 };
@@ -494,7 +561,7 @@ namespace Barotrauma
             GUIFrame.Parent.Visible = visible;
         }
 
-        private IEnumerable<object> UpdateMessageAnimation(GUIComponent message, float animDuration)
+        private IEnumerable<CoroutineStatus> UpdateMessageAnimation(GUIComponent message, float animDuration)
         {
             float timer = 0.0f;
             while (timer < animDuration)
@@ -538,6 +605,25 @@ namespace Barotrauma
                 showNewMessagesButton.Visible = false;
             }
 
+            if (PlayerInput.KeyHit(InputType.ToggleChatMode) && GUI.KeyboardDispatcher.Subscriber == null && Screen.Selected == GameMain.GameScreen)
+            {
+                try
+                {
+                    var mode = GameMain.ActiveChatMode switch
+                    {
+                        ChatMode.Local => ChatMode.Radio,
+                        ChatMode.Radio => ChatMode.Local,
+                        _ => throw new NotImplementedException()
+                    };
+                    ChatModeDropDown.SelectItem(mode);
+                    // TODO: Play a sound?
+                }
+                catch (NotImplementedException)
+                {
+                    DebugConsole.ThrowError($"Error toggling chat mode: not implemented for current mode \"{GameMain.ActiveChatMode}\"");
+                }
+            }
+
             if (ToggleButton != null)
             {
                 ToggleButton.Selected = ToggleOpen;
@@ -552,8 +638,8 @@ namespace Barotrauma
                     {
                         int index = (int)presetButton.UserData;
                         presetButton.ToolTip = TextManager.GetWithVariables("radiochannelpreset",
-                            new string[] { "[index]", "[channel]" },
-                            new string[] { index.ToString(), radio.GetChannelMemory(index).ToString() });
+                            ("[index]", index.ToString()),
+                            ("[channel]", radio.GetChannelMemory(index).ToString()));
                     }
                     SetChannel(radio.Channel, setText: true);
                     prevRadio = radio;
@@ -562,7 +648,7 @@ namespace Barotrauma
                 {
                     if (channelPickerContent.FlashTimer <= 0)
                     {
-                        channelPickerContent.Flash(GUI.Style.Green, flashRectInflate: new Vector2(GUI.Scale * 5.0f));
+                        channelPickerContent.Flash(GUIStyle.Green, flashRectInflate: new Vector2(GUI.Scale * 5.0f));
                     }
                     if (PlayerInput.PrimaryMouseButtonClicked() && !GUI.IsMouseOn(channelPickerContent))
                     {
@@ -670,7 +756,7 @@ namespace Barotrauma
             if (Character.Controlled != null && ChatMessage.CanUseRadio(Character.Controlled, out WifiComponent radio))
             {
                 radio.Channel = channel;
-                GameMain.Client?.CreateEntityEvent(radio.Item, new object[] { NetEntityEvent.Type.ChangeProperty, radio.SerializableProperties["channel"] });
+                GameMain.Client?.CreateEntityEvent(radio.Item, new Item.ChangePropertyEventData(radio.SerializableProperties["channel".ToIdentifier()]));
 
                 if (setText)
                 {
@@ -685,6 +771,71 @@ namespace Barotrauma
                         int buttonIndex = (int)channelButton.UserData;
                         channelButton.Selected = radio.GetChannelMemory(buttonIndex) == channel;
                     }
+                }
+            }
+        }
+
+        public void ApplySelectionInputs() => ApplySelectionInputs(InputBox, true, ChatKeyStates.GetChatKeyStates());
+
+        public struct ChatKeyStates
+        {
+            public bool ActiveChatKeyHit { get; set; }
+            public bool LocalChatKeyHit { get; set; }
+            public bool RadioChatKeyHit { get; set; }
+            public bool AnyHit => ActiveChatKeyHit || LocalChatKeyHit || RadioChatKeyHit;
+
+            private ChatKeyStates(bool active, bool local, bool radio)
+            {
+                ActiveChatKeyHit = active;
+                LocalChatKeyHit = local;
+                RadioChatKeyHit = radio;
+            }
+
+            public static ChatKeyStates GetChatKeyStates()
+            {
+                return new ChatKeyStates(PlayerInput.KeyHit(InputType.ActiveChat),
+                    PlayerInput.KeyHit(InputType.Chat),
+                    PlayerInput.KeyHit(InputType.RadioChat) && (Character.Controlled == null || Character.Controlled.SpeechImpediment < 100));
+            }
+
+            public (bool active, bool local, bool radio) Deconstruct()
+            {
+                return (ActiveChatKeyHit, LocalChatKeyHit, RadioChatKeyHit);
+            }
+        }
+
+        public void ApplySelectionInputs(GUITextBox inputBox, bool selectInputBox, ChatKeyStates chatKeyStates)
+        {
+            inputBox ??= InputBox;
+            var (activeChatKeyHit, localChatKeyHit, radioChatKeyHit) = chatKeyStates.Deconstruct();
+            if (localChatKeyHit || (activeChatKeyHit && GameMain.ActiveChatMode == ChatMode.Local))
+            {
+                ChatModeDropDown.SelectItem(ChatMode.Local);
+                inputBox.AddToGUIUpdateList();
+                GUIFrame.Flash(Color.DarkGreen, 0.5f);
+                if (!ToggleOpen)
+                {
+                    CloseAfterMessageSent = !ToggleOpen;
+                    ToggleOpen = true;
+                }
+                if (selectInputBox)
+                {
+                    inputBox.Select(inputBox.Text.Length);
+                }
+            }
+            else if (radioChatKeyHit || (activeChatKeyHit && GameMain.ActiveChatMode == ChatMode.Radio))
+            {
+                ChatModeDropDown.SelectItem(ChatMode.Radio);
+                inputBox.AddToGUIUpdateList();
+                GUIFrame.Flash(Color.YellowGreen, 0.5f);
+                if (!ToggleOpen)
+                {
+                    CloseAfterMessageSent = !ToggleOpen;
+                    ToggleOpen = true;
+                }
+                if (selectInputBox)
+                {
+                    inputBox.Select(inputBox.Text.Length);
                 }
             }
         }

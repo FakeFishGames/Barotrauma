@@ -4,10 +4,10 @@ namespace Barotrauma.Items.Components
 {
     class NameTag : ItemComponent
     {
-        [InGameEditable(MaxLength = 32), Serialize("", false, description: "Name written on the tag.", alwaysUseInstanceValues: true)]
+        [InGameEditable(MaxLength = 32), Serialize("", IsPropertySaveable.No, description: "Name written on the tag.", alwaysUseInstanceValues: true)]
         public string WrittenName { get; set; }
 
-        public NameTag(Item item, XElement element) : base(item, element)
+        public NameTag(Item item, ContentXElement element) : base(item, element)
         {
             AllowInGameEditing = true;
             DrawHudWhenEquipped = true;

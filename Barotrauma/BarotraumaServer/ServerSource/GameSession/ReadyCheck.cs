@@ -1,4 +1,5 @@
 ﻿#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Networking;
@@ -18,7 +19,8 @@ namespace Barotrauma
                     IWriteMessage msg = new WriteOnlyMessage();
                     msg.Write((byte) ServerPacketHeader.READY_CHECK);
                     msg.Write((byte) ReadyCheckState.Start);
-                    msg.Write(endTime);
+                    msg.Write(new DateTimeOffset(startTime).ToUnixTimeSeconds());
+                    msg.Write(new DateTimeOffset(endTime).ToUnixTimeSeconds());
                     msg.Write(author);
 
                     if (sender != null)
@@ -53,10 +55,9 @@ namespace Barotrauma
             foreach (Client client in ActivePlayers)
             {
                 IWriteMessage msg = new WriteOnlyMessage();
-                msg.Write((byte) ServerPacketHeader.READY_CHECK);
-                msg.Write((byte) ReadyCheckState.Update);
-                msg.Write(time); // sync time
-                msg.Write((byte) state);
+                msg.Write((byte)ServerPacketHeader.READY_CHECK);
+                msg.Write((byte)ReadyCheckState.Update);
+                msg.Write((byte)state);
                 msg.Write(otherClient);
                 GameMain.Server.ServerPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
             }

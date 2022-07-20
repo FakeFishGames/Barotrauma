@@ -11,9 +11,9 @@ namespace Barotrauma
         public SubactionGroup Failure = null;
         protected bool? succeeded = null;
 
-        public BinaryOptionAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element)
+        public BinaryOptionAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)
         {
-            foreach (XElement elem in element.Elements())
+            foreach (var elem in element.Elements())
             {
                 string elemName = elem.Name.LocalName;
                 if (elemName.Equals("success", StringComparison.InvariantCultureIgnoreCase))

@@ -52,4 +52,6 @@
   missiontype="Random"
   autobantime="3600"
   maxautobantime="86400"
-  />
+  lootedmoneydestination="Bank"
+  maximumtransferrequest="999999"
+/>

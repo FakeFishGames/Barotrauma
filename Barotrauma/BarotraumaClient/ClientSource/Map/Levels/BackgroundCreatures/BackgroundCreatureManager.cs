@@ -18,45 +18,46 @@ namespace Barotrauma
         private readonly List<BackgroundCreaturePrefab> prefabs = new List<BackgroundCreaturePrefab>();
         private readonly List<BackgroundCreature> creatures = new List<BackgroundCreature>();
 
-        public BackgroundCreatureManager(string configPath)
-        {
-            LoadConfig(new ContentFile(configPath, ContentType.BackgroundCreaturePrefabs));
-        }
-
-        public BackgroundCreatureManager(IEnumerable<ContentFile> files)
+        public BackgroundCreatureManager(IEnumerable<BackgroundCreaturePrefabsFile> files)
         {
             foreach(var file in files)
             {
-                LoadConfig(file);
+                LoadConfig(file.Path);
             }
         }
 
-        private void LoadConfig(ContentFile config)
+        public BackgroundCreatureManager(string path)
+        {
+            DebugConsole.AddWarning($"Couldn't find any BackgroundCreaturePrefabs files, falling back to {path}");
+            LoadConfig(ContentPath.FromRaw(null, path));
+        }
+
+        private void LoadConfig(ContentPath configPath)
         {
             try
             {
-                XDocument doc = XMLExtensions.TryLoadXml(config.Path);
+                XDocument doc = XMLExtensions.TryLoadXml(configPath);
                 if (doc == null) { return; }
-                var mainElement = doc.Root;
+                var mainElement = doc.Root.FromPackage(configPath.ContentPackage);
                 if (mainElement.IsOverride())
                 {
-                    mainElement = doc.Root.FirstElement();
+                    mainElement = mainElement.FirstElement();
                     prefabs.Clear();
-                    DebugConsole.NewMessage($"Overriding all background creatures with '{config.Path}'", Color.Yellow);
+                    DebugConsole.NewMessage($"Overriding all background creatures with '{configPath}'", Color.Yellow);
                 }
                 else if (prefabs.Any())
                 {
-                    DebugConsole.NewMessage($"Loading additional background creatures from file '{config.Path}'");
+                    DebugConsole.NewMessage($"Loading additional background creatures from file '{configPath}'");
                 }
 
-                foreach (XElement element in mainElement.Elements())
+                foreach (var element in mainElement.Elements())
                 {
                     prefabs.Add(new BackgroundCreaturePrefab(element));
                 };
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError(String.Format("Failed to load BackgroundCreatures from {0}", config.Path), e);
+                DebugConsole.ThrowError(String.Format("Failed to load BackgroundCreatures from {0}", configPath), e);
             }
         }
 
@@ -95,7 +96,7 @@ namespace Barotrauma
                 var prefab = ToolBox.SelectWeightedRandom(availablePrefabs, availablePrefabs.Select(p => p.GetCommonness(level.GenerationParams)).ToList(), Rand.RandSync.ClientOnly);
                 if (prefab == null) { break; }
 
-                int amount = Rand.Range(prefab.SwarmMin, prefab.SwarmMax, Rand.RandSync.ClientOnly);
+                int amount = Rand.Range(prefab.SwarmMin, prefab.SwarmMax + 1, Rand.RandSync.ClientOnly);
                 List<BackgroundCreature> swarmMembers = new List<BackgroundCreature>();
                 for (int n = 0; n < amount; n++)
                 {

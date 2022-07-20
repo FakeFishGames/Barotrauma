@@ -9,38 +9,27 @@ namespace Barotrauma
 {
     class TraitorMissionPrefab
     {
-        public class TraitorMissionEntry
+        public class TraitorMissionEntry : Prefab
         {
+            public static PrefabCollection<TraitorMissionEntry> Prefabs => TraitorMissionPrefab.Prefabs;
+            
             public readonly TraitorMissionPrefab Prefab;
             public float SelectedWeight;
 
-            public TraitorMissionEntry(XElement element)
+            public TraitorMissionEntry(ContentXElement element, TraitorMissionsFile file) : base(file, element)
             {
                 Prefab = new TraitorMissionPrefab(element);
             }
-        }
-        public static readonly List<TraitorMissionEntry> List = new List<TraitorMissionEntry>();
 
-        public static void Init()
-        {
-            var files = GameMain.Instance.GetFilesOfType(ContentType.TraitorMissions);
-            foreach (ContentFile file in files)
-            {
-                XDocument doc = XMLExtensions.TryLoadXml(file.Path);
-                if (doc?.Root == null) continue;
-
-                foreach (XElement element in doc.Root.Elements())
-                {
-                    List.Add(new TraitorMissionEntry(element));
-                }
-            }
+            public override void Dispose() { }
         }
+        public static readonly PrefabCollection<TraitorMissionEntry> Prefabs = new PrefabCollection<TraitorMissionEntry>();
 
         public static TraitorMissionPrefab RandomPrefab()
         {
-            var selected = ToolBox.SelectWeightedRandom(List, List.Select(mission => Math.Max(mission.SelectedWeight, 0.1f)).ToList(), TraitorManager.Random);
+            var selected = ToolBox.SelectWeightedRandom(Prefabs.ToList(), Prefabs.Select(mission => Math.Max(mission.SelectedWeight, 0.1f)).ToList(), TraitorManager.Random);
             //the weight of the missions that didn't get selected keeps growing the make them more likely to get picked
-            foreach (var mission in List)
+            foreach (var mission in Prefabs)
             {
                 mission.SelectedWeight += 10;
             }
@@ -103,7 +92,7 @@ namespace Barotrauma
             private delegate bool TargetFilter(string value, Character character);
             private static Dictionary<string, TargetFilter> targetFilters = new Dictionary<string, TargetFilter>()
             {
-                { "job", (value, character) => value.Equals(character.Info.Job.Prefab.Identifier, StringComparison.OrdinalIgnoreCase) },
+                { "job", (value, character) => value == character.Info.Job.Prefab.Identifier },
                 { "role", (value, character) => value.Equals(GameMain.Server.TraitorManager.GetTraitorRole(character), StringComparison.OrdinalIgnoreCase) }
             };
 
@@ -180,12 +169,29 @@ namespace Barotrauma
                                     itemCountFilters.Add((character) => filter(attribute.Value, character));
                                 }
                             }
-                            goal = new Traitor.GoalFindItem((character) => itemCountFilters.All(f => f(character)), Config.GetAttributeString("identifier", null), Config.GetAttributeBool("preferNew", true), Config.GetAttributeBool("allowNew", true), Config.GetAttributeBool("allowExisting", true), Config.GetAttributeFloat("percentage", -1f), Config.GetAttributeStringArray("allowedContainers", new string[] {"steelcabinet", "mediumsteelcabinet", "suppliescabinet"}));
+                            goal = new Traitor.GoalFindItem((character) => itemCountFilters.All(f => f(character)),
+                                Config.GetAttributeString("identifier",
+                                    null),
+                                Config.GetAttributeBool("preferNew",
+                                    true),
+                                Config.GetAttributeBool("allowNew",
+                                    true),
+                                Config.GetAttributeBool("allowExisting",
+                                    true),
+                                Config.GetAttributeFloat("percentage",
+                                    -1f),
+                                Config.GetAttributeIdentifierArray("allowedContainers",
+                                    new string[]
+                                    {
+                                        "steelcabinet",
+                                        "mediumsteelcabinet",
+                                        "suppliescabinet"
+                                    }.ToIdentifiers()));
                             break;
                         case "replaceinventory":
                             checker.Required("containers", "replacements");
                             checker.Optional("percentage");
-                            goal = new Traitor.GoalReplaceInventory(Config.GetAttributeStringArray("containers", new string[] { }), Config.GetAttributeStringArray("replacements", new string[] { }), Config.GetAttributeFloat("percentage", 100.0f) / 100.0f);
+                            goal = new Traitor.GoalReplaceInventory(Config.GetAttributeIdentifierArray("containers", new Identifier[] { }), Config.GetAttributeIdentifierArray("replacements", new Identifier[] { }), Config.GetAttributeFloat("percentage", 100.0f) / 100.0f);
                             break;
                         case "reachdistancefromsub":
                             checker.Optional("distance");
@@ -221,7 +227,7 @@ namespace Barotrauma
                             break;
                         case "keeptransformedalive":
                             checker.Required("speciesname");
-                            goal = new Traitor.GoalKeepTransformedAlive(Config.GetAttributeString("speciesname", null));
+                            goal = new Traitor.GoalKeepTransformedAlive(Config.GetAttributeIdentifier("speciesname", Identifier.Empty));
                             break;
                         default:
                             GameServer.Log($"Unrecognized goal type \"{goalType}\".", ServerLog.MessageType.Error);
@@ -425,7 +431,7 @@ namespace Barotrauma
         }
         public readonly Dictionary<string, Role> Roles = new Dictionary<string, Role>();
 
-        public readonly string Identifier;
+        public readonly Identifier Identifier;
         public readonly string StartText;
         public readonly string EndMessageSuccessText;
         public readonly string EndMessageSuccessDeadText;
@@ -575,14 +581,14 @@ namespace Barotrauma
             if (jobs != null)
             {
                 var jobsSet = new HashSet<string>(jobs.Select(job => job.ToLower(CultureInfo.InvariantCulture)));
-                filters.Add(character => character.Info?.Job != null && jobsSet.Contains(character.Info.Job.Name.ToLower(CultureInfo.InvariantCulture)));
+                filters.Add(character => character.Info?.Job != null && jobsSet.Contains(character.Info.Job.Name.ToLower().Value));
             }
             return new Role(filters);
         }
 
-        public TraitorMissionPrefab(XElement missionRoot)
+        public TraitorMissionPrefab(ContentXElement missionRoot)
         {
-            Identifier = missionRoot.GetAttributeString("identifier", null);
+            Identifier = missionRoot.GetAttributeIdentifier("identifier", Identifier.Empty);
             foreach (var element in missionRoot.Elements())
             {
                 using (var checker = new AttributeChecker(element))

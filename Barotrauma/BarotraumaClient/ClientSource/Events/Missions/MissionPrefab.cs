@@ -4,7 +4,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    partial class MissionPrefab
+    partial class MissionPrefab : PrefabWithUintIdentifier
     {
         public Sprite Icon
         {
@@ -49,11 +49,11 @@ namespace Barotrauma
         private Sprite hudIcon;
         private Color? hudIconColor;
 
-        partial void InitProjSpecific(XElement element)
+        partial void InitProjSpecific(ContentXElement element)
         {
             DisplayTargetHudIcons = element.GetAttributeBool("displaytargethudicons", false);
             HudIconMaxDistance = element.GetAttributeFloat("hudiconmaxdistance", 1000.0f);
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 string name = subElement.Name.ToString();
                 if (name.Equals("icon", StringComparison.OrdinalIgnoreCase))
@@ -67,6 +67,11 @@ namespace Barotrauma
                     hudIconColor = subElement.GetAttributeColor("color");
                 }
             }
+        }
+
+        partial void DisposeProjectSpecific()
+        {
+            Icon?.Remove();
         }
     }
 }

@@ -30,9 +30,9 @@
         public Character Character { get; set; }
     }
 
-    interface IAbilityString
+    interface IAbilitySkillIdentifier
     {
-        public string String { get; set; }
+        public Identifier SkillIdentifier { get; set; }
     }
 
     interface IAbilityAffliction
