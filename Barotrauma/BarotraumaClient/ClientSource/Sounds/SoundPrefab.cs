@@ -240,6 +240,8 @@ namespace Barotrauma
         public readonly Vector2 IntensityRange;
 
         public readonly bool ContinueFromPreviousTime;
+        public readonly bool MuteIntensityMusic;
+        public readonly float MinimumRequiredTimeToPlay;
         public int PreviousTime;
 
         public BackgroundMusic(ContentXElement element, SoundsFile file) : base(element, file, stream: true)
@@ -249,6 +251,8 @@ namespace Barotrauma
             DuckVolume = element.GetAttributeBool("duckvolume", false);
             this.Volume = element.GetAttributeFloat("volume", 1.0f);
             ContinueFromPreviousTime = element.GetAttributeBool("continuefromprevioustime", false);
+            MuteIntensityMusic = element.GetAttributeBool("muteintensitymusic", false);
+            MinimumRequiredTimeToPlay = element.GetAttributeFloat("minimumrequiredtimetoplay", 30.0f);
         }
     }
 

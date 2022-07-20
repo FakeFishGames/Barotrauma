@@ -26,6 +26,7 @@ namespace Barotrauma
         private static BackgroundMusic previousDefaultMusic;
 
         private static float updateMusicTimer;
+        private static bool increaseUpdateMusicTimer;
 
         //ambience
         private static Sound waterAmbienceIn => SoundPrefab.WaterAmbienceIn.ActivePrefab.Sound;
@@ -533,6 +534,7 @@ namespace Barotrauma
             updateMusicTimer -= deltaTime;
             if (updateMusicTimer <= 0.0f)
             {
+                increaseUpdateMusicTimer = false;
                 //find appropriate music for the current situation
                 Identifier currentMusicType = GetCurrentMusicType();
                 float currentIntensity = GameMain.GameSession?.EventManager != null ?
@@ -613,6 +615,19 @@ namespace Barotrauma
 
                 foreach (BackgroundMusic intensityMusic in suitableIntensityMusic)
                 {
+                    //if the current maintrack is meant to mute all intensity music, loop through all the intensity channels and set them to null, then continue
+                    if ((targetMusic[mainTrackIndex] != null) && (targetMusic[mainTrackIndex].MuteIntensityMusic))
+                    {
+                        for (int i = intensityTrackStartIndex; i < MaxMusicChannels; i++)
+                        {
+                            if (targetMusic[i] != null)
+                            {
+                                targetMusic[i] = null;
+                                break;
+                            }
+                        }
+                        continue;
+                    }
                     //already playing, do nothing
                     if (targetMusic.Any(m => m != null && m == intensityMusic)) { continue; }
 
@@ -627,6 +642,10 @@ namespace Barotrauma
                 }
 
                 updateMusicTimer = UpdateMusicInterval;
+                if (increaseUpdateMusicTimer)
+                {
+                    updateMusicTimer += (targetMusic[mainTrackIndex].MinimumRequiredTimeToPlay);
+                }
             }
 
             int activeTrackCount = targetMusic.Count(m => m != null);
@@ -756,6 +775,44 @@ namespace Barotrauma
             }
 
             Submarine targetSubmarine = Character.Controlled?.Submarine;
+            float enemyDistThreshold = 5000.0f;
+
+            if (targetSubmarine != null)
+            {
+                enemyDistThreshold = Math.Max(enemyDistThreshold, Math.Max(targetSubmarine.Borders.Width, targetSubmarine.Borders.Height) * 2.0f);
+            }
+
+            List<Character> MonsterMusicCharacters = new List<Character>();
+
+            foreach (Character character in Character.CharacterList)
+            {
+                if (character.IsDead || !character.Enabled) continue;
+                if (!(character.AIController is EnemyAIController enemyAI) || !enemyAI.Enabled || (!enemyAI.AttackHumans && !enemyAI.AttackRooms)) { continue; }
+
+                if (targetSubmarine != null)
+                {
+                    if (Vector2.DistanceSquared(character.WorldPosition, targetSubmarine.WorldPosition) < enemyDistThreshold * enemyDistThreshold * character.MusicRangeMultiplier)
+                    {
+                        MonsterMusicCharacters.Add(character);
+                    }
+                }
+                else if (Character.Controlled != null)
+                {
+                    if (Vector2.DistanceSquared(character.WorldPosition, Character.Controlled.WorldPosition) < enemyDistThreshold * enemyDistThreshold * character.MusicRangeMultiplier)
+                    {
+                        MonsterMusicCharacters.Add(character);
+                    }
+                }
+            }
+
+            if (MonsterMusicCharacters.Any())
+            {
+                Character chosencharacter = MonsterMusicCharacters.RandomElementByWeight(c => c.MusicWeight);
+                // Allow the music to play for some time instead of constantly changing if multiple monsters with similiar music weight and different music types are present.
+                increaseUpdateMusicTimer = true;
+                return chosencharacter.MusicType.ToIdentifier();
+            }
+
             if (targetSubmarine != null && targetSubmarine.AtDamageDepth)
             {
                 return "deep".ToIdentifier();
@@ -766,8 +823,8 @@ namespace Barotrauma
                 return "deep".ToIdentifier();
             }
 
-                if (targetSubmarine != null)
-            {                
+            if (targetSubmarine != null)
+            {
                 float floodedArea = 0.0f;
                 float totalArea = 0.0f;
                 foreach (Hull hull in Hull.HullList)
@@ -777,36 +834,9 @@ namespace Barotrauma
                     totalArea += hull.Volume;
                 }
 
-                if (totalArea > 0.0f && floodedArea / totalArea > 0.25f) { return "flooded".ToIdentifier(); }        
-            }
-            
-            float enemyDistThreshold = 5000.0f;
-
-            if (targetSubmarine != null)
-            {
-                enemyDistThreshold = Math.Max(enemyDistThreshold, Math.Max(targetSubmarine.Borders.Width, targetSubmarine.Borders.Height) * 2.0f);
+                if (totalArea > 0.0f && floodedArea / totalArea > 0.25f) { return "flooded".ToIdentifier(); }
             }
 
-            foreach (Character character in Character.CharacterList)
-            {
-                if (character.IsDead || !character.Enabled) continue;
-                if (!(character.AIController is EnemyAIController enemyAI) || !enemyAI.Enabled || (!enemyAI.AttackHumans && !enemyAI.AttackRooms)) { continue; }
-
-                if (targetSubmarine != null)
-                {
-                    if (Vector2.DistanceSquared(character.WorldPosition, targetSubmarine.WorldPosition) < enemyDistThreshold * enemyDistThreshold)
-                    {
-                        return "monster".ToIdentifier();
-                    }
-                }
-                else if (Character.Controlled != null)
-                {
-                    if (Vector2.DistanceSquared(character.WorldPosition, Character.Controlled.WorldPosition) < enemyDistThreshold * enemyDistThreshold)
-                    {
-                        return "monster".ToIdentifier();
-                    }
-                }
-            }
 
             if (GameMain.GameSession != null)
             {
