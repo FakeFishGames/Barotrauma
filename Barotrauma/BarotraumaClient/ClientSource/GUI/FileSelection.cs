@@ -1,9 +1,11 @@
-﻿using Microsoft.Xna.Framework;
+﻿#nullable enable
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using Barotrauma.IO;
 using System.Linq;
 using System.Text;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -18,7 +20,7 @@ namespace Barotrauma
             }
             set
             {
-                if (value && backgroundFrame == null) { Init(); }
+                if (value) { InitIfNecessary(); }
                 if (!value)
                 {
                     fileSystemWatcher?.Dispose();
@@ -28,26 +30,31 @@ namespace Barotrauma
             }
         }
 
-        private static GUIFrame backgroundFrame;
-        private static GUIFrame window;
-        private static GUIListBox sidebar;
-        private static GUIListBox fileList;
-        private static GUITextBox directoryBox;
-        private static GUITextBox filterBox;
-        private static GUITextBox fileBox;
-        private static GUIDropDown fileTypeDropdown;
-        private static GUIButton openButton;
+        private static GUIFrame? backgroundFrame;
+        private static GUIFrame? window;
+        private static GUIListBox? sidebar;
+        private static GUIListBox? fileList;
+        private static GUITextBox? directoryBox;
+        private static GUITextBox? filterBox;
+        private static GUITextBox? fileBox;
+        private static GUIDropDown? fileTypeDropdown;
+        private static GUIButton? openButton;
 
-        private static System.IO.FileSystemWatcher fileSystemWatcher;
+        private static System.IO.FileSystemWatcher? fileSystemWatcher;
 
-        private static string currentFileTypePattern;
+        private enum ItemIsDirectory
+        {
+            Yes, No
+        }
 
-        private static readonly string[] ignoredDrivePrefixes = new string[]
+        private static string? currentFileTypePattern;
+
+        private static readonly string[] ignoredDrivePrefixes =
         {
             "/sys/", "/snap/"
         };
 
-        private static string currentDirectory;
+        private static string currentDirectory = "";
         public static string CurrentDirectory
         {
             get
@@ -91,7 +98,7 @@ namespace Barotrauma
             }
         }
 
-        public static Action<string> OnFileSelected
+        public static Action<string>? OnFileSelected
         {
             get;
             set;
@@ -99,15 +106,16 @@ namespace Barotrauma
 
         private static void OnFileSystemChanges(object sender, System.IO.FileSystemEventArgs e)
         {
+            if (fileList is null) { return; }
             switch (e.ChangeType)
             {
                 case System.IO.WatcherChangeTypes.Created:
                     {
-                        var itemFrame = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), fileList.Content.RectTransform), e.Name)
+                        var itemFrame = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), fileList.Content.RectTransform), e.Name ?? string.Empty)
                         {
-                            UserData = (bool?)Directory.Exists(e.FullPath)
+                            UserData = Directory.Exists(e.FullPath) ? ItemIsDirectory.Yes : ItemIsDirectory.No
                         };
-                        if ((itemFrame.UserData as bool?) ?? false)
+                        if (itemFrame.UserData is ItemIsDirectory.Yes)
                         {
                             itemFrame.Text += "/";
                         }
@@ -122,11 +130,13 @@ namespace Barotrauma
                     break;
                 case System.IO.WatcherChangeTypes.Renamed:
                     {
-                        System.IO.RenamedEventArgs renameArgs = e as System.IO.RenamedEventArgs;
-                        var itemFrame = fileList.Content.FindChild(c => (c is GUITextBlock tb) && (tb.Text == renameArgs.OldName || tb.Text == renameArgs.OldName + "/")) as GUITextBlock;
-                        itemFrame.UserData = (bool?)Directory.Exists(e.FullPath);
-                        itemFrame.Text = renameArgs.Name;
-                        if ((itemFrame.UserData as bool?) ?? false)
+                        System.IO.RenamedEventArgs renameArgs = e as System.IO.RenamedEventArgs ?? throw new InvalidCastException($"Unable to cast {nameof(System.IO.FileSystemEventArgs)} to {nameof(System.IO.RenamedEventArgs)}.");
+                        var itemFrame =
+                            fileList.Content.FindChild(c => (c is GUITextBlock tb) && (tb.Text == renameArgs.OldName || tb.Text == renameArgs.OldName + "/")) as GUITextBlock
+                            ?? throw new Exception($"Could not find file list item with name \"{renameArgs.OldName}\"");
+                        itemFrame.UserData = Directory.Exists(e.FullPath) ? ItemIsDirectory.Yes : ItemIsDirectory.No;
+                        itemFrame.Text = renameArgs.Name ?? string.Empty;
+                        if (itemFrame.UserData is ItemIsDirectory.Yes)
                         {
                             itemFrame.Text += "/";
                         }
@@ -138,10 +148,10 @@ namespace Barotrauma
 
         private static int SortFiles(RectTransform r1, RectTransform r2)
         {
-            string file1 = (r1.GUIComponent as GUITextBlock)?.Text ?? "";
-            string file2 = (r2.GUIComponent as GUITextBlock)?.Text ?? "";
-            bool dir1 = (r1.GUIComponent.UserData as bool?) ?? false;
-            bool dir2 = (r2.GUIComponent.UserData as bool?) ?? false;
+            string file1 = (r1.GUIComponent as GUITextBlock)?.Text?.SanitizedValue ?? "";
+            string file2 = (r2.GUIComponent as GUITextBlock)?.Text?.SanitizedValue ?? "";
+            bool dir1 = r1.GUIComponent.UserData is ItemIsDirectory.Yes;
+            bool dir2 = r2.GUIComponent.UserData is ItemIsDirectory.Yes;
             if (dir1 && !dir2)
             {
                 return -1;
@@ -154,6 +164,11 @@ namespace Barotrauma
             return string.Compare(file1, file2);
         }
 
+        private static void InitIfNecessary()
+        {
+            if (backgroundFrame == null) { Init(); }
+        }
+        
         public static void Init()
         {
             backgroundFrame = new GUIFrame(new RectTransform(GUI.Canvas.RelativeSize, GUI.Canvas), style: null)
@@ -167,7 +182,10 @@ namespace Barotrauma
             window = new GUIFrame(new RectTransform(Vector2.One * 0.8f, backgroundFrame.RectTransform, Anchor.Center));
 
             var horizontalLayout = new GUILayoutGroup(new RectTransform(Vector2.One * 0.9f, window.RectTransform, Anchor.Center), true);
-            sidebar = new GUIListBox(new RectTransform(new Vector2(0.29f, 1.0f), horizontalLayout.RectTransform));
+            sidebar = new GUIListBox(new RectTransform(new Vector2(0.29f, 1.0f), horizontalLayout.RectTransform))
+            {
+                PlaySoundOnSelect = true
+            };
 
             var drives = System.IO.DriveInfo.GetDrives();
             foreach (var drive in drives)
@@ -179,7 +197,7 @@ namespace Barotrauma
 
             sidebar.OnSelected = (child, userdata) =>
             {
-                CurrentDirectory = (child as GUITextBlock).Text;
+                CurrentDirectory = (child as GUITextBlock)?.Text.SanitizedValue ?? throw new Exception("Sidebar selection is invalid");
 
                 return false;
             };
@@ -226,15 +244,17 @@ namespace Barotrauma
 
             fileList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.85f), fileListLayout.RectTransform))
             {
+                PlaySoundOnSelect = true,
                 OnSelected = (child, userdata) =>
                 {
-                    if (userdata == null) { return false; }
+                    if (userdata is null) { return false; }
+                    if (fileBox is null) { return false; }
 
-                    var fileName = (child as GUITextBlock).Text;
+                    var fileName = (child as GUITextBlock)!.Text.SanitizedValue;
                     fileBox.Text = fileName;
                     if (PlayerInput.DoubleClicked())
                     {
-                        bool isDir = (userdata as bool?).Value;
+                        bool isDir = userdata is ItemIsDirectory.Yes;
                         if (isDir)
                         {
                             CurrentDirectory += fileName;
@@ -263,7 +283,7 @@ namespace Barotrauma
             {
                 OnSelected = (child, userdata) =>
                 {
-                    currentFileTypePattern = (child as GUITextBlock).UserData as string;
+                    currentFileTypePattern = (child as GUITextBlock)!.UserData as string;
                     RefreshFileList();
 
                     return true;
@@ -307,30 +327,31 @@ namespace Barotrauma
 
         public static void ClearFileTypeFilters()
         {
-            if (backgroundFrame == null) { Init(); }
-            fileTypeDropdown.ClearChildren();
+            InitIfNecessary();
+            fileTypeDropdown!.ClearChildren();
         }
 
         public static void AddFileTypeFilter(string name, string pattern)
         {
-            if (backgroundFrame == null) { Init(); }
-            fileTypeDropdown.AddItem(name + " (" + pattern + ")", pattern);
+            InitIfNecessary();
+            fileTypeDropdown!.AddItem(name + " (" + pattern + ")", pattern);
         }
 
         public static void SelectFileTypeFilter(string pattern)
         {
-            if (backgroundFrame == null) { Init(); }
-            fileTypeDropdown.SelectItem(pattern);
+            InitIfNecessary();
+            fileTypeDropdown!.SelectItem(pattern);
         }
 
         public static void RefreshFileList()
         {
-            fileList.Content.ClearChildren();
+            InitIfNecessary();
+            fileList!.Content.ClearChildren();
             fileList.BarScroll = 0.0f;
 
             try
             {
-                var directories = Directory.EnumerateDirectories(currentDirectory, "*" + filterBox.Text + "*");
+                var directories = Directory.EnumerateDirectories(currentDirectory, "*" + filterBox!.Text + "*");
                 foreach (var directory in directories)
                 {
                     string txt = directory;
@@ -338,7 +359,7 @@ namespace Barotrauma
                     if (!txt.EndsWith("/")) { txt += "/"; }
                     var itemFrame = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), fileList.Content.RectTransform), txt)
                     {
-                        UserData = (bool?)true
+                        UserData = ItemIsDirectory.Yes
                     };
                     var folderIcon = new GUIImage(new RectTransform(new Point((int)(itemFrame.Rect.Height * 0.8f)), itemFrame.RectTransform, Anchor.CenterLeft)
                     {
@@ -347,18 +368,18 @@ namespace Barotrauma
                     itemFrame.Padding = new Vector4(folderIcon.Rect.Width * 1.5f, itemFrame.Padding.Y, itemFrame.Padding.Z, itemFrame.Padding.W);
                 }
 
-                IEnumerable<string> files = null;
-                if (currentFileTypePattern == null)
+                IEnumerable<string> files = Enumerable.Empty<string>();
+                if (currentFileTypePattern.IsNullOrEmpty())
                 {
                     files = Directory.GetFiles(currentDirectory);
                 }
                 else
                 {
-                    foreach (string pattern in currentFileTypePattern.Split(','))
+                    foreach (string pattern in currentFileTypePattern!.Split(','))
                     {
                         string patternTrimmed = pattern.Trim();
                         patternTrimmed = "*" + filterBox.Text + "*" + patternTrimmed;
-                        if (files == null)
+                        if (files.None())
                         {
                             files = Directory.EnumerateFiles(currentDirectory, patternTrimmed);
                         }
@@ -375,7 +396,7 @@ namespace Barotrauma
                     if (txt.StartsWith(currentDirectory)) { txt = txt.Substring(currentDirectory.Length); }
                     var itemFrame = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), fileList.Content.RectTransform), txt)
                     {
-                        UserData = (bool?)false
+                        UserData = ItemIsDirectory.No
                     };
                 }
             }
@@ -387,8 +408,8 @@ namespace Barotrauma
                 };
             }
 
-            directoryBox.Text = currentDirectory;
-            fileBox.Text = "";
+            directoryBox!.Text = currentDirectory;
+            fileBox!.Text = "";
             fileList.Deselect();
         }
 
@@ -398,9 +419,9 @@ namespace Barotrauma
             if (dir.EndsWith("/")) { dir = dir.Substring(0, dir.Length - 1); }
             int index = dir.LastIndexOf("/");
             if (index < 0) { return false; }
-            CurrentDirectory = CurrentDirectory.Substring(0, index+1);
+            CurrentDirectory = CurrentDirectory.Substring(0, index + 1);
 
-            return false;
+            return true;
         }
 
         public static void AddToGUIUpdateList()

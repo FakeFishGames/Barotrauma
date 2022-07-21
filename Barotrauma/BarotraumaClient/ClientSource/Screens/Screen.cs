@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    partial class Screen
+    abstract partial class Screen
     {
         private GUIFrame frame;
         public GUIFrame Frame
@@ -70,6 +70,7 @@ namespace Barotrauma
 
         public virtual void Release()
         {
+            if (frame is null) { return; }
             frame.RectTransform.Parent = null;
             frame = null;
         }

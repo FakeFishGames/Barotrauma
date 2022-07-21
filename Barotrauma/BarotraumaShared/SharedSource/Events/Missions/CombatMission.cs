@@ -6,8 +6,8 @@ namespace Barotrauma
     {
         private Submarine[] subs;
 
-        private readonly string[] descriptions;
-        private static string[] teamNames = { "Team A", "Team B" };
+        private readonly LocalizedString[] descriptions;
+        private static LocalizedString[] teamNames = { "Team A", "Team B" };
 
         public override bool AllowRespawn
         {
@@ -23,11 +23,11 @@ namespace Barotrauma
             }
         }
 
-        public override string SuccessMessage
+        public override LocalizedString SuccessMessage
         {
             get 
             {
-                if (Winner == CharacterTeamType.None || string.IsNullOrEmpty(base.SuccessMessage)) { return ""; }
+                if (Winner == CharacterTeamType.None || base.SuccessMessage.IsNullOrEmpty()) { return ""; }
 
                 //disable success message for now if it hasn't been translated
                 if (!TextManager.ContainsTag("MissionSuccess." + Prefab.TextIdentifier)) { return ""; }
@@ -45,11 +45,11 @@ namespace Barotrauma
         public CombatMission(MissionPrefab prefab, Location[] locations, Submarine sub)
             : base(prefab, locations, sub)
         {
-            descriptions = new string[]
+            descriptions = new LocalizedString[]
             {
-                TextManager.Get("MissionDescriptionNeutral." + prefab.TextIdentifier, true) ?? prefab.ConfigElement.GetAttributeString("descriptionneutral", ""),
-                TextManager.Get("MissionDescription1." + prefab.TextIdentifier, true) ?? prefab.ConfigElement.GetAttributeString("description1", ""),
-                TextManager.Get("MissionDescription2." + prefab.TextIdentifier, true) ?? prefab.ConfigElement.GetAttributeString("description2", "")
+                TextManager.Get("MissionDescriptionNeutral." + prefab.TextIdentifier).Fallback(prefab.ConfigElement.GetAttributeString("descriptionneutral", "")),
+                TextManager.Get("MissionDescription1." + prefab.TextIdentifier).Fallback(prefab.ConfigElement.GetAttributeString("description1", "")),
+                TextManager.Get("MissionDescription2." + prefab.TextIdentifier).Fallback(prefab.ConfigElement.GetAttributeString("description2", ""))
             };
 
             for (int i = 0; i < descriptions.Length; i++)
@@ -60,14 +60,14 @@ namespace Barotrauma
                 }
             }
 
-            teamNames = new string[]
+            teamNames = new LocalizedString[]
             {
-                TextManager.Get("MissionTeam1." + prefab.TextIdentifier, true) ?? prefab.ConfigElement.GetAttributeString("teamname1", "Team A"),
-                TextManager.Get("MissionTeam2." + prefab.TextIdentifier, true) ?? prefab.ConfigElement.GetAttributeString("teamname2", "Team B")
+                TextManager.Get("MissionTeam1." + prefab.TextIdentifier).Fallback(prefab.ConfigElement.GetAttributeString("teamname1", "Team A")),
+                TextManager.Get("MissionTeam2." + prefab.TextIdentifier).Fallback(prefab.ConfigElement.GetAttributeString("teamname2", "Team B"))
             };
         }
 
-        public static string GetTeamName(CharacterTeamType teamID)
+        public static LocalizedString GetTeamName(CharacterTeamType teamID)
         {
             if (teamID == CharacterTeamType.Team1)
             {

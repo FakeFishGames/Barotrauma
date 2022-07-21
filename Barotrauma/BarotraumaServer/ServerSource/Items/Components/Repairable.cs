@@ -4,13 +4,16 @@ namespace Barotrauma.Items.Components
 {
     partial class Repairable : ItemComponent, IServerSerializable, IClientSerializable
     {
-        void InitProjSpecific()
+        private Character prevLoggedFixer;
+        private FixActions prevLoggedFixAction;
+
+        public override void OnMapLoaded()
         {
             //let the clients know the initial deterioration delay
             item.CreateServerEvent(this);
         }
 
-        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
+        public void ServerEventRead(IReadMessage msg, Client c)
         {
             if (c.Character == null) { return; }
             var requestedFixAction = (FixActions)msg.ReadRangedInteger(0, 2);
@@ -19,7 +22,7 @@ namespace Barotrauma.Items.Components
             {
                 if (!c.Character.IsTraitor && requestedFixAction == FixActions.Sabotage)
                 {
-                    if (GameSettings.VerboseLogging)
+                    if (GameSettings.CurrentConfig.VerboseLogging)
                     {
                         DebugConsole.Log($"Non traitor \"{c.Character.Name}\" attempted to sabotage item.");
                     }
@@ -39,7 +42,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
             msg.Write(deteriorationTimer);
             msg.Write(deteriorateAlwaysResetTimer);

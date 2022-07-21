@@ -34,14 +34,18 @@ namespace Barotrauma
         public float SoundRange
         {
             get { return soundRange; }
-            set 
+            set
             {
                 if (float.IsNaN(value))
                 {
                     DebugConsole.ThrowError("Attempted to set the SoundRange of an AITarget to NaN.\n" + Environment.StackTrace.CleanupStackTrace());
                     return;
                 }
-                soundRange = MathHelper.Clamp(value, MinSoundRange, MaxSoundRange); 
+                soundRange = MathHelper.Clamp(value, MinSoundRange, MaxSoundRange);
+                if (soundRange > 0.0f && !Static && FadeOutTime > 0.0f)
+                {
+                    NeedsUpdate = true;
+                }
             }
         }
 
@@ -55,7 +59,11 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Attempted to set the SightRange of an AITarget to NaN.\n" + Environment.StackTrace.CleanupStackTrace());
                     return;
                 }
-                sightRange = MathHelper.Clamp(value, MinSightRange, MaxSightRange); 
+                sightRange = MathHelper.Clamp(value, MinSightRange, MaxSightRange);
+                if (sightRange > 0 && !Static && FadeOutTime > 0.0f)
+                {
+                    NeedsUpdate = true;
+                }
             }
         }
 
@@ -89,8 +97,8 @@ namespace Barotrauma
             set;
         }
 
-        public string SonarLabel;
-        public string SonarIconIdentifier;
+        public LocalizedString SonarLabel;
+        public Identifier SonarIconIdentifier;
 
         private bool inDetectable;
 
@@ -99,12 +107,32 @@ namespace Barotrauma
         /// </summary>
         public bool InDetectable
         {
-            get => inDetectable || (SoundRange <= 0 && SightRange <= 0);
-            set => inDetectable = value;
+            get 
+            { 
+                return inDetectable || (SoundRange <= 0 && SightRange <= 0); 
+            }
+            set 
+            { 
+                inDetectable = value;
+                if (inDetectable) 
+                { 
+                    NeedsUpdate = true; 
+                }
+            }
         }
+
 
         public float MinSoundRange, MinSightRange;
         public float MaxSoundRange = 100000, MaxSightRange = 100000;
+
+        /// <summary>
+        /// Does the AI target do something that requires Update() to be called (e.g. static targets don't need to be updated)
+        /// </summary>
+        public bool NeedsUpdate
+        {
+            get;
+            private set;
+        } = true;
 
         public TargetType Type { get; private set; }
 
@@ -172,13 +200,9 @@ namespace Barotrauma
             }
             SonarDisruption     = element.GetAttributeFloat("sonardisruption", 0.0f);
             string label        = element.GetAttributeString("sonarlabel", "");
-            SonarLabel          = TextManager.Get(label, returnNull: true) ?? label;
-            SonarIconIdentifier = element.GetAttributeString("sonaricon", "");
-            string typeString   = element.GetAttributeString("type", "Any");
-            if (Enum.TryParse(typeString, out TargetType t))
-            {
-                Type = t;
-            }
+            SonarLabel          = TextManager.Get(label).Fallback(label);
+            SonarIconIdentifier = element.GetAttributeIdentifier("sonaricon", Identifier.Empty);
+            Type                = element.GetAttributeEnum("type", TargetType.Any);
             Reset();
         }
 
@@ -194,14 +218,22 @@ namespace Barotrauma
             if (!Static && FadeOutTime > 0)
             {
                 // The aitarget goes silent/invisible if the components don't keep it active
-                if (!StaticSight && SightRange > 0)
+                if (!StaticSight && sightRange > 0)
                 {
                     DecreaseSightRange(deltaTime);
                 }
-                if (!StaticSound && SoundRange > 0)
+                if (!StaticSound && soundRange > 0)
                 {
                     DecreaseSoundRange(deltaTime);
                 }
+                if (sightRange <= 0 && soundRange <= 0)
+                {
+                    NeedsUpdate = false;
+                }
+            }
+            else
+            {
+                NeedsUpdate = false;
             }
         }
 

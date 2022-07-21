@@ -6,7 +6,7 @@ namespace Barotrauma.Abilities
     {
         private readonly float vitalityPercentage;
 
-        public AbilityConditionAboveVitality(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
+        public AbilityConditionAboveVitality(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
             vitalityPercentage = conditionElement.GetAttributeFloat("vitalitypercentage", 0f);
         }

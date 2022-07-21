@@ -12,18 +12,18 @@ namespace Barotrauma
     {
         public string Name => nameof(Radiation);
 
-        [Serialize(defaultValue: 0f, isSaveable: true)]
+        [Serialize(defaultValue: 0f, isSaveable: IsPropertySaveable.Yes)]
         public float Amount { get; set; }
 
-        [Serialize(defaultValue: true, isSaveable: true)]
+        [Serialize(defaultValue: true, isSaveable: IsPropertySaveable.Yes)]
         public bool Enabled { get; set; }
 
-        public Dictionary<string, SerializableProperty> SerializableProperties { get; }
+        public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; }
 
         public readonly Map Map;
         public readonly RadiationParams Params;
 
-        private Affliction radiationAffliction;
+        private Affliction? radiationAffliction;
 
         private float radiationTimer;
 

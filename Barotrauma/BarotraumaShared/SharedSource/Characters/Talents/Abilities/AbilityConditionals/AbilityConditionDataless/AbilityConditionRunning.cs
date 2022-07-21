@@ -5,7 +5,7 @@ namespace Barotrauma.Abilities
 {
     class AbilityConditionRunning : AbilityConditionDataless
     {
-        public AbilityConditionRunning(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement) { }
+        public AbilityConditionRunning(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement) { }
 
         protected override bool MatchesConditionSpecific()
         {

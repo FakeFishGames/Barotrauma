@@ -10,26 +10,26 @@ namespace Barotrauma.SpriteDeformations
         /// 0 = no falloff, the entire sprite is stretched
         /// 1 = stretching the center of the sprite has no effect at the edges
         /// </summary>
-        [Serialize(0.0f, true, description: "0 = no falloff, the entire sprite is stretched, 1 = stretching the center of the sprite has no effect at the edges."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "0 = no falloff, the entire sprite is stretched, 1 = stretching the center of the sprite has no effect at the edges."), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1.0f)]
         public float Falloff { get; set; }
 
         /// <summary>
         /// Maximum stretch per vertex (1 = the size of the sprite)
         /// </summary>
-        [Serialize(1.0f, true, description: "Maximum stretch per vertex (1 = the size of the sprite)"), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
+        [Serialize(1.0f, IsPropertySaveable.Yes, description: "Maximum stretch per vertex (1 = the size of the sprite)"), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
         public float MaxDeformation { get; set; }
 
 
         /// <summary>
         /// How fast the sprite reacts to being stretched
         /// </summary>
-        [Serialize(10.0f, true, description: "How fast the sprite reacts to being stretched"), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
+        [Serialize(10.0f, IsPropertySaveable.Yes, description: "How fast the sprite reacts to being stretched"), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
         public float ReactionSpeed { get; set; }
 
         /// <summary>
         /// How fast the sprite returns back to normal after stretching ends
         /// </summary>
-        [Serialize(0.05f, true, description: "How fast the sprite returns back to normal after stretching ends"), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
+        [Serialize(0.05f, IsPropertySaveable.Yes, description: "How fast the sprite returns back to normal after stretching ends"), Editable(MinValueFloat = 0.0f, MaxValueFloat = 10.0f)]
         public float RecoverSpeed { get; set; }
 
         public PositionalDeformationParams(XElement element) : base(element)

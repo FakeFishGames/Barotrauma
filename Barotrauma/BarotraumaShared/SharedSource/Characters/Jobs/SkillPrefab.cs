@@ -5,7 +5,7 @@ namespace Barotrauma
 {
     class SkillPrefab
     {
-        public readonly string Identifier;
+        public readonly Identifier Identifier;
 
         public Range<float> LevelRange { get; private set; }
 
@@ -16,9 +16,9 @@ namespace Barotrauma
 
         public bool IsPrimarySkill { get; }
 
-        public SkillPrefab(XElement element) 
+        public SkillPrefab(ContentXElement element) 
         {
-            Identifier = element.GetAttributeString("identifier", "");
+            Identifier = element.GetAttributeIdentifier("identifier", "");
             PriceMultiplier = element.GetAttributeFloat("pricemultiplier", 25.0f);
             var levelString = element.GetAttributeString("level", "");
             if (levelString.Contains(","))

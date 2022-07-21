@@ -11,7 +11,7 @@ namespace Barotrauma
 {
     partial class NestMission : Mission
     {
-        private readonly XElement itemConfig;
+        private readonly ContentXElement itemConfig;
         private readonly List<Item> items = new List<Item>();
         private readonly Dictionary<Item, StatusEffect> statusEffectOnApproach = new Dictionary<Item, StatusEffect>();
 
@@ -49,7 +49,7 @@ namespace Barotrauma
         public NestMission(MissionPrefab prefab, Location[] locations, Submarine sub)
             : base(prefab, locations, sub)
         {
-            itemConfig = prefab.ConfigElement.Element("Items");
+            itemConfig = prefab.ConfigElement.GetChildElement("Items");
 
             itemSpawnRadius = prefab.ConfigElement.GetAttributeFloat("itemspawnradius", 800.0f);
             approachItemsRadius = prefab.ConfigElement.GetAttributeFloat("approachitemsradius", itemSpawnRadius * 2.0f);
@@ -69,7 +69,7 @@ namespace Barotrauma
 
             foreach (var monsterElement in prefab.ConfigElement.GetChildElements("monster"))
             {
-                string speciesName = monsterElement.GetAttributeString("character", string.Empty);
+                Identifier speciesName = monsterElement.GetAttributeIdentifier("character", Identifier.Empty);
                 int defaultCount = monsterElement.GetAttributeInt("count", -1);
                 if (defaultCount < 0)
                 {
@@ -170,7 +170,7 @@ namespace Barotrauma
                     }
                 }
 
-                foreach (XElement subElement in itemConfig.Elements())
+                foreach (var subElement in itemConfig.Elements())
                 {
                     string itemIdentifier = subElement.GetAttributeString("identifier", "");
                     if (!(MapEntityPrefab.Find(null, itemIdentifier) is ItemPrefab itemPrefab))
@@ -183,8 +183,8 @@ namespace Barotrauma
                     float rotation = 0.0f;
                     if (spawnEdges.Any())
                     {
-                        var edge = spawnEdges.GetRandom(Rand.RandSync.Server);
-                        spawnPos = Vector2.Lerp(edge.Point1, edge.Point2, Rand.Range(0.1f, 0.9f, Rand.RandSync.Server));
+                        var edge = spawnEdges.GetRandom(Rand.RandSync.ServerAndClient);
+                        spawnPos = Vector2.Lerp(edge.Point1, edge.Point2, Rand.Range(0.1f, 0.9f, Rand.RandSync.ServerAndClient));
                         Vector2 normal = Vector2.UnitY;
                         if (edge.Cell1 != null && edge.Cell1.CellType == CellType.Solid)
                         {
@@ -204,10 +204,12 @@ namespace Barotrauma
                     item.FindHull();
                     items.Add(item);
 
-                    var statusEffectElement = subElement.Element("StatusEffectOnApproach") ?? subElement.Element("statuseffectonapproach");
+                    var statusEffectElement =
+                        subElement.GetChildElement("StatusEffectOnApproach")
+                        ?? subElement.GetChildElement("statuseffectonapproach");
                     if (statusEffectElement != null)
                     {
-                        statusEffectOnApproach.Add(item, StatusEffect.Load(statusEffectElement, Prefab.Identifier));
+                        statusEffectOnApproach.Add(item, StatusEffect.Load(statusEffectElement, Prefab.Identifier.Value));
                     }
                 }       
             }

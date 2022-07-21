@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Abilities
@@ -6,15 +7,15 @@ namespace Barotrauma.Abilities
     class AbilityConditionLocation : AbilityConditionData
     {
         private readonly bool? hasOutpost;
-        private readonly string[] locationIdentifiers;
+        private readonly Identifier[] locationIdentifiers;
 
-        public AbilityConditionLocation(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
+        public AbilityConditionLocation(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
-            if (conditionElement.Attribute("hasoutpost") != null)
+            if (conditionElement.GetAttribute("hasoutpost") != null)
             {
                 hasOutpost = conditionElement.GetAttributeBool("hasoutpost", false);
             }
-            locationIdentifiers = conditionElement.GetAttributeStringArray("locationtype", new string[0]);
+            locationIdentifiers = conditionElement.GetAttributeIdentifierArray("locationtype", Array.Empty<Identifier>());
         }
 
         protected override bool MatchesConditionSpecific(AbilityObject abilityObject)

@@ -7,7 +7,19 @@ namespace Barotrauma.Items.Components
 {
     partial class Terminal : ItemComponent, IClientSerializable, IServerSerializable
     {
-        public void ServerRead(ClientNetObject type, IReadMessage msg, Client c)
+        private readonly struct ServerEventData : IEventData
+        {
+            public readonly int MsgIndex;
+            public readonly string MsgToSend;
+            
+            public ServerEventData(int msgIndex, string msgToSend)
+            {
+                MsgIndex = msgIndex;
+                MsgToSend = msgToSend;
+            }
+        }
+        
+        public void ServerEventRead(IReadMessage msg, Client c)
         {
             string newOutputValue = msg.ReadString();
 
@@ -47,7 +59,7 @@ namespace Barotrauma.Items.Components
                 string msgToSend = str;
                 if (string.IsNullOrEmpty(msgToSend))
                 {
-                    item.CreateServerEvent(this, new object[] { msgIndex, msgToSend });
+                    item.CreateServerEvent(this, new ServerEventData(msgIndex, msgToSend));
                     msgIndex++;
                     continue;
                 }
@@ -73,23 +85,23 @@ namespace Barotrauma.Items.Components
                             if (!splitMessage.Any()) { break; }
                             tempMsg += " ";
                         } while (tempMsg.Length + splitMessage[0].Length < MaxMessageLength);
-                        item.CreateServerEvent(this, new object[] { msgIndex, tempMsg });
+                        item.CreateServerEvent(this, new ServerEventData(msgIndex, tempMsg));
                         msgToSend = msgToSend.Remove(0, tempMsg.Length);
                     }
                 }
                 if (!string.IsNullOrEmpty(msgToSend))
                 {
-                    item.CreateServerEvent(this, new object[] { msgIndex, msgToSend });
+                    item.CreateServerEvent(this, new ServerEventData(msgIndex, msgToSend));
                 }
                 msgIndex++;
             }
         }
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            if (extraData.Length > 3 && extraData[3] is string str)
+            if (TryExtractEventData(extraData, out ServerEventData eventData))
             {
-                msg.Write(str);
+                msg.Write(eventData.MsgToSend);
             }
             else
             {

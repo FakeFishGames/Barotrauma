@@ -82,10 +82,10 @@ namespace FarseerPhysics.Dynamics
         /// </summary>
         public OnSeparationEventHandler OnSeparation;
 
-        internal Fixture() // Note: This is internal because it's used by Deserialization.
+        internal Fixture(Category collisionCategory, Category collidesWith) // Note: This is internal because it's used by Deserialization.
         {   
-            _collisionCategories = Category.Cat1;
-            _collidesWith = Category.All;
+            _collisionCategories = collisionCategory;
+            _collidesWith = collidesWith;
             _collisionGroup = 0;
 
             //Fixture defaults
@@ -93,7 +93,7 @@ namespace FarseerPhysics.Dynamics
             Restitution = 0f;
         }
 
-        public Fixture(Shape shape) : this()
+        public Fixture(Shape shape, Category collisionCategory, Category collidesWith) : this(collisionCategory, collidesWith)
         {
             Shape = shape.Clone();
             
@@ -375,15 +375,15 @@ namespace FarseerPhysics.Dynamics
         /// <returns>The cloned fixture.</returns>
         internal Fixture CloneOnto(Body body, Shape shape)
         {
-            Fixture fixture = new Fixture(shape.Clone());
-            fixture.UserData = UserData;
-            fixture.Restitution = Restitution;
-            fixture.Friction = Friction;
-            fixture.IsSensor = IsSensor;
-            fixture._collisionGroup = _collisionGroup;
-            fixture._collisionCategories = _collisionCategories;
-            fixture._collidesWith = _collidesWith;
-            
+            Fixture fixture = new Fixture(shape.Clone(), _collisionCategories, _collidesWith)
+            {
+                UserData = UserData,
+                Restitution = Restitution,
+                Friction = Friction,
+                IsSensor = IsSensor,
+                _collisionGroup = _collisionGroup
+            };
+
             body.Add(fixture);
             return fixture;
         }

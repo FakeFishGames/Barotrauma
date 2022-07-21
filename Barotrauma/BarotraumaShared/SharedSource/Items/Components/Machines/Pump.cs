@@ -1,10 +1,9 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.MapCreatures.Behavior;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Globalization;
 using System.Linq;
-using System.Xml.Linq;
-using Barotrauma.MapCreatures.Behavior;
 
 namespace Barotrauma.Items.Components
 {
@@ -24,7 +23,10 @@ namespace Barotrauma.Items.Components
                 if (value == hijacked) { return; }
                 hijacked = value;
 #if SERVER
-                item.CreateServerEvent(this);
+                if (!Submarine.Unloading)
+                {
+                    item.CreateServerEvent(this);
+                }
 #endif
             }
         }
@@ -40,7 +42,7 @@ namespace Barotrauma.Items.Components
 
         private float pumpSpeedLockTimer, isActiveLockTimer;
 
-        [Serialize(0.0f, true, description: "How fast the item is currently pumping water (-100 = full speed out, 100 = full speed in). Intended to be used by StatusEffect conditionals (setting this value in XML has no effect).")]
+        [Serialize(0.0f, IsPropertySaveable.Yes, description: "How fast the item is currently pumping water (-100 = full speed out, 100 = full speed in). Intended to be used by StatusEffect conditionals (setting this value in XML has no effect).")]
         public float FlowPercentage
         {
             get { return flowPercentage; }
@@ -48,18 +50,18 @@ namespace Barotrauma.Items.Components
             {
                 if (!MathUtils.IsValid(flowPercentage)) { return; }
                 flowPercentage = MathHelper.Clamp(value, -100.0f, 100.0f);
-                flowPercentage = MathUtils.Round(flowPercentage, 1.0f);
+                flowPercentage = MathF.Round(flowPercentage);
             }
         }
 
-        [Editable, Serialize(80.0f, false, description: "How fast the item pumps water in/out when operating at 100%.", alwaysUseInstanceValues: true)]
+        [Editable, Serialize(80.0f, IsPropertySaveable.No, description: "How fast the item pumps water in/out when operating at 100%.", alwaysUseInstanceValues: true)]
         public float MaxFlow
         {
             get { return maxFlow; }
             set { maxFlow = value; } 
         }
 
-        [Editable, Serialize(true, true, alwaysUseInstanceValues: true)]
+        [Editable, Serialize(true, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
         public bool IsOn
         {
             get { return IsActive; }
@@ -83,13 +85,13 @@ namespace Barotrauma.Items.Components
 
         public override bool UpdateWhenInactive => true;
 
-        public Pump(Item item, XElement element)
+        public Pump(Item item, ContentXElement element)
             : base(item, element)
         {
             InitProjSpecific(element);
         }
 
-        partial void InitProjSpecific(XElement element);
+        partial void InitProjSpecific(ContentXElement element);
         
         public override void Update(float deltaTime, Camera cam)
         {
@@ -120,10 +122,6 @@ namespace Barotrauma.Items.Components
                 FlowPercentage = ((float)TargetLevel - hullPercentage) * 10.0f;
             }
 
-            currPowerConsumption = powerConsumption * Math.Abs(flowPercentage / 100.0f);
-            //pumps consume more power when in a bad condition
-            item.GetComponent<Repairable>()?.AdjustPowerConsumption(ref currPowerConsumption);
-
             if (!HasPower) { return; }
 
             UpdateProjSpecific(deltaTime);
@@ -144,13 +142,11 @@ namespace Barotrauma.Items.Components
             //less effective when in a bad condition
             currFlow *= MathHelper.Lerp(0.5f, 1.0f, item.Condition / item.MaxCondition);
 
-            item.CurrentHull.WaterVolume += currFlow * deltaTime * Timing.FixedUpdateRate;
+            item.CurrentHull.WaterVolume += currFlow * deltaTime * Timing.FixedUpdateRate; 
             if (item.CurrentHull.WaterVolume > item.CurrentHull.Volume) { item.CurrentHull.Pressure += 30.0f * deltaTime; }
-
-            Voltage -= deltaTime;
         }
 
-        public void InfectBallast(string identifier, bool allowMultiplePerShip = false)
+        public void InfectBallast(Identifier identifier, bool allowMultiplePerShip = false)
         {
             Hull hull = item.CurrentHull;
             if (hull == null) { return; }
@@ -158,7 +154,7 @@ namespace Barotrauma.Items.Components
             if (!allowMultiplePerShip)
             {
                 // if the ship is already infected then do nothing
-                if (Hull.hullList.Where(h => h.Submarine == hull.Submarine).Any(h => h.BallastFlora != null)) { return; }
+                if (Hull.HullList.Where(h => h.Submarine == hull.Submarine).Any(h => h.BallastFlora != null)) { return; }
             }
 
             if (hull.BallastFlora != null) { return; }
@@ -174,8 +170,26 @@ namespace Barotrauma.Items.Components
             hull.BallastFlora = new BallastFloraBehavior(hull, ballastFloraPrefab, offset, firstGrowth: true);
 
 #if SERVER
-            hull.BallastFlora.SendNetworkMessage(hull.BallastFlora, BallastFloraBehavior.NetworkHeader.Spawn);
+            hull.BallastFlora.CreateNetworkMessage(new BallastFloraBehavior.SpawnEventData());
 #endif
+        }
+
+        /// <summary>
+        /// Power consumption of the Pump. Only consume power when active and adjust consumption based on condition.
+        /// </summary>
+        public override float GetCurrentPowerConsumption(Connection connection = null)
+        {
+            //There shouldn't be other power connections to this
+            if (connection != this.powerIn || !IsActive)
+            {
+                return 0;
+            }
+            
+            currPowerConsumption = powerConsumption * Math.Abs(flowPercentage / 100.0f);
+            //pumps consume more power when in a bad condition
+            item.GetComponent<Repairable>()?.AdjustPowerConsumption(ref currPowerConsumption);
+
+            return currPowerConsumption;
         }
 
         partial void UpdateProjSpecific(float deltaTime);
@@ -218,7 +232,8 @@ namespace Barotrauma.Items.Components
 #if CLIENT
             if (GameMain.Client != null) { return false; }
 #endif
-            switch (objective.Option.ToLowerInvariant())
+
+            switch (objective.Option.Value.ToLowerInvariant())
             {
                 case "pumpout":
 #if SERVER

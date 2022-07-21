@@ -9,11 +9,11 @@ namespace Barotrauma
 {
     class AIObjectiveLoadItems : AIObjectiveLoop<Item>
     {
-        public override string Identifier { get; set; } = "load items";
+        public override Identifier Identifier { get; set; } = "load items".ToIdentifier();
         protected override float IgnoreListClearInterval => 20.0f;
         protected override bool ResetWhenClearingIgnoreList => false;
 
-        private ImmutableArray<string> TargetContainerTags { get; }
+        private ImmutableArray<Identifier> TargetContainerTags { get; }
         private List<Item> TargetContainers { get; } = new List<Item>();
         private ItemCondition TargetCondition { get; }
 
@@ -23,7 +23,7 @@ namespace Barotrauma
             Full
         }
 
-        public AIObjectiveLoadItems(Character character, AIObjectiveManager objectiveManager, string option, ImmutableArray<string> containerTags, Item targetContainer = null, float priorityModifier = 1)
+        public AIObjectiveLoadItems(Character character, AIObjectiveManager objectiveManager, Identifier option, ImmutableArray<Identifier> containerTags, Item targetContainer = null, float priorityModifier = 1)
             : base(character, objectiveManager, priorityModifier, option)
         {
             if ((containerTags == null || containerTags.None()) && targetContainer == null)
@@ -39,30 +39,37 @@ namespace Barotrauma
             {
                 TargetContainers.Add(targetContainer);
             }
+            else
+            {
+                foreach (Item item in Item.ItemList)
+                {
+                    if (!OrderPrefab.TargetItemsMatchItem(TargetContainerTags, item)) { continue; }
+                    TargetContainers.Add(item);
+                }
+            }
             TargetCondition = option == "turretammo" ? ItemCondition.Empty : ItemCondition.Full;
         }
 
         protected override bool Filter(Item target)
         {
-            if (!IsValidTarget(target, character, TargetContainerTags, TargetCondition)) { return false; }
+            //don't pass TargetContainerTags to the method (no need to filter by tags anymore, it's already done when populating TargetContainers)
+            if (!IsValidTarget(target, character, null, TargetCondition)) { return false; }
             if (target.CurrentHull == null || target.CurrentHull.FireSources.Count > 0) { return false; }
             if (Character.CharacterList.Any(c => c.CurrentHull == target.CurrentHull && !HumanAIController.IsFriendly(c) && HumanAIController.IsActive(c))) { return false; }
             return true;
         }
 
-        public static bool IsValidTarget(Item item, Character character, ImmutableArray<string>? targetContainerTags = null, ItemCondition? targetCondition = null)
+        public static bool IsValidTarget(Item item, Character character, ImmutableArray<Identifier>? targetContainerTags = null, ItemCondition? targetCondition = null)
         {
-            if (item == null) { return false; }
-            if (item.Removed) { return false; }
-            if (targetContainerTags.HasValue && !Order.TargetItemsMatchItem(targetContainerTags.Value, item)) { return false; }
+            if (item == null || item.Removed) { return false; }
+            if (targetContainerTags.HasValue && !OrderPrefab.TargetItemsMatchItem(targetContainerTags.Value, item)) { return false; }
             if (!(item.GetComponent<ItemContainer>() is ItemContainer container)) { return false; }
             if (container.Inventory == null) { return false; }
             if (targetCondition.HasValue && container.Inventory.IsFull() && container.Inventory.AllItems.None(i => ItemMatchesTargetCondition(i, targetCondition.Value))) { return false; }
             if (!AIObjectiveCleanupItems.IsItemInsideValidSubmarine(item, character)) { return false; }
             if (item.GetRootInventoryOwner() is Character owner && owner != character) { return false; }
-            if (!item.IsInteractable(character)) { return false; }
-            if (item.IsThisOrAnyContainerIgnoredByAI(character)) { return false; }
-            if (!container.HasAccess(character)) { return false; }
+            if (item.IsClaimedByBallastFlora) { return false; }
+            if (!item.HasAccess(character)) { return false; }
             // Ignore items that require power but don't have it
             if (item.GetComponent<Powered>() is Powered powered && powered.PowerConsumption > 0 && powered.Voltage < powered.MinVoltage) { return false; }
             return true;
@@ -89,7 +96,7 @@ namespace Barotrauma
             }
         }
 
-        protected override IEnumerable<Item> GetList() => TargetContainers.Any() ? TargetContainers : Item.ItemList;
+        protected override IEnumerable<Item> GetList() => TargetContainers;
 
         protected override AIObjective ObjectiveConstructor(Item target)
             => new AIObjectiveLoadItem(target, TargetContainerTags, TargetCondition, Option, character, objectiveManager, PriorityModifier);

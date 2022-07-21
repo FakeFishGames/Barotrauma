@@ -21,11 +21,11 @@ namespace Barotrauma
         private Item? miniMapItem;
 
         private Submarine? submarine;
-        private Character? dummyCharacter;
-        public static Effect BlueprintEffect;
-        private GUIFrame container;
+        public static Character? dummyCharacter;
+        public static Effect? BlueprintEffect;
+        private GUIFrame? container;
 
-        private TabMenu tabMenu;
+        private TabMenu? tabMenu;
 
         public TestScreen()
         {
@@ -51,17 +51,15 @@ namespace Barotrauma
             base.Select();
             container = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: "InnerGlow", color: Color.Black);
             var tab = new GUIFrame(new RectTransform(Vector2.One, container.RectTransform), color: Color.Black * 0.9f);
-            MedicalClinicUI clinic = new MedicalClinicUI(new MedicalClinic(null!), tab);
-            clinic.RequestLatestPending();
             if (dummyCharacter is { Removed: false })
             {
                 dummyCharacter?.Remove();
             }
 
-            // dummyCharacter = Character.Create(CharacterPrefab.HumanSpeciesName, Vector2.Zero, "", id: Entity.DummyID, hasAi: false);
-            // dummyCharacter.Info.Job = new Job(JobPrefab.Prefabs.Where(jp => TalentTree.JobTalentTrees.ContainsKey(jp.Identifier)).GetRandom());
-            // dummyCharacter.Info.Name = "Galldren";
-            // dummyCharacter.Inventory.CreateSlots();
+            dummyCharacter = Character.Create(CharacterPrefab.HumanSpeciesName, Vector2.Zero, "", id: Entity.DummyID, hasAi: false);
+            dummyCharacter.Info.Job = new Job(JobPrefab.Prefabs.Where(jp => TalentTree.JobTalentTrees.ContainsKey(jp.Identifier)).GetRandom(Rand.RandSync.Unsynced));
+            dummyCharacter.Info.Name = "Galldren";
+            dummyCharacter.Inventory.CreateSlots();
 
             Character.Controlled = dummyCharacter;
             GameMain.World.ProcessChanges();
@@ -71,7 +69,8 @@ namespace Barotrauma
         public override void AddToGUIUpdateList()
         {
             Frame.AddToGUIUpdateList();
-            container.AddToGUIUpdateList();
+            container?.AddToGUIUpdateList();
+            tabMenu?.AddToGUIUpdateList();
             // CharacterHUD.AddToGUIUpdateList(dummyCharacter);
             // dummyCharacter?.SelectedConstruction?.AddToGUIUpdateList();
         }
@@ -79,15 +78,13 @@ namespace Barotrauma
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
-            tabMenu.Update();
 
             if (dummyCharacter is { } dummy)
             {
                 dummy.ControlLocalPlayer((float)deltaTime, Cam, false);
                 dummy.Control((float)deltaTime, Cam);
             }
-
-            GUI.Update((float)deltaTime);
+            tabMenu?.Update((float)deltaTime);
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)

@@ -24,11 +24,11 @@ namespace Barotrauma
         private double loopStartTime;
         private bool loopSound;
 
-        partial void InitProjSpecific(XElement element, string parentDebugName)
+        partial void InitProjSpecific(ContentXElement element, string parentDebugName)
         {
             particleEmitters = new List<ParticleEmitter>();
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -36,11 +36,11 @@ namespace Barotrauma
                         particleEmitters.Add(new ParticleEmitter(subElement));
                         break;
                     case "sound":
-                        var sound = Submarine.LoadRoundSound(subElement);
+                        var sound = RoundSound.Load(subElement);
                         if (sound?.Sound != null)
                         {
                             loopSound = subElement.GetAttributeBool("loop", false);
-                            if (subElement.Attribute("selectionmode") != null)
+                            if (subElement.GetAttribute("selectionmode") != null)
                             {
                                 if (Enum.TryParse(subElement.GetAttributeString("selectionmode", "Random"), out SoundSelectionMode selectionMode))
                                 {

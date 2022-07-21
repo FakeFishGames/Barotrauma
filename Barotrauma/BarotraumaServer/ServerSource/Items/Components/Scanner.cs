@@ -6,7 +6,7 @@ namespace Barotrauma.Items.Components
     {
         private float LastSentScanTimer { get; set; }
 
-        public void ServerWrite(IWriteMessage msg, Client c, object[] extraData = null)
+        public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
             msg.Write(scanTimer);
         }

@@ -4,7 +4,7 @@ namespace Barotrauma.Abilities
 {
     class AbilityConditionEvasiveManeuvers : AbilityConditionData
     {
-        public AbilityConditionEvasiveManeuvers(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement) { }
+        public AbilityConditionEvasiveManeuvers(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement) { }
 
         protected override bool MatchesConditionSpecific(AbilityObject abilityObject)
         {

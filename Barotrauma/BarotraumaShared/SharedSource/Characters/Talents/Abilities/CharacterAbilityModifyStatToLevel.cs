@@ -11,7 +11,7 @@ namespace Barotrauma.Abilities
         private float lastValue = 0f;
         public override bool AllowClientSimulation => true;
 
-        public CharacterAbilityModifyStatToLevel(CharacterAbilityGroup characterAbilityGroup, XElement abilityElement) : base(characterAbilityGroup, abilityElement)
+        public CharacterAbilityModifyStatToLevel(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             statType = CharacterAbilityGroup.ParseStatType(abilityElement.GetAttributeString("stattype", ""), CharacterTalent.DebugIdentifier);
             statPerLevel = abilityElement.GetAttributeFloat("statperlevel", 0f);

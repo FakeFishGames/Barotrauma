@@ -5,6 +5,7 @@ using System;
 using Barotrauma.IO;
 using System.Linq;
 using System.Text;
+using Barotrauma.Networking;
 #if LINUX
 using System.Runtime.InteropServices;
 #endif
@@ -26,6 +27,20 @@ namespace Barotrauma
         private static extern void setLinuxEnv();
 #endif
 
+        public static bool TryStartChildServerRelay(string[] commandLineArgs)
+        {            
+            for (int i = 0; i < commandLineArgs.Length; i++)
+            {
+                switch (commandLineArgs[i].Trim())
+                {
+                    case "-pipes":
+                        ChildServerRelay.Start(commandLineArgs[i + 2], commandLineArgs[i + 1]);
+                        return true;
+                }
+            }
+            return false;
+        }
+        
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
@@ -36,6 +51,7 @@ namespace Barotrauma
             AppDomain currentDomain = AppDomain.CurrentDomain;
             currentDomain.UnhandledException += new UnhandledExceptionEventHandler(CrashHandler);
 #endif
+            TryStartChildServerRelay(args);
 
 #if LINUX
             setLinuxEnv();
@@ -62,22 +78,49 @@ namespace Barotrauma
 
         static GameMain Game;
 
+        private static void NotifyCrash(string reportFilePath, Exception e)
+        {
+            string errorMsg = $"{reportFilePath}||\n{e.Message} ({e.GetType().Name}) {e.StackTrace}";
+            if (e.InnerException != null)
+            {
+                var innerMost = e.GetInnermost();
+                errorMsg += $"\nInner exception: {innerMost.Message} ({innerMost.GetType().Name}) {e.StackTrace}";
+            }
+            if (errorMsg.Length > ushort.MaxValue) { errorMsg = errorMsg[..ushort.MaxValue]; }
+            ChildServerRelay.NotifyCrash(errorMsg);
+            GameMain.Server?.NotifyCrash();
+        }
+        
         private static void CrashHandler(object sender, UnhandledExceptionEventArgs args)
         {
+            void swallowExceptions(Action action)
+            {
+                try
+                {
+                    action();
+                }
+                catch
+                {
+                    //discard exceptions and keep going
+                }
+            }
+
+            string reportFilePath = "";
             try
             {
-                Game?.Exit();
-                CrashDump("servercrashreport.log", (Exception)args.ExceptionObject);
-                GameMain.Server?.NotifyCrash();
+                reportFilePath = "servercrashreport.log";
+                CrashDump(ref reportFilePath, (Exception)args.ExceptionObject);
             }
             catch
             {
-                //exception handler is broken, we have a serious problem here!!
-                return;
+                //fuck
+                reportFilePath = "";
             }
+            swallowExceptions(() => NotifyCrash(reportFilePath, (Exception)args.ExceptionObject));
+            swallowExceptions(() => Game?.Exit());
         }
 
-        static void CrashDump(string filePath, Exception exception)
+        static void CrashDump(ref string filePath, Exception exception)
         {
             try
             {
@@ -108,13 +151,10 @@ namespace Barotrauma
             sb.AppendLine("Barotrauma seems to have crashed. Sorry for the inconvenience! ");
             sb.AppendLine("\n");
             sb.AppendLine("Game version " + GameMain.Version + " (" + AssemblyInfo.BuildString + ", branch " + AssemblyInfo.GitBranch + ", revision " + AssemblyInfo.GitRevision + ")");
-            if (GameMain.Config != null)
+            sb.AppendLine("Language: " + GameSettings.CurrentConfig.Language);
+            if (ContentPackageManager.EnabledPackages.All != null)
             {
-                sb.AppendLine("Language: " + (GameMain.Config.Language ?? "none"));
-                if (GameMain.Config.AllEnabledPackages != null)
-                {
-                    sb.AppendLine("Selected content packages: " + (!GameMain.Config.AllEnabledPackages.Any() ? "None" : string.Join(", ", GameMain.Config.AllEnabledPackages.Select(c => c.Name))));
-                }
+                sb.AppendLine("Selected content packages: " + (!ContentPackageManager.EnabledPackages.All.Any() ? "None" : string.Join(", ", ContentPackageManager.EnabledPackages.All.Select(c => c.Name))));
             }
             sb.AppendLine("Level seed: " + ((Level.Loaded == null) ? "no level loaded" : Level.Loaded.Seed));
             sb.AppendLine("Loaded submarine: " + ((Submarine.MainSub == null) ? "None" : Submarine.MainSub.Info.Name + " (" + Submarine.MainSub.Info.MD5Hash + ")"));
@@ -176,7 +216,8 @@ namespace Barotrauma
 
             File.WriteAllText(filePath, sb.ToString());
 
-            if (GameSettings.SaveDebugConsoleLogs || GameSettings.VerboseLogging) { DebugConsole.SaveLogs(); }
+            if (GameSettings.CurrentConfig.SaveDebugConsoleLogs
+                || GameSettings.CurrentConfig.VerboseLogging) { DebugConsole.SaveLogs(); }
 
             if (GameAnalyticsManager.SendUserStatistics)
             {

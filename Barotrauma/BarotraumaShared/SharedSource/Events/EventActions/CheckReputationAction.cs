@@ -7,10 +7,10 @@ namespace Barotrauma
 {
     class CheckReputationAction : CheckDataAction
     {
-        [Serialize(ReputationAction.ReputationType.None, true)]
+        [Serialize(ReputationAction.ReputationType.None, IsPropertySaveable.Yes)]
         public ReputationAction.ReputationType TargetType { get; set; }
 
-        public CheckReputationAction(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) { }
+        public CheckReputationAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
 
         protected override float GetFloat(CampaignMode campaignMode)
         {
@@ -18,7 +18,7 @@ namespace Barotrauma
             {
                 case ReputationAction.ReputationType.Faction:
                 {
-                    Faction? faction = campaignMode.Factions.Find(f => f.Prefab.Identifier.Equals(Identifier, StringComparison.OrdinalIgnoreCase));
+                    Faction? faction = campaignMode.Factions.Find(f => f.Prefab.Identifier == Identifier);
                     if (faction != null) { return faction.Reputation.Value; }
                     break;
                 }
@@ -54,7 +54,7 @@ namespace Barotrauma
             }
 
             return $"{ToolBox.GetDebugSymbol(succeeded.HasValue)} {nameof(CheckReputationAction)} -> (Type: {TargetType.ColorizeObject()}, " +
-                   $"{(string.IsNullOrWhiteSpace(Identifier) ? string.Empty : $"Identifier: {Identifier.ColorizeObject()}, ")}" +
+                   $"{(Identifier.IsEmpty ? string.Empty : $"Identifier: {Identifier.ColorizeObject()}, ")}" +
                    $"Success: {succeeded.ColorizeObject()}, Expression: {condition})";
         }
     }

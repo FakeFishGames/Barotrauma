@@ -6,7 +6,7 @@ namespace Barotrauma
 {
     class AIObjectiveReturn : AIObjective
     {
-        public override string Identifier { get; set; } = "return";
+        public override Identifier Identifier { get; set; } = "return".ToIdentifier();
         public Submarine ReturnTarget { get; }
 
         private AIObjectiveGoTo moveInsideObjective, moveOutsideObjective;
@@ -93,7 +93,7 @@ namespace Barotrauma
                             // Target the closest airlock
                             float closestDist = 0;
                             Hull airlock = null;
-                            foreach (Hull hull in Hull.hullList)
+                            foreach (Hull hull in Hull.HullList)
                             {
                                 if (hull.Submarine != targetHull.Submarine) { continue; }
                                 if (!hull.IsTaggedAirlock()) { continue; }
@@ -210,10 +210,10 @@ namespace Barotrauma
             SteeringManager?.Reset();
             if (character.IsOnPlayerTeam && objectiveManager.CurrentOrder == objectiveManager.CurrentObjective)
             {
-                string msg = TextManager.Get("dialogcannotreturn", returnNull: true);
-                if (msg != null)
+                string msg = TextManager.Get("dialogcannotreturn").Value;
+                if (!msg.IsNullOrEmpty())
                 {
-                    character.Speak(msg, identifier: "dialogcannotreturn", minDurationBetweenSimilar: 5.0f);
+                    character.Speak(msg, identifier: "dialogcannotreturn".ToIdentifier(), minDurationBetweenSimilar: 5.0f);
                 }
             }
         }

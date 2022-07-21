@@ -29,7 +29,8 @@ namespace Barotrauma
             public virtual IEnumerable<string> CompletedTextKeys => new string[] { };
             public virtual IEnumerable<string> CompletedTextValues(Traitor traitor) => new string[] { };
 
-            protected virtual string FormatText(Traitor traitor, string textId, IEnumerable<string> keys, IEnumerable<string> values) => TextManager.FormatServerMessageWithGenderPronouns(traitor?.Character?.Info?.Gender ?? Gender.None, textId, keys, values);
+            protected virtual string FormatText(Traitor traitor, string textId, IEnumerable<string> keys, IEnumerable<string> values)
+                => TextManager.FormatServerMessageWithPronouns(traitor.Character.Info, textId, keys.Zip(values, (k,v) => (k,v)).ToArray());
 
             protected internal virtual string GetStatusText(Traitor traitor, string textId, IEnumerable<string> keys, IEnumerable<string> values) => FormatText(traitor, textId, keys, values);
             protected internal virtual string GetInfoText(Traitor traitor, string textId, IEnumerable<string> keys, IEnumerable<string> values) => FormatText(traitor, textId, keys, values);

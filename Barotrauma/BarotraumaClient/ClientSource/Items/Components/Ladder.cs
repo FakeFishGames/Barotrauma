@@ -30,7 +30,7 @@ namespace Barotrauma.Items.Components
                 depth: BackgroundSpriteDepth);
         }
 
-        partial void InitProjSpecific(XElement element)
+        partial void InitProjSpecific(ContentXElement element)
         {
             var backgroundSpriteElement = element.GetChildElement("backgroundsprite");
             if (backgroundSpriteElement != null)

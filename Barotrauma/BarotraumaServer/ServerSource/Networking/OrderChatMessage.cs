@@ -1,4 +1,6 @@
-﻿namespace Barotrauma.Networking
+﻿using System;
+
+namespace Barotrauma.Networking
 {
     partial class OrderChatMessage : ChatMessage
     {
@@ -6,7 +8,7 @@
         {
             msg.Write((byte)ServerNetObject.CHAT_MESSAGE);
             msg.Write(NetStateID);
-            msg.Write((byte)ChatMessageType.Order);
+            msg.WriteRangedInteger((int)ChatMessageType.Order, 0, Enum.GetValues(typeof(ChatMessageType)).Length - 1);
             msg.Write(SenderName);
             msg.Write(SenderClient != null);
             if (SenderClient != null)
@@ -17,7 +19,8 @@
             if (Sender != null && c.InGame)
             {
                 msg.Write(Sender.ID);
-            }
+            }            
+            msg.Write(false); //text color (no custom text colors for order messages)
             msg.WritePadBits();
             WriteOrder(msg);
         }

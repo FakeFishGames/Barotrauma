@@ -14,25 +14,10 @@ namespace Barotrauma
         public const double Step = 1.0 / FixedUpdateRate;
         public const double AccumulatorMax = 0.25f;
 
-        private static int frameLimit;
         /// <summary>
         /// Maximum FPS (0 = unlimited).
         /// </summary>
-        public static int FrameLimit
-        {
-            get { return frameLimit; }
-            set 
-            {
-                if (value <= 0)
-                {
-                    frameLimit = 0;
-                }
-                else
-                {
-                    frameLimit = Math.Max(value, FixedUpdateRate);
-                }
-            }
-        }
+        public static int FrameLimit => GameSettings.CurrentConfig.Graphics.FrameLimit;
 
         public static double Alpha
         {

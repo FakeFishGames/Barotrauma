@@ -136,6 +136,10 @@ namespace Barotrauma
 
         public static void InitIfConsented()
         {
+            #if DEBUG
+            return;
+            #endif
+            
             if (!consentTextAvailable)
             {
                 SetConsent(Consent.Unknown);
@@ -225,8 +229,9 @@ namespace Barotrauma
                         DebugConsole.ThrowError(TextManager.Get("MasterServerErrorUnavailable"));
                         break;
                     default:
-                        DebugConsole.ThrowError(TextManager.GetWithVariables("MasterServerErrorDefault", new string[2] { "[statuscode]", "[statusdescription]" },
-                            new string[2] { response.StatusCode.ToString(), response.StatusDescription }));
+                        DebugConsole.ThrowError(TextManager.GetWithVariables("MasterServerErrorDefault", 
+                            ("[statuscode]", response.StatusCode.ToString()),
+                            ("[statusdescription]", response.StatusDescription)));
                         break;
                 }
             }

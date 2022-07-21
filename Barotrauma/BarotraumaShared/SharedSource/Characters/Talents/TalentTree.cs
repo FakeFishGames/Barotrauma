@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    class TalentTree : IPrefab, IDisposable
+    class TalentTree : Prefab
     {
         public enum TalentTreeStageState
         {
@@ -20,124 +21,44 @@ namespace Barotrauma
 
         public readonly List<TalentSubTree> TalentSubTrees = new List<TalentSubTree>();
 
-        public XElement ConfigElement
+        public ContentXElement ConfigElement
         {
             get;
             private set;
         }
 
-        public string OriginalName => Identifier;
-
-        public string Identifier { get; }
-
-        public string FilePath { get; }
-
-        public ContentPackage ContentPackage { get; set; }
-
-        public TalentTree(XElement element, string filePath)
+        public TalentTree(ContentXElement element, TalentTreesFile file) : base(file, element.GetAttributeIdentifier("jobIdentifier", ""))
         {
             ConfigElement = element;
-            FilePath = filePath;
-            Identifier = element.GetAttributeString("jobidentifier", "").ToLowerInvariant();
 
-            if (string.IsNullOrEmpty(Identifier))
+            if (Identifier.IsEmpty)
             {
-                DebugConsole.ThrowError($"No job defined for talent tree in \"{filePath}\"!");
+                DebugConsole.ThrowError($"No job defined for talent tree in \"{file.Path}\"!");
                 return;
             }
 
-            foreach (XElement subTreeElement in element.GetChildElements("subtree"))
+            foreach (var subTreeElement in element.GetChildElements("subtree"))
             {
                 TalentSubTrees.Add(new TalentSubTree(subTreeElement));
             }
-
-            // talents found and unlocked using the identifier wihin the talent tree, so no duplicates may occur
-            HashSet<string> duplicateSet = new HashSet<string>();
-            foreach (string talent in TalentSubTrees.SelectMany(s => s.TalentOptionStages.SelectMany(o => o.Talents.Select(t => t.Identifier))))
-            {
-                TalentPrefab talentPrefab = TalentPrefab.TalentPrefabs.Find(c => c.Identifier.Equals(talent, StringComparison.OrdinalIgnoreCase));
-                if (talentPrefab == null)
-                {
-                    DebugConsole.AddWarning($"Talent tree for job {Identifier} contains non-existent talent {talent}! Talent tree not added.");
-                    return;
-                }
-                if (!duplicateSet.Add(talent))
-                {
-                    DebugConsole.ThrowError($"Talent tree for job {Identifier} contains duplicate talent {talent}! Talent tree not added.");
-                    return;
-                }
-            }
         }
-
-        public bool TalentIsInTree(string talentIdentifier)
+        
+        public bool TalentIsInTree(Identifier talentIdentifier)
         {
             return TalentSubTrees.SelectMany(s => s.TalentOptionStages.SelectMany(o => o.Talents.Select(t => t.Identifier))).Any(c => c == talentIdentifier);
         }
 
-        public static void LoadFromFile(ContentFile file)
+        public static bool IsViableTalentForCharacter(Character character, Identifier talentIdentifier)
         {
-            DebugConsole.Log("Loading talent tree: " + file.Path);
-
-            XDocument doc = XMLExtensions.TryLoadXml(file.Path);
-            if (doc == null) { return; }
-
-            void loadSinglePrefab(XElement element, bool isOverride)
-            {
-                JobTalentTrees.Add(new TalentTree(element, file.Path) { ContentPackage = file.ContentPackage }, isOverride);
-            }
-
-            void loadMultiplePrefabs(XElement element, bool isOverride)
-            {
-                foreach (var subElement in element.Elements())
-                {
-                    interpretElement(subElement, isOverride);
-                }
-            }
-
-            void interpretElement(XElement subElement, bool isOverride)
-            {
-                if (subElement.IsOverride())
-                {
-                    loadMultiplePrefabs(subElement, true);
-                }
-                else if (subElement.Name.LocalName.Equals("talenttrees", StringComparison.OrdinalIgnoreCase))
-                {
-                    loadMultiplePrefabs(subElement, isOverride);
-                }
-                else if (subElement.Name.LocalName.Equals("talenttree", StringComparison.OrdinalIgnoreCase))
-                {
-                    loadSinglePrefab(subElement, isOverride);
-                }
-                else
-                {
-                    DebugConsole.ThrowError($"Invalid XML element for the {nameof(TalentTree)} prefab type: '{subElement.Name}' in {file.Path}");
-                }
-            }
-
-            interpretElement(doc.Root, false);
-        }
-
-        public static void LoadAll(IEnumerable<ContentFile> files)
-        {
-            DebugConsole.Log("Loading talent tree: ");
-
-            foreach (ContentFile file in files)
-            {
-                LoadFromFile(file);
-            }
-        }
-
-        public static bool IsViableTalentForCharacter(Character character, string talentIdentifier)
-        {
-            return IsViableTalentForCharacter(character, talentIdentifier, character?.Info?.UnlockedTalents ?? Enumerable.Empty<string>());
+            return IsViableTalentForCharacter(character, talentIdentifier, character?.Info?.UnlockedTalents ?? (ICollection<Identifier>)Array.Empty<Identifier>());
         }
 
         // i hate this function - markus
-        public static TalentTreeStageState GetTalentOptionStageState(Character character, string subTreeIdentifier, int index, List<string> selectedTalents)
+        public static TalentTreeStageState GetTalentOptionStageState(Character character, Identifier subTreeIdentifier, int index, List<Identifier> selectedTalents)
         {
             if (character?.Info?.Job.Prefab is null) { return TalentTreeStageState.Invalid; }
 
-            if (!JobTalentTrees.TryGetValue(character.Info.Job.Prefab.Identifier, out TalentTree talentTree)) { return TalentTreeStageState.Invalid; }
+            if (!JobTalentTrees.TryGet(character.Info.Job.Prefab.Identifier, out TalentTree talentTree)) { return TalentTreeStageState.Invalid; }
 
             TalentSubTree subTree = talentTree.TalentSubTrees.FirstOrDefault(tst => tst.Identifier == subTreeIdentifier);
 
@@ -187,12 +108,12 @@ namespace Barotrauma
         }
 
 
-        public static bool IsViableTalentForCharacter(Character character, string talentIdentifier, IEnumerable<string> selectedTalents)
+        public static bool IsViableTalentForCharacter(Character character, Identifier talentIdentifier, ICollection<Identifier> selectedTalents)
         {
             if (character?.Info?.Job.Prefab == null) { return false; }
             if (character.Info.GetTotalTalentPoints() - selectedTalents.Count() <= 0) { return false; }
 
-            if (!JobTalentTrees.TryGetValue(character.Info.Job.Prefab.Identifier, out TalentTree talentTree)) { return false; }
+            if (!JobTalentTrees.TryGet(character.Info.Job.Prefab.Identifier, out TalentTree talentTree)) { return false; }
 
             foreach (var subTree in talentTree.TalentSubTrees)
             {
@@ -218,15 +139,15 @@ namespace Barotrauma
             return false;
         }
 
-        public static List<string> CheckTalentSelection(Character controlledCharacter, IEnumerable<string> selectedTalents)
+        public static List<Identifier> CheckTalentSelection(Character controlledCharacter, IEnumerable<Identifier> selectedTalents)
         {
-            List<string> viableTalents = new List<string>();
+            List<Identifier> viableTalents = new List<Identifier>();
             bool canStillUnlock = true;
             // keep trying to unlock talents until none of the talents are unlockable
             while (canStillUnlock && selectedTalents.Any())
             {
                 canStillUnlock = false;
-                foreach (string talent in selectedTalents)
+                foreach (Identifier talent in selectedTalents)
                 {
                     if (!viableTalents.Contains(talent) && IsViableTalentForCharacter(controlledCharacter, talent, viableTalents))
                     {
@@ -238,32 +159,26 @@ namespace Barotrauma
             return viableTalents;
         }
 
-        private bool disposed = false;
-        public void Dispose()
-        {
-            if (disposed) { return; }
-            disposed = true;
-            JobTalentTrees.Remove(this);
-        }
+        public override void Dispose() { }
     }
 
     class TalentSubTree
     {
-        public string Identifier { get; }
+        public Identifier Identifier { get; }
 
-        public string DisplayName { get; }
+        public LocalizedString DisplayName { get; }
 
         public bool ForceUnlock;
 
         public readonly List<TalentOption> TalentOptionStages = new List<TalentOption>();
 
-        public TalentSubTree(XElement subTreeElement)
+        public TalentSubTree(ContentXElement subTreeElement)
         {
-            Identifier = subTreeElement.GetAttributeString("identifier", "");
+            Identifier = subTreeElement.GetAttributeIdentifier("identifier", "");
 
-            DisplayName = TextManager.Get("talenttree." + Identifier, returnNull: true) ?? Identifier;
+            DisplayName = TextManager.Get("talenttree." + Identifier).Fallback(Identifier.Value);
 
-            foreach (XElement talentOptionsElement in subTreeElement.GetChildElements("talentoptions"))
+            foreach (var talentOptionsElement in subTreeElement.GetChildElements("talentoptions"))
             {
                 TalentOptionStages.Add(new TalentOption(talentOptionsElement, Identifier));
             }
@@ -273,21 +188,20 @@ namespace Barotrauma
 
     class TalentOption
     {
-        public readonly List<TalentPrefab> Talents = new List<TalentPrefab>();
+        private readonly ImmutableHashSet<Identifier> talentIdentifiers;
 
-        public TalentOption(XElement talentOptionsElement, string debugIdentifier)
+        public IEnumerable<TalentPrefab> Talents
+            => talentIdentifiers.Select(id => TalentPrefab.TalentPrefabs[id]);
+
+        public TalentOption(ContentXElement talentOptionsElement, Identifier debugIdentifier)
         {
-            foreach (XElement talentOptionElement in talentOptionsElement.GetChildElements("talentoption"))
+            var talentIdentifiers = new HashSet<Identifier>();
+            foreach (var talentOptionElement in talentOptionsElement.GetChildElements("talentoption"))
             {
-                string identifier = talentOptionElement.GetAttributeString("identifier", string.Empty);
-
-                if (!TalentPrefab.TalentPrefabs.ContainsKey(identifier))
-                {
-                    DebugConsole.ThrowError($"Error in talent tree \"{debugIdentifier}\" - could not find a talent with the identifier \"{identifier}\".");
-                    return;
-                }
-                Talents.Add(TalentPrefab.TalentPrefabs[identifier]);
+                Identifier identifier = talentOptionElement.GetAttributeIdentifier("identifier", Identifier.Empty);
+                talentIdentifiers.Add(identifier);
             }
+            this.talentIdentifiers = talentIdentifiers.ToImmutableHashSet();
         }
     }
 

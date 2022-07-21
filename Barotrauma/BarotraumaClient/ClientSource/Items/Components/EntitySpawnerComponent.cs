@@ -17,12 +17,12 @@ namespace Barotrauma.Items.Components
                 case AreaShape.Rectangle:
                 {
                     RectangleF rect = GetAreaRectangle(SpawnAreaBounds, SpawnAreaOffset, draw: true);
-                    GUI.DrawRectangle(spriteBatch, rect.Location, rect.Size, GUI.Style.Red, isFilled: false, 0f, 4f);
+                    GUI.DrawRectangle(spriteBatch, rect.Location, rect.Size, GUIStyle.Red, isFilled: false, 0f, 4f);
 
                     if (MaximumAmountRangePadding > 0f)
                     {
                         rect.Inflate(MaximumAmountRangePadding, MaximumAmountRangePadding);
-                        GUI.DrawRectangle(spriteBatch, rect.Location, rect.Size, GUI.Style.Red, isFilled: false, 0f, 2f);
+                        GUI.DrawRectangle(spriteBatch, rect.Location, rect.Size, GUIStyle.Red, isFilled: false, 0f, 2f);
                     }
                     break;
                 }
@@ -30,11 +30,11 @@ namespace Barotrauma.Items.Components
                     Vector2 center = item.WorldPosition;
                     center += SpawnAreaOffset;
                     center.Y = -center.Y;
-                    spriteBatch.DrawCircle(center, SpawnAreaRadius, 32, GUI.Style.Red, thickness: 4f);
+                    spriteBatch.DrawCircle(center, SpawnAreaRadius, 32, GUIStyle.Red, thickness: 4f);
 
                     if (MaximumAmountRangePadding > 0f)
                     {
-                        spriteBatch.DrawCircle(center, SpawnAreaRadius + MaximumAmountRangePadding, 32, GUI.Style.Red, thickness: 2f);
+                        spriteBatch.DrawCircle(center, SpawnAreaRadius + MaximumAmountRangePadding, 32, GUIStyle.Red, thickness: 2f);
                     }
                     break;
             }
@@ -46,14 +46,14 @@ namespace Barotrauma.Items.Components
                 case AreaShape.Rectangle:
                 {
                     RectangleF rect = GetAreaRectangle(CrewAreaBounds, CrewAreaOffset, draw: true);
-                    GUI.DrawRectangle(spriteBatch, rect.Location, rect.Size, GUI.Style.Green, isFilled: false, 0f, 4f);
+                    GUI.DrawRectangle(spriteBatch, rect.Location, rect.Size, GUIStyle.Green, isFilled: false, 0f, 4f);
                     break;
                 }
                 case AreaShape.Circle:
                     Vector2 center = item.WorldPosition;
                     center += CrewAreaOffset;
                     center.Y = -center.Y;
-                    spriteBatch.DrawCircle(center, CrewAreaRadius, 32, GUI.Style.Green);
+                    spriteBatch.DrawCircle(center, CrewAreaRadius, 32, GUIStyle.Green);
                     break;
             }
         }

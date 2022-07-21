@@ -23,6 +23,10 @@ namespace Barotrauma
         public readonly Vector2 Noise;
         public readonly Color DirtColor;
 
+#if CLIENT
+        public Sprite GrimeSprite;
+#endif
+
         public float ColorStrength
         {
             get;
@@ -51,6 +55,9 @@ namespace Barotrauma
                 PerlinNoise.GetPerlin(Rect.Y / 1000.0f + 0.5f, Rect.X / 1000.0f + 0.5f));
 
             Color = DirtColor = Color.Lerp(new Color(10, 10, 10, 100), new Color(54, 57, 28, 200), Noise.X);
+#if CLIENT
+            GrimeSprite = DecalManager.GrimeSprites[$"{nameof(GrimeSprite)}{index % DecalManager.GrimeSpriteCount}"].Sprite;
+#endif
         }
 
         public BackgroundSection(Rectangle rect, ushort index, float colorStrength, Color color, ushort rowIndex)
@@ -68,6 +75,9 @@ namespace Barotrauma
                 PerlinNoise.GetPerlin(Rect.Y / 1000.0f + 0.5f, Rect.X / 1000.0f + 0.5f));
             
             DirtColor = Color.Lerp(new Color(10, 10, 10, 100), new Color(54, 57, 28, 200), Noise.X);
+#if CLIENT
+            GrimeSprite = DecalManager.GrimeSprites[$"{nameof(GrimeSprite)}{index % DecalManager.GrimeSpriteCount}"].Sprite;
+#endif
         }
 
         public bool SetColor(Color color)
@@ -101,8 +111,8 @@ namespace Barotrauma
 
     partial class Hull : MapEntity, ISerializableEntity, IServerSerializable
     {
-        public static List<Hull> hullList = new List<Hull>();
-        public static List<EntityGrid> EntityGrids { get; } = new List<EntityGrid>();
+        public readonly static List<Hull> HullList = new List<Hull>();
+        public readonly static List<EntityGrid> EntityGrids = new List<EntityGrid>();
 
         public static bool ShowHulls = true;
 
@@ -124,8 +134,8 @@ namespace Barotrauma
 
         public const int BackgroundSectionsPerNetworkEvent = 16;
 
-        public readonly Dictionary<string, SerializableProperty> properties;
-        public Dictionary<string, SerializableProperty> SerializableProperties
+        public readonly Dictionary<Identifier, SerializableProperty> properties;
+        public Dictionary<Identifier, SerializableProperty> SerializableProperties
         {
             get { return properties; }
         }
@@ -155,32 +165,23 @@ namespace Barotrauma
 
         public readonly List<Gap> ConnectedGaps = new List<Gap>();
 
-        public override string Name
-        {
-            get
-            {
-                return "Hull";
-            }
-        }
+        public override string Name => "Hull";
 
-        public string DisplayName
+        public LocalizedString DisplayName
         {
             get;
             private set;
         }
 
-        private readonly HashSet<string> moduleTags = new HashSet<string>();
+        private readonly HashSet<Identifier> moduleTags = new HashSet<Identifier>();
 
         /// <summary>
         /// Inherited flags from outpost generation.
         /// </summary>
-        public IEnumerable<string> OutpostModuleTags 
-        { 
-            get { return moduleTags; } 
-        }
+        public IEnumerable<Identifier> OutpostModuleTags => moduleTags;
 
         private string roomName;
-        [Editable, Serialize("", true, translationTextTag: "RoomName.")]
+        [Editable, Serialize("", IsPropertySaveable.Yes, translationTextTag: "RoomName.")]
         public string RoomName
         {
             get { return roomName; }
@@ -188,7 +189,7 @@ namespace Barotrauma
             {
                 if (roomName == value) { return; }
                 roomName = value;
-                DisplayName = TextManager.Get(roomName, returnNull: true) ?? roomName;
+                DisplayName = TextManager.Get(roomName).Fallback(roomName);
                 if (!IsWetRoom && ForceAsWetRoom)
                 {
                     IsWetRoom = true;
@@ -200,7 +201,7 @@ namespace Barotrauma
 
         private Color ambientLight;
 
-        [Editable, Serialize("0,0,0,0", true)]
+        [Editable, Serialize("0,0,0,0", IsPropertySaveable.Yes)]
         public Color AmbientLight
         {
             get { return ambientLight; }
@@ -283,38 +284,22 @@ namespace Barotrauma
             get { return Submarine == null ? surface : surface + Submarine.Position.Y; }
         }
 
-        private float dirtiedVolume = 0.0f;
-
         public float WaterVolume
         {
             get { return waterVolume; }
             set
             {
-                if (!MathUtils.IsValid(value)) return;
+                if (!MathUtils.IsValid(value)) { return; }
                 waterVolume = MathHelper.Clamp(value, 0.0f, Volume * MaxCompress);
                 if (waterVolume < Volume) { Pressure = rect.Y - rect.Height + waterVolume / rect.Width; }
                 if (waterVolume > 0.0f)
                 {
                     update = true;
-                    if (BackgroundSections != null)
-                    {
-                        float volumeMultiplier = Math.Clamp(waterVolume / Volume, 0f, 1f);
-                        if (Math.Abs(volumeMultiplier - dirtiedVolume) > 0.075f)
-                        {
-                            RefreshSubmergedSections(new Rectangle(new Point(0, -rect.Height), new Point(rect.Width, (int)(rect.Height * volumeMultiplier))));
-                            dirtiedVolume = volumeMultiplier;
-                        }
-                    }
-                }
-                else
-                {
-                    submergedSections.Clear();
-                    dirtiedVolume = 0.0f;
                 }
             }
         }
 
-        [Serialize(100000.0f, true)]
+        [Serialize(100000.0f, IsPropertySaveable.Yes)]
         public float Oxygen
         {
             get { return oxygen; }
@@ -329,10 +314,11 @@ namespace Barotrauma
             roomName != null && (
             roomName.Contains("ballast", StringComparison.OrdinalIgnoreCase) || 
             roomName.Contains("bilge", StringComparison.OrdinalIgnoreCase) || 
-            roomName.Contains("airlock", StringComparison.OrdinalIgnoreCase));
+            roomName.Contains("airlock", StringComparison.OrdinalIgnoreCase) ||
+            roomName.Contains("dockingport", StringComparison.OrdinalIgnoreCase));
 
         private bool isWetRoom;
-        [Editable, Serialize(false, true, description: "It's normal for this hull to be filled with water. If the room name contains 'ballast', 'bilge', or 'airlock', you can't disable this setting.")]
+        [Editable, Serialize(false, IsPropertySaveable.Yes, description: "It's normal for this hull to be filled with water. If the room name contains 'ballast', 'bilge', or 'airlock', you can't disable this setting.")]
         public bool IsWetRoom
         {
             get { return isWetRoom; }
@@ -347,7 +333,7 @@ namespace Barotrauma
         }
 
         private bool avoidStaying;
-        [Editable, Serialize(false, true, description: "Bots avoid staying here, but they are still allowed to access the room when needed and go through it. Forced true for wet rooms.")]
+        [Editable, Serialize(false, IsPropertySaveable.Yes, description: "Bots avoid staying here, but they are still allowed to access the room when needed and go through it. Forced true for wet rooms.")]
         public bool AvoidStaying
         {
             get { return avoidStaying || IsWetRoom; }
@@ -399,8 +385,6 @@ namespace Barotrauma
 
         private readonly HashSet<int> pendingSectionUpdates = new HashSet<int>();
 
-        private readonly List<BackgroundSection> submergedSections = new List<BackgroundSection>();
-
         public int xBackgroundMax, yBackgroundMax;
 
         public bool SupportsPaintedColors
@@ -426,8 +410,8 @@ namespace Barotrauma
 
         public BallastFloraBehavior BallastFlora { get; set; }
 
-        public Hull(MapEntityPrefab prefab, Rectangle rectangle)
-            : this (prefab, rectangle, Submarine.MainSub)
+        public Hull(Rectangle rectangle)
+            : this (rectangle, Submarine.MainSub)
         {
 #if CLIENT
             if (SubEditorScreen.IsSubEditor())
@@ -437,8 +421,8 @@ namespace Barotrauma
 #endif
         }
 
-        public Hull(MapEntityPrefab prefab, Rectangle rectangle, Submarine submarine, ushort id = Entity.NullEntityID)
-            : base (prefab, submarine, id)
+        public Hull(Rectangle rectangle, Submarine submarine, ushort id = Entity.NullEntityID)
+            : base (CoreEntityPrefab.HullPrefab, submarine, id)
         {
             rect = rectangle;
 
@@ -469,7 +453,7 @@ namespace Barotrauma
                 };
             }
 
-            hullList.Add(this);
+            HullList.Add(this);
 
             if (submarine == null || !submarine.Loading)
             {
@@ -488,11 +472,11 @@ namespace Barotrauma
 
         public static Rectangle GetBorders()
         {
-            if (!hullList.Any()) return Rectangle.Empty;
+            if (!HullList.Any()) return Rectangle.Empty;
 
-            Rectangle rect = hullList[0].rect;
+            Rectangle rect = HullList[0].rect;
             
-            foreach (Hull hull in hullList)
+            foreach (Hull hull in HullList)
             {
                 if (hull.Rect.X < rect.X)
                 {
@@ -516,12 +500,15 @@ namespace Barotrauma
 
         public override MapEntity Clone()
         {
-            var clone = new Hull(MapEntityPrefab.Find(null, "hull"), rect, Submarine);
-            foreach (KeyValuePair<string, SerializableProperty> property in SerializableProperties)
+            var clone = new Hull(rect, Submarine);
+            foreach (KeyValuePair<Identifier, SerializableProperty> property in SerializableProperties)
             {
                 if (!property.Value.Attributes.OfType<Editable>().Any()) { continue; }
                 clone.SerializableProperties[property.Key].TrySetValue(clone, property.Value.GetValue(this));
             }
+#if CLIENT
+            clone.lastAmbientLightEditTime = 0.0;
+#endif
             return clone;
         }
 
@@ -536,17 +523,17 @@ namespace Barotrauma
         {
             var newGrid = new EntityGrid(submarine, 200.0f);
             EntityGrids.Add(newGrid);            
-            foreach (Hull hull in hullList)
+            foreach (Hull hull in HullList)
             {
                 if (hull.Submarine == submarine && !hull.IdFreed) { newGrid.InsertEntity(hull); }
             }
             return newGrid;
         }
 
-        public void SetModuleTags(IEnumerable<string> tags)
+        public void SetModuleTags(IEnumerable<Identifier> tags)
         {
             moduleTags.Clear();
-            foreach (string tag in tags)
+            foreach (Identifier tag in tags)
             {
                 moduleTags.Add(tag);
             }
@@ -603,7 +590,7 @@ namespace Barotrauma
             return index;
         }
 
-        public override void Move(Vector2 amount)
+        public override void Move(Vector2 amount, bool ignoreContacts = false)
         {
             if (!MathUtils.IsValid(amount))
             {
@@ -630,7 +617,7 @@ namespace Barotrauma
         public override void ShallowRemove()
         {
             base.Remove();
-            hullList.Remove(this);
+            HullList.Remove(this);
 
             if (Submarine == null || (!Submarine.Loading && !Submarine.Unloading))
             {
@@ -659,7 +646,7 @@ namespace Barotrauma
         public override void Remove()
         {
             base.Remove();
-            hullList.Remove(this);
+            HullList.Remove(this);
             BallastFlora?.Remove();
 
             if (Submarine != null && !Submarine.Loading && !Submarine.Unloading)
@@ -669,7 +656,6 @@ namespace Barotrauma
             }
 
             BackgroundSections?.Clear();
-            submergedSections?.Clear();
 
             List<FireSource> fireSourcesToRemove = new List<FireSource>(FireSources);
             foreach (FireSource fireSource in fireSourcesToRemove)
@@ -712,7 +698,7 @@ namespace Barotrauma
                 return null;
             }
 
-            var decal = GameMain.DecalManager.Prefabs.Find(p => p.UIntIdentifier == decalId);
+            var decal = DecalManager.Prefabs.Find(p => p.UintIdentifier == decalId);
             if (decal == null)
             {
                 DebugConsole.ThrowError($"Could not find a decal prefab with the UInt identifier {decalId}!");
@@ -732,12 +718,12 @@ namespace Barotrauma
 
             if (decals.Count >= MaxDecalsPerHull) { return null; }
 
-            var decal = GameMain.DecalManager.CreateDecal(decalName, scale, worldPosition, this, spriteIndex);
+            var decal = DecalManager.CreateDecal(decalName, scale, worldPosition, this, spriteIndex);
             if (decal != null)
             {
-                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsServer)
+                if (GameMain.NetworkMember is { IsServer: true })
                 {
-                    GameMain.NetworkMember.CreateEntityEvent(this, new object[] { false });
+                    GameMain.NetworkMember.CreateEntityEvent(this, new DecalEventData());
                 }
                 decals.Add(decal);
             }
@@ -745,6 +731,96 @@ namespace Barotrauma
             return decal;
         }
 
+        #region Shared network write
+        private void SharedStatusWrite(IWriteMessage msg)
+        {
+            msg.WriteRangedSingle(MathHelper.Clamp(waterVolume / Volume, 0.0f, 1.5f), 0.0f, 1.5f, 8);
+
+            msg.WriteRangedInteger(Math.Min(FireSources.Count, 16), 0, 16);
+            for (int i = 0; i < Math.Min(FireSources.Count, 16); i++)
+            {
+                var fireSource = FireSources[i];
+                Vector2 normalizedPos = new Vector2(
+                    (fireSource.Position.X - rect.X) / rect.Width,
+                    (fireSource.Position.Y - (rect.Y - rect.Height)) / rect.Height);
+
+                msg.WriteRangedSingle(MathHelper.Clamp(normalizedPos.X, 0.0f, 1.0f), 0.0f, 1.0f, 8);
+                msg.WriteRangedSingle(MathHelper.Clamp(normalizedPos.Y, 0.0f, 1.0f), 0.0f, 1.0f, 8);
+                msg.WriteRangedSingle(MathHelper.Clamp(fireSource.Size.X / rect.Width, 0.0f, 1.0f), 0, 1.0f, 8);
+            }
+        }
+
+        private void SharedBackgroundSectionsWrite(IWriteMessage msg, in BackgroundSectionsEventData backgroundSectionsEventData)
+        {
+            int sectorToUpdate = backgroundSectionsEventData.SectorStartIndex;
+            int start = sectorToUpdate * BackgroundSectionsPerNetworkEvent;
+            int end = Math.Min((sectorToUpdate + 1) * BackgroundSectionsPerNetworkEvent, BackgroundSections.Count - 1);
+            msg.WriteRangedInteger(sectorToUpdate, 0, BackgroundSections.Count - 1);
+            for (int i = start; i < end; i++)
+            {
+                msg.WriteRangedSingle(BackgroundSections[i].ColorStrength, 0.0f, 1.0f, 8);
+                msg.Write(BackgroundSections[i].Color.PackedValue);
+            }
+        }
+        #endregion
+
+        #region Shared network read
+        public readonly struct NetworkFireSource
+        {
+            public readonly Vector2 Position;
+            public readonly float Size;
+
+            public NetworkFireSource(Hull hull, Vector2 normalizedPosition, float normalizedSize)
+            {
+                Position = hull.Rect.Location.ToVector2()
+                           + new Vector2(0, -hull.Rect.Height)
+                           + normalizedPosition * hull.Rect.Size.ToVector2();
+                Size = normalizedSize * hull.Rect.Width;
+            }
+        }
+
+        private void SharedStatusRead(IReadMessage msg, out float newWaterVolume, out NetworkFireSource[] newFireSources)
+        {
+            newWaterVolume = msg.ReadRangedSingle(0.0f, 1.5f, 8) * Volume;
+
+            int fireSourceCount = msg.ReadRangedInteger(0, 16);
+            newFireSources = new NetworkFireSource[fireSourceCount];
+            for (int i = 0; i < fireSourceCount; i++)
+            {
+                float x = MathHelper.Clamp(msg.ReadRangedSingle(0.0f, 1.0f, 8), 0.05f, 0.95f);
+                float y = MathHelper.Clamp(msg.ReadRangedSingle(0.0f, 1.0f, 8), 0.05f, 0.95f);
+                float size = msg.ReadRangedSingle(0.0f, 1.0f, 8);
+                newFireSources[i] = new NetworkFireSource(this, new Vector2(x, y), size);
+            }
+        }
+
+        private readonly struct BackgroundSectionNetworkUpdate
+        {
+            public readonly int SectionIndex;
+            public readonly Color Color;
+            public readonly float ColorStrength;
+            public BackgroundSectionNetworkUpdate(int sectionIndex, Color color, float colorStrength)
+            {
+                SectionIndex = sectionIndex;
+                Color = color;
+                ColorStrength = colorStrength;
+            }
+        }
+        
+        private void SharedBackgroundSectionRead(IReadMessage msg, Action<BackgroundSectionNetworkUpdate> action, out int sectorToUpdate)
+        {
+            sectorToUpdate = msg.ReadRangedInteger(0, BackgroundSections.Count - 1);
+            int start = sectorToUpdate * BackgroundSectionsPerNetworkEvent;
+            int end = Math.Min((sectorToUpdate + 1) * BackgroundSectionsPerNetworkEvent, BackgroundSections.Count - 1);
+            for (int i = start; i < end; i++)
+            {
+                float colorStrength = msg.ReadRangedSingle(0.0f, 1.0f, 8);
+                Color color = new Color(msg.ReadUInt32());
+
+                action(new BackgroundSectionNetworkUpdate(i, color, colorStrength));
+            }
+        }
+        #endregion
 
         public override void Update(float deltaTime, Camera cam)
         {
@@ -886,12 +962,6 @@ namespace Barotrauma
                     waveY[i - 1] += leftDelta[i];
                     waveY[i + 1] += rightDelta[i];
                 }
-            }
-
-            //0.016 increase every ~2000 frames = reaches full dirtiness in ~35 minutes
-            if (submergedSections.Count > 0 && Submarine != null && Submarine.Info.Type == SubmarineType.Player && Rand.Int(2000) == 1)
-            {
-                DirtySections(submergedSections, deltaTime);
             }
 
             if (waterVolume < Volume)
@@ -1110,12 +1180,12 @@ namespace Barotrauma
         /// </summary>
         public static Hull FindHullUnoptimized(Vector2 position, Hull guess = null, bool useWorldCoordinates = true, bool inclusive = true)
         {
-            if (guess != null && hullList.Contains(guess))
+            if (guess != null && HullList.Contains(guess))
             {
                 if (Submarine.RectContains(useWorldCoordinates ? guess.WorldRect : guess.rect, position, inclusive)) return guess;
             }
 
-            foreach (Hull hull in hullList)
+            foreach (Hull hull in HullList)
             {
                 if (Submarine.RectContains(useWorldCoordinates ? hull.WorldRect : hull.rect, position, inclusive)) return hull;
             }
@@ -1135,15 +1205,15 @@ namespace Barotrauma
             else
             {
                 Hull h = c.CurrentHull;
-                hullList.ForEach(j => j.Visible = false);
+                HullList.ForEach(j => j.Visible = false);
                 List<Hull> visibleHulls;
                 if (h == null || c.Submarine == null)
                 {
-                    visibleHulls = hullList.FindAll(j => j.CanSeeOther(null, false));
+                    visibleHulls = HullList.FindAll(j => j.CanSeeOther(null, false));
                 }
                 else
                 {
-                    visibleHulls = hullList.FindAll(j => h.CanSeeOther(j, true));
+                    visibleHulls = HullList.FindAll(j => h.CanSeeOther(j, true));
                 }
                 visibleHulls.ForEach(j => j.Visible = true);
                 foreach (Item it in Item.ItemList)
@@ -1164,7 +1234,7 @@ namespace Barotrauma
                 foreach (Gap g in ConnectedGaps)
                 {
                     if (g.ConnectedWall != null && g.ConnectedWall.CastShadow) continue;
-                    List<Hull> otherHulls = hullList.FindAll(h => h.ConnectedGaps.Contains(g) && h != this);
+                    List<Hull> otherHulls = HullList.FindAll(h => h.ConnectedGaps.Contains(g) && h != this);
                     retVal = otherHulls.Any(h => h == other);
                     if (!retVal && allowIndirect) retVal = otherHulls.Any(h => h.CanSeeOther(other, false));
                     if (retVal) return true;
@@ -1174,7 +1244,7 @@ namespace Barotrauma
             {
                 foreach (Gap g in ConnectedGaps)
                 {
-                    if (g.ConnectedDoor != null && !hullList.Any(h => h.ConnectedGaps.Contains(g) && h != this)) return true;
+                    if (g.ConnectedDoor != null && !HullList.Any(h => h.ConnectedGaps.Contains(g) && h != this)) return true;
                 }
                 List<MapEntity> structures = mapEntityList.FindAll(me => me is Structure && me.Rect.Intersects(Rect));
                 return structures.Any(st => !(st as Structure).CastShadow);
@@ -1209,7 +1279,7 @@ namespace Barotrauma
             if (moduleFlags != null && moduleFlags.Any() && 
                 (Submarine.Info.Type == SubmarineType.OutpostModule || Submarine.Info.Type == SubmarineType.Outpost))
             {
-                if (moduleFlags.Contains("airlock") &&
+                if (moduleFlags.Contains("airlock".ToIdentifier()) &&
                     ConnectedGaps.Any(g => !g.IsRoomToRoom && g.ConnectedDoor != null))
                 {
                     return "RoomName.Airlock";
@@ -1313,7 +1383,7 @@ namespace Barotrauma
         
         public static Hull GetCleanTarget(Vector2 worldPosition)
         {
-            foreach (Hull hull in hullList)
+            foreach (Hull hull in HullList)
             {
                 Rectangle worldRect = hull.WorldRect;
                 if (worldPosition.X < worldRect.X || worldPosition.X > worldRect.Right) { continue; }
@@ -1363,17 +1433,6 @@ namespace Barotrauma
                         yield return BackgroundSections[x + y * xBackgroundMax];
                     }
                 }
-            }
-        }
-
-        public void RefreshSubmergedSections(Rectangle waterArea)
-        {
-            if (BackgroundSections == null) { return; }
-
-            submergedSections.Clear();
-            foreach (var section in GetBackgroundSectionsViaContaining(waterArea))
-            {
-                submergedSections.Add(section);
             }
         }
 
@@ -1443,15 +1502,6 @@ namespace Barotrauma
             }
         }
 
-        public void DirtySections(List<BackgroundSection> sections, float dirtyVal)
-        {
-            if (sections == null) { return; }
-            for (int i = 0; i < sections.Count; i++)
-            {
-                IncreaseSectionColorOrStrength(sections[i], sections[i].DirtColor, dirtyVal, false, false);
-            }
-        }
-
         public void CleanSection(BackgroundSection section, float cleanVal, bool updateRequired)
         {
             bool decalsCleaned = false;
@@ -1476,10 +1526,10 @@ namespace Barotrauma
         }
 #endregion
 
-        public static Hull Load(XElement element, Submarine submarine, IdRemap idRemap)
+        public static Hull Load(ContentXElement element, Submarine submarine, IdRemap idRemap)
         {
             Rectangle rect;
-            if (element.Attribute("rect") != null)
+            if (element.GetAttribute("rect") != null)
             {
                 rect = element.GetAttributeRect("rect", Rectangle.Empty);
             }
@@ -1487,13 +1537,13 @@ namespace Barotrauma
             {
                 //backwards compatibility
                 rect = new Rectangle(
-                    int.Parse(element.Attribute("x").Value),
-                    int.Parse(element.Attribute("y").Value),
-                    int.Parse(element.Attribute("width").Value),
-                    int.Parse(element.Attribute("height").Value));
+                    int.Parse(element.GetAttribute("x").Value),
+                    int.Parse(element.GetAttribute("y").Value),
+                    int.Parse(element.GetAttribute("width").Value),
+                    int.Parse(element.GetAttribute("height").Value));
             }
 
-            var hull = new Hull(MapEntityPrefab.Find(null, "hull"), rect, submarine, idRemap.GetOffsetId(element))
+            var hull = new Hull(rect, submarine, idRemap.GetOffsetId(element))
             {
                 WaterVolume = element.GetAttributeFloat("pressure", 0.0f)
             };
@@ -1507,7 +1557,7 @@ namespace Barotrauma
                 hull.OriginalAmbientLight = XMLExtensions.ParseColor(originalAmbientLight, false);
             }
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
@@ -1525,7 +1575,7 @@ namespace Barotrauma
                         }
                         break;
                     case "ballastflorabehavior":
-                        string identifier = subElement.GetAttributeString("identifier", string.Empty);
+                        Identifier identifier = subElement.GetAttributeIdentifier("identifier", Identifier.Empty);
                         BallastFloraPrefab prefab = BallastFloraPrefab.Find(identifier);
                         if (prefab != null)
                         {
@@ -1554,7 +1604,7 @@ namespace Barotrauma
             }
 
             SerializableProperty.DeserializeProperties(hull, element);
-            if (element.Attribute("oxygen") == null) { hull.Oxygen = hull.Volume; }
+            if (element.GetAttribute("oxygen") == null) { hull.Oxygen = hull.Volume; }
 
             return hull;
         }

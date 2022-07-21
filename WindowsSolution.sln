@@ -39,6 +39,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XNATypes", "Libraries\XNATy
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpFont.NetStandard", "Libraries\SharpFont\Source\SharpFont\SharpFont.NetStandard.csproj", "{6911872D-40EF-400C-B0A1-9985A19ED488}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsTest", "Barotrauma\BarotraumaTest\WindowsTest.csproj", "{C7212AE2-A925-4225-A639-AE0653EF65B0}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Libraries\GameAnalytics\GA-SDK-MONO-SHARED\GA-SDK-MONO-SHARED.projitems*{95c4d59d-9be4-4278-b4f8-46c0ba1a3916}*SharedItemsImports = 5
@@ -115,6 +117,12 @@ Global
 		{6911872D-40EF-400C-B0A1-9985A19ED488}.Release|x64.Build.0 = Release|x64
 		{6911872D-40EF-400C-B0A1-9985A19ED488}.Unstable|x64.ActiveCfg = Release|x64
 		{6911872D-40EF-400C-B0A1-9985A19ED488}.Unstable|x64.Build.0 = Release|x64
+		{C7212AE2-A925-4225-A639-AE0653EF65B0}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C7212AE2-A925-4225-A639-AE0653EF65B0}.Debug|x64.Build.0 = Debug|Any CPU
+		{C7212AE2-A925-4225-A639-AE0653EF65B0}.Release|x64.ActiveCfg = Release|Any CPU
+		{C7212AE2-A925-4225-A639-AE0653EF65B0}.Release|x64.Build.0 = Release|Any CPU
+		{C7212AE2-A925-4225-A639-AE0653EF65B0}.Unstable|x64.ActiveCfg = Debug|Any CPU
+		{C7212AE2-A925-4225-A639-AE0653EF65B0}.Unstable|x64.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -132,6 +140,7 @@ Global
 		{47848C6E-C7A8-4EC3-96C2-3BC8A4234AFA} = {78A9F0AA-5519-407A-9B72-2A09F5DF7068}
 		{1F318AC4-F808-4130-867F-B98DF9AA8F95} = {DE36F45F-F09E-4719-B953-00D148F7722A}
 		{6911872D-40EF-400C-B0A1-9985A19ED488} = {DE36F45F-F09E-4719-B953-00D148F7722A}
+		{C7212AE2-A925-4225-A639-AE0653EF65B0} = {78A9F0AA-5519-407A-9B72-2A09F5DF7068}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {17032EAB-554B-4B44-A4F6-EFB177ACAB7A}

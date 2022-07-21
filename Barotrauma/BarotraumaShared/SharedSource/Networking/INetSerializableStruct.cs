@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 
@@ -42,6 +44,13 @@ namespace Barotrauma
         public int NumberOfBits = 8;
         public bool IncludeColorAlpha = false;
         public int ArrayMaxSize = ushort.MaxValue;
+
+        public readonly int OrderKey;
+
+        public NetworkSerialize([CallerLineNumber] int lineNumber = 0)
+        {
+            OrderKey = lineNumber;
+        }
     }
 
     /// <summary>
@@ -52,6 +61,7 @@ namespace Barotrauma
         public readonly struct ReadWriteBehavior
         {
             public delegate dynamic? ReadDelegate(IReadMessage inc, Type type, NetworkSerialize attribute);
+
             public delegate void WriteDelegate(dynamic? obj, NetworkSerialize attribute, IWriteMessage msg);
 
             public readonly ReadDelegate ReadAction;
@@ -63,6 +73,58 @@ namespace Barotrauma
                 WriteAction = writeAction;
             }
         }
+
+        public readonly struct CachedReflectedVariable
+        {
+            public delegate object? GetValueDelegate(object? obj);
+
+            public delegate void SetValueDelegate(object? obj, object? value);
+
+            public readonly Type Type;
+            public readonly ReadWriteBehavior Behavior;
+            public readonly NetworkSerialize Attribute;
+            public readonly SetValueDelegate SetValue;
+            public readonly GetValueDelegate GetValue;
+            public readonly bool HasOwnAttribute;
+
+            public CachedReflectedVariable(MemberInfo info, ReadWriteBehavior behavior, Type baseClassType)
+            {
+                Behavior = behavior;
+
+                switch (info)
+                {
+                    case PropertyInfo pi:
+                        Type = pi.PropertyType;
+                        GetValue = pi.GetValue;
+                        SetValue = pi.SetValue;
+                        break;
+                    case FieldInfo fi:
+                        Type = fi.FieldType;
+                        GetValue = fi.GetValue;
+                        SetValue = fi.SetValue;
+                        break;
+                    default:
+                        throw new ArgumentException($"Expected {nameof(FieldInfo)} or {nameof(PropertyInfo)} but found {info.GetType()}.", nameof(info));
+                }
+
+                if (info.GetCustomAttribute<NetworkSerialize>() is { } ownAttriute)
+                {
+                    HasOwnAttribute = true;
+                    Attribute = ownAttriute;
+                }
+                else if (baseClassType.GetCustomAttribute<NetworkSerialize>() is { } globalAttribute)
+                {
+                    HasOwnAttribute = false;
+                    Attribute = globalAttribute;
+                }
+                else
+                {
+                    throw new InvalidOperationException($"Unable to serialize \"{Type}\" in \"{baseClassType}\" because it has no {nameof(NetworkSerialize)} attribute.");
+                }
+            }
+        }
+
+        private static readonly Dictionary<Type, ImmutableArray<CachedReflectedVariable>> CachedVariables = new Dictionary<Type, ImmutableArray<CachedReflectedVariable>>();
 
         private static readonly ImmutableDictionary<Type, ReadWriteBehavior> TypeBehaviors = new Dictionary<Type, ReadWriteBehavior>
         {
@@ -77,16 +139,15 @@ namespace Barotrauma
             { typeof(Single), new ReadWriteBehavior(ReadSingle, WriteSingle) },
             { typeof(Double), new ReadWriteBehavior(ReadDouble, WriteDynamic) },
             { typeof(String), new ReadWriteBehavior(ReadString, WriteDynamic) },
+            { typeof(Identifier), new ReadWriteBehavior(ReadIdentifier, WriteDynamic) },
             { typeof(Color), new ReadWriteBehavior(ReadColor, WriteColor) },
             { typeof(Vector2), new ReadWriteBehavior(ReadVector2, WriteVector2) }
         }.ToImmutableDictionary();
 
-        private static readonly ReadWriteBehavior InvalidReadWriteBehavior = new ReadWriteBehavior(ReadInvalid, WriteInvalid);
-
         private static readonly ImmutableDictionary<Predicate<Type>, ReadWriteBehavior> TypePredicates = new Dictionary<Predicate<Type>, ReadWriteBehavior>
         {
             // Arrays
-            { type => type.BaseType?.IsAssignableFrom(typeof(Array)) ?? false, new ReadWriteBehavior(ReadArray, WriteArray) },
+            { type => typeof(Array).IsAssignableFrom(type.BaseType), new ReadWriteBehavior(ReadArray, WriteArray) },
 
             // Nested INetSerializableStructs
             { type => typeof(INetSerializableStruct).IsAssignableFrom(type), new ReadWriteBehavior(ReadINetSerializableStruct, WriteINetSerializableStruct) },
@@ -94,13 +155,79 @@ namespace Barotrauma
             // Enums
             { type => type.IsEnum, new ReadWriteBehavior(ReadEnum, WriteEnum) },
 
-            // Nullable / Optional types
-            { type => Nullable.GetUnderlyingType(type) != null, new ReadWriteBehavior(ReadNullable, WriteNullable) }
+            // Nullable
+            { type => Nullable.GetUnderlyingType(type) != null, new ReadWriteBehavior(ReadNullable, WriteNullable) },
+
+            // Option
+            { type => type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Option<>), new ReadWriteBehavior(ReadOption, WriteOption) }
         }.ToImmutableDictionary();
 
-        private static void WriteInvalid(dynamic? obj, NetworkSerialize attribute, IWriteMessage msg) => throw new InvalidOperationException($"Type {obj?.GetType()} cannot be serialized. Did you forget to implement INetSerializableStruct?");
+        private static readonly ReadWriteBehavior InvalidReadWriteBehavior = new ReadWriteBehavior(ReadInvalid, WriteInvalid);
 
-        private static dynamic ReadInvalid(IReadMessage inc, Type type, NetworkSerialize attribute) => throw new InvalidOperationException($"Type {type} cannot be deserialized. Did you forget to implement INetSerializableStruct?");
+        private static readonly Dictionary<Type, MethodInfo> cachedSomeCreateMethods = new Dictionary<Type, MethodInfo>();
+        private static readonly Dictionary<Type, MethodInfo> cachedNoneCreateMethod = new Dictionary<Type, MethodInfo>();
+
+        private static void WriteInvalid(dynamic? obj, NetworkSerialize attribute, IWriteMessage msg) =>
+            throw new SerializationException($"Type {obj?.GetType()} cannot be serialized. Did you forget to implement {nameof(INetSerializableStruct)}?");
+
+        private static dynamic ReadInvalid(IReadMessage inc, Type type, NetworkSerialize attribute) => throw new SerializationException($"Type {type} cannot be deserialized. Did you forget to implement {nameof(INetSerializableStruct)}?");
+
+        private static void WriteOption(dynamic? obj, NetworkSerialize attribute, IWriteMessage msg)
+        {
+            if (obj is null) { throw new ArgumentNullException(nameof(obj), "Tried to write 'null' into a non-nullable type"); }
+
+            Type type = obj.GetType();
+            Type optionType = type.GetGenericTypeDefinition();
+            Type underlyingType = type.GetGenericArguments()[0];
+
+            if (optionType == typeof(None<>))
+            {
+                msg.Write(false);
+            }
+            else if (optionType == typeof(Some<>))
+            {
+                msg.Write(true);
+                if (TryFindBehavior(underlyingType, out ReadWriteBehavior behavior))
+                {
+                    behavior.WriteAction(obj.Value, attribute, msg);
+                }
+            }
+            else
+            {
+                throw new ArgumentOutOfRangeException(nameof(obj), "Option type was neither None or Some");
+            }
+        }
+
+        private static dynamic? ReadOption(IReadMessage inc, Type type, NetworkSerialize attribute)
+        {
+            Type underlyingType = type.GetGenericArguments()[0];
+            bool hasValue = inc.ReadBoolean();
+            if (!hasValue)
+            {
+                return GetCreateMethod(typeof(None<>), underlyingType, cachedNoneCreateMethod).Invoke(null, null);
+            }
+
+            if (TryFindBehavior(underlyingType, out ReadWriteBehavior behavior))
+            {
+                dynamic? value = behavior.ReadAction(inc, underlyingType, attribute);
+                return GetCreateMethod(typeof(Some<>), underlyingType, cachedSomeCreateMethods).Invoke(null, new[] { value });
+            }
+
+            throw new InvalidOperationException($"Could not find suitable behavior for type {underlyingType} in {nameof(ReadOption)}");
+
+            static MethodInfo GetCreateMethod(Type optionType, Type type, Dictionary<Type, MethodInfo> cache)
+            {
+                if (cache.TryGetValue(type, out MethodInfo? foundInfo))
+                {
+                    return foundInfo;
+                }
+
+                Type genericType = optionType.MakeGenericType(type);
+                MethodInfo info = genericType.GetMethod("Create", BindingFlags.Static | BindingFlags.Public)!;
+                cache.Add(type, info);
+                return info;
+            }
+        }
 
         private static void WriteNullable(dynamic? obj, NetworkSerialize attribute, IWriteMessage msg)
         {
@@ -152,9 +279,9 @@ namespace Barotrauma
             Range<int> range = GetEnumRange(type);
             int enumIndex = inc.ReadRangedInteger(range.Start, range.End);
 
-            foreach (dynamic e in Enum.GetValues(type))
+            foreach (dynamic? e in Enum.GetValues(type))
             {
-                if (Convert.ChangeType(e, e.GetTypeCode()) == enumIndex) { return e; }
+                if (Convert.ChangeType(e, e!.GetTypeCode()) == enumIndex) { return e; }
             }
 
             throw new InvalidOperationException($"An enum {type} with value {enumIndex} could not be found in {nameof(ReadEnum)}");
@@ -213,9 +340,9 @@ namespace Barotrauma
 
             msg.WriteRangedInteger(array.Length, 0, attribute.ArrayMaxSize);
 
-            foreach (dynamic o in array)
+            foreach (dynamic? o in array)
             {
-                if (TryFindBehavior(o.GetType(), out ReadWriteBehavior behavior))
+                if (TryFindBehavior(o!.GetType(), out ReadWriteBehavior behavior))
                 {
                     behavior.WriteAction(o, attribute, msg);
                 }
@@ -286,6 +413,8 @@ namespace Barotrauma
 
         private static dynamic ReadString(IReadMessage inc, Type type, NetworkSerialize attribute) => inc.ReadString();
 
+        private static dynamic ReadIdentifier(IReadMessage inc, Type type, NetworkSerialize attribute) => inc.ReadIdentifier();
+
         private static dynamic ReadColor(IReadMessage inc, Type type, NetworkSerialize attribute) => attribute.IncludeColorAlpha ? inc.ReadColorR8G8B8A8() : inc.ReadColorR8G8B8();
 
         private static void WriteColor(dynamic? obj, NetworkSerialize attribute, IWriteMessage msg)
@@ -345,7 +474,7 @@ namespace Barotrauma
             return new Range<int>(values.Min(), values.Max());
         }
 
-        public static bool TryFindBehavior(Type type, out ReadWriteBehavior behavior)
+        private static bool TryFindBehavior(Type type, out ReadWriteBehavior behavior)
         {
             if (TypeBehaviors.TryGetValue(type, out behavior)) { return true; }
 
@@ -360,6 +489,46 @@ namespace Barotrauma
 
             behavior = InvalidReadWriteBehavior;
             return false;
+        }
+
+        public static ImmutableArray<CachedReflectedVariable> GetPropertiesAndFields(Type type, Type baseClassType)
+        {
+            if (CachedVariables.TryGetValue(type, out var cached)) { return cached; }
+
+            List<CachedReflectedVariable> variables = new List<CachedReflectedVariable>();
+
+            IEnumerable<PropertyInfo> propertyInfos = type.GetProperties().Where(HasAttribute);
+            IEnumerable<FieldInfo>  fieldInfos = type.GetFields().Where(HasAttribute);
+
+            foreach (PropertyInfo info in propertyInfos)
+            {
+                if (TryFindBehavior(info.PropertyType, out ReadWriteBehavior behavior))
+                {
+                    variables.Add(new CachedReflectedVariable(info, behavior, baseClassType));
+                }
+                else
+                {
+                    throw new SerializationException($"Unable to serialize type \"{type}\".");
+                }
+            }
+
+            foreach (FieldInfo info in fieldInfos)
+            {
+                if (TryFindBehavior(info.FieldType, out ReadWriteBehavior behavior))
+                {
+                    variables.Add(new CachedReflectedVariable(info, behavior, baseClassType));
+                }
+                else
+                {
+                    throw new SerializationException($"Unable to serialize type \"{type}\".");
+                }
+            }
+
+            ImmutableArray<CachedReflectedVariable> array = variables.All(v => v.HasOwnAttribute) ? variables.OrderBy(v => v.Attribute.OrderKey).ToImmutableArray() : variables.ToImmutableArray();
+            CachedVariables.Add(type, array);
+            return array;
+
+            bool HasAttribute(MemberInfo info) => (info.GetCustomAttribute<NetworkSerialize>() ?? baseClassType.GetCustomAttribute<NetworkSerialize>()) != null;
         }
     }
 
@@ -408,8 +577,8 @@ namespace Barotrauma
     /// <see cref="String">string</see><br/>
     /// <see cref="Microsoft.Xna.Framework.Color"/><br/>
     /// <see cref="Microsoft.Xna.Framework.Vector2"/><br/>
-    /// In addition arrays, enums and <see cref="Nullable{T}"/> are supported.<br/>
-    /// Using <see cref="Nullable{T}"/> will make the field or property optional
+    /// In addition arrays, enums, <see cref="Nullable{T}"/> and <see cref="Option{T}"/> are supported.<br/>
+    /// Using <see cref="Nullable{T}"/> or <see cref="Option{T}"/> will make the field or property optional.
     /// </remarks>
     /// <seealso cref="NetworkSerialize"/>
     public interface INetSerializableStruct
@@ -446,38 +615,11 @@ namespace Barotrauma
             object? newObject = Activator.CreateInstance(type);
             if (newObject is null) { return default!; }
 
-            PropertyInfo[] properties = type.GetProperties();
-            foreach (PropertyInfo info in properties)
+            var properties = NetSerializableProperties.GetPropertiesAndFields(type, type);
+            foreach (NetSerializableProperties.CachedReflectedVariable property in properties)
             {
-                NetworkSerialize? attribute = GetAttribute(info, newObject);
-                if (attribute is null) { continue; }
-
-                if (NetSerializableProperties.TryFindBehavior(info.PropertyType, out var behavior))
-                {
-                    object? value = behavior.ReadAction(inc, info.PropertyType, attribute);
-                    info.SetValue(newObject, value);
-                }
-                else
-                {
-                    DebugConsole.ThrowError($"Unsupported property type \"{info.PropertyType}\" in {newObject}!");
-                }
-            }
-
-            FieldInfo[] fields = type.GetFields();
-            foreach (FieldInfo info in fields)
-            {
-                NetworkSerialize? attribute = GetAttribute(info, newObject);
-                if (attribute is null) { continue; }
-
-                if (NetSerializableProperties.TryFindBehavior(info.FieldType, out var behavior))
-                {
-                    object? value = behavior.ReadAction(inc, info.FieldType, attribute);
-                    info.SetValue(newObject, value);
-                }
-                else
-                {
-                    DebugConsole.ThrowError($"Unsupported field type \"{info.FieldType}\" in {newObject}!");
-                }
+                NetworkSerialize attribute = property.Attribute;
+                property.SetValue(newObject, property.Behavior.ReadAction(inc, property.Type, attribute));
             }
 
             return newObject;
@@ -509,39 +651,34 @@ namespace Barotrauma
         /// <param name="msg">Outgoing network message</param>
         public void Write(IWriteMessage msg)
         {
-            PropertyInfo[] properties = GetType().GetProperties();
-            foreach (PropertyInfo info in properties)
+            Type type = GetType();
+            var properties = NetSerializableProperties.GetPropertiesAndFields(type, type);
+            foreach (NetSerializableProperties.CachedReflectedVariable property in properties)
             {
-                NetworkSerialize? attribute = GetAttribute(info, this);
-                if (attribute is null) { continue; }
-
-                if (NetSerializableProperties.TryFindBehavior(info.PropertyType, out var behavior))
-                {
-                    behavior.WriteAction(info.GetValue(this), attribute, msg);
-                }
-                else
-                {
-                    throw new InvalidOperationException($"Unsupported property type \"{info.PropertyType}\" in {this}");
-                }
-            }
-
-            FieldInfo[] fields = GetType().GetFields();
-            foreach (FieldInfo info in fields)
-            {
-                NetworkSerialize? attribute = GetAttribute(info, this);
-                if (attribute is null) { continue; }
-
-                if (NetSerializableProperties.TryFindBehavior(info.FieldType, out var behavior))
-                {
-                    behavior.WriteAction(info.GetValue(this), attribute, msg);
-                }
-                else
-                {
-                    throw new InvalidOperationException($"Unsupported field type \"{info.FieldType}\" in {this}");
-                }
+                NetworkSerialize attribute = property.Attribute;
+                property.Behavior.WriteAction(property.GetValue(this), attribute, msg);
             }
         }
+    }
 
-        private static NetworkSerialize? GetAttribute(MemberInfo info, object baseClass) => info.GetCustomAttribute<NetworkSerialize>() ?? baseClass.GetType().GetCustomAttribute<NetworkSerialize>();
+    public static class WriteOnlyMessageExtensions
+    {
+#if CLIENT
+        public static IWriteMessage WithHeader(this IWriteMessage msg, ClientPacketHeader header)
+        {
+            msg.Write((byte)header);
+            return msg;
+        }
+#elif SERVER
+        public static IWriteMessage WithHeader(this IWriteMessage msg, ServerPacketHeader header)
+        {
+            msg.Write((byte)header);
+            return msg;
+        }
+#endif
+        public static void Write(this IWriteMessage msg, INetSerializableStruct serializableStruct)
+        {
+            serializableStruct.Write(msg);
+        }
     }
 }

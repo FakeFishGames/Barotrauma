@@ -1,7 +1,9 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
@@ -11,7 +13,7 @@ namespace Barotrauma.Items.Components
 {   
     partial class Fabricator : Powered, IServerSerializable, IClientSerializable
     {
-        private readonly List<FabricationRecipe> fabricationRecipes = new List<FabricationRecipe>();
+        private ImmutableDictionary<uint, FabricationRecipe> fabricationRecipes; //this is not readonly because tutorials fuck this up!!!!
 
         private FabricationRecipe fabricatedItem;
         private float timeUntilReady;
@@ -20,7 +22,7 @@ namespace Barotrauma.Items.Components
         private string savedFabricatedItem;
         private float savedTimeUntilReady, savedRequiredTime;
 
-        private readonly Dictionary<string, List<Item>> availableIngredients = new Dictionary<string, List<Item>>();
+        private readonly Dictionary<Identifier, List<Item>> availableIngredients = new Dictionary<Identifier, List<Item>>();
 
         const float RefreshIngredientsInterval = 1.0f;
         private float refreshIngredientsTimer;
@@ -31,10 +33,10 @@ namespace Barotrauma.Items.Components
 
         private ItemContainer inputContainer, outputContainer;
         
-        [Serialize(1.0f, true)]
+        [Serialize(1.0f, IsPropertySaveable.Yes)]
         public float FabricationSpeed { get; set; }
         
-        [Serialize(1.0f, true)]
+        [Serialize(1.0f, IsPropertySaveable.Yes)]
         public float SkillRequirementMultiplier { get; set; }
 
         private const float TinkeringSpeedIncrease = 2.5f;
@@ -78,10 +80,12 @@ namespace Barotrauma.Items.Components
 
         private float progressState;
 
-        public Fabricator(Item item, XElement element)
+        private readonly Dictionary<uint, int> fabricationLimits = new Dictionary<uint, int>();
+
+        public Fabricator(Item item, ContentXElement element)
             : base(item, element)
         {
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 if (subElement.Name.ToString().Equals("fabricableitem", StringComparison.OrdinalIgnoreCase))
                 {
@@ -90,30 +94,28 @@ namespace Barotrauma.Items.Components
                 }            
             }
 
+            var fabricationRecipes = new Dictionary<uint, FabricationRecipe>();
             foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
             {
-                foreach (FabricationRecipe recipe in itemPrefab.FabricationRecipes)
+                foreach (FabricationRecipe recipe in itemPrefab.FabricationRecipes.Values)
                 {
                     if (recipe.SuitableFabricatorIdentifiers.Length > 0)
                     {
-                        if (!recipe.SuitableFabricatorIdentifiers.Any(i => item.prefab.Identifier == i || item.HasTag(i)))
+                        if (!recipe.SuitableFabricatorIdentifiers.Any(i => item.Prefab.Identifier == i || item.HasTag(i)))
                         {
                             continue;
                         }
                     }
-                    fabricationRecipes.Add(recipe);
+                    fabricationRecipes.Add(recipe.RecipeHash, recipe);
+                    if (recipe.FabricationLimitMax >= 0)
+                    {
+                        fabricationLimits.Add(recipe.RecipeHash, Rand.Range(recipe.FabricationLimitMin, recipe.FabricationLimitMax + 1));
+                    }
                 }
             }
-            fabricationRecipes.Sort((r1, r2) =>
-            {
-                int hash1 = (int)r1.TargetItem.UIntIdentifier;
-                int hash2 = (int)r2.TargetItem.UIntIdentifier;
-                return hash1 - hash2;
-            });
+            this.fabricationRecipes = fabricationRecipes.ToImmutableDictionary();
 
             state = FabricatorState.Stopped;
-
-            InitProjSpecific();
         }
 
         public override void OnItemLoaded()
@@ -129,9 +131,9 @@ namespace Barotrauma.Items.Components
             inputContainer = containers[0];
             outputContainer = containers[1];
 
-            foreach (var recipe in fabricationRecipes)
+            foreach (var recipe in fabricationRecipes.Values)
             {
-                if (recipe.RequiredItems.Count > inputContainer.Capacity)
+                if (recipe.RequiredItems.Length > inputContainer.Capacity)
                 {
                     DebugConsole.ThrowError("Error in item \"" + item.Name + "\": There's not enough room in the input inventory for the ingredients of \"" + recipe.TargetItem.Name + "\"!");
                 }
@@ -141,9 +143,6 @@ namespace Barotrauma.Items.Components
         }
 
         partial void OnItemLoadedProjSpecific();
-
-
-        partial void InitProjSpecific();
 
         public override bool Select(Character character)
         {
@@ -158,16 +157,11 @@ namespace Barotrauma.Items.Components
             return picker != null;
         }
 
-        public void RemoveFabricationRecipes(List<string> allowedIdentifiers)
+        public void RemoveFabricationRecipes(IEnumerable<Identifier> allowedIdentifiers)
         {
-            for (int i = 0; i < fabricationRecipes.Count; i++)
-            {
-                if (!allowedIdentifiers.Contains(fabricationRecipes[i].TargetItem.Identifier))
-                {
-                    fabricationRecipes.RemoveAt(i);
-                    i--;
-                }
-            }
+            fabricationRecipes = fabricationRecipes
+                .Where(kvp => allowedIdentifiers.Contains(kvp.Value.TargetItemPrefabIdentifier))
+                .ToImmutableDictionary();
 
             CreateRecipes();
         }
@@ -194,24 +188,28 @@ namespace Barotrauma.Items.Components
             {
                 MoveIngredientsToInputContainer(selectedItem);
             }
-            
+
             requiredTime = GetRequiredTime(fabricatedItem, user);
             timeUntilReady = requiredTime;
             
             inputContainer.Inventory.Locked = true;
             outputContainer.Inventory.Locked = true;
 
-            currPowerConsumption = powerConsumption;
-            item.GetComponent<Repairable>()?.AdjustPowerConsumption(ref currPowerConsumption);
-
             if (GameMain.NetworkMember?.IsServer ?? true)
             {
                 State = FabricatorState.Active;
             }
 #if SERVER
-            if (user != null && addToServerLog)
+            if (user != null && addToServerLog && selectedItem.RequiredMoney == 0)
             {
-                GameServer.Log(GameServer.CharacterLogName(user) + " started fabricating " + selectedItem.DisplayName + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
+                if (selectedItem.RequiredMoney > 0)
+                {
+                    GameServer.Log($"{GameServer.CharacterLogName(user)} bought {selectedItem.DisplayName.Value} for {selectedItem.RequiredMoney} mk from {item.Name}", ServerLog.MessageType.Money);
+                }
+                else
+                {
+                    GameServer.Log($"{GameServer.CharacterLogName(user)} started fabricating {selectedItem.DisplayName.Value} in {item.Name}", ServerLog.MessageType.ItemInteraction);
+                }
             }
 #endif
         }
@@ -237,13 +235,13 @@ namespace Barotrauma.Items.Components
 #if SERVER
             if (user != null)
             {
-                GameServer.Log(GameServer.CharacterLogName(user) + " cancelled the fabrication of " + fabricatedItem.DisplayName + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
+                GameServer.Log(GameServer.CharacterLogName(user) + " cancelled the fabrication of " + fabricatedItem.DisplayName.Value + " in " + item.Name, ServerLog.MessageType.ItemInteraction);
             }
 #elif CLIENT
             itemList.Enabled = true;
             if (activateButton != null)
             {
-                activateButton.Text = TextManager.Get("FabricatorCreate");
+                activateButton.Text = TextManager.Get(CreateButtonText);
             }
 #endif
             fabricatedItem = null;
@@ -304,11 +302,10 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
-            if (powerConsumption <= 0) { Voltage = 1.0f; }
 
             float fabricationSpeedIncrease = 1f + tinkeringStrength * TinkeringSpeedIncrease;
 
-            timeUntilReady -= deltaTime * fabricationSpeedIncrease * Math.Min(Voltage, 1.0f);
+            timeUntilReady -= deltaTime * fabricationSpeedIncrease * Math.Min(powerConsumption <= 0 ? 1 : Voltage, 1.0f);
 
             UpdateRequiredTimeProjSpecific();
 
@@ -318,6 +315,15 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private Client GetUsingClient()
+        {
+#if SERVER
+            return GameMain.Server.ConnectedClients.Find(c => c.Character == user);
+#elif CLIENT
+            return null;
+#endif
+        }
+
         private void Fabricate()
         {
             RefreshAvailableIngredients();
@@ -325,6 +331,28 @@ namespace Barotrauma.Items.Components
             {
                 CancelFabricating();
                 return;
+            }
+
+            if (fabricatedItem.RequiredMoney > 0)
+            {
+                if (user == null) { return; }
+                if (GameMain.GameSession?.GameMode is MultiPlayerCampaign mpCampaign)
+                {
+#if SERVER
+                    if (GetUsingClient() is { } client)
+                    {
+                        mpCampaign.TryPurchase(client, fabricatedItem.RequiredMoney);
+                    }
+                    else
+                    {
+                        user.Wallet.Deduct(fabricatedItem.RequiredMoney);
+                    }
+#endif
+                }
+                else if (GameMain.GameSession?.GameMode is CampaignMode campaign)
+                {
+                    campaign.Bank.Deduct(fabricatedItem.RequiredMoney);
+                }
             }
 
             bool ingredientsStolen = false;
@@ -365,12 +393,19 @@ namespace Barotrauma.Items.Components
                             {
                                 foreach (Item containedItem in availableItem.OwnInventory.AllItemsMod)
                                 {
-                                    containedItem.Drop(dropper: null);
+                                    if (availableItem.GetComponent<ItemContainer>()?.RemoveContainedItemsOnDeconstruct ?? false)
+                                    {
+                                        Entity.Spawner.AddItemToRemoveQueue(containedItem);
+                                    }
+                                    else
+                                    {
+                                        containedItem.Drop(dropper: null);
+                                    }
                                 }
                             }
 
                             availableItems.Remove(availableItem);
-                            Entity.Spawner.AddToRemoveQueue(availableItem);
+                            Entity.Spawner.AddItemToRemoveQueue(availableItem);
                             inputContainer.Inventory.RemoveItem(availableItem);
                             break;
                         }
@@ -382,25 +417,42 @@ namespace Barotrauma.Items.Components
                 var fabricationitemAmount = new AbilityFabricationItemAmount(fabricatedItem.TargetItem, fabricatedItem.Amount);
 
                 int quality = 0;
-                if (user?.Info != null)
+                if (fabricatedItem.Quality.HasValue)
+                {
+                    quality = fabricatedItem.Quality.Value;
+                }
+                else if (user?.Info != null)
                 {
                     foreach (Character character in Character.GetFriendlyCrew(user))
                     {
                         character.CheckTalents(AbilityEffectType.OnAllyItemFabricatedAmount, fabricationitemAmount);
                     }
-                    user.CheckTalents(AbilityEffectType.OnItemFabricatedAmount, fabricationitemAmount);
-
+                    user.CheckTalents(AbilityEffectType.OnItemFabricatedAmount, fabricationitemAmount);                    
                     quality = GetFabricatedItemQuality(fabricatedItem, user);
                 }
 
+                int amount = (int)fabricationitemAmount.Value;
+                if (fabricationLimits.ContainsKey(fabricatedItem.RecipeHash))
+                {
+                    if (amount > fabricationLimits[fabricatedItem.RecipeHash])
+                    {
+                        amount = fabricationLimits[fabricatedItem.RecipeHash];
+                        fabricationLimits[fabricatedItem.RecipeHash] = 0;
+                    }
+                    else
+                    {
+                        fabricationLimits[fabricatedItem.RecipeHash] -= amount;
+                    }
+                }
+
                 var tempUser = user;
-                for (int i = 0; i < (int)fabricationitemAmount.Value; i++)
+                for (int i = 0; i < amount; i++)
                 {
                     float outCondition = fabricatedItem.OutCondition;
-                    GameAnalyticsManager.AddDesignEvent("ItemFabricated:" + (GameMain.GameSession?.GameMode?.Preset.Identifier ?? "none") + ":" + fabricatedItem.TargetItem.Identifier);
+                    GameAnalyticsManager.AddDesignEvent("ItemFabricated:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "none") + ":" + fabricatedItem.TargetItem.Identifier);
                     if (i < amountFittingContainer)
                     {
-                        Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, outputContainer.Inventory, fabricatedItem.TargetItem.Health * outCondition, quality,
+                        Entity.Spawner.AddItemToSpawnQueue(fabricatedItem.TargetItem, outputContainer.Inventory, fabricatedItem.TargetItem.Health * outCondition, quality,
                             onSpawned: (Item spawnedItem) =>
                             {
                                 onItemSpawned(spawnedItem, tempUser);
@@ -413,7 +465,7 @@ namespace Barotrauma.Items.Components
                     }
                     else
                     {
-                        Entity.Spawner.AddToSpawnQueue(fabricatedItem.TargetItem, item.Position, item.Submarine, fabricatedItem.TargetItem.Health * outCondition, quality,
+                        Entity.Spawner.AddItemToSpawnQueue(fabricatedItem.TargetItem, item.Position, item.Submarine, fabricatedItem.TargetItem.Health * outCondition, quality,
                             onSpawned: (Item spawnedItem) =>
                             {
                                 onItemSpawned(spawnedItem, tempUser);
@@ -469,15 +521,36 @@ namespace Barotrauma.Items.Components
 
         }
 
+        /// <summary>
+        /// Power consumption of the fabricator. Only consume power when active and adjust consumption based on condition.
+        /// </summary>
+        public override float GetCurrentPowerConsumption(Connection connection = null)
+        {
+            //No consumption if not powerin or is off
+            if (connection != this.powerIn || !IsActive)
+            {
+                return 0;
+            }
+
+            currPowerConsumption = PowerConsumption;
+            item.GetComponent<Repairable>()?.AdjustPowerConsumption(ref currPowerConsumption);
+
+            return currPowerConsumption;
+        }
+
         private int GetFabricatedItemQuality(FabricationRecipe fabricatedItem, Character user)
         {
             if (user == null) { return 0; }
             if (fabricatedItem.TargetItem.ConfigElement.GetChildElement("Quality") == null) { return 0; }
             int quality = 0;
             float floatQuality = 0.0f;
-            foreach (string tag in fabricatedItem.TargetItem.Tags)
+            foreach (var tag in fabricatedItem.TargetItem.Tags)
             {
                 floatQuality += user.Info.GetSavedStatValue(StatTypes.IncreaseFabricationQuality, tag);
+            }
+            if (!fabricatedItem.TargetItem.Tags.Contains(fabricatedItem.TargetItem.Identifier))
+            {
+                floatQuality += user.Info.GetSavedStatValue(StatTypes.IncreaseFabricationQuality, fabricatedItem.TargetItem.Identifier);
             }
             quality = (int)floatQuality;
 
@@ -489,11 +562,37 @@ namespace Barotrauma.Items.Components
         }
 
         partial void UpdateRequiredTimeProjSpecific();
-
-        private bool CanBeFabricated(FabricationRecipe fabricableItem, Dictionary<string, List<Item>> availableIngredients, Character character)
+        
+        private bool CanBeFabricated(FabricationRecipe fabricableItem, IReadOnlyDictionary<Identifier, List<Item>> availableIngredients, Character character)
         {
             if (fabricableItem == null) { return false; }
             if (fabricableItem.RequiresRecipe && (character == null || !character.HasRecipeForItem(fabricableItem.TargetItem.Identifier))) { return false; }
+
+            if (fabricableItem.RequiredMoney > 0)
+            {
+                switch (GameMain.GameSession?.GameMode)
+                {
+                    case MultiPlayerCampaign mpCampaign:
+                    {
+                        if (!mpCampaign.CanAfford(fabricableItem.RequiredMoney, GetUsingClient())) { return false; }
+
+                        break;
+                    }
+                    case CampaignMode campaign:
+                    {
+                        if (campaign.Bank.Balance < fabricableItem.RequiredMoney) { return false; }
+
+                        break;
+                    }
+                    default:
+                        return false;
+                }
+            }
+
+            if (fabricationLimits.TryGetValue(fabricableItem.RecipeHash, out int amount) && amount <= 0)
+            {
+                return false;
+            }
 
             return fabricableItem.RequiredItems.All(requiredItem =>
             {
@@ -533,13 +632,13 @@ namespace Barotrauma.Items.Components
             return fabricableItem.RequiredTime / FabricationSpeed / MathHelper.Clamp(t, 0.01f, 2.0f);
         }
         
-        public float FabricationDegreeOfSuccess(Character character, List<Skill> skills)
+        public float FabricationDegreeOfSuccess(Character character, ImmutableArray<Skill> skills)
         {
-            if (skills.Count == 0) { return 1.0f; }
+            if (skills.Length == 0) { return 1.0f; }
             if (character == null) { return 0.0f; }
 
             float skillSum = (from t in skills let characterLevel = character.GetSkillLevel(t.Identifier) select (characterLevel - (t.Level * SkillRequirementMultiplier))).Sum();
-            float average = skillSum / skills.Count;
+            float average = skillSum / skills.Length;
 
             return (average + 100.0f) / 2.0f / 100.0f;
         }
@@ -593,7 +692,7 @@ namespace Barotrauma.Items.Components
             availableIngredients.Clear();
             foreach (Item item in itemList)
             {
-                var itemIdentifier = item.prefab.Identifier;
+                var itemIdentifier = item.Prefab.Identifier;
                 if (!availableIngredients.ContainsKey(itemIdentifier))
                 {
                     availableIngredients[itemIdentifier] = new List<Item>(itemList.Count);
@@ -658,12 +757,11 @@ namespace Barotrauma.Items.Components
                 componentElement.Add(new XAttribute("fabricateditemidentifier", fabricatedItem.TargetItem.Identifier));
                 componentElement.Add(new XAttribute("savedtimeuntilready", timeUntilReady.ToString("G", CultureInfo.InvariantCulture)));
                 componentElement.Add(new XAttribute("savedrequiredtime", requiredTime.ToString("G", CultureInfo.InvariantCulture)));
-
             }
             return componentElement;
         }
 
-        public override void Load(XElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
         {
             base.Load(componentElement, usePrefabValues, idRemap);
             savedFabricatedItem = componentElement.GetAttributeString("fabricateditemidentifier", "");
@@ -678,7 +776,7 @@ namespace Barotrauma.Items.Components
             inputContainer?.OnMapLoaded();
             outputContainer?.OnMapLoaded();
             
-            var recipe = fabricationRecipes.Find(r => r.TargetItem.Identifier == savedFabricatedItem);
+            var recipe = fabricationRecipes.Values.FirstOrDefault(r => r.TargetItem.Identifier == savedFabricatedItem);
             if (recipe == null)
             {
                 DebugConsole.ThrowError("Error while loading a fabricator. Can't continue fabricating \"" + savedFabricatedItem + "\" (matching recipe not found).");
@@ -696,13 +794,13 @@ namespace Barotrauma.Items.Components
         }
         class AbilityFabricatorSkillGain : AbilityObject, IAbilityValue, IAbilitySkillIdentifier
         {
-            public AbilityFabricatorSkillGain(string skillIdentifier, float skillAmount)
+            public AbilityFabricatorSkillGain(Identifier skillIdentifier, float skillAmount)
             {
                 SkillIdentifier = skillIdentifier;
                 Value = skillAmount;
             }
             public float Value { get; set; }
-            public string SkillIdentifier { get; set; }
+            public Identifier SkillIdentifier { get; set; }
         }
 
         class AbilityFabricationItemAmount : AbilityObject, IAbilityValue, IAbilityItemPrefab

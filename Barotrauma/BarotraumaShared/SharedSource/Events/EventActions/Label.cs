@@ -4,10 +4,10 @@ namespace Barotrauma
 {
     class Label : EventAction
     {
-        [Serialize("", true)]
+        [Serialize("", IsPropertySaveable.Yes)]
         public string Name { get; set; }
 
-        public Label(ScriptedEvent parentEvent, XElement element) : base(parentEvent, element) { }
+        public Label(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
 
         public override bool IsFinished(ref string goTo)
         {

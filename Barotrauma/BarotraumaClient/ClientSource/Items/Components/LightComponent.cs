@@ -44,17 +44,21 @@ namespace Barotrauma.Items.Components
         {
             if (ParentBody != null)
             {
-                Light.Position = ParentBody.Position;
+                Light.ParentBody = ParentBody;
             }
             else if (turret != null)
             {
                 Light.Position = new Vector2(item.Rect.X + turret.TransformedBarrelPos.X, item.Rect.Y - turret.TransformedBarrelPos.Y);
             }
+            else if (item.body != null)
+            {
+                Light.ParentBody = item.body;
+            }
             else
             {
                 Light.Position = item.Position;
             }
-            PhysicsBody body = ParentBody ?? item.body;
+            PhysicsBody body = Light.ParentBody;
             if (body != null)
             {
                 Light.Rotation = body.Dir > 0.0f ? body.DrawRotation : body.DrawRotation - MathHelper.Pi;
@@ -62,7 +66,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                Light.Rotation = -Rotation - MathHelper.ToRadians(item.Rotation);
+                Light.Rotation = -Rotation - item.RotationRad;
                 Light.LightSpriteEffect = item.SpriteEffects;
             }
         }
@@ -74,7 +78,9 @@ namespace Barotrauma.Items.Components
                 Vector2 origin = Light.LightSprite.Origin;
                 if ((Light.LightSpriteEffect & SpriteEffects.FlipHorizontally) == SpriteEffects.FlipHorizontally) { origin.X = Light.LightSprite.SourceRect.Width - origin.X; }
                 if ((Light.LightSpriteEffect & SpriteEffects.FlipVertically) == SpriteEffects.FlipVertically) { origin.Y = Light.LightSprite.SourceRect.Height - origin.Y; }
-                Light.LightSprite.Draw(spriteBatch, new Vector2(item.DrawPosition.X, -item.DrawPosition.Y), lightColor * lightBrightness, origin, -Light.Rotation, item.Scale, Light.LightSpriteEffect, itemDepth - 0.0001f);
+
+                Vector2 drawPos = item.body?.DrawPosition ?? item.DrawPosition;
+                Light.LightSprite.Draw(spriteBatch, new Vector2(drawPos.X, -drawPos.Y), lightColor * lightBrightness, origin, -Light.Rotation, item.Scale, Light.LightSpriteEffect, itemDepth - 0.0001f);
             }
         }
 
@@ -83,7 +89,8 @@ namespace Barotrauma.Items.Components
             if (Light?.LightSprite != null && item.Prefab.CanSpriteFlipX && item.body == null)
             {
                 Light.LightSpriteEffect = Light.LightSpriteEffect == SpriteEffects.None ?
-                    SpriteEffects.FlipHorizontally : SpriteEffects.None;                
+                    SpriteEffects.FlipHorizontally : SpriteEffects.None;
+                SetLightSourceTransformProjSpecific();
             }
         }
 
@@ -113,7 +120,7 @@ namespace Barotrauma.Items.Components
             yield return CoroutineStatus.Success;
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             IsActive = msg.ReadBoolean();
             lastReceivedState = IsActive;

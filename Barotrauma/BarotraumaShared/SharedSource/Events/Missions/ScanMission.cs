@@ -10,10 +10,11 @@ namespace Barotrauma
 {
     partial class ScanMission : Mission
     {
-        private readonly XElement itemConfig;
+        private readonly ContentXElement itemConfig;
         private readonly List<Item> startingItems = new List<Item>();
         private readonly List<Scanner> scanners = new List<Scanner>();
         private readonly Dictionary<Item, ushort> parentInventoryIDs = new Dictionary<Item, ushort>();
+        private readonly Dictionary<Item, int> inventorySlotIndices = new Dictionary<Item, int>();
         private readonly Dictionary<Item, byte> parentItemContainerIndices = new Dictionary<Item, byte>();
         private readonly int targetsToScan;
         private readonly Dictionary<WayPoint, bool> scanTargets = new Dictionary<WayPoint, bool>();
@@ -55,7 +56,7 @@ namespace Barotrauma
 
         public ScanMission(MissionPrefab prefab, Location[] locations, Submarine sub) : base(prefab, locations, sub)
         {
-            itemConfig = prefab.ConfigElement.Element("Items");
+            itemConfig = prefab.ConfigElement.GetChildElement("Items");
             targetsToScan = prefab.ConfigElement.GetAttributeInt("targets", 1);
             minTargetDistance = prefab.ConfigElement.GetAttributeFloat("mintargetdistance", 0.0f);
         }
@@ -78,7 +79,7 @@ namespace Barotrauma
             }
             GetScanners();
 
-            TargetRuin = Level.Loaded?.Ruins?.GetRandom(randSync: Rand.RandSync.Server);
+            TargetRuin = Level.Loaded?.Ruins?.GetRandom(randSync: Rand.RandSync.ServerAndClient);
             if (TargetRuin == null)
             {
                 DebugConsole.ThrowError("Failed to initialize a Scan mission: level contains no alien ruins");
@@ -101,7 +102,7 @@ namespace Barotrauma
                 availableWaypoints.AddRange(ruinWaypoints);
                 for (int i = 0; i < targetsToScan; i++)
                 {
-                    var selectedWaypoint = availableWaypoints.GetRandom(randSync: Rand.RandSync.Server);
+                    var selectedWaypoint = availableWaypoints.GetRandom(randSync: Rand.RandSync.ServerAndClient);
                     scanTargets.Add(selectedWaypoint, false);
                     availableWaypoints.Remove(selectedWaypoint);
                     if (i < (targetsToScan - 1))
@@ -143,6 +144,7 @@ namespace Barotrauma
         {
             startingItems.Clear();
             parentInventoryIDs.Clear();
+            inventorySlotIndices.Clear();
             parentItemContainerIndices.Clear();
             scanners.Clear();
             TargetRuin = null;
@@ -162,6 +164,7 @@ namespace Barotrauma
                 parentInventoryIDs.Add(item, parent.ID);
                 parentItemContainerIndices.Add(item, (byte)parent.GetComponentIndex(itemContainer));
                 parent.Combine(item, user: null);
+                inventorySlotIndices.Add(item, item.ParentInventory?.FindIndex(item) ?? -1);
             }
             foreach (XElement subElement in element.Elements())
             {

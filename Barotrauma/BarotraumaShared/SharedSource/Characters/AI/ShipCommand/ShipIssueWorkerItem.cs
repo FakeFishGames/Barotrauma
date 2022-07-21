@@ -4,11 +4,7 @@ namespace Barotrauma
 {
     abstract class ShipIssueWorkerItem : ShipIssueWorker
     {
-        public ShipIssueWorkerItem(ShipCommandManager shipCommandManager, Order order, Item targetItem, ItemComponent targetItemComponent, string option = null) : base(shipCommandManager, order, option)
-        {
-            TargetItemComponent = targetItemComponent;
-            TargetItem = targetItem;
-        }
+        public ShipIssueWorkerItem(ShipCommandManager shipCommandManager, Order order) : base(shipCommandManager, order) { }
 
         protected override bool IsIssueViable()
         {

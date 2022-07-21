@@ -32,14 +32,14 @@ namespace Barotrauma.Items.Components
 
         private List<TerminalMessage> messageHistory = new List<TerminalMessage>(MaxMessages);
 
-        public string DisplayedWelcomeMessage
+        public LocalizedString DisplayedWelcomeMessage
         {
             get;
             private set;
         }
 
         private string welcomeMessage;
-        [InGameEditable, Serialize("", true, "Message to be displayed on the terminal display when it is first opened.", translationTextTag = "terminalwelcomemsg.", AlwaysUseInstanceValues = true)]
+        [InGameEditable, Serialize("", IsPropertySaveable.Yes, "Message to be displayed on the terminal display when it is first opened.", translationTextTag: "terminalwelcomemsg.", alwaysUseInstanceValues: true)]
         public string WelcomeMessage
         {
             get { return welcomeMessage; }
@@ -47,7 +47,7 @@ namespace Barotrauma.Items.Components
             {
                 if (welcomeMessage == value) { return; }
                 welcomeMessage = value;
-                DisplayedWelcomeMessage = TextManager.Get(welcomeMessage, returnNull: true) ?? welcomeMessage.Replace("\\n", "\n");
+                DisplayedWelcomeMessage = TextManager.Get(welcomeMessage).Fallback(welcomeMessage.Replace("\\n", "\n"));
             }
         }
 
@@ -64,12 +64,12 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable, Serialize(false, true, description: "The terminal will use a monospace font if this box is ticked.", alwaysUseInstanceValues: true)]
+        [Editable, Serialize(false, IsPropertySaveable.Yes, description: "The terminal will use a monospace font if this box is ticked.", alwaysUseInstanceValues: true)]
         public bool UseMonospaceFont { get; set; }
 
         private Color textColor = Color.LimeGreen;
 
-        [Editable, Serialize("50,205,50,255", true, description: "Color of the terminal text.", alwaysUseInstanceValues: true)]
+        [Editable, Serialize("50,205,50,255", IsPropertySaveable.Yes, description: "Color of the terminal text.", alwaysUseInstanceValues: true)]
         public Color TextColor
         {
             get => textColor;
@@ -89,7 +89,7 @@ namespace Barotrauma.Items.Components
 
         private string prevColorSignal;
 
-        public Terminal(Item item, XElement element)
+        public Terminal(Item item, ContentXElement element)
             : base(item, element)
         {
             IsActive = true;
@@ -143,9 +143,9 @@ namespace Barotrauma.Items.Components
 #endif
 
             base.OnItemLoaded();
-            if (!string.IsNullOrEmpty(DisplayedWelcomeMessage))
+            if (!DisplayedWelcomeMessage.IsNullOrEmpty())
             {
-                ShowOnDisplay(DisplayedWelcomeMessage, addToHistory: !isSubEditor, TextColor);
+                ShowOnDisplay(DisplayedWelcomeMessage.Value, addToHistory: !isSubEditor, TextColor);
                 DisplayedWelcomeMessage = "";
                 //remove welcome message if a game session is running so it doesn't reappear on successive rounds
                 if (GameMain.GameSession != null && !isSubEditor)
@@ -166,7 +166,7 @@ namespace Barotrauma.Items.Components
             return componentElement;
         }
 
-        public override void Load(XElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
         {
             base.Load(componentElement, usePrefabValues, idRemap);
             for (int i = 0; i < MaxMessages; i++)

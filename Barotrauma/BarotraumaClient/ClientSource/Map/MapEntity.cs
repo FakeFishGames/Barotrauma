@@ -610,7 +610,7 @@ namespace Barotrauma
 
             foreach (MapEntity entity in highlightedEntities)
             {
-                var tooltip = string.Empty;
+                LocalizedString tooltip = string.Empty;
 
                 if (wiringMode && entity is Item item)
                 {
@@ -622,9 +622,9 @@ namespace Barotrauma
                             var conn = wire.Connections[i];
                             if (conn != null)
                             {
-                                string[] tags = { "[item]", "[pin]" };
-                                string[] values = { conn.Item?.Name, conn.Name };
-                                tooltip += TextManager.GetWithVariables("wirelistformat",tags , values);
+                                tooltip += TextManager.GetWithVariables("wirelistformat",
+                                    ("[item]", conn.Item?.Name),
+                                    ("[pin]", conn.Name));
                             }
                             if (i != wire.Connections.Length - 1) { tooltip += '\n'; }
                         }
@@ -632,7 +632,7 @@ namespace Barotrauma
                 }
 
                 var textBlock = new GUITextBlock(new RectTransform(new Point(highlightedListBox.Content.Rect.Width, 15), highlightedListBox.Content.RectTransform),
-                                                 ToolBox.LimitString(entity.Name, GUI.SmallFont, 140), font: GUI.SmallFont)
+                                                 ToolBox.LimitString(entity.Name, GUIStyle.SmallFont, 140), font: GUIStyle.SmallFont)
                 {
                     ToolTip = tooltip,
                     UserData = entity
@@ -803,7 +803,7 @@ namespace Barotrauma
                                     break;
                                 }
                         }
-                        e.prefab?.DrawPlacing(spriteBatch,
+                        e.Prefab?.DrawPlacing(spriteBatch,
                             new Rectangle(e.WorldRect.Location + new Point((int)moveAmount.X, (int)-moveAmount.Y), e.WorldRect.Size), e.Scale, spriteEffects);
                         GUI.DrawRectangle(spriteBatch,
                             new Vector2(e.WorldRect.X, -e.WorldRect.Y) + moveAmount,
@@ -830,7 +830,7 @@ namespace Barotrauma
                     new Vector2(posX, posY + sizeY)
                 };
 
-                Color selectionColor = GUI.Style.Blue;
+                Color selectionColor = GUIStyle.Blue;
                 float thickness = Math.Max(2f, 2f / Screen.Selected.Cam.Zoom);
 
                 GUI.DrawFilledRectangle(spriteBatch, corners[0], selectionSize, selectionColor * 0.1f);

@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -34,11 +35,11 @@ namespace Barotrauma
 
                 var textOffset = new Vector2(-150, 0);
                 spriteBatch.DrawCircle(drawPos, 600, 6, Color.White, thickness: 20);
-                GUI.DrawString(spriteBatch, drawPos + textOffset, ev.ToString(), Color.White, Color.Black, 0, GUI.LargeFont);
+                GUI.DrawString(spriteBatch, drawPos + textOffset, ev.ToString(), Color.White, Color.Black, 0, GUIStyle.LargeFont);
             }
         }
 
-        public void DebugDrawHUD(SpriteBatch spriteBatch, int y)
+        public void DebugDrawHUD(SpriteBatch spriteBatch, float y)
         {
             foreach (ScriptedEvent scriptedEvent in activeEvents.Where(ev => !ev.IsFinished && ev is ScriptedEvent).Cast<ScriptedEvent>())
             {
@@ -46,24 +47,29 @@ namespace Barotrauma
             }
 
             float theoreticalMaxMonsterStrength = 10000;
-            float relativeMaxMonsterStrength = theoreticalMaxMonsterStrength * GameMain.GameSession.LevelData.Difficulty / 100;
+            float relativeMaxMonsterStrength = theoreticalMaxMonsterStrength * (GameMain.GameSession?.LevelData?.Difficulty ?? 0f) / 100;
             float absoluteMonsterStrength = monsterStrength / theoreticalMaxMonsterStrength;
             float relativeMonsterStrength = monsterStrength / relativeMaxMonsterStrength;
-            GUI.DrawString(spriteBatch, new Vector2(10, y), "EventManager", Color.White, Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 20), "Event cooldown: " + (int)Math.Max(eventCoolDown, 0), Color.White, Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 35), "Current intensity: " + (int)Math.Round(currentIntensity * 100), Color.Lerp(Color.White, GUI.Style.Red, currentIntensity), Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 50), "Target intensity: " + (int)Math.Round(targetIntensity * 100), Color.Lerp(Color.White, GUI.Style.Red, targetIntensity), Color.Black * 0.6f, 0, GUI.SmallFont);
 
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 65), "Crew health: " + (int)Math.Round(avgCrewHealth * 100), Color.Lerp(GUI.Style.Red, GUI.Style.Green, avgCrewHealth), Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 80), "Hull integrity: " + (int)Math.Round(avgHullIntegrity * 100), Color.Lerp(GUI.Style.Red, GUI.Style.Green, avgHullIntegrity), Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 95), "Flooding amount: " + (int)Math.Round(floodingAmount * 100), Color.Lerp(GUI.Style.Green, GUI.Style.Red, floodingAmount), Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 110), "Fire amount: " + (int)Math.Round(fireAmount * 100), Color.Lerp(GUI.Style.Green, GUI.Style.Red, fireAmount), Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 125), "Enemy danger: " + (int)Math.Round(enemyDanger * 100), Color.Lerp(GUI.Style.Green, GUI.Style.Red, enemyDanger), Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 140), "Current monster strength (total): " + (int)Math.Round(monsterStrength), Color.Lerp(GUI.Style.Green, GUI.Style.Red, relativeMonsterStrength), Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 155), "Main events: " + (int)Math.Round(CumulativeMonsterStrengthMain), Color.White, Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 170), "Ruin events: " + (int)Math.Round(CumulativeMonsterStrengthRuins), Color.White, Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 185), "Wreck events: " + (int)Math.Round(CumulativeMonsterStrengthWrecks), Color.White, Color.Black * 0.6f, 0, GUI.SmallFont);
-            GUI.DrawString(spriteBatch, new Vector2(15, y + 200), "Cave events: " + (int)Math.Round(CumulativeMonsterStrengthCaves), Color.White, Color.Black * 0.6f, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(10, y), "EventManager", Color.White, backgroundColor: Color.Black * 0.6f, font: GUIStyle.SmallFont);
+            DrawString("Event cooldown", Math.Max(eventCoolDown, 0), Color.White, spacing: 20);
+            DrawString("Current intensity", Math.Round(currentIntensity * 100), Color.Lerp(Color.White, GUIStyle.Red, currentIntensity));
+            DrawString("Target intensity", Math.Round(targetIntensity * 100), Color.Lerp(Color.White, GUIStyle.Red, targetIntensity));
+            DrawString("Crew health", Math.Round(avgCrewHealth * 100), Color.Lerp(GUIStyle.Red, GUIStyle.Green, avgCrewHealth));
+            DrawString("Hull integrity", Math.Round(avgHullIntegrity * 100), Color.Lerp(GUIStyle.Red, GUIStyle.Green, avgHullIntegrity));
+            DrawString("Flooding amount", Math.Round(floodingAmount * 100), Color.Lerp(GUIStyle.Green, GUIStyle.Red, floodingAmount));
+            DrawString("Fire amount", Math.Round(fireAmount * 100), Color.Lerp(GUIStyle.Green, GUIStyle.Red, fireAmount));
+            DrawString("Enemy danger", Math.Round(enemyDanger * 100), Color.Lerp(GUIStyle.Green, GUIStyle.Red, enemyDanger));
+            DrawString("Current monster strength (total)", Math.Round(monsterStrength), Color.Lerp(GUIStyle.Green, GUIStyle.Red, relativeMonsterStrength));
+            DrawString("Main events", Math.Round(CumulativeMonsterStrengthMain), Color.White);
+            DrawString("Ruin events", Math.Round(CumulativeMonsterStrengthRuins), Color.White);
+            DrawString("Wreck events", Math.Round(CumulativeMonsterStrengthWrecks), Color.White);
+
+            void DrawString(string text, double value, Color textColor, int spacing = 15)
+            {
+                y += GUI.AdjustForTextScale(spacing);
+                GUI.DrawString(spriteBatch, new Vector2(15, y), $"{text}: {(int)value}", textColor, backgroundColor: Color.Black * 0.6f, font: GUIStyle.SmallFont);
+            }
 
 #if DEBUG
             if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftAlt) &&
@@ -89,7 +95,7 @@ namespace Barotrauma
                 lastIntensityUpdate = (float)Timing.TotalTime;
             }
 
-            Rectangle graphRect = new Rectangle(15, y + 240, (int)(200 * GUI.xScale), (int)(100 * GUI.yScale));
+            Rectangle graphRect = new Rectangle(15, (int)(y + GUI.AdjustForTextScale(55)), (int)(200 * GUI.xScale), (int)(100 * GUI.yScale));
             bool isGraphHovered = graphRect.Contains(PlayerInput.MousePosition);
             bool leftMousePressed = PlayerInput.PrimaryMouseButtonDown() || PlayerInput.PrimaryMouseButtonHeld();
             bool rightMousePressed = PlayerInput.SecondaryMouseButtonHeld() || PlayerInput.SecondaryMouseButtonDown();
@@ -101,10 +107,12 @@ namespace Barotrauma
             {
                 isGraphSelected = false;
             }
-            Color intensityColor = Color.Lerp(Color.White, GUI.Style.Red, currentIntensity);
+            Color intensityColor = Color.Lerp(Color.White, GUIStyle.Red, currentIntensity);
             if (isGraphHovered || isGraphSelected)
             {
-                graphRect.Size = new Point(GameMain.GraphicsWidth - 30, (int)(GameMain.GraphicsHeight * 0.35f));
+                int padding = 15;
+                int graphHeight = Math.Min((int)(GameMain.GraphicsHeight * 0.35f), GameMain.GraphicsHeight - (graphRect.Top + 3 * padding));
+                graphRect.Size = new Point(GameMain.GraphicsWidth - 2 * padding, graphHeight);
                 intensityColor = Color.Red;
                 GUI.DrawRectangle(spriteBatch, graphRect, Color.Black * 0.95f, isFilled: true);
             }
@@ -122,7 +130,7 @@ namespace Barotrauma
                     {
                         height *= 3;
                         string text = (order / 6).ToString();
-                        var font = GUI.SmallFont;
+                        var font = GUIStyle.SmallFont;
                         Vector2 textSize = font.MeasureString(text);
                         Vector2 textPos = new Vector2(bottomPoint.X - textSize.X / 2, bottomPoint.Y + height * 1.5f);
                         GUI.DrawString(sBatch, textPos, text, Color.White, font: font);
@@ -173,74 +181,76 @@ namespace Barotrauma
                 y += yStep;
             }
             int x = graphRect.X;
+            float adjustedYStep = GUI.AdjustForTextScale(15);
             if (isCrewAway && crewAwayDuration < settings.FreezeDurationWhenCrewAway)
             {
-                GUI.DrawString(spriteBatch, new Vector2(x, y), "Events frozen (crew away from sub): " + ToolBox.SecondsToReadableTime(settings.FreezeDurationWhenCrewAway - crewAwayDuration), Color.LightGreen * 0.8f, null, 0, GUI.SmallFont);
-                y += 15;
+                GUI.DrawString(spriteBatch, new Vector2(x, y), "Events frozen (crew away from sub): " + ToolBox.SecondsToReadableTime(settings.FreezeDurationWhenCrewAway - crewAwayDuration), Color.LightGreen * 0.8f, null, 0, GUIStyle.SmallFont);
+                y += adjustedYStep;
             }
             else if (crewAwayResetTimer > 0.0f)
             {
-                GUI.DrawString(spriteBatch, new Vector2(x, y), "Events frozen (crew just returned to the sub): " + ToolBox.SecondsToReadableTime(crewAwayResetTimer), Color.LightGreen * 0.8f, null, 0, GUI.SmallFont);
-                y += 15;
+                GUI.DrawString(spriteBatch, new Vector2(x, y), "Events frozen (crew just returned to the sub): " + ToolBox.SecondsToReadableTime(crewAwayResetTimer), Color.LightGreen * 0.8f, null, 0, GUIStyle.SmallFont);
+                y += adjustedYStep;
             }
             else if (eventCoolDown > 0.0f)
             {
-                GUI.DrawString(spriteBatch, new Vector2(x, y), "Event cooldown active: " + ToolBox.SecondsToReadableTime(eventCoolDown), Color.LightGreen * 0.8f, null, 0, GUI.SmallFont);
-                y += 15;
+                GUI.DrawString(spriteBatch, new Vector2(x, y), "Event cooldown active: " + ToolBox.SecondsToReadableTime(eventCoolDown), Color.LightGreen * 0.8f, null, 0, GUIStyle.SmallFont);
+                y += adjustedYStep;
             }
             else if (currentIntensity > eventThreshold)
             {
                 GUI.DrawString(spriteBatch, new Vector2(x, y),
-                    "Intensity too high for new events: " + (int)(currentIntensity * 100) + "%/" + (int)(eventThreshold * 100) + "%", Color.LightGreen * 0.8f, null, 0, GUI.SmallFont);
-                y += 15;
+                    "Intensity too high for new events: " + (int)(currentIntensity * 100) + "%/" + (int)(eventThreshold * 100) + "%", Color.LightGreen * 0.8f, null, 0, GUIStyle.SmallFont);
+                y += adjustedYStep;
             }
 
+            adjustedYStep = GUI.AdjustForTextScale(12);
             foreach (EventSet eventSet in pendingEventSets)
             {
                 if (Submarine.MainSub == null) { break; }
 
-                GUI.DrawString(spriteBatch, new Vector2(x, y), "New event (ID " + eventSet.DebugIdentifier + ") after: ", Color.Orange * 0.8f, null, 0, GUI.SmallFont);
-                y += 12;
+                GUI.DrawString(spriteBatch, new Vector2(x, y), "New event (ID " + eventSet.Identifier + ") after: ", Color.Orange * 0.8f, null, 0, GUIStyle.SmallFont);
+                y += adjustedYStep;
 
                 if (eventSet.PerCave)
                 {
-                    GUI.DrawString(spriteBatch, new Vector2(x, y), "    submarine near cave", Color.Orange * 0.8f, null, 0, GUI.SmallFont);
-                    y += 12;
+                    GUI.DrawString(spriteBatch, new Vector2(x, y), "    submarine near cave", Color.Orange * 0.8f, null, 0, GUIStyle.SmallFont);
+                    y += adjustedYStep;
                 }
                 if (eventSet.PerWreck)
                 {
-                    GUI.DrawString(spriteBatch, new Vector2(x, y), "    submarine near the wreck", Color.Orange * 0.8f, null, 0, GUI.SmallFont);
-                    y += 12;
+                    GUI.DrawString(spriteBatch, new Vector2(x, y), "    submarine near the wreck", Color.Orange * 0.8f, null, 0, GUIStyle.SmallFont);
+                    y += adjustedYStep;
                 }
                 if (eventSet.PerRuin)
                 {
-                    GUI.DrawString(spriteBatch, new Vector2(x, y), "    submarine near the ruins", Color.Orange * 0.8f, null, 0, GUI.SmallFont);
-                    y += 12;
+                    GUI.DrawString(spriteBatch, new Vector2(x, y), "    submarine near the ruins", Color.Orange * 0.8f, null, 0, GUIStyle.SmallFont);
+                    y += adjustedYStep;
                 }
                 if (roundDuration < eventSet.MinMissionTime)
                 {
                     GUI.DrawString(spriteBatch, new Vector2(x, y),
                         "    " + (int) (eventSet.MinDistanceTraveled * 100.0f) + "% travelled (current: " + (int) (distanceTraveled * 100.0f) + " %)",
-                        ((Submarine.MainSub == null || distanceTraveled < eventSet.MinDistanceTraveled) ? Color.Lerp(GUI.Style.Yellow, GUI.Style.Red, eventSet.MinDistanceTraveled - distanceTraveled) : GUI.Style.Green) * 0.8f, null, 0, GUI.SmallFont);
-                    y += 12;
+                        ((Submarine.MainSub == null || distanceTraveled < eventSet.MinDistanceTraveled) ? Color.Lerp(GUIStyle.Yellow, GUIStyle.Red, eventSet.MinDistanceTraveled - distanceTraveled) : GUIStyle.Green) * 0.8f, null, 0, GUIStyle.SmallFont);
+                    y += adjustedYStep;
                 }
 
                 if (CurrentIntensity < eventSet.MinIntensity || CurrentIntensity > eventSet.MaxIntensity)
                 {
                     GUI.DrawString(spriteBatch, new Vector2(x, y),
                         "    intensity between " + eventSet.MinIntensity.FormatDoubleDecimal() + " and " + eventSet.MaxIntensity.FormatDoubleDecimal(),
-                        Color.Orange * 0.8f, null, 0, GUI.SmallFont);
-                    y += 12;
+                        Color.Orange * 0.8f, null, 0, GUIStyle.SmallFont);
+                        y += adjustedYStep;
                 }
 
                 if (roundDuration < eventSet.MinMissionTime)
                 {
                     GUI.DrawString(spriteBatch, new Vector2(x, y),
                         "    " + (int) (eventSet.MinMissionTime - roundDuration) + " s",
-                        Color.Lerp(GUI.Style.Yellow, GUI.Style.Red, (eventSet.MinMissionTime - roundDuration)), null, 0, GUI.SmallFont);
+                        Color.Lerp(GUIStyle.Yellow, GUIStyle.Red, (eventSet.MinMissionTime - roundDuration)), null, 0, GUIStyle.SmallFont);
                 }
 
-                y += 15;
+                y += GUI.AdjustForTextScale(15);
 
                 if (y > GameMain.GraphicsHeight * 0.9f)
                 {
@@ -249,14 +259,15 @@ namespace Barotrauma
                 }
             }
 
-            GUI.DrawString(spriteBatch, new Vector2(x, y), "Current events: ", Color.White * 0.9f, null, 0, GUI.SmallFont);
+            GUI.DrawString(spriteBatch, new Vector2(x, y), "Current events: ", Color.White * 0.9f, null, 0, GUIStyle.SmallFont);
             y += yStep;
 
+            adjustedYStep = GUI.AdjustForTextScale(18);
             foreach (Event ev in activeEvents.Where(ev => !ev.IsFinished || PlayerInput.IsShiftDown()))
             {
-                GUI.DrawString(spriteBatch, new Vector2(x + 5, y), ev.ToString(), (!ev.IsFinished ? Color.White : Color.Red) * 0.8f, null, 0, GUI.SmallFont);
+                GUI.DrawString(spriteBatch, new Vector2(x + 5, y), ev.ToString(), (!ev.IsFinished ? Color.White : Color.Red) * 0.8f, null, 0, GUIStyle.SmallFont);
 
-                Rectangle rect = new Rectangle(new Point(x + 5, y), GUI.SmallFont.MeasureString(ev.ToString()).ToPoint());
+                Rectangle rect = new Rectangle(new Point(x + 5, (int)y), GUIStyle.SmallFont.MeasureString(ev.ToString()).ToPoint());
 
                 Rectangle outlineRect = new Rectangle(rect.Location, rect.Size);
                 outlineRect.Inflate(4, 4);
@@ -281,7 +292,7 @@ namespace Barotrauma
                     }
                 }
 
-                y += 18;
+                y += adjustedYStep;
                 if (y > GameMain.GraphicsHeight * 0.9f)
                 {
                     y = graphRect.Bottom + yStep * 2;
@@ -331,8 +342,8 @@ namespace Barotrauma
             if (Screen.Selected is GameScreen screen)
             {
                 Camera cam = screen.Cam;
-                Dictionary<Entity, List<string>> tagsDictionary = new Dictionary<Entity, List<string>>();
-                foreach ((string key, List<Entity> value) in scriptedEvent.Targets)
+                Dictionary<Entity, List<Identifier>> tagsDictionary = new Dictionary<Entity, List<Identifier>>();
+                foreach ((Identifier key, List<Entity> value) in scriptedEvent.Targets)
                 {
                     foreach (Entity entity in value)
                     {
@@ -342,24 +353,24 @@ namespace Barotrauma
                         }
                         else
                         {
-                            tagsDictionary.Add(entity, new List<string> { key });
+                            tagsDictionary.Add(entity, new List<Identifier> { key });
                         }
                     }
                 }
 
-                string identifier = scriptedEvent.Prefab.Identifier;
+                Identifier identifier = scriptedEvent.Prefab.Identifier;
 
-                foreach ((Entity entity, List<string> tags) in tagsDictionary)
+                foreach ((Entity entity, List<Identifier> tags) in tagsDictionary)
                 {
                     if (entity.Removed) { continue; }
 
                     string text = tags.Aggregate("Tags:\n", (current, tag) => current + $"    {tag.ColorizeObject()}\n").TrimEnd('\r', '\n');
-                    if (!string.IsNullOrWhiteSpace(identifier)) { text = $"Event: {identifier.ColorizeObject()}\n{text}"; }
+                    if (!identifier.IsEmpty) { text = $"Event: {identifier.ColorizeObject()}\n{text}"; }
 
-                    List<RichTextData> richTextData = RichTextData.GetRichTextData(text, out text);
+                    ImmutableArray<RichTextData>? richTextData = RichTextData.GetRichTextData(text, out text);
 
                     Vector2 entityPos = cam.WorldToScreen(entity.WorldPosition);
-                    Vector2 infoSize = GUI.SmallFont.MeasureString(text);
+                    Vector2 infoSize = GUIStyle.SmallFont.MeasureString(text);
 
                     Vector2 infoPos = entityPos + new Vector2(128 * cam.Zoom, -(128 * cam.Zoom));
                     infoPos.Y -= infoSize.Y / 2;
@@ -370,7 +381,7 @@ namespace Barotrauma
                     GUI.DrawRectangle(spriteBatch, infoRect, Color.Black * 0.8f, isFilled: true);
                     GUI.DrawRectangle(spriteBatch, infoRect, Color.White, isFilled: false);
 
-                    GUI.DrawStringWithColors(spriteBatch, infoPos, text, Color.White, richTextData, font: GUI.SmallFont);
+                    GUI.DrawStringWithColors(spriteBatch, infoPos, text, Color.White, richTextData, font: GUIStyle.SmallFont);
 
                     GUI.DrawLine(spriteBatch, entityPos, new Vector2(infoRect.Location.X, infoRect.Location.Y + infoRect.Height / 2), Color.White);
                 }
@@ -489,15 +500,15 @@ namespace Barotrauma
         {
             text = text.TrimEnd('\r', '\n');
 
-            string identifier = @event.Prefab.Identifier;
-            if (!string.IsNullOrWhiteSpace(identifier))
+            Identifier identifier = @event.Prefab.Identifier;
+            if (!identifier.IsEmpty)
             {
                 text = $"Identifier: {identifier.ColorizeObject()}\n{text}";
             }
 
-            List<RichTextData> richTextData = RichTextData.GetRichTextData(text, out text);
+            ImmutableArray<RichTextData>? richTextData = RichTextData.GetRichTextData(text, out text);
 
-            Vector2 size = GUI.SmallFont.MeasureString(text);
+            Vector2 size = GUIStyle.SmallFont.MeasureString(text);
             Vector2 pos = pinnedPosition;
             Rectangle infoRect;
             Rectangle? infoBarRect = null;
@@ -520,7 +531,7 @@ namespace Barotrauma
                 const string titleHeader = "Pinned event";
 
                 GUI.DrawRectangle(spriteBatch, barRect, Color.DarkGray * 0.8f, isFilled: true);
-                GUI.DrawString(spriteBatch, barRect.Location.ToVector2() + barRect.Size.ToVector2() / 2 - GUI.SubHeadingFont.MeasureString(titleHeader) / 2, titleHeader, Color.White);
+                GUI.DrawString(spriteBatch, barRect.Location.ToVector2() + barRect.Size.ToVector2() / 2 - GUIStyle.SubHeadingFont.MeasureString(titleHeader) / 2, titleHeader, Color.White);
                 GUI.DrawRectangle(spriteBatch, barRect, Color.White);
                 infoBarRect = barRect;
             }
@@ -546,8 +557,14 @@ namespace Barotrauma
             GUI.DrawRectangle(spriteBatch, infoRect, Color.Black * 0.8f, isFilled: true);
             GUI.DrawRectangle(spriteBatch, infoRect, Color.White);
 
-            GUI.DrawStringWithColors(spriteBatch, pos, text, Color.White, richTextData, null, 0, GUI.SmallFont);
-            richTextData.Clear();
+            if (richTextData.HasValue && richTextData.Value.Length > 0)
+            {
+                GUI.DrawStringWithColors(spriteBatch, pos, text, Color.White, richTextData.Value, null, 0, GUIStyle.SmallFont);
+            }
+            else
+            {
+                GUI.DrawString(spriteBatch, pos, text, Color.White, null, 0, GUIStyle.SmallFont);
+            }
             return infoBarRect ?? infoRect;
         }
 
@@ -557,7 +574,7 @@ namespace Barotrauma
             switch (eventType)
             {
                 case NetworkEventType.STATUSEFFECT:
-                    string eventIdentifier = msg.ReadString();
+                    Identifier eventIdentifier = msg.ReadIdentifier();
                     UInt16 actionIndex = msg.ReadUInt16();
                     UInt16 targetCount = msg.ReadUInt16();
                     List<Entity> targets = new List<Entity>();
@@ -571,14 +588,14 @@ namespace Barotrauma
                     var eventPrefab = EventSet.GetEventPrefab(eventIdentifier);
                     if (eventPrefab == null) { return; }
                     int j = 0;
-                    foreach (XElement element in eventPrefab.ConfigElement.Descendants())
+                    foreach (var element in eventPrefab.ConfigElement.Descendants())
                     {
                         if (j != actionIndex)
                         {
                             j++;
                             continue;
                         }
-                        foreach (XElement subElement in element.Elements())
+                        foreach (var subElement in element.Elements())
                         {
                             if (!subElement.Name.ToString().Equals("statuseffect", StringComparison.OrdinalIgnoreCase)) { continue; }
                             StatusEffect effect = StatusEffect.Load(subElement, $"EventManager.ClientRead ({eventIdentifier})");
@@ -633,13 +650,13 @@ namespace Barotrauma
                     }
                     break;
                 case NetworkEventType.MISSION:
-                    string missionIdentifier = msg.ReadString();
+                    Identifier missionIdentifier = msg.ReadIdentifier();
 
-                    MissionPrefab? prefab = MissionPrefab.List.Find(mp => mp.Identifier.Equals(missionIdentifier, StringComparison.OrdinalIgnoreCase));
+                    MissionPrefab? prefab = MissionPrefab.Prefabs.Find(mp => mp.Identifier == missionIdentifier);
                     if (prefab != null)
                     {
                         new GUIMessageBox(string.Empty, TextManager.GetWithVariable("missionunlocked", "[missionname]", prefab.Name), 
-                            new string[0], type: GUIMessageBox.Type.InGame, icon: prefab.Icon, relativeSize: new Vector2(0.3f, 0.15f), minSize: new Point(512, 128))
+                            Array.Empty<LocalizedString>(), type: GUIMessageBox.Type.InGame, icon: prefab.Icon, relativeSize: new Vector2(0.3f, 0.15f), minSize: new Point(512, 128))
                         {
                             IconColor = prefab.IconColor
                         };
@@ -657,7 +674,7 @@ namespace Barotrauma
                         {
                             GameMain.GameSession.Map.Connections[connectionIndex].Locked = false;
                             new GUIMessageBox(string.Empty, TextManager.Get("pathunlockedgeneric"),
-                                new string[0], type: GUIMessageBox.Type.InGame, iconStyle: "UnlockPathIcon", relativeSize: new Vector2(0.3f, 0.15f), minSize: new Point(512, 128));
+                                Array.Empty<LocalizedString>(), type: GUIMessageBox.Type.InGame, iconStyle: "UnlockPathIcon", relativeSize: new Vector2(0.3f, 0.15f), minSize: new Point(512, 128));
                         }
                     }
                     break;

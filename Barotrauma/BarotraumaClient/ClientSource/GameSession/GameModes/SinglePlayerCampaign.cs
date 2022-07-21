@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -34,11 +35,7 @@ namespace Barotrauma
                 }
             }
 
-            if (CrewManager.ChatBox != null)
-            {
-                CrewManager.ChatBox.Update(deltaTime);
-            }
-
+            CrewManager.ChatBox?.Update(deltaTime);
             CrewManager.UpdateReports();
         }
 
@@ -57,18 +54,18 @@ namespace Barotrauma
         /// <summary>
         /// Instantiates a new single player campaign
         /// </summary>
-        private SinglePlayerCampaign(string mapSeed, CampaignSettings settings) : base(GameModePreset.SinglePlayerCampaign)
+        private SinglePlayerCampaign(string mapSeed, CampaignSettings settings) : base(GameModePreset.SinglePlayerCampaign, settings)
         {
             CampaignMetadata = new CampaignMetadata(this);
             UpgradeManager = new UpgradeManager(this);
-            map = new Map(this, mapSeed, settings);
             Settings = settings;
+            map = new Map(this, mapSeed);
             foreach (JobPrefab jobPrefab in JobPrefab.Prefabs)
             {
                 for (int i = 0; i < jobPrefab.InitialCount; i++)
                 {
                     var variant = Rand.Range(0, jobPrefab.Variants);
-                    CrewManager.AddCharacterInfo(new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobPrefab: jobPrefab, variant: variant));
+                    CrewManager.AddCharacterInfo(new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: jobPrefab, variant: variant));
                 }
             }
             InitCampaignData();
@@ -78,22 +75,23 @@ namespace Barotrauma
         /// <summary>
         /// Loads a previously saved single player campaign from XML
         /// </summary>
-        private SinglePlayerCampaign(XElement element) : base(GameModePreset.SinglePlayerCampaign)
+        private SinglePlayerCampaign(XElement element) : base(GameModePreset.SinglePlayerCampaign, CampaignSettings.Empty)
         {
             IsFirstRound = false;
 
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
-                    case "campaignsettings":
+                    case CampaignSettings.LowerCaseSaveElementName:
                         Settings = new CampaignSettings(subElement);
                         break;
                     case "crew":
                         GameMain.GameSession.CrewManager = new CrewManager(subElement, true);
+                        ActiveOrdersElement = subElement.GetChildElement("activeorders");
                         break;
                     case "map":
-                        map = Map.Load(this, subElement, Settings);
+                        map = Map.Load(this, subElement);
                         break;
                     case "metadata":
                         CampaignMetadata = new CampaignMetadata(this, subElement);
@@ -108,6 +106,9 @@ namespace Barotrauma
                     case "pets":
                         petsElement = subElement;
                         break;
+                    case Wallet.LowerCaseSaveElementName:
+                        Bank = new Wallet(Option<Character>.None(), subElement);
+                        break;
                     case "stats":
                         LoadStats(subElement);
                         break;
@@ -121,7 +122,16 @@ namespace Barotrauma
 
             InitUI();
 
-            Money = element.GetAttributeInt("money", 0);
+            //backwards compatibility for saves made prior to the addition of personal wallets
+            int oldMoney = element.GetAttributeInt("money", 0);
+            if (oldMoney > 0)
+            {
+                Bank = new Wallet(Option<Character>.None())
+                {
+                    Balance = oldMoney
+                };
+            }
+
             PurchasedLostShuttles = element.GetAttributeBool("purchasedlostshuttles", false);
             PurchasedHullRepairs = element.GetAttributeBool("purchasedhullrepairs", false);
             PurchasedItemRepairs = element.GetAttributeBool("purchaseditemrepairs", false);
@@ -149,21 +159,14 @@ namespace Barotrauma
         /// <summary>
         /// Start a completely new single player campaign
         /// </summary>
-        public static SinglePlayerCampaign StartNew(string mapSeed, SubmarineInfo selectedSub, CampaignSettings settings)
-        {
-            var campaign = new SinglePlayerCampaign(mapSeed, settings);
-            return campaign;
-        }
+        public static SinglePlayerCampaign StartNew(string mapSeed, CampaignSettings startingSettings) => new SinglePlayerCampaign(mapSeed, startingSettings);
 
         /// <summary>
         /// Load a previously saved single player campaign from xml
         /// </summary>
         /// <param name="element"></param>
         /// <returns></returns>
-        public static SinglePlayerCampaign Load(XElement element)
-        {
-            return new SinglePlayerCampaign(element);
-        }
+        public static SinglePlayerCampaign Load(XElement element) => new SinglePlayerCampaign(element);
 
         private void InitUI()
         {
@@ -181,24 +184,9 @@ namespace Barotrauma
                 },
                 OnClicked = (btn, userdata) =>
                 {
-                    var availableTransition = GetAvailableTransition(out _, out _);
-                    if (Character.Controlled != null &&
-                        availableTransition == TransitionType.ReturnToPreviousLocation &&
-                        Character.Controlled?.Submarine == Level.Loaded?.StartOutpost)
-                    {
-                        TryEndRound();
-                    }
-                    else if (Character.Controlled != null &&
-                        availableTransition == TransitionType.ProgressToNextLocation &&
-                        Character.Controlled?.Submarine == Level.Loaded?.EndOutpost)
-                    {
-                        TryEndRound();
-                    }
-                    else
-                    {
-                        ShowCampaignUI = true;
-                        CampaignUI.SelectTab(InteractionType.Map);
-                    }
+                    TryEndRoundWithFuelCheck(
+                        onConfirm: () => TryEndRound(),
+                        onReturnToMapScreen: () => { ShowCampaignUI = true; CampaignUI.SelectTab(InteractionType.Map); });
                     return true;
                 }
             };
@@ -229,11 +217,10 @@ namespace Barotrauma
             crewDead = false;
             endTimer = 5.0f;
             CrewManager.InitSinglePlayerRound();
-            if (petsElement != null)
-            {
-                PetBehavior.LoadPets(petsElement);
-            }
-            CrewManager.LoadActiveOrders();
+            LoadPets();
+            LoadActiveOrders();
+
+            CargoManager.InitPurchasedIDCards();
 
             GUI.DisableSavingIndicatorDelayed();
         }
@@ -283,9 +270,9 @@ namespace Barotrauma
                 overlaySprite = Map.CurrentLocation.Type.GetPortrait(Map.CurrentLocation.PortraitId);
                 overlayTextColor = Color.Transparent;
                 overlayText = TextManager.GetWithVariables(showCampaignResetText ? "campaignend4" : "campaignstart",
-                        new string[] { "xxxx", "yyyy" },
-                        new string[] { Map.CurrentLocation.Name, TextManager.Get("submarineclass." + Submarine.MainSub.Info.SubmarineClass) });
-                string pressAnyKeyText = TextManager.Get("pressanykey");
+                        ("xxxx", Map.CurrentLocation.Name),
+                        ("yyyy", TextManager.Get("submarineclass." + Submarine.MainSub.Info.SubmarineClass)));
+                LocalizedString pressAnyKeyText = TextManager.Get("pressanykey");
                 float fadeInDuration = 2.0f;
                 float textDuration = 10.0f;
                 float timer = 0.0f;
@@ -385,7 +372,7 @@ namespace Barotrauma
         {
             NextLevel = newLevel;
             bool success = CrewManager.GetCharacters().Any(c => !c.IsDead);
-            SoundPlayer.OverrideMusicType = success ? "endround" : "crewdead";
+            SoundPlayer.OverrideMusicType = (success ? "endround" : "crewdead").ToIdentifier();
             SoundPlayer.OverrideMusicDuration = 18.0f;
             GUI.SetSavingIndicatorState(success);
             crewDead = false;
@@ -448,41 +435,8 @@ namespace Barotrauma
 
             if (success)
             {
-                if (leavingSub != Submarine.MainSub && !leavingSub.DockedTo.Contains(Submarine.MainSub))
-                {
-                    Submarine.MainSub = leavingSub;
-                    GameMain.GameSession.Submarine = leavingSub;
-                    GameMain.GameSession.SubmarineInfo = leavingSub.Info;
-                    leavingSub.Info.FilePath = System.IO.Path.Combine(SaveUtil.TempPath, leavingSub.Info.Name + ".sub");
-                    var subsToLeaveBehind = GetSubsToLeaveBehind(leavingSub);
-                    GameMain.GameSession.OwnedSubmarines.Add(leavingSub.Info);
-                    foreach (Submarine sub in subsToLeaveBehind)
-                    {
-                        GameMain.GameSession.OwnedSubmarines.RemoveAll(s => s != leavingSub.Info && s.Name == sub.Info.Name);
-                        MapEntity.mapEntityList.RemoveAll(e => e.Submarine == sub && e is LinkedSubmarine);
-                        LinkedSubmarine.CreateDummy(leavingSub, sub);
-                    }
-                }
-
                 GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);
-
-                if (PendingSubmarineSwitch != null)
-                {
-                    SubmarineInfo previousSub = GameMain.GameSession.SubmarineInfo;
-                    GameMain.GameSession.SubmarineInfo = PendingSubmarineSwitch;
-
-                    for (int i = 0; i < GameMain.GameSession.OwnedSubmarines.Count; i++)
-                    {
-                        if (GameMain.GameSession.OwnedSubmarines[i].Name == previousSub.Name)
-                        {
-                            GameMain.GameSession.OwnedSubmarines[i] = previousSub;
-                            break;
-                        }
-                    }
-                }
-
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
-                PendingSubmarineSwitch = null;
             }
             else
             {
@@ -672,9 +626,9 @@ namespace Barotrauma
             var subsToLeaveBehind = GetSubsToLeaveBehind(leavingSub);
             if (subsToLeaveBehind.Any())
             {
-                string msg = TextManager.Get(subsToLeaveBehind.Count == 1 ? "LeaveSubBehind" : "LeaveSubsBehind");
+                LocalizedString msg = TextManager.Get(subsToLeaveBehind.Count == 1 ? "LeaveSubBehind" : "LeaveSubsBehind");
 
-                var msgBox = new GUIMessageBox(TextManager.Get("Warning"), msg, new string[] { TextManager.Get("Yes"), TextManager.Get("No") });
+                var msgBox = new GUIMessageBox(TextManager.Get("Warning"), msg, new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") });
                 msgBox.Buttons[0].OnClicked += (btn, userdata) => { LoadNewLevel(); return true; } ;
                 msgBox.Buttons[0].OnClicked += msgBox.Close;
                 msgBox.Buttons[0].UserData = Submarine.Loaded.FindAll(s => !subsToLeaveBehind.Contains(s));
@@ -729,7 +683,6 @@ namespace Barotrauma
         public override void Save(XElement element)
         {
             XElement modeElement = new XElement("SinglePlayerCampaign",
-                new XAttribute("money", Money),
                 new XAttribute("purchasedlostshuttles", PurchasedLostShuttles),
                 new XAttribute("purchasedhullrepairs", PurchasedHullRepairs),
                 new XAttribute("purchaseditemrepairs", PurchasedItemRepairs),
@@ -754,15 +707,15 @@ namespace Barotrauma
                 c.Info.SaveOrderData();
             }
 
-            petsElement = new XElement("pets");
-            PetBehavior.SavePets(petsElement);
-            modeElement.Add(petsElement);            
+            SavePets(modeElement);
+            var crewManagerElement = CrewManager.Save(modeElement);
+            SaveActiveOrders(crewManagerElement);
 
-            CrewManager.Save(modeElement);
             CampaignMetadata.Save(modeElement);
             Map.Save(modeElement);
             CargoManager?.SavePurchasedItems(modeElement);
             UpgradeManager?.Save(modeElement);
+            modeElement.Add(Bank.Save());
             element.Add(modeElement);
         }
     }

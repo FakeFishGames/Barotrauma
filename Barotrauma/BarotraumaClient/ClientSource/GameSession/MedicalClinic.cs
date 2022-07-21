@@ -181,6 +181,11 @@ namespace Barotrauma
             }
         }
 
+        private void OnMoneyChanged(WalletChangedEvent e)
+        {
+            if (e.Wallet.IsOwnWallet) { OnUpdate?.Invoke(); }
+        }
+
         // if you have more than 5000 ping there are probably more important things to worry about but hey just in case
         private static DateTimeOffset GetTimeout() => DateTimeOffset.Now.AddSeconds(5).AddMilliseconds(GetPing());
 
@@ -241,6 +246,7 @@ namespace Barotrauma
         private void HealRequestReceived(IReadMessage inc)
         {
             NetHealRequest request = INetSerializableStruct.Read<NetHealRequest>(inc);
+
             if (request.Result == HealRequestResult.Success)
             {
                 HealAllPending(force: true);

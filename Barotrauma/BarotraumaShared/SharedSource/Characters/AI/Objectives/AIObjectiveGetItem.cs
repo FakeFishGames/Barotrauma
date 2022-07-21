@@ -9,7 +9,7 @@ namespace Barotrauma
 {
     class AIObjectiveGetItem : AIObjective
     {
-        public override string Identifier { get; set; } = "get item";
+        public override Identifier Identifier { get; set; } = "get item".ToIdentifier();
 
         public override bool AbandonWhenCannotCompleteSubjectives => false;
         public override bool AllowMultipleInstances => true;
@@ -21,7 +21,7 @@ namespace Barotrauma
         public float TargetCondition { get; set; } = 1;
         public bool AllowDangerousPressure { get; set; }
 
-        public readonly ImmutableArray<string> IdentifiersOrTags;
+        public readonly ImmutableArray<Identifier> IdentifiersOrTags;
 
         //if the item can't be found, spawn it in the character's inventory (used by outpost NPCs)
         private bool spawnItemIfNotFound = false;
@@ -32,8 +32,8 @@ namespace Barotrauma
         private bool isDoneSeeking;
         public Item TargetItem => targetItem;
         private int currSearchIndex;
-        public string[] ignoredContainerIdentifiers;
-        public string[] ignoredIdentifiersOrTags;
+        public Identifier[] ignoredContainerIdentifiers;
+        public Identifier[] ignoredIdentifiersOrTags;
         private AIObjectiveGoTo goToObjective;
         private float currItemPriority;
         private readonly bool checkInventory;
@@ -83,10 +83,10 @@ namespace Barotrauma
             moveToTarget = targetItem?.GetRootInventoryOwner();
         }
 
-        public AIObjectiveGetItem(Character character, string identifierOrTag, AIObjectiveManager objectiveManager, bool equip = true, bool checkInventory = true, float priorityModifier = 1, bool spawnItemIfNotFound = false) 
-            : this(character, new string[] { identifierOrTag }, objectiveManager, equip, checkInventory, priorityModifier, spawnItemIfNotFound) { }
+        public AIObjectiveGetItem(Character character, Identifier identifierOrTag, AIObjectiveManager objectiveManager, bool equip = true, bool checkInventory = true, float priorityModifier = 1, bool spawnItemIfNotFound = false) 
+            : this(character, new Identifier[] { identifierOrTag }, objectiveManager, equip, checkInventory, priorityModifier, spawnItemIfNotFound) { }
 
-        public AIObjectiveGetItem(Character character, IEnumerable<string> identifiersOrTags, AIObjectiveManager objectiveManager, bool equip = true, bool checkInventory = true, float priorityModifier = 1, bool spawnItemIfNotFound = false) 
+        public AIObjectiveGetItem(Character character, IEnumerable<Identifier> identifiersOrTags, AIObjectiveManager objectiveManager, bool equip = true, bool checkInventory = true, float priorityModifier = 1, bool spawnItemIfNotFound = false) 
             : base(character, objectiveManager, priorityModifier)
         {
             currSearchIndex = -1;
@@ -97,27 +97,27 @@ namespace Barotrauma
             ignoredIdentifiersOrTags = ParseIgnoredTags(identifiersOrTags).ToArray();
         }
 
-        public static IEnumerable<string> ParseGearTags(IEnumerable<string> identifiersOrTags)
+        public static IEnumerable<Identifier> ParseGearTags(IEnumerable<Identifier> identifiersOrTags)
         {
-            var tags = new List<string>();
-            foreach (string tag in identifiersOrTags)
+            var tags = new List<Identifier>();
+            foreach (Identifier tag in identifiersOrTags)
             {
-                if (!tag.Contains('!'))
+                if (!tag.Contains("!"))
                 {
-                    tags.Add(tag.ToLowerInvariant());
+                    tags.Add(tag);
                 }
             }
             return tags;
         }
 
-        public static IEnumerable<string> ParseIgnoredTags(IEnumerable<string> identifiersOrTags)
+        public static IEnumerable<Identifier> ParseIgnoredTags(IEnumerable<Identifier> identifiersOrTags)
         {
-            var ignoredTags = new List<string>();
-            foreach (string tag in identifiersOrTags)
+            var ignoredTags = new List<Identifier>();
+            foreach (Identifier tag in identifiersOrTags)
             {
-                if (tag.Contains('!'))
+                if (tag.Contains("!"))
                 {
-                    ignoredTags.Add(tag.Remove("!").ToLowerInvariant());
+                    ignoredTags.Add(tag.Remove("!"));
                 }
             }
             return ignoredTags;
@@ -177,7 +177,7 @@ namespace Barotrauma
                         if (dangerousPressure)
                         {
 #if DEBUG
-                            string itemName = targetItem != null ? targetItem.Name : IdentifiersOrTags.FirstOrDefault();
+                            string itemName = targetItem != null ? targetItem.Name : IdentifiersOrTags.FirstOrDefault().Value;
                             DebugConsole.NewMessage($"{character.Name}: Seeking item ({itemName}) aborted, because the pressure is dangerous.", Color.Yellow);
 #endif
                             Abandon = true;
@@ -471,7 +471,8 @@ namespace Barotrauma
                 {
                     if (spawnItemIfNotFound)
                     {
-                        if (!(MapEntityPrefab.List.FirstOrDefault(me => me is ItemPrefab ip && IdentifiersOrTags.Any(id => id == ip.Identifier || ip.Tags.Contains(id))) is ItemPrefab prefab))
+                        ItemPrefab prefab = FindItemToSpawn();
+                        if (prefab == null)
                         {
 #if DEBUG
                             DebugConsole.NewMessage($"{character.Name}: Cannot find an item with the following identifier(s) or tag(s): {string.Join(", ", IdentifiersOrTags)}, tried to spawn the item but no matching item prefabs were found.", Color.Yellow);
@@ -480,7 +481,7 @@ namespace Barotrauma
                         }
                         else
                         {
-                            Entity.Spawner.AddToSpawnQueue(prefab, character.Inventory, onSpawned: (Item spawnedItem) => 
+                            Entity.Spawner.AddItemToSpawnQueue(prefab, character.Inventory, onSpawned: (Item spawnedItem) => 
                             {
                                 targetItem = spawnedItem; 
                                 if (character.TeamID == CharacterTeamType.FriendlyNPC && (character.Submarine?.Info.IsOutpost ?? false))
@@ -499,6 +500,33 @@ namespace Barotrauma
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns the "best" item to spawn when using <see cref="spawnItemIfNotFound"/> and there's multiple suitable items.
+        /// Best in this context is the one that's sold at the lowest price in stores (usually the most "basic" item)
+        /// </summary>
+        /// <returns></returns>
+        private ItemPrefab FindItemToSpawn()
+        {
+            ItemPrefab bestItem = null;
+            float lowestCost = float.MaxValue;
+            foreach (MapEntityPrefab prefab in MapEntityPrefab.List)
+            {
+                if (!(prefab is ItemPrefab itemPrefab)) { continue; }
+                if (IdentifiersOrTags.Any(id => id == prefab.Identifier || prefab.Tags.Contains(id)))
+                {
+                    float cost = itemPrefab.DefaultPrice != null && itemPrefab.CanBeBought ?
+                        itemPrefab.DefaultPrice.Price :
+                        float.MaxValue;
+                    if (cost < lowestCost || bestItem == null)
+                    {
+                        bestItem = itemPrefab;
+                        lowestCost = cost;
+                    }
+                }
+            }
+            return bestItem;
         }
 
         protected override bool CheckObjectiveSpecific()
@@ -528,14 +556,13 @@ namespace Barotrauma
 
         private bool CheckItem(Item item)
         {
-            if (!item.IsInteractable(character)) { return false; }
-            if (item.IsThisOrAnyContainerIgnoredByAI(character)) { return false; }
+            if (!item.HasAccess(character)) { return false; }
             if (ignoredItems.Contains(item)) { return false; };
-            if (ignoredIdentifiersOrTags != null && ignoredIdentifiersOrTags.Any(id => item.prefab.Identifier == id || item.HasTag(id))) { return false; }
+            if (ignoredIdentifiersOrTags != null && ignoredIdentifiersOrTags.Any(id => item.Prefab.Identifier == id || item.HasTag(id))) { return false; }
             if (item.Condition < TargetCondition) { return false; }
             if (ItemFilter != null && !ItemFilter(item)) { return false; }
             if (RequireLoaded && item.Components.Any(i => !i.IsLoaded(character))) { return false; }
-            return IdentifiersOrTags.Any(id => id == item.Prefab.Identifier || item.HasTag(id) || (AllowVariants && item.Prefab.VariantOf?.Identifier == id));
+            return IdentifiersOrTags.Any(id => id == item.Prefab.Identifier || item.HasTag(id) || (AllowVariants && !item.Prefab.VariantOf.IsEmpty && item.Prefab.VariantOf == id));
         }
 
         public override void Reset()
@@ -575,9 +602,9 @@ namespace Barotrauma
             if (!character.IsOnPlayerTeam) { return; }
             if (objectiveManager.CurrentOrder != objectiveManager.CurrentObjective) { return; }
             if (CannotFindDialogueCondition != null && !CannotFindDialogueCondition()) { return; }
-            string msg = TextManager.Get(CannotFindDialogueIdentifierOverride, returnNull: true) ?? TextManager.Get("dialogcannotfinditem", returnNull: true);
-            if (msg == null) { return; }
-            character.Speak(msg, identifier: "dialogcannotfinditem", minDurationBetweenSimilar: 20.0f);
+            LocalizedString msg = TextManager.Get(CannotFindDialogueIdentifierOverride, "dialogcannotfinditem");
+            if (msg.IsNullOrEmpty() || !msg.Loaded) { return; }
+            character.Speak(msg.Value, identifier: "dialogcannotfinditem".ToIdentifier(), minDurationBetweenSimilar: 20.0f);
         }
     }
 }

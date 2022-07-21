@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
@@ -27,9 +28,9 @@ namespace Barotrauma
         All = Salvage | Monster | Cargo | Beacon | Nest | Mineral | Combat | AbandonedOutpost | Escort | Pirate | GoTo | ScanAlienRuins | ClearAlienRuins
     }
 
-    partial class MissionPrefab
+    partial class MissionPrefab : PrefabWithUintIdentifier
     {
-        public static readonly List<MissionPrefab> List = new List<MissionPrefab>();
+        public static readonly PrefabCollection<MissionPrefab> Prefabs = new PrefabCollection<MissionPrefab>();
 
         public static readonly Dictionary<MissionType, Type> CoOpMissionClasses = new Dictionary<MissionType, Type>()
         {
@@ -52,15 +53,14 @@ namespace Barotrauma
         };
 
         public static readonly HashSet<MissionType> HiddenMissionClasses = new HashSet<MissionType>() { MissionType.GoTo };
-        
+
         private readonly ConstructorInfo constructor;
 
         public readonly MissionType Type;
 
         public readonly bool MultiplayerOnly, SingleplayerOnly;
 
-        public readonly string Identifier;
-        public readonly string TextIdentifier;
+        public readonly Identifier TextIdentifier;
 
         private readonly string[] tags;
         public IEnumerable<string> Tags
@@ -68,17 +68,19 @@ namespace Barotrauma
             get { return tags; }
         }
 
-        public readonly string Name;
-        public readonly string Description;
-        public readonly string SuccessMessage;
-        public readonly string FailureMessage;
-        public readonly string SonarLabel;
-        public readonly string SonarIconIdentifier;
+        public readonly LocalizedString Name;
+        public readonly LocalizedString Description;
+        public readonly LocalizedString SuccessMessage;
+        public readonly LocalizedString FailureMessage;
+        public readonly LocalizedString SonarLabel;
+        public readonly Identifier SonarIconIdentifier;
 
-        public readonly string AchievementIdentifier;
+        public readonly Identifier AchievementIdentifier;
 
-        public readonly Dictionary<string, float> ReputationRewards = new Dictionary<string, float>();
-        public readonly List<Tuple<string, object, SetDataAction.OperationType>> DataRewards = new List<Tuple<string, object, SetDataAction.OperationType>>();
+        public readonly Dictionary<Identifier, float> ReputationRewards = new Dictionary<Identifier, float>();
+
+        public readonly List<(Identifier Identifier, object Value, SetDataAction.OperationType OperationType)>
+            DataRewards = new List<(Identifier Identifier, object Value, SetDataAction.OperationType OperationType)>();
 
         public readonly int Commonness;
         public readonly int? Difficulty;
@@ -86,25 +88,24 @@ namespace Barotrauma
 
         public readonly int Reward;
 
-        public readonly List<string> Headers;
-        public readonly List<string> Messages;
+        public readonly ImmutableArray<LocalizedString> Headers;
+        public readonly ImmutableArray<LocalizedString> Messages;
 
         public readonly bool AllowRetry;
 
         public readonly bool IsSideObjective;
 
-        public readonly bool RequireWreck;
-        public readonly string RequiredWreckType;
+        public readonly bool RequireWreck, RequireRuin;
 
         /// <summary>
         /// The mission can only be received when travelling from a location of the first type to a location of the second type
         /// </summary>
-        public readonly List<(string from, string to)> AllowedConnectionTypes;
+        public readonly List<(Identifier from, Identifier to)> AllowedConnectionTypes;
 
         /// <summary>
         /// The mission can only be received in these location types
         /// </summary>
-        public readonly List<string> AllowedLocationTypes = new List<string>();
+        public readonly List<Identifier> AllowedLocationTypes = new List<Identifier>();
 
         /// <summary>
         /// Show entities belonging to these sub categories when the mission starts
@@ -113,16 +114,16 @@ namespace Barotrauma
 
         public class TriggerEvent
         {
-            [Serialize("", true)]
+            [Serialize("", IsPropertySaveable.Yes)]
             public string EventIdentifier { get; private set; }
 
-            [Serialize(0, true)]
+            [Serialize(0, IsPropertySaveable.Yes)]
             public int State { get; private set; }
 
-            [Serialize(0.0f, true)]
+            [Serialize(0.0f, IsPropertySaveable.Yes)]
             public float Delay { get; private set; }
 
-            [Serialize(false, true)]
+            [Serialize(false, IsPropertySaveable.Yes)]
             public bool CampaignOnly { get; private set; }
 
             public TriggerEvent(XElement element)
@@ -135,159 +136,119 @@ namespace Barotrauma
 
         public LocationTypeChange LocationTypeChangeOnCompleted;
 
-        public readonly XElement ConfigElement;
+        public readonly ContentXElement ConfigElement;
 
-        public static void Init()
-        {
-            List.Clear();
-            var files = GameMain.Instance.GetFilesOfType(ContentType.Missions);
-            foreach (ContentFile file in files)
-            {
-                XDocument doc = XMLExtensions.TryLoadXml(file.Path);
-                if (doc == null) { continue; }
-                bool allowOverride = false;
-                var mainElement = doc.Root;
-                if (mainElement.IsOverride())
-                {
-                    allowOverride = true;
-                    mainElement = mainElement.FirstElement();
-                }
-
-                foreach (XElement sourceElement in mainElement.Elements())
-                {
-                    var element = sourceElement.IsOverride() ? sourceElement.FirstElement() : sourceElement;
-                    var identifier = element.GetAttributeString("identifier", string.Empty);
-                    var duplicate = List.Find(m => m.Identifier == identifier);
-                    if (duplicate != null)
-                    {
-                        if (allowOverride || sourceElement.IsOverride())
-                        {
-                            DebugConsole.NewMessage($"Overriding a mission with the identifier '{identifier}' using the file '{file.Path}'", Color.Yellow);
-                            List.Remove(duplicate);
-                        }
-                        else
-                        {
-                            DebugConsole.ThrowError($"Duplicate mission found with the identifier '{identifier}' in file '{file.Path}'! Add <override></override> tags as the parent of the mission definition to allow overriding.");
-                            // TODO: Don't allow adding duplicates when the issue with multiple missions is solved.
-                            //continue;
-                        }
-                    }
-                    List.Add(new MissionPrefab(element));
-                }
-            }
-        }
-
-        public MissionPrefab(XElement element)
+        public MissionPrefab(ContentXElement element, MissionsFile file) : base(file, element.GetAttributeIdentifier("identifier", ""))
         {
             ConfigElement = element;
 
-            Identifier = element.GetAttributeString("identifier", "");
-            TextIdentifier = element.GetAttributeString("textidentifier", null) ?? Identifier;
+            TextIdentifier = element.GetAttributeIdentifier("textidentifier", Identifier);
 
-            tags = element.GetAttributeStringArray("tags", new string[0], convertToLowerInvariant: true);
+            tags = element.GetAttributeStringArray("tags", Array.Empty<string>(), convertToLowerInvariant: true);
 
-            Name = TextManager.Get("MissionName." + TextIdentifier, true);
-            if (Name == null)
-            {
-#if DEBUG
-                DebugConsole.ThrowError($"Error in mission \"{Identifier}\" - could not find a name in localization files. Make sure the texts are present in the loca file or that the mission is set to share texts with another mission using the TextIdentifier attribute.");
-#endif
-                Name = element.GetAttributeString("name", "");
-            }
-            Description = TextManager.Get("MissionDescription." + TextIdentifier, true) ?? element.GetAttributeString("description", "");
+            Name = 
+                TextManager.Get($"MissionName.{TextIdentifier}")
+                .Fallback(TextManager.Get(element.GetAttributeString("name", "")))
+                .Fallback(element.GetAttributeString("name", ""));
+            Description = 
+                TextManager.Get($"MissionDescription.{TextIdentifier}")
+                .Fallback(TextManager.Get(element.GetAttributeString("description", "")))
+                .Fallback(element.GetAttributeString("description", ""));
+
             Reward      = element.GetAttributeInt("reward", 1);
             AllowRetry  = element.GetAttributeBool("allowretry", false);
             IsSideObjective = element.GetAttributeBool("sideobjective", false);
             RequireWreck = element.GetAttributeBool("requirewreck", false);
-            RequiredWreckType = element.GetAttributeString("requiredwrecktype", null);
-            Commonness = element.GetAttributeInt("commonness", 1);
+            RequireRuin = element.GetAttributeBool("requireruin", false);
+            Commonness  = element.GetAttributeInt("commonness", 1);
             if (element.GetAttribute("difficulty") != null)
             {
                 int difficulty = element.GetAttributeInt("difficulty", MinDifficulty);
                 Difficulty = Math.Clamp(difficulty, MinDifficulty, MaxDifficulty);
             }
 
-            SuccessMessage  = TextManager.Get("MissionSuccess." + TextIdentifier, true) ?? element.GetAttributeString("successmessage", "Mission completed successfully");
-            FailureMessage  = TextManager.Get("MissionFailure." + TextIdentifier, true) ?? "";
-            if (string.IsNullOrEmpty(FailureMessage) && TextManager.ContainsTag("missionfailed"))
-            {
-                FailureMessage = TextManager.Get("missionfailed", returnNull: true) ?? "";
-            }
-            if (string.IsNullOrEmpty(FailureMessage) && GameMain.Config.Language == "English")
-            {
-                FailureMessage = element.GetAttributeString("failuremessage", "");
-            }
+            SuccessMessage  = 
+                TextManager.Get($"MissionSuccess.{TextIdentifier}")
+                .Fallback(TextManager.Get(element.GetAttributeString("successmessage", "")))
+                .Fallback(element.GetAttributeString("successmessage", "Mission completed successfully"));
+            FailureMessage  = 
+                TextManager.Get($"MissionFailure.{TextIdentifier}")
+                .Fallback(TextManager.Get(element.GetAttributeString("missionfailed", "")))
+                .Fallback(TextManager.Get("missionfailed"))
+                .Fallback(GameSettings.CurrentConfig.Language == TextManager.DefaultLanguage ? element.GetAttributeString("failuremessage", "") : "");
 
-            if (element.Attribute("sonarlabel") == null)
-            {
-                SonarLabel =
-                    TextManager.Get("MissionSonarLabel." + TextIdentifier, true) ??
-                    TextManager.Get("missionsonarlabel.target");
-            }
-            else
-            {            
-                SonarLabel = 
-                    TextManager.Get("MissionSonarLabel." + element.GetAttributeString("sonarlabel", ""), true) ??
-                    TextManager.Get(element.GetAttributeString("sonarlabel", ""), true) ??
-                    element.GetAttributeString("sonarlabel", "");
-            }
+            string sonarLabelTag = element.GetAttributeString("sonarlabel", "");
 
-            SonarIconIdentifier = element.GetAttributeString("sonaricon", "");
+            SonarLabel = 
+                TextManager.Get($"MissionSonarLabel.{sonarLabelTag}")
+                .Fallback(TextManager.Get(sonarLabelTag))
+                .Fallback(TextManager.Get($"MissionSonarLabel.{TextIdentifier}"))
+                .Fallback(element.GetAttributeString("sonarlabel", ""));
+
+            SonarIconIdentifier = element.GetAttributeIdentifier("sonaricon", "");
 
             MultiplayerOnly     = element.GetAttributeBool("multiplayeronly", false);
             SingleplayerOnly    = element.GetAttributeBool("singleplayeronly", false);
 
-            AchievementIdentifier = element.GetAttributeString("achievementidentifier", "");
+            AchievementIdentifier = element.GetAttributeIdentifier("achievementidentifier", "");
 
-            UnhideEntitySubCategories = element.GetAttributeStringArray("unhideentitysubcategories", new string[0]).ToList();
+            UnhideEntitySubCategories = element.GetAttributeStringArray("unhideentitysubcategories", Array.Empty<string>()).ToList();
 
-            Headers = new List<string>();
-            Messages = new List<string>();
-            AllowedConnectionTypes = new List<(string from, string to)>();
+            var headers = new List<LocalizedString>();
+            var messages = new List<LocalizedString>();
+            AllowedConnectionTypes = new List<(Identifier from, Identifier to)>();
 
             for (int i = 0; i < 100; i++)
             {
-                string header = TextManager.Get("MissionHeader" + i + "." + TextIdentifier, true);
-                string message = TextManager.Get("MissionMessage" + i + "." + TextIdentifier, true);
-                if (!string.IsNullOrEmpty(message))
+                LocalizedString header = TextManager.Get($"MissionHeader{i}.{TextIdentifier}");
+                LocalizedString message = TextManager.Get($"MissionMessage{i}.{TextIdentifier}");
+                if (!message.IsNullOrEmpty())
                 {
-                    Headers.Add(header);
-                    Messages.Add(message);
+                    headers.Add(header);
+                    messages.Add(message);
                 }
             }
-
+            
             int messageIndex = 0;
-            foreach (XElement subElement in element.Elements())
+            foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "message":
-                        if (messageIndex > Headers.Count - 1)
+                        if (messageIndex > headers.Count - 1)
                         {
-                            Headers.Add(string.Empty);
-                            Messages.Add(string.Empty);
+                            headers.Add(string.Empty);
+                            messages.Add(string.Empty);
                         }
-                        Headers[messageIndex] = TextManager.Get("MissionHeader" + messageIndex + "." + TextIdentifier, true) ?? subElement.GetAttributeString("header", "");
-                        Messages[messageIndex] = TextManager.Get("MissionMessage" + messageIndex + "." + TextIdentifier, true) ?? subElement.GetAttributeString("text", "");
+                        headers[messageIndex] = 
+                            TextManager.Get($"MissionHeader{messageIndex}.{TextIdentifier}")
+                            .Fallback(TextManager.Get(subElement.GetAttributeString("header", "")))
+                            .Fallback(subElement.GetAttributeString("header", ""));
+                        messages[messageIndex] = 
+                            TextManager.Get($"MissionMessage{messageIndex}.{TextIdentifier}")
+                            .Fallback(TextManager.Get(subElement.GetAttributeString("text", "")))
+                            .Fallback(subElement.GetAttributeString("text", ""));
                         messageIndex++;
                         break;
                     case "locationtype":
                     case "connectiontype":
-                        if (subElement.Attribute("identifier") != null)
+                        if (subElement.GetAttribute("identifier") != null)
                         {
-                            AllowedLocationTypes.Add(subElement.GetAttributeString("identifier", ""));
+                            AllowedLocationTypes.Add(subElement.GetAttributeIdentifier("identifier", ""));
                         }
                         else
                         {
-                            AllowedConnectionTypes.Add((subElement.GetAttributeString("from", "").ToLowerInvariant(), subElement.GetAttributeString("to", "").ToLowerInvariant()));
+                            AllowedConnectionTypes.Add((
+                                subElement.GetAttributeIdentifier("from", ""),
+                                subElement.GetAttributeIdentifier("to", "")));
                         }
                         break;
                     case "locationtypechange":
-                        LocationTypeChangeOnCompleted = new LocationTypeChange(subElement.GetAttributeString("from", ""), subElement, requireChangeMessages: false, defaultProbability: 1.0f);
+                        LocationTypeChangeOnCompleted = new LocationTypeChange(subElement.GetAttributeIdentifier("from", ""), subElement, requireChangeMessages: false, defaultProbability: 1.0f);
                         break;
                     case "reputation":
                     case "reputationreward":
-                        string factionIdentifier = subElement.GetAttributeString("identifier", "");
+                        Identifier factionIdentifier = subElement.GetAttributeIdentifier("identifier", Identifier.Empty);
                         float amount = subElement.GetAttributeFloat("amount", 0.0f);
                         if (ReputationRewards.ContainsKey(factionIdentifier))
                         {
@@ -295,18 +256,11 @@ namespace Barotrauma
                             continue;
                         }
                         ReputationRewards.Add(factionIdentifier, amount);
-                        if (!factionIdentifier.Equals("location", StringComparison.OrdinalIgnoreCase))
-                        {
-                            if (FactionPrefab.Prefabs != null && !FactionPrefab.Prefabs.Any(p => p.Identifier.Equals(factionIdentifier, StringComparison.OrdinalIgnoreCase)))
-                            {
-                                DebugConsole.ThrowError($"Error in mission prefab \"{Identifier}\". Could not find a faction with the identifier \"{factionIdentifier}\".");
-                            }
-                        }
                         break;
                     case "metadata":
-                        string identifier = subElement.GetAttributeString("identifier", string.Empty);
+                        Identifier identifier = subElement.GetAttributeIdentifier("identifier", Identifier.Empty);
                         string stringValue = subElement.GetAttributeString("value", string.Empty);
-                        if (!string.IsNullOrWhiteSpace(stringValue) && !string.IsNullOrWhiteSpace(identifier))
+                        if (!string.IsNullOrWhiteSpace(stringValue) && !identifier.IsEmpty)
                         {
                             object value = SetDataAction.ConvertXMLValue(stringValue);
                             SetDataAction.OperationType operation = SetDataAction.OperationType.Set;
@@ -317,7 +271,7 @@ namespace Barotrauma
                                 operation = (SetDataAction.OperationType) Enum.Parse(typeof(SetDataAction.OperationType), operatingString);
                             }
 
-                            DataRewards.Add(Tuple.Create(identifier, value, operation));
+                            DataRewards.Add((identifier, value, operation));
                         }
                         break;
                     case "triggerevent":
@@ -325,15 +279,17 @@ namespace Barotrauma
                         break;
                 }
             }
+            Headers = headers.ToImmutableArray();
+            Messages = messages.ToImmutableArray();
 
-            string missionTypeName = element.GetAttributeString("type", "");
+            Identifier missionTypeName = element.GetAttributeIdentifier("type", Identifier.Empty);
             //backwards compatibility
-            if (missionTypeName.Equals("outpostdestroy", StringComparison.OrdinalIgnoreCase) || missionTypeName.Equals("outpostrescue", StringComparison.OrdinalIgnoreCase)) 
+            if (missionTypeName == "outpostdestroy" || missionTypeName == "outpostrescue") 
             {
-                missionTypeName = "AbandonedOutpost";
+                missionTypeName = "AbandonedOutpost".ToIdentifier();
             }
 
-            if (!Enum.TryParse(missionTypeName, out Type))
+            if (!Enum.TryParse(missionTypeName.Value, true, out Type))
             {
                 DebugConsole.ThrowError("Error in mission prefab \"" + Name + "\" - \"" + missionTypeName + "\" is not a valid mission type.");
                 return;
@@ -364,25 +320,25 @@ namespace Barotrauma
             InitProjSpecific(element);
         }
         
-        partial void InitProjSpecific(XElement element);
+        partial void InitProjSpecific(ContentXElement element);
 
         public bool IsAllowed(Location from, Location to)
         {
             if (from == to)
             {
                 return 
-                    AllowedLocationTypes.Any(lt => lt.Equals("any", StringComparison.OrdinalIgnoreCase)) ||
-                    AllowedLocationTypes.Any(lt => lt.Equals(from.Type.Identifier, StringComparison.OrdinalIgnoreCase));
+                    AllowedLocationTypes.Any(lt => lt == "any") ||
+                    AllowedLocationTypes.Any(lt => lt == from.Type.Identifier);
             }
 
-            foreach ((string fromType, string toType) in AllowedConnectionTypes)
+            foreach (var (fromType, toType) in AllowedConnectionTypes)
             {
-                if (fromType.Equals("any", StringComparison.OrdinalIgnoreCase) ||
-                    fromType.Equals(from.Type.Identifier, StringComparison.OrdinalIgnoreCase) ||
+                if (fromType == "any" ||
+                    fromType == from.Type.Identifier ||
                     (fromType == "anyoutpost" && from.HasOutpost()))
                 {
-                    if (toType.Equals("any", StringComparison.OrdinalIgnoreCase) ||
-                        toType.Equals(to.Type.Identifier, StringComparison.OrdinalIgnoreCase) ||
+                    if (toType == "any" ||
+                        toType == to.Type.Identifier ||
                         (toType == "anyoutpost" && to.HasOutpost()))
                     {
                         return true;
@@ -407,6 +363,12 @@ namespace Barotrauma
         public Mission Instantiate(Location[] locations, Submarine sub)
         {
             return constructor?.Invoke(new object[] { this, locations, sub }) as Mission;
+        }
+
+        partial void DisposeProjectSpecific();
+        public override void Dispose()
+        {
+            DisposeProjectSpecific();
         }
     }
 }

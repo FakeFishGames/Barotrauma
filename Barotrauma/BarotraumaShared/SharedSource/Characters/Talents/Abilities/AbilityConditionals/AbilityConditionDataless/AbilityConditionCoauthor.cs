@@ -7,7 +7,7 @@ namespace Barotrauma.Abilities
     {
         private readonly string jobIdentifier;
 
-        public AbilityConditionCoauthor(CharacterTalent characterTalent, XElement conditionElement) : base(characterTalent, conditionElement)
+        public AbilityConditionCoauthor(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
             jobIdentifier = conditionElement.GetAttributeString("jobidentifier", string.Empty);
         }

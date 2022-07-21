@@ -13,7 +13,8 @@ namespace Barotrauma
                 item.WriteSpawnData(msg, 
                     item.ID, 
                     parentInventoryIDs.ContainsKey(item) ? parentInventoryIDs[item] : Entity.NullEntityID,
-                    parentItemContainerIndices.ContainsKey(item) ? parentItemContainerIndices[item] : (byte)0);
+                    parentItemContainerIndices.ContainsKey(item) ? parentItemContainerIndices[item] : (byte)0,
+                    inventorySlotIndices.ContainsKey(item) ? inventorySlotIndices[item] : -1);
             }
         }
     }

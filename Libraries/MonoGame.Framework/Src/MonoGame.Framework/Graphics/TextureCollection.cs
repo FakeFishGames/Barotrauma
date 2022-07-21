@@ -19,7 +19,7 @@ namespace Microsoft.Xna.Framework.Graphics
             _graphicsDevice = graphicsDevice;
             _textures = new Texture[maxTextures];
             _applyToVertexStage = applyToVertexStage;
-            for (int i=0;i<maxTextures;i++)
+            for (int i = 0; i < maxTextures; i++)
             {
                 _dirtyMax |= 1 << i;
             }

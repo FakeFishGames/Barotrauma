@@ -28,7 +28,7 @@ namespace Barotrauma
             CreateLabeledSlider(parent, 0.0f, 50.0f, 1.0f, nameof(KarmaIncreaseThreshold));
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.12f), parent.RectTransform), TextManager.Get("Karma.PositiveActions"), 
-                textAlignment: Alignment.Center, font: GUI.SubHeadingFont)
+                textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont)
             {
                 CanBeFocused = false
             };
@@ -41,7 +41,7 @@ namespace Barotrauma
             CreateLabeledSlider(parent, 0.0f, 1.0f, 0.01f, nameof(BallastFloraKarmaIncrease));
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.12f), parent.RectTransform), TextManager.Get("Karma.NegativeActions"), 
-                textAlignment: Alignment.Center, font: GUI.SubHeadingFont)
+                textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont)
             {
                 CanBeFocused = false
             };
@@ -86,9 +86,9 @@ namespace Barotrauma
                 ToolTip = TextManager.Get("Karma." + propertyName + "ToolTip")
             };
 
-            string labelText = TextManager.Get("Karma." + propertyName);
+            LocalizedString labelText = TextManager.Get("Karma." + propertyName);
             var label = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), container.RectTransform),
-                labelText, textAlignment: Alignment.CenterLeft, font: GUI.SmallFont)
+                labelText, textAlignment: Alignment.CenterLeft, font: GUIStyle.SmallFont)
             {
                 ToolTip = TextManager.Get("Karma." + propertyName + "ToolTip")
             };
@@ -120,13 +120,13 @@ namespace Barotrauma
                 ToolTip = TextManager.Get("Karma." + propertyName + "ToolTip")
             };
 
-            string labelText = TextManager.Get("Karma." + propertyName);
-            new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), container.RectTransform), labelText, textAlignment: Alignment.CenterLeft, font: GUI.SmallFont)
+            LocalizedString labelText = TextManager.Get("Karma." + propertyName);
+            new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), container.RectTransform), labelText, textAlignment: Alignment.CenterLeft, font: GUIStyle.SmallFont)
             {
                 ToolTip = TextManager.Get("Karma." + propertyName + "ToolTip")
             };
 
-            var numInput = new GUINumberInput(new RectTransform(new Vector2(0.3f, 1.0f), container.RectTransform), GUINumberInput.NumberType.Int)
+            var numInput = new GUINumberInput(new RectTransform(new Vector2(0.3f, 1.0f), container.RectTransform), NumberType.Int)
             {
                 MinValueInt = min,
                 MaxValueInt = max
@@ -140,7 +140,7 @@ namespace Barotrauma
         {
             var tickBox = new GUITickBox(new RectTransform(new Vector2(0.3f, 0.1f), parent.RectTransform), TextManager.Get("Karma." + propertyName))
             {
-                ToolTip = TextManager.Get("Karma." + propertyName + "ToolTip", returnNull: true) ?? ""
+                ToolTip = TextManager.Get("Karma." + propertyName + "ToolTip").Fallback("")
             };
             GameMain.NetworkMember.ServerSettings.AssignGUIComponent(propertyName, tickBox);
         }

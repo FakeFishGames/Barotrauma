@@ -4,12 +4,13 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static Barotrauma.AIObjectiveFindSafety;
 
 namespace Barotrauma
 {
     class AIObjectiveRescue : AIObjective
     {
-        public override string Identifier { get; set; } = "rescue";
+        public override Identifier Identifier { get; set; } = "rescue".ToIdentifier();
         public override bool ForceRun => true;
         public override bool KeepDivingGearOn => true;
 
@@ -30,6 +31,7 @@ namespace Barotrauma
         private float findHullTimer;
         private bool ignoreOxygen;
         private readonly float findHullInterval = 1.0f;
+        private bool performedCpr;
 
         public AIObjectiveRescue(Character character, Character targetCharacter, AIObjectiveManager objectiveManager, float priorityModifier = 1) 
             : base(character, objectiveManager, priorityModifier)
@@ -146,9 +148,10 @@ namespace Barotrauma
                             {
                                 if (targetCharacter.CurrentHull != null && HumanAIController.VisibleHulls.Contains(targetCharacter.CurrentHull) && targetCharacter.CurrentHull.DisplayName != null)
                                 {
-                                    character.Speak(TextManager.GetWithVariables("DialogFoundUnconsciousTarget", new string[2] { "[targetname]", "[roomname]" },
-                                        new string[2] { targetCharacter.Name, targetCharacter.CurrentHull.DisplayName }, new bool[2] { false, true }),
-                                        null, 1.0f, "foundunconscioustarget" + targetCharacter.Name, 60.0f);
+                                    character.Speak(TextManager.GetWithVariables("DialogFoundUnconsciousTarget",
+                                        ("[targetname]", targetCharacter.Name, FormatCapitals.No),
+                                        ("[roomname]", targetCharacter.CurrentHull.DisplayName, FormatCapitals.Yes)).Value,
+                                        null, 1.0f, $"foundunconscioustarget{targetCharacter.Name}".ToIdentifier(), 60.0f);
                                 }
                                 // Go to the target and select it
                                 if (!character.CanInteractWith(targetCharacter))
@@ -158,7 +161,7 @@ namespace Barotrauma
                                     TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(targetCharacter, character, objectiveManager)
                                     {
                                         CloseEnough = CloseEnoughToTreat,
-                                        DialogueIdentifier = "dialogcannotreachpatient",
+                                        DialogueIdentifier = "dialogcannotreachpatient".ToIdentifier(),
                                         TargetName = targetCharacter.DisplayName
                                     },
                                     onCompleted: () => RemoveSubObjective(ref goToObjective),
@@ -184,7 +187,9 @@ namespace Barotrauma
                                     }
                                     else
                                     {
-                                        safeHull = objectiveManager.GetObjective<AIObjectiveFindSafety>().FindBestHull(HumanAIController.VisibleHulls);
+                                        HullSearchStatus hullSearchStatus = objectiveManager.GetObjective<AIObjectiveFindSafety>().FindBestHull(out Hull potentialSafeHull, HumanAIController.VisibleHulls);
+                                        if (hullSearchStatus != HullSearchStatus.Finished) { return; }
+                                        safeHull = potentialSafeHull;
                                         findHullTimer = findHullInterval * Rand.Range(0.9f, 1.1f);
                                     }
                                 }
@@ -216,15 +221,15 @@ namespace Barotrauma
                 TryAddSubObjective(ref goToObjective, () => new AIObjectiveGoTo(targetCharacter, character, objectiveManager)
                 {
                     CloseEnough = CloseEnoughToTreat,
-                    DialogueIdentifier = "dialogcannotreachpatient",
+                    DialogueIdentifier = "dialogcannotreachpatient".ToIdentifier(),
                     TargetName = targetCharacter.DisplayName
                 },
-                    onCompleted: () => RemoveSubObjective(ref goToObjective),
-                    onAbandon: () =>
-                    {
-                        RemoveSubObjective(ref goToObjective);
-                        Abandon = true;
-                    });
+                onCompleted: () => RemoveSubObjective(ref goToObjective),
+                onAbandon: () =>
+                {
+                    RemoveSubObjective(ref goToObjective);
+                    Abandon = true;
+                });
             }
             else
             {
@@ -233,18 +238,19 @@ namespace Barotrauma
                 {
                     if (targetCharacter.CurrentHull?.DisplayName != null)
                     {
-                        character.Speak(TextManager.GetWithVariables("DialogFoundWoundedTarget", new string[2] { "[targetname]", "[roomname]" },
-                            new string[2] { targetCharacter.Name, targetCharacter.CurrentHull.DisplayName }, new bool[2] { false, true }),
-                            null, 1.0f, "foundwoundedtarget" + targetCharacter.Name, 60.0f);
+                        character.Speak(TextManager.GetWithVariables("DialogFoundWoundedTarget",
+                            ("[targetname]", targetCharacter.Name, FormatCapitals.No),
+                            ("[roomname]", targetCharacter.CurrentHull.DisplayName, FormatCapitals.Yes)).Value,
+                            null, 1.0f, $"foundwoundedtarget{targetCharacter.Name}".ToIdentifier(), 60.0f);
                     }
                 }
                 GiveTreatment(deltaTime);
             }
         }
 
-        private readonly List<string> suitableItemIdentifiers = new List<string>();
-        private readonly List<string> itemNameList = new List<string>();
-        private readonly Dictionary<string, float> currentTreatmentSuitabilities = new Dictionary<string, float>();
+        private readonly List<Identifier> suitableItemIdentifiers = new List<Identifier>();
+        private readonly List<LocalizedString> itemNameList = new List<LocalizedString>();
+        private readonly Dictionary<Identifier, float> currentTreatmentSuitabilities = new Dictionary<Identifier, float>();
         private void GiveTreatment(float deltaTime)
         {
             if (targetCharacter == null)
@@ -281,7 +287,7 @@ namespace Barotrauma
                 if (affliction.Prefab == null) { throw new Exception("Affliction prefab was null"); }
                 float bestSuitability = 0.0f;
                 Item bestItem = null;
-                foreach (KeyValuePair<string, float> treatmentSuitability in affliction.Prefab.TreatmentSuitability)
+                foreach (KeyValuePair<Identifier, float> treatmentSuitability in affliction.Prefab.TreatmentSuitability)
                 {
                     if (currentTreatmentSuitabilities.ContainsKey(treatmentSuitability.Key) && 
                         currentTreatmentSuitabilities[treatmentSuitability.Key] > bestSuitability)
@@ -311,12 +317,12 @@ namespace Barotrauma
                 {
                     itemNameList.Clear();
                     suitableItemIdentifiers.Clear();
-                    foreach (KeyValuePair<string, float> treatmentSuitability in currentTreatmentSuitabilities)
+                    foreach (KeyValuePair<Identifier, float> treatmentSuitability in currentTreatmentSuitabilities)
                     {
                         if (treatmentSuitability.Value <= cprSuitability) { continue; }
                         if (MapEntityPrefab.Find(null, treatmentSuitability.Key, showErrorMessages: false) is ItemPrefab itemPrefab)
                         {
-                            if (!Item.ItemList.Any(it => it.prefab.Identifier == treatmentSuitability.Key)) { continue; }
+                            if (!Item.ItemList.Any(it => ((MapEntity)it).Prefab.Identifier == treatmentSuitability.Key)) { continue; }
                             suitableItemIdentifiers.Add(treatmentSuitability.Key);
                             //only list the first 4 items
                             if (itemNameList.Count < 4)
@@ -327,7 +333,7 @@ namespace Barotrauma
                     }
                     if (itemNameList.Any())
                     {
-                        string itemListStr = "";
+                        LocalizedString itemListStr = "";
                         if (itemNameList.Count == 1)
                         {
                             itemListStr = itemNameList[0];
@@ -337,33 +343,34 @@ namespace Barotrauma
                             //[treatment1] or [treatment2]
                             itemListStr = TextManager.GetWithVariables(
                                 "DialogRequiredTreatmentOptionsLast",
-                                new string[] { "[treatment1]", "[treatment2]" },
-                                new string[] { itemNameList[0], itemNameList[1] });
+                                ("[treatment1]", itemNameList[0]),
+                                ("[treatment2]", itemNameList[1]));
                         }
                         else
                         {
                             //[treatment1], [treatment2], [treatment3] ... or [treatmentx]
                             itemListStr = TextManager.GetWithVariables(
                                 "DialogRequiredTreatmentOptionsFirst",
-                                new string[] { "[treatment1]", "[treatment2]" },
-                                new string[] { itemNameList[0], itemNameList[1] });
+                                ("[treatment1]", itemNameList[0]),
+                                ("[treatment2]", itemNameList[1]));
                             for (int i = 2; i < itemNameList.Count - 1; i++)
                             {
                                 itemListStr = TextManager.GetWithVariables(
                                   "DialogRequiredTreatmentOptionsFirst",
-                                  new string[] { "[treatment1]", "[treatment2]" },
-                                  new string[] { itemListStr, itemNameList[i] });
+                                  ("[treatment1]", itemListStr),
+                                  ("[treatment2]", itemNameList[i]));
                             }
                             itemListStr = TextManager.GetWithVariables(
                                 "DialogRequiredTreatmentOptionsLast",
-                                new string[] { "[treatment1]", "[treatment2]" },
-                                new string[] { itemListStr, itemNameList.Last() });
+                                ("[treatment1]", itemListStr),
+                                ("[treatment2]", itemNameList.Last()));
                         }
                         if (targetCharacter != character && character.IsOnPlayerTeam)
                         {
-                            character.Speak(TextManager.GetWithVariables("DialogListRequiredTreatments", new string[2] { "[targetname]", "[treatmentlist]" },
-                                new string[2] { targetCharacter.Name, itemListStr }, new bool[2] { false, true }),
-                                null, 2.0f, "listrequiredtreatments" + targetCharacter.Name, 60.0f);
+                            character.Speak(TextManager.GetWithVariables("DialogListRequiredTreatments",
+                                ("[targetname]", targetCharacter.Name, FormatCapitals.No),
+                                ("[treatmentlist]", itemListStr, FormatCapitals.Yes)).Value,
+                                null, 2.0f, $"listrequiredtreatments{targetCharacter.Name}".ToIdentifier(), 60.0f);
                         }
                         RemoveSubObjective(ref getItemObjective);
                         TryAddSubObjective(ref getItemObjective,
@@ -374,13 +381,13 @@ namespace Barotrauma
                                 Abandon = true;
                                 if (character != targetCharacter && character.IsOnPlayerTeam)
                                 {
-                                    character.Speak(TextManager.GetWithVariable("dialogcannottreatpatient", "[name]", targetCharacter.DisplayName, formatCapitals: false), identifier: "cannottreatpatient", minDurationBetweenSimilar: 20.0f);
+                                    character.Speak(TextManager.GetWithVariable("dialogcannottreatpatient", "[name]", targetCharacter.DisplayName, FormatCapitals.No).Value, identifier: "cannottreatpatient".ToIdentifier(), minDurationBetweenSimilar: 20.0f);
                                 }
                             });
                     }
                     else if (cprSuitability <= 0)
                     {
-                        character.Speak(TextManager.GetWithVariable("dialogcannottreatpatient", "[name]", targetCharacter.DisplayName, formatCapitals: false), identifier: "cannottreatpatient", minDurationBetweenSimilar: 20.0f);
+                        character.Speak(TextManager.GetWithVariable("dialogcannottreatpatient", "[name]", targetCharacter.DisplayName, formatCapitals: FormatCapitals.No).Value, identifier: "cannottreatpatient".ToIdentifier(), minDurationBetweenSimilar: 20.0f);
                         Abandon = true;
                     }
                 }
@@ -388,7 +395,7 @@ namespace Barotrauma
             else if (!targetCharacter.IsUnconscious)
             {
                 //no suitable treatments found, not inside our own sub (= can't search for more treatments), the target isn't unconscious (= can't give CPR)
-                character.Speak(TextManager.GetWithVariable("dialogcannottreatpatient", "[name]", targetCharacter.DisplayName, formatCapitals: false), identifier: "cannottreatpatient", minDurationBetweenSimilar: 20.0f);
+                character.Speak(TextManager.GetWithVariable("dialogcannottreatpatient", "[name]", targetCharacter.DisplayName, formatCapitals: FormatCapitals.No).Value, identifier: "cannottreatpatient".ToIdentifier(), minDurationBetweenSimilar: 20.0f);
                 Abandon = true;
                 return;
             }
@@ -398,6 +405,7 @@ namespace Barotrauma
                 {
                     character.SelectCharacter(targetCharacter);
                     character.AnimController.Anim = AnimController.Animation.CPR;
+                    performedCpr = true;
                 }
                 else
                 {
@@ -425,7 +433,7 @@ namespace Barotrauma
             }
             if (remove)
             {
-                Entity.Spawner?.AddToRemoveQueue(item);
+                Entity.Spawner?.AddItemToRemoveQueue(item);
             }
         }
 
@@ -433,9 +441,10 @@ namespace Barotrauma
         {
             bool isCompleted = AIObjectiveRescueAll.GetVitalityFactor(targetCharacter) >= AIObjectiveRescueAll.GetVitalityThreshold(objectiveManager, character, targetCharacter);
             if (isCompleted && targetCharacter != character && character.IsOnPlayerTeam)
-            {                
-                character.Speak(TextManager.GetWithVariable("DialogTargetHealed", "[targetname]", targetCharacter.Name),
-                    null, 1.0f, "targethealed" + targetCharacter.Name, 60.0f);
+            {
+                string textTag = performedCpr ? "DialogTargetResuscitated" : "DialogTargetHealed";
+                string message = TextManager.GetWithVariable(textTag, "[targetname]", targetCharacter.Name)?.Value;
+                character.Speak(message, delay: 1.0f, identifier: $"targethealed{targetCharacter.Name}".ToIdentifier(), minDurationBetweenSimilar: 60.0f);
             }
             return isCompleted;
         }

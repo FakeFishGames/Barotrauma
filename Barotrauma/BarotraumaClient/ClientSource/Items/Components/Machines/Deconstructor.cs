@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Linq;
@@ -21,13 +22,13 @@ namespace Barotrauma.Items.Components
 
         private GUITextBlock infoArea;
 
-        [Serialize("DeconstructorDeconstruct", true)]
+        [Serialize("DeconstructorDeconstruct", IsPropertySaveable.Yes)]
         public string ActivateButtonText { get; set; }
-
-        [Serialize("", true)]
+        
+        [Serialize("", IsPropertySaveable.Yes)]
         public string InfoText { get; set; }
 
-        [Serialize(0.0f, true)]
+        [Serialize(0.0f, IsPropertySaveable.Yes)]
         public float InfoAreaWidth { get; set; }
 
         partial void InitProjSpecific(XElement element)
@@ -49,7 +50,7 @@ namespace Barotrauma.Items.Components
                 RelativeSpacing = 0.08f
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1f, 0.07f), paddedFrame.RectTransform), item.Name, font: GUI.SubHeadingFont)
+            new GUITextBlock(new RectTransform(new Vector2(1f, 0.07f), paddedFrame.RectTransform), item.Name, font: GUIStyle.SubHeadingFont)
             {
                 TextAlignment = Alignment.Center,
                 AutoScaleHorizontal = true
@@ -63,7 +64,7 @@ namespace Barotrauma.Items.Components
                     Stretch = true, 
                     RelativeSpacing = 0.05f
                 };
-                    var inputLabel = new GUITextBlock(new RectTransform(Vector2.One, inputLabelArea.RectTransform), TextManager.Get("deconstructor.input", fallBackTag: "uilabel.input"), font: GUI.SubHeadingFont) { Padding = Vector4.Zero };
+                    var inputLabel = new GUITextBlock(new RectTransform(Vector2.One, inputLabelArea.RectTransform), TextManager.Get("deconstructor.input", "uilabel.input"), font: GUIStyle.SubHeadingFont) { Padding = Vector4.Zero };
                     inputLabel.RectTransform.Resize(new Point((int) inputLabel.Font.MeasureString(inputLabel.Text).X, inputLabel.RectTransform.Rect.Height));
                     new GUIFrame(new RectTransform(Vector2.One, inputLabelArea.RectTransform), style: "HorizontalLine");
 
@@ -78,11 +79,11 @@ namespace Barotrauma.Items.Components
                         activateButton = new GUIButton(new RectTransform(new Vector2(0.95f, 0.8f), buttonContainer.RectTransform), TextManager.Get("DeconstructorDeconstruct"), style: "DeviceButton")
                         {
                             TextBlock = { AutoScaleHorizontal = true },
-                            OnClicked = ToggleActive
+                            OnClicked = OnActivateButtonClicked
                         };
-                            inSufficientPowerWarning = new GUITextBlock(new RectTransform(Vector2.One, activateButton.RectTransform), 
-                                TextManager.Get("DeconstructorNoPower"), textColor: GUI.Style.Orange, textAlignment: Alignment.Center, color: Color.Black, style: "OuterGlow", wrap: true)
-                            {
+                            inSufficientPowerWarning = new GUITextBlock(new RectTransform(Vector2.One, activateButton.RectTransform),
+                                TextManager.Get("DeconstructorNoPower"), textColor: GUIStyle.Orange, textAlignment: Alignment.Center, color: Color.Black, style: "OuterGlow", wrap: true)
+                                {
                                 HoverColor = Color.Black, 
                                 IgnoreLayoutGroups = true, 
                                 Visible = false, 
@@ -99,7 +100,7 @@ namespace Barotrauma.Items.Components
                     Stretch = true, 
                     RelativeSpacing = 0.05f
                 };
-                    var outputLabel = new GUITextBlock(new RectTransform(new Vector2(0f, 1.0f), outputLabelArea.RectTransform), TextManager.Get("uilabel.output"), font: GUI.SubHeadingFont) { Padding = Vector4.Zero };
+                    var outputLabel = new GUITextBlock(new RectTransform(new Vector2(0f, 1.0f), outputLabelArea.RectTransform), TextManager.Get("uilabel.output"), font: GUIStyle.SubHeadingFont) { Padding = Vector4.Zero };
                     outputLabel.RectTransform.Resize(new Point((int) outputLabel.Font.MeasureString(outputLabel.Text).X, outputLabel.RectTransform.Rect.Height));
                     new GUIFrame(new RectTransform(Vector2.One, outputLabelArea.RectTransform), style: "HorizontalLine");
 
@@ -123,7 +124,7 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    infoArea.Text = TextManager.Get(InfoText, returnNull: true) ?? InfoText;
+                    infoArea.Text = TextManager.Get(InfoText).Fallback(InfoText);
                 }
                 if (IsActive)
                 {
@@ -137,11 +138,11 @@ namespace Barotrauma.Items.Components
                     outputsFound = true;
                     if (!string.IsNullOrEmpty(deconstructItem.ActivateButtonText))
                     {
-                        string buttonText = TextManager.Get(deconstructItem.ActivateButtonText, returnNull: true) ?? deconstructItem.ActivateButtonText;
-                        string infoText =  string.Empty;
+                        LocalizedString buttonText = TextManager.Get(deconstructItem.ActivateButtonText).Fallback(deconstructItem.ActivateButtonText);
+                        LocalizedString infoText =  string.Empty;
                         if (!string.IsNullOrEmpty(deconstructItem.InfoText))
                         {
-                            infoText = TextManager.Get(deconstructItem.InfoText, returnNull: true) ?? deconstructItem.InfoText;
+                            infoText = TextManager.Get(deconstructItem.InfoText).Fallback(deconstructItem.InfoText);
                         }
                         inputItem.GetComponent<GeneticMaterial>()?.ModifyDeconstructInfo(this, ref buttonText, ref infoText);
                         activateButton.Text = buttonText;
@@ -159,12 +160,12 @@ namespace Barotrauma.Items.Components
                     {
                         if (deconstructItem.RequiredOtherItem.Any() && !string.IsNullOrEmpty(deconstructItem.InfoTextOnOtherItemMissing))
                         {
-                            string missingItemName = TextManager.Get("entityname." + deconstructItem.RequiredOtherItem.First(), returnNull: true);
+                            LocalizedString missingItemName = TextManager.Get("entityname." + deconstructItem.RequiredOtherItem.First());
                             infoArea.Text = TextManager.GetWithVariable(deconstructItem.InfoTextOnOtherItemMissing, "[itemname]", missingItemName);
                         }
                     }
                 }
-                activateButton.Enabled = outputsFound;
+                activateButton.Enabled = outputsFound || !InputContainer.Inventory.IsEmpty();
                 activateButton.Text = TextManager.Get(ActivateButtonText);
             };
         }
@@ -207,7 +208,7 @@ namespace Barotrauma.Items.Components
             overlayComponent.RectTransform.SetAsLastChild();
 
             if (!(inputContainer?.Inventory?.visualSlots is { } visualSlots)) { return; }
-
+            
             if (DeconstructItemsSimultaneously)
             {
                 for (int i = 0; i < InputContainer.Inventory.Capacity; i++)
@@ -227,17 +228,28 @@ namespace Barotrauma.Items.Components
                     new Rectangle(
                         slot.Rect.X, slot.Rect.Y + (int)(slot.Rect.Height * (1.0f - progressState)),
                         slot.Rect.Width, (int)(slot.Rect.Height * progressState)),
-                    GUI.Style.Green * 0.5f, isFilled: true);
+                    GUIStyle.Green * 0.5f, isFilled: true);
             }
         }
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
         {
-            inSufficientPowerWarning.Visible = CurrPowerConsumption > 0 && !hasPower;
+            inSufficientPowerWarning.Visible = IsActive && !hasPower;
         }
 
-        private bool ToggleActive(GUIButton button, object obj)
+        private bool OnActivateButtonClicked(GUIButton button, object obj)
         {
+            var disallowedItem = inputContainer.Inventory.FindItem(i => !i.AllowDeconstruct, recursive: false);
+            if (disallowedItem != null && !DeconstructItemsSimultaneously)
+            {
+                int index = inputContainer.Inventory.FindIndex(disallowedItem);
+                if (index >= 0 && index < inputContainer.Inventory.visualSlots.Length)
+                {
+                    var slot = inputContainer.Inventory.visualSlots[index];
+                    slot?.ShowBorderHighlight(GUIStyle.Red, 0.1f, 0.9f);
+                }
+                return true;
+            }
             if (GameMain.Client != null)
             {
                 pendingState = !IsActive;
@@ -246,18 +258,16 @@ namespace Barotrauma.Items.Components
             else
             {
                 SetActive(!IsActive, Character.Controlled);
-                currPowerConsumption = IsActive ? powerConsumption : 0.0f;
             }
-
             return true;
         }
 
-        public void ClientWrite(IWriteMessage msg, object[] extraData = null)
+        public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
             msg.Write(pendingState);
         }
 
-        public void ClientRead(ServerNetObject type, IReadMessage msg, float sendingTime)
+        public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             ushort userID = msg.ReadUInt16();
             Character user = userID == Entity.NullEntityID ? null : Entity.FindEntityByID(userID) as Character;
