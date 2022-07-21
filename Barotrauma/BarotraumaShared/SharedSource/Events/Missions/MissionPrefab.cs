@@ -96,6 +96,7 @@ namespace Barotrauma
         public readonly bool IsSideObjective;
 
         public readonly bool RequireWreck, RequireRuin;
+        public readonly string RequiredWreckType;
 
         /// <summary>
         /// The mission can only be received when travelling from a location of the first type to a location of the second type
@@ -161,6 +162,8 @@ namespace Barotrauma
             RequireWreck = element.GetAttributeBool("requirewreck", false);
             RequireRuin = element.GetAttributeBool("requireruin", false);
             Commonness  = element.GetAttributeInt("commonness", 1);
+            RequiredWreckType = element.GetAttributeString("requiredwrecktype", null);
+            Commonness = element.GetAttributeInt("commonness", 1);
             if (element.GetAttribute("difficulty") != null)
             {
                 int difficulty = element.GetAttributeInt("difficulty", MinDifficulty);
