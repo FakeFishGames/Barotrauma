@@ -53,6 +53,12 @@ namespace Barotrauma
         /// </summary>
         public int TargetSlot = -1;
 
+        /// <summary>
+        /// The slot type the target must be in when targeting an item contained inside a character's inventory
+        /// </summary>
+        public InvSlotType CharacterInventorySlotType;
+
+
         public string JoinedIdentifiers
         {
             get { return string.Join(",", Identifiers); }
@@ -81,6 +87,10 @@ namespace Barotrauma
         {
             if (item == null) { return false; }
             if (excludedIdentifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id))) { return false; }
+            if ((item.ParentInventory?.Owner is Character character) && (CharacterInventorySlotType != InvSlotType.None))
+            {
+                if (!character.HasEquippedItem(item, CharacterInventorySlotType)) { return false; }
+            }
             return Identifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id) || (AllowVariants && !item.Prefab.VariantOf.IsEmpty && item.Prefab.VariantOf == id));
         }
         public bool MatchesItem(ItemPrefab itemPrefab)
@@ -154,6 +164,7 @@ namespace Barotrauma
             element.Add(
                 new XAttribute("items", JoinedIdentifiers),
                 new XAttribute("type", type.ToString()),
+                new XAttribute("characterinventoryslottype", CharacterInventorySlotType.ToString()),
                 new XAttribute("optional", IsOptional),
                 new XAttribute("ignoreineditor", IgnoreInEditor),
                 new XAttribute("excludebroken", ExcludeBroken),
@@ -219,9 +230,21 @@ namespace Barotrauma
 
             if (identifiers.Length == 0 && excludedIdentifiers.Length == 0 && !returnEmpty) { return null; }
 
+            InvSlotType slottype;
+            try
+            {
+                slottype = Enum.Parse<InvSlotType>(element.GetAttributeString("characterinventoryslottype", "None"));
+            }
+            catch (ArgumentException)
+            {
+                DebugConsole.ThrowError("Error in RelatedItem config (" + parentDebugName + ") - invalid characterinventoryslottype (" + (element.GetAttributeString("characterinventoryslottype", "None")) + "). Check spelling/capitalization.");
+                slottype = InvSlotType.None;
+            }
+
             RelatedItem ri = new RelatedItem(identifiers, excludedIdentifiers)
             {
                 ExcludeBroken = element.GetAttributeBool("excludebroken", true),
+                CharacterInventorySlotType = slottype,
                 ExcludeFullCondition = element.GetAttributeBool("excludefullcondition", false),
                 AllowVariants = element.GetAttributeBool("allowvariants", true)
             };
