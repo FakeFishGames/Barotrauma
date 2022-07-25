@@ -86,6 +86,7 @@ namespace Barotrauma
             this.CanBreakDoors = canBreakDoors;
 
             character = (host as AIController).Character;
+            lastDoor = new LastDoor(character);
 
             findPathTimer = Rand.Range(0.0f, 1.0f);
         }
@@ -258,6 +259,7 @@ namespace Barotrauma
                             CheckDoorsInPath();
                         }
                         currentPath = newPath;
+                        lastDoor.Reset();
                     }
                     float priority = MathHelper.Lerp(3, 1, character.Params.PathFinderPriority);
                     findPathTimer = priority * Rand.Range(1.0f, 1.2f);
@@ -487,7 +489,12 @@ namespace Barotrauma
                     }
                 }
                 float targetDistance = Math.Max(colliderSize.X / 2 * margin, minWidth / 2);
-                if (horizontalDistance < targetDistance && !isTargetTooHigh && !isTargetTooLow && (door == null || door.CanBeTraversed))
+                bool lastDoorPassedByCharacter = lastDoor.IsPassedByCharacter();
+                if (horizontalDistance < targetDistance
+                    && !isTargetTooHigh && !isTargetTooLow
+                    && (door == null || door.CanBeTraversed)
+                    && (currentPath.NextNode?.ConnectedDoor == null || lastDoor.door == null || lastDoorPassedByCharacter)
+                    )
                 {
                     NextNode(!doorsChecked);
                 }
@@ -557,7 +564,47 @@ namespace Barotrauma
             return ConvertUnits.ToDisplayUnits(Math.Max(colliderSize.X, colliderSize.Y));
         }
 
-        private (Door door, bool shouldBeOpen) lastDoor;
+        private class LastDoor
+        {
+            private Character character;
+            private int openingStartedRelativePositionToCharacter;
+            public Door door;
+            public bool shouldBeOpen;
+
+            public LastDoor(Character charact)
+            {
+                character = charact;
+            }
+
+            public void Reset()
+            {
+                door = null;
+                openingStartedRelativePositionToCharacter = 0;
+            }
+
+            public void OpeningStarted()
+            {
+                openingStartedRelativePositionToCharacter = GetRelativePositionToCharacter();
+            }
+
+            public int GetRelativePositionToCharacter()
+            {
+                if (door == null || character == null) { return 0; }
+                return !door.IsHorizontal
+                    ? Math.Sign(door.Item.WorldPosition.X - character.WorldPosition.X)
+                    : Math.Sign(door.Item.WorldPosition.Y - character.WorldPosition.Y);
+            }
+
+            public bool IsPassedByCharacter()
+            {
+                int currentRelativePositionToCharacter = GetRelativePositionToCharacter();
+                bool lastDoorPassedByCharacter = door != null && currentRelativePositionToCharacter != openingStartedRelativePositionToCharacter;
+                return lastDoorPassedByCharacter;
+            }
+        }
+
+        private LastDoor lastDoor;
+
         private float GetDoorCheckTime()
         {
             if (steering.LengthSquared() > 0)
@@ -692,7 +739,9 @@ namespace Barotrauma
                             {
                                 if (door.Item.TryInteract(character, forceSelectKey: true))
                                 {
-                                    lastDoor = (door, shouldBeOpen);
+                                    lastDoor.door = door;
+                                    lastDoor.shouldBeOpen = shouldBeOpen;
+                                    if (shouldBeOpen) { lastDoor.OpeningStarted(); }
                                     buttonPressTimer = shouldBeOpen ? buttonPressCooldown : 0;
                                 }
                                 else
@@ -710,7 +759,9 @@ namespace Barotrauma
                                 {
                                     if (closestButton.Item.TryInteract(character, forceSelectKey: true))
                                     {
-                                        lastDoor = (door, shouldBeOpen);
+                                        lastDoor.door = door;
+                                        lastDoor.shouldBeOpen = shouldBeOpen;
+                                        if (shouldBeOpen) { lastDoor.OpeningStarted(); }
                                         buttonPressTimer = shouldBeOpen ? buttonPressCooldown : 0;
                                     }
                                     else
