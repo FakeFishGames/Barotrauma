@@ -79,7 +79,7 @@ namespace Barotrauma
             set { maxBranchCount = Math.Max(value, minBranchCount); }
         }
 
-        [Serialize(50, IsPropertySaveable.Yes), Editable(MinValueInt = 0, MaxValueInt = 1000)]
+        [Serialize(50, IsPropertySaveable.Yes), Editable(MinValueInt = 0, MaxValueInt = 10000)]
         public int LevelObjectAmount
         {
             get;
