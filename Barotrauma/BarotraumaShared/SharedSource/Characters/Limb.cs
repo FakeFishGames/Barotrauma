@@ -549,6 +549,7 @@ namespace Barotrauma
         public float Health => character.Health;
         public float HealthPercentage => character.HealthPercentage;
         public AIState AIState => character.AIController is EnemyAIController enemyAI ? enemyAI.State : AIState.Idle;
+        public bool IsFlipped => character.AnimController.IsFlipped;
 
         public bool CanBeSeveredAlive
         {
