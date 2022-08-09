@@ -700,9 +700,12 @@ namespace Barotrauma
                 List<MapEntity> prevSelected = MapEntity.SelectedList.ToList();
                 //reselect the entities that were selected during editing
                 //otherwise multi-editing won't work when we deselect the entities with unapplied changes in the textbox
-                foreach (var entity in editedEntities)
-                { 
-                    MapEntity.SelectedList.Add(entity);
+                if (editedEntities.Count > 1)
+                {
+                    foreach (var entity in editedEntities)
+                    { 
+                        MapEntity.SelectedList.Add(entity);
+                    }
                 }
                 if (SetPropertyValue(property, entity, textBox.Text))
                 {
@@ -1448,7 +1451,9 @@ namespace Barotrauma
                             var component = otherComponents[componentIndex];
                             Debug.Assert(component.GetType() == parentObject.GetType());                            
                             SafeAdd(component, property);
-                            if (value is string stringValue && Enum.TryParse(property.PropertyType, stringValue, out var enumValue))
+                            if (value is string stringValue && 
+                                property.PropertyType.IsEnum &&
+                                Enum.TryParse(property.PropertyType, stringValue, out var enumValue))
                             {
                                 property.PropertyInfo.SetValue(component, enumValue);
                             }

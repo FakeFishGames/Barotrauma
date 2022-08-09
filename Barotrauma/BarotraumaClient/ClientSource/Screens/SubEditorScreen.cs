@@ -4801,7 +4801,7 @@ namespace Barotrauma
         /// <summary>
         /// GUI.MouseOn doesn't get updated while holding primary mouse and we need it to
         /// </summary>
-        private bool IsMouseOnEditorGUI()
+        public bool IsMouseOnEditorGUI()
         {
             if (GUI.MouseOn == null) { return false; }
 

@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------------
+v0.18.15.1
+---------------------------------------------------------------------------------------------------------
+
+- Fixed frequent crashing in the submarine editor. The crashes were caused by modifying multiple entities at the same time, such as by selecting an entity of the same type as the last entity that was edited.
+- Fixed dragged objects becoming invisible if you bring the cursor over a UI element in the submarine editor.
+- Fixed a bug that sometimes caused radio voice chat to be muffled.
+
+---------------------------------------------------------------------------------------------------------
 v0.18.15.0
 ---------------------------------------------------------------------------------------------------------
 
