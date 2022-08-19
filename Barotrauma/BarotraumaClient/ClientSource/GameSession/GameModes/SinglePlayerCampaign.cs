@@ -132,9 +132,9 @@ namespace Barotrauma
                 };
             }
 
-            PurchasedLostShuttles = element.GetAttributeBool("purchasedlostshuttles", false);
-            PurchasedHullRepairs = element.GetAttributeBool("purchasedhullrepairs", false);
-            PurchasedItemRepairs = element.GetAttributeBool("purchaseditemrepairs", false);
+            PurchasedLostShuttlesInLatestSave = element.GetAttributeBool("purchasedlostshuttles", false);
+            PurchasedHullRepairsInLatestSave = element.GetAttributeBool("purchasedhullrepairs", false);
+            PurchasedItemRepairsInLatestSave = element.GetAttributeBool("purchaseditemrepairs", false);
             CheatsEnabled = element.GetAttributeBool("cheatsenabled", false);
             if (CheatsEnabled)
             {

@@ -252,7 +252,7 @@ namespace Barotrauma
 
                 if (placePosition == Vector2.Zero)
                 {
-                    if (PlayerInput.PrimaryMouseButtonHeld()) placePosition = position;
+                    if (PlayerInput.PrimaryMouseButtonHeld() && GUI.MouseOn == null) { placePosition = position; }
                 }
                 else
                 {
@@ -270,11 +270,10 @@ namespace Barotrauma
                         item.SetTransform(ConvertUnits.ToSimUnits(Submarine.MainSub == null ? item.Position : item.Position - Submarine.MainSub.Position), 0.0f);
                         item.FindHull();
 
-                        //selected = null;
+                        SubEditorScreen.StoreCommand(new AddOrDeleteCommand(new List<MapEntity> { item }, false));
+
                         return;
                     }
-
-                    position = placePosition;
                 }
             }
 
@@ -282,21 +281,11 @@ namespace Barotrauma
             {
                 potentialContainer.IsHighlighted = true;
             }
-
-
-            //if (PlayerInput.GetMouseState.RightButton == ButtonState.Pressed) selected = null;
-
         }
 
         public override void DrawPlacing(SpriteBatch spriteBatch, Camera cam)
         {
             Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
-
-            if (PlayerInput.SecondaryMouseButtonClicked())
-            {
-                Selected = null;
-                return;
-            }
 
             if (!ResizeHorizontal && !ResizeVertical)
             {

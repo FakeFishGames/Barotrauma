@@ -96,7 +96,7 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
-            progressTimer += deltaTime * Math.Min(powerConsumption <= 0.0f ? 1 : Voltage, 1.0f);
+            progressTimer += deltaTime * Math.Min(powerConsumption <= 0.0f ? 1 : Voltage, MaxOverVoltageFactor);
 
             float tinkeringStrength = 0f;
             if (repairable.IsTinkering)
@@ -205,18 +205,18 @@ namespace Barotrauma.Items.Components
 
                 foreach (DeconstructItem deconstructProduct in products)
                 {
-                    CreateDeconstructProduct(deconstructProduct, inputItems, amountMultiplier);
+                    CreateDeconstructProduct(deconstructProduct, inputItems, (int)(amountMultiplier * deconstructProduct.Amount));
                 }
             }
             else
             {
                 foreach (DeconstructItem deconstructProduct in validDeconstructItems)
                 {
-                    CreateDeconstructProduct(deconstructProduct, inputItems, amountMultiplier);
+                    CreateDeconstructProduct(deconstructProduct, inputItems, (int)(amountMultiplier * deconstructProduct.Amount));
                 }
             }
 
-            void CreateDeconstructProduct(DeconstructItem deconstructProduct, IEnumerable<Item> inputItems, float amountMultiplier)
+            void CreateDeconstructProduct(DeconstructItem deconstructProduct, IEnumerable<Item> inputItems, int amount)
             {
                 float percentageHealth = targetItem.Condition / targetItem.MaxCondition;
 
@@ -284,7 +284,6 @@ namespace Barotrauma.Items.Components
                     user.CheckTalents(AbilityEffectType.OnItemDeconstructedInventory, itemDeconstructedInventory);
                 }
 
-                int amount = (int)amountMultiplier;
                 for (int i = 0; i < amount; i++)
                 {
                     Entity.Spawner.AddItemToSpawnQueue(itemPrefab, outputContainer.Inventory, condition, onSpawned: (Item spawnedItem) =>

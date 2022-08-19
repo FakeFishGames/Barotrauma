@@ -98,7 +98,7 @@ namespace Barotrauma.Items.Components
             set { maxRechargeSpeed = Math.Max(value, 1.0f); }
         }
 
-        [Editable, Serialize(10.0f, IsPropertySaveable.Yes, description: "The current recharge speed of the device.")]
+        [Editable, Serialize(0.0f, IsPropertySaveable.Yes, description: "The current recharge speed of the device.")]
         public float RechargeSpeed
         {
             get { return rechargeSpeed; }

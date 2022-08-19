@@ -369,7 +369,7 @@ namespace Barotrauma
             float radius = ConvertUnits.ToSimUnits(colliderParams.Radius) * colliderParams.Ragdoll.LimbScale;
             float height = ConvertUnits.ToSimUnits(colliderParams.Height) * colliderParams.Ragdoll.LimbScale;
             float width = ConvertUnits.ToSimUnits(colliderParams.Width) * colliderParams.Ragdoll.LimbScale;
-            density = 10;
+            density = Physics.NeutralDensity;
             CreateBody(width, height, radius, density, BodyType.Dynamic,
                 Physics.CollisionCharacter,
                 Physics.CollisionWall | Physics.CollisionLevel, 
@@ -417,7 +417,7 @@ namespace Barotrauma
             float radius = ConvertUnits.ToSimUnits(element.GetAttributeFloat("radius", 0.0f)) * scale;
             float height = ConvertUnits.ToSimUnits(element.GetAttributeFloat("height", 0.0f)) * scale;
             float width = ConvertUnits.ToSimUnits(element.GetAttributeFloat("width", 0.0f)) * scale;
-            density = Math.Max(forceDensity ?? element.GetAttributeFloat("density", 10.0f), MinDensity);
+            density = Math.Max(forceDensity ?? element.GetAttributeFloat("density", Physics.NeutralDensity), MinDensity);
             Enum.TryParse(element.GetAttributeString("bodytype", "Dynamic"), out BodyType bodyType);
             CreateBody(width, height, radius, density, bodyType, collisionCategory, collidesWith, findNewContacts);
             _collisionCategories = collisionCategory;

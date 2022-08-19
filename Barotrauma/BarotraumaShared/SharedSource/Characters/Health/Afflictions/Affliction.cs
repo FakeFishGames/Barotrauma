@@ -50,6 +50,9 @@ namespace Barotrauma
         [Serialize(1.0f, IsPropertySaveable.Yes, description: "The probability for the affliction to be applied."), Editable(minValue: 0f, maxValue: 1f)]
         public float Probability { get; set; } = 1.0f;
 
+        [Serialize(true, IsPropertySaveable.Yes, description: "Explosion damage is applied per each affected limb. Should this affliction damage be divided by the count of affected limbs (1-15) or applied in full? Default: true. Only affects explosions."), Editable]
+        public bool DivideByLimbCount { get; set; }
+
         public float DamagePerSecond;
         public float DamagePerSecondTimer;
         public float PreviousVitalityDecrease;
@@ -96,9 +99,11 @@ namespace Barotrauma
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
         }
 
-        public Affliction CreateMultiplied(float multiplier)
+        public Affliction CreateMultiplied(float multiplier, float probability)
         {
-            return Prefab.Instantiate(NonClampedStrength * multiplier, Source);
+            var instance = Prefab.Instantiate(NonClampedStrength * multiplier, Source);
+            instance.Probability = probability;
+            return instance;
         }
 
         public override string ToString() => Prefab == null ? "Affliction (Invalid)" : $"Affliction ({Prefab.Name})";

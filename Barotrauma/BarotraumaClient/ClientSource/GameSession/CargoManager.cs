@@ -103,7 +103,7 @@ namespace Barotrauma
             {
                 if (soldItem.ItemPrefab != soldEntity.ItemPrefab) { return false; }
                 if (matchId && (soldEntity.Item == null || soldItem.ID != soldEntity.Item.ID)) { return false; }
-                if (soldItem.Origin == SoldItem.SellOrigin.Character && GameMain.Client != null && soldItem.SellerID != GameMain.Client.ID) { return false; }
+                if (soldItem.Origin == SoldItem.SellOrigin.Character && GameMain.Client != null && soldItem.SellerID != GameMain.Client.SessionId) { return false; }
                 return true;
             }
         }
@@ -143,7 +143,7 @@ namespace Barotrauma
                 return;
             }
             bool canAddToRemoveQueue = campaign.IsSinglePlayer && Entity.Spawner != null;
-            byte sellerId = GameMain.Client?.ID ?? 0;
+            byte sellerId = GameMain.Client?.SessionId ?? 0;
             // Check all the prices before starting the transaction to make sure the modifiers stay the same for the whole transaction
             var sellValues = GetSellValuesAtCurrentLocation(storeIdentifier, itemsToSell.Select(i => i.ItemPrefab));
             if (!(Location.GetStore(storeIdentifier) is { } store))

@@ -126,7 +126,7 @@ namespace Barotrauma.Steam
             {
                 OnClicked = (button, o) =>
                 {
-                    SteamManager.OverlayCustomURL(workshopItem.Url);
+                    SteamManager.OverlayCustomUrl(workshopItem.Url);
                     return false;
                 }
             };
@@ -234,7 +234,7 @@ namespace Barotrauma.Steam
 
             int indexOfUserDataInPublishedItemsArray(object userData)
                 => publishedItems.IndexOf(t
-                    => t.WorkshopItem.Id == ((Steamworks.Ugc.Item)(userData as ItemOrPackage)).Id);
+                    => t.WorkshopItem.Id == ((Steamworks.Ugc.Item)(userData as ItemOrPackage)!).Id);
 
             //Take the existing GUI items that are in the list and sort to match the order of publishedItems
             var publishedGuiComponents = selfModsList.Content.Children.OrderBy(c => indexOfUserDataInPublishedItemsArray(c.UserData)).ToArray();
@@ -582,7 +582,7 @@ namespace Barotrauma.Steam
                 SelectedTextColor = GUIStyle.TextColorNormal,
                 OnClicked = (button, o) =>
                 {
-                    SteamManager.OverlayCustomURL(
+                    SteamManager.OverlayCustomUrl(
                         $"https://steamcommunity.com/profiles/{author.Id}/myworkshopfiles/?appid={SteamManager.AppID}");
                     return false;
                 }
@@ -639,9 +639,10 @@ namespace Barotrauma.Steam
                 new RectTransform(Vector2.Zero, reinstallButton.RectTransform),
                 onUpdate: (f, component) =>
                 {
-                    reinstallButton.Visible = workshopItem.IsSubscribed || workshopItem.Owner.Id == SteamManager.GetSteamID();
-                    reinstallButton.Enabled = !workshopItem.IsDownloading && !workshopItem.IsDownloadPending &&
-                                              !SteamManager.Workshop.IsInstalling(workshopItem);
+                    reinstallButton.Visible = workshopItem.IsSubscribed
+                                              || workshopItem.Owner.Id == SteamManager.GetSteamId().Select(steamId => steamId.Value).Fallback(0);
+                    reinstallButton.Enabled = !workshopItem.IsDownloading && !workshopItem.IsDownloadPending
+                                              && !SteamManager.Workshop.IsInstalling(workshopItem);
 
                     reinstallSprite.Color = reinstallButton.Enabled
                         ? reinstallSprite.Style.Color

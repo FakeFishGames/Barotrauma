@@ -99,6 +99,7 @@ namespace Barotrauma
         private bool hasComponentsToDraw;
 
         public PhysicsBody body;
+        private float waterDragCoefficient;
 
         public readonly XElement StaticBodyConfig;
 
@@ -860,12 +861,14 @@ namespace Barotrauma
 
             SetActiveSprite();
 
+            ContentXElement bodyElement = null;
             foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "body":
-                        float density = subElement.GetAttributeFloat("density", 10.0f);
+                        bodyElement = subElement;
+                        float density = subElement.GetAttributeFloat("density", Physics.NeutralDensity);
                         float minDensity = subElement.GetAttributeFloat("mindensity", density);
                         float maxDensity = subElement.GetAttributeFloat("maxdensity", density);
                         if (minDensity < maxDensity)
@@ -904,6 +907,7 @@ namespace Barotrauma
                         }
                         body = new PhysicsBody(subElement, ConvertUnits.ToSimUnits(Position), Scale, density, collisionCategory, collidesWith, findNewContacts: false);
                         body.FarseerBody.AngularDamping = subElement.GetAttributeFloat("angulardamping", 0.2f);
+                        body.FarseerBody.LinearDamping = subElement.GetAttributeFloat("lineardamping", 0.1f);
                         body.FarseerBody.LinearDamping = subElement.GetAttributeFloat("lineardamping", 0.1f);
                         body.UserData = this;
                         break;
@@ -994,6 +998,8 @@ namespace Barotrauma
             if (body != null)
             {
                 body.Submarine = submarine;
+                waterDragCoefficient = bodyElement.GetAttributeFloat("waterdragcoefficient", 
+                    GetComponent<Projectile>() != null || GetComponent<Throwable>() != null ? 0.1f : 1.0f);
             }
 
             //cache connections into a dictionary for faster lookups
@@ -1898,10 +1904,19 @@ namespace Barotrauma
 
             if (needsWaterCheck)
             {
+                bool wasInWater = inWater;
                 inWater = IsInWater();
                 bool waterProof = WaterProof;
                 if (inWater)
                 {
+                    //the item has gone through the surface of the water
+                    if (!wasInWater && CurrentHull != null && body != null && body.LinearVelocity.Y < -1.0f)
+                    {
+                        Splash();
+                        //slow the item down (not physically accurate, but looks good enough)
+                        body.LinearVelocity *= 0.2f;                        
+                    }
+
                     Item container = this.Container;
                     while (!waterProof && container != null)
                     {
@@ -1929,7 +1944,8 @@ namespace Barotrauma
             }
         }
 
-                
+        partial void Splash();
+
         public void UpdateTransform()
         {
             if (body == null) { return; }
@@ -2017,23 +2033,47 @@ namespace Barotrauma
             {
                 float floor = CurrentHull.Rect.Y - CurrentHull.Rect.Height;
                 float waterLevel = floor + CurrentHull.WaterVolume / CurrentHull.Rect.Width;
-
                 //forceFactor is 1.0f if the item is completely submerged, 
                 //and goes to 0.0f as the item goes through the surface
                 forceFactor = Math.Min((waterLevel - Position.Y) / rect.Height, 1.0f);
-                if (forceFactor <= 0.0f) return;
+                if (forceFactor <= 0.0f) { return; }
             }
 
+            bool moving = body.LinearVelocity.LengthSquared() > 0.001f;
             float volume = body.Mass / body.Density;
+            if (moving)
+            {
+                //measure velocity from the velocity of the front of the item and apply the drag to the other end to get the drag to turn the item the "pointy end first"
 
-            var uplift = -GameMain.World.Gravity * forceFactor * volume;
+                //a more "proper" (but more expensive) way to do this would be to e.g. calculate the drag separately for each edge of the fixture
+                //but since we define the "front" as the "pointy end", we can cheat a bit by using that, and actually even make the drag appear more realistic in some cases
+                //(e.g. a bullet with a rectangular fixture would be just as "aerodynamic" travelling backwards, but with this method we get it to turn the correct way)
+                Vector2 localFront = body.GetLocalFront();
+                Vector2 frontVel = body.FarseerBody.GetLinearVelocityFromLocalPoint(localFront);
 
-            Vector2 drag = body.LinearVelocity * volume;
+                float speed = frontVel.Length();
+                float drag = speed * speed * waterDragCoefficient * volume * Physics.NeutralDensity;
+                //very small drag on active projectiles to prevent affecting their trajectories much
+                if (body.FarseerBody.IsBullet) { drag *= 0.1f; }
+                Vector2 dragVec = -frontVel / speed * drag;
 
-            body.ApplyForce((uplift - drag) * 10.0f);
+                //apply the force slightly towards the back of the item to make it turn the front first
+                Vector2 back = body.FarseerBody.GetWorldPoint(-localFront * 0.01f);
+                body.ApplyForce(dragVec, back);
+            }
+
+            //no need to apply buoyancy if the item is still and not light enough to float
+            if (moving || body.Density < 10.0f)
+            {
+                Vector2 buoyancy = -GameMain.World.Gravity * forceFactor * volume * Physics.NeutralDensity;
+                body.ApplyForce(buoyancy);
+            }
 
             //apply simple angular drag
-            body.ApplyTorque(body.AngularVelocity * volume * -0.05f);
+            if (Math.Abs(body.AngularVelocity) > 0.0001f)
+            {
+                body.ApplyTorque(body.AngularVelocity * volume * -0.1f);
+            }
         }
 
 
@@ -3270,7 +3310,7 @@ namespace Barotrauma
                     relativeOrigin = MathUtils.RotatePoint(relativeOrigin, -item.RotationRad);
                     Vector2 origin = new Vector2(rect.X + rect.Width / 2, rect.Y - rect.Height / 2) + relativeOrigin;
 
-                    item.rect.Location -= ((origin - oldOrigin) * scaleRelativeToPrefab).ToPoint();
+                    item.rect.Location -= (origin - oldOrigin).ToPoint();
                 }
 
                 if (item.PurchasedNewSwap && !string.IsNullOrEmpty(appliedSwap.SwappableItem?.SpawnWithId))

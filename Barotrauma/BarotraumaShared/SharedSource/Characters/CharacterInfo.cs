@@ -1287,6 +1287,11 @@ namespace Barotrauma
                     if (splitTag[0] != "name") { continue; }
                     if (splitTag[1] != Name) { continue; }
                     item.ReplaceTag(tag, $"name:{newName}");
+                    var idCard = item.GetComponent<IdCard>();
+                    if (idCard != null)
+                    {
+                        idCard.OwnerName = newName;
+                    }
                     break;
                 }
             }

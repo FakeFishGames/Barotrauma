@@ -68,12 +68,28 @@ namespace Barotrauma
             {
                 OnClicked = (guiButton, o) =>
                 {
-                    GameMain.Client?.Disconnect();
+                    GameMain.Client?.Quit();
                     GameMain.MainMenuScreen.Select();
                     return false;
                 }
             };
-            
+
+            if (!GameMain.Client.IsServerOwner)
+            {
+                if (GameMain.Client.ClientPeer.ServerContentPackages.Length == 0)
+                {
+                    string errorMsg = $"Error in ModDownloadScreen: the list of mods the server has enabled was empty. Content package list received: {GameMain.Client.ClientPeer.ContentPackageOrderReceived}";
+                    GameAnalyticsManager.AddErrorEventOnce("ModDownloadScreen.Select:NoContentPackages", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                    throw new InvalidOperationException(errorMsg);
+                }
+                if (GameMain.Client.ClientPeer.ServerContentPackages.None(p => p.CorePackage != null))
+                {
+                    string errorMsg = $"Error in ModDownloadScreen: no core packages in the list of mods the server has enabled. Content package list received: {GameMain.Client.ClientPeer.ContentPackageOrderReceived}";
+                    GameAnalyticsManager.AddErrorEventOnce("ModDownloadScreen.Select:NoCorePackage", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                    throw new InvalidOperationException(errorMsg);
+                }
+            }
+
             var missingPackages = GameMain.Client.ClientPeer.ServerContentPackages
                 .Where(sp => sp.ContentPackage is null).ToArray();
             if (!missingPackages.Any())
@@ -84,11 +100,14 @@ namespace Barotrauma
                     ContentPackageManager.EnabledPackages.SetCore(
                         GameMain.Client.ClientPeer.ServerContentPackages
                             .Select(p => p.CorePackage)
-                            .First(p => p != null));
-                    ContentPackageManager.EnabledPackages.SetRegular(
+                            .OfType<CorePackage>().First());
+                    List<RegularPackage> regularPackages =
                         GameMain.Client.ClientPeer.ServerContentPackages
                             .Select(p => p.RegularPackage)
-                            .Where(p => p != null).ToArray());
+                            .OfType<RegularPackage>().ToList();
+                    //keep enabled client-side-only mods enabled
+                    regularPackages.AddRange(ContentPackageManager.EnabledPackages.Regular.Where(p => !p.HasMultiplayerSyncedContent));
+                    ContentPackageManager.EnabledPackages.SetRegular(regularPackages);
                 }
                 GameMain.NetLobbyScreen.Select();
                 return;
@@ -153,7 +172,7 @@ namespace Barotrauma
             buttonContainerSpacing(0.2f);
             button(TextManager.Get("No"), () =>
             {
-                GameMain.Client?.Disconnect();
+                GameMain.Client?.Quit();
                 GameMain.MainMenuScreen.Select();
             });
             buttonContainerSpacing(0.1f);
@@ -173,10 +192,10 @@ namespace Barotrauma
                     if (GameMain.Client != null)
                     {
                         BulkDownloader.SubscribeToServerMods(missingIds,
-                            rejoinEndpoint: GameMain.Client.ClientPeer.ServerConnection.EndPointString,
-                            rejoinLobby: SteamManager.CurrentLobbyID,
-                            rejoinServerName: GameMain.NetLobbyScreen.ServerName.Text);
-                        GameMain.Client.Disconnect();
+                            new ConnectCommand(
+                                serverName: GameMain.Client.ServerName,
+                                endpoint: GameMain.Client.ClientPeer.ServerEndpoint));
+                        GameMain.Client.Quit();
                     }
                     GameMain.MainMenuScreen.Select();
                 }, width: 0.7f);
@@ -275,18 +294,21 @@ namespace Barotrauma
                           ?? serverPackages.FirstOrDefault(p => p.CorePackage != null)
                               ?.CorePackage
                           ?? throw new Exception($"Failed to find core package to enable");
-                    RegularPackage[] regularPackages
+                    List<RegularPackage> regularPackages
                         = serverPackages.Where(p => p.CorePackage is null)
                             .Select(p =>
                                 p.RegularPackage
                                 ?? downloadedPackages.FirstOrDefault(d => d is RegularPackage && d.Hash.Equals(p.Hash))
                                 ?? throw new Exception($"Could not find regular package \"{p.Name}\""))
                             .Cast<RegularPackage>()
-                            .ToArray();
+                            .ToList();
                     foreach (var regularPackage in regularPackages)
                     {
                         DebugConsole.NewMessage($"Enabling \"{regularPackage.Name}\" ({regularPackage.Dir})", Color.Lime);
                     }
+
+                    //keep enabled client-side-only mods enabled
+                    regularPackages.AddRange(ContentPackageManager.EnabledPackages.Regular.Where(p => !p.HasMultiplayerSyncedContent));
 
                     ContentPackageManager.EnabledPackages.BackUp();
                     ContentPackageManager.EnabledPackages.SetCore(corePackage);

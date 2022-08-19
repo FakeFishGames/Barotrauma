@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
@@ -11,13 +10,14 @@ namespace Barotrauma.Networking
 {
     class ServerInfo
     {
-        public string IP;
-        public string Port;
-        public string QueryPort;
-
-        public Steamworks.Data.NetPingLocation? PingLocation;
+        public Endpoint Endpoint;
+        
+        #region TODO: genericize
+        public int QueryPort;
         public UInt64 LobbyID;
-        public UInt64 OwnerID;
+        public Steamworks.Data.NetPingLocation? PingLocation;
+        #endregion
+
         public bool OwnerVerified;
 
         private string serverName;
@@ -42,7 +42,7 @@ namespace Barotrauma.Networking
 
         //null value means that the value isn't known (the server may be using 
         //an old version of the game that didn't report these values or the FetchRules query to Steam may not have finished yet)
-        public bool? UsingWhiteList;
+        // TODO: death to Nullable<T>!!!!
         public SelectionMode? ModeSelectionMode;
         public SelectionMode? SubSelectionMode;
         public bool? AllowSpectating;
@@ -140,7 +140,7 @@ namespace Barotrauma.Networking
             }
 
             var serverType = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), frame.RectTransform),
-                TextManager.Get((OwnerID != 0 || LobbyID != 0) ? "SteamP2PServer" : "DedicatedServer"),
+                Endpoint.ServerTypeString,
                 textAlignment: Alignment.TopLeft)
             {
                 CanBeFocused = false
@@ -248,20 +248,6 @@ namespace Barotrauma.Networking
             else
                 voipEnabledTickBox.Selected = VoipEnabled.Value;*/
 
-            var usingWhiteList = new GUITickBox(new RectTransform(new Vector2(1, elementHeight), content.RectTransform), TextManager.Get("ServerListUsingWhitelist"))
-            {
-                CanBeFocused = false
-            };
-            if (!UsingWhiteList.HasValue)
-                new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.8f), usingWhiteList.Box.RectTransform, Anchor.Center), "?", textAlignment: Alignment.Center);
-            else
-                usingWhiteList.Selected = UsingWhiteList.Value;
-
-            content.RectTransform.SizeChanged += () =>
-            {
-                GUITextBlock.AutoScaleAndNormalize(allowSpectating.TextBlock, allowRespawn.TextBlock, usingWhiteList.TextBlock);
-            };
-
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform),
                 TextManager.Get("ServerListContentPackages"), textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont);
 
@@ -350,42 +336,33 @@ namespace Barotrauma.Networking
 
         public static ServerInfo FromXElement(XElement element)
         {
-            ServerInfo info = new ServerInfo()
+            string endpointStr
+                = element.GetAttributeString("Endpoint", null)
+                  ?? element.GetAttributeString("OwnerID", null)
+                  ?? $"{element.GetAttributeString("IP", "")}:{element.GetAttributeInt("Port", 0)}";
+            
+            if (!(Endpoint.Parse(endpointStr).TryUnwrap(out var endpoint))) { return null; }
+
+            ServerInfo info = new ServerInfo
             {
                 ServerName = element.GetAttributeString("ServerName", ""),
                 ServerMessage = element.GetAttributeString("ServerMessage", ""),
-                IP = element.GetAttributeString("IP", ""),
-                Port = element.GetAttributeString("Port", ""),
-                QueryPort = element.GetAttributeString("QueryPort", ""),
-                OwnerID = element.GetAttributeSteamID("OwnerID",0)
+                Endpoint = endpoint,
+                QueryPort = element.GetAttributeInt("QueryPort", 0),
+                GameMode = element.GetAttributeIdentifier("GameMode", Identifier.Empty),
+                GameVersion = element.GetAttributeString("GameVersion", ""),
+                MaxPlayers = Math.Min(element.GetAttributeInt("MaxPlayers", 0), NetConfig.MaxPlayers),
+                HasPassword = element.GetAttributeBool("HasPassword", false),
+                RespondedToSteamQuery = null
             };
 
-            info.RespondedToSteamQuery = null;
-
-            info.GameMode = element.GetAttributeIdentifier("GameMode", Identifier.Empty);
-            info.GameVersion = element.GetAttributeString("GameVersion", "");
-
-            int maxPlayersElement = element.GetAttributeInt("MaxPlayers", 0);
-
-            if (maxPlayersElement > NetConfig.MaxPlayers)
-            {
-                /*DebugConsole.IsOpen = true;
-                DebugConsole.NewMessage($"Setting the maximum amount of players to {maxPlayersElement} failed due to exceeding the limit of {NetConfig.MaxPlayers} players per server. Using the maximum of {NetConfig.MaxPlayers} instead.", Color.Red);*/
-                maxPlayersElement = NetConfig.MaxPlayers;
-            }
-
-            info.MaxPlayers = maxPlayersElement;
-
             if (Enum.TryParse(element.GetAttributeString("PlayStyle", ""), out PlayStyle playStyleTemp)) { info.PlayStyle = playStyleTemp; }
-            if (bool.TryParse(element.GetAttributeString("UsingWhiteList", ""), out bool whitelistTemp)) { info.UsingWhiteList = whitelistTemp; }
             if (Enum.TryParse(element.GetAttributeString("TraitorsEnabled", ""), out YesNoMaybe traitorsTemp)) { info.TraitorsEnabled = traitorsTemp; }
             if (Enum.TryParse(element.GetAttributeString("SubSelectionMode", ""), out SelectionMode subSelectionTemp)) { info.SubSelectionMode = subSelectionTemp; }
             if (Enum.TryParse(element.GetAttributeString("ModeSelectionMode", ""), out SelectionMode modeSelectionTemp)) { info.ModeSelectionMode = modeSelectionTemp; }
             if (bool.TryParse(element.GetAttributeString("VoipEnabled", ""), out bool voipTemp)) { info.VoipEnabled = voipTemp; }
             if (bool.TryParse(element.GetAttributeString("KarmaEnabled", ""), out bool karmaTemp)) { info.KarmaEnabled = karmaTemp; }
             if (bool.TryParse(element.GetAttributeString("FriendlyFireEnabled", ""), out bool friendlyFireTemp)) { info.FriendlyFireEnabled = friendlyFireTemp; }
-
-            info.HasPassword = element.GetAttributeBool("HasPassword", false);
 
             return info;
         }
@@ -394,9 +371,9 @@ namespace Barotrauma.Networking
         {
             if (!SteamManager.IsInitialized) { return; }
 
-            if (int.TryParse(QueryPort, out int parsedPort) && IPAddress.TryParse(IP, out IPAddress parsedIP))
+            if (QueryPort != 0 && Endpoint is LidgrenEndpoint { NetEndpoint: { Address: var ipAddress } })
             {
-                if (MatchmakingPingResponse?.QueryActive ?? false)
+                if (MatchmakingPingResponse is { QueryActive: true })
                 {
                     MatchmakingPingResponse.Cancel();
                 }
@@ -433,14 +410,11 @@ namespace Barotrauma.Networking
                         RespondedToSteamQuery = false;
                     });
 
-                MatchmakingPingResponse.HQueryPing(parsedIP, parsedPort);
+                MatchmakingPingResponse.HQueryPing(ipAddress, QueryPort);
             }
-            else if (OwnerID != 0)
+            else if (Endpoint is SteamP2PEndpoint { SteamId: var ownerId })
             {
-                if (SteamFriend == null)
-                {
-                    SteamFriend = new Steamworks.Friend(OwnerID);
-                }
+                SteamFriend ??= new Steamworks.Friend(ownerId.Value);
                 if (LobbyID == 0)
                 {
                     TaskPool.Add("RequestSteamP2POwnerInfo", SteamFriend?.RequestInfoAsync(),
@@ -474,20 +448,15 @@ namespace Barotrauma.Networking
             bool.TryParse(lobby.GetData("haspassword"), out bool hasPassword);
             int.TryParse(lobby.GetData("playercount"), out int currPlayers);
             int.TryParse(lobby.GetData("maxplayernum"), out int maxPlayers);
-            UInt64 ownerId = SteamManager.SteamIDStringToUInt64(lobby.GetData("lobbyowner"));
-
-            if (OwnerID != ownerId) { return; }
+            
+            if (!SteamId.Parse(lobby.GetData("lobbyowner")).TryUnwrap(out var ownerId)) { return; }
+            if (!(Endpoint is SteamP2PEndpoint { SteamId: var id }) || id != ownerId) { return; }
 
             ServerName = lobby.GetData("name");
-            IP = "";
-            Port = "";
-            QueryPort = "";
             PlayerCount = currPlayers;
             MaxPlayers = maxPlayers;
             HasPassword = hasPassword;
             RespondedToSteamQuery = true;
-            LobbyID = lobby.Id;
-            OwnerID = ownerId;
             PingChecked = false;
             OwnerVerified = true;
 
@@ -496,7 +465,7 @@ namespace Barotrauma.Networking
 
         public XElement ToXElement()
         {
-            if (OwnerID == 0 && string.IsNullOrEmpty(Port))
+            if (Endpoint is null)
             {
                 return null; //can't save this one since it's not set up correctly
             }
@@ -505,22 +474,12 @@ namespace Barotrauma.Networking
 
             element.SetAttributeValue("ServerName", ServerName);
             element.SetAttributeValue("ServerMessage", ServerMessage);
-            if (OwnerID == 0)
-            {
-                element.SetAttributeValue("IP", IP);
-                element.SetAttributeValue("Port", Port);
-                element.SetAttributeValue("QueryPort", QueryPort);
-            }
-            else
-            {
-                element.SetAttributeValue("OwnerID", SteamManager.SteamIDUInt64ToString(OwnerID));
-            }
+            element.SetAttributeValue("Endpoint", Endpoint.ToString());
 
             element.SetAttributeValue("GameMode", GameMode);
             element.SetAttributeValue("GameVersion", GameVersion ?? "");
             element.SetAttributeValue("MaxPlayers", MaxPlayers);
             if (PlayStyle.HasValue) { element.SetAttributeValue("PlayStyle", PlayStyle.Value.ToString()); }
-            if (UsingWhiteList.HasValue) { element.SetAttributeValue("UsingWhiteList", UsingWhiteList.Value.ToString()); }
             if (TraitorsEnabled.HasValue) { element.SetAttributeValue("TraitorsEnabled", TraitorsEnabled.Value.ToString()); }
             if (SubSelectionMode.HasValue) { element.SetAttributeValue("SubSelectionMode", SubSelectionMode.Value.ToString()); }
             if (ModeSelectionMode.HasValue) { element.SetAttributeValue("ModeSelectionMode", ModeSelectionMode.Value.ToString()); }
@@ -540,14 +499,19 @@ namespace Barotrauma.Networking
         public bool Equals(ServerInfo other)
         {
             return
-                other.OwnerID == OwnerID &&
-                (other.LobbyID == LobbyID || other.LobbyID == 0 || LobbyID == 0) &&
-                ((OwnerID == 0) ? (other.IP == IP && other.Port == Port) : true);
+                other.Endpoint == Endpoint &&
+                (other.LobbyID == LobbyID || other.LobbyID == 0 || LobbyID == 0);
         }
+
+        /// <summary>
+        /// This class is trash, so punish its use by making it horribly inefficient in hashsets
+        /// Doing anything else here would make it cause even more bugs
+        /// </summary>
+        public override int GetHashCode() => 0;
 
         public bool MatchesByEndpoint(ServerInfo other)
         {
-            return OwnerID == other.OwnerID && (OwnerID != 0 ? true : (IP == other.IP && Port == other.Port));
+            return other.Endpoint == Endpoint;
         }
     }
 }

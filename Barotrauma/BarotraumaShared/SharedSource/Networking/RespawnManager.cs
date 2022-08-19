@@ -269,6 +269,7 @@ namespace Barotrauma.Networking
 #endif
                 }
             }
+            respawnItems.Clear();
 
             foreach (Structure wall in Structure.WallList)
             {

@@ -317,6 +317,7 @@ namespace Barotrauma.Items.Components
 
             bool mouseOn =
                 canDrag &&
+                !(GUI.MouseOn is GUIDragHandle) &&
                 ((PlayerInput.MousePosition.X > Math.Min(start.X, end.X) &&
                 PlayerInput.MousePosition.X < Math.Max(start.X, end.X) &&
                 MathUtils.LineToPointDistanceSquared(start, end, PlayerInput.MousePosition) < 36) ||

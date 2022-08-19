@@ -6,7 +6,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Sounds
 {
-    public abstract class Sound : IDisposable
+    abstract class Sound : IDisposable
     {
         protected bool disposed;
         public bool Disposed

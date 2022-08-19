@@ -40,7 +40,7 @@ namespace Barotrauma
             }
             set
             {
-                if (value == enabled) return;
+                if (value == enabled) { return; }
 
                 if (Removed)
                 {
@@ -60,6 +60,32 @@ namespace Barotrauma
                     UpdateLimbLightSource(limb);
                 }
                 AnimController.Collider.Enabled = value;
+            }
+        }
+
+
+        private bool disabledByEvent;
+        /// <summary>
+        /// MonsterEvents disable monsters (which includes removing them from the character list, so they essentially "don't exist") until they're ready to spawn
+        /// </summary>
+        public bool DisabledByEvent
+        {
+            get { return disabledByEvent; }
+            set 
+            {
+                if (value == disabledByEvent) { return; }
+                disabledByEvent = value;
+                if (disabledByEvent)
+                {
+                    Enabled = false;
+                    CharacterList.Remove(this);
+                    if (AiTarget != null) { AITarget.List.Remove(AiTarget); }
+                }
+                else
+                {
+                    if (!CharacterList.Contains(this)) { CharacterList.Add(this); }
+                    if (AiTarget != null && !AITarget.List.Contains(AiTarget)) { AITarget.List.Add(AiTarget); }
+                }
             }
         }
 
@@ -1247,22 +1273,29 @@ namespace Barotrauma
 
             if (Params.Husk && speciesName != "husk" && Prefab.VariantOf != "husk")
             {
-                // Get the non husked name and find the ragdoll with it
-                var matchingAffliction = AfflictionPrefab.List
-                    .Where(p => p is AfflictionPrefabHusk)
-                    .Select(p => p as AfflictionPrefabHusk)
-                    .FirstOrDefault(p => p.TargetSpecies.Any(t => t == AfflictionHusk.GetNonHuskedSpeciesName(speciesName, p)));
                 Identifier nonHuskedSpeciesName = Identifier.Empty;
-                if (matchingAffliction == null)
+                AfflictionPrefabHusk matchingAffliction = null; 
+                foreach (var huskPrefab in AfflictionPrefab.Prefabs.OfType<AfflictionPrefabHusk>())
                 {
-                    DebugConsole.ThrowError("Cannot find a husk infection that matches this species! Please add the speciesnames as 'targets' in the husk affliction prefab definition!");
+                    var nonHuskedName = AfflictionHusk.GetNonHuskedSpeciesName(speciesName, huskPrefab);
+                    if (huskPrefab.TargetSpecies.Contains(nonHuskedName))
+                    {
+                        var huskedSpeciesName = AfflictionHusk.GetHuskedSpeciesName(nonHuskedName, huskPrefab);
+                        if (huskedSpeciesName.Equals(speciesName))
+                        {
+                            nonHuskedSpeciesName = nonHuskedName;
+                            matchingAffliction = huskPrefab;
+                            break;
+                        }
+                    }                    
+                }
+                if (matchingAffliction == null || nonHuskedSpeciesName.IsEmpty)
+                {
+                    DebugConsole.ThrowError($"Cannot find a husk infection that matches {speciesName}! Please make sure that the speciesname is added as 'targets' in the husk affliction prefab definition!\n"
+                        + "Note that all the infected speciesnames and files must stick the following pattern: [nonhuskedspeciesname][huskedspeciesname]. E.g. Humanhusk, Crawlerhusk, or Humancustomhusk, or Crawlerzombie. Not \"Customhumanhusk!\" or \"Zombiecrawler\"");
                     // Crashes if we fail to create a ragdoll -> Let's just use some ragdoll so that the user sees the error msg.
                     nonHuskedSpeciesName = IsHumanoid ? CharacterPrefab.HumanSpeciesName : "crawler".ToIdentifier();
                     speciesName = nonHuskedSpeciesName;
-                }
-                else
-                {
-                    nonHuskedSpeciesName = AfflictionHusk.GetNonHuskedSpeciesName(speciesName, matchingAffliction);
                 }
                 if (ragdollParams == null && prefab.VariantOf == null)
                 {

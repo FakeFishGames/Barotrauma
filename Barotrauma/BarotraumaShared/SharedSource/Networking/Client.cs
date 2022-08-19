@@ -11,10 +11,10 @@ namespace Barotrauma.Networking
         public string Name;
         public Identifier PreferredJob;
         public CharacterTeamType PreferredTeam;
-        public UInt16 NameID;
-        public UInt64 SteamID;
-        public byte ID;
-        public UInt16 CharacterID;
+        public UInt16 NameId;
+        public AccountInfo AccountInfo;
+        public byte SessionId;
+        public UInt16 CharacterId;
         public float Karma;
         public bool Muted;
         public bool InGame;
@@ -28,10 +28,23 @@ namespace Barotrauma.Networking
     {
         public const int MaxNameLength = 32;
 
-        public string Name; public UInt16 NameID;
-        public byte ID;
-        public UInt64 SteamID;
-        public UInt64 OwnerSteamID;
+        public string Name; public UInt16 NameId;
+        
+        /// <summary>
+        /// An ID for this client for the current session.
+        /// THIS IS NOT A PERSISTENT VALUE. DO NOT STORE THIS LONG-TERM.
+        /// IT CANNOT BE USED TO IDENTIFY PLAYERS ACROSS SESSIONS.
+        /// </summary>
+        public readonly byte SessionId;
+
+        public AccountInfo AccountInfo;
+        
+        /// <summary>
+        /// The ID of the account used to authenticate this session.
+        /// This value can be used as a persistent value to identify
+        /// players in the banlist and campaign saves.
+        /// </summary>
+        public Option<AccountId> AccountId => AccountInfo.AccountId;
 
         public LanguageIdentifier Language;
 
@@ -90,14 +103,14 @@ namespace Barotrauma.Networking
 
         public UInt16 CharacterID;
 
-        private Vector2 spectate_position;
+        private Vector2 spectatePos;
         public Vector2? SpectatePos
         {
             get
             {
                 if (character == null || character.IsDead)
                 {
-                    return spectate_position;
+                    return spectatePos;
                 }
                 else
                 {
@@ -107,7 +120,7 @@ namespace Barotrauma.Networking
 
             set
             {
-                spectate_position = value.Value;
+                spectatePos = value.Value;
             }
         }
 
@@ -177,19 +190,13 @@ namespace Barotrauma.Networking
         {
             get { return kickVoters.Count; }
         }
-        
-        /*public Client(NetPeer server, string name, byte ID)
-            : this(name, ID)
-        {
-            
-        }*/
 
         partial void InitProjSpecific();
         partial void DisposeProjSpecific();
-        public Client(string name, byte ID)
+        public Client(string name, byte sessionId)
         {
             this.Name = name;
-            this.ID = ID;
+            this.SessionId = sessionId;
 
             kickVoters = new List<Client>();
 
@@ -234,13 +241,16 @@ namespace Barotrauma.Networking
             return kickVoters.Contains(voter);
         }
 
-        public bool HasKickVoteFromID(int id)
+        public bool HasKickVoteFromSessionId(int id)
         {
-            return kickVoters.Any(k => k.ID == id);
+            return kickVoters.Any(k => k.SessionId == id);
         }
 
+        public bool SessionOrAccountIdMatches(string userId)
+            => (AccountId.IsSome() && Networking.AccountId.Parse(userId) == AccountId)
+               || (byte.TryParse(userId, out byte sessionId) && SessionId == sessionId);
 
-        public static void UpdateKickVotes(List<Client> connectedClients)
+        public static void UpdateKickVotes(IReadOnlyList<Client> connectedClients)
         {
             foreach (Client client in connectedClients)
             {
@@ -250,7 +260,7 @@ namespace Barotrauma.Networking
 
         public void WritePermissions(IWriteMessage msg)
         {
-            msg.Write(ID);
+            msg.Write(SessionId);
             msg.WriteRangedInteger((int)Permissions, 0, (int)ClientPermissions.All);
             if (HasPermission(ClientPermissions.ConsoleCommands))
             {

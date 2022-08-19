@@ -173,8 +173,8 @@ namespace Barotrauma
             {
                 if (character.Info != null && !character.ShouldLockHud() && character.SelectedCharacter == null && Screen.Selected != GameMain.SubEditorScreen)
                 {
-                    bool mouseOnPortrait = HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition) && GUI.MouseOn == null;
-                    if (mouseOnPortrait && PlayerInput.PrimaryMouseButtonClicked())
+                    bool mouseOnPortrait = MouseOnCharacterPortrait() && GUI.MouseOn == null;
+                    if (mouseOnPortrait && PlayerInput.PrimaryMouseButtonClicked() && Inventory.DraggingItems.None())
                     {
                         CharacterHealth.OpenHealthWindow = character.CharacterHealth;
                     }
@@ -491,7 +491,7 @@ namespace Barotrauma
                         character.Info.DrawPortrait(spriteBatch, HUDLayoutSettings.PortraitArea.Location.ToVector2(), new Vector2(-12 * GUI.Scale, yOffset), targetWidth: HUDLayoutSettings.PortraitArea.Width, true, character.Info.IsDisguisedAsAnother);
                         character.Info.DrawForeground(spriteBatch);
                     }
-                    mouseOnPortrait = HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition) && !character.ShouldLockHud();
+                    mouseOnPortrait = MouseOnCharacterPortrait() && !character.ShouldLockHud();
                     if (mouseOnPortrait)
                     {
                         GUIStyle.UIGlow.Draw(spriteBatch, HUDLayoutSettings.BottomRightInfoArea, GUIStyle.Green * 0.5f);
@@ -536,6 +536,13 @@ namespace Barotrauma
                     character.Info?.Job == null ? character.DisplayName : character.DisplayName + " (" + character.Info.Job.Name + ")",
                     HUDLayoutSettings.PortraitArea);
             }
+        }
+
+        public static bool MouseOnCharacterPortrait()
+        {
+            if (Character.Controlled == null) { return false; }
+            if (CharacterHealth.OpenHealthWindow != null || Character.Controlled.SelectedCharacter != null) { return false; }
+            return HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition);
         }
 
         private static void DrawCharacterHoverTexts(SpriteBatch spriteBatch, Camera cam, Character character)

@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -54,7 +55,7 @@ namespace Barotrauma
             voteCountMax[voteType] = value;
         }
 
-        public void UpdateVoteTexts(List<Client> clients, VoteType voteType)
+        public void UpdateVoteTexts(IEnumerable<Client> clients, VoteType voteType)
         {
             switch (voteType)
             {
@@ -92,7 +93,7 @@ namespace Barotrauma
 
         private void SetVoteText(GUIListBox listBox, object userData, int votes)
         {
-            if (userData == null) return;
+            if (userData == null) { return; }
             foreach (GUIComponent comp in listBox.Content.Children)
             {
                 if (comp.UserData != userData) { continue; }
@@ -136,7 +137,7 @@ namespace Barotrauma
                 case VoteType.Kick:
                     if (!(data is Client votedClient)) { return; }
 
-                    msg.Write(votedClient.ID);
+                    msg.Write(votedClient.SessionId);
                     break;
                 case VoteType.StartRound:
                     if (!(data is bool)) { return; }
@@ -233,21 +234,22 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Failed to cast vote type \"" + voteTypeByte + "\"", e);
                 }
 
-                byte yesClientCount = inc.ReadByte();
-                for (int i = 0; i < yesClientCount; i++)
+                int readVote(int value)
                 {
-                    byte clientID = inc.ReadByte();
-                    var matchingClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.ID == clientID);
-                    matchingClient?.SetVote(voteType, 2);
-                }
+                    byte clientCount = inc.ReadByte();
+                    for (int i = 0; i < clientCount; i++)
+                    {
+                        byte clientId = inc.ReadByte();
+                        var matchingClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.SessionId == clientId);
+                        matchingClient?.SetVote(voteType, value);
+                    }
 
-                byte noClientCount = inc.ReadByte();
-                for (int i = 0; i < noClientCount; i++)
-                {
-                    byte clientID = inc.ReadByte();
-                    var matchingClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.ID == clientID);
-                    matchingClient?.SetVote(voteType, 1);
+                    return clientCount;
                 }
+                
+                int yesClientCount = readVote(value: 2);
+                int noClientCount = readVote(value: 1);
+
                 byte maxClientCount = inc.ReadByte();
 
                 SetVoteCountYes(voteType, yesClientCount);
@@ -258,10 +260,10 @@ namespace Barotrauma
                 {
                     case VoteState.Started:
                         byte starterID = inc.ReadByte();
-                        Client starterClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.ID == starterID);
+                        Client starterClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.SessionId == starterID);
                         float timeOut = inc.ReadByte();
 
-                        Client myClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.ID == GameMain.Client.ID);
+                        Client myClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.SessionId == GameMain.Client.SessionId);
                         if (myClient == null || !myClient.InGame)  { return; }
 
                         switch (voteType)
@@ -284,8 +286,8 @@ namespace Barotrauma
                                 byte toClientId = inc.ReadByte();
                                 int transferAmount = inc.ReadInt32();
 
-                                Client fromClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.ID == fromClientId);
-                                Client toClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.ID == toClientId);
+                                Client fromClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.SessionId == fromClientId);
+                                Client toClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.SessionId == toClientId);
                                 GameMain.Client.ShowMoneyTransferVoteInterface(starterClient, fromClient, transferAmount, toClient, timeOut);
                                 break;
                         }
@@ -343,8 +345,8 @@ namespace Barotrauma
             byte readyClientCount = inc.ReadByte();
             for (int i = 0; i < readyClientCount; i++)
             {
-                byte clientID = inc.ReadByte();
-                var matchingClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.ID == clientID);
+                byte clientId = inc.ReadByte();
+                var matchingClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.SessionId == clientId);
                 matchingClient?.SetVote(VoteType.StartRound, true);
             }
             UpdateVoteTexts(GameMain.NetworkMember.ConnectedClients, VoteType.StartRound);

@@ -9,7 +9,7 @@ using Barotrauma.IO;
 
 namespace Barotrauma.Sounds
 {
-    public class SoundManager : IDisposable
+    class SoundManager : IDisposable
     {
         public const int SOURCE_COUNT = 32;
 

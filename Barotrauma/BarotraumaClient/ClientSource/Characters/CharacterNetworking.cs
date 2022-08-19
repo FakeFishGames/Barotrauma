@@ -175,6 +175,11 @@ namespace Barotrauma
 
             AnimController.Frozen = false;
             Enabled = true;
+            //if we start receiving position updates, it means the character's no longer disabled
+            if (DisabledByEvent && !Removed)
+            {
+                DisabledByEvent = false;
+            }
 
             UInt16 networkUpdateID = 0;
             if (msg.ReadBoolean())
@@ -534,6 +539,7 @@ namespace Barotrauma
             Vector2 position = new Vector2(inc.ReadSingle(), inc.ReadSingle());
 
             bool enabled = inc.ReadBoolean();
+            bool disabledByEvent = inc.ReadBoolean();
 
             DebugConsole.Log("Received spawn data for " + speciesName);
 
@@ -569,7 +575,7 @@ namespace Barotrauma
                 CharacterInfo info = CharacterInfo.ClientRead(infoSpeciesName, inc);
                 try
                 {
-                    character = Create(speciesName, position, seed, characterInfo: info, id: id, isRemotePlayer: ownerId > 0 && GameMain.Client.ID != ownerId, hasAi: hasAi);
+                    character = Create(speciesName, position, seed, characterInfo: info, id: id, isRemotePlayer: ownerId > 0 && GameMain.Client.SessionId != ownerId, hasAi: hasAi);
                 }
                 catch (Exception e)
                 {
@@ -650,7 +656,7 @@ namespace Barotrauma
                     GameMain.GameSession.CrewManager.AddCharacter(character);
                 }
 
-                if (GameMain.Client.ID == ownerId)
+                if (GameMain.Client.SessionId == ownerId)
                 {
                     GameMain.Client.HasSpawned = true;
                     GameMain.Client.Character = character;
@@ -667,7 +673,14 @@ namespace Barotrauma
                 }
             }
 
-            character.Enabled = Controlled == character || enabled;
+            if (disabledByEvent)
+            {
+                character.DisabledByEvent = true;
+            }
+            else
+            {
+                character.Enabled = Controlled == character || enabled;
+            }
 
             return character;
         }

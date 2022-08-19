@@ -631,7 +631,7 @@ namespace Barotrauma
 
             linkedGUIList = new List<LinkedGUI>();
 
-            List<Client> connectedClients = GameMain.Client.ConnectedClients;
+            var connectedClients = GameMain.Client.ConnectedClients;
 
             for (int i = 0; i < teamIDs.Count; i++)
             {

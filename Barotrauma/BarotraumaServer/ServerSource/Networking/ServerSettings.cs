@@ -69,7 +69,6 @@ namespace Barotrauma.Networking
             WriteNetProperties(outMsg, c);
             WriteMonsterEnabled(outMsg);
             BanList.ServerAdminWrite(outMsg, c);
-            Whitelist.ServerAdminWrite(outMsg, c);
         }
 
         public void ServerWrite(IWriteMessage outMsg, Client c)
@@ -171,7 +170,6 @@ namespace Barotrauma.Networking
                 propertiesChanged |= changedMonsterSettings;
                 if (changedMonsterSettings) { ReadMonsterEnabled(incMsg); }
                 propertiesChanged |= BanList.ServerAdminRead(incMsg, c);
-                propertiesChanged |= Whitelist.ServerAdminRead(incMsg, c);
 
                 if (propertiesChanged)
                 {
@@ -444,31 +442,27 @@ namespace Barotrauma.Networking
         {
             ClientPermissions.Clear();
 
-            if (!File.Exists(ClientPermissionsFile))
-            {
-                if (File.Exists("Data/clientpermissions.txt"))
-                {
-                    LoadClientPermissionsOld("Data/clientpermissions.txt");
-                }
-                return;
-            }
+            if (!File.Exists(ClientPermissionsFile)) { return; }
 
             XDocument doc = XMLExtensions.TryLoadXml(ClientPermissionsFile);
             if (doc == null) { return; }
             foreach (XElement clientElement in doc.Root.Elements())
             {
                 string clientName = clientElement.GetAttributeString("name", "");
-                string clientEndPoint = clientElement.GetAttributeString("endpoint", null) ?? clientElement.GetAttributeString("ip", "");
-                string steamIdStr = clientElement.GetAttributeString("steamid", "");
+                string addressStr = clientElement.GetAttributeString("address", null)
+                                    ?? clientElement.GetAttributeString("endpoint", null)
+                                    ?? clientElement.GetAttributeString("ip", "");
+                string accountIdStr = clientElement.GetAttributeString("accountid", null)
+                                   ?? clientElement.GetAttributeString("steamid", "");
 
                 if (string.IsNullOrWhiteSpace(clientName))
                 {
-                    DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - all clients must have a name and an IP address.");
+                    DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - all clients must have a name.");
                     continue;
                 }
-                if (string.IsNullOrWhiteSpace(clientEndPoint) && string.IsNullOrWhiteSpace(steamIdStr))
+                if (string.IsNullOrWhiteSpace(addressStr) && string.IsNullOrWhiteSpace(accountIdStr))
                 {
-                    DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - all clients must have an IP address or a Steam ID.");
+                    DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - all clients must have an endpoint or a Steam ID.");
                     continue;
                 }
 
@@ -525,69 +519,33 @@ namespace Barotrauma.Networking
                     }
                 }
 
-                if (!string.IsNullOrEmpty(steamIdStr))
+                if (!string.IsNullOrEmpty(accountIdStr))
                 {
-                    if (ulong.TryParse(steamIdStr, out ulong steamID))
+                    if (AccountId.Parse(accountIdStr).TryUnwrap(out var accountId))
                     {
-                        ClientPermissions.Add(new SavedClientPermission(clientName, steamID, permissions, permittedCommands));
+                        ClientPermissions.Add(new SavedClientPermission(clientName, accountId, permissions, permittedCommands));
                     }
                     else
                     {
-                        DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - \"" + steamIdStr + "\" is not a valid Steam ID.");
-                        continue;
+                        DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - \"" + accountIdStr + "\" is not a valid account ID.");
                     }
                 }
                 else
                 {
-                    ClientPermissions.Add(new SavedClientPermission(clientName, clientEndPoint, permissions, permittedCommands));
-                }
-            }
-        }
-
-        /// <summary>
-        /// Method for loading old .txt client permission files to provide backwards compatibility
-        /// </summary>
-        private void LoadClientPermissionsOld(string file)
-        {
-            if (!File.Exists(file)) return;
-
-            string[] lines;
-            try
-            {
-                lines = File.ReadAllLines(file);
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Failed to open client permission file " + ClientPermissionsFile, e);
-                return;
-            }
-
-            ClientPermissions.Clear();
-
-            foreach (string line in lines)
-            {
-                string[] separatedLine = line.Split('|');
-                if (separatedLine.Length < 3) { continue; }
-
-                string name = string.Join("|", separatedLine.Take(separatedLine.Length - 2));
-                string ip = separatedLine[separatedLine.Length - 2];
-
-                ClientPermissions permissions;
-                if (Enum.TryParse(separatedLine.Last(), out permissions))
-                {
-                    ClientPermissions.Add(new SavedClientPermission(name, ip, permissions, new HashSet<DebugConsole.Command>()));
+                    if (Address.Parse(addressStr).TryUnwrap(out var address))
+                    {
+                        ClientPermissions.Add(new SavedClientPermission(clientName, address, permissions, permittedCommands));
+                    }
+                    else
+                    {
+                        DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - \"" + addressStr + "\" is not a valid endpoint.");
+                    }
                 }
             }
         }
 
         public void SaveClientPermissions()
         {
-            //delete old client permission file
-            if (File.Exists("Data/clientpermissions.txt"))
-            {
-                File.Delete("Data/clientpermissions.txt");
-            }
-            
             GameServer.Log("Saving client permissions", ServerLog.MessageType.ServerMessage);
 
             XDocument doc = new XDocument(new XElement("ClientPermissions"));
@@ -595,6 +553,7 @@ namespace Barotrauma.Networking
             foreach (SavedClientPermission clientPermission in ClientPermissions)
             {
                 var matchingPreset = PermissionPreset.List.Find(p => p.MatchesPermissions(clientPermission.Permissions, clientPermission.PermittedCommands));
+                #warning TODO: this is broken because of localization
                 if (matchingPreset != null && matchingPreset.Name == "None")
                 {
                     continue;
@@ -603,23 +562,14 @@ namespace Barotrauma.Networking
                 XElement clientElement = new XElement("Client",
                     new XAttribute("name", clientPermission.Name));
 
-                if (clientPermission.SteamID > 0)
-                {
-                    clientElement.Add(new XAttribute("steamid", clientPermission.SteamID));
-                }
-                else
-                {
-                    clientElement.Add(new XAttribute("endpoint", clientPermission.EndPoint));
-                }
+                clientElement.Add(clientPermission.AddressOrAccountId.TryGet(out AccountId accountId)
+                    ? new XAttribute("accountid", accountId.StringRepresentation)
+                    : new XAttribute("address", ((Address)clientPermission.AddressOrAccountId).StringRepresentation));
 
-                if (matchingPreset == null)
-                {
-                    clientElement.Add(new XAttribute("permissions", clientPermission.Permissions.ToString()));
-                }
-                else
-                {
-                    clientElement.Add(new XAttribute("preset", matchingPreset.Name));
-                }
+                clientElement.Add(matchingPreset == null
+                    ? new XAttribute("permissions", clientPermission.Permissions.ToString())
+                    : new XAttribute("preset", matchingPreset.Name));
+                
                 if (clientPermission.Permissions.HasFlag(Networking.ClientPermissions.ConsoleCommands))
                 {
                     foreach (DebugConsole.Command command in clientPermission.PermittedCommands)

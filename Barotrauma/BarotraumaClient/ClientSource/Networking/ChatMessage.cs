@@ -35,8 +35,9 @@ namespace Barotrauma.Networking
             bool hasSenderClient = msg.ReadBoolean();
             if (hasSenderClient)
             {
-                UInt64 clientId = msg.ReadUInt64();
-                senderClient = GameMain.Client.ConnectedClients.Find(c => c.SteamID == clientId || c.ID == clientId);
+                string userId = msg.ReadString();
+                senderClient = GameMain.Client.ConnectedClients.Find(c
+                    => c.SessionOrAccountIdMatches(userId));
                 if (senderClient != null) { senderName = senderClient.Name; }
             }
             bool hasSenderCharacter = msg.ReadBoolean();

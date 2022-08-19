@@ -148,7 +148,6 @@ namespace Barotrauma.Networking
         InvalidVersion,
         MissingContentPackage,
         IncompatibleContentPackage,
-        NotOnWhitelist,
         ExcessiveDesyncOldEvent,
         ExcessiveDesyncRemovedEvent,
         SyncTimeout,
@@ -218,10 +217,7 @@ namespace Barotrauma.Networking
             get { return gameStarted; }
         }
 
-        public virtual List<Client> ConnectedClients
-        {
-            get { return null; }
-        }
+        public abstract IReadOnlyList<Client> ConnectedClients { get; }
 
         public RespawnManager RespawnManager
         {
@@ -268,19 +264,22 @@ namespace Barotrauma.Networking
             {
                 retVal += "color:#ff9900;";
             }
-            retVal += "metadata:" + (client.SteamID != 0 ? client.SteamID.ToString() : client.ID.ToString()) + "‖" + (name ?? client.Name).Replace("‖", "") + "‖end‖";
+            retVal += "metadata:" + (client.AccountId.TryUnwrap(out var accountId) ? accountId.ToString() : client.SessionId.ToString())
+                                  + "‖" + (name ?? client.Name).Replace("‖", "") + "‖end‖";
             return retVal;
         }
 
-        public virtual void KickPlayer(string kickedName, string reason) { }
+        public abstract void KickPlayer(string kickedName, string reason);
 
-        public virtual void BanPlayer(string kickedName, string reason, bool range = false, TimeSpan? duration = null) { }
+        public abstract void BanPlayer(string kickedName, string reason, TimeSpan? duration = null);
 
-        public virtual void UnbanPlayer(string playerName, string playerIP) { }
+        public abstract void UnbanPlayer(string playerName);
+        
+        public abstract void UnbanPlayer(Endpoint endpoint);
 
         public virtual void Update(float deltaTime) { }
 
-        public virtual void Disconnect() { }
+        public virtual void Quit() { }
 
         /// <summary>
         /// Check if the two version are compatible (= if they can play together in multiplayer). 

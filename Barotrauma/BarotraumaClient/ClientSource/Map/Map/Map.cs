@@ -666,7 +666,7 @@ namespace Barotrauma
                             GUI.DrawRectangle(spriteBatch, new Rectangle((int)dPos.X, (int)dPos.Y, 256, 32), Color.White);
                         }
                         dPos.Y += 48;
-                        GUI.DrawString(spriteBatch, dPos, $"Difficulty: {location.LevelData.Difficulty.FormatZeroDecimal()}", Color.White, Color.Black * 0.8f, 4, font: GUIStyle.SmallFont);
+                        GUI.DrawString(spriteBatch, dPos, $"Difficulty: {location.LevelData.Difficulty.FormatSingleDecimal()}", Color.White, Color.Black * 0.8f, 4, font: GUIStyle.SmallFont);
                     }
                 }
             }
@@ -981,7 +981,7 @@ namespace Barotrauma
                 Vector2 center = rectCenter + (connection.CenterPos + viewOffset) * zoom;
                 if (viewArea.Contains(center) && connection.Biome != null)
                 {
-                    GUI.DrawString(spriteBatch, center, (connection.LevelData?.GenerationParams?.Identifier ?? connection.Biome.Identifier) + " (" + (int)connection.Difficulty + ")", Color.White);
+                    GUI.DrawString(spriteBatch, center, (connection.LevelData?.GenerationParams?.Identifier ?? connection.Biome.Identifier) + " (" + connection.Difficulty.FormatSingleDecimal() + ")", Color.White);
                 }
             }
 

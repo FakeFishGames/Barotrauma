@@ -255,7 +255,7 @@ namespace Barotrauma.Items.Components
 
                 foreach (DeconstructItem deconstructItem in it.Prefab.DeconstructItems)
                 {
-                    RegisterItem(deconstructItem.ItemIdentifier);
+                    RegisterItem(deconstructItem.ItemIdentifier, deconstructItem.Amount);
                 }
 
                 if (it.OwnInventory is { } inventory)
@@ -266,15 +266,14 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
-                void RegisterItem(Identifier identifier)
+                void RegisterItem(Identifier identifier, int amount = 1)
                 {
                     if (itemCounts.ContainsKey(identifier))
                     {
-                        itemCounts[identifier]++;
+                        itemCounts[identifier] += amount;
                         return;
                     }
-
-                    itemCounts.Add(identifier, 1);
+                    itemCounts.Add(identifier, amount);
                 }
             }
 

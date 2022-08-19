@@ -119,6 +119,8 @@ namespace Barotrauma
 
             if (!HasRequiredConditions(currentTargets)) { return; }
 
+            if (Entity.Spawner != null && Entity.Spawner.IsInRemoveQueue(entity)) { return; }
+
             switch (delayType)
             {
                 case DelayTypes.Timer:

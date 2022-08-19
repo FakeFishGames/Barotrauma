@@ -14,6 +14,8 @@ namespace Barotrauma
     readonly struct DeconstructItem
     {
         public readonly Identifier ItemIdentifier;
+        //number of items to output
+        public readonly int Amount;
         //minCondition does <= check, meaning that below or equal to min condition will be skipped.
         public readonly float MinCondition;
         //maxCondition does > check, meaning that above this max the deconstruct item will be skipped.
@@ -37,6 +39,7 @@ namespace Barotrauma
         public DeconstructItem(XElement element, Identifier parentDebugName)
         {
             ItemIdentifier = element.GetAttributeIdentifier("identifier", "");
+            Amount = element.GetAttributeInt("amount", 1);
             MinCondition = element.GetAttributeFloat("mincondition", -0.1f);
             MaxCondition = element.GetAttributeFloat("maxcondition", 1.0f);
             OutConditionMin = element.GetAttributeFloat("outconditionmin", element.GetAttributeFloat("outcondition", 1.0f));
@@ -70,6 +73,20 @@ namespace Barotrauma
             public readonly float MinCondition;
             public readonly float MaxCondition;
             public readonly bool UseCondition;
+
+            public bool IsConditionSuitable(float conditionPercentage)
+            {
+                float normalizedCondition = conditionPercentage / 100.0f;
+                if (MathUtils.NearlyEqual(normalizedCondition, MinCondition) || MathUtils.NearlyEqual(normalizedCondition, MaxCondition))
+                {
+                    return true;
+                }
+                else if (normalizedCondition >= MinCondition && normalizedCondition <= MaxCondition)
+                {
+                    return true;
+                }
+                return false;
+            }
         }
 
         public class RequiredItemByIdentifier : RequiredItem
@@ -393,12 +410,106 @@ namespace Barotrauma
             private set;
         }
 
+        public readonly struct CommonnessInfo
+        {
+            public float Commonness
+            {
+                get
+                {
+                    return commonness;
+                }
+            }
+            public float AbyssCommonness
+            {
+                get
+                {
+                    return abyssCommonness ?? 0.0f;
+                }
+            }
+            public float CaveCommonness
+            {
+                get
+                {
+                    return caveCommonness ?? Commonness;
+                }
+            }
+            public bool CanAppear
+            {
+                get
+                {
+                    if (Commonness > 0.0f) { return true; }
+                    if (AbyssCommonness > 0.0f) { return true; }
+                    if (CaveCommonness > 0.0f) { return true; }
+                    return false;
+                }
+            }
+
+            public readonly float commonness;
+            public readonly float? abyssCommonness;
+            public readonly float? caveCommonness;
+
+            public CommonnessInfo(XElement element)
+            {
+                this.commonness = Math.Max(element?.GetAttributeFloat("commonness", 0.0f) ?? 0.0f, 0.0f);
+
+                float? abyssCommonness = null;
+                XAttribute abyssCommonnessAttribute = element?.GetAttribute("abysscommonness") ?? element?.GetAttribute("abyss");
+                if (abyssCommonnessAttribute != null)
+                {
+                    abyssCommonness = Math.Max(abyssCommonnessAttribute.GetAttributeFloat(0.0f), 0.0f);
+                }
+                this.abyssCommonness = abyssCommonness;
+
+                float? caveCommonness = null;
+                XAttribute caveCommonnessAttribute = element?.GetAttribute("cavecommonness") ?? element?.GetAttribute("cave");
+                if (caveCommonnessAttribute != null)
+                {
+                    caveCommonness =  Math.Max(caveCommonnessAttribute.GetAttributeFloat(0.0f), 0.0f);
+                }
+                this.caveCommonness = caveCommonness;
+            }
+
+            public CommonnessInfo(float commonness, float? abyssCommonness, float? caveCommonness)
+            {
+                this.commonness = commonness;
+                this.abyssCommonness = abyssCommonness != null ? (float?)Math.Max(abyssCommonness.Value, 0.0f) : null;
+                this.caveCommonness = caveCommonness != null ? (float?)Math.Max(caveCommonness.Value, 0.0f) : null;
+            }
+
+            public CommonnessInfo WithInheritedCommonness(CommonnessInfo? parentInfo)
+            {
+                return new CommonnessInfo(commonness,
+                    abyssCommonness ?? parentInfo?.abyssCommonness,
+                    caveCommonness ?? parentInfo?.caveCommonness);
+            }
+
+            public CommonnessInfo WithInheritedCommonness(params CommonnessInfo?[] parentInfos)
+            {
+                CommonnessInfo info = this;
+                foreach (var parentInfo in parentInfos)
+                {
+                    info = info.WithInheritedCommonness(parentInfo);
+                }
+                return info;
+            }
+
+            public float GetCommonness(Level.TunnelType tunnelType)
+            {
+                if (tunnelType == Level.TunnelType.Cave)
+                {
+                    return CaveCommonness;
+                }
+                else
+                {
+                    return Commonness;
+                }
+            }
+        }
+
         /// <summary>
         /// How likely it is for the item to spawn in a level of a given type.
-        /// Key = name of the LevelGenerationParameters (empty string = default value) /* TODO: empty string = default value???? */
-        /// Value = commonness
         /// </summary>
-        public ImmutableDictionary<Identifier, float> LevelCommonness { get; private set; }
+        private ImmutableDictionary<Identifier, CommonnessInfo> LevelCommonness { get; set; }
 
         public readonly struct FixedQuantityResourceInfo
         {
@@ -747,7 +858,7 @@ namespace Barotrauma
             AllowDroppingOnSwapWith = allowDroppingOnSwapWith.ToImmutableHashSet();
             AllowDroppingOnSwap = allowDroppingOnSwapWith.Any();
 
-            var levelCommonness = new Dictionary<Identifier, float>();
+            var levelCommonness = new Dictionary<Identifier, CommonnessInfo>();
             var levelQuantity = new Dictionary<Identifier, FixedQuantityResourceInfo>();
 
             foreach (ContentXElement subElement in ConfigElement.Elements())
@@ -871,7 +982,7 @@ namespace Barotrauma
                             {
                                 if (!levelCommonness.ContainsKey(levelName))
                                 {
-                                    levelCommonness.Add(levelName, levelCommonnessElement.GetAttributeFloat("commonness", 0.0f));
+                                    levelCommonness.Add(levelName, new CommonnessInfo(levelCommonnessElement));
                                 }
                             }
                             else
@@ -960,6 +1071,40 @@ namespace Barotrauma
 #endif
 
             this.allowedLinks = ConfigElement.GetAttributeIdentifierArray("allowedlinks", Array.Empty<Identifier>()).ToImmutableHashSet();
+        }
+
+        public CommonnessInfo? GetCommonnessInfo(Level level)
+        {
+            CommonnessInfo? levelCommonnessInfo = GetValueOrNull(level.GenerationParams.Identifier);
+            CommonnessInfo? biomeCommonnessInfo = GetValueOrNull(level.LevelData.Biome.Identifier);
+            CommonnessInfo? defaultCommonnessInfo = GetValueOrNull(Identifier.Empty);
+
+            if (levelCommonnessInfo.HasValue)
+            {
+                return levelCommonnessInfo?.WithInheritedCommonness(biomeCommonnessInfo, defaultCommonnessInfo);
+            }
+            else if (biomeCommonnessInfo.HasValue)
+            {
+                return biomeCommonnessInfo?.WithInheritedCommonness(defaultCommonnessInfo);
+            }
+            else if (defaultCommonnessInfo.HasValue)
+            {
+                return defaultCommonnessInfo;
+            }
+
+            return null;
+
+            CommonnessInfo? GetValueOrNull(Identifier identifier)
+            {
+                if (LevelCommonness.TryGetValue(identifier, out CommonnessInfo info))
+                {
+                    return info;
+                }
+                else
+                {
+                    return null;
+                }
+            }
         }
 
         public float GetTreatmentSuitability(Identifier treatmentIdentifier)

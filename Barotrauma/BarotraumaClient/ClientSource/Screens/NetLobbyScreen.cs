@@ -1529,14 +1529,13 @@ namespace Barotrauma
                     while (i < MultiplayerPreferences.Instance.JobPreferences.Count)
                     {
                         var jobPreference = MultiplayerPreferences.Instance.JobPreferences[i];
-                        if (!JobPrefab.Prefabs.ContainsKey(jobPreference.JobIdentifier))
+                        if (!JobPrefab.Prefabs.TryGet(jobPreference.JobIdentifier, out JobPrefab prefab) || prefab.HiddenJob)
                         {
                             MultiplayerPreferences.Instance.JobPreferences.RemoveAt(i);
                             continue;
                         }
                         // The old job variant system used one-based indexing
                         // so let's make sure no one get to pick a variant which doesn't exist
-                        var prefab = JobPrefab.Prefabs[jobPreference.JobIdentifier];
                         var variant = Math.Min(jobPreference.Variant, prefab.Variants - 1);
                         jobPrefab = new JobVariant(prefab, variant);
                         break;
@@ -2160,15 +2159,8 @@ namespace Barotrauma
             if (child != null) { PlayerList.RemoveChild(child); }
         }
 
-        private Client ExtractClientFromClickableArea(GUITextBlock.ClickableArea area)
-        {
-            if (!UInt64.TryParse(area.Data.Metadata, out UInt64 id)) { return null; }
-            Client client = GameMain.Client.ConnectedClients.Find(c => c.SteamID == id)
-                            ?? GameMain.Client.ConnectedClients.Find(c => c.ID == id)
-                            ?? GameMain.Client.PreviouslyConnectedClients.FirstOrDefault(c => c.SteamID == id)
-                            ?? GameMain.Client.PreviouslyConnectedClients.FirstOrDefault(c => c.ID == id);
-            return client;
-        }
+        public static Client ExtractClientFromClickableArea(GUITextBlock.ClickableArea area)
+            => area.Data.ExtractClient();
         
         public void SelectPlayer(GUITextBlock component, GUITextBlock.ClickableArea area)
         {
@@ -2188,29 +2180,35 @@ namespace Barotrauma
         public static void CreateModerationContextMenu(Client client)
         {
             if (GUIContextMenu.CurrentContextMenu != null) { return; }
-            if (GameMain.IsSingleplayer || client == null || ((!GameMain.Client?.PreviouslyConnectedClients?.Contains(client)) ?? true)) { return; }
-            bool hasSteam = client.SteamID > 0 && SteamManager.IsInitialized,
-                 canKick  = GameMain.Client.HasPermission(ClientPermissions.Kick),
-                 canBan   = GameMain.Client.HasPermission(ClientPermissions.Ban) && client.AllowKicking,
-                 canPromo = GameMain.Client.HasPermission(ClientPermissions.ManagePermissions);
+            if (GameMain.IsSingleplayer || client == null) { return; }
+            if (!(GameMain.Client is { PreviouslyConnectedClients: var previouslyConnectedClients })
+                || !previouslyConnectedClients.Contains(client)) { return; }
+
+            bool hasAccountId = client.AccountId.IsSome();
+            bool canKick = GameMain.Client.HasPermission(ClientPermissions.Kick);
+            bool canBan = GameMain.Client.HasPermission(ClientPermissions.Ban) && client.AllowKicking;
+            bool canManagePermissions = GameMain.Client.HasPermission(ClientPermissions.ManagePermissions);
 
             // Disable options if we are targeting ourselves
-            if (client.ID == GameMain.Client?.ID)
+            if (client.SessionId == GameMain.Client.SessionId)
             {
-                canKick = canBan = canPromo = false;
+                canKick = canBan = canManagePermissions = false;
             }
 
-            List<ContextMenuOption> options = new List<ContextMenuOption>
+            List<ContextMenuOption> options = new List<ContextMenuOption>();
+
+            if (client.AccountId.TryUnwrap(out var accountId) && accountId is SteamId steamId)
             {
-                new ContextMenuOption("ViewSteamProfile", isEnabled: hasSteam, onSelected: delegate
-                {
-                    Steamworks.SteamFriends.OpenWebOverlay($"https://steamcommunity.com/profiles/{client.SteamID}");
-                }),
-                new ContextMenuOption("ModerationMenu.ManagePlayer", isEnabled: true, onSelected: delegate
+                options.Add(new ContextMenuOption("ViewSteamProfile", isEnabled: hasAccountId, onSelected: () =>
+                    {
+                        SteamManager.OverlayProfile(steamId);
+                    }));
+            }
+            
+            options.Add(new ContextMenuOption("ModerationMenu.ManagePlayer", isEnabled: true, onSelected: () =>
                 {
                     GameMain.NetLobbyScreen?.SelectPlayer(client);
-                })
-            };
+                }));
 
             // Creates sub context menu options for all the ranks
             List<ContextMenuOption> rankOptions = new List<ContextMenuOption>();
@@ -2236,18 +2234,18 @@ namespace Barotrauma
                 }) { Tooltip = rank.Description });
             }
 
-            options.Add(new ContextMenuOption("Rank", isEnabled: canPromo, options: rankOptions.ToArray()));
+            options.Add(new ContextMenuOption("Rank", isEnabled: canManagePermissions, options: rankOptions.ToArray()));
 
             Color clientColor = client.Character?.Info?.Job.Prefab.UIColor ?? Color.White;
 
             if (GameMain.Client.ConnectedClients.Contains(client))
             {
-                options.Add(new ContextMenuOption(client.MutedLocally ? "Unmute" : "Mute", isEnabled: client.ID != GameMain.Client?.ID, onSelected: delegate
+                options.Add(new ContextMenuOption(client.MutedLocally ? "Unmute" : "Mute", isEnabled: client.SessionId != GameMain.Client.SessionId, onSelected: delegate
                 {
                     client.MutedLocally = !client.MutedLocally;
                 }));
 
-                bool kickEnabled = client.ID != GameMain.Client?.ID && client.AllowKicking;
+                bool kickEnabled = client.SessionId != GameMain.Client.SessionId && client.AllowKicking;
 
                 // if the user can kick create a kick option else create the votekick option
                 ContextMenuOption kickOption;
@@ -2281,7 +2279,7 @@ namespace Barotrauma
 
         public bool SelectPlayer(Client selectedClient)
         {
-            bool myClient = selectedClient.ID == GameMain.Client.ID;
+            bool myClient = selectedClient.SessionId == GameMain.Client.SessionId;
             bool hasManagePermissions = GameMain.Client.HasPermission(ClientPermissions.ManagePermissions);
 
             PlayerFrame = new GUIButton(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: null)
@@ -2510,14 +2508,6 @@ namespace Barotrauma
                     };
                     banButton.OnClicked = (bt, userdata) => { BanPlayer(selectedClient); return true; };
                     banButton.OnClicked += ClosePlayerFrame;
-
-                    var rangebanButton = new GUIButton(new RectTransform(new Vector2(0.34f, 1.0f), buttonAreaTop.RectTransform),
-                        TextManager.Get("BanRange"))
-                    {
-                        UserData = selectedClient
-                    };
-                    rangebanButton.OnClicked = (bt, userdata) => { BanPlayerRange(selectedClient); return true; };
-                    rangebanButton.OnClicked += ClosePlayerFrame;
                 }
 
                 if (GameMain.Client != null && GameMain.Client.ConnectedClients.Contains(selectedClient))
@@ -2528,7 +2518,7 @@ namespace Barotrauma
                         var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.34f, 1.0f), buttonAreaLower.RectTransform),
                             TextManager.Get("VoteToKick"))
                         {
-                            Enabled = !selectedClient.HasKickVoteFromID(GameMain.Client.ID),
+                            Enabled = !selectedClient.HasKickVoteFromSessionId(GameMain.Client.SessionId),
                             OnClicked = (btn, userdata) => { GameMain.Client.VoteForKick(selectedClient); btn.Enabled = false; return true; },
                             UserData = selectedClient
                         };
@@ -2560,7 +2550,7 @@ namespace Barotrauma
                 }
             }
 
-            if (selectedClient.SteamID != 0 && Steam.SteamManager.IsInitialized)
+            if (selectedClient.AccountId.TryUnwrap(out var accountId) && accountId is SteamId steamId && Steam.SteamManager.IsInitialized)
             {
                 var viewSteamProfileButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), headerContainer.RectTransform, Anchor.TopCenter) { MaxSize = new Point(int.MaxValue, (int)(40 * GUI.Scale)) },
                         TextManager.Get("ViewSteamProfile"))
@@ -2570,7 +2560,7 @@ namespace Barotrauma
                 viewSteamProfileButton.TextBlock.AutoScaleHorizontal = true;
                 viewSteamProfileButton.OnClicked = (bt, userdata) =>
                 {
-                    SteamManager.OverlayCustomURL("https://steamcommunity.com/profiles/" + selectedClient.SteamID.ToString());
+                    SteamManager.OverlayProfile(steamId);
                     return true;
                 };
             }
@@ -2628,13 +2618,7 @@ namespace Barotrauma
         public void BanPlayer(Client client)
         {
             if (GameMain.NetworkMember == null || client == null) { return; }
-            GameMain.Client.CreateKickReasonPrompt(client.Name, ban: true, rangeBan: false);
-        }
-
-        public void BanPlayerRange(Client client)
-        {
-            if (GameMain.NetworkMember == null || client == null) { return; }
-            GameMain.Client.CreateKickReasonPrompt(client.Name, ban: true, rangeBan: true);
+            GameMain.Client.CreateKickReasonPrompt(client.Name, ban: true);
         }
 
         public override void AddToGUIUpdateList()
@@ -2679,7 +2663,7 @@ namespace Barotrauma
                     if (child.FindChild(c => c.UserData is Pair<string, float> pair && pair.First == "soundicon") is GUIImage soundIcon)
                     {
                         double voipAmplitude = 0.0f;
-                        if (client.ID != GameMain.Client.ID)
+                        if (client.SessionId != GameMain.Client.SessionId)
                         {
                             voipAmplitude = client.VoipSound?.CurrentAmplitude ?? 0.0f;
                         }

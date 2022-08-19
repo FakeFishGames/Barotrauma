@@ -6,7 +6,7 @@ using System;
 
 namespace Barotrauma
 {
-    public class Camera : IDisposable
+    class Camera : IDisposable
     {
         public static bool FollowSub = true;
 

@@ -467,11 +467,11 @@ namespace Barotrauma
                 SetConsent(Consent.Error);
                 return;
             }
-                loadedImplementation?.SetEnabledInfoLog(true);
-                loadedImplementation?.SetEnabledVerboseLog(true);
 #if DEBUG
             try
             {
+                loadedImplementation?.SetEnabledInfoLog(true);
+                loadedImplementation?.SetEnabledVerboseLog(true);
             }
             catch (Exception e)
             {

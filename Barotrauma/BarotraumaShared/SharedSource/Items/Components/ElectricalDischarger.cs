@@ -203,7 +203,7 @@ namespace Barotrauma.Items.Components
                 foreach ((Character character, Node node) in charactersInRange)
                 {
                     if (character == null || character.Removed) { continue; }
-                    character.ApplyAttack(null, node.WorldPosition, attack, 1.0f);
+                    character.ApplyAttack(null, node.WorldPosition, attack, MathHelper.Clamp(Voltage, 1.0f, MaxOverVoltageFactor));
                 }
             }
             DischargeProjSpecific();

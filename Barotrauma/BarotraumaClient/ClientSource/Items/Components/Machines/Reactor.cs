@@ -1,11 +1,11 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Networking;
+using Barotrauma.Sounds;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -39,6 +39,9 @@ namespace Barotrauma.Items.Components
         private Color hotColor = Color.Red;
         private Color outputColor = Color.Goldenrod;
         private Color loadColor = Color.LightSteelBlue;
+
+        private RoundSound temperatureBoostSoundUp, temperatureBoostSoundDown;
+        private GUIButton temperatureBoostUpButton, temperatureBoostDownButton;
 
         public GUIScrollBar FissionRateScrollBar { get; private set; }
 
@@ -75,6 +78,20 @@ namespace Barotrauma.Items.Components
             tempMeterBar = new Sprite(element.GetChildElement("tempmeterbar")?.GetChildElement("sprite"));
             tempRangeIndicator = new Sprite(element.GetChildElement("temprangeindicator")?.GetChildElement("sprite"));
             graphLine = new Sprite(element.GetChildElement("graphline")?.GetChildElement("sprite"));
+
+            foreach (var subElement in element.Elements())
+            {
+                string textureDir = GetTextureDirectory(subElement);
+                switch (subElement.Name.ToString().ToLowerInvariant())
+                {
+                    case "temperatureboostsoundup":
+                        temperatureBoostSoundUp = RoundSound.Load(subElement, false);
+                        break;
+                    case "temperatureboostsounddown":
+                        temperatureBoostSoundDown = RoundSound.Load(subElement, false);
+                        break;
+                }
+            }
 
             paddedFrame = new GUILayoutGroup(new RectTransform(
                     GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin, GuiFrame.RectTransform, Anchor.Center) 
@@ -354,7 +371,46 @@ namespace Barotrauma.Items.Components
 
             new GUIFrame(new RectTransform(new Vector2(0.01f, 1.0f), bottomRightArea.RectTransform), style: "VerticalLine");
 
-            new GUICustomComponent(new RectTransform(new Vector2(0.1f, 1), bottomRightArea.RectTransform, Anchor.Center), DrawTempMeter, null);
+            var temperatureArea = new GUILayoutGroup(new RectTransform(new Vector2(0.1f, 1), bottomRightArea.RectTransform, Anchor.Center), isHorizontal: false)
+            {
+                Stretch = true,
+                RelativeSpacing = 0.01f
+            };
+
+            temperatureBoostUpButton = new GUIButton(new RectTransform(Vector2.One, temperatureArea.RectTransform, scaleBasis: ScaleBasis.BothWidth), style: "GUIPlusButton")
+            {
+                ToolTip = TextManager.Get("reactor.temperatureboostup"),
+                OnClicked = (_, __) =>
+                {
+                    applyTemperatureBoost(TemperatureBoostAmount, temperatureBoostSoundUp);
+                    return true;
+                }
+            };
+            new GUICustomComponent(new RectTransform(Vector2.One, temperatureArea.RectTransform, Anchor.Center), DrawTempMeter, null);
+
+            temperatureBoostDownButton = new GUIButton(new RectTransform(Vector2.One, temperatureArea.RectTransform, scaleBasis: ScaleBasis.BothWidth), style: "GUIMinusButton")
+            {
+                ToolTip = TextManager.Get("reactor.temperatureboostdown"),
+                OnClicked = (_, __) =>
+                {
+                    applyTemperatureBoost(-TemperatureBoostAmount, temperatureBoostSoundDown);                    
+                    return true;
+                }
+            };
+
+            void applyTemperatureBoost(float amount, RoundSound sound)
+            {
+                temperatureBoost = amount;
+                if (sound != null)
+                {
+                    SoundPlayer.PlaySound(
+                        sound.Sound,
+                        item.WorldPosition,
+                        sound.Volume,
+                        sound.Range,
+                        hullGuess: item.CurrentHull);
+                }
+            }
 
             var graphArea = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 1.0f), bottomRightArea.RectTransform))
             {

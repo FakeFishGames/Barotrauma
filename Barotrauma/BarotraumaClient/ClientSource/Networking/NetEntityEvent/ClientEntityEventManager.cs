@@ -203,7 +203,7 @@ namespace Barotrauma.Networking
                         DebugConsole.NewMessage(
                             "Received msg " + thisEventID + ", entity " + entityID + " not found",
                             GUIStyle.Red);
-                        GameMain.Client.ReportError(ClientNetError.MISSING_ENTITY, eventID: thisEventID, entityID: entityID);
+                        GameMain.Client.ReportError(ClientNetError.MISSING_ENTITY, eventId: thisEventID, entityId: entityID);
                         return false;
                     }
                     

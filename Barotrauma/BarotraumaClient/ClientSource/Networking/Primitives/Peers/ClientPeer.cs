@@ -1,11 +1,9 @@
-﻿using Barotrauma.Extensions;
+﻿#nullable enable
 using Barotrauma.Steam;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Reflection;
-using System.Text;
 
 namespace Barotrauma.Networking
 {
@@ -18,7 +16,7 @@ namespace Barotrauma.Networking
             public readonly UInt64 WorkshopId;
             public readonly DateTime InstallTime;
 
-            public RegularPackage RegularPackage
+            public RegularPackage? RegularPackage
             {
                 get
                 {
@@ -26,7 +24,7 @@ namespace Barotrauma.Networking
                 }
             }
 
-            public CorePackage CorePackage
+            public CorePackage? CorePackage
             {
                 get
                 {
@@ -34,8 +32,8 @@ namespace Barotrauma.Networking
                 }
             }
 
-            public ContentPackage ContentPackage
-                => (ContentPackage)RegularPackage ?? CorePackage;
+            public ContentPackage? ContentPackage
+                => (ContentPackage?)RegularPackage ?? CorePackage;
             
             
             public string GetPackageStr()
@@ -58,21 +56,44 @@ namespace Barotrauma.Networking
         public delegate void DisconnectMessageCallback(string message);
         public delegate void PasswordCallback(int salt, int retries);
         public delegate void InitializationCompleteCallback();
+
+        [Obsolete("TODO: delete in nr3-layer-1-2-cleanup")]
+        public readonly struct Callbacks
+        {
+            public readonly MessageCallback OnMessageReceived;
+            public readonly DisconnectCallback OnDisconnect;
+            public readonly DisconnectMessageCallback OnDisconnectMessageReceived;
+            public readonly PasswordCallback OnRequestPassword;
+            public readonly InitializationCompleteCallback OnInitializationComplete;
+            
+            public Callbacks(MessageCallback onMessageReceived, DisconnectCallback onDisconnect, DisconnectMessageCallback onDisconnectMessageReceived, PasswordCallback onRequestPassword, InitializationCompleteCallback onInitializationComplete)
+            {
+                OnMessageReceived = onMessageReceived;
+                OnDisconnect = onDisconnect;
+                OnDisconnectMessageReceived = onDisconnectMessageReceived;
+                OnRequestPassword = onRequestPassword;
+                OnInitializationComplete = onInitializationComplete;
+            }
+        }
+
+        protected readonly Callbacks callbacks;
+
+        public readonly Endpoint ServerEndpoint;
+        public NetworkConnection? ServerConnection { get; protected set; }
+
+        protected readonly bool isOwner;
+        protected readonly Option<int> ownerKey;
+
+        public ClientPeer(Endpoint serverEndpoint, Callbacks callbacks, Option<int> ownerKey)
+        {
+            ServerEndpoint = serverEndpoint;
+            this.callbacks = callbacks;
+            this.ownerKey = ownerKey;
+            isOwner = ownerKey.IsSome();
+        }
         
-        public MessageCallback OnMessageReceived;
-        public DisconnectCallback OnDisconnect;
-        public DisconnectMessageCallback OnDisconnectMessageReceived;
-        public PasswordCallback OnRequestPassword;
-        public InitializationCompleteCallback OnInitializationComplete;
-
-        public string Name;
-
-        public string Version { get; protected set; }
-
-        public NetworkConnection ServerConnection { get; protected set; }
-
-        public abstract void Start(object endPoint, int ownerKey);
-        public abstract void Close(string msg = null, bool disableReconnect = false);
+        public abstract void Start();
+        public abstract void Close(string? msg = null, bool disableReconnect = false);
         public abstract void Update(float deltaTime);
         public abstract void Send(IWriteMessage msg, DeliveryMethod deliveryMethod, bool compressPastThreshold = true);
         public abstract void SendPassword(string password);
@@ -80,10 +101,9 @@ namespace Barotrauma.Networking
         protected abstract void SendMsgInternal(DeliveryMethod deliveryMethod, IWriteMessage msg);
 
         protected ConnectionInitialization initializationStep;
-        protected bool contentPackageOrderReceived;
-        protected int ownerKey = 0;
+        public bool ContentPackageOrderReceived { get; protected set; }
         protected int passwordSalt;
-        protected Steamworks.AuthTicket steamAuthTicket;
+        protected Steamworks.AuthTicket? steamAuthTicket;
         protected void ReadConnectionInitializationStep(IReadMessage inc)
         {
             ConnectionInitialization step = (ConnectionInitialization)inc.ReadByte();
@@ -97,9 +117,9 @@ namespace Barotrauma.Networking
                     outMsg = new WriteOnlyMessage();
                     outMsg.Write((byte)PacketHeader.IsConnectionInitializationStep);
                     outMsg.Write((byte)ConnectionInitialization.SteamTicketAndVersion);
-                    outMsg.Write(Name);
-                    outMsg.Write(ownerKey);
-                    outMsg.Write(SteamManager.GetSteamID());
+                    outMsg.Write(GameMain.Client.Name);
+                    outMsg.Write(ownerKey.Fallback(0));
+                    outMsg.Write(SteamManager.GetSteamId().Select(steamId => steamId.Value).Fallback(0));
                     if (steamAuthTicket == null)
                     {
                         outMsg.Write((UInt16)0);
@@ -122,8 +142,6 @@ namespace Barotrauma.Networking
                     outMsg.Write((byte)PacketHeader.IsConnectionInitializationStep);
                     outMsg.Write((byte)ConnectionInitialization.ContentPackageOrder);
 
-                    string serverName = inc.ReadString();
-
                     UInt32 packageCount = inc.ReadVariableUInt32();
                     List<ServerContentPackage> serverPackages = new List<ServerContentPackage>();
                     for (int i = 0; i < packageCount; i++)
@@ -139,9 +157,16 @@ namespace Barotrauma.Networking
                         serverPackages.Add(pkg);
                     }
 
-                    if (!contentPackageOrderReceived)
+                    if (!ContentPackageOrderReceived)
                     {
                         ServerContentPackages = serverPackages.ToImmutableArray();
+                        if (serverPackages.Count == 0)
+                        {
+                            string errorMsg = "Error in ContentPackageOrder message: list of content packages enabled on the server was empty.";
+                            GameAnalyticsManager.AddErrorEventOnce("ClientPeer.ReadConnectionInitializationStep:NoContentPackages", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                            DebugConsole.ThrowError(errorMsg);
+                        }
+                        ContentPackageOrderReceived = true;
                         SendMsgInternal(DeliveryMethod.Reliable, outMsg);
                     }
                     break;
@@ -158,7 +183,7 @@ namespace Barotrauma.Networking
                     {
                         retries = inc.ReadInt32();
                     }
-                    OnRequestPassword?.Invoke(passwordSalt, retries);
+                    callbacks.OnRequestPassword.Invoke(passwordSalt, retries);
                     break;
             }
         }

@@ -149,7 +149,7 @@ namespace Barotrauma
                             Biome.Prefabs.FirstOrDefault(b => b.Identifier == biomeId) ??
                             Biome.Prefabs.FirstOrDefault(b => !b.OldIdentifier.IsEmpty && b.OldIdentifier == biomeId) ??
                             Biome.Prefabs.First();
-                        connection.Difficulty = MathHelper.Clamp(connection.Difficulty, connection.Biome.MinDifficulty, connection.Biome.MaxDifficulty);
+                        connection.Difficulty = MathHelper.Clamp(connection.Difficulty, connection.Biome.MinDifficulty, connection.Biome.AdjustedMaxDifficulty);
                         connection.LevelData = new LevelData(subElement.Element("Level"), connection.Difficulty);
                         Connections.Add(connection);
                         connectionElements.Add(subElement);
@@ -562,7 +562,7 @@ namespace Barotrauma
             {
                 if (connection.Locations.Any(l => l.IsGateBetweenBiomes))
                 {
-                    connection.Difficulty = connection.Locations.Min(l => l.Biome.MaxDifficulty);
+                    connection.Difficulty = Math.Min(connection.Locations.Min(l => l.Biome.ActualMaxDifficulty), connection.Biome.AdjustedMaxDifficulty);
                 }
                 else
                 {
@@ -591,7 +591,7 @@ namespace Barotrauma
                 if (biome != null)
                 {
                     minDifficulty = biome.MinDifficulty;
-                    maxDifficulty = biome.MaxDifficulty;
+                    maxDifficulty = biome.AdjustedMaxDifficulty;
                     float diff = 1 - settingsFactor;
                     difficulty *= 1 - (1f / biome.AllowedZones.Max() * diff);
                 }

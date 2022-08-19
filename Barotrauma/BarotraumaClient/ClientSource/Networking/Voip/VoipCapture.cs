@@ -53,7 +53,7 @@ namespace Barotrauma.Networking
         {
             get
             {
-                return GameMain.Client?.ID ?? 0;
+                return GameMain.Client?.SessionId ?? 0;
             }
             protected set
             {
@@ -82,7 +82,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        private VoipCapture(string deviceName) : base(GameMain.Client?.ID ?? 0, true, false)
+        private VoipCapture(string deviceName) : base(GameMain.Client?.SessionId ?? 0, true, false)
         {
             Disconnected = false;
 

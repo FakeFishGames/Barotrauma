@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Steam;
 
 namespace Barotrauma
 {
@@ -45,21 +46,26 @@ namespace Barotrauma
 
         class SavedExperiencePoints
         {
-            public readonly ulong SteamID;
-            public readonly string EndPoint;
+            public readonly Option<AccountId> AccountId;
+            public readonly Address Address;
             public readonly int ExperiencePoints;
 
             public SavedExperiencePoints(Client client)
             {
-                SteamID = client.SteamID;
-                EndPoint = client.Connection.EndPointString;
+                AccountId = client.AccountId;
+                Address = client.Connection.Endpoint.Address;
                 ExperiencePoints = client.Character?.Info?.ExperiencePoints ?? 0;
             }
 
             public SavedExperiencePoints(XElement element)
             {
-                SteamID = element.GetAttributeUInt64("steamid", 0);
-                EndPoint = element.GetAttributeString("endpoint", string.Empty);
+                AccountId = Networking.AccountId.Parse(
+                    element.GetAttributeString("accountid", null)
+                    ?? element.GetAttributeString("steamid", ""));
+                Address = Address.Parse(
+                        element.GetAttributeString("address", null)
+                        ?? element.GetAttributeString("endpoint", ""))
+                    .Fallback(new UnknownAddress());
                 ExperiencePoints = element.GetAttributeInt("points", 0);
             }
         }
@@ -202,11 +208,11 @@ namespace Barotrauma
         }
         public int GetSavedExperiencePoints(Client client)
         {
-            return savedExperiencePoints.Find(s => s.SteamID != 0 && client.SteamID == s.SteamID || client.EndpointMatches(s.EndPoint))?.ExperiencePoints ?? 0;
+            return savedExperiencePoints.Find(s => client.AccountId == s.AccountId || client.Connection.Endpoint.Address == s.Address)?.ExperiencePoints ?? 0;
         }
         public void ClearSavedExperiencePoints(Client client)
         {
-            savedExperiencePoints.RemoveAll(s => s.SteamID != 0 && client.SteamID == s.SteamID || client.EndpointMatches(s.EndPoint));
+            savedExperiencePoints.RemoveAll(s => client.AccountId == s.AccountId || client.Connection.Endpoint.Address == s.Address);
         }
 
         public void SavePlayers()
@@ -805,6 +811,10 @@ namespace Barotrauma
 
             Wallet personalWallet = GetWallet(sender);
             personalWallet?.ForceUpdate();
+            if (AllowedToManageWallets(sender))
+            {
+                Bank.ForceUpdate();
+            }
 
             if (purchasedHullRepairs != PurchasedHullRepairs)
             {
@@ -886,7 +896,9 @@ namespace Barotrauma
                 foreach (var item in store.Value.ToList())
                 {
                     if (map?.CurrentLocation?.Stores == null || !map.CurrentLocation.Stores.ContainsKey(store.Key)) { continue; }
-                    item.Quantity = Math.Min(map.CurrentLocation.Stores[store.Key].Stock.Find(s => s.ItemPrefab == item.ItemPrefab)?.Quantity ?? 0, item.Quantity);
+                    int availableQuantity = map.CurrentLocation.Stores[store.Key].Stock.Find(s => s.ItemPrefab == item.ItemPrefab)?.Quantity ?? 0;
+                    int alreadyPurchasedQuantity = CargoManager.GetBuyCrateItem(store.Key, item.ItemPrefab)?.Quantity ?? 0;
+                    item.Quantity = Math.Min(availableQuantity - alreadyPurchasedQuantity, item.Quantity);
                     if (item.Quantity <= 0) { continue; }
                     CargoManager.ModifyItemQuantityInBuyCrate(store.Key, item.ItemPrefab, item.Quantity, sender);
                 }
@@ -1364,8 +1376,8 @@ namespace Barotrauma
             foreach (var savedExperiencePoint in savedExperiencePoints)
             {
                 savedExperiencePointsElement.Add(new XElement("Point",
-                    new XAttribute("steamid", savedExperiencePoint.SteamID),
-                    new XAttribute("endpoint", savedExperiencePoint?.EndPoint ?? string.Empty),
+                    new XAttribute("accountid", savedExperiencePoint.AccountId.TryUnwrap(out var accountId) ? accountId.StringRepresentation : ""),
+                    new XAttribute("address", savedExperiencePoint.Address.StringRepresentation),
                     new XAttribute("points", savedExperiencePoint.ExperiencePoints)));
             }
 

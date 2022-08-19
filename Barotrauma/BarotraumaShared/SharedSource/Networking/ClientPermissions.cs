@@ -32,8 +32,8 @@ namespace Barotrauma.Networking
 
     class PermissionPreset
     {
-        public static List<PermissionPreset> List = new List<PermissionPreset>();
-           
+        public static readonly List<PermissionPreset> List = new List<PermissionPreset>();
+        
         public readonly LocalizedString Name;
         public readonly LocalizedString Description;
         public readonly ClientPermissions Permissions;
@@ -87,9 +87,11 @@ namespace Barotrauma.Networking
             }
         }
 
-        public bool MatchesPermissions(ClientPermissions permissions, HashSet<DebugConsole.Command> permittedConsoleCommands)
+        public bool MatchesPermissions(ClientPermissions permissions, ISet<DebugConsole.Command> permittedConsoleCommands)
         {
-            return permissions == this.Permissions && PermittedCommands.SequenceEqual(permittedConsoleCommands);
+            return permissions == Permissions
+                   && PermittedCommands.All(permittedConsoleCommands.Contains)
+                   && permittedConsoleCommands.All(PermittedCommands.Contains);
         }
     }
 }

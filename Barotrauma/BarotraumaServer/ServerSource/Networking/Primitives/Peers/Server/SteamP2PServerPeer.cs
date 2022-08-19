@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net;
 using System.Linq;
-using System.Threading;
 
 namespace Barotrauma.Networking
 {
@@ -10,29 +8,25 @@ namespace Barotrauma.Networking
     {
         private bool started;
 
-        public UInt64 OwnerSteamID
-        {
-            get;
-            private set;
-        }
+        private readonly SteamId ownerSteamId;
 
-        private UInt64 ownerKey64 => unchecked((UInt64)ownerKey.Value);
+        private UInt64 ownerKey64 => unchecked((UInt64)ownerKey.Fallback(0));
         
-        private UInt64 ReadSteamId(IReadMessage inc)
-            => inc.ReadUInt64() ^ ownerKey64;
-        private void WriteSteamId(IWriteMessage msg, UInt64 val)
-            => msg.Write(val ^ ownerKey64);
+        private SteamId ReadSteamId(IReadMessage inc)
+            => new SteamId(inc.ReadUInt64() ^ ownerKey64);
+        private void WriteSteamId(IWriteMessage msg, SteamId val)
+            => msg.Write(val.Value ^ ownerKey64);
 
-        public SteamP2PServerPeer(UInt64 steamId, int ownerKey, ServerSettings settings)
+        public SteamP2PServerPeer(SteamId steamId, int ownerKey, ServerSettings settings)
         {
             serverSettings = settings;
 
             connectedClients = new List<NetworkConnection>();
             pendingClients = new List<PendingClient>();
 
-            this.ownerKey = ownerKey;
+            this.ownerKey = Option<int>.Some(ownerKey);
 
-            OwnerSteamID = steamId;
+            ownerSteamId = steamId;
 
             started = false;
         }
@@ -40,7 +34,7 @@ namespace Barotrauma.Networking
         public override void Start()
         {
             IWriteMessage outMsg = new WriteOnlyMessage();
-            WriteSteamId(outMsg, OwnerSteamID);
+            WriteSteamId(outMsg, ownerSteamId);
             outMsg.Write((byte)DeliveryMethod.Reliable);
             outMsg.Write((byte)(PacketHeader.IsConnectionInitializationStep | PacketHeader.IsServerMessage));
 
@@ -129,9 +123,9 @@ namespace Barotrauma.Networking
         {
             if (!started) { return; }
 
-            UInt64 senderSteamId = ReadSteamId(inc);
-            UInt64 ownerSteamId = ReadSteamId(inc);
-
+            SteamId senderSteamId = ReadSteamId(inc);
+            SteamId ownerSteamId = ReadSteamId(inc);
+            
             PacketHeader packetHeader = (PacketHeader)inc.ReadByte();
             
             if (packetHeader.IsServerMessage())
@@ -140,11 +134,14 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            if (senderSteamId != OwnerSteamID) //sender is remote, handle disconnects and heartbeats
+            if (senderSteamId != this.ownerSteamId) //sender is remote, handle disconnects and heartbeats
             {
-                PendingClient pendingClient = pendingClients.Find(c => c.SteamID == senderSteamId);
-                SteamP2PConnection connectedClient = connectedClients.Find(c => c.SteamID == senderSteamId) as SteamP2PConnection;
-                
+                bool connectionMatches(NetworkConnection conn)
+                    => conn is SteamP2PConnection { Endpoint: SteamP2PEndpoint { SteamId: var steamId } }
+                       && steamId == senderSteamId;
+                PendingClient pendingClient = pendingClients.Find(c => connectionMatches(c.Connection));
+                SteamP2PConnection connectedClient = connectedClients.Find(connectionMatches) as SteamP2PConnection;
+
                 pendingClient?.Heartbeat();
                 connectedClient?.Heartbeat();
 
@@ -171,7 +168,7 @@ namespace Barotrauma.Networking
                     }
                     else if (connectedClient != null)
                     {
-                        string disconnectMsg = $"ServerMessage.HasDisconnected~[client]={connectedClient.Name}";
+                        string disconnectMsg = $"ServerMessage.HasDisconnected~[client]={GameMain.Server.ConnectedClients.First(c => c.Connection == connectedClient).Name}";
                         Disconnect(connectedClient, disconnectMsg, false);
                     }
                     return;
@@ -183,13 +180,9 @@ namespace Barotrauma.Networking
                 }
                 else if (packetHeader.IsConnectionInitializationStep())
                 {
-
                     if (pendingClient != null)
                     {
-                        if (ownerSteamId != 0)
-                        {
-                            pendingClient.Connection.SetOwnerSteamIDIfUnknown(ownerSteamId);
-                        }
+                        pendingClient.Connection.SetAccountInfo(new AccountInfo(senderSteamId, ownerSteamId));
                         ReadConnectionInitializationStep(pendingClient, new ReadOnlyMessage(inc.Buffer, false, inc.BytePosition, inc.LengthBytes - inc.BytePosition, null));
                     }
                     else
@@ -197,7 +190,7 @@ namespace Barotrauma.Networking
                         ConnectionInitialization initializationStep = (ConnectionInitialization)inc.ReadByte();
                         if (initializationStep == ConnectionInitialization.ConnectionStarted)
                         {
-                            pendingClients.Add(new PendingClient(new SteamP2PConnection("PENDING", senderSteamId)) { SteamID = senderSteamId });
+                            pendingClients.Add(new PendingClient(new SteamP2PConnection(senderSteamId)));
                         }
                     }
                 }
@@ -228,13 +221,13 @@ namespace Barotrauma.Networking
                     if (OwnerConnection == null)
                     {
                         string ownerName = inc.ReadString();
-                        OwnerConnection = new SteamP2PConnection(ownerName, OwnerSteamID)
+                        OwnerConnection = new SteamP2PConnection(this.ownerSteamId)
                         {
                             Language = GameSettings.CurrentConfig.Language
                         };
-                        OwnerConnection.SetOwnerSteamIDIfUnknown(OwnerSteamID);
+                        OwnerConnection.SetAccountInfo(new AccountInfo(this.ownerSteamId, this.ownerSteamId));
 
-                        OnInitializationComplete?.Invoke(OwnerConnection);
+                        OnInitializationComplete?.Invoke(OwnerConnection, ownerName);
                     }
                     return;
                 }
@@ -261,17 +254,19 @@ namespace Barotrauma.Networking
         {
             if (!started) { return; }
 
-            if (!(conn is SteamP2PConnection steamp2pConn)) return;
+            if (!(conn is SteamP2PConnection steamp2pConn)) { return; }
             if (!connectedClients.Contains(steamp2pConn) && conn != OwnerConnection)
             {
-                DebugConsole.ThrowError("Tried to send message to unauthenticated connection: " + steamp2pConn.SteamID.ToString());
+                DebugConsole.ThrowError("Tried to send message to unauthenticated connection: " + steamp2pConn.AccountInfo.AccountId.ToString());
                 return;
             }
+
+            if (!conn.AccountInfo.AccountId.TryUnwrap(out var connAccountId) || !(connAccountId is SteamId connSteamId)) { return; }
 
             IWriteMessage msgToSend = new WriteOnlyMessage();
             byte[] msgData = new byte[16];
             msg.PrepareForSending(ref msgData, compressPastThreshold, out bool isCompressed, out int length);
-            WriteSteamId(msgToSend, conn.SteamID);
+            WriteSteamId(msgToSend, connSteamId);
             msgToSend.Write((byte)deliveryMethod);
             msgToSend.Write((byte)((isCompressed ? PacketHeader.IsCompressed : PacketHeader.None) | PacketHeader.IsServerMessage));
             msgToSend.Write((UInt16)length);
@@ -282,7 +277,7 @@ namespace Barotrauma.Networking
             ChildServerRelay.Write(bufToSend);
         }
 
-        private void SendDisconnectMessage(UInt64 steamId, string msg)
+        private void SendDisconnectMessage(SteamId steamId, string msg)
         {
             if (!started) { return; }
             if (string.IsNullOrWhiteSpace(msg)) { return; }
@@ -303,13 +298,16 @@ namespace Barotrauma.Networking
             if (!started) { return; }
 
             if (!(conn is SteamP2PConnection steamp2pConn)) { return; }
-            if (sendDisconnectMessage) { SendDisconnectMessage(steamp2pConn.SteamID, msg); }
+
+            if (!conn.AccountInfo.AccountId.TryUnwrap(out var connAccountId) || !(connAccountId is SteamId connSteamId)) { return; }
+            
+            if (sendDisconnectMessage) { SendDisconnectMessage(connSteamId, msg); }
             if (connectedClients.Contains(steamp2pConn))
             {
                 steamp2pConn.Status = NetworkConnectionStatus.Disconnected;
                 connectedClients.Remove(steamp2pConn);
                 OnDisconnect?.Invoke(conn, msg);
-                Steam.SteamManager.StopAuthSession(conn.SteamID);
+                Steam.SteamManager.StopAuthSession(connSteamId);
             }
             else if (steamp2pConn == OwnerConnection)
             {
@@ -324,8 +322,12 @@ namespace Barotrauma.Networking
 
         protected override void SendMsgInternal(NetworkConnection conn, DeliveryMethod deliveryMethod, IWriteMessage msg)
         {
+            var connSteamId = conn is SteamP2PConnection { Endpoint: SteamP2PEndpoint { SteamId: var id } }
+                ? id : null;
+            if (connSteamId is null) { return; }
+            
             IWriteMessage msgToSend = new WriteOnlyMessage();
-            WriteSteamId(msgToSend, conn.SteamID);
+            WriteSteamId(msgToSend, connSteamId);
             msgToSend.Write((byte)deliveryMethod);
             msgToSend.Write(msg.Buffer, 0, msg.LengthBytes);
             byte[] bufToSend = (byte[])msgToSend.Buffer.Clone();
@@ -333,11 +335,10 @@ namespace Barotrauma.Networking
             ChildServerRelay.Write(bufToSend);
         }
 
-        protected override void ProcessAuthTicket(string name, int ownKey, ulong steamId, PendingClient pendingClient, byte[] ticket)
+        protected override void ProcessAuthTicket(string name, Option<int> ownKey, Option<SteamId> steamId, PendingClient pendingClient, byte[] ticket)
         {
             pendingClient.InitializationStep = serverSettings.HasPassword ? ConnectionInitialization.Password : ConnectionInitialization.ContentPackageOrder;
 
-            pendingClient.Connection.Name = name;
             pendingClient.Name = name;
             pendingClient.AuthSessionStarted = true;
         }

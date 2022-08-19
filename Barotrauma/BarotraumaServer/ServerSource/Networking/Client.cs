@@ -57,7 +57,7 @@ namespace Barotrauma.Networking
 
         public bool ReadyToStart;
 
-        public List<JobVariant> JobPreferences;
+        public List<JobVariant> JobPreferences { get; set; }
         public JobVariant AssignedJob;
 
         public float DeleteDisconnectedTimer;
@@ -111,7 +111,7 @@ namespace Barotrauma.Networking
         {
             JobPreferences = new List<JobVariant>();
 
-            VoipQueue = new VoipQueue(ID, true, true);
+            VoipQueue = new VoipQueue(SessionId, true, true);
             GameMain.Server.VoipServer.RegisterQueue(VoipQueue);
 
             //initialize to infinity, gets set to a proper value when initializing midround syncing
@@ -162,7 +162,7 @@ namespace Barotrauma.Networking
             return true;
         }
 
-        public bool EndpointMatches(string endPoint)
+        public bool EndpointMatches(Endpoint endPoint)
         {
             return Connection.EndpointMatches(endPoint);
         }

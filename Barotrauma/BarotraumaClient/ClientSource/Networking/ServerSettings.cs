@@ -121,7 +121,6 @@ namespace Barotrauma.Networking
 
             ReadMonsterEnabled(incMsg);
             BanList.ClientAdminRead(incMsg);
-            Whitelist.ClientAdminRead(incMsg);
         }
 
         public void ClientRead(IReadMessage incMsg)
@@ -225,7 +224,6 @@ namespace Barotrauma.Networking
                 outMsg.Write(changedMonsterSettings); outMsg.WritePadBits();
                 if (changedMonsterSettings) WriteMonsterEnabled(outMsg, tempMonsterEnabled);
                 BanList.ClientAdminWrite(outMsg);
-                Whitelist.ClientAdminWrite(outMsg);
             }
 
             if (dataToSend.HasFlag(NetFlags.HiddenSubs))
@@ -273,8 +271,7 @@ namespace Barotrauma.Networking
             General,
             Rounds,
             Antigriefing,
-            Banlist,
-            Whitelist
+            Banlist
         }
 
         private NetPropertyData GetPropertyData(string name)
@@ -949,13 +946,6 @@ namespace Barotrauma.Networking
             //--------------------------------------------------------------------------------
 
             BanList.CreateBanFrame(settingsTabs[(int)SettingsTab.Banlist]);
-
-            //--------------------------------------------------------------------------------
-            //                              whitelist
-            //--------------------------------------------------------------------------------
-
-            Whitelist.CreateWhiteListFrame(settingsTabs[(int)SettingsTab.Whitelist]);
-            Whitelist.localEnabled = Whitelist.Enabled;
         }
 
         private void CreateLabeledSlider(GUIComponent parent, string labelTag, out GUIScrollBar slider, out GUITextBlock label)

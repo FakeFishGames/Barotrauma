@@ -1,4 +1,5 @@
-﻿using System;
+using Barotrauma.Steam;
+using System;
 
 namespace Barotrauma.Networking
 {
@@ -13,7 +14,7 @@ namespace Barotrauma.Networking
             msg.Write(SenderClient != null);
             if (SenderClient != null)
             {
-                msg.Write((SenderClient.SteamID != 0) ? SenderClient.SteamID : SenderClient.ID);
+                msg.Write(SenderClient.AccountId.TryUnwrap(out var accountId) ? accountId.StringRepresentation : SenderClient.SessionId.ToString());
             }
             msg.Write(Sender != null && c.InGame);
             if (Sender != null && c.InGame)

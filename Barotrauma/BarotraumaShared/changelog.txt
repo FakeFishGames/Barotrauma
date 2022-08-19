@@ -1,4 +1,87 @@
 ---------------------------------------------------------------------------------------------------------
+v0.19.1.0
+---------------------------------------------------------------------------------------------------------
+
+Unstable only:
+- Option to lock or reset draggable item UIs.
+- Force item UI layout update when resolution changes. Fixes item repositioned item UIs potentially getting left outside the window when switching to a smaller resolution.
+- Item UIs can't be dragged under each other.
+- Fixed dragging a wire in a connection panel dragging the panel too if you bring the cursor close to the edges of the panel.
+- Fixed seated bots being unable to get up from the chair.
+- Fixed some more unwired lights in ResearchModule_02_Colony.
+- Fixed another minor gap issue in Winterhalter.
+- Fixed hull/item repairs and the money spent on them appearing to reset if you join mid-round after repairs have been purchased.
+- Fixed light source staying in place after detaching a glowing item (e.g. mineral) from a wall. 
+- Fixed server trying to place all previously spawned respawn items into containers on every respawn, even if the items have already been removed. Happened because we never cleared respawnItems, and because we used that list when placing new respawn items into containers.
+
+Changes and additions:
+- Overvoltage makes devices perform better, increasing the output of engines, making fabricators, deconstructors and fabricators operate faster, electrical discharge coils do more damage and oxygen generators generate more oxygen. Incentivizes operating the reactor manually and hopefully makes it a little more engaging.
+- Added more randomness to junction box overvoltage damage, and made partially damaged boxes take more damage from overvoltage. Prevents all boxes from breaking at the same time, making overvoltage less of a pain in the ass to deal with and intentionally overvolting the devices more worthwhile.
+- Experimental: Added a way to immediately increase/decrease the temperatureof the reactor for a brief amount of time (atm bumps the gauge up/down by a fifth, and the boost fades out in 20 seconds). Allows reacting to load fluctuations very quickly, and to conserve fuel by operating the reactor at a lower fission rate = serves as another incentive to operate it manually.
+- Signals no longer set the fission and turbine rates of the reactor instantaneously, making automated reactor circuits less overpowered. They are still viable, but especially now with the addition of the extra incentives for operating the reactor manually, they're no longer as clearly the best and most efficient way to operate the reactor, making manual operation more worthwhile.
+- Added a Large Weapon Hardpoint.
+- Railgun is now considered a large weapon.
+- Added Flak Cannon and Double Coilgun as large weapons.
+- Pulse Laser and Railgun now have similar power consumption as other turrets.
+- Improved the way drag is applied on submerged items. Fixes heavy items dropping at unnaturally high speeds in water.
+- Added a splash effect when an item falls into water.
+
+Balance:
+- Reduced the pulse laser tri-laser bolt spread.
+- Explosions are now calculated differently, using the number of limbs to divide the damage (to a max of 15 limbs). Adjusted explosion damage values to match new calculations.
+- Coilgun costs 5000 to install, Pulse Laser and Chaingun 6000. Large turrets all cost 7500.
+- Make mudraptor eggs slightly viable for farming (decreased cost from shop, increased deconstruction yields)
+- Mineral yield and spawn rates rebalance, minerals found are now much more dependant on location (biome, cave, abyss)
+
+Submarines:
+- Added a new intermediate transport sub, Camel. Still WIP, but feedback is welcome.
+- Fixed messy wiring in Typhon 2's bottom left hardpoint.
+- Added some loose vents and panels to Herja, Winterhalter and Barsuk, fixed invisible "loose panel" (news stand) in Orca 2.
+
+Fixes:
+- Fixed brief freezes when monsters spawn mid-round.
+- Fixed vitality modifiers not being taken into account in the readings in the health interface. For example, gunshot wounds on the head cause a x2 larger vitality drop than on other limbs, but this wasn't displayed on the health interface.
+- Fixed Planet Neon Sign sprite bleed.
+- Fixed Grenade Launcher quality doing basically nothing, because it increased the minuscule amount of blunt force trauma the grenade causes on impact instead of the explosion damage.
+- Fixed level resource spawn rate not properly respecting level generations parameters' resource spawn chance values.
+- Fixed some text overflows in the hiring menu when using a small HUD scale.
+- Fixed name on an ID card resetting to the original name if you rename a character and then start a new round.
+- Fixed handcuffs in the backmost hand being drawn in front of the character.
+- Fixed water splashes appearing in an incorrect hull when a character's limb moves from a flooded hull to another hull, where the limb is no longer underwater.
+- Fixed crashing when a signal causes a wired item to get dropped (e.g. when you attach a detonator to a destructible ice wall and blow it up). 
+- Oxygen generators and shelves don't fill up oxygen tanks when on fire. Caused repeated explosions when the tank constantly refilled and re-exploded.
+- Fixed "gene harvester" and "deep sea slayer" working on all enemies, not just monsters.
+- Fixed floating point inaccuracy sometimes preventing items from being used as fabrication ingredients (e.g. oxygen generator may sometimes only fill tanks up to something like 99.9998%, which prevented it from being used in recipes that require a full tank).
+- Fixed item picking timer (e.g. detaching an item from a wall) ticking down when the game is paused.
+- Fixed outpost supply cabs missing the oxygen tank spawns.
+- Made the water current outside the levels start from the same point where monsters start heading towards the level, to make sure monsters can't escape too far from sub with a weak engine. 
+- Fixed hardened diving knife recipe.
+- Fixed probability multiplier not being shown in wearable tooltip if the damage multiplier is 1.
+- Yet another attempt to prevent beacon missions from failing for apparently no reason: sonar monitors won't get damaged by water after the beacon's been activated.
+- Don't stop selecting text in a textbox if the cursor goes outside the box.
+
+Multiplayer:
+- Fixed clients getting stuck in the loading screen if they happen to disconnect at the right moment between rounds.
+- Fixed bank balance not getting corrected if it's gotten desynced by e.g. client-side commands.
+- Fixed server not registering a client's character as disconnected if the client disconnects and reconnects before the round has fully started, causing the client to get stuck as a spectator when they rejoin.
+- Fixed clients disabling their client-side-only mods when they join a server.
+- Fixed hull/item repairs purchased from an outpost sometimes not getting applied client-side.
+
+Submarine editor:
+- Fixed prefab placement breaking in the sub editor if LMB is held while moving the cursor outside of the selection panel.
+- Fixed several instances of janky UI interactions in the submarine editor: dragging selection rectangle now works even if cursor reaches into the prefab list, letting go of a dragged entity works even if cursor reaches into the prefab list, dragged entity no longer goes invisible when reaching into the prefab list.
+- Made PowerContainer recharge speed always default to 0.
+- Fixed adding resizeable items (like ladders) not being registered in sub editor's command history, preventing undoing it.
+
+Modding:
+- Added DamageMultiplier and LaunchImpulse to Turret. LaunchImpulse is now defined on turrets instead of ammunition (total impulse is the sum of turret + ammunition).
+- Added SnapRopeOnNewAttack property to Attacks: allows characters to switch attacks without snapping ropes from previous attacks.
+- Added dividebylimbcount to Explosion, which determines whether the damage is spread out among limbs (if set to true).
+- UpgradeCategories with no upgrades in them are hidden from the upgrade menu (i.e. if you modify the upgrades so some of the vanilla categories no longer contain any upgrades, those categories won't be shown).
+- Fixed affliction names and descriptions being empty if they're not available in the selected language nor configured in the affliction xml directly.
+- Fix custom infected husks seeking for any husk infection targeting the matching species instead of checking that also the husk affliction prefab matches the husk.
+
+---------------------------------------------------------------------------------------------------------
 v0.19.0.0
 ---------------------------------------------------------------------------------------------------------
 
@@ -35,6 +118,8 @@ Balance:
 - Adjusted supplies in pirate submarines.
 - Turn some weapons' burn damage into explosion damage (wip).
 - Terminal ignores empty signals.
+- Reduce commonness of Molochs (as they can take a lot of time to kill, running into multiple of them can quickly become a chore)
+- Remove steel requirement for depth charges. Fabricate decoy depth charges from depth charge, rather than base material.
 
 Multiplayer:
 - Clients who've recently joined (by default 2 minutes) are not allowed to vote to kick others, and vote kicking someone always requires at least 2 votes.

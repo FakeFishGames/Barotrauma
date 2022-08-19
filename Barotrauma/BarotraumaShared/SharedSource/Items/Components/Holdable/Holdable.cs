@@ -295,12 +295,11 @@ namespace Barotrauma.Items.Components
 
             if (attachable)
             {
-                DeattachFromWall();
-
                 if (body != null)
                 {
                     item.body = body;
                 }
+                DeattachFromWall();
             }
 
             if (Pusher != null) { Pusher.Enabled = false; }
@@ -619,6 +618,10 @@ namespace Barotrauma.Items.Components
 #if CLIENT
             item.DrawDepthOffset = SpriteDepthWhenDropped - item.SpriteDepth;
 #endif
+            foreach (LightComponent light in item.GetComponents<LightComponent>())
+            {
+                light.CheckIfNeedsUpdate();
+            }
         }
 
         public override void ParseMsg()

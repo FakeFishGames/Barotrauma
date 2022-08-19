@@ -94,6 +94,11 @@ namespace Barotrauma.Items.Components
 
         protected Connection powerIn, powerOut;
 
+        /// <summary>
+        /// Maximum voltage factor when the device is being overvolted. I.e. how many times more effectively the device can function when it's being overvolted
+        /// </summary>
+        protected const float MaxOverVoltageFactor = 2.0f;
+
         protected virtual PowerPriority Priority { get { return PowerPriority.Default; } }
 
         [Editable, Serialize(0.5f, IsPropertySaveable.Yes, description: "The minimum voltage required for the device to function. " +

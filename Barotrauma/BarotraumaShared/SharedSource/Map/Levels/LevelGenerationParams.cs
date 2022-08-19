@@ -323,7 +323,7 @@ namespace Barotrauma
             set { caveCount = MathHelper.Clamp(value, 0, 100); }
         }
 
-        [Serialize(100, IsPropertySaveable.Yes), Editable(MinValueInt = 0, MaxValueInt = 10000)]
+        [Serialize(100, IsPropertySaveable.Yes, description: "The maximum number of level resources in the level."), Editable(MinValueInt = 0, MaxValueInt = 10000)]
         public int ItemCount
         {
             get;
@@ -344,7 +344,7 @@ namespace Barotrauma
             set;
         }
 
-        [Serialize("2,8", IsPropertySaveable.Yes, description: "The minimum and maximum amount of resources in a single cluster. " +
+        [Serialize("3,6", IsPropertySaveable.Yes, description: "The minimum and maximum amount of resources in a single cluster. " +
             "In addition to this, resource commonness affects the cluster size. Less common resources spawn in smaller clusters."), Editable(1, 20)]
         public Point ResourceClusterSizeRange
         {

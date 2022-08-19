@@ -305,7 +305,7 @@ namespace Barotrauma.Items.Components
 
             float fabricationSpeedIncrease = 1f + tinkeringStrength * TinkeringSpeedIncrease;
 
-            timeUntilReady -= deltaTime * fabricationSpeedIncrease * Math.Min(powerConsumption <= 0 ? 1 : Voltage, 1.0f);
+            timeUntilReady -= deltaTime * fabricationSpeedIncrease * Math.Min(powerConsumption <= 0 ? 1 : Voltage, MaxOverVoltageFactor);
 
             UpdateRequiredTimeProjSpecific();
 
@@ -371,8 +371,7 @@ namespace Barotrauma.Items.Components
                             var availableItems = availableIngredients[requiredPrefab.Identifier];
                             var availableItem = availableItems.FirstOrDefault(potentialPrefab =>
                             {
-                                return potentialPrefab.ConditionPercentage >= requiredItem.MinCondition * 100.0f &&
-                                       potentialPrefab.ConditionPercentage <= requiredItem.MaxCondition * 100.0f;
+                                return requiredItem.IsConditionSuitable(potentialPrefab.ConditionPercentage);
                             });
 
                             if (availableItem == null) { continue; }
@@ -616,8 +615,7 @@ namespace Barotrauma.Items.Components
                     var availablePrefabs = availableIngredients[requiredPrefab.Identifier];
                     foreach (Item availablePrefab in availablePrefabs)
                     {
-                        if (availablePrefab.ConditionPercentage / 100.0f >= requiredItem.MinCondition &&
-                            availablePrefab.ConditionPercentage / 100.0f <= requiredItem.MaxCondition)
+                        if (requiredItem.IsConditionSuitable(availablePrefab.ConditionPercentage))
                         {
                             availablePrefabsAmount++;
                         }
@@ -732,9 +730,7 @@ namespace Barotrauma.Items.Components
                         var availablePrefabs = availableIngredients[requiredPrefab.Identifier];
                         var availablePrefab = availablePrefabs.FirstOrDefault(potentialPrefab =>
                         {
-                            return !usedItems.Contains(potentialPrefab) &&
-                                   potentialPrefab.ConditionPercentage >= requiredItem.MinCondition * 100.0f &&
-                                   potentialPrefab.ConditionPercentage <= requiredItem.MaxCondition * 100.0f;
+                            return !usedItems.Contains(potentialPrefab) && requiredItem.IsConditionSuitable(potentialPrefab.ConditionPercentage);
                         });
                         if (availablePrefab == null) { continue; }
 

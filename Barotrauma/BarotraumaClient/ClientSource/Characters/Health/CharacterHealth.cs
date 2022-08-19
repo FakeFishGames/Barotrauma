@@ -1461,7 +1461,7 @@ namespace Barotrauma
 
             description.RectTransform.Resize(new Point(description.Rect.Width, (int)(description.TextSize.Y + 10)));
 
-            int vitalityDecrease = (int)affliction.GetVitalityDecrease(this);
+            int vitalityDecrease = (int)GetVitalityDecreaseWithVitalityMultipliers(affliction);
             if (vitalityDecrease == 0)
             {
                 vitality.Visible = false;
@@ -1503,7 +1503,7 @@ namespace Barotrauma
 
             foreach (Affliction affliction in afflictions)
             {
-                float afflictionVitalityDecrease = affliction.GetVitalityDecrease(this);
+                float afflictionVitalityDecrease = GetVitalityDecreaseWithVitalityMultipliers(affliction);
                 Color afflictionEffectColor = Color.White;
                 if (afflictionVitalityDecrease > 0.0f)
                 {
@@ -1586,7 +1586,7 @@ namespace Barotrauma
                 affliction.Strength / affliction.Prefab.MaxStrength);
 
             var vitalityText = labelContainer.GetChildByUserData("vitality") as GUITextBlock;
-            int vitalityDecrease = (int)affliction.GetVitalityDecrease(this);
+            int vitalityDecrease = (int)GetVitalityDecreaseWithVitalityMultipliers(affliction);
             if (vitalityDecrease == 0)
             {
                 vitalityText.Visible = false;
@@ -1604,7 +1604,7 @@ namespace Barotrauma
         {
             //items can be dropped outside the health window
             if (!ignoreMousePos &&
-                !healthWindow.Rect.Contains(PlayerInput.MousePosition) )
+                !healthWindow.Rect.Contains(PlayerInput.MousePosition))
             {
                 return false;
             }
@@ -1620,10 +1620,10 @@ namespace Barotrauma
                 }
             }
 
-            Limb targetLimb = Character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == selectedLimbIndex);
-
+            Limb targetLimb = 
+                Character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == selectedLimbIndex) ?? 
+                Character.AnimController.MainLimb;
             item.ApplyTreatment(Character.Controlled, Character, targetLimb);
-
             return true;
         }
         private void UpdateLimbIndicators(float deltaTime, Rectangle drawArea)
@@ -1686,7 +1686,7 @@ namespace Barotrauma
                     if (!affliction.ShouldShowIcon(Character)) { continue; }
                     if (!affliction.Prefab.IsBuff)
                     {
-                        negativeEffect += affliction.Strength;
+                        negativeEffect += affliction.Strength * GetVitalityMultiplier(affliction, limbHealth);
                     }
                     else
                     {

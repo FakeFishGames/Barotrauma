@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Barotrauma.Sounds
 {
-    public class SoundBuffers : IDisposable
+    class SoundBuffers : IDisposable
     {
         private static readonly HashSet<uint> bufferPool = new HashSet<uint>();
 #if OSX

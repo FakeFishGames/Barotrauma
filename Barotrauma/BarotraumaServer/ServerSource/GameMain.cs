@@ -151,9 +151,9 @@ namespace Barotrauma
             string password = "";
             bool enableUpnp = false;
 
-            int maxPlayers = 10;
-            int? ownerKey = null;
-            UInt64 steamId = 0;
+            int maxPlayers = 10; 
+            Option<int> ownerKey = Option<int>.None();
+            Option<SteamId> steamId = Option<SteamId>.None();
 
             XDocument doc = XMLExtensions.TryLoadXml(ServerSettings.SettingsFile);
             if (doc?.Root == null)
@@ -169,7 +169,7 @@ namespace Barotrauma
                 password = doc.Root.GetAttributeString("password", "");
                 enableUpnp = doc.Root.GetAttributeBool("enableupnp", false);
                 maxPlayers = doc.Root.GetAttributeInt("maxplayers", 10);
-                ownerKey = null;
+                ownerKey = Option<int>.None();
             }
             
 #if DEBUG
@@ -218,12 +218,12 @@ namespace Barotrauma
                     case "-ownerkey":
                         if (int.TryParse(CommandLineArgs[i + 1], out int key))
                         {
-                            ownerKey = key;
+                            ownerKey = Option<int>.Some(key);
                         }
                         i++;
                         break;
                     case "-steamid":
-                        UInt64.TryParse(CommandLineArgs[i + 1], out steamId);
+                        steamId = SteamId.Parse(CommandLineArgs[i + 1]);
                         i++;
                         break;
                     case "-pipes":
@@ -274,7 +274,7 @@ namespace Barotrauma
 
         public void CloseServer()
         {
-            Server?.Disconnect();
+            Server?.Quit();
             ShouldRun = false;
             Server = null;
         }

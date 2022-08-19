@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Barotrauma.Items.Components;
 using Barotrauma.Particles;
 using Barotrauma.Sounds;
 using Microsoft.Xna.Framework;
-using System.Xml.Linq;
-using Barotrauma.Items.Components;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma

@@ -218,6 +218,8 @@ namespace Barotrauma
                         
         public Vector2 StepOffset => ConvertUnits.ToSimUnits(Params.StepOffset) * ragdoll.RagdollParams.JointScale;
 
+        public Hull Hull;
+
         public bool InWater { get; set; }
 
         private FixedMouseJoint pullJoint;
@@ -720,11 +722,12 @@ namespace Barotrauma
                 tempModifiers.Clear();
                 var newAffliction = affliction;
                 float random = Rand.Value(Rand.RandSync.Unsynced);
-                if (random > affliction.Probability) { continue; }
+                bool foundMatchingModifier = false;
                 bool applyAffliction = true;
                 foreach (DamageModifier damageModifier in DamageModifiers)
                 {
                     if (!damageModifier.MatchesAffliction(affliction)) { continue; }
+                    foundMatchingModifier = true;
                     if (random > affliction.Probability * damageModifier.ProbabilityMultiplier)
                     {
                         applyAffliction = false;
@@ -740,6 +743,7 @@ namespace Barotrauma
                     foreach (DamageModifier damageModifier in wearable.WearableComponent.DamageModifiers)
                     {
                         if (!damageModifier.MatchesAffliction(affliction)) { continue; }
+                        foundMatchingModifier = true;
                         if (random > affliction.Probability * damageModifier.ProbabilityMultiplier)
                         {
                             applyAffliction = false;
@@ -751,6 +755,7 @@ namespace Barotrauma
                         }
                     }
                 }
+                if (!foundMatchingModifier && random > affliction.Probability) { continue; }
                 float finalDamageModifier = damageMultiplier;
                 foreach (DamageModifier damageModifier in tempModifiers)
                 {
@@ -763,7 +768,7 @@ namespace Barotrauma
                 }
                 if (!MathUtils.NearlyEqual(finalDamageModifier, 1.0f))
                 {
-                    newAffliction = affliction.CreateMultiplied(finalDamageModifier);
+                    newAffliction = affliction.CreateMultiplied(finalDamageModifier, affliction.Probability);
                 }
                 else
                 {

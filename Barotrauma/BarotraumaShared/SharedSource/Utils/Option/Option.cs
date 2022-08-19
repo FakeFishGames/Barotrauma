@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 
 namespace Barotrauma
@@ -23,7 +24,7 @@ namespace Barotrauma
                     outValue = value;
                     return true;
                 case None<T> _:
-                    outValue = default;
+                    outValue = default!;
                     return false;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -37,5 +38,30 @@ namespace Barotrauma
                 None<T> _ => Option<TType>.None(),
                 _ => throw new ArgumentOutOfRangeException()
             };
+
+        public abstract Option<T> Fallback(Option<T> fallback);
+        public abstract T Fallback(T fallback);
+
+        public abstract bool ValueEquals(T value);
+
+        public override bool Equals(object? obj)
+            => obj switch
+            {
+                Some<T> { Value: var value } => this is Some<T> { Value: { } selfValue } && selfValue.Equals(value),
+                None<T> _ => IsNone(),
+                T value => this is Some<T> { Value: { } selfValue } && selfValue.Equals(value),
+                _ => false
+            };
+
+        public override int GetHashCode()
+            => this is Some<T> { Value: { } value } ? value.GetHashCode() : 0;
+
+        public static bool operator ==(Option<T> a, Option<T> b)
+            => a.Equals(b);
+
+        public static bool operator !=(Option<T> a, Option<T> b)
+            => !(a == b);
+
+        public abstract override string ToString();
     }
 }

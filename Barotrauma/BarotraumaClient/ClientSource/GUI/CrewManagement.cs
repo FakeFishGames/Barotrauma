@@ -128,10 +128,11 @@ namespace Barotrauma
 
             var sortGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.04f), hireablesGroup.RectTransform), isHorizontal: true)
             {
-                RelativeSpacing = 0.015f
+                RelativeSpacing = 0.015f,
+                Stretch = true
             };
-            new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), sortGroup.RectTransform), text: TextManager.Get("campaignstore.sortby"));
-            sortingDropDown = new GUIDropDown(new RectTransform(new Vector2(0.4f, 1.0f), sortGroup.RectTransform), elementCount: 5)
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), sortGroup.RectTransform), text: TextManager.Get("campaignstore.sortby"));
+            sortingDropDown = new GUIDropDown(new RectTransform(new Vector2(0.5f, 1.0f), sortGroup.RectTransform), elementCount: 5)
             {
                 OnSelected = (child, userData) =>
                 {
@@ -193,19 +194,20 @@ namespace Barotrauma
             {
                 RelativeSpacing = 0.01f
             };
-            validateHiresButton = new GUIButton(new RectTransform(new Vector2(1.0f / 3.0f, 1.0f), group.RectTransform), text: TextManager.Get("campaigncrew.validate"))
+            validateHiresButton = new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), group.RectTransform), text: TextManager.Get("campaigncrew.validate"))
             {
                 ClickSound = GUISoundType.ConfirmTransaction,
                 ForceUpperCase = ForceUpperCase.Yes,
                 OnClicked = (b, o) => ValidateHires(PendingHires, true)
             };
-            clearAllButton = new GUIButton(new RectTransform(new Vector2(1.0f / 3.0f, 1.0f), group.RectTransform), text: TextManager.Get("campaignstore.clearall"))
+            clearAllButton = new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), group.RectTransform), text: TextManager.Get("campaignstore.clearall"))
             {
                 ClickSound = GUISoundType.Cart,
                 ForceUpperCase = ForceUpperCase.Yes,
                 Enabled = HasPermission,
                 OnClicked = (b, o) => RemoveAllPendingHires()
             };
+            GUITextBlock.AutoScaleAndNormalize(validateHiresButton.TextBlock, clearAllButton.TextBlock);
 
             resolutionWhenCreated = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
         }

@@ -1147,15 +1147,16 @@ namespace Barotrauma
             {
                 Character.Controlled.ClearInputs();
 
+                bool mouseOnPortrait = CharacterHUD.MouseOnCharacterPortrait();
                 if (!DetermineMouseOnInventory(ignoreDraggedItem: true) &&
-                    CharacterHealth.OpenHealthWindow != null)
+                    (CharacterHealth.OpenHealthWindow != null || mouseOnPortrait))
                 {
                     bool dropSuccessful = false;
                     foreach (Item item in DraggingItems)
                     {
                         var inventory = item.ParentInventory;
                         var indices = inventory?.FindIndices(item);
-                        dropSuccessful |= CharacterHealth.OpenHealthWindow.OnItemDropped(item, false);
+                        dropSuccessful |= (CharacterHealth.OpenHealthWindow ?? Character.Controlled.CharacterHealth).OnItemDropped(item, ignoreMousePos: mouseOnPortrait);
                         if (dropSuccessful)
                         {
                             if (indices != null && inventory.visualSlots != null)
@@ -1167,7 +1168,6 @@ namespace Barotrauma
                             }
                             break;
                         }
-
                     }
                     if (dropSuccessful)
                     {
@@ -1444,7 +1444,10 @@ namespace Barotrauma
                     float scale = Math.Min(Math.Min(iconSize / sprite.size.X, iconSize / sprite.size.Y), 1.5f);
                     Vector2 itemPos = PlayerInput.MousePosition;
 
-                    bool mouseOnHealthInterface = CharacterHealth.OpenHealthWindow != null && CharacterHealth.OpenHealthWindow.MouseOnElement && DraggingItems.Any(it => it.UseInHealthInterface);
+                    bool mouseOnHealthInterface = 
+                        (CharacterHealth.OpenHealthWindow != null && CharacterHealth.OpenHealthWindow.MouseOnElement)||
+                        CharacterHUD.MouseOnCharacterPortrait();
+                    mouseOnHealthInterface = mouseOnHealthInterface && DraggingItems.Any(it => it.UseInHealthInterface);
 
                     if ((GUI.MouseOn == null || mouseOnHealthInterface) && selectedSlot == null)
                     {
@@ -1453,13 +1456,25 @@ namespace Barotrauma
                             Character.Controlled.FocusedItem != null ?
                                 TextManager.GetWithVariable("PutItemIn", "[itemname]", Character.Controlled.FocusedItem.Name, FormatCapitals.Yes) :
                                 TextManager.Get(Screen.Selected is SubEditorScreen editor && editor.EntityMenu.Rect.Contains(PlayerInput.MousePosition) ? "Delete" : "DropItem");
-                        int textWidth = (int)Math.Max(GUIStyle.Font.MeasureString(DraggingItems.First().Name).X, GUIStyle.SmallFont.MeasureString(toolTip).X);
+
+                        Vector2 nameSize = GUIStyle.Font.MeasureString(DraggingItems.First().Name);
+                        Vector2 toolTipSize = GUIStyle.SmallFont.MeasureString(toolTip);
+                        int textWidth = (int)Math.Max(nameSize.X, toolTipSize.X);
                         int textSpacing = (int)(15 * GUI.Scale);
-                        Point shadowBorders = (new Point(40, 10)).Multiply(GUI.Scale);
+
+                        Vector2 textPos = itemPos;
+                        int textDir = textPos.X + textWidth * 1.5f > GameMain.GraphicsWidth ? -1 : 1;
+                        int textOffset = textDir == 1 ? 0 : -1;
+                        textPos += new Vector2((iconSize / 2 + textSpacing) * textDir, 0);
+
+                        Point shadowPadding = new Point(40, 20).Multiply(GUI.Scale);
+                        Point shadowSize = new Point(iconSize + textWidth + textSpacing, iconSize) + shadowPadding.Multiply(2);
+
                         shadowSprite.Draw(spriteBatch,
-                            new Rectangle(itemPos.ToPoint() - new Point(iconSize / 2) - shadowBorders, new Point(iconSize + textWidth + textSpacing, iconSize) + shadowBorders.Multiply(2)), Color.Black * 0.8f);
-                        GUI.DrawString(spriteBatch, new Vector2(itemPos.X + iconSize / 2 + textSpacing, itemPos.Y - iconSize / 2), DraggingItems.First().Name, Color.White);
-                        GUI.DrawString(spriteBatch, new Vector2(itemPos.X + iconSize / 2 + textSpacing, itemPos.Y), toolTip,
+                            new Rectangle(itemPos.ToPoint() - new Point((iconSize / 2 - shadowPadding.X) * textDir - shadowSize.X * textOffset, iconSize / 2 + shadowPadding.Y), shadowSize), Color.Black * 0.8f);
+
+                        GUI.DrawString(spriteBatch, textPos + new Vector2(nameSize.X * textOffset, -iconSize / 2), DraggingItems.First().Name, Color.White);
+                        GUI.DrawString(spriteBatch, textPos + new Vector2(toolTipSize.X * textOffset, 0), toolTip,
                             color: Character.Controlled.FocusedItem == null && !mouseOnHealthInterface ? GUIStyle.Red : Color.LightGreen,
                             font: GUIStyle.SmallFont);
                     }

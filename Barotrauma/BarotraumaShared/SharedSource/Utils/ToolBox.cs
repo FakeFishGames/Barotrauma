@@ -26,14 +26,14 @@ namespace Barotrauma
         }
     }
 
-    public static partial class ToolBox
+    static partial class ToolBox
     {
-        static internal class Epoch
+        internal static class Epoch
         {
             private static readonly DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
             /// <summary>
-            /// Returns the current Unix Epoch (Coordinated Universal Time )
+            /// Returns the current Unix Epoch (Coordinated Universal Time)
             /// </summary>
             public static int NowUTC
             {
@@ -711,6 +711,11 @@ namespace Barotrauma
             while (e.InnerException != null) { e = e.InnerException; }
 
             return e;
+        }
+
+        public static void ThrowIfNull<T>(T o)
+        {
+            if (o is null) { throw new ArgumentNullException(); }
         }
     }
 }

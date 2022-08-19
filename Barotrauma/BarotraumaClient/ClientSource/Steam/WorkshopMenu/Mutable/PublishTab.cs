@@ -546,7 +546,7 @@ namespace Barotrauma.Steam
 
                 if (result.Value.NeedsWorkshopAgreement)
                 {
-                    SteamManager.OverlayCustomURL(resultItem.Url);
+                    SteamManager.OverlayCustomUrl(resultItem.Url);
                 }
                 new GUIMessageBox(string.Empty, TextManager.GetWithVariable("workshopitempublished", "[itemname]", localPackage.Name));
             }

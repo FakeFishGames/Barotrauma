@@ -26,7 +26,7 @@ namespace Barotrauma
                     if (sender != null)
                     {
                         msg.Write(true);
-                        msg.Write(sender.ID);
+                        msg.Write(sender.SessionId);
                     }
                     else
                     {
@@ -99,10 +99,10 @@ namespace Barotrauma
                 case ReadyCheckState.Update when readyCheck != null:
 
                     ReadyStatus status = (ReadyStatus) inc.ReadByte();
-                    if (!readyCheck.Clients.ContainsKey(client.ID)) { return; }
+                    if (!readyCheck.Clients.ContainsKey(client.SessionId)) { return; }
 
-                    readyCheck.Clients[client.ID] = status;
-                    readyCheck.UpdateReadyCheck(client.ID, status);
+                    readyCheck.Clients[client.SessionId] = status;
+                    readyCheck.UpdateReadyCheck(client.SessionId, status);
                     break;
             }
         }
@@ -111,8 +111,8 @@ namespace Barotrauma
         {
             if (GameMain.GameSession?.CrewManager == null || GameMain.GameSession.CrewManager.ActiveReadyCheck != null) { return; }
 
-            List<Client> connectedClients = GameMain.Server.ConnectedClients;
-            ReadyCheck newReadyCheck = new ReadyCheck(connectedClients.Where(c => !c.Spectating).Select(c => c.ID).ToList(), 30);
+            var connectedClients = GameMain.Server.ConnectedClients;
+            ReadyCheck newReadyCheck = new ReadyCheck(connectedClients.Where(c => !c.Spectating).Select(c => c.SessionId).ToList(), 30);
             GameMain.GameSession.CrewManager.ActiveReadyCheck = newReadyCheck;
             newReadyCheck.InitializeReadyCheck(author, sender);
         }

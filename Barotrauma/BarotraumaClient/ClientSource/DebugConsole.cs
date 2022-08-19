@@ -226,7 +226,7 @@ namespace Barotrauma
                     return client.HasPermission(ClientPermissions.Kick);
                 case "ban":
                 case "banip":
-                case "banendpoint":
+                case "banaddress":
                     return client.HasPermission(ClientPermissions.Ban);
                 case "unban":
                 case "unbanip":
@@ -426,24 +426,6 @@ namespace Barotrauma
                 {
                     ShowQuestionPrompt("The automatic hull generation may not work correctly if your submarine uses curved walls. Do you want to continue? Y/N",
                         (option) => { if (option.ToLowerInvariant() == "y") GameMain.SubEditorScreen.AutoHull(); });
-                }
-            }));
-
-            commands.Add(new Command("startlidgrenclient", "", (string[] args) =>
-            {
-                if (args.Length == 0) return;
-
-                if (GameMain.Client == null)
-                {
-                    GameMain.Client = new GameClient("Name", args[0], 0);
-                }
-            }));
-
-            commands.Add(new Command("startsteamp2pclient", "", (string[] args) =>
-            {
-                if (GameMain.Client == null)
-                {
-                    GameMain.Client = new GameClient("Name", null, 76561198977850505); //this is juan's alt account, feel free to abuse this one
                 }
             }));
 
@@ -2849,7 +2831,7 @@ namespace Barotrauma
             );
 
             AssignOnClientExecute(
-                "banendpoint|banip",
+                "banaddress|banip",
                 (string[] args) =>
                 {
                     if (GameMain.Client == null || args.Length == 0) return;
@@ -2871,7 +2853,7 @@ namespace Barotrauma
                             }
 
                             GameMain.Client?.SendConsoleCommand(
-                                "banendpoint " +
+                                "banaddress " +
                                 args[0] + " " +
                                 (banDuration.HasValue ? banDuration.Value.TotalSeconds.ToString() : "0") + " " +
                                 reason);
@@ -2884,13 +2866,16 @@ namespace Barotrauma
             {
                 if (GameMain.Client == null || args.Length == 0) return;
                 string clientName = string.Join(" ", args);
-                GameMain.Client.UnbanPlayer(clientName, "");
+                GameMain.Client.UnbanPlayer(clientName);
             }));
 
-            commands.Add(new Command("unbanip", "unbanip [ip]: Unban a specific IP.", (string[] args) =>
+            commands.Add(new Command("unbanaddress", "unbanaddress [endpoint]: Unban a specific endpoint.", (string[] args) =>
             {
                 if (GameMain.Client == null || args.Length == 0) return;
-                GameMain.Client.UnbanPlayer("", args[0]);
+                if (Endpoint.Parse(args[0]).TryUnwrap(out var endpoint))
+                {
+                    GameMain.Client.UnbanPlayer(endpoint);
+                }
             }));
 
             AssignOnClientExecute(

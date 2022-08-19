@@ -569,6 +569,36 @@ namespace Barotrauma
             }
         }
 
+        partial void Splash()
+        {
+            if (body == null || CurrentHull == null) { return; }
+            //create a splash particle
+            float massFactor = MathHelper.Clamp(body.Mass, 0.5f, 20.0f);
+            for (int i = 0; i < MathHelper.Clamp(Math.Abs(body.LinearVelocity.Y), 1.0f, 10.0f); i++)
+            {
+                var splash = GameMain.ParticleManager.CreateParticle("watersplash",
+                    new Vector2(WorldPosition.X, CurrentHull.WorldSurface),
+                    new Vector2(0.0f, Math.Abs(-body.LinearVelocity.Y * massFactor)) + Rand.Vector(Math.Abs(body.LinearVelocity.Y * 10)),
+                    Rand.Range(0.0f, MathHelper.TwoPi), CurrentHull);
+                if (splash != null)
+                {
+                    splash.Size *= MathHelper.Clamp(Math.Abs(body.LinearVelocity.Y) * 0.1f * massFactor, 1.0f, 4.0f);
+                }
+            }
+            GameMain.ParticleManager.CreateParticle("bubbles",
+                new Vector2(WorldPosition.X, CurrentHull.WorldSurface),
+                body.LinearVelocity * massFactor,
+                0.0f, CurrentHull);
+
+            //create a wave
+            if (body.LinearVelocity.Y < 0.0f)
+            {
+                int n = (int)((Position.X - CurrentHull.Rect.X) / Hull.WaveWidth);
+                CurrentHull.WaveVel[n] += MathHelper.Clamp(body.LinearVelocity.Y * massFactor, -5.0f, 5.0f);
+            }
+            SoundPlayer.PlaySplashSound(WorldPosition, Math.Abs(body.LinearVelocity.Y) + Rand.Range(-10.0f, -5.0f));
+        }
+
         public void CheckNeedsSoundUpdate(ItemComponent ic)
         {
             if (ic.NeedsSoundUpdate())
@@ -976,7 +1006,7 @@ namespace Barotrauma
         /// <summary>
         /// Reposition currently active item interfaces to make sure they don't overlap with each other
         /// </summary>
-        private void SetHUDLayout()
+        private void SetHUDLayout(bool ignoreLocking = false)
         {
             //reset positions first
             List<GUIComponent> elementsToMove = new List<GUIComponent>();
@@ -991,6 +1021,7 @@ namespace Barotrauma
             foreach (ItemComponent ic in activeHUDs)
             {
                 if (ic.GuiFrame == null || ic.AllowUIOverlap || ic.GetLinkUIToComponent() != null) { continue; }
+                if (!ignoreLocking && ic.LockGuiFramePosition) { continue; }
                 //if the frame covers nearly all of the screen, don't trying to prevent overlaps because it'd fail anyway
                 if (ic.GuiFrame.Rect.Width >= GameMain.GraphicsWidth * 0.9f && ic.GuiFrame.Rect.Height >= GameMain.GraphicsHeight * 0.9f) { continue; }
                 ic.GuiFrame.RectTransform.ScreenSpaceOffset = Point.Zero;
@@ -1015,11 +1046,7 @@ namespace Barotrauma
                 disallowedAreas.Add(editor.ToggleEntityMenuButton.Rect);
             }
 
-            GUI.PreventElementOverlap(elementsToMove, disallowedAreas,
-                new Rectangle(
-                    0, 20,
-                    GameMain.GraphicsWidth,
-                    HUDLayoutSettings.InventoryTopY > 0 ? HUDLayoutSettings.InventoryTopY - 40 : GameMain.GraphicsHeight - 80));
+            GUI.PreventElementOverlap(elementsToMove, disallowedAreas, clampArea: HUDLayoutSettings.ItemHUDArea);
 
             //System.Diagnostics.Debug.WriteLine("after: " + elementsToMove[0].Rect.ToString() + "   " + elementsToMove[1].Rect.ToString());
             foreach (ItemComponent ic in activeHUDs)
@@ -1237,6 +1264,24 @@ namespace Barotrauma
                 texts.Add(new ColoredText(TextManager.ParseInputTypes(TextManager.Get("itemmsgcontextualorders")).Value, Color.Cyan, false, false));
             }
             return texts;
+        }
+
+        public void ForceHUDLayoutUpdate(bool ignoreLocking = false)
+        {
+            foreach (ItemComponent ic in activeHUDs)
+            {
+                if (ic.GuiFrame == null || !ic.CanBeSelected) { continue; }
+                ic.GuiFrame.RectTransform.ScreenSpaceOffset = Point.Zero;
+                if (ic.UseAlternativeLayout)
+                {
+                    ic.AlternativeLayout?.ApplyTo(ic.GuiFrame.RectTransform);
+                }
+                else
+                {
+                    ic.DefaultLayout?.ApplyTo(ic.GuiFrame.RectTransform);
+                }
+            }
+            SetHUDLayout(ignoreLocking);
         }
 
         public override void AddToGUIUpdateList(int order = 0)

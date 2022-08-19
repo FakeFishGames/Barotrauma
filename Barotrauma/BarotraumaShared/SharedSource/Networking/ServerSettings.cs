@@ -70,27 +70,18 @@ namespace Barotrauma.Networking
 
         public class SavedClientPermission
         {
-            public readonly string EndPoint;
-            public readonly ulong SteamID;
+            public readonly Either<Address, AccountId> AddressOrAccountId;
             public readonly string Name;
-            public HashSet<DebugConsole.Command> PermittedCommands;
+            public readonly ImmutableHashSet<DebugConsole.Command> PermittedCommands;
 
-            public ClientPermissions Permissions;
+            public readonly ClientPermissions Permissions;
 
-            public SavedClientPermission(string name, string endpoint, ClientPermissions permissions, HashSet<DebugConsole.Command> permittedCommands)
+            public SavedClientPermission(string name, Either<Address, AccountId> addressOrAccountId, ClientPermissions permissions, IEnumerable<DebugConsole.Command> permittedCommands)
             {
                 this.Name = name;
-                this.EndPoint = endpoint;
+                this.AddressOrAccountId = addressOrAccountId;
                 this.Permissions = permissions;
-                this.PermittedCommands = permittedCommands;
-            }
-            public SavedClientPermission(string name, ulong steamID, ClientPermissions permissions, HashSet<DebugConsole.Command> permittedCommands)
-            {
-                this.Name = name;
-                this.SteamID = steamID;
-
-                this.Permissions = permissions;
-                this.PermittedCommands = permittedCommands;
+                this.PermittedCommands = permittedCommands.ToImmutableHashSet();
             }
         }
 
@@ -279,7 +270,6 @@ namespace Barotrauma.Networking
         {
             ServerLog = new ServerLog(serverName);
 
-            Whitelist = new WhiteList();
             BanList = new BanList();
 
             ExtraCargo = new Dictionary<ItemPrefab, int>();
@@ -397,8 +387,6 @@ namespace Barotrauma.Networking
         private int maxPlayers;
 
         public List<SavedClientPermission> ClientPermissions { get; private set; } = new List<SavedClientPermission>();
-
-        public WhiteList Whitelist { get; private set; }
 
         [Serialize(20, IsPropertySaveable.Yes)]
         public int TickRate

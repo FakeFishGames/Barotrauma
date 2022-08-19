@@ -11,6 +11,8 @@ namespace Barotrauma.Items.Components
     {
         const float NetworkUpdateIntervalHigh = 0.5f;
 
+        const float TemperatureBoostAmount = 20;
+
         //the rate at which the reactor is being run on (higher rate -> higher temperature)
         private float fissionRate;
         
@@ -45,6 +47,8 @@ namespace Barotrauma.Items.Components
         private Vector2 optimalTemperature, allowedTemperature;
         private Vector2 optimalFissionRate, allowedFissionRate;
         private Vector2 optimalTurbineOutput, allowedTurbineOutput;
+
+        private float temperatureBoost;
 
         private bool _powerOn;
 
@@ -241,6 +245,34 @@ namespace Barotrauma.Items.Components
             }
 #endif
 
+            if (signalControlledTargetFissionRate.HasValue && Math.Abs(signalControlledTargetFissionRate.Value - TargetFissionRate) > 1.0f)
+            {
+                TargetFissionRate = adjustValueWithoutOverShooting(TargetFissionRate, signalControlledTargetFissionRate.Value, deltaTime * 5.0f);
+#if CLIENT
+                FissionRateScrollBar.BarScroll = TargetFissionRate / 100.0f;
+#endif
+            }
+            else
+            {
+                signalControlledTargetFissionRate = null;
+            }
+            if (signalControlledTargetTurbineOutput.HasValue && Math.Abs(signalControlledTargetTurbineOutput.Value - TargetTurbineOutput) > 1.0f)
+            {
+                TargetTurbineOutput = adjustValueWithoutOverShooting(TargetTurbineOutput, signalControlledTargetTurbineOutput.Value, deltaTime * 5.0f);                
+#if CLIENT
+                TurbineOutputScrollBar.BarScroll = TargetTurbineOutput / 100.0f;
+#endif
+            }
+            else
+            {
+                signalControlledTargetTurbineOutput = null;
+            }
+
+            static float adjustValueWithoutOverShooting(float current, float target, float speed)
+            {
+                return target < current ? Math.Max(target, current - speed) : Math.Min(target, current + speed);      
+            }
+
             prevAvailableFuel = AvailableFuel;
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
@@ -270,7 +302,10 @@ namespace Barotrauma.Items.Components
 
             float temperatureDiff = (heatAmount - turbineOutput) - Temperature;
             Temperature += MathHelper.Clamp(Math.Sign(temperatureDiff) * 10.0f * deltaTime, -Math.Abs(temperatureDiff), Math.Abs(temperatureDiff));
-            //if (item.InWater && AvailableFuel < 100.0f) Temperature -= 12.0f * deltaTime;
+            temperatureBoost = adjustValueWithoutOverShooting(temperatureBoost, 0.0f, deltaTime);
+#if CLIENT
+            temperatureBoostUpButton.Enabled = temperatureBoostDownButton.Enabled = Math.Abs(temperatureBoost) < TemperatureBoostAmount * 0.9f;
+#endif
 
             FissionRate = MathHelper.Lerp(fissionRate, Math.Min(TargetFissionRate, AvailableFuel), deltaTime);
 
@@ -438,7 +473,7 @@ namespace Barotrauma.Items.Components
 
         private float GetGeneratedHeat(float fissionRate)
         {
-            return fissionRate * (prevAvailableFuel / 100.0f) * 2.0f;
+            return fissionRate * (prevAvailableFuel / 100.0f) * 2.0f + temperatureBoost;
         }
 
         /// <summary>
@@ -486,13 +521,15 @@ namespace Barotrauma.Items.Components
             if (temperature > allowedTemperature.Y)
             {
                 item.SendSignal("1", "meltdown_warning");
-                //faster meltdown if the item is in a bad condition
-                meltDownTimer += MathHelper.Lerp(deltaTime * 2.0f, deltaTime, item.Condition / item.MaxCondition);
-
-                if (meltDownTimer > MeltdownDelay)
+                if (!item.InvulnerableToDamage)
                 {
-                    MeltDown();
-                    return;
+                    //faster meltdown if the item is in a bad condition
+                    meltDownTimer += MathHelper.Lerp(deltaTime * 2.0f, deltaTime, item.Condition / item.MaxCondition);
+                    if (meltDownTimer > MeltdownDelay)
+                    {
+                        MeltDown();
+                        return;
+                    }
                 }
             }
             else
@@ -797,30 +834,31 @@ namespace Barotrauma.Items.Components
                         AutoTemp = false;
                         TargetFissionRate = 0.0f;
                         TargetTurbineOutput = 0.0f;
-                        if (GameMain.NetworkMember?.IsServer ?? false) { unsentChanges = true; }
+                        registerUnsentChanges();
                     }
                     break;
                 case "set_fissionrate":
                     if (PowerOn && float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float newFissionRate))
                     {
-                        TargetFissionRate = MathHelper.Clamp(newFissionRate, 0.0f, 100.0f);
-                        if (GameMain.NetworkMember?.IsServer ?? false) { unsentChanges = true; }
-#if CLIENT
-                        FissionRateScrollBar.BarScroll = TargetFissionRate / 100.0f;
-#endif
+                        signalControlledTargetFissionRate = MathHelper.Clamp(newFissionRate, 0.0f, 100.0f);
+                        registerUnsentChanges();
                     }
                     break;
                 case "set_turbineoutput":
                     if (PowerOn && float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float newTurbineOutput))
                     {
-                        TargetTurbineOutput = MathHelper.Clamp(newTurbineOutput, 0.0f, 100.0f);
-                        if (GameMain.NetworkMember?.IsServer ?? false) { unsentChanges = true; }                       
-#if CLIENT
-                        TurbineOutputScrollBar.BarScroll = TargetTurbineOutput / 100.0f;
-#endif
+                        signalControlledTargetTurbineOutput = MathHelper.Clamp(newTurbineOutput, 0.0f, 100.0f);
+                        registerUnsentChanges();
                     }
                     break;
             }
+
+            void registerUnsentChanges()
+            {
+                if (GameMain.NetworkMember is { IsServer: true }) { unsentChanges = true; }
+            }
         }
+
+        private float? signalControlledTargetFissionRate, signalControlledTargetTurbineOutput;
     }
 }

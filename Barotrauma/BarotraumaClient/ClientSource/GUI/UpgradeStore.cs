@@ -1313,6 +1313,8 @@ namespace Barotrauma
             Item[] entitiesOnSub = drawnSubmarine.GetItems(true).Where(i => drawnSubmarine.IsEntityFoundOnThisSub(i, true)).ToArray();
             foreach (UpgradeCategory category in UpgradeCategory.Categories)
             {
+                //hide categories with no upgrades in them
+                if (UpgradePrefab.Prefabs.None(p => p.UpgradeCategories.Contains(category))) { continue; }
                 if (entitiesOnSub.Any(item => category.CanBeApplied(item, null)))
                 {
                     yield return category;

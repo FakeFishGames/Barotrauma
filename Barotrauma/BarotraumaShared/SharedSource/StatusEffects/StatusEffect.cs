@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -158,11 +157,11 @@ namespace Barotrauma
             /// </summary>
             public readonly bool SpawnIfCantBeContained;
             public readonly float Impulse;
-            public readonly float Rotation;
+            public readonly float RotationRad;
             public readonly int Count;
             public readonly float Spread;
             public readonly SpawnRotationType RotationType;
-            public readonly float AimSpread;
+            public readonly float AimSpreadRad;
             public readonly bool Equip;
 
             public readonly float Condition;
@@ -198,14 +197,14 @@ namespace Barotrauma
 
                 SpawnIfInventoryFull = element.GetAttributeBool("spawnifinventoryfull", false);
                 SpawnIfCantBeContained = element.GetAttributeBool("spawnifcantbecontained", true);
-                Impulse = element.GetAttributeFloat("impulse", element.GetAttributeFloat("speed", 0.0f));
+                Impulse = element.GetAttributeFloat("impulse", element.GetAttributeFloat("launchimpulse", element.GetAttributeFloat("speed", 0.0f)));
 
                 Condition = MathHelper.Clamp(element.GetAttributeFloat("condition", 1.0f), 0.0f, 1.0f);
 
-                Rotation = element.GetAttributeFloat("rotation", 0.0f);
+                RotationRad = MathHelper.ToRadians(element.GetAttributeFloat("rotation", 0.0f));
                 Count = element.GetAttributeInt("count", 1);
                 Spread = element.GetAttributeFloat("spread", 0f);
-                AimSpread = element.GetAttributeFloat("aimspread", 0f);
+                AimSpreadRad = MathHelper.ToRadians(element.GetAttributeFloat("aimspread", 0f));
                 Equip = element.GetAttributeBool("equip", false);
 
                 string spawnTypeStr = element.GetAttributeString("spawnposition", "This");
@@ -213,7 +212,7 @@ namespace Barotrauma
                 {
                     DebugConsole.ThrowError("Error in StatusEffect config - \"" + spawnTypeStr + "\" is not a valid spawn position.");
                 }
-                string rotationTypeStr = element.GetAttributeString("rotationtype", Rotation != 0 ? "Fixed" : "Target");
+                string rotationTypeStr = element.GetAttributeString("rotationtype", RotationRad != 0 ? "Fixed" : "Target");
                 if (!Enum.TryParse(rotationTypeStr, ignoreCase: true, out RotationType))
                 {
                     DebugConsole.ThrowError("Error in StatusEffect config - \"" + rotationTypeStr + "\" is not a valid rotation type.");
@@ -1668,11 +1667,11 @@ namespace Barotrauma
                                                 Character.Controlled = newCharacter;
                                             }
 #elif SERVER
-                                            foreach (Client c in GameMain.Server.ConnectedClients)
+                                            /*foreach (Client c in GameMain.Server.ConnectedClients)
                                             {
                                                 if (c.Character != target) { continue; }                                                
                                                 GameMain.Server.SetClientCharacter(c, newCharacter);                                                
-                                            }
+                                            }*/
 #endif
                                         }
                                         if (characterSpawnInfo.RemovePreviousCharacter) { Entity.Spawner?.AddEntityToRemoveQueue(character); }
@@ -1705,92 +1704,101 @@ namespace Barotrauma
                         case ItemSpawnInfo.SpawnPositionType.This:
                             Entity.Spawner.AddItemToSpawnQueue(chosenItemSpawnInfo.ItemPrefab, position + Rand.Vector(chosenItemSpawnInfo.Spread, Rand.RandSync.Unsynced), onSpawned: newItem =>
                             {
+                                Item parentItem = entity as Item;
                                 Projectile projectile = newItem.GetComponent<Projectile>();
-                                if (projectile != null && user != null && sourceBody != null && entity != null)
+                                if (entity != null)
                                 {
                                     var rope = newItem.GetComponent<Rope>();
-                                    if (rope != null && sourceBody.UserData is Limb sourceLimb)
+                                    if (rope != null && sourceBody != null && sourceBody.UserData is Limb sourceLimb)
                                     {
                                         rope.Attach(sourceLimb, newItem);
 #if SERVER
                                         newItem.CreateServerEvent(rope);
 #endif
                                     }
-                                    float spread = MathHelper.ToRadians(Rand.Range(-chosenItemSpawnInfo.AimSpread, chosenItemSpawnInfo.AimSpread));
-                                    var worldPos = sourceBody.Position;
-                                    float rotation = 0;
-                                    if (user.Submarine != null)
+                                    float spread = Rand.Range(-chosenItemSpawnInfo.AimSpreadRad, chosenItemSpawnInfo.AimSpreadRad);
+                                    float rotation = chosenItemSpawnInfo.RotationRad;
+                                    Vector2 worldPos;
+                                    if (sourceBody != null)
                                     {
-                                        worldPos += user.Submarine.Position;
+                                        worldPos = sourceBody.Position;
+                                        if (user?.Submarine != null)
+                                        {
+                                            worldPos += user.Submarine.Position;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        worldPos = entity.WorldPosition;
                                     }
                                     switch (chosenItemSpawnInfo.RotationType)
                                     {
                                         case ItemSpawnInfo.SpawnRotationType.Fixed:
-                                            rotation = sourceBody.TransformRotation(chosenItemSpawnInfo.Rotation);
+                                            if (sourceBody != null)
+                                            {
+                                                rotation = sourceBody.TransformRotation(chosenItemSpawnInfo.RotationRad);
+                                            }
+                                            else if (parentItem?.body != null)
+                                            {
+                                                rotation = parentItem.body.TransformRotation(chosenItemSpawnInfo.RotationRad);
+                                            }
                                             break;
                                         case ItemSpawnInfo.SpawnRotationType.Target:
                                             rotation = MathUtils.VectorToAngle(entity.WorldPosition - worldPos);
                                             break;
                                         case ItemSpawnInfo.SpawnRotationType.Limb:
-                                            rotation = sourceBody.TransformedRotation;
+                                            if (sourceBody != null)
+                                            {
+                                                rotation = sourceBody.TransformedRotation;
+                                            }
                                             break;
                                         case ItemSpawnInfo.SpawnRotationType.Collider:
-                                            rotation = user.AnimController.Collider.Rotation + MathHelper.PiOver2;
+                                            if (parentItem?.body != null)
+                                            {
+                                                rotation = parentItem.body.Rotation;
+                                            }
+                                            else if (user != null)
+                                            {
+                                                rotation = user.AnimController.Collider.Rotation + MathHelper.PiOver2;
+                                            }
                                             break;
                                         case ItemSpawnInfo.SpawnRotationType.MainLimb:
-                                            rotation = user.AnimController.MainLimb.body.TransformedRotation;
+                                            if (user != null)
+                                            {
+                                                rotation = user.AnimController.MainLimb.body.TransformedRotation;
+                                            }
                                             break;
                                         case ItemSpawnInfo.SpawnRotationType.Random:
-                                            DebugConsole.ShowError("Random rotation is not supported for Projectiles.");
+                                            if (projectile != null)
+                                            {
+                                                DebugConsole.ShowError("Random rotation is not supported for Projectiles.");
+                                            }
+                                            else
+                                            {
+                                                rotation = Rand.Range(0f, MathHelper.TwoPi, Rand.RandSync.Unsynced);
+                                            }
                                             break;
                                         default:
-                                            throw new NotImplementedException("Projectile spawn rotation type not implemented: " + chosenItemSpawnInfo.RotationType);
+                                            throw new NotImplementedException("Item spawn rotation type not implemented: " + chosenItemSpawnInfo.RotationType);
                                     }
-                                    rotation += MathHelper.ToRadians(chosenItemSpawnInfo.Rotation * user.AnimController.Dir);
-                                    projectile.Shoot(user, ConvertUnits.ToSimUnits(worldPos), ConvertUnits.ToSimUnits(worldPos), rotation + spread, ignoredBodies: user.AnimController.Limbs.Where(l => !l.IsSevered).Select(l => l.body.FarseerBody).ToList(), createNetworkEvent: true);
-                                }
-                                else
-                                {
-                                    var body = newItem.body;
-                                    if (body != null)
+                                    if (user != null)
                                     {
-                                        float rotation = MathHelper.ToRadians(chosenItemSpawnInfo.Rotation);
-                                        switch (chosenItemSpawnInfo.RotationType)
-                                        {
-                                            case ItemSpawnInfo.SpawnRotationType.Fixed:
-                                                if (sourceBody != null)
-                                                {
-                                                    rotation = sourceBody.TransformRotation(chosenItemSpawnInfo.Rotation);
-                                                }
-                                                break;
-                                            case ItemSpawnInfo.SpawnRotationType.Limb:
-                                                if (sourceBody != null)
-                                                {
-                                                    rotation += sourceBody.Rotation;
-                                                }
-                                                break;
-                                            case ItemSpawnInfo.SpawnRotationType.Collider:
-                                                if (entity is Character character)
-                                                {
-                                                    rotation += character.AnimController.Collider.Rotation + MathHelper.PiOver2;
-                                                }
-                                                break;
-                                            case ItemSpawnInfo.SpawnRotationType.MainLimb:
-                                                if (entity is Character c)
-                                                {
-                                                    rotation = c.AnimController.MainLimb.body.TransformedRotation;
-                                                }
-                                                break;
-                                            case ItemSpawnInfo.SpawnRotationType.Random:
-                                                rotation = Rand.Range(0f, MathHelper.TwoPi, Rand.RandSync.Unsynced);
-                                                break;
-                                            case ItemSpawnInfo.SpawnRotationType.Target:
-                                                break;
-                                            default:
-                                                throw new NotImplementedException("Spawn rotation type not implemented: " + chosenItemSpawnInfo.RotationType);
-                                        }
-                                        body.SetTransform(newItem.SimPosition, rotation);
-                                        body.ApplyLinearImpulse(Rand.Vector(1) * chosenItemSpawnInfo.Impulse);
+                                        rotation += chosenItemSpawnInfo.RotationRad * user.AnimController.Dir;
+                                    }
+                                    rotation += spread;
+                                    if (projectile != null)
+                                    {
+                                        projectile.Shoot(user, 
+                                            ConvertUnits.ToSimUnits(worldPos), 
+                                            ConvertUnits.ToSimUnits(worldPos),
+                                            rotation,
+                                            ignoredBodies: user?.AnimController.Limbs.Where(l => !l.IsSevered).Select(l => l.body.FarseerBody).ToList(), createNetworkEvent: true);
+                                    }
+                                    else if (newItem.body != null)
+                                    {
+                                        newItem.body.SetTransform(newItem.SimPosition, rotation);
+                                        Vector2 impulseDir = new Vector2(MathF.Cos(rotation), MathF.Sin(rotation));
+                                        newItem.body.ApplyLinearImpulse(impulseDir * chosenItemSpawnInfo.Impulse);
                                     }
                                 }
                                 newItem.Condition = newItem.MaxCondition * chosenItemSpawnInfo.Condition;
@@ -2082,7 +2090,7 @@ namespace Barotrauma
 
             if (!MathUtils.NearlyEqual(afflictionMultiplier, 1.0f))
             {
-                return affliction.CreateMultiplied(afflictionMultiplier);
+                return affliction.CreateMultiplied(afflictionMultiplier, affliction.Probability);
             }
             return affliction;
         }

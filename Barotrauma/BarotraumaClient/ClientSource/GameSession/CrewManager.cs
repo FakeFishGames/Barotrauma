@@ -1390,7 +1390,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    CreateCommandUI(HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition) ? Character.Controlled : GUI.MouseOn?.UserData as Character);
+                    CreateCommandUI(CharacterHUD.MouseOnCharacterPortrait() ? Character.Controlled : GUI.MouseOn?.UserData as Character);
                 }
                 SoundPlayer.PlayUISound(GUISoundType.PopupMenu);
                 clicklessSelectionActive = isOpeningClick = true;

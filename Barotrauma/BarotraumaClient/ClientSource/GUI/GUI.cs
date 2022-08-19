@@ -48,7 +48,7 @@ namespace Barotrauma
         WaitingBackground = 6, // Cursor + Hourglass
     }
 
-    public static class GUI
+    static class GUI
     {
         public static GUICanvas Canvas => GUICanvas.Instance;
         public static CursorState MouseCursor = CursorState.Default;
@@ -981,7 +981,7 @@ namespace Barotrauma
                             return editor.GetMouseCursorState();
                         // Portrait area during gameplay
                         case GameScreen _ when !(Character.Controlled?.ShouldLockHud() ?? true):
-                            if (HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition) || CharacterHealth.IsMouseOnHealthBar())
+                            if (CharacterHUD.MouseOnCharacterPortrait() || CharacterHealth.IsMouseOnHealthBar())
                             {
                                 return CursorState.Hand;
                             }

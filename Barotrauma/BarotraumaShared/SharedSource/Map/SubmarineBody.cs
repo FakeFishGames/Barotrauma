@@ -343,14 +343,12 @@ namespace Barotrauma
                         Math.Max(Body.LinearVelocity.Y, ConvertUnits.ToSimUnits(Level.Loaded.BottomPos - (worldBorders.Y - worldBorders.Height))));
                 }
 
-                //hard limit for how far outside the level the sub can go
-                float maxDist = 200000.0f;
-                //the force of the current starts to increase exponentially after this point
-                float exponentialForceIncreaseDist = 150000.0f;
-                float distance = Position.X < 0 ? Math.Abs(Position.X) : Position.X - Level.Loaded.Size.X;
+                float distance = Position.X < -Level.OutsideBoundsCurrentMargin ? 
+                    Math.Abs(Position.X + Level.OutsideBoundsCurrentMargin) : 
+                    Position.X - (Level.Loaded.Size.X + Level.OutsideBoundsCurrentMargin);
                 if (distance > 0)
                 {
-                    if (distance > maxDist)
+                    if (distance > Level.OutsideBoundsCurrentHardLimit)
                     {
                         if (Position.X < 0)
                         {
@@ -361,9 +359,9 @@ namespace Barotrauma
                             Body.LinearVelocity = new Vector2(Math.Min(0, Body.LinearVelocity.X), Body.LinearVelocity.Y);
                         }
                     }
-                    if (distance > exponentialForceIncreaseDist)
+                    if (distance > Level.OutsideBoundsCurrentMarginExponential)
                     {
-                        distance += (float)Math.Pow((distance - exponentialForceIncreaseDist) * 0.01f, 2.0f);
+                        distance += (float)Math.Pow((distance - Level.OutsideBoundsCurrentMarginExponential) * 0.01f, 2.0f);
                     }
                     float force = distance * 0.5f;
                     totalForce += (Position.X < 0 ? Vector2.UnitX : -Vector2.UnitX) * force;

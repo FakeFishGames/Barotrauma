@@ -53,21 +53,19 @@ namespace Barotrauma
 
         private class FriendInfo
         {
-            public UInt64 SteamID;
+            public UInt64 SteamId;
             public string Name;
             public Sprite Sprite;
             public LocalizedString StatusText;
             public bool PlayingThisGame;
             public bool PlayingAnotherGame;
-            public string ConnectName;
-            public string ConnectEndpoint;
-            public UInt64 ConnectLobby;
+            public Option<ConnectCommand> ConnectCommand = Option<ConnectCommand>.None();
 
             public bool InServer
             {
                 get
                 {
-                    return PlayingThisGame && !StatusText.IsNullOrWhiteSpace() && (!string.IsNullOrWhiteSpace(ConnectEndpoint) || ConnectLobby != 0);
+                    return PlayingThisGame && !StatusText.IsNullOrWhiteSpace() && ConnectCommand.IsSome();
                 }
             }
         }
@@ -81,7 +79,7 @@ namespace Barotrauma
         private List<ServerInfo> favoriteServers;
         private List<ServerInfo> recentServers;
 
-        private readonly Dictionary<string, int> activePings = new Dictionary<string, int>();
+        private readonly Dictionary<IPAddress, int> activePings = new Dictionary<IPAddress, int>();
 
         private enum ServerListTab
         {
@@ -153,7 +151,6 @@ namespace Barotrauma
         private GUITickBox filterIncompatible;
         private GUITickBox filterFull;
         private GUITickBox filterEmpty;
-        private GUITickBox filterWhitelisted;
         private Dictionary<Identifier, GUIDropDown> ternaryFilters;
         private Dictionary<Identifier, GUITickBox> filterTickBoxes;
         private Dictionary<Identifier, GUITickBox> playStyleTickBoxes;
@@ -405,7 +402,6 @@ namespace Barotrauma
             filterIncompatible = addTickBox("FilterIncompatibleServers".ToIdentifier());
             filterFull = addTickBox("FilterFullServers".ToIdentifier());
             filterEmpty = addTickBox("FilterEmptyServers".ToIdentifier());
-            filterWhitelisted = addTickBox("FilterWhitelistedServers".ToIdentifier());
             filterOffensive = addTickBox("FilterOffensiveServers".ToIdentifier());
 
             // Filter Tags
@@ -608,13 +604,13 @@ namespace Barotrauma
                 {
                     if (selectedServer != null)
                     {
-                        if (!string.IsNullOrWhiteSpace(selectedServer.IP) && !string.IsNullOrWhiteSpace(selectedServer.Port) && int.TryParse(selectedServer.Port, out _))
-                        {
-                            JoinServer(selectedServer.IP + ":" + selectedServer.Port, selectedServer.ServerName);
-                        }
-                        else if (selectedServer.LobbyID != 0)
+                        if (selectedServer.LobbyID != 0)
                         {
                             Steam.SteamManager.JoinLobby(selectedServer.LobbyID, true);
+                        }
+                        else if (selectedServer.Endpoint != null)
+                        {
+                            JoinServer(selectedServer.Endpoint, selectedServer.ServerName);
                         }
                         else
                         {
@@ -753,20 +749,11 @@ namespace Barotrauma
             doc.SaveSafe(file);
         }
 
-        public ServerInfo UpdateServerInfoWithServerSettings(NetworkConnection endpoint, ServerSettings serverSettings)
+        public ServerInfo UpdateServerInfoWithServerSettings(NetworkConnection connection, ServerSettings serverSettings)
         {
-            UInt64 steamId = 0;
-            string ip = ""; string port = "";
-            if (endpoint is SteamP2PConnection steamP2PConnection) { steamId = steamP2PConnection.SteamID; }
-            else if (endpoint is LidgrenConnection lidgrenConnection)
-            {
-                ip = lidgrenConnection.IPString;
-                port = lidgrenConnection.Port.ToString();
-            }
-
             bool isInfoNew = false;
             ServerInfo info = serverList.Content.FindChild(d => (d.UserData is ServerInfo serverInfo) &&
-                                                        (steamId != 0 ? steamId == serverInfo.OwnerID : (ip == serverInfo.IP && port == serverInfo.Port)))?.UserData as ServerInfo;
+                                                        serverInfo.Endpoint == connection.Endpoint)?.UserData as ServerInfo;
             if (info == null)
             {
                 isInfoNew = true;
@@ -775,17 +762,14 @@ namespace Barotrauma
 
             info.ServerName = serverSettings.ServerName;
             info.ServerMessage = serverSettings.ServerMessageText;
-            info.OwnerID = steamId;
+            info.Endpoint = connection.Endpoint;
             info.LobbyID = SteamManager.CurrentLobbyID;
-            info.IP = ip;
-            info.Port = port;
             info.GameMode = GameMain.NetLobbyScreen.SelectedMode?.Identifier ?? Identifier.Empty;
             info.GameStarted = Screen.Selected != GameMain.NetLobbyScreen;
             info.GameVersion = GameMain.Version.ToString();
             info.MaxPlayers = serverSettings.MaxPlayers;
             info.PlayStyle = serverSettings.PlayStyle;
             info.RespondedToSteamQuery = true;
-            info.UsingWhiteList = serverSettings.Whitelist.Enabled;
             info.TraitorsEnabled = serverSettings.TraitorsEnabled;
             info.SubSelectionMode = serverSettings.SubSelectionMode;
             info.ModeSelectionMode = serverSettings.ModeSelectionMode;
@@ -807,10 +791,9 @@ namespace Barotrauma
 
         public void AddToRecentServers(ServerInfo info)
         {
-            if (!string.IsNullOrEmpty(info.IP))
+            if (info.Endpoint is LidgrenEndpoint { NetEndpoint: { Address: var ip } } && IPAddress.IsLoopback(ip))
             {
-                //don't add localhost to recent servers
-                if (IPAddress.TryParse(info.IP, out IPAddress ip) && IPAddress.IsLoopback(ip)) { return; }
+                return;
             }
 
             info.Recent = true;
@@ -870,8 +853,7 @@ namespace Barotrauma
 
         private void SortList(string sortBy, bool toggle)
         {
-            GUIButton button = labelHolder.GetChildByUserData(sortBy) as GUIButton;
-            if (button == null) { return; }
+            if (!(labelHolder.GetChildByUserData(sortBy) is GUIButton button)) { return; }
 
             sortedBy = sortBy;
 
@@ -985,7 +967,7 @@ namespace Barotrauma
 
             if (GameMain.Client != null)
             {
-                GameMain.Client.Disconnect();
+                GameMain.Client.Quit();
                 GameMain.Client = null;
             }
 
@@ -1060,14 +1042,13 @@ namespace Barotrauma
                         (!filterIncompatible.Selected || !incompatible) &&
                         (!filterFull.Selected || serverInfo.PlayerCount < serverInfo.MaxPlayers) &&
                         (!filterEmpty.Selected || serverInfo.PlayerCount > 0) &&
-                        (!filterWhitelisted.Selected || serverInfo.UsingWhiteList == true) &&
                         (!filterOffensive.Selected || !ForbiddenWordFilter.IsForbidden(serverInfo.ServerName)) &&
                         karmaFilterPassed &&
                         friendlyFireFilterPassed &&
                         traitorsFilterPassed &&
                         voipFilterPassed &&
                         moddedFilterPassed &&
-                        ((selectedTab == ServerListTab.All && (serverInfo.LobbyID != 0 || !string.IsNullOrWhiteSpace(serverInfo.Port))) ||
+                        ((selectedTab == ServerListTab.All && (serverInfo.LobbyID != 0 || serverInfo.Endpoint != null)) ||
                          (selectedTab == ServerListTab.Recent && serverInfo.Recent) ||
                          (selectedTab == ServerListTab.Favorites && serverInfo.Favorite));
                 }
@@ -1105,7 +1086,7 @@ namespace Barotrauma
             serverList.UpdateScrollBarSize();
         }
 
-        private Queue<ServerInfo> pendingQueries = new Queue<ServerInfo>();
+        private readonly Queue<ServerInfo> pendingQueries = new Queue<ServerInfo>();
         int activeQueries = 0;
         private void QueueInfoQuery(ServerInfo info)
         {
@@ -1152,46 +1133,22 @@ namespace Barotrauma
             okButton.Enabled = false;
             okButton.OnClicked = (btn, userdata) =>
             {
-                JoinServer(endpointBox.Text, "");
+                if (!(Endpoint.Parse(endpointBox.Text).TryUnwrap(out var endpoint))) { return false; }
+                JoinServer(endpoint, "");
                 msgBox.Close();
-                return true;
+                return false;
             };
 
             var favoriteButton = msgBox.Buttons[1];
             favoriteButton.Enabled = false;
             favoriteButton.OnClicked = (button, userdata) =>
             {
-                UInt64 steamId = SteamManager.SteamIDStringToUInt64(endpointBox.Text);
-                string ip = ""; int port = 0;
-                if (steamId == 0)
-                {
-                    string hostIP = endpointBox.Text;
+                if (!(Endpoint.Parse(endpointBox.Text).TryUnwrap(out var endpoint))) { return false; }
 
-                    string[] address = hostIP.Split(':');
-                    if (address.Length == 1)
-                    {
-                        ip = hostIP;
-                        port = NetConfig.DefaultPort;
-                    }
-                    else
-                    {
-                        ip = string.Join(":", address.Take(address.Length - 1));
-                        if (!int.TryParse(address[address.Length - 1], out port))
-                        {
-                            DebugConsole.ThrowError("Invalid port: " + address[address.Length - 1] + "!");
-                            port = NetConfig.DefaultPort;
-                        }
-                    }
-                }
-
-                //TODO: add a better way to get the query port, right now we're just assuming that it'll always be the default
                 ServerInfo serverInfo = new ServerInfo()
                 {
                     ServerName = "Server",
-                    OwnerID = steamId,
-                    IP = ip,
-                    Port = port.ToString(),
-                    QueryPort = NetConfig.DefaultQueryPort.ToString(),
+                    Endpoint = endpoint,
                     GameVersion = GameMain.Version.ToString(),
                     PlayStyle = null
                 };
@@ -1231,37 +1188,25 @@ namespace Barotrauma
 
         private bool JoinFriend(GUIButton button, object userdata)
         {
-            FriendInfo info = userdata as FriendInfo;
+            if (!(userdata is FriendInfo { InServer: true } info)) { return false; }
 
-            if (info.InServer)
-            {
-                if (info.ConnectLobby != 0)
-                {
-                    GameMain.Instance.ConnectLobby = info.ConnectLobby;
-                    GameMain.Instance.ConnectEndpoint = null;
-                    GameMain.Instance.ConnectName = null;
-                }
-                else
-                {
-                    GameMain.Instance.ConnectLobby = 0;
-                    GameMain.Instance.ConnectEndpoint = info.ConnectEndpoint;
-                    GameMain.Instance.ConnectName = info.ConnectName;
-                }
-            }
+            GameMain.Instance.ConnectCommand = info.ConnectCommand;
             return false;
         }
 
         private bool OpenFriendPopup(GUIButton button, object userdata)
         {
-            FriendInfo info = userdata as FriendInfo;
+            if (!(userdata is FriendInfo { InServer: true } info)) { return false; }
 
-            if (info.InServer)
+            if (info.InServer
+                && info.ConnectCommand is Some<ConnectCommand> { Value: { EndpointOrLobby: var endpointOrLobby } }
+                && endpointOrLobby.TryGet(out ConnectCommand.NameAndEndpoint nameAndEndpoint))
             {
-                int framePadding = 5;
+                const int framePadding = 5;
 
                 friendPopup = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas));
 
-                var serverNameText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), friendPopup.RectTransform, Anchor.CenterLeft), info.ConnectName ?? "[Unnamed]");
+                var serverNameText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1.0f), friendPopup.RectTransform, Anchor.CenterLeft), nameAndEndpoint.ServerName ?? "[Unnamed]");
                 serverNameText.RectTransform.AbsoluteOffset = new Point(framePadding, 0);
 
                 var joinButton = new GUIButton(new RectTransform(new Vector2(0.3f, 1.0f), friendPopup.RectTransform, Anchor.CenterRight), TextManager.Get("ServerListJoin"))
@@ -1349,7 +1294,7 @@ namespace Barotrauma
             for (int i = friendsList.Count - 1; i >= 0; i--)
             {
                 var friend = friendsList[i];
-                if (!friends.Any(g => g.Id == friend.SteamID && g.IsOnline))
+                if (!friends.Any(g => g.Id == friend.SteamId && g.IsOnline))
                 {
                     friend.Sprite?.Remove();
                     friendsList.RemoveAt(i);
@@ -1360,12 +1305,12 @@ namespace Barotrauma
             {
                 if (!friend.IsOnline) { continue; }
 
-                FriendInfo info = friendsList.Find(f => f.SteamID == friend.Id);
+                FriendInfo info = friendsList.Find(f => f.SteamId == friend.Id);
                 if (info == null)
                 {
                     info = new FriendInfo()
                     {
-                        SteamID = friend.Id
+                        SteamId = friend.Id
                     };
                     friendsList.Insert(0, info);
                 }
@@ -1425,9 +1370,7 @@ namespace Barotrauma
 
                 info.Name = friend.Name;
 
-                info.ConnectName = null;
-                info.ConnectEndpoint = null;
-                info.ConnectLobby = 0;
+                info.ConnectCommand = Option<ConnectCommand>.None();
 
                 info.PlayingThisGame = friend.IsPlayingThisGame;
                 info.PlayingAnotherGame = friend.GameInfo.HasValue;
@@ -1439,7 +1382,7 @@ namespace Barotrauma
 
                     try
                     {
-                        ToolBox.ParseConnectCommand(ToolBox.SplitCommand(connectCommand), out info.ConnectName, out info.ConnectEndpoint, out info.ConnectLobby);
+                        info.ConnectCommand = ToolBox.ParseConnectCommand(ToolBox.SplitCommand(connectCommand));
                     }
                     catch (IndexOutOfRangeException e)
                     {
@@ -1448,9 +1391,7 @@ namespace Barotrauma
 #else
                         DebugConsole.Log($"Failed to parse a Steam friend's connect command ({connectCommand})\n" + e.StackTrace.CleanupStackTrace());
 #endif
-                        info.ConnectName = null;
-                        info.ConnectEndpoint = null;
-                        info.ConnectLobby = 0;
+                        info.ConnectCommand = Option<ConnectCommand>.None();
                     }
                 }
                 else
@@ -1650,86 +1591,16 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        private void UpdateServerList(string masterServerData)
-        {
-            serverList.ClearChildren();
-                        
-            if (masterServerData.Substring(0, 5).Equals("error", StringComparison.OrdinalIgnoreCase))
-            {
-                DebugConsole.ThrowError("Error while connecting to master server (" + masterServerData + ")!");
-                return;
-            }
-
-            string[] lines = masterServerData.Split('\n');
-            List<ServerInfo> serverInfos = new List<ServerInfo>();
-            for (int i = 0; i < lines.Length; i++)
-            {
-                string[] arguments = lines[i].Split('|');
-                if (arguments.Length < 3) continue;
-
-                string ip =                 arguments[0];
-                string port =               arguments[1];
-                string serverName =         arguments[2];
-                bool gameStarted =          arguments.Length > 3 && arguments[3] == "1";
-                string currPlayersStr =     arguments.Length > 4 ? arguments[4] : "";
-                string maxPlayersStr =      arguments.Length > 5 ? arguments[5] : "";
-                bool hasPassWord =          arguments.Length > 6 && arguments[6] == "1";
-                string gameVersion =        arguments.Length > 7 ? arguments[7] : "";
-                string contentPackageNames = arguments.Length > 8 ? arguments[8] : "";
-                string contentPackageHashes = arguments.Length > 9 ? arguments[9] : "";
-
-                int.TryParse(currPlayersStr, out int playerCount);
-                int.TryParse(maxPlayersStr, out int maxPlayers);
-
-                var serverInfo = new ServerInfo()
-                {
-                    IP = ip,
-                    Port = port,
-                    ServerName = serverName,
-                    GameStarted = gameStarted,
-                    PlayerCount = playerCount,
-                    MaxPlayers = maxPlayers,
-                    HasPassword = hasPassWord,
-                    GameVersion = gameVersion,
-                    OwnerVerified = true
-                };
-                foreach (string contentPackageName in contentPackageNames.Split(','))
-                {
-                    if (string.IsNullOrEmpty(contentPackageName)) continue;
-                    serverInfo.ContentPackageNames.Add(contentPackageName);
-                }
-                foreach (string contentPackageHash in contentPackageHashes.Split(','))
-                {
-                    if (string.IsNullOrEmpty(contentPackageHash)) continue;
-                    serverInfo.ContentPackageHashes.Add(contentPackageHash);
-                }
-
-                serverInfos.Add(serverInfo);
-            }
-
-            serverList.Content.ClearChildren();
-            if (serverInfos.Count() == 0)
-            {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), serverList.Content.RectTransform),
-                    TextManager.Get("NoServers"), textAlignment: Alignment.Center)
-                {
-                    CanBeFocused = false
-                };
-                return;
-            }
-            foreach (ServerInfo serverInfo in serverInfos)
-            {
-                AddToServerList(serverInfo);
-            }
-        }
-
+        private GUIComponent FindFrameMatchingServerInfo(ServerInfo serverInfo)
+            => serverList.Content.FindChild(d =>
+                d.UserData is ServerInfo info
+                && (info.LobbyID == 0 || info.LobbyID == serverInfo.LobbyID)
+                && info.OwnerVerified
+                && serverInfo.Endpoint == info.Endpoint);
+        
         private void AddToServerList(ServerInfo serverInfo)
         {
-            var serverFrame = serverList.Content.FindChild(d => (d.UserData is ServerInfo info) &&
-                                                                (info.LobbyID == serverInfo.LobbyID ||
-                                                                (info.LobbyID == 0 && info.OwnerID == serverInfo.OwnerID &&
-                                                                serverInfo.OwnerVerified)) &&
-                                                                (serverInfo.OwnerID != 0 ? true : (info.IP == serverInfo.IP && info.Port == serverInfo.Port)));
+            var serverFrame = FindFrameMatchingServerInfo(serverInfo);
 
             if (serverFrame == null)
             {
@@ -1763,8 +1634,10 @@ namespace Barotrauma
 
             if (serverInfo.OwnerVerified)
             {
-                var childrenToRemove = serverList.Content.FindChildren(c => (c.UserData is ServerInfo info) && info != serverInfo &&
-                                                                            (serverInfo.OwnerID != 0 ? info.OwnerID == serverInfo.OwnerID : info.IP == serverInfo.IP)).ToList();
+                var childrenToRemove = serverList.Content.FindChildren(c =>
+                   c.UserData is ServerInfo info
+                   && !ReferenceEquals(info, serverInfo)
+                   && serverInfo.Endpoint == info.Endpoint).ToList();
                 foreach (var child in childrenToRemove)
                 {
                     serverList.Content.RemoveChild(child);
@@ -1779,11 +1652,7 @@ namespace Barotrauma
 
         private void UpdateServerInfo(ServerInfo serverInfo)
         {
-            var serverFrame = serverList.Content.FindChild(d => (d.UserData is ServerInfo info) &&
-                                                                (info.LobbyID == serverInfo.LobbyID ||
-                                                                (info.LobbyID == 0 && info.OwnerID == serverInfo.OwnerID &&
-                                                                serverInfo.OwnerVerified)) &&
-                                                                (serverInfo.OwnerID != 0 ? true : (info.IP == serverInfo.IP && info.Port == serverInfo.Port)));
+            var serverFrame = FindFrameMatchingServerInfo(serverInfo);
             if (serverFrame == null) return;
 
             var serverContent = serverFrame.Children.First() as GUILayoutGroup;
@@ -1806,11 +1675,10 @@ namespace Barotrauma
             };
 
 			var serverName = new GUITextBlock(new RectTransform(new Vector2(columnRelativeWidth[2] * 1.1f, 1.0f), serverContent.RectTransform),
-#if !DEBUG
-                serverInfo.ServerName,
-#else
-                ((serverInfo.OwnerID != 0 || serverInfo.LobbyID != 0) ? "[STEAMP2P] " : "[LIDGREN] ") + serverInfo.ServerName,
+#if DEBUG
+                (serverInfo.Endpoint is SteamP2PEndpoint ? "[STEAMP2P] " : "[LIDGREN] ") +
 #endif
+                serverInfo.ServerName,
                 style: "GUIServerListTextBox");
             serverName.UserData = serverName.Text;
             serverName.RectTransform.SizeChanged += () =>
@@ -1850,7 +1718,7 @@ namespace Barotrauma
                 serverPingText.Text = serverInfo.Ping > -1 ? serverInfo.Ping.ToString() : "?";
                 serverPingText.TextColor = GetPingTextColor(serverInfo.Ping);
             }
-            else if (!string.IsNullOrEmpty(serverInfo.IP))
+            else if (serverInfo.Endpoint is LidgrenEndpoint lidgrenEndpoint)
             {
                 try
                 {
@@ -1866,7 +1734,7 @@ namespace Barotrauma
                 CoroutineManager.StartCoroutine(EstimateLobbyPing(serverInfo, serverPingText), "EstimateLobbyPing");
             }
 
-            if (serverInfo.LobbyID == 0 && (string.IsNullOrWhiteSpace(serverInfo.IP) || string.IsNullOrWhiteSpace(serverInfo.Port)))
+            if (serverInfo.LobbyID == 0)
             {
                 LocalizedString toolTip = TextManager.Get("ServerOffline");
                 serverContent.Children.ForEach(c => c.ToolTip = toolTip);
@@ -1930,7 +1798,7 @@ namespace Barotrauma
                 LocalizedString toolTip = "";
                 for (int i = 0; i < serverInfo.ContentPackageNames.Count; i++)
                 {
-                    if (!ContentPackageManager.EnabledPackages.All.Any(contentPackage => contentPackage.Hash.StringRepresentation == serverInfo.ContentPackageHashes[i]))
+                    if (ContentPackageManager.EnabledPackages.All.None(contentPackage => contentPackage.Hash.StringRepresentation == serverInfo.ContentPackageHashes[i]))
                     {
                         if (toolTip != "") { toolTip += "\n"; }
                         toolTip += TextManager.GetWithVariable("ServerListIncompatibleContentPackageWorkshopAvailable", "[contentpackage]", serverInfo.ContentPackageNames[i]);
@@ -1995,7 +1863,7 @@ namespace Barotrauma
             masterServerResponded = true;
         }
 
-        private bool JoinServer(string endpoint, string serverName)
+        private bool JoinServer(Endpoint endpoint, string serverName)
         {
             if (string.IsNullOrWhiteSpace(ClientNameBox.Text))
             {
@@ -2013,17 +1881,13 @@ namespace Barotrauma
             return true;
         }
         
-        private IEnumerable<CoroutineStatus> ConnectToServer(string endpoint, string serverName)
+        private IEnumerable<CoroutineStatus> ConnectToServer(Endpoint endpoint, string serverName)
         {
-            string serverIP = null;
-            UInt64 serverSteamID = SteamManager.SteamIDStringToUInt64(endpoint);
-            if (serverSteamID == 0) { serverIP = endpoint; }
-
 #if !DEBUG
             try
             {
 #endif
-                GameMain.Client = new GameClient(MultiplayerPreferences.Instance.PlayerName.FallbackNullOrEmpty(SteamManager.GetUsername()), serverIP, serverSteamID, serverName);
+                GameMain.Client = new GameClient(MultiplayerPreferences.Instance.PlayerName.FallbackNullOrEmpty(SteamManager.GetUsername()), endpoint, serverName, Option<int>.None());
 #if !DEBUG
             }
             catch (Exception e)
@@ -2035,31 +1899,32 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        public void GetServerPing(ServerInfo serverInfo, GUITextBlock serverPingText)
+        private void GetServerPing(ServerInfo serverInfo, GUITextBlock serverPingText)
         {
             if (CoroutineManager.IsCoroutineRunning("ConnectToServer")) { return; }
-
+            if (!(serverInfo.Endpoint is LidgrenEndpoint { NetEndpoint: { Address: var address } })) { return; }
+            
             lock (activePings)
             {
-                if (activePings.ContainsKey(serverInfo.IP)) { return; }
-                activePings.Add(serverInfo.IP, activePings.Any() ? activePings.Values.Max()+1 : 0);
+                if (activePings.ContainsKey(address)) { return; }
+                activePings.Add(address, activePings.Any() ? activePings.Values.Max()+1 : 0);
             }
 
             serverInfo.PingChecked = false;
             serverInfo.Ping = -1;
 
-            TaskPool.Add($"PingServerAsync ({serverInfo?.IP ?? "NULL"})", PingServerAsync(serverInfo.IP, 1000),
+            TaskPool.Add($"PingServerAsync ({address})", PingServerAsync(address, 1000),
                 new Tuple<ServerInfo, GUITextBlock>(serverInfo, serverPingText),
                 (rtt, obj) =>
                 {
-                    var info = obj.Item1;
-                    var text = obj.Item2;
-                    rtt.TryGetResult(out info.Ping); info.PingChecked = true;
+                    var (info, text) = obj;
+                    if (!rtt.TryGetResult(out info.Ping)) { info.Ping = -1; }
+                    info.PingChecked = true;
                     text.TextColor = GetPingTextColor(info.Ping);
                     text.Text = info.Ping > -1 ? info.Ping.ToString() : "?";
                     lock (activePings)
                     {
-                        activePings.Remove(info.IP);
+                        activePings.Remove(address);
                     }
                 });
         }
@@ -2070,7 +1935,7 @@ namespace Barotrauma
             return ToolBox.GradientLerp(ping / 200.0f, GUIStyle.Green, GUIStyle.Orange, GUIStyle.Red);
         }
 
-        public async Task<int> PingServerAsync(string ip, int timeOut)
+        public async Task<int> PingServerAsync(IPAddress ipAddress, int timeOut)
         {
             await Task.Yield();
             bool shouldGo = false;
@@ -2078,29 +1943,22 @@ namespace Barotrauma
             {
                 lock (activePings)
                 {
-                    shouldGo = activePings.Count(kvp => kvp.Value < activePings[ip]) < 25;
+                    shouldGo = activePings.Count(kvp => kvp.Value < activePings[ipAddress]) < 25;
                 }
                 await Task.Delay(25);
             }
 
-            if (string.IsNullOrWhiteSpace(ip))
-            {
-                return -1;
-            }
-
             long rtt = -1;
-            IPAddress address = null;
-            IPAddress.TryParse(ip, out address);
-            if (address != null)
+            if (ipAddress != null)
             {
                 //don't attempt to ping if the address is IPv6 and it's not supported
-                if (address.AddressFamily != AddressFamily.InterNetworkV6 || Socket.OSSupportsIPv6)
+                if (ipAddress.AddressFamily != AddressFamily.InterNetworkV6 || Socket.OSSupportsIPv6)
                 {
                     Ping ping = new Ping();
                     byte[] buffer = new byte[32];
                     try
                     {
-                        PingReply pingReply = ping.Send(address, timeOut, buffer, new PingOptions(128, true));
+                        PingReply pingReply = ping.Send(ipAddress, timeOut, buffer, new PingOptions(128, true));
 
                         if (pingReply != null)
                         {
@@ -2117,9 +1975,9 @@ namespace Barotrauma
                     }
                     catch (Exception ex)
                     {
-                        GameAnalyticsManager.AddErrorEventOnce("ServerListScreen.PingServer:PingException" + ip, GameAnalyticsManager.ErrorSeverity.Warning, "Failed to ping a server - " + (ex?.InnerException?.Message ?? ex.Message));
+                        GameAnalyticsManager.AddErrorEventOnce("ServerListScreen.PingServer:PingException" + ipAddress, GameAnalyticsManager.ErrorSeverity.Warning, "Failed to ping a server - " + (ex?.InnerException?.Message ?? ex.Message));
 #if DEBUG
-                        DebugConsole.NewMessage("Failed to ping a server (" + ip + ") - " + (ex?.InnerException?.Message ?? ex.Message), Color.Red);
+                        DebugConsole.NewMessage("Failed to ping a server (" + ipAddress + ") - " + (ex?.InnerException?.Message ?? ex.Message), Color.Red);
 #endif
                     }
                 }

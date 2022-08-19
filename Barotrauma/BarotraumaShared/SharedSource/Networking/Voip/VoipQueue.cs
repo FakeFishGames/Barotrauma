@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.Xna.Framework;
 
 namespace Barotrauma.Networking
 {
-
-    public class VoipQueue : IDisposable
+    class VoipQueue : IDisposable
     {
         public const int BUFFER_COUNT = 8;
         protected int[] bufferLengths;

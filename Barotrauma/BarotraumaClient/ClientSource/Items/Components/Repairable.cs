@@ -354,7 +354,7 @@ namespace Barotrauma.Items.Components
                 tinkerButtonText :
                 tinkeringText + new string('.', ((int)(Timing.TotalTime * 2.0f) % 3) + 1);
 
-            System.Diagnostics.Debug.Assert(GuiFrame.GetChild(0) is GUILayoutGroup, "Repair UI hierarchy has changed, could not find skill texts");
+            //System.Diagnostics.Debug.Assert(GuiFrame.GetChild(0) is GUILayoutGroup, "Repair UI hierarchy has changed, could not find skill texts");
 
             extraButtonContainer.Visible = SabotageButton.Visible || TinkerButton.Visible;
             extraButtonContainer.IgnoreLayoutGroups = !extraButtonContainer.Visible;

@@ -810,7 +810,7 @@ namespace Barotrauma
                     GUI.DrawString(spriteBatch, pos, interestingPos.PositionType.ToString(), Color.White, font: GUIStyle.LargeFont);
                 }
 
-                // TODO: Improve this temporary level editor debug solution (or remove it)
+                // TODO: Improve this temporary level editor debug solution
                 foreach (var pathPoint in Level.Loaded.PathPoints)
                 {
                     Vector2 pathPointPos = new Vector2(pathPoint.Position.X, -pathPoint.Position.Y);
@@ -831,6 +831,17 @@ namespace Barotrauma
                     var color = pathPoint.ShouldContainResources ? Color.DarkGreen : Color.DarkRed;
                     spriteBatch.DrawCircle(pathPointPos, 300, 6, color * 0.5f, thickness: (int)(2 / Cam.Zoom));
                     GUI.DrawString(spriteBatch, pathPointPos, "Path Point\n" + pathPoint.Id, color, font: GUIStyle.LargeFont);
+                }
+
+                foreach (var location in Level.Loaded.AbyssResources)
+                {
+                    if (location.Resources == null) { continue; }
+                    foreach (var resource in location.Resources)
+                    {
+                        Vector2 resourcePos = new Vector2(resource.Position.X, -resource.Position.Y);
+                        spriteBatch.DrawCircle(resourcePos, 100, 6, Color.DarkGreen * 0.5f, thickness: (int)(2 / Cam.Zoom));
+                        GUI.DrawString(spriteBatch, resourcePos, resource.Name, Color.DarkGreen, font: GUIStyle.LargeFont);
+                    }
                 }
 
                 /*for (int i = 0; i < Level.Loaded.distanceField.Count; i++)

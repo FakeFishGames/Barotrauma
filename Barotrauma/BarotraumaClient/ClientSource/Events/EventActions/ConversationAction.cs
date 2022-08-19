@@ -63,33 +63,43 @@ namespace Barotrauma
 
             shouldFadeToBlack = fadeToBlack;
 
+            Sprite eventSprite = EventSet.GetEventSprite(spriteIdentifier);
+
             if (lastMessageBox != null && !lastMessageBox.Closed && GUIMessageBox.MessageBoxes.Contains(lastMessageBox))
             {
-                if (actionId != null && lastMessageBox.UserData is Pair<string, ushort> userData)
+                if (eventSprite != null && lastMessageBox.BackgroundIcon == null)
                 {
-                    if (userData.Second == actionId) { return; }
-                    lastMessageBox.UserData = new Pair<string, ushort>("ConversationAction", actionId.Value);
+                    //no background icon in the last message box: we need to create a new one
+                    lastMessageBox.Close();
                 }
-
-                GUIListBox conversationList = lastMessageBox.FindChild("conversationlist", true) as GUIListBox;
-                Debug.Assert(conversationList != null);
-
-                // gray out the last text block
-                if (conversationList.Content.Children.LastOrDefault() is GUILayoutGroup lastElement)
+                else
                 {
-                    if (lastElement.FindChild("text", true) is GUITextBlock textLayout)
+                    if (actionId != null && lastMessageBox.UserData is Pair<string, ushort> userData)
                     {
-                        textLayout.OverrideTextColor(Color.DarkGray * 0.8f);
+                        if (userData.Second == actionId) { return; }
+                        lastMessageBox.UserData = new Pair<string, ushort>("ConversationAction", actionId.Value);
                     }
+
+                    GUIListBox conversationList = lastMessageBox.FindChild("conversationlist", true) as GUIListBox;
+                    Debug.Assert(conversationList != null);
+
+                    // gray out the last text block
+                    if (conversationList.Content.Children.LastOrDefault() is GUILayoutGroup lastElement)
+                    {
+                        if (lastElement.FindChild("text", true) is GUITextBlock textLayout)
+                        {
+                            textLayout.OverrideTextColor(Color.DarkGray * 0.8f);
+                        }
+                    }
+
+                    List<GUIButton> extraButtons = CreateConversation(conversationList, text, speaker, options, string.IsNullOrWhiteSpace(spriteIdentifier));
+                    AssignActionsToButtons(extraButtons, lastMessageBox);
+                    RecalculateLastMessage(conversationList, true);
+
+                    conversationList.ScrollToEnd(0.5f);
+                    lastMessageBox.SetBackgroundIcon(eventSprite);
+                    return;
                 }
-
-                List<GUIButton> extraButtons = CreateConversation(conversationList, text, speaker, options, string.IsNullOrWhiteSpace(spriteIdentifier));
-                AssignActionsToButtons(extraButtons, lastMessageBox);
-                RecalculateLastMessage(conversationList, true);
-
-                conversationList.ScrollToEnd(0.5f);
-                lastMessageBox.SetBackgroundIcon(EventSet.GetEventSprite(spriteIdentifier));
-                return;
             }
 
             var (relative, min) = GetSizes(dialogType);
@@ -100,7 +110,10 @@ namespace Barotrauma
             {
                 UserData = "ConversationAction"
             };
-
+            messageBox.OnAddedToGUIUpdateList += (GUIComponent component) =>
+            {
+                if (!(Screen.Selected is GameScreen)) { messageBox.Close(); }
+            };
             lastMessageBox = messageBox;
 
             messageBox.InnerFrame.ClearChildren();

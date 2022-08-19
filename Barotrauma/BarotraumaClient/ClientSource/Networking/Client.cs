@@ -72,8 +72,8 @@ namespace Barotrauma.Networking
         partial void InitProjSpecific()
         {
             VoipQueue = null; VoipSound = null;
-            if (ID == GameMain.Client.ID) return;
-            VoipQueue = new VoipQueue(ID, false, true);
+            if (SessionId == GameMain.Client.SessionId) { return; }
+            VoipQueue = new VoipQueue(SessionId, canSend: false, canReceive: true);
             GameMain.Client?.VoipClient?.RegisterQueue(VoipQueue);
             VoipSound = null;
         }

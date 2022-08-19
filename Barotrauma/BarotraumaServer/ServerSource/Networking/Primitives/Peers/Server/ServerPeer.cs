@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
+using Barotrauma.Extensions;
 
 namespace Barotrauma.Networking
 {
@@ -10,7 +9,7 @@ namespace Barotrauma.Networking
     {
         public delegate void MessageCallback(NetworkConnection connection, IReadMessage message);
         public delegate void DisconnectCallback(NetworkConnection connection, string reason);
-        public delegate void InitializationCompleteCallback(NetworkConnection connection);
+        public delegate void InitializationCompleteCallback(NetworkConnection connection, string clientName);
         public delegate void ShutdownCallback();
         public delegate void OwnerDeterminedCallback(NetworkConnection connection);
 
@@ -20,7 +19,7 @@ namespace Barotrauma.Networking
         public ShutdownCallback OnShutdown;
         public OwnerDeterminedCallback OnOwnerDetermined;
 
-        protected int? ownerKey;
+        protected Option<int> ownerKey;
 
         public NetworkConnection OwnerConnection { get; protected set; }
 
@@ -33,43 +32,23 @@ namespace Barotrauma.Networking
         protected class PendingClient
         {
             public string Name;
-            public int OwnerKey;
+            public Option<int> OwnerKey;
             public NetworkConnection Connection;
             public ConnectionInitialization InitializationStep;
             public double UpdateTime;
             public double TimeOut;
             public int Retries;
-            private UInt64? steamId;
-            public UInt64? SteamID
-            {
-                get { return steamId; }
-                set
-                {
-                    steamId = value;
-                    Connection.SetSteamIDIfUnknown(value ?? 0);
-                }
-            }
-            private UInt64? ownerSteamId;
-            public UInt64? OwnerSteamID
-            {
-                get { return ownerSteamId; }
-                set
-                {
-                    ownerSteamId = value;
-                    Connection.SetOwnerSteamIDIfUnknown(value ?? 0);
-                }
-            }
             public Int32? PasswordSalt;
             public bool AuthSessionStarted;
+            
+            public AccountInfo AccountInfo => Connection.AccountInfo;
 
             public PendingClient(NetworkConnection conn)
             {
-                OwnerKey = 0;
+                OwnerKey = Option<int>.None();
                 Connection = conn;
                 InitializationStep = ConnectionInitialization.SteamTicketAndVersion;
                 Retries = 0;
-                SteamID = null;
-                OwnerSteamID = null;
                 PasswordSalt = null;
                 UpdateTime = Timing.TotalTime + Timing.Step * 3.0;
                 TimeOut = NetworkConnection.TimeoutThreshold;
@@ -101,7 +80,10 @@ namespace Barotrauma.Networking
                 case ConnectionInitialization.SteamTicketAndVersion:
                     string name = Client.SanitizeName(inc.ReadString());
                     int ownerKey = inc.ReadInt32();
-                    UInt64 steamId = inc.ReadUInt64();
+                    UInt64 steamIdVal = inc.ReadUInt64();
+                    Option<SteamId> steamId = steamIdVal != 0
+                        ? Option<SteamId>.Some(new SteamId(steamIdVal))
+                        : Option<SteamId>.None();
                     UInt16 ticketLength = inc.ReadUInt16();
                     byte[] ticketBytes = inc.ReadBytes(ticketLength);
 
@@ -136,7 +118,7 @@ namespace Barotrauma.Networking
 
                     if (!pendingClient.AuthSessionStarted)
                     {
-                        ProcessAuthTicket(name, ownerKey, steamId, pendingClient, ticketBytes);
+                        ProcessAuthTicket(name, ownerKey != 0 ? Option<int>.Some(ownerKey) : Option<int>.None(), steamId, pendingClient, ticketBytes);
                     }
                     break;
                 case ConnectionInitialization.Password:
@@ -172,34 +154,37 @@ namespace Barotrauma.Networking
             }
         }
 
-        protected abstract void ProcessAuthTicket(string name, int ownKey, ulong steamId, PendingClient pendingClient, byte[] ticket);
+        protected abstract void ProcessAuthTicket(string name, Option<int> ownKey, Option<SteamId> steamId, PendingClient pendingClient, byte[] ticket);
 
         protected void BanPendingClient(PendingClient pendingClient, string banReason, TimeSpan? duration)
         {
-            if (pendingClient.Connection is LidgrenConnection l)
+            void banAccountId(AccountId accountId)
             {
-                serverSettings.BanList.BanPlayer(pendingClient.Name, l.NetConnection.RemoteEndPoint.Address, banReason, duration);
+                serverSettings.BanList.BanPlayer(pendingClient.Name, accountId, banReason, duration);
             }
-            else if (pendingClient.Connection is SteamP2PConnection s)
-            {
-                serverSettings.BanList.BanPlayer(pendingClient.Name, s.SteamID, banReason, duration);
-                serverSettings.BanList.BanPlayer(pendingClient.Name, s.OwnerSteamID, banReason, duration);
-            }
+            
+            if (pendingClient.AccountInfo.AccountId.TryUnwrap(out var id)) { banAccountId(id); }
+            pendingClient.AccountInfo.OtherMatchingIds.ForEach(banAccountId);
+            serverSettings.BanList.BanPlayer(pendingClient.Name, pendingClient.Connection.Endpoint, banReason, duration);
         }
-
+        
         protected bool IsPendingClientBanned(PendingClient pendingClient, out string banReason)
         {
-            if (pendingClient.Connection is LidgrenConnection l)
+            bool isAccountIdBanned(AccountId accountId, out string banReason)
             {
-                return serverSettings.BanList.IsBanned(l.NetConnection.RemoteEndPoint.Address, out banReason);
+                banReason = default;
+                return serverSettings.BanList.IsBanned(accountId, out banReason);
             }
-            else if (pendingClient.Connection is SteamP2PConnection s)
+
+            banReason = default;
+            bool isBanned = pendingClient.AccountInfo.AccountId.TryUnwrap(out var id)
+                            && isAccountIdBanned(id, out banReason);
+            foreach (var otherId in pendingClient.AccountInfo.OtherMatchingIds)
             {
-                return serverSettings.BanList.IsBanned(s.SteamID, out banReason) ||
-                       serverSettings.BanList.IsBanned(s.OwnerSteamID, out banReason);
+                if (isBanned) { break; }
+                isBanned |= isAccountIdBanned(otherId, out banReason);
             }
-            banReason = null;
-            return false;
+            return isBanned;
         }
 
         protected abstract void SendMsgInternal(NetworkConnection conn, DeliveryMethod deliveryMethod, IWriteMessage msg);
@@ -225,7 +210,7 @@ namespace Barotrauma.Networking
 
                 CheckOwnership(pendingClient);
 
-                OnInitializationComplete?.Invoke(newConnection);
+                OnInitializationComplete?.Invoke(newConnection, pendingClient.Name);
             }
 
             pendingClient.TimeOut -= Timing.Step;
@@ -244,8 +229,6 @@ namespace Barotrauma.Networking
             switch (pendingClient.InitializationStep)
             {
                 case ConnectionInitialization.ContentPackageOrder:
-                    outMsg.Write(GameMain.Server.ServerName);
-
                     var mpContentPackages = ContentPackageManager.EnabledPackages.All.Where(cp => cp.HasMultiplayerSyncedContent).ToList();
                     outMsg.WriteVariableUInt32((UInt32)mpContentPackages.Count);
                     for (int i = 0; i < mpContentPackages.Count; i++)
@@ -286,11 +269,10 @@ namespace Barotrauma.Networking
 
                 pendingClients.Remove(pendingClient);
 
-                if (pendingClient.AuthSessionStarted)
+                if (pendingClient.AuthSessionStarted && pendingClient.AccountInfo.AccountId is Some<AccountId> { Value: SteamId steamId })
                 {
-                    Steam.SteamManager.StopAuthSession(pendingClient.SteamID.Value);
-                    pendingClient.SteamID = null;
-                    pendingClient.OwnerSteamID = null;
+                    Steam.SteamManager.StopAuthSession(steamId);
+                    pendingClient.Connection.SetAccountInfo(AccountInfo.None);
                     pendingClient.AuthSessionStarted = false;
                 }
             }

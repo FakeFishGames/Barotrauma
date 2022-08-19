@@ -28,7 +28,7 @@ namespace Barotrauma.Steam
                 if (IsInitialized)
                 {
                     DebugConsole.NewMessage(
-                        $"Logged in as {GetUsername()} (SteamID {SteamIDUInt64ToString(GetSteamID())})");
+                        $"Logged in as {GetUsername()} (SteamID {(GetSteamId().TryUnwrap(out var steamId) ? steamId.ToString() : "[NULL]")})");
 
                     popularTags.Clear();
                     int i = 0;
@@ -129,7 +129,7 @@ namespace Barotrauma.Steam
         }
         
         
-        public static bool OverlayCustomURL(string url)
+        public static bool OverlayCustomUrl(string url)
         {
             if (!IsInitialized || !Steamworks.SteamClient.IsValid)
             {
@@ -138,6 +138,11 @@ namespace Barotrauma.Steam
 
             Steamworks.SteamFriends.OpenWebOverlay(url);
             return true;
+        }
+
+        public static void OverlayProfile(SteamId steamId)
+        {
+            OverlayCustomUrl($"https://steamcommunity.com/profiles/{steamId.Value}");
         }
     }
 }

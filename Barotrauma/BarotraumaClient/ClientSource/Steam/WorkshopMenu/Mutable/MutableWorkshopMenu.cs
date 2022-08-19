@@ -137,7 +137,7 @@ namespace Barotrauma.Steam
             {
                 OnClicked = (button, o) =>
                 {
-                    SteamManager.OverlayCustomURL($"https://steamcommunity.com/app/{SteamManager.AppID}/workshop/");
+                    SteamManager.OverlayCustomUrl($"https://steamcommunity.com/app/{SteamManager.AppID}/workshop/");
                     return false;
                 }
             };

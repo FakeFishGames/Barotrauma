@@ -11,7 +11,7 @@ namespace Barotrauma.Networking
 {
     public static class MsgConstants
     {
-        public const int MTU = 1200;
+        public const int MTU = 1200; //TODO: determine dynamically
         public const int CompressionThreshold = 1000;
         public const int InitialBufferSize = 256;
         public const int BufferOverAllocateAmount = 4;
@@ -254,6 +254,12 @@ namespace Barotrauma.Networking
             return retval;
         }
 
+        internal static byte PeekByte(byte[] buf, ref int bitPos)
+        {
+            byte retval = NetBitWriter.ReadByte(buf, 8, bitPos);
+            return retval;
+        }
+
         internal static UInt16 ReadUInt16(byte[] buf, ref int bitPos)
         {
             uint retval = NetBitWriter.ReadUInt16(buf, 16, bitPos);
@@ -409,7 +415,7 @@ namespace Barotrauma.Networking
         }
     }
 
-    public class WriteOnlyMessage : IWriteMessage
+    class WriteOnlyMessage : IWriteMessage
     {
         private byte[] buf = new byte[MsgConstants.InitialBufferSize];
         private int seekPos = 0;
@@ -602,9 +608,9 @@ namespace Barotrauma.Networking
         }
     }
 
-    public class ReadOnlyMessage : IReadMessage
+    class ReadOnlyMessage : IReadMessage
     {
-        private byte[] buf;
+        private readonly byte[] buf;
         private int seekPos = 0;
         private int lengthBits = 0;
 
@@ -720,6 +726,11 @@ namespace Barotrauma.Networking
             return MsgReader.ReadByte(buf, ref seekPos);
         }
 
+        public byte PeekByte()
+        {
+            return MsgReader.PeekByte(buf, ref seekPos);
+        }
+
         public UInt16 ReadUInt16()
         {
             return MsgReader.ReadUInt16(buf, ref seekPos);
@@ -801,7 +812,7 @@ namespace Barotrauma.Networking
         }
     }
 
-    public class ReadWriteMessage : IWriteMessage, IReadMessage
+    class ReadWriteMessage : IWriteMessage, IReadMessage
     {
         private byte[] buf;
         private int seekPos = 0;
@@ -983,6 +994,11 @@ namespace Barotrauma.Networking
             return MsgReader.ReadByte(buf, ref seekPos);
         }
 
+        public byte PeekByte()
+        {
+            return MsgReader.PeekByte(buf, ref seekPos);
+        }
+
         public UInt16 ReadUInt16()
         {
             return MsgReader.ReadUInt16(buf, ref seekPos);
@@ -1067,5 +1083,6 @@ namespace Barotrauma.Networking
         {
             throw new InvalidOperationException("ReadWriteMessages are not to be sent");
         }
+
     }
 }

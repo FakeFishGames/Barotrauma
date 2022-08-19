@@ -806,6 +806,13 @@ namespace Barotrauma
             flashColor = (color == null) ? GUIStyle.Red : (Color)color;
         }
 
+        public void ImmediateFlash(Color? color = null)
+        {
+            flashTimer = MathHelper.Pi / 4.0f * 0.1f;
+            flashDuration = 1.0f *0.1f;
+            flashColor = (color == null) ? GUIStyle.Red : (Color)color;
+        }
+
         public void FadeOut(float duration, bool removeAfter, float wait = 0.0f)
         {
             CoroutineManager.StartCoroutine(LerpAlpha(0.0f, duration, removeAfter, wait));
@@ -1156,7 +1163,7 @@ namespace Barotrauma
                 try
                 {
 #if USE_STEAM
-                    Steam.SteamManager.OverlayCustomURL(url);
+                    Steam.SteamManager.OverlayCustomUrl(url);
 #else
                     ToolBox.OpenFileWithShell(url);
 #endif

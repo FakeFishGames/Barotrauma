@@ -4,8 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+#if CLIENT
 using Barotrauma.Networking;
 using Barotrauma.Steam;
+#endif
 
 namespace Barotrauma.IO
 {

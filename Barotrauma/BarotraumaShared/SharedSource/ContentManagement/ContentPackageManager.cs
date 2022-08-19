@@ -7,7 +7,6 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 using Barotrauma.IO;
 using Barotrauma.Steam;

@@ -15,8 +15,8 @@ namespace Barotrauma
         public CharacterCampaignData(Client client)
         {
             Name = client.Name;
-            ClientEndPoint = client.Connection.EndPointString;
-            SteamID = client.SteamID;
+            ClientAddress = client.Connection.Endpoint.Address;
+            AccountId = client.AccountId;
             CharacterInfo = client.CharacterInfo;
 
             healthData = new XElement("health");
@@ -55,13 +55,13 @@ namespace Barotrauma
         public CharacterCampaignData(XElement element)
         {
             Name = element.GetAttributeString("name", "Unnamed");
-            ClientEndPoint = element.GetAttributeString("endpoint", null) ?? element.GetAttributeString("ip", "");
-            string steamID = element.GetAttributeString("steamid", "");
-            if (!string.IsNullOrEmpty(steamID))
-            {
-                ulong.TryParse(steamID, out ulong parsedID);
-                SteamID = parsedID;
-            }
+            string clientEndPointStr = element.GetAttributeString("address", null)
+                                       ?? element.GetAttributeString("endpoint", null)
+                                       ?? element.GetAttributeString("ip", "");
+            ClientAddress = Address.Parse(clientEndPointStr).Fallback(new UnknownAddress());
+            string accountIdStr = element.GetAttributeString("accountid", null)
+                               ?? element.GetAttributeString("steamid", "");
+            AccountId = Networking.AccountId.Parse(accountIdStr);
 
             foreach (XElement subElement in element.Elements())
             {
@@ -89,19 +89,20 @@ namespace Barotrauma
 
         public bool MatchesClient(Client client)
         {
-            if (SteamID > 0)
+            if (AccountId.TryUnwrap(out var accountId)
+                && client.AccountId.TryUnwrap(out var clientId))
             {
-                return SteamID == client.SteamID;
+                return accountId == clientId;
             }
             else
             {
-                return ClientEndPoint == client.Connection.EndPointString;
+                return ClientAddress == client.Connection.Endpoint.Address;
             }
         }
 
         public bool IsDuplicate(CharacterCampaignData other)
         {
-            return other.SteamID == SteamID && other.ClientEndPoint == ClientEndPoint;
+            return AccountId == other.AccountId && other.ClientAddress == ClientAddress;
         }
 
         public void SpawnInventoryItems(Character character, Inventory inventory)
@@ -136,8 +137,8 @@ namespace Barotrauma
         {
             XElement element = new XElement("CharacterCampaignData",
                 new XAttribute("name", Name),
-                new XAttribute("endpoint", ClientEndPoint),
-                new XAttribute("steamid", SteamID));
+                new XAttribute("address", ClientAddress),
+                new XAttribute("accountid", AccountId.TryUnwrap(out var accountId) ? accountId.StringRepresentation : ""));
 
             CharacterInfo?.Save(element);
             if (itemData != null) { element.Add(itemData); }

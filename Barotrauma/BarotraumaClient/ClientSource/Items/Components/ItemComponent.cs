@@ -148,6 +148,8 @@ namespace Barotrauma.Items.Components
 
         public GUIFrame GuiFrame { get; set; }
 
+        public bool LockGuiFramePosition;
+
         [Serialize(false, IsPropertySaveable.No)]
         public bool AllowUIOverlap
         {
@@ -586,8 +588,58 @@ namespace Barotrauma.Items.Components
                 };
 
                 int iconHeight = GUIStyle.ItemFrameMargin.Y / 4;
-                new GUIImage(new RectTransform(new Point(GuiFrame.Rect.Width, iconHeight), handle.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, iconHeight / 2) },
+                var dragIcon = new GUIImage(new RectTransform(new Point(GuiFrame.Rect.Width, iconHeight), handle.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, iconHeight / 2) },
                     style: "GUIDragIndicatorHorizontal");
+
+                handle.ValidatePosition = (RectTransform rectT) =>
+                {
+                    var activeHuds = Character.Controlled?.SelectedItem?.ActiveHUDs ?? item.ActiveHUDs;
+                    foreach (ItemComponent ic in activeHuds)
+                    {
+                        if (ic == this || ic.GuiFrame == null || !ic.CanBeSelected) { continue; }
+                        if (ic.GuiFrame.Rect.Width > GameMain.GraphicsWidth * 0.9f && ic.GuiFrame.Rect.Height > GameMain.GraphicsHeight * 0.9f) 
+                        { 
+                            //a full-screen GUIFrame (or at least close to one) - this component is doing something weird,
+                            //an ItemContainer with no GUIFrame definition that positions itself in some other GUIFrame, some kind of an overlay?
+                            // -> allow intersecting
+                            continue; 
+                        }
+                        if (dragIcon.Rect.Intersects(ic.GuiFrame.Rect))
+                        {
+                            GuiFrame.ImmediateFlash();
+                            return false;
+                        }
+                    }
+                    return true;
+                };
+
+
+                int buttonHeight = (int)(GUIStyle.ItemFrameMargin.Y * 0.4f);
+                new GUIButton(new RectTransform(new Point(buttonHeight), handle.RectTransform, Anchor.TopLeft) { AbsoluteOffset = new Point(buttonHeight / 10) },
+                    style: "GUIButtonRefresh")
+                {
+                    OnClicked = (btn, userdata) =>
+                    {
+                        GUIContextMenu.CreateContextMenu(
+                            new ContextMenuOption("item.resetuiposition", isEnabled: true, onSelected: () =>
+                            {
+                                if (Character.Controlled?.SelectedItem != null && item != Character.Controlled.SelectedItem)
+                                {
+                                    Character.Controlled.SelectedItem.ForceHUDLayoutUpdate(ignoreLocking: true);
+                                }
+                                else
+                                {
+                                    item.ForceHUDLayoutUpdate(ignoreLocking: true);
+                                }
+                            }),
+                            new ContextMenuOption(TextManager.Get(LockGuiFramePosition ? "item.unlockuiposition" : "item.lockuiposition"), isEnabled: true, onSelected: () =>
+                            {
+                                LockGuiFramePosition = !LockGuiFramePosition;
+                                handle.Enabled = !LockGuiFramePosition;
+                            }));
+                        return true;
+                    }
+                };
             }
         }
 
@@ -648,6 +700,11 @@ namespace Barotrauma.Items.Components
                 CreateGUI();
             }
             OnResolutionChanged();
+            item.ForceHUDLayoutUpdate(ignoreLocking: true);
+            if (GuiFrame != null && GuiFrame.GetChild<GUIDragHandle>() is GUIDragHandle dragHandle)
+            {
+                dragHandle.DragArea = HUDLayoutSettings.ItemHUDArea;
+            }
         }
 
         public virtual void AddTooltipInfo(ref LocalizedString name, ref LocalizedString description) { }

@@ -100,7 +100,8 @@ namespace Barotrauma
                     if (!connectedSubs.Contains(item.Submarine)) { continue; }
                     if (item.GetComponent<PowerTransfer>() != null ||
                         item.GetComponent<PowerContainer>() != null ||
-                        item.GetComponent<Reactor>() != null)
+                        item.GetComponent<Reactor>() != null ||
+                        item.GetComponent<Sonar>() != null)
                     {
                         item.InvulnerableToDamage = true;
                     }

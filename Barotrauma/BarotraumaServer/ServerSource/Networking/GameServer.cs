@@ -1,5 +1,4 @@
-﻿#define ALLOW_BOT_TRAITORS
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using Barotrauma.IO;
 using Barotrauma.Items.Components;
 using Barotrauma.Steam;
@@ -85,7 +84,7 @@ namespace Barotrauma.Networking
         }
 #endif
 
-        public override List<Client> ConnectedClients
+        public override IReadOnlyList<Client> ConnectedClients
         {
             get
             {
@@ -110,10 +109,19 @@ namespace Barotrauma.Networking
         public int QueryPort => serverSettings?.QueryPort ?? 0;
 
         public NetworkConnection OwnerConnection { get; private set; }
-        private readonly int? ownerKey;
-        private readonly UInt64? ownerSteamId;
+        private readonly Option<int> ownerKey;
+        private readonly Option<SteamId> ownerSteamId;
 
-        public GameServer(string name, int port, int queryPort = 0, bool isPublic = false, string password = "", bool attemptUPnP = false, int maxPlayers = 10, int? ownKey = null, UInt64? steamId = null)
+        public GameServer(
+            string name,
+            int port,
+            int queryPort,
+            bool isPublic,
+            string password,
+            bool attemptUPnP,
+            int maxPlayers,
+            Option<int> ownerKey,
+            Option<SteamId> ownerSteamId)
         {
             name = name.Replace(":", "");
             name = name.Replace(";", "");
@@ -132,9 +140,9 @@ namespace Barotrauma.Networking
 
             Voting = new Voting();
 
-            ownerKey = ownKey;
+            this.ownerKey = ownerKey;
 
-            ownerSteamId = steamId;
+            this.ownerSteamId = ownerSteamId;
 
             entityEventManager = new ServerEntityEventManager(this);
 
@@ -147,15 +155,15 @@ namespace Barotrauma.Networking
             try
             {
                 Log("Starting the server...", ServerLog.MessageType.ServerMessage);
-                if (!ownerSteamId.HasValue || ownerSteamId.Value == 0)
+                if (ownerSteamId.TryUnwrap(out var steamId))
                 {
-                    Log("Using Lidgren networking. Manual port forwarding may be required. If players cannot connect to the server, you may want to use the in-game hosting menu (which uses SteamP2P networking and does not require port forwarding).", ServerLog.MessageType.ServerMessage);
-                    serverPeer = new LidgrenServerPeer(ownerKey, serverSettings);
+                    Log("Using SteamP2P networking.", ServerLog.MessageType.ServerMessage);
+                    serverPeer = new SteamP2PServerPeer(steamId, ownerKey.Fallback(0), serverSettings);
                 }
                 else
                 {
-                    Log("Using SteamP2P networking.", ServerLog.MessageType.ServerMessage);
-                    serverPeer = new SteamP2PServerPeer(ownerSteamId.Value, ownerKey.Value, serverSettings);
+                    Log("Using Lidgren networking. Manual port forwarding may be required. If players cannot connect to the server, you may want to use the in-game hosting menu (which uses SteamP2P networking and does not require port forwarding).", ServerLog.MessageType.ServerMessage);
+                    serverPeer = new LidgrenServerPeer(ownerKey, serverSettings);
                 }
 
                 serverPeer.OnInitializationComplete = OnInitializationComplete;
@@ -253,17 +261,15 @@ namespace Barotrauma.Networking
             Thread.Sleep(500);
         }
 
-        private void OnInitializationComplete(NetworkConnection connection)
+        private void OnInitializationComplete(NetworkConnection connection, string clientName)
         {
-            string clName = connection.Name;
-            Client newClient = new Client(clName, GetNewClientID());
+            Client newClient = new Client(clientName, GetNewClientSessionId());
             newClient.InitClientSync();
             newClient.Connection = connection;
             newClient.Connection.Status = NetworkConnectionStatus.Connected;
-            newClient.SteamID = connection.SteamID;
-            newClient.OwnerSteamID = connection.OwnerSteamID;
+            newClient.AccountInfo = connection.AccountInfo;
             newClient.Language = connection.Language;
-            ConnectedClients.Add(newClient);
+            connectedClients.Add(newClient);
 
             var previousPlayer = previousPlayers.Find(p => p.MatchesClient(newClient));
             if (previousPlayer != null)
@@ -299,10 +305,10 @@ namespace Barotrauma.Networking
                 previousPlayer.Name = newClient.Name;
             }
 
-            var savedPermissions = serverSettings.ClientPermissions.Find(cp =>
-                cp.SteamID > 0 ?
-                cp.SteamID == newClient.SteamID :
-                newClient.EndpointMatches(cp.EndPoint));
+            var savedPermissions = serverSettings.ClientPermissions.Find(scp =>
+                scp.AddressOrAccountId.TryGet(out AccountId accountId)
+                    ? newClient.AccountId.ValueEquals(accountId)
+                    : newClient.Connection.Endpoint.Address == scp.AddressOrAccountId);
 
             if (savedPermissions != null)
             {
@@ -346,7 +352,7 @@ namespace Barotrauma.Networking
 
             if (OwnerConnection != null && ChildServerRelay.HasShutDown)
             {
-                Disconnect();
+                Quit();
                 return;
             }
 
@@ -377,7 +383,7 @@ namespace Barotrauma.Networking
                     character.KillDisconnectedTimer += deltaTime;
                     character.SetStun(1.0f);
 
-                    Client owner = connectedClients.Find(c => (c.Character == null || c.Character == character) && c.EndpointMatches(character.OwnerClientEndPoint));
+                    Client owner = connectedClients.Find(c => (c.Character == null || c.Character == character) && c.EndpointMatches(character.OwnerClientEndpoint));
 
                     if ((OwnerConnection == null || owner?.Connection != OwnerConnection) && character.KillDisconnectedTimer > serverSettings.KillDisconnectedTime)
                     {
@@ -679,7 +685,7 @@ namespace Barotrauma.Networking
                     pingInf.Write((byte)ConnectedClients.Count);
                     ConnectedClients.ForEach(c2 =>
                     {
-                        pingInf.Write(c2.ID);
+                        pingInf.Write(c2.SessionId);
                         pingInf.Write(c2.Ping);
                     });
                     serverPeer.Send(pingInf, c.Connection, DeliveryMethod.Unreliable);
@@ -788,11 +794,11 @@ namespace Barotrauma.Networking
                     if (serverSettings.VoiceChatEnabled && !connectedClient.Muted)
                     {
                         byte id = inc.ReadByte();
-                        if (connectedClient.ID != id)
+                        if (connectedClient.SessionId != id)
                         {
 #if DEBUG
                             DebugConsole.ThrowError(
-                                "Client \"" + connectedClient.Name + "\" sent a VOIP update that didn't match its ID (" + id.ToString() + "!=" + connectedClient.ID.ToString() + ")");
+                                "Client \"" + connectedClient.Name + "\" sent a VOIP update that didn't match its ID (" + id.ToString() + "!=" + connectedClient.SessionId.ToString() + ")");
 #endif
                             return;
                         }
@@ -1010,14 +1016,14 @@ namespace Barotrauma.Networking
             entityEventManager.CreateEvent(serverSerializable, extraData);
         }
 
-        private byte GetNewClientID()
+        private byte GetNewClientSessionId()
         {
-            byte userID = 1;
-            while (connectedClients.Any(c => c.ID == userID))
+            byte userId = 1;
+            while (connectedClients.Any(c => c.SessionId == userId))
             {
-                userID++;
+                userId++;
             }
-            return userID;
+            return userId;
         }
 
         private void ClientReadLobby(IReadMessage inc)
@@ -1165,6 +1171,12 @@ namespace Barotrauma.Networking
                                 DebugConsole.Log("Finished midround syncing " + c.Name + " - switching from ID " + prevID + " to " + c.LastRecvEntityEventID);
                                 //notify the client of the state of the respawn manager (so they show the respawn prompt if needed)
                                 if (respawnManager != null) { CreateEntityEvent(respawnManager); }
+                                if (GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign)
+                                {
+                                    //notify the client of the current bank balance and purchased repairs
+                                    campaign.Bank.ForceUpdate();
+                                    campaign.IncrementLastUpdateIdForFlag(MultiPlayerCampaign.NetFlags.Misc);
+                                }
                             }
                             else
                             {
@@ -1189,7 +1201,7 @@ namespace Barotrauma.Networking
                             {
                                 //give midround-joining clients a bit more time to get in sync if they keep receiving messages
                                 int receivedEventCount = lastRecvEntityEventID - c.LastRecvEntityEventID;
-                                if (receivedEventCount < 0) receivedEventCount += ushort.MaxValue;
+                                if (receivedEventCount < 0) { receivedEventCount += ushort.MaxValue; }
                                 c.MidRoundSyncTimeOut += receivedEventCount * 0.01f;
                                 DebugConsole.Log("Midround sync timeout " + c.MidRoundSyncTimeOut.ToString("0.##") + "/" + Timing.TotalTime.ToString("0.##"));
                             }
@@ -1241,7 +1253,7 @@ namespace Barotrauma.Networking
                 }
 
                 //don't read further messages if the client has been disconnected (kicked due to spam for example)
-                if (!connectedClients.Contains(c)) break;
+                if (!connectedClients.Contains(c)) { break; }
             }
         }
 
@@ -1341,7 +1353,6 @@ namespace Barotrauma.Networking
                 case ClientPermissions.Ban:
                     string bannedName = inc.ReadString().ToLowerInvariant();
                     string banReason = inc.ReadString();
-                    bool range = inc.ReadBoolean();
                     double durationSeconds = inc.ReadDouble();
 
                     TimeSpan? banDuration = null;
@@ -1351,7 +1362,7 @@ namespace Barotrauma.Networking
                     if (bannedClient != null)
                     {
                         Log("Client \"" + ClientLogName(sender) + "\" banned \"" + ClientLogName(bannedClient) + "\".", ServerLog.MessageType.ServerMessage);
-                        BanClient(bannedClient, string.IsNullOrEmpty(banReason) ? $"ServerMessage.BannedBy~[initiator]={sender.Name}" : banReason, range, banDuration);
+                        BanClient(bannedClient, string.IsNullOrEmpty(banReason) ? $"ServerMessage.BannedBy~[initiator]={sender.Name}" : banReason, banDuration);
                     }
                     else
                     {
@@ -1359,7 +1370,7 @@ namespace Barotrauma.Networking
                         if (bannedPreviousClient != null)
                         {
                             Log("Client \"" + ClientLogName(sender) + "\" banned \"" + bannedPreviousClient.Name + "\".", ServerLog.MessageType.ServerMessage);
-                            BanPreviousPlayer(bannedPreviousClient, string.IsNullOrEmpty(banReason) ? $"ServerMessage.BannedBy~[initiator]={sender.Name}" : banReason, range, banDuration);
+                            BanPreviousPlayer(bannedPreviousClient, string.IsNullOrEmpty(banReason) ? $"ServerMessage.BannedBy~[initiator]={sender.Name}" : banReason, banDuration);
                         }
                         else
                         {
@@ -1368,9 +1379,16 @@ namespace Barotrauma.Networking
                     }
                     break;
                 case ClientPermissions.Unban:
-                    string unbannedName = inc.ReadString();
-                    string unbannedIP = inc.ReadString();
-                    UnbanPlayer(unbannedName, unbannedIP);
+                    bool isPlayerName = inc.ReadBoolean(); inc.ReadPadBits();
+                    string str = inc.ReadString();
+                    if (isPlayerName)
+                    {
+                        UnbanPlayer(playerName: str);
+                    }
+                    else if (Endpoint.Parse(str).TryUnwrap(out var endpoint))
+                    {
+                        UnbanPlayer(endpoint);
+                    }
                     break;
                 case ClientPermissions.ManageRound:
                     bool end = inc.ReadBoolean();
@@ -1506,7 +1524,7 @@ namespace Barotrauma.Networking
                     break;
                 case ClientPermissions.ManagePermissions:
                     byte targetClientID = inc.ReadByte();
-                    Client targetClient = connectedClients.Find(c => c.ID == targetClientID);
+                    Client targetClient = connectedClients.Find(c => c.SessionId == targetClientID);
                     if (targetClient == null || targetClient == sender || targetClient.Connection == OwnerConnection) { return; }
 
                     targetClient.ReadPermissions(inc);
@@ -1592,7 +1610,7 @@ namespace Barotrauma.Networking
                 DebugConsole.NewMessage("Sending initial lobby update", Color.Gray);
             }
 
-            outmsg.Write(c.ID);
+            outmsg.Write(c.SessionId);
 
             var subList = GameMain.NetLobbyScreen.GetSubList();
             outmsg.Write((UInt16)subList.Count);
@@ -1811,15 +1829,15 @@ namespace Barotrauma.Networking
             {
                 var tempClientData = new TempClient
                 {
-                    ID = client.ID,
-                    SteamID = client.SteamID,
-                    NameID = client.NameID,
+                    SessionId = client.SessionId,
+                    AccountInfo = client.AccountInfo,
+                    NameId = client.NameId,
                     Name = client.Name,
                     PreferredJob = client.Character?.Info?.Job != null && gameStarted
                         ? client.Character.Info.Job.Prefab.Identifier
                         : client.PreferredJob,
                     PreferredTeam = client.PreferredTeam,
-                    CharacterID = client.Character == null || !gameStarted ? (ushort)0 : client.Character.ID,
+                    CharacterId = client.Character == null || !gameStarted ? (ushort)0 : client.Character.ID,
                     Karma = c.HasPermission(ClientPermissions.ServerLog) ? client.Karma : 100.0f,
                     Muted = client.Muted,
                     InGame = client.InGame,
@@ -2382,7 +2400,7 @@ namespace Barotrauma.Networking
                         mpCampaign.ClearSavedExperiencePoints(teamClients[i]);
                     }
 
-                    spawnedCharacter.OwnerClientEndPoint = teamClients[i].Connection.EndPointString;
+                    spawnedCharacter.OwnerClientEndpoint = teamClients[i].Connection.Endpoint;
                     spawnedCharacter.OwnerClientName = teamClients[i].Name;
                 }
 
@@ -2693,9 +2711,15 @@ namespace Barotrauma.Networking
             Identifier newJob = inc.ReadIdentifier();
             CharacterTeamType newTeam = (CharacterTeamType)inc.ReadByte();
 
-            if (c == null || string.IsNullOrEmpty(newName) || !NetIdUtils.IdMoreRecent(nameId, c.NameID)) { return false; }
-
-            c.NameID = nameId;
+            if (c == null || string.IsNullOrEmpty(newName) || !NetIdUtils.IdMoreRecent(nameId, c.NameId)) { return false; }
+            if (!newJob.IsEmpty)
+            {
+                if (!JobPrefab.Prefabs.TryGet(newJob, out JobPrefab newJobPrefab) || newJobPrefab.HiddenJob)                    
+                {
+                    newJob = Identifier.Empty;
+                }
+            }
+            c.NameId = nameId;
             if (newName == c.Name && newJob == c.PreferredJob && newTeam == c.PreferredTeam) { return false; }
             c.PreferredJob = newJob;
             c.PreferredTeam = newTeam;
@@ -2716,7 +2740,6 @@ namespace Barotrauma.Networking
             {
                 string oldName = c.Name;
                 c.Name = newName;
-                c.Connection.Name = newName;
                 SendChatMessage($"ServerMessage.NameChangeSuccessful~[oldname]={oldName}~[newname]={newName}", ChatMessageType.Server);
                 return true;
             }
@@ -2797,7 +2820,7 @@ namespace Barotrauma.Networking
             DisconnectClient(client, logMsg, msg, reason, PlayerConnectionChangeType.Kicked);
         }
 
-        public override void BanPlayer(string playerName, string reason, bool range = false, TimeSpan? duration = null)
+        public override void BanPlayer(string playerName, string reason, TimeSpan? duration = null)
         {
             Client client = connectedClients.Find(c =>
                 c.Name.Equals(playerName, StringComparison.OrdinalIgnoreCase) ||
@@ -2809,10 +2832,10 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            BanClient(client, reason, range, duration);
+            BanClient(client, reason, duration);
         }
 
-        public void BanClient(Client client, string reason, bool range = false, TimeSpan? duration = null)
+        public void BanClient(Client client, string reason, TimeSpan? duration = null)
         {
             if (client == null || client.Connection == OwnerConnection) { return; }
 
@@ -2827,45 +2850,32 @@ namespace Barotrauma.Networking
             string targetMsg = DisconnectReason.Banned.ToString();
             DisconnectClient(client, $"ServerMessage.BannedFromServer~[client]={client.Name}", targetMsg, reason, PlayerConnectionChangeType.Banned);
 
-            if (client.Connection is LidgrenConnection lidgrenConn && (client.SteamID == 0 || range))
+            serverSettings.BanList.BanPlayer(client.Name, client.Connection.Endpoint, reason, duration);
+            if (client.AccountInfo.AccountId.TryUnwrap(out var accountId))
             {
-                string ip = "";
-                ip = lidgrenConn.IPEndPoint.Address.IsIPv4MappedToIPv6 ?
-                lidgrenConn.IPEndPoint.Address.MapToIPv4NoThrow().ToString() :
-                lidgrenConn.IPEndPoint.Address.ToString();
-                if (range) { ip = BanList.ToRange(ip); }
-                serverSettings.BanList.BanPlayer(client.Name, ip, reason, duration);
+                serverSettings.BanList.BanPlayer(client.Name, accountId, reason, duration);
             }
-            if (client.SteamID > 0)
+            foreach (var relatedId in client.AccountInfo.OtherMatchingIds)
             {
-                serverSettings.BanList.BanPlayer(client.Name, client.SteamID, reason, duration);
-            }
-            if (client.OwnerSteamID > 0)
-            {
-                serverSettings.BanList.BanPlayer(client.Name, client.OwnerSteamID, reason, duration);
+                serverSettings.BanList.BanPlayer(client.Name, relatedId, reason, duration);
             }
         }
 
-        public void BanPreviousPlayer(PreviousPlayer previousPlayer, string reason, bool range = false, TimeSpan? duration = null)
+        public void BanPreviousPlayer(PreviousPlayer previousPlayer, string reason, TimeSpan? duration = null)
         {
             if (previousPlayer == null) { return; }
 
             //reset karma to a neutral value, so if/when the ban is revoked the client wont get immediately punished by low karma again
             previousPlayer.Karma = Math.Max(previousPlayer.Karma, 50.0f);
 
-            if (!string.IsNullOrEmpty(previousPlayer.EndPoint) && (previousPlayer.SteamID == 0 || range))
+            serverSettings.BanList.BanPlayer(previousPlayer.Name, previousPlayer.Endpoint, reason, duration);
+            if (previousPlayer.AccountInfo.AccountId.TryUnwrap(out var accountId))
             {
-                string ip = previousPlayer.EndPoint;
-                if (range) { ip = BanList.ToRange(ip); }
-                serverSettings.BanList.BanPlayer(previousPlayer.Name, ip, reason, duration);
+                serverSettings.BanList.BanPlayer(previousPlayer.Name, accountId, reason, duration);
             }
-            if (previousPlayer.SteamID > 0)
+            foreach (var relatedId in previousPlayer.AccountInfo.OtherMatchingIds)
             {
-                serverSettings.BanList.BanPlayer(previousPlayer.Name, previousPlayer.SteamID, reason, duration);
-            }
-            if (previousPlayer.OwnerSteamID > 0)
-            {
-                serverSettings.BanList.BanPlayer(previousPlayer.Name, previousPlayer.OwnerSteamID, reason, duration);
+                serverSettings.BanList.BanPlayer(previousPlayer.Name, relatedId, reason, duration);
             }
 
             string msg = $"ServerMessage.BannedFromServer~[client]={previousPlayer.Name}";
@@ -2876,16 +2886,17 @@ namespace Barotrauma.Networking
             SendChatMessage(msg, ChatMessageType.Server, changeType: PlayerConnectionChangeType.Banned);
         }
 
-        public override void UnbanPlayer(string playerName, string playerEndPoint)
+        public override void UnbanPlayer(string playerName)
         {
-            if (!string.IsNullOrEmpty(playerEndPoint))
-            {
-                serverSettings.BanList.UnbanEndPoint(playerEndPoint);
-            }
-            else if (!string.IsNullOrEmpty(playerName))
-            {
-                serverSettings.BanList.UnbanPlayer(playerName);
-            }
+            BannedPlayer bannedPlayer
+                = serverSettings.BanList.BannedPlayers.FirstOrDefault(bp => bp.Name == playerName);
+            if (bannedPlayer is null) { return; }
+            serverSettings.BanList.UnbanPlayer(bannedPlayer.AddressOrAccountId);
+        }
+
+        public override void UnbanPlayer(Endpoint endpoint)
+        {
+            serverSettings.BanList.UnbanPlayer(endpoint);
         }
 
         public void DisconnectClient(NetworkConnection senderConnection, string msg = "", string targetmsg = "")
@@ -2906,7 +2917,7 @@ namespace Barotrauma.Networking
         {
             if (client == null) return;
 
-            if (gameStarted && client.Character != null)
+            if (client.Character != null)
             {
                 client.Character.ClientDisconnected = true;
                 client.Character.ClearInputs();
@@ -2925,7 +2936,7 @@ namespace Barotrauma.Networking
                 targetmsg += $"/\n/ServerMessage.Reason/: /{reason}";
             }
 
-            if (client.SteamID != 0) { SteamManager.StopAuthSession(client.SteamID); }
+            if (client.AccountId is Some<AccountId> { Value: SteamId steamId }) { SteamManager.StopAuthSession(steamId); }
 
             var previousPlayer = previousPlayers.Find(p => p.MatchesClient(client));
             if (previousPlayer == null)
@@ -3363,26 +3374,26 @@ namespace Barotrauma.Networking
 
         public void UpdateClientPermissions(Client client)
         {
-            if (client.SteamID > 0)
+            if (client.AccountId.TryUnwrap(out var accountId))
             {
-                serverSettings.ClientPermissions.RemoveAll(cp => cp.SteamID == client.SteamID);
+                serverSettings.ClientPermissions.RemoveAll(scp => scp.AddressOrAccountId == accountId);
                 if (client.Permissions != ClientPermissions.None)
                 {
                     serverSettings.ClientPermissions.Add(new ServerSettings.SavedClientPermission(
                         client.Name,
-                        client.SteamID,
+                        accountId,
                         client.Permissions,
                         client.PermittedConsoleCommands));
                 }
             }
             else
             {
-                serverSettings.ClientPermissions.RemoveAll(cp => client.EndpointMatches(cp.EndPoint));
+                serverSettings.ClientPermissions.RemoveAll(scp => client.Connection.Endpoint.Address == scp.AddressOrAccountId);
                 if (client.Permissions != ClientPermissions.None)
                 {
                     serverSettings.ClientPermissions.Add(new ServerSettings.SavedClientPermission(
                         client.Name,
-                        client.Connection.EndPointString,
+                        client.Connection.Endpoint.Address,
                         client.Permissions,
                         client.PermittedConsoleCommands));
                 }
@@ -3504,7 +3515,7 @@ namespace Barotrauma.Networking
             if (client.Character != null)
             {
                 client.Character.IsRemotePlayer = false;
-                client.Character.OwnerClientEndPoint = null;
+                client.Character.OwnerClientEndpoint = null;
                 client.Character.OwnerClientName = null;
             }
 
@@ -3531,7 +3542,7 @@ namespace Barotrauma.Networking
                     newCharacter.Info.Character = newCharacter;
                 }
 
-                newCharacter.OwnerClientEndPoint = client.Connection.EndPointString;
+                newCharacter.OwnerClientEndpoint = client.Connection.Endpoint;
                 newCharacter.OwnerClientName = client.Name;
                 newCharacter.IsRemotePlayer = true;
                 newCharacter.Enabled = true;
@@ -3920,17 +3931,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public Tuple<ulong, string> FindPreviousClientData(Client client)
-        {
-            var player = previousPlayers.Find(p => p.MatchesClient(client));
-            if (player != null)
-            {
-                return Tuple.Create(player.SteamID, player.EndPoint);
-            }
-            return null;
-        }
-
-        public override void Disconnect()
+        public override void Quit()
         {
             if (started)
             {
@@ -3959,12 +3960,11 @@ namespace Barotrauma.Networking
         }
     }
 
-    partial class PreviousPlayer
+    class PreviousPlayer
     {
         public string Name;
-        public string EndPoint;
-        public UInt64 SteamID;
-        public UInt64 OwnerSteamID;
+        public Endpoint Endpoint;
+        public AccountInfo AccountInfo;
         public float Karma;
         public int KarmaKickCount;
         public readonly List<Client> KickVoters = new List<Client>();
@@ -3972,15 +3972,14 @@ namespace Barotrauma.Networking
         public PreviousPlayer(Client c)
         {
             Name = c.Name;
-            EndPoint = c.Connection?.EndPointString ?? "";
-            SteamID = c.SteamID;
-            OwnerSteamID = c.OwnerSteamID;
+            Endpoint = c.Connection.Endpoint;
+            AccountInfo = c.AccountInfo;
         }
 
         public bool MatchesClient(Client c)
         {
-            if (c.SteamID > 0 && SteamID > 0) { return c.SteamID == SteamID; }
-            return c.EndpointMatches(EndPoint);
+            if (c.AccountInfo.AccountId.IsSome() && AccountInfo.AccountId.IsSome()) { return c.AccountInfo.AccountId == AccountInfo.AccountId; }
+            return c.EndpointMatches(Endpoint);
         }
     }
 }

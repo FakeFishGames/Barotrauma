@@ -5,9 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using Barotrauma.IO;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -93,14 +91,6 @@ namespace Barotrauma.Items.Components
             get;
             private set;
         }
-
-        [Serialize(false, IsPropertySaveable.No, description: "Use firing offset for muzzleflash? This field shouldn't be needed but I'm using it for prototyping")]
-        public bool UseFiringOffsetForMuzzleFlash
-        {
-            get;
-            private set;
-        }
-
 
         public Vector2 DrawSize
         {
@@ -188,7 +178,7 @@ namespace Barotrauma.Items.Components
                 recoilTimer /= 1 + user.GetStatValue(StatTypes.TurretAttackSpeed);
             }
             PlaySound(ActionType.OnUse);
-            Vector2 particlePos = GetRelativeFiringPosition(UseFiringOffsetForMuzzleFlash);
+            Vector2 particlePos = GetRelativeFiringPosition();
             foreach (ParticleEmitter emitter in particleEmitters)
             {
                 emitter.Emit(1.0f, particlePos, hullGuess: null, angle: -rotation, particleRotation: rotation);
@@ -248,7 +238,6 @@ namespace Barotrauma.Items.Components
                     {
                         moveSoundChannel.FadeOutAndDispose();
                         moveSoundChannel = null;
-
                     }
                 }
             }

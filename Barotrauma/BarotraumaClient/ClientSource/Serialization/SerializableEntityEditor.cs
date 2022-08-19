@@ -382,10 +382,9 @@ namespace Barotrauma
             LocalizedString toolTip = TextManager.Get($"sp.{propertyTag}.description");
             if (toolTip.IsNullOrEmpty())
             {
-                toolTip =  TextManager.Get($"{propertyTag}.description", $"sp.{fallbackTag}.description");
+                toolTip = TextManager.Get($"{propertyTag}.description", $"sp.{fallbackTag}.description");
             }
-
-            if (toolTip == null)
+            if (toolTip.IsNullOrEmpty())
             {
                 toolTip = property.GetAttribute<Serialize>().Description;
             }
@@ -700,9 +699,12 @@ namespace Barotrauma
                 List<MapEntity> prevSelected = MapEntity.SelectedList.ToList();
                 //reselect the entities that were selected during editing
                 //otherwise multi-editing won't work when we deselect the entities with unapplied changes in the textbox
-                foreach (var entity in editedEntities)
-                { 
-                    MapEntity.SelectedList.Add(entity);
+                if (editedEntities.Count > 1)
+                {
+                    foreach (var entity in editedEntities)
+                    { 
+                        MapEntity.SelectedList.Add(entity);
+                    }
                 }
                 if (SetPropertyValue(property, entity, textBox.Text))
                 {

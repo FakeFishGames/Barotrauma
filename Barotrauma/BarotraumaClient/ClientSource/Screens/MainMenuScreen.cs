@@ -390,7 +390,7 @@ namespace Barotrauma
                     SelectTab(tb, userdata);
 
                     GameMain.Client = new GameClient(MultiplayerPreferences.Instance.PlayerName.FallbackNullOrEmpty(SteamManager.GetUsername()),
-                                                     IPAddress.Loopback.ToString(), 0, "localhost", 0, false);
+                                                     new LidgrenEndpoint(IPAddress.Loopback, NetConfig.DefaultPort), "localhost", Option<int>.None());
 
                     return true;
                 }
@@ -489,7 +489,7 @@ namespace Barotrauma
 
             if (GameMain.Client != null)
             {
-                GameMain.Client.Disconnect();
+                GameMain.Client.Quit();
                 GameMain.Client = null;
             }
 
@@ -834,9 +834,9 @@ namespace Barotrauma
                     arguments += " -nopassword";
                 }
 
-                if (Steam.SteamManager.GetSteamID() != 0)
+                if (SteamManager.GetSteamId().TryUnwrap(out var steamId1))
                 {
-                    arguments += " -steamid " + Steam.SteamManager.GetSteamID();
+                    arguments += " -steamid " + steamId1.Value;
                 }
                 int ownerKey = Math.Max(CryptoRandom.Instance.Next(), 1);
                 arguments += " -ownerkey " + ownerKey;
@@ -865,8 +865,12 @@ namespace Barotrauma
                 Thread.Sleep(1000); //wait until the server is ready before connecting
 
                 GameMain.Client = new GameClient(MultiplayerPreferences.Instance.PlayerName.FallbackNullOrEmpty(
-                            SteamManager.GetUsername().FallbackNullOrEmpty(name)),
-                    System.Net.IPAddress.Loopback.ToString(), Steam.SteamManager.GetSteamID(), name, ownerKey, true);
+                    SteamManager.GetUsername().FallbackNullOrEmpty(name)),
+                    SteamManager.GetSteamId().TryUnwrap(out var steamId)
+                        ? new SteamP2PEndpoint(steamId)
+                        : (Endpoint)new LidgrenEndpoint(IPAddress.Loopback, NetConfig.DefaultPort),
+                    name,
+                    Option<int>.Some(ownerKey));
             }
             catch (Exception e)
             {

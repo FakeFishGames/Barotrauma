@@ -909,25 +909,44 @@ namespace Barotrauma
                 float vitalityDecrease = affliction.GetVitalityDecrease(this);
                 if (limbHealth != null)
                 {
-                    if (limbHealth.VitalityMultipliers.ContainsKey(affliction.Prefab.Identifier))
-                    {
-                        vitalityDecrease *= limbHealth.VitalityMultipliers[affliction.Prefab.Identifier];
-                    }
-                    if (limbHealth.VitalityTypeMultipliers.ContainsKey(affliction.Prefab.AfflictionType))
-                    {
-                        vitalityDecrease *= limbHealth.VitalityTypeMultipliers[affliction.Prefab.AfflictionType];
-                    }
+                    vitalityDecrease *= GetVitalityMultiplier(affliction, limbHealth);
                 }
                 Vitality -= vitalityDecrease;
                 affliction.CalculateDamagePerSecond(vitalityDecrease);
             }
-
 #if CLIENT
             if (IsUnconscious)
             {
                 HintManager.OnCharacterUnconscious(Character);
             }
 #endif
+        }
+
+        private float GetVitalityMultiplier(Affliction affliction, LimbHealth limbHealth)
+        {
+            float multiplier = 1.0f;
+            if (limbHealth.VitalityMultipliers.TryGetValue(affliction.Prefab.Identifier, out float vitalityMultiplier))
+            {
+                multiplier *= vitalityMultiplier;
+            }
+            if (limbHealth.VitalityTypeMultipliers.TryGetValue(affliction.Prefab.AfflictionType, out float vitalityTypeMultiplier))
+            {
+                multiplier *= vitalityTypeMultiplier;
+            }
+            return multiplier;
+        }
+
+        /// <summary>
+        /// How much vitality the affliction reduces, taking into account the effects of vitality modifiers on the limb the affliction is on (if limb-based)
+        /// </summary>
+        private float GetVitalityDecreaseWithVitalityMultipliers(Affliction affliction)
+        {
+            float vitalityDecrease = affliction.GetVitalityDecrease(this);
+            if (afflictions.TryGetValue(affliction, out LimbHealth limbHealth) && limbHealth != null)
+            {
+                vitalityDecrease *= GetVitalityMultiplier(affliction, limbHealth);
+            }            
+            return vitalityDecrease;
         }
 
         private void Kill()

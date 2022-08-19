@@ -83,7 +83,7 @@ namespace Barotrauma
 
             foreach (var (id, _) in Clients)
             {
-                Client? client = GameMain.Client.ConnectedClients.FirstOrDefault(c => c.ID == id);
+                Client? client = GameMain.Client.ConnectedClients.FirstOrDefault(c => c.SessionId == id);
                 GUIFrame container = new GUIFrame(new RectTransform(new Vector2(1f, 0.15f), listBox.Content.RectTransform), style: "ListBoxElement") { UserData = id };
                 GUILayoutGroup frame = new GUILayoutGroup(new RectTransform(Vector2.One, container.RectTransform), isHorizontal: true) { Stretch = true };
 
@@ -93,7 +93,7 @@ namespace Barotrauma
 
                 if (client == null)
                 {
-                    string list = GameMain.Client.ConnectedClients.Aggregate("Available clients:\n", (current, c) => current + $"{c.ID}: {c.Name}\n");
+                    string list = GameMain.Client.ConnectedClients.Aggregate("Available clients:\n", (current, c) => current + $"{c.SessionId}: {c.Name}\n");
                     DebugConsole.ThrowError($"Client ID {id} was reported in ready check but was not found.\n" + list.TrimEnd('\n'));
                 }
 
@@ -141,7 +141,7 @@ namespace Barotrauma
         {
             ReadyCheckState state = (ReadyCheckState) inc.ReadByte();
             CrewManager? crewManager = GameMain.GameSession?.CrewManager;
-            List<Client> otherClients = GameMain.Client.ConnectedClients;
+            var otherClients = GameMain.Client.ConnectedClients;
             if (crewManager == null || otherClients == null)
             {
                 if (state == ReadyCheckState.Start)
@@ -165,7 +165,7 @@ namespace Barotrauma
                     if (hasAuthor)
                     {
                         authorId = inc.ReadByte();
-                        isOwn = authorId == GameMain.Client.ID;
+                        isOwn = authorId == GameMain.Client.SessionId;
                     }
 
                     ushort clientCount = inc.ReadUInt16();

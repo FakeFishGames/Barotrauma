@@ -3,7 +3,7 @@ using System;
 
 namespace Barotrauma
 {
-    public static class StringExtensions
+    static class StringExtensions
     {
         public static string FallbackNullOrEmpty(this string s, string fallback) => string.IsNullOrEmpty(s) ? fallback : s;
         

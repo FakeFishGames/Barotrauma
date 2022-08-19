@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -52,7 +51,7 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            CurrFlow = Math.Min(PowerConsumption > 0 ? Voltage : 1.0f, 1.0f) * generatedAmount * 100.0f;
+            CurrFlow = Math.Min(PowerConsumption > 0 ? Voltage : 1.0f, MaxOverVoltageFactor) * generatedAmount * 100.0f;
             float conditionMult = item.Condition / item.MaxCondition;
             //100% condition = 100% oxygen
             //50% condition = 25% oxygen

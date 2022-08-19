@@ -430,7 +430,7 @@ namespace Barotrauma
                 if (GameMain.NetworkMember == null || args.Length == 0) return;
 
                 int.TryParse(args[0], out int id);
-                var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.ID == id);
+                var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.SessionId == id);
                 if (client == null)
                 {
                     ThrowError("Client id \"" + id + "\" not found.");
@@ -466,7 +466,7 @@ namespace Barotrauma
                             banDuration = parsedBanDuration;
                         }
 
-                        GameMain.NetworkMember.BanPlayer(clientName, reason, false, banDuration);
+                        GameMain.NetworkMember.BanPlayer(clientName, reason, banDuration);
                     });
                 });
             },
@@ -485,7 +485,7 @@ namespace Barotrauma
                 if (GameMain.NetworkMember == null || args.Length == 0) return;
 
                 int.TryParse(args[0], out int id);
-                var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.ID == id);
+                var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.SessionId == id);
                 if (client == null)
                 {
                     ThrowError("Client id \"" + id + "\" not found.");
@@ -509,12 +509,12 @@ namespace Barotrauma
                             banDuration = parsedBanDuration;
                         }
 
-                        GameMain.NetworkMember.BanPlayer(client.Name, reason, false, banDuration);
+                        GameMain.NetworkMember.BanPlayer(client.Name, reason, banDuration);
                     });
                 });
             }));
             
-            commands.Add(new Command("banendpoint|banip", "banendpoint [endpoint]: Ban the IP address/SteamID from the server.", null));
+            commands.Add(new Command("banaddress|banip", "banaddress [endpoint]: Ban the IP address/SteamID from the server.", null));
             
             commands.Add(new Command("teleportcharacter|teleport", "teleport [character name]: Teleport the specified character to the position of the cursor. If the name parameter is omitted, the controlled character will be teleported.", null,
             () =>

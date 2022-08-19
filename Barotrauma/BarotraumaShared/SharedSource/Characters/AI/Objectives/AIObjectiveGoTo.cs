@@ -197,6 +197,10 @@ namespace Barotrauma
                 return;
             }
             character.SelectedItem = null;
+            if (character.SelectedSecondaryItem != null && !character.SelectedSecondaryItem.IsLadder)
+            {
+                character.SelectedSecondaryItem = null;
+            }
             if (Target is Entity e)
             {
                 if (e.Removed)

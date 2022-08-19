@@ -59,8 +59,8 @@ namespace Barotrauma.Items.Components
             msg.Write(timeUntilReady);
             uint recipeHash = fabricatedItem?.RecipeHash ?? 0;
             msg.Write(recipeHash);
-            UInt16 userID = fabricatedItem is null || user is null ? (UInt16)0 : user.ID;
-            msg.Write(userID);
+            UInt16 userId = fabricatedItem is null || user is null ? (UInt16)0 : user.ID;
+            msg.Write(userId);
 
             var reachedLimits = fabricationLimits.Where(kvp => kvp.Value <= 0);
             msg.Write((ushort)reachedLimits.Count());

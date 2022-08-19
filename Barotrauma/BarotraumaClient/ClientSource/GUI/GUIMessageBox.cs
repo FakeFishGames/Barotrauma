@@ -448,7 +448,7 @@ namespace Barotrauma
                         {
                             // Message box not of type GUIMessageBox is likely the round summary
                             MessageBoxes[i].AddToGUIUpdateList();
-                            break;
+                            if (!(MessageBoxes[i].UserData is RoundSummary)) { break; }
                         }
                         continue;
                     }
@@ -471,7 +471,7 @@ namespace Barotrauma
         public void SetBackgroundIcon(Sprite icon)
         {
             if (icon == null) { return; }
-            if (icon == BackgroundIcon.Sprite) { return; }
+            if (icon == BackgroundIcon?.Sprite) { return; }
             GUIImage newIcon = new GUIImage(new RectTransform(icon.size.ToPoint(), RectTransform), icon)
             {
                 IgnoreLayoutGroups = true,

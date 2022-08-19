@@ -133,6 +133,8 @@ namespace Barotrauma
             protected set;
         }
 
+        public bool PurchasedLostShuttlesInLatestSave, PurchasedHullRepairsInLatestSave, PurchasedItemRepairsInLatestSave;
+
         public virtual bool PurchasedHullRepairs { get; set; }
         public virtual bool PurchasedLostShuttles { get; set; }
         public virtual bool PurchasedItemRepairs { get; set; }
@@ -228,7 +230,8 @@ namespace Barotrauma
 #if CLIENT
             prevCampaignUIAutoOpenType = TransitionType.None;
 #endif
-            if (PurchasedHullRepairs)
+
+            if (PurchasedHullRepairsInLatestSave)
             {
                 foreach (Structure wall in Structure.WallList)
                 {
@@ -241,9 +244,9 @@ namespace Barotrauma
                         }
                     }
                 }
-                PurchasedHullRepairs = false;
+                PurchasedHullRepairsInLatestSave = PurchasedHullRepairs = false;
             }
-            if (PurchasedItemRepairs)
+            if (PurchasedItemRepairsInLatestSave)
             {
                 foreach (Item item in Item.ItemList)
                 {
@@ -256,9 +259,9 @@ namespace Barotrauma
                         }
                     }
                 }
-                PurchasedItemRepairs = false;
+                PurchasedItemRepairsInLatestSave = PurchasedItemRepairs = false;
             }
-            PurchasedLostShuttles = false;
+            PurchasedLostShuttlesInLatestSave = PurchasedLostShuttles = false;
             var connectedSubs = Submarine.MainSub.GetConnectedSubs();
             wasDocked = Level.Loaded.StartOutpost != null && connectedSubs.Contains(Level.Loaded.StartOutpost);
         }
@@ -725,7 +728,7 @@ namespace Barotrauma
             }
             foreach (LocationConnection connection in Map.Connections)
             {
-                connection.Difficulty = connection.Biome.MaxDifficulty;
+                connection.Difficulty = connection.Biome.AdjustedMaxDifficulty;
                 connection.LevelData = new LevelData(connection)
                 {
                     IsBeaconActive = false
@@ -734,7 +737,7 @@ namespace Barotrauma
             }
             foreach (Location location in Map.Locations)
             {
-                location.LevelData = new LevelData(location, location.Biome.MaxDifficulty);
+                location.LevelData = new LevelData(location, location.Biome.AdjustedMaxDifficulty);
                 location.Reset();
             }
             Map.SetLocation(Map.Locations.IndexOf(Map.StartLocation));

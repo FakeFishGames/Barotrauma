@@ -206,7 +206,7 @@ namespace Barotrauma.Networking
                 case (byte)FileTransferMessageType.Initiate:
                     {
                         byte transferId = inc.ReadByte();
-                        var existingTransfer = activeTransfers.Find(t => t.Connection.EndpointMatches(t.Connection.EndPointString) && t.ID == transferId);
+                        var existingTransfer = activeTransfers.Find(t => t.Connection.EndpointMatches(t.Connection.Endpoint) && t.ID == transferId);
                         finishedTransfers.RemoveAll(t => t.transferId  == transferId);
                         byte fileType = inc.ReadByte();
                         //ushort chunkLen = inc.ReadUInt16();
@@ -329,7 +329,7 @@ namespace Barotrauma.Networking
                     {
                         byte transferId = inc.ReadByte();
 
-                        var activeTransfer = activeTransfers.Find(t => t.Connection.EndpointMatches(t.Connection.EndPointString) && t.ID == transferId);
+                        var activeTransfer = activeTransfers.Find(t => t.Connection.EndpointMatches(t.Connection.Endpoint) && t.ID == transferId);
                         if (activeTransfer == null)
                         {
                             //it's possible for the server to send some extra data
@@ -406,7 +406,7 @@ namespace Barotrauma.Networking
                 case (byte)FileTransferMessageType.Cancel:
                     {
                         byte transferId = inc.ReadByte();
-                        var matchingTransfer = activeTransfers.Find(t => t.Connection.EndpointMatches(t.Connection.EndPointString) && t.ID == transferId);
+                        var matchingTransfer = activeTransfers.Find(t => t.Connection.EndpointMatches(t.Connection.Endpoint) && t.ID == transferId);
                         if (matchingTransfer != null)
                         {
                             new GUIMessageBox("File transfer cancelled", "The server has cancelled the transfer of the file \"" + matchingTransfer.FileName + "\".");

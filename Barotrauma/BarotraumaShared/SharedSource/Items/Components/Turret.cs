@@ -21,11 +21,14 @@ namespace Barotrauma.Items.Components
         
         private float rotation, targetRotation;
 
-        private float reload, reloadTime;
+        private float reload, reloadTime, delayBetweenBurst;
+        private int shotsPerBurst, shotCounter;
 
         private float minRotation, maxRotation;
 
         private float launchImpulse;
+
+        private float damageMultiplier;
 
         private Camera cam;
 
@@ -94,6 +97,16 @@ namespace Barotrauma.Items.Components
             get;
             set;
         }
+
+        public bool flipFiringOffset;
+
+        [Serialize(false, IsPropertySaveable.No, description: "If enabled, the firing offset will alternate from left to right (i.e. flipping the x-component of the offset each shot.)")]
+        public bool AlternatingFiringOffset
+        {
+            get;
+            set;
+        }
+
         public Vector2 TransformedBarrelPos
         {
             get
@@ -116,6 +129,20 @@ namespace Barotrauma.Items.Components
             set { reloadTime = value; }
         }
 
+        [Editable(1, 100), Serialize(1, IsPropertySaveable.No, description: "How many projectiles needs to be shot before we add an extra break? Think of the double coilgun.")]
+        public int ShotsPerBurst
+        {
+            get { return shotsPerBurst; }
+            set { shotsPerBurst = value; }
+        }
+
+        [Editable(0.0f, 1000.0f, decimals: 3), Serialize(0.0f, IsPropertySaveable.No, description: "An extra delay between the bursts. Added to the reload.")]
+        public float DelayBetweenBursts
+        {
+            get { return delayBetweenBurst; }
+            set { delayBetweenBurst = value; }
+        }
+
         [Editable(0.1f, 10f), Serialize(1.0f, IsPropertySaveable.No, description: "Modifies the duration of retraction of the barrell after recoil to get back to the original position after shooting. Reload time affects this too.")]
         public float RetractionDurationMultiplier
         {
@@ -135,6 +162,13 @@ namespace Barotrauma.Items.Components
         {
             get;
             set;
+        }
+
+        [Serialize(1.0f, IsPropertySaveable.No, description: "Multiplies the damage the turret deals by this amount.")]
+        public float DamageMultiplier
+        {
+            get { return damageMultiplier; }
+            set { damageMultiplier = value; }
         }
 
         [Serialize(1, IsPropertySaveable.No, description: "How many projectiles the weapon launches when fired once.")]
@@ -602,9 +636,9 @@ namespace Barotrauma.Items.Components
                 if (projectiles.Any())
                 {
                     ItemContainer projectileContainer = projectiles.First().Item.Container?.GetComponent<ItemContainer>();
-                    if (projectileContainer != null && projectileContainer.Item != item) 
-                    { 
-                        projectileContainer?.Item.Use(deltaTime, null); 
+                    if (projectileContainer != null && projectileContainer.Item != item)
+                    {
+                        projectileContainer?.Item.Use(deltaTime, null);
                     }
                 }
                 else
@@ -764,6 +798,15 @@ namespace Barotrauma.Items.Components
         private void Launch(Item projectile, Character user = null, float? launchRotation = null, float tinkeringStrength = 0f)
         {
             reload = reloadTime;
+            if (ShotsPerBurst > 1)
+            {
+                shotCounter++;
+                if (shotCounter >= ShotsPerBurst)
+                {
+                    reload += DelayBetweenBursts;
+                    shotCounter = 0;
+                }
+            }
             reload /= 1f + (tinkeringStrength * TinkeringReloadDecrease);
 
             if (user != null)
@@ -773,6 +816,10 @@ namespace Barotrauma.Items.Components
 
             if (projectile != null)
             {
+                if (AlternatingFiringOffset)
+                {
+                    flipFiringOffset = !flipFiringOffset;
+                }
                 activeProjectiles.Add(projectile);
                 projectile.Drop(null, setTransform: false);
                 if (projectile.body != null) 
@@ -796,9 +843,9 @@ namespace Barotrauma.Items.Components
                     projectileComponent.Attacker = projectileComponent.User = user;
                     if (projectileComponent.Attack != null)
                     {
-                        projectileComponent.Attack.DamageMultiplier = 1f + (TinkeringDamageIncrease * tinkeringStrength);
+                        projectileComponent.Attack.DamageMultiplier = (1f * DamageMultiplier) + (TinkeringDamageIncrease * tinkeringStrength);
                     }
-                    projectileComponent.Use();
+                    projectileComponent.Use(null, LaunchImpulse);
                     projectile.GetComponent<Rope>()?.Attach(item, projectile);
                     projectileComponent.User = user;
 
@@ -1452,7 +1499,9 @@ namespace Barotrauma.Items.Components
             Vector2 transformedFiringOffset = Vector2.Zero;
             if (useOffset)
             {
-                transformedFiringOffset = MathUtils.RotatePoint(new Vector2(-FiringOffset.Y, -FiringOffset.X) * item.Scale, -rotation);
+                Vector2 currOffSet = FiringOffset;
+                if (flipFiringOffset) { currOffSet.X = -currOffSet.X; }
+                transformedFiringOffset = MathUtils.RotatePoint(new Vector2(-currOffSet.Y, -currOffSet.X) * item.Scale, -rotation);
             }
             return new Vector2(item.WorldRect.X + transformedBarrelPos.X + transformedFiringOffset.X, item.WorldRect.Y - transformedBarrelPos.Y + transformedFiringOffset.Y);
         }

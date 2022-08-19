@@ -257,11 +257,10 @@ namespace Barotrauma
                     if ((DateTime.Now - sender.JoinTime).TotalSeconds > GameMain.Server.ServerSettings.DisallowKickVoteTime)
                     {
                         GameMain.Server.SendDirectChatMessage($"ServerMessage.kickvotedisallowed", sender);
-
                     }
                     else
                     {
-                        Client kicked = GameMain.Server.ConnectedClients.Find(c => c.ID == kickedClientID);
+                        Client kicked = GameMain.Server.ConnectedClients.Find(c => c.SessionId == kickedClientID);
                         if (kicked != null && kicked.Connection != GameMain.Server.OwnerConnection && !kicked.HasKickVoteFrom(sender))
                         {
                             kicked.AddKickVote(sender);
@@ -293,9 +292,9 @@ namespace Barotrauma
                             if (!ShouldRejectVote(sender, voteType))
                             {
                                 pendingVotes.Enqueue(new TransferVote(sender,
-                                    GameMain.Server.ConnectedClients.Find(c => c.ID == fromClientId),
+                                    GameMain.Server.ConnectedClients.Find(c => c.SessionId == fromClientId),
                                     amount,
-                                    GameMain.Server.ConnectedClients.Find(c => c.ID == toClientId)));
+                                    GameMain.Server.ConnectedClients.Find(c => c.SessionId == toClientId)));
                             }
                         }
                         else
@@ -372,14 +371,14 @@ namespace Barotrauma
                     msg.Write((byte)yesClients.Count());
                     foreach (Client c in yesClients)
                     {
-                        msg.Write(c.ID);
+                        msg.Write(c.SessionId);
                     }
 
                     var noClients = eligibleClients.Where(c => c.GetVote<int>(ActiveVote.VoteType) == 1);
                     msg.Write((byte)noClients.Count());
                     foreach (Client c in noClients)
                     {
-                        msg.Write(c.ID);
+                        msg.Write(c.SessionId);
                     }
 
                     msg.Write((byte)eligibleClients.Count());
@@ -387,7 +386,7 @@ namespace Barotrauma
                     switch (ActiveVote.State)
                     {
                         case VoteState.Started:
-                            msg.Write(ActiveVote.VoteStarter.ID);
+                            msg.Write(ActiveVote.VoteStarter.SessionId);
                             msg.Write((byte)GameMain.Server.ServerSettings.VoteTimeout);
 
                             switch (ActiveVote.VoteType)
@@ -401,8 +400,8 @@ namespace Barotrauma
                                     break;
                                 case VoteType.TransferMoney:
                                     var transferVote = (ActiveVote as TransferVote);
-                                    msg.Write(transferVote.From?.ID ?? 0);
-                                    msg.Write(transferVote.To?.ID ?? 0);
+                                    msg.Write(transferVote.From?.SessionId ?? 0);
+                                    msg.Write(transferVote.To?.SessionId ?? 0);
                                     msg.Write(transferVote.TransferAmount);
                                     break;
                             }
@@ -430,11 +429,11 @@ namespace Barotrauma
                 }
             }            
 
-            var readyClients = GameMain.Server.ConnectedClients.FindAll(c => c.GetVote<bool>(VoteType.StartRound));
-            msg.Write((byte)readyClients.Count);
+            var readyClients = GameMain.Server.ConnectedClients.Where(c => c.GetVote<bool>(VoteType.StartRound));
+            msg.Write((byte)readyClients.Count());
             foreach (Client c in readyClients)
             {
-                msg.Write(c.ID);
+                msg.Write(c.SessionId);
             }
 
             msg.WritePadBits();

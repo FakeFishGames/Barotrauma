@@ -191,7 +191,6 @@ namespace Barotrauma
                         if (unlockPathEventPrefab != null)
                         {
                             var newEvent = unlockPathEventPrefab.CreateInstance();
-                            newEvent.Init();
                             ActiveEvents.Add(newEvent);
                         }
                         else
@@ -223,6 +222,7 @@ namespace Barotrauma
             PreloadContent(GetFilesToPreload());
 
             roundDuration = 0.0f;
+            eventsInitialized = false;
             isCrewAway = false;
             crewAwayDuration = 0.0f;
             crewAwayResetTimer = 0.0f;
@@ -460,7 +460,6 @@ namespace Barotrauma
 
                                 var newEvent = eventPrefab.CreateInstance();
                                 if (newEvent == null) { continue; }
-                                newEvent.Init(eventSet);
                                 if (i < spawnPosFilter.Count) { newEvent.SpawnPosFilter = spawnPosFilter[i]; }
                                 DebugConsole.NewMessage($"Initialized event {newEvent}", debugOnly: true);
                                 if (!selectedEvents.ContainsKey(eventSet))
@@ -490,8 +489,6 @@ namespace Barotrauma
                         var eventPrefab = ToolBox.SelectWeightedRandom(eventPrefabs.Where(isPrefabSuitable), e => e.Commonness, rand);
                         var newEvent = eventPrefab.CreateInstance();
                         if (newEvent == null) { continue; }
-                        newEvent.Init(eventSet);
-                        DebugConsole.NewMessage($"Initialized event {newEvent}", debugOnly: true);
                         if (!selectedEvents.ContainsKey(eventSet))
                         {
                             selectedEvents.Add(eventSet, new List<Event>());
@@ -614,11 +611,24 @@ namespace Barotrauma
             return true;
         }
 
+        private bool eventsInitialized;
         
         public void Update(float deltaTime)
         {
             if (!Enabled || level == null) { return; }
             if (GameMain.GameSession.Campaign?.DisableEvents ?? false) { return; }
+
+            if (!eventsInitialized)
+            {
+                foreach (var eventSet in selectedEvents.Keys)
+                {
+                    foreach (var ev in selectedEvents[eventSet])
+                    {
+                        ev.Init(eventSet);
+                    }
+                }
+                eventsInitialized = true;
+            }
 
             //clients only calculate the intensity but don't create any events
             //(the intensity is used for controlling the background music)

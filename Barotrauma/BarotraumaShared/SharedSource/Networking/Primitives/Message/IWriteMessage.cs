@@ -2,7 +2,7 @@
 
 namespace Barotrauma.Networking
 {
-    public interface IWriteMessage
+    interface IWriteMessage
     {
         void Write(bool val);
         void WritePadBits();

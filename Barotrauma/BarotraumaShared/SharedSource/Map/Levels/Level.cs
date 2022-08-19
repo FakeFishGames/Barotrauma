@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using Voronoi2;
 
@@ -24,6 +25,22 @@ namespace Barotrauma
         //all entities are disabled after they reach this depth
         public const int MaxEntityDepth = -1000000;
         public const float ShaftHeight = 1000.0f;
+
+        /// <summary>
+        /// How far outside the boundaries of the level the water current that pushes subs towards the level starts
+        /// </summary>
+        public const float OutsideBoundsCurrentMargin = 30000.0f;
+
+        /// <summary>
+        /// How far outside the boundaries of the level the strength of the current starts to increase exponentially
+        /// </summary>
+        public const float OutsideBoundsCurrentMarginExponential = 150000.0f;
+
+        /// <summary>
+        /// How far outside the boundaries of the level the current stops submarines entirely
+        /// </summary>
+        public const float OutsideBoundsCurrentHardLimit = 200000.0f;
+
         /// <summary>
         /// The level generator won't try to adjust the width of the main path above this limit.
         /// </summary>
@@ -2437,15 +2454,26 @@ namespace Barotrauma
             public List<ClusterLocation> ClusterLocations { get; }
             public TunnelType TunnelType { get; }
 
-            public PathPoint(string id, Vector2 position, bool shouldContainResources, TunnelType tunnelType)
+            private PathPoint(string id, Vector2 position, bool shouldContainResources, TunnelType tunnelType, List<Identifier> resourceTags, List<Identifier> resourceIds, List<ClusterLocation> clusterLocations)
             {
-                Id = id;   
+                Id = id;
                 Position = position;
                 ShouldContainResources = shouldContainResources;
-                ResourceTags = new List<Identifier>();
-                ResourceIds = new List<Identifier>();
-                ClusterLocations = new List<ClusterLocation>();
+                ResourceTags = resourceTags;
+                ResourceIds = resourceIds;
+                ClusterLocations = clusterLocations;
                 TunnelType = tunnelType;
+            }
+
+            public PathPoint(string id, Vector2 position, bool shouldContainResources, TunnelType tunnelType)
+                : this(id, position, shouldContainResources, tunnelType, new List<Identifier>(), new List<Identifier>(), new List<ClusterLocation>())
+            {
+
+            }
+
+            public PathPoint WithResources(bool containsResources)
+            {
+                return new PathPoint(Id, Position, containsResources, TunnelType, ResourceTags, ResourceIds, ClusterLocations);
             }
         }
 
@@ -2485,22 +2513,26 @@ namespace Barotrauma
         // Such as the exploding crystals in The Great Sea
         private void GenerateItems()
         {
-            Identifier levelName = GenerationParams.Identifier;
-            float minCommonness = float.MaxValue, maxCommonness = float.MinValue;
-            List<(ItemPrefab itemPrefab, float commonness)> levelResources = new List<(ItemPrefab itemPrefab, float commonness)>();
+            var levelResources = new List<(ItemPrefab itemPrefab, ItemPrefab.CommonnessInfo commonnessInfo)>();
             var fixedResources = new List<(ItemPrefab itemPrefab, ItemPrefab.FixedQuantityResourceInfo resourceInfo)>();
+            Vector2 commonnessRange = new Vector2(float.MaxValue, float.MinValue), caveCommonnessRange = new Vector2(float.MaxValue, float.MinValue);
             foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs.OrderBy(p => p.UintIdentifier))
             {
-                if (itemPrefab.LevelCommonness.TryGetValue(levelName, out float commonness) || 
-                    itemPrefab.LevelCommonness.TryGetValue(LevelData.Biome.Identifier, out commonness) ||
-                    itemPrefab.LevelCommonness.TryGetValue(Identifier.Empty, out commonness))
+                if (itemPrefab.GetCommonnessInfo(this) is { CanAppear: true } commonnessInfo)
                 {
-                    if (commonness <= 0.0f) { continue; }
-                    if (commonness < minCommonness) { minCommonness = commonness; }
-                    if (commonness > maxCommonness) { maxCommonness = commonness; }
-                    levelResources.Add((itemPrefab, commonness));
+                    if (commonnessInfo.Commonness > 0.0)
+                    {
+                        if (commonnessInfo.Commonness < commonnessRange.X) { commonnessRange.X = commonnessInfo.Commonness; }
+                        if (commonnessInfo.Commonness > commonnessRange.Y) { commonnessRange.Y = commonnessInfo.Commonness; }
+                    }
+                    if (commonnessInfo.CaveCommonness > 0.0)
+                    {
+                        if (commonnessInfo.CaveCommonness < caveCommonnessRange.X) { caveCommonnessRange.X = commonnessInfo.CaveCommonness; }
+                        if (commonnessInfo.CaveCommonness > caveCommonnessRange.Y) { caveCommonnessRange.Y = commonnessInfo.CaveCommonness; }
+                    }
+                    levelResources.Add((itemPrefab, commonnessInfo));
                 }
-                else if (itemPrefab.LevelQuantity.TryGetValue(levelName, out var fixedQuantityResourceInfo) ||
+                else if (itemPrefab.LevelQuantity.TryGetValue(GenerationParams.Identifier, out var fixedQuantityResourceInfo) ||
                          itemPrefab.LevelQuantity.TryGetValue(Identifier.Empty, out fixedQuantityResourceInfo))
                 {
                     fixedResources.Add((itemPrefab, fixedQuantityResourceInfo));
@@ -2533,18 +2565,18 @@ namespace Barotrauma
                 }
             }
 
-            //place some of the least common resources in the abyss
+            // Abyss Resources
             AbyssResources.Clear();
 
-            int abyssClusterCount = (int)MathHelper.Lerp(GenerationParams.AbyssResourceClustersMin, GenerationParams.AbyssResourceClustersMax, Difficulty / 100.0f);
-
+            var abyssResourcePrefabs = levelResources.Where(r => r.commonnessInfo.AbyssCommonness > 0.0f);
+            int abyssClusterCount = (int)MathHelper.Lerp(GenerationParams.AbyssResourceClustersMin, GenerationParams.AbyssResourceClustersMax, MathUtils.InverseLerp(LevelData.Biome.MinDifficulty, LevelData.Biome.AdjustedMaxDifficulty, Difficulty));
             for (int i = 0; i < abyssClusterCount; i++)
             {
-                //use inverse commonness to select the abyss resources (the rarest ones are the most common in the abyss)
                 var selectedPrefab = ToolBox.SelectWeightedRandom(
-                    levelResources.Select(it => it.itemPrefab).ToList(),
-                    levelResources.Select(it => it.commonness <= 0.0f ? 0.0f : 1.0f / it.commonness).ToList(),
+                    abyssResourcePrefabs.Select(r => r.itemPrefab).ToList(),
+                    abyssResourcePrefabs.Select(r => r.commonnessInfo.AbyssCommonness).ToList(),
                     Rand.RandSync.ServerAndClient);
+
                 var location = allValidLocations.GetRandom(l =>
                 {
                     if (l.Cell == null || l.Edge == null) { return false; }
@@ -2554,14 +2586,16 @@ namespace Barotrauma
                 }, randSync: Rand.RandSync.ServerAndClient);
 
                 if (location.Cell == null || location.Edge == null) { break; }
+
                 int clusterSize = Rand.Range(GenerationParams.ResourceClusterSizeRange.X, GenerationParams.ResourceClusterSizeRange.Y + 1, Rand.RandSync.ServerAndClient);
-                PlaceResources(selectedPrefab, clusterSize, location, out var abyssResources);
+                PlaceResources(selectedPrefab, clusterSize, location, out var placedResources, maxResourceOverlap: 0);
                 var abyssClusterLocation = new ClusterLocation(location.Cell, location.Edge, initializeResourceList: true);
-                abyssClusterLocation.Resources.AddRange(abyssResources);
+                abyssClusterLocation.Resources.AddRange(placedResources);
                 AbyssResources.Add(abyssClusterLocation);
+
                 var locationIndex = allValidLocations.FindIndex(l => l.Equals(location));
                 allValidLocations.RemoveAt(locationIndex);
-            }            
+            }
 
             PathPoints.Clear();
             nextPathPointId = 0;
@@ -2618,17 +2652,25 @@ namespace Barotrauma
             int itemCount = 0;
             Identifier[] exclusiveResourceTags = new Identifier[2] { "ore".ToIdentifier(), "plant".ToIdentifier() };
 
+            var disabledPathPoints = new List<string>();
             // Create first cluster for each spawn point
-            foreach (var pathPoint in PathPoints.Where(p => p.ShouldContainResources))
+            foreach (var pathPoint in PathPoints)
             {
                 if (itemCount >= GenerationParams.ItemCount) { break; }
+                if (!pathPoint.ShouldContainResources) { continue; }
                 GenerateFirstCluster(pathPoint);
+                if (pathPoint.ClusterLocations.Count > 0) { continue; }
+                disabledPathPoints.Add(pathPoint.Id);
             }
-
-            // Don't try to spawn more resource clusters for points
-            // for which the initial cluster could not be spawned
-            PathPoints.Where(p => p.ShouldContainResources && p.ClusterLocations.Count == 0)
-                .ForEach(p => p.ShouldContainResources = false);
+            // Don't try to spawn more resource clusters for points for which the initial cluster could not be spawned
+            foreach (string pathPointId in disabledPathPoints)
+            {
+                if (PathPoints.FirstOrNull(p => p.Id == pathPointId) is PathPoint pathPoint)
+                {
+                    PathPoints.RemoveAll(p => p.Id == pathPointId);
+                    PathPoints.Add(pathPoint.WithResources(false));
+                }
+            }
 
             var excludedPathPointIds = new List<string>();
             while (itemCount < GenerationParams.ItemCount)
@@ -2647,35 +2689,16 @@ namespace Barotrauma
                 GenerateAdditionalCluster(pathPoint);
             }
 
-            // If none of the point set to contain resources can take more resources,
-            // but we still haven't reached the item count set in the generation parameters...
-            while (itemCount < GenerationParams.ItemCount)
-            {
-                // We need to start filling some of the path points previously set to not contain resources
-                Func<PathPoint, bool> availablePathPoints = p => !excludedPathPointIds.Contains(p.Id) && p.ClusterLocations.None();
-                if (PathPoints.None(availablePathPoints)) { break; }
-                var pathPoint = PathPoints.GetRandom(availablePathPoints, randSync: Rand.RandSync.ServerAndClient);
-                if (!GenerateFirstCluster(pathPoint))
-                {
-                    excludedPathPointIds.Add(pathPoint.Id);
-                    continue;
-                }
-                while (pathPoint.NextClusterProbability > 0)
-                {
-                    if (!GenerateAdditionalCluster(pathPoint)) { break; }
-                }
-                pathPoint.ShouldContainResources = pathPoint.ClusterLocations.Any();
-            }
-
 #if DEBUG
-            DebugConsole.NewMessage("Level resources spawned: " + itemCount + "\n" +
-                "   Spawn points containing resources: " + PathPoints.Where(p => p.ClusterLocations.Any()).Count() + "/" + PathPoints.Count + "\n" +
-                "   Total value: " + PathPoints.Sum(p => p.ClusterLocations.Sum(c => c.Resources.Sum(r => r.Prefab.DefaultPrice?.Price ?? 0))) + " mk");
+            int spawnPointsContainingResources = PathPoints.Where(p => p.ClusterLocations.Any()).Count();
+            string percentage = string.Format(CultureInfo.InvariantCulture, "{0:P2}", (float)spawnPointsContainingResources / PathPoints.Count);
+            DebugConsole.NewMessage($"Level resources spawned: {itemCount}\n" +
+                $"   Spawn points containing resources: {spawnPointsContainingResources} ({percentage})\n" +
+                $"   Total value: {PathPoints.Sum(p => p.ClusterLocations.Sum(c => c.Resources.Sum(r => r.Prefab.DefaultPrice?.Price ?? 0)))} mk");
             if (AbyssResources.Count > 0)
             {
-
-                DebugConsole.NewMessage("Abyss resources spawned: " + AbyssResources.Sum(a => a.Resources.Count) + "\n" +
-                "   Total value: " + AbyssResources.Sum(c => c.Resources.Sum(r => r.Prefab.DefaultPrice?.Price ?? 0)) + " mk");
+                DebugConsole.NewMessage($"Abyss resources spawned: {AbyssResources.Sum(a => a.Resources.Count)}\n" +
+                    $"   Total value: {AbyssResources.Sum(c => c.Resources.Sum(r => r.Prefab.DefaultPrice?.Price ?? 0))} mk");
             }
 #endif
 
@@ -2842,7 +2865,7 @@ namespace Barotrauma
                 {
                     selectedPrefab = ToolBox.SelectWeightedRandom(
                         levelResources.Select(it => it.itemPrefab).ToList(),
-                        levelResources.Select(it => it.commonness).ToList(),
+                        levelResources.Select(it => it.commonnessInfo.GetCommonness(pathPoint.TunnelType)).ToList(),
                         Rand.RandSync.ServerAndClient);
                     selectedPrefab.Tags.ForEach(t =>
                     {
@@ -2854,20 +2877,21 @@ namespace Barotrauma
                 }
                 else
                 {
-                    var filteredResources = levelResources.Where(it =>
-                        !pathPoint.ResourceIds.Contains(it.itemPrefab.Identifier) &&
-                        pathPoint.ResourceTags.Any() && it.itemPrefab.Tags.Any(t => pathPoint.ResourceTags.Contains(t)));
-                    selectedPrefab = ToolBox.SelectWeightedRandom(
+                    var filteredResources = pathPoint.ResourceTags.None() ? levelResources :
+                        levelResources.Where(it => it.itemPrefab.Tags.Any(t => pathPoint.ResourceTags.Contains(t)));
+                    selectedPrefab = ToolBox.SelectWeightedRandom( 
                         filteredResources.Select(it => it.itemPrefab).ToList(),
-                        filteredResources.Select(it => it.commonness).ToList(),
+                        filteredResources.Select(it => it.commonnessInfo.GetCommonness(pathPoint.TunnelType)).ToList(),
                         Rand.RandSync.ServerAndClient);
                 }
 
                 if (selectedPrefab == null) { return false; }
 
                 // Create resources for the cluster
-                var commonness = levelResources.First(r => r.itemPrefab == selectedPrefab).commonness;
-                var lerpAmount = MathUtils.InverseLerp(minCommonness, maxCommonness, commonness);
+                float commonness = levelResources.First(r => r.itemPrefab == selectedPrefab).commonnessInfo.GetCommonness(pathPoint.TunnelType);
+                float lerpAmount = pathPoint.TunnelType != TunnelType.Cave ?
+                    MathUtils.InverseLerp(commonnessRange.X, commonnessRange.Y, commonness) : 
+                    MathUtils.InverseLerp(caveCommonnessRange.X, caveCommonnessRange.Y, commonness);
                 var maxClusterSize = (int)MathHelper.Lerp(GenerationParams.ResourceClusterSizeRange.X, GenerationParams.ResourceClusterSizeRange.Y, lerpAmount);
                 var maxFitOnEdge = GetMaxResourcesOnEdge(selectedPrefab, location, out var edgeLength);
                 maxClusterSize = Math.Min(maxClusterSize, maxFitOnEdge);
@@ -2898,6 +2922,7 @@ namespace Barotrauma
                 edgeLength = 0.0f;
                 if (location.Cell == null || location.Edge == null) { return 0; } 
                 edgeLength = Vector2.Distance(location.Edge.Point1, location.Edge.Point2);
+                if (resourcePrefab == null) { return 0; }
                 return (int)Math.Floor(edgeLength / ((1.0f - maxResourceOverlap) * resourcePrefab.Size.X));
             }
         }
@@ -3041,15 +3066,19 @@ namespace Barotrauma
         {
             edgeLength ??= Vector2.Distance(location.Edge.Point1, location.Edge.Point2);
             Vector2 edgeDir = (location.Edge.Point2 - location.Edge.Point1) / edgeLength.Value;
+            if (!MathUtils.IsValid(edgeDir))
+            {
+                edgeDir = Vector2.Zero;
+            }
             var minResourceOverlap = -((edgeLength.Value - (resourceCount * resourcePrefab.Size.X)) / (resourceCount * resourcePrefab.Size.X));
-            minResourceOverlap = Math.Max(minResourceOverlap, 0.0f);
+            minResourceOverlap = Math.Clamp(minResourceOverlap, 0, maxResourceOverlap);
             var lerpAmounts = new float[resourceCount];
             lerpAmounts[0] = 0.0f;
             var lerpAmount = 0.0f;
             for (int i = 1; i < resourceCount; i++)
             {
                 var overlap = Rand.Range(minResourceOverlap, maxResourceOverlap, sync: Rand.RandSync.ServerAndClient);
-                lerpAmount += ((1.0f - overlap) * resourcePrefab.Size.X) / edgeLength.Value;
+                lerpAmount += (1.0f - overlap) * resourcePrefab.Size.X / edgeLength.Value;
                 lerpAmounts[i] = Math.Clamp(lerpAmount, 0.0f, 1.0f);
             }
             var startOffset = Rand.Range(0.0f, 1.0f - lerpAmount, sync: Rand.RandSync.ServerAndClient);

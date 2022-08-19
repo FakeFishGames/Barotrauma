@@ -92,7 +92,9 @@ namespace Barotrauma.Steam
             //currentLobby?.SetData("hostipaddress", lobbyIP);
             string pingLocation = Steamworks.SteamNetworkingUtils.LocalPingLocation?.ToString();
             currentLobby?.SetData("pinglocation", pingLocation ?? "");
-            currentLobby?.SetData("lobbyowner", SteamIDUInt64ToString(GetSteamID()));
+            currentLobby?.SetData("lobbyowner", GetSteamId().TryUnwrap(out var steamId)
+                ? steamId.StringRepresentation
+                : throw new InvalidOperationException("Steamworks not initialized"));
             currentLobby?.SetData("haspassword", serverSettings.HasPassword.ToString());
 
             currentLobby?.SetData("message", serverSettings.ServerMessageText);
@@ -101,7 +103,6 @@ namespace Barotrauma.Steam
             currentLobby?.SetData("contentpackage", string.Join(",", contentPackages.Select(cp => cp.Name)));
             currentLobby?.SetData("contentpackagehash", string.Join(",", contentPackages.Select(cp => cp.Hash.StringRepresentation)));
             currentLobby?.SetData("contentpackageid", string.Join(",", contentPackages.Select(cp => cp.SteamWorkshopId)));
-            currentLobby?.SetData("usingwhitelist", (serverSettings.Whitelist != null && serverSettings.Whitelist.Enabled).ToString());
             currentLobby?.SetData("modeselectionmode", serverSettings.ModeSelectionMode.ToString());
             currentLobby?.SetData("subselectionmode", serverSettings.SubSelectionMode.ToString());
             currentLobby?.SetData("voicechatenabled", serverSettings.VoiceChatEnabled.ToString());
@@ -144,9 +145,10 @@ namespace Barotrauma.Steam
                     lobbyID = (currentLobby?.Id).Value;
                     if (joinServer)
                     {
-                        GameMain.Instance.ConnectLobby = 0;
-                        GameMain.Instance.ConnectName = currentLobby?.GetData("servername");
-                        GameMain.Instance.ConnectEndpoint = SteamIDUInt64ToString((currentLobby?.Owner.Id).Value);
+                        GameMain.Instance.ConnectCommand = Option<ConnectCommand>.Some(
+                            new ConnectCommand(
+                                currentLobby?.GetData("servername") ?? "Server",
+                                new SteamP2PEndpoint(new SteamId(currentLobby?.Owner.Id ?? 0))));
                     }
                 });
         }
@@ -189,14 +191,16 @@ namespace Barotrauma.Steam
                     {
                         if (string.IsNullOrEmpty(lobby.GetData("name"))) { continue; }
 
-                        ServerInfo serverInfo = new ServerInfo();
-                        serverInfo.ServerName = lobby.GetData("name");
-                        serverInfo.OwnerID = SteamIDStringToUInt64(lobby.GetData("lobbyowner"));
-                        serverInfo.LobbyID = lobby.Id;
+                        ServerInfo serverInfo = new ServerInfo
+                        {
+                            ServerName = lobby.GetData("name"),
+                            Endpoint = new SteamP2PEndpoint(SteamId.Parse(lobby.GetData("lobbyowner")).Fallback(default(SteamId))),
+                            LobbyID = lobby.Id,
+                            RespondedToSteamQuery = true
+                        };
                         bool.TryParse(lobby.GetData("haspassword"), out serverInfo.HasPassword);
                         serverInfo.PlayerCount = int.TryParse(lobby.GetData("playercount"), out int playerCount) ? playerCount : 0;
                         serverInfo.MaxPlayers = int.TryParse(lobby.GetData("maxplayernum"), out int maxPlayers) ? maxPlayers : 1;
-                        serverInfo.RespondedToSteamQuery = true;
 
                         AssignLobbyDataToServerInfo(lobby, serverInfo);
 
@@ -215,8 +219,7 @@ namespace Barotrauma.Steam
                 {
                     ServerName = info.Name,
                     HasPassword = info.Passworded,
-                    IP = info.Address.ToString(),
-                    Port = info.ConnectionPort.ToString(),
+                    Endpoint = new LidgrenEndpoint(info.Address, info.ConnectionPort),
                     PlayerCount = info.Players,
                     MaxPlayers = info.MaxPlayers,
                     RespondedToSteamQuery = responsive
@@ -316,7 +319,6 @@ namespace Barotrauma.Steam
                 serverInfo.ContentPackageWorkshopIds.AddRange(WorkshopUrlsToIds(workshopUrls));
             }
 
-            serverInfo.UsingWhiteList = getLobbyBool("usingwhitelist");
             if (Enum.TryParse(lobby.GetData("modeselectionmode"), out SelectionMode selectionMode)) { serverInfo.ModeSelectionMode = selectionMode; }
             if (Enum.TryParse(lobby.GetData("subselectionmode"), out selectionMode)) { serverInfo.SubSelectionMode = selectionMode; }
 
@@ -365,7 +367,7 @@ namespace Barotrauma.Steam
 
             if (rules.ContainsKey("playercount"))
             {
-                if (int.TryParse(rules["playercount"], out int playerCount)) serverInfo.PlayerCount = playerCount;
+                if (int.TryParse(rules["playercount"], out int playerCount)) { serverInfo.PlayerCount = playerCount; }
             }
 
             serverInfo.ContentPackageNames.Clear();
@@ -383,7 +385,6 @@ namespace Barotrauma.Steam
                 serverInfo.ContentPackageWorkshopIds.AddRange(WorkshopUrlsToIds(workshopUrls));
             }
 
-            if (rules.ContainsKey("usingwhitelist")) { serverInfo.UsingWhiteList = rules["usingwhitelist"] == "True"; }
             if (rules.ContainsKey("modeselectionmode"))
             {
                 if (Enum.TryParse(rules["modeselectionmode"], out SelectionMode selectionMode)) { serverInfo.ModeSelectionMode = selectionMode; }

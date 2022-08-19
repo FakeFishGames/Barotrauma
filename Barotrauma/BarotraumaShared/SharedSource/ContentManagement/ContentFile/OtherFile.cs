@@ -1,5 +1,3 @@
-using Barotrauma;
-
 namespace Barotrauma
 {
 

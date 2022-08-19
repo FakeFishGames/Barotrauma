@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     partial class Character
     {
-        public string OwnerClientEndPoint;
+        public Endpoint OwnerClientEndpoint;
         public string OwnerClientName;
         public bool ClientDisconnected;
         public float KillDisconnectedTimer;
@@ -423,7 +423,7 @@ namespace Barotrauma
                 case ControlEventData controlEventData:
                     Client owner = controlEventData.Owner;
                     msg.Write(owner == c && owner.Character == this);
-                    msg.Write(owner != null && owner.Character == this && GameMain.Server.ConnectedClients.Contains(owner) ? owner.ID : (byte)0);
+                    msg.Write(owner != null && owner.Character == this && GameMain.Server.ConnectedClients.Contains(owner) ? owner.SessionId : (byte)0);
                     break;
                 case CharacterStatusEventData statusEventData:
                     WriteStatus(msg, statusEventData.ForceAfflictionData);
@@ -632,6 +632,7 @@ namespace Barotrauma
             }
 
             msg.Write(Enabled);
+            msg.Write(DisabledByEvent);
 
             //character with no characterinfo (e.g. some monster)
             if (Info == null)
@@ -644,7 +645,7 @@ namespace Barotrauma
             if (ownerClient != null)
             {
                 msg.Write(true);
-                msg.Write(ownerClient.ID);
+                msg.Write(ownerClient.SessionId);
             }
             else if (GameMain.Server.Character == this)
             {

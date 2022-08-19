@@ -149,7 +149,7 @@ namespace Barotrauma
         private GUIDropDown linkedSubBox;
 
         private static GUIComponent autoSaveLabel;
-        private static int maxAutoSaves => GameSettings.CurrentConfig.MaxAutoSaves;
+        private static int MaxAutoSaves => GameSettings.CurrentConfig.MaxAutoSaves;
 
         public static readonly object ItemAddMutex = new object(), ItemRemoveMutex = new object();
 
@@ -227,6 +227,8 @@ namespace Barotrauma
         private bool lockMode;
 
         private static bool isAutoSaving;
+
+        private KeyOrMouse toggleEntityListBind; 
 
         public override Camera Cam => cam;
 
@@ -926,7 +928,6 @@ namespace Barotrauma
             toggleEntityMenuButton = new GUIButton(new RectTransform(new Vector2(0.15f, 0.08f), EntityMenu.RectTransform, Anchor.TopCenter, Pivot.BottomCenter) { MinSize = new Point(0, 15) },
                 style: "UIToggleButtonVertical")
             {
-                ToolTip = RichString.Rich($"{TextManager.Get("EntityMenuToggleTooltip")}\n‖color:125,125,125‖{GameSettings.CurrentConfig.KeyMap.Bindings[InputType.ToggleInventory].Name}‖color:end‖"),
                 OnClicked = (btn, userdata) =>
                 {
                     entityMenuOpen = !entityMenuOpen;
@@ -1645,7 +1646,7 @@ namespace Barotrauma
                                 if (AutoSaveInfo?.Root == null || MainSub?.Info == null) { return; }
 
                                 int saveCount = AutoSaveInfo.Root.Elements().Count();
-                                while (AutoSaveInfo.Root.Elements().Count() > maxAutoSaves)
+                                while (AutoSaveInfo.Root.Elements().Count() > MaxAutoSaves)
                                 {
                                     XElement min = AutoSaveInfo.Root.Elements().OrderBy(element => element.GetAttributeUInt64("time", 0)).FirstOrDefault();
                                     #warning TODO: revise
@@ -5192,6 +5193,11 @@ namespace Barotrauma
                     }
                 }
 
+                if (toggleEntityListBind != GameSettings.CurrentConfig.KeyMap.Bindings[InputType.ToggleInventory])
+                {
+                    toggleEntityMenuButton.ToolTip = RichString.Rich($"{TextManager.Get("EntityMenuToggleTooltip")}\n‖color:125,125,125‖{GameSettings.CurrentConfig.KeyMap.Bindings[InputType.ToggleInventory].Name}‖color:end‖");
+                    toggleEntityListBind = GameSettings.CurrentConfig.KeyMap.Bindings[InputType.ToggleInventory];
+                }
                 if (GameSettings.CurrentConfig.KeyMap.Bindings[InputType.ToggleInventory].IsHit() && mode == Mode.Default)
                 {
                     toggleEntityMenuButton.OnClicked?.Invoke(toggleEntityMenuButton, toggleEntityMenuButton.UserData);
@@ -5528,8 +5534,10 @@ namespace Barotrauma
                 MouseDragStart = Vector2.Zero;
             }
 
-            if (!saveAssemblyFrame.Rect.Contains(PlayerInput.MousePosition) && !snapToGridFrame.Rect.Contains(PlayerInput.MousePosition)  &&
-                dummyCharacter?.SelectedItem == null && !WiringMode && GUI.MouseOn == null)
+            if (!saveAssemblyFrame.Rect.Contains(PlayerInput.MousePosition)
+                && !snapToGridFrame.Rect.Contains(PlayerInput.MousePosition)
+                && dummyCharacter?.SelectedItem == null && !WiringMode
+                && (GUI.MouseOn == null || MapEntity.SelectedAny || MapEntity.SelectionPos != Vector2.Zero))
             {
                 if (layerList is { Visible: true } && GUI.KeyboardDispatcher.Subscriber == layerList)
                 {
@@ -5556,7 +5564,7 @@ namespace Barotrauma
             {
                 bool shouldCloseHud = dummyCharacter?.SelectedItem != null && HUD.CloseHUD(dummyCharacter.SelectedItem.Rect) && DraggedItemPrefab == null;
 
-                if (MapEntityPrefab.Selected != null && GUI.MouseOn == null)
+                if (MapEntityPrefab.Selected != null)
                 {
                     MapEntityPrefab.Selected.UpdatePlacing(cam);
                 }
@@ -5708,7 +5716,7 @@ namespace Barotrauma
 
             spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.NonPremultiplied, transformMatrix: cam.Transform);
             Submarine.DrawFront(spriteBatch, editing: true, e => !IsSubcategoryHidden(e.Prefab?.Subcategory));
-            if (!WiringMode && !IsMouseOnEditorGUI())
+            if (!WiringMode)
             {
                 MapEntityPrefab.Selected?.DrawPlacing(spriteBatch, cam);
                 MapEntity.DrawSelecting(spriteBatch, cam);
