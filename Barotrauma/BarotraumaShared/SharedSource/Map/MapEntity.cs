@@ -540,6 +540,7 @@ namespace Barotrauma
             mapEntityList.Remove(this);
 
 #if CLIENT
+            Submarine.ForceRemoveFromVisibleEntities(this);
             if (SelectedList.Contains(this))
             {
                 SelectedList = SelectedList.Where(e => e != this).ToHashSet();

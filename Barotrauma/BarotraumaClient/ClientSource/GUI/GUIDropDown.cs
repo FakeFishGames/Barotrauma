@@ -20,7 +20,7 @@ namespace Barotrauma
         private RectTransform currentHighestParent;
         private List<RectTransform> parentHierarchy = new List<RectTransform>();
 
-        private bool selectMultiple;
+        private readonly bool selectMultiple;
 
         public bool Dropped { get; set; }
         
@@ -129,17 +129,19 @@ namespace Barotrauma
             }
         }
 
-        private List<object> selectedDataMultiple = new List<object>();
+        private readonly List<object> selectedDataMultiple = new List<object>();
         public IEnumerable<object> SelectedDataMultiple
         {
             get { return selectedDataMultiple; }
         }
 
-        private List<int> selectedIndexMultiple = new List<int>();
+        private readonly List<int> selectedIndexMultiple = new List<int>();
         public IEnumerable<int> SelectedIndexMultiple
         {
             get { return selectedIndexMultiple; }
         }
+
+        public bool MustSelectAtLeastOne;
 
         public LocalizedString Text
         {
@@ -269,6 +271,12 @@ namespace Barotrauma
                     ToolTip = toolTip,
                     OnSelected = (GUITickBox tb) =>
                     {
+                        if (MustSelectAtLeastOne && selectedIndexMultiple.Count <= 1 && !tb.Selected)
+                        {
+                            tb.Selected = true;
+                            return false;
+                        }
+
                         List<LocalizedString> texts = new List<LocalizedString>();
                         selectedDataMultiple.Clear();
                         selectedIndexMultiple.Clear();

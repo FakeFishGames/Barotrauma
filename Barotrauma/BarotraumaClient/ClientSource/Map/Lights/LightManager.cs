@@ -254,7 +254,7 @@ namespace Barotrauma.Lights
             }
 
             //remove some lights with a light volume if there's too many of them
-            if (activeLightsWithLightVolume.Count > GameSettings.CurrentConfig.Graphics.VisibleLightLimit)
+            if (activeLightsWithLightVolume.Count > GameSettings.CurrentConfig.Graphics.VisibleLightLimit && Screen.Selected is { IsEditor: false })
             {
                 for (int i = GameSettings.CurrentConfig.Graphics.VisibleLightLimit; i < activeLightsWithLightVolume.Count; i++)
                 {

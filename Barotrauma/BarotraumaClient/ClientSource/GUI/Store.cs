@@ -188,21 +188,23 @@ namespace Barotrauma
             this.parentComponent = parentComponent;
             UpdatePermissions();
             CreateUI();
-            campaignUI.Campaign.Map.OnLocationChanged += UpdateLocation;
-            if (CurrentLocation?.Reputation != null)
-            {
-                CurrentLocation.Reputation.OnReputationValueChanged += () => { needsRefresh = true; };
-            }
-            campaignUI.Campaign.CargoManager.OnItemsInBuyCrateChanged += () => { needsBuyingRefresh = true; };
-            campaignUI.Campaign.CargoManager.OnPurchasedItemsChanged += () => { needsRefresh = true; };
-            campaignUI.Campaign.CargoManager.OnItemsInSellCrateChanged += () => { needsSellingRefresh = true; };
-            campaignUI.Campaign.CargoManager.OnSoldItemsChanged += () =>
+            Identifier refreshStoreId = new Identifier("RefreshStore");  
+            campaignUI.Campaign.Map.OnLocationChanged.RegisterOverwriteExisting(
+                refreshStoreId, 
+                (locationChangeInfo) => UpdateLocation(locationChangeInfo.PrevLocation, locationChangeInfo.NewLocation));
+
+            CurrentLocation?.Reputation?.OnReputationValueChanged.RegisterOverwriteExisting(refreshStoreId, _ => needsRefresh = true);
+            CargoManager cargoManager = campaignUI.Campaign.CargoManager;
+            cargoManager.OnItemsInBuyCrateChanged.RegisterOverwriteExisting(refreshStoreId, _ => needsBuyingRefresh = true);
+            cargoManager.OnPurchasedItemsChanged.RegisterOverwriteExisting(refreshStoreId, _ => needsRefresh = true);
+            cargoManager.OnItemsInSellCrateChanged.RegisterOverwriteExisting(refreshStoreId, _ => needsSellingRefresh = true);
+            cargoManager.OnSoldItemsChanged.RegisterOverwriteExisting(refreshStoreId, _ =>
             {
                 needsItemsToSellRefresh = true;
                 needsItemsToSellFromSubRefresh = true;
                 needsRefresh = true;
-            };
-            campaignUI.Campaign.CargoManager.OnItemsInSellFromSubCrateChanged += () => { needsSellingFromSubRefresh = true; };
+            });
+            cargoManager.OnItemsInSellFromSubCrateChanged.RegisterOverwriteExisting(refreshStoreId, _ => needsSellingFromSubRefresh = true);
         }
 
         public void SelectStore(Identifier identifier)
@@ -713,7 +715,7 @@ namespace Barotrauma
             if (prevLocation == newLocation) { return; }
             if (prevLocation?.Reputation != null)
             {
-                prevLocation.Reputation.OnReputationValueChanged -= SetNeedsRefresh;
+                prevLocation.Reputation.OnReputationValueChanged.Dispose();
             }
             if (ItemPrefab.Prefabs.Any(p => p.CanBeBoughtFrom(newLocation)))
             {
@@ -722,7 +724,7 @@ namespace Barotrauma
                 ChangeStoreTab(StoreTab.Buy);
                 if (newLocation?.Reputation != null)
                 {
-                    newLocation.Reputation.OnReputationValueChanged += SetNeedsRefresh;
+                    CurrentLocation.Reputation.OnReputationValueChanged.RegisterOverwriteExisting("RefreshStore".ToIdentifier(), _ => { SetNeedsRefresh(); });
                 }
             }
 

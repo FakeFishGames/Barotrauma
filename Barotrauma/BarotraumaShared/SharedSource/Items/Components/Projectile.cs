@@ -742,7 +742,7 @@ namespace Barotrauma.Items.Components
                     limb.body?.ApplyLinearImpulse(item.body.LinearVelocity * item.body.Mass * 0.1f, item.SimPosition);
                     return false;
                 }
-                if (!FriendlyFire && User != null && limb.character.IsFriendly(User))
+                if (!FriendlyFire && User != null && limb.character.IsFriendly(User) && HumanAIController.IsOnFriendlyTeam(limb.character, User))
                 {
                     return false;
                 }
@@ -789,6 +789,11 @@ namespace Barotrauma.Items.Components
 
         private bool ShouldIgnoreSubmarineCollision(ref Fixture target, Contact contact)
         {
+            //not in the projectile category: the projectile has not been launched (e.g. just dropped from an inventory)
+            if (item.body.CollisionCategories != Physics.CollisionProjectile) 
+            { 
+                return false; 
+            }
             if (target.Body.UserData is Submarine sub)
             {
                 Vector2 dir = item.body.LinearVelocity.LengthSquared() < 0.001f ?

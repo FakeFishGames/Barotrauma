@@ -809,8 +809,13 @@ namespace Barotrauma
 
             if (!Character.GodMode)
             {
-                UpdateLimbAfflictionOverlays();
-                UpdateSkinTint();                
+#if CLIENT
+                if (Character.IsVisible)
+                {
+                    UpdateLimbAfflictionOverlays();
+                    UpdateSkinTint();
+                }
+#endif
                 CalculateVitality();
 
                 if (Vitality <= MinVitality)
@@ -818,6 +823,12 @@ namespace Barotrauma
                     Kill();
                 }
             }
+        }
+
+        public void ForceUpdateVisuals()
+        {
+            UpdateLimbAfflictionOverlays();
+            UpdateSkinTint();
         }
 
         private void UpdateDamageReductions(float deltaTime)

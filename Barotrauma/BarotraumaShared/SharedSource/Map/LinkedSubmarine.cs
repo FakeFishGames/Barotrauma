@@ -182,8 +182,8 @@ namespace Barotrauma
                 float scale = element.GetAttributeFloat("scale", prefab.Scale);
 
                 var rect = element.GetAttributeVector4("rect", Vector4.Zero);
-                rect.Z *= scale / prefab.Scale;
-                rect.W *= scale / prefab.Scale;
+                if (!prefab.ResizeHorizontal) { rect.Z *= scale / prefab.Scale; }
+                if (!prefab.ResizeVertical) { rect.W *= scale / prefab.Scale; }
 
                 points.Add(new Vector2(rect.X, rect.Y));
                 points.Add(new Vector2(rect.X + rect.Z, rect.Y));
@@ -203,7 +203,7 @@ namespace Barotrauma
             if (Screen.Selected == GameMain.SubEditorScreen)
             {
                 linkedSub = CreateDummy(submarine, element, pos, id);
-                linkedSub.saveElement = element;
+                linkedSub.saveElement = new XElement(element);
                 linkedSub.purchasedLostShuttles = false;
             }
             else
@@ -212,8 +212,10 @@ namespace Barotrauma
                 LevelData levelData = GameMain.GameSession?.Campaign?.NextLevel ?? GameMain.GameSession?.LevelData;
                 linkedSub = new LinkedSubmarine(submarine, id)
                 {
-                    purchasedLostShuttles = GameMain.GameSession?.GameMode is CampaignMode campaign && campaign.PurchasedLostShuttles,
-                    saveElement = element
+                    purchasedLostShuttles = 
+                        (GameMain.GameSession?.GameMode is CampaignMode campaign && campaign.PurchasedLostShuttles) || 
+                        element.GetAttributeBool("purchasedlostshuttle", false),
+                    saveElement = new XElement(element)
                 };
 
                 bool levelMatches = string.IsNullOrWhiteSpace(levelSeed) || levelData == null || levelData.Seed == levelSeed;
@@ -281,6 +283,8 @@ namespace Barotrauma
                 DebugConsole.ThrowError("Failed to load a linked submarine (the submarine contains no hulls).");
                 return;
             }
+
+            saveElement.Attribute("purchasedlostshuttle")?.Remove();
 
             IdRemap parentRemap = new IdRemap(Submarine.Info.SubmarineElement, Submarine.IdOffset);
             sub = Submarine.Load(info, false, parentRemap);
@@ -442,14 +446,22 @@ namespace Barotrauma
                     saveElement.Attribute("previewimage").Remove();
                 }
 
-                if (saveElement.Attribute("pos") != null) { saveElement.Attribute("pos").Remove(); }
-                saveElement.Add(new XAttribute("pos", XMLExtensions.Vector2ToString(Position - Submarine.HiddenSubPosition)));
-
-                var linkedPort = linkedTo.FirstOrDefault(lt => (lt is Item) && ((Item)lt).GetComponent<DockingPort>() != null);
-                if (linkedPort != null)
+                if (GameMain.GameSession?.GameMode is CampaignMode campaign && campaign.PurchasedLostShuttles)
                 {
-                    saveElement.Attribute("linkedto")?.Remove();
-                    saveElement.Add(new XAttribute("linkedto", linkedPort.ID));
+                    saveElement.SetAttributeValue("purchasedlostshuttle", true);
+                }
+
+                saveElement.SetAttributeValue("pos", XMLExtensions.Vector2ToString(Position - Submarine.HiddenSubPosition));
+
+                if (linkedTo.Any() || linkedToID.Any())
+                {
+                    var linkedPort = 
+                        linkedTo.FirstOrDefault(lt => (lt is Item item) && item.GetComponent<DockingPort>() != null) ?? 
+                        FindEntityByID(linkedToID.First()) as MapEntity;
+                    if (linkedPort != null)
+                    {
+                        saveElement.SetAttributeValue("linkedto", linkedPort.ID);
+                    }
                 }
             }
             else
@@ -458,10 +470,8 @@ namespace Barotrauma
                 sub.SaveToXElement(saveElement);
             }
 
-            saveElement.Attribute("originallinkedto")?.Remove();
-            saveElement.Add(new XAttribute("originallinkedto", originalLinkedPort != null ? originalLinkedPort.Item.ID : originalLinkedToID));
-            saveElement.Attribute("originalmyport")?.Remove();
-            saveElement.Add(new XAttribute("originalmyport", originalMyPortID));
+            saveElement.SetAttributeValue("originallinkedto", originalLinkedPort != null ? originalLinkedPort.Item.ID : originalLinkedToID);
+            saveElement.SetAttributeValue("originalmyport", originalMyPortID);
 
             if (sub != null)
             {

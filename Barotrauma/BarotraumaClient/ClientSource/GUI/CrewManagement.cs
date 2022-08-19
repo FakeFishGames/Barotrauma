@@ -47,7 +47,9 @@ namespace Barotrauma
             CreateUI();
             UpdateLocationView(campaignUI.Campaign.Map.CurrentLocation, true);
 
-            campaignUI.Campaign.Map.OnLocationChanged += (prevLocation, newLocation) => UpdateLocationView(newLocation, true, prevLocation);
+            campaignUI.Campaign.Map.OnLocationChanged.RegisterOverwriteExisting(
+                "CrewManagement.UpdateLocationView".ToIdentifier(), 
+                (locationChangeInfo) => UpdateLocationView(locationChangeInfo.NewLocation, true, locationChangeInfo.PrevLocation));
         }
 
         public void RefreshPermissions()

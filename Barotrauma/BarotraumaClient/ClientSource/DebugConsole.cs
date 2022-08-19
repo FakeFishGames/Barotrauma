@@ -1792,9 +1792,9 @@ namespace Barotrauma
                                 addIfMissing($"missionfailure.{missionId}".ToIdentifier(), language);
                             }
                         }
-                        for (int i = 0; i<missionPrefab.Messages.Length; i++)
+                        for (int i = 0; i < missionPrefab.Messages.Length; i++)
                         {
-                            if (missionPrefab.Messages[i].IsNullOrWhiteSpace())
+                            if (missionPrefab.Messages[i].IsNullOrWhiteSpace() || (missionPrefab.Messages[i] as FallbackLString)?.GetLastFallback() is FallbackLString { PrimaryIsLoaded: false })
                             {
                                 addIfMissing($"MissionMessage{i}.{missionId}".ToIdentifier(), language);
                             }

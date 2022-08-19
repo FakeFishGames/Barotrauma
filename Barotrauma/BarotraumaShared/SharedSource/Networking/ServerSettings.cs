@@ -1,17 +1,12 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Barotrauma.IO;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.ComponentModel;
-using System.Globalization;
-using Barotrauma.IO;
 using System.Linq;
-using System.Net;
 using System.Security.Cryptography;
 using System.Text;
-using System.Xml;
-using System.Xml.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma.Networking
 {

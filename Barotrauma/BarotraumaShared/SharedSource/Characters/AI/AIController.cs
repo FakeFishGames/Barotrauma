@@ -308,6 +308,7 @@ namespace Barotrauma
                         }
                     }
                 }
+                if (targetSlot < 0) { return false; }
                 return targetInventory.TryPutItem(item, targetSlot, allowSwapping, allowCombine: false, Character);
             }
             else

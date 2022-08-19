@@ -1109,27 +1109,6 @@ namespace Barotrauma
             GUIMessageBox.CloseAll();
             MainMenuScreen.Select();
             GameSession = null;
-
-        }
-
-        public void ShowCampaignDisclaimer(Action onContinue = null)
-        {
-            var msgBox = new GUIMessageBox(TextManager.Get("CampaignDisclaimerTitle"), TextManager.Get("CampaignDisclaimerText"),
-                new LocalizedString[] { TextManager.Get("CampaignRoadMapTitle"), TextManager.Get("OK") });
-
-            msgBox.Buttons[0].OnClicked = (btn, userdata) =>
-            {
-                ShowOpenUrlInWebBrowserPrompt("https://trello.com/b/hBXI8ltN/barotrauma-roadmap-known-issues");
-                return true;
-            };
-            msgBox.Buttons[0].OnClicked += msgBox.Close;
-            msgBox.Buttons[1].OnClicked += msgBox.Close;
-            msgBox.Buttons[1].OnClicked += (_, __) => { onContinue?.Invoke(); return true; };
-
-            var config = GameSettings.CurrentConfig;
-            config.CampaignDisclaimerShown = true;
-            GameSettings.SetCurrentConfig(config);
-            GameSettings.SaveCurrentConfig();
         }
 
         public void ShowEditorDisclaimer()

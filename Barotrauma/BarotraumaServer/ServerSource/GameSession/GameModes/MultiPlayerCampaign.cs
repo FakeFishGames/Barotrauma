@@ -393,14 +393,17 @@ namespace Barotrauma
         }
 
         partial void InitProjSpecific()
-        {            
-            CargoManager.OnItemsInBuyCrateChanged += () => { IncrementLastUpdateIdForFlag(NetFlags.ItemsInBuyCrate); };
-            CargoManager.OnPurchasedItemsChanged += () => { IncrementLastUpdateIdForFlag(NetFlags.PurchasedItems); };
-            CargoManager.OnSoldItemsChanged += () => { IncrementLastUpdateIdForFlag(NetFlags.SoldItems); };
-            UpgradeManager.OnUpgradesChanged += () => { IncrementLastUpdateIdForFlag(NetFlags.UpgradeManager); };
-            Map.OnLocationSelected += (loc, connection) => { IncrementLastUpdateIdForFlag(NetFlags.MapAndMissions); };
-            Map.OnMissionsSelected += (loc, mission) => { IncrementLastUpdateIdForFlag(NetFlags.MapAndMissions); };
-            Reputation.OnAnyReputationValueChanged += () => { IncrementLastUpdateIdForFlag(NetFlags.Reputation); };
+        {
+            Identifier eventId = nameof(MultiPlayerCampaign).ToIdentifier();
+            CargoManager.OnItemsInBuyCrateChanged.RegisterOverwriteExisting(eventId, _ =>  IncrementLastUpdateIdForFlag(NetFlags.ItemsInBuyCrate));
+            CargoManager.OnPurchasedItemsChanged.RegisterOverwriteExisting(eventId, _ =>  IncrementLastUpdateIdForFlag(NetFlags.PurchasedItems));
+            CargoManager.OnSoldItemsChanged.RegisterOverwriteExisting(eventId, _ =>  IncrementLastUpdateIdForFlag(NetFlags.SoldItems));
+            UpgradeManager.OnUpgradesChanged.RegisterOverwriteExisting(eventId, _ =>  IncrementLastUpdateIdForFlag(NetFlags.UpgradeManager));
+
+            Reputation.OnAnyReputationValueChanged.RegisterOverwriteExisting(eventId, _ => IncrementLastUpdateIdForFlag(NetFlags.Reputation));
+
+            Map.OnLocationSelected = (loc, connection) => IncrementLastUpdateIdForFlag(NetFlags.MapAndMissions);
+            Map.OnMissionsSelected = (loc, mission) => IncrementLastUpdateIdForFlag(NetFlags.MapAndMissions);
 
             //increment save ID so clients know they're lacking the most up-to-date save file
             LastSaveID++;

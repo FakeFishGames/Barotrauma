@@ -6,11 +6,11 @@ namespace Barotrauma
         private readonly LocalizedString primary;
         private readonly LocalizedString fallback;
 
-        private bool primaryIsLoaded = false;
-        
+        public bool PrimaryIsLoaded { get; private set; }
+
         public FallbackLString(LocalizedString primary, LocalizedString fallback)
         {
-            if (primary is FallbackLString {primary: { } innerPrimary, fallback: { } innerFallback})
+            if (primary is FallbackLString { primary: { } innerPrimary, fallback: { } innerFallback })
             {
                 this.primary = innerPrimary;
                 this.fallback = innerFallback.Fallback(fallback);
@@ -27,18 +27,27 @@ namespace Barotrauma
             return base.MustRetrieveValue()
                    || MustRetrieveValue(primary)
                    || MustRetrieveValue(fallback)
-                   || primaryIsLoaded != primary.Loaded;
+                   || PrimaryIsLoaded != primary.Loaded;
         }
 
         public override bool Loaded => primary.Loaded || fallback.Loaded;
         public override void RetrieveValue()
         {
             cachedValue = primary.Value;
-            primaryIsLoaded = primary.Loaded;
+            PrimaryIsLoaded = primary.Loaded;
             if (!primary.Loaded)
             {
                 cachedValue = fallback.Value;
             }
+        }
+
+        public LocalizedString GetLastFallback()
+        {
+            if (fallback is FallbackLString innerFallback)
+            {
+                return innerFallback.GetLastFallback();
+            }
+            return fallback;
         }
     }
 }

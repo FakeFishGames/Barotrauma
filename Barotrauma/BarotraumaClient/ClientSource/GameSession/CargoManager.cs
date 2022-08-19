@@ -52,7 +52,7 @@ namespace Barotrauma
             {
                 ItemsInBuyCrate.Add(entry.Key, entry.Value);
             }
-            OnItemsInBuyCrateChanged?.Invoke();
+            OnItemsInBuyCrateChanged?.Invoke(this);
         }
 
         public void SetItemsInSubSellCrate(Dictionary<Identifier, List<PurchasedItem>> items)
@@ -62,7 +62,7 @@ namespace Barotrauma
             {
                 ItemsInSellFromSubCrate.Add(entry.Key, entry.Value);
             }
-            OnItemsInSellFromSubCrateChanged?.Invoke();
+            OnItemsInSellFromSubCrateChanged?.Invoke(this);
         }
 
         public void SetSoldItems(Dictionary<Identifier, List<SoldItem>> items)
@@ -97,7 +97,7 @@ namespace Barotrauma
                     soldEntityMatch.Status = SoldEntity.SellStatus.Confirmed;
                 }
             }
-            OnSoldItemsChanged?.Invoke();
+            OnSoldItemsChanged?.Invoke(this);
 
             static bool Match(SoldItem soldItem, SoldEntity soldEntity, bool matchId)
             {
@@ -122,7 +122,7 @@ namespace Barotrauma
             {
                 GetSellCrateItems(storeIdentifier, create: true).Add(new PurchasedItem(itemPrefab, changeInQuantity));
             }
-            OnItemsInSellCrateChanged?.Invoke();
+            OnItemsInSellCrateChanged?.Invoke(this);
         }
 
         public void SellItems(Identifier storeIdentifier, List<PurchasedItem> itemsToSell, Store.StoreTab sellingMode)
@@ -199,7 +199,7 @@ namespace Barotrauma
                     }
                 }
             }
-            OnSoldItemsChanged?.Invoke();
+            OnSoldItemsChanged?.Invoke(this);
         }
 
         public void ClearSoldItemsProjSpecific()
