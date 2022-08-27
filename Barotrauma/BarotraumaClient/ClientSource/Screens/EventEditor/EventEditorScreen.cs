@@ -876,7 +876,7 @@ namespace Barotrauma
             EventPrefab? prefab;
             if (eventXml != null)
             { 
-                prefab = new EventPrefab(eventXml.FromPackage(null), null);
+                prefab = new EventPrefab(eventXml.FromContent(ContentPath.Empty), null);
             }
             else
             {

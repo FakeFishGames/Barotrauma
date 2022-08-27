@@ -403,7 +403,7 @@ namespace Barotrauma
                 ragdoll.Flip();
             }
 
-            var root = doc.Root.FromPackage(pathToAppendage.ContentPackage);
+            var root = doc.Root.FromContent(pathToAppendage);
             var limbElements = root.GetChildElements("limb").ToDictionary(e => e.GetAttributeString("id", null), e => e);
             foreach (var jointElement in root.GetChildElements("joint"))
             {

@@ -10,12 +10,12 @@ namespace Barotrauma
 {
     public sealed class ContentXElement
     {
-        public ContentPackage? ContentPackage { get; private set; }
+        public ContentPath ContentPath { get;  private set; }
         public readonly XElement Element;
         
-        public ContentXElement(ContentPackage? contentPackage, XElement element)
+        public ContentXElement(ContentPath? contentPath, XElement element)
         {
-            ContentPackage = contentPackage;
+            ContentPath = contentPath??ContentPath.Empty;
             Element = element;
         }
 
@@ -31,7 +31,7 @@ namespace Barotrauma
         
         public ContentXElement? FirstElement() => Elements().FirstOrDefault();
         
-        public ContentXElement? Parent => Element.Parent is null ? null : new ContentXElement(ContentPackage, Element.Parent);
+        public ContentXElement? Parent => Element.Parent is null ? null : new ContentXElement(ContentPath, Element.Parent);
         public bool HasElements => Element.HasElements;
 
         public bool IsOverride() => Element.IsOverride();
@@ -39,16 +39,16 @@ namespace Barotrauma
         public bool ComesAfter(ContentXElement other) => Element.ComesAfter(other.Element);
         
         public ContentXElement? GetChildElement(string name)
-            => Element.GetChildElement(name) is { } elem ? new ContentXElement(ContentPackage, elem) : null;
+            => Element.GetChildElement(name) is { } elem ? new ContentXElement(ContentPath, elem) : null;
         
         public IEnumerable<ContentXElement> Elements()
-            => Element.Elements().Select(e => new ContentXElement(ContentPackage, e));
+            => Element.Elements().Select(e => new ContentXElement(ContentPath, e));
         
         public IEnumerable<ContentXElement> ElementsBeforeSelf()
-            => Element.ElementsBeforeSelf().Select(e => new ContentXElement(ContentPackage, e));
+            => Element.ElementsBeforeSelf().Select(e => new ContentXElement(ContentPath, e));
         
         public IEnumerable<ContentXElement> Descendants()
-            => Element.Descendants().Select(e => new ContentXElement(ContentPackage, e));
+            => Element.Descendants().Select(e => new ContentXElement(ContentPath, e));
 
         public IEnumerable<ContentXElement> GetChildElements(string name)
             => Elements().Where(e => string.Equals(name, e.Name.LocalName, StringComparison.InvariantCultureIgnoreCase));
@@ -66,7 +66,7 @@ namespace Barotrauma
         public string? GetAttributeString(string key, string? def) => Element.GetAttributeString(key, def);
         public string GetAttributeStringUnrestricted(string key, string def) => Element.GetAttributeStringUnrestricted(key, def);
         public string[]? GetAttributeStringArray(string key, string[]? def, bool convertToLowerInvariant = false) => Element.GetAttributeStringArray(key, def, convertToLowerInvariant);
-        public ContentPath? GetAttributeContentPath(string key) => Element.GetAttributeContentPath(key, ContentPackage);
+        public ContentPath? GetAttributeContentPath(string key) => Element.GetAttributeContentPath(key, ContentPath);
         public int GetAttributeInt(string key, int def) => Element.GetAttributeInt(key, def);
         public int[]? GetAttributeIntArray(string key, int[]? def) => Element.GetAttributeIntArray(key, def);
         public ushort[]? GetAttributeUshortArray(string key, ushort[]? def) => Element.GetAttributeUshortArray(key, def);
@@ -85,7 +85,7 @@ namespace Barotrauma
         public (T1, T2) GetAttributeTuple<T1, T2>(string key, in (T1, T2) def) => Element.GetAttributeTuple(key, def);
         public (T1, T2)[] GetAttributeTupleArray<T1, T2>(string key, in (T1, T2)[] def) => Element.GetAttributeTupleArray(key, def);
 
-        public Identifier VariantOf() => Element.VariantOf();
+        public PrefabInstance InheritParent() => Element.InheritParent();
         
         public bool DoesAttributeReferenceFileNameAlone(string key) => Element.DoesAttributeReferenceFileNameAlone(key);
 
@@ -96,21 +96,26 @@ namespace Barotrauma
         public void Add(ContentXElement elem)
         {
             Element.Add(elem.Element);
-            elem.ContentPackage = ContentPackage;
+            elem.ContentPath = ContentPath;
             #warning TODO: update %ModDir% instances in case the content package changes
         }
-        
+
+        public void Add(XAttribute attr){
+            Element.Add(attr);
+            #warning TODO: move attr replacement here...
+        }
+
         public void AddFirst(ContentXElement elem)
         {
             Element.AddFirst(elem.Element);
-            elem.ContentPackage = ContentPackage;
+            elem.ContentPath = ContentPath;
             #warning TODO: update %ModDir% instances in case the content package changes
         }
         
         public void AddAfterSelf(ContentXElement elem)
         {
             Element.AddAfterSelf(elem.Element);
-            elem.ContentPackage = ContentPackage;
+            elem.ContentPath = ContentPath;
             #warning TODO: update %ModDir% instances in case the content package changes
         }
 
@@ -123,12 +128,12 @@ namespace Barotrauma
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(ContentPackage, Element);
+            return HashCode.Combine(ContentPath, Element);
         }
 
         public static bool operator ==(in ContentXElement? a, in ContentXElement? b)
         {
-            return a?.ContentPackage == b?.ContentPackage && a?.Element == b?.Element;
+            return a?.ContentPath?.Value == b?.ContentPath?.Value && a?.Element == b?.Element;
         }
 
         public static bool operator !=(in ContentXElement? a, in ContentXElement? b) =>
@@ -137,8 +142,8 @@ namespace Barotrauma
 
     public static class ContentXElementExtensions
     {
-        public static ContentXElement FromPackage(this XElement element, ContentPackage? contentPackage)
-            => new ContentXElement(contentPackage, element);
+        public static ContentXElement FromContent(this XElement element, ContentPath? contentPath)
+            => new ContentXElement(contentPath, element);
 
         public static IEnumerable<ContentXElement> Elements(this IEnumerable<ContentXElement> elements)
             => elements.SelectMany(e => e.Elements());

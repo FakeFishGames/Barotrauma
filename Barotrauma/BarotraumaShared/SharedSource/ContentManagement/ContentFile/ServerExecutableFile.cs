@@ -17,10 +17,10 @@ namespace Barotrauma
                     Barotrauma.IO.Path.GetDirectoryName(path.RawValue ?? ""),
                     Barotrauma.IO.Path.GetFileNameWithoutExtension(path.RawValue ?? "")).CleanUpPath();
             
-            path = ContentPath.FromRaw(path.ContentPackage, rawValueWithoutExtension());
+            path = ContentPath.FromRaw(path, rawValueWithoutExtension());
             if (File.Exists(path.FullPath)) { return path; }
             
-            path = ContentPath.FromRaw(path.ContentPackage,
+            path = ContentPath.FromRaw(path,
                 rawValueWithoutExtension() + ".exe");
             return path;
         }

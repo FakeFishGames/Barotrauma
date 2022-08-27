@@ -480,15 +480,15 @@ namespace Barotrauma
                 if (spriteParams != null)
                 {
                     ContentPath texturePath =
-                        character.Params.VariantFile?.Root?.GetAttributeContentPath("texture", character.Prefab.ContentPackage)
-                        ?? ContentPath.FromRaw(character.Prefab.ContentPackage, spriteParams.GetTexturePath());
+                        character.Params.VariantFile?.Root?.GetAttributeContentPath("texture", character.Prefab.FilePath)
+                        ?? ContentPath.FromRaw(character.Prefab.FilePath, spriteParams.GetTexturePath());
                     path = GetSpritePath(texturePath);
                 }
                 else
                 {
                     ContentPath texturePath = element.GetAttributeContentPath("texture");
                     texturePath = texturePath.IsNullOrWhiteSpace()
-                        ? ContentPath.FromRaw(character.Prefab.ContentPackage, ragdoll.RagdollParams.Texture)
+                        ? ContentPath.FromRaw(character.Prefab.FilePath, ragdoll.RagdollParams.Texture)
                         : texturePath;
                     path = GetSpritePath(texturePath);
                 }

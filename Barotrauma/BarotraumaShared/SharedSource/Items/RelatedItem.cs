@@ -81,13 +81,13 @@ namespace Barotrauma
         {
             if (item == null) { return false; }
             if (excludedIdentifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id))) { return false; }
-            return Identifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id) || (AllowVariants && !item.Prefab.VariantOf.IsEmpty && item.Prefab.VariantOf == id));
+            return Identifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id) || (AllowVariants && !item.Prefab.InheritParent.IsEmpty && item.Prefab.InheritParent.ToIdentifier() == id));
         }
         public bool MatchesItem(ItemPrefab itemPrefab)
         {
             if (itemPrefab == null) { return false; }
             if (excludedIdentifiers.Any(id => itemPrefab.Identifier == id || itemPrefab.Tags.Contains(id))) { return false; }
-            return Identifiers.Any(id => itemPrefab.Identifier == id || itemPrefab.Tags.Contains(id) || (AllowVariants && !itemPrefab.VariantOf.IsEmpty && itemPrefab.VariantOf == id));
+            return Identifiers.Any(id => itemPrefab.Identifier == id || itemPrefab.Tags.Contains(id) || (AllowVariants && !itemPrefab.InheritParent.IsEmpty && itemPrefab.InheritParent.ToIdentifier() == id));
         }
 
         public RelatedItem(Identifier[] identifiers, Identifier[] excludedIdentifiers)

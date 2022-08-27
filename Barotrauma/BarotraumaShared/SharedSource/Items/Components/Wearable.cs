@@ -157,7 +157,7 @@ namespace Barotrauma
             {
                 string textureName = element.GetAttributeString("texture", "");
                 return ContentPath.FromRaw(
-                    element.ContentPackage,
+                    element.ContentPath,
                     $"{Path.GetDirectoryName(WearableComponent.Item.Prefab.FilePath)}/{textureName}");
             }
             else

@@ -427,7 +427,7 @@ namespace Barotrauma
             }
         }
 
-        public Identifier VariantOf => Prefab.VariantOf;
+        public PrefabInstance VariantOf => Prefab.InheritParent;
 
         public string Name
         {
@@ -488,7 +488,7 @@ namespace Barotrauma
             }
         }
 
-        public string ConfigPath => Params.File.Path.Value;
+        public string ConfigPath => Params.characterPrefab.ContentFile.Path.Value;
 
         public float Mass
         {
@@ -1111,15 +1111,15 @@ namespace Barotrauma
 
             Properties = SerializableProperty.GetProperties(this);
 
-            Params = new CharacterParams(prefab.ContentFile as CharacterFile);
+            Params = new CharacterParams(prefab);
 
             Info = characterInfo;
 
             Identifier speciesName = prefab.Identifier;
 
-            if (VariantOf == CharacterPrefab.HumanSpeciesName || speciesName == CharacterPrefab.HumanSpeciesName)
+            if (VariantOf.id == CharacterPrefab.HumanSpeciesName || speciesName == CharacterPrefab.HumanSpeciesName)
             {
-                if (!VariantOf.IsEmpty)
+                if (!VariantOf.id.IsEmpty &&  prefab.Identifier != CharacterPrefab.HumanSpeciesName)
                 {
                     DebugConsole.ThrowError("The variant system does not yet support humans, sorry. It does support other humanoids though!");
                 }
@@ -1172,7 +1172,7 @@ namespace Barotrauma
             }
             if (Params.VariantFile != null)
             {
-                var overrideElement = Params.VariantFile.Root.FromPackage(Params.MainElement.ContentPackage);
+                var overrideElement = Params.VariantFile.Root.FromContent(Params.MainElement.ContentPath);
                 // Only override if the override file contains matching elements
                 if (overrideElement.GetChildElement("inventory") != null)
                 {
@@ -1223,7 +1223,7 @@ namespace Barotrauma
                 CharacterHealth = new CharacterHealth(selectedHealthElement, this, limbHealthElement);
             }
 
-            if (Params.Husk && speciesName != "husk" && Prefab.VariantOf != "husk")
+            if (Params.Husk && speciesName != "husk" && Prefab.InheritParent.id != "husk")
             {
                 // Get the non husked name and find the ragdoll with it
                 var matchingAffliction = AfflictionPrefab.List
@@ -1242,7 +1242,7 @@ namespace Barotrauma
                 {
                     nonHuskedSpeciesName = AfflictionHusk.GetNonHuskedSpeciesName(speciesName, matchingAffliction);
                 }
-                if (ragdollParams == null && prefab.VariantOf == null)
+                if (ragdollParams == null && prefab.InheritParent.IsEmpty)
                 {
                     Identifier name = Params.UseHuskAppendage ? nonHuskedSpeciesName : speciesName;
                     ragdollParams = IsHumanoid ? RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(name) : RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(name) as RagdollParams;

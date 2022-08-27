@@ -254,7 +254,7 @@ namespace Barotrauma
                     }
                     if (character.Info.InventoryData != null)
                     {
-                        character.SpawnInventoryItems(character.Inventory, character.Info.InventoryData.FromPackage(null));
+                        character.SpawnInventoryItems(character.Inventory, character.Info.InventoryData.FromContent(ContentPath.Empty));
                     }
                     else if (!character.Info.StartItemsGiven)
                     {
