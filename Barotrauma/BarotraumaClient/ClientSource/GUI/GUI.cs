@@ -1018,6 +1018,11 @@ namespace Barotrauma
 
                     if (c.Enabled)
                     {
+                        var dragHandle = c as GUIDragHandle ?? parent as GUIDragHandle;
+                        if (dragHandle != null)
+                        {
+                            return dragHandle.Dragging ? CursorState.Dragging : CursorState.Hand;
+                        }
                         // Some parent elements take priority
                         // but not when the child is a GUIButton or GUITickBox
                         if (!(parent is GUIButton) && !(parent is GUIListBox) ||
@@ -1026,6 +1031,7 @@ namespace Barotrauma
                             if (!c.Rect.Equals(monitorRect)) { return c.HoverCursor; }
                         }
                     }
+
 
                     // Children in list boxes can be interacted with despite not having
                     // a GUIButton inside of them so instead of hard coding we check if
@@ -1097,6 +1103,8 @@ namespace Barotrauma
                                         return list;
                                     case GUIScrollBar bar:
                                         return bar;
+                                    case GUIDragHandle dragHandle:
+                                        return dragHandle;
                                 }
                             }
                             component = parent;

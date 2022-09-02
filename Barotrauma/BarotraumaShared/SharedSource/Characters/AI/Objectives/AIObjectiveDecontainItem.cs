@@ -1,5 +1,7 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using System;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace Barotrauma
@@ -13,7 +15,7 @@ namespace Barotrauma
         //can either be a tag or an identifier
         private readonly string[] itemIdentifiers;
         private readonly ItemContainer sourceContainer;
-        private ItemContainer targetContainer;
+        private readonly ItemContainer targetContainer;
         private readonly Item targetItem;
 
         private AIObjectiveGetItem getItemObjective;
@@ -127,7 +129,7 @@ namespace Barotrauma
                         RemoveExistingPredicate = RemoveExistingPredicate,
                         RemoveMax = RemoveExistingMax,
                         GetItemPriority = GetItemPriority,
-                        ignoredContainerIdentifiers = sourceContainer != null ? new Identifier[] { sourceContainer.Item.Prefab.Identifier } : null
+                        ignoredContainerIdentifiers = sourceContainer?.Item.Prefab.Identifier.ToEnumerable().ToImmutableHashSet()
                     },
                     onCompleted: () => IsCompleted = true,
                     onAbandon: () => Abandon = true);

@@ -74,7 +74,7 @@ namespace Barotrauma
             get => name;
             set
             {
-                var charsToRemove = Path.GetInvalidFileNameChars();
+                var charsToRemove = Path.GetInvalidFileNameCharsCrossPlatform();
                 name = string.Concat(value.Where(c => !charsToRemove.Contains(c)));
             }
         }

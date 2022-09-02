@@ -965,16 +965,10 @@ namespace Barotrauma
 
                 foreach (var talentTree in talentTrees)
                 {
-                    foreach (var subTree in talentTree.TalentSubTrees)
+                    foreach (var talentId in talentTree.AllTalentIdentifiers)
                     {
-                        foreach (var option in subTree.TalentOptionStages)
-                        {
-                            foreach (var talent in option.Talents)
-                            {
-                                character.GiveTalent(talent);
-                                NewMessage($"Unlocked talent \"{talent.DisplayName}\".");
-                            }
-                        }
+                        character.GiveTalent(talentId);
+                        NewMessage($"Unlocked talent \"{talentId}\".");                        
                     }
                 }
             },
@@ -1304,102 +1298,7 @@ namespace Barotrauma
                     }
                 }
             }, null, true));
-            
-            commands.Add(new Command("upgradeitem", "upgradeitem [upgrade] [level] [items]: Adds an upgrade to the current targeted item.", args =>
-            {
-                if (args.Length > 0)
-                {
-                    int level;
-                    if (args.Length > 1)
-                    {
-                        if (int.TryParse(args[1], out int result))
-                        {
-                            level = result;
-                        }
-                        else
-                        {
-                            ThrowError($"\"{args[1]}\" is not a valid level.");
-                            return;
-                        }
-                        
-                    }
-                    else
-                    {
-                        ThrowError("Parameter \"level\" is required.");
-                        return;
-                    }
 
-                    var upgradePrefab = UpgradePrefab.Find(args[0].ToIdentifier());
-
-                    if (upgradePrefab == null)
-                    {
-                        ThrowError($"Unknown upgrade: {args[0]}.");
-                        return;
-                    }
-
-                    List<MapEntity> targetItems = new List<MapEntity>();
-
-                    if (upgradePrefab.IsWallUpgrade)
-                    {
-                        targetItems.AddRange(Submarine.MainSub.GetWalls(true).Cast<MapEntity>());
-                    }
-                    else
-                    {
-                        if (args.Length > 2)
-                        {
-                            targetItems.AddRange(Item.ItemList.Where(item => item.Submarine == Submarine.MainSub).Where(item => item.HasTag(args[2])).Cast<MapEntity>());
-                        }
-                        else
-                        {
-                            ThrowError("Argument \"tag\" is required.");
-                            return;
-                        }
-                    }
-
-                    if (!targetItems.Any())
-                    {
-                        ThrowError("No valid items found.");
-                        return;
-                    }
-
-                    foreach (MapEntity targetItem in targetItems)
-                    {
-                        Upgrade existingUpgrade = targetItem.GetUpgrade(args[0].ToIdentifier());
-
-                        if (!(targetItem is ISerializableEntity sEntity)) { continue; }
-
-                        var upgrade = new Upgrade(sEntity, upgradePrefab, level);
-                        if (targetItem.AddUpgrade(upgrade, true))
-                        {
-                            if (existingUpgrade == null)
-                            {
-                                NewMessage($"Added {upgradePrefab.Identifier}:{level} to {sEntity.Name}.", Color.Green);
-                                upgrade.ApplyUpgrade(); 
-                            }
-                            else
-                            {
-                                NewMessage($"Set {sEntity.Name}'s {upgradePrefab.Identifier} upgrade to level {existingUpgrade.Level}.", Color.Cyan);
-                                existingUpgrade.ApplyUpgrade(); 
-                            }
-                        }
-                        else
-                        {
-                            ThrowError($"{upgrade.Prefab.Identifier} cannot be applied to {sEntity.Name}");
-                        }
-                    }
-                }
-                else
-                {
-                    ThrowError("Parameter \"upgrade\" is required.");
-                }
-            }, () =>
-            {
-                return new[]
-                {
-                    UpgradePrefab.Prefabs.Select(c => c.Identifier).Distinct().Select(i => i.Value).ToArray()
-                };
-            }, true));
-            
             commands.Add(new Command("maxupgrades", "maxupgrades [category] [prefab]: Maxes out all upgrades or only specific one if given arguments.", args =>
             {
                 UpgradeManager upgradeManager = GameMain.GameSession?.Campaign?.UpgradeManager;
@@ -2362,7 +2261,7 @@ namespace Barotrauma
             {
                 NewMessage(msg, color.Value, isCommand: false, isError: false);
             }
-#if DEBUG
+#if DEBUG && CLIENT
             Console.WriteLine(msg);
 #endif
         }
@@ -2547,7 +2446,7 @@ namespace Barotrauma
 #endif
 
             fileName += DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString();
-            var invalidChars = Path.GetInvalidFileNameChars();
+            var invalidChars = Path.GetInvalidFileNameCharsCrossPlatform();
             foreach (char invalidChar in invalidChars)
             {
                 fileName = fileName.Replace(invalidChar.ToString(), "");

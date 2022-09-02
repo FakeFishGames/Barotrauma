@@ -11,6 +11,11 @@ namespace Barotrauma.Networking
 {
     partial class RespawnManager : Entity, IServerSerializable
     {
+        /// <summary>
+        /// How much skills drop towards the job's default skill levels when dying
+        /// </summary>
+        const float SkillReductionOnDeath = 0.75f;
+
         public enum State
         {
             Waiting,

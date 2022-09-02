@@ -5,7 +5,6 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -27,6 +26,10 @@ namespace Barotrauma.Items.Components
         private Point originalMaxSize;
         private Vector2 originalRelativeSize;
 
+        private GUIComponent dragArea;
+
+        public override bool RecreateGUIOnResolutionChange => true;
+
         partial void InitProjSpecific()
         {
             if (GuiFrame == null) { return; }
@@ -40,9 +43,8 @@ namespace Barotrauma.Items.Components
             content.RectTransform.SetAsFirstChild();
 
             //prevents inputs from going through the GUICustomComponent to the drag handle
-            var blocker = new GUIFrame(new RectTransform(GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin, GuiFrame.RectTransform, Anchor.Center) 
-            { AbsoluteOffset = GUIStyle.ItemFrameOffset },
-            style: null);
+            dragArea = new GUIFrame(new RectTransform(GuiFrame.Rect.Size - GUIStyle.ItemFrameMargin, GuiFrame.RectTransform, Anchor.Center) 
+                { AbsoluteOffset = GUIStyle.ItemFrameOffset }, style: null);
         }
 
         public void TriggerRewiringSound()
@@ -111,7 +113,7 @@ namespace Barotrauma.Items.Components
             if (user != Character.Controlled || user == null) { return; }
 
             HighlightedWire = null;
-            Connection.DrawConnections(spriteBatch, this, user);
+            Connection.DrawConnections(spriteBatch, this, dragArea.Rect, user);
 
             foreach (UISprite sprite in GUIStyle.GetComponentStyle("ConnectionPanelFront").Sprites[GUIComponent.ComponentState.None])
             {
@@ -121,7 +123,6 @@ namespace Barotrauma.Items.Components
 
         protected override void OnResolutionChanged()
         {
-            base.OnResolutionChanged();
             if (GuiFrame == null) { return; }
             CheckForLabelOverlap();
         }

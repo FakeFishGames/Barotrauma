@@ -505,7 +505,6 @@ namespace Barotrauma
                 if (wall.Submarine != submarine) { continue; }
 
                 float wallCrushDepth = wall.CrushDepth;
-                if (submarine.Info.SubmarineClass == SubmarineClass.DeepDiver) { wallCrushDepth *= 1.2f; }
                 float pastCrushDepth = submarine.RealWorldDepth - wallCrushDepth;
                 if (pastCrushDepth > 0)
                 {
@@ -587,9 +586,13 @@ namespace Barotrauma
                 newHull = Hull.FindHull(targetPos, null);
             }
 
-            var gaps = newHull?.ConnectedGaps ?? Gap.GapList.Where(g => g.Submarine == submarine);
-            Gap adjacentGap = Gap.FindAdjacent(gaps, ConvertUnits.ToDisplayUnits(points[0]), 200.0f);
-            if (adjacentGap == null) { return true; }
+            //if all the bodies of a wall have been disabled, we don't need to care about gaps (can always pass through)
+            if (!(contact.FixtureA.UserData is Structure wall) || !wall.AllSectionBodiesDisabled())
+            {
+                var gaps = newHull?.ConnectedGaps ?? Gap.GapList.Where(g => g.Submarine == submarine);
+                Gap adjacentGap = Gap.FindAdjacent(gaps, ConvertUnits.ToDisplayUnits(points[0]), 200.0f);
+                if (adjacentGap == null) { return true; }
+            }
 
             if (newHull != null)
             {

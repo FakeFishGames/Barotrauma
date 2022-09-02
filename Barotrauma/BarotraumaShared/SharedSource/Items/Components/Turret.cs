@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Linq;
 using Barotrauma.Extensions;
 using FarseerPhysics.Dynamics;
+using System.Collections.Immutable;
 
 namespace Barotrauma.Items.Components
 {
@@ -1151,7 +1152,7 @@ namespace Barotrauma.Items.Components
                 if (objective.SubObjectives.None())
                 {
                     var loadItemsObjective = AIContainItems<Turret>(container, character, objective, usableProjectileCount + 1, equip: true, removeEmpty: true, dropItemOnDeselected: true);
-                    loadItemsObjective.ignoredContainerIdentifiers = new Identifier[] { ((MapEntity)containerItem).Prefab.Identifier };
+                    loadItemsObjective.ignoredContainerIdentifiers = ((MapEntity)containerItem).Prefab.Identifier.ToEnumerable().ToImmutableHashSet();
                     if (character.IsOnPlayerTeam)
                     {
                         character.Speak(TextManager.GetWithVariable("DialogLoadTurret", "[itemname]", item.Name, formatCapitals: FormatCapitals.Yes).Value,
@@ -1340,7 +1341,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (character.AIController.SelectedAiTarget == null && !hadCurrentTarget)
                     {
-                        if (CreatureMetrics.Instance.RecentlyEncountered.Contains(closestEnemy.SpeciesName))
+                        if (CreatureMetrics.Instance.RecentlyEncountered.Contains(closestEnemy.SpeciesName) || closestEnemy.IsHuman)
                         {
                             character.Speak(TextManager.Get("DialogNewTargetSpotted").Value,
                                 identifier: "newtargetspotted".ToIdentifier(),
@@ -1611,6 +1612,7 @@ namespace Barotrauma.Items.Components
             targetRotation = rotation = (minRotation + maxRotation) / 2;
 
             UpdateTransformedBarrelPos();
+            UpdateLightComponents();
         }
 
         public override void FlipY(bool relativeToSub)
@@ -1632,6 +1634,7 @@ namespace Barotrauma.Items.Components
             targetRotation = rotation = (minRotation + maxRotation) / 2;
 
             UpdateTransformedBarrelPos();
+            UpdateLightComponents();
         }
 
         public override void ReceiveSignal(Signal signal, Connection connection)
@@ -1714,12 +1717,12 @@ namespace Barotrauma.Items.Components
         {
             if (TryExtractEventData(extraData, out EventData eventData))
             {
-                msg.Write(eventData.Projectile.ID);
+                msg.WriteUInt16(eventData.Projectile.ID);
                 msg.WriteRangedSingle(MathHelper.Clamp(rotation, minRotation, maxRotation), minRotation, maxRotation, 16);
             }
             else
             {
-                msg.Write((ushort)0);
+                msg.WriteUInt16((ushort)0);
                 float wrappedTargetRotation = targetRotation;
                 while (wrappedTargetRotation < minRotation && MathUtils.IsValid(wrappedTargetRotation))
                 {

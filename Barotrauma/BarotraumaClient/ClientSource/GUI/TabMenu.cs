@@ -1722,7 +1722,7 @@ namespace Barotrauma
 
             var subInfoTextLayout = new GUILayoutGroup(new RectTransform(Vector2.One, paddedFrame.RectTransform));
 
-            LocalizedString className = !sub.Info.HasTag(SubmarineTag.Shuttle) ? TextManager.Get($"submarineclass.{sub.Info.SubmarineClass}") : TextManager.Get("shuttle");
+            LocalizedString className = !sub.Info.HasTag(SubmarineTag.Shuttle) ? $"{TextManager.Get($"submarineclass.{sub.Info.SubmarineClass}")} ({TextManager.Get($"submarinetier.{sub.Info.Tier}")})" : TextManager.Get("shuttle");
 
             int nameHeight = (int)GUIStyle.LargeFont.MeasureString(sub.Info.DisplayName, true).Y;
             int classHeight = (int)GUIStyle.SubHeadingFont.MeasureString(className).Y;
@@ -1763,7 +1763,10 @@ namespace Barotrauma
             }
             else
             {
-                var specsListBox = new GUIListBox(new RectTransform(new Vector2(1f, 0.57f), paddedFrame.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft));
+                var specsListBox = new GUIListBox(new RectTransform(new Vector2(1f, 0.57f), paddedFrame.RectTransform, Anchor.BottomLeft, Pivot.BottomLeft))
+                {
+                    CurrentSelectMode = GUIListBox.SelectMode.None
+                };
                 sub.Info.CreateSpecsWindow(specsListBox, GUIStyle.Font, includeTitle: false, includeClass: false, includeDescription: true);
             }
         }
@@ -1954,14 +1957,15 @@ namespace Barotrauma
                         Point iconSize = cornerIcon.RectTransform.NonScaledSize;
                         cornerIcon.RectTransform.AbsoluteOffset = new Point(iconSize.X / 2, iconSize.Y / 2);
 
-                        if (subTree.TalentOptionStages.Count <= i) { continue; }
+                        if (subTree.TalentOptionStages.Length <= i) { continue; }
 
                         TalentOption talentOption = subTree.TalentOptionStages[i];
                         GUILayoutGroup talentOptionCenterGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.75f, 0.7f), talentOptionFrame.RectTransform, Anchor.Center), childAnchor: Anchor.CenterLeft);
                         GUILayoutGroup talentOptionLayoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, talentOptionCenterGroup.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { Stretch = true };
 
-                        foreach (TalentPrefab talent in talentOption.Talents.OrderBy(t => t.Identifier))
+                        foreach (Identifier talentId in talentOption.TalentIdentifiers.OrderBy(t => t))
                         {
+                            if (!TalentPrefab.TalentPrefabs.TryGet(talentId, out TalentPrefab talent)) { continue; }
                             GUIFrame talentFrame = new GUIFrame(new RectTransform(Vector2.One, talentOptionLayoutGroup.RectTransform), style: null)
                             {
                                 CanBeFocused = false

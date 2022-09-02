@@ -229,7 +229,7 @@ namespace Barotrauma
             };
         }
 
-        private string Percentage(float v) => TextManager.GetWithVariable("percentageformat", "[value]", Round(v * 100).ToString()).Value;
+        private string Percentage(float v) => ToolBox.GetFormattedPercentage(v);
 
         private int Round(float v) => (int)MathF.Round(v);
         

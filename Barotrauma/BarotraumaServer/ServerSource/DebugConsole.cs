@@ -302,9 +302,9 @@ namespace Barotrauma
             {
                 client ??= GameMain.Server.ConnectedClients.Find(c => c.SessionId == id);
             }
-            if (Endpoint.Parse(arg).TryUnwrap(out var endpoint))
+            if (Address.Parse(arg).TryUnwrap(out var address))
             {
-                client ??= GameMain.Server.ConnectedClients.Find(c => c.EndpointMatches(endpoint));
+                client ??= GameMain.Server.ConnectedClients.Find(c => c.AddressMatches(address));
             }
             if (AccountId.Parse(arg).TryUnwrap(out var argAccountId))
             {
@@ -915,7 +915,7 @@ namespace Barotrauma
             {
                 if (GameMain.Server == null || args.Length == 0) return;
 
-                if (!(Endpoint.Parse(args[0]).TryUnwrap(out var endpoint))) { return; }
+                if (!(Address.Parse(args[0]).TryUnwrap(out var address))) { return; }
                 
                 ShowQuestionPrompt("Reason for banning the endpoint \"" + args[0] + "\"? (c to cancel)", (reason) =>
                 {
@@ -934,10 +934,10 @@ namespace Barotrauma
                             banDuration = parsedBanDuration;
                         }
 
-                        var clients = GameMain.Server.ConnectedClients.Where(c => c.EndpointMatches(endpoint)).ToList();
+                        var clients = GameMain.Server.ConnectedClients.Where(c => c.AddressMatches(address)).ToList();
                         if (clients.Count == 0)
                         {
-                            GameMain.Server.ServerSettings.BanList.BanPlayer("Unnamed", endpoint, reason, banDuration);
+                            GameMain.Server.ServerSettings.BanList.BanPlayer("Unnamed", address, reason, banDuration);
                         }
                         else
                         {
@@ -1510,8 +1510,8 @@ namespace Barotrauma
                 (Client client, Vector2 cursorPos, string[] args) =>
                 {
                     if (args.Length < 1) { return; }
-                    if (!(Endpoint.Parse(args[0]).TryUnwrap(out var endpoint))) { return; }
-                    var clients = GameMain.Server.ConnectedClients.Where(c => c.EndpointMatches(endpoint)).ToList();
+                    if (!(Address.Parse(args[0]).TryUnwrap(out var address))) { return; }
+                    var clients = GameMain.Server.ConnectedClients.Where(c => c.AddressMatches(address)).ToList();
                     TimeSpan? duration = null;
                     if (args.Length > 1)
                     {
@@ -1530,7 +1530,7 @@ namespace Barotrauma
 
                     if (clients.Count == 0)
                     {
-                        GameMain.Server.ServerSettings.BanList.BanPlayer("Unnamed", endpoint, reason, duration);
+                        GameMain.Server.ServerSettings.BanList.BanPlayer("Unnamed", address, reason, duration);
                     }
                     else
                     {
@@ -1866,20 +1866,17 @@ namespace Barotrauma
                     }
 
                     foreach (var talentTree in talentTrees)
-                    {
-                        foreach (var subTree in talentTree.TalentSubTrees)
+                    {          
+                        foreach (var talentId in talentTree.AllTalentIdentifiers)
                         {
-                            foreach (var option in subTree.TalentOptionStages)
+                            if (TalentPrefab.TalentPrefabs.TryGet(talentId, out TalentPrefab talentPrefab))
                             {
-                                foreach (var talent in option.Talents)
-                                {
-                                    targetCharacter.GiveTalent(talent);
-                                    NewMessage($"Talent \"{talent.DisplayName}\" given to \"{targetCharacter.Name}\" by \"{client.Name}\".");
-                                    GameMain.Server.SendConsoleMessage($"Gave talent \"{talent.DisplayName}\" to \"{targetCharacter.Name}\".", client);
-                                    NewMessage($"Unlocked talent \"{talent.DisplayName}\".");
-                                }
+                                targetCharacter.GiveTalent(talentPrefab);
+                                NewMessage($"Talent \"{talentPrefab.DisplayName}\" given to \"{targetCharacter.Name}\" by \"{client.Name}\".");
+                                GameMain.Server.SendConsoleMessage($"Gave talent \"{talentPrefab.DisplayName}\" to \"{targetCharacter.Name}\".", client);
+                                NewMessage($"Unlocked talent \"{talentPrefab.DisplayName}\".");
                             }
-                        }
+                        }              
                     }
                 }
             );

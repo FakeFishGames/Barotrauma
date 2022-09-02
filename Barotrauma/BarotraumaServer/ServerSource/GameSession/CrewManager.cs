@@ -47,7 +47,7 @@ namespace Barotrauma
         public void ServerWriteActiveOrders(IWriteMessage msg)
         {
             ushort count = (ushort)ActiveOrders.Count(o => o.Order != null && !o.FadeOutTime.HasValue);
-            msg.Write(count);
+            msg.WriteUInt16(count);
             if (count > 0)
             {
                 foreach (var activeOrder in ActiveOrders)
@@ -55,10 +55,10 @@ namespace Barotrauma
                     if (!(activeOrder?.Order is Order order) || activeOrder.FadeOutTime.HasValue) { continue; }
                     OrderChatMessage.WriteOrder(msg, order, null, isNewOrder: true);
                     bool hasOrderGiver = order.OrderGiver != null;
-                    msg.Write(hasOrderGiver);
+                    msg.WriteBoolean(hasOrderGiver);
                     if (hasOrderGiver)
                     {
-                        msg.Write(order.OrderGiver.ID);
+                        msg.WriteUInt16(order.OrderGiver.ID);
                     }
                 }
             }

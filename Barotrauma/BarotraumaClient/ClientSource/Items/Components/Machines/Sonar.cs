@@ -140,8 +140,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        private bool AllowUsingMineralScanner =>
-            HasMineralScanner && !isConnectedToSteering;
+        public override bool RecreateGUIOnResolutionChange => true;
 
         partial void InitProjSpecific(ContentXElement element)
         {
@@ -195,7 +194,6 @@ namespace Barotrauma.Items.Components
 
         protected override void OnResolutionChanged()
         {
-            base.OnResolutionChanged();
             UpdateGUIElements();
         }
 
@@ -302,7 +300,7 @@ namespace Barotrauma.Items.Components
                 TextManager.Get("SonarDirectionalPing"), GUIStyle.TextColorNormal, GUIStyle.SubHeadingFont, Alignment.CenterLeft);
             textBlocksToScaleAndNormalize.Add(directionalModeSwitchText);
 
-            if (AllowUsingMineralScanner)
+            if (HasMineralScanner)
             {
                 AddMineralScannerSwitchToGUI();
             }
@@ -373,7 +371,7 @@ namespace Barotrauma.Items.Components
         {
             base.OnItemLoaded();
             zoomSlider.BarScroll = MathUtils.InverseLerp(MinZoom, MaxZoom, zoom);
-            if (AllowUsingMineralScanner && mineralScannerSwitch == null)
+            if (HasMineralScanner && mineralScannerSwitch == null)
             {
                 AddMineralScannerSwitchToGUI();
                 GUITextBlock.AutoScaleAndNormalize(textBlocksToScaleAndNormalize);
@@ -417,12 +415,32 @@ namespace Barotrauma.Items.Components
                         unsentChanges = true;
                         correctionTimer = CorrectionDelay;
                     }
+
                     return true;
                 }
             };
             var mineralScannerSwitchText = new GUITextBlock(new RectTransform(new Vector2(0.7f, 1), mineralScannerFrame.RectTransform, Anchor.CenterRight),
                 TextManager.Get("SonarMineralScanner"), GUIStyle.TextColorNormal, GUIStyle.SubHeadingFont, Alignment.CenterLeft);
             textBlocksToScaleAndNormalize.Add(mineralScannerSwitchText);
+
+            PreventMineralScannerOverlap();
+        }
+
+        private void PreventMineralScannerOverlap()
+        {
+            if (item.GetComponent<Steering>() is { } steering && controlContainer is { } container)
+            {
+                int containerBottom = container.Rect.Y + container.Rect.Height,
+                    steeringTop = steering.ControlContainer.Rect.Top;
+
+                int amountRaised = 0;
+
+                while (GetContainerBottom() > steeringTop) { amountRaised++; }
+
+                container.RectTransform.AbsoluteOffset = new Point(0, -amountRaised);
+
+                int GetContainerBottom() => containerBottom - amountRaised;
+            }
         }
 
         public override void UpdateHUD(Character character, float deltaTime, Camera cam)
@@ -502,7 +520,7 @@ namespace Barotrauma.Items.Components
                 Vector2.DistanceSquared(sonarView.Rect.Center.ToVector2(), PlayerInput.MousePosition) <
                 (sonarView.Rect.Width / 2 * sonarView.Rect.Width / 2);
 
-            if (AllowUsingMineralScanner && Level.Loaded != null && !Level.Loaded.Generating)
+            if (HasMineralScanner && Level.Loaded != null && !Level.Loaded.Generating)
             {
                 if (MineralClusters == null)
                 {
@@ -985,7 +1003,7 @@ namespace Barotrauma.Items.Components
                 missionIndex++;
             }
 
-            if (AllowUsingMineralScanner && useMineralScanner && CurrentMode == Mode.Active && MineralClusters != null &&
+            if (HasMineralScanner && useMineralScanner && CurrentMode == Mode.Active && MineralClusters != null &&
                 (item.CurrentHull == null || !DetectSubmarineWalls))
             {
                 foreach (var c in MineralClusters)
@@ -1754,17 +1772,17 @@ namespace Barotrauma.Items.Components
 
         public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
-            msg.Write(currentMode == Mode.Active);
+            msg.WriteBoolean(currentMode == Mode.Active);
             if (currentMode == Mode.Active)
             {
                 msg.WriteRangedSingle(zoom, MinZoom, MaxZoom, 8);
-                msg.Write(useDirectionalPing);
+                msg.WriteBoolean(useDirectionalPing);
                 if (useDirectionalPing)
                 {
                     float pingAngle = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(pingDirection));
                     msg.WriteRangedSingle(MathUtils.InverseLerp(0.0f, MathHelper.TwoPi, pingAngle), 0.0f, 1.0f, 8);
                 }
-                msg.Write(useMineralScanner);
+                msg.WriteBoolean(useMineralScanner);
             }
         }
         

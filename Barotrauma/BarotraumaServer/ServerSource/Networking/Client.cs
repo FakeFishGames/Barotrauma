@@ -8,12 +8,16 @@ namespace Barotrauma.Networking
     {
         public bool VoiceEnabled = true;
 
-        public UInt16 LastRecvClientListUpdate = 0;
+        public UInt16 LastRecvClientListUpdate
+            = NetIdUtils.GetIdOlderThan(GameMain.Server.LastClientListUpdateID);
 
-        public UInt16 LastSentServerSettingsUpdate = 0;
-        public UInt16 LastRecvServerSettingsUpdate = 0;
+        public UInt16 LastSentServerSettingsUpdate
+            = NetIdUtils.GetIdOlderThan(GameMain.Server.ServerSettings.LastUpdateIdForFlag[ServerSettings.NetFlags.Properties]);
+        public UInt16 LastRecvServerSettingsUpdate
+            = NetIdUtils.GetIdOlderThan(GameMain.Server.ServerSettings.LastUpdateIdForFlag[ServerSettings.NetFlags.Properties]);
         
-        public UInt16 LastRecvLobbyUpdate = 0;
+        public UInt16 LastRecvLobbyUpdate
+            = NetIdUtils.GetIdOlderThan(GameMain.NetLobbyScreen.LastUpdateID);
 
         public UInt16 LastSentChatMsgID = 0; //last msg this client said
         public UInt16 LastRecvChatMsgID = 0; //last msg this client knows about
@@ -21,7 +25,8 @@ namespace Barotrauma.Networking
         public UInt16 LastSentEntityEventID = 0;
         public UInt16 LastRecvEntityEventID = 0;
 
-        public readonly Dictionary<MultiPlayerCampaign.NetFlags, UInt16> LastRecvCampaignUpdate = new Dictionary<MultiPlayerCampaign.NetFlags, ushort>();
+        public readonly Dictionary<MultiPlayerCampaign.NetFlags, UInt16> LastRecvCampaignUpdate
+            = new Dictionary<MultiPlayerCampaign.NetFlags, UInt16>();
         public UInt16 LastRecvCampaignSave = 0;
 
         public (UInt16 saveId, float time) LastCampaignSaveSendTime;
@@ -107,8 +112,17 @@ namespace Barotrauma.Networking
             }
         }
 
+        private List<Client> kickVoters;
+
+        public int KickVoteCount
+        {
+            get { return kickVoters.Count; }
+        }
+
         partial void InitProjSpecific()
         {
+            kickVoters = new List<Client>();
+
             JobPreferences = new List<JobVariant>();
 
             VoipQueue = new VoipQueue(SessionId, true, true);
@@ -151,7 +165,22 @@ namespace Barotrauma.Networking
         {
             if (string.IsNullOrWhiteSpace(name)) { return false; }
             
-            char[] disallowedChars = new char[] { ';', ',', '<', '>', '/', '\\', '[', ']', '"', '?' };
+            char[] disallowedChars =
+            {
+                //',', //previously disallowed because of the ban list format
+                
+                ';',
+                '<',
+                '>',
+                
+                '/', //disallowed because of server messages using forward slash as a delimiter (TODO: implement escaping)
+                
+                '\\',
+                '[',
+                ']',
+                '"',
+                '?'
+            };
             if (name.Any(c => disallowedChars.Contains(c))) { return false; }
 
             foreach (char character in name)
@@ -162,19 +191,45 @@ namespace Barotrauma.Networking
             return true;
         }
 
-        public bool EndpointMatches(Endpoint endPoint)
+        public bool AddressMatches(Address address)
         {
-            return Connection.EndpointMatches(endPoint);
+            return Connection.Endpoint.Address.Equals(address);
         }
+
+        public void AddKickVote(Client voter)
+        {
+            if (voter != null && !kickVoters.Contains(voter)) { kickVoters.Add(voter); }
+        }
+
+        public void RemoveKickVote(Client voter)
+        {
+            kickVoters.Remove(voter);
+        }
+
+        public bool HasKickVoteFrom(Client voter)
+        {
+            return kickVoters.Contains(voter);
+        }
+
+        public bool HasKickVoteFromSessionId(int id)
+        {
+            return kickVoters.Any(k => k.SessionId == id);
+        }
+
+        public static void UpdateKickVotes(IReadOnlyList<Client> connectedClients)
+        {
+            foreach (Client client in connectedClients)
+            {
+                client.kickVoters.RemoveAll(voter => !connectedClients.Contains(voter));
+            }
+        }
+
 
         public void SetPermissions(ClientPermissions permissions, IEnumerable<DebugConsole.Command> permittedConsoleCommands)
         {
             this.Permissions = permissions;
             this.PermittedConsoleCommands.Clear();
-            foreach (var command in permittedConsoleCommands)
-            {
-                this.PermittedConsoleCommands.Add(command);
-            }
+            this.PermittedConsoleCommands.UnionWith(permittedConsoleCommands);
         }
 
         public void GivePermission(ClientPermissions permission)

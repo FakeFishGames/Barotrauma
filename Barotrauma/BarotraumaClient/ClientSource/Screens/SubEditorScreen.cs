@@ -1839,7 +1839,7 @@ namespace Barotrauma
                 return false;
             }
 
-            foreach (var illegalChar in Path.GetInvalidFileNameChars())
+            foreach (var illegalChar in Path.GetInvalidFileNameCharsCrossPlatform())
             {
                 if (!name.Contains(illegalChar)) { continue; }
                 GUI.AddMessage(TextManager.GetWithVariable("SubNameIllegalCharsWarning", "[illegalchar]", illegalChar.ToString()), GUIStyle.Red);
@@ -2410,12 +2410,15 @@ namespace Barotrauma
                 Stretch = true
             };
             var classText = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), classGroup.RectTransform),
-                TextManager.Get("submarineclass"), textAlignment: Alignment.CenterLeft, wrap: true);
+                TextManager.Get("submarineclass"), textAlignment: Alignment.CenterLeft, wrap: true)
+            {
+                ToolTip = TextManager.Get("submarineclass.description")
+            };
             GUIDropDown classDropDown = new GUIDropDown(new RectTransform(new Vector2(0.4f, 1.0f), classGroup.RectTransform));
             classDropDown.RectTransform.MinSize = new Point(0, subTypeContainer.RectTransform.Children.Max(c => c.MinSize.Y));
-            foreach (SubmarineClass @class in Enum.GetValues(typeof(SubmarineClass)))
+            foreach (SubmarineClass subClass in Enum.GetValues(typeof(SubmarineClass)))
             {
-                classDropDown.AddItem(TextManager.Get($"{nameof(SubmarineClass)}.{@class}"), @class);
+                classDropDown.AddItem(TextManager.Get($"{nameof(SubmarineClass)}.{subClass}"), subClass, toolTip: TextManager.Get($"submarineclass.{subClass}.description"));
             }
             classDropDown.AddItem(TextManager.Get(nameof(SubmarineTag.Shuttle)), SubmarineTag.Shuttle);
             classDropDown.OnSelected += (selected, userdata) =>
@@ -2434,6 +2437,31 @@ namespace Barotrauma
                 return true;
             };
             classDropDown.SelectItem(!MainSub.Info.HasTag(SubmarineTag.Shuttle) ? MainSub.Info.SubmarineClass : (object)SubmarineTag.Shuttle);
+
+            var tierGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), subSettingsContainer.RectTransform), isHorizontal: true)
+            {
+                Stretch = true
+            };
+            new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), tierGroup.RectTransform),
+                TextManager.Get("subeditor.tier"), textAlignment: Alignment.CenterLeft, wrap: true)
+            {
+                ToolTip = TextManager.Get("submarinetier.description")
+            };
+
+            new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), tierGroup.RectTransform), NumberType.Int)
+            {
+                IntValue = SubmarineInfo.GetDefaultTier(MainSub.Info.Price),
+                MinValueInt = 1,
+                MaxValueInt = 3,
+                OnValueChanged = (numberInput) =>
+                {
+                    MainSub.Info.Tier = numberInput.IntValue;
+                }
+            };
+            if (MainSub?.Info != null)
+            {
+                MainSub.Info.Tier = Math.Clamp(MainSub.Info.Tier, 1, 3);
+            }
 
             var crewSizeArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), subSettingsContainer.RectTransform), isHorizontal: true)
             {
@@ -2970,7 +2998,7 @@ namespace Barotrauma
                 return false;
             }
 
-            foreach (char illegalChar in Path.GetInvalidFileNameChars())
+            foreach (char illegalChar in Path.GetInvalidFileNameCharsCrossPlatform())
             {
                 if (nameBox.Text.Contains(illegalChar))
                 {
@@ -5013,6 +5041,10 @@ namespace Barotrauma
         {
             SkipInventorySlotUpdate = false;
             ImageManager.Update((float)deltaTime);
+
+#if DEBUG
+            Hull.UpdateCheats((float)deltaTime, cam);
+#endif
 
             if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y)
             {

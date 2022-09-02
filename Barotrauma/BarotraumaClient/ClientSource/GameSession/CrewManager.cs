@@ -183,14 +183,13 @@ namespace Barotrauma
             {
                 chatBox.ToggleButton = new GUIButton(new RectTransform(new Point((int)(182f * GUI.Scale * 0.4f), (int)(99f * GUI.Scale * 0.4f)), chatBox.GUIFrame.Parent.RectTransform), style: "ChatToggleButton")
                 {
-                    ToolTip = TextManager.Get("chat"),
+                    ToolTip = TextManager.GetWithVariable("hudbutton.chatbox", "[key]", GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.ChatBox)),
                     ClampMouseRectToParent = false
                 };
                 chatBox.ToggleButton.RectTransform.AbsoluteOffset = new Point(0, HUDLayoutSettings.ChatBoxArea.Height - chatBox.ToggleButton.Rect.Height);
                 chatBox.ToggleButton.OnClicked += (GUIButton btn, object userdata) =>
                 {
-                    chatBox.ToggleOpen = !chatBox.ToggleOpen;
-                    chatBox.CloseAfterMessageSent = false;
+                    chatBox.Toggle();
                     return true;
                 };
             }

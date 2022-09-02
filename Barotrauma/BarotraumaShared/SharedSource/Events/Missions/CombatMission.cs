@@ -109,6 +109,7 @@ namespace Barotrauma
             subs[1].FlipX();
 #if SERVER
             crews = new List<Character>[] { new List<Character>(), new List<Character>() };
+            roundEndTimer = RoundEndDuration;
 #endif
         }
 

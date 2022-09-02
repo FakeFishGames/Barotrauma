@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Immutable;
 using Barotrauma;
 using Barotrauma.Networking;
 using FluentAssertions;
@@ -11,7 +12,7 @@ using Xunit;
 namespace TestProject
 {
     // ReSharper disable UnusedMember.Local NotAccessedField.Local UnusedMember.Global
-    public class INetSerializableStructTests
+    public sealed class INetSerializableStructTests
     {
         private class CustomGenerators
         {
@@ -23,6 +24,21 @@ namespace TestProject
         {
             Arb.Register<TestProject.CustomGenerators>();
             Arb.Register<CustomGenerators>();
+        }
+
+        [Fact]
+        public void TestBitField()
+        {
+            Prop.ForAll<bool[]>(SerializeDeserializeBitField).VerboseCheckThrowOnFailure();
+        }
+
+        [Fact]
+        public void TestRanged()
+        {
+            Prop.ForAll(
+                Arb.Generate<int>().Where(i => i <= 100 && i >= -100).ToArbitrary(),
+                Arb.Generate<float>().Where(f => f <= 100f && f >= -100f).ToArbitrary(),
+                SerializeDeserializeRanged).QuickCheckThrowOnFailure();
         }
 
         [Fact]
@@ -58,6 +74,12 @@ namespace TestProject
         {
             Prop.ForAll<EnumTest>(SerializeDeserialize).QuickCheckThrowOnFailure();
         }
+        
+        [Fact]
+        public void TestEnumFlags()
+        {
+            Prop.ForAll<EnumFlagsTest>(SerializeDeserialize).QuickCheckThrowOnFailure();
+        }
 
         [Fact]
         public void TestArray()
@@ -65,6 +87,14 @@ namespace TestProject
             Prop.ForAll<Int32[]>(SerializeDeserialize).QuickCheckThrowOnFailure();
             Prop.ForAll<Boolean[]>(SerializeDeserialize).QuickCheckThrowOnFailure();
             Prop.ForAll<String[]>(SerializeDeserialize).QuickCheckThrowOnFailure();
+        }
+
+        [Fact]
+        public void TestImmutableArray()
+        {
+            Prop.ForAll<ImmutableArray<Int32>>(SerializeDeserialize).QuickCheckThrowOnFailure();
+            Prop.ForAll<ImmutableArray<Boolean>>(SerializeDeserialize).QuickCheckThrowOnFailure();
+            Prop.ForAll<ImmutableArray<String>>(SerializeDeserialize).QuickCheckThrowOnFailure();
         }
 
         [Fact]
@@ -147,6 +177,26 @@ namespace TestProject
             Thousand = 1000
         }
 
+        [Flags]
+        private enum EnumFlagsTest
+        {
+            None = 0,
+            Bit0 = 1 << 0,
+            Bit1 = 1 << 1,
+            Bit2 = 1 << 2,
+            Bit3 = 1 << 3
+        }
+
+        private struct TestRangedStruct : INetSerializableStruct
+        {
+            [NetworkSerialize(MinValueInt = -100, MaxValueInt = 100)]
+            public int IntValue;
+
+            [NetworkSerialize(MinValueFloat = -100, MaxValueFloat = 100, NumberOfBits = 16)]
+            public float FloatValue;
+        }
+
+#pragma warning disable CS0649
         private struct TestStruct<T> : INetSerializableStruct
         {
             [NetworkSerialize]
@@ -168,6 +218,25 @@ namespace TestProject
             public (T, U) NotSerializedValue;
             public (T, U) NotSerializedFunction() => throw new NotImplementedException();
         }
+#pragma warning restore CS0649
+
+        private static void SerializeDeserializeRanged(int intValue, float floatValue)
+        {
+            ReadWriteMessage msg = new ReadWriteMessage();
+            TestRangedStruct writeStruct = new TestRangedStruct
+            {
+                IntValue = intValue,
+                FloatValue = floatValue
+            };
+
+            msg.WriteNetSerializableStruct(writeStruct);
+            msg.BitPosition = 0;
+
+            TestRangedStruct readStruct = INetSerializableStruct.Read<TestRangedStruct>(msg);
+
+            readStruct.FloatValue.Should().BeApproximately(floatValue, 0.25f); // should be enough precision
+            readStruct.IntValue.Should().Be(intValue);
+        }
 
         private static void SerializeDeserialize<T>(T arg) where T : notnull
         {
@@ -177,12 +246,14 @@ namespace TestProject
                 Value = arg
             };
 
-            ((INetSerializableStruct)writeStruct).Write(msg);
+            msg.WriteNetSerializableStruct(writeStruct);
             msg.BitPosition = 0;
 
             TestStruct<T> readStruct = INetSerializableStruct.Read<TestStruct<T>>(msg);
 
-            readStruct.Should().BeEquivalentTo(writeStruct, options => options.ComparingByMembers<TestStruct<T>>());
+            readStruct.Should().BeEquivalentTo(writeStruct, options => options
+                .ComparingByMembers<TestStruct<T>>()
+                .ComparingByMembers(typeof(Option<>)));
         }
 
         private static void SerializeDeserializeNullableTuple<T, U>(T arg1, U arg2)
@@ -194,12 +265,35 @@ namespace TestProject
                 Two = arg2
             };
 
-            ((INetSerializableStruct)writeStruct).Write(msg);
+            msg.WriteNetSerializableStruct(writeStruct);
             msg.BitPosition = 0;
 
             TupleNullableStruct<T, U> readStruct = INetSerializableStruct.Read<TupleNullableStruct<T, U>>(msg);
 
-            readStruct.Should().BeEquivalentTo(writeStruct, options => options.ComparingByMembers<TupleNullableStruct<T, U>>());
+            readStruct.Should().BeEquivalentTo(writeStruct, options => options
+                .ComparingByMembers<TupleNullableStruct<T, U>>()
+                .ComparingByMembers(typeof(Option<>)));
+        }
+
+        private static void SerializeDeserializeBitField(bool[] arg)
+        {
+            ReadWriteMessage msg = new ReadWriteMessage();
+            IWritableBitField bitFieldWrite = new WriteOnlyBitField();
+
+            foreach (bool b in arg)
+            {
+                bitFieldWrite.WriteBoolean(b);
+            }
+
+            bitFieldWrite.WriteToMessage(msg);
+            msg.BitPosition = 0;
+
+            IReadableBitField bitFieldRead = new ReadOnlyBitField(msg);
+
+            foreach (bool b in arg)
+            {
+                bitFieldRead.ReadBoolean().Should().Be(b);
+            }
         }
     }
 }

@@ -603,11 +603,11 @@ namespace Barotrauma.Items.Components
         {
             var eventData = ExtractEventData<ClientEventData>(extraData);
             int nodeCount = eventData.NodeCount;
-            msg.Write((byte)nodeCount);
+            msg.WriteByte((byte)nodeCount);
             if (nodeCount > 0)
             {
-                msg.Write(nodes.Last().X);
-                msg.Write(nodes.Last().Y);
+                msg.WriteSingle(nodes.Last().X);
+                msg.WriteSingle(nodes.Last().Y);
             }
         }
     }

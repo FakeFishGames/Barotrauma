@@ -1,60 +1,23 @@
 ﻿#nullable enable
 using Barotrauma.Steam;
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 
 namespace Barotrauma.Networking
 {
-    abstract class ClientPeer
+    internal abstract class ClientPeer
     {
-        public class ServerContentPackage
-        {
-            public readonly string Name;
-            public readonly Md5Hash Hash;
-            public readonly UInt64 WorkshopId;
-            public readonly DateTime InstallTime;
-
-            public RegularPackage? RegularPackage
-            {
-                get
-                {
-                    return ContentPackageManager.RegularPackages.FirstOrDefault(p => p.Hash.Equals(Hash));
-                }
-            }
-
-            public CorePackage? CorePackage
-            {
-                get
-                {
-                    return ContentPackageManager.CorePackages.FirstOrDefault(p => p.Hash.Equals(Hash));
-                }
-            }
-
-            public ContentPackage? ContentPackage
-                => (ContentPackage?)RegularPackage ?? CorePackage;
-            
-            
-            public string GetPackageStr()
-                => $"\"{Name}\" (hash {Hash.ShortRepresentation})";
-
-            public ServerContentPackage(string name, Md5Hash hash, UInt64 workshopId, DateTime installTime)
-            {
-                Name = name;
-                Hash = hash;
-                WorkshopId = workshopId;
-                InstallTime = installTime;
-            }
-        }
-
         public ImmutableArray<ServerContentPackage> ServerContentPackages { get; set; } =
             ImmutableArray<ServerContentPackage>.Empty;
 
         public delegate void MessageCallback(IReadMessage message);
+
         public delegate void DisconnectCallback(bool disableReconnect);
+
         public delegate void DisconnectMessageCallback(string message);
+
         public delegate void PasswordCallback(int salt, int retries);
+
         public delegate void InitializationCompleteCallback();
 
         [Obsolete("TODO: delete in nr3-layer-1-2-cleanup")]
@@ -65,8 +28,12 @@ namespace Barotrauma.Networking
             public readonly DisconnectMessageCallback OnDisconnectMessageReceived;
             public readonly PasswordCallback OnRequestPassword;
             public readonly InitializationCompleteCallback OnInitializationComplete;
-            
-            public Callbacks(MessageCallback onMessageReceived, DisconnectCallback onDisconnect, DisconnectMessageCallback onDisconnectMessageReceived, PasswordCallback onRequestPassword, InitializationCompleteCallback onInitializationComplete)
+
+            public Callbacks(MessageCallback onMessageReceived,
+                             DisconnectCallback onDisconnect,
+                             DisconnectMessageCallback onDisconnectMessageReceived,
+                             PasswordCallback onRequestPassword,
+                             InitializationCompleteCallback onInitializationComplete)
             {
                 OnMessageReceived = onMessageReceived;
                 OnDisconnect = onDisconnect;
@@ -91,98 +58,106 @@ namespace Barotrauma.Networking
             this.ownerKey = ownerKey;
             isOwner = ownerKey.IsSome();
         }
-        
+
         public abstract void Start();
         public abstract void Close(string? msg = null, bool disableReconnect = false);
         public abstract void Update(float deltaTime);
         public abstract void Send(IWriteMessage msg, DeliveryMethod deliveryMethod, bool compressPastThreshold = true);
         public abstract void SendPassword(string password);
 
-        protected abstract void SendMsgInternal(DeliveryMethod deliveryMethod, IWriteMessage msg);
+        protected abstract void SendMsgInternal(PeerPacketHeaders headers, INetSerializableStruct? body);
 
         protected ConnectionInitialization initializationStep;
         public bool ContentPackageOrderReceived { get; protected set; }
         protected int passwordSalt;
         protected Steamworks.AuthTicket? steamAuthTicket;
-        protected void ReadConnectionInitializationStep(IReadMessage inc)
+
+        public struct IncomingInitializationMessage
         {
-            ConnectionInitialization step = (ConnectionInitialization)inc.ReadByte();
+            public ConnectionInitialization InitializationStep;
+            public IReadMessage Message;
+        }
 
-            IWriteMessage outMsg;
-
-            switch (step)
+        protected void ReadConnectionInitializationStep(IncomingInitializationMessage inc)
+        {
+            switch (inc.InitializationStep)
             {
                 case ConnectionInitialization.SteamTicketAndVersion:
+                {
                     if (initializationStep != ConnectionInitialization.SteamTicketAndVersion) { return; }
-                    outMsg = new WriteOnlyMessage();
-                    outMsg.Write((byte)PacketHeader.IsConnectionInitializationStep);
-                    outMsg.Write((byte)ConnectionInitialization.SteamTicketAndVersion);
-                    outMsg.Write(GameMain.Client.Name);
-                    outMsg.Write(ownerKey.Fallback(0));
-                    outMsg.Write(SteamManager.GetSteamId().Select(steamId => steamId.Value).Fallback(0));
-                    if (steamAuthTicket == null)
-                    {
-                        outMsg.Write((UInt16)0);
-                    }
-                    else
-                    {
-                        outMsg.Write((UInt16)steamAuthTicket.Data.Length);
-                        outMsg.Write(steamAuthTicket.Data, 0, steamAuthTicket.Data.Length);
-                    }
-                    outMsg.Write(GameMain.Version.ToString());
-                    outMsg.Write(GameSettings.CurrentConfig.Language.Value);
 
-                    SendMsgInternal(DeliveryMethod.Reliable, outMsg);
+                    PeerPacketHeaders headers = new PeerPacketHeaders
+                    {
+                        DeliveryMethod = DeliveryMethod.Reliable,
+                        PacketHeader = PacketHeader.IsConnectionInitializationStep,
+                        Initialization = ConnectionInitialization.SteamTicketAndVersion
+                    };
+
+                    ClientSteamTicketAndVersionPacket body = new ClientSteamTicketAndVersionPacket
+                    {
+                        Name = GameMain.Client.Name,
+                        OwnerKey = ownerKey,
+                        SteamId = SteamManager.GetSteamId().Select(id => (AccountId)id),
+                        SteamAuthTicket = steamAuthTicket switch
+                        {
+                            null => Option<byte[]>.None(),
+                            var ticket => Option<byte[]>.Some(ticket.Data)
+                        },
+                        GameVersion = GameMain.Version.ToString(),
+                        Language = GameSettings.CurrentConfig.Language.Value
+                    };
+
+                    SendMsgInternal(headers, body);
                     break;
+                }
                 case ConnectionInitialization.ContentPackageOrder:
+                {
                     if (initializationStep == ConnectionInitialization.SteamTicketAndVersion ||
-                        initializationStep == ConnectionInitialization.Password) { initializationStep = ConnectionInitialization.ContentPackageOrder; }
-                    if (initializationStep != ConnectionInitialization.ContentPackageOrder) { return; }
-                    outMsg = new WriteOnlyMessage();
-                    outMsg.Write((byte)PacketHeader.IsConnectionInitializationStep);
-                    outMsg.Write((byte)ConnectionInitialization.ContentPackageOrder);
-
-                    UInt32 packageCount = inc.ReadVariableUInt32();
-                    List<ServerContentPackage> serverPackages = new List<ServerContentPackage>();
-                    for (int i = 0; i < packageCount; i++)
+                        initializationStep == ConnectionInitialization.Password)
                     {
-                        string name = inc.ReadString();
-                        UInt32 hashByteCount = inc.ReadVariableUInt32();
-                        byte[] hashBytes = inc.ReadBytes((int)hashByteCount);
-                        UInt64 workshopId = inc.ReadUInt64();
-                        UInt32 installTimeDiffSeconds = inc.ReadUInt32();
-                        DateTime installTime = DateTime.UtcNow + TimeSpan.FromSeconds(installTimeDiffSeconds);
-
-                        var pkg = new ServerContentPackage(name, Md5Hash.BytesAsHash(hashBytes), workshopId, installTime);
-                        serverPackages.Add(pkg);
+                        initializationStep = ConnectionInitialization.ContentPackageOrder;
                     }
+
+                    if (initializationStep != ConnectionInitialization.ContentPackageOrder) { return; }
+
+                    PeerPacketHeaders headers = new PeerPacketHeaders
+                    {
+                        DeliveryMethod = DeliveryMethod.Reliable,
+                        PacketHeader = PacketHeader.IsConnectionInitializationStep,
+                        Initialization = ConnectionInitialization.ContentPackageOrder
+                    };
+
+                    var orderPacket = INetSerializableStruct.Read<ServerPeerContentPackageOrderPacket>(inc.Message);
 
                     if (!ContentPackageOrderReceived)
                     {
-                        ServerContentPackages = serverPackages.ToImmutableArray();
-                        if (serverPackages.Count == 0)
+                        ServerContentPackages = orderPacket.ContentPackages;
+                        if (ServerContentPackages.Length == 0)
                         {
                             string errorMsg = "Error in ContentPackageOrder message: list of content packages enabled on the server was empty.";
                             GameAnalyticsManager.AddErrorEventOnce("ClientPeer.ReadConnectionInitializationStep:NoContentPackages", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                             DebugConsole.ThrowError(errorMsg);
                         }
                         ContentPackageOrderReceived = true;
-                        SendMsgInternal(DeliveryMethod.Reliable, outMsg);
+                        
+                        SendMsgInternal(headers, null);
                     }
+
                     break;
+                }
                 case ConnectionInitialization.Password:
-                    if (initializationStep == ConnectionInitialization.SteamTicketAndVersion) { initializationStep = ConnectionInitialization.Password; }
+                    if (initializationStep == ConnectionInitialization.SteamTicketAndVersion)
+                    {
+                        initializationStep = ConnectionInitialization.Password;
+                    }
+
                     if (initializationStep != ConnectionInitialization.Password) { return; }
-                    bool incomingSalt = inc.ReadBoolean(); inc.ReadPadBits();
-                    int retries = 0;
-                    if (incomingSalt)
-                    {
-                        passwordSalt = inc.ReadInt32();
-                    }
-                    else
-                    {
-                        retries = inc.ReadInt32();
-                    }
+
+                    var passwordPacket = INetSerializableStruct.Read<ServerPeerPasswordPacket>(inc.Message);
+
+                    passwordPacket.Salt.TryUnwrap(out passwordSalt);
+                    passwordPacket.RetriesLeft.TryUnwrap(out var retries);
+
                     callbacks.OnRequestPassword.Invoke(passwordSalt, retries);
                     break;
             }

@@ -25,6 +25,10 @@ namespace Barotrauma
         {
             get; private set;
         }
+        public static Rectangle TutorialObjectiveListArea
+        {
+            get; private set;
+        }
 
         public static Rectangle MessageAreaTop
         {
@@ -167,6 +171,10 @@ namespace Barotrauma
 
             HealthWindowAreaLeft = new Rectangle(healthWindowX, healthWindowY, healthWindowWidth, healthWindowHeight);
 
+            int objectiveListAreaX = HealthWindowAreaLeft.Right + Padding;
+            int objectiveListAreaY = ButtonAreaTop.Bottom + Padding;
+            TutorialObjectiveListArea = new Rectangle(objectiveListAreaX, objectiveListAreaY, (GameMain.GraphicsWidth - Padding) - objectiveListAreaX, (AfflictionAreaLeft.Top - Padding) - objectiveListAreaY);
+
             int votingAreaWidth = (int)(400 * GUI.Scale);
             int votingAreaX = GameMain.GraphicsWidth - Padding - votingAreaWidth;
             int votingAreaY = Padding + ButtonAreaTop.Height;
@@ -179,16 +187,19 @@ namespace Barotrauma
 
         public static void Draw(SpriteBatch spriteBatch)
         {
-            GUI.DrawRectangle(spriteBatch, ButtonAreaTop, Color.White * 0.5f);
-            GUI.DrawRectangle(spriteBatch, MessageAreaTop, GUIStyle.Orange * 0.5f);
-            GUI.DrawRectangle(spriteBatch, CrewArea, Color.Blue * 0.5f);
-            GUI.DrawRectangle(spriteBatch, ChatBoxArea, Color.Cyan * 0.5f);
-            GUI.DrawRectangle(spriteBatch, HealthBarArea, Color.Red * 0.5f);
-            GUI.DrawRectangle(spriteBatch, AfflictionAreaLeft, Color.Red * 0.5f);
-            GUI.DrawRectangle(spriteBatch, InventoryAreaLower, Color.Yellow * 0.5f);
-            GUI.DrawRectangle(spriteBatch, HealthWindowAreaLeft, Color.Red * 0.5f);
-            GUI.DrawRectangle(spriteBatch, BottomRightInfoArea, Color.Green * 0.5f);
-            GUI.DrawRectangle(spriteBatch, ItemHUDArea, Color.Magenta * 0.3f);
+            DrawRectangle(ButtonAreaTop, Color.White * 0.5f);
+            DrawRectangle(TutorialObjectiveListArea, GUIStyle.Blue * 0.5f);
+            DrawRectangle(MessageAreaTop, GUIStyle.Orange * 0.5f);
+            DrawRectangle(CrewArea, Color.Blue * 0.5f);
+            DrawRectangle(ChatBoxArea, Color.Cyan * 0.5f);
+            DrawRectangle(HealthBarArea, Color.Red * 0.5f);
+            DrawRectangle(AfflictionAreaLeft, Color.Red * 0.5f);
+            DrawRectangle(InventoryAreaLower, Color.Yellow * 0.5f);
+            DrawRectangle(HealthWindowAreaLeft, Color.Red * 0.5f);
+            DrawRectangle(BottomRightInfoArea, Color.Green * 0.5f);
+            DrawRectangle(ItemHUDArea, Color.Magenta * 0.3f);
+
+            void DrawRectangle(Rectangle r, Color c) => GUI.DrawRectangle(spriteBatch, r, c);
         }
     }
 

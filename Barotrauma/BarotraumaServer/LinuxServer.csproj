@@ -2,40 +2,30 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>Barotrauma</RootNamespace>
     <Authors>FakeFish, Undertow Games</Authors>
     <Product>Barotrauma Dedicated Server</Product>
-    <Version>0.19.1.0</Version>
+    <Version>0.19.3.0</Version>
     <Copyright>Copyright © FakeFish 2018-2022</Copyright>
     <Platforms>AnyCPU;x64</Platforms>
     <AssemblyName>DedicatedServer</AssemblyName>
     <ApplicationIcon>..\BarotraumaShared\Icon.ico</ApplicationIcon>
     <Configurations>Debug;Release;Unstable</Configurations>
+    <InvariantGlobalization>true</InvariantGlobalization>
     <WarningsAsErrors>;NU1605;CS0114;CS0108CS8597;CS8600;CS8601;CS8602;CS8603;CS8604;CS8605;CS8606;CS8607;CS8608;CS8609;CS8610;CS8611;CS8612;CS8613;CS8614;CS8615;CS8616;CS8617;CS8618;CS8619;CS8620;CS8621;CS8622;CS8624;CS8625;CS8626;CS8629;CS8631;CS8632;CS8633;CS8634;CS8638;CS8643;CS8644;CS8645;CS8653;CS8654;CS8655;CS8667;CS8669;CS8670;CS8714;CS8717;CS8765</WarningsAsErrors>
   </PropertyGroup>
-
-  <!--
-  DebugLinux is configured to use .NET 6.0 so I can use Hot Reload while working on the game.
-  If you are running Linux and and have issues compiling in debug configurations remove the
-  <TargetFramework>net6.0</TargetFramework> elements under <PropertyGroup>:s.
-  - Markus
-  -->
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE;SERVER;LINUX;USE_STEAM</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>..\bin\$(Configuration)Linux\</OutputPath>
-    <TargetFramework>net6.0</TargetFramework>
-    <LangVersion>8</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <DefineConstants>TRACE;DEBUG;SERVER;LINUX;X64;USE_STEAM</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>..\bin\$(Configuration)Linux\</OutputPath>
-    <TargetFramework>net6.0</TargetFramework>
-    <LangVersion>8</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">

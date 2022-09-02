@@ -21,12 +21,13 @@ namespace Barotrauma.Items.Components
         public float FlashTimer { get; private set; }
         public static Wire DraggingConnected { get; private set; }
 
-        public static void DrawConnections(SpriteBatch spriteBatch, ConnectionPanel panel, Character character)
+        public static void DrawConnections(SpriteBatch spriteBatch, ConnectionPanel panel, Rectangle dragArea, Character character)
         {
             if (DraggingConnected?.Item?.Removed ?? true)
             {
                 DraggingConnected = null;
             }
+
             Rectangle panelRect = panel.GuiFrame.Rect;
             int x = panelRect.X, y = panelRect.Y;
             int width = panelRect.Width, height = panelRect.Height;
@@ -131,7 +132,10 @@ namespace Barotrauma.Items.Components
             {
                 if (mouseInRect)
                 {
-                    DrawWire(spriteBatch, DraggingConnected, PlayerInput.MousePosition, new Vector2(x + width / 2, y + height - 10), null, panel, "");
+                    Vector2 wireDragPos = new Vector2(
+                        MathHelper.Clamp(PlayerInput.MousePosition.X, dragArea.X, dragArea.Right),
+                        MathHelper.Clamp(PlayerInput.MousePosition.Y, dragArea.Y, dragArea.Bottom));
+                    DrawWire(spriteBatch, DraggingConnected, wireDragPos, new Vector2(x + width / 2, y + height - 10), null, panel, "");
                 }
                 panel.TriggerRewiringSound();
 

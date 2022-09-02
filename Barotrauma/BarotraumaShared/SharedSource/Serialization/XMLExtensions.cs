@@ -308,7 +308,7 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Error in " + element + "! ", e);
+                    DebugConsole.ThrowError($"Error when reading attribute \"{name}\" from {element}!", e);
                 }
             }
 
@@ -331,7 +331,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error in " + element + "! ", e);
+                DebugConsole.ThrowError($"Error when reading attribute \"{name}\" from {element}!", e);
             }
 
             return val;
@@ -350,7 +350,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error in " + element + "! ", e);
+                DebugConsole.ThrowError($"Error when reading attribute \"{name}\" from {element}!", e);
             }
 
             return val;
@@ -369,7 +369,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error in " + element + "! ", e);
+                DebugConsole.ThrowError($"Error when reading attribute \"{name}\" from {element}!", e);
             }
 
             return val;
@@ -388,7 +388,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error in " + element + "! ", e);
+                DebugConsole.ThrowError($"Error when reading attribute \"{name}\" from {element}!", e);
             }
 
             return val;
@@ -413,7 +413,7 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Error in " + element + "! ", e);
+                    DebugConsole.ThrowError($"Error when reading attribute \"{name}\" from {element}!", e);
                 }
             }
 
@@ -438,7 +438,7 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Error in " + element + "! ", e);
+                    DebugConsole.ThrowError($"Error when reading attribute \"{name}\" from {element}!", e);
                 }
             }
 
@@ -540,7 +540,7 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Error in " + element + "! ", e);
+                    DebugConsole.ThrowError($"Error when reading attribute \"{name}\" from {element}!", e);
                 }
             }
 

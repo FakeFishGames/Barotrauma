@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma.Items.Components
 {
@@ -33,14 +34,18 @@ namespace Barotrauma.Items.Components
         [Serialize(0.0f, IsPropertySaveable.Yes)]
         public float InfoAreaWidth { get; set; }
 
-        partial void InitProjSpecific(XElement element)
+        [Serialize(true, IsPropertySaveable.Yes)]
+        public bool ShowOutput { get; set; }
+
+        partial void InitProjSpecific(XElement _)
         {
             CreateGUI();
         }
 
+        public override bool RecreateGUIOnResolutionChange => true;
+
         protected override void OnResolutionChanged()
         {
-            base.OnResolutionChanged();
             OnItemLoadedProjSpecific();
         }
 
@@ -122,11 +127,14 @@ namespace Barotrauma.Items.Components
                 // === OUTPUT SLOTS === //
                 outputInventoryHolder = new GUIFrame(new RectTransform(new Vector2(1f - InfoAreaWidth, 1f), outputArea.RectTransform, Anchor.CenterLeft), style: null);
 
-            GUILayoutGroup outputDisplayLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.25f), paddedFrame.RectTransform), childAnchor: Anchor.TopCenter);
-                    GUILayoutGroup outDisplayTopGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.2f), outputDisplayLayout.RectTransform), isHorizontal: true);
-                        GUITextBlock outDisplayBlock = new GUITextBlock(new RectTransform(Vector2.One, outDisplayTopGroup.RectTransform), TextManager.Get("deconstructor.output"), font: GUIStyle.SubHeadingFont) { Padding = Vector4.Zero };
-                    GUILayoutGroup outDisplayBottomGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.975f, 0.8f), outputDisplayLayout.RectTransform), isHorizontal: true);
-                        outputDisplayListBox = new GUIListBox(new RectTransform(new Vector2(1f, 1f), outDisplayBottomGroup.RectTransform), isHorizontal: true, style: null);
+            if (ShowOutput)
+            {
+                GUILayoutGroup outputDisplayLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.25f), paddedFrame.RectTransform), childAnchor: Anchor.TopCenter);
+                        GUILayoutGroup outDisplayTopGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.2f), outputDisplayLayout.RectTransform), isHorizontal: true);
+                            GUITextBlock outDisplayBlock = new GUITextBlock(new RectTransform(Vector2.One, outDisplayTopGroup.RectTransform), TextManager.Get("deconstructor.output"), font: GUIStyle.SubHeadingFont) { Padding = Vector4.Zero };
+                        GUILayoutGroup outDisplayBottomGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.975f, 0.8f), outputDisplayLayout.RectTransform), isHorizontal: true);
+                            outputDisplayListBox = new GUIListBox(new RectTransform(new Vector2(1f, 1f), outDisplayBottomGroup.RectTransform), isHorizontal: true, style: null);
+            }
 
             if (InfoAreaWidth >= 0.0f)
             {
@@ -255,16 +263,17 @@ namespace Barotrauma.Items.Components
 
                 foreach (DeconstructItem deconstructItem in it.Prefab.DeconstructItems)
                 {
+                    if (!deconstructItem.IsValidDeconstructor(item)) { continue; }
                     RegisterItem(deconstructItem.ItemIdentifier, deconstructItem.Amount);
                 }
 
-                if (it.OwnInventory is { } inventory)
+                /*if (it.OwnInventory is { } inventory)
                 {
                     foreach (Item inventoryItems in inventory.AllItems)
                     {
                         RegisterItem(inventoryItems.Prefab.Identifier);
                     }
-                }
+                }*/
 
                 void RegisterItem(Identifier identifier, int amount = 1)
                 {
@@ -383,6 +392,8 @@ namespace Barotrauma.Items.Components
             inputContainer.Inventory.RectTransform = inputInventoryHolder.RectTransform;
             outputContainer.AllowUIOverlap = true;
             outputContainer.Inventory.RectTransform = outputInventoryHolder.RectTransform;
+
+            inputContainer.Inventory.Locked = IsActive;
         }
 
         private void DrawOverLay(SpriteBatch spriteBatch, GUICustomComponent overlayComponent)
@@ -446,7 +457,7 @@ namespace Barotrauma.Items.Components
 
         public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
-            msg.Write(pendingState);
+            msg.WriteBoolean(pendingState);
         }
 
         public void ClientEventRead(IReadMessage msg, float sendingTime)

@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿#nullable enable
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,36 +25,31 @@ namespace Barotrauma.Networking
 
     partial class BanList
     {
-        private GUIComponent banFrame;
-
-        public GUIComponent BanFrame
-        {
-            get { return banFrame; }
-        }
+        public GUIComponent? BanFrame { get; private set; }
 
         public List<UInt32> localRemovedBans = new List<UInt32>();
 
         private void RecreateBanFrame()
         {
-            if (banFrame != null)
+            if (BanFrame != null)
             {
-                var parent = banFrame.Parent;
-                parent.RemoveChild(banFrame);
+                var parent = BanFrame.Parent;
+                parent.RemoveChild(BanFrame);
                 CreateBanFrame(parent);
             }
         }
 
         public GUIComponent CreateBanFrame(GUIComponent parent)
         {
-            banFrame = new GUIListBox(new RectTransform(Vector2.One, parent.RectTransform, Anchor.Center));
+            BanFrame = new GUIListBox(new RectTransform(Vector2.One, parent.RectTransform, Anchor.Center));
 
             foreach (BannedPlayer bannedPlayer in bannedPlayers)
             {
                 if (localRemovedBans.Contains(bannedPlayer.UniqueIdentifier)) { continue; }
 
-                var playerFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), ((GUIListBox)banFrame).Content.RectTransform) { MinSize = new Point(0, 70) })
+                var playerFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.2f), ((GUIListBox)BanFrame).Content.RectTransform) { MinSize = new Point(0, 70) })
                 {
-                    UserData = banFrame
+                    UserData = BanFrame
                 };
 
                 var paddedPlayerFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.85f), playerFrame.RectTransform, Anchor.Center))
@@ -102,16 +98,15 @@ namespace Barotrauma.Networking
 
                 paddedPlayerFrame.Recalculate();
 
-                new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), ((GUIListBox)banFrame).Content.RectTransform), style: "HorizontalLine");
+                new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), ((GUIListBox)BanFrame).Content.RectTransform), style: "HorizontalLine");
             }
 
-            return banFrame;
+            return BanFrame;
         }
 
         private bool RemoveBan(GUIButton button, object obj)
         {
-            BannedPlayer banned = obj as BannedPlayer;
-            if (banned == null) { return false; }
+            if (!(obj is BannedPlayer banned)) { return false; }
 
             localRemovedBans.Add(banned.UniqueIdentifier);
             RecreateBanFrame();
@@ -178,10 +173,10 @@ namespace Barotrauma.Networking
                 bannedPlayers.Add(new BannedPlayer(uniqueIdentifier, name, addressOrAccountId, reason, expiration));
             }
 
-            if (banFrame != null)
+            if (BanFrame != null)
             {
-                var parent = banFrame.Parent;
-                parent.RemoveChild(banFrame);
+                var parent = BanFrame.Parent;
+                parent.RemoveChild(BanFrame);
                 CreateBanFrame(parent);
             }
         }
@@ -191,7 +186,7 @@ namespace Barotrauma.Networking
             outMsg.WriteVariableUInt32((UInt32)localRemovedBans.Count);
             foreach (UInt32 uniqueId in localRemovedBans)
             {
-                outMsg.Write(uniqueId);
+                outMsg.WriteUInt32(uniqueId);
             }
 
             localRemovedBans.Clear();

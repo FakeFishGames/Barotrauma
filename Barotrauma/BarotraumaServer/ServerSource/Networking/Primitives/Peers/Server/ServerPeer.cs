@@ -1,39 +1,41 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Barotrauma.Extensions;
 
 namespace Barotrauma.Networking
 {
-    abstract class ServerPeer
+    internal abstract class ServerPeer
     {
         public delegate void MessageCallback(NetworkConnection connection, IReadMessage message);
-        public delegate void DisconnectCallback(NetworkConnection connection, string reason);
-        public delegate void InitializationCompleteCallback(NetworkConnection connection, string clientName);
+
+        public delegate void DisconnectCallback(NetworkConnection connection, string? reason);
+
+        public delegate void InitializationCompleteCallback(NetworkConnection connection, string? clientName);
+
         public delegate void ShutdownCallback();
+
         public delegate void OwnerDeterminedCallback(NetworkConnection connection);
 
-        public MessageCallback OnMessageReceived;
-        public DisconnectCallback OnDisconnect;
-        public InitializationCompleteCallback OnInitializationComplete;
-        public ShutdownCallback OnShutdown;
-        public OwnerDeterminedCallback OnOwnerDetermined;
-
-        protected Option<int> ownerKey;
-
-        public NetworkConnection OwnerConnection { get; protected set; }
+        public MessageCallback? OnMessageReceived;
+        public DisconnectCallback? OnDisconnect;
+        public InitializationCompleteCallback? OnInitializationComplete;
+        public ShutdownCallback? OnShutdown;
+        public OwnerDeterminedCallback? OnOwnerDetermined;
 
         public abstract void InitializeSteamServerCallbacks();
 
         public abstract void Start();
-        public abstract void Close(string msg = null);
+        public abstract void Close(string? msg = null);
         public abstract void Update(float deltaTime);
 
-        protected class PendingClient
+        protected sealed class PendingClient
         {
-            public string Name;
+            public string? Name;
             public Option<int> OwnerKey;
-            public NetworkConnection Connection;
+            public readonly NetworkConnection Connection;
             public ConnectionInitialization InitializationStep;
             public double UpdateTime;
             public double TimeOut;
@@ -60,76 +62,69 @@ namespace Barotrauma.Networking
                 TimeOut = NetworkConnection.TimeoutThreshold;
             }
         }
-        protected List<NetworkConnection> connectedClients;
-        protected List<PendingClient> pendingClients;
 
-        protected ServerSettings serverSettings;
+        protected List<NetworkConnection> connectedClients = null!;
+        protected List<PendingClient> pendingClients = null!;
+        protected ServerSettings serverSettings = null!;
+        protected Option<int> ownerKey = null!;
+        protected NetworkConnection? OwnerConnection;
 
-        protected void ReadConnectionInitializationStep(PendingClient pendingClient, IReadMessage inc)
+        protected void ReadConnectionInitializationStep(PendingClient pendingClient, IReadMessage inc, ConnectionInitialization initializationStep)
         {
             pendingClient.TimeOut = NetworkConnection.TimeoutThreshold;
 
-            ConnectionInitialization initializationStep = (ConnectionInitialization)inc.ReadByte();
-
-            if (pendingClient.InitializationStep != initializationStep) return;
+            if (pendingClient.InitializationStep != initializationStep) { return; }
 
             pendingClient.UpdateTime = Timing.TotalTime + Timing.Step;
 
             switch (initializationStep)
             {
                 case ConnectionInitialization.SteamTicketAndVersion:
-                    string name = Client.SanitizeName(inc.ReadString());
-                    int ownerKey = inc.ReadInt32();
-                    UInt64 steamIdVal = inc.ReadUInt64();
-                    Option<SteamId> steamId = steamIdVal != 0
-                        ? Option<SteamId>.Some(new SteamId(steamIdVal))
-                        : Option<SteamId>.None();
-                    UInt16 ticketLength = inc.ReadUInt16();
-                    byte[] ticketBytes = inc.ReadBytes(ticketLength);
+                    var authPacket = INetSerializableStruct.Read<ClientSteamTicketAndVersionPacket>(inc);
 
-                    if (!Client.IsValidName(name, serverSettings))
+                    if (!Client.IsValidName(authPacket.Name, serverSettings))
                     {
                         RemovePendingClient(pendingClient, DisconnectReason.InvalidName, "");
                         return;
                     }
 
-                    string version = inc.ReadString();
-                    bool isCompatibleVersion = NetworkMember.IsCompatible(version, GameMain.Version.ToString()) ?? false;
+                    bool isCompatibleVersion = NetworkMember.IsCompatible(authPacket.GameVersion, GameMain.Version.ToString()) ?? false;
                     if (!isCompatibleVersion)
                     {
                         RemovePendingClient(pendingClient, DisconnectReason.InvalidVersion,
-                                    $"DisconnectMessage.InvalidVersion~[version]={GameMain.Version}~[clientversion]={version}");
+                            $"DisconnectMessage.InvalidVersion~[version]={GameMain.Version}~[clientversion]={authPacket.GameVersion}");
 
-                        GameServer.Log($"{name} ({steamId}) couldn't join the server (incompatible game version)", ServerLog.MessageType.Error);
-                        DebugConsole.NewMessage($"{name} ({steamId}) couldn't join the server (incompatible game version)", Microsoft.Xna.Framework.Color.Red);
+                        GameServer.Log($"{authPacket.Name} ({authPacket.SteamId}) couldn't join the server (incompatible game version)", ServerLog.MessageType.Error);
+                        DebugConsole.NewMessage($"{authPacket.Name} ({authPacket.SteamId}) couldn't join the server (incompatible game version)", Microsoft.Xna.Framework.Color.Red);
                         return;
                     }
 
-                    LanguageIdentifier language = inc.ReadIdentifier().ToLanguageIdentifier();
-                    pendingClient.Connection.Language = language;
+                    pendingClient.Connection.Language = authPacket.Language.ToLanguageIdentifier();
 
-                    Client nameTaken = GameMain.Server.ConnectedClients.Find(c => Homoglyphs.Compare(c.Name.ToLower(), name.ToLower()));
+                    Client nameTaken = GameMain.Server.ConnectedClients.Find(c => Homoglyphs.Compare(c.Name.ToLower(), authPacket.Name.ToLower()));
                     if (nameTaken != null)
                     {
                         RemovePendingClient(pendingClient, DisconnectReason.NameTaken, "");
-                        GameServer.Log($"{name} ({steamId}) couldn't join the server (name too similar to the name of the client \"" + nameTaken.Name + "\").", ServerLog.MessageType.Error);
+                        GameServer.Log($"{authPacket.Name} ({authPacket.SteamId}) couldn't join the server (name too similar to the name of the client \"" + nameTaken.Name + "\").", ServerLog.MessageType.Error);
                         return;
                     }
 
                     if (!pendingClient.AuthSessionStarted)
                     {
-                        ProcessAuthTicket(name, ownerKey != 0 ? Option<int>.Some(ownerKey) : Option<int>.None(), steamId, pendingClient, ticketBytes);
+                        ProcessAuthTicket(authPacket, pendingClient);
                     }
+
                     break;
                 case ConnectionInitialization.Password:
-                    int pwLength = inc.ReadByte();
-                    byte[] incPassword = inc.ReadBytes(pwLength);
-                    if (pendingClient.PasswordSalt == null)
+                    var passwordPacket = INetSerializableStruct.Read<ClientPeerPasswordPacket>(inc);
+
+                    if (pendingClient.PasswordSalt is null)
                     {
                         DebugConsole.ThrowError("Received password message from client without salt");
                         return;
                     }
-                    if (serverSettings.IsPasswordCorrect(incPassword, pendingClient.PasswordSalt.Value))
+
+                    if (serverSettings.IsPasswordCorrect(passwordPacket.Password, pendingClient.PasswordSalt.Value))
                     {
                         pendingClient.InitializationStep = ConnectionInitialization.ContentPackageOrder;
                     }
@@ -138,13 +133,13 @@ namespace Barotrauma.Networking
                         pendingClient.Retries++;
                         if (serverSettings.BanAfterWrongPassword && pendingClient.Retries > serverSettings.MaxPasswordRetriesBeforeBan)
                         {
-                            string banMsg = "Failed to enter correct password too many times";
+                            const string banMsg = "Failed to enter correct password too many times";
                             BanPendingClient(pendingClient, banMsg, null);
-
                             RemovePendingClient(pendingClient, DisconnectReason.Banned, banMsg);
                             return;
                         }
                     }
+
                     pendingClient.UpdateTime = Timing.TotalTime;
                     break;
                 case ConnectionInitialization.ContentPackageOrder:
@@ -154,25 +149,25 @@ namespace Barotrauma.Networking
             }
         }
 
-        protected abstract void ProcessAuthTicket(string name, Option<int> ownKey, Option<SteamId> steamId, PendingClient pendingClient, byte[] ticket);
+        protected abstract void ProcessAuthTicket(ClientSteamTicketAndVersionPacket packet, PendingClient pendingClient);
 
         protected void BanPendingClient(PendingClient pendingClient, string banReason, TimeSpan? duration)
         {
             void banAccountId(AccountId accountId)
             {
-                serverSettings.BanList.BanPlayer(pendingClient.Name, accountId, banReason, duration);
+                serverSettings.BanList.BanPlayer(pendingClient.Name ?? "Player", accountId, banReason, duration);
             }
-            
+
             if (pendingClient.AccountInfo.AccountId.TryUnwrap(out var id)) { banAccountId(id); }
+
             pendingClient.AccountInfo.OtherMatchingIds.ForEach(banAccountId);
-            serverSettings.BanList.BanPlayer(pendingClient.Name, pendingClient.Connection.Endpoint, banReason, duration);
+            serverSettings.BanList.BanPlayer(pendingClient.Name ?? "Player", pendingClient.Connection.Endpoint, banReason, duration);
         }
-        
-        protected bool IsPendingClientBanned(PendingClient pendingClient, out string banReason)
+
+        protected bool IsPendingClientBanned(PendingClient pendingClient, out string? banReason)
         {
-            bool isAccountIdBanned(AccountId accountId, out string banReason)
+            bool isAccountIdBanned(AccountId accountId, out string? banReason)
             {
-                banReason = default;
                 return serverSettings.BanList.IsBanned(accountId, out banReason);
             }
 
@@ -182,16 +177,18 @@ namespace Barotrauma.Networking
             foreach (var otherId in pendingClient.AccountInfo.OtherMatchingIds)
             {
                 if (isBanned) { break; }
+
                 isBanned |= isAccountIdBanned(otherId, out banReason);
             }
+
             return isBanned;
         }
 
-        protected abstract void SendMsgInternal(NetworkConnection conn, DeliveryMethod deliveryMethod, IWriteMessage msg);
+        protected abstract void SendMsgInternal(NetworkConnection conn, PeerPacketHeaders headers, INetSerializableStruct? body);
 
         protected void UpdatePendingClient(PendingClient pendingClient)
         {
-            if (IsPendingClientBanned(pendingClient, out string banReason))
+            if (IsPendingClientBanned(pendingClient, out string? banReason))
             {
                 RemovePendingClient(pendingClient, DisconnectReason.Banned, banReason);
                 return;
@@ -220,52 +217,61 @@ namespace Barotrauma.Networking
             }
 
             if (Timing.TotalTime < pendingClient.UpdateTime) { return; }
+
             pendingClient.UpdateTime = Timing.TotalTime + 1.0;
 
-            IWriteMessage outMsg = new WriteOnlyMessage();
-            outMsg.Write((byte)(PacketHeader.IsConnectionInitializationStep |
-                                PacketHeader.IsServerMessage));
-            outMsg.Write((byte)pendingClient.InitializationStep);
+            PeerPacketHeaders headers = new PeerPacketHeaders
+            {
+                DeliveryMethod = DeliveryMethod.Reliable,
+                PacketHeader = PacketHeader.IsConnectionInitializationStep | PacketHeader.IsServerMessage,
+                Initialization = pendingClient.InitializationStep
+            };
+
+            INetSerializableStruct? structToSend = null;
+
             switch (pendingClient.InitializationStep)
             {
                 case ConnectionInitialization.ContentPackageOrder:
-                    var mpContentPackages = ContentPackageManager.EnabledPackages.All.Where(cp => cp.HasMultiplayerSyncedContent).ToList();
-                    outMsg.WriteVariableUInt32((UInt32)mpContentPackages.Count);
-                    for (int i = 0; i < mpContentPackages.Count; i++)
+
+                    DateTime timeNow = DateTime.UtcNow;
+                    structToSend = new ServerPeerContentPackageOrderPacket
                     {
-                        outMsg.Write(mpContentPackages[i].Name);
-                        byte[] hashBytes = mpContentPackages[i].Hash.ByteRepresentation;
-                        outMsg.WriteVariableUInt32((UInt32)hashBytes.Length);
-                        outMsg.Write(hashBytes, 0, hashBytes.Length);
-                        outMsg.Write(mpContentPackages[i].SteamWorkshopId);
-                        UInt32 installTimeDiffSeconds = (UInt32)((mpContentPackages[i].InstallTime ?? DateTime.UtcNow) - DateTime.UtcNow).TotalSeconds;
-                        outMsg.Write(installTimeDiffSeconds);
-                    }
+                        ServerName = GameMain.Server.ServerName,
+                        ContentPackages = ContentPackageManager.EnabledPackages.All.Where(cp => cp.HasMultiplayerSyncedContent)
+                            .Select(contentPackage => new ServerContentPackage(contentPackage, timeNow))
+                            .ToImmutableArray()
+                    };
+
                     break;
                 case ConnectionInitialization.Password:
-                    outMsg.Write(pendingClient.PasswordSalt == null); outMsg.WritePadBits();
-                    if (pendingClient.PasswordSalt == null)
+                    structToSend = new ServerPeerPasswordPacket
                     {
-                        pendingClient.PasswordSalt = Lidgren.Network.CryptoRandom.Instance.Next();
-                        outMsg.Write(pendingClient.PasswordSalt.Value);
-                    }
-                    else
+                        Salt = GetSalt(pendingClient),
+                        RetriesLeft = Option<int>.Some(pendingClient.Retries)
+                    };
+
+                    static Option<int> GetSalt(PendingClient client)
                     {
-                        outMsg.Write(pendingClient.Retries);
+                        if (client.PasswordSalt is { } salt) { return Option<int>.Some(salt); }
+
+                        salt = Lidgren.Network.CryptoRandom.Instance.Next();
+                        client.PasswordSalt = salt;
+                        return Option<int>.Some(salt);
                     }
+
                     break;
             }
 
-            SendMsgInternal(pendingClient.Connection, DeliveryMethod.Reliable, outMsg);
+            SendMsgInternal(pendingClient.Connection, headers, structToSend);
         }
 
         protected virtual void CheckOwnership(PendingClient pendingClient) { }
 
-        protected void RemovePendingClient(PendingClient pendingClient, DisconnectReason reason, string msg)
+        protected void RemovePendingClient(PendingClient pendingClient, DisconnectReason reason, string? msg)
         {
             if (pendingClients.Contains(pendingClient))
             {
-                Disconnect(pendingClient.Connection, reason + "/" + msg);
+                Disconnect(pendingClient.Connection, $"{reason}/{msg}");
 
                 pendingClients.Remove(pendingClient);
 
@@ -279,6 +285,6 @@ namespace Barotrauma.Networking
         }
 
         public abstract void Send(IWriteMessage msg, NetworkConnection conn, DeliveryMethod deliveryMethod, bool compressPastThreshold = true);
-        public abstract void Disconnect(NetworkConnection conn, string msg = null);
+        public abstract void Disconnect(NetworkConnection conn, string? msg = null);
     }
 }

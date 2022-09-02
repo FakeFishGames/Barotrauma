@@ -889,35 +889,35 @@ namespace Barotrauma
             if (campaign is MultiPlayerCampaign)
             {
                 IWriteMessage msg = new WriteOnlyMessage();
-                msg.Write((byte)ClientPacketHeader.CREW);
+                msg.WriteByte((byte)ClientPacketHeader.CREW);
                 
-                msg.Write(updatePending);
+                msg.WriteBoolean(updatePending);
                 if (updatePending)
                 {
-                    msg.Write((ushort)PendingHires.Count);
+                    msg.WriteUInt16((ushort)PendingHires.Count);
                     foreach (CharacterInfo pendingHire in PendingHires)
                     {
-                        msg.Write(pendingHire.GetIdentifierUsingOriginalName());
+                        msg.WriteInt32(pendingHire.GetIdentifierUsingOriginalName());
                     }
                 }
 
-                msg.Write(validateHires);
+                msg.WriteBoolean(validateHires);
 
                 bool validRenaming = renameCharacter.info != null && !string.IsNullOrEmpty(renameCharacter.newName);
-                msg.Write(validRenaming);
+                msg.WriteBoolean(validRenaming);
                 if (validRenaming)
                 {
                     int identifier = renameCharacter.info.GetIdentifierUsingOriginalName();
-                    msg.Write(identifier);
-                    msg.Write(renameCharacter.newName);
+                    msg.WriteInt32(identifier);
+                    msg.WriteString(renameCharacter.newName);
                     bool existingCrewMember = campaign.CrewManager?.GetCharacterInfos().Any(ci => ci.GetIdentifierUsingOriginalName() == identifier) ?? false;
-                    msg.Write(existingCrewMember);
+                    msg.WriteBoolean(existingCrewMember);
                 }
 
-                msg.Write(firedCharacter != null);
+                msg.WriteBoolean(firedCharacter != null);
                 if (firedCharacter != null)
                 {
-                    msg.Write(firedCharacter.GetIdentifier());
+                    msg.WriteInt32(firedCharacter.GetIdentifier());
                 }
 
                 GameMain.Client.ClientPeer?.Send(msg, DeliveryMethod.Reliable);

@@ -10,14 +10,14 @@ namespace Barotrauma
         private void ServerWrite(IEnumerable<Entity> targets)
         {
             IWriteMessage outmsg = new WriteOnlyMessage();
-            outmsg.Write((byte)ServerPacketHeader.EVENTACTION);
-            outmsg.Write((byte)EventManager.NetworkEventType.STATUSEFFECT);
-            outmsg.Write(ParentEvent.Prefab.Identifier);
-            outmsg.Write((UInt16)actionIndex);
-            outmsg.Write((UInt16)targets.Count());
+            outmsg.WriteByte((byte)ServerPacketHeader.EVENTACTION);
+            outmsg.WriteByte((byte)EventManager.NetworkEventType.STATUSEFFECT);
+            outmsg.WriteIdentifier(ParentEvent.Prefab.Identifier);
+            outmsg.WriteUInt16((UInt16)actionIndex);
+            outmsg.WriteUInt16((UInt16)targets.Count());
             foreach (Entity target in targets)
             {
-                outmsg.Write(target.ID);
+                outmsg.WriteUInt16(target.ID);
             }
             foreach (Client c in GameMain.Server.ConnectedClients)
             {

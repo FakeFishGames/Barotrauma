@@ -741,6 +741,15 @@ namespace Barotrauma
         /// </summary>
         public static void DrawSelecting(SpriteBatch spriteBatch, Camera cam)
         {
+            if (Screen.Selected is SubEditorScreen subEditor)
+            {
+                if (subEditor.IsMouseOnEditorGUI()) { return; }
+            }
+            else if (GUI.MouseOn != null) 
+            { 
+                return; 
+            }
+
             Vector2 position = PlayerInput.MousePosition;
             position = cam.ScreenToWorld(position);
 

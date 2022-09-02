@@ -253,7 +253,13 @@ namespace Barotrauma.Items.Components
 
         public void CheckIfNeedsUpdate()
         {
-            if (item.body == null && powerConsumption <= 0.0f && Parent == null && turret == null && IsOn &&
+            if (!IsOn) 
+            {
+                base.IsActive = false;
+                return; 
+            }
+
+            if (item.body == null && powerConsumption <= 0.0f && Parent == null && turret == null &&
                 (statusEffectLists == null || !statusEffectLists.ContainsKey(ActionType.OnActive)) &&
                 (IsActiveConditionals == null || IsActiveConditionals.Count == 0))
             {
@@ -268,7 +274,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                IsActive = true;
+                base.IsActive = true;
             }
         }
 

@@ -76,8 +76,6 @@ namespace Barotrauma.Items.Components
             get { return outputContainer; }
         }
 
-        public override bool RecreateGUIOnResolutionChange => true;
-
         private float progressState;
 
         private readonly Dictionary<uint, int> fabricationLimits = new Dictionary<uint, int>();
@@ -647,10 +645,13 @@ namespace Barotrauma.Items.Components
             if (skills.Length == 0) { return 1.0f; }
             if (character == null) { return 0.0f; }
 
-            float skillSum = (from t in skills let characterLevel = character.GetSkillLevel(t.Identifier) select (characterLevel - (t.Level * SkillRequirementMultiplier))).Sum();
-            float average = skillSum / skills.Length;
-
-            return (average + 100.0f) / 2.0f / 100.0f;
+            float minDegreeOfSuccess = 1.0f;
+            foreach (var skill in skills)
+            {
+                float characterLevel = character.GetSkillLevel(skill.Identifier);
+                minDegreeOfSuccess = Math.Min(minDegreeOfSuccess, (characterLevel - (skill.Level * SkillRequirementMultiplier) + 100.0f) / 2.0f / 100.0f);
+            }
+            return minDegreeOfSuccess;
         }
 
         public override float GetSkillMultiplier()
@@ -658,13 +659,16 @@ namespace Barotrauma.Items.Components
             return SkillRequirementMultiplier;
         }
 
+
+        private readonly HashSet<Inventory> linkedInventories = new HashSet<Inventory>();
+
         private void RefreshAvailableIngredients()
         {
             Character user = this.user;
 #if CLIENT
             user ??= Character.Controlled;
 #endif
-
+            linkedInventories.Clear();
             List<Item> itemList = new List<Item>();
             itemList.AddRange(inputContainer.Inventory.AllItems);
             foreach (MapEntity linkedTo in item.linkedTo)
@@ -684,6 +688,7 @@ namespace Barotrauma.Items.Components
                         itemContainer = deconstructor.OutputContainer;
                     }
 
+                    linkedInventories.Add(itemContainer.Inventory);
                     itemList.AddRange(itemContainer.Inventory.AllItems);
                 }
             }
@@ -698,6 +703,7 @@ namespace Barotrauma.Items.Components
             if (user?.Inventory != null)
             {
                 itemList.AddRange(user.Inventory.AllItems);
+                linkedInventories.Add(user.Inventory);
             }
             availableIngredients.Clear();
             foreach (Item item in itemList)

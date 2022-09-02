@@ -262,9 +262,9 @@ namespace Barotrauma
                 string.Join(separator, parts.Select((part, index) => $"[{namePrefix}{index}]")));
         }
         
-        public static LocalizedString ParseInputTypes(LocalizedString str)
+        public static LocalizedString ParseInputTypes(LocalizedString str, bool useColorHighlight = false)
         {
-            return new InputTypeLString(str);
+            return new InputTypeLString(str, useColorHighlight);
         }
 
         public static LocalizedString GetWithVariable(string tag, string varName, LocalizedString value, FormatCapitals formatCapitals = FormatCapitals.No)

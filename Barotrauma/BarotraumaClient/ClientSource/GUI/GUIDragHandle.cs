@@ -16,6 +16,8 @@ namespace Barotrauma
 
         public Func<RectTransform, bool> ValidatePosition;
 
+        public bool Dragging => dragStarted;
+
         public GUIDragHandle(RectTransform rectT, RectTransform elementToMove, string style = "GUIDragIndicator")
             : base(style, rectT)
         {

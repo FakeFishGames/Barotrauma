@@ -219,7 +219,7 @@ namespace Barotrauma.Items.Components
         {
             //flowpercentage can only be adjusted at 10% intervals -> no need for more accuracy than this
             msg.WriteRangedInteger((int)(flowPercentage / 10.0f), -10, 10);
-            msg.Write(IsActive);
+            msg.WriteBoolean(IsActive);
         }
 
         public void ClientEventRead(IReadMessage msg, float sendingTime)

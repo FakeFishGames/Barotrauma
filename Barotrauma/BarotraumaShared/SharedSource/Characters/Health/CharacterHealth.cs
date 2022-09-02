@@ -1146,14 +1146,14 @@ namespace Barotrauma
                     activeAfflictions.Add(affliction);
                 }
             }
-            msg.Write((byte)activeAfflictions.Count);
+            msg.WriteByte((byte)activeAfflictions.Count);
             foreach (Affliction affliction in activeAfflictions)
             {
-                msg.Write(affliction.Prefab.UintIdentifier);
+                msg.WriteUInt32(affliction.Prefab.UintIdentifier);
                 msg.WriteRangedSingle(
                     MathHelper.Clamp(affliction.Strength, 0.0f, affliction.Prefab.MaxStrength), 
                     0.0f, affliction.Prefab.MaxStrength, 8);
-                msg.Write((byte)affliction.Prefab.PeriodicEffects.Count());
+                msg.WriteByte((byte)affliction.Prefab.PeriodicEffects.Count());
                 foreach (AfflictionPrefab.PeriodicEffect periodicEffect in affliction.Prefab.PeriodicEffects)
                 {
                     msg.WriteRangedSingle(affliction.PeriodicEffectTimers[periodicEffect], periodicEffect.MinInterval, periodicEffect.MaxInterval, 8);
@@ -1170,15 +1170,15 @@ namespace Barotrauma
                 limbAfflictions.Add((limbHealth, limbAffliction));                
             }
 
-            msg.Write((byte)limbAfflictions.Count);
+            msg.WriteByte((byte)limbAfflictions.Count);
             foreach (var (limbHealth, affliction) in limbAfflictions)
             {
                 msg.WriteRangedInteger(limbHealths.IndexOf(limbHealth), 0, limbHealths.Count - 1);
-                msg.Write(affliction.Prefab.UintIdentifier);
+                msg.WriteUInt32(affliction.Prefab.UintIdentifier);
                 msg.WriteRangedSingle(
                     MathHelper.Clamp(affliction.Strength, 0.0f, affliction.Prefab.MaxStrength), 
                     0.0f, affliction.Prefab.MaxStrength, 8);
-                msg.Write((byte)affliction.Prefab.PeriodicEffects.Count());
+                msg.WriteByte((byte)affliction.Prefab.PeriodicEffects.Count());
                 foreach (AfflictionPrefab.PeriodicEffect periodicEffect in affliction.Prefab.PeriodicEffects)
                 {
                     msg.WriteRangedSingle(affliction.PeriodicEffectTimers[periodicEffect], periodicEffect.MinInterval, periodicEffect.MaxInterval, 8);

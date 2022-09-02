@@ -354,14 +354,14 @@ namespace Barotrauma
         private static IWriteMessage StartSending()
         {
             IWriteMessage writeMessage = new WriteOnlyMessage();
-            writeMessage.Write((byte)ClientPacketHeader.MEDICAL);
+            writeMessage.WriteByte((byte)ClientPacketHeader.MEDICAL);
             return writeMessage;
         }
 
         private static void ClientSend(INetSerializableStruct? netStruct, NetworkHeader header, DeliveryMethod deliveryMethod)
         {
             IWriteMessage msg = StartSending();
-            msg.Write((byte)header);
+            msg.WriteByte((byte)header);
             netStruct?.Write(msg);
             GameMain.Client.ClientPeer?.Send(msg, deliveryMethod);
         }

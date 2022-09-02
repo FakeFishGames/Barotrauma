@@ -222,7 +222,7 @@ namespace Barotrauma
 
             if (!ResizeHorizontal && !ResizeVertical)
             {
-                if (PlayerInput.PrimaryMouseButtonClicked())
+                if (PlayerInput.PrimaryMouseButtonClicked() && GUI.MouseOn == null)
                 {
                     var item = new Item(new Rectangle((int)position.X, (int)position.Y, (int)(Sprite.size.X * Scale), (int)(Sprite.size.Y * Scale)), this, Submarine.MainSub)
                     {

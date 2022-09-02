@@ -10,8 +10,6 @@ namespace Barotrauma
 {
     partial class MultiPlayerCampaign : CampaignMode
     {
-        public const int MinimumInitialMoney = 500;
-
         [Flags]
         public enum NetFlags : UInt16
         {
@@ -294,14 +292,14 @@ namespace Barotrauma
 
         private static void WriteItems(IWriteMessage msg, Dictionary<Identifier, List<PurchasedItem>> purchasedItems)
         {
-            msg.Write((byte)purchasedItems.Count);
+            msg.WriteByte((byte)purchasedItems.Count);
             foreach (var storeItems in purchasedItems)
             {
-                msg.Write(storeItems.Key);
-                msg.Write((UInt16)storeItems.Value.Count);
+                msg.WriteIdentifier(storeItems.Key);
+                msg.WriteUInt16((UInt16)storeItems.Value.Count);
                 foreach (var item in storeItems.Value)
                 {
-                    msg.Write(item.ItemPrefabIdentifier);
+                    msg.WriteIdentifier(item.ItemPrefabIdentifier);
                     msg.WriteRangedInteger(item.Quantity, 0, CargoManager.MaxQuantity);
                 }
             }
@@ -328,18 +326,18 @@ namespace Barotrauma
 
         private static void WriteItems(IWriteMessage msg, Dictionary<Identifier, List<SoldItem>> soldItems)
         {
-            msg.Write((byte)soldItems.Count);
+            msg.WriteByte((byte)soldItems.Count);
             foreach (var storeItems in soldItems)
             {
-                msg.Write(storeItems.Key);
-                msg.Write((UInt16)storeItems.Value.Count);
+                msg.WriteIdentifier(storeItems.Key);
+                msg.WriteUInt16((UInt16)storeItems.Value.Count);
                 foreach (var item in storeItems.Value)
                 {
-                    msg.Write(item.ItemPrefab.Identifier);
-                    msg.Write((UInt16)item.ID);
-                    msg.Write(item.Removed);
-                    msg.Write(item.SellerID);
-                    msg.Write((byte)item.Origin);
+                    msg.WriteIdentifier(item.ItemPrefab.Identifier);
+                    msg.WriteUInt16((UInt16)item.ID);
+                    msg.WriteBoolean(item.Removed);
+                    msg.WriteByte(item.SellerID);
+                    msg.WriteByte((byte)item.Origin);
                 }
             }
         }

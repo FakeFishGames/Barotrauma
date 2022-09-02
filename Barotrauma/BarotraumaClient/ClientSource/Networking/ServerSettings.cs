@@ -182,9 +182,9 @@ namespace Barotrauma.Networking
 
             IWriteMessage outMsg = new WriteOnlyMessage();
 
-            outMsg.Write((byte)ClientPacketHeader.SERVER_SETTINGS);
+            outMsg.WriteByte((byte)ClientPacketHeader.SERVER_SETTINGS);
 
-            outMsg.Write((byte)dataToSend);
+            outMsg.WriteByte((byte)dataToSend);
 
             if (dataToSend.HasFlag(NetFlags.Name))
             {
@@ -192,7 +192,7 @@ namespace Barotrauma.Networking
                 {
                     ServerName = GameMain.NetLobbyScreen.ServerName.Text;
                 }
-                outMsg.Write(ServerName);
+                outMsg.WriteString(ServerName);
             }
 
             if (dataToSend.HasFlag(NetFlags.Message))
@@ -201,7 +201,7 @@ namespace Barotrauma.Networking
                 {
                     ServerMessageText = GameMain.NetLobbyScreen.ServerMessage.Text;
                 }
-                outMsg.Write(ServerMessageText);
+                outMsg.WriteString(ServerMessageText);
             }
 
             if (dataToSend.HasFlag(NetFlags.Properties))
@@ -213,15 +213,15 @@ namespace Barotrauma.Networking
                 UInt32 count = (UInt32)changedProperties.Count();
                 bool changedMonsterSettings = tempMonsterEnabled != null && tempMonsterEnabled.Any(p => p.Value != MonsterEnabled[p.Key]);
 
-                outMsg.Write(count);
+                outMsg.WriteUInt32(count);
                 foreach (KeyValuePair<UInt32, NetPropertyData> prop in changedProperties)
                 {
                     DebugConsole.NewMessage(prop.Value.Name.Value, Color.Lime);
-                    outMsg.Write(prop.Key);
+                    outMsg.WriteUInt32(prop.Key);
                     prop.Value.Write(outMsg, prop.Value.GUIComponentValue);
                 }
 
-                outMsg.Write(changedMonsterSettings); outMsg.WritePadBits();
+                outMsg.WriteBoolean(changedMonsterSettings); outMsg.WritePadBits();
                 if (changedMonsterSettings) WriteMonsterEnabled(outMsg, tempMonsterEnabled);
                 BanList.ClientAdminWrite(outMsg);
             }
@@ -235,23 +235,23 @@ namespace Barotrauma.Networking
             {
                 outMsg.WriteRangedInteger(missionTypeOr ?? (int)Barotrauma.MissionType.None, 0, (int)Barotrauma.MissionType.All);
                 outMsg.WriteRangedInteger(missionTypeAnd ?? (int)Barotrauma.MissionType.All, 0, (int)Barotrauma.MissionType.All);
-                outMsg.Write((byte)(traitorSetting + 1));
-                outMsg.Write((byte)(botCount + 1));
-                outMsg.Write((byte)(botSpawnMode + 1));
+                outMsg.WriteByte((byte)(traitorSetting + 1));
+                outMsg.WriteByte((byte)(botCount + 1));
+                outMsg.WriteByte((byte)(botSpawnMode + 1));
 
-                outMsg.Write(levelDifficulty ?? -1000.0f);
+                outMsg.WriteSingle(levelDifficulty ?? -1000.0f);
 
-                outMsg.Write(useRespawnShuttle ?? UseRespawnShuttle);
+                outMsg.WriteBoolean(useRespawnShuttle ?? UseRespawnShuttle);
 
-                outMsg.Write(autoRestart != null);
-                outMsg.Write(autoRestart ?? false);
+                outMsg.WriteBoolean(autoRestart != null);
+                outMsg.WriteBoolean(autoRestart ?? false);
 
                 outMsg.WritePadBits();
             }
 
             if (dataToSend.HasFlag(NetFlags.LevelSeed))
             {
-                outMsg.Write(GameMain.NetLobbyScreen.SeedBox.Text);
+                outMsg.WriteString(GameMain.NetLobbyScreen.SeedBox.Text);
             }
 
             GameMain.Client.ClientPeer.Send(outMsg, DeliveryMethod.Reliable);

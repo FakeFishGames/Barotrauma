@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace Barotrauma
@@ -866,7 +867,7 @@ namespace Barotrauma
             {
                 OnSelected = (component, obj) =>
                 {
-                    GameMain.Client?.RequestSelectSub(component.Parent.GetChildIndex(component), isShuttle: true);
+                    GameMain.Client?.RequestSelectSub(obj as SubmarineInfo, isShuttle: true);
                     return true;
                 }
             };
@@ -1794,7 +1795,7 @@ namespace Barotrauma
             MissionType = missionType;
         }
 
-        public void UpdateSubList(GUIComponent subList, List<SubmarineInfo> submarines)
+        public void UpdateSubList(GUIComponent subList, IEnumerable<SubmarineInfo> submarines)
         {
             if (subList == null) { return; }
 
@@ -1817,7 +1818,7 @@ namespace Barotrauma
                 subList = dropDown.ListBox.Content;
             }
 
-            var frame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), subList.RectTransform) { MinSize = new Point(0, 20) },
+            var frame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.15f), subList.RectTransform) { MinSize = new Point(0, 25) },
                 style: "ListBoxElement")
             {
                 ToolTip = sub.Description,
@@ -1873,7 +1874,7 @@ namespace Barotrauma
         {
             if (sub.HasTag(SubmarineTag.Shuttle))
             {
-                var shuttleText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), parent.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(GUI.IntScale(20), 0) },
+                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), parent.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(GUI.IntScale(20), 0) },
                     TextManager.Get("Shuttle", "RespawnShuttle"), textAlignment: Alignment.CenterRight, font: GUIStyle.SmallFont)
                 {
                     TextColor = subTextBlock.TextColor * 0.8f,
@@ -1881,7 +1882,7 @@ namespace Barotrauma
                     CanBeFocused = false
                 };
                 //make shuttles more dim in the sub list (selecting a shuttle as the main sub is allowed but not recommended)
-                if (subList == this.SubList.Content)
+                if (subList == SubList.Content)
                 {
                     subTextBlock.TextColor *= 0.8f;
                     foreach (GUIComponent child in parent.Children)
@@ -1892,8 +1893,16 @@ namespace Barotrauma
             }
             else
             {
-                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), parent.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(GUI.IntScale(20), 0) },
-                    TextManager.Get($"submarineclass.{sub.SubmarineClass}"), textAlignment: Alignment.CenterRight, font: GUIStyle.SmallFont)
+                var infoContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), parent.RectTransform, Anchor.CenterRight) { AbsoluteOffset = new Point(GUI.IntScale(20), 0) }, isHorizontal: false);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), infoContainer.RectTransform),
+                    TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", sub.Price)), textAlignment: Alignment.BottomRight, font: GUIStyle.SmallFont)
+                {
+                    UserData = "pricetext",
+                    TextColor = subTextBlock.TextColor * 0.8f,
+                    CanBeFocused = false
+                };
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), infoContainer.RectTransform),
+                    TextManager.Get($"submarineclass.{sub.SubmarineClass}"), textAlignment: Alignment.TopRight, font: GUIStyle.SmallFont)
                 {
                     UserData = "classtext",
                     TextColor = subTextBlock.TextColor * 0.8f,
@@ -1913,6 +1922,17 @@ namespace Barotrauma
                 if (!GameMain.Client.ServerSettings.AllowSubVoting)
                 {
                     var selectedSub = component.UserData as SubmarineInfo;
+                    if (SelectedMode == GameModePreset.MultiPlayerCampaign && CampaignSetupUI != null)
+                    {
+                        if (selectedSub.Price > CampaignSetupUI.CurrentSettings.InitialMoney)
+                        {
+                            new GUIMessageBox(TextManager.Get("warning"), TextManager.Get("campaignsubtooexpensive"));
+                        }
+                        if (!selectedSub.IsCampaignCompatible)
+                        {
+                            new GUIMessageBox(TextManager.Get("warning"), TextManager.Get("campaignsubincompatible"));
+                        }
+                    }
                     if (!selectedSub.RequiredContentPackagesInstalled)
                     {
                         var msgBox = new GUIMessageBox(TextManager.Get("ContentPackageMismatch"),
@@ -1924,7 +1944,7 @@ namespace Barotrauma
                         msgBox.Buttons[0].OnClicked = msgBox.Close;
                         msgBox.Buttons[0].OnClicked += (button, obj) =>
                         {
-                            GameMain.Client.RequestSelectSub(component.Parent.GetChildIndex(component), isShuttle: false);
+                            GameMain.Client.RequestSelectSub(obj as SubmarineInfo, isShuttle: false);
                             return true;
                         };
                         msgBox.Buttons[1].OnClicked = msgBox.Close;
@@ -1932,7 +1952,7 @@ namespace Barotrauma
                     }
                     else if (GameMain.Client.HasPermission(ClientPermissions.SelectSub))
                     {
-                        GameMain.Client.RequestSelectSub(component.Parent.GetChildIndex(component), isShuttle: false);
+                        GameMain.Client.RequestSelectSub(selectedSub, isShuttle: false);
                         return true;
                     }
                     return false;
@@ -2518,7 +2538,6 @@ namespace Barotrauma
                         var kickVoteButton = new GUIButton(new RectTransform(new Vector2(0.34f, 1.0f), buttonAreaLower.RectTransform),
                             TextManager.Get("VoteToKick"))
                         {
-                            Enabled = !selectedClient.HasKickVoteFromSessionId(GameMain.Client.SessionId),
                             OnClicked = (btn, userdata) => { GameMain.Client.VoteForKick(selectedClient); btn.Enabled = false; return true; },
                             UserData = selectedClient
                         };
@@ -3223,6 +3242,22 @@ namespace Barotrauma
         {
             if (GameMain.Client == null) { return; }
 
+            foreach (var subElement in SubList.Content.Children)
+            {
+                subElement.CanBeFocused = true;
+                foreach (var textBlock in subElement.GetAllChildren<GUITextBlock>())
+                {
+                    textBlock.Enabled = true;
+                }                
+            }
+
+            SubList.Content.RectTransform.SortChildren((rt1, rt2) =>
+            {
+                SubmarineInfo s1 = rt1.GUIComponent.UserData as SubmarineInfo;
+                SubmarineInfo s2 = rt2.GUIComponent.UserData as SubmarineInfo;
+                return s1.Name.CompareTo(s2.Name);
+            });
+
             autoRestartBox.Parent.Visible = true;
             settingsBlocker.Visible = false;
             if (SelectedMode == GameModePreset.Mission || SelectedMode == GameModePreset.PvP)
@@ -3254,6 +3289,33 @@ namespace Barotrauma
                         new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.5f), CampaignSetupFrame.RectTransform, Anchor.Center),
                             TextManager.Get("campaignstarting"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Center, wrap: true);
                     }
+                }
+
+                if (CampaignSetupUI != null)
+                {
+                    foreach (var subElement in SubList.Content.Children)
+                    {
+                        var sub = subElement.UserData as SubmarineInfo;
+                        bool tooExpensive = sub.Price > CampaignSetupUI.CurrentSettings.InitialMoney;
+                        if (tooExpensive || !sub.IsCampaignCompatible)
+                        {
+                            foreach (var textBlock in subElement.GetAllChildren<GUITextBlock>())
+                            {
+                                textBlock.DisabledTextColor = (textBlock.UserData as string == "pricetext" && tooExpensive ? GUIStyle.Red : GUIStyle.TextColorNormal) * 0.7f;
+                                textBlock.Enabled = false;
+                            }
+                        }
+                    }
+                    SubList.Content.RectTransform.SortChildren((rt1, rt2) =>
+                    {
+                        SubmarineInfo s1 = rt1.GUIComponent.UserData as SubmarineInfo;
+                        SubmarineInfo s2 = rt2.GUIComponent.UserData as SubmarineInfo;
+                        int p1 = s1.Price;
+                        if (!s1.IsCampaignCompatible) { p1 += 100000; }
+                        int p2 = s2.Price;
+                        if (!s2.IsCampaignCompatible) { p2 += 100000; }
+                        return p1.CompareTo(p2) * 100 + s1.Name.CompareTo(s2.Name);
+                    });
                 }
             }
             else
@@ -3656,7 +3718,7 @@ namespace Barotrauma
             }
         }
 
-        private List<SubmarineInfo> visibilityMenuOrder = new List<SubmarineInfo>();
+        private readonly List<SubmarineInfo> visibilityMenuOrder = new List<SubmarineInfo>();
         private void CreateSubmarineVisibilityMenu()
         {
             var messageBox = new GUIMessageBox(TextManager.Get("SubmarineVisibility"), "",

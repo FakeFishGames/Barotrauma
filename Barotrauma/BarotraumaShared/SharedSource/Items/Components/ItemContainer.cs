@@ -216,9 +216,7 @@ namespace Barotrauma.Items.Components
         }
         
         private ImmutableHashSet<Identifier> containableItemIdentifiers;
-        public IEnumerable<Identifier> ContainableItemIdentifiers => containableItemIdentifiers;
-
-        public override bool RecreateGUIOnResolutionChange => true;
+        public ImmutableHashSet<Identifier> ContainableItemIdentifiers => containableItemIdentifiers;
 
         public List<RelatedItem> ContainableItems { get; }
 

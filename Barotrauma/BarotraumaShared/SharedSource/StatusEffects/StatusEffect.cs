@@ -1538,24 +1538,23 @@ namespace Barotrauma
                     {
                         Character targetCharacter = CharacterFromTarget(target);
                         if (targetCharacter?.Info == null) { continue; }
-                        if (!TalentTree.JobTalentTrees.TryGet(targetCharacter.Info.Job.Prefab.Identifier, out TalentTree talentTree)) { continue; }
-                        // for the sake of technical simplicity, for now do not allow talents to be given if the character could unlock them in their talent tree as well
-                        IEnumerable<Identifier> disallowedTalents = talentTree.TalentSubTrees.SelectMany(s => s.TalentOptionStages.SelectMany(o => o.Talents.Select(t => t.Identifier)));
+                        if (!TalentTree.JobTalentTrees.TryGet(targetCharacter.Info.Job.Prefab.Identifier, out TalentTree characterTalentTree)) { continue; }
 
                         foreach (GiveTalentInfo giveTalentInfo in giveTalentInfos)
                         {
-                            IEnumerable<Identifier> viableTalents = giveTalentInfo.TalentIdentifiers.Where(s => !targetCharacter.Info.UnlockedTalents.Contains(s) && !disallowedTalents.Contains(s));
-                            if (viableTalents.None()) { continue; }
-
                             if (giveTalentInfo.GiveRandom)
-                            {
+                            {                        
+                                // for the sake of technical simplicity, for now do not allow talents to be given if the character could unlock them in their talent tree as well
+                                IEnumerable<Identifier> viableTalents = giveTalentInfo.TalentIdentifiers.Where(id => !targetCharacter.Info.UnlockedTalents.Contains(id) && !characterTalentTree.AllTalentIdentifiers.Contains(id));
+                                if (viableTalents.None()) { continue; }
                                 targetCharacter.GiveTalent(viableTalents.GetRandomUnsynced(), true);
                             }
                             else
                             {
-                                foreach (Identifier talent in viableTalents)
+                                foreach (Identifier id in giveTalentInfo.TalentIdentifiers)
                                 {
-                                    targetCharacter.GiveTalent(talent, true);
+                                    if (targetCharacter.Info.UnlockedTalents.Contains(id) || characterTalentTree.AllTalentIdentifiers.Contains(id)) { continue; }
+                                    targetCharacter.GiveTalent(id, true);
                                 }
                             }
                         }

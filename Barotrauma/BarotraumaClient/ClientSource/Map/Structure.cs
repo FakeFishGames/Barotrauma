@@ -37,17 +37,6 @@ namespace Barotrauma
             }
         }
 
-#if DEBUG
-        [Editable, Serialize("", IsPropertySaveable.Yes)]
-#else
-        [Serialize("", IsPropertySaveable.Yes)]
-#endif
-        public string SpecialTag
-        {
-            get;
-            set;
-        }
-
         partial void InitProjSpecific()
         {
             Prefab.Sprite?.EnsureLazyLoaded();

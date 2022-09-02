@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Linq;
@@ -7,10 +8,10 @@ using Lidgren.Network;
 
 namespace Barotrauma.Networking
 {
-    class LidgrenServerPeer : ServerPeer
+    internal sealed class LidgrenServerPeer : ServerPeer
     {
-        private NetPeerConfiguration netPeerConfiguration;
-        private NetServer netServer;
+        private readonly NetPeerConfiguration netPeerConfiguration;
+        private NetServer? netServer;
 
         private readonly List<NetIncomingMessage> incomingLidgrenMessages;
 
@@ -19,6 +20,25 @@ namespace Barotrauma.Networking
             serverSettings = settings;
 
             netServer = null;
+
+            netPeerConfiguration = new NetPeerConfiguration("barotrauma")
+            {
+                AcceptIncomingConnections = true,
+                AutoExpandMTU = false,
+                MaximumConnections = NetConfig.MaxPlayers * 2,
+                EnableUPnP = serverSettings.EnableUPnP,
+                Port = serverSettings.Port
+            };
+
+            netPeerConfiguration.DisableMessageType(
+                NetIncomingMessageType.DebugMessage
+                | NetIncomingMessageType.WarningMessage
+                | NetIncomingMessageType.Receipt
+                | NetIncomingMessageType.ErrorMessage
+                | NetIncomingMessageType.Error
+                | NetIncomingMessageType.UnconnectedData);
+
+            netPeerConfiguration.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
 
             connectedClients = new List<NetworkConnection>();
             pendingClients = new List<PendingClient>();
@@ -32,21 +52,7 @@ namespace Barotrauma.Networking
         {
             if (netServer != null) { return; }
 
-            netPeerConfiguration = new NetPeerConfiguration("barotrauma")
-            {
-                AcceptIncomingConnections = true,
-                AutoExpandMTU = false,
-                MaximumConnections = NetConfig.MaxPlayers * 2,
-                EnableUPnP = serverSettings.EnableUPnP,
-                Port = serverSettings.Port
-            };
-
-            netPeerConfiguration.DisableMessageType(NetIncomingMessageType.DebugMessage |
-                NetIncomingMessageType.WarningMessage | NetIncomingMessageType.Receipt |
-                NetIncomingMessageType.ErrorMessage | NetIncomingMessageType.Error |
-                NetIncomingMessageType.UnconnectedData);
-
-            netPeerConfiguration.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
+            incomingLidgrenMessages.Clear();
 
             netServer = new NetServer(netPeerConfiguration);
 
@@ -62,7 +68,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        public override void Close(string msg = null)
+        public override void Close(string? msg = null)
         {
             if (netServer == null) { return; }
 
@@ -90,7 +96,9 @@ namespace Barotrauma.Networking
 
         public override void Update(float deltaTime)
         {
-            if (netServer == null) { return; }
+            if (netServer is null) { return; }
+
+            ToolBox.ThrowIfNull(incomingLidgrenMessages);
 
             if (OnOwnerDetermined != null && OwnerConnection != null)
             {
@@ -99,7 +107,7 @@ namespace Barotrauma.Networking
             }
 
             netServer.ReadMessages(incomingLidgrenMessages);
-            
+
             //process incoming connections first
             foreach (NetIncomingMessage inc in incomingLidgrenMessages.Where(m => m.MessageType == NetIncomingMessageType.ConnectionApproval))
             {
@@ -126,7 +134,7 @@ namespace Barotrauma.Networking
             catch (Exception e)
             {
                 string errorMsg = "Server failed to read an incoming message. {" + e + "}\n" + e.StackTrace.CleanupStackTrace();
-                GameAnalyticsManager.AddErrorEventOnce("LidgrenServerPeer.Update:ClientReadException" + e.TargetSite.ToString(), GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce($"LidgrenServerPeer.Update:ClientReadException{e.TargetSite}", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
 #if DEBUG
                 DebugConsole.ThrowError(errorMsg);
 #else
@@ -138,7 +146,8 @@ namespace Barotrauma.Networking
             {
                 PendingClient pendingClient = pendingClients[i];
 
-                var connection = pendingClient.Connection as LidgrenConnection;
+                LidgrenConnection connection = (LidgrenConnection)pendingClient.Connection;
+
                 if (connection.NetConnection.Status == NetConnectionStatus.InitiatedConnect ||
                     connection.NetConnection.Status == NetConnectionStatus.ReceivedInitiation ||
                     connection.NetConnection.Status == NetConnectionStatus.RespondedAwaitingApproval ||
@@ -146,6 +155,7 @@ namespace Barotrauma.Networking
                 {
                     continue;
                 }
+
                 UpdatePendingClient(pendingClient);
                 if (i >= pendingClients.Count || pendingClients[i] != pendingClient) { i--; }
             }
@@ -155,7 +165,9 @@ namespace Barotrauma.Networking
 
         private void InitUPnP()
         {
-            if (netServer == null) { return; }
+            if (netServer is null) { return; }
+
+            ToolBox.ThrowIfNull(netPeerConfiguration);
 
             netServer.UPnP.ForwardPort(netPeerConfiguration.Port, "barotrauma");
 #if USE_STEAM
@@ -178,7 +190,7 @@ namespace Barotrauma.Networking
         private void HandleConnection(NetIncomingMessage inc)
         {
             if (netServer == null) { return; }
-            
+
             if (connectedClients.Count >= serverSettings.MaxPlayers)
             {
                 inc.SenderConnection.Deny(DisconnectReason.ServerFull.ToString());
@@ -188,13 +200,13 @@ namespace Barotrauma.Networking
             if (serverSettings.BanList.IsBanned(new LidgrenEndpoint(inc.SenderConnection.RemoteEndPoint), out string banReason))
             {
                 //IP banned: deny immediately
-                inc.SenderConnection.Deny(DisconnectReason.Banned.ToString() + "/ " + banReason);
+                inc.SenderConnection.Deny($"{DisconnectReason.Banned}/ {banReason}");
                 return;
             }
 
-            PendingClient pendingClient = pendingClients.Find(c => c.Connection is LidgrenConnection l && l.NetConnection == inc.SenderConnection);
+            PendingClient? pendingClient = pendingClients.Find(c => c.Connection is LidgrenConnection l && l.NetConnection == inc.SenderConnection);
 
-            if (pendingClient == null)
+            if (pendingClient is null)
             {
                 pendingClient = new PendingClient(new LidgrenConnection(inc.SenderConnection));
                 pendingClients.Add(pendingClient);
@@ -203,51 +215,52 @@ namespace Barotrauma.Networking
             inc.SenderConnection.Approve();
         }
 
-        private void HandleDataMessage(NetIncomingMessage inc)
+        private void HandleDataMessage(NetIncomingMessage lidgrenMsg)
         {
             if (netServer == null) { return; }
 
-            PendingClient pendingClient = pendingClients.Find(c => c.Connection is LidgrenConnection l && l.NetConnection == inc.SenderConnection);
+            PendingClient? pendingClient = pendingClients.Find(c => c.Connection is LidgrenConnection l && l.NetConnection == lidgrenMsg.SenderConnection);
 
-            PacketHeader packetHeader = (PacketHeader)inc.ReadByte();
+            IReadMessage inc = lidgrenMsg.ToReadMessage();
 
-            if (packetHeader.IsConnectionInitializationStep() && pendingClient != null)
+            var (_, packetHeader, initialization) = INetSerializableStruct.Read<PeerPacketHeaders>(inc);
+
+            if (packetHeader.IsConnectionInitializationStep() && pendingClient != null && initialization.HasValue)
             {
-                ReadConnectionInitializationStep(pendingClient, new ReadWriteMessage(inc.Data, (int)inc.Position, inc.LengthBits, false));
+                ReadConnectionInitializationStep(pendingClient, inc, initialization.Value);
             }
             else if (!packetHeader.IsConnectionInitializationStep())
             {
-                LidgrenConnection conn = connectedClients.Find(c => (c is LidgrenConnection l) && l.NetConnection == inc.SenderConnection) as LidgrenConnection;
-                if (conn == null)
+                if (!(connectedClients.Find(c => c is LidgrenConnection l && l.NetConnection == lidgrenMsg.SenderConnection) is LidgrenConnection conn))
                 {
                     if (pendingClient != null)
                     {
                         RemovePendingClient(pendingClient, DisconnectReason.AuthenticationRequired, "Received data message from unauthenticated client");
                     }
-                    else if (inc.SenderConnection.Status != NetConnectionStatus.Disconnected &&
-                             inc.SenderConnection.Status != NetConnectionStatus.Disconnecting)
+                    else if (lidgrenMsg.SenderConnection.Status != NetConnectionStatus.Disconnected &&
+                             lidgrenMsg.SenderConnection.Status != NetConnectionStatus.Disconnecting)
                     {
-                        inc.SenderConnection.Disconnect(DisconnectReason.AuthenticationRequired.ToString() + "/ Received data message from unauthenticated client");
+                        lidgrenMsg.SenderConnection.Disconnect($"{DisconnectReason.AuthenticationRequired}/ Received data message from unauthenticated client");
                     }
+
                     return;
                 }
+
                 if (pendingClient != null) { pendingClients.Remove(pendingClient); }
+
                 if (serverSettings.BanList.IsBanned(conn.Endpoint, out string banReason)
                     || (conn.AccountInfo.AccountId.TryUnwrap(out var accountId) && serverSettings.BanList.IsBanned(accountId, out banReason))
                     || conn.AccountInfo.OtherMatchingIds.Any(id => serverSettings.BanList.IsBanned(id, out banReason)))
                 {
-                    Disconnect(conn, DisconnectReason.Banned.ToString() + "/ " + banReason);
+                    Disconnect(conn, $"{DisconnectReason.Banned}/ {banReason}");
                     return;
                 }
-                UInt16 length = inc.ReadUInt16();
 
-                //DebugConsole.NewMessage(isCompressed + " " + isConnectionInitializationStep + " " + (int)incByte + " " + length);
-
-                IReadMessage msg = new ReadOnlyMessage(inc.Data, packetHeader.IsCompressed(), inc.PositionInBytes, length, conn);
-                OnMessageReceived?.Invoke(conn, msg);
+                var packet = INetSerializableStruct.Read<PeerPacketMessage>(inc);
+                OnMessageReceived?.Invoke(conn, packet.GetReadMessage(packetHeader.IsCompressed(), conn));
             }
         }
-        
+
         private void HandleStatusChanged(NetIncomingMessage inc)
         {
             if (netServer == null) { return; }
@@ -255,30 +268,30 @@ namespace Barotrauma.Networking
             switch (inc.SenderConnection.Status)
             {
                 case NetConnectionStatus.Disconnected:
-                    string disconnectMsg;
-                    LidgrenConnection conn = connectedClients.Select(c => c as LidgrenConnection).FirstOrDefault(c => c.NetConnection == inc.SenderConnection);
+                    LidgrenConnection? conn = connectedClients.Cast<LidgrenConnection>().FirstOrDefault(c => c.NetConnection == inc.SenderConnection);
                     if (conn != null)
                     {
                         if (conn == OwnerConnection)
                         {
                             DebugConsole.NewMessage("Owner disconnected: closing the server...");
                             GameServer.Log("Owner disconnected: closing the server...", ServerLog.MessageType.ServerMessage);
-                            Close(DisconnectReason.ServerShutdown.ToString() + "/ Owner disconnected");
+                            Close($"{DisconnectReason.ServerShutdown}/ Owner disconnected");
                         }
                         else
                         {
-                            disconnectMsg = $"ServerMessage.HasDisconnected~[client]={GameMain.Server.ConnectedClients.First(c => c.Connection == conn).Name}";
-                            Disconnect(conn, disconnectMsg);
+#warning TODO: kill off disconnect in layer 1
+                            Disconnect(conn, $"ServerMessage.HasDisconnected~[client]={GameMain.Server.ConnectedClients.First(c => c.Connection == conn).Name}");
                         }
                     }
                     else
                     {
-                        PendingClient pendingClient = pendingClients.Find(c => (c.Connection is LidgrenConnection l) && l.NetConnection == inc.SenderConnection);
+                        PendingClient? pendingClient = pendingClients.Find(c => c.Connection is LidgrenConnection l && l.NetConnection == inc.SenderConnection);
                         if (pendingClient != null)
                         {
                             RemovePendingClient(pendingClient, DisconnectReason.Unknown, $"ServerMessage.HasDisconnected~[client]={pendingClient.Name}");
                         }
                     }
+
                     break;
             }
         }
@@ -292,25 +305,23 @@ namespace Barotrauma.Networking
         {
             if (netServer == null) { return; }
 
-            PendingClient pendingClient = pendingClients.Find(c => c.AccountInfo.AccountId is Some<AccountId> { Value: SteamId id } && id.Value == steamId);
-            DebugConsole.Log(steamId + " validation: " + status+", "+(pendingClient!=null));
-            
-            if (pendingClient == null)
+            PendingClient? pendingClient = pendingClients.Find(c => c.AccountInfo.AccountId is Some<AccountId> { Value: SteamId id } && id.Value == steamId);
+            DebugConsole.Log($"{steamId} validation: {status}, {(pendingClient != null)}");
+
+            if (pendingClient is null)
             {
-                if (status != Steamworks.AuthResponse.OK)
+                if (status == Steamworks.AuthResponse.OK) { return; }
+
+                if (connectedClients.Find(c => c.AccountInfo.AccountId is Some<AccountId> { Value: SteamId id } && id.Value == steamId) is LidgrenConnection connection)
                 {
-                    LidgrenConnection connection = connectedClients.Find(c => c.AccountInfo.AccountId is Some<AccountId> { Value: SteamId id } && id.Value == steamId) as LidgrenConnection;
-                    if (connection != null)
-                    {
-                        Disconnect(connection, DisconnectReason.SteamAuthenticationFailed.ToString() + "/ Steam authentication status changed: " + status.ToString());
-                    }
+                    Disconnect(connection, $"{DisconnectReason.SteamAuthenticationFailed}/ Steam authentication status changed: {status}");
                 }
+
                 return;
             }
 
-            LidgrenConnection pendingConnection = pendingClient.Connection as LidgrenConnection;
-            string banReason;
-            if (serverSettings.BanList.IsBanned(pendingConnection.Endpoint, out banReason)
+            LidgrenConnection pendingConnection = (LidgrenConnection)pendingClient.Connection;
+            if (serverSettings.BanList.IsBanned(pendingConnection.Endpoint, out string banReason)
                 || serverSettings.BanList.IsBanned(new SteamId(steamId), out banReason)
                 || serverSettings.BanList.IsBanned(new SteamId(ownerId), out banReason))
             {
@@ -326,8 +337,7 @@ namespace Barotrauma.Networking
             }
             else
             {
-                RemovePendingClient(pendingClient, DisconnectReason.SteamAuthenticationFailed, "Steam authentication failed: " + status.ToString());
-                return;
+                RemovePendingClient(pendingClient, DisconnectReason.SteamAuthenticationFailed, $"Steam authentication failed: {status}");
             }
         }
 
@@ -335,86 +345,62 @@ namespace Barotrauma.Networking
         {
             if (netServer == null) { return; }
 
-            if (!(conn is LidgrenConnection lidgrenConn)) return;
-            if (!connectedClients.Contains(lidgrenConn))
+            if (!connectedClients.Contains(conn))
             {
-                DebugConsole.ThrowError("Tried to send message to unauthenticated connection: " + lidgrenConn.Endpoint.StringRepresentation);
+                DebugConsole.ThrowError($"Tried to send message to unauthenticated connection: {conn.Endpoint.StringRepresentation}");
                 return;
             }
 
-            NetDeliveryMethod lidgrenDeliveryMethod = NetDeliveryMethod.Unreliable;
-            switch (deliveryMethod)
-            {
-                case DeliveryMethod.Unreliable:
-                    lidgrenDeliveryMethod = NetDeliveryMethod.Unreliable;
-                    break;
-                case DeliveryMethod.Reliable:
-                    lidgrenDeliveryMethod = NetDeliveryMethod.ReliableUnordered;
-                    break;
-                case DeliveryMethod.ReliableOrdered:
-                    lidgrenDeliveryMethod = NetDeliveryMethod.ReliableOrdered;
-                    break;
-            }
+            byte[] bufAux = msg.PrepareForSending(compressPastThreshold, out bool isCompressed, out _);
 
 #if DEBUG
+            ToolBox.ThrowIfNull(netPeerConfiguration);
             netPeerConfiguration.SimulatedDuplicatesChance = GameMain.Server.SimulatedDuplicatesChance;
             netPeerConfiguration.SimulatedMinimumLatency = GameMain.Server.SimulatedMinimumLatency;
             netPeerConfiguration.SimulatedRandomLatency = GameMain.Server.SimulatedRandomLatency;
             netPeerConfiguration.SimulatedLoss = GameMain.Server.SimulatedLoss;
 #endif
 
-            NetOutgoingMessage lidgrenMsg = netServer.CreateMessage();
-            byte[] msgData = new byte[msg.LengthBytes];
-            msg.PrepareForSending(ref msgData, compressPastThreshold, out bool isCompressed, out int length);
-            lidgrenMsg.Write((byte)(isCompressed ? PacketHeader.IsCompressed : PacketHeader.None));
-            lidgrenMsg.Write((UInt16)length);
-            lidgrenMsg.Write(msgData, 0, length);
-
-            NetSendResult result = netServer.SendMessage(lidgrenMsg, lidgrenConn.NetConnection, lidgrenDeliveryMethod);
-            if (result != NetSendResult.Sent && result != NetSendResult.Queued)
+            var headers = new PeerPacketHeaders
             {
-                DebugConsole.NewMessage("Failed to send message to "+conn.Endpoint.StringRepresentation+": " + result.ToString(), Microsoft.Xna.Framework.Color.Yellow);
-            }
+                DeliveryMethod = deliveryMethod,
+                PacketHeader = isCompressed ? PacketHeader.IsCompressed : PacketHeader.None,
+                Initialization = null
+            };
+            var body = new PeerPacketMessage
+            {
+                Buffer = bufAux
+            };
+            SendMsgInternal(conn, headers, body);
         }
-        
-        public override void Disconnect(NetworkConnection conn,string msg=null)
+
+        public override void Disconnect(NetworkConnection conn, string? msg = null)
         {
             if (netServer == null) { return; }
 
             if (!(conn is LidgrenConnection lidgrenConn)) { return; }
+
             if (connectedClients.Contains(lidgrenConn))
             {
                 lidgrenConn.Status = NetworkConnectionStatus.Disconnected;
                 connectedClients.Remove(lidgrenConn);
                 OnDisconnect?.Invoke(conn, msg);
-                if (conn.AccountInfo.AccountId is Some<AccountId> { Value: SteamId steamId }) { Steam.SteamManager.StopAuthSession(steamId); }
+                if (conn.AccountInfo.AccountId is Some<AccountId> { Value: SteamId steamId }) { SteamManager.StopAuthSession(steamId); }
             }
+
             lidgrenConn.NetConnection.Disconnect(msg ?? "Disconnected");
         }
 
-        protected override void SendMsgInternal(NetworkConnection conn, DeliveryMethod deliveryMethod, IWriteMessage msg)
+        protected override void SendMsgInternal(NetworkConnection conn, PeerPacketHeaders headers, INetSerializableStruct? body)
         {
-            LidgrenConnection lidgrenConn = conn as LidgrenConnection;
-            NetDeliveryMethod lidgrenDeliveryMethod = NetDeliveryMethod.Unreliable;
-            switch (deliveryMethod)
-            {
-                case DeliveryMethod.Unreliable:
-                    lidgrenDeliveryMethod = NetDeliveryMethod.Unreliable;
-                    break;
-                case DeliveryMethod.Reliable:
-                    lidgrenDeliveryMethod = NetDeliveryMethod.ReliableUnordered;
-                    break;
-                case DeliveryMethod.ReliableOrdered:
-                    lidgrenDeliveryMethod = NetDeliveryMethod.ReliableOrdered;
-                    break;
-            }
+            IWriteMessage msgToSend = new WriteOnlyMessage();
+            msgToSend.WriteNetSerializableStruct(headers);
+            body?.Write(msgToSend);
 
-            NetOutgoingMessage lidgrenMsg = netServer.CreateMessage();
-            lidgrenMsg.Write(msg.Buffer, 0, msg.LengthBytes);
-            NetSendResult result = netServer.SendMessage(lidgrenMsg, lidgrenConn.NetConnection, lidgrenDeliveryMethod);
+            NetSendResult result = ForwardToLidgren(msgToSend, conn, headers.DeliveryMethod);
             if (result != NetSendResult.Sent && result != NetSendResult.Queued)
             {
-                DebugConsole.NewMessage("Failed to send message to " + conn.Endpoint.StringRepresentation + ": " + result.ToString(), Microsoft.Xna.Framework.Color.Yellow);
+                DebugConsole.NewMessage($"Failed to send message to {conn.Endpoint}: {result}", Microsoft.Xna.Framework.Color.Yellow);
             }
         }
 
@@ -430,7 +416,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        protected override void ProcessAuthTicket(string name, Option<int> ownKey, Option<SteamId> steamId, PendingClient pendingClient, byte[] ticket)
+        protected override void ProcessAuthTicket(ClientSteamTicketAndVersionPacket packet, PendingClient pendingClient)
         {
             if (pendingClient.AccountInfo.AccountId.IsNone())
             {
@@ -438,19 +424,19 @@ namespace Barotrauma.Networking
 #if DEBUG
                 requireSteamAuth = false;
 #endif
+                bool hasSteamAuth = packet.SteamAuthTicket.TryUnwrap(out var ticket);
 
                 //steam auth cannot be done (SteamManager not initialized or no ticket given),
                 //but it's not required either -> let the client join without auth
-                if ((!SteamManager.IsInitialized || (ticket?.Length ?? 0) == 0)
-                    && !requireSteamAuth)
+                if ((!SteamManager.IsInitialized || !hasSteamAuth) && !requireSteamAuth)
                 {
-                    pendingClient.Name = name;
-                    pendingClient.OwnerKey = ownKey;
+                    pendingClient.Name = packet.Name;
+                    pendingClient.OwnerKey = packet.OwnerKey;
                     pendingClient.InitializationStep = serverSettings.HasPassword ? ConnectionInitialization.Password : ConnectionInitialization.ContentPackageOrder;
                 }
                 else
                 {
-                    if (!steamId.TryUnwrap(out var id))
+                    if (!packet.SteamId.TryUnwrap(out var id) || !(id is SteamId steamId))
                     {
                         if (requireSteamAuth)
                         {
@@ -460,36 +446,42 @@ namespace Barotrauma.Networking
                     }
                     else
                     {
-                        Steamworks.BeginAuthResult authSessionStartState = Steam.SteamManager.StartAuthSession(ticket, id);
+                        Steamworks.BeginAuthResult authSessionStartState = SteamManager.StartAuthSession(ticket, steamId);
                         if (authSessionStartState != Steamworks.BeginAuthResult.OK)
                         {
                             if (requireSteamAuth)
                             {
-                                RemovePendingClient(pendingClient, DisconnectReason.SteamAuthenticationFailed, "Steam auth session failed to start: " + authSessionStartState.ToString());
-                                return;
+                                RemovePendingClient(pendingClient, DisconnectReason.SteamAuthenticationFailed, $"Steam auth session failed to start: {authSessionStartState}");
                             }
                             else
                             {
-                                steamId = Option<SteamId>.None();
+                                packet.SteamId = Option<AccountId>.None();
                                 pendingClient.InitializationStep = serverSettings.HasPassword ? ConnectionInitialization.Password : ConnectionInitialization.ContentPackageOrder;
                             }
                         }
                     }
 
-                    pendingClient.Connection.SetAccountInfo(new AccountInfo(steamId.Select(uid => (AccountId)uid)));
-                    pendingClient.Name = name;
-                    pendingClient.OwnerKey = ownKey;
+                    pendingClient.Connection.SetAccountInfo(new AccountInfo(packet.SteamId.Select(uid => (AccountId)uid)));
+                    pendingClient.Name = packet.Name;
+                    pendingClient.OwnerKey = packet.OwnerKey;
                     pendingClient.AuthSessionStarted = true;
                 }
             }
             else
             {
-                if (pendingClient.AccountInfo.AccountId != steamId.Select(uid => (AccountId)uid))
+                if (pendingClient.AccountInfo.AccountId != packet.SteamId.Select(uid => (AccountId)uid))
                 {
                     RemovePendingClient(pendingClient, DisconnectReason.SteamAuthenticationFailed, "SteamID mismatch");
-                    return;
                 }
             }
+        }
+
+        private NetSendResult ForwardToLidgren(IWriteMessage msg, NetworkConnection connection, DeliveryMethod deliveryMethod)
+        {
+            ToolBox.ThrowIfNull(netServer);
+
+            LidgrenConnection conn = (LidgrenConnection)connection;
+            return netServer.SendMessage(msg.ToLidgren(netServer), conn.NetConnection, deliveryMethod.ToLidgren());
         }
     }
 }

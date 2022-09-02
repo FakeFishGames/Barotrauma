@@ -401,14 +401,14 @@ namespace Barotrauma.Items.Components
                 msg.WriteVariableUInt32((uint)connection.Wires.Count);
                 foreach (Wire wire in connection.Wires)
                 {
-                    msg.Write(wire?.Item == null ? (ushort)0 : wire.Item.ID);
+                    msg.WriteUInt16(wire?.Item == null ? (ushort)0 : wire.Item.ID);
                 }
             }
 
-            msg.Write((ushort)DisconnectedWires.Count);
+            msg.WriteUInt16((ushort)DisconnectedWires.Count);
             foreach (Wire disconnectedWire in DisconnectedWires)
             {
-                msg.Write(disconnectedWire.Item.ID);
+                msg.WriteUInt16(disconnectedWire.Item.ID);
             }
         }
     }

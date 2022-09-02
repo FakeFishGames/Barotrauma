@@ -4,6 +4,7 @@ using FarseerPhysics.Dynamics.Contacts;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace Barotrauma.Items.Components
@@ -62,7 +63,7 @@ namespace Barotrauma.Items.Components
         /// <summary>
         /// Defines items that boost the weapon functionality, like battery cell for stun batons.
         /// </summary>
-        public readonly Identifier[] PreferredContainedItems;
+        public readonly ImmutableHashSet<Identifier> PreferredContainedItems;
 
         public MeleeWeapon(Item item, ContentXElement element)
             : base(item, element)
@@ -77,7 +78,7 @@ namespace Barotrauma.Items.Components
             }
             item.IsShootable = true;
             item.RequireAimToUse = element.Parent.GetAttributeBool("requireaimtouse", true);
-            PreferredContainedItems = element.GetAttributeIdentifierArray("preferredcontaineditems", Array.Empty<Identifier>());
+            PreferredContainedItems = element.GetAttributeIdentifierArray("preferredcontaineditems", Array.Empty<Identifier>()).ToImmutableHashSet();
         }
 
         public override void Equip(Character character)
@@ -387,14 +388,16 @@ namespace Barotrauma.Items.Components
                 User = null;
                 return;
             }
-            
+
+            float damageMultiplier = 1 + User.GetStatValue(StatTypes.MeleeAttackMultiplier);
+            damageMultiplier *= 1.0f + item.GetQualityModifier(Quality.StatType.StrikingPowerMultiplier);
+
             Limb targetLimb = target.UserData as Limb;
             Character targetCharacter = targetLimb?.character ?? target.UserData as Character;
             if (Attack != null)
             {
                 Attack.SetUser(User);
-                Attack.DamageMultiplier = 1 + User.GetStatValue(StatTypes.MeleeAttackMultiplier);
-                Attack.DamageMultiplier *= 1.0f + item.GetQualityModifier(Quality.StatType.StrikingPowerMultiplier);
+                Attack.DamageMultiplier = damageMultiplier;
 
                 if (targetLimb != null)
                 {
@@ -467,7 +470,7 @@ namespace Barotrauma.Items.Components
 
             if (targetCharacter != null) //TODO: Allow OnUse to happen on structures too maybe??
             {
-                ApplyStatusEffects(success ? ActionType.OnUse : ActionType.OnFailure, 1.0f, targetCharacter, targetLimb, user: User);
+                ApplyStatusEffects(success ? ActionType.OnUse : ActionType.OnFailure, 1.0f, targetCharacter, targetLimb, user: User, afflictionMultiplier: damageMultiplier);
             }
 
             if (DeleteOnUse)

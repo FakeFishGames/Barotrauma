@@ -179,9 +179,9 @@ namespace Barotrauma
         {
             if (Character.Controlled != null && !Character.Controlled.IsDead) { return; }
 
-            msg.Write((byte)ClientNetObject.SPECTATING_POS);
-            msg.Write(position.X);
-            msg.Write(position.Y);
+            msg.WriteByte((byte)ClientNetObject.SPECTATING_POS);
+            msg.WriteSingle(position.X);
+            msg.WriteSingle(position.Y);
         }
 
         private void CreateMatrices()

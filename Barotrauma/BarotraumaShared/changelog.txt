@@ -1,4 +1,130 @@
 ---------------------------------------------------------------------------------------------------------
+v0.19.3.0
+---------------------------------------------------------------------------------------------------------
+
+Unstable only:
+- Fixed deconstructors and research stations showing what unidentified genetic materials are.
+- Fixed fabricator not showing the number of required items on recipes.
+- Fixed a crash in Fabriactor.DrawInputOverLay.
+- Visual improvements to draggable item UIs.
+- Fixed reactor sliders adjusting to the received signals until the received value has been matched, leading to buggy-looking behavior when the sliders adjust by themselves after the signal wires have been disconnected. Now the reactor stops following the signals if nothing is received in 1 second. 
+- Misc fixes and improvements to Camel.
+- Fixed vote-kicked players being unable to rejoin when they're unbanned.
+
+Changes:
+- Updated our runtime to .NET 6, which should yield significant performance improvements. Do note that this unfortunately means we'll have to drop support for macOS versions older than 10.15, but we have taken some measures to help the affected Mac players continue having access to Barotrauma. More info here https://store.steampowered.com/news/app/602960/view/3367025204056277713.
+- First version of reworked tutorials. Still very much a work in progress (only the 1st tutorial that teaches you the very basics is close to done), but would still appreciate feedback!
+- Changed unit load device capacity to 12 (because the sprite has space for 12) and made them waterproof.
+- Changed fabricator skill calculations: the most inadequate of the required skills determines the fabrication time (instead of the average).
+- Made dying drop a characters' skills towards the maximum initial skill instead of minimum.
+- Added a new keybind for opening and closing the chat box. The default bind is B.
+- Added a warning if a new keybind overlaps with any of player's existing binds.
+- Balanced existing mineral missions: adjusted rewards & required minerals and required some minerals to be handed over to the outposts as proof of their existence.
+- Added new mining missions, including some in the abyss.
+
+Submarines: 
+- Added submarine tiers. Higher-tier submarines can be upgraded futher than lower-tier submarines.
+- Overhauled and balanced submarine upgrades.
+- Added an upgrade that adds a mineral scanner to nav terminals and sonar monitors.
+- Submarine class now affects which upgrades are available for the sub.
+- Removed the Deep Diver class: the way we see it, Deep Divers didn't have a clear enough role in the game, especially considering that hull upgrades served pretty much the same purpose. In practice, the only clear benefit of a Deep Diver was being able to get through the very last levels of the campaign, and having to switch to one just for that purpose wasn't fun. Now any submarine with full hull upgrades can get all the way to the end of the campaign.
+
+Fixes:
+- Fixed a level generation issue that sometimes made the level impassable if there happened to be a cave right above the outpost.
+- Fixed holes on sloped walls being impossible to pass through when you're swimming straight down/up (or straight right/left depending on the wall): the walls are technically considered either horizontal or vertical (depending on the angle of the slope), and you would have to swim in a direction perpendicular to this "technical" direction of the wall.
+- Fixed retrying the Hognose mission making a new Hognose join your crew every time.
+- Fixed idling NPCs sometimes getting stuck on ladders.
+- Fixed mirrored turrets being displayed backwards on status monitor.
+- Fixed character's hands getting "stuck" if you handcuff yourself while dragging someone.
+- Fixed dragged character's arms not being pulled towards you, making it look like you're dragging them without touching if you run or walk away while dragging.
+- Fixed dragged bots slowly moving constantly, preventing them from switching to the normal standing pose.
+- Fixed bots having trouble fixing leaks in multi-hull rooms: they were required to be in the same hull as the leak, which prevented them from fixing leaks in e.g. R-29's bilge.
+- Fixed combat missions not ending the round if both crews are dead.
+- Fixed bots stating the name of the character they're firing at with turrets, making it seem like they know the name of every pirate they come across and magically recognize them through the walls of the enemy sub.
+- Fixed chaingun rotation speed not being affected by the weapons skill.
+- Fixed crashing when using ':' in item assembly names on Linux platforms.
+- Fixed ImmuneToPressure ability flag being ignored on characters who don't need air (in practice meaning that you can get killed by pressure if you get huskified even if you have a talent that makes you immune to pressure).
+- Disallow using the "reloadwearables" and "loadwearable" when a gamesession is active because it leads to a crash. These commands are intended to be used in the character editor.
+- Fixed geneticmaterialcrawler_unresearched3 producing mudraptor genes.
+
+Submarine editor:
+- Fixed sub editor background images not saving.
+
+Optimization:
+- Optimized affliction that apply other afflictions on the character (e.g. radiation sickness, drunkenness, opiate withdrawal).
+- Physics optimization: fixed submerged items' physics bodies staying active indefinitely even after they've come to rest due to buoyant forces being applied on them constantly. Now we stop updating bodies that have come to rest on the floor and aren't light enough to float.
+- Optimized AI objectives that make the bots fetch items (combat, contain item, decontain item, get item).
+
+Multiplayer:
+- Fixed "kick" button staying disabled indefinitely if you vote to kick someone and the vote doesn't go through.
+- Fixed Steamworks publish tab showing the "free weekend" message when using Steam family sharing.
+
+Modding:
+- Fixed inability to localize item names if the name is defined directly in the item config.
+- Allowed defining where mineral mission resources are spawned using the "positiontype" attribute. The supported types are "MainPath", "SidePath", "Cave", and "AbyssCave".
+
+---------------------------------------------------------------------------------------------------------
+v0.19.2.0
+---------------------------------------------------------------------------------------------------------
+
+Unstable only:
+- Fixed an item getting placed in the sub editor when you select one from the entity list.
+- Made flak cannon ammo proximity-triggered.
+- Made flak cannon's sounds and visual effects more powerful.
+- Fixed LightComponents turning themselves on when the round starts.
+- Fixed "Input string was not in a correct format" when loading favorite/recent servers with an empty QueryPort.
+- Fixed deconstructor showing contained items in the deconstruction output.
+- Fixed double coilgun sometimes not playing a sound on every shot.
+- Change the cursor to a hand on draggable item UIs.
+- Fixed crashing during level generation if abyss resources have not been configured.
+- Fixed hull & item repairs (and presumably replacing lost shuttles) not working in single player unless you save and reload.
+- Visual improvements to Camel.
+- Fixed timer that prevents recently joined players from voting to kick working the wrong way around.
+- Fixed inability to resize a resizeable structure when placing it in the sub editor.
+
+Changes:
+- Reintroduced separate local/radio voice chat keys as a legacy option. Now it's again possible to speak with voice activation by default and use a push-to-talk button for radio, the same way as before, by setting the chat mode to Local and using the new radio voice chat hotkey.
+- Changed reactor temperature bar colors (from blue to red).
+- Higher quality stun batons cause heavier stun.
+- Disabled the autodocking prompt (which verifies whether you actually want to dock when docking is initiated by an automated circuit) in single player.
+- Minor tweaks to the end of PvP missions to make them a little less underwhelming: instead of ending the round immediately when one team is dead (without even giving enough time to see the enemy die), there's a bried delay, a message box and a camera transition to let the players see what happened.
+
+Submarines:
+- Fixed floating light component in Orca 2.
+- Medical fabricator now consumes 500 power on all submarines, to be consistent with other fabricators
+- Rebalanced Engine Force values to better match hull size. Most Scouts (Azimuth, Orca2, Remora, Winterhalter) are now faster. Humpback, Typhon and Orca slightly slower.
+- Winterhalter and Remora are now Scout class ships, Deep Diver class will be removed.
+- Introduced submarine tiers. Submarine tiers and class affect the max level of submarine upgrades that apply / can be bought.
+- Updated prices of all submarines to match tiers.
+- Gave Typhon 2 better stats and even more firepower, to outclass the original Typhon.
+- Improved R-29 speed and gave a Flak cannon
+- Added Large weapon hardpoints to Berilia to make it a Tier 3 transport.
+
+Optimization:
+- Optimizations to the talent system, particularly when the talent menu is open and when there's a large number of talents (e.g. when using mods that make all talents available to every class). 
+
+Multiplayer:
+- Significantly sped up file transfers (mods, submarine files, campaign saves).
+- The minimum kick vote counts are no longer rounded down. Previously if you had for example four players on the server and the minimum vote count set to 60%, kicking would require 2 votes, now it requires 3.
+
+Submarine editor:
+- Fixed turret lightsource rotation not refreshing in the sub editor when flipping the item.
+- Fixed turret lightsource rotation not refreshing in the sub editor when flipping the item.
+
+Fixes:
+- Fixed linked subs still sometimes getting placed on the wrong side of the docking port when switching subs.
+- Fixed PvP team assignment sometimes being wildly imbalanced, even if there's enough players with no preference to make the team sizes equal.
+- Fixes to ruin door connections, wiring and connection panels.
+- Fixed "insurance policy" giving the money to the dead character instead of the bank.
+- Fixed damage to mirrored wall pieces resetting between rounds.
+- Increased the minimum width of cave tunnels to prevent impassable paths.
+- Fixed deconstructor input slots becoming unlocked when starting a new round while the deconstructor is running.
+
+Modding:
+- Fixed console errors when trying to check int values with PropertyConditionals.
+- Fixed melee weapon's StrikingPowerMultiplier only affecting the afflictions defined in the Attack, not ones defined in the status effect.
+
+---------------------------------------------------------------------------------------------------------
 v0.19.1.0
 ---------------------------------------------------------------------------------------------------------
 
@@ -15,9 +141,9 @@ Unstable only:
 - Fixed server trying to place all previously spawned respawn items into containers on every respawn, even if the items have already been removed. Happened because we never cleared respawnItems, and because we used that list when placing new respawn items into containers.
 
 Changes and additions:
-- Overvoltage makes devices perform better, increasing the output of engines, making fabricators, deconstructors and fabricators operate faster, electrical discharge coils do more damage and oxygen generators generate more oxygen. Incentivizes operating the reactor manually and hopefully makes it a little more engaging.
+- Overvoltage makes devices perform better, increasing the output of engines, making fabricators, deconstructors and pumps operate faster, electrical discharge coils do more damage, batteries recharge faster and oxygen generators generate more oxygen. Incentivizes operating the reactor manually and hopefully makes it a little more engaging.
 - Added more randomness to junction box overvoltage damage, and made partially damaged boxes take more damage from overvoltage. Prevents all boxes from breaking at the same time, making overvoltage less of a pain in the ass to deal with and intentionally overvolting the devices more worthwhile.
-- Experimental: Added a way to immediately increase/decrease the temperatureof the reactor for a brief amount of time (atm bumps the gauge up/down by a fifth, and the boost fades out in 20 seconds). Allows reacting to load fluctuations very quickly, and to conserve fuel by operating the reactor at a lower fission rate = serves as another incentive to operate it manually.
+- Experimental: Added a way to immediately increase/decrease the temperature of the reactor for a brief amount of time (atm bumps the gauge up/down by a fifth, and the boost fades out in 20 seconds). Allows reacting to load fluctuations very quickly, and to conserve fuel by operating the reactor at a lower fission rate = serves as another incentive to operate it manually.
 - Signals no longer set the fission and turbine rates of the reactor instantaneously, making automated reactor circuits less overpowered. They are still viable, but especially now with the addition of the extra incentives for operating the reactor manually, they're no longer as clearly the best and most efficient way to operate the reactor, making manual operation more worthwhile.
 - Added a Large Weapon Hardpoint.
 - Railgun is now considered a large weapon.
@@ -189,6 +315,21 @@ Modding:
 - Fixed bots always choosing their "personality trait" from the first 6 even if more are modded in.
 
 ---------------------------------------------------------------------------------------------------------
+v0.18.15.2 (MacOS only)
+---------------------------------------------------------------------------------------------------------
+
+- Fixed crashes on MacOS 10.13 and 10.14. This seems to have happened because Microsoft quietly dropped support for these versions in .NET Core in late 2021, and we didn't realize until this hotfix when we deployed with a sufficiently new version of the technology. 
+- Fixed inability to use the voice chat on some MacOS versions, due to the game not having permissions to access the microphone as a result of the aforementioned .NET Core upgrade.
+
+---------------------------------------------------------------------------------------------------------
+v0.18.15.1
+---------------------------------------------------------------------------------------------------------
+
+- Fixed frequent crashing in the submarine editor. The crashes were caused by modifying multiple entities at the same time, such as by selecting an entity of the same type as the last entity that was edited.
+- Fixed dragged objects becoming invisible if you bring the cursor over a UI element in the submarine editor.
+- Fixed a bug that sometimes caused radio voice chat to be muffled.
+
+---------------------------------------------------------------------------------------------------------
 v0.18.15.0
 ---------------------------------------------------------------------------------------------------------
 
@@ -259,6 +400,7 @@ Modding:
 v0.18.11.0
 ---------------------------------------------------------------------------------------------------------
 
+Bugfixes:
 - Disabled project-wide invariant globalization, which was meant to address "couldn't find a valid ICU package installed on the system" errors on some Linux distributions. The fix caused issues with case-insensitive comparisons and converting to upper or lower case in non-latin alphabets.
 - Fixed tutorial characters spawning without a headset.
 - Fixed inability to bind keys to LMB by clicking on the input box.

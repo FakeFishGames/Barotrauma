@@ -177,8 +177,6 @@ namespace Barotrauma.Networking
         }
         public bool HasSpawned; //has the client spawned as a character during the current round
         
-        private readonly List<Client> kickVoters;
-
         public HashSet<Identifier> GivenAchievements = new HashSet<Identifier>();
 
         public ClientPermissions Permissions = ClientPermissions.None;
@@ -186,19 +184,12 @@ namespace Barotrauma.Networking
 
         private readonly object[] votes;
 
-        public int KickVoteCount
-        {
-            get { return kickVoters.Count; }
-        }
-
         partial void InitProjSpecific();
         partial void DisposeProjSpecific();
         public Client(string name, byte sessionId)
         {
             this.Name = name;
             this.SessionId = sessionId;
-
-            kickVoters = new List<Client>();
 
             votes = new object[Enum.GetNames(typeof(VoteType)).Length];
 
@@ -221,53 +212,22 @@ namespace Barotrauma.Networking
             {
                 votes[i] = null;
             }
-
-            kickVoters.Clear();
         }
-
-        public void AddKickVote(Client voter)
-        {
-            if (voter != null && !kickVoters.Contains(voter)) { kickVoters.Add(voter); }
-        }
-
-
-        public void RemoveKickVote(Client voter)
-        {
-            kickVoters.Remove(voter);
-        }
-        
-        public bool HasKickVoteFrom(Client voter)
-        {
-            return kickVoters.Contains(voter);
-        }
-
-        public bool HasKickVoteFromSessionId(int id)
-        {
-            return kickVoters.Any(k => k.SessionId == id);
-        }
-
+               
         public bool SessionOrAccountIdMatches(string userId)
             => (AccountId.IsSome() && Networking.AccountId.Parse(userId) == AccountId)
                || (byte.TryParse(userId, out byte sessionId) && SessionId == sessionId);
 
-        public static void UpdateKickVotes(IReadOnlyList<Client> connectedClients)
-        {
-            foreach (Client client in connectedClients)
-            {
-                client.kickVoters.RemoveAll(voter => !connectedClients.Contains(voter));
-            }
-        }
-
         public void WritePermissions(IWriteMessage msg)
         {
-            msg.Write(SessionId);
+            msg.WriteByte(SessionId);
             msg.WriteRangedInteger((int)Permissions, 0, (int)ClientPermissions.All);
             if (HasPermission(ClientPermissions.ConsoleCommands))
             {
-                msg.Write((UInt16)PermittedConsoleCommands.Count);
+                msg.WriteUInt16((UInt16)PermittedConsoleCommands.Count);
                 foreach (DebugConsole.Command command in PermittedConsoleCommands)
                 {
-                    msg.Write(command.names[0]);
+                    msg.WriteString(command.names[0]);
                 }
             }
         }

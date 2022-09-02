@@ -12,19 +12,19 @@ namespace Barotrauma
         public override void ServerWriteInitial(IWriteMessage msg, Client c)
         {
             base.ServerWriteInitial(msg, c);
-            msg.Write((ushort)spawnedItems.Count);
+            msg.WriteUInt16((ushort)spawnedItems.Count);
             foreach (Item item in spawnedItems)
             {
                 item.WriteSpawnData(msg, item.ID, Entity.NullEntityID, 0, -1);
             }
 
-            msg.Write((byte)characters.Count);
+            msg.WriteByte((byte)characters.Count);
             foreach (Character character in characters)
             {
                 character.WriteSpawnData(msg, character.ID, restrictMessageSize: false);
-                msg.Write(requireKill.Contains(character));
-                msg.Write(requireRescue.Contains(character));
-                msg.Write((ushort)characterItems[character].Count());
+                msg.WriteBoolean(requireKill.Contains(character));
+                msg.WriteBoolean(requireRescue.Contains(character));
+                msg.WriteUInt16((ushort)characterItems[character].Count());
                 foreach (Item item in characterItems[character])
                 {
                     item.WriteSpawnData(msg, item.ID, item.ParentInventory?.Owner?.ID ?? Entity.NullEntityID, 0, item.ParentInventory?.FindIndex(item) ?? -1);

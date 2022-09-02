@@ -45,10 +45,14 @@ namespace Barotrauma
 
         public int GetBuyprice(int level, Location? location = null)
         {
+            int maxLevel = Prefab.MaxLevel;
+
+            if (level > maxLevel) { maxLevel = level; }
+
             int price = BasePrice;
             for (int i = 1; i <= level; i++)
             {
-                price += (int)(price * MathHelper.Lerp(IncreaseLow, IncreaseHigh, i / (float)Prefab.MaxLevel) / 100);
+                price += (int)(price * MathHelper.Lerp(IncreaseLow, IncreaseHigh, i / (float)maxLevel) / 100);
             }
             return location?.GetAdjustedMechanicalCost(price) ?? price;
         }
@@ -108,7 +112,7 @@ namespace Barotrauma
         public readonly LocalizedString Name;
 
         public readonly IEnumerable<Identifier> ItemTags;
-        
+
         public UpgradeCategory(ContentXElement element, UpgradeModulesFile file) : base(element, file)
         {
             selfItemTags = element.GetAttributeIdentifierArray("items", Array.Empty<Identifier>())?.ToImmutableHashSet() ?? ImmutableHashSet<Identifier>.Empty;
@@ -137,13 +141,22 @@ namespace Barotrauma
                 .Select(it => it.Identifier));
         }
 
-        public bool CanBeApplied(Item item, UpgradePrefab? upgradePrefab)
+        public bool CanBeApplied(MapEntity item, UpgradePrefab? upgradePrefab)
         {
-            if (IsWallUpgrade) { return false; }
+            if (upgradePrefab != null && item.Submarine is { Info: var info } && !upgradePrefab.IsApplicable(info)) { return false; }
+
+            bool isStructure = item is Structure;
+            switch (IsWallUpgrade)
+            {
+                case true:
+                    return isStructure;
+                case false when isStructure:
+                    return false;
+            }
 
             if (upgradePrefab != null && upgradePrefab.IsDisallowed(item)) { return false; }
 
-            return ((MapEntity)item).Prefab.GetAllowedUpgrades().Contains(Identifier) ||
+            return item.Prefab.GetAllowedUpgrades().Contains(Identifier) ||
                    ItemTags.Any(tag => item.Prefab.Tags.Contains(tag) || item.Prefab.Identifier == tag);
         }
 
@@ -171,6 +184,83 @@ namespace Barotrauma
         }
 
         public override void Dispose() { }
+    }
+
+    internal readonly struct UpgradeMaxLevelMod
+    {
+        private enum MaxLevelModType
+        {
+            Invalid,
+            Increase,
+            Set
+        }
+
+        private readonly Either<SubmarineClass, int> tierOrClass;
+        private readonly int value;
+        private readonly MaxLevelModType type;
+
+        public int GetLevelAfter(int level) =>
+            type switch
+            {
+                MaxLevelModType.Invalid => level,
+                MaxLevelModType.Increase => level + value,
+                MaxLevelModType.Set => value,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+        public bool AppliesTo(SubmarineInfo sub)
+        {
+            if (type is MaxLevelModType.Invalid) { return false; }
+
+            if (tierOrClass.TryGet(out int tier))
+            {
+                return sub.Tier == tier;
+            }
+
+            if (tierOrClass.TryGet(out SubmarineClass subClass))
+            {
+                return sub.SubmarineClass == subClass;
+            }
+
+            return false;
+        }
+
+        public UpgradeMaxLevelMod(ContentXElement element)
+        {
+            bool isValid = true;
+
+            SubmarineClass subClass = element.GetAttributeEnum("class", SubmarineClass.Undefined);
+            int tier = element.GetAttributeInt("tier", 0);
+            if (subClass != SubmarineClass.Undefined)
+            {
+                tierOrClass = subClass;
+            }
+            else
+            {
+                tierOrClass = tier;
+            }
+
+            string stringValue = element.GetAttributeString("level", null) ?? string.Empty;
+            value = 0;
+
+            if (string.IsNullOrWhiteSpace(stringValue)) { isValid = false; }
+
+            char firstChar = stringValue[0];
+
+            if (!int.TryParse(stringValue, NumberStyles.Any, CultureInfo.InvariantCulture, out var intValue)) { isValid = false; }
+            value = intValue;
+
+            if (firstChar.Equals('+') || firstChar.Equals('-'))
+            {
+                type = MaxLevelModType.Increase;
+            }
+            else
+            {
+                type = MaxLevelModType.Set;
+            }
+
+            if (!isValid) { type = MaxLevelModType.Invalid; }
+        }
     }
 
     internal partial class UpgradePrefab : UpgradeContentPrefab
@@ -205,10 +295,19 @@ namespace Barotrauma
             onRemoveOverrideFile: null
         );
 
-        public int MaxLevel { get; }
+        private readonly int maxLevel;
+
+        public int MaxLevel
+        {
+            get
+            {
+                Submarine? sub = GameMain.GameSession?.Submarine ?? Submarine.MainSub;
+                return sub is { Info: var info } ? GetMaxLevel(info) : maxLevel;
+            }
+        }
 
         public LocalizedString Name { get; }
-        
+
         public LocalizedString Description { get; }
 
         public float IncreaseOnTooltip { get; }
@@ -243,17 +342,19 @@ namespace Barotrauma
         public bool IsWallUpgrade => UpgradeCategories.All(u => u.IsWallUpgrade);
 
         private Dictionary<string, string[]> targetProperties { get; }
+        private readonly ImmutableArray<UpgradeMaxLevelMod> MaxLevelsMods;
 
         public UpgradePrefab(ContentXElement element, UpgradeModulesFile file) : base(element, file)
         {
             Name = element.GetAttributeString("name", string.Empty)!;
             Description = element.GetAttributeString("description", string.Empty)!;
-            MaxLevel = element.GetAttributeInt("maxlevel", 1);
+            maxLevel = element.GetAttributeInt("maxlevel", 1);
             SuppressWarnings = element.GetAttributeBool("supresswarnings", false);
             HideInMenus = element.GetAttributeBool("hideinmenus", false);
             SourceElement = element;
 
             var targetProperties = new Dictionary<string, string[]>();
+            var maxLevels = new List<UpgradeMaxLevelMod>();
 
             Identifier nameIdentifier = element.GetAttributeIdentifier("nameidentifier", "");
             if (!nameIdentifier.IsEmpty)
@@ -291,6 +392,11 @@ namespace Barotrauma
                         Price = new UpgradePrice(this, subElement);
                         break;
                     }
+                    case "maxlevel":
+                    {
+                        maxLevels.Add(new UpgradeMaxLevelMod(subElement));
+                        break;
+                    }
 #if CLIENT
                     case "decorativesprite":
                     {
@@ -321,14 +427,35 @@ namespace Barotrauma
 #endif
 
             this.targetProperties = targetProperties;
+            MaxLevelsMods = maxLevels.ToImmutableArray();
 
             upgradeCategoryIdentifiers = element.GetAttributeIdentifierArray("categories", Array.Empty<Identifier>())?
                 .ToImmutableHashSet() ?? ImmutableHashSet<Identifier>.Empty;
         }
 
-        public bool IsDisallowed(Item item)
+        public int GetMaxLevel(SubmarineInfo info)
         {
-            return item.DisallowedUpgradeSet.Contains(Identifier) || UpgradeCategories.Any(c => item.DisallowedUpgradeSet.Contains(c.Identifier));
+            int level = maxLevel;
+
+            foreach (UpgradeMaxLevelMod mod in MaxLevelsMods)
+            {
+                if (mod.AppliesTo(info)) { level = mod.GetLevelAfter(level); }
+            }
+
+            return level;
+        }
+
+        public bool IsApplicable(SubmarineInfo? info)
+        {
+            if (info is null) { return false; }
+
+            return GetMaxLevel(info) > 0;
+        }
+
+        public bool IsDisallowed(MapEntity item)
+        {
+            return item.DisallowedUpgradeSet.Contains(Identifier)
+                   || UpgradeCategories.Any(c => item.DisallowedUpgradeSet.Contains(c.Identifier));
         }
 
         public static UpgradePrefab? Find(Identifier identifier)

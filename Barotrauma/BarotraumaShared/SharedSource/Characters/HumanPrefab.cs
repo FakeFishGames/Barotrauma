@@ -85,7 +85,7 @@ namespace Barotrauma
         public readonly List<(XElement element, float commonness)> ItemSets = new List<(XElement element, float commonness)>();
         public readonly List<(XElement element, float commonness)> CustomCharacterInfos = new List<(XElement element, float commonness)>();
 
-        private readonly Identifier npcSetIdentifier;
+        public readonly Identifier NpcSetIdentifier;
 
         public HumanPrefab(ContentXElement element, ContentFile file, Identifier npcSetIdentifier) : base(file, element.GetAttributeIdentifier("identifier", ""))
         {
@@ -94,7 +94,7 @@ namespace Barotrauma
             element.GetChildElements("itemset").ForEach(e => ItemSets.Add((e, e.GetAttributeFloat("commonness", 1))));
             element.GetChildElements("character").ForEach(e => CustomCharacterInfos.Add((e, e.GetAttributeFloat("commonness", 1))));
             PreferredOutpostModuleTypes = element.GetAttributeIdentifierArray("preferredoutpostmoduletypes", Array.Empty<Identifier>());
-            this.npcSetIdentifier = npcSetIdentifier;
+            this.NpcSetIdentifier = npcSetIdentifier;
         }
 
         public IEnumerable<Identifier> GetModuleFlags()
@@ -183,7 +183,7 @@ namespace Barotrauma
             {
                 characterInfo = new CharacterInfo(characterElement, Identifier);
             }
-            characterInfo.HumanPrefabIds = (npcSetIdentifier, Identifier);
+            characterInfo.HumanPrefabIds = (NpcSetIdentifier, Identifier);
             return characterInfo;
         }
 

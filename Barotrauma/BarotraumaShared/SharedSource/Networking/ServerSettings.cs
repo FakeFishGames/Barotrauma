@@ -209,48 +209,48 @@ namespace Barotrauma.Networking
                 {
                     case "float":
                         msg.WriteVariableUInt32(4);
-                        msg.Write((float)overrideValue);
+                        msg.WriteSingle((float)overrideValue);
                         break;
                     case "int":
                         msg.WriteVariableUInt32(4);
-                        msg.Write((int)overrideValue);
+                        msg.WriteInt32((int)overrideValue);
                         break;
                     case "vector2":
                         msg.WriteVariableUInt32(8);
-                        msg.Write(((Vector2)overrideValue).X);
-                        msg.Write(((Vector2)overrideValue).Y);
+                        msg.WriteSingle(((Vector2)overrideValue).X);
+                        msg.WriteSingle(((Vector2)overrideValue).Y);
                         break;
                     case "vector3":
                         msg.WriteVariableUInt32(12);
-                        msg.Write(((Vector3)overrideValue).X);
-                        msg.Write(((Vector3)overrideValue).Y);
-                        msg.Write(((Vector3)overrideValue).Z);
+                        msg.WriteSingle(((Vector3)overrideValue).X);
+                        msg.WriteSingle(((Vector3)overrideValue).Y);
+                        msg.WriteSingle(((Vector3)overrideValue).Z);
                         break;
                     case "vector4":
                         msg.WriteVariableUInt32(16);
-                        msg.Write(((Vector4)overrideValue).X);
-                        msg.Write(((Vector4)overrideValue).Y);
-                        msg.Write(((Vector4)overrideValue).Z);
-                        msg.Write(((Vector4)overrideValue).W);
+                        msg.WriteSingle(((Vector4)overrideValue).X);
+                        msg.WriteSingle(((Vector4)overrideValue).Y);
+                        msg.WriteSingle(((Vector4)overrideValue).Z);
+                        msg.WriteSingle(((Vector4)overrideValue).W);
                         break;
                     case "color":
                         msg.WriteVariableUInt32(4);
-                        msg.Write(((Color)overrideValue).R);
-                        msg.Write(((Color)overrideValue).G);
-                        msg.Write(((Color)overrideValue).B);
-                        msg.Write(((Color)overrideValue).A);
+                        msg.WriteByte(((Color)overrideValue).R);
+                        msg.WriteByte(((Color)overrideValue).G);
+                        msg.WriteByte(((Color)overrideValue).B);
+                        msg.WriteByte(((Color)overrideValue).A);
                         break;
                     case "rectangle":
                         msg.WriteVariableUInt32(16);
-                        msg.Write(((Rectangle)overrideValue).X);
-                        msg.Write(((Rectangle)overrideValue).Y);
-                        msg.Write(((Rectangle)overrideValue).Width);
-                        msg.Write(((Rectangle)overrideValue).Height);
+                        msg.WriteInt32(((Rectangle)overrideValue).X);
+                        msg.WriteInt32(((Rectangle)overrideValue).Y);
+                        msg.WriteInt32(((Rectangle)overrideValue).Width);
+                        msg.WriteInt32(((Rectangle)overrideValue).Height);
                         break;
                     default:
                         string strVal = overrideValue.ToString();
 
-                        msg.Write(strVal);
+                        msg.WriteString(strVal);
                         break;
                 }
             }
@@ -550,7 +550,7 @@ namespace Barotrauma.Networking
 
         public bool HasPassword
         {
-            get { return password != null; }
+            get { return !string.IsNullOrEmpty(password); }
 #if CLIENT
             set
             {
@@ -953,14 +953,7 @@ namespace Barotrauma.Networking
 
         public void SetPassword(string password)
         {
-            if (string.IsNullOrEmpty(password))
-            {
-                this.password = null;
-            }
-            else
-            {
-                this.password = password;
-            }
+            this.password = string.IsNullOrEmpty(password) ? null : password;
         }
 
         public static byte[] SaltPassword(byte[] password, int salt)
@@ -977,14 +970,9 @@ namespace Barotrauma.Networking
 
         public bool IsPasswordCorrect(byte[] input, int salt)
         {
-            if (!HasPassword) return true;
+            if (!HasPassword) { return true; }
             byte[] saltedPw = SaltPassword(Encoding.UTF8.GetBytes(password), salt);
-            if (input.Length != saltedPw.Length) return false;
-            for (int i = 0; i < input.Length; i++)
-            {
-                if (input[i] != saltedPw[i]) return false;
-            }
-            return true;
+            return saltedPw.SequenceEqual(input);
         }
 
         /// <summary>
@@ -1039,7 +1027,7 @@ namespace Barotrauma.Networking
             msg.WriteVariableUInt32((uint)monsterNames.Count);
             foreach (Identifier s in monsterNames)
             {
-                msg.Write(monsterEnabled[s]);
+                msg.WriteBoolean(monsterEnabled[s]);
             }
             msg.WritePadBits();
         }
@@ -1071,15 +1059,15 @@ namespace Barotrauma.Networking
         {
             if (ExtraCargo == null)
             {
-                msg.Write((UInt32)0);
+                msg.WriteUInt32((UInt32)0);
                 return;
             }
 
-            msg.Write((UInt32)ExtraCargo.Count);
+            msg.WriteUInt32((UInt32)ExtraCargo.Count);
             foreach (KeyValuePair<ItemPrefab, int> kvp in ExtraCargo)
             {
-                msg.Write(kvp.Key.Identifier);
-                msg.Write((byte)kvp.Value);
+                msg.WriteIdentifier(kvp.Key.Identifier);
+                msg.WriteByte((byte)kvp.Value);
             }
         }
 
@@ -1109,7 +1097,7 @@ namespace Barotrauma.Networking
             msg.WriteVariableUInt32((uint)HiddenSubs.Count);
             foreach (string submarineName in HiddenSubs)
             {
-                msg.Write((UInt16)subList.FindIndex(s => s.Name.Equals(submarineName, StringComparison.OrdinalIgnoreCase)));
+                msg.WriteUInt16((UInt16)subList.FindIndex(s => s.Name.Equals(submarineName, StringComparison.OrdinalIgnoreCase)));
             }
         }
     }

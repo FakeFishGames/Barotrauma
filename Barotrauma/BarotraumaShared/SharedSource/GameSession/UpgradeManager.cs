@@ -512,8 +512,11 @@ namespace Barotrauma
         /// Should be called after every round start right after <see cref="ApplyUpgrades"/>
         /// </summary>
         /// <param name="submarine"></param>
-        public void SanityCheckUpgrades(Submarine submarine)
+        public void SanityCheckUpgrades()
         {
+            Submarine submarine = GameMain.GameSession?.Submarine ?? Submarine.MainSub;
+            if (submarine is null) { return; }
+
             // check walls
             foreach (Structure wall in submarine.GetWalls(UpgradeAlsoConnectedSubs))
             {
@@ -521,23 +524,8 @@ namespace Barotrauma
                 {
                     foreach (UpgradePrefab prefab in UpgradePrefab.Prefabs)
                     {
-                        int level = GetRealUpgradeLevel(prefab, category);
-                        if (level == 0 || !prefab.IsWallUpgrade) { continue; }
-
-                        Upgrade? upgrade = wall.GetUpgrade(prefab.Identifier);
-
-                        bool isOverMax = IsOverMaxLevel(level, prefab);
-                        if (isOverMax)
-                        {
-                            SetUpgradeLevel(prefab, category, prefab.MaxLevel);
-                            level = prefab.MaxLevel;
-                        }
-
-                        if (upgrade == null || upgrade.Level != level || isOverMax)
-                        {
-                            DebugLog($"{((MapEntity)wall).Prefab.Name} has incorrect \"{prefab.Name}\" level! Expected {level} but got {upgrade?.Level ?? 0}. Fixing...");
-                            FixUpgradeOnItem(wall, prefab, level);
-                        }
+                        if (!prefab.IsWallUpgrade) { continue; }
+                        TryFixUpgrade(wall, category, prefab);
                     }
                 }
             }
@@ -549,35 +537,38 @@ namespace Barotrauma
                 {
                     foreach (UpgradePrefab prefab in UpgradePrefab.Prefabs)
                     {
-                        if (!category.CanBeApplied(item, prefab)) { continue; }
-
-                        int level = GetRealUpgradeLevel(prefab, category);
-                        if (level == 0) { continue; }
-
-                        Upgrade? upgrade = item.GetUpgrade(prefab.Identifier);
-                        bool isOverMax = IsOverMaxLevel(level, prefab);
-                        if (isOverMax)
-                        {
-                            SetUpgradeLevel(prefab, category, prefab.MaxLevel);
-                            level = prefab.MaxLevel;
-                        }
-
-                        if (upgrade == null || upgrade.Level != level || isOverMax)
-                        {
-                            DebugLog($"{((MapEntity)item).Prefab.Name} has incorrect \"{prefab.Name}\" level! Expected {level} but got {upgrade?.Level ?? 0}{(isOverMax ? " (Over max level!)" : string.Empty)}. Fixing...");
-                            FixUpgradeOnItem(item, prefab, level);
-                        }
+                        TryFixUpgrade(item, category, prefab);
                     }
                 }
             }
 
-            static bool IsOverMaxLevel(int level, UpgradePrefab prefab) => level > prefab.MaxLevel;
+            void TryFixUpgrade(MapEntity entity, UpgradeCategory category, UpgradePrefab prefab)
+            {
+                if (!category.CanBeApplied(entity, prefab)) { return; }
+
+                int level = GetRealUpgradeLevel(prefab, category);
+                int maxLevel = submarine.Info is { } info ? prefab.GetMaxLevel(info) : prefab.MaxLevel;
+                if (maxLevel < level) { level = maxLevel; }
+
+                if (level == 0) { return; }
+
+                Upgrade? upgrade = entity.GetUpgrade(prefab.Identifier);
+
+                if (upgrade == null || upgrade.Level != level)
+                {
+                    DebugLog($"{entity.Prefab.Name} has incorrect \"{prefab.Name}\" level! Expected {level} but got {upgrade?.Level ?? 0}. Fixing...");
+                    FixUpgradeOnItem((ISerializableEntity)entity, prefab, level);
+                }
+            }
         }
 
         private static void FixUpgradeOnItem(ISerializableEntity target, UpgradePrefab prefab, int level)
         {
             if (target is MapEntity mapEntity)
             {
+                // do not fix what's not broken
+                if (level == 0) { return; }
+
                 mapEntity.SetUpgrade(new Upgrade(target, prefab, level), false);
             }
         }

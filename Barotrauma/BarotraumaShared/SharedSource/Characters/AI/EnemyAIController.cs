@@ -3847,7 +3847,7 @@ namespace Barotrauma
 
         public override void ServerWrite(IWriteMessage msg)
         {
-            msg.Write((byte)State);
+            msg.WriteByte((byte)State);
             PetBehavior?.ServerWrite(msg);
         }
 

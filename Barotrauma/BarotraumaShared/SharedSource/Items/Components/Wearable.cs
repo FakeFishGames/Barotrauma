@@ -560,7 +560,7 @@ namespace Barotrauma.Items.Components
         }
         public override void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            msg.Write((byte)Variant);
+            msg.WriteByte((byte)Variant);
             base.ServerEventWrite(msg, c, extraData);
         }
 

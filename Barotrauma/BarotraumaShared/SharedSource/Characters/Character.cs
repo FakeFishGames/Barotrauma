@@ -2969,7 +2969,7 @@ namespace Barotrauma
             }
             else if ((GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient) &&
                 PressureProtection < (Level.Loaded?.GetRealWorldDepth(WorldPosition.Y) ?? 1.0f) &&
-                WorldPosition.Y < CharacterHealth.CrushDepth)
+                WorldPosition.Y < CharacterHealth.CrushDepth && !HasAbilityFlag(AbilityFlags.ImmuneToPressure))
             {
                 //implode if below crush depth, and either outside or in a high-pressure hull                
                 if (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure >= 80.0f)
@@ -4776,7 +4776,7 @@ namespace Barotrauma
                 {
                     foreach (TalentOption talentOption in talentSubTree.TalentOptionStages)
                     {
-                        if (talentOption.Talents.None(t => HasTalent(t.Identifier)))
+                        if (talentOption.TalentIdentifiers.None(t => HasTalent(t)))
                         {
                             return false;
                         }

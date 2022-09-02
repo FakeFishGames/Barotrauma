@@ -113,35 +113,35 @@ namespace Barotrauma
 
         public void ClientWrite(IWriteMessage msg, VoteType voteType, object data)
         {
-            msg.Write((byte)voteType);
+            msg.WriteByte((byte)voteType);
 
             switch (voteType)
             {
                 case VoteType.Sub:
                     if (!(data is SubmarineInfo sub)) { return; }
-                    msg.Write(sub.EqualityCheckVal);
+                    msg.WriteInt32(sub.EqualityCheckVal);
                     if (sub.EqualityCheckVal == 0)
                     {
                         //sub doesn't exist client-side, use hash to let the server know which one we voted for
-                        msg.Write(sub.MD5Hash.StringRepresentation);
+                        msg.WriteString(sub.MD5Hash.StringRepresentation);
                     }
                     break;
                 case VoteType.Mode:
                     if (!(data is GameModePreset gameMode)) { return; }
-                    msg.Write(gameMode.Identifier);
+                    msg.WriteIdentifier(gameMode.Identifier);
                     break;
                 case VoteType.EndRound:
                     if (!(data is bool)) { return; }
-                    msg.Write((bool)data);
+                    msg.WriteBoolean((bool)data);
                     break;
                 case VoteType.Kick:
                     if (!(data is Client votedClient)) { return; }
 
-                    msg.Write(votedClient.SessionId);
+                    msg.WriteByte(votedClient.SessionId);
                     break;
                 case VoteType.StartRound:
                     if (!(data is bool)) { return; }
-                    msg.Write((bool)data);
+                    msg.WriteBoolean((bool)data);
                     break;
                 case VoteType.PurchaseAndSwitchSub:
                 case VoteType.PurchaseSub:
@@ -149,22 +149,22 @@ namespace Barotrauma
                     if (data is (SubmarineInfo voteSub, bool transferItems))
                     { 
                         //initiate sub vote
-                        msg.Write(true);
-                        msg.Write(voteSub.Name);
-                        msg.Write(transferItems);
+                        msg.WriteBoolean(true);
+                        msg.WriteString(voteSub.Name);
+                        msg.WriteBoolean(transferItems);
                     }
                     else
                     {
                         // vote
                         if (!(data is int)) { return; }
-                        msg.Write(false);
-                        msg.Write((int)data);
+                        msg.WriteBoolean(false);
+                        msg.WriteInt32((int)data);
                     }
                     break;
                 case VoteType.TransferMoney:
                     if (!(data is int)) { return; }
-                    msg.Write(false); //not initiating a vote
-                    msg.Write((int)data);
+                    msg.WriteBoolean(false); //not initiating a vote
+                    msg.WriteInt32((int)data);
                     break;
             }
 

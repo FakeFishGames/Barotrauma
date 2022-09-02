@@ -287,7 +287,7 @@ namespace Barotrauma.Items.Components
 
         public virtual void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            msg.Write(activePicker?.ID ?? (ushort)0);
+            msg.WriteUInt16(activePicker?.ID ?? (ushort)0);
         }
 
         public virtual void ClientEventRead(IReadMessage msg, float sendingTime)

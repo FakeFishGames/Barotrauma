@@ -348,7 +348,7 @@ namespace Barotrauma.Networking
                 ServerName = element.GetAttributeString("ServerName", ""),
                 ServerMessage = element.GetAttributeString("ServerMessage", ""),
                 Endpoint = endpoint,
-                QueryPort = element.GetAttributeInt("QueryPort", 0),
+                QueryPort = !string.IsNullOrEmpty(element.GetAttributeString("QueryPort", string.Empty)) ? element.GetAttributeInt("QueryPort", 0) : 0,
                 GameMode = element.GetAttributeIdentifier("GameMode", Identifier.Empty),
                 GameVersion = element.GetAttributeString("GameVersion", ""),
                 MaxPlayers = Math.Min(element.GetAttributeInt("MaxPlayers", 0), NetConfig.MaxPlayers),

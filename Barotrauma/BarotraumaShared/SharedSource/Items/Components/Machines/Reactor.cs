@@ -48,6 +48,9 @@ namespace Barotrauma.Items.Components
         private Vector2 optimalFissionRate, allowedFissionRate;
         private Vector2 optimalTurbineOutput, allowedTurbineOutput;
 
+        private float? signalControlledTargetFissionRate, signalControlledTargetTurbineOutput;
+        private double lastReceivedFissionRateSignalTime, lastReceivedTurbineOutputSignalTime;
+
         private float temperatureBoost;
 
         private bool _powerOn;
@@ -245,7 +248,7 @@ namespace Barotrauma.Items.Components
             }
 #endif
 
-            if (signalControlledTargetFissionRate.HasValue && Math.Abs(signalControlledTargetFissionRate.Value - TargetFissionRate) > 1.0f)
+            if (signalControlledTargetFissionRate.HasValue && lastReceivedFissionRateSignalTime > Timing.TotalTime - 1)
             {
                 TargetFissionRate = adjustValueWithoutOverShooting(TargetFissionRate, signalControlledTargetFissionRate.Value, deltaTime * 5.0f);
 #if CLIENT
@@ -256,7 +259,7 @@ namespace Barotrauma.Items.Components
             {
                 signalControlledTargetFissionRate = null;
             }
-            if (signalControlledTargetTurbineOutput.HasValue && Math.Abs(signalControlledTargetTurbineOutput.Value - TargetTurbineOutput) > 1.0f)
+            if (signalControlledTargetTurbineOutput.HasValue && lastReceivedTurbineOutputSignalTime > Timing.TotalTime - 1)
             {
                 TargetTurbineOutput = adjustValueWithoutOverShooting(TargetTurbineOutput, signalControlledTargetTurbineOutput.Value, deltaTime * 5.0f);                
 #if CLIENT
@@ -841,6 +844,7 @@ namespace Barotrauma.Items.Components
                     if (PowerOn && float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float newFissionRate))
                     {
                         signalControlledTargetFissionRate = MathHelper.Clamp(newFissionRate, 0.0f, 100.0f);
+                        lastReceivedFissionRateSignalTime = Timing.TotalTime;
                         registerUnsentChanges();
                     }
                     break;
@@ -848,6 +852,7 @@ namespace Barotrauma.Items.Components
                     if (PowerOn && float.TryParse(signal.value, NumberStyles.Float, CultureInfo.InvariantCulture, out float newTurbineOutput))
                     {
                         signalControlledTargetTurbineOutput = MathHelper.Clamp(newTurbineOutput, 0.0f, 100.0f);
+                        lastReceivedTurbineOutputSignalTime = Timing.TotalTime;
                         registerUnsentChanges();
                     }
                     break;
@@ -858,7 +863,5 @@ namespace Barotrauma.Items.Components
                 if (GameMain.NetworkMember is { IsServer: true }) { unsentChanges = true; }
             }
         }
-
-        private float? signalControlledTargetFissionRate, signalControlledTargetTurbineOutput;
     }
 }

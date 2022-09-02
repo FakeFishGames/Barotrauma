@@ -6,7 +6,13 @@ namespace Barotrauma
     public class InputTypeLString : LocalizedString
     {
         private readonly LocalizedString nestedStr;
-        public InputTypeLString(LocalizedString nStr) { nestedStr = nStr; }
+        private bool useColorHighlight;
+
+        public InputTypeLString(LocalizedString nStr, bool useColorHighlight = false) 
+        { 
+            nestedStr = nStr;
+            this.useColorHighlight = useColorHighlight;
+        }
 
         protected override bool MustRetrieveValue()
         {
@@ -23,8 +29,14 @@ namespace Barotrauma
             foreach (InputType? inputType in Enum.GetValues(typeof(InputType)))
             {
                 if (!inputType.HasValue) { continue; }
-                cachedValue = cachedValue.Replace($"[{inputType}]", GameSettings.CurrentConfig.KeyMap.KeyBindText(inputType.Value).Value, StringComparison.OrdinalIgnoreCase);
-                cachedValue = cachedValue.Replace($"[InputType.{inputType}]", GameSettings.CurrentConfig.KeyMap.KeyBindText(inputType.Value).Value, StringComparison.OrdinalIgnoreCase);
+
+                string keyBindText = GameSettings.CurrentConfig.KeyMap.KeyBindText(inputType.Value).Value;
+                if (useColorHighlight)
+                {
+                    keyBindText = $"‖color:gui.orange‖{keyBindText}‖end‖";
+                }
+                cachedValue = cachedValue.Replace($"[{inputType}]", keyBindText, StringComparison.OrdinalIgnoreCase);
+                cachedValue = cachedValue.Replace($"[InputType.{inputType}]", keyBindText, StringComparison.OrdinalIgnoreCase);
             }
 #endif
             UpdateLanguage();

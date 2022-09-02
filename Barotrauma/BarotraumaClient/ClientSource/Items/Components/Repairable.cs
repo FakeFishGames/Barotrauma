@@ -451,7 +451,7 @@ namespace Barotrauma.Items.Components
         public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
             msg.WriteRangedInteger((int)requestStartFixAction, 0, 2);
-            msg.Write(qteSuccess);
+            msg.WriteBoolean(qteSuccess);
         }
     }
 }

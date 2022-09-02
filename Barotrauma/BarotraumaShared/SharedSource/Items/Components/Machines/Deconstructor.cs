@@ -40,8 +40,6 @@ namespace Barotrauma.Items.Components
         [Editable, Serialize(1.0f, IsPropertySaveable.Yes)]
         public float DeconstructionSpeed { get; set; }
 
-        public override bool RecreateGUIOnResolutionChange => true;
-
         public Deconstructor(Item item, ContentXElement element)
             : base(item, element)
         {
@@ -122,7 +120,7 @@ namespace Barotrauma.Items.Components
                     {
                         if ((Entity.Spawner?.IsInRemoveQueue(targetItem) ?? false) || !inputContainer.Inventory.AllItems.Contains(targetItem)) { continue; }
                         var validDeconstructItems = targetItem.Prefab.DeconstructItems.Where(it =>
-                            (it.RequiredDeconstructor.Length == 0 || it.RequiredDeconstructor.Any(r => item.HasTag(r) || item.Prefab.Identifier == r)) &&
+                            it.IsValidDeconstructor(item) &&
                             (it.RequiredOtherItem.Length == 0 || it.RequiredOtherItem.Any(r => items.Any(it => it != targetItem && (it.HasTag(r) || it.Prefab.Identifier == r))))).ToList();
 
                         ProcessItem(targetItem, items, validDeconstructItems, allowRemove: validDeconstructItems.Any() || !targetItem.Prefab.DeconstructItems.Any());                        
@@ -140,9 +138,7 @@ namespace Barotrauma.Items.Components
                 var targetItem = inputContainer.Inventory.LastOrDefault();
                 if (targetItem == null) { return; }
 
-                var validDeconstructItems = targetItem.Prefab.DeconstructItems.Where(it =>
-                    it.RequiredDeconstructor.Length == 0 || it.RequiredDeconstructor.Any(r => item.HasTag(r) || item.Prefab.Identifier == r)).ToList();
-
+                var validDeconstructItems = targetItem.Prefab.DeconstructItems.Where(it => it.IsValidDeconstructor(item)).ToList();
                 float deconstructTime = validDeconstructItems.Any() ? targetItem.Prefab.DeconstructTime / (DeconstructionSpeed * deconstructionSpeedModifier) : 1.0f;
 
                 progressState = Math.Min(progressTimer / deconstructTime, 1.0f);

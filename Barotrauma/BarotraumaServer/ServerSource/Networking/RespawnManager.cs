@@ -8,11 +8,6 @@ namespace Barotrauma.Networking
 {
     partial class RespawnManager : Entity, IServerSerializable
     {
-        /// <summary>
-        /// How much skills drop towards the job's default skill levels when respawning midround in the campaign
-        /// </summary>
-        const float SkillReductionOnCampaignMidroundRespawn = 0.75f;
-
         private DateTime despawnTime;
 
         private float shuttleEmptyTimer;
@@ -444,7 +439,7 @@ namespace Barotrauma.Networking
                     }
 
                     clients[i].Character = character;
-                    character.OwnerClientEndpoint = clients[i].Connection.Endpoint;
+                    character.OwnerClientAddress = clients[i].Connection.Endpoint.Address;
                     character.OwnerClientName = clients[i].Name;
                     GameServer.Log(
                         $"Respawning {GameServer.ClientLogName(clients[i])} ({clients[i].Connection.Endpoint}) as {characterInfos[i].Job.Name}", ServerLog.MessageType.Spawning);
@@ -561,7 +556,7 @@ namespace Barotrauma.Networking
             {
                 var skillPrefab = characterInfo.Job.Prefab.Skills.Find(s => skill.Identifier == s.Identifier);
                 if (skillPrefab == null) { continue; }
-                skill.Level = MathHelper.Lerp(skill.Level, skillPrefab.LevelRange.Start, SkillReductionOnCampaignMidroundRespawn);
+                skill.Level = MathHelper.Lerp(skill.Level, skillPrefab.LevelRange.End, SkillReductionOnDeath);
             }
         }
 
@@ -572,20 +567,20 @@ namespace Barotrauma.Networking
             switch (CurrentState)
             {
                 case State.Transporting:
-                    msg.Write(ReturnCountdownStarted);
-                    msg.Write(GameMain.Server.ServerSettings.MaxTransportTime);
-                    msg.Write((float)(ReturnTime - DateTime.Now).TotalSeconds);
+                    msg.WriteBoolean(ReturnCountdownStarted);
+                    msg.WriteSingle(GameMain.Server.ServerSettings.MaxTransportTime);
+                    msg.WriteSingle((float)(ReturnTime - DateTime.Now).TotalSeconds);
                     break;
                 case State.Waiting:
                     MultiPlayerCampaign campaign = GameMain.GameSession.GameMode as MultiPlayerCampaign;
                     var matchingData = campaign?.GetClientCharacterData(c);
                     bool forceSpawnInMainSub = matchingData != null && !matchingData.HasSpawned;
-                    msg.Write((ushort)pendingRespawnCount);
-                    msg.Write((ushort)requiredRespawnCount);
-                    msg.Write(IsRespawnPromptPendingForClient(c));
-                    msg.Write(RespawnCountdownStarted);
-                    msg.Write(forceSpawnInMainSub);
-                    msg.Write((float)(RespawnTime - DateTime.Now).TotalSeconds);
+                    msg.WriteUInt16((ushort)pendingRespawnCount);
+                    msg.WriteUInt16((ushort)requiredRespawnCount);
+                    msg.WriteBoolean(IsRespawnPromptPendingForClient(c));
+                    msg.WriteBoolean(RespawnCountdownStarted);
+                    msg.WriteBoolean(forceSpawnInMainSub);
+                    msg.WriteSingle((float)(RespawnTime - DateTime.Now).TotalSeconds);
                     break;
                 case State.Returning:
                     break;

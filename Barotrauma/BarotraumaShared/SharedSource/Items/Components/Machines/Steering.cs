@@ -166,8 +166,6 @@ namespace Barotrauma.Items.Components
             set { posToMaintain = value; }
         }
 
-        public override bool RecreateGUIOnResolutionChange => true;
-
         struct ObstacleDebugInfo
         {
             public Vector2 Point1;

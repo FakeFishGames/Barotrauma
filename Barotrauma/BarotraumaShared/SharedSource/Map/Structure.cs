@@ -168,6 +168,17 @@ namespace Barotrauma
 
         public ImmutableHashSet<Identifier> Tags => Prefab.Tags;
 
+#if DEBUG
+        [Editable, Serialize("", IsPropertySaveable.Yes)]
+#else
+        [Serialize("", IsPropertySaveable.Yes)]
+#endif
+        public string SpecialTag
+        {
+            get;
+            set;
+        }
+
         protected Color spriteColor;
         [Editable, Serialize("1.0,1.0,1.0,1.0", IsPropertySaveable.Yes)]
         public Color SpriteColor
@@ -574,6 +585,11 @@ namespace Barotrauma
             int xsections = 1, ysections = 1;
             int width = rect.Width, height = rect.Height;
 
+            WallSection[] prevSections = null;
+            if (Sections != null)
+            {
+                prevSections = Sections.ToArray();
+            }
             if (!HasBody)
             {
                 if (FlippedX && IsHorizontal)
@@ -655,6 +671,14 @@ namespace Barotrauma
 
                         Sections[x + y] = new WallSection(sectionRect, this);
                     }
+                }
+            }
+
+            if (prevSections != null && Sections.Length == prevSections.Length)
+            {
+                for (int i = 0; i < Sections.Length; i++)
+                {
+                    Sections[i].damage = prevSections[i].damage;
                 }
             }
         }
@@ -829,17 +853,24 @@ namespace Barotrauma
 
         public WallSection GetSection(int sectionIndex)
         {
-            if (sectionIndex < 0 || sectionIndex >= Sections.Length) return null;
-
+            if (sectionIndex < 0 || sectionIndex >= Sections.Length) { return null; }
             return Sections[sectionIndex];
 
         }
 
         public bool SectionBodyDisabled(int sectionIndex)
         {
-            if (sectionIndex < 0 || sectionIndex >= Sections.Length) return false;
-
+            if (sectionIndex < 0 || sectionIndex >= Sections.Length) { return false; }
             return (Sections[sectionIndex].damage >= MaxHealth);
+        }
+
+        public bool AllSectionBodiesDisabled()
+        {
+            for (int i = 0; i < Sections.Length; i++)
+            {
+                if (Sections[i].damage < MaxHealth) { return false; }
+            }
+            return true;
         }
 
         /// <summary>
@@ -847,9 +878,8 @@ namespace Barotrauma
         /// </summary>
         public bool SectionIsLeaking(int sectionIndex)
         {
-            if (sectionIndex < 0 || sectionIndex >= Sections.Length) return false;
-
-            return (Sections[sectionIndex].damage >= MaxHealth * LeakThreshold);
+            if (sectionIndex < 0 || sectionIndex >= Sections.Length) { return false; }
+            return Sections[sectionIndex].damage >= MaxHealth * LeakThreshold;
         }
 
         public int SectionLength(int sectionIndex)
@@ -1139,21 +1169,22 @@ namespace Barotrauma
                     gapRect.Height += 20;
 
                     bool horizontalGap = !IsHorizontal;
+                    bool diagonalGap = false;
                     if (Prefab.BodyRotation != 0.0f)
                     {
                         //rotation within a 90 deg sector (e.g. 100 -> 10, 190 -> 10, -10 -> 80)
                         float sectorizedRotation = MathUtils.WrapAngleTwoPi(BodyRotation) % MathHelper.PiOver2;
                         //diagonal if 30 < angle < 60
-                        bool diagonal = sectorizedRotation > MathHelper.Pi / 6 && sectorizedRotation < MathHelper.Pi / 3;
+                        diagonalGap = sectorizedRotation > MathHelper.Pi / 6 && sectorizedRotation < MathHelper.Pi / 3;
                         //gaps on the lower half of a diagonal wall are horizontal, ones on the upper half are vertical
-                        if (diagonal)
+                        if (diagonalGap)
                         {
                             horizontalGap = gapRect.Y - gapRect.Height / 2 < Position.Y;
                             if (FlippedY) { horizontalGap = !horizontalGap; }
                         }
                     }
 
-                    Sections[sectionIndex].gap = new Gap(gapRect, horizontalGap, Submarine);
+                    Sections[sectionIndex].gap = new Gap(gapRect, horizontalGap, Submarine, isDiagonal: diagonalGap);
 
                     //free the ID, because if we give gaps IDs we have to make sure they always match between the clients and the server and
                     //that clients create them in the correct order along with every other entity created/removed during the round

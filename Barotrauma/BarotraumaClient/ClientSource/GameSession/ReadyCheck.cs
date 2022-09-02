@@ -139,7 +139,7 @@ namespace Barotrauma
 
         public static void ClientRead(IReadMessage inc)
         {
-            ReadyCheckState state = (ReadyCheckState) inc.ReadByte();
+            ReadyCheckState state = (ReadyCheckState)inc.ReadByte();
             CrewManager? crewManager = GameMain.GameSession?.CrewManager;
             var otherClients = GameMain.Client.ConnectedClients;
             if (crewManager == null || otherClients == null)
@@ -196,7 +196,7 @@ namespace Barotrauma
                     }
                     break;
                 case ReadyCheckState.Update:
-                    ReadyStatus newState = (ReadyStatus) inc.ReadByte();
+                    ReadyStatus newState = (ReadyStatus)inc.ReadByte();
                     byte targetId = inc.ReadByte();
                     if (crewManager.ActiveReadyCheck != null)
                     {
@@ -208,7 +208,7 @@ namespace Barotrauma
                     for (int i = 0; i < count; i++)
                     {
                         byte id = inc.ReadByte();
-                        ReadyStatus status = (ReadyStatus) inc.ReadByte();
+                        ReadyStatus status = (ReadyStatus)inc.ReadByte();
                         crewManager.ActiveReadyCheck?.UpdateState(id, status);
                     }
 
@@ -269,9 +269,9 @@ namespace Barotrauma
         private static void SendState(ReadyStatus status)
         {
             IWriteMessage msg = new WriteOnlyMessage();
-            msg.Write((byte) ClientPacketHeader.READY_CHECK);
-            msg.Write((byte) ReadyCheckState.Update);
-            msg.Write((byte) status);
+            msg.WriteByte((byte)ClientPacketHeader.READY_CHECK);
+            msg.WriteByte((byte)ReadyCheckState.Update);
+            msg.WriteByte((byte)status);
             GameMain.Client?.ClientPeer?.Send(msg, DeliveryMethod.Reliable);
         }
 
@@ -283,8 +283,8 @@ namespace Barotrauma
                 ReadyCheckCooldown = DateTime.Now.AddMinutes(1);
 #endif
                 IWriteMessage msg = new WriteOnlyMessage();
-                msg.Write((byte) ClientPacketHeader.READY_CHECK);
-                msg.Write((byte) ReadyCheckState.Start);
+                msg.WriteByte((byte)ClientPacketHeader.READY_CHECK);
+                msg.WriteByte((byte)ReadyCheckState.Start);
                 GameMain.Client?.ClientPeer?.Send(msg, DeliveryMethod.Reliable);
                 return;
             }

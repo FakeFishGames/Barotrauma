@@ -344,15 +344,15 @@ namespace Barotrauma.Networking
 
             if (client.NeedsMidRoundSync)
             {
-                msg.Write((byte)ServerNetObject.ENTITY_EVENT_INITIAL);                
-                msg.Write(client.UnreceivedEntityEventCount);
-                msg.Write(client.FirstNewEventID);
+                msg.WriteByte((byte)ServerNetObject.ENTITY_EVENT_INITIAL);                
+                msg.WriteUInt16(client.UnreceivedEntityEventCount);
+                msg.WriteUInt16(client.FirstNewEventID);
 
                 Write(msg, eventsToSync, out sentEvents, client);
             }
             else
             {
-                msg.Write((byte)ServerNetObject.ENTITY_EVENT);
+                msg.WriteByte((byte)ServerNetObject.ENTITY_EVENT);
                 Write(msg, eventsToSync, out sentEvents, client);
             }
 
@@ -499,7 +499,7 @@ namespace Barotrauma.Networking
 
                     ReadWriteMessage buffer = new ReadWriteMessage();
                     byte[] temp = msg.ReadBytes(msgLength - 2);
-                    buffer.Write(temp, 0, msgLength - 2);
+                    buffer.WriteBytes(temp, 0, msgLength - 2);
                     buffer.BitPosition = 0;
                     BufferEvent(new BufferedEvent(sender, sender.Character, characterStateID, entity, buffer));
 

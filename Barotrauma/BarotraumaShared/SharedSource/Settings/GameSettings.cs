@@ -86,13 +86,6 @@ namespace Barotrauma
                 return config;
             }
 
-            public static Config FromFile(string configFile, in Config? fallback = null)
-            {
-                XDocument doc = XMLExtensions.TryLoadXml(configFile);
-
-                return FromElement(doc.Root ?? throw new InvalidOperationException("Unable to load config file: XML document is null."), fallback);
-            }
-
             public static Config FromElement(XElement element, in Config? fallback = null)
             {
                 Config retVal = fallback ?? GetDefault();
@@ -108,6 +101,7 @@ namespace Barotrauma
 #if CLIENT
                 retVal.KeyMap = new KeyMapping(element.GetChildElements("keymapping"), retVal.KeyMap);
                 retVal.InventoryKeyMap = new InventoryKeyMapping(element.GetChildElements("inventorykeymapping"), retVal.InventoryKeyMap);
+                LoadSubEditorImages(element);
 #endif
 
                 return retVal;
@@ -288,6 +282,7 @@ namespace Barotrauma
                         { InputType.RadioChat, Keys.None },
                         { InputType.ActiveChat, Keys.T },
                         { InputType.CrewOrders, Keys.C },
+                        { InputType.ChatBox, Keys.B }, 
 
                         { InputType.Voice, Keys.V },
                         { InputType.RadioVoice, Keys.None },
@@ -331,9 +326,13 @@ namespace Barotrauma
                     Dictionary<InputType, KeyOrMouse> bindings = fallback?.Bindings?.ToMutable() ?? defaultBindings.ToMutable();
                     foreach (InputType inputType in (InputType[])Enum.GetValues(typeof(InputType)))
                     {
-                        if (!bindings.ContainsKey(inputType)) { bindings.Add(inputType, defaultBindings[inputType]); }
+                        if (!bindings.ContainsKey(inputType))
+                        {
+                            bindings.Add(inputType, defaultBindings[inputType]);
+                        }
                     }
 
+                    Dictionary<InputType, KeyOrMouse> savedBindings = new Dictionary<InputType, KeyOrMouse>();
                     bool playerConfigContainsNewChatBinds = false;
                     bool playerConfigContainsRestoredVoipBinds = false;
                     foreach (XElement element in elements)
@@ -344,7 +343,34 @@ namespace Barotrauma
                             {
                                 playerConfigContainsNewChatBinds |= result == InputType.ActiveChat;
                                 playerConfigContainsRestoredVoipBinds |= result == InputType.RadioVoice;
-                                bindings[result] = element.GetAttributeKeyOrMouse(attribute.Name.LocalName, bindings[result]);
+                                var keyOrMouse = element.GetAttributeKeyOrMouse(attribute.Name.LocalName, bindings[result]);
+                                savedBindings.Add(result, keyOrMouse);
+                                bindings[result] = keyOrMouse;
+                            }
+                        }
+                    }
+
+                    // Check for duplicate binds when introducing new binds
+                    foreach (var defaultBinding in defaultBindings)
+                    {
+                        if (!savedBindings.ContainsKey(defaultBinding.Key))
+                        {
+                            foreach (var savedBinding in savedBindings)
+                            {
+                                if (savedBinding.Value == defaultBinding.Value)
+                                {
+                                    OnGameMainHasLoaded += () =>
+                                    {
+                                        (string, string)[] replacements =
+                                        {
+                                            ("[defaultbind]", $"\"{TextManager.Get($"inputtype.{defaultBinding.Key}")}\""),
+                                            ("[savedbind]", $"\"{TextManager.Get($"inputtype.{savedBinding.Key}")}\""),
+                                            ("[key]", $"\"{defaultBinding.Value.Name}\"")
+                                        };
+                                        new GUIMessageBox(TextManager.Get("warning"), TextManager.GetWithVariables("duplicatebindwarning", replacements));
+                                    };
+                                    break;
+                                }
                             }
                         }
                     }
@@ -441,6 +467,10 @@ namespace Barotrauma
 
         private static Config currentConfig;
         public static ref readonly Config CurrentConfig => ref currentConfig;
+
+#if CLIENT
+        public static Action? OnGameMainHasLoaded;
+#endif
 
         public static void Init()
         {
@@ -574,6 +604,8 @@ namespace Barotrauma
                     .Select(kvp
                         => new XAttribute($"slot{kvp.Index.ToString(CultureInfo.InvariantCulture)}", kvp.Bind.ToString())));
             root.Add(inventoryKeyMappingElement);
+
+            SubEditorScreen.ImageManager.Save(root);
 #endif
 
             configDoc.SaveSafe(PlayerConfigPath);
@@ -600,5 +632,18 @@ namespace Barotrauma
                     "Saving game settings failed.\n" + e.Message + "\n" + e.StackTrace.CleanupStackTrace());
             }
         }
+
+#if CLIENT
+        private static void LoadSubEditorImages(XElement configElement)
+        {
+            XElement? element = configElement?.Element("editorimages");
+            if (element == null)
+            {
+                SubEditorScreen.ImageManager.Clear(alsoPending: true);
+                return;
+            }
+            SubEditorScreen.ImageManager.Load(element);
+        }
+#endif
     }
 }

@@ -45,6 +45,8 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
+        public override bool RecreateGUIOnResolutionChange => true;
+
         /// <summary>
         /// Depth at which the contained sprites are drawn. If not set, the original depth of the item sprites is used.
         /// </summary>

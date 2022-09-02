@@ -145,9 +145,9 @@ namespace Barotrauma
             foreach (Client client in GameMain.Server.ConnectedClients)
             {
                 IWriteMessage outmsg = new WriteOnlyMessage();
-                outmsg.Write((byte)ServerPacketHeader.EVENTACTION);
-                outmsg.Write((byte)EventManager.NetworkEventType.MISSION);
-                outmsg.Write(prefab.Identifier);
+                outmsg.WriteByte((byte)ServerPacketHeader.EVENTACTION);
+                outmsg.WriteByte((byte)EventManager.NetworkEventType.MISSION);
+                outmsg.WriteIdentifier(prefab.Identifier);
                 GameMain.Server.ServerPeer.Send(outmsg, client.Connection, DeliveryMethod.Reliable);
             }
         }

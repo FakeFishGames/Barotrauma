@@ -72,8 +72,8 @@ namespace Barotrauma.Networking
             {
                 IWriteMessage msg = new WriteOnlyMessage();
 
-                msg.Write((byte)ClientPacketHeader.VOICE);
-                msg.Write((byte)VoipCapture.Instance.QueueID);
+                msg.WriteByte((byte)ClientPacketHeader.VOICE);
+                msg.WriteByte((byte)VoipCapture.Instance.QueueID);
                 VoipCapture.Instance.Write(msg);
 
                 netClient.Send(msg, DeliveryMethod.Unreliable);

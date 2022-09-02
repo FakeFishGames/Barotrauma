@@ -4,27 +4,27 @@ namespace Barotrauma.Networking
 {
     interface IWriteMessage
     {
-        void Write(bool val);
+        void WriteBoolean(bool val);
         void WritePadBits();
-        void Write(byte val);
-        void Write(Int16 val);
-        void Write(UInt16 val);
-        void Write(Int32 val);
-        void Write(UInt32 val);
-        void Write(Int64 val);
-        void Write(UInt64 val);
-        void Write(Single val);
-        void Write(Double val);
+        void WriteByte(byte val);
+        void WriteInt16(Int16 val);
+        void WriteUInt16(UInt16 val);
+        void WriteInt32(Int32 val);
+        void WriteUInt32(UInt32 val);
+        void WriteInt64(Int64 val);
+        void WriteUInt64(UInt64 val);
+        void WriteSingle(Single val);
+        void WriteDouble(Double val);
         void WriteColorR8G8B8(Microsoft.Xna.Framework.Color val);
         void WriteColorR8G8B8A8(Microsoft.Xna.Framework.Color val);
         void WriteVariableUInt32(UInt32 val);
-        void Write(string val);
-        void Write(Identifier val);
+        void WriteString(string val);
+        void WriteIdentifier(Identifier val);
         void WriteRangedInteger(int val, int min, int max);
         void WriteRangedSingle(Single val, Single min, Single max, int bitCount);
-        void Write(byte[] val, int startIndex, int length);
+        void WriteBytes(byte[] val, int startIndex, int length);
 
-        void PrepareForSending(ref byte[] outBuf, bool compressPastThreshold, out bool isCompressed, out int outLength);
+        byte[] PrepareForSending(bool compressPastThreshold, out bool isCompressed, out int outLength);
 
         int BitPosition { get; set; }
         int BytePosition { get; }

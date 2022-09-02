@@ -1,4 +1,7 @@
 ﻿using Barotrauma.Extensions;
+#if CLIENT
+using Barotrauma.Tutorials;
+#endif
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -348,6 +351,9 @@ namespace Barotrauma
         private void UpdateConversations(float deltaTime)
         {
             if (GameMain.GameSession?.GameMode?.Preset == GameModePreset.TestMode) { return; }
+#if CLIENT
+            if (GameMain.GameSession?.GameMode is TutorialMode tutorialMode && tutorialMode.Tutorial is Tutorial tutorial && tutorial.TutorialPrefab.DisableBotConversations) { return; }
+#endif
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.ServerSettings.DisableBotConversations) { return; }
 
             conversationTimer -= deltaTime;

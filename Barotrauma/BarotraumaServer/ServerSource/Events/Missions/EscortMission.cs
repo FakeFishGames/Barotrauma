@@ -16,12 +16,12 @@ namespace Barotrauma
                 throw new InvalidOperationException("Server attempted to write escort mission data when no characters had been spawned.");
             }
 
-            msg.Write((byte)characters.Count);
+            msg.WriteByte((byte)characters.Count);
             foreach (Character character in characters)
             {
                 character.WriteSpawnData(msg, character.ID, restrictMessageSize: false);
-                msg.Write(terroristCharacters.Contains(character));
-                msg.Write((ushort)characterItems[character].Count());
+                msg.WriteBoolean(terroristCharacters.Contains(character));
+                msg.WriteUInt16((ushort)characterItems[character].Count());
                 foreach (Item item in characterItems[character])
                 {
                     item.WriteSpawnData(msg, item.ID, item.ParentInventory?.Owner?.ID ?? Entity.NullEntityID, 0, item.ParentInventory?.FindIndex(item) ?? -1);

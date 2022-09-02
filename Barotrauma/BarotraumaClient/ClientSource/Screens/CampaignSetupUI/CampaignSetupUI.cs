@@ -61,7 +61,8 @@ namespace Barotrauma
                 UserData = saveInfo.FilePath
             };
 
-            var nameText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), saveFrame.RectTransform), Path.GetFileNameWithoutExtension(saveInfo.FilePath))
+            var nameText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), saveFrame.RectTransform), Path.GetFileNameWithoutExtension(saveInfo.FilePath), 
+                textColor: GUIStyle.TextColorBright)
             {
                 CanBeFocused = false
             };
@@ -84,7 +85,6 @@ namespace Barotrauma
                 CanBeFocused = false,
                 UserData = saveInfo.FilePath
             };
-
 
             string saveTimeStr = string.Empty;
             if (saveInfo.SaveTime > 0)
@@ -187,9 +187,9 @@ namespace Barotrauma
             SettingValue<Identifier> startingSetInput = CreateSelectionCarousel(settingsList.Content, TextManager.Get("startitemset"), TextManager.Get("startitemsettooltip"), prevStartingSet, verticalSize, startingSetOptions);
 
             ImmutableArray<SettingCarouselElement<StartingBalanceAmount>> fundOptions = ImmutableArray.Create(
-                new SettingCarouselElement<StartingBalanceAmount>(StartingBalanceAmount.High, "startingfunds.high"),
+                new SettingCarouselElement<StartingBalanceAmount>(StartingBalanceAmount.Low, "startingfunds.low"),
                 new SettingCarouselElement<StartingBalanceAmount>(StartingBalanceAmount.Medium, "startingfunds.medium"),
-                new SettingCarouselElement<StartingBalanceAmount>(StartingBalanceAmount.Low, "startingfunds.low")
+                new SettingCarouselElement<StartingBalanceAmount>(StartingBalanceAmount.High, "startingfunds.high")
             );
 
             SettingCarouselElement<StartingBalanceAmount> prevStartingFund = fundOptions.FirstOrNull(element => element.Value == prevSettings.StartingBalanceAmount) ?? fundOptions[1];

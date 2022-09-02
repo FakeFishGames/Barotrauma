@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -19,7 +18,12 @@ namespace Barotrauma
 
         public static readonly PrefabCollection<TalentTree> JobTalentTrees = new PrefabCollection<TalentTree>();
 
-        public readonly List<TalentSubTree> TalentSubTrees = new List<TalentSubTree>();
+        public readonly ImmutableArray<TalentSubTree> TalentSubTrees;
+
+        /// <summary>
+        /// Talent identifiers of all the talents in this tree
+        /// </summary>
+        public readonly ImmutableHashSet<Identifier> AllTalentIdentifiers;
 
         public ContentXElement ConfigElement
         {
@@ -36,16 +40,19 @@ namespace Barotrauma
                 DebugConsole.ThrowError($"No job defined for talent tree in \"{file.Path}\"!");
                 return;
             }
-
+            
+            List<TalentSubTree> subTrees = new List<TalentSubTree>();
             foreach (var subTreeElement in element.GetChildElements("subtree"))
             {
-                TalentSubTrees.Add(new TalentSubTree(subTreeElement));
+                subTrees.Add(new TalentSubTree(subTreeElement));
             }
+            TalentSubTrees = subTrees.ToImmutableArray();
+            AllTalentIdentifiers = TalentSubTrees.SelectMany(t => t.AllTalentIdentifiers).ToImmutableHashSet();
         }
         
         public bool TalentIsInTree(Identifier talentIdentifier)
         {
-            return TalentSubTrees.SelectMany(s => s.TalentOptionStages.SelectMany(o => o.Talents.Select(t => t.Identifier))).Any(c => c == talentIdentifier);
+            return AllTalentIdentifiers.Contains(talentIdentifier);
         }
 
         public static bool IsViableTalentForCharacter(Character character, Identifier talentIdentifier)
@@ -54,6 +61,7 @@ namespace Barotrauma
         }
 
         // i hate this function - markus
+        // me too - joonas
         public static TalentTreeStageState GetTalentOptionStageState(Character character, Identifier subTreeIdentifier, int index, List<Identifier> selectedTalents)
         {
             if (character?.Info?.Job.Prefab is null) { return TalentTreeStageState.Invalid; }
@@ -66,12 +74,12 @@ namespace Barotrauma
 
             TalentOption targetTalentOption = subTree.TalentOptionStages[index];
 
-            if (targetTalentOption.Talents.Any(t => character.HasTalent(t.Identifier)))
+            if (targetTalentOption.TalentIdentifiers.Any(t => character.HasTalent(t)))
             {
                 return TalentTreeStageState.Unlocked;
             }
 
-            if (targetTalentOption.Talents.Any(t => selectedTalents.Contains(t.Identifier)))
+            if (targetTalentOption.TalentIdentifiers.Any(t => selectedTalents.Contains(t)))
             {
                 return TalentTreeStageState.Highlighted;
             }
@@ -83,8 +91,8 @@ namespace Barotrauma
             if (lastindex >= 0)
             {
                 TalentOption lastLatentOption = subTree.TalentOptionStages[lastindex];
-                hasTalentInLastTier = lastLatentOption.Talents.Any(HasTalent);
-                isLastTalentPurchased = lastLatentOption.Talents.Any(t => character.HasTalent(t.Identifier));
+                hasTalentInLastTier = lastLatentOption.TalentIdentifiers.Any(HasTalent);
+                isLastTalentPurchased = lastLatentOption.TalentIdentifiers.Any(t => character.HasTalent(t));
             }
 
             if (!hasTalentInLastTier)
@@ -101,9 +109,9 @@ namespace Barotrauma
 
             return TalentTreeStageState.Locked;
 
-            bool HasTalent(TalentPrefab t)
+            bool HasTalent(Identifier talentId)
             {
-                return selectedTalents.Contains(t.Identifier);
+                return selectedTalents.Contains(talentId);
             }
         }
 
@@ -117,14 +125,14 @@ namespace Barotrauma
 
             foreach (var subTree in talentTree.TalentSubTrees)
             {
-                if (subTree.ForceUnlock && subTree.TalentOptionStages.Any(option => option.Talents.Any(t => t.Identifier == talentIdentifier))) { return true; }
+                if (subTree.ForceUnlock && subTree.TalentOptionStages.Any(option => option.TalentIdentifiers.Contains(talentIdentifier))) { return true; }
 
                 foreach (var talentOptionStage in subTree.TalentOptionStages)
                 {
-                    bool hasTalentInThisTier = talentOptionStage.Talents.Any(t => selectedTalents.Contains(t.Identifier));
+                    bool hasTalentInThisTier = talentOptionStage.TalentIdentifiers.Any(t => selectedTalents.Contains(t));
                     if (!hasTalentInThisTier)
                     {
-                        if (talentOptionStage.Talents.Any(t => t.Identifier == talentIdentifier))
+                        if (talentOptionStage.TalentIdentifiers.Contains(talentIdentifier))
                         {
                             return true;
                         }
@@ -170,18 +178,21 @@ namespace Barotrauma
 
         public bool ForceUnlock;
 
-        public readonly List<TalentOption> TalentOptionStages = new List<TalentOption>();
+        public readonly ImmutableArray<TalentOption> TalentOptionStages;
+
+        public readonly ImmutableHashSet<Identifier> AllTalentIdentifiers;
 
         public TalentSubTree(ContentXElement subTreeElement)
         {
             Identifier = subTreeElement.GetAttributeIdentifier("identifier", "");
-
             DisplayName = TextManager.Get("talenttree." + Identifier).Fallback(Identifier.Value);
-
+            List<TalentOption> talentOptionStages = new List<TalentOption>();
             foreach (var talentOptionsElement in subTreeElement.GetChildElements("talentoptions"))
             {
-                TalentOptionStages.Add(new TalentOption(talentOptionsElement, Identifier));
+                talentOptionStages.Add(new TalentOption(talentOptionsElement, Identifier));
             }
+            TalentOptionStages = talentOptionStages.ToImmutableArray();
+            AllTalentIdentifiers = TalentOptionStages.SelectMany(t => t.TalentIdentifiers).ToImmutableHashSet();
         }
 
     }
@@ -190,8 +201,12 @@ namespace Barotrauma
     {
         private readonly ImmutableHashSet<Identifier> talentIdentifiers;
 
-        public IEnumerable<TalentPrefab> Talents
-            => talentIdentifiers.Select(id => TalentPrefab.TalentPrefabs[id]);
+        public IEnumerable<Identifier> TalentIdentifiers => talentIdentifiers;
+
+        public bool HasTalent(Identifier talentIdentifier)
+        {
+            return talentIdentifiers.Contains(talentIdentifier);
+        }
 
         public TalentOption(ContentXElement talentOptionsElement, Identifier debugIdentifier)
         {

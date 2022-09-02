@@ -381,18 +381,18 @@ namespace Barotrauma
         private static void SendResponse(UInt16 actionId, int selectedOption)
         {
             IWriteMessage outmsg = new WriteOnlyMessage();
-            outmsg.Write((byte)ClientPacketHeader.EVENTMANAGER_RESPONSE);
-            outmsg.Write(actionId);
-            outmsg.Write((byte)selectedOption);
+            outmsg.WriteByte((byte)ClientPacketHeader.EVENTMANAGER_RESPONSE);
+            outmsg.WriteUInt16(actionId);
+            outmsg.WriteByte((byte)selectedOption);
             GameMain.Client?.ClientPeer?.Send(outmsg, DeliveryMethod.Reliable);
         }
 
         private static void SendIgnore(UInt16 actionId)
         {
             IWriteMessage outmsg = new WriteOnlyMessage();
-            outmsg.Write((byte)ClientPacketHeader.EVENTMANAGER_RESPONSE);
-            outmsg.Write(actionId);
-            outmsg.Write(byte.MaxValue);
+            outmsg.WriteByte((byte)ClientPacketHeader.EVENTMANAGER_RESPONSE);
+            outmsg.WriteUInt16(actionId);
+            outmsg.WriteByte(byte.MaxValue);
             GameMain.Client?.ClientPeer?.Send(outmsg, DeliveryMethod.Reliable);
         }
 

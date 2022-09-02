@@ -8,11 +8,11 @@ namespace Barotrauma.Networking
     {
         public virtual void ClientWrite(IWriteMessage msg)
         {
-            msg.Write((byte)ClientNetObject.CHAT_MESSAGE);
-            msg.Write(NetStateID);
+            msg.WriteByte((byte)ClientNetObject.CHAT_MESSAGE);
+            msg.WriteUInt16(NetStateID);
             msg.WriteRangedInteger((int)Type, 0, Enum.GetValues(typeof(ChatMessageType)).Length - 1);
             msg.WriteRangedInteger((int)ChatMode, 0, Enum.GetValues(typeof(ChatMode)).Length - 1);
-            msg.Write(Text);
+            msg.WriteString(Text);
         }
 
         public static void ClientRead(IReadMessage msg)

@@ -66,6 +66,8 @@ namespace Barotrauma.Items.Components
 
         public float IsActiveTimer;
 
+        public virtual bool RecreateGUIOnResolutionChange => false;
+
         public GUILayoutSettings DefaultLayout { get; protected set; }
         public GUILayoutSettings AlternativeLayout { get; protected set; }
 
@@ -574,7 +576,7 @@ namespace Barotrauma.Items.Components
             {
                 GuiFrame.RectTransform.ParentChanged += OnGUIParentChanged;
             }
-            GameMain.Instance.ResolutionChanged += OnResolutionChanged;
+            GameMain.Instance.ResolutionChanged += OnResolutionChangedPrivate;
         }
 
         protected void TryCreateDragHandle()
@@ -610,13 +612,17 @@ namespace Barotrauma.Items.Components
                             return false;
                         }
                     }
+                    foreach (ItemComponent ic in activeHuds)
+                    {
+                        //refresh slots to ensure they're rendered at the correct position
+                        (ic as ItemContainer)?.Inventory.CreateSlots();
+                    }
                     return true;
                 };
 
-
                 int buttonHeight = (int)(GUIStyle.ItemFrameMargin.Y * 0.4f);
-                new GUIButton(new RectTransform(new Point(buttonHeight), handle.RectTransform, Anchor.TopLeft) { AbsoluteOffset = new Point(buttonHeight / 10) },
-                    style: "GUIButtonRefresh")
+                new GUIButton(new RectTransform(new Point(buttonHeight), handle.RectTransform, Anchor.TopLeft) { AbsoluteOffset = new Point(buttonHeight / 4) },
+                    style: "GUIButtonSettings")
                 {
                     OnClicked = (btn, userdata) =>
                     {

@@ -813,9 +813,9 @@ namespace Barotrauma
             flashColor = (color == null) ? GUIStyle.Red : (Color)color;
         }
 
-        public void FadeOut(float duration, bool removeAfter, float wait = 0.0f)
+        public void FadeOut(float duration, bool removeAfter, float wait = 0.0f, Action onRemove = null)
         {
-            CoroutineManager.StartCoroutine(LerpAlpha(0.0f, duration, removeAfter, wait));
+            CoroutineManager.StartCoroutine(LerpAlpha(0.0f, duration, removeAfter, wait, onRemove));
         }
 
         public void FadeIn(float wait, float duration)
@@ -877,7 +877,7 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        private IEnumerable<CoroutineStatus> LerpAlpha(float to, float duration, bool removeAfter, float wait = 0.0f)
+        private IEnumerable<CoroutineStatus> LerpAlpha(float to, float duration, bool removeAfter, float wait = 0.0f, Action onRemove = null)
         {
             State = ComponentState.None;
             float t = 0.0f;
@@ -902,6 +902,7 @@ namespace Barotrauma
             if (removeAfter && Parent != null)
             {
                 Parent.RemoveChild(this);
+                onRemove?.Invoke();
             }
 
             yield return CoroutineStatus.Success;

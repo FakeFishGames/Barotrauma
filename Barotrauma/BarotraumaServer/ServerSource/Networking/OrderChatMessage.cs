@@ -7,21 +7,21 @@ namespace Barotrauma.Networking
     {
         public override void ServerWrite(IWriteMessage msg, Client c)
         {
-            msg.Write((byte)ServerNetObject.CHAT_MESSAGE);
-            msg.Write(NetStateID);
+            msg.WriteByte((byte)ServerNetObject.CHAT_MESSAGE);
+            msg.WriteUInt16(NetStateID);
             msg.WriteRangedInteger((int)ChatMessageType.Order, 0, Enum.GetValues(typeof(ChatMessageType)).Length - 1);
-            msg.Write(SenderName);
-            msg.Write(SenderClient != null);
+            msg.WriteString(SenderName);
+            msg.WriteBoolean(SenderClient != null);
             if (SenderClient != null)
             {
-                msg.Write(SenderClient.AccountId.TryUnwrap(out var accountId) ? accountId.StringRepresentation : SenderClient.SessionId.ToString());
+                msg.WriteString(SenderClient.AccountId.TryUnwrap(out var accountId) ? accountId.StringRepresentation : SenderClient.SessionId.ToString());
             }
-            msg.Write(Sender != null && c.InGame);
+            msg.WriteBoolean(Sender != null && c.InGame);
             if (Sender != null && c.InGame)
             {
-                msg.Write(Sender.ID);
+                msg.WriteUInt16(Sender.ID);
             }            
-            msg.Write(false); //text color (no custom text colors for order messages)
+            msg.WriteBoolean(false); //text color (no custom text colors for order messages)
             msg.WritePadBits();
             WriteOrder(msg);
         }

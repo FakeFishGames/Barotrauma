@@ -540,37 +540,37 @@ namespace Barotrauma
         {
             System.Diagnostics.Debug.Assert(map.Locations.Count < UInt16.MaxValue);
 
-            msg.Write(map.CurrentLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.CurrentLocationIndex);
-            msg.Write(map.SelectedLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.SelectedLocationIndex);
+            msg.WriteUInt16(map.CurrentLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.CurrentLocationIndex);
+            msg.WriteUInt16(map.SelectedLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.SelectedLocationIndex);
 
             var selectedMissionIndices = map.GetSelectedMissionIndices();
-            msg.Write((byte)selectedMissionIndices.Count());
+            msg.WriteByte((byte)selectedMissionIndices.Count());
             foreach (int selectedMissionIndex in selectedMissionIndices)
             {
-                msg.Write((byte)selectedMissionIndex);
+                msg.WriteByte((byte)selectedMissionIndex);
             }
-            msg.Write(PurchasedHullRepairs);
-            msg.Write(PurchasedItemRepairs);
-            msg.Write(PurchasedLostShuttles);
+            msg.WriteBoolean(PurchasedHullRepairs);
+            msg.WriteBoolean(PurchasedItemRepairs);
+            msg.WriteBoolean(PurchasedLostShuttles);
 
             WriteItems(msg, CargoManager.ItemsInBuyCrate);
             WriteItems(msg, CargoManager.ItemsInSellFromSubCrate);
             WriteItems(msg, CargoManager.PurchasedItems);
             WriteItems(msg, CargoManager.SoldItems);
 
-            msg.Write((ushort)UpgradeManager.PurchasedUpgrades.Count);
+            msg.WriteUInt16((ushort)UpgradeManager.PurchasedUpgrades.Count);
             foreach (var (prefab, category, level) in UpgradeManager.PurchasedUpgrades)
             {
-                msg.Write(prefab.Identifier);
-                msg.Write(category.Identifier);
-                msg.Write((byte)level);
+                msg.WriteIdentifier(prefab.Identifier);
+                msg.WriteIdentifier(category.Identifier);
+                msg.WriteByte((byte)level);
             }
 
-            msg.Write((ushort)UpgradeManager.PurchasedItemSwaps.Count);
+            msg.WriteUInt16((ushort)UpgradeManager.PurchasedItemSwaps.Count);
             foreach (var itemSwap in UpgradeManager.PurchasedItemSwaps)
             {
-                msg.Write(itemSwap.ItemToRemove.ID);
-                msg.Write(itemSwap.ItemToInstall?.Identifier ?? Identifier.Empty);
+                msg.WriteUInt16(itemSwap.ItemToRemove.ID);
+                msg.WriteIdentifier(itemSwap.ItemToInstall?.Identifier ?? Identifier.Empty);
             }
         }
 

@@ -53,6 +53,11 @@ namespace Barotrauma
             InfoText = element.GetAttributeString("infotext", string.Empty);
             InfoTextOnOtherItemMissing = element.GetAttributeString("infotextonotheritemmissing", string.Empty);
         }
+
+        public bool IsValidDeconstructor(Item deconstructor)
+        {
+            return RequiredDeconstructor.Length == 0 || RequiredDeconstructor.Any(r => deconstructor.HasTag(r) || deconstructor.Prefab.Identifier == r);
+        }
     }
 
     class FabricationRecipe
@@ -61,6 +66,10 @@ namespace Barotrauma
         {
             public abstract IEnumerable<ItemPrefab> ItemPrefabs { get; }
             public abstract UInt32 UintIdentifier { get; }
+
+            public abstract bool MatchesItem(Item item);
+
+            public abstract ItemPrefab FirstMatchingPrefab { get; }
 
             public RequiredItem(int amount, float minCondition, float maxCondition, bool useCondition)
             {
@@ -92,11 +101,20 @@ namespace Barotrauma
         public class RequiredItemByIdentifier : RequiredItem
         {
             public readonly Identifier ItemPrefabIdentifier;
+
             public ItemPrefab ItemPrefab => ItemPrefab.Prefabs.TryGet(ItemPrefabIdentifier, out var prefab) ? prefab
                 : MapEntityPrefab.FindByName(ItemPrefabIdentifier.Value) as ItemPrefab ?? throw new Exception($"No ItemPrefab with identifier or name \"{ItemPrefabIdentifier}\"");
+            
             public override UInt32 UintIdentifier { get; }
 
             public override IEnumerable<ItemPrefab> ItemPrefabs => ItemPrefab.ToEnumerable();
+
+            public override ItemPrefab FirstMatchingPrefab => ItemPrefab;
+
+            public override bool MatchesItem(Item item)
+            {
+                return item?.Prefab.Identifier == ItemPrefabIdentifier;
+            }
 
             public RequiredItemByIdentifier(Identifier itemPrefab, int amount, float minCondition, float maxCondition, bool useCondition) : base(amount, minCondition, maxCondition, useCondition)
             {
@@ -109,9 +127,18 @@ namespace Barotrauma
         public class RequiredItemByTag : RequiredItem
         {
             public readonly Identifier Tag;
+
             public override UInt32 UintIdentifier { get; }
 
             public override IEnumerable<ItemPrefab> ItemPrefabs => ItemPrefab.Prefabs.Where(p => p.Tags.Contains(Tag));
+
+            public override ItemPrefab FirstMatchingPrefab => ItemPrefab.Prefabs.FirstOrDefault(p => p.Tags.Contains(Tag));
+
+            public override bool MatchesItem(Item item)
+            {
+                if (item == null) { return false; }
+                return item.HasTag(Tag);
+            }
 
             public RequiredItemByTag(Identifier tag, int amount, float minCondition, float maxCondition, bool useCondition) : base(amount, minCondition, maxCondition, useCondition)
             {
@@ -208,10 +235,10 @@ namespace Barotrauma
                         if (requiredItemIdentifier != Identifier.Empty)
                         {
                             var existing = requiredItems.FindIndex(r =>
-                            r is RequiredItemByIdentifier ri &&
-                            ri.ItemPrefabIdentifier == requiredItemIdentifier &&
-                            MathUtils.NearlyEqual(r.MinCondition, minCondition) &&
-                            MathUtils.NearlyEqual(r.MaxCondition, maxCondition));
+                                r is RequiredItemByIdentifier ri &&
+                                ri.ItemPrefabIdentifier == requiredItemIdentifier &&
+                                MathUtils.NearlyEqual(r.MinCondition, minCondition) &&
+                                MathUtils.NearlyEqual(r.MaxCondition, maxCondition));
                             if (existing >= 0)
                             {
                                 amount += requiredItems[existing].Amount;
@@ -222,10 +249,10 @@ namespace Barotrauma
                         else
                         {
                             var existing = requiredItems.FindIndex(r =>
-                            r is RequiredItemByTag rt &&
-                            rt.Tag == requiredItemTag &&
-                            MathUtils.NearlyEqual(r.MinCondition, minCondition) &&
-                            MathUtils.NearlyEqual(r.MaxCondition, maxCondition));
+                                r is RequiredItemByTag rt &&
+                                rt.Tag == requiredItemTag &&
+                                MathUtils.NearlyEqual(r.MinCondition, minCondition) &&
+                                MathUtils.NearlyEqual(r.MaxCondition, maxCondition));
                             if (existing >= 0)
                             {
                                 amount += requiredItems[existing].Amount;
@@ -783,19 +810,12 @@ namespace Barotrauma
             //works the same as nameIdentifier, but just replaces the description
             Identifier descriptionIdentifier = ConfigElement.GetAttributeIdentifier("descriptionidentifier", "");
 
-            if (string.IsNullOrEmpty(OriginalName))
-            {
-                name = TextManager.Get(nameIdentifier.IsEmpty
-                        ? $"EntityName.{Identifier}"
-                        : $"EntityName.{nameIdentifier}",
-                    $"EntityName.{fallbackNameIdentifier}");
-            }
-            else if (Category.HasFlag(MapEntityCategory.Legacy))
-            {
-                // Legacy items use names as identifiers, so we have to define them in the xml. But we also want to support the translations. Therefore
-                name = TextManager.Get(nameIdentifier.IsEmpty
+            name = TextManager.Get(nameIdentifier.IsEmpty
                     ? $"EntityName.{Identifier}"
-                    : $"EntityName.{nameIdentifier}");
+                    : $"EntityName.{nameIdentifier}",
+                $"EntityName.{fallbackNameIdentifier}");
+            if (!string.IsNullOrEmpty(OriginalName))
+            {
                 name = name.Fallback(OriginalName);
             }
 
@@ -838,20 +858,17 @@ namespace Barotrauma
 
             SerializableProperty.DeserializeProperties(this, ConfigElement);
 
-            if (Description.IsNullOrEmpty())
+            if (descriptionIdentifier != Identifier.Empty)
             {
-                if (descriptionIdentifier != Identifier.Empty)
-                {
-                    Description = TextManager.Get($"EntityDescription.{descriptionIdentifier}");
-                }
-                else if (nameIdentifier == Identifier.Empty)
-                {
-                    Description = TextManager.Get($"EntityDescription.{Identifier}");
-                }
-                else
-                {
-                    Description = TextManager.Get($"EntityDescription.{nameIdentifier}");
-                }
+                Description = TextManager.Get($"EntityDescription.{descriptionIdentifier}").Fallback(Description);
+            }
+            else if (nameIdentifier == Identifier.Empty)
+            {
+                Description = TextManager.Get($"EntityDescription.{Identifier}").Fallback(Description);
+            }
+            else
+            {
+                Description = TextManager.Get($"EntityDescription.{nameIdentifier}").Fallback(Description);
             }
 
             var allowDroppingOnSwapWith = ConfigElement.GetAttributeIdentifierArray("allowdroppingonswapwith", Array.Empty<Identifier>());

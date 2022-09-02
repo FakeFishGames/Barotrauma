@@ -83,7 +83,7 @@ namespace Barotrauma
 
             foreach (byte b in Buffer)
             {
-                msg.Write(b);
+                msg.WriteByte(b);
             }
 
             Dispose();

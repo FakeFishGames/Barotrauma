@@ -41,7 +41,7 @@ namespace Barotrauma
         public readonly ImmutableArray<LocalizedString> Headers;
         public readonly ImmutableArray<LocalizedString> Messages;
 
-        public LocalizedString Name => Prefab.Name;
+        public virtual LocalizedString Name => Prefab.Name;
 
         private readonly LocalizedString successMessage;
         public virtual LocalizedString SuccessMessage
@@ -276,6 +276,10 @@ namespace Barotrauma
 
         partial void ShowMessageProjSpecific(int missionState);
 
+        protected virtual LocalizedString ModifyMessage(LocalizedString message, bool color = true)
+        {
+            return message;
+        }
 
         private void TryTriggerEvents(int state)
         {

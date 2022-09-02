@@ -90,8 +90,8 @@ namespace Barotrauma.Items.Components
             {
                 Light.LightSpriteEffect = Light.LightSpriteEffect == SpriteEffects.None ?
                     SpriteEffects.FlipHorizontally : SpriteEffects.None;
-                SetLightSourceTransformProjSpecific();
             }
+            SetLightSourceTransformProjSpecific();
         }
 
         partial void OnStateChanged()

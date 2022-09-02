@@ -27,11 +27,18 @@ namespace Barotrauma.Networking
         public static readonly string ClientPermissionsFile = "Data" + Path.DirectorySeparatorChar + "clientpermissions.xml";
         public static readonly char SubmarineSeparatorChar = '|';
 
-        public readonly Dictionary<NetFlags, UInt16> LastUpdateIdForFlag = new Dictionary<NetFlags, UInt16>();
-        public UInt16 LastPropertyUpdateId { get; private set; } = 1;
-        
+        public readonly Dictionary<NetFlags, UInt16> LastUpdateIdForFlag
+            = ((NetFlags[])Enum.GetValues(typeof(NetFlags)))
+                .Select(f => (f, (ushort)1))
+                .ToDictionary();
+
         public void UpdateFlag(NetFlags flag)
             => LastUpdateIdForFlag[flag] = (UInt16)(GameMain.NetLobbyScreen.LastUpdateID + 1);
+
+        public NetFlags UnsentFlags()
+            => LastUpdateIdForFlag.Keys
+                .Where(k => NetIdUtils.IdMoreRecent(LastUpdateIdForFlag[k], GameMain.NetLobbyScreen.LastUpdateID))
+                .Aggregate(NetFlags.None, (f1, f2) => f1 | f2);
 
         private bool IsFlagRequired(Client c, NetFlags flag)
             => NetIdUtils.IdMoreRecent(LastUpdateIdForFlag[flag], c.LastRecvLobbyUpdate);
@@ -39,8 +46,7 @@ namespace Barotrauma.Networking
         public NetFlags GetRequiredFlags(Client c)
             => LastUpdateIdForFlag.Keys
                 .Where(k => IsFlagRequired(c, k))
-                .Concat(NetFlags.None.ToEnumerable()) //prevents InvalidOperationException in Aggregate
-                .Aggregate((f1, f2) => f1 | f2);
+                .Aggregate(NetFlags.None, (f1, f2) => f1 | f2);
         
         partial void InitProjSpecific()
         {
@@ -56,16 +62,16 @@ namespace Barotrauma.Networking
                 property.SyncValue();
                 if (NetIdUtils.IdMoreRecent(property.LastUpdateID, c.LastRecvLobbyUpdate))
                 {
-                    outMsg.Write(key);
+                    outMsg.WriteUInt32(key);
                     netProperties[key].Write(outMsg);
                 }
             }
-            outMsg.Write((UInt32)0);
+            outMsg.WriteUInt32((UInt32)0);
         }
 
         public void ServerAdminWrite(IWriteMessage outMsg, Client c)
         {
-            c.LastSentServerSettingsUpdate = LastPropertyUpdateId;
+            c.LastSentServerSettingsUpdate = LastUpdateIdForFlag[NetFlags.Properties];
             WriteNetProperties(outMsg, c);
             WriteMonsterEnabled(outMsg);
             BanList.ServerAdminWrite(outMsg, c);
@@ -74,21 +80,21 @@ namespace Barotrauma.Networking
         public void ServerWrite(IWriteMessage outMsg, Client c)
         {
             NetFlags requiredFlags = GetRequiredFlags(c);
-            outMsg.Write((byte)requiredFlags);
+            outMsg.WriteByte((byte)requiredFlags);
             if (requiredFlags.HasFlag(NetFlags.Name))
             {
-                outMsg.Write(ServerName);
+                outMsg.WriteString(ServerName);
             }
 
             if (requiredFlags.HasFlag(NetFlags.Message))
             {
-                outMsg.Write(ServerMessageText);
+                outMsg.WriteString(ServerMessageText);
             }
-            outMsg.Write((byte)PlayStyle);
-            outMsg.Write((byte)MaxPlayers);
-            outMsg.Write(HasPassword);
-            outMsg.Write(IsPublic);
-            outMsg.Write(AllowFileTransfers);
+            outMsg.WriteByte((byte)PlayStyle);
+            outMsg.WriteByte((byte)MaxPlayers);
+            outMsg.WriteBoolean(HasPassword);
+            outMsg.WriteBoolean(IsPublic);
+            outMsg.WriteBoolean(AllowFileTransfers);
             outMsg.WritePadBits();
             outMsg.WriteRangedInteger(TickRate, 1, 60);
 
@@ -103,16 +109,18 @@ namespace Barotrauma.Networking
             }
 
             if (c.HasPermission(Networking.ClientPermissions.ManageSettings)
-                && !NetIdUtils.IdMoreRecentOrMatches(c.LastRecvServerSettingsUpdate, LastPropertyUpdateId))
+                && NetIdUtils.IdMoreRecent(
+                    newID: LastUpdateIdForFlag[NetFlags.Properties],
+                    oldID: c.LastRecvServerSettingsUpdate))
             {
-                outMsg.Write(true);
+                outMsg.WriteBoolean(true);
                 outMsg.WritePadBits();
 
                 ServerAdminWrite(outMsg, c);
             }
             else
             {
-                outMsg.Write(false);
+                outMsg.WriteBoolean(false);
                 outMsg.WritePadBits();
             }
         }
@@ -174,7 +182,6 @@ namespace Barotrauma.Networking
                 if (propertiesChanged)
                 {
                     UpdateFlag(NetFlags.Properties);
-                    LastPropertyUpdateId = (UInt16)(GameMain.NetLobbyScreen.LastUpdateID + 1);
                 }
                 changed |= propertiesChanged;
             }

@@ -64,7 +64,7 @@ namespace Barotrauma.Steam
         {
             if (!IsInitialized || !Steamworks.SteamClient.IsValid) { return false; }
 
-            return Steamworks.SteamApps.IsSubscribedFromFamilySharing;
+            return Steamworks.SteamApps.IsSubscribedFromFreeWeekend;
         }
 
         public static string GetUsername()

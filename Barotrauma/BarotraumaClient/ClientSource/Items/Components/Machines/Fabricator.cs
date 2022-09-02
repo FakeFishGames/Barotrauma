@@ -51,11 +51,13 @@ namespace Barotrauma.Items.Components
         [Serialize("vendingmachine.outofstock", IsPropertySaveable.Yes)]
         public string FabricationLimitReachedText { get; set; }
 
+        public override bool RecreateGUIOnResolutionChange => true;
+
         protected override void OnResolutionChanged()
         {
             if (GuiFrame != null)
             {
-                OnItemLoadedProjSpecific();
+                InitInventoryUIs();
             }
         }
 
@@ -232,6 +234,17 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private void InitInventoryUIs()
+        {
+            if (inputInventoryHolder != null)
+            {
+                inputContainer.AllowUIOverlap = true;
+                inputContainer.Inventory.RectTransform = inputInventoryHolder.RectTransform;
+            }
+            outputContainer.AllowUIOverlap = true;
+            outputContainer.Inventory.RectTransform = outputInventoryHolder.RectTransform;
+        }
+
         private LocalizedString GetRecipeNameAndAmount(FabricationRecipe fabricationRecipe)
         {
             if (fabricationRecipe == null) { return ""; }
@@ -249,13 +262,7 @@ namespace Barotrauma.Items.Components
         partial void OnItemLoadedProjSpecific()
         {
             CreateGUI();
-            if (inputInventoryHolder != null)
-            {
-                inputContainer.AllowUIOverlap = true;
-                inputContainer.Inventory.RectTransform = inputInventoryHolder.RectTransform;
-            }
-            outputContainer.AllowUIOverlap = true;
-            outputContainer.Inventory.RectTransform = outputInventoryHolder.RectTransform;
+            InitInventoryUIs();
         }
 
         partial void SelectProjSpecific(Character character)
@@ -328,76 +335,112 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private readonly Dictionary<FabricationRecipe.RequiredItem, int> missingIngredientCounts = new Dictionary<FabricationRecipe.RequiredItem, int>();
+        private float ingredientHighlightTimer;
+
         private void DrawInputOverLay(SpriteBatch spriteBatch, GUICustomComponent overlayComponent)
         {
             overlayComponent.RectTransform.SetAsLastChild();
 
+            missingIngredientCounts.Clear();
+
             FabricationRecipe targetItem = fabricatedItem ?? selectedItem;
             if (targetItem != null)
             {
-                int slotIndex = 0;
-
-                var missingItems = new List<FabricationRecipe.RequiredItem>();
-                
                 foreach (FabricationRecipe.RequiredItem requiredItem in targetItem.RequiredItems)
                 {
-                    for (int i = 0; i < requiredItem.Amount; i++)
+                    if (missingIngredientCounts.ContainsKey(requiredItem))
                     {
-                        missingItems.Add(requiredItem);
+                        missingIngredientCounts[requiredItem] += requiredItem.Amount;
+                    }
+                    else
+                    {
+                        missingIngredientCounts[requiredItem] = requiredItem.Amount;
                     }
                 }
                 foreach (Item item in inputContainer.Inventory.AllItems)
                 {
-                    missingItems.Remove(missingItems.FirstOrDefault(mi => mi.ItemPrefabs.Contains(item.Prefab)));
-                }
-                var missingCounts = missingItems.GroupBy(missingItem => missingItem).ToDictionary(x => x.Key, x => x.Count());
-                missingItems = missingItems.Distinct().ToList();
+                    var missingIngredient = missingIngredientCounts.Keys.FirstOrDefault(mi => mi.MatchesItem(item));
+                    if (missingIngredient == null) { continue; }
 
-                foreach (FabricationRecipe.RequiredItem requiredItem in missingItems)
+                    if (missingIngredientCounts[missingIngredient] == 1)
+                    {
+                        missingIngredientCounts.Remove(missingIngredient);
+                    }
+                    else
+                    {
+                        missingIngredientCounts[missingIngredient]--;
+                    }
+                }
+
+                if (ingredientHighlightTimer <= 0.0f)
                 {
+                    //highlight inventory slots that contain suitable ingredients in linked inventories
+                    foreach (var inventory in linkedInventories)
+                    {
+                        if (inventory.visualSlots == null) { continue; }
+                        for (int i = 0; i < inventory.Capacity; i++)
+                        {
+                            if (inventory.visualSlots[i].HighlightTimer > 0.0f) { continue; }
+                            var availableItem = inventory.GetItemAt(i);
+                            if (availableItem == null) { continue; }
+
+                            if (missingIngredientCounts.Keys.Any(it => it.MatchesItem(availableItem)))
+                            {
+                                inventory.visualSlots[i].ShowBorderHighlight(GUIStyle.Green, 0.5f, 0.5f, 0.2f);
+                                continue;
+                            }
+                            if (availableItem.OwnInventory != null)
+                            {
+                                for (int j = 0; j < availableItem.OwnInventory.Capacity; j++)
+                                {
+                                    var availableContainedItem = availableItem.OwnInventory.GetItemAt(i);
+                                    if (availableContainedItem == null) { continue; }
+                                    if (missingIngredientCounts.Keys.Any(it => it.MatchesItem(availableContainedItem)))
+                                    {
+                                        inventory.visualSlots[i].ShowBorderHighlight(GUIStyle.Green, 0.5f, 0.5f, 0.2f);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    ingredientHighlightTimer = 1.0f;
+                }
+
+                int slotIndex = 0;
+                foreach (var kvp in missingIngredientCounts)
+                {
+                    var requiredItem = kvp.Key;
+                    int missingCount = kvp.Value;
+
                     while (slotIndex < inputContainer.Capacity && inputContainer.Inventory.GetItemAt(slotIndex) != null)
                     {
                         slotIndex++;
                     }
 
-                    requiredItem.ItemPrefabs
-                        .Where(requiredPrefab => availableIngredients.ContainsKey(requiredPrefab.Identifier))
-                        .ForEach(requiredPrefab => {
-                            var availableItems = availableIngredients[requiredPrefab.Identifier];
-                            foreach (Item it in availableItems)
-                            {
-                                if (it.ParentInventory == inputContainer.Inventory) { continue; }
-                                var rootInventoryOwner = it.GetRootInventoryOwner();
-                                Inventory rootInventory = (rootInventoryOwner as Item)?.OwnInventory as Inventory ?? (rootInventoryOwner as Character)?.Inventory;
-                                if (rootInventory?.visualSlots == null) { continue; }                                
-                                int availableSlotIndex = rootInventory.FindIndex((it.Container != rootInventoryOwner ? it.Container : it) ?? it);
-                                if (availableSlotIndex < 0) { continue; }
-                                if (rootInventory.visualSlots[availableSlotIndex].HighlightTimer <= 0.0f)
-                                {
-                                    rootInventory.visualSlots[availableSlotIndex].ShowBorderHighlight(GUIStyle.Green, 0.5f, 0.5f, 0.2f);
-                                    if (slotIndex < inputContainer.Capacity)
-                                    {
-                                        inputContainer.Inventory.visualSlots[slotIndex].ShowBorderHighlight(GUIStyle.Green, 0.5f, 0.5f, 0.2f);
-                                    }
-                                }
-                            }
-                        });
-
                     if (slotIndex >= inputContainer.Capacity) { break; }
 
-                    var itemIcon = requiredItem.ItemPrefabs.First().InventoryIcon ?? requiredItem.ItemPrefabs.First().Sprite;
+                    if (slotIndex < inputContainer.Capacity && 
+                        inputContainer.Inventory.visualSlots[slotIndex].HighlightTimer <= 0.0f &&
+                        availableIngredients.Any(i => i.Value.Any() && requiredItem.MatchesItem(i.Value.First())))
+                    {
+                        inputContainer.Inventory.visualSlots[slotIndex].ShowBorderHighlight(GUIStyle.Green, 0.5f, 0.5f, 0.2f);
+                    }
+
+                    var requiredItemPrefab = requiredItem.FirstMatchingPrefab;
+                    var itemIcon = requiredItemPrefab.InventoryIcon ?? requiredItemPrefab.Sprite;
                     Rectangle slotRect = inputContainer.Inventory.visualSlots[slotIndex].Rect;
                     itemIcon.Draw(
                         spriteBatch,
                         slotRect.Center.ToVector2(),
-                        color: requiredItem.ItemPrefabs.First().InventoryIconColor * 0.3f,
+                        color: requiredItemPrefab.InventoryIconColor * 0.3f,
                         scale: Math.Min(slotRect.Width / itemIcon.size.X, slotRect.Height / itemIcon.size.Y));
-
-                    
-                    if (missingCounts[requiredItem] > 1)
+                                        
+                    if (missingCount > 1)
                     {
                         Vector2 stackCountPos = new Vector2(slotRect.Right, slotRect.Bottom);
-                        string stackCountText = "x" + missingCounts[requiredItem];
+                        string stackCountText = "x" + missingCount;
                         stackCountPos -= GUIStyle.SmallFont.MeasureString(stackCountText) + new Vector2(4, 2);
                         GUIStyle.SmallFont.DrawString(spriteBatch, stackCountText, stackCountPos + Vector2.One, Color.Black);
                         GUIStyle.SmallFont.DrawString(spriteBatch, stackCountText, stackCountPos, Color.White);
@@ -446,9 +489,9 @@ namespace Barotrauma.Items.Components
                         {
                             toolTipText = TextManager.GetWithVariable("displayname.emptyitem", "[itemname]", toolTipText);
                         }
-                        if (!requiredItem.ItemPrefabs.First().Description.IsNullOrEmpty())
+                        if (!requiredItemPrefab.Description.IsNullOrEmpty())
                         {
-                            toolTipText += '\n' + requiredItem.ItemPrefabs.First().Description;
+                            toolTipText += '\n' + requiredItemPrefab.Description;
                         }
                         tooltip = new ToolTip { TargetElement = slotRect, Tooltip = toolTipText };
                     }
@@ -715,6 +758,8 @@ namespace Barotrauma.Items.Components
             activateButton.Enabled = false;
             inSufficientPowerWarning.Visible = IsActive && !hasPower;
 
+            ingredientHighlightTimer -= deltaTime;
+
             if (!IsActive)
             {
                 //only check ingredients if the fabricator isn't active (if it is, this is done in Update)
@@ -763,7 +808,7 @@ namespace Barotrauma.Items.Components
         public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
             uint recipeHash = pendingFabricatedItem?.RecipeHash ?? 0;
-            msg.Write(recipeHash);
+            msg.WriteUInt32(recipeHash);
         }
 
         public void ClientEventRead(IReadMessage msg, float sendingTime)

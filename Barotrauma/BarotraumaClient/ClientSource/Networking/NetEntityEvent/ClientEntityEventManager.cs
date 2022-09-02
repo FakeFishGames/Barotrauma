@@ -103,7 +103,7 @@ namespace Barotrauma.Networking
                 eventLastSent[entityEvent.ID] = (float)Lidgren.Network.NetTime.Now;
             }
 
-            msg.Write((byte)ClientNetObject.ENTITY_STATE);
+            msg.WriteByte((byte)ClientNetObject.ENTITY_STATE);
             Write(msg, eventsToSync, out _);
         }
 

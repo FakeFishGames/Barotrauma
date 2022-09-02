@@ -510,7 +510,7 @@ namespace Barotrauma.Items.Components
                             Vector2 origin = weaponSprite.Origin;
                             float scale = parentWidth / Math.Max(weaponSprite.size.X, weaponSprite.size.Y);
                             Color color = !hasPower ? NoPowerColor : turret.ActiveUser is null ? Color.DimGray : GUIStyle.Green;
-                            weaponSprite.Draw(batch, center, color, origin, rotation, scale, it.SpriteEffects);
+                            weaponSprite.Draw(batch, center, color, origin, rotation, scale, SpriteEffects.None);
                         }
                     });
 

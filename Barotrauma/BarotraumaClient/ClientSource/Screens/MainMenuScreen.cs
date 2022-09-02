@@ -434,25 +434,18 @@ namespace Barotrauma
             {
                 PlaySoundOnSelect = true,
             };
-            var tutorialTypes = new List<Type>()
+            foreach (var tutorialPrefab in TutorialPrefab.Prefabs.OrderBy(p => p.Order))
             {
-                typeof(MechanicTutorial),
-                typeof(EngineerTutorial),
-                typeof(DoctorTutorial),
-                typeof(OfficerTutorial),
-                typeof(CaptainTutorial),
-            };
-            foreach (Type tutorialType in tutorialTypes)
-            {
-                Tutorial tutorial = (Tutorial)Activator.CreateInstance(tutorialType);
+                var tutorial = new Tutorial(tutorialPrefab);
                 var tutorialText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), tutorialList.Content.RectTransform), tutorial.DisplayName, textAlignment: Alignment.Center, font: GUIStyle.LargeFont)
                 {
+                    TextColor = GUIStyle.Green,
                     UserData = tutorial
                 };
             }
             tutorialList.OnSelected += (component, obj) =>
             {
-                (obj as Tutorial).Start();
+                (obj as Tutorial)?.Start();
                 return true;
             };
 
@@ -737,34 +730,12 @@ namespace Barotrauma
 
         private void UpdateTutorialList()
         {
-            var tutorialList = menuTabs[Tab.Tutorials].GetChild<GUIListBox>();
-
-            int completedTutorials = 0;
-
-            foreach (GUITextBlock tutorialText in tutorialList.Content.Children)
+            foreach (GUITextBlock tutorialText in menuTabs[Tab.Tutorials].GetChild<GUIListBox>().Content.Children)
             {
-                if (CompletedTutorials.Instance.Contains(((Tutorial)tutorialText.UserData).Identifier))
-                {
-                    completedTutorials++;
-                }
-            }
-
-            for (int i = 0; i < tutorialList.Content.Children.Count(); i++)
-            {
-                if (i < completedTutorials + 1)
-                {
-                    (tutorialList.Content.GetChild(i) as GUITextBlock).TextColor = GUIStyle.Green;
-#if !DEBUG
-                    (tutorialList.Content.GetChild(i) as GUITextBlock).CanBeFocused = true;
-#endif
-                }
-                else
-                {
-                    (tutorialList.Content.GetChild(i) as GUITextBlock).TextColor = Color.Gray;
-#if !DEBUG
-                    (tutorialList.Content.GetChild(i) as GUITextBlock).CanBeFocused = false;
-#endif
-                }
+                var tutorial = (Tutorial)tutorialText.UserData;
+                tutorialText.Text = CompletedTutorials.Instance.Contains(tutorial.Identifier) ?
+                    TextManager.GetWithVariable("tutorialcompleted", "[tutorialname]", tutorial.DisplayName) :
+                    tutorial.DisplayName;
             }
         }
 

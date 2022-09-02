@@ -1,12 +1,8 @@
-﻿using Barotrauma.Extensions;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Xml.Linq;
-using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -48,6 +44,31 @@ namespace Barotrauma
         private Character lastControlledCharacter;
 
         private bool showCampaignResetText;
+
+        public override bool PurchasedHullRepairs
+        {
+            get { return PurchasedHullRepairsInLatestSave; }
+            set
+            {
+                PurchasedHullRepairsInLatestSave = value;
+            }
+        }
+        public override bool PurchasedLostShuttles
+        {
+            get { return PurchasedLostShuttlesInLatestSave; }
+            set
+            {
+                PurchasedLostShuttlesInLatestSave = value;
+            }
+        }
+        public override bool PurchasedItemRepairs
+        {
+            get { return PurchasedItemRepairsInLatestSave; }
+            set
+            {
+                PurchasedItemRepairsInLatestSave = value;
+            }
+        }
 
         #region Constructors/initialization
 
@@ -214,7 +235,7 @@ namespace Barotrauma
             base.Start();
             CargoManager.CreatePurchasedItems();
             UpgradeManager.ApplyUpgrades();
-            UpgradeManager.SanityCheckUpgrades(Submarine.MainSub);
+            UpgradeManager.SanityCheckUpgrades();
 
             if (!savedOnStart)
             {

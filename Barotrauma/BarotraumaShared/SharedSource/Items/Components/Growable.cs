@@ -132,8 +132,8 @@ namespace Barotrauma.Items.Components
         public static FoliageConfig CreateRandomConfig(int maxVariants, float minScale, float maxScale, Random? random = null)
         {
             int flowerVariant = Growable.RandomInt(0, maxVariants, random);
-            float flowerScale = (float) Growable.RandomDouble(minScale, maxScale, random);
-            float flowerRotation = (float) Growable.RandomDouble(0, MathHelper.TwoPi, random);
+            float flowerScale = (float)Growable.RandomDouble(minScale, maxScale, random);
+            float flowerRotation = (float)Growable.RandomDouble(0, MathHelper.TwoPi, random);
             return new FoliageConfig { Variant = flowerVariant, Scale = flowerScale, Rotation = flowerRotation };
         }
     }
@@ -169,10 +169,10 @@ namespace Barotrauma.Items.Components
             {
                 const float limit = 1.0f;
                 growthStep = value;
-                VineStep = Math.Min((float) Math.Pow(value, 2), limit);
+                VineStep = Math.Min((float)Math.Pow(value, 2), limit);
                 if (value > limit)
                 {
-                    FlowerStep = Math.Min((float) Math.Pow(value - limit, 2), limit);
+                    FlowerStep = Math.Min((float)Math.Pow(value - limit, 2), limit);
                 }
             }
         }
@@ -260,7 +260,7 @@ namespace Barotrauma.Items.Components
         {
             if (Type == VineTileType.Stem) { return; }
 
-            Type = (VineTileType) Sides;
+            Type = (VineTileType)Sides;
         }
 
         /// <summary>
@@ -310,7 +310,7 @@ namespace Barotrauma.Items.Components
 
         public bool IsSideBlocked(TileSide side) => BlockedSides.HasFlag(side) || Sides.HasFlag(side);
 
-        public static Rectangle CreatePlantRect(Vector2 pos) => new Rectangle((int) pos.X - Size / 2, (int) pos.Y + Size / 2, Size, Size);
+        public static Rectangle CreatePlantRect(Vector2 pos) => new Rectangle((int)pos.X - Size / 2, (int)pos.Y + Size / 2, Size, Size);
     }
 
     internal static class GrowthSideExtension
@@ -318,7 +318,7 @@ namespace Barotrauma.Items.Components
         // K&R algorithm for counting how many bits are set in a bit field
         public static int Count(this TileSide side)
         {
-            int n = (int) side;
+            int n = (int)side;
             int count = 0;
             while (n != 0)
             {
@@ -607,7 +607,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                 foreach (VineTile vine in Vines)
                 {
-                    vine.DecayDelay = (float) RandomDouble(0f, 30f);
+                    vine.DecayDelay = (float)RandomDouble(0f, 30f);
                 }
 #endif
 #if SERVER
@@ -742,7 +742,7 @@ namespace Barotrauma.Items.Components
                 {
                     var (x, y, z, w) = GrowthWeights;
                     float[] weights = { x, y, z, w };
-                    int index = (int) Math.Log2((int) side);
+                    int index = (int)Math.Log2((int)side);
                     if (MathUtils.NearlyEqual(weights[index], 0f))
                     {
                         oldVines.FailedGrowthAttempts++;
@@ -778,7 +778,7 @@ namespace Barotrauma.Items.Components
                 foreach (VineTile otherVine in Vines)
                 {
                     var (distX, distY) = pos - otherVine.Position;
-                    int absDistX = (int) Math.Abs(distX), absDistY = (int) Math.Abs(distY);
+                    int absDistX = (int)Math.Abs(distX), absDistY = (int)Math.Abs(distY);
 
                     // check if the tile is within the with or height distance from us but ignore diagonals
                     if (absDistX > newVine.Rect.Width || absDistY > newVine.Rect.Height || absDistX > 0 && absDistY > 0) { continue; }
@@ -872,10 +872,10 @@ namespace Barotrauma.Items.Components
             foreach (VineTile vine in Vines)
             {
                 XElement vineElement = new XElement("Vine");
-                vineElement.Add(new XAttribute("sides", (int) vine.Sides));
-                vineElement.Add(new XAttribute("blockedsides", (int) vine.BlockedSides));
+                vineElement.Add(new XAttribute("sides", (int)vine.Sides));
+                vineElement.Add(new XAttribute("blockedsides", (int)vine.BlockedSides));
                 vineElement.Add(new XAttribute("pos", XMLExtensions.Vector2ToString(vine.Position)));
-                vineElement.Add(new XAttribute("tile", (int) vine.Type));
+                vineElement.Add(new XAttribute("tile", (int)vine.Type));
                 vineElement.Add(new XAttribute("failedattempts", vine.FailedGrowthAttempts));
 #if SERVER
                 vineElement.Add(new XAttribute("growthscale", Decayed ? 1.0f : 2.0f));
@@ -902,10 +902,10 @@ namespace Barotrauma.Items.Components
             {
                 if (element.Name.ToString().Equals("vine", StringComparison.OrdinalIgnoreCase))
                 {
-                    VineTileType type = (VineTileType) element.GetAttributeInt("tile", 0);
+                    VineTileType type = (VineTileType)element.GetAttributeInt("tile", 0);
                     Vector2 pos = element.GetAttributeVector2("pos", Vector2.Zero);
-                    TileSide sides = (TileSide) element.GetAttributeInt("sides", 0);
-                    TileSide blockedSides = (TileSide) element.GetAttributeInt("blockedsides", 0);
+                    TileSide sides = (TileSide)element.GetAttributeInt("sides", 0);
+                    TileSide blockedSides = (TileSide)element.GetAttributeInt("blockedsides", 0);
                     int failedAttempts = element.GetAttributeInt("failedattempts", 0);
                     float growthscale = element.GetAttributeFloat("growthscale", 0f);
                     int flowerConfig = element.GetAttributeInt("flowerconfig", FoliageConfig.EmptyConfigValue);

@@ -331,39 +331,41 @@ namespace Barotrauma
                     Collider.SetTransform(Collider.SimPosition, Collider.Rotation + angleDiff);
                 }
             }
-
-            if (character.LockHands)
-            {
-                var leftHand = GetLimb(LimbType.LeftHand);
-                var rightHand = GetLimb(LimbType.RightHand);
-
-                var waist = GetLimb(LimbType.Waist) ?? GetLimb(LimbType.Torso);
-
-                rightHand.Disabled = true;
-                leftHand.Disabled = true;
-
-                Vector2 midPos = waist.SimPosition;
-                Matrix torsoTransform = Matrix.CreateRotationZ(waist.Rotation);
-
-                midPos += Vector2.Transform(new Vector2(-0.3f * Dir, -0.2f), torsoTransform);
-
-                if (rightHand.PullJointEnabled) midPos = (midPos + rightHand.PullJointWorldAnchorB) / 2.0f;
-                HandIK(rightHand, midPos, CurrentAnimationParams.ArmIKStrength, CurrentAnimationParams.HandIKStrength);
-                HandIK(leftHand, midPos, CurrentAnimationParams.ArmIKStrength, CurrentAnimationParams.HandIKStrength);
-            }
-            else if (character.AnimController.AnimationTestPose)
+             
+            if (character.AnimController.AnimationTestPose)
             {
                 ApplyTestPose();
             }
-            else if (Anim != Animation.UsingItem)
+            else
             {
-                if (Anim != Animation.UsingItemWhileClimbing)
+                if (character.LockHands)
                 {
-                    ResetPullJoints();
+                    var leftHand = GetLimb(LimbType.LeftHand);
+                    var rightHand = GetLimb(LimbType.RightHand);
+
+                    var waist = GetLimb(LimbType.Waist) ?? GetLimb(LimbType.Torso);
+
+                    rightHand.Disabled = true;
+                    leftHand.Disabled = true;
+
+                    Vector2 midPos = waist.SimPosition;
+                    Matrix torsoTransform = Matrix.CreateRotationZ(waist.Rotation);
+
+                    midPos += Vector2.Transform(new Vector2(-0.3f * Dir, -0.2f), torsoTransform);
+                    if (rightHand.PullJointEnabled) midPos = (midPos + rightHand.PullJointWorldAnchorB) / 2.0f;
+                    HandIK(rightHand, midPos, CurrentAnimationParams.ArmIKStrength, CurrentAnimationParams.HandIKStrength);
+                    HandIK(leftHand, midPos, CurrentAnimationParams.ArmIKStrength, CurrentAnimationParams.HandIKStrength);
                 }
-                else
+                if (Anim != Animation.UsingItem && character.SelectedBy == null)
                 {
-                    ResetPullJoints(l => l.IsLowerBody);
+                    if (Anim != Animation.UsingItemWhileClimbing)
+                    {
+                        ResetPullJoints();
+                    }
+                    else
+                    {
+                        ResetPullJoints(l => l.IsLowerBody);
+                    }
                 }
             }
 
@@ -1489,17 +1491,17 @@ namespace Barotrauma
 
         public override void DragCharacter(Character target, float deltaTime)
         {
-            if (target == null) return;
+            if (target == null) { return; }
 
             Limb torso = GetLimb(LimbType.Torso);
             Limb leftHand = GetLimb(LimbType.LeftHand);
             Limb rightHand = GetLimb(LimbType.RightHand);
 
-            Limb targetLeftHand = target.AnimController.GetLimb(LimbType.LeftHand);
+            Limb targetLeftHand = target.AnimController.GetLimb(LimbType.LeftForearm);
             if (targetLeftHand == null) targetLeftHand = target.AnimController.GetLimb(LimbType.Torso);
             if (targetLeftHand == null) targetLeftHand = target.AnimController.MainLimb;
 
-            Limb targetRightHand = target.AnimController.GetLimb(LimbType.RightHand);
+            Limb targetRightHand = target.AnimController.GetLimb(LimbType.RightForearm);
             if (targetRightHand == null) targetRightHand = target.AnimController.GetLimb(LimbType.Torso);
             if (targetRightHand == null) targetRightHand = target.AnimController.MainLimb;
 
@@ -1628,7 +1630,7 @@ namespace Barotrauma
                     }
 
                     //only pull with one hand when swimming
-                    if (i > 0 && inWater) continue;
+                    if (i > 0 && inWater) { continue; }
                     
                     Vector2 diff = ConvertUnits.ToSimUnits(targetLimb.WorldPosition - pullLimb.WorldPosition);
 
@@ -1680,14 +1682,15 @@ namespace Barotrauma
                         targetForce = 5000.0f;
                     }
 
-                    if (!target.AllowInput)
-                    {
-                        targetLimb.PullJointEnabled = true;
-                        targetLimb.PullJointMaxForce = targetForce;
-                        targetLimb.PullJointWorldAnchorB = targetAnchor;
-                    }
+                    targetLimb.PullJointEnabled = true;
+                    targetLimb.PullJointMaxForce = targetForce;
+                    targetLimb.PullJointWorldAnchorB = targetAnchor;
+                    targetLimb.Disabled = true;                    
 
-                    target.AnimController.movement = -diff;
+                    if (diff.LengthSquared() > 0.1f)
+                    {
+                        target.AnimController.movement = -diff;
+                    }
                 }
 
                 float dist = ConvertUnits.ToSimUnits(Vector2.Distance(target.WorldPosition, WorldPosition));
@@ -1714,7 +1717,8 @@ namespace Barotrauma
                 else if (target is AICharacter && target != Character.Controlled)
                 {
                     target.AnimController.TargetDir = WorldPosition.X > target.WorldPosition.X ? Direction.Right : Direction.Left;
-                    target.AnimController.TargetMovement = (character.SimPosition + Vector2.UnitX * Dir) - target.SimPosition;
+                    Vector2 movement =  (character.SimPosition + Vector2.UnitX * 0.5f * Dir) - target.SimPosition;
+                    target.AnimController.TargetMovement = movement.LengthSquared() > 0.01f ? movement : Vector2.Zero;                    
                 }
             }
         }

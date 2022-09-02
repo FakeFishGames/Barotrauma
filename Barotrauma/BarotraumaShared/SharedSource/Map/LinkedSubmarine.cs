@@ -357,7 +357,9 @@ namespace Barotrauma
                 float closestDistance = 0.0f;
                 foreach (DockingPort port in DockingPort.List)
                 {
-                    if (port.Item.Submarine != sub || port.IsHorizontal != linkedPort.IsHorizontal) { continue; }
+                    if (port.Item.Submarine != sub) { continue; }
+                    if (port.IsHorizontal != linkedPort.IsHorizontal) { continue; }
+                    if (port.ForceDockingDirection != DockingPort.DirectionType.None && port.ForceDockingDirection == linkedPort.ForceDockingDirection) { continue; }
                     float dist = Vector2.Distance(port.Item.WorldPosition, linkedPort.Item.WorldPosition);
                     if (myPort == null || dist < closestDistance)
                     {
@@ -453,21 +455,21 @@ namespace Barotrauma
 
                 saveElement.SetAttributeValue("pos", XMLExtensions.Vector2ToString(Position - Submarine.HiddenSubPosition));
 
-                if (linkedTo.Any() || linkedToID.Any())
-                {
-                    var linkedPort = 
-                        linkedTo.FirstOrDefault(lt => (lt is Item item) && item.GetComponent<DockingPort>() != null) ?? 
-                        FindEntityByID(linkedToID.First()) as MapEntity;
-                    if (linkedPort != null)
-                    {
-                        saveElement.SetAttributeValue("linkedto", linkedPort.ID);
-                    }
-                }
             }
             else
             {
                 saveElement = new XElement("LinkedSubmarine");
                 sub.SaveToXElement(saveElement);
+            }
+            if (linkedTo.Any() || linkedToID.Any())
+            {
+                var linkedPort = 
+                    linkedTo.FirstOrDefault(lt => (lt is Item item) && item.GetComponent<DockingPort>() != null) ?? 
+                    FindEntityByID(linkedToID.First()) as MapEntity;
+                if (linkedPort != null)
+                {
+                    saveElement.SetAttributeValue("linkedto", linkedPort.ID);
+                }
             }
 
             saveElement.SetAttributeValue("originallinkedto", originalLinkedPort != null ? originalLinkedPort.Item.ID : originalLinkedToID);

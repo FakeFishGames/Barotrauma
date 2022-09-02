@@ -594,7 +594,10 @@ namespace Barotrauma
             if (body.LinearVelocity.Y < 0.0f)
             {
                 int n = (int)((Position.X - CurrentHull.Rect.X) / Hull.WaveWidth);
-                CurrentHull.WaveVel[n] += MathHelper.Clamp(body.LinearVelocity.Y * massFactor, -5.0f, 5.0f);
+                if (n >= 0 && n < currentHull.WaveVel.Length)
+                {
+                    CurrentHull.WaveVel[n] += MathHelper.Clamp(body.LinearVelocity.Y * massFactor, -5.0f, 5.0f);
+                }
             }
             SoundPlayer.PlaySplashSound(WorldPosition, Math.Abs(body.LinearVelocity.Y) + Rand.Range(-10.0f, -5.0f));
         }
@@ -1469,8 +1472,8 @@ namespace Barotrauma
                 case TreatmentEventData treatmentEventData:
                     Character targetCharacter = treatmentEventData.TargetCharacter;
 
-                    msg.Write(targetCharacter.ID);
-                    msg.Write(treatmentEventData.LimbIndex);
+                    msg.WriteUInt16(targetCharacter.ID);
+                    msg.WriteByte(treatmentEventData.LimbIndex);
                     break;
                 case ChangePropertyEventData changePropertyEventData:
                     WritePropertyChange(msg, changePropertyEventData, inGameEditableOnly: true);
@@ -1478,7 +1481,7 @@ namespace Barotrauma
                     break;
                 case CombineEventData combineEventData:
                     Item combineTarget = combineEventData.CombineTarget;
-                    msg.Write(combineTarget.ID);
+                    msg.WriteUInt16(combineTarget.ID);
                     break;
                 default:
                     throw error($"Unsupported event type {eventData.GetType().Name}");

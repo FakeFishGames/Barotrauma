@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿#nullable enable
+using System;
 using Barotrauma.IO;
 using System.Linq;
-using System.Net;
-using Barotrauma.Steam;
+using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma.Networking
 {
@@ -11,6 +11,8 @@ namespace Barotrauma.Networking
     {
         private static UInt32 LastIdentifier = 0;
 
+        public bool Expired => ExpirationTime is { } expirationTime && DateTime.Now > expirationTime;
+        
         public BannedPlayer(
             string name, Either<Address, AccountId> addressOrAccountId, string reason, DateTime? expirationTime)
         {
@@ -24,20 +26,33 @@ namespace Barotrauma.Networking
 
     partial class BanList
     {
-        const string SavePath = "Data/bannedplayers.txt";
+        private const string SavePath = "Data/bannedplayers.xml";
+        private const string LegacySavePath = "Data/bannedplayers.txt";
 
         partial void InitProjectSpecific()
         {
-            if (!File.Exists(SavePath)) { return; }
+            if (!File.Exists(SavePath))
+            {
+                LoadLegacyBanList();
+            }
+            else
+            {
+                LoadBanList();
+            }
+        }
 
+        private void LoadLegacyBanList()
+        {
+            if (!File.Exists(LegacySavePath)) { return; }
+            
             string[] lines;
             try
             {
-                lines = File.ReadAllLines(SavePath);
+                lines = File.ReadAllLines(LegacySavePath);
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Failed to open the list of banned players in " + SavePath, e);
+                DebugConsole.ThrowError($"Failed to open the list of banned players in {LegacySavePath}", e);
                 return;
             }
 
@@ -70,11 +85,46 @@ namespace Barotrauma.Networking
                     bannedPlayers.Add(new BannedPlayer(name, address, reason, expirationTime));
                 }
             }
+            
+            Save();
+            File.Delete(LegacySavePath);
         }
 
-        public void RemoveExpired()
+        private void LoadBanList()
         {
-            bannedPlayers.RemoveAll(bp => bp.ExpirationTime.HasValue && DateTime.Now > bp.ExpirationTime.Value);
+            XDocument? doc = XMLExtensions.TryLoadXml(SavePath);
+            
+            if (doc?.Root is null) { return; }
+
+            static Option<BannedPlayer> loadFromElement(XElement element)
+            {
+                var accountId = AccountId.Parse(element.GetAttributeString("accountid", ""));
+                var address = Address.Parse(element.GetAttributeString("address", ""));
+
+                var name = element.GetAttributeString("name", "")!;
+                var reason = element.GetAttributeString("reason", "")!;
+                DateTime? expirationTime = DateTime.FromBinary(unchecked((long)element.GetAttributeUInt64("expirationtime", 0)));
+                
+                if (expirationTime < DateTime.Now) { expirationTime = null; }
+                
+                if (accountId.IsNone() && address.IsNone()) { return Option<BannedPlayer>.None(); }
+
+                Either<Address, AccountId> addressOrAccountId = accountId.TryUnwrap(out var accId)
+                    ? (Either<Address, AccountId>)accId
+                    : address.TryUnwrap(out var addr)
+                        ? addr
+                        : throw new InvalidCastException();
+                
+                return Option<BannedPlayer>.Some(new BannedPlayer(name, addressOrAccountId, reason, expirationTime));
+            }
+            
+            bannedPlayers.AddRange(doc.Root.Elements().Select(loadFromElement)
+                .OfType<Some<BannedPlayer>>().Select(o => o.Value));
+        }
+        
+        private void RemoveExpired()
+        {
+            bannedPlayers.RemoveAll(bp => bp.Expired);
         }
         
         public bool IsBanned(Endpoint endpoint, out string reason)
@@ -107,17 +157,7 @@ namespace Barotrauma.Networking
         public void BanPlayer(string name, Either<Address, AccountId> addressOrAccountId, string reason, TimeSpan? duration)
         {
             var existingBan = bannedPlayers.Find(bp => bp.AddressOrAccountId == addressOrAccountId);
-            if (existingBan != null)
-            {
-                if (!duration.HasValue) { return; }
-
-                DebugConsole.Log("Set \"" + name + "\"'s ban duration to " + duration.Value);
-                existingBan.ExpirationTime = DateTime.Now + duration.Value;
-                Save();
-                return;
-            }
-
-            System.Diagnostics.Debug.Assert(!name.Contains(','));
+            if (existingBan != null) { bannedPlayers.Remove(existingBan); }
 
             string logMsg = "Banned " + name;
             if (!string.IsNullOrEmpty(reason)) { logMsg += ", reason: " + reason; }
@@ -132,7 +172,6 @@ namespace Barotrauma.Networking
             }
 
             bannedPlayers.Add(new BannedPlayer(name, addressOrAccountId, reason, expirationTime));
-
             Save();
         }
 
@@ -168,27 +207,32 @@ namespace Barotrauma.Networking
             
             GameMain.Server?.ServerSettings?.UpdateFlag(ServerSettings.NetFlags.Properties);
 
-            bannedPlayers.RemoveAll(bp => bp.ExpirationTime.HasValue && DateTime.Now > bp.ExpirationTime.Value);
+            RemoveExpired();
 
-            List<string> lines = new List<string>();
-            foreach (BannedPlayer banned in bannedPlayers)
+            static XElement saveToElement(BannedPlayer bannedPlayer)
             {
-                string line = banned.Name;
-                line += "," + (banned.AddressOrAccountId.ToString());
-                line += "," + (banned.ExpirationTime.HasValue ? banned.ExpirationTime.Value.ToString() : "");
-                if (!string.IsNullOrWhiteSpace(banned.Reason)) { line += "," + banned.Reason; }
+                XElement retVal = new XElement("ban");
+                retVal.SetAttributeValue("name", bannedPlayer.Name);
+                retVal.SetAttributeValue("reason", bannedPlayer.Reason);
+                if (bannedPlayer.AddressOrAccountId.TryGet(out AccountId accountId))
+                {
+                    retVal.SetAttributeValue("accountid", accountId.StringRepresentation);
+                }
+                else if (bannedPlayer.AddressOrAccountId.TryGet(out Address address))
+                {
+                    retVal.SetAttributeValue("address", address.StringRepresentation);
+                }
+                if (bannedPlayer.ExpirationTime is { } expirationTime)
+                {
+                    retVal.SetAttributeValue("expirationtime", unchecked((ulong)expirationTime.ToBinary()));
+                }
 
-                lines.Add(line);
+                return retVal;
             }
 
-            try
-            {
-                File.WriteAllLines(SavePath, lines);
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Saving the list of banned players to " + SavePath + " failed", e);
-            }
+            XDocument doc = new XDocument(new XElement("bannedplayers"));
+            bannedPlayers.Select(saveToElement).ForEach(doc.Root!.Add);
+            doc.SaveSafe(SavePath);
         }
 
         public void ServerAdminWrite(IWriteMessage outMsg, Client c)
@@ -200,12 +244,12 @@ namespace Barotrauma.Networking
 
                 if (!c.HasPermission(ClientPermissions.Ban))
                 {
-                    outMsg.Write(false); outMsg.WritePadBits();
+                    outMsg.WriteBoolean(false); outMsg.WritePadBits();
                     return;
                 }
 
-                outMsg.Write(true);
-                outMsg.Write(c.Connection == GameMain.Server.OwnerConnection);
+                outMsg.WriteBoolean(true);
+                outMsg.WriteBoolean(c.Connection == GameMain.Server.OwnerConnection);
 
                 outMsg.WritePadBits();
                 outMsg.WriteVariableUInt32((UInt32)bannedPlayers.Count);
@@ -213,29 +257,29 @@ namespace Barotrauma.Networking
                 {
                     BannedPlayer bannedPlayer = bannedPlayers[i];
 
-                    outMsg.Write(bannedPlayer.Name);
-                    outMsg.Write(bannedPlayer.UniqueIdentifier);
-                    outMsg.Write(bannedPlayer.ExpirationTime != null);
+                    outMsg.WriteString(bannedPlayer.Name);
+                    outMsg.WriteUInt32(bannedPlayer.UniqueIdentifier);
+                    outMsg.WriteBoolean(bannedPlayer.ExpirationTime != null);
                     outMsg.WritePadBits();
                     if (bannedPlayer.ExpirationTime != null)
                     {
                         double hoursFromNow = (bannedPlayer.ExpirationTime.Value - DateTime.Now).TotalHours;
-                        outMsg.Write(hoursFromNow);
+                        outMsg.WriteDouble(hoursFromNow);
                     }
 
-                    outMsg.Write(bannedPlayer.Reason ?? "");
+                    outMsg.WriteString(bannedPlayer.Reason ?? "");
 
                     if (c.Connection == GameMain.Server.OwnerConnection)
                     {
                         if (bannedPlayer.AddressOrAccountId.TryGet(out Address endpoint))
                         {
-                            outMsg.Write(true); outMsg.WritePadBits();
-                            outMsg.Write(endpoint.StringRepresentation);
+                            outMsg.WriteBoolean(true); outMsg.WritePadBits();
+                            outMsg.WriteString(endpoint.StringRepresentation);
                         }
                         else
                         {
-                            outMsg.Write(false); outMsg.WritePadBits();
-                            outMsg.Write(((SteamId)bannedPlayer.AddressOrAccountId).StringRepresentation);
+                            outMsg.WriteBoolean(false); outMsg.WritePadBits();
+                            outMsg.WriteString(((SteamId)bannedPlayer.AddressOrAccountId).StringRepresentation);
                         }
                     }
                 }
@@ -262,7 +306,7 @@ namespace Barotrauma.Networking
                 for (int i = 0; i < removeCount; i++)
                 {
                     UInt32 id = incMsg.ReadUInt32();
-                    BannedPlayer bannedPlayer = bannedPlayers.Find(p => p.UniqueIdentifier == id);
+                    BannedPlayer? bannedPlayer = bannedPlayers.Find(p => p.UniqueIdentifier == id);
                     if (bannedPlayer != null)
                     {
                         GameServer.Log(GameServer.ClientLogName(c) + " unbanned " + bannedPlayer.Name + " (" + bannedPlayer.AddressOrAccountId + ")", ServerLog.MessageType.ConsoleUsage);

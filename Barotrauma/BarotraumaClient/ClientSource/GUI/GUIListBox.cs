@@ -57,7 +57,8 @@ namespace Barotrauma
         {
             SelectSingle,
             SelectMultiple,
-            RequireShiftToSelectMultiple
+            RequireShiftToSelectMultiple,
+            None
         }
         
         public SelectMode CurrentSelectMode = SelectMode.SelectSingle;
@@ -1058,7 +1059,7 @@ namespace Barotrauma
 
         public void Select(int childIndex, Force force = Force.No, AutoScroll autoScroll = AutoScroll.Enabled, TakeKeyBoardFocus takeKeyBoardFocus = TakeKeyBoardFocus.No, PlaySelectSound playSelectSound = PlaySelectSound.No)
         {
-            if (childIndex >= Content.CountChildren || childIndex < 0) { return; }
+            if (childIndex >= Content.CountChildren || childIndex < 0 || CurrentSelectMode == SelectMode.None) { return; }
 
             GUIComponent child = Content.GetChild(childIndex);
             if (child is null) { return; }
@@ -1157,6 +1158,7 @@ namespace Barotrauma
 
         public void Select(IEnumerable<GUIComponent> children)
         {
+            if (CurrentSelectMode == SelectMode.None) { return; }
             Selected = true;
             selected.Clear();
             selected.AddRange(children.Where(c => Content.Children.Contains(c)));

@@ -14,7 +14,7 @@ namespace Barotrauma
                 throw new InvalidOperationException("Server attempted to write monster mission data when no monsters had been spawned.");
             }
 
-            msg.Write((byte)monsters.Count);
+            msg.WriteByte((byte)monsters.Count);
             foreach (Character monster in monsters)
             {
                 monster.WriteSpawnData(msg, monster.ID, restrictMessageSize: false);

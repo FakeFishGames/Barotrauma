@@ -114,27 +114,27 @@ namespace Barotrauma
 
         public void ClientWriteInput(IWriteMessage msg)
         {
-            msg.Write((byte)ClientNetObject.CHARACTER_INPUT);
+            msg.WriteByte((byte)ClientNetObject.CHARACTER_INPUT);
 
             if (memInput.Count > 60)
             {
                 memInput.RemoveRange(60, memInput.Count - 60);
             }
 
-            msg.Write(LastNetworkUpdateID);
+            msg.WriteUInt16(LastNetworkUpdateID);
             byte inputCount = Math.Min((byte)memInput.Count, (byte)60);
-            msg.Write(inputCount);
+            msg.WriteByte(inputCount);
             for (int i = 0; i < inputCount; i++)
             {
                 msg.WriteRangedInteger((int)memInput[i].states, 0, (int)InputNetFlags.MaxVal);
-                msg.Write(memInput[i].intAim);
+                msg.WriteUInt16(memInput[i].intAim);
                 if (memInput[i].states.HasFlag(InputNetFlags.Select) ||
                     memInput[i].states.HasFlag(InputNetFlags.Deselect) ||
                     memInput[i].states.HasFlag(InputNetFlags.Use) ||
                     memInput[i].states.HasFlag(InputNetFlags.Health) ||
                     memInput[i].states.HasFlag(InputNetFlags.Grab))
                 {
-                    msg.Write(memInput[i].interact);
+                    msg.WriteUInt16(memInput[i].interact);
                 }
             }
         }
@@ -150,16 +150,16 @@ namespace Barotrauma
                     Inventory.ClientEventWrite(msg, inventoryStateEventData);
                     break;
                 case TreatmentEventData _:
-                    msg.Write(AnimController.Anim == AnimController.Animation.CPR);
+                    msg.WriteBoolean(AnimController.Anim == AnimController.Animation.CPR);
                     break;
                 case CharacterStatusEventData _:
                     //do nothing
                     break;
                 case UpdateTalentsEventData _:
-                    msg.Write((ushort)characterTalents.Count);
+                    msg.WriteUInt16((ushort)characterTalents.Count);
                     foreach (var unlockedTalent in characterTalents)
                     {
-                        msg.Write(unlockedTalent.Prefab.UintIdentifier);
+                        msg.WriteUInt32(unlockedTalent.Prefab.UintIdentifier);
                     }
                     break;
                 default:

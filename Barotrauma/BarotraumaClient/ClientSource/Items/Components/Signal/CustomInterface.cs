@@ -14,6 +14,8 @@ namespace Barotrauma.Items.Components
 
         private Point ElementMaxSize => new Point(uiElementContainer.Rect.Width, (int)(65 * GUI.yScale));
 
+        public override bool RecreateGUIOnResolutionChange => true;
+
         partial void InitProjSpecific()
         {
             CreateGUI();
@@ -354,29 +356,29 @@ namespace Barotrauma.Items.Components
                 {
                     if (!element.IsNumberInput)
                     {
-                        msg.Write(((GUITextBox)uiElements[i]).Text);
+                        msg.WriteString(((GUITextBox)uiElements[i]).Text);
                     }
                     else
                     {
                         switch (element.NumberType)
                         {
                             case NumberType.Float:
-                                msg.Write(((GUINumberInput)uiElements[i]).FloatValue.ToString());
+                                msg.WriteString(((GUINumberInput)uiElements[i]).FloatValue.ToString());
                                 break;
                             case NumberType.Int:
                             default:
-                                msg.Write(((GUINumberInput)uiElements[i]).IntValue.ToString());
+                                msg.WriteString(((GUINumberInput)uiElements[i]).IntValue.ToString());
                                 break;
                         }
                     }
                 }
                 else if (element.ContinuousSignal)
                 {
-                    msg.Write(((GUITickBox)uiElements[i]).Selected);
+                    msg.WriteBoolean(((GUITickBox)uiElements[i]).Selected);
                 }
                 else
                 {
-                    msg.Write(extraData is Item.ComponentStateEventData { ComponentData: EventData eventData } && eventData.BtnElement == customInterfaceElementList[i]);
+                    msg.WriteBoolean(extraData is Item.ComponentStateEventData { ComponentData: EventData eventData } && eventData.BtnElement == customInterfaceElementList[i]);
                 }
             }
         }

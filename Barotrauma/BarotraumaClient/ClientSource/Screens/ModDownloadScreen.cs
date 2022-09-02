@@ -9,7 +9,7 @@ using Barotrauma.Steam;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Color = Microsoft.Xna.Framework.Color;
-using ServerContentPackage = Barotrauma.Networking.ClientPeer.ServerContentPackage;
+using ServerContentPackage = Barotrauma.Networking.ServerContentPackage;
 
 namespace Barotrauma
 {
@@ -21,7 +21,7 @@ namespace Barotrauma
 
         private readonly List<ContentPackage> downloadedPackages = new List<ContentPackage>();
         public IEnumerable<ContentPackage> DownloadedPackages => downloadedPackages;
-        
+
         private bool confirmDownload;
 
         public void Reset()

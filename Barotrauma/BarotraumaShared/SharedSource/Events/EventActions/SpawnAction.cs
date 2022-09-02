@@ -57,6 +57,9 @@ namespace Barotrauma
 
         private readonly HashSet<Identifier> targetModuleTags = new HashSet<Identifier>();
 
+        [Serialize(true, IsPropertySaveable.Yes, description: "If false, we won't spawn another character if one with the same identifier has already been spawned.")]
+        public bool AllowDuplicates { get; set; }
+
         [Serialize("", IsPropertySaveable.Yes, "What outpost module tags does the entity prefer to spawn in.")]
         public string TargetModuleTags
         {
@@ -115,6 +118,12 @@ namespace Barotrauma
                 HumanPrefab humanPrefab = NPCSet.Get(NPCSetIdentifier, NPCIdentifier);
                 if (humanPrefab != null)
                 {
+                    if (!AllowDuplicates && 
+                        Character.CharacterList.Any(c => c.Info?.HumanPrefabIds.NpcIdentifier == NPCIdentifier && c.Info?.HumanPrefabIds.NpcSetIdentifier == NPCSetIdentifier))
+                    {
+                        spawned = true;
+                        return;
+                    }
                     ISpatialEntity spawnPos = GetSpawnPos();
                     if (spawnPos != null)
                     {
@@ -145,6 +154,11 @@ namespace Barotrauma
             }
             else if (!SpeciesName.IsEmpty)
             {
+                if (!AllowDuplicates && Character.CharacterList.Any(c => c.SpeciesName == SpeciesName))
+                {
+                    spawned = true;
+                    return;
+                }
                 ISpatialEntity spawnPos = GetSpawnPos();
                 if (spawnPos != null)
                 {

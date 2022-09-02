@@ -325,9 +325,14 @@ namespace Barotrauma
             Range<int> range = GetEnumRange(type);
             int enumIndex = bitField.ReadInteger(range.Start, range.End);
 
+            if (typeof(T).GetCustomAttribute<FlagsAttribute>() != null)
+            {
+                return (T)(object)enumIndex;
+            }
+            
             foreach (T e in (T[])Enum.GetValues(type))
             {
-                if ((int)Convert.ChangeType(e, e.GetTypeCode()) == enumIndex) { return e; }
+                if (((int)(object)e) == enumIndex) { return e; }
             }
 
             throw new InvalidOperationException($"An enum {type} with value {enumIndex} could not be found in {nameof(ReadEnum)}");
@@ -388,18 +393,18 @@ namespace Barotrauma
 
         private static bool ReadBoolean(IReadMessage inc, NetworkSerialize attribute, IReadableBitField bitField) => bitField.ReadBoolean();
         private static void WriteBoolean(bool b, NetworkSerialize attribute, IWriteMessage msg, IWritableBitField bitField) { bitField.WriteBoolean(b); }
-
+        
         private static byte ReadByte(IReadMessage inc, NetworkSerialize attribute, IReadableBitField bitField) => inc.ReadByte();
-        private static void WriteByte(byte b, NetworkSerialize attribute, IWriteMessage msg, IWritableBitField bitField) { msg.Write(b); }
+        private static void WriteByte(byte b, NetworkSerialize attribute, IWriteMessage msg, IWritableBitField bitField) { msg.WriteByte(b); }
 
         private static ushort ReadUInt16(IReadMessage inc, NetworkSerialize attribute, IReadableBitField bitField) => inc.ReadUInt16();
-        private static void WriteUInt16(ushort b, NetworkSerialize attribute, IWriteMessage msg, IWritableBitField bitField) { msg.Write(b); }
+        private static void WriteUInt16(ushort b, NetworkSerialize attribute, IWriteMessage msg, IWritableBitField bitField) { msg.WriteUInt16(b); }
 
         private static short ReadInt16(IReadMessage inc, NetworkSerialize attribute, IReadableBitField bitField) => inc.ReadInt16();
-        private static void WriteInt16(short b, NetworkSerialize attribute, IWriteMessage msg, IWritableBitField bitField) { msg.Write(b); }
+        private static void WriteInt16(short b, NetworkSerialize attribute, IWriteMessage msg, IWritableBitField bitField) { msg.WriteInt16(b); }
 
         private static uint ReadUInt32(IReadMessage inc, NetworkSerialize attribute, IReadableBitField bitField) => inc.ReadUInt32();
-        private static void WriteUInt32(uint b, NetworkSerialize attribute, IWriteMessage msg, IWritableBitField bitField) { msg.Write(b); }
+        private static void WriteUInt32(uint b, NetworkSerialize attribute, IWriteMessage msg, IWritableBitField bitField) { msg.WriteUInt32(b); }
 
         private static int ReadInt32(IReadMessage inc, NetworkSerialize attribute, IReadableBitField bitField)
         {
@@ -421,14 +426,14 @@ namespace Barotrauma
                 return;
             }
 
-            msg.Write(i);
+            msg.WriteInt32(i);
         }
 
         private static ulong ReadUInt64(IReadMessage inc, NetworkSerialize attribute, IReadableBitField bitField) => inc.ReadUInt64();
-        private static void WriteUInt64(ulong b, NetworkSerialize attribute, IWriteMessage msg, IWritableBitField bitField) { msg.Write(b); }
+        private static void WriteUInt64(ulong b, NetworkSerialize attribute, IWriteMessage msg, IWritableBitField bitField) { msg.WriteUInt64(b); }
 
         private static long ReadInt64(IReadMessage inc, NetworkSerialize attribute, IReadableBitField bitField) => inc.ReadInt64();
-        private static void WriteInt64(long b, NetworkSerialize attribute, IWriteMessage msg, IWritableBitField bitField) { msg.Write(b); }
+        private static void WriteInt64(long b, NetworkSerialize attribute, IWriteMessage msg, IWritableBitField bitField) { msg.WriteInt64(b); }
 
         private static float ReadSingle(IReadMessage inc, NetworkSerialize attribute, IReadableBitField bitField)
         {
@@ -450,17 +455,17 @@ namespace Barotrauma
                 return;
             }
 
-            msg.Write(f);
+            msg.WriteSingle(f);
         }
 
         private static double ReadDouble(IReadMessage inc, NetworkSerialize attribute, IReadableBitField bitField) => inc.ReadDouble();
-        private static void WriteDouble(double b, NetworkSerialize attribute, IWriteMessage msg, IWritableBitField bitField) { msg.Write(b); }
+        private static void WriteDouble(double b, NetworkSerialize attribute, IWriteMessage msg, IWritableBitField bitField) { msg.WriteDouble(b); }
 
         private static string ReadString(IReadMessage inc, NetworkSerialize attribute, IReadableBitField bitField) => inc.ReadString();
-        private static void WriteString(string b, NetworkSerialize attribute, IWriteMessage msg, IWritableBitField bitField) { msg.Write(b); }
+        private static void WriteString(string b, NetworkSerialize attribute, IWriteMessage msg, IWritableBitField bitField) { msg.WriteString(b); }
 
         private static Identifier ReadIdentifier(IReadMessage inc, NetworkSerialize attribute, IReadableBitField bitField) => inc.ReadIdentifier();
-        private static void WriteIdentifier(Identifier b, NetworkSerialize attribute, IWriteMessage msg, IWritableBitField bitField) { msg.Write(b); }
+        private static void WriteIdentifier(Identifier b, NetworkSerialize attribute, IWriteMessage msg, IWritableBitField bitField) { msg.WriteIdentifier(b); }
 
         private static AccountId ReadAccountId(IReadMessage inc, NetworkSerialize attribute, IReadableBitField bitField)
         {
@@ -472,7 +477,7 @@ namespace Barotrauma
 
         private static void WriteAccountId(AccountId accountId, NetworkSerialize attribute, IWriteMessage msg, IWritableBitField bitField)
         {
-            msg.Write(accountId.StringRepresentation);
+            msg.WriteString(accountId.StringRepresentation);
         }
 
         private static Color ReadColor(IReadMessage inc, NetworkSerialize attribute, IReadableBitField bitField) => attribute.IncludeColorAlpha ? inc.ReadColorR8G8B8A8() : inc.ReadColorR8G8B8();
@@ -519,7 +524,7 @@ namespace Barotrauma
         private static bool TryFindBehavior<T>(out ReadWriteBehavior<T> behavior) where T : notnull
         {
             bool found = TryFindBehavior(typeof(T), out var bhvr);
-            behavior = (ReadWriteBehavior<T>)bhvr;
+            behavior = found ? (ReadWriteBehavior<T>)bhvr : default;
             return found;
         }
 
@@ -589,8 +594,8 @@ namespace Barotrauma
             return array;
 
             bool HasAttribute(MemberInfo info) => (info.GetCustomAttribute<NetworkSerialize>() ?? type.GetCustomAttribute<NetworkSerialize>()) != null;
-            
-            bool NotStatic(MemberInfo info)
+
+            static bool NotStatic(MemberInfo info)
                 => info switch
                 {
                     PropertyInfo property => property.GetGetMethod() is { IsStatic: false },
@@ -656,7 +661,7 @@ namespace Barotrauma
     /// Using <see cref="Nullable{T}"/> or <see cref="Option{T}"/> will make the field or property optional.
     /// </remarks>
     /// <seealso cref="NetworkSerialize"/>
-    interface INetSerializableStruct
+    internal interface INetSerializableStruct
     {
         /// <summary>
         /// Deserializes a network message into a struct.
@@ -743,7 +748,7 @@ namespace Barotrauma
             IWriteMessage structWriteMsg = new WriteOnlyMessage();
             WriteInternal(structWriteMsg, bitField);
             bitField.WriteToMessage(msg);
-            msg.Write(structWriteMsg.Buffer, 0, structWriteMsg.LengthBytes);
+            msg.WriteBytes(structWriteMsg.Buffer, 0, structWriteMsg.LengthBytes);
         }
 
         public void WriteInternal(IWriteMessage msg, IWritableBitField bitField)
@@ -755,27 +760,6 @@ namespace Barotrauma
                 object? value = property.GetValue(this);
                 property.Behavior.WriteAction(value!, property.Attribute, msg, bitField);
             }
-        }
-    }
-
-    static class WriteOnlyMessageExtensions
-    {
-#if CLIENT
-        public static IWriteMessage WithHeader(this IWriteMessage msg, ClientPacketHeader header)
-        {
-            msg.Write((byte)header);
-            return msg;
-        }
-#elif SERVER
-        public static IWriteMessage WithHeader(this IWriteMessage msg, ServerPacketHeader header)
-        {
-            msg.Write((byte)header);
-            return msg;
-        }
-#endif
-        public static void Write(this IWriteMessage msg, INetSerializableStruct serializableStruct)
-        {
-            serializableStruct.Write(msg);
         }
     }
 }

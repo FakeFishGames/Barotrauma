@@ -723,7 +723,7 @@ namespace Barotrauma
 
             AssignOnExecute("explosion", (string[] args) =>
             {
-                Vector2 explosionPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
+                Vector2 explosionPos = Screen.Selected.Cam.ScreenToWorld(PlayerInput.MousePosition);
                 float range = 500, force = 10, damage = 50, structureDamage = 20, itemDamage = 100, empStrength = 0.0f, ballastFloraStrength = 50f;
                 if (args.Length > 0) float.TryParse(args[0], out range);
                 if (args.Length > 1) float.TryParse(args[1], out force);
@@ -3056,6 +3056,11 @@ namespace Barotrauma
 
             commands.Add(new Command("reloadwearables", "Reloads the sprites of all limbs and wearable sprites (clothing) of the controlled character. Provide id or name if you want to target another character.", args =>
             {
+                if (GameMain.GameSession != null)
+                {
+                    ThrowError("Using the command is not allowed during an active game session: the command is intended to be used in the character editor or in the main menu.");
+                    return;
+                }
                 var character = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args, true);
                 if (character == null)
                 {
@@ -3067,6 +3072,11 @@ namespace Barotrauma
 
             commands.Add(new Command("loadwearable", "Force select certain variant for the selected character.", args =>
             {
+                if (GameMain.GameSession != null)
+                {
+                    ThrowError("Using the command is not allowed during an active game session: the command is intended to be used in the character editor or in the main menu.");
+                    return;
+                }
                 var character = Character.Controlled;
                 if (character == null)
                 {

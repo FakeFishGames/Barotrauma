@@ -809,8 +809,8 @@ namespace Barotrauma
             }
 
             HumanPrefabIds = (
-                element.GetAttributeIdentifier("npcsetid", Identifier.Empty), 
-                element.GetAttributeIdentifier("npcid", Identifier.Empty));
+                infoElement.GetAttributeIdentifier("npcsetid", Identifier.Empty),
+                infoElement.GetAttributeIdentifier("npcid", Identifier.Empty));
 
             MissionsCompletedSinceDeath = infoElement.GetAttributeInt("missionscompletedsincedeath", 0);
 

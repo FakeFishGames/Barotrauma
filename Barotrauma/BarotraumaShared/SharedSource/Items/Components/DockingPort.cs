@@ -1191,7 +1191,7 @@ namespace Barotrauma.Items.Components
                 //trying to dock/undock from an outpost and the signal was sent by some automated system instead of a character
                 // -> ask if the player really wants to dock/undock to prevent a softlock if someone's wired the docking port
                 //    in a way that makes always makes it dock/undock immediately at the start of the roun
-                if (tryingToToggleOutpostDocking && signal.sender == null)
+                if (GameMain.NetworkMember != null && tryingToToggleOutpostDocking && signal.sender == null)
                 {
                     if (allowOutpostAutoDocking == AllowOutpostAutoDocking.Ask)
                     {

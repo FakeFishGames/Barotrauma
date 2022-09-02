@@ -1,6 +1,8 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace Barotrauma
@@ -11,14 +13,14 @@ namespace Barotrauma
 
         public Func<Item, float> GetItemPriority;
 
-        public Identifier[] ignoredContainerIdentifiers;
+        public ImmutableHashSet<Identifier> ignoredContainerIdentifiers;
         public bool checkInventory = true;
 
         //if the item can't be found, spawn it in the character's inventory (used by outpost NPCs and in some cases also enemy NPCs, like pirates)
         private readonly bool spawnItemIfNotFound;
 
         //can either be a tag or an identifier
-        public readonly Identifier[] itemIdentifiers;
+        public readonly ImmutableHashSet<Identifier> itemIdentifiers;
         public readonly ItemContainer container;
         private readonly Item item;
         public Item ItemToContain { get; private set; }
@@ -61,9 +63,9 @@ namespace Barotrauma
         }
 
         public AIObjectiveContainItem(Character character, Identifier itemIdentifier, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1, bool spawnItemIfNotFound = false)
-            : this(character, new Identifier[] { itemIdentifier }, container, objectiveManager, priorityModifier, spawnItemIfNotFound) { }
+            : this(character, itemIdentifier.ToEnumerable().ToImmutableHashSet(), container, objectiveManager, priorityModifier, spawnItemIfNotFound) { }
 
-        public AIObjectiveContainItem(Character character, Identifier[] itemIdentifiers, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1, bool spawnItemIfNotFound = false) 
+        public AIObjectiveContainItem(Character character, ImmutableHashSet<Identifier> itemIdentifiers, ItemContainer container, AIObjectiveManager objectiveManager, float priorityModifier = 1, bool spawnItemIfNotFound = false) 
             : base(character, objectiveManager, priorityModifier)
         {
             this.itemIdentifiers = itemIdentifiers;
@@ -102,7 +104,10 @@ namespace Barotrauma
             return containedItemCount >= ItemCount;
         }
 
-        private bool CheckItem(Item i) => itemIdentifiers.Any(id => i.Prefab.Identifier == id || i.HasTag(id)) && i.ConditionPercentage >= ConditionLevel && i.HasAccess(character);
+        private bool CheckItem(Item item)
+        {
+            return CheckItemIdentifiersOrTags(item, itemIdentifiers) && item.ConditionPercentage >= ConditionLevel && item.HasAccess(character);
+        }
 
         protected override void Act(float deltaTime)
         {

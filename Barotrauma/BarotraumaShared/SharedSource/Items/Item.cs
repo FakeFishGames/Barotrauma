@@ -1536,7 +1536,7 @@ namespace Barotrauma
             return false;
         }
 
-        private bool ConditionalMatches(PropertyConditional conditional)
+        public bool ConditionalMatches(PropertyConditional conditional)
         {
             if (string.IsNullOrEmpty(conditional.TargetItemComponentName))
             {
@@ -2861,77 +2861,77 @@ namespace Barotrauma
                 var propertyOwner = allProperties.Find(p => p.property == property);
                 if (allProperties.Count > 1)
                 {
-                    msg.Write((byte)allProperties.FindIndex(p => p.property == property));
+                    msg.WriteByte((byte)allProperties.FindIndex(p => p.property == property));
                 }
 
                 object value = property.GetValue(propertyOwner.obj);
                 if (value is string stringVal)
                 {
-                    msg.Write(stringVal);
+                    msg.WriteString(stringVal);
                 }
                 else if (value is Identifier idValue)
                 {
-                    msg.Write(idValue);
+                    msg.WriteIdentifier(idValue);
                 }
                 else if (value is float floatVal)
                 {
-                    msg.Write(floatVal);
+                    msg.WriteSingle(floatVal);
                 }
                 else if (value is int intVal)
                 {
-                    msg.Write(intVal);
+                    msg.WriteInt32(intVal);
                 }
                 else if (value is bool boolVal)
                 {
-                    msg.Write(boolVal);
+                    msg.WriteBoolean(boolVal);
                 }
                 else if (value is Color color)
                 {
-                    msg.Write(color.R);
-                    msg.Write(color.G);
-                    msg.Write(color.B);
-                    msg.Write(color.A);
+                    msg.WriteByte(color.R);
+                    msg.WriteByte(color.G);
+                    msg.WriteByte(color.B);
+                    msg.WriteByte(color.A);
                 }
                 else if (value is Vector2 vector2)
                 {
-                    msg.Write(vector2.X);
-                    msg.Write(vector2.Y);
+                    msg.WriteSingle(vector2.X);
+                    msg.WriteSingle(vector2.Y);
                 }
                 else if (value is Vector3 vector3)
                 {
-                    msg.Write(vector3.X);
-                    msg.Write(vector3.Y);
-                    msg.Write(vector3.Z);
+                    msg.WriteSingle(vector3.X);
+                    msg.WriteSingle(vector3.Y);
+                    msg.WriteSingle(vector3.Z);
                 }
                 else if (value is Vector4 vector4)
                 {
-                    msg.Write(vector4.X);
-                    msg.Write(vector4.Y);
-                    msg.Write(vector4.Z);
-                    msg.Write(vector4.W);
+                    msg.WriteSingle(vector4.X);
+                    msg.WriteSingle(vector4.Y);
+                    msg.WriteSingle(vector4.Z);
+                    msg.WriteSingle(vector4.W);
                 }
                 else if (value is Point point)
                 {
-                    msg.Write(point.X);
-                    msg.Write(point.Y);
+                    msg.WriteInt32(point.X);
+                    msg.WriteInt32(point.Y);
                 }
                 else if (value is Rectangle rect)
                 {
-                    msg.Write(rect.X);
-                    msg.Write(rect.Y);
-                    msg.Write(rect.Width);
-                    msg.Write(rect.Height);
+                    msg.WriteInt32(rect.X);
+                    msg.WriteInt32(rect.Y);
+                    msg.WriteInt32(rect.Width);
+                    msg.WriteInt32(rect.Height);
                 }
                 else if (value is Enum)
                 {
-                    msg.Write((int)value);
+                    msg.WriteInt32((int)value);
                 }
                 else if (value is string[] a)
                 {
-                    msg.Write(a.Length);
+                    msg.WriteInt32(a.Length);
                     for (int i = 0; i < a.Length; i++)
                     {
-                        msg.Write(a[i] ?? "");
+                        msg.WriteString(a[i] ?? "");
                     }
                 }
                 else

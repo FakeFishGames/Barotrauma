@@ -229,8 +229,6 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        public virtual bool RecreateGUIOnResolutionChange => false;
-
         /// <summary>
         /// How useful the item is in combat? Used by AI to decide which item it should use as a weapon. For the sake of clarity, use a value between 0 and 100 (not enforced).
         /// </summary>
@@ -397,7 +395,7 @@ namespace Barotrauma.Items.Components
             RelatedItem ri = RelatedItem.Load(element, returnEmpty, item.Name);
             if (ri != null)
             {
-                if (ri.Identifiers.Length == 0)
+                if (ri.Identifiers.Count == 0)
                 {
                     DisabledRequiredItems.Add(ri);
                 }
@@ -816,7 +814,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb targetLimb = null, Entity useTarget = null, Character user = null, Vector2? worldPosition = null, float applyOnUserFraction = 0.0f)
+        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb targetLimb = null, Entity useTarget = null, Character user = null, Vector2? worldPosition = null, float afflictionMultiplier = 1.0f, float applyOnUserFraction = 0.0f)
         {
             if (statusEffectLists == null) { return; }
 
@@ -828,13 +826,14 @@ namespace Barotrauma.Items.Components
             {
                 if (broken && !effect.AllowWhenBroken && effect.type != ActionType.OnBroken) { continue; }
                 if (user != null) { effect.SetUser(user); }
+                effect.AfflictionMultiplier = afflictionMultiplier;
                 item.ApplyStatusEffect(effect, type, deltaTime, character, targetLimb, useTarget, isNetworkEvent: false, checkCondition: false, worldPosition);
                 if (user != null && applyOnUserFraction > 0.0f && effect.HasTargetType(StatusEffect.TargetType.Character))
                 {
                     effect.AfflictionMultiplier = applyOnUserFraction;
                     item.ApplyStatusEffect(effect, type, deltaTime, user, targetLimb == null ? null : user.AnimController.GetLimb(targetLimb.type), useTarget, false, false, worldPosition);
-                    effect.AfflictionMultiplier = 1.0f;
                 }
+                effect.AfflictionMultiplier = 1.0f;
                 reducesCondition |= effect.ReducesItemCondition();
             }
             //if any of the effects reduce the item's condition, set the user for OnBroken effects as well
@@ -1070,7 +1069,7 @@ namespace Barotrauma.Items.Components
             AIObjectiveContainItem containObjective = null;
             if (character.AIController is HumanAIController aiController)
             {
-                containObjective = new AIObjectiveContainItem(character, container.ContainableItemIdentifiers.ToArray(), container, currentObjective.objectiveManager, spawnItemIfNotFound: spawnItemIfNotFound)
+                containObjective = new AIObjectiveContainItem(character, container.ContainableItemIdentifiers, container, currentObjective.objectiveManager, spawnItemIfNotFound: spawnItemIfNotFound)
                 {
                     ItemCount = itemCount,
                     Equip = equip,

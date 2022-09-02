@@ -18,21 +18,21 @@ namespace Barotrauma
         {
             base.ServerWriteInitial(msg, c);
 
-            msg.Write(usedExistingItem);
+            msg.WriteBoolean(usedExistingItem);
             if (usedExistingItem)
             {
-                msg.Write(item.ID);
+                msg.WriteUInt16(item.ID);
             }
             else
             {
                 item.WriteSpawnData(msg, item.ID, originalInventoryID, originalItemContainerIndex, originalSlotIndex);
             }
 
-            msg.Write((byte)executedEffectIndices.Count);
+            msg.WriteByte((byte)executedEffectIndices.Count);
             foreach (Pair<int, int> effectIndex in executedEffectIndices)
             {
-                msg.Write((byte)effectIndex.First);
-                msg.Write((byte)effectIndex.Second);
+                msg.WriteByte((byte)effectIndex.First);
+                msg.WriteByte((byte)effectIndex.Second);
             }
         }
     }

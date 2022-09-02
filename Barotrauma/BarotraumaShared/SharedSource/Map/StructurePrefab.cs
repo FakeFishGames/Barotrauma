@@ -271,20 +271,17 @@ namespace Barotrauma
                 tags.Add("wall".ToIdentifier());
             }
 
-            if (Description.IsNullOrEmpty())
+            if (!descriptionIdentifier.IsEmpty)
             {
-                if (!descriptionIdentifier.IsEmpty)
-                {
-                    Description = TextManager.Get($"EntityDescription.{descriptionIdentifier}");
-                }
-                else if (nameIdentifier.IsEmpty)
-                {
-                    Description = TextManager.Get($"EntityDescription.{Identifier}");
-                }
-                else
-                {
-                    Description = TextManager.Get($"EntityDescription.{nameIdentifier}");
-                }
+                Description = TextManager.Get($"EntityDescription.{descriptionIdentifier}").Fallback(Description);
+            }
+            else if (nameIdentifier.IsEmpty)
+            {
+                Description = TextManager.Get($"EntityDescription.{Identifier}").Fallback(Description);
+            }
+            else
+            {
+                Description = TextManager.Get($"EntityDescription.{nameIdentifier}").Fallback(Description);
             }
 
             //backwards compatibility
