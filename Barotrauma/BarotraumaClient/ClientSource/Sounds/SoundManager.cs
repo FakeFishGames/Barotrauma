@@ -368,7 +368,7 @@ namespace Barotrauma.Sounds
             string filePath = overrideFilePath ?? element.GetAttributeContentPath("file")?.Value ?? "";
             if (!File.Exists(filePath))
             {
-                throw new System.IO.FileNotFoundException($"Sound file \"{filePath}\" doesn't exist! Content package \"{(element.ContentPackage?.Name ?? "Unknown")}\".");
+                throw new System.IO.FileNotFoundException($"Sound file \"{filePath}\" doesn't exist! Content package \"{(element.ContentPath.ContentPackage?.Name ?? "Unknown")}\".");
             }
 
             var newSound = new OggSound(this, filePath, stream, xElement: element);

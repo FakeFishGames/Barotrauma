@@ -171,7 +171,7 @@ namespace Barotrauma
         private void EvaluateRelativePath(string? parent_full_path, string parent_package_path, bool parent_is_vanilla){
             string? modName = ContentPackage?.Name;
 
-            var cleanvalue = RawValue.CleanUpPathCrossPlatform();
+            var cleanvalue = RawValue.CleanUpPath();
             if (cleanvalue.IsNullOrEmpty())
             {
                 return;
@@ -209,7 +209,7 @@ namespace Barotrauma
                         // what is this??? user specified relative path in character editor's texture config?
                         throw new Exception("Relative path relative to nothing.");
                     }
-                    string location = System.IO.Path.GetDirectoryName(parent_full_path).CleanUpPathCrossPlatform();
+                    string location = System.IO.Path.GetDirectoryName(parent_full_path).CleanUpPath();
                     cachedPackageName = modName;
                     if(parent_is_vanilla) {
                         cachedRelativePath = System.IO.Path.GetRelativePath(".", string.Join('/', location, cleanvalue));

@@ -76,7 +76,7 @@ namespace Barotrauma
             var type = Types.FirstOrDefault(t => t.Names.Contains(elemName));
             // is vanilla here? but shouldn't matter anyway.
             var relativepath = 
-                System.IO.Path.GetRelativePath((contentPackage is CorePackage) ? "." : contentPackage.Dir, element.Document.BaseUri.IsNullOrEmpty()? ".": 
+                System.IO.Path.GetRelativePath((contentPackage is CorePackage) ? "." : contentPackage.Dir, (element.Document?.BaseUri.IsNullOrEmpty()??true)? ".": 
                     System.IO.Path.GetDirectoryName(element.Document.BaseUri)??".");
             if(relativepath.Equals(".")){
                 relativepath = "";
