@@ -22,10 +22,28 @@ namespace Barotrauma
         }
 
         public string Name => Identifier.Value;
-        public Identifier VariantOf { get; }
+        public PrefabInstance InheritParent { get; private set; }
+        public List<PrefabInstance> InheritHistory { get; private set;  }
         public void InheritFrom(CharacterPrefab parent)
         {
-            ConfigElement = CharacterParams.CreateVariantXml(originalElement, parent.ConfigElement).FromPackage(ConfigElement.ContentPackage);
+            InheritHistory = new List<PrefabInstance>();
+            // toolbox's createcopy throws for List<PrefabInstance>
+            if (!(parent.InheritHistory is null))
+            {
+                foreach (PrefabInstance inst in parent.InheritHistory)
+                {
+                    InheritHistory.Add(inst);
+                }
+            }
+            // xml may not specify package name, then this prefab parent here is important...
+            InheritHistory.Add(new PrefabInstance(parent.Identifier, parent.ContentPackage.Name));
+            // xml didn't specify
+            if (InheritParent.package.IsNullOrEmpty())
+            {
+                InheritParent.package = parent.ContentPackage.Name;
+            }
+
+            ConfigElement = (this as IImplementsVariants<CharacterPrefab>).DoInherit(CharacterParams.CreateVariantXml_callback);
             ParseConfigElement();
         }
 
@@ -42,7 +60,7 @@ namespace Barotrauma
             }
         }
 
-        private XElement originalElement;
+        public XElement originalElement { get; }
         public ContentXElement ConfigElement { get; private set; }
 
         public CharacterInfoPrefab CharacterInfoPrefab { get; private set; }
@@ -77,7 +95,7 @@ namespace Barotrauma
         {
             originalElement = mainElement;
             ConfigElement = mainElement;
-            VariantOf = mainElement.VariantOf();
+            InheritParent = mainElement.InheritParent();
 
             ParseConfigElement();
         }
@@ -105,6 +123,29 @@ namespace Barotrauma
                 return false;
             }
             return true;
+        }
+
+        public CharacterPrefab FindByPrefabInstance(PrefabInstance instance){
+            Prefabs.TryGet(instance, out CharacterPrefab res);
+            return res;
+		}
+
+        public CharacterPrefab GetPrevious(Identifier identifier)
+        {
+            CharacterPrefab res;
+            if (identifier != Identifier)
+            {
+                res = Prefabs[identifier];
+            }
+            else{
+                res = Prefabs.AllPrefabs.Where(p => p.Key == identifier).Single().Value.GetPrevious(ContentPackage.Name);
+            }
+            if (res is null) return null;
+            if (originalElement.InheritParent().package.IsNullOrEmpty())
+            {
+                InheritParent.package = res.ContentPackage.Name;
+            }
+            return res;
         }
     }
 }

@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -74,7 +74,14 @@ namespace Barotrauma
             
             Identifier elemName = element.NameAsIdentifier();
             var type = Types.FirstOrDefault(t => t.Names.Contains(elemName));
-            var filePath = element.GetAttributeContentPath("file", contentPackage);
+            // is vanilla here? but shouldn't matter anyway.
+            var relativepath = 
+                System.IO.Path.GetRelativePath((contentPackage is CorePackage) ? "." : contentPackage.Dir, element.Document.BaseUri.IsNullOrEmpty()? ".": 
+                    System.IO.Path.GetDirectoryName(element.Document.BaseUri)??".");
+            if(relativepath.Equals(".")){
+                relativepath = "";
+            }
+            var filePath = element.GetAttributeContentPath("file", ContentPath.FromRawNoConcrete(contentPackage, relativepath));
             if (type is null)
             {
                 return fail($"Invalid content type \"{elemName}\"");

@@ -46,7 +46,7 @@ namespace Barotrauma
             {
                 if (rootElement?.Element != doc.Root)
                 {
-                    rootElement = doc.Root.FromPackage(Path.ContentPackage);
+                    rootElement = doc.Root.FromContent(Path);
                 }
                 return rootElement;
             }
@@ -55,7 +55,7 @@ namespace Barotrauma
         public ContentXElement OriginalElement { get; protected set; }
 
         protected ContentXElement CreateElement(string name, params object[] attrs)
-            => new XElement(name, attrs).FromPackage(Path.ContentPackage);
+            => new XElement(name, attrs).FromContent(Path);
 
         protected virtual string GetName() => System.IO.Path.GetFileNameWithoutExtension(Path.Value).FormatCamelCaseWithSpaces();
 
@@ -84,7 +84,7 @@ namespace Barotrauma
             doc = XMLExtensions.TryLoadXml(Path);
             if (doc == null) { return false; }
             IsLoaded = Deserialize(MainElement);
-            OriginalElement = new XElement(MainElement).FromPackage(MainElement.ContentPackage);
+            OriginalElement = new XElement(MainElement).FromContent(MainElement.ContentPath);
             return IsLoaded;
         }
 
@@ -115,7 +115,7 @@ namespace Barotrauma
             }
             if (fileNameWithoutExtension != null)
             {
-                UpdatePath(ContentPath.FromRaw(Path.ContentPackage, System.IO.Path.Combine(Folder, $"{fileNameWithoutExtension}.xml")));
+                UpdatePath(ContentPath.FromRaw(Path, System.IO.Path.Combine(Folder, $"{fileNameWithoutExtension}.xml")));
             }
             using (var writer = XmlWriter.Create(Path.Value, settings))
             {

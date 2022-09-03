@@ -115,7 +115,7 @@ namespace Barotrauma
             {
                 throw new System.InvalidOperationException($"Failed to spawn inventory items for the character \"{character.Name}\". No saved inventory data.");
             }
-            character.SpawnInventoryItems(inventory, itemData.FromPackage(null));
+            character.SpawnInventoryItems(inventory, itemData.FromContent(ContentPath.Empty));
         }
 
         public void ApplyHealthData(Character character)

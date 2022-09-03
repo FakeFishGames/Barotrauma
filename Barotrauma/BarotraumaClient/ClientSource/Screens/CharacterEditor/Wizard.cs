@@ -409,7 +409,7 @@ namespace Barotrauma.CharacterEditor
                         return false;
                     }
 
-                    string evaluatedTexturePath = ContentPath.FromRaw(
+                    string evaluatedTexturePath = ContentPath.FromRawNoConcrete(
                         contentPackageDropDown.SelectedData as ContentPackage,
                         TexturePath).Value;
                     if (SourceCharacter?.SpeciesName != CharacterPrefab.HumanSpeciesName)

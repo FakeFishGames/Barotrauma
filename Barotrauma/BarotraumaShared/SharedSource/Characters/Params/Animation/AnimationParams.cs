@@ -195,7 +195,7 @@ namespace Barotrauma
                 && (character.Params.VariantFile?.Root?.GetChildElement("animations")?.GetAttributeStringUnrestricted("folder", null)).IsNullOrEmpty())
             {
                 // Use the base animations defined in the base definition file.
-                speciesName = character.VariantOf;
+                speciesName = character.VariantOf.ToIdentifier();
             }
             return GetAnimParams<T>(speciesName, animType, GetDefaultFileName(speciesName, animType));
         }
@@ -256,7 +256,7 @@ namespace Barotrauma
                 DebugConsole.Log($"[AnimationParams] Loading animations from {selectedFile}.");
                 var characterPrefab = CharacterPrefab.Prefabs[speciesName];
                 T a = new T();
-                if (a.Load(ContentPath.FromRaw(characterPrefab.ContentPackage, selectedFile), speciesName))
+                if (a.Load(ContentPath.FromRaw(characterPrefab.FilePath, selectedFile), speciesName))
                 {
                     fileName = IO.Path.GetFileNameWithoutExtension(selectedFile);
                     if (!anims.ContainsKey(fileName))
@@ -340,7 +340,7 @@ namespace Barotrauma
             XElement animationElement = new XElement(GetDefaultFileName(speciesName, animationType), new XAttribute("animationtype", animationType.ToString()));
             instance.doc = new XDocument(animationElement);
             var characterPrefab = CharacterPrefab.Prefabs[speciesName];
-            var contentPath = ContentPath.FromRaw(characterPrefab.ContentPackage, fullPath);
+            var contentPath = ContentPath.FromRaw(characterPrefab.FilePath, fullPath);
             instance.UpdatePath(contentPath);
             instance.IsLoaded = instance.Deserialize(animationElement);
             instance.Save();

@@ -20,6 +20,10 @@ namespace Barotrauma
             implementsVariants = interfaces.Any(i => i.Name.Contains(nameof(IImplementsVariants<T>)));
         }
 
+        // an instance of prefab that the collection keeps track of.
+        // used in ienumerable<T>
+
+
         /// <summary>
         /// Constructor with OnAdd and OnRemove callbacks provided.
         /// </summary>
@@ -89,7 +93,7 @@ namespace Barotrauma
         private ContentFile? topMostOverrideFile = null;
 
         private readonly bool implementsVariants;
-        
+
         private bool IsPrefabOverriddenByFile(T prefab)
         {
             return topMostOverrideFile != null &&
@@ -100,29 +104,31 @@ namespace Barotrauma
         {
             public class Node
             {
-                public Node(Identifier identifier) { Identifier = identifier; }
-                
-                public readonly Identifier Identifier;
+                public Node(Identifier identifier, string package /*= ""*/) { Inst = new PrefabInstance(identifier, package); }
+
+                public readonly PrefabInstance Inst;
                 public Node? Parent = null;
                 public readonly HashSet<Node> Inheritors = new HashSet<Node>();
             }
 
             private readonly PrefabCollection<T> prefabCollection;
-            
+
             public InheritanceTreeCollection(PrefabCollection<T> collection) { prefabCollection = collection; }
 
-            public readonly Dictionary<Identifier, Node> IdToNode = new Dictionary<Identifier, Node>();
+            public readonly Dictionary<PrefabInstance, Node> IdToNode = new Dictionary<PrefabInstance, Node>();
             public readonly HashSet<Node> RootNodes = new HashSet<Node>();
 
-            public Node? AddNodeAndInheritors(Identifier id)
+            public Node? AddNodeAndInheritors(PrefabInstance inst)
             {
-                if (!prefabCollection.TryGet(id, out T? prefab)) { return null; }
-                
-                if (!IdToNode.TryGetValue(id, out var node))
+                if (!prefabCollection.TryGet(inst, out T? prefab)) { return null; }
+
+                if (prefab is null) return null;
+
+                if (!IdToNode.TryGetValue(inst, out var node))
                 {
-                    node = new Node(id);
+                    node = new Node(inst.id, inst.package);
                     RootNodes.Add(node);
-                    IdToNode.Add(id, node);
+                    IdToNode.Add(inst, node);
                 }
                 else
                 {
@@ -130,70 +136,68 @@ namespace Barotrauma
                     //all inheritors so let's just return this immediately
                     return node;
                 }
-                
-                prefabCollection
+            
+                // for overridden stuff to be found by inheritance, one must use all prefabs asscociated with id,
+                // not just the active prefab, as implemented by PrefabCollection's enummerator
+                prefabCollection.prefabs
+                    .SelectMany(p => p.Value)
                     .Cast<IImplementsVariants<T>>()
-                    .Where(p => p.VariantOf == id)
+                    .Where(p => p.InheritParent.id == inst.id)
+                     // only the current package is null
+                    .Where(p => (p.InheritParent.package == inst.package
+                       // variant inheritance across package boundary need reload prefab, so the evaluated one doesn't count here.
+                        || (p.originalElement.InheritParent().package.IsNullOrEmpty() && p.GetPrevious(inst.id)?.ContentPackage?.Name == inst.package))
+                        && p.CheckInheritHistory(prefab))
                     .Cast<T>()
                     .ForEach(p =>
                     {
-                        var inheritorNode = AddNodeAndInheritors(p.Identifier);
+                        var c_inst = new PrefabInstance(p.Identifier, p.ContentPackage?.Name ?? "");
+                        var inheritorNode = AddNodeAndInheritors(c_inst);
                         if (inheritorNode is null) { return; }
                         RootNodes.Remove(inheritorNode);
                         inheritorNode.Parent = node;
                         node.Inheritors.Add(inheritorNode);
                     });
-
                 return node;
             }
 
-            private void FindCycles(in Node node, HashSet<Node> uncheckedNodes)
-            {
-                HashSet<Node> checkedNodes = new HashSet<Node>();
-                List<Node> hierarchyPositions = new List<Node>();
-                Node? currNode = node;
-                do
-                {
-                    if (!uncheckedNodes.Contains(currNode)) { break; }
-                    if (checkedNodes.Contains(currNode))
-                    {
-                        int index = hierarchyPositions.IndexOf(currNode);
-                        throw new Exception("Inheritance cycle detected: "
-                            +string.Join(", ", hierarchyPositions.Skip(index).Select(n => n.Identifier)));
-                    }
-                    checkedNodes.Add(currNode);
-                    hierarchyPositions.Add(currNode);
-                    currNode = currNode.Parent;
-                } while (currNode != null);
-                uncheckedNodes.RemoveWhere(i => checkedNodes.Contains(i));
-            }
-            
-            public void AddNodesAndInheritors(IEnumerable<Identifier> ids)
+            public void AddNodesAndInheritors(IEnumerable<PrefabInstance> ids)
                 => ids.ForEach(id => AddNodeAndInheritors(id));
 
             public void InvokeCallbacks()
             {
                 HashSet<Node> uncheckedNodes = IdToNode.Values.ToHashSet();
-                IdToNode.Values.ForEach(v => FindCycles(v, uncheckedNodes));
+
                 void invokeCallbacksForNode(Node node)
                 {
-                    if (!prefabCollection.TryGet(node.Identifier, out var p) ||
+                    if (!prefabCollection.TryGet(node.Inst, out var p) ||
                         !(p is IImplementsVariants<T> prefab)) { return; }
-                    if (!prefab.VariantOf.IsEmpty && prefabCollection.TryGet(prefab.VariantOf, out T? parent)) { prefab.InheritFrom(parent!); }
+                    if (!prefab.InheritParent.IsEmpty && prefabCollection.TryGet(prefab.InheritParent, out T? parent)) {
+                        if(!(parent is null))
+                        {
+                            prefab.CheckInheritHistory(parent);
+                            prefab.InheritFrom(parent!);
+                        }
+                    }
                     node.Inheritors.ForEach(invokeCallbacksForNode);
                 }
                 RootNodes.ForEach(invokeCallbacksForNode);
             }
         }
 
-        private void HandleInheritance(Identifier prefabIdentifier)
-            => HandleInheritance(prefabIdentifier.ToEnumerable());
+        private void HandleInheritance(T prefab){
+            var inst = new PrefabInstance(prefab.Identifier, prefab.ContentPackage?.Name ?? "");
+            HandleInheritance(inst);
+        }
 
-        private void HandleInheritance(IEnumerable<Identifier> identifiers)
+        private void HandleInheritance(PrefabInstance prefabInstance)
+            => HandleInheritance(prefabInstance.ToEnumerable());
+
+        private void HandleInheritance(IEnumerable<PrefabInstance> prefabInstance)
         {
             if (!implementsVariants) { return; }
             InheritanceTreeCollection inheritanceTreeCollection = new InheritanceTreeCollection(this);
-            inheritanceTreeCollection.AddNodesAndInheritors(identifiers);
+            inheritanceTreeCollection.AddNodesAndInheritors(prefabInstance);
             inheritanceTreeCollection.InvokeCallbacks();
         }
 
@@ -248,13 +252,29 @@ namespace Barotrauma
         /// <param name="identifier">Prefab identifier</param>
         /// <param name="result">The matching prefab (if one is found)</param>
         /// <returns>Whether a prefab with the identifier exists or not</returns>
-        public bool TryGet(Identifier identifier, out T? result)
+        public bool TryGet(PrefabInstance identifier, out T? result)
         {
             Prefab.DisallowCallFromConstructor();
-            if (prefabs.TryGetValue(identifier, out PrefabSelector<T>? selector))
+            if (prefabs.TryGetValue(identifier.id, out PrefabSelector<T>? selector))
             {
-                result = selector!.ActivePrefab;
-                return true;
+                if(identifier.package.IsNullOrEmpty()){
+                    result = selector!.ActivePrefab;
+                    return true;
+                }
+                else{
+                    foreach (T it in selector)
+                    {
+                        if (identifier.package == it.ContentPackage?.Name)
+                        {
+                            result = it;
+                            return true;
+                        }
+                    }
+                    result = null;
+                    return false;
+                }
+
+                return false;
             }
             else
             {
@@ -264,7 +284,15 @@ namespace Barotrauma
         }
 
         public bool TryGet(string identifier, out T? result)
-            => TryGet(identifier.ToIdentifier(), out result);
+        {
+            return TryGet(new PrefabInstance(identifier.ToIdentifier(), ""), out result);
+        }
+
+        public bool TryGet(Identifier identifier, out T? result)
+        {
+            return TryGet(new PrefabInstance(identifier, ""), out result);
+        }
+
 
         public IEnumerable<Identifier> Keys => prefabs.Keys;
 
@@ -370,7 +398,7 @@ namespace Barotrauma
                 if (!prefabs.TryAdd(prefab.Identifier, selector)) { throw new Exception($"Failed to add selector for \"{prefab.Identifier}\""); }
             }
             OnAdd?.Invoke(prefab, isOverride);
-            HandleInheritance(prefab.Identifier);
+            HandleInheritance(prefab);
         }
 
         /// <summary>
@@ -389,7 +417,7 @@ namespace Barotrauma
             {
                 prefabs.TryRemove(prefab.Identifier, out _);
             }
-            HandleInheritance(prefab.Identifier);
+            HandleInheritance(prefab);
         }
 
         /// <summary>
@@ -450,7 +478,9 @@ namespace Barotrauma
             }
             topMostOverrideFile = overrideFiles.Any() ? overrideFiles.First(f1 => overrideFiles.All(f2 => f1.ContentPackage.Index >= f2.ContentPackage.Index)) : null;
             OnSort?.Invoke();
-            HandleInheritance(this.Select(p => p.Identifier));
+            foreach(T p in this){
+                HandleInheritance(p);
+			}
         }
 
         /// <summary>

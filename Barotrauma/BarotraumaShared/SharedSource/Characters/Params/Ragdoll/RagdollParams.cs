@@ -146,9 +146,9 @@ namespace Barotrauma
             Identifier ragdollSpecies = speciesName;
             if (CharacterPrefab.Prefabs.TryGet(speciesName, out var prefab))
             {
-                if (!prefab.VariantOf.IsEmpty)
+                if (!prefab.InheritParent.IsEmpty)
                 {
-                    ragdollSpecies = prefab.VariantOf;
+                    ragdollSpecies = prefab.InheritParent.ToIdentifier();
                 }
                 string error = null;
                 string folder = GetFolder(ragdollSpecies);
@@ -192,7 +192,7 @@ namespace Barotrauma
             DebugConsole.Log($"[RagdollParams] Loading ragdoll from {selectedFile}.");
             var characterPrefab = CharacterPrefab.Prefabs[speciesName];
             T r = new T();
-            if (r.Load(ContentPath.FromRaw(characterPrefab.ContentPackage, selectedFile), ragdollSpecies))
+            if (r.Load(ContentPath.FromRaw(characterPrefab.FilePath, selectedFile), ragdollSpecies))
             {
                 if (!ragdolls.ContainsKey(r.Name))
                 {
@@ -226,7 +226,7 @@ namespace Barotrauma
                 doc = new XDocument(mainElement)
             };
             var characterPrefab = CharacterPrefab.Prefabs[speciesName];
-            var contentPath = ContentPath.FromRaw(characterPrefab.ContentPackage, fullPath);
+            var contentPath = ContentPath.FromRaw(characterPrefab.FilePath, fullPath);
             instance.UpdatePath(contentPath);
             instance.IsLoaded = instance.Deserialize(mainElement);
             instance.Save();
@@ -1206,7 +1206,7 @@ namespace Barotrauma
             public virtual string GenerateName() => Element.Name.ToString();
 
             protected ContentXElement CreateElement(string name, params object[] attrs)
-                => new XElement(name, attrs).FromPackage(Element.ContentPackage);
+                => new XElement(name, attrs).FromContent(Element.ContentPath);
             
             public SubParam(ContentXElement element, RagdollParams ragdoll)
             {

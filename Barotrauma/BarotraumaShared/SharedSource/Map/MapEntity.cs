@@ -695,7 +695,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        object newEntity = loadMethod.Invoke(t, new object[] { element.FromPackage(null), submarine, idRemap });
+                        object newEntity = loadMethod.Invoke(t, new object[] { element.FromContent(ContentPath.Empty), submarine, idRemap });
                         if (newEntity != null)
                         {
                             entities.Add((MapEntity)newEntity);

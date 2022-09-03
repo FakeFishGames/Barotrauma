@@ -417,7 +417,7 @@ namespace Barotrauma
         /// </summary>
         public bool IsOverride => Prefabs.IsOverride(this);
 
-        private readonly XElement originalElement;
+        public XElement originalElement { get; }
         public ContentXElement ConfigElement { get; private set; }
 
         public ImmutableArray<DeconstructItem> DeconstructItems { get; private set; }
@@ -780,16 +780,16 @@ namespace Barotrauma
             OriginalName = element.GetAttributeString("name", "");
             name = OriginalName;
 
-            VariantOf = element.VariantOf();
+            InheritParent = element.InheritParent();
             
-            if (!VariantOf.IsEmpty) { return; } //don't even attempt to read the XML until the PrefabCollection readies up the parent to inherit from
+            if (!InheritParent.id.IsEmpty) { return; } //don't even attempt to read the XML until the PrefabCollection readies up the parent to inherit from
 
             ParseConfigElement(variantOf: null);
         }
 
         private string GetTexturePath(ContentXElement subElement, ItemPrefab variantOf)
             => subElement.DoesAttributeReferenceFileNameAlone("texture")
-                ? Path.GetDirectoryName(variantOf?.ContentFile.Path ?? ContentFile.Path)
+                ? Path.GetDirectoryName(ContentFile.Path.IsNullOrEmpty()?variantOf?.ContentFile.Path : ContentFile.Path)
                 : "";
 
         private void ParseConfigElement(ItemPrefab variantOf)
@@ -1329,13 +1329,54 @@ namespace Barotrauma
             Item.RemoveByPrefab(this);
         }
 
-        public Identifier VariantOf { get; }
-        
+        public PrefabInstance InheritParent { get; private set; }
+        public List<PrefabInstance> InheritHistory { get; private set; }
+
         public void InheritFrom(ItemPrefab parent)
         {
-            ConfigElement = originalElement.CreateVariantXML(parent.ConfigElement).FromPackage(ConfigElement.ContentPackage);
+            InheritHistory = new List<PrefabInstance>();
+            // toolbox's createcopy throws for List<PrefabInstance>
+            if (!(parent.InheritHistory is null)){
+                foreach (PrefabInstance inst in parent.InheritHistory)
+                {
+                    InheritHistory.Add(inst);
+                }
+            }
+
+            // xml may not specify package name, then this prefab parent here is important...
+            InheritHistory.Add(new PrefabInstance(parent.Identifier, parent.ContentPackage.Name));
+            // xml didn't specify
+            if (originalElement.InheritParent().package.IsNullOrEmpty())
+            {
+                InheritParent.package = parent.ContentPackage.Name;
+            }
+            ConfigElement = (this as IImplementsVariants<ItemPrefab>).DoInherit(null);
             ParseConfigElement(parent);
         }
+
+        public ItemPrefab FindByPrefabInstance(PrefabInstance instance){
+            Prefabs.TryGet(instance, out ItemPrefab res);
+            return res;
+        }
+        public ItemPrefab GetPrevious(Identifier identifier)
+        {
+            ItemPrefab res;
+            if (identifier != Identifier)
+            {
+                res = Prefabs[identifier];
+            }
+            else
+            {
+                res = Prefabs.AllPrefabs.Where(p => p.Key == identifier).Single().Value.GetPrevious(ContentPackage.Name);
+            }
+            if (res is null) return null;
+            if (InheritParent.package.IsNullOrEmpty())
+            {
+                InheritParent.package = res.ContentPackage.Name;
+            }
+            return res;
+        }
+
 
         public override string ToString()
         {

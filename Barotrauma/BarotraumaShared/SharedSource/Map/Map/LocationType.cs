@@ -119,7 +119,7 @@ namespace Barotrauma
             {
                 try
                 {
-                    var path = ContentPath.FromRaw(element.ContentPackage, rawPath.Trim());
+                    var path = ContentPath.FromRaw(element.ContentPath, rawPath.Trim());
                     names.AddRange(File.ReadAllLines(path.Value).ToList());
                 }
                 catch (Exception e)

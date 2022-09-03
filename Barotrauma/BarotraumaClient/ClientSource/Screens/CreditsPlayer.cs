@@ -48,7 +48,7 @@ namespace Barotrauma
 
             var doc = XMLExtensions.TryLoadXml(configFile);
             if (doc == null) { return; }
-            configElement = doc.Root.FromPackage(ContentPackageManager.VanillaCorePackage);
+            configElement = doc.Root.FromContent(ContentPath.FromRaw(configFile));
 
             Load();
         }

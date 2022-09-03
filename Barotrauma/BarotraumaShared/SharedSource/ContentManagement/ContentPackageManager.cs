@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using Barotrauma.Extensions;
 using System;
 using System.Collections;

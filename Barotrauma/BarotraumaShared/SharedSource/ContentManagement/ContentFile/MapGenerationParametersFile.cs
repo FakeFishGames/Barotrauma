@@ -14,7 +14,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError($"Loading map generation parameters file failed: {Path}");
                 return;
             }
-            var mainElement = doc.Root.FromPackage(ContentPackage);
+            var mainElement = doc.Root.FromContent(Path);
             bool isOverride = mainElement.IsOverride();
             if (isOverride) { mainElement = mainElement.FirstElement(); }
             var prefab = new MapGenerationParams(mainElement, this);

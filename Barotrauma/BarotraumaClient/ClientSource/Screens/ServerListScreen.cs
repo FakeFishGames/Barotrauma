@@ -670,7 +670,7 @@ namespace Barotrauma
 
             XDocument playStylesDoc = XMLExtensions.TryLoadXml("Content/UI/Server/PlayStyles.xml");
 
-            var rootElement = playStylesDoc.Root.FromPackage(ContentPackageManager.VanillaCorePackage);
+            var rootElement = playStylesDoc.Root.FromContent(ContentPath.FromRaw("Content/UI/Server/PlayStyles.xml"));
             foreach (var element in rootElement.Elements())
             {
                 switch (element.Name.ToString().ToLowerInvariant())

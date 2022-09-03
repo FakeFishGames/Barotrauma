@@ -1,0 +1,9 @@
+1. path attribute registering (folder="Default")
+	static reflect an interface that returns a IEnumerable<KeyValuePair<string, Action<XAttribute, ContentPath, ContentPath>>?>, static Immutable dictionary at ContentPath for XPath match (key), and Action(updates xattribute according to src dst path should replace default with actual folder path)
+2. identifier attribute mapping (character uses speciesname for identifier)
+3. override+inherit without variants (perhaps allow human character to override this on itsown?)
+	Move CreateVariantXML and inherithistory out of IImplementVariants
+4. fix? preprocess path update->preprocess xpath substitute->postprocess path update->postprocess xpath substitute inconsistency.
+	specify preprocess to be "literal", relative path referering to parent's location?
+5. package name to package instance resolution should be consistent (workshopid->name->alias)
+	initial loading still cannot ensure package created, but later name evaluation should be consistent everywhere.

@@ -488,7 +488,7 @@ namespace Barotrauma
                 {
                     ContentPath texturePath = element.GetAttributeContentPath("texture");
                     texturePath = texturePath.IsNullOrWhiteSpace()
-                        ? ContentPath.FromRaw(character.Prefab.ContentPackage, ragdoll.RagdollParams.Texture)
+                        ? ContentPath.FromRaw(character.Prefab.FilePath, ragdoll.RagdollParams.Texture)
                         : texturePath;
                     path = GetSpritePath(texturePath);
                 }

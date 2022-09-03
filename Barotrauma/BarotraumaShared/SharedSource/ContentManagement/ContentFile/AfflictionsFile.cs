@@ -83,7 +83,7 @@ namespace Barotrauma
         {
             XDocument doc = XMLExtensions.TryLoadXml(Path);
             if (doc?.Root is null) { return; }
-            ParseElement(doc.Root.FromPackage(ContentPackage), overriding: false);
+            ParseElement(doc.Root.FromContent(Path), overriding: false);
         }
 
         private AfflictionPrefab CreatePrefab(ContentXElement element, Type type)

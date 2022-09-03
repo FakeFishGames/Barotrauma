@@ -25,7 +25,7 @@ namespace Barotrauma
                 DebugConsole.ThrowError($"Duplicate path: {Path}");
                 return;
             }
-            var mainElement = doc.Root.FromPackage(ContentPackage);
+            var mainElement = doc.Root.FromContent(Path);
             bool isOverride = mainElement.IsOverride();
             if (isOverride) { mainElement = mainElement.FirstElement(); }
             if (!CharacterPrefab.CheckSpeciesName(mainElement, this, out Identifier n)) { return; }
@@ -77,7 +77,7 @@ namespace Barotrauma
             {
                 HashSet<string> texturePaths = new HashSet<string>
                 {
-                    ContentPath.FromRaw(CharacterPrefab.Prefabs[speciesName].ContentPackage, ragdollParams.Texture).Value
+                    ContentPath.FromRaw(CharacterPrefab.Prefabs[speciesName].FilePath , ragdollParams.Texture).Value
                 };
                 foreach (RagdollParams.LimbParams limb in ragdollParams.Limbs)
                 {
