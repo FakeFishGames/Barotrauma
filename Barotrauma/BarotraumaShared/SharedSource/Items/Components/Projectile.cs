@@ -750,6 +750,22 @@ namespace Barotrauma.Items.Components
             else if (target.Body.UserData is Item item)
             {
                 if (item.Condition <= 0.0f) { return false; }
+
+                var levelResource = item.GetComponent<LevelResource>();
+                if (levelResource != null && levelResource.Attached && levelResource.requiredItems.Any() && Item.Tags.Any(tag => levelResource.requiredItems.Contains(tag)))
+                {
+                    float addedDetachTime = deltaTime * (1f + (User ?? Attacker).GetStatValue(StatTypes.RepairToolDeattachTimeMultiplier)) * (1f + Item.GetQualityModifier(Quality.StatType.RepairToolDeattachTimeMultiplier));
+                    levelResource.DeattachTimer += addedDetachTime;
+#if CLIENT
+                    (User ?? Attacker).Controlled?.UpdateHUDProgressBar(
+                        this,
+                        item.WorldPosition,
+                        levelResource.DeattachTimer / levelResource.DeattachDuration,
+                        GUIStyle.Red, GUIStyle.Green, "progressbar.deattaching");
+#endif
+                    FixItemProjSpecific(User, deltaTime, item, showProgressBar: false);
+                    return true;
+                }
             }
 
             //ignore character colliders (the projectile only hits limbs)
