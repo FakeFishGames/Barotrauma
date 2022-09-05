@@ -188,9 +188,9 @@ namespace Barotrauma
             else if(cleanvalue.StartsWith("LocalMods/")){
                 // typically only used when loading filelist.xml.
                 // mod internal use should never use this.
-                cachedPackageName = "Vanilla";
+                cachedPackageName = "";
                 cachedRelativePath = cleanvalue;
-                isVanilla = true;
+                isVanilla = false;
             }
             else if (cleanvalue.StartsWith(ModDirStr + "/", StringComparison.OrdinalIgnoreCase))
             {
@@ -252,7 +252,7 @@ namespace Barotrauma
             if(isVanilla){
                 return RelativePath;
 			}
-            else{
+            else {
                 return string.Format("%ModDir:{0}%/{1}", cachedPackageName, RelativePath);
             }
 		}

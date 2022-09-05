@@ -138,8 +138,10 @@ namespace Barotrauma
                 res = Prefabs[identifier];
             }
             else{
-                res = Prefabs.AllPrefabs.Where(p => p.Key == identifier).Single().Value.GetPrevious(ContentPackage.Name);
-            }
+                res = Prefabs.AllPrefabs.Where(p => p.Key == identifier)
+                    .Single().Value
+					.GetPrevious((ContentPackage.SteamWorkshopId != 0) ? ContentPackage.SteamWorkshopId.ToString() : ContentPackage.Name);
+			}
             if (res is null) return null;
             if (originalElement.InheritParent().package.IsNullOrEmpty())
             {
