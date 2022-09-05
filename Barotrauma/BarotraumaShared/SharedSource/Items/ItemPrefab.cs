@@ -641,10 +641,8 @@ namespace Barotrauma
 
             OriginalName = element.GetAttributeString("name", "");
             name = OriginalName;
-
-            InheritParent = element.InheritParent();
             
-            if (!InheritParent.id.IsEmpty) { return; } //don't even attempt to read the XML until the PrefabCollection readies up the parent to inherit from
+            if (!element.InheritParent().id.IsEmpty) { return; } //don't even attempt to read the XML until the PrefabCollection readies up the parent to inherit from
 
             ParseConfigElement(variantOf: null);
         }
@@ -1168,27 +1166,8 @@ namespace Barotrauma
             Item.RemoveByPrefab(this);
         }
 
-        public PrefabInstance InheritParent { get; private set; }
-        public List<PrefabInstance> InheritHistory { get; private set; }
-
         public void InheritFrom(ItemPrefab parent)
         {
-            InheritHistory = new List<PrefabInstance>();
-            // toolbox's createcopy throws for List<PrefabInstance>
-            if (!(parent.InheritHistory is null)){
-                foreach (PrefabInstance inst in parent.InheritHistory)
-                {
-                    InheritHistory.Add(inst);
-                }
-            }
-
-            // xml may not specify package name, then this prefab parent here is important...
-            InheritHistory.Add(new PrefabInstance(parent.Identifier, parent.ContentPackage.Name));
-            // xml didn't specify
-            if (originalElement.InheritParent().package.IsNullOrEmpty())
-            {
-                InheritParent.package = parent.ContentPackage.Name;
-            }
             ConfigElement = (this as IImplementsVariants<ItemPrefab>).DoInherit(null);
             ParseConfigElement(parent);
         }
@@ -1200,22 +1179,31 @@ namespace Barotrauma
         public ItemPrefab GetPrevious(Identifier identifier)
         {
             ItemPrefab res;
-            if (identifier != Identifier)
-            {
-                res = Prefabs[identifier];
-            }
-            else
-            {
-                res = Prefabs.AllPrefabs.Where(p => p.Key == identifier)
-                    .Single().Value
-                    .GetPrevious((ContentPackage.SteamWorkshopId!=0)?ContentPackage.SteamWorkshopId.ToString():ContentPackage.Name);
-            }
-            if (res is null) return null;
-            if (InheritParent.package.IsNullOrEmpty())
-            {
-                InheritParent.package = res.ContentPackage.Name;
-            }
-            return res;
+			if (identifier != Identifier)
+			{
+				if (Prefabs.Any(p => p.Identifier == identifier))
+				{
+					res = Prefabs[identifier];
+				}
+				else
+				{
+					res = null;
+				}
+			}
+			else
+			{
+				if (Prefabs.AllPrefabs.Any(p => p.Key == identifier))
+				{
+					res = Prefabs.AllPrefabs.Where(p => p.Key == identifier)
+						.Single().Value
+						.GetPrevious((ContentPackage.SteamWorkshopId != 0) ? ContentPackage.SteamWorkshopId.ToString() : ContentPackage.Name);
+				}
+				else
+				{
+					res = null;
+				}
+			}
+			return res;
         }
 
 

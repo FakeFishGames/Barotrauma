@@ -427,7 +427,7 @@ namespace Barotrauma
             }
         }
 
-        public PrefabInstance VariantOf => Prefab.InheritParent;
+        public PrefabInstance VariantOf => (Prefab as IImplementsVariants<CharacterPrefab>).InheritParent;
 
         public string Name
         {
@@ -1223,7 +1223,7 @@ namespace Barotrauma
                 CharacterHealth = new CharacterHealth(selectedHealthElement, this, limbHealthElement);
             }
 
-            if (Params.Husk && speciesName != "husk" && Prefab.InheritParent.id != "husk")
+            if (Params.Husk && speciesName != "husk" && (Prefab as IImplementsVariants<CharacterPrefab>).InheritParent.id != "husk")
             {
                 // Get the non husked name and find the ragdoll with it
                 var matchingAffliction = AfflictionPrefab.List
@@ -1242,7 +1242,7 @@ namespace Barotrauma
                 {
                     nonHuskedSpeciesName = AfflictionHusk.GetNonHuskedSpeciesName(speciesName, matchingAffliction);
                 }
-                if (ragdollParams == null && prefab.InheritParent.IsEmpty)
+                if (ragdollParams == null && (prefab as IImplementsVariants<CharacterPrefab>).InheritParent.IsEmpty)
                 {
                     Identifier name = Params.UseHuskAppendage ? nonHuskedSpeciesName : speciesName;
                     ragdollParams = IsHumanoid ? RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(name) : RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(name) as RagdollParams;

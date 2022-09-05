@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Steamworks.Ugc;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -81,13 +82,13 @@ namespace Barotrauma
         {
             if (item == null) { return false; }
             if (excludedIdentifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id))) { return false; }
-            return Identifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id) || (AllowVariants && !item.Prefab.InheritParent.IsEmpty && item.Prefab.InheritParent.ToIdentifier() == id));
+            return Identifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id) || (AllowVariants && !(item.Prefab as IImplementsVariants<ItemPrefab>).InheritParent.IsEmpty && (item.Prefab as IImplementsVariants<ItemPrefab>).InheritParent.ToIdentifier() == id));
         }
         public bool MatchesItem(ItemPrefab itemPrefab)
         {
             if (itemPrefab == null) { return false; }
             if (excludedIdentifiers.Any(id => itemPrefab.Identifier == id || itemPrefab.Tags.Contains(id))) { return false; }
-            return Identifiers.Any(id => itemPrefab.Identifier == id || itemPrefab.Tags.Contains(id) || (AllowVariants && !itemPrefab.InheritParent.IsEmpty && itemPrefab.InheritParent.ToIdentifier() == id));
+            return Identifiers.Any(id => itemPrefab.Identifier == id || itemPrefab.Tags.Contains(id) || (AllowVariants && !(itemPrefab as IImplementsVariants<ItemPrefab>).InheritParent.IsEmpty && (itemPrefab as IImplementsVariants<ItemPrefab>).InheritParent.ToIdentifier() == id));
         }
 
         public RelatedItem(Identifier[] identifiers, Identifier[] excludedIdentifiers)

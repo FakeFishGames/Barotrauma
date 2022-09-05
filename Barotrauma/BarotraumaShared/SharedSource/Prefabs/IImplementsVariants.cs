@@ -30,10 +30,24 @@ namespace Barotrauma
     public interface IImplementsVariants<T> where T : Prefab
     {
         // direct parent of the prefab
-        public PrefabInstance InheritParent { get; }
+        public PrefabInstance InheritParent => originalElement.InheritParent();
 
-        // ancestry line of the prefab
-        public List<PrefabInstance> InheritHistory{ get; }
+		// ancestry line of the prefab
+		public IEnumerable<T> InheritHistory { 
+            get {
+                IImplementsVariants<T> cur = this;
+                while(!(cur.InheritParent?.IsEmpty??true)){
+                    if(cur.InheritParent.package.IsNullOrEmpty()){
+                        cur = cur.GetPrevious(cur.InheritParent.id) as IImplementsVariants<T>;
+					}
+                    else{
+                        cur = FindByPrefabInstance(cur.InheritParent) as IImplementsVariants<T>;
+                    }
+                    if (cur is null) break;
+                    yield return cur as T;
+				}
+			} 
+        }
 
         public XElement originalElement{ get; }
 
@@ -42,16 +56,13 @@ namespace Barotrauma
         public bool CheckInheritHistory(T parent)
         {
             bool result = true;
-            if (!((parent as IImplementsVariants<T>).InheritHistory is null)) {
-                if ((parent as IImplementsVariants<T>).InheritHistory.Any(p => (this as T).Identifier == p.id && (this as T).ContentPackage.Name == p.package))
-                {
-                    int index = InheritHistory.IndexOf(p => (this as T).Identifier == p.id && (this as T).ContentPackage.Name == p.package);
-                    throw new Exception("Inheritance cycle detected: "
-                        + string.Join(", ", InheritHistory.Select(n => "(id: " + n.id.ToString() + ", package: " + n.package + ")"),
-                        "(id: " + (this as T).Identifier.ToString() + ", package: " + (this as T).ContentPackage.Name + ")"));
-                }
-            }
-            return result;
+			if ((parent as IImplementsVariants<T>).InheritHistory.Any(p => ReferenceEquals(p, this as T)))
+		    {
+				throw new Exception("Inheritance cycle detected: "
+					+ string.Join(", ", InheritHistory.Select(n => "(id: " + n.Identifier.ToString() + ", package: " + n.ContentPackage!.Name + ")"),
+					"(id: " + (this as T).Identifier.ToString() + ", package: " + (this as T).ContentPackage.Name + ")"));
+			}
+			return result;
         }
 
         public T FindByPrefabInstance(PrefabInstance instance);
@@ -62,12 +73,11 @@ namespace Barotrauma
         {
             Stack<ContentXElement> preprocessed = new Stack<ContentXElement>();
             var last_elem = originalElement.FromContent((this as T).FilePath);
-            for (var i = InheritHistory.Count - 1; i >= 0; --i)
-            {
-                var hist = FindByPrefabInstance(InheritHistory[i]);
-                preprocessed.Push(last_elem.PreprocessInherit((hist as IImplementsVariants<T>).originalElement.FromContent(hist.ContentFile.Path), false));
-                last_elem = preprocessed.Peek();
-            }
+            foreach(var it in InheritHistory)
+			{
+				preprocessed.Push(last_elem.PreprocessInherit((it as IImplementsVariants<T>).originalElement.FromContent(it.ContentFile.Path), false));
+				last_elem = preprocessed.Peek();
+			}
             ContentXElement previous = preprocessed.Pop();
             while (preprocessed.Any())
             {
