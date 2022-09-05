@@ -1297,7 +1297,8 @@ namespace Barotrauma
                     nonHuskedSpeciesName = IsHumanoid ? CharacterPrefab.HumanSpeciesName : "crawler".ToIdentifier();
                     speciesName = nonHuskedSpeciesName;
                 }
-                if (ragdollParams == null && (prefab as IImplementsVariants<CharacterPrefab>).InheritParent == null)
+                // currently a hack, should track id history to see if all same
+                if (ragdollParams == null && ((prefab as IImplementsVariants<CharacterPrefab>).InheritParent.IsEmpty || (prefab as IImplementsVariants<CharacterPrefab>).InheritParent.id == prefab.Identifier))
                 {
                     Identifier name = Params.UseHuskAppendage ? nonHuskedSpeciesName : speciesName;
                     ragdollParams = IsHumanoid ? RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(name) : RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(name) as RagdollParams;
