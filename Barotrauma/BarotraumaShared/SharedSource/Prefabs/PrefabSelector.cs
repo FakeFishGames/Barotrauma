@@ -33,7 +33,7 @@ namespace Barotrauma
                 if(found) {
                     return prefab;
 				}
-				if ((prefab.ContentPackage?.Name??"").Equals(package_name))
+				if (prefab.ContentPackage?.StringMatches(package_name)??false)
 				{
                     found = true;
                 }

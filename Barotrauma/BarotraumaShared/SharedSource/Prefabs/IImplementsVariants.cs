@@ -253,17 +253,24 @@ namespace Barotrauma
                         ContentPath evaluated;
                         if (attribute.Name.ToString().Equals("folder", StringComparison.OrdinalIgnoreCase) && attribute.Value.ToString().Equals("default", StringComparison.OrdinalIgnoreCase))
                         {
-                            if(attribute.Parent.Name.ToString().Equals("ragdolls", StringComparison.OrdinalIgnoreCase))
+                            if(!old_element.GetAttributeBool("usehuskappendage",false)) {
+								if (attribute.Parent.Name.ToString().Equals("ragdolls", StringComparison.OrdinalIgnoreCase))
+								{
+									evaluated = ContentPath.FromRaw(old_element.ContentPath, "./Ragdolls/");
+								}
+								else if (attribute.Parent.Name.ToString().Equals("animations", StringComparison.OrdinalIgnoreCase))
+								{
+									evaluated = ContentPath.FromRaw(old_element.ContentPath, "./Animations/");
+								}
+								else
+								{
+									evaluated = attribute.GetContentPath(old_element.ContentPath);
+								}
+							}
+                            else
                             {
-                                evaluated = ContentPath.FromRaw(old_element.ContentPath, "./Ragdolls/");
-                            }
-                            else if (attribute.Parent.Name.ToString().Equals("animations", StringComparison.OrdinalIgnoreCase))
-                            {
-                                evaluated = ContentPath.FromRaw(old_element.ContentPath, "./Animations/");
-                            }
-                            else {
-                                evaluated = attribute.GetContentPath(old_element.ContentPath);
-                            }
+								evaluated = attribute.GetContentPath(old_element.ContentPath);
+							}
                         }
                         else
                         {
