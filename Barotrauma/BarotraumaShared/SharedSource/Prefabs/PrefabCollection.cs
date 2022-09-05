@@ -264,7 +264,7 @@ namespace Barotrauma
                 else{
                     foreach (T it in selector)
                     {
-                        if (identifier.package == it.ContentPackage?.Name)
+                        if (it.ContentPackage!.StringMatches(identifier.package))
                         {
                             result = it;
                             return true;
