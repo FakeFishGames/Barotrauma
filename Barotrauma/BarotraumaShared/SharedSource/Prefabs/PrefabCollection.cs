@@ -172,13 +172,22 @@ namespace Barotrauma
                 {
                     if (!prefabCollection.TryGet(node.Inst, out var p) ||
                         !(p is IImplementsVariants<T> prefab)) { return; }
-                    if (!prefab.InheritParent.IsEmpty && prefabCollection.TryGet(prefab.InheritParent, out T? parent)) {
-                        if(!(parent is null))
-                        {
-                            prefab.CheckInheritHistory(parent);
-                            prefab.InheritFrom(parent!);
-                        }
-                    }
+                    if(!prefab.InheritParent.id.IsEmpty){
+						T parent;
+						if (prefab.InheritParent.package.IsNullOrEmpty())
+						{
+							parent = prefab.GetPrevious(prefab.InheritParent.id);
+						}
+						else
+						{
+							parent = prefab.FindByPrefabInstance(prefab.InheritParent);
+						}
+						if (!(parent is null))
+						{
+							prefab.CheckInheritHistory(parent);
+							prefab.InheritFrom(parent!);
+						}
+					}
                     node.Inheritors.ForEach(invokeCallbacksForNode);
                 }
                 RootNodes.ForEach(invokeCallbacksForNode);

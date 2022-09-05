@@ -22,27 +22,8 @@ namespace Barotrauma
         }
 
         public string Name => Identifier.Value;
-        public PrefabInstance InheritParent { get; private set; }
-        public List<PrefabInstance> InheritHistory { get; private set;  }
         public void InheritFrom(CharacterPrefab parent)
         {
-            InheritHistory = new List<PrefabInstance>();
-            // toolbox's createcopy throws for List<PrefabInstance>
-            if (!(parent.InheritHistory is null))
-            {
-                foreach (PrefabInstance inst in parent.InheritHistory)
-                {
-                    InheritHistory.Add(inst);
-                }
-            }
-            // xml may not specify package name, then this prefab parent here is important...
-            InheritHistory.Add(new PrefabInstance(parent.Identifier, parent.ContentPackage.Name));
-            // xml didn't specify
-            if (InheritParent.package.IsNullOrEmpty())
-            {
-                InheritParent.package = parent.ContentPackage.Name;
-            }
-
             ConfigElement = (this as IImplementsVariants<CharacterPrefab>).DoInherit(CharacterParams.CreateVariantXml_callback);
             ParseConfigElement();
         }
@@ -95,7 +76,6 @@ namespace Barotrauma
         {
             originalElement = mainElement;
             ConfigElement = mainElement;
-            InheritParent = mainElement.InheritParent();
 
             ParseConfigElement();
         }
@@ -135,18 +115,23 @@ namespace Barotrauma
             CharacterPrefab res;
             if (identifier != Identifier)
             {
-                res = Prefabs[identifier];
+                if(Prefabs.Any(p=>p.Identifier == identifier)){
+					res = Prefabs[identifier];
+				}
+                else{
+                    res = null;
+                }
             }
-            else{
-                res = Prefabs.AllPrefabs.Where(p => p.Key == identifier)
-                    .Single().Value
-					.GetPrevious((ContentPackage.SteamWorkshopId != 0) ? ContentPackage.SteamWorkshopId.ToString() : ContentPackage.Name);
+            else {
+                if (Prefabs.AllPrefabs.Any(p => p.Key == identifier)) {
+					res = Prefabs.AllPrefabs.Where(p => p.Key == identifier)
+		                .Single().Value
+		                .GetPrevious((ContentPackage.SteamWorkshopId != 0) ? ContentPackage.SteamWorkshopId.ToString() : ContentPackage.Name);
+				}
+                else{
+                    res = null;
+                }
 			}
-            if (res is null) return null;
-            if (originalElement.InheritParent().package.IsNullOrEmpty())
-            {
-                InheritParent.package = res.ContentPackage.Name;
-            }
             return res;
         }
     }

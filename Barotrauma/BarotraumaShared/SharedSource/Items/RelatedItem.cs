@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Steamworks.Ugc;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -81,21 +82,8 @@ namespace Barotrauma
         public bool MatchesItem(Item item)
         {
             if (item == null) { return false; }
-            if (excludedIdentifiers.Contains(item.Prefab.Identifier)) { return false; }
-            foreach (var excludedIdentifier in excludedIdentifiers)
-            {
-                if (item.HasTag(excludedIdentifier)) { return false; }
-            }
-            if (Identifiers.Contains(item.Prefab.Identifier)) { return true; }
-            foreach (var identifier in Identifiers)
-            {
-                if (item.HasTag(identifier)) { return true; }
-            }
-            if (AllowVariants && !item.Prefab.InheritParent.IsEmpty)
-            {
-                if (Identifiers.Contains(item.Prefab.InheritParent.id)) { return true; }
-            }
-            return false;
+            if (excludedIdentifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id))) { return false; }
+            return Identifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id) || (AllowVariants && !(item.Prefab as IImplementsVariants<ItemPrefab>).InheritParent.IsEmpty && (item.Prefab as IImplementsVariants<ItemPrefab>).InheritParent.ToIdentifier() == id));
         }
         public bool MatchesItem(ItemPrefab itemPrefab)
         {
@@ -110,9 +98,9 @@ namespace Barotrauma
             {
                 if (itemPrefab.Tags.Contains(identifier)) { return true; }
             }
-            if (AllowVariants && !itemPrefab.InheritParent.IsEmpty)
+            if (AllowVariants && !(itemPrefab as IImplementsVariants<ItemPrefab>).InheritParent.IsEmpty)
             {
-                if (Identifiers.Contains(itemPrefab.InheritParent.id)) { return true; }
+                if (Identifiers.Contains((itemPrefab as IImplementsVariants<ItemPrefab>).InheritParent.id)) { return true; }
             }
             return false;
         }

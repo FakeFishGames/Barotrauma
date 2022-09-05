@@ -146,9 +146,9 @@ namespace Barotrauma
             Identifier ragdollSpecies = speciesName;
             if (CharacterPrefab.Prefabs.TryGet(speciesName, out var prefab))
             {
-                if (!prefab.InheritParent.IsEmpty)
+                if (!(prefab as IImplementsVariants<CharacterPrefab>).InheritParent.IsEmpty)
                 {
-                    ragdollSpecies = prefab.InheritParent.ToIdentifier();
+                    ragdollSpecies = (prefab as IImplementsVariants<CharacterPrefab>).InheritParent.ToIdentifier();
                 }
                 string error = null;
                 string folder = GetFolder(ragdollSpecies);
