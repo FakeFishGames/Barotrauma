@@ -674,10 +674,13 @@ namespace Barotrauma
             // directly. If legacy name is present, stores should still show new localized
             // name. (Legacy name is fallback for localized name).
             // This is used by gui, console, and structure linking, nothing should be saved in save?
-            name = TextManager.Get(nameIdentifier.IsEmpty
+            var local = TextManager.Get(nameIdentifier.IsEmpty
                         ? $"EntityName.{Identifier}"
                         : $"EntityName.{nameIdentifier}",
                     $"EntityName.{fallbackNameIdentifier}");
+            if(!local.IsNullOrEmpty()){
+                name = local;
+            }
             if (Category.HasFlag(MapEntityCategory.Legacy))
             {
                 // Legacy items use names as identifiers, so we have to define them in the xml. But we also want to support the translations. Therefore
