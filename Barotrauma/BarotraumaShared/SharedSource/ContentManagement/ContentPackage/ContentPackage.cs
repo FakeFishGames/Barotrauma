@@ -122,7 +122,7 @@ namespace Barotrauma
             => NameMatches(name.ToIdentifier());
         
         public bool StringMatches(string workshop_id_or_name)
-            => (UInt64.TryParse(workshop_id_or_name, out UInt64 res)&& res == SteamWorkshopId) || NameMatches(workshop_id_or_name);
+            => (UInt64.TryParse(workshop_id_or_name, out UInt64 res)&& (res != 0 && res == SteamWorkshopId)) || NameMatches(workshop_id_or_name);
 
         public static ContentPackage? TryLoad(string path)
         {
