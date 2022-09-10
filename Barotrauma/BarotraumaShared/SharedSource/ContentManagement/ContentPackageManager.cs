@@ -81,8 +81,11 @@ namespace Barotrauma
                 if (inNewRegular.SequenceEqual(regular)) { yield break; }
                 ThrowIfDuplicates(inNewRegular);
                 var newRegular = inNewRegular.ToList();
-                IEnumerable<RegularPackage> toUnload = regular.Where(r => !newRegular.Contains(r));
-                RegularPackage[] toLoad = newRegular.Where(r => !regular.Contains(r)).ToArray();
+                // inheritance can be compicated.
+                // Mod A have item a, Mod B partially overrides Mod A's a.
+                // If you have Mod B, this doesn't necessarily mean Mod B works correctly
+                IEnumerable<RegularPackage> toUnload = regular;//.Where(r => !newRegular.Contains(r));
+                RegularPackage[] toLoad = newRegular.ToArray();//.Where(r => !regular.Contains(r)).ToArray();
                 toUnload.ForEach(r => r.UnloadPackage());
 
                 Range<float> loadingRange = new Range<float>(0.0f, 1.0f);
