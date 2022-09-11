@@ -487,9 +487,14 @@ namespace Barotrauma
             }
             topMostOverrideFile = overrideFiles.Any() ? overrideFiles.First(f1 => overrideFiles.All(f2 => f1.ContentPackage.Index >= f2.ContentPackage.Index)) : null;
             OnSort?.Invoke();
+			// inheritance cannot just work topmost prefab
+			// Mod A have item a, Mod B partially overrides Mod A's a.
+			// If you have Mod B, this doesn't necessarily mean Mod B works correctly
+			AllPrefabs.SelectMany(p => p.Value).ForEach(p => HandleInheritance(p));
+            /*
             foreach(T p in this){
                 HandleInheritance(p);
-			}
+			}*/
         }
 
         /// <summary>
