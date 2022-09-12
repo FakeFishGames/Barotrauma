@@ -22,7 +22,7 @@ namespace Barotrauma
             private set;
         }
 
-        public TalentPrefab(ContentXElement element, TalentsFile file) : base(file, element.GetAttributeIdentifier("identifier", Identifier.Empty))
+        public TalentPrefab(ContentXElement element, TalentsFile file) : base(file, element)
         {
             ConfigElement = element;
 

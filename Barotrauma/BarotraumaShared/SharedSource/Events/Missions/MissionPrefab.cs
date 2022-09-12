@@ -138,7 +138,7 @@ namespace Barotrauma
 
         public readonly ContentXElement ConfigElement;
 
-        public MissionPrefab(ContentXElement element, MissionsFile file) : base(file, element.GetAttributeIdentifier("identifier", ""))
+        public MissionPrefab(ContentXElement element, MissionsFile file) : base(file, element)
         {
             ConfigElement = element;
 

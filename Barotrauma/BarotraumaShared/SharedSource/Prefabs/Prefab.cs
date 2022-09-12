@@ -1,6 +1,7 @@
 ﻿#nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Xml.Linq;
@@ -9,13 +10,13 @@ namespace Barotrauma
 {
     public abstract class Prefab : IDisposable
     {
-        public readonly static ImmutableHashSet<Type> Types;
+		public readonly static ImmutableHashSet<Type> Types;
         static Prefab()
         {
             Types = ReflectionUtils.GetDerivedNonAbstract<Prefab>().ToImmutableHashSet();
         }
 
-        private static bool potentialCallFromConstructor = false;
+		private static bool potentialCallFromConstructor = false;
         public static void DisallowCallFromConstructor()
         {
             if (!potentialCallFromConstructor) { return; }

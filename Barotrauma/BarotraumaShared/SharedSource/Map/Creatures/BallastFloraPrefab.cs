@@ -14,7 +14,7 @@ namespace Barotrauma
 
         public static readonly PrefabCollection<BallastFloraPrefab> Prefabs = new PrefabCollection<BallastFloraPrefab>();
 
-        public BallastFloraPrefab(ContentXElement element, BallastFloraFile file) : base(file, element.GetAttributeIdentifier("identifier", ""))
+        public BallastFloraPrefab(ContentXElement element, BallastFloraFile file) : base(file, element)
         {
             OriginalName = element.GetAttributeString("name", "");
             DisplayName = TextManager.Get(Identifier).Fallback(OriginalName);

@@ -124,7 +124,7 @@ namespace Barotrauma
             return Commonness;
         }
 
-        public CaveGenerationParams(ContentXElement element, CaveGenerationParametersFile file) : base(file, element.GetAttributeIdentifier("identifier", ""))
+        public CaveGenerationParams(ContentXElement element, CaveGenerationParametersFile file) : base(file, element)
         {
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
 

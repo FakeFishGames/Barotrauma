@@ -26,7 +26,7 @@ namespace Barotrauma
         public readonly float FadeOutTime;
         public readonly float FadeInTime;
 
-        public DecalPrefab(ContentXElement element, DecalsFile file) : base(file, new Identifier(element.Name.LocalName))
+        public DecalPrefab(ContentXElement element, DecalsFile file) : base(file, element)
         {
             Sprites = new List<Sprite>();
 
@@ -44,5 +44,10 @@ namespace Barotrauma
             FadeOutTime = Math.Min(LifeTime, element.GetAttributeFloat("fadeouttime", 1.0f));
             FadeInTime = Math.Min(LifeTime - FadeOutTime, element.GetAttributeFloat("fadeintime", 0.0f));
         }
-    }
+
+		protected override Identifier DetermineIdentifier(XElement element)
+		{
+            return element.Name.LocalName.ToIdentifier();
+		}
+	}
 }

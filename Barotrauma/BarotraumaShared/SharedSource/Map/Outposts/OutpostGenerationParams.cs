@@ -177,7 +177,7 @@ namespace Barotrauma
         private ImmutableHashSet<Identifier> StoreIdentifiers { get; set; }
 
         #warning TODO: this shouldn't really accept any ContentFile, issue is that RuinConfigFile and OutpostConfigFile are separate derived classes
-        public OutpostGenerationParams(ContentXElement element, ContentFile file) : base(file, element.GetAttributeIdentifier("identifier", ""))
+        public OutpostGenerationParams(ContentXElement element, ContentFile file) : base(file, element)
         {
             Name = element.GetAttributeString("name", Identifier.Value);
             allowedLocationTypes = element.GetAttributeIdentifierArray("allowedlocationtypes", Array.Empty<Identifier>()).ToHashSet();

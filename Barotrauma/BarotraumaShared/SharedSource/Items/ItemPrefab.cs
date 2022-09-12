@@ -390,8 +390,8 @@ namespace Barotrauma
     {
         public static readonly PrefabCollection<ItemPrefab> Prefabs = new PrefabCollection<ItemPrefab>();
 
-        //default size
-        public Vector2 Size { get; private set; }
+		//default size
+		public Vector2 Size { get; private set; }
 
         private PriceInfo defaultPrice;
         public PriceInfo DefaultPrice => defaultPrice;
@@ -780,17 +780,15 @@ namespace Barotrauma
             OriginalName = element.GetAttributeString("name", "");
             name = OriginalName;
             
-            if (!element.InheritParent().id.IsEmpty) { return; } //don't even attempt to read the XML until the PrefabCollection readies up the parent to inherit from
+            if (!element.InheritParent().IsEmpty) { return; } //don't even attempt to read the XML until the PrefabCollection readies up the parent to inherit from
 
-            ParseConfigElement(variantOf: null);
+            ParseConfigElement();
         }
 
-        private string GetTexturePath(ContentXElement subElement, ItemPrefab variantOf)
-            => subElement.DoesAttributeReferenceFileNameAlone("texture")
-                ? Path.GetDirectoryName(ContentFile.Path.IsNullOrEmpty()?variantOf?.ContentFile.Path : ContentFile.Path)
-                : "";
+        private string GetTexturePath(ContentXElement subElement)
+            => subElement.DoesAttributeReferenceFileNameAlone("texture")? Path.GetDirectoryName(ContentFile.Path) : "";
 
-        private void ParseConfigElement(ItemPrefab variantOf)
+        private void ParseConfigElement()
         {
             string categoryStr = ConfigElement.GetAttributeString("category", "Misc");
             this.category = Enum.TryParse(categoryStr, true, out MapEntityCategory category)
@@ -881,7 +879,7 @@ namespace Barotrauma
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "sprite":
-                        string spriteFolder = GetTexturePath(subElement, variantOf);
+                        string spriteFolder = GetTexturePath(subElement);
 
                         CanSpriteFlipX = subElement.GetAttributeBool("canflipx", true);
                         CanSpriteFlipY = subElement.GetAttributeBool("canflipy", true);
@@ -1026,7 +1024,7 @@ namespace Barotrauma
             }
 
 #if CLIENT
-            ParseSubElementsClient(ConfigElement, variantOf);
+            ParseSubElementsClient(ConfigElement);
 #endif
 
             this.Triggers = triggers.ToImmutableArray();
@@ -1327,46 +1325,11 @@ namespace Barotrauma
             Item.RemoveByPrefab(this);
         }
 
-        public void InheritFrom(ItemPrefab parent)
+        public void ApplyInherit()
         {
-            ConfigElement = (this as IImplementsVariants<ItemPrefab>).DoInherit(null);
-            ParseConfigElement(parent);
+            ConfigElement = (this as IImplementsInherit<ItemPrefab>).DoInherit(null);
+            ParseConfigElement();
         }
-
-        public ItemPrefab FindByPrefabInstance(PrefabInstance instance){
-            Prefabs.TryGet(instance, out ItemPrefab res);
-            return res;
-        }
-        public ItemPrefab GetPrevious(Identifier identifier)
-        {
-            ItemPrefab res;
-			if (identifier != Identifier)
-			{
-				if (Prefabs.Any(p => p.Identifier == identifier))
-				{
-					res = Prefabs[identifier];
-				}
-				else
-				{
-					res = null;
-				}
-			}
-			else
-			{
-				if (Prefabs.AllPrefabs.Any(p => p.Key == identifier))
-				{
-					res = Prefabs.AllPrefabs.Where(p => p.Key == identifier)
-						.Single().Value
-						.GetPrevious((ContentPackage.SteamWorkshopId != 0) ? ContentPackage.SteamWorkshopId.ToString() : ContentPackage.Name);
-				}
-				else
-				{
-					res = null;
-				}
-			}
-			return res;
-        }
-
 
         public override string ToString()
         {

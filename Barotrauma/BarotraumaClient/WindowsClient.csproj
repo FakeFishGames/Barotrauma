@@ -127,6 +127,10 @@
     <ProjectReference Include="..\..\Libraries\MonoGame.Framework\Src\MonoGame.Framework\MonoGame.Framework.Windows.NetStandard.csproj" AdditionalProperties="Configuration=Debug" />
     <ProjectReference Include="..\..\Libraries\SharpFont\Source\SharpFont\SharpFont.NetStandard.csproj" AdditionalProperties="Configuration=Debug" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="..\BarotraumaShared\SharedSource\Prefabs\IInheritIdentifier.cs" />
+    <Compile Remove="..\BarotraumaShared\SharedSource\Prefabs\IInheritSingleton.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <Folder Include="..\BarotraumaShared\SharedSource\Utils\Result">

@@ -83,7 +83,7 @@ namespace Barotrauma
         {
             if (item == null) { return false; }
             if (excludedIdentifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id))) { return false; }
-            return Identifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id) || (AllowVariants && !(item.Prefab as IImplementsVariants<ItemPrefab>).InheritParent.IsEmpty && (item.Prefab as IImplementsVariants<ItemPrefab>).InheritParent.ToIdentifier() == id));
+            return Identifiers.Any(id => item.Prefab.Identifier == id || item.HasTag(id) || (AllowVariants && !(item.Prefab as IImplementsVariants<ItemPrefab>).VariantOf.IsEmpty && (item.Prefab as IImplementsVariants<ItemPrefab>).VariantOf.ToIdentifier() == id));
         }
         public bool MatchesItem(ItemPrefab itemPrefab)
         {
@@ -98,9 +98,9 @@ namespace Barotrauma
             {
                 if (itemPrefab.Tags.Contains(identifier)) { return true; }
             }
-            if (AllowVariants && !(itemPrefab as IImplementsVariants<ItemPrefab>).InheritParent.IsEmpty)
+            if (AllowVariants && !(itemPrefab as IImplementsVariants<ItemPrefab>).VariantOf.IsEmpty)
             {
-                if (Identifiers.Contains((itemPrefab as IImplementsVariants<ItemPrefab>).InheritParent.id)) { return true; }
+                if (Identifiers.Contains((itemPrefab as IImplementsVariants<ItemPrefab>).VariantOf)) { return true; }
             }
             return false;
         }
