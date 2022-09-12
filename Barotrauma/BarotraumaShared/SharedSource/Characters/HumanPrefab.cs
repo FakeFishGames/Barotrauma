@@ -85,7 +85,7 @@ namespace Barotrauma
         public readonly Dictionary<XElement, float> ItemSets = new Dictionary<XElement, float>();
         public readonly Dictionary<XElement, float> CustomNPCSets = new Dictionary<XElement, float>();
 
-        public HumanPrefab(ContentXElement element, ContentFile file) : base(file, element.GetAttributeIdentifier("identifier", ""))
+        public HumanPrefab(ContentXElement element, ContentFile file) : base(file, element)
         {
             SerializableProperty.DeserializeProperties(this, element);
             Job = Job.ToLowerInvariant();

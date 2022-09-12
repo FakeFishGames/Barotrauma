@@ -41,7 +41,7 @@ namespace Barotrauma
 
         public override void Dispose() { }
 
-        public EventManagerSettings(XElement element, EventManagerSettingsFile file) : base(file, element.NameAsIdentifier())
+        public EventManagerSettings(XElement element, EventManagerSettingsFile file) : base(file, element.FromContent(file.Path))
         {
             Name = TextManager.Get("difficulty." + Identifier).Fallback(Identifier.Value);
             EventThresholdIncrease = element.GetAttributeFloat("EventThresholdIncrease", EventThresholdIncrease);
@@ -53,5 +53,10 @@ namespace Barotrauma
 
             FreezeDurationWhenCrewAway = element.GetAttributeFloat("FreezeDurationWhenCrewAway", FreezeDurationWhenCrewAway);
         }
-    }
+
+		protected override Identifier DetermineIdentifier(XElement element)
+		{
+            return element.NameAsIdentifier();
+		}
+	}
 }

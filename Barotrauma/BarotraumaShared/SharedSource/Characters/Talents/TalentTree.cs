@@ -27,7 +27,7 @@ namespace Barotrauma
             private set;
         }
 
-        public TalentTree(ContentXElement element, TalentTreesFile file) : base(file, element.GetAttributeIdentifier("jobIdentifier", ""))
+        public TalentTree(ContentXElement element, TalentTreesFile file) : base(file, element)
         {
             ConfigElement = element;
 
@@ -42,8 +42,13 @@ namespace Barotrauma
                 TalentSubTrees.Add(new TalentSubTree(subTreeElement));
             }
         }
-        
-        public bool TalentIsInTree(Identifier talentIdentifier)
+
+		protected override Identifier DetermineIdentifier(XElement element)
+		{
+            return element.GetAttributeIdentifier("jobIdentifier", "");
+		}
+
+		public bool TalentIsInTree(Identifier talentIdentifier)
         {
             return TalentSubTrees.SelectMany(s => s.TalentOptionStages.SelectMany(o => o.Talents.Select(t => t.Identifier))).Any(c => c == talentIdentifier);
         }

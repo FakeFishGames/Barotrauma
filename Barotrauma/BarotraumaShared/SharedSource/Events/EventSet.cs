@@ -15,7 +15,7 @@ namespace Barotrauma
 
         public readonly Sprite Sprite;
 
-        public EventSprite(ContentXElement element, RandomEventsFile file) : base(file, element.GetAttributeIdentifier("identifier", Identifier.Empty))
+        public EventSprite(ContentXElement element, RandomEventsFile file) : base(file, element)
         {
             Sprite = new Sprite(element);
         }

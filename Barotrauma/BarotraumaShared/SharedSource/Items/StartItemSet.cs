@@ -31,7 +31,7 @@ namespace Barotrauma
         /// </summary>
         public readonly int Order;
 
-        public StartItemSet(ContentXElement element, StartItemsFile file) : base(file, element.GetAttributeIdentifier("identifier", Identifier.Empty))
+        public StartItemSet(ContentXElement element, StartItemsFile file) : base(file, element)
         {
             Items = element.Elements().Select(e => new StartItem(e!)).ToImmutableArray();
             Order = element.GetAttributeInt("order", 0);

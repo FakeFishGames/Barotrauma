@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -16,7 +17,7 @@ namespace Barotrauma
 
         public readonly ImmutableHashSet<int> AllowedZones;
 
-        public Biome(ContentXElement element, LevelGenerationParametersFile file) : base(file, ParseIdentifier(element))
+        public Biome(ContentXElement element, LevelGenerationParametersFile file) : base(file, element)
         {
             OldIdentifier = element.GetAttributeIdentifier("oldidentifier", Identifier.Empty);
 
@@ -34,7 +35,7 @@ namespace Barotrauma
             MaxDifficulty = element.GetAttributeFloat("MaxDifficulty", 100);
         }
 
-        public static Identifier ParseIdentifier(ContentXElement element)
+		protected override Identifier DetermineIdentifier(XElement element)
         {
             Identifier identifier = element.GetAttributeIdentifier("identifier", "");
             if (identifier.IsEmpty)

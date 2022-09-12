@@ -16,7 +16,7 @@ namespace Barotrauma
         public readonly List<NPCConversation> Conversations;
         public readonly Dictionary<Identifier, NPCPersonalityTrait> PersonalityTraits;
 
-        public NPCConversationCollection(NPCConversationsFile file, ContentXElement element) : base(file, element.GetAttributeIdentifier("identifier", ""))
+        public NPCConversationCollection(NPCConversationsFile file, ContentXElement element) : base(file, element)
         {
             Language = element.GetAttributeIdentifier("language", "English").ToLanguageIdentifier();
             Conversations = new List<NPCConversation>();

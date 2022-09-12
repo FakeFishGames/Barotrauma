@@ -86,7 +86,7 @@ namespace Barotrauma
             get;
             private set;
         }
-        private void ParseSubElementsClient(ContentXElement element, ItemPrefab variantOf)
+        private void ParseSubElementsClient(ContentXElement element)
         {
             UpgradePreviewSprite = null;
             UpgradePreviewScale = 1f;
@@ -121,39 +121,39 @@ namespace Barotrauma
                         }
                     case "upgradepreviewsprite":
                         {
-                            string iconFolder = GetTexturePath(subElement, variantOf);
+                            string iconFolder = GetTexturePath(subElement);
                             UpgradePreviewSprite = new Sprite(subElement, iconFolder, lazyLoad: true);
                             UpgradePreviewScale = subElement.GetAttributeFloat("scale", 1.0f);
                         }
                         break;
                     case "inventoryicon":
                         {
-                            string iconFolder = GetTexturePath(subElement, variantOf);
+                            string iconFolder = GetTexturePath(subElement);
                             InventoryIcon = new Sprite(subElement, iconFolder, lazyLoad: true);
                         }
                         break;
                     case "minimapicon":
                         {
-                            string iconFolder = GetTexturePath(subElement, variantOf);
+                            string iconFolder = GetTexturePath(subElement);
                             MinimapIcon = new Sprite(subElement, iconFolder, lazyLoad: true);
                         }
                         break;
                     case "infectedsprite":
                         {
-                            string iconFolder = GetTexturePath(subElement, variantOf);
+                            string iconFolder = GetTexturePath(subElement);
 
                             InfectedSprite = new Sprite(subElement, iconFolder, lazyLoad: true);
                         }
                         break;
                     case "damagedinfectedsprite":
                         {
-                            string iconFolder = GetTexturePath(subElement, variantOf);
+                            string iconFolder = GetTexturePath(subElement);
 
                             DamagedInfectedSprite = new Sprite(subElement, iconFolder, lazyLoad: true);
                         }
                         break;
                     case "brokensprite":
-                        string brokenSpriteFolder = GetTexturePath(subElement, variantOf);
+                        string brokenSpriteFolder = GetTexturePath(subElement);
 
                         var brokenSprite = new BrokenItemSprite(
                             new Sprite(subElement, brokenSpriteFolder, lazyLoad: true),
@@ -169,7 +169,7 @@ namespace Barotrauma
                         brokenSprites.Insert(spriteIndex, brokenSprite);
                         break;
                     case "decorativesprite":
-                        string decorativeSpriteFolder = GetTexturePath(subElement, variantOf);
+                        string decorativeSpriteFolder = GetTexturePath(subElement);
 
                         int groupID = 0;
                         DecorativeSprite decorativeSprite = null;
@@ -191,7 +191,7 @@ namespace Barotrauma
 
                         break;
                     case "containedsprite":
-                        string containedSpriteFolder = GetTexturePath(subElement, variantOf);
+                        string containedSpriteFolder = GetTexturePath(subElement);
                         var containedSprite = new ContainedItemSprite(subElement, containedSpriteFolder, lazyLoad: true);
                         if (containedSprite.Sprite != null)
                         {

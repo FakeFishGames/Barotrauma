@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    public class PrefabSelector<T> : IEnumerable<T> where T : notnull, Prefab
+	public class PrefabSelector<T> : IEnumerable<T> where T : notnull, Prefab
     {
         public T? BasePrefab
         {

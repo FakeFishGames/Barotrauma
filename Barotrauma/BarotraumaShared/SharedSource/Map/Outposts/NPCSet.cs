@@ -17,7 +17,7 @@ namespace Barotrauma
 
         private bool Disposed { get; set; }
 
-        public NPCSet(ContentXElement element, NPCSetsFile file) : base(file, element.GetAttributeIdentifier("identifier", ""))
+        public NPCSet(ContentXElement element, NPCSetsFile file) : base(file, element)
         {
             Humans = element.Elements().Select(npcElement => new HumanPrefab(npcElement, file)).ToImmutableArray();
         }
