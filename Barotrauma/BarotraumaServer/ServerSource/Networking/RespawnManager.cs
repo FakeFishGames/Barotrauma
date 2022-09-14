@@ -505,9 +505,10 @@ namespace Barotrauma.Networking
                 var characterData = campaign?.GetClientCharacterData(clients[i]);
                 if (characterData != null && Level.Loaded?.Type != LevelData.LevelType.Outpost && characterData.HasSpawned)
                 {
+                    //we need to reapply the previous respawn penalty affliction or successive deaths won't make it stack
+                    characterData.ApplyHealthData(character, (AfflictionPrefab ap) => ap == GetRespawnPenaltyAfflictionPrefab());
                     GiveRespawnPenaltyAffliction(character);
                 }
-
                 if (characterData == null || characterData.HasSpawned)
                 {
                     //give the character the items they would've gotten if they had spawned in the main sub
@@ -555,7 +556,7 @@ namespace Barotrauma.Networking
             foreach (Skill skill in characterInfo.Job.GetSkills())
             {
                 var skillPrefab = characterInfo.Job.Prefab.Skills.Find(s => skill.Identifier == s.Identifier);
-                if (skillPrefab == null) { continue; }
+                if (skillPrefab == null || skill.Level < skillPrefab.LevelRange.End) { continue; }
                 skill.Level = MathHelper.Lerp(skill.Level, skillPrefab.LevelRange.End, SkillReductionOnDeath);
             }
         }

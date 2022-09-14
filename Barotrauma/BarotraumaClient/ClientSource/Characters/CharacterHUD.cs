@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
+using Barotrauma.Tutorials;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -398,36 +399,58 @@ namespace Barotrauma
                     progressBar.Draw(spriteBatch, cam);
                 }
 
-                foreach (Character npc in Character.CharacterList)
+                void DrawInteractionIcon(Entity entity, string iconStyle)
                 {
-                    if (npc.CampaignInteractionType == CampaignMode.InteractionType.None || npc.Submarine != character.Submarine || npc.IsDead || npc.IsIncapacitated) { continue; }
+                    if (entity == null || entity.Removed) { return; }
+                    var characterEntity = entity as Character;
+                    if (characterEntity is not null && (characterEntity.IsDead || characterEntity.IsIncapacitated)) { return; }
+                    if (GUIStyle.GetComponentStyle(iconStyle) is not GUIComponentStyle style) { return; }
 
-                    var iconStyle = GUIStyle.GetComponentStyle("CampaignInteractionIcon." + npc.CampaignInteractionType);
-                    if (iconStyle == null) { continue; }
-                    Range<float> visibleRange = new Range<float>(npc.CurrentHull == Character.Controlled.CurrentHull ? 500.0f : 100.0f, float.PositiveInfinity);
-                    if (npc.CampaignInteractionType == CampaignMode.InteractionType.Examine)
+                    Hull currentHull = entity switch
+                    {
+                        Character character => character.CurrentHull,
+                        Item item => item.CurrentHull,
+                        _ => null
+                    };
+
+                    Range<float> visibleRange = new Range<float>(currentHull == Character.Controlled.CurrentHull ? 500.0f : 100.0f, float.PositiveInfinity);
+                    if (characterEntity?.CampaignInteractionType == CampaignMode.InteractionType.Examine)
                     {
                         //TODO: we could probably do better than just hardcoding
                         //a check for InteractionType.Examine here.
 
-                        if (Vector2.DistanceSquared(character.Position, npc.Position) > 500f * 500f) { continue; }
+                        if (Vector2.DistanceSquared(character.Position, entity.Position) > 500f * 500f) { return; }
 
-                        var body = Submarine.CheckVisibility(character.SimPosition, npc.SimPosition, ignoreLevel: true);
-                        if (body != null && body.UserData as Character != npc) { continue; }
+                        var body = Submarine.CheckVisibility(character.SimPosition, entity.SimPosition, ignoreLevel: true);
+                        if (body != null && body.UserData != entity) { return; }
 
                         visibleRange = new Range<float>(-100f, 500f);
                     }
-                    float dist = Vector2.Distance(character.WorldPosition, npc.WorldPosition);
+                    float dist = Vector2.Distance(character.WorldPosition, entity.WorldPosition);
                     float distFactor = 1.0f - MathUtils.InverseLerp(1000.0f, 3000.0f, dist);
                     float alpha = MathHelper.Lerp(0.3f, 1.0f, distFactor);
                     GUI.DrawIndicator(
                         spriteBatch,
-                        npc.WorldPosition,
+                        entity.WorldPosition,
                         cam,
                         visibleRange,
-                        iconStyle.GetDefaultSprite(),
-                        iconStyle.Color * alpha,
-                        label: npc.Info?.Title);
+                        style.GetDefaultSprite(),
+                        style.Color * alpha,
+                        label: characterEntity?.Info?.Title);
+                }
+
+                foreach (Character npc in Character.CharacterList)
+                {
+                    if (npc.CampaignInteractionType == CampaignMode.InteractionType.None) { continue; }
+                    DrawInteractionIcon(npc, "CampaignInteractionIcon." + npc.CampaignInteractionType);
+                }
+
+                if (GameMain.GameSession?.GameMode is TutorialMode tutorialMode && tutorialMode.Tutorial is not null)
+                {
+                    foreach (var (entity, iconStyle) in tutorialMode.Tutorial.Icons)
+                    {
+                        DrawInteractionIcon(entity, iconStyle);
+                    }
                 }
 
                 foreach (Item item in Item.ItemList)

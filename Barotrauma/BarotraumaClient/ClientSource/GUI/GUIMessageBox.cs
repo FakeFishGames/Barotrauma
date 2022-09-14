@@ -34,7 +34,7 @@ namespace Barotrauma
         public GUIFrame InnerFrame { get; private set; }
         public GUITextBlock Header { get; private set; }
         public GUITextBlock Text { get; private set; }
-        public string Tag { get; private set; }
+        public Identifier Tag { get; private set; }
         public bool Closed { get; private set; }
 
         public bool DisplayInLoadingScreens;
@@ -77,6 +77,8 @@ namespace Barotrauma
         /// Close the message box automatically if the condition is met
         /// </summary>
         private readonly Func<bool> autoCloseCondition;
+
+        public bool FlashOnAutoCloseCondition { get; set; }
 
         public Type MessageBoxType => type;
 
@@ -142,7 +144,7 @@ namespace Barotrauma
             }
             GUIStyle.Apply(InnerFrame, "", this);
             this.type = type;
-            Tag = tag;
+            Tag = tag.ToIdentifier();
 
             #warning TODO: These should be broken into separate methods at least
             if (type == Type.Default || type == Type.Vote)
@@ -199,6 +201,7 @@ namespace Barotrauma
                     var button = new GUIButton(new RectTransform(new Vector2(0.6f, 1.0f / buttons.Length), buttonContainer.RectTransform), buttons[i]);
                     Buttons.Add(button);
                 }
+                GUITextBlock.AutoScaleAndNormalize(Buttons.Select(btn => btn.TextBlock));
             }
             else if (type == Type.InGame || type == Type.Tutorial)
             {
@@ -540,9 +543,7 @@ namespace Barotrauma
                 if (type == Type.InGame || type == Type.Tutorial)
                 {
                     initialPos = new Vector2(0.0f, GameMain.GraphicsHeight);
-                    defaultPos = type == Type.InGame ?
-                        new Vector2(0.0f, HUDLayoutSettings.InventoryAreaLower.Y - InnerFrame.Rect.Height - 20 * GUI.Scale) :
-                        new Vector2(0.0f, GameMain.GraphicsHeight / 2);
+                    defaultPos = new Vector2(0.0f, HUDLayoutSettings.InventoryAreaLower.Y - InnerFrame.Rect.Height - 20 * GUI.Scale);
                     endPos = new Vector2(GameMain.GraphicsWidth, defaultPos.Y);
                 }
                 else
@@ -574,9 +575,17 @@ namespace Barotrauma
                         inGameCloseTimer += deltaTime;
                     }
 
-                    if (inGameCloseTimer >= inGameCloseTime || (autoCloseCondition != null && autoCloseCondition()))
+                    if (inGameCloseTimer >= inGameCloseTime)
                     {
                         Close();
+                    }
+                    else if (autoCloseCondition != null && autoCloseCondition())
+                    {
+                        Close();
+                        if (FlashOnAutoCloseCondition)
+                        {
+                            InnerFrame.Flash(GUIStyle.Green);
+                        }
                     }
                 }
                 else
@@ -634,7 +643,6 @@ namespace Barotrauma
             }
         }
 
-
         public void Close()
         {
             if (IsAnimated)
@@ -661,6 +669,19 @@ namespace Barotrauma
         {
             MessageBoxes.Clear();
         }
+
+        public static void Close(Identifier tag)
+        {
+            foreach (var messageBox in MessageBoxes)
+            {
+                if (messageBox is GUIMessageBox mb && mb.Tag == tag)
+                {
+                    mb.Close();
+                }
+            }
+        }
+
+        public static void Close(string tag) => Close(tag.ToIdentifier());
 
         /// <summary>
         /// Parent does not matter. It's overridden.

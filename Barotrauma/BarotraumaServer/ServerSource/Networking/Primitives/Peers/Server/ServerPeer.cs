@@ -9,26 +9,31 @@ namespace Barotrauma.Networking
 {
     internal abstract class ServerPeer
     {
-        public delegate void MessageCallback(NetworkConnection connection, IReadMessage message);
+        public readonly record struct Callbacks(
+            Callbacks.MessageCallback OnMessageReceived,
+            Callbacks.DisconnectCallback OnDisconnect,
+            Callbacks.InitializationCompleteCallback OnInitializationComplete,
+            Callbacks.ShutdownCallback OnShutdown,
+            Callbacks.OwnerDeterminedCallback OnOwnerDetermined)
+        {
+            public delegate void MessageCallback(NetworkConnection connection, IReadMessage message);
+            public delegate void DisconnectCallback(NetworkConnection connection, PeerDisconnectPacket peerDisconnectPacket);
+            public delegate void InitializationCompleteCallback(NetworkConnection connection, string? clientName);
+            public delegate void ShutdownCallback();
+            public delegate void OwnerDeterminedCallback(NetworkConnection connection);
+        }
 
-        public delegate void DisconnectCallback(NetworkConnection connection, string? reason);
+        protected readonly Callbacks callbacks;
 
-        public delegate void InitializationCompleteCallback(NetworkConnection connection, string? clientName);
-
-        public delegate void ShutdownCallback();
-
-        public delegate void OwnerDeterminedCallback(NetworkConnection connection);
-
-        public MessageCallback? OnMessageReceived;
-        public DisconnectCallback? OnDisconnect;
-        public InitializationCompleteCallback? OnInitializationComplete;
-        public ShutdownCallback? OnShutdown;
-        public OwnerDeterminedCallback? OnOwnerDetermined;
-
+        protected ServerPeer(Callbacks callbacks)
+        {
+            this.callbacks = callbacks;
+        }
+        
         public abstract void InitializeSteamServerCallbacks();
 
         public abstract void Start();
-        public abstract void Close(string? msg = null);
+        public abstract void Close();
         public abstract void Update(float deltaTime);
 
         protected sealed class PendingClient
@@ -84,15 +89,16 @@ namespace Barotrauma.Networking
 
                     if (!Client.IsValidName(authPacket.Name, serverSettings))
                     {
-                        RemovePendingClient(pendingClient, DisconnectReason.InvalidName, "");
+                        RemovePendingClient(pendingClient, PeerDisconnectPacket.WithReason(DisconnectReason.InvalidName));
                         return;
                     }
 
-                    bool isCompatibleVersion = NetworkMember.IsCompatible(authPacket.GameVersion, GameMain.Version.ToString()) ?? false;
+                    bool isCompatibleVersion =
+                        Version.TryParse(authPacket.GameVersion, out var remoteVersion)
+                        && NetworkMember.IsCompatible(remoteVersion, GameMain.Version);
                     if (!isCompatibleVersion)
                     {
-                        RemovePendingClient(pendingClient, DisconnectReason.InvalidVersion,
-                            $"DisconnectMessage.InvalidVersion~[version]={GameMain.Version}~[clientversion]={authPacket.GameVersion}");
+                        RemovePendingClient(pendingClient, PeerDisconnectPacket.InvalidVersion());
 
                         GameServer.Log($"{authPacket.Name} ({authPacket.SteamId}) couldn't join the server (incompatible game version)", ServerLog.MessageType.Error);
                         DebugConsole.NewMessage($"{authPacket.Name} ({authPacket.SteamId}) couldn't join the server (incompatible game version)", Microsoft.Xna.Framework.Color.Red);
@@ -104,7 +110,7 @@ namespace Barotrauma.Networking
                     Client nameTaken = GameMain.Server.ConnectedClients.Find(c => Homoglyphs.Compare(c.Name.ToLower(), authPacket.Name.ToLower()));
                     if (nameTaken != null)
                     {
-                        RemovePendingClient(pendingClient, DisconnectReason.NameTaken, "");
+                        RemovePendingClient(pendingClient, PeerDisconnectPacket.WithReason(DisconnectReason.NameTaken));
                         GameServer.Log($"{authPacket.Name} ({authPacket.SteamId}) couldn't join the server (name too similar to the name of the client \"" + nameTaken.Name + "\").", ServerLog.MessageType.Error);
                         return;
                     }
@@ -135,7 +141,7 @@ namespace Barotrauma.Networking
                         {
                             const string banMsg = "Failed to enter correct password too many times";
                             BanPendingClient(pendingClient, banMsg, null);
-                            RemovePendingClient(pendingClient, DisconnectReason.Banned, banMsg);
+                            RemovePendingClient(pendingClient, PeerDisconnectPacket.Banned(banMsg));
                             return;
                         }
                     }
@@ -190,13 +196,13 @@ namespace Barotrauma.Networking
         {
             if (IsPendingClientBanned(pendingClient, out string? banReason))
             {
-                RemovePendingClient(pendingClient, DisconnectReason.Banned, banReason);
+                RemovePendingClient(pendingClient, PeerDisconnectPacket.Banned(banReason));
                 return;
             }
 
             if (connectedClients.Count >= serverSettings.MaxPlayers)
             {
-                RemovePendingClient(pendingClient, DisconnectReason.ServerFull, "");
+                RemovePendingClient(pendingClient, PeerDisconnectPacket.WithReason(DisconnectReason.ServerFull));
             }
 
             if (pendingClient.InitializationStep == ConnectionInitialization.Success)
@@ -205,15 +211,15 @@ namespace Barotrauma.Networking
                 connectedClients.Add(newConnection);
                 pendingClients.Remove(pendingClient);
 
-                CheckOwnership(pendingClient);
+                callbacks.OnInitializationComplete.Invoke(newConnection, pendingClient.Name);
 
-                OnInitializationComplete?.Invoke(newConnection, pendingClient.Name);
+                CheckOwnership(pendingClient);
             }
 
             pendingClient.TimeOut -= Timing.Step;
             if (pendingClient.TimeOut < 0.0)
             {
-                RemovePendingClient(pendingClient, DisconnectReason.Unknown, Lidgren.Network.NetConnection.NoResponseMessage);
+                RemovePendingClient(pendingClient, PeerDisconnectPacket.WithReason(DisconnectReason.Timeout));
             }
 
             if (Timing.TotalTime < pendingClient.UpdateTime) { return; }
@@ -237,7 +243,7 @@ namespace Barotrauma.Networking
                     structToSend = new ServerPeerContentPackageOrderPacket
                     {
                         ServerName = GameMain.Server.ServerName,
-                        ContentPackages = ContentPackageManager.EnabledPackages.All.Where(cp => cp.HasMultiplayerSyncedContent)
+                        ContentPackages = ContentPackageManager.EnabledPackages.All.Where(cp => cp.HasMultiplayerSyncedContent || cp.Files.All(f => f is SubmarineFile))
                             .Select(contentPackage => new ServerContentPackage(contentPackage, timeNow))
                             .ToImmutableArray()
                     };
@@ -267,11 +273,11 @@ namespace Barotrauma.Networking
 
         protected virtual void CheckOwnership(PendingClient pendingClient) { }
 
-        protected void RemovePendingClient(PendingClient pendingClient, DisconnectReason reason, string? msg)
+        protected void RemovePendingClient(PendingClient pendingClient, PeerDisconnectPacket peerDisconnectPacket)
         {
             if (pendingClients.Contains(pendingClient))
             {
-                Disconnect(pendingClient.Connection, $"{reason}/{msg}");
+                Disconnect(pendingClient.Connection, peerDisconnectPacket);
 
                 pendingClients.Remove(pendingClient);
 
@@ -285,6 +291,6 @@ namespace Barotrauma.Networking
         }
 
         public abstract void Send(IWriteMessage msg, NetworkConnection conn, DeliveryMethod deliveryMethod, bool compressPastThreshold = true);
-        public abstract void Disconnect(NetworkConnection conn, string? msg = null);
+        public abstract void Disconnect(NetworkConnection conn, PeerDisconnectPacket peerDisconnectPacket);
     }
 }

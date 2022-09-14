@@ -369,6 +369,7 @@ namespace Barotrauma.Items.Components
                     loopingSoundChannel = loopingSound.RoundSound.Sound.Play(
                         new Vector3(position.X, position.Y, 0.0f), 
                         0.01f,
+                        freqMult: itemSound.RoundSound.GetRandomFrequencyMultiplier(),
                         muffle: SoundPlayer.ShouldMuffleSound(Character.Controlled, position, loopingSound.Range, Character.Controlled?.CurrentHull));
                     loopingSoundChannel.Looping = true;
                     //TODO: tweak

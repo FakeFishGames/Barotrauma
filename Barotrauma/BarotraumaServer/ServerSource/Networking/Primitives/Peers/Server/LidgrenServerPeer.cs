@@ -15,7 +15,7 @@ namespace Barotrauma.Networking
 
         private readonly List<NetIncomingMessage> incomingLidgrenMessages;
 
-        public LidgrenServerPeer(Option<int> ownKey, ServerSettings settings)
+        public LidgrenServerPeer(Option<int> ownKey, ServerSettings settings, Callbacks callbacks) : base(callbacks)
         {
             serverSettings = settings;
 
@@ -68,21 +68,21 @@ namespace Barotrauma.Networking
             }
         }
 
-        public override void Close(string? msg = null)
+        public override void Close()
         {
             if (netServer == null) { return; }
 
             for (int i = pendingClients.Count - 1; i >= 0; i--)
             {
-                RemovePendingClient(pendingClients[i], DisconnectReason.ServerShutdown, msg);
+                RemovePendingClient(pendingClients[i], PeerDisconnectPacket.WithReason(DisconnectReason.ServerShutdown));
             }
 
             for (int i = connectedClients.Count - 1; i >= 0; i--)
             {
-                Disconnect(connectedClients[i], msg ?? DisconnectReason.ServerShutdown.ToString());
+                Disconnect(connectedClients[i], PeerDisconnectPacket.WithReason(DisconnectReason.ServerShutdown));
             }
 
-            netServer.Shutdown(msg ?? DisconnectReason.ServerShutdown.ToString());
+            netServer.Shutdown(PeerDisconnectPacket.WithReason(DisconnectReason.ServerShutdown).ToLidgrenStringRepresentation());
 
             pendingClients.Clear();
             connectedClients.Clear();
@@ -91,7 +91,7 @@ namespace Barotrauma.Networking
 
             Steamworks.SteamServer.OnValidateAuthTicketResponse -= OnAuthChange;
 
-            OnShutdown?.Invoke();
+            callbacks.OnShutdown.Invoke();
         }
 
         public override void Update(float deltaTime)
@@ -99,12 +99,6 @@ namespace Barotrauma.Networking
             if (netServer is null) { return; }
 
             ToolBox.ThrowIfNull(incomingLidgrenMessages);
-
-            if (OnOwnerDetermined != null && OwnerConnection != null)
-            {
-                OnOwnerDetermined?.Invoke(OwnerConnection);
-                OnOwnerDetermined = null;
-            }
 
             netServer.ReadMessages(incomingLidgrenMessages);
 
@@ -193,14 +187,14 @@ namespace Barotrauma.Networking
 
             if (connectedClients.Count >= serverSettings.MaxPlayers)
             {
-                inc.SenderConnection.Deny(DisconnectReason.ServerFull.ToString());
+                inc.SenderConnection.Deny(PeerDisconnectPacket.WithReason(DisconnectReason.ServerFull).ToLidgrenStringRepresentation());
                 return;
             }
 
             if (serverSettings.BanList.IsBanned(new LidgrenEndpoint(inc.SenderConnection.RemoteEndPoint), out string banReason))
             {
                 //IP banned: deny immediately
-                inc.SenderConnection.Deny($"{DisconnectReason.Banned}/ {banReason}");
+                inc.SenderConnection.Deny(PeerDisconnectPacket.Banned(banReason).ToLidgrenStringRepresentation());
                 return;
             }
 
@@ -235,12 +229,12 @@ namespace Barotrauma.Networking
                 {
                     if (pendingClient != null)
                     {
-                        RemovePendingClient(pendingClient, DisconnectReason.AuthenticationRequired, "Received data message from unauthenticated client");
+                        RemovePendingClient(pendingClient, PeerDisconnectPacket.WithReason(DisconnectReason.AuthenticationRequired));
                     }
                     else if (lidgrenMsg.SenderConnection.Status != NetConnectionStatus.Disconnected &&
                              lidgrenMsg.SenderConnection.Status != NetConnectionStatus.Disconnecting)
                     {
-                        lidgrenMsg.SenderConnection.Disconnect($"{DisconnectReason.AuthenticationRequired}/ Received data message from unauthenticated client");
+                        lidgrenMsg.SenderConnection.Disconnect(PeerDisconnectPacket.WithReason(DisconnectReason.AuthenticationRequired).ToLidgrenStringRepresentation());
                     }
 
                     return;
@@ -252,12 +246,12 @@ namespace Barotrauma.Networking
                     || (conn.AccountInfo.AccountId.TryUnwrap(out var accountId) && serverSettings.BanList.IsBanned(accountId, out banReason))
                     || conn.AccountInfo.OtherMatchingIds.Any(id => serverSettings.BanList.IsBanned(id, out banReason)))
                 {
-                    Disconnect(conn, $"{DisconnectReason.Banned}/ {banReason}");
+                    Disconnect(conn, PeerDisconnectPacket.Banned(banReason));
                     return;
                 }
 
                 var packet = INetSerializableStruct.Read<PeerPacketMessage>(inc);
-                OnMessageReceived?.Invoke(conn, packet.GetReadMessage(packetHeader.IsCompressed(), conn));
+                callbacks.OnMessageReceived.Invoke(conn, packet.GetReadMessage(packetHeader.IsCompressed(), conn));
             }
         }
 
@@ -275,12 +269,11 @@ namespace Barotrauma.Networking
                         {
                             DebugConsole.NewMessage("Owner disconnected: closing the server...");
                             GameServer.Log("Owner disconnected: closing the server...", ServerLog.MessageType.ServerMessage);
-                            Close($"{DisconnectReason.ServerShutdown}/ Owner disconnected");
+                            Close();
                         }
                         else
                         {
-#warning TODO: kill off disconnect in layer 1
-                            Disconnect(conn, $"ServerMessage.HasDisconnected~[client]={GameMain.Server.ConnectedClients.First(c => c.Connection == conn).Name}");
+                            Disconnect(conn, PeerDisconnectPacket.WithReason(DisconnectReason.Disconnected));
                         }
                     }
                     else
@@ -288,7 +281,7 @@ namespace Barotrauma.Networking
                         PendingClient? pendingClient = pendingClients.Find(c => c.Connection is LidgrenConnection l && l.NetConnection == inc.SenderConnection);
                         if (pendingClient != null)
                         {
-                            RemovePendingClient(pendingClient, DisconnectReason.Unknown, $"ServerMessage.HasDisconnected~[client]={pendingClient.Name}");
+                            RemovePendingClient(pendingClient, PeerDisconnectPacket.WithReason(DisconnectReason.Disconnected));
                         }
                     }
 
@@ -312,9 +305,11 @@ namespace Barotrauma.Networking
             {
                 if (status == Steamworks.AuthResponse.OK) { return; }
 
-                if (connectedClients.Find(c => c.AccountInfo.AccountId is Some<AccountId> { Value: SteamId id } && id.Value == steamId) is LidgrenConnection connection)
+                if (connectedClients.Find(c
+                        => c.AccountInfo.AccountId is Some<AccountId> { Value: SteamId id } && id.Value == steamId)
+                    is LidgrenConnection connection)
                 {
-                    Disconnect(connection, $"{DisconnectReason.SteamAuthenticationFailed}/ Steam authentication status changed: {status}");
+                    Disconnect(connection,  PeerDisconnectPacket.SteamAuthError(status));
                 }
 
                 return;
@@ -325,7 +320,7 @@ namespace Barotrauma.Networking
                 || serverSettings.BanList.IsBanned(new SteamId(steamId), out banReason)
                 || serverSettings.BanList.IsBanned(new SteamId(ownerId), out banReason))
             {
-                RemovePendingClient(pendingClient, DisconnectReason.Banned, banReason);
+                RemovePendingClient(pendingClient, PeerDisconnectPacket.Banned(banReason));
                 return;
             }
 
@@ -337,7 +332,7 @@ namespace Barotrauma.Networking
             }
             else
             {
-                RemovePendingClient(pendingClient, DisconnectReason.SteamAuthenticationFailed, $"Steam authentication failed: {status}");
+                RemovePendingClient(pendingClient, PeerDisconnectPacket.SteamAuthError(status));
             }
         }
 
@@ -374,7 +369,7 @@ namespace Barotrauma.Networking
             SendMsgInternal(conn, headers, body);
         }
 
-        public override void Disconnect(NetworkConnection conn, string? msg = null)
+        public override void Disconnect(NetworkConnection conn, PeerDisconnectPacket peerDisconnectPacket)
         {
             if (netServer == null) { return; }
 
@@ -384,11 +379,11 @@ namespace Barotrauma.Networking
             {
                 lidgrenConn.Status = NetworkConnectionStatus.Disconnected;
                 connectedClients.Remove(lidgrenConn);
-                OnDisconnect?.Invoke(conn, msg);
+                callbacks.OnDisconnect.Invoke(conn, peerDisconnectPacket);
                 if (conn.AccountInfo.AccountId is Some<AccountId> { Value: SteamId steamId }) { SteamManager.StopAuthSession(steamId); }
             }
 
-            lidgrenConn.NetConnection.Disconnect(msg ?? "Disconnected");
+            lidgrenConn.NetConnection.Disconnect(peerDisconnectPacket.ToLidgrenStringRepresentation());
         }
 
         protected override void SendMsgInternal(NetworkConnection conn, PeerPacketHeaders headers, INetSerializableStruct? body)
@@ -413,6 +408,7 @@ namespace Barotrauma.Networking
             {
                 ownerKey = Option<int>.None();
                 OwnerConnection = pendingClient.Connection;
+                callbacks.OnOwnerDetermined.Invoke(OwnerConnection);
             }
         }
 
@@ -440,7 +436,7 @@ namespace Barotrauma.Networking
                     {
                         if (requireSteamAuth)
                         {
-                            RemovePendingClient(pendingClient, DisconnectReason.SteamAuthenticationFailed, "Steam auth session failed to start: Steam ID not provided");
+                            RemovePendingClient(pendingClient, PeerDisconnectPacket.WithReason(DisconnectReason.SteamAuthenticationFailed));
                             return;
                         }
                     }
@@ -451,7 +447,7 @@ namespace Barotrauma.Networking
                         {
                             if (requireSteamAuth)
                             {
-                                RemovePendingClient(pendingClient, DisconnectReason.SteamAuthenticationFailed, $"Steam auth session failed to start: {authSessionStartState}");
+                                RemovePendingClient(pendingClient, PeerDisconnectPacket.SteamAuthError(authSessionStartState));
                             }
                             else
                             {
@@ -471,7 +467,7 @@ namespace Barotrauma.Networking
             {
                 if (pendingClient.AccountInfo.AccountId != packet.SteamId.Select(uid => (AccountId)uid))
                 {
-                    RemovePendingClient(pendingClient, DisconnectReason.SteamAuthenticationFailed, "SteamID mismatch");
+                    RemovePendingClient(pendingClient, PeerDisconnectPacket.WithReason(DisconnectReason.SteamAuthenticationFailed));
                 }
             }
         }

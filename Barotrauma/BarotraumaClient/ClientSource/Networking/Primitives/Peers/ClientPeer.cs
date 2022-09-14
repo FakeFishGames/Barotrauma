@@ -2,6 +2,8 @@
 using Barotrauma.Steam;
 using System;
 using System.Collections.Immutable;
+using System.Linq;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma.Networking
 {
@@ -10,37 +12,14 @@ namespace Barotrauma.Networking
         public ImmutableArray<ServerContentPackage> ServerContentPackages { get; set; } =
             ImmutableArray<ServerContentPackage>.Empty;
 
-        public delegate void MessageCallback(IReadMessage message);
-
-        public delegate void DisconnectCallback(bool disableReconnect);
-
-        public delegate void DisconnectMessageCallback(string message);
-
-        public delegate void PasswordCallback(int salt, int retries);
-
-        public delegate void InitializationCompleteCallback();
-
-        [Obsolete("TODO: delete in nr3-layer-1-2-cleanup")]
-        public readonly struct Callbacks
+        public readonly record struct Callbacks(
+            Callbacks.MessageCallback OnMessageReceived,
+            Callbacks.DisconnectCallback OnDisconnect,
+            Callbacks.InitializationCompleteCallback OnInitializationComplete)
         {
-            public readonly MessageCallback OnMessageReceived;
-            public readonly DisconnectCallback OnDisconnect;
-            public readonly DisconnectMessageCallback OnDisconnectMessageReceived;
-            public readonly PasswordCallback OnRequestPassword;
-            public readonly InitializationCompleteCallback OnInitializationComplete;
-
-            public Callbacks(MessageCallback onMessageReceived,
-                             DisconnectCallback onDisconnect,
-                             DisconnectMessageCallback onDisconnectMessageReceived,
-                             PasswordCallback onRequestPassword,
-                             InitializationCompleteCallback onInitializationComplete)
-            {
-                OnMessageReceived = onMessageReceived;
-                OnDisconnect = onDisconnect;
-                OnDisconnectMessageReceived = onDisconnectMessageReceived;
-                OnRequestPassword = onRequestPassword;
-                OnInitializationComplete = onInitializationComplete;
-            }
+            public delegate void MessageCallback(IReadMessage message);
+            public delegate void DisconnectCallback(PeerDisconnectPacket disconnectPacket);
+            public delegate void InitializationCompleteCallback();
         }
 
         protected readonly Callbacks callbacks;
@@ -51,6 +30,8 @@ namespace Barotrauma.Networking
         protected readonly bool isOwner;
         protected readonly Option<int> ownerKey;
 
+        protected bool isActive;
+
         public ClientPeer(Endpoint serverEndpoint, Callbacks callbacks, Option<int> ownerKey)
         {
             ServerEndpoint = serverEndpoint;
@@ -60,7 +41,7 @@ namespace Barotrauma.Networking
         }
 
         public abstract void Start();
-        public abstract void Close(string? msg = null, bool disableReconnect = false);
+        public abstract void Close(PeerDisconnectPacket peerDisconnectPacket);
         public abstract void Update(float deltaTime);
         public abstract void Send(IWriteMessage msg, DeliveryMethod deliveryMethod, bool compressPastThreshold = true);
         public abstract void SendPassword(string password);
@@ -71,6 +52,12 @@ namespace Barotrauma.Networking
         public bool ContentPackageOrderReceived { get; protected set; }
         protected int passwordSalt;
         protected Steamworks.AuthTicket? steamAuthTicket;
+        private GUIMessageBox? passwordMsgBox;
+
+        public bool WaitingForPassword
+            => isActive && initializationStep == ConnectionInitialization.Password
+               && passwordMsgBox != null
+               && GUIMessageBox.MessageBoxes.Contains(passwordMsgBox);
 
         public struct IncomingInitializationMessage
         {
@@ -112,8 +99,9 @@ namespace Barotrauma.Networking
                 }
                 case ConnectionInitialization.ContentPackageOrder:
                 {
-                    if (initializationStep == ConnectionInitialization.SteamTicketAndVersion ||
-                        initializationStep == ConnectionInitialization.Password)
+                    if (initializationStep
+                        is ConnectionInitialization.SteamTicketAndVersion
+                        or ConnectionInitialization.Password)
                     {
                         initializationStep = ConnectionInitialization.ContentPackageOrder;
                     }
@@ -155,10 +143,57 @@ namespace Barotrauma.Networking
 
                     var passwordPacket = INetSerializableStruct.Read<ServerPeerPasswordPacket>(inc.Message);
 
+                    if (WaitingForPassword) { return; }
+                    
                     passwordPacket.Salt.TryUnwrap(out passwordSalt);
                     passwordPacket.RetriesLeft.TryUnwrap(out var retries);
 
-                    callbacks.OnRequestPassword.Invoke(passwordSalt, retries);
+                    LocalizedString pwMsg = TextManager.Get("PasswordRequired");
+
+                    passwordMsgBox = new GUIMessageBox(pwMsg, "", new LocalizedString[] { TextManager.Get("OK"), TextManager.Get("Cancel") },
+                        relativeSize: new Vector2(0.25f, 0.1f), minSize: new Point(400, GUI.IntScale(170)));
+                    var passwordHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.5f), passwordMsgBox.Content.RectTransform), childAnchor: Anchor.TopCenter);
+                    var passwordBox = new GUITextBox(new RectTransform(new Vector2(0.8f, 1f), passwordHolder.RectTransform) { MinSize = new Point(0, 20) })
+                    {
+                        Censor = true
+                    };
+
+                    if (retries > 0)
+                    {
+                        var incorrectPasswordText = new GUITextBlock(new RectTransform(new Vector2(1f, 0.0f), passwordHolder.RectTransform), TextManager.Get("incorrectpassword"), GUIStyle.Red, GUIStyle.Font, textAlignment: Alignment.Center);
+                        incorrectPasswordText.RectTransform.MinSize = new Point(0, (int)incorrectPasswordText.TextSize.Y);
+                        passwordHolder.Recalculate();
+                    }
+
+                    passwordMsgBox.Content.Recalculate();
+                    passwordMsgBox.Content.RectTransform.MinSize = new Point(0, passwordMsgBox.Content.RectTransform.Children.Sum(c => c.Rect.Height));
+                    passwordMsgBox.Content.Parent.RectTransform.MinSize = new Point(0, (int)(passwordMsgBox.Content.RectTransform.MinSize.Y / passwordMsgBox.Content.RectTransform.RelativeSize.Y));
+
+                    var okButton = passwordMsgBox.Buttons[0];
+                    okButton.OnClicked += (_, __) =>
+                    {
+                        SendPassword(passwordBox.Text);
+                        return true;
+                    };
+                    okButton.OnClicked += passwordMsgBox.Close;
+                    
+                    var cancelButton = passwordMsgBox.Buttons[1];
+                    cancelButton.OnClicked = (_, __) =>
+                    {
+                        Close(PeerDisconnectPacket.WithReason(DisconnectReason.Disconnected));
+                        passwordMsgBox?.Close(); passwordMsgBox = null;
+
+                        return true;
+                    };
+
+                    passwordBox.OnEnterPressed += (_, __) =>
+                    {
+                        okButton.OnClicked.Invoke(okButton, okButton.UserData);
+                        return true;
+                    };
+
+                    passwordBox.Select();
+                    
                     break;
             }
         }

@@ -2489,26 +2489,8 @@ namespace Barotrauma
                 Barotrauma.IO.Validation.SkipValidationInDebugBuilds = false;
                 ToolBox.OpenFileWithShell(Path.GetFullPath(filePath));
             }));
+
 #if DEBUG
-            commands.Add(new Command("playovervc", "Plays a sound over voice chat.", (args) =>
-            {
-                VoipCapture.Instance?.SetOverrideSound(args.Length > 0 ? args[0] : null);
-            }));
-
-            commands.Add(new Command("querylobbies", "Queries all SteamP2P lobbies", (args) =>
-            {
-                TaskPool.Add("DebugQueryLobbies",
-                    SteamManager.LobbyQueryRequest(), (t) =>
-                    {
-                        t.TryGetResult(out List<Steamworks.Data.Lobby> lobbies);
-                        foreach (var lobby in lobbies)
-                        {
-                            NewMessage(lobby.GetData("name") + ", " + lobby.GetData("lobbyowner"), Color.Yellow);
-                        }
-                        NewMessage($"Retrieved a total of {lobbies.Count} lobbies", Color.Lime);
-                    });
-            }));
-
             commands.Add(new Command("checkduplicates", "Checks the given language for duplicate translation keys and writes to file.", (string[] args) =>
             {
                 if (args.Length != 1) { return; }
@@ -3056,11 +3038,6 @@ namespace Barotrauma
 
             commands.Add(new Command("reloadwearables", "Reloads the sprites of all limbs and wearable sprites (clothing) of the controlled character. Provide id or name if you want to target another character.", args =>
             {
-                if (GameMain.GameSession != null)
-                {
-                    ThrowError("Using the command is not allowed during an active game session: the command is intended to be used in the character editor or in the main menu.");
-                    return;
-                }
                 var character = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args, true);
                 if (character == null)
                 {
@@ -3072,11 +3049,6 @@ namespace Barotrauma
 
             commands.Add(new Command("loadwearable", "Force select certain variant for the selected character.", args =>
             {
-                if (GameMain.GameSession != null)
-                {
-                    ThrowError("Using the command is not allowed during an active game session: the command is intended to be used in the character editor or in the main menu.");
-                    return;
-                }
                 var character = Character.Controlled;
                 if (character == null)
                 {

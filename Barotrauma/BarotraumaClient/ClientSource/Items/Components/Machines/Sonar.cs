@@ -1013,6 +1013,19 @@ namespace Barotrauma.Items.Components
                     if (!CheckResourceMarkerVisibility(c.center, transducerCenter)) { continue; }
                     var i = unobtainedMinerals.FirstOrDefault();
                     if (i == null) { continue; }
+
+                    bool disrupted = false;
+                    foreach ((Vector2 disruptPos, float disruptStrength) in disruptedDirections)
+                    {
+                        float dot = Vector2.Dot(Vector2.Normalize(c.center - transducerCenter), disruptPos);
+                        if (dot > 1.0f - disruptStrength)
+                        {
+                            disrupted = true;
+                            break;
+                        }
+                    }
+                    if (disrupted) { continue; }
+
                     DrawMarker(spriteBatch,
                         i.Name, "mineral".ToIdentifier(), "mineralcluster" + i,
                         c.center, transducerCenter,

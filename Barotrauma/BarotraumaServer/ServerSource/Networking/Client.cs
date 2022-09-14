@@ -224,27 +224,55 @@ namespace Barotrauma.Networking
             }
         }
 
+        /// <summary>
+        /// Reset what this client has voted for and the kick votes given to this client
+        /// </summary>
+        public void ResetVotes(bool resetKickVotes)
+        {
+            for (int i = 0; i < votes.Length; i++)
+            {
+                votes[i] = null;
+            }
+            if (resetKickVotes)
+            {
+                kickVoters.Clear();
+            }
+        }
+
 
         public void SetPermissions(ClientPermissions permissions, IEnumerable<DebugConsole.Command> permittedConsoleCommands)
         {
-            this.Permissions = permissions;
-            this.PermittedConsoleCommands.Clear();
-            this.PermittedConsoleCommands.UnionWith(permittedConsoleCommands);
+            Permissions = permissions;
+            PermittedConsoleCommands.Clear();
+            PermittedConsoleCommands.UnionWith(permittedConsoleCommands);
+            if (Permissions.HasFlag(ClientPermissions.ManageSettings))
+            {
+                //ensure the client has the up-to-date server settings
+                GameMain.Server?.ServerSettings?.ForcePropertyUpdate();
+            }
         }
 
         public void GivePermission(ClientPermissions permission)
         {
-            if (!this.Permissions.HasFlag(permission)) this.Permissions |= permission;
+            if (!Permissions.HasFlag(permission))
+            {
+                Permissions |= permission;
+                if (permission.HasFlag(ClientPermissions.ManageSettings))
+                {
+                    //ensure the client has the up-to-date server settings
+                    GameMain.Server?.ServerSettings?.ForcePropertyUpdate();
+                }
+            }
         }
 
         public void RemovePermission(ClientPermissions permission)
         {
-            this.Permissions &= ~permission;
+            Permissions &= ~permission;
         }
 
         public bool HasPermission(ClientPermissions permission)
         {
-            return this.Permissions.HasFlag(permission);
+            return Permissions.HasFlag(permission);
         }
     }
 }

@@ -9,7 +9,6 @@ namespace Barotrauma.Networking
 {
     internal sealed class LidgrenClientPeer : ClientPeer
     {
-        private bool isActive;
         private NetClient? netClient;
         private readonly NetPeerConfiguration netPeerConfiguration;
 
@@ -94,7 +93,7 @@ namespace Barotrauma.Networking
 
             if (isOwner && !(ChildServerRelay.Process is { HasExited: false }))
             {
-                Close();
+                Close(PeerDisconnectPacket.WithReason(DisconnectReason.ServerCrashed));
                 var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), ChildServerRelay.CrashMessage);
                 msgBox.Buttons[0].OnClicked += (btn, obj) =>
                 {
@@ -140,8 +139,10 @@ namespace Barotrauma.Networking
 
             var (_, packetHeader, initialization) = INetSerializableStruct.Read<PeerPacketHeaders>(inc);
 
-            if (packetHeader.IsConnectionInitializationStep() && initializationStep != ConnectionInitialization.Success)
+            if (packetHeader.IsConnectionInitializationStep())
             {
+                if (initializationStep == ConnectionInitialization.Success) { return; }
+
                 ReadConnectionInitializationStep(new IncomingInitializationMessage
                 {
                     InitializationStep = initialization ?? throw new Exception("Initialization step missing"),
@@ -170,8 +171,9 @@ namespace Barotrauma.Networking
             {
                 case NetConnectionStatus.Disconnected:
                     string disconnectMsg = inc.ReadString();
-                    Close(disconnectMsg);
-                    callbacks.OnDisconnectMessageReceived.Invoke(disconnectMsg);
+                    var peerDisconnectPacket =
+                        PeerDisconnectPacket.FromLidgrenStringRepresentation(disconnectMsg);
+                    Close(peerDisconnectPacket.Fallback(PeerDisconnectPacket.WithReason(DisconnectReason.Unknown)));
                     break;
             }
         }
@@ -198,7 +200,7 @@ namespace Barotrauma.Networking
             SendMsgInternal(headers, body);
         }
 
-        public override void Close(string? msg = null, bool disableReconnect = false)
+        public override void Close(PeerDisconnectPacket peerDisconnectPacket)
         {
             if (!isActive) { return; }
 
@@ -206,13 +208,13 @@ namespace Barotrauma.Networking
 
             isActive = false;
 
-            netClient.Shutdown(msg ?? TextManager.Get("Disconnecting").Value);
+            netClient.Shutdown(peerDisconnectPacket.ToLidgrenStringRepresentation());
             netClient = null;
 
             steamAuthTicket?.Cancel();
             steamAuthTicket = null;
 
-            callbacks.OnDisconnect.Invoke(disableReconnect);
+            callbacks.OnDisconnect.Invoke(peerDisconnectPacket);
         }
 
         public override void Send(IWriteMessage msg, DeliveryMethod deliveryMethod, bool compressPastThreshold = true)

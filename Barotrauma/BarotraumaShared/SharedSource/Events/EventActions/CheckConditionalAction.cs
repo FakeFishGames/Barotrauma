@@ -28,10 +28,7 @@ namespace Barotrauma
                 DebugConsole.ShowError($"CheckConditionalAction error: {GetEventName()} uses a CheckConditionalAction with no valid PropertyConditional! This will cause the check to automatically succeed.");
             }
 
-            static bool IsTargetTagAttribute(XAttribute attribute)
-            {
-                return attribute.Name.ToString().Equals("targettag", System.StringComparison.OrdinalIgnoreCase);
-            }
+            static bool IsTargetTagAttribute(XAttribute attribute) => attribute.NameAsIdentifier() == "targettag";
         }
 
         private string GetEventName()

@@ -35,7 +35,12 @@ namespace Barotrauma.Steam
             memSubscribedModCount = numSubscribedMods;
 
             var subscribedIds = SteamManager.GetSubscribedItems().ToHashSet();
-            var installedIds = ContentPackageManager.WorkshopPackages.Select(p => p.SteamWorkshopId).ToHashSet();
+            var installedIds = ContentPackageManager.WorkshopPackages
+                .Select(p => p.UgcId)
+                .NotNone()
+                .OfType<SteamWorkshopId>()
+                .Select(id => id.Value)
+                .ToHashSet();
             foreach (var id in subscribedIds.Where(id2 => !installedIds.Contains(id2)))
             {
                 Steamworks.Ugc.Item item = new Steamworks.Ugc.Item(id);
@@ -514,7 +519,9 @@ namespace Barotrauma.Steam
 
         private void PrepareToShowModInfo(ContentPackage mod)
         {
-            TaskPool.Add($"PrepareToShow{mod.SteamWorkshopId}Info", SteamManager.Workshop.GetItem(mod.SteamWorkshopId),
+            if (!mod.UgcId.TryUnwrap(out var ugcId)
+                || !(ugcId is SteamWorkshopId workshopId)) { return; }
+            TaskPool.Add($"PrepareToShow{mod.UgcId}Info", SteamManager.Workshop.GetItem(workshopId.Value),
                 t =>
                 {
                     if (!t.TryGetResult(out Steamworks.Ugc.Item? item)) { return; }
@@ -592,7 +599,12 @@ namespace Barotrauma.Steam
                                     isEnabled: true,
                                     onSelected: () =>
                                     {
-                                        TaskPool.AddIfNotFound($"UnsubFromSelected", Task.WhenAll(selectedMods.Select(m => SteamManager.Workshop.GetItem(m.SteamWorkshopId))),
+                                        var workshopIds = selectedMods
+                                            .Select(m => m.UgcId)
+                                            .NotNone()
+                                            .OfType<SteamWorkshopId>()
+                                            .Select(id => id.Value);
+                                        TaskPool.AddIfNotFound($"UnsubFromSelected", Task.WhenAll(workshopIds.Select(SteamManager.Workshop.GetItem)),
                                             t =>
                                             {
                                                 if (!t.TryGetResult(out Steamworks.Ugc.Item?[] items)) { return; }
@@ -672,7 +684,7 @@ namespace Barotrauma.Steam
                         infoButton.Enabled = false;
                     }
                     TaskPool.AddIfNotFound(
-                        $"DetermineUpdateRequired{mod.SteamWorkshopId}",
+                        $"DetermineUpdateRequired{mod.UgcId}",
                         mod.IsUpToDate(),
                         t =>
                         {
@@ -725,6 +737,8 @@ namespace Barotrauma.Steam
                     {
                         var mod = child.UserData as RegularPackage;
                         if (mod is null || !ContentPackageManager.WorkshopPackages.Contains(mod)) { continue; }
+                        if (!mod.UgcId.TryUnwrap(out var ugcId)) { continue; }
+                        if (!(ugcId is SteamWorkshopId workshopId)) { continue; }
                         
                         var btn = child.GetChild<GUILayoutGroup>()?.GetAllChildren<GUIButton>().Last();
                         if (btn is null) { continue; }
@@ -732,11 +746,11 @@ namespace Barotrauma.Steam
 
                         btn.ApplyStyle(
                             GUIStyle.GetComponentStyle(
-                                ids.Contains(mod.SteamWorkshopId)
+                                ids.Contains(workshopId.Value)
                                     ? "WorkshopMenu.PublishedIcon"
                                     : "WorkshopMenu.DownloadedIcon"));
                         btn.ToolTip = TextManager.Get(
-                            ids.Contains(mod.SteamWorkshopId)
+                            ids.Contains(workshopId.Value)
                                 ? "PublishedWorkshopMod"
                                 : "DownloadedWorkshopMod");
                         btn.HoverCursor = CursorState.Default;

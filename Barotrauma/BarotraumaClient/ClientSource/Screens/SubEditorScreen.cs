@@ -1547,6 +1547,8 @@ namespace Barotrauma
 
             GUI.ForceMouseOn(null);
 
+            if (ImageManager.EditorMode) { GameSettings.SaveCurrentConfig(); }
+
             MapEntityPrefab.Selected = null;
 
             saveFrame = null;
@@ -1797,25 +1799,14 @@ namespace Barotrauma
         {
             Type subFileType = DetermineSubFileType(MainSub?.Info.Type ?? SubmarineType.Player);
 
-            void addSubAndSaveModProject(ModProject modProject, string filePath, string packagePath) 
+            static string getExistingFilePath(ContentPackage package, string fileName)
             {
-                filePath = filePath.CleanUpPath();
-                packagePath = packagePath.CleanUpPath();
-                string packageDir = Path.GetDirectoryName(packagePath).CleanUpPathCrossPlatform(correctFilenameCase: false);
-                if (filePath.StartsWith(packageDir))
+                if (Submarine.MainSub?.Info == null) { return null; }
+                if (package.Files.Any(f => f.Path == MainSub.Info.FilePath && Path.GetFileName(f.Path.Value) == fileName))
                 {
-                    filePath = $"{ContentPath.ModDirStr}/{filePath[packageDir.Length..]}";
+                    return MainSub.Info.FilePath;
                 }
-                if (!modProject.Files.Any(f => f.Type == subFileType &&
-                                                   f.Path == filePath))
-                {
-                    var newFile = ModProject.File.FromPath(filePath, subFileType);
-                    modProject.AddFile(newFile);
-                }
-
-                using var _ = Validation.SkipInDebugBuilds();
-                modProject.DiscardHashAndInstallTime();
-                modProject.Save(packagePath);
+                return null;
             }
 
             if (!GameMain.DebugDraw)
@@ -1861,101 +1852,139 @@ namespace Barotrauma
 #if !DEBUG
                     throw new InvalidOperationException("Cannot save to Vanilla package");
 #endif
-                    savePath = string.Format((MainSub?.Info.Type ?? SubmarineType.Player) switch
-                    {
-                        SubmarineType.Player => "Content/Submarines/{0}",
-                        SubmarineType.Outpost => "Content/Map/Outposts/{0}",
-                        SubmarineType.Ruin => "Content/Submarines/{0}", //we don't seem to use this anymore...
-                        SubmarineType.Wreck => "Content/Map/Wrecks/{0}",
-                        SubmarineType.BeaconStation => "Content/Map/BeaconStations/{0}",
-                        SubmarineType.EnemySubmarine => "Content/Map/EnemySubmarines/{0}",
-                        SubmarineType.OutpostModule => "Content/Map/Outposts/{0}",
-                        _ => throw new InvalidOperationException()
-                    }, savePath);
+                    savePath =
+                        getExistingFilePath(packageToSaveTo, savePath) ??
+                        string.Format((MainSub?.Info.Type ?? SubmarineType.Player) switch
+                        {
+                            SubmarineType.Player => "Content/Submarines/{0}",
+                            SubmarineType.Outpost => "Content/Map/Outposts/{0}",
+                            SubmarineType.Ruin => "Content/Submarines/{0}", //we don't seem to use this anymore...
+                            SubmarineType.Wreck => "Content/Map/Wrecks/{0}",
+                            SubmarineType.BeaconStation => "Content/Map/BeaconStations/{0}",
+                            SubmarineType.EnemySubmarine => "Content/Map/EnemySubmarines/{0}",
+                            SubmarineType.OutpostModule => "Content/Map/Outposts/{0}",
+                            _ => throw new InvalidOperationException()
+                        }, savePath);
                     modProject.ModVersion = "";
                 }
                 else
                 {
-                    savePath = Path.Combine(packageToSaveTo.Dir, savePath);
+                    string existingFilePath = getExistingFilePath(packageToSaveTo, savePath);
+                    //if we're trying to save a sub that's already included in the package with the same name as before, save directly in the same path
+                    if (existingFilePath != null)
+                    {
+                        savePath = existingFilePath;
+                    }
+                    //otherwise make sure we're not trying to overwrite another sub in the same package
+                    else
+                    {
+                        savePath = Path.Combine(packageToSaveTo.Dir, savePath);
+                        if (File.Exists(savePath))
+                        {
+                            var verification = new GUIMessageBox(TextManager.Get("warning"), TextManager.Get("subeditor.duplicatesubinpackage"), 
+                                new LocalizedString[] { TextManager.Get("yes"), TextManager.Get("no") });
+                            verification.Buttons[0].OnClicked = (_, _) =>
+                            {
+                                addSubAndSave(modProject, savePath, fileListPath);
+                                verification.Close();
+                                return true;
+                            };
+                            verification.Buttons[1].OnClicked = verification.Close;
+                            return false;
+                        }
+                    }
                 }
-                addSubAndSaveModProject(modProject, savePath, fileListPath);
-            }
-            else if (MainSub?.Info?.FilePath != null
-                     && MainSub.Info.Name != null
-                     && MainSub.Info.FilePath.StartsWith(ContentPackage.LocalModsDir)
-                     && MainSub.Info.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
-            {
-                prevSavePath = MainSub.Info.FilePath.CleanUpPath();
-                ContentPackage contentPackage = GetLocalPackageThatOwnsSub(MainSub.Info);
-                if (contentPackage == null)
-                {
-                    throw new InvalidOperationException($"Tried to overwrite a submarine ({name}) that's not in a local package!");
-                }
-                ModProject modProject = new ModProject(contentPackage);
-                packageToSaveTo = contentPackage;
-                savePath = prevSavePath;
-                addSubAndSaveModProject(modProject, savePath, contentPackage.Path);
+                addSubAndSave(modProject, savePath, fileListPath);
             }
             else
             {
                 savePath = Path.Combine(newLocalModDir, savePath);
-                ModProject modProject = new ModProject { Name = name };
-                addSubAndSaveModProject(modProject, savePath, Path.Combine(Path.GetDirectoryName(savePath), ContentPackage.FileListFileName));
-            }
-            savePath = savePath.CleanUpPathCrossPlatform(correctFilenameCase: false);
-
-            if (MainSub != null)
-            {
-                Barotrauma.IO.Validation.SkipValidationInDebugBuilds = true;
-                if (previewImage?.Sprite?.Texture != null && !previewImage.Sprite.Texture.IsDisposed && MainSub.Info.Type != SubmarineType.OutpostModule)
+                if (File.Exists(savePath))
                 {
-                    bool savePreviewImage = true;
-                    using System.IO.MemoryStream imgStream = new System.IO.MemoryStream();
-                    try
-                    {
-                        previewImage.Sprite.Texture.SaveAsPng(imgStream, previewImage.Sprite.Texture.Width, previewImage.Sprite.Texture.Height);
-                    }
-                    catch (Exception e)
-                    {
-                        DebugConsole.ThrowError($"Saving the preview image of the submarine \"{MainSub.Info.Name}\" failed.", e);
-                        savePreviewImage = false;
-                    }
-                    MainSub.TrySaveAs(savePath, savePreviewImage ? imgStream : null);
+                    new GUIMessageBox(TextManager.Get("warning"), TextManager.GetWithVariable("subeditor.packagealreadyexists", "[name]", name));
+                    return false;
                 }
                 else
                 {
-                    MainSub.TrySaveAs(savePath);
+                    ModProject modProject = new ModProject { Name = name };
+                    addSubAndSave(modProject, savePath, Path.Combine(Path.GetDirectoryName(savePath), ContentPackage.FileListFileName));
                 }
-                Barotrauma.IO.Validation.SkipValidationInDebugBuilds = false;
+            }
 
-                MainSub.CheckForErrors();
-
-                GUI.AddMessage(TextManager.GetWithVariable("SubSavedNotification", "[filepath]", savePath), GUIStyle.Green);
-
-                if (savePath.StartsWith(newLocalModDir))
+            void addSubAndSave(ModProject modProject, string filePath, string packagePath)
+            {
+                filePath = filePath.CleanUpPath();
+                packagePath = packagePath.CleanUpPath();
+                string packageDir = Path.GetDirectoryName(packagePath).CleanUpPathCrossPlatform(correctFilenameCase: false);
+                if (filePath.StartsWith(packageDir))
                 {
-                    ContentPackageManager.LocalPackages.Refresh();
-                    var newPackage = ContentPackageManager.LocalPackages.FirstOrDefault(p => p.Path.StartsWith(newLocalModDir));
-                    if (newPackage is RegularPackage regular)
+                    filePath = $"{ContentPath.ModDirStr}/{filePath[packageDir.Length..]}";
+                }
+                if (!modProject.Files.Any(f => f.Type == subFileType &&
+                                                   f.Path == filePath))
+                {
+                    var newFile = ModProject.File.FromPath(filePath, subFileType);
+                    modProject.AddFile(newFile);
+                }
+
+                using var _ = Validation.SkipInDebugBuilds();
+                modProject.DiscardHashAndInstallTime();
+                modProject.Save(packagePath);
+
+                savePath = savePath.CleanUpPathCrossPlatform(correctFilenameCase: false);
+                if (MainSub != null)
+                {
+                    Barotrauma.IO.Validation.SkipValidationInDebugBuilds = true;
+                    if (previewImage?.Sprite?.Texture != null && !previewImage.Sprite.Texture.IsDisposed && MainSub.Info.Type != SubmarineType.OutpostModule)
                     {
-                        ContentPackageManager.EnabledPackages.EnableRegular(regular);
-                        GameSettings.SaveCurrentConfig();
+                        bool savePreviewImage = true;
+                        using System.IO.MemoryStream imgStream = new System.IO.MemoryStream();
+                        try
+                        {
+                            previewImage.Sprite.Texture.SaveAsPng(imgStream, previewImage.Sprite.Texture.Width, previewImage.Sprite.Texture.Height);
+                        }
+                        catch (Exception e)
+                        {
+                            DebugConsole.ThrowError($"Saving the preview image of the submarine \"{MainSub.Info.Name}\" failed.", e);
+                            savePreviewImage = false;
+                        }
+                        MainSub.TrySaveAs(savePath, savePreviewImage ? imgStream : null);
                     }
-                }
-                if (packageToSaveTo != null) { ReloadModifiedPackage(packageToSaveTo); }
-                SubmarineInfo.RefreshSavedSub(savePath);
-                if (prevSavePath != null && prevSavePath != savePath) { SubmarineInfo.RefreshSavedSub(prevSavePath); }
-                MainSub.Info.PreviewImage = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.FilePath == savePath)?.PreviewImage; 
+                    else
+                    {
+                        MainSub.TrySaveAs(savePath);
+                    }
+                    Barotrauma.IO.Validation.SkipValidationInDebugBuilds = false;
 
-                string downloadFolder = Path.GetFullPath(SaveUtil.SubmarineDownloadFolder);
-                linkedSubBox.ClearChildren();
-                foreach (SubmarineInfo sub in SubmarineInfo.SavedSubmarines)
-                {
-                    if (sub.Type != SubmarineType.Player) { continue; }
-                    if (Path.GetDirectoryName(Path.GetFullPath(sub.FilePath)) == downloadFolder) { continue; }
-                    linkedSubBox.AddItem(sub.Name, sub);
+                    MainSub.CheckForErrors();
+
+                    GUI.AddMessage(TextManager.GetWithVariable("SubSavedNotification", "[filepath]", savePath), GUIStyle.Green);
+
+                    if (savePath.StartsWith(newLocalModDir))
+                    {
+                        ContentPackageManager.LocalPackages.Refresh();
+                        var newPackage = ContentPackageManager.LocalPackages.FirstOrDefault(p => p.Path.StartsWith(newLocalModDir));
+                        if (newPackage is RegularPackage regular)
+                        {
+                            ContentPackageManager.EnabledPackages.EnableRegular(regular);
+                            GameSettings.SaveCurrentConfig();
+                        }
+                    }
+                    if (packageToSaveTo != null) { ReloadModifiedPackage(packageToSaveTo); }
+                    SubmarineInfo.RefreshSavedSub(savePath);
+                    if (prevSavePath != null && prevSavePath != savePath) { SubmarineInfo.RefreshSavedSub(prevSavePath); }
+                    MainSub.Info.PreviewImage = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.FilePath == savePath)?.PreviewImage;
+
+                    string downloadFolder = Path.GetFullPath(SaveUtil.SubmarineDownloadFolder);
+                    linkedSubBox.ClearChildren();
+                    foreach (SubmarineInfo sub in SubmarineInfo.SavedSubmarines)
+                    {
+                        if (sub.Type != SubmarineType.Player) { continue; }
+                        if (Path.GetDirectoryName(Path.GetFullPath(sub.FilePath)) == downloadFolder) { continue; }
+                        linkedSubBox.AddItem(sub.Name, sub);
+                    }
+                    subNameLabel.Text = ToolBox.LimitString(MainSub.Info.Name, subNameLabel.Font, subNameLabel.Rect.Width);
                 }
-                subNameLabel.Text = ToolBox.LimitString(MainSub.Info.Name, subNameLabel.Font, subNameLabel.Rect.Width);
             }
 
             return false;
@@ -2735,40 +2764,31 @@ namespace Barotrauma
             new GUICustomComponent(new RectTransform(Vector2.Zero, saveInPackageLayout.RectTransform),
                 onUpdate: (f, component) =>
                 {
-                    bool canCreateNewPackage = true;
                     foreach (GUIComponent contentChild in packageToSaveInList.Content.Children)
                     {
-                        contentChild.Visible = !(contentChild.UserData is ContentPackage p)
-                                               || !string.Equals(p.Name, nameBox.Text, StringComparison.OrdinalIgnoreCase);
-                        canCreateNewPackage &= contentChild.Visible;
                         contentChild.Visible &= !(contentChild.GetChild<GUILayoutGroup>()?.GetChild<GUITextBlock>() is GUITextBlock tb &&
                                                   !tb.Text.Contains(packToSaveInFilter.Text, StringComparison.OrdinalIgnoreCase));
                     }
-
-                    if (newPackageListIcon.Style.Identifier != "NewContentPackageIcon" && canCreateNewPackage)
-                    {
-                        GUIStyle.Apply(newPackageListIcon, "NewContentPackageIcon");
-                        newPackageListText.Text = TextManager.Get("CreateNewLocalPackage");
-                    }
-                    if (newPackageListIcon.Style.Identifier != "WorkshopMenu.EditButton" && !canCreateNewPackage)
-                    {
-                        GUIStyle.Apply(newPackageListIcon, "WorkshopMenu.EditButton");
-                        newPackageListText.Text = TextManager.GetWithVariable("UpdateExistingLocalPackage", "[mod]", nameBox.Text);
-                    }
                 });
-            packageToSaveInList.Select(0);
             ContentPackage ownerPkg = null;
             if (MainSub?.Info != null) { ownerPkg = GetLocalPackageThatOwnsSub(MainSub.Info); }
             foreach (var p in ContentPackageManager.LocalPackages)
             {
-                addItemToPackageToSaveList(p.Name, p);
+                var packageListItem = addItemToPackageToSaveList(p.Name, p);
+                if (p == ownerPkg)
+                {
+                    var packageListIcon = packageListItem.GetChild<GUIFrame>();
+                    var packageListText = packageListItem.GetChild<GUITextBlock>();
+                    GUIStyle.Apply(packageListIcon, "WorkshopMenu.EditButton");
+                    packageListText.Text = TextManager.GetWithVariable("UpdateExistingLocalPackage", "[mod]", p.Name);
+                }
             }
-
-            if (ownerPkg != null && !string.Equals(ownerPkg.Name, nameBox.Text, StringComparison.OrdinalIgnoreCase))
+            if (ownerPkg != null)
             {
-                packageToSaveInList.Select(ownerPkg);
-                packageToSaveInList.ScrollToElement(packageToSaveInList.SelectedComponent);
+                var element = packageToSaveInList.Content.FindChild(ownerPkg);
+                element?.RectTransform.SetAsFirstChild();
             }
+            packageToSaveInList.Select(0);
 
             var requiredContentPackagesLayout = new GUILayoutGroup(new RectTransform(Vector2.One,
                 horizontalArea.RectTransform, Anchor.BottomRight))
@@ -3424,7 +3444,8 @@ namespace Barotrauma
             {
                 if (GetWorkshopPackageThatOwnsSub(selectedSubInfo) is ContentPackage workshopPackage)
                 {
-                    if (publishedWorkshopItemIds.Contains(workshopPackage.SteamWorkshopId))
+                    if (workshopPackage.TryExtractSteamWorkshopId(out var workshopId)
+                        && publishedWorkshopItemIds.Contains(workshopId.Value))
                     {
                         AskLoadPublishedSub(selectedSubInfo, workshopPackage);
                     }

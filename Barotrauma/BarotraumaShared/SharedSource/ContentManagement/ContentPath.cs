@@ -43,10 +43,10 @@ namespace Barotrauma
                     cachedValue = cachedValue
                         .Replace(ModDirStr, modPath, StringComparison.OrdinalIgnoreCase)
                         .Replace(string.Format(OtherModDirFmt, ContentPackage.Name), modPath, StringComparison.OrdinalIgnoreCase);
-                    if (ContentPackage.SteamWorkshopId != 0)
+                    if (ContentPackage.UgcId.TryUnwrap(out var ugcId))
                     {
                         cachedValue = cachedValue
-                            .Replace(string.Format(OtherModDirFmt, ContentPackage.SteamWorkshopId.ToString(CultureInfo.InvariantCulture)), modPath, StringComparison.OrdinalIgnoreCase);
+                            .Replace(string.Format(OtherModDirFmt, ugcId.StringRepresentation), modPath, StringComparison.OrdinalIgnoreCase);
                     }
                 }
                 var allPackages = ContentPackageManager.AllPackages;
@@ -55,9 +55,9 @@ namespace Barotrauma
 #endif
                 foreach (Identifier otherModName in otherMods)
                 {
-                    if (!UInt64.TryParse(otherModName.Value, out UInt64 workshopId)) { workshopId = 0; }
+                    Option<ContentPackageId> ugcId = ContentPackageId.Parse(otherModName.Value);
                     ContentPackage? otherMod =
-                        allPackages.FirstOrDefault(p => workshopId != 0 && p.SteamWorkshopId != 0 && workshopId == p.SteamWorkshopId)
+                        allPackages.FirstOrDefault(p => ugcId == p.UgcId)
                         ?? allPackages.FirstOrDefault(p => p.Name == otherModName)
                         ?? allPackages.FirstOrDefault(p => p.NameMatches(otherModName))
                         ?? throw new MissingContentPackageException(ContentPackage, otherModName.Value);

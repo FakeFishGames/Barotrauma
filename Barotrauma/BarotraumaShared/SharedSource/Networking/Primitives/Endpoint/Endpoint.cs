@@ -22,12 +22,21 @@ namespace Barotrauma.Networking
         public override string ToString() => StringRepresentation;
 
         public static Option<Endpoint> Parse(string str)
-            => ReflectionUtils.ParseDerived<Endpoint>(str);
+            => ReflectionUtils.ParseDerived<Endpoint, string>(str);
 
-        public static bool operator ==(Endpoint a, Endpoint b)
-            => a.Equals(b);
+        public static bool operator ==(Endpoint? a, Endpoint? b)
+        {
+            if (a is null)
+            {
+                return b is null;
+            }
+            else
+            {
+                return a.Equals(b);
+            }
+        }
 
-        public static bool operator !=(Endpoint a, Endpoint b)
+        public static bool operator !=(Endpoint? a, Endpoint? b)
             => !(a == b);
     }
 }

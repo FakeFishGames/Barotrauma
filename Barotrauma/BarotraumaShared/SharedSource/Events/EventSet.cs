@@ -24,7 +24,7 @@ namespace Barotrauma
     }
 #endif
 
-    class EventSet : Prefab
+    sealed class EventSet : Prefab
     {
         internal class EventDebugStats
         {
@@ -489,12 +489,6 @@ namespace Barotrauma
             }
         }
 
-        public override void Dispose()
-        {
-            foreach (var childSet in ChildSets)
-            {
-                childSet.Dispose();
-            }
-        }
+        public override void Dispose() { }
     }
 }

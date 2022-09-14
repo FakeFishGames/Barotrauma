@@ -1,4 +1,88 @@
 ---------------------------------------------------------------------------------------------------------
+v0.19.5.0
+---------------------------------------------------------------------------------------------------------
+
+Unstable only:
+- Progress on the new tutorials, the Roles tutorials in particular. Still a work in progress, but feedback is again more than welcome!
+- Cleaned up networking and server list code to make them less error-prone and easier to work with in the future. Should not cause any functional differences, but please let us know if you notice any issues or oddities!  
+- Fixes and improvements to Camel.
+- Fixed skill texts not being colored according to the user's skills in the repair UI.
+- Fixed outpost service NPCs' titles (which are also used as the tooltips on the icons) not showing up in the multiplayer campaign.
+- Further fixes to dragging animations.
+- Fixed warning about duplicate keybinds being displayed for things set to None.
+- Fixed clients who've gotten vote kicked getting vote kicked again when they join.
+- Fixed favorited localhost servers causing a crash.
+- Fixed respawn shuttle setting toggling on and off when adjusting other settings.
+- Fixed skills increasing on death if the skill level is under the maximum initial skill.
+- Fixes duplicate Captain Hognoses occasionally appearing in the crew list when selecting the Hognose mission in the multiplayer campaign.
+- Fixed wrecked coilgun and railgun launch impulses.
+- Fixed delayed status effects not working after the parent entity has been removed (breaking many medical items, e.g. ethanol). 
+- Fixed inability to buy anything from other stores when you've bought something from one of the stores in an outpost in the multiplayer campaign.
+
+Changes:
+- Made crates deconstruct much faster to make them easier to get rid of.
+- Sonar disruptions hide minerals.
+- Gray out RangedWeapon's crosshair when reloading (similar to turret crosshairs).
+
+Fixes:
+- Fixed clients downloading submarines they already have from the server if the mods those submarines are in are not currently enabled.
+- Fixed submarines always saving in the root folder of a local mod, instead of the subfolder they were originally in.
+- Fixed Reaper's Tax not stacking.
+- Fixed turrets linked to the same loader messing up the upgrade store UI and causing item swaps to cost more than they should.
+- Fixed status monitor calculating linked hulls' water amounts incorrectly (displaying the average of their water percentages, which isn't correct if the hulls aren't the same size).
+- Fixes to messed up ruin decals in a bunch of ruin modules.
+- Fixed a waypoint issue in the Alien_Entrance3 ruin module.
+- Removed oxygen tanks from DockingModule_01_Colony.
+- Tweaked the hulls and waypoints around Herja's top docking hatch to make it easier for bots to reach and weld.
+- Fixed a waypoint/hull issue in Typhon's stowage compartment (waypoint in such a tight space the bots couldn't reach it).
+- Fixed inactive components (components not currently sending any signal) not reactivating if their output is set to a non-empty value.
+- Fixed duct block's misaligned broken sprite.
+
+Submarine editor:
+- Fixed door gaps not appearing in the sub editor until you select the door 
+
+Modding:
+- Added CheckTalentAction, which can be used in events to check whether a target has unlocked a specific talent.
+- Fixed ExtraLoad working the wrong way around on PowerTransfer components that generate/consume power (the extra load would supply power to the grid). Does not affect the vanilla game, because neither junction boxes or relays generate or consume power.
+
+---------------------------------------------------------------------------------------------------------
+v0.19.4.0
+---------------------------------------------------------------------------------------------------------
+
+Unstable only:
+- Fixed networking issues that prevented joining SteamP2P servers.
+- Fixed crashing on startup if GameAnalytics is enabled.
+- Fixed sub editor background images not saving if you leave the editor and quit the game without exiting the image editing mode first.
+- Camel hull fixes.
+- Fixed a draw order issue in unit load device.
+- Fixed unit load device's inventory slot layout.
+- Fixed submarine tier set in the sub editor not being saved, causing all subs to use the default tier determined by the price.
+
+Changes:
+- Made extra sales from "traveling tradesman" talent stack.
+
+Fixes:
+- Made bots better at figuring out which button controls a door when there's some complex circuit involved. Previously the bots would try to find a button connected to any of the door's connections via wires/circuits, now only the toggle and set_state inputs are considered.
+- Bots now heavily prefer using buttons linked to the door in the sub editor. Can be used as another way to help the bots figure out which button they should press in situations with multiple buttons and complex door control logic.
+- Fixed bots failing to find a path to a couple of spots in Herja.
+- Fixed alien materials (physicorium, incendium, fulgurium, dementonite, paralyxis) not being shown on the mineral scanner.
+- Another fix to cave generation to prevent it from creating impassable paths.
+- Fixed inability to use manual assignment for bot orders with options.
+- Fixed all boolean components (And, Or, Xor) using the And Component's tooltip for the "timeframe" property.
+- Fixed boolean operator component (And, Or, Xor) timeframes not working correctly in some situations (non-zero timeframe, empty false output). The component would deactivate as soon as it stops sending an output, which could prevent some inputs from timing out (meaning that the component could send a signal again as soon as it receives signal A, even if signal B hasn't been received within the timeframe).
+- Fixed PUCS consuming the medical item inside it when a welding fuel or incendium tank is inserted.
+
+Multiplayer:
+- Fixed inventory and wallet resetting if a campaign round ends when a client's character has spawned, but the client is not currently controlling it (e.g. due to getting kicked to the lobby).
+- Fixed spectator checkbox overlapping with the character info if you get kicked to the lobby mid-round.
+
+Modding:
+- Fixed items/structures now falling back to the description defined in the xml even if it's empty, if the description is not defined for the selected language (instead of using English instead).
+- Fixed using the "reloadwearables" and "loadwearable" console commands outside the character editor crashing the game.
+- Fixed character editor crash if you first reload textures and then recreate the ragdoll.
+- Changed how submarine upgrades are calculated, now no longer adds previous levels' costs to the price, but rather relies on higher increasehigh values
+
+---------------------------------------------------------------------------------------------------------
 v0.19.3.0
 ---------------------------------------------------------------------------------------------------------
 
@@ -44,7 +128,6 @@ Fixes:
 - Fixed chaingun rotation speed not being affected by the weapons skill.
 - Fixed crashing when using ':' in item assembly names on Linux platforms.
 - Fixed ImmuneToPressure ability flag being ignored on characters who don't need air (in practice meaning that you can get killed by pressure if you get huskified even if you have a talent that makes you immune to pressure).
-- Disallow using the "reloadwearables" and "loadwearable" when a gamesession is active because it leads to a crash. These commands are intended to be used in the character editor.
 - Fixed geneticmaterialcrawler_unresearched3 producing mudraptor genes.
 
 Submarine editor:

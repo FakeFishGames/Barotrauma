@@ -2179,7 +2179,7 @@ namespace Barotrauma
         /// <summary>
         /// Note: This function generates garbage and might be a bit too heavy to be used once per frame.
         /// </summary>
-        public List<T> GetConnectedComponents<T>(bool recursive = false, bool allowTraversingBackwards = true) where T : ItemComponent
+        public List<T> GetConnectedComponents<T>(bool recursive = false, bool allowTraversingBackwards = true, Func<Connection, bool> connectionFilter = null) where T : ItemComponent
         {
             List<T> connectedComponents = new List<T>();
 
@@ -2195,6 +2195,7 @@ namespace Barotrauma
 
             foreach (Connection c in connectionPanel.Connections)
             {
+                if (connectionFilter != null && !connectionFilter.Invoke(c)) { continue; }
                 var recipients = c.Recipients;
                 foreach (Connection recipient in recipients)
                 {

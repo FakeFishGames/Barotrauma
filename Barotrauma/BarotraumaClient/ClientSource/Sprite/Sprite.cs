@@ -127,15 +127,22 @@ namespace Barotrauma
             }
         }
 
-        public void ReloadTexture(bool updateAllSprites = false) => ReloadTexture(updateAllSprites ? LoadedSprites.Where(s => s.texture == texture).ToList() : new List<Sprite>() { this });
-
-        public void ReloadTexture(IEnumerable<Sprite> spritesToUpdate)
+        public void ReloadTexture()
         {
+            var oldTexture = texture;
             texture.Dispose();
             texture = TextureLoader.FromFile(FilePath.Value, Compress);
-            foreach (Sprite sprite in spritesToUpdate)
+            Identifier pathKey = FullPath.ToIdentifier();
+            if (textureRefCounts.ContainsKey(pathKey))
             {
-                sprite.texture = texture;
+                textureRefCounts[pathKey].Texture = texture;
+            }
+            foreach (Sprite sprite in LoadedSprites)
+            {
+                if (sprite.texture == oldTexture)
+                {
+                    sprite.texture = texture;
+                }
             }
         }
 

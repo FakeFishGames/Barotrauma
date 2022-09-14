@@ -5,7 +5,13 @@ namespace Barotrauma
 {
     class TutorialPrefab : Prefab
     {
-        public static readonly PrefabCollection<TutorialPrefab> Prefabs = new PrefabCollection<TutorialPrefab>();
+
+        public static readonly PrefabCollection<TutorialPrefab> Prefabs =
+#if CLIENT
+            new PrefabCollection<TutorialPrefab>(onSort: MainMenuScreen.UpdateInstanceTutorialButtons);
+#else
+            new PrefabCollection<TutorialPrefab>();
+#endif
 
         public readonly int Order;
         public readonly bool DisableBotConversations;
@@ -54,8 +60,11 @@ namespace Barotrauma
                 return null;
             }
             Identifier speciesName = tutorialCharacterElement.GetAttributeIdentifier("speciesname", CharacterPrefab.HumanSpeciesName);
-            string jobPrefabIdentifier = tutorialCharacterElement.GetAttributeString("jobidentifier", "assistant");
-            var jobPrefab = JobPrefab.Prefabs.FirstOrDefault(p => p.Identifier == jobPrefabIdentifier) ?? JobPrefab.Prefabs.First();
+            Identifier jobPrefabIdentifier = tutorialCharacterElement.GetAttributeIdentifier("jobidentifier", "assistant");
+            if (!JobPrefab.Prefabs.TryGet(jobPrefabIdentifier, out var jobPrefab))
+            {
+                jobPrefab = JobPrefab.Prefabs.First();
+            }
             int jobVariant = tutorialCharacterElement.GetAttributeInt("variant", 0);
             var characterInfo = new CharacterInfo(speciesName, jobOrJobPrefab: jobPrefab, variant: jobVariant);
             foreach (var skillElement in tutorialCharacterElement.GetChildElements("skill"))

@@ -917,15 +917,14 @@ namespace Barotrauma
 
             foreach (var kvp in purchasedItems)
             {
-                foreach (var purchasedItemList in purchasedItems.Values)
+                var storeId = kvp.Key;
+                var purchasedItemList = kvp.Value;
+                foreach (var purchasedItem in purchasedItemList)
                 {
-                    foreach (var purchasedItem in purchasedItemList)
-                    {
-                        int availableQuantity = map.CurrentLocation.Stores[kvp.Key].Stock.Find(s => s.ItemPrefab == purchasedItem.ItemPrefab)?.Quantity ?? 0;
-                        purchasedItem.Quantity = Math.Min(purchasedItem.Quantity, availableQuantity);
-                    }
-                }
-                CargoManager.PurchaseItems(kvp.Key, kvp.Value, false, sender);
+                    int availableQuantity = map.CurrentLocation.Stores[storeId].Stock.Find(s => s.ItemPrefab == purchasedItem.ItemPrefab)?.Quantity ?? 0;
+                    purchasedItem.Quantity = Math.Min(purchasedItem.Quantity, availableQuantity);
+                }                
+                CargoManager.PurchaseItems(storeId, purchasedItemList, false, sender);
             }
 
             foreach (var (storeIdentifier, items) in CargoManager.PurchasedItems)

@@ -11,13 +11,7 @@ namespace Barotrauma
     {
         public static readonly PrefabCollection<CorpsePrefab> Prefabs = new PrefabCollection<CorpsePrefab>();
 
-        private bool disposed = false;
-        public override void Dispose()
-        {
-            if (disposed) { return; }
-            disposed = true;
-            Prefabs.Remove(this);
-        }
+        public override void Dispose() { }
 
         public static CorpsePrefab Get(Identifier identifier)
         {

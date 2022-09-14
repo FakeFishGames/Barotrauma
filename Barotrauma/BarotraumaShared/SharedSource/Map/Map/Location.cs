@@ -1253,7 +1253,7 @@ namespace Barotrauma
         {
             var characters = GameSession.GetSessionCrewCharacters(CharacterType.Both);
             if (!characters.Any()) { return 0; }
-            return characters.Max(c => (int)c.GetStatValue(StatTypes.ExtraSpecialSalesCount));
+            return characters.Sum(c => (int)c.GetStatValue(StatTypes.ExtraSpecialSalesCount));
         }
 
         public void Discover(bool checkTalents = true)

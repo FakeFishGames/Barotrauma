@@ -1634,9 +1634,9 @@ namespace Barotrauma
             return id;
         }
 
-        public static void ApplyHealthData(Character character, XElement healthData)
+        public static void ApplyHealthData(Character character, XElement healthData, Func<AfflictionPrefab, bool> afflictionPredicate = null)
         {
-            if (healthData != null) { character?.CharacterHealth.Load(healthData); }
+            if (healthData != null) { character?.CharacterHealth.Load(healthData, afflictionPredicate); }
         }
 
         /// <summary>

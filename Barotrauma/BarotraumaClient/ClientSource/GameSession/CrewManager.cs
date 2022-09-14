@@ -3516,9 +3516,9 @@ namespace Barotrauma
             if (node == null || characterContext != null) { return false; }
             if (node.UserData is Order nodeOrder)
             {
-                return !nodeOrder.TargetAllCharacters && !nodeOrder.Prefab.HasOptions &&
-                    (!nodeOrder.MustSetTarget || itemContext != null ||
-                     nodeOrder.GetMatchingItems(GetTargetSubmarine(), true, interactableFor: Character.Controlled).Count < 2);
+                return !nodeOrder.TargetAllCharacters &&
+                    (!nodeOrder.Prefab.HasOptions || !nodeOrder.Option.IsEmpty) &&
+                    (!nodeOrder.MustSetTarget || itemContext != null || nodeOrder.GetMatchingItems(GetTargetSubmarine(), true, interactableFor: Character.Controlled).Count < 2);
             }
             return false;
         }

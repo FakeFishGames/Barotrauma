@@ -14,6 +14,9 @@ namespace Barotrauma
 
         [Serialize("", IsPropertySaveable.Yes)]
         public string ItemTags { get; set; }
+
+        [Serialize(false, IsPropertySaveable.Yes)]
+        public bool RequireEquipped { get; set; }
         
         private readonly Identifier[] itemIdentifierSplit;
         private readonly Identifier[] itemTags;
@@ -30,20 +33,24 @@ namespace Barotrauma
             if (!targets.Any()) { return null; }
             foreach (var target in targets)
             {
-                if (!(target is Character chr)) { continue; }
-                if (chr.Inventory == null) { continue; }
-
-                if (itemTags.Any(tag => chr.Inventory.FindItemByTag(tag, recursive: true) != null)) { return true; }
-
-                foreach (var identifier in itemIdentifierSplit)
+                if (target is Character character)
                 {
-                    if (chr.Inventory.FindItemByIdentifier(identifier, recursive: true) != null)
+                    if (RequireEquipped)
                     {
-                        return true;
+                        if (itemTags.Any(tag => character.HasEquippedItem(tag))) { return true; }
+                        if (itemIdentifierSplit.Any(identifier => character.HasEquippedItem(identifier))) { return true; }
+                        return false;
                     }
+                    if (character.Inventory is not CharacterInventory inventory) { continue; }
+                    if (itemTags.Any(tag => inventory.FindItemByTag(tag, recursive: true) is not null)) { return true; }
+                    if (itemIdentifierSplit.Any(identifier => inventory.FindItemByIdentifier(identifier, recursive: true) is not null)) { return true; }
+                }
+                else if (target is Item item && item.OwnInventory is ItemInventory inventory)
+                {
+                    if (itemTags.Any(tag => inventory.FindItemByTag(tag, recursive: true) is not null)) { return true; }
+                    if (itemIdentifierSplit.Any(identifier => inventory.FindItemByIdentifier(identifier, recursive: true) is not null)) { return true; }
                 }
             }
-
             return false;
         }
 

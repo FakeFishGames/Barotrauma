@@ -521,8 +521,9 @@ namespace Barotrauma
             Color skinColor = inc.ReadColorR8G8B8();
             Color hairColor = inc.ReadColorR8G8B8();
             Color facialHairColor = inc.ReadColorR8G8B8();
-            string ragdollFile = inc.ReadString();
 
+            string ragdollFile = inc.ReadString();
+            Identifier npcId = inc.ReadIdentifier();
             uint jobIdentifier = inc.ReadUInt32();
             int variant = inc.ReadByte();
 
@@ -539,9 +540,9 @@ namespace Barotrauma
             }            
 
             // TODO: animations
-            CharacterInfo ch = new CharacterInfo(speciesName, newName, originalName, jobPrefab, ragdollFile, variant)
+            CharacterInfo ch = new CharacterInfo(speciesName, newName, originalName, jobPrefab, ragdollFile, variant, npcIdentifier: npcId)
             {
-                ID = infoID,
+                ID = infoID
             };
             ch.RecreateHead(tagSet.ToImmutableHashSet(), hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
             ch.Head.SkinColor = skinColor;

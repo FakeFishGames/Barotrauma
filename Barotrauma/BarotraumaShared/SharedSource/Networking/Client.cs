@@ -205,15 +205,7 @@ namespace Barotrauma.Networking
         {
             votes[(int)voteType] = value;
         }
-
-        public void ResetVotes()
-        {
-            for (int i = 0; i < votes.Length; i++)
-            {
-                votes[i] = null;
-            }
-        }
-               
+                       
         public bool SessionOrAccountIdMatches(string userId)
             => (AccountId.IsSome() && Networking.AccountId.Parse(userId) == AccountId)
                || (byte.TryParse(userId, out byte sessionId) && SessionId == sessionId);

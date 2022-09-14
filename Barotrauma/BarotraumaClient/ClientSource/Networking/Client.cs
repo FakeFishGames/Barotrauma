@@ -134,6 +134,14 @@ namespace Barotrauma.Networking
             return Permissions.HasFlag(permission);
         }
 
+        public void ResetVotes()
+        {
+            for (int i = 0; i < votes.Length; i++)
+            {
+                votes[i] = null;
+            }
+        }
+
         partial void DisposeProjSpecific()
         {
             if (VoipQueue != null)

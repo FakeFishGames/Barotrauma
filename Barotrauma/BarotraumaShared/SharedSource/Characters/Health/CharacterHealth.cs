@@ -1227,7 +1227,7 @@ namespace Barotrauma
             }
         }
 
-        public void Load(XElement element)
+        public void Load(XElement element, Func<AfflictionPrefab, bool> afflictionPredicate = null)
         {
             foreach (var subElement in element.Elements())
             {
@@ -1260,6 +1260,7 @@ namespace Barotrauma
                     DebugConsole.ThrowError($"Error while loading character health: affliction \"{id}\" not found.");
                     return;
                 }
+                if (afflictionPredicate != null && !afflictionPredicate.Invoke(afflictionPrefab)) { return; }
                 float strength = afflictionElement.GetAttributeFloat("strength", 0.0f);
                 var irremovableAffliction = irremovableAfflictions.FirstOrDefault(a => a.Prefab == afflictionPrefab);
                 if (irremovableAffliction != null)

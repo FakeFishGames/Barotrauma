@@ -45,9 +45,11 @@ namespace Barotrauma
             
             var needInstalling = subscribedItems.Where(item
                     => !WorkshopPackages.Any(p
-                        => item.Id == p.SteamWorkshopId
-                           && p.InstallTime.HasValue
-                           && item.LatestUpdateTime <= p.InstallTime))
+                        => p.UgcId.TryUnwrap(out var ugcId)
+                           && ugcId is SteamWorkshopId workshopId
+                           && item.Id == workshopId.Value
+                           && p.InstallTime.TryUnwrap(out var installTime)
+                           && item.LatestUpdateTime <= installTime))
                 .ToArray();
             if (needInstalling.Any())
             {

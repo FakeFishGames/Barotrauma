@@ -7,7 +7,7 @@ namespace Barotrauma.Networking
         public abstract string StringRepresentation { get; }
         
         public static Option<AccountId> Parse(string str)
-            => ReflectionUtils.ParseDerived<AccountId>(str);
+            => ReflectionUtils.ParseDerived<AccountId, string>(str);
 
         public abstract override bool Equals(object? obj);
 

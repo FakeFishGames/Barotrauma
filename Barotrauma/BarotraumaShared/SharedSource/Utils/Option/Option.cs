@@ -16,18 +16,18 @@ namespace Barotrauma
         public bool IsNone() => this is None<T>;
         public bool IsSome() => this is Some<T>;
 
-        public bool TryUnwrap(out T outValue)
+        public bool TryUnwrap(out T outValue) => TryUnwrap<T>(out outValue);
+
+        public bool TryUnwrap<T1>(out T1 outValue) where T1 : T
         {
             switch (this)
             {
-                case Some<T> { Value: var value }:
+                case Some<T> { Value: T1 value }:
                     outValue = value;
                     return true;
-                case None<T> _:
+                default:
                     outValue = default!;
                     return false;
-                default:
-                    throw new ArgumentOutOfRangeException();
             }
         }
 

@@ -11,15 +11,7 @@ namespace Barotrauma
 {
     partial class LinkedSubmarinePrefab : MapEntityPrefab
     {
-        //public static readonly PrefabCollection<LinkedSubmarinePrefab> Prefabs = new PrefabCollection<LinkedSubmarinePrefab>();
-
-        private bool disposed = false;
-        public override void Dispose()
-        {
-            if (disposed) { return; }
-            disposed = true;
-            //Prefabs.Remove(this);
-        }
+        public override void Dispose() { }
 
         public readonly SubmarineInfo subInfo;
 

@@ -1257,11 +1257,16 @@ namespace Barotrauma
             List<Upgrade> upgrades = entity.GetUpgrades();
             int upgradesCount = upgrades.Count;
             const int maxUpgrades = 4;
-            
-            itemName.Text = entity is Item ? entity.Name : TextManager.Get("upgradecategory.walls");
+
+            Item? item = entity as Item;
+            itemName.Text = item?.Name ?? TextManager.Get("upgradecategory.walls");
             if (slotIndex > -1)
             {
                 itemName.Text = TextManager.GetWithVariables("weaponslotwithname", ("[number]", slotIndex.ToString()), ("[weaponname]", itemName.Text));
+            }
+            if (item?.PendingItemSwap != null)
+            {
+                itemName.Text = RichString.Rich(itemName.Text + "\n" + TextManager.GetWithVariable("upgrades.pendingitem", "[itemname]", item.PendingItemSwap.Name));
             }
             upgradeList.Content.ClearChildren();
             for (var i = 0; i < upgrades.Count && i < maxUpgrades; i++)
@@ -1275,7 +1280,7 @@ namespace Barotrauma
             // include pending upgrades into the tooltip
             foreach (var (prefab, category, level) in upgradeManager.PendingUpgrades)
             {
-                if (entity is Item item && category.CanBeApplied(item, prefab) || entity is Structure && category.IsWallUpgrade)
+                if (item != null && category.CanBeApplied(item, prefab) || entity is Structure && category.IsWallUpgrade)
                 {
                     bool found = false;
                     foreach (GUITextBlock textBlock in upgradeList.Content.Children.Where(c => c is GUITextBlock).Cast<GUITextBlock>())
@@ -1392,6 +1397,10 @@ namespace Barotrauma
                                     if (!itemElement.Selected) { itemElement.OnClicked(itemElement, itemElement.UserData); }
                                     (itemElement.Parent?.Parent?.Parent as GUIListBox)?.ScrollToElement(itemElement);
                                 }
+                                else
+                                {
+                                    ScrollToCategory(data => data.Category.CanBeApplied(item, null));
+                                }
                             }
                         }
                         else
@@ -1463,23 +1472,16 @@ namespace Barotrauma
             // submarine name
             new GUITextBlock(rectT(1, 0, submarineInfoFrame), submarine.Info.DisplayName, textAlignment: Alignment.Right, font: GUIStyle.LargeFont);
 
-            GUILayoutGroup classLayout = new GUILayoutGroup(rectT(1, 0.15f, submarineInfoFrame), isHorizontal: true) { Stretch = true };
             LocalizedString classText = $"{TextManager.GetWithVariable("submarineclass.classsuffixformat", "[type]", TextManager.Get($"submarineclass.{submarine.Info.SubmarineClass}"))}";
             // submarine class + tier
-            new GUITextBlock(rectT(0.8f, 1, classLayout), classText, textAlignment: Alignment.Right, font: GUIStyle.Font)
+            new GUITextBlock(rectT(1.0f, 0.15f, submarineInfoFrame), classText, textAlignment: Alignment.Right, font: GUIStyle.Font)
             {
-                ToolTip = TextManager.Get("submarineclass.description") + '\n' + TextManager.Get($"submarineclass.{submarine.Info.SubmarineClass}.description")
+                ToolTip = TextManager.Get("submarineclass.description") + "\n\n" + TextManager.Get($"submarineclass.{submarine.Info.SubmarineClass}.description")
             };
-            int tier = submarine.Info.Tier;
-            string tierStyle = $"SubmarineTier.{tier}";
-            if (GUIStyle.GetComponentStyle(tierStyle) != null)
+            new GUITextBlock(rectT(1.0f, 0.15f, submarineInfoFrame), TextManager.Get($"submarinetier.{submarine.Info.Tier}"), textAlignment: Alignment.Right, font: GUIStyle.Font)
             {
-                LocalizedString tooltip = TextManager.Get("submarinetier.description").Fallback(string.Empty);
-                new GUIImage(rectT(0.15f, 1, classLayout), style: tierStyle, scaleToFit: false)
-                {
-                    ToolTip = tooltip
-                };
-            }
+                ToolTip = TextManager.Get("submarinetier.description")
+            };
 
             var description = new GUITextBlock(rectT(1, 0, submarineInfoFrame), submarine.Info.Description, textAlignment: Alignment.Right, wrap: true);
             submarineInfoFrame.RectTransform.ScreenSpaceOffset = new Point(0, (int)(16 * GUI.Scale));
@@ -1750,13 +1752,25 @@ namespace Barotrauma
         {
             if (currentStoreLayout == null) { return; }
 
+            CategoryData? mostAppropriateCategory = null;
+            GUIComponent? mostAppropriateChild = null;
             foreach (GUIComponent child in currentStoreLayout.Content.Children)
             {
                 if (child.UserData is CategoryData data && predicate(data))
                 {
-                    currentStoreLayout.ScrollToElement(child, playSelectSound);
-                    break;
+                    //choose the category with least items in it as the "most appropriate"
+                    //e.g. when selecting junction boxes, we want to select the "junction boxes" category instead of "electrical repairs" which contains many electrical devices
+                    if (mostAppropriateCategory == null || 
+                        data.Category.ItemTags.Count() < mostAppropriateCategory.Value.Category.ItemTags.Count())
+                    {
+                        mostAppropriateCategory = data;
+                        mostAppropriateChild = child;
+                    }
                 }
+            }
+            if (mostAppropriateChild != null)
+            {
+                currentStoreLayout.ScrollToElement(mostAppropriateChild, playSelectSound);
             }
         }
 
