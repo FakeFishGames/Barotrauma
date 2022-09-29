@@ -1862,7 +1862,7 @@ namespace Barotrauma
                             SubmarineType.Wreck => "Content/Map/Wrecks/{0}",
                             SubmarineType.BeaconStation => "Content/Map/BeaconStations/{0}",
                             SubmarineType.EnemySubmarine => "Content/Map/EnemySubmarines/{0}",
-                            SubmarineType.OutpostModule => "Content/Map/Outposts/{0}",
+                            SubmarineType.OutpostModule => MainSub.Info.FilePath.Contains("RuinModules") ? "Content/Map/RuinModules/{0}" : "Content/Map/Outposts/{0}",
                             _ => throw new InvalidOperationException()
                         }, savePath);
                     modProject.ModVersion = "";

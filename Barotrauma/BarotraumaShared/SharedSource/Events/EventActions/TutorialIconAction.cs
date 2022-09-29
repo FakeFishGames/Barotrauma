@@ -13,7 +13,7 @@ class TutorialIconAction : EventAction
     public Identifier TargetTag { get; set; }
 
     [Serialize("", IsPropertySaveable.Yes)]
-    public string IconStyle { get; set; }
+    public Identifier IconStyle { get; set; }
 
     private bool isFinished;
 
@@ -33,7 +33,7 @@ class TutorialIconAction : EventAction
                 }
                 else if(Type == ActionType.Remove)
                 {
-                    tutorialMode.Tutorial?.Icons.RemoveAll(i => i.entity == target && i.iconStyle.Equals(IconStyle, System.StringComparison.OrdinalIgnoreCase));
+                    tutorialMode.Tutorial?.Icons.RemoveAll(i => i.entity == target && i.iconStyle == IconStyle);
                 }
                 else if (Type == ActionType.RemoveTarget)
                 {
@@ -41,7 +41,7 @@ class TutorialIconAction : EventAction
                 }
                 else if (Type == ActionType.RemoveIcon)
                 {
-                    tutorialMode.Tutorial?.Icons.RemoveAll(i => i.iconStyle.Equals(IconStyle, System.StringComparison.OrdinalIgnoreCase));
+                    tutorialMode.Tutorial?.Icons.RemoveAll(i => i.iconStyle == IconStyle);
                 }
                 else if (Type == ActionType.Clear)
                 {

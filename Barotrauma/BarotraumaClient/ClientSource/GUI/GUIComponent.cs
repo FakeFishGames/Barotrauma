@@ -486,7 +486,7 @@ namespace Barotrauma
             {
                 if (bounceTimer > 3.0f || bounceDown)
                 {
-                    RectTransform.ScreenSpaceOffset = new Point(RectTransform.ScreenSpaceOffset.X, (int) -(bounceJump * 10f));
+                    RectTransform.ScreenSpaceOffset = new Point(RectTransform.ScreenSpaceOffset.X, (int) -(bounceJump * 15f * GUI.Scale));
                     if (!bounceDown)
                     {
                         bounceJump += deltaTime * 4;
@@ -503,6 +503,7 @@ namespace Barotrauma
                             bounceJump = 0.0f;
                             bounceTimer = 0.0f;
                             bounceDown = false;
+                            Bounce = false;
                         }
                     }
                 }

@@ -447,11 +447,13 @@ namespace Barotrauma
 
         private Vector2 CalculateBuoyancy()
         {
+            if (Submarine.LockY) { return Vector2.Zero; }
+
             float waterVolume = 0.0f;
             float volume = 0.0f;
             foreach (Hull hull in Hull.HullList)
             {
-                if (hull.Submarine != submarine) continue;
+                if (hull.Submarine != submarine) { continue; }
 
                 waterVolume += hull.WaterVolume;
                 volume += hull.Volume;

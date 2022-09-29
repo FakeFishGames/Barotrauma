@@ -2,7 +2,7 @@ namespace Barotrauma
 {
     partial class MessageBoxAction : EventAction
     {
-        public enum ActionType { Create, Close }
+        public enum ActionType { Create, ConnectObjective, Close, Clear }
 
         [Serialize(ActionType.Create, IsPropertySaveable.Yes)]
         public ActionType Type { get; set; }
@@ -51,7 +51,13 @@ namespace Barotrauma
 
         private bool isFinished = false;
 
-        public MessageBoxAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
+        public MessageBoxAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)
+        {
+            if (Identifier.IsEmpty)
+            {
+                Identifier = element.GetAttributeIdentifier("id", Identifier.Empty);
+            }
+        }
 
         public override void Update(float deltaTime)
         {

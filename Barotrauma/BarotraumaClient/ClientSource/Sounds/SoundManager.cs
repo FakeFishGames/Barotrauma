@@ -195,13 +195,13 @@ namespace Barotrauma.Sounds
                 GainMultipliers[index] = gain;
             }
         }
-        private Dictionary<string, CategoryModifier> categoryModifiers;
+
+        private readonly Dictionary<string, CategoryModifier> categoryModifiers = new Dictionary<string, CategoryModifier>();
 
         public SoundManager()
         {
             loadedSounds = new List<Sound>();
             streamingThread = null;
-            categoryModifiers = null;
 
             sourcePools = new SoundSourcePool[2];
             playingChannels[(int)SourcePoolIndex.Default] = new SoundChannel[SOURCE_COUNT];
@@ -235,7 +235,7 @@ namespace Barotrauma.Sounds
             CompressionDynamicRangeGain = 1.0f;
         }
 
-        private void SetAudioOutputDevice(string deviceName)
+        private static void SetAudioOutputDevice(string deviceName)
         {
             var config = GameSettings.CurrentConfig;
             config.Audio.AudioOutputDevice = deviceName;
@@ -249,7 +249,7 @@ namespace Barotrauma.Sounds
             DebugConsole.NewMessage($"Attempting to open ALC device \"{deviceName}\"");
 
             alcDevice = IntPtr.Zero;
-            int alcError = Al.NoError;
+            int alcError;
             for (int i = 0; i < 3; i++)
             {
                 alcDevice = Alc.OpenDevice(deviceName);
@@ -371,8 +371,10 @@ namespace Barotrauma.Sounds
                 throw new System.IO.FileNotFoundException($"Sound file \"{filePath}\" doesn't exist! Content package \"{(element.ContentPackage?.Name ?? "Unknown")}\".");
             }
 
-            var newSound = new OggSound(this, filePath, stream, xElement: element);
-            newSound.BaseGain = element.GetAttributeFloat("volume", 1.0f);
+            var newSound = new OggSound(this, filePath, stream, xElement: element)
+            {
+                BaseGain = element.GetAttributeFloat("volume", 1.0f)
+            };
             float range = element.GetAttributeFloat("range", 1000.0f);
             newSound.BaseNear = range * 0.4f;
             newSound.BaseFar = range;
@@ -537,14 +539,16 @@ namespace Barotrauma.Sounds
         {
             if (Disabled) { return; }
             category = category.ToLower();
-            if (categoryModifiers == null) categoryModifiers = new Dictionary<string, CategoryModifier>();
-            if (!categoryModifiers.ContainsKey(category))
+            lock (categoryModifiers)
             {
-                categoryModifiers.Add(category, new CategoryModifier(index, gain, false));
-            }
-            else
-            {
-                categoryModifiers[category].SetGainMultiplier(index, gain);
+                if (!categoryModifiers.ContainsKey(category))
+                {
+                    categoryModifiers.Add(category, new CategoryModifier(index, gain, false));
+                }
+                else
+                {
+                    categoryModifiers[category].SetGainMultiplier(index, gain);
+                }
             }
 
             for (int i = 0; i < playingChannels.Length; i++)
@@ -562,23 +566,26 @@ namespace Barotrauma.Sounds
             }
         }
 
-        public float GetCategoryGainMultiplier(string category, int index=-1)
+        public float GetCategoryGainMultiplier(string category, int index = -1)
         {
             if (Disabled) { return 0.0f; }
             category = category.ToLower();
-            if (categoryModifiers == null || !categoryModifiers.ContainsKey(category)) return 1.0f;
-            if (index < 0)
+            lock (categoryModifiers)
             {
-                float accumulatedMultipliers = 1.0f;
-                for (int i = 0; i < categoryModifiers[category].GainMultipliers.Length; i++)
+                if (categoryModifiers == null || !categoryModifiers.TryGetValue(category, out CategoryModifier categoryModifier)) { return 1.0f; }
+                if (index < 0)
                 {
-                    accumulatedMultipliers *= categoryModifiers[category].GainMultipliers[i];
+                    float accumulatedMultipliers = 1.0f;
+                    for (int i = 0; i < categoryModifier.GainMultipliers.Length; i++)
+                    {
+                        accumulatedMultipliers *= categoryModifier.GainMultipliers[i];
+                    }
+                    return accumulatedMultipliers;
                 }
-                return accumulatedMultipliers;
-            }
-            else
-            {
-                return categoryModifiers[category].GainMultipliers[index];
+                else
+                {
+                    return categoryModifier.GainMultipliers[index];
+                }
             }
         }
 
@@ -587,15 +594,16 @@ namespace Barotrauma.Sounds
             if (Disabled) { return; }
 
             category = category.ToLower();
-
-            if (categoryModifiers == null) { categoryModifiers = new Dictionary<string, CategoryModifier>(); }
-            if (!categoryModifiers.ContainsKey(category))
+            lock (categoryModifiers)
             {
-                categoryModifiers.Add(category, new CategoryModifier(0, 1.0f, muffle));
-            }
-            else
-            {
-                categoryModifiers[category].Muffle = muffle;
+                if (!categoryModifiers.ContainsKey(category))
+                {
+                    categoryModifiers.Add(category, new CategoryModifier(0, 1.0f, muffle));
+                }
+                else
+                {
+                    categoryModifiers[category].Muffle = muffle;
+                }
             }
 
             for (int i = 0; i < playingChannels.Length; i++)
@@ -618,8 +626,11 @@ namespace Barotrauma.Sounds
             if (Disabled) { return false; }
 
             category = category.ToLower();
-            if (categoryModifiers == null || !categoryModifiers.ContainsKey(category)) { return false; }
-            return categoryModifiers[category].Muffle;
+            lock (categoryModifiers)
+            {
+                if (categoryModifiers == null || !categoryModifiers.TryGetValue(category, out CategoryModifier categoryModifier)) { return false; }
+                return categoryModifier.Muffle;
+            }
         }
 
         public void Update()

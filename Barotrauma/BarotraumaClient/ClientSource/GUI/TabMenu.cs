@@ -206,9 +206,9 @@ namespace Barotrauma
                 transferMenuButton.RectTransform.AbsoluteOffset = new Point(0, -pos - transferMenu.Rect.Height);
             }
             GameSession.UpdateTalentNotificationIndicator(talentPointNotification);
-            if (Character.Controlled is { } controlled && talentResetButton != null && talentApplyButton != null)
+            if (Character.Controlled?.Info is { } characterInfo && talentResetButton != null && talentApplyButton != null)
             {
-                int talentCount = selectedTalents.Count - controlled.Info.GetUnlockedTalentsInTree().Count();
+                int talentCount = selectedTalents.Count - characterInfo.GetUnlockedTalentsInTree().Count();
                 talentResetButton.Enabled = talentApplyButton.Enabled = talentCount > 0;
                 if (talentApplyButton.Enabled && talentApplyButton.FlashTimer <= 0.0f)
                 {
@@ -1918,13 +1918,17 @@ namespace Barotrauma
             skillListBox = new GUIListBox(new RectTransform(new Vector2(1f, 1f - skillBlock.RectTransform.RelativeSize.Y), skillLayout.RectTransform), style: null);
             CreateSkillList(controlledCharacter, info, skillListBox);
 
-            if (controlledCharacter != null)
+            new GUIFrame(new RectTransform(new Vector2(1f, 1f), contentLayout.RectTransform), style: "HorizontalLine");
+
+            GUIListBox talentTreeListBox = new GUIListBox(new RectTransform(new Vector2(1f, 0.6f), contentLayout.RectTransform, Anchor.TopCenter), isHorizontal: true, style: null);
+
+            if (controlledCharacter == null)
+            {
+                talentTreeListBox.Enabled = false;
+            }
+            else
             {
                 if (!TalentTree.JobTalentTrees.TryGet(info.Job.Prefab.Identifier, out TalentTree talentTree)) { return; }
-
-                new GUIFrame(new RectTransform(new Vector2(1f, 1f), contentLayout.RectTransform), style: "HorizontalLine");
-
-                GUIListBox talentTreeListBox = new GUIListBox(new RectTransform(new Vector2(1f, 0.6f), contentLayout.RectTransform, Anchor.TopCenter), isHorizontal: true, style: null);
 
                 selectedTalents = info.GetUnlockedTalentsInTree().ToList();
 

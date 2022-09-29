@@ -580,7 +580,7 @@ namespace Barotrauma.Items.Components
             GameMain.Instance.ResolutionChanged += OnResolutionChangedPrivate;
         }
 
-        protected void TryCreateDragHandle()
+        protected virtual void TryCreateDragHandle()
         {
             if (GuiFrame != null && GuiFrameSource.GetAttributeBool("draggable", true))
             {
@@ -593,6 +593,7 @@ namespace Barotrauma.Items.Components
                 int iconHeight = GUIStyle.ItemFrameMargin.Y / 4;
                 var dragIcon = new GUIImage(new RectTransform(new Point(GuiFrame.Rect.Width, iconHeight), handle.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, iconHeight / 2) },
                     style: "GUIDragIndicatorHorizontal");
+                dragIcon.RectTransform.MinSize = new Point(0, iconHeight);
 
                 handle.ValidatePosition = (RectTransform rectT) =>
                 {
@@ -622,7 +623,7 @@ namespace Barotrauma.Items.Components
                 };
 
                 int buttonHeight = (int)(GUIStyle.ItemFrameMargin.Y * 0.4f);
-                new GUIButton(new RectTransform(new Point(buttonHeight), handle.RectTransform, Anchor.TopLeft) { AbsoluteOffset = new Point(buttonHeight / 4) },
+                new GUIButton(new RectTransform(new Point(buttonHeight), handle.RectTransform, Anchor.TopLeft) { AbsoluteOffset = new Point(buttonHeight / 4), MinSize = new Point(buttonHeight) },
                     style: "GUIButtonSettings")
                 {
                     OnClicked = (btn, userdata) =>

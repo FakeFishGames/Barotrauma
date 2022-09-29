@@ -329,21 +329,14 @@ namespace Barotrauma
 
         }
 
-        public override void End()
+        protected override bool DetermineCompleted()
         {
-            completed = State > 0 && State != HostagesKilledState;
-            if (completed)
-            {
-                if (Prefab.LocationTypeChangeOnCompleted != null)
-                {
-                    ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
-                }
-                GiveReward();
-            }
-            else
-            {
-                failed = requireRescue.Any(r => r.Removed || r.IsDead);
-            }
+            return State > 0 && State != HostagesKilledState;
+        }
+
+        protected override void EndMissionSpecific(bool completed)
+        {
+            failed = !completed && requireRescue.Any(r => r.Removed || r.IsDead);
         }
     }
 }

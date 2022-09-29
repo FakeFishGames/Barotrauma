@@ -70,7 +70,7 @@ namespace Barotrauma.Networking
         [Serialize(PlayStyle.Casual, IsPropertySaveable.Yes)]
         public PlayStyle PlayStyle { get; set; }
 
-        public Version GameVersion { get; set; } = new Version(0,0,0,0);
+        public Version GameVersion { get; set; } = new Version(0, 0, 0, 0);
 
         public Option<int> Ping = Option<int>.None();
 
@@ -200,7 +200,7 @@ namespace Barotrauma.Networking
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), frame.RectTransform),
                 TextManager.AddPunctuation(':', TextManager.Get("ServerListVersion"),
-                    GameVersion.ToString()))
+                    GameVersion == new Version(0, 0, 0, 0) ? TextManager.Get("Unknown") : GameVersion.ToString()))
             {
                 CanBeFocused = false
             };
@@ -397,10 +397,10 @@ namespace Barotrauma.Networking
         public void UpdateInfo(Func<string, string?> valueGetter)
         {
             ServerMessage = valueGetter("message") ?? "";
-            GameVersion = Version.TryParse(valueGetter("version"), out var version)
-                ? version
-                : GameMain.Version;
-
+            if (Version.TryParse(valueGetter("version"), out var version))
+            {
+                GameVersion = version;
+            }
             if (int.TryParse(valueGetter("playercount"), out int playerCount)) { PlayerCount = playerCount; }
             if (int.TryParse(valueGetter("maxplayernum"), out int maxPlayers)) { MaxPlayers = maxPlayers; }
             if (Enum.TryParse(valueGetter("modeselectionmode"), out SelectionMode modeSelectionMode)) { ModeSelectionMode = modeSelectionMode; }

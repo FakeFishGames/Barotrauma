@@ -2,6 +2,7 @@
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace Barotrauma
@@ -141,7 +142,7 @@ namespace Barotrauma
         
         public virtual void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
-            if (!(extraData is IEventData eventData)) { throw new Exception($"Malformed character event: expected {nameof(Character)}.{nameof(IEventData)}"); }
+            if (extraData is not IEventData eventData) { throw new Exception($"Malformed character event: expected {nameof(Character)}.{nameof(IEventData)}"); }
             
             msg.WriteRangedInteger((int)eventData.EventType, (int)EventType.MinValue, (int)EventType.MaxValue);
             switch (eventData)
@@ -471,25 +472,11 @@ namespace Barotrauma
                     break;
                 case EventType.AddToCrew:
                     GameMain.GameSession.CrewManager.AddCharacter(this);
-                    CharacterTeamType teamID = (CharacterTeamType)msg.ReadByte();
-                    ushort itemCount = msg.ReadUInt16();
-                    for (int i = 0; i < itemCount; i++)
-                    {
-                        ushort itemID = msg.ReadUInt16();
-                        if (!(Entity.FindEntityByID(itemID) is Item item)) { continue; }
-                        item.AllowStealing = true;
-                        var wifiComponent = item.GetComponent<WifiComponent>();
-                        if (wifiComponent != null)
-                        {
-                            wifiComponent.TeamID = teamID;
-                        }
-                        var idCard = item.GetComponent<IdCard>();
-                        if (idCard != null)
-                        {
-                            idCard.TeamID = teamID;
-                            idCard.SubmarineSpecificID = 0;
-                        }
-                    }
+                    ReadItemTeamChange(msg, true);
+                    break;
+                case EventType.RemoveFromCrew:
+                    GameMain.GameSession.CrewManager.RemoveCharacter(this, removeInfo: true);
+                    ReadItemTeamChange(msg, false);
                     break;
                 case EventType.UpdateExperience:
                     int experienceAmount = msg.ReadInt32();
@@ -520,9 +507,27 @@ namespace Barotrauma
                         info?.ChangeSavedStatValue(statType, statValue, statIdentifier, removeOnDeath, setValue: true);
                     }
                     break;
-
             }
             msg.ReadPadBits();
+
+            static void ReadItemTeamChange(IReadMessage msg, bool allowStealing)
+            {
+                var itemTeamChange = INetSerializableStruct.Read<ItemTeamChange>(msg);
+                foreach (var itemID in itemTeamChange.ItemIds)
+                {
+                    if (FindEntityByID(itemID) is not Item item) { continue; }
+                    item.AllowStealing = allowStealing;
+                    if (item.GetComponent<WifiComponent>() is { } wifiComponent)
+                    {
+                        wifiComponent.TeamID = itemTeamChange.TeamId;
+                    }
+                    if (item.GetComponent<IdCard>() is { } idCard)
+                    {
+                        idCard.TeamID = itemTeamChange.TeamId;
+                        idCard.SubmarineSpecificID = 0;
+                    }
+                }
+            }
         }
 
         public static Character ReadSpawnData(IReadMessage inc)

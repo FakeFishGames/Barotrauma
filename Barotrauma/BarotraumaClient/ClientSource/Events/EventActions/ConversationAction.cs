@@ -92,11 +92,13 @@ namespace Barotrauma
                         }
                     }
 
+                    float prevSize = conversationList.TotalSize;
+
                     List<GUIButton> extraButtons = CreateConversation(conversationList, text, speaker, options, string.IsNullOrWhiteSpace(spriteIdentifier));
                     AssignActionsToButtons(extraButtons, lastMessageBox);
                     RecalculateLastMessage(conversationList, true);
-
-                    conversationList.ScrollToEnd(0.5f);
+                    conversationList.BarScroll = (prevSize - conversationList.Content.Rect.Height) / (conversationList.TotalSize - conversationList.Content.Rect.Height);
+                    conversationList.ScrollToEnd(duration: 0.5f);
                     lastMessageBox.SetBackgroundIcon(eventSprite);
                     return;
                 }
@@ -112,7 +114,7 @@ namespace Barotrauma
             };
             messageBox.OnAddedToGUIUpdateList += (GUIComponent component) =>
             {
-                if (!(Screen.Selected is GameScreen)) { messageBox.Close(); }
+                if (Screen.Selected is not GameScreen) { messageBox.Close(); }
             };
             lastMessageBox = messageBox;
 
@@ -321,7 +323,7 @@ namespace Barotrauma
                 AlwaysOverrideCursor = true
             };
 
-            LocalizedString translatedText = TextManager.Get(text).Fallback(text);
+            LocalizedString translatedText = TextManager.ParseInputTypes(TextManager.Get(text)).Fallback(text);
 
             if (speaker?.Info != null && drawChathead)
             {

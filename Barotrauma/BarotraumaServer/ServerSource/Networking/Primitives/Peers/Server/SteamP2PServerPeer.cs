@@ -1,8 +1,6 @@
 ﻿#nullable enable
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Microsoft.Xna.Framework;
 
 namespace Barotrauma.Networking
 {
@@ -139,7 +137,27 @@ namespace Barotrauma.Networking
                 pendingClient?.Heartbeat();
                 connectedClient?.Heartbeat();
 
-                if (serverSettings.BanList.IsBanned(senderSteamId, out string banReason) ||
+                if (packetHeader.IsConnectionInitializationStep())
+                {
+                    if (!initialization.HasValue) { return; }
+                    ConnectionInitialization initializationStep = initialization.Value;
+
+                    if (pendingClient != null)
+                    {
+                        pendingClient.Connection.SetAccountInfo(new AccountInfo(senderSteamId, sentOwnerSteamId));
+                        ReadConnectionInitializationStep(
+                            pendingClient,
+                            new ReadWriteMessage(inc.Buffer, inc.BitPosition, inc.LengthBits, false),
+                            initializationStep);
+                    }
+                    else if (initializationStep == ConnectionInitialization.ConnectionStarted)
+                    {
+                        pendingClient = new PendingClient(new SteamP2PConnection(senderSteamId));
+                        pendingClient.Connection.SetAccountInfo(new AccountInfo(senderSteamId, sentOwnerSteamId));
+                        pendingClients.Add(pendingClient);
+                    }
+                }
+                else if (serverSettings.BanList.IsBanned(senderSteamId, out string banReason) ||
                     serverSettings.BanList.IsBanned(sentOwnerSteamId, out banReason))
                 {
                     if (pendingClient != null)
@@ -166,24 +184,6 @@ namespace Barotrauma.Networking
                 {
                     //message exists solely as a heartbeat, ignore its contents
                     return;
-                }
-                else if (packetHeader.IsConnectionInitializationStep())
-                {
-                    if (!initialization.HasValue) { return; }
-                    ConnectionInitialization initializationStep = initialization.Value;
-
-                    if (pendingClient != null)
-                    {
-                        pendingClient.Connection.SetAccountInfo(new AccountInfo(senderSteamId, sentOwnerSteamId));
-                        ReadConnectionInitializationStep(
-                            pendingClient,
-                            new ReadWriteMessage(inc.Buffer, inc.BitPosition, inc.LengthBits, false),
-                            initializationStep);
-                    }
-                    else if (initializationStep == ConnectionInitialization.ConnectionStarted)
-                    {
-                        pendingClients.Add(new PendingClient(new SteamP2PConnection(senderSteamId)));
-                    }
                 }
                 else if (connectedClient != null)
                 {
@@ -248,7 +248,7 @@ namespace Barotrauma.Networking
         {
             if (!started) { return; }
 
-            if (!(conn is SteamP2PConnection steamP2PConn)) { return; }
+            if (conn is not SteamP2PConnection steamP2PConn) { return; }
 
             if (!connectedClients.Contains(steamP2PConn) && conn != OwnerConnection)
             {
@@ -256,7 +256,7 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            if (!conn.AccountInfo.AccountId.TryUnwrap(out var connAccountId) || !(connAccountId is SteamId connSteamId)) { return; }
+            if (!conn.AccountInfo.AccountId.TryUnwrap(out var connAccountId) || connAccountId is not SteamId) { return; }
 
             byte[] bufAux = msg.PrepareForSending(compressPastThreshold, out bool isCompressed, out _);
 
@@ -292,9 +292,9 @@ namespace Barotrauma.Networking
         {
             if (!started) { return; }
 
-            if (!(conn is SteamP2PConnection steamp2pConn)) { return; }
+            if (conn is not SteamP2PConnection steamp2pConn) { return; }
 
-            if (!conn.AccountInfo.AccountId.TryUnwrap(out var connAccountId) || !(connAccountId is SteamId connSteamId)) { return; }
+            if (!conn.AccountInfo.AccountId.TryUnwrap(out var connAccountId) || connAccountId is not SteamId connSteamId) { return; }
 
             SendDisconnectMessage(connSteamId, peerDisconnectPacket);
 

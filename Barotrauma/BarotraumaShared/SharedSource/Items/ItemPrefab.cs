@@ -1123,7 +1123,7 @@ namespace Barotrauma
             {
                 string message = $"Tried to get price info for \"{Identifier}\" with a null store parameter!\n{Environment.StackTrace.CleanupStackTrace()}";
 #if DEBUG
-                DebugConsole.ShowError(message);
+                DebugConsole.LogError(message);
 #else
                 DebugConsole.AddWarning(message);
                 GameAnalyticsManager.AddErrorEventOnce("ItemPrefab.GetPriceInfo:StoreParameterNull", GameAnalyticsManager.ErrorSeverity.Error, message);

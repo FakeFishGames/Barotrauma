@@ -67,7 +67,9 @@ namespace Barotrauma
 
         public static readonly Queue<ulong> WorkshopItemsToUpdate = new Queue<ulong>();
 
-        private readonly GUIListBox tutorialList;
+        private GUIImage tutorialBanner;
+        private GUITextBlock tutorialHeader, tutorialDescription;
+        private GUIListBox tutorialList;
 
         #region Creation
         public MainMenuScreen(GameMain game)
@@ -429,20 +431,7 @@ namespace Barotrauma
             //----------------------------------------------------------------------
 
             menuTabs[Tab.Tutorials] = new GUIFrame(new RectTransform(relativeSize, GUI.Canvas, anchor, pivot, minSize, maxSize) { RelativeOffset = relativeSpacing });
-
-            //PLACEHOLDER
-            tutorialList = new GUIListBox(
-                new RectTransform(new Vector2(0.95f, 0.85f), menuTabs[Tab.Tutorials].RectTransform, Anchor.TopCenter) { RelativeOffset = new Vector2(0.0f, 0.1f) })
-            {
-                PlaySoundOnSelect = true,
-            };
-            tutorialList.OnSelected += (component, obj) =>
-            {
-                (obj as Tutorial)?.Start();
-                return true;
-            };
-
-            CreateTutorialButtons();
+            CreateTutorialTab();
 
             this.game = game;
 
@@ -459,24 +448,68 @@ namespace Barotrauma
             creditsPlayer = new CreditsPlayer(new RectTransform(Vector2.One, creditsContainer.RectTransform), "Content/Texts/Credits.xml");
         }
 
-        private void CreateTutorialButtons()
+        private void CreateTutorialTab()
         {
+            var tutorialInnerFrame = new GUIFrame(new RectTransform(new Vector2(0.9f, 0.9f), menuTabs[Tab.Tutorials].RectTransform, Anchor.Center), style: "InnerFrame");
+            var tutorialContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), tutorialInnerFrame.RectTransform, Anchor.Center), isHorizontal: true) { RelativeSpacing = 0.02f, Stretch = true };
+
+            tutorialList = new GUIListBox(new RectTransform(new Vector2(0.4f, 1.0f), tutorialContent.RectTransform))
+            {
+                PlaySoundOnSelect = true,
+                OnSelected = (component, obj) =>
+                {
+                    SelectTutorial(obj as Tutorial);
+                    return true;
+                }
+            };
+            var tutorialPreview = new GUILayoutGroup(new RectTransform(new Vector2(0.6f, 1.0f), tutorialContent.RectTransform)) { RelativeSpacing = 0.05f, Stretch = true };
+            var imageContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.6f), tutorialPreview.RectTransform), style: "InnerFrame");
+            tutorialBanner = new GUIImage(new RectTransform(Vector2.One, imageContainer.RectTransform), style: null, scaleToFit: true);
+
+            var infoContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.4f), tutorialPreview.RectTransform), style: "GUIFrameListBox");
+            var infoContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), infoContainer.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter);
+
+            tutorialHeader = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.75f), infoContent.RectTransform), string.Empty, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Center);
+
+            var startButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.0f), infoContent.RectTransform, Anchor.BottomRight), text: TextManager.Get("startgamebutton")) 
+            { 
+                IgnoreLayoutGroups = true,
+                OnClicked = (component, obj) =>
+                {
+                    (tutorialList.SelectedData as Tutorial)?.Start();
+                    return true;
+                }
+            };
+
+            Tutorial firstTutorial = null;
             foreach (var tutorialPrefab in TutorialPrefab.Prefabs.OrderBy(p => p.Order))
             {
                 var tutorial = new Tutorial(tutorialPrefab);
-                var tutorialText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.15f), tutorialList.Content.RectTransform), tutorial.DisplayName, textAlignment: Alignment.Center, font: GUIStyle.LargeFont)
+                firstTutorial ??= tutorial;
+                var tutorialText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), tutorialList.Content.RectTransform), tutorial.DisplayName)
                 {
-                    TextColor = GUIStyle.Green,
+                    Padding = new Vector4(30.0f * GUI.Scale, 0,0,0),
                     UserData = tutorial
                 };
+                tutorialText.RectTransform.MinSize = new Point(0, (int)(tutorialText.TextSize.Y * 2));
             }
+            GUITextBlock.AutoScaleAndNormalize(tutorialList.Content.Children.Select(c => c as GUITextBlock));
+            tutorialList.Select(firstTutorial);
+        }
+
+        private void SelectTutorial(Tutorial tutorial)
+        {
+            tutorialHeader.Text = tutorial.DisplayName;
+            tutorial.TutorialPrefab.Banner?.EnsureLazyLoaded();
+            tutorialBanner.Sprite = tutorial.TutorialPrefab.Banner;
+            tutorialBanner.Color = tutorial.TutorialPrefab.Banner == null ? Color.Black : Color.White;
         }
 
         public static void UpdateInstanceTutorialButtons()
         {
             if (GameMain.MainMenuScreen is not MainMenuScreen menuScreen) { return; }
             menuScreen.tutorialList.ClearChildren();
-            menuScreen.CreateTutorialButtons();
+            menuScreen.CreateTutorialTab();
         }
 
         #endregion
@@ -746,12 +779,13 @@ namespace Barotrauma
 
         private void UpdateTutorialList()
         {
-            foreach (GUITextBlock tutorialText in menuTabs[Tab.Tutorials].GetChild<GUIListBox>().Content.Children)
+            foreach (GUITextBlock tutorialText in tutorialList.Content.Children)
             {
                 var tutorial = (Tutorial)tutorialText.UserData;
-                tutorialText.Text = CompletedTutorials.Instance.Contains(tutorial.Identifier) ?
-                    TextManager.GetWithVariable("tutorialcompleted", "[tutorialname]", tutorial.DisplayName) :
-                    tutorial.DisplayName;
+                if (CompletedTutorials.Instance.Contains(tutorial.Identifier) && tutorialText.GetChild<GUIImage>() == null)
+                {
+                    new GUIImage(new RectTransform(new Point((int)(tutorialText.Padding.X * 0.8f)), tutorialText.RectTransform, Anchor.CenterLeft), style: "ObjectiveIndicatorCompleted");
+                }
             }
         }
 

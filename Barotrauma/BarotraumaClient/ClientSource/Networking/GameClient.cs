@@ -362,8 +362,7 @@ namespace Barotrauma.Networking
             // When this is set to true, we are approved and ready to go
             canStart = false;
 
-            DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 40);
-            DateTime reqAuthTime = DateTime.Now + new TimeSpan(0, 0, 0, 0, 200);
+            DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 200);
 
             // Loop until we are approved
             LocalizedString connectingText = TextManager.Get("Connecting");
@@ -489,7 +488,10 @@ namespace Barotrauma.Networking
                 }
                 GameAnalyticsManager.AddErrorEventOnce("GameClient.Update:CheckServerMessagesException" + e.TargetSite.ToString(), GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 DebugConsole.ThrowError("Error while reading a message from server.", e);
-                new GUIMessageBox(TextManager.Get("Error"), TextManager.GetWithVariables("MessageReadError", ("[message]", e.Message), ("[targetsite]", e.TargetSite.ToString())));
+                new GUIMessageBox(TextManager.Get("Error"), TextManager.GetWithVariables("MessageReadError", ("[message]", e.Message), ("[targetsite]", e.TargetSite.ToString())))
+                {
+                    DisplayInLoadingScreens = true
+                };
                 Quit();
                 GameMain.ServerListScreen.Select();
                 return;
@@ -965,10 +967,10 @@ namespace Barotrauma.Networking
                 }
                 AttemptReconnect(disconnectPacket);
             }
-            else if (disconnectPacket.ShouldShowMessage)
+            else
             {
                 ReturnToPreviousMenu(null, null);
-                var msgBox = new GUIMessageBox(TextManager.Get(wasConnected ? "ConnectionLost" : "CouldNotConnectToServer"), disconnectPacket.PopupMessage)
+                new GUIMessageBox(TextManager.Get(wasConnected ? "ConnectionLost" : "CouldNotConnectToServer"), disconnectPacket.PopupMessage)
                 {
                     DisplayInLoadingScreens = true
                 };
@@ -1033,6 +1035,7 @@ namespace Barotrauma.Networking
             if (ClientPeer != null)
             {
                 //restore the previous list of content packages so we can reconnect immediately without having to recheck that the packages match
+                ClientPeer.ContentPackageOrderReceived = true;
                 ClientPeer.ServerContentPackages = prevContentPackages;
             }
         }
@@ -1721,6 +1724,7 @@ namespace Barotrauma.Networking
                 string subName = inc.ReadString();
                 string subHash = inc.ReadString();
                 byte subClass  = inc.ReadByte();
+                bool isShuttle = inc.ReadBoolean();
                 bool requiredContentPackagesInstalled = inc.ReadBoolean();
 
                 var matchingSub = SubmarineInfo.SavedSubmarines.FirstOrDefault(s => s.Name == subName && s.MD5Hash.StringRepresentation == subHash);
@@ -1730,6 +1734,7 @@ namespace Barotrauma.Networking
                     {
                         SubmarineClass = (SubmarineClass)subClass
                     };
+                    if (isShuttle) { matchingSub.AddTag(SubmarineTag.Shuttle); }
                 }
                 matchingSub.RequiredContentPackagesInstalled = requiredContentPackagesInstalled;
                 ServerSubmarines.Add(matchingSub);
@@ -1780,7 +1785,6 @@ namespace Barotrauma.Networking
                             AccountInfo = tc.AccountInfo,
                             Muted = tc.Muted,
                             InGame = tc.InGame,
-                            AllowKicking = tc.AllowKicking,
                             IsOwner = tc.IsOwner
                         };
                         otherClients.Add(existingClient);
@@ -1795,7 +1799,6 @@ namespace Barotrauma.Networking
                     existingClient.Muted = tc.Muted;
                     existingClient.InGame = tc.InGame;
                     existingClient.IsOwner = tc.IsOwner;
-                    existingClient.AllowKicking = tc.AllowKicking;
                     existingClient.IsDownloading = tc.IsDownloading;
                     GameMain.NetLobbyScreen.SetPlayerNameAndJobPreference(existingClient);
                     if (Screen.Selected != GameMain.NetLobbyScreen && tc.CharacterId > 0)
@@ -2404,7 +2407,7 @@ namespace Barotrauma.Networking
                         var subElement = subListChildren.FirstOrDefault(c =>
                             ((SubmarineInfo)c.UserData).Name == newSub.Name &&
                             ((SubmarineInfo)c.UserData).MD5Hash.StringRepresentation == newSub.MD5Hash.StringRepresentation);
-                        if (subElement == null) continue;
+                        if (subElement == null) { continue; }
 
                         Color newSubTextColor = new Color(subElement.GetChild<GUITextBlock>().TextColor, 1.0f);
                         subElement.GetChild<GUITextBlock>().TextColor = newSubTextColor;
@@ -2429,7 +2432,7 @@ namespace Barotrauma.Networking
 
                     if (GameMain.NetLobbyScreen.FailedSelectedShuttle.HasValue &&
                         GameMain.NetLobbyScreen.FailedSelectedShuttle.Value.Name == newSub.Name &&
-                        GameMain.NetLobbyScreen.FailedSelectedShuttle.Value.Name == newSub.MD5Hash.StringRepresentation)
+                        GameMain.NetLobbyScreen.FailedSelectedShuttle.Value.Hash == newSub.MD5Hash.StringRepresentation)
                     {
                         GameMain.NetLobbyScreen.TrySelectSub(newSub.Name, newSub.MD5Hash.StringRepresentation, GameMain.NetLobbyScreen.ShuttleList.ListBox);
                     }
@@ -2583,6 +2586,7 @@ namespace Barotrauma.Networking
                 }
             }
             ChildServerRelay.ShutDown();
+            GUIMessageBox.MessageBoxes.RemoveAll(c => c?.UserData is RoundSummary);
 
             characterInfo?.Remove();
 

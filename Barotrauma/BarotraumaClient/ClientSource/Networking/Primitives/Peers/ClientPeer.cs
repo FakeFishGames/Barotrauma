@@ -49,7 +49,7 @@ namespace Barotrauma.Networking
         protected abstract void SendMsgInternal(PeerPacketHeaders headers, INetSerializableStruct? body);
 
         protected ConnectionInitialization initializationStep;
-        public bool ContentPackageOrderReceived { get; protected set; }
+        public bool ContentPackageOrderReceived { get; set; }
         protected int passwordSalt;
         protected Steamworks.AuthTicket? steamAuthTicket;
         private GUIMessageBox? passwordMsgBox;

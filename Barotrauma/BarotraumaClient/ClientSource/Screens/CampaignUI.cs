@@ -346,7 +346,7 @@ namespace Barotrauma
                     };
 
                     var missionName = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), mission?.Name ?? TextManager.Get("NoMission"), font: GUIStyle.SubHeadingFont, wrap: true);
-                   // missionName.RectTransform.MinSize = new Point(0, (int)(missionName.Rect.Height * 1.5f));
+                    missionName.RectTransform.MinSize = new Point(0, GUI.IntScale(15));
                     if (mission != null)
                     {                    
                         var tickBox = new GUITickBox(new RectTransform(Vector2.One * 0.9f, missionName.RectTransform, anchor: Anchor.CenterLeft, scaleBasis: ScaleBasis.Smallest) { AbsoluteOffset = new Point((int)missionName.Padding.X, 0) }, label: string.Empty)

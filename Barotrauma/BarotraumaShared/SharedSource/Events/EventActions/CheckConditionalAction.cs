@@ -13,7 +13,7 @@ namespace Barotrauma
         {
             if (TargetTag.IsEmpty)
             {
-                DebugConsole.ShowError($"CheckConditionalAction error: {GetEventName()} uses a CheckConditionalAction with no target tag! This will cause the check to automatically succeed.");
+                DebugConsole.LogError($"CheckConditionalAction error: {GetEventName()} uses a CheckConditionalAction with no target tag! This will cause the check to automatically succeed.");
             }
             foreach (var attribute in element.Attributes())
             {
@@ -25,7 +25,7 @@ namespace Barotrauma
             }
             if (Conditional == null)
             {
-                DebugConsole.ShowError($"CheckConditionalAction error: {GetEventName()} uses a CheckConditionalAction with no valid PropertyConditional! This will cause the check to automatically succeed.");
+                DebugConsole.LogError($"CheckConditionalAction error: {GetEventName()} uses a CheckConditionalAction with no valid PropertyConditional! This will cause the check to automatically succeed.");
             }
 
             static bool IsTargetTagAttribute(XAttribute attribute) => attribute.NameAsIdentifier() == "targettag";
@@ -52,7 +52,7 @@ namespace Barotrauma
             }
             if (target == null)
             {
-                DebugConsole.ShowError($"CheckConditionalAction error: {GetEventName()} uses a CheckConditionalAction but no valid target was found for tag \"{TargetTag}\"! This will cause the check to automatically succeed.");
+                DebugConsole.LogError($"CheckConditionalAction error: {GetEventName()} uses a CheckConditionalAction but no valid target was found for tag \"{TargetTag}\"! This will cause the check to automatically succeed.");
             }
             if (target == null || Conditional == null)
             {

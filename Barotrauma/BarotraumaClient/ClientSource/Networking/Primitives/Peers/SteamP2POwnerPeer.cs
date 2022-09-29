@@ -391,7 +391,7 @@ namespace Barotrauma.Networking
 
             for (int i = remotePeers.Count - 1; i >= 0; i--)
             {
-                DisconnectPeer(remotePeers[i], peerDisconnectPacket);
+                DisconnectPeer(remotePeers[i], PeerDisconnectPacket.WithReason(DisconnectReason.ServerShutdown));
             }
 
             Thread.Sleep(100);

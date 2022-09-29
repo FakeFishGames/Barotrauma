@@ -48,6 +48,8 @@ namespace Barotrauma.Items.Components
             {
                 if (value == null) { return; }
                 output = value;
+                //reactivate (we may not have been previously sending a signal, but might now)
+                IsActive = true;
                 if (output.Length > MaxOutputLength && (item.Submarine == null || !item.Submarine.Loading))
                 {
                     output = output.Substring(0, MaxOutputLength);
@@ -63,6 +65,8 @@ namespace Barotrauma.Items.Components
             {
                 if (value == null) { return; }
                 falseOutput = value;
+                //reactivate (we may not have been previously sending a signal, but might now)
+                IsActive = true;
                 if (falseOutput.Length > MaxOutputLength && (item.Submarine == null || !item.Submarine.Loading))
                 {
                     falseOutput = falseOutput.Substring(0, MaxOutputLength);

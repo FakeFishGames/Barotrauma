@@ -281,6 +281,10 @@ namespace Barotrauma
             IdRemap parentRemap = new IdRemap(Submarine.Info.SubmarineElement, Submarine.IdOffset);
             sub = Submarine.Load(info, false, parentRemap);
             sub.Info.SubmarineClass = Submarine.Info.SubmarineClass;
+            if (Submarine.Info.IsOutpost && Submarine.TeamID == CharacterTeamType.FriendlyNPC)
+            {
+                sub.TeamID = CharacterTeamType.FriendlyNPC;
+            }
 
             IdRemap childRemap = new IdRemap(saveElement, sub.IdOffset);
 

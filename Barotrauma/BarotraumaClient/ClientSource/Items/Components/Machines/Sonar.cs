@@ -216,6 +216,7 @@ namespace Barotrauma.Items.Components
             var sonarModeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.4f + extraHeight), paddedControlContainer.RectTransform, Anchor.TopCenter), style: null);
             SonarModeSwitch = new GUIButton(new RectTransform(new Vector2(0.2f, 1), sonarModeArea.RectTransform), string.Empty, style: "SwitchVertical")
             {
+                UserData = UIHighlightAction.ElementId.SonarModeSwitch,
                 Selected = false,
                 Enabled = true,
                 ClickSound = GUISoundType.UISwitch,
@@ -238,6 +239,7 @@ namespace Barotrauma.Items.Components
             passiveTickBox = new GUITickBox(new RectTransform(new Vector2(1, 0.45f), sonarModeRightSide.RectTransform, Anchor.TopLeft),
                 TextManager.Get("SonarPassive"), font: GUIStyle.SubHeadingFont, style: "IndicatorLightRedSmall")
             {
+                UserData = UIHighlightAction.ElementId.PassiveSonarIndicator,
                 ToolTip = TextManager.Get("SonarTipPassive"),
                 Selected = true,
                 Enabled = false
@@ -245,6 +247,7 @@ namespace Barotrauma.Items.Components
             activeTickBox = new GUITickBox(new RectTransform(new Vector2(1, 0.45f), sonarModeRightSide.RectTransform, Anchor.BottomLeft),
                 TextManager.Get("SonarActive"), font: GUIStyle.SubHeadingFont, style: "IndicatorLightRedSmall")
             {
+                UserData = UIHighlightAction.ElementId.ActiveSonarIndicator,
                 ToolTip = TextManager.Get("SonarTipActive"),
                 Selected = false,
                 Enabled = false
@@ -279,9 +282,14 @@ namespace Barotrauma.Items.Components
             };
 
             new GUIFrame(new RectTransform(new Vector2(0.8f, 0.01f), paddedControlContainer.RectTransform, Anchor.Center), style: "HorizontalLine")
-            { UserData = "horizontalline" };
+            { 
+                UserData = "horizontalline" 
+            };
 
-            var directionalModeFrame = new GUIFrame(new RectTransform(new Vector2(1, 0.45f), lowerAreaFrame.RectTransform, Anchor.BottomCenter), style: null);
+            var directionalModeFrame = new GUIFrame(new RectTransform(new Vector2(1, 0.45f), lowerAreaFrame.RectTransform, Anchor.BottomCenter), style: null)
+            {
+                UserData = UIHighlightAction.ElementId.DirectionalSonarFrame
+            };
             directionalModeSwitch = new GUIButton(new RectTransform(new Vector2(0.3f, 0.8f), directionalModeFrame.RectTransform, Anchor.CenterLeft), string.Empty, style: "SwitchHorizontal")
             {
                 OnClicked = (button, data) =>
@@ -334,6 +342,18 @@ namespace Barotrauma.Items.Components
                 sonarView.RectTransform.RelativeOffset = new Vector2(0.13f * GUI.RelativeHorizontalAspectRatio, 0);
                 sonarView.RectTransform.SetPosition(Anchor.BottomRight);
             }
+            var handle = GuiFrame.GetChild<GUIDragHandle>();
+            if (handle != null)
+            {
+                handle.RectTransform.Parent = controlContainer.RectTransform;
+                handle.RectTransform.Resize(Vector2.One);
+                handle.RectTransform.SetAsFirstChild();
+            }
+        }
+
+        protected override void TryCreateDragHandle()
+        {
+            base.TryCreateDragHandle();
         }
 
         private void SetPingDirection(Vector2 direction)

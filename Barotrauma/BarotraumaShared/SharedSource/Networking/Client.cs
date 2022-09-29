@@ -20,7 +20,6 @@ namespace Barotrauma.Networking
         public bool InGame;
         public bool HasPermissions;
         public bool IsOwner;
-        public bool AllowKicking;
         public bool IsDownloading;
     }
     

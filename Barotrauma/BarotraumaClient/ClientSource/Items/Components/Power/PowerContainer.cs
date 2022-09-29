@@ -83,7 +83,8 @@ namespace Barotrauma.Items.Components
                 }
             };
             rechargeSpeedSlider.Bar.RectTransform.MaxSize = new Point(rechargeSpeedSlider.Bar.Rect.Height);
-            
+            rechargeSpeedSlider.Frame.UserData = UIHighlightAction.ElementId.RechargeSpeedSlider;
+
             // lower area --------------------------
 
             var chargeTextContainer = new GUIFrame(new RectTransform(new Vector2(1, 0.4f), lowerArea.RectTransform), style: null);

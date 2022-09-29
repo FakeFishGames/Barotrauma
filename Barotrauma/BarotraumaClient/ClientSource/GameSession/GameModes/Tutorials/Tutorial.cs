@@ -78,7 +78,7 @@ namespace Barotrauma.Tutorials
 
             public Action OnClickObjective;
 
-            public readonly TutorialSegmentType SegmentType;
+            public TutorialSegmentType SegmentType { get; private set; }
 
             public static Segment CreateInfoBoxSegment(Identifier id, Identifier objectiveTextTag, AutoPlayVideo autoPlayVideo, Text textContent = default, Video videoContent = default)
             {
@@ -119,6 +119,12 @@ namespace Barotrauma.Tutorials
                 ObjectiveText = TextManager.ParseInputTypes(TextManager.Get(objectiveTextTag));
                 SegmentType = TutorialSegmentType.Objective;
             }
+
+            public void ConnectMessageBox(Segment messageBoxSegment)
+            {
+                SegmentType = TutorialSegmentType.MessageBox;
+                OnClickObjective = messageBoxSegment.OnClickObjective;
+            }
     }
 
         private bool completed;
@@ -144,6 +150,7 @@ namespace Barotrauma.Tutorials
         private readonly EventPrefab eventPrefab;
 
         private CoroutineHandle tutorialCoroutine;
+        private CoroutineHandle completedCoroutine;
 
         private Character character;
 
@@ -154,7 +161,7 @@ namespace Barotrauma.Tutorials
 
         private SubmarineInfo startOutpost = null;
 
-        public readonly List<(Entity entity, string iconStyle)> Icons = new List<(Entity entity, string iconStyle)>();
+        public readonly List<(Entity entity, Identifier iconStyle)> Icons = new List<(Entity entity, Identifier iconStyle)>();
 
         #endregion
 
@@ -331,13 +338,16 @@ namespace Barotrauma.Tutorials
                     {
                         CoroutineManager.StopCoroutines(tutorialCoroutine);
                     }
-                    GUI.PreventPauseMenuToggle = false;
+                    if (completedCoroutine == null && !CoroutineManager.IsCoroutineRunning(completedCoroutine))
+                    {
+                        GUI.PreventPauseMenuToggle = false;
+                    }
                     ContentRunning = false;
                     infoBox = null;
                 }
-                else if (Character.Controlled.IsDead)
+                else
                 {
-                    CoroutineManager.StartCoroutine(Dead());
+                    character = Character.Controlled;
                 }
             }
         }
@@ -385,7 +395,7 @@ namespace Barotrauma.Tutorials
 
             if (eventPrefab == null)
             {
-                DebugConsole.ShowError($"No tutorial event defined for the tutorial (identifier: \"{TutorialPrefab?.Identifier.ToString() ?? "null"})\"");
+                DebugConsole.LogError($"No tutorial event defined for the tutorial (identifier: \"{TutorialPrefab?.Identifier.ToString() ?? "null"})\"");
                 yield return CoroutineStatus.Failure;
             }
 
@@ -399,7 +409,7 @@ namespace Barotrauma.Tutorials
             }
             else
             {
-                DebugConsole.ShowError($"Failed to create an instance for a tutorial event (identifier: \"{eventPrefab.Identifier}\"");
+                DebugConsole.LogError($"Failed to create an instance for a tutorial event (identifier: \"{eventPrefab.Identifier}\"");
                 yield return CoroutineStatus.Failure;
             }
 
@@ -409,10 +419,12 @@ namespace Barotrauma.Tutorials
         public void Complete()
         {
             GameAnalyticsManager.AddDesignEvent($"Tutorial:{Identifier}:Completed");
-            CoroutineManager.StartCoroutine(TutorialCompleted());
+            completedCoroutine = CoroutineManager.StartCoroutine(TutorialCompleted());
 
             IEnumerable<CoroutineStatus> TutorialCompleted()
             {
+                while (GUI.PauseMenuOpen) { yield return CoroutineStatus.Running; }
+
                 GUI.PreventPauseMenuToggle = true;
                 Character.Controlled.ClearInputs();
                 Character.Controlled = null;
@@ -423,7 +435,7 @@ namespace Barotrauma.Tutorials
                 var endCinematic = new CameraTransition(Submarine.MainSub, GameMain.GameScreen.Cam, null, Alignment.Center, panDuration: FadeOutTime);
                 Completed = true;
 
-                while (endCinematic.Running) { yield return null; }
+                while (endCinematic.Running) { yield return CoroutineStatus.Running; }
 
                 Stop();
                 GameMain.MainMenuScreen.ReturnToMainMenu(null, null);
@@ -432,16 +444,18 @@ namespace Barotrauma.Tutorials
 
         private bool Restart(GUIButton button, object obj)
         {
-            GUI.PreventPauseMenuToggle = false;
+            GUIMessageBox.MessageBoxes.Clear();
+            GameMain.MainMenuScreen.ReturnToMainMenu(button, obj);
+            Start();
             return true;
         }
 
-        public void TriggerTutorialSegment(Segment segment)
+        public void TriggerTutorialSegment(Segment segment, bool connectObjective = false)
         {
             if (segment.SegmentType != TutorialSegmentType.InfoBox)
             {
                 ActiveObjectives.Add(segment);
-                AddToObjectiveList(segment);
+                AddToObjectiveList(segment, connectObjective);
                 return;
             }
 
@@ -488,11 +502,14 @@ namespace Barotrauma.Tutorials
             }
             if (GUIStyle.GetComponentStyle("ObjectiveIndicatorCompleted") is GUIComponentStyle style)
             {
+                //return if already completed
+                if (segment.ObjectiveStateIndicator.Style == style) { return; }
                 segment.ObjectiveStateIndicator.ApplyStyle(style);
             }
             segment.ObjectiveStateIndicator.Parent.Flash(color: GUIStyle.Green, flashDuration: 0.35f, useRectangleFlash: true);
             segment.ObjectiveButton.OnClicked = null;
             segment.ObjectiveButton.CanBeFocused = false;
+            GameAnalyticsManager.AddDesignEvent($"Tutorial:{Identifier}:{segmentId}:Completed");
         }
 
         public void RemoveTutorialSegment(Identifier segmentId)
@@ -568,8 +585,18 @@ namespace Barotrauma.Tutorials
         /// <summary>
         /// Adds the segment to the objective list
         /// </summary>
-        private void AddToObjectiveList(Segment segment)
+        private void AddToObjectiveList(Segment segment, bool connectExisting = false)
         {
+            if (connectExisting)
+            {
+                if (ActiveObjectives.Find(o => o.Id == segment.Id) is { } existingSegment)
+                {
+                    existingSegment.ConnectMessageBox(segment);
+                    SetButtonBehavior(existingSegment);   
+                }
+                return;
+            }
+
             var frameRt = new RectTransform(new Vector2(1.0f, 0.1f), objectiveGroup.RectTransform)
             {
                 AbsoluteOffset = GetObjectiveHiddenPosition(),
@@ -595,15 +622,25 @@ namespace Barotrauma.Tutorials
             frame.RectTransform.IsFixedSize = true;
 
             var indicatorRt = new RectTransform(new Point(objectiveGroup.AbsoluteSpacing), frame.RectTransform, isFixedSize: true);
-            segment.ObjectiveStateIndicator = new GUIImage(indicatorRt, "ObjectiveIndicatorIncomplete");;
+            segment.ObjectiveStateIndicator = new GUIImage(indicatorRt, "ObjectiveIndicatorIncomplete");
 
             SetTransparent(segment.LinkedTextBlock);
 
             segment.ObjectiveButton = new GUIButton(new RectTransform(Vector2.One, segment.LinkedTextBlock.RectTransform, Anchor.TopLeft, Pivot.TopLeft), style: null)
             {
-                CanBeFocused = segment.SegmentType != TutorialSegmentType.Objective,
-                ToolTip = objectiveTextTranslated,
-                OnClicked = (GUIButton btn, object userdata) =>
+                ToolTip = objectiveTextTranslated
+            };
+            SetButtonBehavior(segment);
+            SetTransparent(segment.ObjectiveButton);
+
+            frameRt.MoveOverTime(new Point(0, frameRt.AbsoluteOffset.Y), ObjectiveComponentAnimationTime, onDoneMoving: () => objectiveGroup?.Recalculate());
+
+            static void SetTransparent(GUIComponent component) => component.Color = component.HoverColor = component.PressedColor = component.SelectedColor = Color.Transparent;
+
+            void SetButtonBehavior(Segment segment)
+            {
+                segment.ObjectiveButton.CanBeFocused = segment.SegmentType != TutorialSegmentType.Objective;
+                segment.ObjectiveButton.OnClicked = (GUIButton btn, object userdata) =>
                 {
                     if (segment.SegmentType == TutorialSegmentType.InfoBox)
                     {
@@ -621,13 +658,8 @@ namespace Barotrauma.Tutorials
                         segment.OnClickObjective?.Invoke();
                     }
                     return true;
-                }
-            };
-            SetTransparent(segment.ObjectiveButton);
-
-            frameRt.MoveOverTime(new Point(0, frameRt.AbsoluteOffset.Y), ObjectiveComponentAnimationTime, onDoneMoving: () => objectiveGroup?.Recalculate());
-
-            static void SetTransparent(GUIComponent component) => component.Color = component.HoverColor = component.PressedColor = component.SelectedColor = Color.Transparent;
+                };
+            }
         }
 
         private void ReplaySegmentVideo(Segment segment)

@@ -874,7 +874,7 @@ namespace Barotrauma
                 itemPrefab.SwappableItem.CanBeBought &&
                 itemPrefab.SwappableItem.SwapIdentifier.Equals(item.Prefab.SwappableItem.SwapIdentifier, StringComparison.OrdinalIgnoreCase)).Cast<ItemPrefab>();
 
-            var linkedItems = Campaign.UpgradeManager.GetLinkedItemsToSwap(item) ?? new List<Item>() { item };
+            var linkedItems = UpgradeManager.GetLinkedItemsToSwap(item) ?? new List<Item>() { item };
             //create the swap entry only for one of the items (the one with the smallest ID)
             if (linkedItems.Min(it => it.ID) < item.ID) { return; }
 
@@ -910,7 +910,7 @@ namespace Barotrauma
             GUILayoutGroup buttonLayout = new GUILayoutGroup(rectT(1f, 1f, toggleButton.Frame), isHorizontal: true);
 
             LocalizedString slotText = "";
-            if (linkedItems.Count > 1)
+            if (linkedItems.Count() > 1)
             {
                 slotText = TextManager.GetWithVariable("weaponslot", "[number]", string.Join(", ", linkedItems.Select(it => (swappableEntities.IndexOf(it) + 1).ToString())));
             }
@@ -982,7 +982,7 @@ namespace Barotrauma
 
                 bool isPurchased = item.AvailableSwaps.Contains(replacement);
 
-                int price = isPurchased || replacement == item.Prefab ? 0 : replacement.SwappableItem.GetPrice(Campaign.Map?.CurrentLocation) * linkedItems.Count;
+                int price = isPurchased || replacement == item.Prefab ? 0 : replacement.SwappableItem.GetPrice(Campaign.Map?.CurrentLocation) * linkedItems.Count();
 
                 frames.Add(CreateUpgradeEntry(rectT(1f, 0.25f, parent.Content), replacement.UpgradePreviewSprite, replacement.Name, replacement.Description, 
                     price, replacement, 
@@ -998,7 +998,7 @@ namespace Barotrauma
                     {
                         LocalizedString promptBody = TextManager.GetWithVariables(isPurchased ? "upgrades.itemswappromptbody" : "upgrades.purchaseitemswappromptbody",
                             ("[itemtoinstall]", replacement.Name),
-                            ("[amount]", (replacement.SwappableItem.GetPrice(Campaign?.Map?.CurrentLocation) * linkedItems.Count).ToString()));
+                            ("[amount]", (replacement.SwappableItem.GetPrice(Campaign?.Map?.CurrentLocation) * linkedItems.Count()).ToString()));
                         currectConfirmation = EventEditorScreen.AskForConfirmation(TextManager.Get("Upgrades.PurchasePromptTitle"), promptBody, () =>
                         {
                             if (GameMain.NetworkMember != null)
@@ -1042,7 +1042,7 @@ namespace Barotrauma
                 }
                 if (toggleButton.Selected)
                 {
-                    var linkedItems = Campaign.UpgradeManager.GetLinkedItemsToSwap(item);
+                    var linkedItems = UpgradeManager.GetLinkedItemsToSwap(item);
                     foreach (var itemPreview in itemPreviews)
                     {
                         itemPreview.Value.OutlineColor = itemPreview.Value.Color = linkedItems.Contains(itemPreview.Key) ? GUIStyle.Orange : previewWhite;
@@ -1391,7 +1391,7 @@ namespace Barotrauma
                         {
                             if (selectedUpgradeCategoryLayout != null)
                             {
-                                var linkedItems = HoveredEntity is Item hoveredItem ? Campaign.UpgradeManager.GetLinkedItemsToSwap(hoveredItem) : new List<Item>();
+                                var linkedItems = HoveredEntity is Item hoveredItem ? UpgradeManager.GetLinkedItemsToSwap(hoveredItem) : new List<Item>();
                                 if (selectedUpgradeCategoryLayout.FindChild(c => c.UserData is Item item && (item == HoveredEntity || linkedItems.Contains(item)), recursive: true) is GUIButton itemElement)
                                 {
                                     if (!itemElement.Selected) { itemElement.OnClicked(itemElement, itemElement.UserData); }

@@ -225,7 +225,7 @@ namespace Barotrauma.Networking
             }
             else if (!packetHeader.IsConnectionInitializationStep())
             {
-                if (!(connectedClients.Find(c => c is LidgrenConnection l && l.NetConnection == lidgrenMsg.SenderConnection) is LidgrenConnection conn))
+                if (connectedClients.Find(c => c is LidgrenConnection l && l.NetConnection == lidgrenMsg.SenderConnection) is not LidgrenConnection conn)
                 {
                     if (pendingClient != null)
                     {
@@ -373,7 +373,7 @@ namespace Barotrauma.Networking
         {
             if (netServer == null) { return; }
 
-            if (!(conn is LidgrenConnection lidgrenConn)) { return; }
+            if (conn is not LidgrenConnection lidgrenConn) { return; }
 
             if (connectedClients.Contains(lidgrenConn))
             {
@@ -432,7 +432,7 @@ namespace Barotrauma.Networking
                 }
                 else
                 {
-                    if (!packet.SteamId.TryUnwrap(out var id) || !(id is SteamId steamId))
+                    if (!packet.SteamId.TryUnwrap(out var id) || id is not SteamId steamId)
                     {
                         if (requireSteamAuth)
                         {

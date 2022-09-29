@@ -11,6 +11,9 @@ namespace Barotrauma
         [Serialize("", IsPropertySaveable.Yes)]
         public Identifier OrderOption { get; set; }
 
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier OrderTargetTag { get; set; }
+
         public CheckOrderAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
 
         protected override bool? DetermineSuccess()
@@ -29,20 +32,17 @@ namespace Barotrauma
             }
             if (targetCharacter == null)
             {
-                DebugConsole.ShowError($"CheckConditionalAction error: {GetEventName()} uses a CheckOrderAction but no valid target character was found for tag \"{TargetTag}\"! This will cause the check to automatically fail.");
+                DebugConsole.LogError($"CheckConditionalAction error: {GetEventName()} uses a CheckOrderAction but no valid target character was found for tag \"{TargetTag}\"! This will cause the check to automatically fail.");
                 return false;
             }
             var currentOrderInfo = targetCharacter.GetCurrentOrderWithTopPriority();
             if (currentOrderInfo?.Identifier == OrderIdentifier)
             {
-                if (OrderOption.IsEmpty)
+                if (!OrderTargetTag.IsEmpty)
                 {
-                    return true;
+                    if (currentOrderInfo.TargetEntity is not Item targetItem || !targetItem.HasTag(OrderTargetTag)) { return false; }
                 }
-                else
-                {
-                    return currentOrderInfo?.Option == OrderOption;
-                }
+                return OrderOption.IsEmpty || currentOrderInfo?.Option == OrderOption;                
             }
             return false;
         }

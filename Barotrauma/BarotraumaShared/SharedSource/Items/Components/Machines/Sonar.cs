@@ -136,6 +136,13 @@ namespace Barotrauma.Items.Components
         public float Zoom
         {
             get { return zoom; }
+            set 
+            { 
+                zoom = MathHelper.Clamp(value, MinZoom, MaxZoom);
+#if CLIENT
+                zoomSlider.BarScroll = MathUtils.InverseLerp(MinZoom, MaxZoom, zoom);
+#endif
+            }
         }
 
         public Mode CurrentMode

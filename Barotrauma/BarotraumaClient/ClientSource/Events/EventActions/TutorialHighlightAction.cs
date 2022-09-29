@@ -4,7 +4,7 @@ namespace Barotrauma;
 
 partial class TutorialHighlightAction : EventAction
 {
-    private static readonly Color highlightColor = Color.OrangeRed;
+    private static readonly Color highlightColor = Color.Orange;
 
     partial void UpdateProjSpecific()
     {
@@ -19,32 +19,32 @@ partial class TutorialHighlightAction : EventAction
     {
         if (entity is Item i)
         {
-            SetHighlight(i);
+            SetItemHighlight(i);
         }
         else if (entity is Structure s)
         {
-            SetHighlight(s);
+            SetStructureHighlight(s);
         }
         else if (entity is Character c)
         {
-            SetHighlight(c);
+            SetCharacterHighlight(c);
         }
     }
 
-    private void SetHighlight(Item item)
+    private void SetItemHighlight(Item item)
     {
         if (item.ExternalHighlight == State) { return; } 
-        item.SpriteColor = (State) ? highlightColor : Color.White;
+        item.HighlightColor = State ? highlightColor : null;
         item.ExternalHighlight = State;
     }
 
-    private void SetHighlight(Structure structure)
+    private void SetStructureHighlight(Structure structure)
     {
-        structure.SpriteColor = (State) ? highlightColor : Color.White;
+        structure.SpriteColor = State ? highlightColor : Color.White;
         structure.ExternalHighlight = State;
     }
 
-    private void SetHighlight(Character character)
+    private void SetCharacterHighlight(Character character)
     {
         character.ExternalHighlight = State;
     }

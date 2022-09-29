@@ -60,6 +60,9 @@ namespace Barotrauma
         [Serialize(true, IsPropertySaveable.Yes, description: "If false, we won't spawn another character if one with the same identifier has already been spawned.")]
         public bool AllowDuplicates { get; set; }
 
+        [Serialize(100.0f, IsPropertySaveable.Yes)]
+        public float Offset { get; set; }
+
         [Serialize("", IsPropertySaveable.Yes, "What outpost module tags does the entity prefer to spawn in.")]
         public string TargetModuleTags
         {
@@ -127,7 +130,7 @@ namespace Barotrauma
                     ISpatialEntity spawnPos = GetSpawnPos();
                     if (spawnPos != null)
                     {
-                        Entity.Spawner.AddCharacterToSpawnQueue(CharacterPrefab.HumanSpeciesName, OffsetSpawnPos(spawnPos.WorldPosition, 100.0f), humanPrefab.CreateCharacterInfo(), onSpawn: newCharacter =>
+                        Entity.Spawner.AddCharacterToSpawnQueue(CharacterPrefab.HumanSpeciesName, OffsetSpawnPos(spawnPos.WorldPosition, Offset), humanPrefab.CreateCharacterInfo(), onSpawn: newCharacter =>
                         {
                             if (newCharacter == null) { return; }
                             newCharacter.HumanPrefab = humanPrefab;
@@ -162,7 +165,7 @@ namespace Barotrauma
                 ISpatialEntity spawnPos = GetSpawnPos();
                 if (spawnPos != null)
                 {
-                    Entity.Spawner.AddCharacterToSpawnQueue(SpeciesName, OffsetSpawnPos(spawnPos.WorldPosition, 100.0f), onSpawn: newCharacter =>
+                    Entity.Spawner.AddCharacterToSpawnQueue(SpeciesName, OffsetSpawnPos(spawnPos.WorldPosition, Offset), onSpawn: newCharacter =>
                     {
                         if (!TargetTag.IsEmpty && newCharacter != null)
                         {
@@ -208,7 +211,7 @@ namespace Barotrauma
                         ISpatialEntity spawnPos = GetSpawnPos();
                         if (spawnPos != null)
                         {
-                            Entity.Spawner.AddItemToSpawnQueue(itemPrefab, OffsetSpawnPos(spawnPos.WorldPosition, 100.0f), onSpawned: onSpawned);
+                            Entity.Spawner.AddItemToSpawnQueue(itemPrefab, OffsetSpawnPos(spawnPos.WorldPosition, Offset), onSpawned: onSpawned);
                         }
                     }
                     else

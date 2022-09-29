@@ -101,34 +101,45 @@ namespace Barotrauma.Networking
         }
 
         public LocalizedString ChatMessage(Client c)
-            => DisconnectReason switch
+        {
+            LocalizedString message = DisconnectReason switch
             {
                 DisconnectReason.Disconnected => TextManager.GetWithVariable("ServerMessage.ClientLeftServer",
                         "[client]", c.Name),
+                DisconnectReason.Banned => TextManager.GetWithVariable("servermessage.bannedfromserver", "[client]", c.Name),
+                DisconnectReason.Kicked => TextManager.GetWithVariable("servermessage.kickedfromserver", "[client]", c.Name),
                 _ => TextManager.GetWithVariables("ChatMsg.DisconnectedWithReason",
                         ("[client]", c.Name),
                         ("[reason]", TextManager.Get($"ChatMsg.DisconnectReason.{DisconnectReason}")))
             };
+            if (!string.IsNullOrEmpty(AdditionalInformation) && 
+                DisconnectReason is DisconnectReason.Banned or DisconnectReason.Kicked)
+            {
+                message += " "+ TextManager.Get("banreason") + " " + TextManager.GetServerMessage(AdditionalInformation);
+            }
+            return message;
+        }
 
-        private LocalizedString msgWithReason
+
+        private LocalizedString MsgWithReason
             => TextManager.Get($"DisconnectReason.{DisconnectReason}")
                + "\n\n"
-               + TextManager.Get("banreason") + " " + AdditionalInformation;
+               + TextManager.Get("banreason") + " " + TextManager.GetServerMessage(AdditionalInformation);
 
-        private LocalizedString serverMessage
+        private LocalizedString ServerMessage
             => TextManager.Get($"ServerMessage.{DisconnectReason}");
         
         public LocalizedString PopupMessage
             => DisconnectReason switch
             {
-                DisconnectReason.Banned => msgWithReason,
-                DisconnectReason.Kicked => msgWithReason,
+                DisconnectReason.Banned => MsgWithReason,
+                DisconnectReason.Kicked => MsgWithReason,
                 DisconnectReason.InvalidVersion => TextManager.GetWithVariables("DisconnectMessage.InvalidVersion",
                     ("[version]", AdditionalInformation),
                     ("[clientversion]", GameMain.Version.ToString())),
-                DisconnectReason.ExcessiveDesyncOldEvent => serverMessage,
-                DisconnectReason.ExcessiveDesyncRemovedEvent => serverMessage,
-                DisconnectReason.SyncTimeout => serverMessage,
+                DisconnectReason.ExcessiveDesyncOldEvent => ServerMessage,
+                DisconnectReason.ExcessiveDesyncRemovedEvent => ServerMessage,
+                DisconnectReason.SyncTimeout => ServerMessage,
                 _ => TextManager.Get($"DisconnectReason.{DisconnectReason}").Fallback(TextManager.Get("ConnectionLost"))
             };
 
@@ -164,9 +175,6 @@ namespace Barotrauma.Networking
                    or DisconnectReason.Kicked
                    or DisconnectReason.TooManyFailedLogins
                    or DisconnectReason.InvalidVersion);
-
-        public bool ShouldShowMessage
-            => DisconnectReason is not DisconnectReason.Disconnected;
 
         private const string lidgrenSeparator = ":hankey:";
 

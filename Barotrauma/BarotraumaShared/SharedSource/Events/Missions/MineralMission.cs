@@ -131,13 +131,13 @@ namespace Barotrauma
 
             foreach ((Identifier identifier, ResourceCluster cluster) in resourceClusters)
             {
-                if (!(MapEntityPrefab.FindByIdentifier(identifier) is ItemPrefab prefab))
+                if (MapEntityPrefab.FindByIdentifier(identifier) is not ItemPrefab prefab)
                 {
                     DebugConsole.ThrowError($"Error in MineralMission: couldn't find an item prefab (identifier: \"{identifier}\")");
                     continue;
                 }
 
-                var spawnedResources = level.GenerateMissionResources(prefab, cluster.Amount, positionType, out float rotation);
+                var spawnedResources = level.GenerateMissionResources(prefab, cluster.Amount, positionType, out float rotation, caves);
                 if (spawnedResources.Count < cluster.Amount)
                 {
                     DebugConsole.ThrowError($"Error in MineralMission: spawned only {spawnedResources.Count}/{cluster.Amount} of {prefab.Name}");
@@ -181,14 +181,16 @@ namespace Barotrauma
             }
         }
 
-        public override void End()
+        protected override bool DetermineCompleted()
         {
-            if (EnoughHaveBeenCollected())
+            return EnoughHaveBeenCollected();
+        }
+
+        protected override void EndMissionSpecific(bool completed)
+        {
+            failed = !completed && state > 0;
+            if (completed)
             {
-                if (Prefab.LocationTypeChangeOnCompleted != null)
-                {
-                    ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
-                }
                 if (!IsClient)
                 {
                     // When mission is completed successfully, half of the resources will be removed from the player (i.e. given to the outpost as a part of the mission)
@@ -198,7 +200,7 @@ namespace Barotrauma
                         if (relevantLevelResources.TryGetValue(identifier, out var availableResources))
                         {
                             var collectedResources = availableResources.Where(HasBeenCollected);
-                            if (collectedResources.Count() < 1) { continue; }
+                            if (!collectedResources.Any()) { continue; }
                             int handoverCount = (int)MathF.Round(resourceHandoverAmount * collectedResources.Count());
                             for (int i = 0; i < handoverCount; i++)
                             {
@@ -211,8 +213,6 @@ namespace Barotrauma
                         resource.Remove();
                     }
                 }
-                GiveReward();
-                completed = true;
             }
             foreach (var kvp in spawnedResources)
             {
@@ -227,7 +227,6 @@ namespace Barotrauma
             spawnedResources.Clear();
             relevantLevelResources.Clear();
             missionClusterPositions.Clear();
-            failed = !completed && state > 0;
         }
 
         private void FindRelevantLevelResources()

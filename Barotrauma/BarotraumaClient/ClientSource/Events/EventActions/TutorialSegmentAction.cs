@@ -11,13 +11,13 @@ partial class TutorialSegmentAction : EventAction
         // Only need to create the segment when it's being triggered (otherwise the tutorial already has the segment instance)
         if (Type == SegmentActionType.Trigger)
         {
-            segment = Tutorial.Segment.CreateInfoBoxSegment(Id, ObjectiveTag, AutoPlayVideo ? Tutorials.AutoPlayVideo.Yes : Tutorials.AutoPlayVideo.No,
+            segment = Tutorial.Segment.CreateInfoBoxSegment(Identifier, ObjectiveTag, AutoPlayVideo ? Tutorials.AutoPlayVideo.Yes : Tutorials.AutoPlayVideo.No,
                 new Tutorial.Segment.Text(TextTag, Width, Height, Anchor.Center),
                 new Tutorial.Segment.Video(VideoFile, TextTag, Width, Height));
         }
         else if (Type == SegmentActionType.Add)
         {
-            segment = Tutorial.Segment.CreateObjectiveSegment(Id, !ObjectiveTag.IsEmpty ? ObjectiveTag : Id);
+            segment = Tutorial.Segment.CreateObjectiveSegment(Identifier, !ObjectiveTag.IsEmpty ? ObjectiveTag : Identifier);
         }
         if (GameMain.GameSession?.GameMode is TutorialMode tutorialMode)
         {
@@ -30,21 +30,21 @@ partial class TutorialSegmentAction : EventAction
                         tutorial.TriggerTutorialSegment(segment);
                         break;
                     case SegmentActionType.Complete:
-                        tutorial.CompleteTutorialSegment(Id);
+                        tutorial.CompleteTutorialSegment(Identifier);
                         break;
                     case SegmentActionType.Remove:
-                        tutorial.RemoveTutorialSegment(Id);
+                        tutorial.RemoveTutorialSegment(Identifier);
                         break;
                     case SegmentActionType.CompleteAndRemove:
-                        tutorial.CompleteTutorialSegment(Id);
-                        tutorial.RemoveTutorialSegment(Id);
+                        tutorial.CompleteTutorialSegment(Identifier);
+                        tutorial.RemoveTutorialSegment(Identifier);
                         break;
                 }
             }
         }
         else
         {
-            DebugConsole.ShowError($"Error in event \"{ParentEvent.Prefab.Identifier}\": attempting to use TutorialSegmentAction during a non-Tutorial game mode!");
+            DebugConsole.ThrowError($"Error in event \"{ParentEvent.Prefab.Identifier}\": attempting to use TutorialSegmentAction during a non-Tutorial game mode!");
         }
     }
 }

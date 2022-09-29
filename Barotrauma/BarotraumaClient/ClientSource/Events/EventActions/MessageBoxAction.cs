@@ -8,19 +8,23 @@ partial class MessageBoxAction : EventAction
 {
     partial void UpdateProjSpecific()
     {
-        if (Type == ActionType.Create)
+        if (Type == ActionType.Create || Type == ActionType.ConnectObjective)
         {
             CreateMessageBox();
             if (!ObjectiveTag.IsEmpty && GameMain.GameSession?.GameMode is TutorialMode tutorialMode)
             {
-                Identifier id = Identifier.IsEmpty ? Text : Identifier;
+                Identifier id = Identifier.IfEmpty(Text);
                 var segment = Tutorial.Segment.CreateMessageBoxSegment(id, ObjectiveTag, CreateMessageBox);
-                tutorialMode.Tutorial?.TriggerTutorialSegment(segment);
+                tutorialMode.Tutorial?.TriggerTutorialSegment(segment, connectObjective: Type == ActionType.ConnectObjective);
             }
         }
         else if (Type == ActionType.Close)
         {
             GUIMessageBox.Close(Tag);
+        }
+        else if (Type == ActionType.Clear)
+        {
+            GUIMessageBox.CloseAll();
         }
     }
 

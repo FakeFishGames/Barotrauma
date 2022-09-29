@@ -2,7 +2,6 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Barotrauma.Networking
 {
@@ -88,12 +87,13 @@ namespace Barotrauma.Networking
                         TextManager.Get("BanPermanent") :  TextManager.GetWithVariable("BanExpires", "[time]", bannedPlayer.ExpirationTime.Value.ToString()),
                     font: GUIStyle.SmallFont);
 
+                LocalizedString reason = TextManager.GetServerMessage(bannedPlayer.Reason).Fallback(bannedPlayer.Reason);
                 var reasonText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedPlayerFrame.RectTransform),
                     TextManager.Get("BanReason") + " " +
-                        (string.IsNullOrEmpty(bannedPlayer.Reason) ? TextManager.Get("None") : bannedPlayer.Reason),
+                        (string.IsNullOrEmpty(bannedPlayer.Reason) ? TextManager.Get("None") : reason),
                     font: GUIStyle.SmallFont, wrap: true)
                 {
-                    ToolTip = bannedPlayer.Reason
+                    ToolTip = reason
                 };
 
                 paddedPlayerFrame.Recalculate();

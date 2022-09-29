@@ -37,6 +37,7 @@ namespace Barotrauma.Networking
             switch (serverInfo.Endpoint)
             {
                 case LidgrenEndpoint { NetEndpoint: { Address: var address } }:
+
                     GetIPAddressPing(serverInfo, address, onPingDiscovered);
                     break;
                 case SteamP2PEndpoint steamP2PEndpoint:
@@ -132,24 +133,30 @@ namespace Barotrauma.Networking
 
         private static void GetIPAddressPing(ServerInfo serverInfo, IPAddress address, Action<ServerInfo> onPingDiscovered)
         {
-            lock (activePings)
+            if (IPAddress.IsLoopback(address))
             {
-                if (activePings.ContainsKey(address)) { return; }
-                activePings.Add(address, activePings.Any() ? activePings.Values.Max() + 1 : 0);
+                serverInfo.Ping = Option<int>.Some(0);
+                onPingDiscovered(serverInfo);
             }
-
-            serverInfo.Ping = Option<int>.None();
-
-            TaskPool.Add($"PingServerAsync ({address})", PingServerAsync(address, 1000),
-                rtt =>
+            else
+            {
+                lock (activePings)
                 {
-                    if (!rtt.TryGetResult(out serverInfo.Ping)) { serverInfo.Ping = Option<int>.None(); }
-                    onPingDiscovered(serverInfo);
-                    lock (activePings)
+                    if (activePings.ContainsKey(address)) { return; }
+                    activePings.Add(address, activePings.Any() ? activePings.Values.Max() + 1 : 0);
+                }
+                serverInfo.Ping = Option<int>.None();
+                TaskPool.Add($"PingServerAsync ({address})", PingServerAsync(address, 1000),
+                    rtt =>
                     {
-                        activePings.Remove(address);
-                    }
-                });
+                        if (!rtt.TryGetResult(out serverInfo.Ping)) { serverInfo.Ping = Option<int>.None(); }
+                        onPingDiscovered(serverInfo);
+                        lock (activePings)
+                        {
+                            activePings.Remove(address);
+                        }
+                    });
+            }
         }
 
         private static async Task<Option<int>> PingServerAsync(IPAddress ipAddress, int timeOut)

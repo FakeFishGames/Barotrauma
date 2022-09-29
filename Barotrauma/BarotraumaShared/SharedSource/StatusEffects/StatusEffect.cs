@@ -1770,7 +1770,7 @@ namespace Barotrauma
                                         case ItemSpawnInfo.SpawnRotationType.Random:
                                             if (projectile != null)
                                             {
-                                                DebugConsole.ShowError("Random rotation is not supported for Projectiles.");
+                                                DebugConsole.LogError("Random rotation is not supported for Projectiles.");
                                             }
                                             else
                                             {

@@ -8,7 +8,7 @@ namespace Barotrauma
         public SegmentActionType Type { get; set; }
 
         [Serialize("", IsPropertySaveable.Yes)]
-        public Identifier Id { get; set; }
+        public Identifier Identifier { get; set; }
 
         [Serialize("", IsPropertySaveable.Yes)]
         public Identifier ObjectiveTag { get; set; }
@@ -30,7 +30,13 @@ namespace Barotrauma
 
         private bool isFinished;
 
-        public TutorialSegmentAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
+        public TutorialSegmentAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element)
+        {
+            if (Identifier.IsEmpty)
+            {
+                Identifier = element.GetAttributeIdentifier("id", Identifier.Empty);
+            }
+        }
 
         public override void Update(float deltaTime)
         {

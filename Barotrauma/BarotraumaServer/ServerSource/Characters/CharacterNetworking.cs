@@ -512,13 +512,10 @@ namespace Barotrauma
                     msg.WriteByte((byte)TeamID);
                     break;
                 case AddToCrewEventData addToCrewEventData:
-                    msg.WriteByte((byte)addToCrewEventData.TeamType); // team id
-                    ushort[] inventoryItemIDs = addToCrewEventData.InventoryItems.Select(item => item.ID).ToArray();
-                    msg.WriteUInt16((ushort)inventoryItemIDs.Length);
-                    for (int i = 0; i < inventoryItemIDs.Length; i++)
-                    {
-                        msg.WriteUInt16(inventoryItemIDs[i]);
-                    }
+                    msg.WriteNetSerializableStruct(addToCrewEventData.ItemTeamChange);
+                    break;
+                case RemoveFromCrewEventData removeFromCrewEventData:
+                    msg.WriteNetSerializableStruct(removeFromCrewEventData.ItemTeamChange);
                     break;
                 case UpdateExperienceEventData _:
                     msg.WriteInt32(Info.ExperiencePoints);

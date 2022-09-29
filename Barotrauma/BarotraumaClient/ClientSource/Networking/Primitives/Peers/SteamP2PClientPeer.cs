@@ -36,6 +36,8 @@ namespace Barotrauma.Networking
 
         public override void Start()
         {
+            if (isActive) { return; }
+
             ContentPackageOrderReceived = false;
 
             steamAuthTicket = SteamManager.GetAuthSessionTicket();
@@ -189,6 +191,7 @@ namespace Barotrauma.Networking
                 if (packet is { SteamId: var steamId, Data: var data })
                 {
                     OnP2PData(steamId, data, data.Length);
+                    if (!isActive) { return; }
                     receivedBytes += data.Length;
                 }
             }

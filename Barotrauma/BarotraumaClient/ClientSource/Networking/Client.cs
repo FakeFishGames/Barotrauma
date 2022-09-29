@@ -31,11 +31,16 @@ namespace Barotrauma.Networking
 
         public bool IsOwner;
 
-        public bool AllowKicking;
 
         public bool IsDownloading;
 
         public float Karma;
+
+        public bool AllowKicking =>
+            !IsOwner &&
+            !HasPermission(ClientPermissions.Ban) &&
+            !HasPermission(ClientPermissions.Kick) &&
+            !HasPermission(ClientPermissions.Unban);
 
         public void UpdateSoundPosition()
         {

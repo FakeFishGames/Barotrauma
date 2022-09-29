@@ -165,6 +165,7 @@ namespace Barotrauma.Items.Components
             repairingText = TextManager.Get("Repairing");
             RepairButton = new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), progressBarHolder.RectTransform, Anchor.TopCenter), repairButtonText)
             {
+                UserData = UIHighlightAction.ElementId.RepairButton,
                 OnClicked = (btn, obj) =>
                 {
                     requestStartFixAction = FixActions.Repair;

@@ -113,15 +113,9 @@ namespace Barotrauma
 #endif
         }
 
-        public override void End()
+        protected override bool DetermineCompleted()
         {
-            if (GameMain.NetworkMember == null) { return; }
-
-            if (Winner != CharacterTeamType.None)
-            {
-                GiveReward();
-                completed = true;
-            }
+            return Winner != CharacterTeamType.None;
         }
     }
 }

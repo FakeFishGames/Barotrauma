@@ -11,7 +11,7 @@ namespace Barotrauma
     {
         public readonly Identifier SpeciesName;
         public readonly int MinAmount, MaxAmount;
-        private List<Character> monsters;
+        private readonly List<Character> monsters = new List<Character>();
 
         private readonly float scatter;
         private readonly float offset;
@@ -30,7 +30,7 @@ namespace Barotrauma
 
         public readonly int MaxAmountPerLevel = int.MaxValue;
 
-        public List<Character> Monsters => monsters;
+        public IReadOnlyList<Character> Monsters => monsters;
         public Vector2? SpawnPos => spawnPos;
         public bool SpawnPending => spawnPending;
 
@@ -115,7 +115,7 @@ namespace Barotrauma
             }
         }
 
-        private Submarine GetReferenceSub()
+        private static Submarine GetReferenceSub()
         {
             return EventManager.GetRefEntity() as Submarine ?? Submarine.MainSub;
         }
@@ -147,7 +147,7 @@ namespace Barotrauma
                 DebugConsole.NewMessage("Initialized MonsterEvent (" + SpeciesName + ")", Color.White);
             }
 
-            monsters = new List<Character>();
+            monsters.Clear();
 
             //+1 because Range returns an integer less than the max value
             int amount = Rand.Range(MinAmount, MaxAmount + 1);

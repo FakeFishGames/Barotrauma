@@ -27,6 +27,8 @@ namespace Barotrauma
 
         public readonly Identifier EventIdentifier;
 
+        public readonly Sprite Banner;
+
         public TutorialPrefab(ContentFile file, ContentXElement element) : base(file, element.GetAttributeIdentifier("identifier", ""))
         {
             Order = element.GetAttributeInt("order", int.MaxValue);
@@ -48,6 +50,12 @@ namespace Barotrauma
             else
             {
                 StartingItemTags = ImmutableArray<Identifier>.Empty;
+            }
+
+            var bannerElement = element.GetChildElement("banner");
+            if (bannerElement != null)
+            {
+                Banner = new Sprite(bannerElement, lazyLoad: true);
             }
 
             EventIdentifier = element.GetChildElement("scriptedevent")?.GetAttributeIdentifier("identifier", "") ?? Identifier.Empty;

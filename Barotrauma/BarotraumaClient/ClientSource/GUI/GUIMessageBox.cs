@@ -207,7 +207,7 @@ namespace Barotrauma
             {
                 InnerFrame.RectTransform.AbsoluteOffset = new Point(0, GameMain.GraphicsHeight);
                 CanBeFocused = false;
-                AutoClose = true;
+                AutoClose = type == Type.InGame;
                 GUIStyle.Apply(InnerFrame, "", this);
 
                 var horizontalLayoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.98f, 0.95f), InnerFrame.RectTransform, Anchor.Center), 

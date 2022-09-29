@@ -1613,6 +1613,7 @@ namespace Barotrauma.Networking
                 outmsg.WriteString(sub.Name);
                 outmsg.WriteString(sub.MD5Hash.ToString());
                 outmsg.WriteByte((byte)sub.SubmarineClass);
+                outmsg.WriteBoolean(sub.HasTag(SubmarineTag.Shuttle));
                 outmsg.WriteBoolean(sub.RequiredContentPackagesInstalled);
             }
 
@@ -1836,10 +1837,6 @@ namespace Barotrauma.Networking
                     InGame = client.InGame,
                     HasPermissions = client.Permissions != ClientPermissions.None,
                     IsOwner = client.Connection == OwnerConnection,
-                    AllowKicking = client.Connection != OwnerConnection &&
-                                   !client.HasPermission(ClientPermissions.Ban) &&
-                                   !client.HasPermission(ClientPermissions.Kick) &&
-                                   !client.HasPermission(ClientPermissions.Unban),
                     IsDownloading = FileSender.ActiveTransfers.Any(t => t.Connection == client.Connection)
                 };
                 
@@ -3383,7 +3380,7 @@ namespace Barotrauma.Networking
         private IEnumerable<CoroutineStatus> SendClientPermissionsAfterClientListSynced(Client recipient, Client client)
         {
             DateTime timeOut = DateTime.Now + new TimeSpan(0, 0, 10);
-            while (recipient.LastRecvClientListUpdate < LastClientListUpdateID)
+            while (NetIdUtils.IdMoreRecent(LastClientListUpdateID, recipient.LastRecvClientListUpdate))
             {
                 if (DateTime.Now > timeOut || GameMain.Server == null || !connectedClients.Contains(recipient))
                 {

@@ -399,12 +399,9 @@ namespace Barotrauma
                     progressBar.Draw(spriteBatch, cam);
                 }
 
-                void DrawInteractionIcon(Entity entity, string iconStyle)
+                void DrawInteractionIcon(Entity entity, Identifier iconStyle)
                 {
                     if (entity == null || entity.Removed) { return; }
-                    var characterEntity = entity as Character;
-                    if (characterEntity is not null && (characterEntity.IsDead || characterEntity.IsIncapacitated)) { return; }
-                    if (GUIStyle.GetComponentStyle(iconStyle) is not GUIComponentStyle style) { return; }
 
                     Hull currentHull = entity switch
                     {
@@ -412,20 +409,28 @@ namespace Barotrauma
                         Item item => item.CurrentHull,
                         _ => null
                     };
-
                     Range<float> visibleRange = new Range<float>(currentHull == Character.Controlled.CurrentHull ? 500.0f : 100.0f, float.PositiveInfinity);
-                    if (characterEntity?.CampaignInteractionType == CampaignMode.InteractionType.Examine)
+                    LocalizedString label = null;
+                    if (entity is Character characterEntity)
                     {
-                        //TODO: we could probably do better than just hardcoding
-                        //a check for InteractionType.Examine here.
+                        if (characterEntity.IsDead || characterEntity.IsIncapacitated) { return; }
+                        if (characterEntity?.CampaignInteractionType == CampaignMode.InteractionType.Examine)
+                        {
+                            //TODO: we could probably do better than just hardcoding
+                            //a check for InteractionType.Examine here.
 
-                        if (Vector2.DistanceSquared(character.Position, entity.Position) > 500f * 500f) { return; }
+                            if (Vector2.DistanceSquared(character.Position, entity.Position) > 500f * 500f) { return; }
 
-                        var body = Submarine.CheckVisibility(character.SimPosition, entity.SimPosition, ignoreLevel: true);
-                        if (body != null && body.UserData != entity) { return; }
+                            var body = Submarine.CheckVisibility(character.SimPosition, entity.SimPosition, ignoreLevel: true);
+                            if (body != null && body.UserData != entity) { return; }
 
-                        visibleRange = new Range<float>(-100f, 500f);
+                            visibleRange = new Range<float>(-100f, 500f);
+                        }
+                        label = characterEntity?.Info?.Title;
                     }
+
+                    if (GUIStyle.GetComponentStyle(iconStyle) is not GUIComponentStyle style) { return; }
+
                     float dist = Vector2.Distance(character.WorldPosition, entity.WorldPosition);
                     float distFactor = 1.0f - MathUtils.InverseLerp(1000.0f, 3000.0f, dist);
                     float alpha = MathHelper.Lerp(0.3f, 1.0f, distFactor);
@@ -436,13 +441,13 @@ namespace Barotrauma
                         visibleRange,
                         style.GetDefaultSprite(),
                         style.Color * alpha,
-                        label: characterEntity?.Info?.Title);
+                        label: label);
                 }
 
                 foreach (Character npc in Character.CharacterList)
                 {
                     if (npc.CampaignInteractionType == CampaignMode.InteractionType.None) { continue; }
-                    DrawInteractionIcon(npc, "CampaignInteractionIcon." + npc.CampaignInteractionType);
+                    DrawInteractionIcon(npc, ("CampaignInteractionIcon." + npc.CampaignInteractionType).ToIdentifier());
                 }
 
                 if (GameMain.GameSession?.GameMode is TutorialMode tutorialMode && tutorialMode.Tutorial is not null)

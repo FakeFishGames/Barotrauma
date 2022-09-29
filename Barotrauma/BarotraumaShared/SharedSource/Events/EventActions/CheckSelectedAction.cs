@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma
 {
-    class CheckSelectedAction : BinaryOptionAction
+    class CheckSelectedItemAction : BinaryOptionAction
     {
         public enum SelectedItemType { Primary, Secondary, Any };
 
@@ -16,7 +16,7 @@ namespace Barotrauma
         [Serialize(SelectedItemType.Any, IsPropertySaveable.Yes)]
         public SelectedItemType ItemType { get; set; }
 
-        public CheckSelectedAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
+        public CheckSelectedItemAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
 
         protected override bool? DetermineSuccess()
         {
@@ -47,11 +47,6 @@ namespace Barotrauma
                 }
                 foreach (var target in targets)
                 {
-                    if (target is Character targetCharacter)
-                    {
-                        if (ItemType == SelectedItemType.Any && character.SelectedCharacter == targetCharacter) { return true; }
-                        continue;
-                    }
                     if (target is not Item targetItem)
                     {
                         continue;

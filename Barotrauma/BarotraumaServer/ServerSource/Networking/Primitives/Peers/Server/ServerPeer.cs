@@ -167,7 +167,14 @@ namespace Barotrauma.Networking
             if (pendingClient.AccountInfo.AccountId.TryUnwrap(out var id)) { banAccountId(id); }
 
             pendingClient.AccountInfo.OtherMatchingIds.ForEach(banAccountId);
-            serverSettings.BanList.BanPlayer(pendingClient.Name ?? "Player", pendingClient.Connection.Endpoint, banReason, duration);
+            if (pendingClient.AccountInfo.AccountId.TryUnwrap(out var accountId))
+            {
+                serverSettings.BanList.BanPlayer(pendingClient.Name ?? "Player", accountId, banReason, duration);
+            }
+            else
+            {
+                serverSettings.BanList.BanPlayer(pendingClient.Name ?? "Player", pendingClient.Connection.Endpoint, banReason, duration);
+            }
         }
 
         protected bool IsPendingClientBanned(PendingClient pendingClient, out string? banReason)

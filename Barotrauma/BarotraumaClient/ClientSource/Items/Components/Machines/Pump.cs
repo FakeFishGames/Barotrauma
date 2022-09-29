@@ -1,10 +1,8 @@
 ﻿using Barotrauma.Networking;
 using Barotrauma.Particles;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -58,6 +56,7 @@ namespace Barotrauma.Items.Components
                 RelativeOffset = new Vector2(0, 0.1f)
             }, style: "PowerButton")
             {
+                UserData = UIHighlightAction.ElementId.PowerButton,
                 OnClicked = (button, data) =>
                 {
                     TargetLevel = null;
@@ -114,6 +113,7 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
+            pumpSpeedSlider.Frame.UserData = UIHighlightAction.ElementId.PumpSpeedSlider;
             var textsArea = new GUIFrame(new RectTransform(new Vector2(1, 0.25f), sliderArea.RectTransform, Anchor.BottomCenter), style: null);
             var outLabel = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), textsArea.RectTransform, Anchor.CenterLeft), TextManager.Get("PumpOut"), 
                 textColor: GUIStyle.TextColorNormal, textAlignment: Alignment.CenterLeft, wrap: false, font: GUIStyle.SubHeadingFont);
