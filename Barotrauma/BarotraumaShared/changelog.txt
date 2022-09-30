@@ -1,4 +1,14 @@
 ---------------------------------------------------------------------------------------------------------
+v0.19.9.0
+---------------------------------------------------------------------------------------------------------
+
+Fixes to new issues in the previous build:
+- Fixed missions always giving rewards even if you fail them!
+- Fixed clients sometimes failing to reconnect to the server if the connection is momentarily lost.
+- Fixed item conditions resetting to 100% between rounds.
+- Fixed mineral missions always causing a crash.
+
+---------------------------------------------------------------------------------------------------------
 v0.19.8.0
 ---------------------------------------------------------------------------------------------------------
 

@@ -127,9 +127,8 @@ namespace Barotrauma.Networking
                             DebugConsole.ThrowError(errorMsg);
                         }
                         ContentPackageOrderReceived = true;
-                        
-                        SendMsgInternal(headers, null);
                     }
+                    SendMsgInternal(headers, null);                    
 
                     break;
                 }

@@ -348,11 +348,15 @@ namespace Barotrauma
             completed = 
                 DetermineCompleted() && 
                 (completeCheckDataAction == null ||completeCheckDataAction.GetSuccess());
-            if (Prefab.LocationTypeChangeOnCompleted != null)
+            if (completed)
             {
-                ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
+                if (Prefab.LocationTypeChangeOnCompleted != null)
+                {
+                    ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
+                }
+                GiveReward();
             }
-            GiveReward();
+
             EndMissionSpecific(completed);
         }
 
