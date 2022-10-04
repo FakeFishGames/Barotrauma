@@ -125,6 +125,14 @@ namespace Barotrauma.Items.Components
             set { efficiency = MathHelper.Clamp(value, 0.0f, 1.0f); }
         }
 
+        private bool flipIndicator;
+        [Editable, Serialize(false, IsPropertySaveable.Yes, description: "Should the progress bar indicating the charge be flipped to fill from the other side.")]
+        public bool FlipIndicator
+        {
+            get { return flipIndicator; }
+            set { flipIndicator = value; }
+        }
+
         public float RechargeRatio => RechargeSpeed / MaxRechargeSpeed;
 
         public const float aiRechargeTargetRatio = 0.5f;
