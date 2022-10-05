@@ -1,4 +1,13 @@
 ---------------------------------------------------------------------------------------------------------
+v0.19.10.0
+---------------------------------------------------------------------------------------------------------
+
+- Updated translations. Includes various fixes to existing translations. The Japanese translations in particular has been significantly improved.
+- Fixes to Camel waypoints.
+- Fixed pump in Camel's airlock not pumping out by default.
+- Fixed high-quality fuel rods and other high-quality consumable items resetting to 100% between rounds.
+
+---------------------------------------------------------------------------------------------------------
 v0.19.9.0
 ---------------------------------------------------------------------------------------------------------
 
