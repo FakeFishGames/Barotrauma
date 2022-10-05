@@ -333,10 +333,14 @@ namespace Barotrauma.Networking
             RespawnCharactersProjSpecific(shuttlePos);
         }
 
+        public static AfflictionPrefab GetRespawnPenaltyAfflictionPrefab()
+        {
+            return AfflictionPrefab.Prefabs.First(a => a.AfflictionType == "respawnpenalty");
+        }
+
         public static Affliction GetRespawnPenaltyAffliction()
         {
-            var respawnPenaltyAffliction = AfflictionPrefab.Prefabs.First(a => a.AfflictionType == "respawnpenalty");
-            return respawnPenaltyAffliction?.Instantiate(10.0f);
+            return GetRespawnPenaltyAfflictionPrefab()?.Instantiate(10.0f);
         }
 
         public static void GiveRespawnPenaltyAffliction(Character character)

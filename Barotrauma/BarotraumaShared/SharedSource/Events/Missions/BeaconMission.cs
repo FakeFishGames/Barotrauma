@@ -163,20 +163,16 @@ namespace Barotrauma
 #endif
         }
 
-        public override void End()
+        protected override bool DetermineCompleted()
         {
-            completed = level.CheckBeaconActive();
-            if (completed)
+            return level.CheckBeaconActive();
+        }
+
+        protected override void EndMissionSpecific(bool completed)
+        {
+            if (completed && level.LevelData != null)
             {
-                if (Prefab.LocationTypeChangeOnCompleted != null)
-                {
-                    ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
-                }
-                GiveReward();
-                if (level.LevelData != null)
-                {
-                    level.LevelData.IsBeaconActive = true;
-                }
+                level.LevelData.IsBeaconActive = true;                
             }
         }
 

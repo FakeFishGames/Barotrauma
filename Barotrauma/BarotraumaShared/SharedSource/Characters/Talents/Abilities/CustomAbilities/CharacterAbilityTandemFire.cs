@@ -1,8 +1,4 @@
-﻿using Barotrauma.Items.Components;
-using Microsoft.Xna.Framework;
-using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
+﻿using Microsoft.Xna.Framework;
 
 namespace Barotrauma.Abilities
 {
@@ -31,7 +27,7 @@ namespace Barotrauma.Abilities
                 }
             }
 
-            if (!SelectedItemHasTag(closestCharacter)) { return; }
+            if (closestCharacter == null || !SelectedItemHasTag(closestCharacter)) { return; }
 
             if (closestDistance < squaredMaxDistance)
             {

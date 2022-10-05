@@ -219,7 +219,7 @@ namespace Barotrauma
             else if (sub != this.currentSub || missionsChanged)
             {
                 this.currentSub = sub;
-                this.nextRoundSubInfo = sub.Info;
+                this.nextRoundSubInfo = sub?.Info;
                 DetermineCargo();
             }
 
@@ -294,22 +294,21 @@ namespace Barotrauma
             }
         }
 
-        public override void End()
+        protected override bool DetermineCompleted()
         {
             if (Submarine.MainSub != null && Submarine.MainSub.AtEndExit)
             {
                 int deliveredItemCount = items.Count(it => IsItemDelivered(it));
                 if (deliveredItemCount / (float)items.Count >= requiredDeliveryAmount)
                 {
-                    GiveReward();
-                    completed = true;
-                    if (Prefab.LocationTypeChangeOnCompleted != null)
-                    {
-                        ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
-                    }
+                    return true;
                 }
             }
+            return false;
+        }
 
+        protected override void EndMissionSpecific(bool completed)
+        {
             foreach (Item item in items)
             {
                 if (!item.Removed) { item.Remove(); }
@@ -318,7 +317,7 @@ namespace Barotrauma
             failed = !completed;
         }
 
-        private bool IsItemDelivered(Item item)
+        private static bool IsItemDelivered(Item item)
         {
             if (item.Removed || item.Condition <= 0.0f || Submarine.MainSub == null) { return false; }
             var submarine = item.Submarine ?? item.GetRootContainer()?.Submarine;

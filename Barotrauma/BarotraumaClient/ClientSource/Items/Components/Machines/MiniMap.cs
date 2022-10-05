@@ -1013,12 +1013,14 @@ namespace Barotrauma.Items.Components
                 }
                 else if (hullData.LinkedHulls.Any())
                 {
-                    hullData.HullWaterAmount = 0.0f;
+                    float waterVolume = 0.0f;
+                    float totalVolume = 0.0f;
                     foreach (Hull linkedHull in hullData.LinkedHulls)
                     {
-                        hullData.HullWaterAmount += WaterDetector.GetWaterPercentage(linkedHull);
+                        waterVolume += linkedHull.WaterVolume;
+                        totalVolume += linkedHull.Volume;
                     }
-                    hullData.HullWaterAmount /= hullData.LinkedHulls.Count;
+                    hullData.HullWaterAmount = MathHelper.Clamp((int)Math.Ceiling(waterVolume / totalVolume * 100), 0, 100);
                 }
                 else
                 {

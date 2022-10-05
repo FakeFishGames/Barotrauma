@@ -53,7 +53,7 @@ namespace Barotrauma.Items.Components
 
         private bool alwaysContainedItemsSpawned;
 
-        public ItemInventory Inventory;
+        public readonly ItemInventory Inventory;
 
         private readonly List<ActiveContainedItem> activeContainedItems = new List<ActiveContainedItem>();
         
@@ -188,6 +188,16 @@ namespace Barotrauma.Items.Components
 
         [Serialize(false, IsPropertySaveable.No)]
         public bool RemoveContainedItemsOnDeconstruct { get; set; }
+
+
+        /// <summary>
+        /// Can be used by status effects to lock the inventory
+        /// </summary>
+        public bool Locked
+        {
+            get { return Inventory.Locked; }
+            set { Inventory.Locked = value; }
+        }
 
         private readonly ImmutableArray<SlotRestrictions> slotRestrictions;
 

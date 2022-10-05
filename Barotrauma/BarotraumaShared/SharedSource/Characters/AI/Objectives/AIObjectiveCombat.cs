@@ -913,11 +913,14 @@ namespace Barotrauma
 
         private void RemoveFollowTarget()
         {
-            if (arrestingRegistered)
+            if (followTargetObjective != null)
             {
-                followTargetObjective.Completed -= OnArrestTargetReached;
+                if (arrestingRegistered)
+                {
+                    followTargetObjective.Completed -= OnArrestTargetReached;
+                }
+                RemoveSubObjective(ref followTargetObjective);
             }
-            RemoveSubObjective(ref followTargetObjective);
             arrestingRegistered = false;
         }
 

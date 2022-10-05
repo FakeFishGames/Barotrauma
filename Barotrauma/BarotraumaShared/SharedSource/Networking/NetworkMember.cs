@@ -131,28 +131,29 @@ namespace Barotrauma.Networking
 
     enum DisconnectReason
     {
+        //do not attempt reconnecting with these reasons
         Unknown,
+        Disconnected,
         Banned,
         Kicked,
         ServerShutdown,
         ServerCrashed,
         ServerFull,
         AuthenticationRequired,
-        SteamAuthenticationRequired,
         SteamAuthenticationFailed,
         SessionTaken,
         TooManyFailedLogins,
-        NoName,
         InvalidName,
         NameTaken,
         InvalidVersion,
-        MissingContentPackage,
-        IncompatibleContentPackage,
+        SteamP2PError,
+        
+        //attempt reconnecting with these reasons
+        Timeout,
         ExcessiveDesyncOldEvent,
         ExcessiveDesyncRemovedEvent,
         SyncTimeout,
-        SteamP2PError,
-        SteamP2PTimeOut,
+        SteamP2PTimeOut
     }
 
     abstract partial class NetworkMember
@@ -163,32 +164,15 @@ namespace Barotrauma.Networking
             set;
         }
 
-        public virtual bool IsServer
-        {
-            get { return false; }
-        }
+        public abstract bool IsServer { get; }
 
-        public virtual bool IsClient
-        {
-            get { return false; }
-        }
+        public abstract bool IsClient { get; }
 
         public abstract void CreateEntityEvent(INetSerializable entity, NetEntityEvent.IData extraData = null);
 
-#if DEBUG
-        public Dictionary<string, long> messageCount = new Dictionary<string, long>();
-#endif
-        
-        protected ServerSettings serverSettings;
+        public abstract Voting Voting { get; }
 
-        public Voting Voting { get; protected set; }
-
-        protected TimeSpan updateInterval;
         protected DateTime updateTimer;
-
-        protected bool gameStarted;
-
-        protected RespawnManager respawnManager;
 
         public bool ShowNetStats;
         
@@ -196,38 +180,22 @@ namespace Barotrauma.Networking
         public float SimulatedLoss;
         public float SimulatedDuplicatesChance;
 
-        public int TickRate
-        {
-            get { return serverSettings.TickRate; }
-            set
-            {
-                serverSettings.TickRate = MathHelper.Clamp(value, 1, 60);
-                updateInterval = new TimeSpan(0, 0, 0, 0, MathHelper.Clamp(1000 / serverSettings.TickRate, 1, 500));
-            }
-        }
-
         public KarmaManager KarmaManager
         {
             get;
             private set;
         } = new KarmaManager();
 
-        public bool GameStarted
-        {
-            get { return gameStarted; }
-        }
+        public bool GameStarted { get; protected set; }
 
         public abstract IReadOnlyList<Client> ConnectedClients { get; }
 
-        public RespawnManager RespawnManager
-        {
-            get { return respawnManager; }
-        }
+        public RespawnManager RespawnManager { get; protected set; }
 
-        public ServerSettings ServerSettings
-        {
-            get { return serverSettings; }
-        }
+        public ServerSettings ServerSettings { get; protected set; }
+        
+        public TimeSpan UpdateInterval => new TimeSpan(0, 0, 0, 0, MathHelper.Clamp(1000 / ServerSettings.TickRate, 1, 500));
+
 
         public bool CanUseRadio(Character sender)
         {
@@ -276,24 +244,6 @@ namespace Barotrauma.Networking
         public abstract void UnbanPlayer(string playerName);
         
         public abstract void UnbanPlayer(Endpoint endpoint);
-
-        public virtual void Update(float deltaTime) { }
-
-        public virtual void Quit() { }
-
-        /// <summary>
-        /// Check if the two version are compatible (= if they can play together in multiplayer). 
-        /// Returns null if compatibility could not be determined (invalid/unknown version number).
-        /// </summary>
-        public static bool? IsCompatible(string myVersion, string remoteVersion)
-        {
-            if (string.IsNullOrEmpty(myVersion) || string.IsNullOrEmpty(remoteVersion)) { return null; }
-
-            if (!Version.TryParse(myVersion, out Version myVersionNumber)) { return null; }
-            if (!Version.TryParse(remoteVersion, out Version remoteVersionNumber)) { return null; }
-
-            return IsCompatible(myVersionNumber, remoteVersionNumber);
-        }
 
         /// <summary>
         /// Check if the two version are compatible (= if they can play together in multiplayer).

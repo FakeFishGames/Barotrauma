@@ -37,6 +37,8 @@ namespace Barotrauma
         public Func<bool> completionCondition;
         private bool isDoneOperating;
 
+        public float? OverridePriority = null;
+
         protected override float GetPriority()
         {
             bool isOrder = objectiveManager.IsOrder(this);
@@ -52,7 +54,11 @@ namespace Barotrauma
             }
             else
             {
-                if (isOrder)
+                if (OverridePriority.HasValue)
+                {
+                    Priority = OverridePriority.Value;
+                }
+                else if (isOrder)
                 {
                     Priority = objectiveManager.GetOrderPriority(this);
                 }
@@ -135,7 +141,7 @@ namespace Barotrauma
                         float value = CumulatedDevotion + (max * PriorityModifier);
                         Priority = MathHelper.Clamp(value, 0, max);
                     }
-                    else
+                    else if (!OverridePriority.HasValue)
                     {
                         float value = CumulatedDevotion + (AIObjectiveManager.LowestOrderPriority * PriorityModifier);
                         float max = AIObjectiveManager.LowestOrderPriority - 1;
@@ -204,8 +210,15 @@ namespace Barotrauma
             {
                 if (!character.IsClimbing && character.CanInteractWith(target.Item, out _, checkLinked: false))
                 {
-                    HumanAIController.FaceTarget(target.Item);
-                    if (character.SelectedItem != target.Item)
+                    if (target.Item.GetComponent<Controller>() is not Controller { ControlCharacterPose: true })
+                    {
+                        HumanAIController.FaceTarget(target.Item);
+                    }
+                    else
+                    {
+                        HumanAIController.SteeringManager.Reset();
+                    }
+                    if (character.SelectedItem != target.Item && character.SelectedSecondaryItem != target.Item)
                     {
                         target.Item.TryInteract(character, forceSelectKey: true);
                     }

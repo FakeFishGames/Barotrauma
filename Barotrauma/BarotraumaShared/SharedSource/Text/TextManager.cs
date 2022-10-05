@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using System.Globalization;
+using System.Text.Unicode;
 
 namespace Barotrauma
 {
@@ -30,18 +31,22 @@ namespace Barotrauma
 
         public static int LanguageVersion { get; private set; } = 0;
 
-        private readonly static Regex isCJK = new Regex(
-            @"\p{IsHangulJamo}|" +
-            @"\p{IsHiragana}|" +
-            @"\p{IsKatakana}|" +
-            @"\p{IsCJKRadicalsSupplement}|" +
-            @"\p{IsCJKSymbolsandPunctuation}|" +
-            @"\p{IsEnclosedCJKLettersandMonths}|" +
-            @"\p{IsCJKCompatibility}|" +
-            @"\p{IsCJKUnifiedIdeographsExtensionA}|" +
-            @"\p{IsCJKUnifiedIdeographs}|" +
-            @"\p{IsHangulSyllables}|" +
-            @"\p{IsCJKCompatibilityForms}");
+        private static readonly ImmutableArray<Range<int>> CjkRanges = new[]
+        {
+            UnicodeRanges.HangulJamo,
+            UnicodeRanges.Hiragana,
+            UnicodeRanges.Katakana,
+            UnicodeRanges.CjkRadicalsSupplement,
+            UnicodeRanges.CjkSymbolsandPunctuation,
+            UnicodeRanges.EnclosedCjkLettersandMonths,
+            UnicodeRanges.CjkCompatibility,
+            UnicodeRanges.CjkUnifiedIdeographsExtensionA,
+            UnicodeRanges.CjkUnifiedIdeographs,
+            UnicodeRanges.HangulSyllables,
+            UnicodeRanges.CjkCompatibilityForms
+        }.Select(r => new Range<int>(r.FirstCodePoint, r.FirstCodePoint+r.Length-1))
+            .OrderBy(r => r.Start)
+            .ToImmutableArray();
 
         /// <summary>
         /// Does the string contain symbols from Chinese, Japanese or Korean languages
@@ -54,7 +59,24 @@ namespace Barotrauma
         public static bool IsCJK(string text)
         {
             if (string.IsNullOrEmpty(text)) { return false; }
-            return isCJK.IsMatch(text);
+
+            for (int i = 0; i < text.Length; i++)
+            {
+                char chr = text[i];
+                for (int j = 0; j < CjkRanges.Length; j++)
+                {
+                    var range = CjkRanges[j];
+
+                    // If chr < range.Start, we know that it can't
+                    // be in any of the following ranges, so let's
+                    // not even bother checking them
+                    if (chr < range.Start) { break; }
+
+                    // This character is in a range, return true
+                    if (range.Contains(chr)) { return true; }
+                }
+            }
+            return false;
         }
 
         /// <summary>

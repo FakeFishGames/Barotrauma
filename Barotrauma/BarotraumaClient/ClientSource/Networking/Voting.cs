@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Extensions;
+using System;
 
 namespace Barotrauma
 {
@@ -109,6 +110,23 @@ namespace Barotrauma
 
                 voteText.Text = votes == 0 ? "" : votes.ToString();
             }
+        }
+
+        public void ResetVotes(IEnumerable<Client> connectedClients)
+        {
+            foreach (Client client in connectedClients)
+            {
+                client.ResetVotes();
+            }
+
+            foreach (VoteType voteType in Enum.GetValues(typeof(VoteType)))
+            {
+                SetVoteCountYes(voteType, 0);
+                SetVoteCountNo(voteType, 0);
+                SetVoteCountMax(voteType, 0);
+            }
+            UpdateVoteTexts(connectedClients, VoteType.Mode);
+            UpdateVoteTexts(connectedClients, VoteType.Sub);
         }
 
         public void ClientWrite(IWriteMessage msg, VoteType voteType, object data)

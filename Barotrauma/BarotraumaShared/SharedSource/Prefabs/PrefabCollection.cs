@@ -9,25 +9,20 @@ using System.Security.Cryptography;
 
 namespace Barotrauma
 {
-	public class PrefabCollection<T> : IEnumerable<T> where T : notnull, Prefab
+    public class PrefabCollection<T> : IEnumerable<T> where T : notnull, Prefab
     {
-		/// <summary>
-		/// Static constructor to reflect T's traits.
-		/// </summary>
-		static PrefabCollection(){
-			var interfaces = typeof(T).GetInterfaces();
-			implementsVariants = interfaces.Any(i => i.Name.Contains(nameof(IImplementsVariants<T>)));
-			implementsPartialOverride = false;
-			if (!implementsVariants)
-			{
-				implementsPartialOverride = interfaces.Any(i => i.Name.Contains(nameof(IImplementsInherit<T>)));
-			}
-		}
-        
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public PrefabCollection() {}
+        public PrefabCollection()
+        {
+            var interfaces = typeof(T).GetInterfaces();
+            implementsVariants = interfaces.Any(i => i.Name.Contains(nameof(IImplementsVariants<T>)));
+        }
+
+        // an instance of prefab that the collection keeps track of.
+        // used in ienumerable<T>
+
 
         /// <summary>
         /// Constructor with OnAdd and OnRemove callbacks provided.
@@ -44,6 +39,14 @@ namespace Barotrauma
             OnSort = onSort;
             OnAddOverrideFile = onAddOverrideFile;
             OnRemoveOverrideFile = onRemoveOverrideFile;
+        }
+
+        /// <summary>
+        /// Constructor with only the OnSort callback provided.
+        /// </summary>
+        public PrefabCollection(Action? onSort) : this()
+        {
+            OnSort = onSort;
         }
 
         /// <summary>
@@ -97,10 +100,9 @@ namespace Barotrauma
         private readonly HashSet<ContentFile> overrideFiles = new HashSet<ContentFile>();
         private ContentFile? topMostOverrideFile = null;
 
-        public static readonly bool implementsVariants;
-		public static readonly bool implementsPartialOverride;
+        private readonly bool implementsVariants;
 
-		private bool IsPrefabOverriddenByFile(T prefab)
+        private bool IsPrefabOverriddenByFile(T prefab)
         {
             return topMostOverrideFile != null &&
                     topMostOverrideFile.ContentPackage.Index > prefab.ContentFile.ContentPackage.Index;
@@ -191,7 +193,7 @@ namespace Barotrauma
 						if (!(parent is null))
 						{
 							prefab.CheckInheritHistory(parent);
-							prefab.ApplyInherit();
+							prefab.InheritFrom(parent!);
 						}
 					}
                     node.Inheritors.ForEach(invokeCallbacksForNode);

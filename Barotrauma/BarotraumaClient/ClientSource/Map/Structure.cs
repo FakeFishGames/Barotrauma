@@ -163,7 +163,7 @@ namespace Barotrauma
                 OnClicked = (button, data) =>
                 {
                     Sprite.ReloadXML();
-                    Sprite.ReloadTexture(updateAllSprites: true);
+                    Sprite.ReloadTexture();
                     return true;
                 }
             };

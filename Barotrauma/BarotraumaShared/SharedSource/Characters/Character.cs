@@ -453,7 +453,7 @@ namespace Barotrauma
             }
         }
 
-        public Identifier VariantOf => (Prefab as IImplementsVariants<CharacterPrefab>).VariantOf;
+        public PrefabInstance VariantOf => (Prefab as IImplementsVariants<CharacterPrefab>).InheritParent;
 
         public string Name
         {
@@ -549,6 +549,10 @@ namespace Barotrauma
             set
             {
                 lockHandsTimer = MathHelper.Clamp(lockHandsTimer + (value ? 1.0f : -0.5f), 0.0f, 10.0f);
+                if (value)
+                {
+                    SelectedCharacter = null;
+                }
 #if CLIENT
                 HintManager.OnHandcuffed(this);
 #endif
@@ -599,13 +603,10 @@ namespace Barotrauma
             get { return selectedCharacter; }
             set
             {
-                if (value == selectedCharacter) return;
-                if (selectedCharacter != null)
-                    selectedCharacter.selectedBy = null;
+                if (value == selectedCharacter) { return; }
+                if (selectedCharacter != null) { selectedCharacter.selectedBy = null; }                   
                 selectedCharacter = value;
-                if (selectedCharacter != null)
-                    selectedCharacter.selectedBy = this;
-
+                if (selectedCharacter != null) {selectedCharacter.selectedBy = this; }
 #if CLIENT
                 CharacterHealth.SetHealthBarVisibility(value == null);
 #endif
@@ -705,6 +706,14 @@ namespace Barotrauma
         public bool InPressure
         {
             get { return CurrentHull == null || CurrentHull.LethalPressure > 5.0f; }
+        }
+
+        /// <summary>
+        /// Can be used by status effects
+        /// </summary>
+        public AnimController.Animation Anim
+        {
+            get { return AnimController?.Anim ?? AnimController.Animation.None; }
         }
 
         public const float KnockbackCooldown = 5.0f;
@@ -1165,9 +1174,9 @@ namespace Barotrauma
 
             Identifier speciesName = prefab.Identifier;
 
-            if (VariantOf == CharacterPrefab.HumanSpeciesName || speciesName == CharacterPrefab.HumanSpeciesName)
+            if (VariantOf.id == CharacterPrefab.HumanSpeciesName || speciesName == CharacterPrefab.HumanSpeciesName)
             {
-                if (!VariantOf.IsEmpty)
+                if (!VariantOf.id.IsEmpty &&  prefab.Identifier != CharacterPrefab.HumanSpeciesName)
                 {
                     DebugConsole.ThrowError("The variant system does not yet support humans, sorry. It does support other humanoids though!");
                 }
@@ -1271,7 +1280,7 @@ namespace Barotrauma
                 CharacterHealth = new CharacterHealth(selectedHealthElement, this, limbHealthElement);
             }
 
-            if (Params.Husk && speciesName != "husk" && (Prefab as IImplementsVariants<CharacterPrefab>).VariantOf != "husk")
+            if (Params.Husk && speciesName != "husk" && (Prefab as IImplementsVariants<CharacterPrefab>).InheritParent.id != "husk")
             {
                 Identifier nonHuskedSpeciesName = Identifier.Empty;
                 AfflictionPrefabHusk matchingAffliction = null; 
@@ -1297,7 +1306,8 @@ namespace Barotrauma
                     nonHuskedSpeciesName = IsHumanoid ? CharacterPrefab.HumanSpeciesName : "crawler".ToIdentifier();
                     speciesName = nonHuskedSpeciesName;
                 }
-                if (ragdollParams == null && (prefab as IImplementsVariants<CharacterPrefab>).VariantOf.IsEmpty)
+                // currently a hack, should track id history to see if all same
+                if (ragdollParams == null && ((prefab as IImplementsVariants<CharacterPrefab>).InheritParent.IsEmpty || (prefab as IImplementsVariants<CharacterPrefab>).InheritParent.id == prefab.Identifier))
                 {
                     Identifier name = Params.UseHuskAppendage ? nonHuskedSpeciesName : speciesName;
                     ragdollParams = IsHumanoid ? RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(name) : RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(name) as RagdollParams;
@@ -2620,7 +2630,7 @@ namespace Barotrauma
                 if (!AllowInput)
                 {
                     FocusedCharacter = null;
-                    if (SelectedCharacter != null) DeselectCharacter();
+                    if (SelectedCharacter != null) { DeselectCharacter(); }
                     return;
                 }
             }
@@ -3636,7 +3646,7 @@ namespace Barotrauma
                     string modifiedMessage = ChatMessage.ApplyDistanceEffect(message.Message, message.MessageType.Value, this, Controlled);
                     if (!string.IsNullOrEmpty(modifiedMessage))
                     {
-                        GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(info.Name, modifiedMessage, message.MessageType.Value, this);
+                        GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(Name, modifiedMessage, message.MessageType.Value, this);
                     }
                 }
 #endif
@@ -4020,6 +4030,7 @@ namespace Barotrauma
             if (newStun > 0.0f)
             {
                 SelectedItem = SelectedSecondaryItem = null;
+                if (SelectedCharacter != null) { DeselectCharacter(); }
             }
             HealthUpdateInterval = 0.0f;
         }

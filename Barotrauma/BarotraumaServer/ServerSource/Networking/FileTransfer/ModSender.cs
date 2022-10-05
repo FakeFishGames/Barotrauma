@@ -39,7 +39,7 @@ namespace Barotrauma.Networking
             string resultFileName
                 = dir.StartsWith(ContentPackage.LocalModsDir)
                     ? $"Local_{mod.Name}"
-                    : $"Workshop_{mod.Name}_{mod.SteamWorkshopId}";
+                    : $"Workshop_{mod.Name}_{(mod.UgcId.TryUnwrap(out var ugcId) ? ugcId.ToString() : "NULL")}";
             resultFileName = ToolBox.RemoveInvalidFileNameChars(resultFileName.Replace('\\', '_').Replace('/', '_'));
             resultFileName = $"{resultFileName}{Extension}";
             return Path.Combine(UploadFolder, resultFileName);

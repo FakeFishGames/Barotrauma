@@ -278,6 +278,19 @@ namespace Barotrauma
                 }
             }
         }
+
+        public static void ListCoroutines()
+        {
+            lock (Coroutines)
+            {
+                DebugConsole.NewMessage("***********");
+                DebugConsole.NewMessage($"{Coroutines.Count} coroutine(s)");
+                foreach (var c in Coroutines)
+                {
+                    DebugConsole.NewMessage($"- {c.Name}");
+                }
+            }
+        }
     }
   
     class WaitForSeconds : CoroutineStatus

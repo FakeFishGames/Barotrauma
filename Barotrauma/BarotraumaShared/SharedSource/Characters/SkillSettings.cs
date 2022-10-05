@@ -100,17 +100,12 @@ namespace Barotrauma
             set;
         }
 
-        public SkillSettings(XElement element, SkillSettingsFile file) : base(file, element.FromContent(file.Path))
+        public SkillSettings(XElement element, SkillSettingsFile file) : base(file, "SkillSettings".ToIdentifier())
         {
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
         }
 
-		protected override Identifier DetermineIdentifier(XElement element)
-		{
-            return "SkillSettings".ToIdentifier();
-		}
-
-		public string Name => "SkillSettings";
+        public string Name => "SkillSettings";
 
         public Dictionary<Identifier, SerializableProperty> SerializableProperties
         {

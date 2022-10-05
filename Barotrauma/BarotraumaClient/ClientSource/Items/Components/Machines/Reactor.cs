@@ -234,6 +234,7 @@ namespace Barotrauma.Items.Components
                     return false;
                 }
             };
+            FissionRateScrollBar.Frame.UserData = UIHighlightAction.ElementId.FissionRateSlider;
 
             TurbineOutputScrollBar = new GUIScrollBar(new RectTransform(sliderSize, rightArea.RectTransform, Anchor.TopCenter)
             {
@@ -252,6 +253,7 @@ namespace Barotrauma.Items.Components
                     return false;
                 }
             };
+            TurbineOutputScrollBar.Frame.UserData = UIHighlightAction.ElementId.TurbineOutputSlider;
 
             var buttonArea = new GUILayoutGroup(new RectTransform(new Vector2(1, 0.2f), columnLeft.RectTransform)) 
             { 
@@ -302,9 +304,10 @@ namespace Barotrauma.Items.Components
 
             new GUIFrame(new RectTransform(new Vector2(0.01f, 1.0f), topRightArea.RectTransform), style: "VerticalLine");
 
-            AutoTempSwitch = new GUIButton(new RectTransform(new Vector2(0.15f, 0.9f), topRightArea.RectTransform), 
+            AutoTempSwitch = new GUIButton(new RectTransform(new Vector2(0.15f, 0.9f), topRightArea.RectTransform),
                 style: "SwitchVertical")
             {
+                UserData = UIHighlightAction.ElementId.AutoTempSwitch,
                 Enabled = false,
                 Selected = AutoTemp,
                 ClickSound = GUISoundType.UISwitch,
@@ -347,6 +350,7 @@ namespace Barotrauma.Items.Components
                 RelativeOffset = new Vector2(0, 0.1f)
             }, style: "PowerButton")
             {
+                UserData = UIHighlightAction.ElementId.PowerButton,
                 OnClicked = (button, data) =>
                 {
                     PowerOn = !PowerOn;

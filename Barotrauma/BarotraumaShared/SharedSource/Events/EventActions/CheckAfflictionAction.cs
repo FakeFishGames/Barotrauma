@@ -38,10 +38,12 @@ namespace Barotrauma
                 }
                 IEnumerable<Affliction> afflictions = target.CharacterHealth.GetAllAfflictions().Where(affliction =>
                 {
-                    LimbType? limbType = target.CharacterHealth.GetAfflictionLimb(affliction)?.type;
-                    if (limbType == null) { return false; }
-
-                    return limbType == TargetLimb && affliction.Strength >= MinStrength;
+                    if (affliction.Prefab.LimbSpecific)
+                    {
+                        LimbType? limbType = target.CharacterHealth.GetAfflictionLimb(affliction)?.type;
+                        if (limbType == null || limbType != TargetLimb) { return false; }
+                    }
+                    return affliction.Strength >= MinStrength;
                 });
 
                 if (afflictions.Any(a => a.Identifier == Identifier)) { return true; }

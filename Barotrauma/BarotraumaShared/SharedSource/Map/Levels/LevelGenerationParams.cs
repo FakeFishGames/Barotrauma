@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -622,7 +621,7 @@ namespace Barotrauma
             return ToolBox.SelectWeightedRandom(matchingLevelParams, p => p.Commonness, Rand.RandSync.ServerAndClient);
         }
 
-        public LevelGenerationParams(ContentXElement element, LevelGenerationParametersFile file) : base(file, element)
+        public LevelGenerationParams(ContentXElement element, LevelGenerationParametersFile file) : base(file, element.GetAttributeIdentifier("identifier", element.Name.LocalName))
         {
             OldIdentifier = element.GetAttributeIdentifier("oldidentifier", Identifier.Empty);
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
@@ -666,10 +665,6 @@ namespace Barotrauma
             }
         }
 
-		protected override Identifier DetermineIdentifier(XElement element)
-		{
-            return element.GetAttributeIdentifier("identifier", element.Name.LocalName);
-		}
-		public override void Dispose() { }
+        public override void Dispose() { }
     }
 }

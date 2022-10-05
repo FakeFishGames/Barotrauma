@@ -462,6 +462,13 @@ namespace Barotrauma
                 }
             }
 
+            //make sure the connections are in the same order on the locations and the Connections list
+            //otherwise their order will change when loading the game (as they're added to the locations in the same order they're loaded)
+            foreach (var location in Locations)
+            {
+                location.Connections.Sort((c1, c2) => Connections.IndexOf(c1).CompareTo(Connections.IndexOf(c2)));
+            }
+
             for (int i = Connections.Count - 1; i >= 0; i--)
             {
                 i = Math.Min(i, Connections.Count - 1);

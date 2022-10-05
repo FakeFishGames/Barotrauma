@@ -160,8 +160,13 @@ namespace Barotrauma
 
         public static Point ItemFrameOffset => new Point(0, 3).Multiply(GUI.SlicedSpriteScale);
 
-        public static GUIComponentStyle GetComponentStyle(string name)
-            => ComponentStyles.ContainsKey(name) ? ComponentStyles[name] : null;
+        public static GUIComponentStyle GetComponentStyle(string styleName)
+        {
+            return GetComponentStyle(styleName.ToIdentifier());
+        }
+
+        public static GUIComponentStyle GetComponentStyle(Identifier identifier)
+            => ComponentStyles.TryGet(identifier, out var style) ? style : null;
 
         public static void Apply(GUIComponent targetComponent, string styleName = "", GUIComponent parent = null)
         {

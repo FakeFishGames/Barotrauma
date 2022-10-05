@@ -6,7 +6,6 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -94,7 +93,7 @@ namespace Barotrauma
             return $"LocationType (" + Identifier + ")";
         }
 
-        public LocationType(ContentXElement element, LocationTypesFile file) : base(file, element)
+        public LocationType(ContentXElement element, LocationTypesFile file) : base(file, element.GetAttributeIdentifier("identifier", element.Name.LocalName))
         {
             Name = TextManager.Get("LocationName." + Identifier, "unknown");
 
@@ -204,12 +203,7 @@ namespace Barotrauma
             this.hireableJobs = hireableJobs.ToImmutableArray();
         }
 
-		protected override Identifier DetermineIdentifier(XElement element)
-		{
-            return element.GetAttributeIdentifier("identifier", element.Name.LocalName);
-		}
-
-		public JobPrefab GetRandomHireable()
+        public JobPrefab GetRandomHireable()
         {
             float randFloat = Rand.Range(0.0f, totalHireableWeight, Rand.RandSync.ServerAndClient);
 

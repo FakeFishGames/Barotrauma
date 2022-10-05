@@ -1,7 +1,6 @@
 ﻿#nullable enable
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Barotrauma.Networking
 {
@@ -16,7 +15,7 @@ namespace Barotrauma.Networking
         private SteamId ReadSteamId(IReadMessage inc) => new SteamId(inc.ReadUInt64() ^ ownerKey64);
         private void WriteSteamId(IWriteMessage msg, SteamId val) => msg.WriteUInt64(val.Value ^ ownerKey64);
 
-        public SteamP2PServerPeer(SteamId steamId, int ownerKey, ServerSettings settings)
+        public SteamP2PServerPeer(SteamId steamId, int ownerKey, ServerSettings settings, Callbacks callbacks) : base(callbacks)
         {
             serverSettings = settings;
 
@@ -43,7 +42,7 @@ namespace Barotrauma.Networking
             started = true;
         }
 
-        public override void Close(string? msg = null)
+        public override void Close()
         {
             if (!started) { return; }
 
@@ -51,12 +50,12 @@ namespace Barotrauma.Networking
 
             for (int i = pendingClients.Count - 1; i >= 0; i--)
             {
-                RemovePendingClient(pendingClients[i], DisconnectReason.ServerShutdown, msg);
+                RemovePendingClient(pendingClients[i], PeerDisconnectPacket.WithReason(DisconnectReason.ServerShutdown));
             }
 
             for (int i = connectedClients.Count - 1; i >= 0; i--)
             {
-                Disconnect(connectedClients[i], msg ?? DisconnectReason.ServerShutdown.ToString());
+                Disconnect(connectedClients[i], PeerDisconnectPacket.WithReason(DisconnectReason.ServerShutdown));
             }
 
             pendingClients.Clear();
@@ -64,18 +63,12 @@ namespace Barotrauma.Networking
 
             ChildServerRelay.ShutDown();
 
-            OnShutdown?.Invoke();
+            callbacks.OnShutdown.Invoke();
         }
 
         public override void Update(float deltaTime)
         {
             if (!started) { return; }
-
-            if (OnOwnerDetermined != null && OwnerConnection != null)
-            {
-                OnOwnerDetermined?.Invoke(OwnerConnection);
-                OnOwnerDetermined = null;
-            }
 
             //backwards for loop so we can remove elements while iterating
             for (int i = connectedClients.Count - 1; i >= 0; i--)
@@ -84,7 +77,7 @@ namespace Barotrauma.Networking
                 conn.Decay(deltaTime);
                 if (conn.Timeout < 0.0)
                 {
-                    Disconnect(conn, "Timed out");
+                    Disconnect(conn, PeerDisconnectPacket.WithReason(DisconnectReason.Timeout));
                 }
             }
 
@@ -144,29 +137,47 @@ namespace Barotrauma.Networking
                 pendingClient?.Heartbeat();
                 connectedClient?.Heartbeat();
 
-                if (serverSettings.BanList.IsBanned(senderSteamId, out string banReason) ||
+                if (packetHeader.IsConnectionInitializationStep())
+                {
+                    if (!initialization.HasValue) { return; }
+                    ConnectionInitialization initializationStep = initialization.Value;
+
+                    if (pendingClient != null)
+                    {
+                        pendingClient.Connection.SetAccountInfo(new AccountInfo(senderSteamId, sentOwnerSteamId));
+                        ReadConnectionInitializationStep(
+                            pendingClient,
+                            new ReadWriteMessage(inc.Buffer, inc.BitPosition, inc.LengthBits, false),
+                            initializationStep);
+                    }
+                    else if (initializationStep == ConnectionInitialization.ConnectionStarted)
+                    {
+                        pendingClient = new PendingClient(new SteamP2PConnection(senderSteamId));
+                        pendingClient.Connection.SetAccountInfo(new AccountInfo(senderSteamId, sentOwnerSteamId));
+                        pendingClients.Add(pendingClient);
+                    }
+                }
+                else if (serverSettings.BanList.IsBanned(senderSteamId, out string banReason) ||
                     serverSettings.BanList.IsBanned(sentOwnerSteamId, out banReason))
                 {
                     if (pendingClient != null)
                     {
-                        RemovePendingClient(pendingClient, DisconnectReason.Banned, banReason);
+                        RemovePendingClient(pendingClient, PeerDisconnectPacket.Banned(banReason));
                     }
                     else if (connectedClient != null)
                     {
-                        Disconnect(connectedClient, $"{DisconnectReason.Banned}/ {banReason}");
+                        Disconnect(connectedClient, PeerDisconnectPacket.Banned(banReason));
                     }
                 }
                 else if (packetHeader.IsDisconnectMessage())
                 {
                     if (pendingClient != null)
                     {
-                        string disconnectMsg = $"ServerMessage.HasDisconnected~[client]={pendingClient.Name}";
-                        RemovePendingClient(pendingClient, DisconnectReason.Unknown, disconnectMsg);
+                        RemovePendingClient(pendingClient, PeerDisconnectPacket.WithReason(DisconnectReason.Disconnected));
                     }
                     else if (connectedClient != null)
                     {
-                        string disconnectMsg = $"ServerMessage.HasDisconnected~[client]={GameMain.Server.ConnectedClients.First(c => c.Connection == connectedClient).Name}";
-                        Disconnect(connectedClient, disconnectMsg, false);
+                        Disconnect(connectedClient, PeerDisconnectPacket.WithReason(DisconnectReason.Disconnected));
                     }
                 }
                 else if (packetHeader.IsHeartbeatMessage())
@@ -174,30 +185,11 @@ namespace Barotrauma.Networking
                     //message exists solely as a heartbeat, ignore its contents
                     return;
                 }
-                else if (packetHeader.IsConnectionInitializationStep())
-                {
-                    if (pendingClient != null)
-                    {
-                        pendingClient.Connection.SetAccountInfo(new AccountInfo(senderSteamId, sentOwnerSteamId));
-                        ReadConnectionInitializationStep(
-                            pendingClient,
-                            new ReadWriteMessage(inc.Buffer, inc.BitPosition, inc.LengthBits, false),
-                            initialization ?? throw new Exception("Initialization step missing"));
-                    }
-                    else if (initialization.HasValue)
-                    {
-                        ConnectionInitialization initializationStep = initialization.Value;
-                        if (initializationStep == ConnectionInitialization.ConnectionStarted)
-                        {
-                            pendingClients.Add(new PendingClient(new SteamP2PConnection(senderSteamId)));
-                        }
-                    }
-                }
                 else if (connectedClient != null)
                 {
                     var packet = INetSerializableStruct.Read<PeerPacketMessage>(inc);
                     IReadMessage msg = new ReadOnlyMessage(packet.Buffer, packetHeader.IsCompressed(), 0, packet.Length, connectedClient);
-                    OnMessageReceived?.Invoke(connectedClient, msg);
+                    callbacks.OnMessageReceived.Invoke(connectedClient, msg);
                 }
             }
             else //sender is owner
@@ -227,7 +219,8 @@ namespace Barotrauma.Networking
                         };
                         OwnerConnection.SetAccountInfo(new AccountInfo(ownerSteamId, ownerSteamId));
 
-                        OnInitializationComplete?.Invoke(OwnerConnection, packet.OwnerName);
+                        callbacks.OnInitializationComplete.Invoke(OwnerConnection, packet.OwnerName);
+                        callbacks.OnOwnerDetermined.Invoke(OwnerConnection);
                     }
 
                     return;
@@ -241,7 +234,7 @@ namespace Barotrauma.Networking
                 {
                     var packet = INetSerializableStruct.Read<PeerPacketMessage>(inc);
                     IReadMessage msg = new ReadOnlyMessage(packet.Buffer, packetHeader.IsCompressed(), 0, packet.Length, OwnerConnection);
-                    OnMessageReceived?.Invoke(OwnerConnection!, msg);
+                    callbacks.OnMessageReceived.Invoke(OwnerConnection!, msg);
                 }
             }
         }
@@ -255,7 +248,7 @@ namespace Barotrauma.Networking
         {
             if (!started) { return; }
 
-            if (!(conn is SteamP2PConnection steamP2PConn)) { return; }
+            if (conn is not SteamP2PConnection steamP2PConn) { return; }
 
             if (!connectedClients.Contains(steamP2PConn) && conn != OwnerConnection)
             {
@@ -263,7 +256,7 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            if (!conn.AccountInfo.AccountId.TryUnwrap(out var connAccountId) || !(connAccountId is SteamId connSteamId)) { return; }
+            if (!conn.AccountInfo.AccountId.TryUnwrap(out var connAccountId) || connAccountId is not SteamId) { return; }
 
             byte[] bufAux = msg.PrepareForSending(compressPastThreshold, out bool isCompressed, out _);
 
@@ -281,11 +274,9 @@ namespace Barotrauma.Networking
             SendMsgInternal(steamP2PConn, headers, body);
         }
 
-        private void SendDisconnectMessage(SteamId steamId, string? msg)
+        private void SendDisconnectMessage(SteamId steamId, PeerDisconnectPacket peerDisconnectPacket)
         {
             if (!started) { return; }
-
-            if (string.IsNullOrWhiteSpace(msg)) { return; }
 
             var headers = new PeerPacketHeaders
             {
@@ -293,40 +284,31 @@ namespace Barotrauma.Networking
                 PacketHeader = PacketHeader.IsDisconnectMessage | PacketHeader.IsServerMessage,
                 Initialization = null
             };
-            var packet = new PeerDisconnectPacket
-            {
-                Message = msg
-            };
 
-            SendMsgInternal(steamId, headers, packet);
+            SendMsgInternal(steamId, headers, peerDisconnectPacket);
         }
 
-        private void Disconnect(NetworkConnection conn, string? msg, bool sendDisconnectMessage)
+        public override void Disconnect(NetworkConnection conn, PeerDisconnectPacket peerDisconnectPacket)
         {
             if (!started) { return; }
 
-            if (!(conn is SteamP2PConnection steamp2pConn)) { return; }
+            if (conn is not SteamP2PConnection steamp2pConn) { return; }
 
-            if (!conn.AccountInfo.AccountId.TryUnwrap(out var connAccountId) || !(connAccountId is SteamId connSteamId)) { return; }
+            if (!conn.AccountInfo.AccountId.TryUnwrap(out var connAccountId) || connAccountId is not SteamId connSteamId) { return; }
 
-            if (sendDisconnectMessage) { SendDisconnectMessage(connSteamId, msg); }
+            SendDisconnectMessage(connSteamId, peerDisconnectPacket);
 
             if (connectedClients.Contains(steamp2pConn))
             {
                 steamp2pConn.Status = NetworkConnectionStatus.Disconnected;
                 connectedClients.Remove(steamp2pConn);
-                OnDisconnect?.Invoke(conn, msg);
+                callbacks.OnDisconnect.Invoke(conn, peerDisconnectPacket);
                 Steam.SteamManager.StopAuthSession(connSteamId);
             }
             else if (steamp2pConn == OwnerConnection)
             {
-                //TODO: fix?
+                throw new InvalidOperationException("Cannot disconnect owner peer");
             }
-        }
-
-        public override void Disconnect(NetworkConnection conn, string? msg = null)
-        {
-            Disconnect(conn, msg, true);
         }
 
         protected override void SendMsgInternal(NetworkConnection conn, PeerPacketHeaders headers, INetSerializableStruct? body)

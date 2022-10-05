@@ -1267,7 +1267,11 @@ namespace Barotrauma
                 }
             }, () =>
             {
-                return new[] { FactionPrefab.Prefabs.Select(f => f.Identifier.Value).ToArray() };
+                return new[] 
+                { 
+                    FactionPrefab.Prefabs.Select(f => f.Identifier.Value).ToArray(), 
+                    GameMain.GameSession?.Campaign.Factions.Select(f => f.Prefab.Identifier.ToString()).ToArray() ?? Array.Empty<string>()
+                };
             }, true));
 
             commands.Add(new Command("fixitems", "fixitems: Repairs all items and restores them to full condition.", (string[] args) =>
@@ -1651,6 +1655,8 @@ namespace Barotrauma
             }, isCheat: false));
 
             commands.Add(new Command("listtasks", "listtasks: Lists all asynchronous tasks currently in the task pool.", (string[] args) => { TaskPool.ListTasks(); }));
+            
+            commands.Add(new Command("listcoroutines", "listcoroutines: Lists all coroutines currently running.", (string[] args) => { CoroutineManager.ListCoroutines(); }));
 
             commands.Add(new Command("calculatehashes", "calculatehashes [content package name]: Show the MD5 hashes of the files in the selected content package. If the name parameter is omitted, the first content package is selected.", (string[] args) =>
             {
@@ -2233,7 +2239,7 @@ namespace Barotrauma
             }
         }
 
-        public static void ShowError(string msg, Color? color = null)
+        public static void LogError(string msg, Color? color = null)
         {
             color ??= Color.Red;
             NewMessage(msg, color.Value, isCommand: false, isError: true);
@@ -2405,7 +2411,7 @@ namespace Barotrauma
             }
 #endif
 
-            ShowError(error);
+            LogError(error);
         }
         
         public static void AddWarning(string warning)

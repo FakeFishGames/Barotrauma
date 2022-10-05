@@ -651,11 +651,11 @@ namespace Barotrauma
                     break;
                 case NetworkEventType.MISSION:
                     Identifier missionIdentifier = msg.ReadIdentifier();
-
+                    string missionName = msg.ReadString();
                     MissionPrefab? prefab = MissionPrefab.Prefabs.Find(mp => mp.Identifier == missionIdentifier);
                     if (prefab != null)
                     {
-                        new GUIMessageBox(string.Empty, TextManager.GetWithVariable("missionunlocked", "[missionname]", prefab.Name), 
+                        new GUIMessageBox(string.Empty, TextManager.GetWithVariable("missionunlocked", "[missionname]", missionName), 
                             Array.Empty<LocalizedString>(), type: GUIMessageBox.Type.InGame, icon: prefab.Icon, relativeSize: new Vector2(0.3f, 0.15f), minSize: new Point(512, 128))
                         {
                             IconColor = prefab.IconColor

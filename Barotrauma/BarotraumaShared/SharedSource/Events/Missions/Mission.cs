@@ -13,7 +13,8 @@ namespace Barotrauma
     abstract partial class Mission
     {
         public readonly MissionPrefab Prefab;
-        protected bool completed, failed;
+        private bool completed;
+        protected bool failed;
 
         protected Level level;
 
@@ -36,7 +37,9 @@ namespace Barotrauma
             }
         }
 
-        protected bool IsClient => GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
+        protected static bool IsClient => GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
+
+        private readonly CheckDataAction completeCheckDataAction;
 
         public readonly ImmutableArray<LocalizedString> Headers;
         public readonly ImmutableArray<LocalizedString> Messages;
@@ -155,6 +158,12 @@ namespace Barotrauma
             var messages = prefab.Messages.ToArray();
 
             Locations = locations;
+
+            var endConditionElement = prefab.ConfigElement.GetChildElement(nameof(completeCheckDataAction));
+            if (endConditionElement != null)
+            {
+                completeCheckDataAction = new CheckDataAction(endConditionElement, $"Mission ({prefab.Identifier.ToString()})");
+            }
 
             for (int n = 0; n < 2; n++)
             {
@@ -334,19 +343,31 @@ namespace Barotrauma
         /// <summary>
         /// End the mission and give a reward if it was completed successfully
         /// </summary>
-        public virtual void End()
+        public void End()
         {
-            completed = true;
-            if (Prefab.LocationTypeChangeOnCompleted != null)
+            completed = 
+                DetermineCompleted() && 
+                (completeCheckDataAction == null ||completeCheckDataAction.GetSuccess());
+            if (completed)
             {
-                ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
+                if (Prefab.LocationTypeChangeOnCompleted != null)
+                {
+                    ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
+                }
+                GiveReward();
             }
-            GiveReward();
+
+            EndMissionSpecific(completed);
         }
 
-        public void GiveReward()
+        protected abstract bool DetermineCompleted();
+
+        protected virtual void EndMissionSpecific(bool completed) { }
+
+
+        private void GiveReward()
         {
-            if (!(GameMain.GameSession.GameMode is CampaignMode campaign)) { return; }
+            if (GameMain.GameSession.GameMode is not CampaignMode campaign) { return; }
             int reward = GetReward(Submarine.MainSub);
 
             float baseExperienceGain = reward * 0.09f;

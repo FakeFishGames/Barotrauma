@@ -15,7 +15,7 @@ namespace Barotrauma
 
         public readonly Sprite Sprite;
 
-        public EventSprite(ContentXElement element, RandomEventsFile file) : base(file, element)
+        public EventSprite(ContentXElement element, RandomEventsFile file) : base(file, element.GetAttributeIdentifier("identifier", Identifier.Empty))
         {
             Sprite = new Sprite(element);
         }
@@ -24,7 +24,7 @@ namespace Barotrauma
     }
 #endif
 
-    class EventSet : Prefab
+    sealed class EventSet : Prefab
     {
         internal class EventDebugStats
         {
@@ -489,12 +489,6 @@ namespace Barotrauma
             }
         }
 
-        public override void Dispose()
-        {
-            foreach (var childSet in ChildSets)
-            {
-                childSet.Dispose();
-            }
-        }
+        public override void Dispose() { }
     }
 }

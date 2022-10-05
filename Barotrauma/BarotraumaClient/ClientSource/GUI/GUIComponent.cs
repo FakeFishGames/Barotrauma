@@ -486,7 +486,7 @@ namespace Barotrauma
             {
                 if (bounceTimer > 3.0f || bounceDown)
                 {
-                    RectTransform.ScreenSpaceOffset = new Point(RectTransform.ScreenSpaceOffset.X, (int) -(bounceJump * 10f));
+                    RectTransform.ScreenSpaceOffset = new Point(RectTransform.ScreenSpaceOffset.X, (int) -(bounceJump * 15f * GUI.Scale));
                     if (!bounceDown)
                     {
                         bounceJump += deltaTime * 4;
@@ -503,6 +503,7 @@ namespace Barotrauma
                             bounceJump = 0.0f;
                             bounceTimer = 0.0f;
                             bounceDown = false;
+                            Bounce = false;
                         }
                     }
                 }
@@ -730,7 +731,7 @@ namespace Barotrauma
         public void DrawToolTip(SpriteBatch spriteBatch)
         {
             if (!Visible) { return; }
-            DrawToolTip(spriteBatch, ToolTip, GUI.MouseOn.Rect);
+            DrawToolTip(spriteBatch, ToolTip, Rect);
         }
         
         public static void DrawToolTip(SpriteBatch spriteBatch, RichString toolTip, Vector2 pos)
@@ -781,7 +782,7 @@ namespace Barotrauma
             if (toolTipBlock.Rect.Bottom > GameMain.GraphicsHeight - 10)
             {
                 toolTipBlock.RectTransform.AbsoluteOffset -= new Point(
-                    (targetElement.Width / 2) * Math.Sign(targetElement.Center.X - toolTipBlock.Center.X), 
+                    0, 
                     toolTipBlock.Rect.Bottom - (GameMain.GraphicsHeight - 10));
             }
             toolTipBlock.SetTextPos();

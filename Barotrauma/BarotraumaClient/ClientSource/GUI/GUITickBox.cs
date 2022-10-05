@@ -177,7 +177,7 @@ namespace Barotrauma
             radioButtonGroup = rbg;
         }
 
-        private void ResizeBox()
+        public void ResizeBox()
         {
             Vector2 textBlockScale = new Vector2(Math.Max(Rect.Width - box.Rect.Width, 0.0f) / Math.Max(Rect.Width, 1.0f), 1.0f);
             text.RectTransform.RelativeSize = textBlockScale;

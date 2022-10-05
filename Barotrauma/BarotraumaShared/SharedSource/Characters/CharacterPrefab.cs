@@ -12,19 +12,15 @@ namespace Barotrauma
     {
         public readonly static PrefabCollection<CharacterPrefab> Prefabs = new PrefabCollection<CharacterPrefab>();
 
-		private bool disposed = false;
         public override void Dispose()
         {
-            if (disposed) { return; }
-            disposed = true;
-            Prefabs.Remove(this);
             Character.RemoveByPrefab(this);
         }
 
         public string Name => Identifier.Value;
-        public void ApplyInherit()
+        public void InheritFrom(CharacterPrefab parent)
         {
-            ConfigElement = (this as IImplementsInherit<CharacterPrefab>).DoInherit(CharacterParams.CreateVariantXml_callback);
+            ConfigElement = (this as IImplementsVariants<CharacterPrefab>).DoInherit(CharacterParams.CreateVariantXml_callback);
             ParseConfigElement();
         }
 
@@ -80,21 +76,7 @@ namespace Barotrauma
             ParseConfigElement();
         }
 
-		protected override Identifier DetermineIdentifier(XElement element)
-		{
-			string name = element.GetAttributeString("name", null);
-			if (!string.IsNullOrEmpty(name))
-			{
-				// file not used here to be consistent with override.
-			}
-			else
-			{
-				name = element.GetAttributeString("speciesname", string.Empty);
-			}
-			return new Identifier(name);
-		}
-
-		public static Identifier ParseName(XElement element, CharacterFile file)
+        public static Identifier ParseName(XElement element, CharacterFile file)
         {
             string name = element.GetAttributeString("name", null);
             if (!string.IsNullOrEmpty(name))
@@ -117,6 +99,37 @@ namespace Barotrauma
                 return false;
             }
             return true;
+        }
+
+        public CharacterPrefab FindByPrefabInstance(PrefabInstance instance){
+            Prefabs.TryGet(instance, out CharacterPrefab res);
+            return res;
+		}
+
+        public CharacterPrefab GetPrevious(Identifier identifier)
+        {
+            CharacterPrefab res;
+            if (identifier != Identifier)
+            {
+                if(Prefabs.Any(p=>p.Identifier == identifier)){
+					res = Prefabs[identifier];
+				}
+                else{
+                    res = null;
+                }
+            }
+            else {
+                if (Prefabs.AllPrefabs.Any(p => p.Key == identifier)) {
+                    string best_effort_package_id = ContentPackage.GetBestEffortId();
+					res = Prefabs.AllPrefabs.Where(p => p.Key == identifier)
+		                .Single().Value
+		                .GetPrevious(best_effort_package_id);
+				}
+                else{
+                    res = null;
+                }
+			}
+            return res;
         }
     }
 }

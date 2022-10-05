@@ -54,7 +54,7 @@ namespace Barotrauma
             if (ValidContainableItemIdentifiers.None())
             {
 #if DEBUG
-                DebugConsole.ShowError($"No valid containable item identifiers found for the Load Item objective targeting {Container}");
+                DebugConsole.LogError($"No valid containable item identifiers found for the Load Item objective targeting {Container}");
 #endif
                 Abandon = true;
                 return;
@@ -250,7 +250,7 @@ namespace Barotrauma
                     catch (NotImplementedException)
                     {
 #if DEBUG
-                        DebugConsole.ShowError($"Unexpected target condition \"{TargetItemCondition}\" in local function GetConditionBasedProperty");
+                        DebugConsole.LogError($"Unexpected target condition \"{TargetItemCondition}\" in local function GetConditionBasedProperty");
 #endif
                         return 0.0f;
                     }

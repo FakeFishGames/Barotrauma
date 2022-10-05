@@ -595,6 +595,10 @@ namespace Barotrauma
             {
                 return c.CurrentHull;
             }
+            else if (target is Structure structure)
+            {
+                return Hull.FindHull(structure.Position, useWorldCoordinates: false);
+            }
             else if (target is Gap g)
             {
                 return g.FlowTargetHull;

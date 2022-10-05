@@ -410,7 +410,7 @@ namespace Barotrauma
                     {
                         y += yStep;
                         DrawString(spriteBatch, new Vector2(10, y),
-                            "Sub pos: " + Submarine.MainSub.Position.ToPoint(),
+                            "Sub pos: " + Submarine.MainSub.WorldPosition.ToPoint(),
                             Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
                     }
 
@@ -878,6 +878,11 @@ namespace Barotrauma
                     GUIMessageBox.VisibleBox.AddToGUIUpdateList();
                 }
             }
+        }
+
+        public static IEnumerable<GUIComponent> GetAdditions()
+        {
+            return additions;
         }
         #endregion
 

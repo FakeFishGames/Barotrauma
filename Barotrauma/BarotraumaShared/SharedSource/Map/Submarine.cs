@@ -1234,7 +1234,7 @@ namespace Barotrauma
         public List<(ItemContainer container, int freeSlots)> GetCargoContainers()
         {
             List<(ItemContainer container, int freeSlots)> containers = new List<(ItemContainer container, int freeSlots)>();
-            var connectedSubs = GetConnectedSubs();
+            var connectedSubs = GetConnectedSubs().Where(sub => sub.Info?.Type == Info.Type);
             foreach (Item item in Item.ItemList.ToList())
             {
                 if (!connectedSubs.Contains(item.Submarine)) { continue; }
@@ -1548,6 +1548,7 @@ namespace Barotrauma
             element.Add(new XAttribute("description", Info.Description ?? ""));
             element.Add(new XAttribute("checkval", Rand.Int(int.MaxValue)));
             element.Add(new XAttribute("price", Info.Price));
+            element.Add(new XAttribute("tier", Info.Tier));
             element.Add(new XAttribute("initialsuppliesspawned", Info.InitialSuppliesSpawned));
             element.Add(new XAttribute("noitems", Info.NoItems));
             element.Add(new XAttribute("lowfuel", !CheckFuel()));

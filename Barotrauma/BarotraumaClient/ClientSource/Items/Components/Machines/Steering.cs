@@ -1,13 +1,11 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Linq;
 using System.Collections.Generic;
-using System.Xml.Linq;
-using Barotrauma.Extensions;
+using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -141,6 +139,7 @@ namespace Barotrauma.Items.Components
             var steeringModeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.4f), paddedControlContainer.RectTransform, Anchor.TopLeft), style: null);
             steeringModeSwitch = new GUIButton(new RectTransform(new Vector2(0.2f, 1), steeringModeArea.RectTransform), string.Empty, style: "SwitchVertical")
             {
+                UserData = UIHighlightAction.ElementId.SteeringModeSwitch,
                 Selected = autoPilot,
                 Enabled = true,
                 ClickSound = GUISoundType.UISwitch,
@@ -182,6 +181,7 @@ namespace Barotrauma.Items.Components
             maintainPosTickBox = new GUITickBox(new RectTransform(new Vector2(1, 0.333f), paddedAutoPilotControls.RectTransform, Anchor.TopCenter),
                 TextManager.Get("SteeringMaintainPos"), font: GUIStyle.SmallFont, style: "GUIRadioButton")
             {
+                UserData = UIHighlightAction.ElementId.MaintainPosTickBox,
                 Enabled = autoPilot,
                 Selected = maintainPos,
                 OnSelected = tickBox =>

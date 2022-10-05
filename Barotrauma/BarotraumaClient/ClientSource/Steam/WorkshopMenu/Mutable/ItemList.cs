@@ -226,7 +226,7 @@ namespace Barotrauma.Steam
             (Steamworks.Ugc.Item WorkshopItem, ContentPackage? LocalPackage)[] publishedItems = workshopItems
                 .Select(item => (item,
                     (ContentPackage?)ContentPackageManager.LocalPackages.FirstOrDefault(p
-                        => p.SteamWorkshopId != 0 && p.SteamWorkshopId == item.Id)))
+                        => p.TryExtractSteamWorkshopId(out var workshopId) && workshopId.Value == item.Id)))
                 //Sort the pairs by last local edit time if available
                 .OrderBy(t => t.Item2 == null)
                 .ThenByDescending(t => t.Item2 is { } p ? getEditTime(p) : t.Item1.LatestUpdateTime)
@@ -241,7 +241,9 @@ namespace Barotrauma.Steam
 
             //Get mods that haven't been published and add them to the list
             var unpublishedMods = ContentPackageManager.LocalPackages
-                .Where(p => p.SteamWorkshopId == 0 || !publishedItems.Any(item => item.WorkshopItem.Id == p.SteamWorkshopId))
+                .Where(p =>
+                    !p.TryExtractSteamWorkshopId(out var workshopId)
+                    || !publishedItems.Any(item => item.WorkshopItem.Id == workshopId.Value))
                 .OrderByDescending(getEditTime).ToArray();
 
             if (unpublishedMods.Any())
@@ -556,7 +558,9 @@ namespace Barotrauma.Steam
             taskCancelSrc = taskCancelSrc.IsCancellationRequested ? new CancellationTokenSource() : taskCancelSrc;
 
             var contentPackage
-                = ContentPackageManager.WorkshopPackages.FirstOrDefault(p => p.SteamWorkshopId == workshopItem.Id);
+                = ContentPackageManager.WorkshopPackages.FirstOrDefault(p =>
+                    p.TryExtractSteamWorkshopId(out var workshopId)
+                    && workshopId.Value == workshopItem.Id);
             
             var verticalLayout = new GUILayoutGroup(new RectTransform(Vector2.One, parentFrame.RectTransform));
 
@@ -619,7 +623,7 @@ namespace Barotrauma.Steam
             if (contentPackage != null)
             {
                 TaskPool.AddIfNotFound(
-                    $"DetermineUpdateRequired{contentPackage.SteamWorkshopId}",
+                    $"DetermineUpdateRequired{contentPackage.UgcId}",
                     contentPackage.IsUpToDate(),
                     t =>
                     {
@@ -652,7 +656,9 @@ namespace Barotrauma.Steam
 
                     if (contentPackage != null
                         && !ContentPackageManager.WorkshopPackages.Contains(contentPackage)
-                        && ContentPackageManager.WorkshopPackages.Any(p => p.SteamWorkshopId == workshopItem.Id))
+                        && ContentPackageManager.WorkshopPackages.Any(p =>
+                            p.TryExtractSteamWorkshopId(out var workshopId)
+                            && workshopId.Value == workshopItem.Id))
                     {
                         updateButton.Visible = false;
                     }

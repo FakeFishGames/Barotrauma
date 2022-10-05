@@ -139,7 +139,7 @@ namespace Barotrauma
             }
             catch (NotImplementedException e)
             {
-                DebugConsole.ShowError($"Error selling items: uknown store tab type \"{sellingMode}\".\n{e.StackTrace.CleanupStackTrace()}");
+                DebugConsole.LogError($"Error selling items: uknown store tab type \"{sellingMode}\".\n{e.StackTrace.CleanupStackTrace()}");
                 return;
             }
             bool canAddToRemoveQueue = campaign.IsSinglePlayer && Entity.Spawner != null;
@@ -148,7 +148,7 @@ namespace Barotrauma
             var sellValues = GetSellValuesAtCurrentLocation(storeIdentifier, itemsToSell.Select(i => i.ItemPrefab));
             if (!(Location.GetStore(storeIdentifier) is { } store))
             {
-                DebugConsole.ShowError($"Error selling items at {Location}: no store with identifier \"{storeIdentifier}\" exists.\n{Environment.StackTrace.CleanupStackTrace()}");
+                DebugConsole.LogError($"Error selling items at {Location}: no store with identifier \"{storeIdentifier}\" exists.\n{Environment.StackTrace.CleanupStackTrace()}");
                 return;
             }
             var storeSpecificSoldItems = GetSoldItems(storeIdentifier, create: true);

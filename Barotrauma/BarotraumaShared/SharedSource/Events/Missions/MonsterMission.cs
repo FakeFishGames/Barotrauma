@@ -223,26 +223,26 @@ namespace Barotrauma
                     break;
             }
         }
-        
-        public override void End()
+
+        protected override bool DetermineCompleted()
+        {
+            return state > 0;
+        }
+
+        protected override void EndMissionSpecific(bool completed)
         {
             tempSonarPositions.Clear();
             monsters.Clear();
-            if (State < 1) { return; }
-
-            if (Prefab.LocationTypeChangeOnCompleted != null)
+            if (completed)
             {
-                ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
-            }
-            GiveReward();
-            completed = true;
-            if (level?.LevelData != null && Prefab.Tags.Any(t => t.Equals("huntinggrounds", StringComparison.OrdinalIgnoreCase)))
-            {
-                level.LevelData.HasHuntingGrounds = false;
+                if (level?.LevelData != null && Prefab.Tags.Contains("huntinggrounds"))
+                {
+                    level.LevelData.HasHuntingGrounds = false;
+                }
             }
         }
 
-        public bool IsEliminated(Character enemy) =>
+        public static bool IsEliminated(Character enemy) =>
             enemy == null ||
             enemy.Removed || 
             enemy.IsDead || 

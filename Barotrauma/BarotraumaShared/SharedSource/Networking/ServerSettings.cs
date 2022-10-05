@@ -388,11 +388,12 @@ namespace Barotrauma.Networking
 
         public List<SavedClientPermission> ClientPermissions { get; private set; } = new List<SavedClientPermission>();
 
+        private int tickRate = 20;
         [Serialize(20, IsPropertySaveable.Yes)]
         public int TickRate
         {
-            get;
-            set;
+            get { return tickRate; }
+            set { tickRate = MathHelper.Clamp(value, 1, 60); }
         }
 
         [Serialize(true, IsPropertySaveable.Yes)]

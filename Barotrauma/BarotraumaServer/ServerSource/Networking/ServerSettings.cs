@@ -18,9 +18,13 @@ namespace Barotrauma.Networking
             {
                 if (!PropEquals(lastSyncedValue, Value))
                 {
-                    LastUpdateID = (UInt16)(GameMain.NetLobbyScreen.LastUpdateID);
+                    LastUpdateID = GameMain.NetLobbyScreen.LastUpdateID;
                     lastSyncedValue = Value;
                 }
+            }
+            public void ForceUpdate()
+            {
+                LastUpdateID = GameMain.NetLobbyScreen.LastUpdateID++;
             }
         }
         
@@ -52,6 +56,15 @@ namespace Barotrauma.Networking
         {
             LoadSettings();
             LoadClientPermissions();
+        }
+
+        public void ForcePropertyUpdate()
+        {
+            UpdateFlag(NetFlags.Properties);
+            foreach (NetPropertyData property in netProperties.Values)
+            {
+                property.ForceUpdate();
+            }
         }
 
         private void WriteNetProperties(IWriteMessage outMsg, Client c)
@@ -197,27 +210,32 @@ namespace Barotrauma.Networking
             {
                 int orBits = incMsg.ReadRangedInteger(0, (int)Barotrauma.MissionType.All) & (int)Barotrauma.MissionType.All;
                 int andBits = incMsg.ReadRangedInteger(0, (int)Barotrauma.MissionType.All) & (int)Barotrauma.MissionType.All;
-                GameMain.NetLobbyScreen.MissionType = (Barotrauma.MissionType)(((int)GameMain.NetLobbyScreen.MissionType | orBits) & andBits);
+                GameMain.NetLobbyScreen.MissionType = (MissionType)(((int)GameMain.NetLobbyScreen.MissionType | orBits) & andBits);
                 
                 int traitorSetting = (int)TraitorsEnabled + incMsg.ReadByte() - 1;
-                if (traitorSetting < 0) traitorSetting = 2;
-                if (traitorSetting > 2) traitorSetting = 0;
+                if (traitorSetting < 0) { traitorSetting = 2; }
+                if (traitorSetting > 2) { traitorSetting = 0; }
                 TraitorsEnabled = (YesNoMaybe)traitorSetting;
 
                 int botCount = BotCount + incMsg.ReadByte() - 1;
-                if (botCount < 0) botCount = MaxBotCount;
-                if (botCount > MaxBotCount) botCount = 0;
+                if (botCount < 0) { botCount = MaxBotCount; }
+                if (botCount > MaxBotCount) { botCount = 0; }
                 BotCount = botCount;
 
                 int botSpawnMode = (int)BotSpawnMode + incMsg.ReadByte() - 1;
-                if (botSpawnMode < 0) botSpawnMode = 1;
-                if (botSpawnMode > 1) botSpawnMode = 0;
+                if (botSpawnMode < 0) { botSpawnMode = 1; }
+                if (botSpawnMode > 1) { botSpawnMode = 0; }
                 BotSpawnMode = (BotSpawnMode)botSpawnMode;
 
                 float levelDifficulty = incMsg.ReadSingle();
-                if (levelDifficulty >= 0.0f) SelectedLevelDifficulty = levelDifficulty;
+                if (levelDifficulty >= 0.0f) { SelectedLevelDifficulty = levelDifficulty; }
 
-                UseRespawnShuttle = incMsg.ReadBoolean();
+                bool changedUseRespawnShuttle = incMsg.ReadBoolean();
+                bool useRespawnShuttle = incMsg.ReadBoolean();
+                if (changedUseRespawnShuttle)
+                {
+                    UseRespawnShuttle = useRespawnShuttle;
+                }
 
                 bool changedAutoRestart = incMsg.ReadBoolean();
                 bool autoRestart = incMsg.ReadBoolean();

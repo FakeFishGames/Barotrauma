@@ -7,7 +7,7 @@ namespace Barotrauma.Networking
         public abstract string StringRepresentation { get; }
 
         public static Option<Address> Parse(string str)
-            => ReflectionUtils.ParseDerived<Address>(str);
+            => ReflectionUtils.ParseDerived<Address, string>(str);
 
         public abstract bool IsLocalHost { get; }
 

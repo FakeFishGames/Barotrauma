@@ -1,6 +1,4 @@
-using System;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -35,29 +33,19 @@ namespace Barotrauma
             }
             else if (MatchesSingular(elemName))
             {
-
-				T prefab = CreatePrefab(parentElement);
-				try
-				{
-					Prefabs.Add(prefab, overriding);
-				}
-				catch
-				{
-                    // Have partial override, but cannot parse config
-                    // at any time. Should defer CreatePrefab to when
-                    // the prefab collections are ready.
-                    if (PrefabCollection<T>.implementsPartialOverride && overriding && !parentElement.InheritParent().id.IsEmpty)
-                    {
-                        // likely inherit history not resolved at first run.
-                        // we just need to wait for "SortAll"
-                        // resource locking 
-                    }
-                    else{
-						prefab.Dispose(); //clean up before rethrowing, since some prefab types might lock resources
-						throw;
-					}
-				}
-			}
+                T prefab = CreatePrefab(parentElement);
+                try
+                {
+                    Prefabs.Add(prefab, overriding);
+                }
+                catch
+                {
+                    //clean up before rethrowing, since some prefab types might lock resources
+                    prefab.Dispose();
+                    Prefabs.Remove(prefab);
+                    throw;
+                }
+            }
             else if (MatchesPlural(elemName))
             {
                 foreach (var element in childElements)

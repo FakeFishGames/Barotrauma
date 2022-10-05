@@ -61,8 +61,9 @@ namespace Barotrauma
             msg.WriteColorR8G8B8(Head.SkinColor);
             msg.WriteColorR8G8B8(Head.HairColor);
             msg.WriteColorR8G8B8(Head.FacialHairColor);
-            msg.WriteString(ragdollFileName);
 
+            msg.WriteString(ragdollFileName);
+            msg.WriteIdentifier(HumanPrefabIds.NpcIdentifier);
             if (Job != null)
             {
                 msg.WriteUInt32(Job.Prefab.UintIdentifier);

@@ -96,6 +96,7 @@ namespace Barotrauma.Items.Components
                     var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.4f, 0.8f), inputArea.RectTransform), childAnchor: Anchor.CenterLeft);
                         activateButton = new GUIButton(new RectTransform(new Vector2(0.95f, 0.8f), buttonContainer.RectTransform), TextManager.Get("DeconstructorDeconstruct"), style: "DeviceButton")
                         {
+                            UserData = UIHighlightAction.ElementId.DeconstructButton,
                             TextBlock = { AutoScaleHorizontal = true },
                             OnClicked = OnActivateButtonClicked
                         };
@@ -432,17 +433,22 @@ namespace Barotrauma.Items.Components
 
         private bool OnActivateButtonClicked(GUIButton button, object obj)
         {
-            var disallowedItem = inputContainer.Inventory.FindItem(i => !i.AllowDeconstruct, recursive: false);
-            if (disallowedItem != null && !DeconstructItemsSimultaneously)
+            if (!IsActive)
             {
-                int index = inputContainer.Inventory.FindIndex(disallowedItem);
-                if (index >= 0 && index < inputContainer.Inventory.visualSlots.Length)
+                //don't allow turning on if there's non-deconstructable items in the queue
+                var disallowedItem = inputContainer.Inventory.FindItem(i => !i.AllowDeconstruct, recursive: false);
+                if (disallowedItem != null && !DeconstructItemsSimultaneously)
                 {
-                    var slot = inputContainer.Inventory.visualSlots[index];
-                    slot?.ShowBorderHighlight(GUIStyle.Red, 0.1f, 0.9f);
+                    int index = inputContainer.Inventory.FindIndex(disallowedItem);
+                    if (index >= 0 && index < inputContainer.Inventory.visualSlots.Length)
+                    {
+                        var slot = inputContainer.Inventory.visualSlots[index];
+                        slot?.ShowBorderHighlight(GUIStyle.Red, 0.1f, 0.9f);
+                    }
+                    return true;
                 }
-                return true;
             }
+
             if (GameMain.Client != null)
             {
                 pendingState = !IsActive;

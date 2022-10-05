@@ -242,7 +242,7 @@ namespace Barotrauma
                         Submarine parentSub = item.CurrentHull?.Submarine ?? item.GetRootInventoryOwner()?.Submarine;
                         if (parentSub == null || parentSub.Info.Type != SubmarineType.Player) 
                         {
-                            return; 
+                            return;
                         }
                     }
                     State = 1;
@@ -254,23 +254,16 @@ namespace Barotrauma
             }
         }
 
-        public override void End()
+        protected override bool DetermineCompleted()
         {
             var root = item?.GetRootContainer() ?? item;
-            if (root?.CurrentHull?.Submarine == null || (!root.CurrentHull.Submarine.AtEndExit && !root.CurrentHull.Submarine.AtStartExit) || item.Removed) 
-            { 
-                return; 
-            }
+            return root?.CurrentHull?.Submarine != null && (root.CurrentHull.Submarine.AtEndExit || root.CurrentHull.Submarine.AtStartExit) && !item.Removed;
+        }
 
-            if (Prefab.LocationTypeChangeOnCompleted != null)
-            {
-                ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
-            }
-
+        protected override void EndMissionSpecific(bool completed)
+        {
             item?.Remove();
             item = null;
-            GiveReward();
-            completed = true;
             failed = !completed && state > 0;
         }
     }

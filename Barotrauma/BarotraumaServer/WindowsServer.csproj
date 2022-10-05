@@ -6,7 +6,7 @@
     <RootNamespace>Barotrauma</RootNamespace>
     <Authors>FakeFish, Undertow Games</Authors>
     <Product>Barotrauma Dedicated Server</Product>
-    <Version>0.19.3.0</Version>
+    <Version>0.19.10.0</Version>
     <Copyright>Copyright © FakeFish 2018-2022</Copyright>
     <Platforms>AnyCPU;x64</Platforms>
     <AssemblyName>DedicatedServer</AssemblyName>
@@ -20,6 +20,7 @@
     <DefineConstants>DEBUG;TRACE;SERVER;WINDOWS;USE_STEAM</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>..\bin\$(Configuration)Windows\</OutputPath>
+    <NoWarn>1701;1702;1030;</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -28,12 +29,14 @@
     <OutputPath>..\bin\$(Configuration)Windows\</OutputPath>
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
+    <NoWarn>1701;1702;1030;</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DefineConstants>TRACE;SERVER;WINDOWS;USE_STEAM</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>..\bin\$(Configuration)Windows\</OutputPath>
+    <NoWarn>1701;1702;1030;</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Unstable|AnyCPU'">
@@ -41,6 +44,7 @@
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>..\bin\$(Configuration)Windows\</OutputPath>
     <Optimize>true</Optimize>
+    <NoWarn>1701;1702;1030;</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -49,6 +53,7 @@
     <OutputPath>..\bin\$(Configuration)Windows\</OutputPath>
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
+    <NoWarn>1701;1702;1030;</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Unstable|x64'">
@@ -58,6 +63,7 @@
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <Optimize>true</Optimize>
+    <NoWarn>1701;1702;1030;</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

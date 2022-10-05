@@ -11,44 +11,40 @@ namespace Barotrauma
         [Serialize("", IsPropertySaveable.Yes)]
         public Identifier OrderOption { get; set; }
 
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier OrderTargetTag { get; set; }
+
         public CheckOrderAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
 
         protected override bool? DetermineSuccess()
         {
-            ISerializableEntity target = null;
+            Character targetCharacter = null;
             if (!TargetTag.IsEmpty)
             {
                 foreach (var t in ParentEvent.GetTargets(TargetTag))
                 {
-                    if (t is ISerializableEntity e)
+                    if (t is Character c)
                     {
-                        target = e;
+                        targetCharacter = c;
                         break;
                     }
                 }
             }
-            if (target == null)
+            if (targetCharacter == null)
             {
-                DebugConsole.ShowError($"CheckConditionalAction error: {GetEventName()} uses a CheckOrderAction but no valid target was found for tag \"{TargetTag}\"! This will cause the check to automatically succeed.");
-                return true;
-            }
-            if (target is Character character)
-            {
-                var currentOrderInfo = character.GetCurrentOrderWithTopPriority();
-                if (currentOrderInfo?.Identifier == OrderIdentifier)
-                {
-                    if (OrderOption.IsEmpty)
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        return currentOrderInfo?.Option == OrderOption;
-                    }
-                }
+                DebugConsole.LogError($"CheckConditionalAction error: {GetEventName()} uses a CheckOrderAction but no valid target character was found for tag \"{TargetTag}\"! This will cause the check to automatically fail.");
                 return false;
             }
-            return true;
+            var currentOrderInfo = targetCharacter.GetCurrentOrderWithTopPriority();
+            if (currentOrderInfo?.Identifier == OrderIdentifier)
+            {
+                if (!OrderTargetTag.IsEmpty)
+                {
+                    if (currentOrderInfo.TargetEntity is not Item targetItem || !targetItem.HasTag(OrderTargetTag)) { return false; }
+                }
+                return OrderOption.IsEmpty || currentOrderInfo?.Option == OrderOption;                
+            }
+            return false;
         }
 
         private string GetEventName()

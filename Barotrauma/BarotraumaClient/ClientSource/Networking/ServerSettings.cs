@@ -125,8 +125,6 @@ namespace Barotrauma.Networking
 
         public void ClientRead(IReadMessage incMsg)
         {
-            cachedServerListInfo = null;
-
             NetFlags requiredFlags = (NetFlags)incMsg.ReadByte();
 
             if (requiredFlags.HasFlag(NetFlags.Name))
@@ -146,7 +144,6 @@ namespace Barotrauma.Networking
             AllowFileTransfers = incMsg.ReadBoolean();
             incMsg.ReadPadBits();
             TickRate = incMsg.ReadRangedInteger(1, 60);
-            GameMain.NetworkMember.TickRate = TickRate;
 
             if (requiredFlags.HasFlag(NetFlags.Properties))
             {
@@ -241,7 +238,8 @@ namespace Barotrauma.Networking
 
                 outMsg.WriteSingle(levelDifficulty ?? -1000.0f);
 
-                outMsg.WriteBoolean(useRespawnShuttle ?? UseRespawnShuttle);
+                outMsg.WriteBoolean(useRespawnShuttle != null);
+                outMsg.WriteBoolean(useRespawnShuttle ?? false);
 
                 outMsg.WriteBoolean(autoRestart != null);
                 outMsg.WriteBoolean(autoRestart ?? false);
@@ -1057,15 +1055,7 @@ namespace Barotrauma.Networking
                 }
                 settingsFrame = null;
             }
-
             return false;
-        }
-
-        private ServerInfo cachedServerListInfo = null;
-        public ServerInfo GetServerListInfo()
-        {
-            cachedServerListInfo ??= GameMain.ServerListScreen.UpdateServerInfoWithServerSettings(GameMain.Client.ClientPeer.ServerConnection, this);
-            return cachedServerListInfo;
         }
     }
 }

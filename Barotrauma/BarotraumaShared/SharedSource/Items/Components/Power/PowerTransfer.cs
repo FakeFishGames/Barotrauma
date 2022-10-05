@@ -278,7 +278,8 @@ namespace Barotrauma.Items.Components
 
         public override float GetConnectionPowerOut(Connection conn, float power, PowerRange minMaxPower, float load)
         {
-            return conn == powerOut ? PowerConsumption + ExtraLoad : 0;
+            //not used in the vanilla game (junction boxes or relays don't output power)
+            return conn == powerOut ? MathHelper.Max(-(PowerConsumption + ExtraLoad), 0) : 0;
         }
 
         public override bool Pick(Character picker)

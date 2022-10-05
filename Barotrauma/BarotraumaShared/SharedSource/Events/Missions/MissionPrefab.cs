@@ -138,7 +138,7 @@ namespace Barotrauma
 
         public readonly ContentXElement ConfigElement;
 
-        public MissionPrefab(ContentXElement element, MissionsFile file) : base(file, element)
+        public MissionPrefab(ContentXElement element, MissionsFile file) : base(file, element.GetAttributeIdentifier("identifier", ""))
         {
             ConfigElement = element;
 
@@ -146,14 +146,24 @@ namespace Barotrauma
 
             tags = element.GetAttributeStringArray("tags", Array.Empty<string>(), convertToLowerInvariant: true);
 
-            Name = 
-                TextManager.Get($"MissionName.{TextIdentifier}")
-                .Fallback(TextManager.Get(element.GetAttributeString("name", "")))
-                .Fallback(element.GetAttributeString("name", ""));
-            Description = 
-                TextManager.Get($"MissionDescription.{TextIdentifier}")
-                .Fallback(TextManager.Get(element.GetAttributeString("description", "")))
-                .Fallback(element.GetAttributeString("description", ""));
+            string nameTag = element.GetAttributeString("name", "");
+            Name = TextManager.Get($"MissionName.{TextIdentifier}");
+            if (!string.IsNullOrEmpty(nameTag))
+            {
+                Name = Name
+                    .Fallback(TextManager.Get(nameTag))
+                    .Fallback(nameTag);
+            }
+
+            string descriptionTag = element.GetAttributeString("description", "");
+            Description =
+                TextManager.Get($"MissionDescription.{TextIdentifier}"); 
+            if (!string.IsNullOrEmpty(descriptionTag))
+            {
+                Description = Description
+                    .Fallback(TextManager.Get(descriptionTag))
+                    .Fallback(descriptionTag);
+            }
 
             Reward      = element.GetAttributeInt("reward", 1);
             AllowRetry  = element.GetAttributeBool("allowretry", false);
@@ -167,23 +177,35 @@ namespace Barotrauma
                 Difficulty = Math.Clamp(difficulty, MinDifficulty, MaxDifficulty);
             }
 
-            SuccessMessage  = 
-                TextManager.Get($"MissionSuccess.{TextIdentifier}")
-                .Fallback(TextManager.Get(element.GetAttributeString("successmessage", "")))
-                .Fallback(element.GetAttributeString("successmessage", "Mission completed successfully"));
-            FailureMessage  = 
-                TextManager.Get($"MissionFailure.{TextIdentifier}")
-                .Fallback(TextManager.Get(element.GetAttributeString("missionfailed", "")))
-                .Fallback(TextManager.Get("missionfailed"))
-                .Fallback(GameSettings.CurrentConfig.Language == TextManager.DefaultLanguage ? element.GetAttributeString("failuremessage", "") : "");
+            string successMessageTag = element.GetAttributeString("successmessage", "");
+            SuccessMessage = TextManager.Get($"MissionSuccess.{TextIdentifier}");
+            if (!string.IsNullOrEmpty(successMessageTag))
+            {
+                SuccessMessage = SuccessMessage
+                    .Fallback(TextManager.Get(successMessageTag))
+                    .Fallback(successMessageTag);
+            }
+            SuccessMessage = SuccessMessage.Fallback(TextManager.Get("missioncompleted"));
+
+            string failureMessageTag = element.GetAttributeString("failuremessage", "");
+            FailureMessage = TextManager.Get($"MissionFailure.{TextIdentifier}");
+            if (!string.IsNullOrEmpty(failureMessageTag))
+            {
+                FailureMessage = FailureMessage
+                    .Fallback(TextManager.Get(failureMessageTag))
+                    .Fallback(failureMessageTag);
+            }
+            FailureMessage = FailureMessage.Fallback(TextManager.Get("missionfailed"));
 
             string sonarLabelTag = element.GetAttributeString("sonarlabel", "");
-
-            SonarLabel = 
+            SonarLabel =
                 TextManager.Get($"MissionSonarLabel.{sonarLabelTag}")
                 .Fallback(TextManager.Get(sonarLabelTag))
-                .Fallback(TextManager.Get($"MissionSonarLabel.{TextIdentifier}"))
-                .Fallback(element.GetAttributeString("sonarlabel", ""));
+                .Fallback(TextManager.Get($"MissionSonarLabel.{TextIdentifier}"));
+            if (!string.IsNullOrEmpty(sonarLabelTag))
+            {
+                SonarLabel = SonarLabel.Fallback(sonarLabelTag);
+            }
 
             SonarIconIdentifier = element.GetAttributeIdentifier("sonaricon", "");
 

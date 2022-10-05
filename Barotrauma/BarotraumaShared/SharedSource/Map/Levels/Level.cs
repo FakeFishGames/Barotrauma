@@ -2932,7 +2932,7 @@ namespace Barotrauma
         }
 
         /// <param name="rotation">Used by clients to set the rotation for the resources</param>
-        public List<Item> GenerateMissionResources(ItemPrefab prefab, int requiredAmount, PositionType positionType, out float rotation)
+        public List<Item> GenerateMissionResources(ItemPrefab prefab, int requiredAmount, PositionType positionType, out float rotation, IEnumerable<Cave> targetCaves = null)
         {
             var allValidLocations = GetAllValidClusterLocations();
             var placedResources = new List<Item>();
@@ -2995,6 +2995,12 @@ namespace Barotrauma
                 DebugConsole.ThrowError($"Unexpected PositionType (\"{positionType}\") for mineral mission resources: mineral spawning might not work as expected.");
             }
 
+            if (targetCaves != null && targetCaves.Any())
+            {
+                // If resources are placed inside a cave, make sure all of them are placed inside the same one
+                allValidLocations.RemoveAll(l => targetCaves.None(c => c.Area.Contains(l.EdgeCenter)));
+            }
+
             var poi = PositionsOfInterest.GetRandom(p => p.PositionType == positionType, randSync: Rand.RandSync.ServerAndClient);
             Vector2 poiPos = poi.Position.ToVector2();
             allValidLocations.Sort((x, y) => Vector2.DistanceSquared(poiPos, x.EdgeCenter)
@@ -3002,7 +3008,10 @@ namespace Barotrauma
             float maxResourceOverlap = 0.4f;
             var selectedLocation = allValidLocations.FirstOrDefault(l =>
                 Vector2.Distance(l.Edge.Point1, l.Edge.Point2) is float edgeLength &&
+                !l.Edge.OutsideLevel &&
                 requiredAmount <= (int)Math.Floor(edgeLength / ((1.0f - maxResourceOverlap) * prefab.Size.X)));
+
+
             if (selectedLocation.Edge == null)
             {
                 //couldn't find a long enough edge, find the largest one
@@ -3028,10 +3037,10 @@ namespace Barotrauma
             static bool IsOnMainPath(ClusterLocation location) => location.Edge.NextToMainPath;
             static bool IsOnSidePath(ClusterLocation location) => location.Edge.NextToSidePath;
             static bool IsInCave(ClusterLocation location) => location.Edge.NextToCave;
-            bool IsInAbyssCave(ClusterLocation location) => location.EdgeCenter.Y > AbyssArea.Bottom;
+            bool IsInAbyssCave(ClusterLocation location) => location.EdgeCenter.Y < AbyssStart;
             void RemoveInvalidLocations(Predicate<ClusterLocation> match)
             {
-                allValidLocations.RemoveAll(match);
+                allValidLocations.RemoveAll(l => !match(l));
             }
         }
 

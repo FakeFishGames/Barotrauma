@@ -84,9 +84,10 @@ namespace Barotrauma
 
         public readonly List<(XElement element, float commonness)> ItemSets = new List<(XElement element, float commonness)>();
         public readonly List<(XElement element, float commonness)> CustomCharacterInfos = new List<(XElement element, float commonness)>();
-		public readonly Identifier NpcSetIdentifier;
 
-		public HumanPrefab(ContentXElement element, ContentFile file, Identifier npcSetIdentifier) : base(file, element)
+        public readonly Identifier NpcSetIdentifier;
+
+        public HumanPrefab(ContentXElement element, ContentFile file, Identifier npcSetIdentifier) : base(file, element.GetAttributeIdentifier("identifier", ""))
         {
             SerializableProperty.DeserializeProperties(this, element);
             Element = element;

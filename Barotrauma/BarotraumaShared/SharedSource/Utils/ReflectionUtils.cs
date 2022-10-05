@@ -23,16 +23,16 @@ namespace Barotrauma
             return cachedNonAbstractTypes[assembly].Where(t => t.IsSubclassOf(typeof(T)));
         }
 
-        public static Option<T1> ParseDerived<T1>(string str)
+        public static Option<TBase> ParseDerived<TBase, TInput>(TInput input) where TInput : notnull
         {
-            static Option<T1> none() => Option<T1>.None();
+            static Option<TBase> none() => Option<TBase>.None();
             
-            var derivedTypes = GetDerivedNonAbstract<T1>();
+            var derivedTypes = GetDerivedNonAbstract<TBase>();
 
-            Option<T1> parseOfType(Type t)
+            Option<TBase> parseOfType(Type t)
             {
-                //every T1 type is expected to have a method with the following signature:
-                //  public static Option<T> Parse(string str)
+                //every TBase type is expected to have a method with the following signature:
+                //  public static Option<T> Parse(TInput str)
                 var parseFunc = t.GetMethod("Parse", BindingFlags.Public | BindingFlags.Static);
                 if (parseFunc is null) { return none(); }
                 
@@ -44,14 +44,17 @@ namespace Barotrauma
                 if (returnType.GetGenericTypeDefinition() != typeof(Option<>)) { return none(); }
                 if (returnType.GenericTypeArguments[0] != t) { return none(); }
 
-                //some hacky business to convert from Option<T2> to Option<T1> when we only know T2 at runtime
-                static Option<T1> convert<T2>(Option<T2> option) where T2 : T1
-                    => option.Select(v => (T1)v);
-                Func<Option<T1>, Option<T1>> f = convert;
-                var constructedConverter = f.Method.GetGenericMethodDefinition().MakeGenericMethod(typeof(T1), t);
+                //some hacky business to convert from Option<T2> to Option<TBase> when we only know T2 at runtime
+                static Option<TBase> convert<T2>(Option<T2> option) where T2 : TBase
+                    => option.Select(v => (TBase)v);
+                Func<Option<TBase>, Option<TBase>> f = convert;
+                var genericArgs = f.Method.GetGenericArguments();
+                genericArgs[^1] = t;
+                var constructedConverter =
+                    f.Method.GetGenericMethodDefinition().MakeGenericMethod(genericArgs);
 
-                return constructedConverter.Invoke(null, new object?[] { parseFunc.Invoke(null, new object[] { str }) })
-                    as Option<T1> ?? none();
+                return constructedConverter.Invoke(null, new[] { parseFunc.Invoke(null, new object[] { input }) })
+                    as Option<TBase> ?? none();
             }
 
             return derivedTypes.Select(parseOfType).FirstOrDefault(t => t.IsSome()) ?? none();

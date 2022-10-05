@@ -86,7 +86,7 @@ namespace Barotrauma
             get;
             private set;
         }
-        private void ParseSubElementsClient(ContentXElement element)
+        private void ParseSubElementsClient(ContentXElement element, ItemPrefab variantOf)
         {
             UpgradePreviewSprite = null;
             UpgradePreviewScale = 1f;
@@ -121,39 +121,39 @@ namespace Barotrauma
                         }
                     case "upgradepreviewsprite":
                         {
-                            string iconFolder = GetTexturePath(subElement);
+                            string iconFolder = GetTexturePath(subElement, variantOf);
                             UpgradePreviewSprite = new Sprite(subElement, iconFolder, lazyLoad: true);
                             UpgradePreviewScale = subElement.GetAttributeFloat("scale", 1.0f);
                         }
                         break;
                     case "inventoryicon":
                         {
-                            string iconFolder = GetTexturePath(subElement);
+                            string iconFolder = GetTexturePath(subElement, variantOf);
                             InventoryIcon = new Sprite(subElement, iconFolder, lazyLoad: true);
                         }
                         break;
                     case "minimapicon":
                         {
-                            string iconFolder = GetTexturePath(subElement);
+                            string iconFolder = GetTexturePath(subElement, variantOf);
                             MinimapIcon = new Sprite(subElement, iconFolder, lazyLoad: true);
                         }
                         break;
                     case "infectedsprite":
                         {
-                            string iconFolder = GetTexturePath(subElement);
+                            string iconFolder = GetTexturePath(subElement, variantOf);
 
                             InfectedSprite = new Sprite(subElement, iconFolder, lazyLoad: true);
                         }
                         break;
                     case "damagedinfectedsprite":
                         {
-                            string iconFolder = GetTexturePath(subElement);
+                            string iconFolder = GetTexturePath(subElement, variantOf);
 
                             DamagedInfectedSprite = new Sprite(subElement, iconFolder, lazyLoad: true);
                         }
                         break;
                     case "brokensprite":
-                        string brokenSpriteFolder = GetTexturePath(subElement);
+                        string brokenSpriteFolder = GetTexturePath(subElement, variantOf);
 
                         var brokenSprite = new BrokenItemSprite(
                             new Sprite(subElement, brokenSpriteFolder, lazyLoad: true),
@@ -169,7 +169,7 @@ namespace Barotrauma
                         brokenSprites.Insert(spriteIndex, brokenSprite);
                         break;
                     case "decorativesprite":
-                        string decorativeSpriteFolder = GetTexturePath(subElement);
+                        string decorativeSpriteFolder = GetTexturePath(subElement, variantOf);
 
                         int groupID = 0;
                         DecorativeSprite decorativeSprite = null;
@@ -191,7 +191,7 @@ namespace Barotrauma
 
                         break;
                     case "containedsprite":
-                        string containedSpriteFolder = GetTexturePath(subElement);
+                        string containedSpriteFolder = GetTexturePath(subElement, variantOf);
                         var containedSprite = new ContainedItemSprite(subElement, containedSpriteFolder, lazyLoad: true);
                         if (containedSprite.Sprite != null)
                         {
@@ -229,6 +229,7 @@ namespace Barotrauma
                         Submarine = Submarine.MainSub
                     };
                     item.SetTransform(ConvertUnits.ToSimUnits(Submarine.MainSub == null ? item.Position : item.Position - Submarine.MainSub.Position), 0.0f);
+                    item.GetComponent<Items.Components.Door>()?.RefreshLinkedGap();
                     item.FindHull();
                     item.Submarine = Submarine.MainSub;
 

@@ -20,7 +20,6 @@ namespace Barotrauma.Networking
         public bool InGame;
         public bool HasPermissions;
         public bool IsOwner;
-        public bool AllowKicking;
         public bool IsDownloading;
     }
     
@@ -205,15 +204,7 @@ namespace Barotrauma.Networking
         {
             votes[(int)voteType] = value;
         }
-
-        public void ResetVotes()
-        {
-            for (int i = 0; i < votes.Length; i++)
-            {
-                votes[i] = null;
-            }
-        }
-               
+                       
         public bool SessionOrAccountIdMatches(string userId)
             => (AccountId.IsSome() && Networking.AccountId.Parse(userId) == AccountId)
                || (byte.TryParse(userId, out byte sessionId) && SessionId == sessionId);

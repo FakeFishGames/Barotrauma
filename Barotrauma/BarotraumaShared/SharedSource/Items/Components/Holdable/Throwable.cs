@@ -111,6 +111,12 @@ namespace Barotrauma.Items.Components
             }
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, picker);
+            //return if the status effect got rid of the picker somehow
+            if (picker == null || picker.Removed || !picker.HeldItems.Contains(item))
+            {
+                IsActive = false;
+                return;
+            }
 
             if (item.body.Dir != picker.AnimController.Dir) { item.FlipX(relativeToSub: false); }
 

@@ -353,7 +353,7 @@ namespace Barotrauma
                     // Check for duplicate binds when introducing new binds
                     foreach (var defaultBinding in defaultBindings)
                     {
-                        if (!savedBindings.ContainsKey(defaultBinding.Key))
+                        if (!IsSetToNone(defaultBinding.Value) && !savedBindings.ContainsKey(defaultBinding.Key))
                         {
                             foreach (var savedBinding in savedBindings)
                             {
@@ -373,6 +373,8 @@ namespace Barotrauma
                                 }
                             }
                         }
+
+                        static bool IsSetToNone(KeyOrMouse keyOrMouse) => keyOrMouse == Keys.None && keyOrMouse == MouseButton.None;
                     }
 
                     // Clear the old chat binds for configs saved before the introduction of the new chat binds

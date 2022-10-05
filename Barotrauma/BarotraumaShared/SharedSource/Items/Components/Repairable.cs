@@ -603,6 +603,9 @@ namespace Barotrauma.Items.Components
         private bool ShouldDeteriorate()
         {
             if (Level.IsLoadedFriendlyOutpost) { return false; }
+#if CLIENT
+            if (GameMain.GameSession?.GameMode is TutorialMode) { return false; }
+#endif
 
             if (LastActiveTime > Timing.TotalTime) { return true; }
             foreach (ItemComponent ic in item.Components)

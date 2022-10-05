@@ -204,15 +204,7 @@ namespace Barotrauma
 
             currentHighestParent = FindHighestParent();
             currentHighestParent.GUIComponent.OnAddedToGUIUpdateList += AddListBoxToGUIUpdateList;
-            rectT.ParentChanged += (RectTransform newParent) =>
-            {
-                currentHighestParent.GUIComponent.OnAddedToGUIUpdateList -= AddListBoxToGUIUpdateList;
-                if (newParent != null)
-                {
-                    currentHighestParent = FindHighestParent();
-                    currentHighestParent.GUIComponent.OnAddedToGUIUpdateList += AddListBoxToGUIUpdateList;
-                }
-            };
+            rectT.ParentChanged += _ => RefreshListBoxParent();
         }
 
 
@@ -396,6 +388,15 @@ namespace Barotrauma
             return true;
         }
 
+        public void RefreshListBoxParent()
+        {
+            currentHighestParent.GUIComponent.OnAddedToGUIUpdateList -= AddListBoxToGUIUpdateList;
+            if (RectTransform.Parent == null) { return; }
+
+            currentHighestParent = FindHighestParent();
+            currentHighestParent.GUIComponent.OnAddedToGUIUpdateList += AddListBoxToGUIUpdateList;
+        }
+        
         private void AddListBoxToGUIUpdateList(GUIComponent parent)
         {
             //the parent is not our parent anymore :(
@@ -403,11 +404,13 @@ namespace Barotrauma
             //and somewhere between this component and the higher parent a component was removed
             for (int i = 1; i < parentHierarchy.Count; i++)
             {
-                if (!parentHierarchy[i].IsParentOf(parentHierarchy[i - 1], recursive: false))
+                if (parentHierarchy[i].IsParentOf(parentHierarchy[i - 1], recursive: false))
                 {
-                    parent.OnAddedToGUIUpdateList -= AddListBoxToGUIUpdateList;
-                    return;
+                    continue;
                 }
+
+                parent.OnAddedToGUIUpdateList -= AddListBoxToGUIUpdateList;
+                return;
             }
 
             if (Dropped)

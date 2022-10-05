@@ -356,7 +356,7 @@ namespace Barotrauma
             return identifier;
         }
 
-		private void LoadElements(LevelObjectPrefabsFile file, ContentXElement element, int parentTriggerIndex)
+        private void LoadElements(LevelObjectPrefabsFile file, ContentXElement element, int parentTriggerIndex)
         {
             int propertyOverrideCount = 0;
             foreach (var subElement in element.Elements())
@@ -413,6 +413,7 @@ namespace Barotrauma
         }
         
         partial void InitProjSpecific(ContentXElement element);
+
 
         public float GetCommonness(CaveGenerationParams generationParams, bool requireCaveSpecificOverride = true)
         {

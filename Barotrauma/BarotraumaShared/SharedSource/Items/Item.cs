@@ -422,6 +422,8 @@ namespace Barotrauma
             }
         }
 
+        public Color? HighlightColor;
+
 
         [Serialize("", IsPropertySaveable.Yes)]
 
@@ -523,6 +525,7 @@ namespace Barotrauma
             {
                 float prevConditionPercentage = ConditionPercentage;
                 healthMultiplier = MathHelper.Clamp(value, 0.0f, float.PositiveInfinity);
+                RecalculateConditionValues();
                 condition = MaxCondition * prevConditionPercentage / 100.0f;
                 RecalculateConditionValues();
             }
@@ -750,6 +753,9 @@ namespace Barotrauma
         {
             get { return Prefab.Linkable; }
         }
+
+        public float WorldPositionX => WorldPosition.X;
+        public float WorldPositionY => WorldPosition.Y;
 
         /// <summary>
         /// Can be used to move the item from XML (e.g. to correct the positions of items whose sprite origin has been changed)
@@ -1913,8 +1919,11 @@ namespace Barotrauma
                     if (!wasInWater && CurrentHull != null && body != null && body.LinearVelocity.Y < -1.0f)
                     {
                         Splash();
-                        //slow the item down (not physically accurate, but looks good enough)
-                        body.LinearVelocity *= 0.2f;                        
+                        if (GetComponent<Projectile>() is not { IsActive: true })
+                        {
+                            //slow the item down (not physically accurate, but looks good enough)
+                            body.LinearVelocity *= 0.2f;
+                        }                   
                     }
 
                     Item container = this.Container;
@@ -2179,7 +2188,7 @@ namespace Barotrauma
         /// <summary>
         /// Note: This function generates garbage and might be a bit too heavy to be used once per frame.
         /// </summary>
-        public List<T> GetConnectedComponents<T>(bool recursive = false, bool allowTraversingBackwards = true) where T : ItemComponent
+        public List<T> GetConnectedComponents<T>(bool recursive = false, bool allowTraversingBackwards = true, Func<Connection, bool> connectionFilter = null) where T : ItemComponent
         {
             List<T> connectedComponents = new List<T>();
 
@@ -2195,6 +2204,7 @@ namespace Barotrauma
 
             foreach (Connection c in connectionPanel.Connections)
             {
+                if (connectionFilter != null && !connectionFilter.Invoke(c)) { continue; }
                 var recipients = c.Recipients;
                 foreach (Connection recipient in recipients)
                 {
@@ -3339,10 +3349,9 @@ namespace Barotrauma
                 item.PurchasedNewSwap = false;
             }
 
-            float condition = element.GetAttributeFloat("condition", item.MaxCondition);
-            item.condition = MathHelper.Clamp(condition, 0, item.MaxCondition);
+            item.condition = element.GetAttributeFloat("condition", item.condition);
+            item.condition = MathHelper.Clamp(item.condition, 0, item.MaxCondition);
             item.lastSentCondition = item.condition;
-
             item.RecalculateConditionValues();
             item.SetActiveSprite();
 

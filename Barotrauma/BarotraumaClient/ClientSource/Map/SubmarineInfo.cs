@@ -93,10 +93,11 @@ namespace Barotrauma
         {
             float leftPanelWidth = 0.6f;
             float rightPanelWidth = 0.4f / leftPanelWidth;
-            LocalizedString className = !HasTag(SubmarineTag.Shuttle)
-                ? $"{TextManager.Get($"submarineclass.{SubmarineClass}")} ({TextManager.Get($"submarinetier.{Tier}")})"
-                : TextManager.Get("shuttle");
-
+            LocalizedString className = !HasTag(SubmarineTag.Shuttle) ?
+                TextManager.GetWithVariables("submarine.classandtier",
+                    ("[class]", TextManager.Get($"submarineclass.{SubmarineClass}")),
+                    ("[tier]", TextManager.Get($"submarinetier.{Tier}"))) :
+                TextManager.Get("shuttle");
 
             int classHeight = (int)GUIStyle.SubHeadingFont.MeasureString(className).Y;
             int leftPanelWidthInt = (int)(parent.Rect.Width * leftPanelWidth); 

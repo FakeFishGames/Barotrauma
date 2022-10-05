@@ -8,9 +8,6 @@ using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 using Barotrauma.Networking;
-#if SERVER
-using Barotrauma.Networking;
-#endif
 
 namespace Barotrauma
 {
@@ -80,7 +77,7 @@ namespace Barotrauma
         {
             if (ID != Entity.NullEntityID)
             {
-                DebugConsole.ShowError("Error setting SoldItem.ID: ID has already been set and should not be changed.");
+                DebugConsole.LogError("Error setting SoldItem.ID: ID has already been set and should not be changed.");
                 return;
             }
             ID = id;
@@ -128,7 +125,7 @@ namespace Barotrauma
             {
                 if (Item != null)
                 {
-                    DebugConsole.ShowError($"Trying to set SoldEntity.Item, but it's already set!\n{Environment.StackTrace.CleanupStackTrace()}");
+                    DebugConsole.LogError($"Trying to set SoldEntity.Item, but it's already set!\n{Environment.StackTrace.CleanupStackTrace()}");
                     return;
                 }
                 Item = item;

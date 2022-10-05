@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Barotrauma.IO;
 using System.Xml.Linq;
+using System.Diagnostics;
 
 namespace Barotrauma
 {
@@ -20,6 +21,8 @@ namespace Barotrauma
 
         public readonly string? RawValue;
 
+        // the package that current path originates
+        // context of the package
         public readonly ContentPackage? ContentPackage;
 
         private string? cachedValue;
@@ -49,16 +52,17 @@ namespace Barotrauma
                     .Select(m => m.Groups[1].Value.Trim().ToIdentifier())
                     .Distinct().Where(id => !id.IsEmpty && id != modName).ToHashSet();
                 cachedValue = RawValue!;
-                if (!(ContentPackage is null))
+                // vanilla package's filelist.xml is not at package root.
+                if (!(ContentPackage is null) && !(ContentPackage is CorePackage))
                 {
                     string modPath = Path.GetDirectoryName(ContentPackage.Path)!;
                     cachedValue = cachedValue
                         .Replace(ModDirStr, modPath, StringComparison.OrdinalIgnoreCase)
                         .Replace(string.Format(OtherModDirFmt, ContentPackage.Name), modPath, StringComparison.OrdinalIgnoreCase);
-                    if (ContentPackage.SteamWorkshopId != 0)
+                    if (ContentPackage.UgcId.TryUnwrap(out var ugcId))
                     {
                         cachedValue = cachedValue
-                            .Replace(string.Format(OtherModDirFmt, ContentPackage.SteamWorkshopId.ToString(CultureInfo.InvariantCulture)), modPath, StringComparison.OrdinalIgnoreCase);
+                            .Replace(string.Format(OtherModDirFmt, ugcId.StringRepresentation), modPath, StringComparison.OrdinalIgnoreCase);
                     }
                 }
                 var allPackages = ContentPackageManager.AllPackages;
@@ -67,14 +71,15 @@ namespace Barotrauma
 #endif
                 foreach (Identifier otherModName in otherMods)
                 {
-                    if (!UInt64.TryParse(otherModName.Value, out UInt64 workshopId)) { workshopId = 0; }
+                    Option<ContentPackageId> ugcId = ContentPackageId.Parse(otherModName.Value);
                     ContentPackage? otherMod =
-                        allPackages.FirstOrDefault(p => workshopId != 0 && p.SteamWorkshopId != 0 && workshopId == p.SteamWorkshopId)
+                        allPackages.FirstOrDefault(p => ugcId.IsSome() && ugcId == p.UgcId)
                         ?? allPackages.FirstOrDefault(p => p.Name == otherModName)
                         ?? allPackages.FirstOrDefault(p => p.NameMatches(otherModName))
                         ?? throw new MissingContentPackageException(ContentPackage, otherModName.Value);
-                    cachedValue = cachedValue.Replace(string.Format(OtherModDirFmt, otherModName.Value), Path.GetDirectoryName(otherMod.Path));
-                }
+                    Debug.Assert(!(otherMod is CorePackage));
+					cachedValue = cachedValue.Replace(string.Format(OtherModDirFmt, otherModName.Value), Path.GetDirectoryName(otherMod.Path));
+				}
                 cachedValue = cachedValue.CleanUpPath();
                 return cachedValue;
             }
@@ -99,7 +104,9 @@ namespace Barotrauma
                 {
                     if (!UInt64.TryParse(cachedPackageName, out UInt64 workshopId)) { workshopId = 0; }
                     ContentPackage? otherMod =
-                        allPackages.FirstOrDefault(p => workshopId != 0 && p.SteamWorkshopId != 0 && workshopId == p.SteamWorkshopId)
+                        allPackages.FirstOrDefault(p => {
+                            return p.UgcId.TryUnwrap(out ContentPackageId other_id) && other_id.ToString().Equals(cachedPackageName);
+                        })
                         ?? allPackages.FirstOrDefault(p => p.Name == cachedPackageName)
                         ?? allPackages.FirstOrDefault(p => p.NameMatches(cachedPackageName!))
                         ?? throw new MissingContentPackageException(ContentPackage, cachedPackageName);

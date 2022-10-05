@@ -211,7 +211,7 @@ namespace Barotrauma.Particles
 
         //----------------------------------------------------
 
-        public ParticlePrefab(ContentXElement element, ContentFile file) : base(file, element)
+        public ParticlePrefab(ContentXElement element, ContentFile file) : base(file, element.NameAsIdentifier())
         {
             Sprites = new List<Sprite>();
 
@@ -277,12 +277,7 @@ namespace Barotrauma.Particles
             }
         }
 
-		protected override Identifier DetermineIdentifier(XElement element)
-		{
-			return element.NameAsIdentifier();
-		}
-
-		public Vector2 CalculateEndPosition(Vector2 startPosition, Vector2 velocity)
+        public Vector2 CalculateEndPosition(Vector2 startPosition, Vector2 velocity)
         {
             //endPos = x + vt + 1/2 * at^2
             return startPosition + velocity * LifeTime + 0.5f * VelocityChangeDisplay * LifeTime * LifeTime;

@@ -761,6 +761,7 @@ namespace Barotrauma
                             item.PendingItemSwap = null;
                         }
                     }
+                    campaign.CampaignUI?.UpgradeStore?.RequestRefresh();
                 }
             }
 

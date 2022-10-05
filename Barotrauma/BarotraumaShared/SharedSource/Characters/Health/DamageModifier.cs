@@ -86,6 +86,28 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError("Error in DamageModifier config (" + parentDebugName + ") - define afflictions using identifiers or types instead of names.");
             }
+            foreach (var afflictionType in parsedAfflictionTypes)
+            {
+                if (!AfflictionPrefab.Prefabs.Any(p => p.AfflictionType == afflictionType))
+                {
+                    createWarningOrError($"Potentially invalid damage modifier in \"{parentDebugName}\". Could not find any afflictions of the type \"{afflictionType}\". Did you mean to use an affliction identifier instead?");
+                }
+            }
+            foreach (var afflictionIdentifier in parsedAfflictionIdentifiers)
+            {
+                if (!AfflictionPrefab.Prefabs.ContainsKey(afflictionIdentifier))
+                {
+                    createWarningOrError($"Potentially invalid damage modifier in \"{parentDebugName}\". Could not find any afflictions with the identifier \"{afflictionIdentifier}\". Did you mean to use an affliction type instead?");
+                }
+            }
+            static void createWarningOrError(string msg)
+            {
+#if DEBUG
+                DebugConsole.ThrowError(msg);
+#else
+                DebugConsole.AddWarning(msg);
+#endif
+            }
         }
 
         private void ParseAfflictionTypes()

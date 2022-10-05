@@ -13,7 +13,7 @@ namespace Barotrauma
         public readonly Sprite Icon;
         public readonly Color IconColor;
 
-        public TraitorMissionPrefab(ContentXElement element, TraitorMissionsFile file) : base(file, element)
+        public TraitorMissionPrefab(ContentXElement element, TraitorMissionsFile file) : base(file, element.GetAttributeIdentifier("identifier", Identifier.Empty))
         {
             foreach (var subElement in element.Elements())
             {

@@ -153,7 +153,7 @@ namespace Barotrauma.Items.Components
             {
                 if (GetAvailableInstantaneousBatteryPower() >= PowerConsumption)
                 {
-                    List<PowerContainer> batteries = GetConnectedBatteries();
+                    List<PowerContainer> batteries = GetDirectlyConnectedBatteries();
                     float neededPower = PowerConsumption;
                     while (neededPower > 0.0001f && batteries.Count > 0)
                     {

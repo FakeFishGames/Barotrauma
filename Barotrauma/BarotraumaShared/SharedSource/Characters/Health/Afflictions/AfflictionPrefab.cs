@@ -399,7 +399,7 @@ namespace Barotrauma
             }
         }
 
-        public AfflictionPrefab(ContentXElement element, AfflictionsFile file, Type type) : base(file, element)
+        public AfflictionPrefab(ContentXElement element, AfflictionsFile file, Type type) : base(file, element.GetAttributeIdentifier("identifier", ""))
         {
             configElement = element;
             

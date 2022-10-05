@@ -38,7 +38,7 @@ namespace Barotrauma
 
         public readonly float Priority;
 
-        public ItemRepairPriority(XElement element, JobsFile file) : base(file, element.FromContent(file.Path))
+        public ItemRepairPriority(XElement element, JobsFile file) : base(file, element.GetAttributeIdentifier("tag", Identifier.Empty))
         {
             Priority = element.GetAttributeFloat("priority", -1f);
             if (Priority < 0)
@@ -47,12 +47,7 @@ namespace Barotrauma
             }
         }
 
-		protected override Identifier DetermineIdentifier(XElement element)
-		{
-			return element.GetAttributeIdentifier("tag", Identifier.Empty);
-		}
-
-		public override void Dispose() { }
+        public override void Dispose() { }
     }
 
     class JobVariant
@@ -70,13 +65,7 @@ namespace Barotrauma
     {
         public static readonly PrefabCollection<JobPrefab> Prefabs = new PrefabCollection<JobPrefab>();
 
-        private bool disposed = false;
-        public override void Dispose()
-        {
-            if (disposed) { return; }
-            disposed = true;
-            Prefabs.Remove(this);
-        }
+        public override void Dispose() { }
 
         private static readonly Dictionary<Identifier, float> _itemRepairPriorities = new Dictionary<Identifier, float>();
         /// <summary>
@@ -220,7 +209,7 @@ namespace Barotrauma
 
         public int Variants { get; private set; }
 
-        public JobPrefab(ContentXElement element, JobsFile file) : base(file, element)
+        public JobPrefab(ContentXElement element, JobsFile file) : base(file, element.GetAttributeIdentifier("identifier", ""))
         {
             SerializableProperty.DeserializeProperties(this, element);
 

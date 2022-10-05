@@ -50,7 +50,7 @@ namespace Barotrauma
         public Color IconColor { get; }
 #endif
 
-        public FactionPrefab(ContentXElement element, FactionsFile file) : base(file, element)
+        public FactionPrefab(ContentXElement element, FactionsFile file) : base(file, element.GetAttributeIdentifier("identifier", string.Empty))
         {
             MenuOrder = element.GetAttributeInt("menuorder", 0);
             MinReputation = element.GetAttributeInt("minreputation", -100);

@@ -22,7 +22,7 @@ namespace Barotrauma
             private set;
         }
 
-        public TalentPrefab(ContentXElement element, TalentsFile file) : base(file, element)
+        public TalentPrefab(ContentXElement element, TalentsFile file) : base(file, element.GetAttributeIdentifier("identifier", Identifier.Empty))
         {
             ConfigElement = element;
 
@@ -56,11 +56,6 @@ namespace Barotrauma
             }
         }
 
-        private bool disposed = false;
-        public override void Dispose()
-        {
-            if (disposed) { return; }
-            disposed = true;
-        }
+        public override void Dispose() { }
     }
 }

@@ -292,28 +292,12 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Remove the character from the crew (and crew menus).
-        /// </summary>
-        /// <param name="character">The character to remove</param>
-        /// <param name="removeInfo">If the character info is also removed, the character will not be visible in the round summary.</param>
-        public void RemoveCharacter(Character character, bool removeInfo = false, bool resetCrewListIndex = true)
-        {
-            if (character == null)
-            {
-                DebugConsole.ThrowError("Tried to remove a null character from CrewManager.\n" + Environment.StackTrace.CleanupStackTrace());
-                return;
-            }
-            characters.Remove(character);
-            if (removeInfo) { characterInfos.Remove(character.Info); }
-            if (resetCrewListIndex) { ResetCrewListIndex(character); }
-        }
-
-        /// <summary>
         /// Add character to the list without actually adding it to the crew
         /// </summary>
         public GUIComponent AddCharacterToCrewList(Character character)
         {
             if (character == null) { return null; }
+            if (crewList.Content.Children.Any(c => c.UserData as Character == character)) { return null; }
 
             var background = new GUIFrame(
                 new RectTransform(crewListEntrySize, parent: crewList.Content.RectTransform, anchor: Anchor.TopRight),
@@ -509,7 +493,15 @@ namespace Barotrauma
             return background;
         }
 
-        private void SetCharacterComponentTooltip(GUIComponent characterComponent)
+        public void RemoveCharacterFromCrewList(Character character)
+        {
+            if (crewList?.Content.GetChildByUserData(character) is { } component)
+            {
+                crewList.RemoveChild(component);
+            }
+        }
+
+        private static void SetCharacterComponentTooltip(GUIComponent characterComponent)
         {
             if (!(characterComponent?.UserData is Character character)) { return; }
             if (character.Info?.Job?.Prefab == null) { return; }
@@ -2821,7 +2813,7 @@ namespace Barotrauma
             return node;
         }
 
-        private struct MinimapNodeData
+        public struct MinimapNodeData
         {
             public Order Order;
         }
@@ -3516,9 +3508,9 @@ namespace Barotrauma
             if (node == null || characterContext != null) { return false; }
             if (node.UserData is Order nodeOrder)
             {
-                return !nodeOrder.TargetAllCharacters && !nodeOrder.Prefab.HasOptions &&
-                    (!nodeOrder.MustSetTarget || itemContext != null ||
-                     nodeOrder.GetMatchingItems(GetTargetSubmarine(), true, interactableFor: Character.Controlled).Count < 2);
+                return !nodeOrder.TargetAllCharacters &&
+                    (!nodeOrder.Prefab.HasOptions || !nodeOrder.Option.IsEmpty) &&
+                    (!nodeOrder.MustSetTarget || itemContext != null || nodeOrder.GetMatchingItems(GetTargetSubmarine(), true, interactableFor: Character.Controlled).Count < 2);
             }
             return false;
         }

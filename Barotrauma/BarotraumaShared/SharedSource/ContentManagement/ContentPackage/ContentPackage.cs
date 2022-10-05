@@ -29,25 +29,25 @@ namespace Barotrauma
         public readonly ImmutableArray<string> AltNames;
         public readonly string Path;
         public string Dir => Barotrauma.IO.Path.GetDirectoryName(Path) ?? "";
-        public readonly UInt64 SteamWorkshopId;
+        public readonly Option<ContentPackageId> UgcId;
 
         public readonly Version GameVersion;
         public readonly string ModVersion;
         public Md5Hash Hash { get; private set; }
-        public readonly DateTime? InstallTime;
+        public readonly Option<DateTime> InstallTime;
 
         public ImmutableArray<ContentFile> Files { get; private set; }
         public ImmutableArray<ContentFile.LoadError> Errors { get; private set; }
 
         public async Task<bool> IsUpToDate()
         {
-            if (SteamWorkshopId != 0 && InstallTime.HasValue)
-            {
-                Steamworks.Ugc.Item? item = await SteamManager.Workshop.GetItem(SteamWorkshopId);
-                if (item is null) { return true; }
-                return item.Value.LatestUpdateTime <= InstallTime;
-            }
-            return true;
+            if (!UgcId.TryUnwrap(out var ugcId)) { return true; }
+            if (!(ugcId is SteamWorkshopId steamWorkshopId)) { return true; }
+            if (!InstallTime.TryUnwrap(out var installTime)) { return true; }
+            
+            Steamworks.Ugc.Item? item = await SteamManager.Workshop.GetItem(steamWorkshopId.Value);
+            if (item is null) { return true; }
+            return item.Value.LatestUpdateTime <= installTime;
         }
 
         public int Index => ContentPackageManager.EnabledPackages.IndexOf(this);
@@ -66,18 +66,19 @@ namespace Barotrauma
             AltNames = rootElement.GetAttributeStringArray("altnames", Array.Empty<string>())
                 .Select(n => n.Trim()).ToImmutableArray();
             AssertCondition(!string.IsNullOrEmpty(Name), "Name is null or empty");
-            SteamWorkshopId = rootElement.GetAttributeUInt64("steamworkshopid", 0);
+
+            UInt64 steamWorkshopId = rootElement.GetAttributeUInt64("steamworkshopid", 0);
+            
+            UgcId = steamWorkshopId != 0
+                ? Option<ContentPackageId>.Some(new SteamWorkshopId(steamWorkshopId))
+                : Option<ContentPackageId>.None();
 
             GameVersion = rootElement.GetAttributeVersion("gameversion", GameMain.Version);
             ModVersion = rootElement.GetAttributeString("modversion", DefaultModVersion);
-            if (rootElement.Attribute("installtime") != null)
-            {
-                InstallTime = ToolBox.Epoch.ToDateTime(rootElement.GetAttributeUInt("installtime", 0));
-            }
-            else
-            {
-                InstallTime = null;
-            }
+            UInt64 installTimeUnix = rootElement.GetAttributeUInt64("installtime", 0);
+            InstallTime = installTimeUnix != 0
+                ? Option<DateTime>.Some(ToolBox.Epoch.ToDateTime(installTimeUnix))
+                : Option<DateTime>.None();
 
             var fileResults = rootElement.Elements()
                 .Select(e => ContentFile.CreateFromXElement(this, e))
@@ -122,7 +123,18 @@ namespace Barotrauma
             => NameMatches(name.ToIdentifier());
         
         public bool StringMatches(string workshop_id_or_name)
-            => (UInt64.TryParse(workshop_id_or_name, out UInt64 res)&& (res != 0 && res == SteamWorkshopId)) || NameMatches(workshop_id_or_name);
+            => (UgcId.Fallback(ContentPackageId.NULL).ToString().Equals(workshop_id_or_name) || NameMatches(workshop_id_or_name));
+
+        public string GetBestEffortId() {
+			if (UgcId.TryUnwrap(out ContentPackageId id))
+			{
+				return id.ToString();
+			}
+			else
+			{
+				return Name;
+			}
+		}
 
         public static ContentPackage? TryLoad(string path)
         {
