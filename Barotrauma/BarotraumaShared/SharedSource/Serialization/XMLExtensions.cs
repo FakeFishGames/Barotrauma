@@ -327,6 +327,25 @@ namespace Barotrauma
             return floatValue;
         }
 
+        public static bool TryGetAttributeInt(this XElement element, string name, out int result)
+        {
+            var attribute = element?.GetAttribute(name);
+            result = default;
+            if (attribute == null) { return false; }
+
+            if (int.TryParse(attribute.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var intVal))
+            {
+                result = intVal;
+                return true;
+            }
+            if (float.TryParse(attribute.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var floatVal))
+            {
+                result = (int)floatVal;
+                return true;
+            }
+            return false;
+        }
+        
         public static int GetAttributeInt(this XElement element, string name, int defaultValue)
         {
             var attribute = element?.GetAttribute(name);

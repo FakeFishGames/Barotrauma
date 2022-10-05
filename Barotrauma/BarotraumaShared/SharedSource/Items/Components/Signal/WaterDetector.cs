@@ -58,6 +58,9 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public bool WaterDetected => isInWater;
+        public int WaterPercentage => GetWaterPercentage(item.CurrentHull);
+
         public WaterDetector(Item item, ContentXElement element)
             : base(item, element)
         {

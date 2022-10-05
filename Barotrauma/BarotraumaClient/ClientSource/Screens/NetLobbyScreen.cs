@@ -666,7 +666,7 @@ namespace Barotrauma
                 OnSelected = (tickbox) =>
                 {
                     if (GameMain.Client == null) { return true; }
-                    ServerInfo info = GameMain.Client.ServerSettings.GetServerListInfo();
+                    ServerInfo info = GameMain.Client.CreateServerInfoFromSettings();
                     if (tickbox.Selected)
                     {
                         GameMain.ServerListScreen.AddToFavoriteServers(info);
@@ -1432,10 +1432,6 @@ namespace Barotrauma
             bool nameChangePending = isGameRunning && GameMain.Client.PendingName != string.Empty && GameMain.Client?.Character?.Name != GameMain.Client.PendingName;
             changesPendingText = null;
 
-            if (isGameRunning)
-            {
-                infoContainer.RectTransform.AbsoluteOffset = new Point(0, (int)(parent.Rect.Height * 0.025f));
-            }
 
             if (TabMenu.PendingChanges)
             {
@@ -1454,7 +1450,6 @@ namespace Barotrauma
             {
                 if (GameMain.Client == null) { return; }
                 string newName = Client.SanitizeName(tb.Text);
-                newName = newName.Replace(":", "").Replace(";", "");
                 if (newName == GameMain.Client.Name) return;
                 if (string.IsNullOrWhiteSpace(newName))
                 {
@@ -1782,6 +1777,10 @@ namespace Barotrauma
 
             // Hide spectate tickbox if spectating is not allowed
             spectateBox.Visible = allowSpectating;
+            if (infoContainer != null)
+            {
+                infoContainer.RectTransform.RelativeSize = new Vector2(infoContainer.RectTransform.RelativeSize.X, spectateBox.Visible ? 0.92f : 0.97f);
+            }
         }
 
         public void SetAutoRestart(bool enabled, float timer = 0.0f)
@@ -2753,25 +2752,24 @@ namespace Barotrauma
             if (GameMain.NetworkMember?.ServerSettings == null) { return; }
 
             PlayStyle playStyle = GameMain.NetworkMember.ServerSettings.PlayStyle;
-            if ((int)playStyle < 0 ||
-                (int)playStyle >= ServerListScreen.PlayStyleBanners.Length)
-            {
-                return;
-            }
 
-            Sprite sprite = ServerListScreen.PlayStyleBanners[(int)playStyle];
+            Sprite sprite = GUIStyle
+                .GetComponentStyle($"PlayStyleBanner.{playStyle}")?
+                .GetSprite(GUIComponent.ComponentState.None);
+            if (sprite is null) { return; }
+            
             float scale = component.Rect.Width / sprite.size.X;
             sprite.Draw(spriteBatch, component.Center, scale: scale);
 
             if (!prevPlayStyle.HasValue || playStyle != prevPlayStyle.Value)
             {
                 var nameText = component.GetChild<GUITextBlock>();
-                nameText.Text = TextManager.Get("servertag." + playStyle);
-                nameText.Color = ServerListScreen.PlayStyleColors[(int)playStyle];
+                nameText.Text = TextManager.Get($"ServerTag.{playStyle}");
+                nameText.Color = sprite.SourceElement.GetAttributeColor("BannerColor") ?? Color.White;
                 nameText.RectTransform.NonScaledSize = (nameText.Font.MeasureString(nameText.Text) + new Vector2(25, 10) * GUI.Scale).ToPoint();
                 prevPlayStyle = playStyle;
 
-                component.ToolTip = TextManager.Get("servertagdescription." + playStyle);
+                component.ToolTip = TextManager.Get($"ServerTagDescription.{playStyle}");
             }
 
             publicOrPrivate.RectTransform.NonScaledSize = (publicOrPrivate.Font.MeasureString(publicOrPrivate.Text) + new Vector2(25, 8) * GUI.Scale).ToPoint();

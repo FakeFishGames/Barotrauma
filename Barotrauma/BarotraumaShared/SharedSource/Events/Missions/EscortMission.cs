@@ -305,7 +305,7 @@ namespace Barotrauma
             return character.LockHands && character.HasTeamChange(TerroristTeamChangeIdentifier);
         }
 
-        public override void End()
+        protected override bool DetermineCompleted()
         {
             if (Submarine.MainSub != null && Submarine.MainSub.AtEndExit)
             {
@@ -321,11 +321,14 @@ namespace Barotrauma
 
                 if (friendliesSurvived && !terroristsSurvived && !vipDied)
                 {
-                    GiveReward();
-                    completed = true;
+                    return true;
                 }
             }
+            return false;
+        }
 
+        protected override void EndMissionSpecific(bool completed)
+        {
             if (!IsClient)
             {
                 foreach (Character character in characters)

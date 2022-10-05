@@ -549,6 +549,10 @@ namespace Barotrauma
             set
             {
                 lockHandsTimer = MathHelper.Clamp(lockHandsTimer + (value ? 1.0f : -0.5f), 0.0f, 10.0f);
+                if (value)
+                {
+                    SelectedCharacter = null;
+                }
 #if CLIENT
                 HintManager.OnHandcuffed(this);
 #endif
@@ -599,13 +603,10 @@ namespace Barotrauma
             get { return selectedCharacter; }
             set
             {
-                if (value == selectedCharacter) return;
-                if (selectedCharacter != null)
-                    selectedCharacter.selectedBy = null;
+                if (value == selectedCharacter) { return; }
+                if (selectedCharacter != null) { selectedCharacter.selectedBy = null; }                   
                 selectedCharacter = value;
-                if (selectedCharacter != null)
-                    selectedCharacter.selectedBy = this;
-
+                if (selectedCharacter != null) {selectedCharacter.selectedBy = this; }
 #if CLIENT
                 CharacterHealth.SetHealthBarVisibility(value == null);
 #endif
@@ -705,6 +706,14 @@ namespace Barotrauma
         public bool InPressure
         {
             get { return CurrentHull == null || CurrentHull.LethalPressure > 5.0f; }
+        }
+
+        /// <summary>
+        /// Can be used by status effects
+        /// </summary>
+        public AnimController.Animation Anim
+        {
+            get { return AnimController?.Anim ?? AnimController.Animation.None; }
         }
 
         public const float KnockbackCooldown = 5.0f;
@@ -2621,7 +2630,7 @@ namespace Barotrauma
                 if (!AllowInput)
                 {
                     FocusedCharacter = null;
-                    if (SelectedCharacter != null) DeselectCharacter();
+                    if (SelectedCharacter != null) { DeselectCharacter(); }
                     return;
                 }
             }
@@ -3637,7 +3646,7 @@ namespace Barotrauma
                     string modifiedMessage = ChatMessage.ApplyDistanceEffect(message.Message, message.MessageType.Value, this, Controlled);
                     if (!string.IsNullOrEmpty(modifiedMessage))
                     {
-                        GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(info.Name, modifiedMessage, message.MessageType.Value, this);
+                        GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(Name, modifiedMessage, message.MessageType.Value, this);
                     }
                 }
 #endif
@@ -4021,6 +4030,7 @@ namespace Barotrauma
             if (newStun > 0.0f)
             {
                 SelectedItem = SelectedSecondaryItem = null;
+                if (SelectedCharacter != null) { DeselectCharacter(); }
             }
             HealthUpdateInterval = 0.0f;
         }

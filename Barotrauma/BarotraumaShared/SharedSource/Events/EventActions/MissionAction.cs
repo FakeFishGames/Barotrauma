@@ -55,7 +55,7 @@ namespace Barotrauma
 
             if (GameMain.GameSession.GameMode is CampaignMode campaign)
             {
-                MissionPrefab prefab = null;
+                Mission unlockedMission = null;
                 var unlockLocation = FindUnlockLocation();
                 if (unlockLocation == null && CreateLocationIfNotFound)
                 {
@@ -72,27 +72,34 @@ namespace Barotrauma
                 {
                     if (!MissionIdentifier.IsEmpty)
                     {
-                        prefab = unlockLocation.UnlockMissionByIdentifier(MissionIdentifier);                    
+                        unlockedMission = unlockLocation.UnlockMissionByIdentifier(MissionIdentifier);                    
                     }
                     else if (!MissionTag.IsEmpty)
                     {
-                        prefab = unlockLocation.UnlockMissionByTag(MissionTag);
+                        unlockedMission = unlockLocation.UnlockMissionByTag(MissionTag);
                     }
                     if (campaign is MultiPlayerCampaign mpCampaign)
                     {
                         mpCampaign.IncrementLastUpdateIdForFlag(MultiPlayerCampaign.NetFlags.MapAndMissions);
                     }
-                    if (prefab != null)
+                    if (unlockedMission != null)
                     {
-                        DebugConsole.NewMessage($"Unlocked mission \"{prefab.Name}\" in the location \"{unlockLocation.Name}\".");
-    #if CLIENT
-                        new GUIMessageBox(string.Empty, TextManager.GetWithVariable("missionunlocked", "[missionname]", prefab.Name), 
-                            Array.Empty<LocalizedString>(), type: GUIMessageBox.Type.InGame, icon: prefab.Icon, relativeSize: new Vector2(0.3f, 0.15f), minSize: new Point(512, 128))
+                        if (unlockedMission.Locations[0] == unlockedMission.Locations[1] || unlockedMission.Locations[1] ==null)
                         {
-                            IconColor = prefab.IconColor
+                            DebugConsole.NewMessage($"Unlocked mission \"{unlockedMission.Name}\" in the location \"{unlockLocation.Name}\".");
+                        }
+                        else
+                        {
+                            DebugConsole.NewMessage($"Unlocked mission \"{unlockedMission.Name}\" in the connection from \"{unlockedMission.Locations[0].Name}\" to \"{unlockedMission.Locations[1].Name}\".");
+                        }
+#if CLIENT
+                        new GUIMessageBox(string.Empty, TextManager.GetWithVariable("missionunlocked", "[missionname]", unlockedMission.Name), 
+                            Array.Empty<LocalizedString>(), type: GUIMessageBox.Type.InGame, icon: unlockedMission.Prefab.Icon, relativeSize: new Vector2(0.3f, 0.15f), minSize: new Point(512, 128))
+                        {
+                            IconColor = unlockedMission.Prefab.IconColor
                         };
-    #else
-                        NotifyMissionUnlock(prefab);
+#else
+                        NotifyMissionUnlock(unlockedMission);
     #endif
                     }
                 }
@@ -138,16 +145,17 @@ namespace Barotrauma
         {
             return $"{ToolBox.GetDebugSymbol(isFinished)} {nameof(MissionAction)} -> ({(MissionIdentifier.IsEmpty ? MissionTag : MissionIdentifier)})";
         }
-        
+
 #if SERVER
-        private void NotifyMissionUnlock(MissionPrefab prefab)
+        private void NotifyMissionUnlock(Mission mission)
         {
             foreach (Client client in GameMain.Server.ConnectedClients)
             {
                 IWriteMessage outmsg = new WriteOnlyMessage();
                 outmsg.WriteByte((byte)ServerPacketHeader.EVENTACTION);
                 outmsg.WriteByte((byte)EventManager.NetworkEventType.MISSION);
-                outmsg.WriteIdentifier(prefab.Identifier);
+                outmsg.WriteIdentifier(mission.Prefab.Identifier);
+                outmsg.WriteString(mission.Name.Value);
                 GameMain.Server.ServerPeer.Send(outmsg, client.Connection, DeliveryMethod.Reliable);
             }
         }

@@ -32,6 +32,8 @@ namespace Barotrauma.Items.Components
         }
         private FabricationRecipe selectedItem;
 
+        public Identifier SelectedItemIdentifier => SelectedItem?.TargetItem.Identifier ?? Identifier.Empty;
+
         private GUIComponent inSufficientPowerWarning;
 
         private FabricationRecipe pendingFabricatedItem;

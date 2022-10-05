@@ -412,14 +412,14 @@ namespace Barotrauma
 #endif       
         }
 
-        public List<Item> GetLinkedItemsToSwap(Item item)
+        public static ICollection<Item> GetLinkedItemsToSwap(Item item)
         {
-            List<Item> linkedItems = new List<Item>() { item };
+            HashSet<Item> linkedItems = new HashSet<Item>() { item };
             foreach (MapEntity linkedEntity in item.linkedTo)
             {
                 foreach (MapEntity secondLinkedEntity in linkedEntity.linkedTo)
                 {
-                    if (!(secondLinkedEntity is Item linkedItem) || linkedItem == item) { continue; }
+                    if (secondLinkedEntity is not Item linkedItem || linkedItem == item) { continue; }
                     if (linkedItem.AllowSwapping &&
                         linkedItem.Prefab.SwappableItem != null && (linkedItem.Prefab.SwappableItem.CanBeBought || item.Prefab.SwappableItem.ReplacementOnUninstall == ((MapEntity)linkedItem).Prefab.Identifier) &&
                         linkedItem.Prefab.SwappableItem.SwapIdentifier.Equals(item.Prefab.SwappableItem.SwapIdentifier, StringComparison.OrdinalIgnoreCase))
@@ -709,7 +709,7 @@ namespace Barotrauma
             SavePendingUpgrades(upgradeManagerElement, PendingUpgrades);
         }
 
-        private void SavePendingUpgrades(XElement? parent, List<PurchasedUpgrade> upgrades)
+        private static void SavePendingUpgrades(XElement? parent, List<PurchasedUpgrade> upgrades)
         {
             if (parent == null) { return; }
 

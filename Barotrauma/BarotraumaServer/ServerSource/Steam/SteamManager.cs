@@ -53,12 +53,13 @@ namespace Barotrauma.Steam
             Steamworks.SteamServer.Passworded = server.ServerSettings.HasPassword;
             Steamworks.SteamServer.MapName = GameMain.NetLobbyScreen?.SelectedSub?.DisplayName?.Value ?? "";
             Steamworks.SteamServer.SetKey("haspassword", server.ServerSettings.HasPassword.ToString());
-            Steamworks.SteamServer.SetKey("message", GameMain.Server.ServerSettings.ServerMessageText);
+            Steamworks.SteamServer.SetKey("message", server.ServerSettings.ServerMessageText);
             Steamworks.SteamServer.SetKey("version", GameMain.Version.ToString());
-            Steamworks.SteamServer.SetKey("playercount", GameMain.Server.ConnectedClients.Count.ToString());
+            Steamworks.SteamServer.SetKey("playercount", server.ConnectedClients.Count.ToString());
             Steamworks.SteamServer.SetKey("contentpackage", string.Join(",", contentPackages.Select(cp => cp.Name)));
             Steamworks.SteamServer.SetKey("contentpackagehash", string.Join(",", contentPackages.Select(cp => cp.Hash.StringRepresentation)));
-            Steamworks.SteamServer.SetKey("contentpackageid", string.Join(",", contentPackages.Select(cp => cp.SteamWorkshopId)));
+            Steamworks.SteamServer.SetKey("contentpackageid", string.Join(",", contentPackages.Select(cp
+                => cp.UgcId.TryUnwrap(out var ugcId) ? ugcId.StringRepresentation : "")));
             Steamworks.SteamServer.SetKey("modeselectionmode", server.ServerSettings.ModeSelectionMode.ToString());
             Steamworks.SteamServer.SetKey("subselectionmode", server.ServerSettings.SubSelectionMode.ToString());
             Steamworks.SteamServer.SetKey("voicechatenabled", server.ServerSettings.VoiceChatEnabled.ToString());

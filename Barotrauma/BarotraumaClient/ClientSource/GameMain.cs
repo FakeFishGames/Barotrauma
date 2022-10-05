@@ -461,7 +461,7 @@ namespace Barotrauma
 
             yield return CoroutineStatus.Running;
 
-            UgcTransition.Prepare();
+            LegacySteamUgcTransition.Prepare();
             var contentPackageLoadRoutine = ContentPackageManager.Init();
             foreach (var progress in contentPackageLoadRoutine)
             {
@@ -715,7 +715,7 @@ namespace Barotrauma
                     }
 #endif
 
-                    NetworkMember?.Update((float)Timing.Step);
+                    Client?.Update((float)Timing.Step);
 
                     if (!HasLoaded && !CoroutineManager.IsCoroutineRunning(loadingCoroutine))
                     {
@@ -874,7 +874,7 @@ namespace Barotrauma
                         }
                     }
 
-                    NetworkMember?.Update((float)Timing.Step);
+                    Client?.Update((float)Timing.Step);
 
                     GUI.Update((float)Timing.Step);
 
@@ -1181,7 +1181,7 @@ namespace Barotrauma
         {
             exiting = true;
             DebugConsole.NewMessage("Exiting...");
-            NetworkMember?.Quit();
+            Client?.Quit();
             SteamManager.ShutDown();
 
             try

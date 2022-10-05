@@ -601,16 +601,13 @@ namespace Barotrauma
                     yield return CoroutineStatus.Success;
                 }
                 float t = 0.0f;
-                float startScroll = BarScroll * BarSize;
+                float startScroll = BarScroll;
                 float distanceToTravel = ScrollBar.MaxValue - startScroll;
-                float progress = startScroll;
                 float speed = distanceToTravel / duration;
-
-                while (t < duration && !MathUtils.NearlyEqual(ScrollBar.MaxValue, progress))
+                while (t < duration && !MathUtils.NearlyEqual(ScrollBar.MaxValue, BarScroll))
                 {
                     t += CoroutineManager.DeltaTime;
-                    progress += speed * CoroutineManager.DeltaTime;
-                    BarScroll = progress;
+                    BarScroll += speed * CoroutineManager.DeltaTime;
                     yield return CoroutineStatus.Running;
                 }
 

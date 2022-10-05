@@ -156,22 +156,21 @@ namespace Barotrauma
             return true;
         }
 
-        private bool IsItemDestroyed(Item item) => item == null || item.Removed || item.Condition <= 0.0f;
+        private static bool IsItemDestroyed(Item item) => item == null || item.Removed || item.Condition <= 0.0f;
 
-        private bool IsEnemyDefeated(Character enemy) => enemy == null ||enemy.Removed || enemy.IsDead;
+        private static bool IsEnemyDefeated(Character enemy) => enemy == null ||enemy.Removed || enemy.IsDead;
 
-        public override void End()
+        protected override bool DetermineCompleted()
         {
             bool exitingLevel = GameMain.GameSession?.GameMode is CampaignMode campaign ?
                 campaign.GetAvailableTransition() != CampaignMode.TransitionType.None :
                 Submarine.MainSub is { } sub && (sub.AtEndExit || sub.AtStartExit);
 
-            if (State > 0 && exitingLevel)
-            {
-                GiveReward();
-                completed = true;
-            }
+            return State > 0 && exitingLevel;            
+        }
 
+        protected override void EndMissionSpecific(bool completed)
+        {
             failed = !completed && State > 0;
         }
     }

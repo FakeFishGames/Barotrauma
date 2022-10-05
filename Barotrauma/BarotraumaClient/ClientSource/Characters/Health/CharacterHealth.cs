@@ -280,6 +280,7 @@ namespace Barotrauma
 
             cprButton = new GUIButton(new RectTransform(new Vector2(0.17f, 0.17f), characterIndicatorArea.RectTransform, Anchor.BottomLeft, scaleBasis: ScaleBasis.Smallest), text: "", style: "CPRButton")
             {
+                UserData = UIHighlightAction.ElementId.CPRButton,
                 OnClicked = (button, userData) =>
                 {
                     Character selectedCharacter = Character.Controlled?.SelectedCharacter;
@@ -690,7 +691,7 @@ namespace Barotrauma
             {
                 distortTimer = (distortTimer + deltaTime * distortSpeed) % MathHelper.TwoPi;
                 Character.BlurStrength = (float)(Math.Sin(distortTimer) + 1.5f) * 0.25f * blurStrength;
-                Character.DistortStrength = (float)(Math.Sin(distortTimer) + 1.0f) * 0.1f * distortStrength;
+                Character.DistortStrength = (float)(Math.Sin(distortTimer) + 1.0f) * 0.05f * distortStrength;
             }
             else
             {
@@ -1294,6 +1295,7 @@ namespace Barotrauma
             Dictionary<Identifier, float> treatmentSuitability = new Dictionary<Identifier, float>();
             GetSuitableTreatments(treatmentSuitability,
                 normalize: true,
+                user: Character.Controlled,
                 ignoreHiddenAfflictions: true,
                 limb: selectedLimbIndex == -1 ? null : Character.AnimController.Limbs.Find(l => l.HealthIndex == selectedLimbIndex));
 
@@ -1337,13 +1339,13 @@ namespace Barotrauma
                 };
 
                 var innerFrame = new GUIButton(new RectTransform(Vector2.One, itemSlot.RectTransform, Anchor.Center, Pivot.Center, scaleBasis: ScaleBasis.Smallest), style: "SubtreeHeader")
-                {
+                {                    
                     UserData = item,
                     DisabledColor = Color.White * 0.1f,
                     PlaySoundOnSelect = false,
                     OnClicked = (btn, userdata) =>
                     {
-                        if (!(userdata is ItemPrefab itemPrefab)) { return false; }
+                        if (userdata is not ItemPrefab itemPrefab) { return false; }
                         var item = Character.Controlled.Inventory.FindItem(it => it.Prefab == itemPrefab, recursive: true);
                         if (item == null) { return false; }
                         Limb targetLimb = Character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == selectedLimbIndex);
@@ -1900,6 +1902,7 @@ namespace Barotrauma
         public void ClientRead(IReadMessage inc)
         {
             newAfflictions.Clear();
+            newPeriodicEffects.Clear();
             byte afflictionCount = inc.ReadByte();
             for (int i = 0; i < afflictionCount; i++)
             {
@@ -1921,7 +1924,7 @@ namespace Barotrauma
                 int periodicAfflictionCount = inc.ReadByte();
                 for (int j = 0; j < periodicAfflictionCount; j++)
                 {
-                    float periodicAfflictionTimer = inc.ReadRangedSingle(afflictionPrefab.PeriodicEffects[j].MinInterval, afflictionPrefab.PeriodicEffects[j].MaxInterval, 8);
+                    float periodicAfflictionTimer = inc.ReadRangedSingle(0, afflictionPrefab.PeriodicEffects[j].MaxInterval, 8);
                     newPeriodicEffects.Add((afflictionPrefab.PeriodicEffects[j], periodicAfflictionTimer));
                 }
                 newAfflictions.Add((null, afflictionPrefab, afflictionStrength));
@@ -1991,13 +1994,13 @@ namespace Barotrauma
                     //timer has wrapped around, apply the effect
                     if (periodicEffect.timer - existingAffliction.PeriodicEffectTimers[periodicEffect.effect] > periodicEffect.effect.MinInterval / 2)
                     {
-                        existingAffliction.PeriodicEffectTimers[periodicEffect.effect] = periodicEffect.timer;
                         foreach (StatusEffect effect in periodicEffect.effect.StatusEffects)
                         {
                             Limb targetLimb = Character.AnimController.Limbs.FirstOrDefault(l => l.HealthIndex == limbHealths.IndexOf(limb));
                             existingAffliction.ApplyStatusEffect(ActionType.OnActive, effect, deltaTime: 1.0f, this, targetLimb: targetLimb);
                         }
                     }
+                    existingAffliction.PeriodicEffectTimers[periodicEffect.effect] = periodicEffect.timer;
                 }
             }
 

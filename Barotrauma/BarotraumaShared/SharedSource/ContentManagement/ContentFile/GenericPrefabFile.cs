@@ -40,7 +40,9 @@ namespace Barotrauma
                 }
                 catch
                 {
-                    prefab.Dispose(); //clean up before rethrowing, since some prefab types might lock resources
+                    //clean up before rethrowing, since some prefab types might lock resources
+                    prefab.Dispose();
+                    Prefabs.Remove(prefab);
                     throw;
                 }
             }

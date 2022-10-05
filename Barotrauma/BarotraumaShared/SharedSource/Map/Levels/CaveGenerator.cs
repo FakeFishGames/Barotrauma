@@ -238,8 +238,8 @@ namespace Barotrauma
                     //find the edge at the opposite side of the adjacent cell
                     foreach (GraphEdge otherEdge in adjacentEmptyCell.Edges)
                     {
-                        if (Vector2.Dot(adjacentEmptyCell.Center - edge.Center, adjacentEmptyCell.Center - otherEdge.Center) < 0 &&
-                            otherEdge.AdjacentCell(adjacentEmptyCell)?.CellType == CellType.Solid)
+                        if (Vector2.Dot(adjacentEmptyCell.Center - edge.Center, adjacentEmptyCell.Center - otherEdge.Center) > 0 &&
+                            otherEdge.AdjacentCell(adjacentEmptyCell)?.CellType != CellType.Solid)
                         {
                             adjacentEdge = otherEdge;
                             break;

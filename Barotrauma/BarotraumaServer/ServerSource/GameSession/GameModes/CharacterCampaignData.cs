@@ -1,4 +1,5 @@
 ﻿using Barotrauma.Networking;
+using System;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -20,19 +21,22 @@ namespace Barotrauma
             CharacterInfo = client.CharacterInfo;
 
             healthData = new XElement("health");
-            client.Character?.CharacterHealth?.Save(healthData);
-            if (client.Character?.Inventory != null)
+
+            //the character may not be controlled by the client atm, but still exist
+            Character character = client.Character ?? CharacterInfo?.Character;
+
+            character?.CharacterHealth?.Save(healthData);
+            if (character?.Inventory != null)
             {
                 itemData = new XElement("inventory");
-                Character.SaveInventory(client.Character.Inventory, itemData);
+                Character.SaveInventory(character.Inventory, itemData);
             }
             OrderData = new XElement("orders");
-            if (client.CharacterInfo != null)
+            if (CharacterInfo != null)
             {
-                CharacterInfo.SaveOrderData(client.CharacterInfo, OrderData);
+                CharacterInfo.SaveOrderData(CharacterInfo, OrderData);
             }
-
-            if (client.Character?.Wallet.Save() is { } walletSave)
+            if (character?.Wallet.Save() is { } walletSave)
             {
                 WalletData = walletSave;
             }
@@ -118,9 +122,9 @@ namespace Barotrauma
             character.SpawnInventoryItems(inventory, itemData.FromContent(ContentPath.Empty));
         }
 
-        public void ApplyHealthData(Character character)
+        public void ApplyHealthData(Character character, Func<AfflictionPrefab, bool> afflictionPredicate = null)
         {
-            CharacterInfo.ApplyHealthData(character, healthData);
+            CharacterInfo.ApplyHealthData(character, healthData, afflictionPredicate);
         }
 
         public void ApplyOrderData(Character character)

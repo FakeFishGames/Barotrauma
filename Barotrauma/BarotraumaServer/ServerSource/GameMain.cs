@@ -243,6 +243,7 @@ namespace Barotrauma
                 maxPlayers,
                 ownerKey,
                 steamId);
+            Server.StartServer();
 
             for (int i = 0; i < CommandLineArgs.Length; i++)
             {

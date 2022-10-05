@@ -206,9 +206,9 @@ namespace Barotrauma
                 transferMenuButton.RectTransform.AbsoluteOffset = new Point(0, -pos - transferMenu.Rect.Height);
             }
             GameSession.UpdateTalentNotificationIndicator(talentPointNotification);
-            if (Character.Controlled is { } controlled && talentResetButton != null && talentApplyButton != null)
+            if (Character.Controlled?.Info is { } characterInfo && talentResetButton != null && talentApplyButton != null)
             {
-                int talentCount = selectedTalents.Count - controlled.Info.GetUnlockedTalentsInTree().Count();
+                int talentCount = selectedTalents.Count - characterInfo.GetUnlockedTalentsInTree().Count();
                 talentResetButton.Enabled = talentApplyButton.Enabled = talentCount > 0;
                 if (talentApplyButton.Enabled && talentApplyButton.FlashTimer <= 0.0f)
                 {
@@ -1722,7 +1722,11 @@ namespace Barotrauma
 
             var subInfoTextLayout = new GUILayoutGroup(new RectTransform(Vector2.One, paddedFrame.RectTransform));
 
-            LocalizedString className = !sub.Info.HasTag(SubmarineTag.Shuttle) ? $"{TextManager.Get($"submarineclass.{sub.Info.SubmarineClass}")} ({TextManager.Get($"submarinetier.{sub.Info.Tier}")})" : TextManager.Get("shuttle");
+            LocalizedString className = !sub.Info.HasTag(SubmarineTag.Shuttle) ?
+                TextManager.GetWithVariables("submarine.classandtier", 
+                    ("[class]", TextManager.Get($"submarineclass.{sub.Info.SubmarineClass}")),
+                    ("[tier]", TextManager.Get($"submarinetier.{sub.Info.Tier}"))) :
+                TextManager.Get("shuttle");
 
             int nameHeight = (int)GUIStyle.LargeFont.MeasureString(sub.Info.DisplayName, true).Y;
             int classHeight = (int)GUIStyle.SubHeadingFont.MeasureString(className).Y;
@@ -1914,13 +1918,17 @@ namespace Barotrauma
             skillListBox = new GUIListBox(new RectTransform(new Vector2(1f, 1f - skillBlock.RectTransform.RelativeSize.Y), skillLayout.RectTransform), style: null);
             CreateSkillList(controlledCharacter, info, skillListBox);
 
-            if (controlledCharacter != null)
+            new GUIFrame(new RectTransform(new Vector2(1f, 1f), contentLayout.RectTransform), style: "HorizontalLine");
+
+            GUIListBox talentTreeListBox = new GUIListBox(new RectTransform(new Vector2(1f, 0.6f), contentLayout.RectTransform, Anchor.TopCenter), isHorizontal: true, style: null);
+
+            if (controlledCharacter == null)
+            {
+                talentTreeListBox.Enabled = false;
+            }
+            else
             {
                 if (!TalentTree.JobTalentTrees.TryGet(info.Job.Prefab.Identifier, out TalentTree talentTree)) { return; }
-
-                new GUIFrame(new RectTransform(new Vector2(1f, 1f), contentLayout.RectTransform), style: "HorizontalLine");
-
-                GUIListBox talentTreeListBox = new GUIListBox(new RectTransform(new Vector2(1f, 0.6f), contentLayout.RectTransform, Anchor.TopCenter), isHorizontal: true, style: null);
 
                 selectedTalents = info.GetUnlockedTalentsInTree().ToList();
 
@@ -2140,18 +2148,17 @@ namespace Barotrauma
                 skillNames.Add(skillName);
                 skillName.RectTransform.MinSize = new Point(0, skillName.Rect.Height);
                 skillContainer.RectTransform.MinSize = new Point(0, skillName.Rect.Height);
-                
+
                 new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), skillContainer.RectTransform), Math.Floor(skill.Level).ToString("F0"), textAlignment: Alignment.TopRight);
 
                 float modifiedSkillLevel = character?.GetSkillLevel(skill.Identifier) ?? skill.Level;
                 if (!MathUtils.NearlyEqual(MathF.Floor(modifiedSkillLevel), MathF.Floor(skill.Level)))
                 {
                     int skillChange = (int)MathF.Floor(modifiedSkillLevel - skill.Level);
-                    //TODO: if/when we upgrade to C# 9, do neater pattern matching here
-                    string stringColor = true switch
+                    string stringColor = skillChange switch
                     {
-                        true when skillChange > 0 => XMLExtensions.ToStringHex(GUIStyle.Green),
-                        true when skillChange < 0 => XMLExtensions.ToStringHex(GUIStyle.Red),
+                        > 0 => XMLExtensions.ToStringHex(GUIStyle.Green),
+                        < 0 => XMLExtensions.ToStringHex(GUIStyle.Red),
                         _ => XMLExtensions.ToStringHex(GUIStyle.TextColorNormal)
                     };
 

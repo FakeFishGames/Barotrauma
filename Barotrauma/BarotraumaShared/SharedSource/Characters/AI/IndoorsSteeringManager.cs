@@ -527,7 +527,7 @@ namespace Barotrauma
             {
                 // We'll want this to run each time, because the delegate is used to find a valid button component.
                 bool canAccessButtons = false;
-                foreach (var button in door.Item.GetConnectedComponents<Controller>(true))
+                foreach (var button in door.Item.GetConnectedComponents<Controller>(true, connectionFilter: c => c.Name == "toggle" || c.Name == "set_state"))
                 {
                     if (button.HasAccess(character) && (buttonFilter == null || buttonFilter(button)))
                     {
@@ -675,6 +675,8 @@ namespace Barotrauma
                             }
                         }
                         float distance = Vector2.DistanceSquared(button.Item.WorldPosition, character.WorldPosition);
+                        //heavily prefer buttons linked to the door, so sub builders can help the bots figure out which button to use by linking them
+                        if (door.Item.linkedTo.Contains(button.Item)) { distance *= 0.1f; }
                         if (closestButton == null || distance < closestDist && character.CanSeeTarget(button.Item))
                         {
                             closestButton = button;

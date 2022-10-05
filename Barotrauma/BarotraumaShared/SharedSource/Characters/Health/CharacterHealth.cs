@@ -1038,7 +1038,7 @@ namespace Barotrauma
         /// <param name="treatmentSuitability">A dictionary where the key is the identifier of the item and the value the suitability</param>
         /// <param name="normalize">If true, the suitability values are normalized between 0 and 1. If not, they're arbitrary values defined in the medical item XML, where negative values are unsuitable, and positive ones suitable.</param>   
         /// <param name="predictFutureDuration">If above 0, the method will take into account how much currently active status effects while affect the afflictions in the next x seconds.</param>   
-        public void GetSuitableTreatments(Dictionary<Identifier, float> treatmentSuitability, bool normalize, Limb limb = null, bool ignoreHiddenAfflictions = false, float predictFutureDuration = 0.0f)
+        public void GetSuitableTreatments(Dictionary<Identifier, float> treatmentSuitability, bool normalize, Character user, Limb limb = null, bool ignoreHiddenAfflictions = false, float predictFutureDuration = 0.0f)
         {
             //key = item identifier
             //float = suitability
@@ -1062,7 +1062,18 @@ namespace Barotrauma
                 }
 
                 if (strength <= affliction.Prefab.TreatmentThreshold) { continue; }
-                if (ignoreHiddenAfflictions && strength < affliction.Prefab.ShowIconThreshold) { continue; }
+
+                if (ignoreHiddenAfflictions)
+                {
+                    if (user == Character)
+                    {
+                        if (strength < affliction.Prefab.ShowIconThreshold) { continue; }
+                    }
+                    else
+                    {
+                        if (strength < affliction.Prefab.ShowIconToOthersThreshold) { continue; }
+                    }
+                }
 
                 foreach (KeyValuePair<Identifier, float> treatment in affliction.Prefab.TreatmentSuitability)
                 {
@@ -1153,10 +1164,10 @@ namespace Barotrauma
                 msg.WriteRangedSingle(
                     MathHelper.Clamp(affliction.Strength, 0.0f, affliction.Prefab.MaxStrength), 
                     0.0f, affliction.Prefab.MaxStrength, 8);
-                msg.WriteByte((byte)affliction.Prefab.PeriodicEffects.Count());
+                msg.WriteByte((byte)affliction.Prefab.PeriodicEffects.Count);
                 foreach (AfflictionPrefab.PeriodicEffect periodicEffect in affliction.Prefab.PeriodicEffects)
                 {
-                    msg.WriteRangedSingle(affliction.PeriodicEffectTimers[periodicEffect], periodicEffect.MinInterval, periodicEffect.MaxInterval, 8);
+                    msg.WriteRangedSingle(affliction.PeriodicEffectTimers[periodicEffect], 0, periodicEffect.MaxInterval, 8);
                 }
             }
 
@@ -1178,7 +1189,7 @@ namespace Barotrauma
                 msg.WriteRangedSingle(
                     MathHelper.Clamp(affliction.Strength, 0.0f, affliction.Prefab.MaxStrength), 
                     0.0f, affliction.Prefab.MaxStrength, 8);
-                msg.WriteByte((byte)affliction.Prefab.PeriodicEffects.Count());
+                msg.WriteByte((byte)affliction.Prefab.PeriodicEffects.Count);
                 foreach (AfflictionPrefab.PeriodicEffect periodicEffect in affliction.Prefab.PeriodicEffects)
                 {
                     msg.WriteRangedSingle(affliction.PeriodicEffectTimers[periodicEffect], periodicEffect.MinInterval, periodicEffect.MaxInterval, 8);
@@ -1227,7 +1238,7 @@ namespace Barotrauma
             }
         }
 
-        public void Load(XElement element)
+        public void Load(XElement element, Func<AfflictionPrefab, bool> afflictionPredicate = null)
         {
             foreach (var subElement in element.Elements())
             {
@@ -1260,6 +1271,7 @@ namespace Barotrauma
                     DebugConsole.ThrowError($"Error while loading character health: affliction \"{id}\" not found.");
                     return;
                 }
+                if (afflictionPredicate != null && !afflictionPredicate.Invoke(afflictionPrefab)) { return; }
                 float strength = afflictionElement.GetAttributeFloat("strength", 0.0f);
                 var irremovableAffliction = irremovableAfflictions.FirstOrDefault(a => a.Prefab == afflictionPrefab);
                 if (irremovableAffliction != null)

@@ -16,7 +16,7 @@ namespace Barotrauma.Transition
     /// Class dedicated to transitioning away from the old, shitty
     /// Mods + Submarines folders to the new LocalMods folder
     /// </summary>
-    public static class UgcTransition
+    public static class LegacySteamUgcTransition
     {
         private const string readmeName = "LOCALMODS_README.txt";
 
@@ -168,7 +168,11 @@ namespace Barotrauma.Transition
                     addHeader(TextManager.Get("SubscribedMods"));
                     foreach (var mod in mods.Mods)
                     {
-                        addTickbox(mod.Dir, mod.Name, ticked: !ContentPackageManager.LocalPackages.Any(p => p.SteamWorkshopId != 0 && p.SteamWorkshopId == mod.Item?.Id));
+                        addTickbox(mod.Dir, mod.Name,
+                            ticked: !(mod.Item is { } item && ContentPackageManager.LocalPackages.Any(p =>
+                                p.UgcId.TryUnwrap(out var ugcId)
+                                && ugcId is SteamWorkshopId workshopId
+                                && workshopId.Value == item.Id)));
                     }
                 }
 

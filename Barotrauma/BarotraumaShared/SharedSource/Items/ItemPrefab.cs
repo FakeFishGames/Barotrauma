@@ -805,9 +805,6 @@ namespace Barotrauma
             //only used if the item doesn't have a name/description defined in the currently selected language
             string fallbackNameIdentifier = ConfigElement.GetAttributeString("fallbacknameidentifier", "");
 
-            //works the same as nameIdentifier, but just replaces the description
-            Identifier descriptionIdentifier = ConfigElement.GetAttributeIdentifier("descriptionidentifier", "");
-
             name = TextManager.Get(nameIdentifier.IsEmpty
                     ? $"EntityName.{Identifier}"
                     : $"EntityName.{nameIdentifier}",
@@ -856,18 +853,7 @@ namespace Barotrauma
 
             SerializableProperty.DeserializeProperties(this, ConfigElement);
 
-            if (descriptionIdentifier != Identifier.Empty)
-            {
-                Description = TextManager.Get($"EntityDescription.{descriptionIdentifier}").Fallback(Description);
-            }
-            else if (nameIdentifier == Identifier.Empty)
-            {
-                Description = TextManager.Get($"EntityDescription.{Identifier}").Fallback(Description);
-            }
-            else
-            {
-                Description = TextManager.Get($"EntityDescription.{nameIdentifier}").Fallback(Description);
-            }
+            LoadDescription(ConfigElement);
 
             var allowDroppingOnSwapWith = ConfigElement.GetAttributeIdentifierArray("allowdroppingonswapwith", Array.Empty<Identifier>());
             AllowDroppingOnSwapWith = allowDroppingOnSwapWith.ToImmutableHashSet();
@@ -1135,7 +1121,7 @@ namespace Barotrauma
             {
                 string message = $"Tried to get price info for \"{Identifier}\" with a null store parameter!\n{Environment.StackTrace.CleanupStackTrace()}";
 #if DEBUG
-                DebugConsole.ShowError(message);
+                DebugConsole.LogError(message);
 #else
                 DebugConsole.AddWarning(message);
                 GameAnalyticsManager.AddErrorEventOnce("ItemPrefab.GetPriceInfo:StoreParameterNull", GameAnalyticsManager.ErrorSeverity.Error, message);
@@ -1318,12 +1304,8 @@ namespace Barotrauma
             throw new InvalidOperationException("Can't call ItemPrefab.CreateInstance");
         }
 
-        private bool disposed = false;
         public override void Dispose()
         {
-            if (disposed) { return; }
-            disposed = true;
-            Prefabs.Remove(this);
             Item.RemoveByPrefab(this);
         }
 

@@ -402,9 +402,8 @@ namespace Barotrauma
                         }
                         else
                         {
-                            string afflictionIdentifier = subElement.GetAttributeString("identifier", "").ToLowerInvariant();
-                            afflictionPrefab = AfflictionPrefab.Prefabs[afflictionIdentifier];
-                            if (afflictionPrefab == null)
+                            Identifier afflictionIdentifier = subElement.GetAttributeIdentifier("identifier", "");
+                            if (!AfflictionPrefab.Prefabs.TryGet(afflictionIdentifier, out afflictionPrefab))
                             {
                                 DebugConsole.ThrowError("Error in Attack (" + parentDebugName + ") - Affliction prefab \"" + afflictionIdentifier + "\" not found.");
                                 continue;
@@ -430,15 +429,13 @@ namespace Barotrauma
             Afflictions.Clear();
             foreach (var subElement in element.GetChildElements("affliction"))
             {
-                AfflictionPrefab afflictionPrefab;
                 Affliction affliction;
                 Identifier afflictionIdentifier = subElement.GetAttributeIdentifier("identifier", "");
-                if (!AfflictionPrefab.Prefabs.ContainsKey(afflictionIdentifier))
+                if (!AfflictionPrefab.Prefabs.TryGet(afflictionIdentifier, out AfflictionPrefab afflictionPrefab))
                 {
                     DebugConsole.ThrowError($"Error in an Attack defined in \"{parentDebugName}\" - could not find an affliction with the identifier \"{afflictionIdentifier}\".");
                     continue;
                 }
-                afflictionPrefab = AfflictionPrefab.Prefabs[afflictionIdentifier];
                 affliction = afflictionPrefab.Instantiate(0.0f);
                 affliction.Deserialize(subElement);
                 //backwards compatibility

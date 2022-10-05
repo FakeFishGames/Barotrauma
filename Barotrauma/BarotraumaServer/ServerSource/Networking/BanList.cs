@@ -71,6 +71,12 @@ namespace Barotrauma.Networking
                     {
                         expirationTime = parsedTime;
                     }
+                    else
+                    {
+                        string error = $"Failed to parse the ban duration of \"{name}\" ({separatedLine[2]}) from the legacy ban list file (text file which has now been changed to XML). Considering the ban permanent.";
+                        DebugConsole.ThrowError(error);
+                        GameServer.AddPendingMessageToOwner(error, ChatMessageType.Error);
+                    }
                 }
                 string reason = separatedLine.Length > 3 ? string.Join(",", separatedLine.Skip(3)) : "";
 
@@ -156,6 +162,8 @@ namespace Barotrauma.Networking
         
         public void BanPlayer(string name, Either<Address, AccountId> addressOrAccountId, string reason, TimeSpan? duration)
         {
+            if (addressOrAccountId.TryGet(out Address address) && address.IsLocalHost) { return; }
+            
             var existingBan = bannedPlayers.Find(bp => bp.AddressOrAccountId == addressOrAccountId);
             if (existingBan != null) { bannedPlayers.Remove(existingBan); }
 

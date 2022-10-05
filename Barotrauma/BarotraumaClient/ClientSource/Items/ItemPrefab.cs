@@ -229,6 +229,7 @@ namespace Barotrauma
                         Submarine = Submarine.MainSub
                     };
                     item.SetTransform(ConvertUnits.ToSimUnits(Submarine.MainSub == null ? item.Position : item.Position - Submarine.MainSub.Position), 0.0f);
+                    item.GetComponent<Items.Components.Door>()?.RefreshLinkedGap();
                     item.FindHull();
                     item.Submarine = Submarine.MainSub;
 

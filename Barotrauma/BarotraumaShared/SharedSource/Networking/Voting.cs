@@ -56,23 +56,5 @@ namespace Barotrauma
 
             return selected;            
         }
-
-        public void ResetVotes(IEnumerable<Client> connectedClients)
-        {
-            foreach (Client client in connectedClients)
-            {
-                client.ResetVotes();
-            }
-#if CLIENT
-            foreach (VoteType voteType in Enum.GetValues(typeof(VoteType)))
-            {
-                SetVoteCountYes(voteType, 0);
-                SetVoteCountNo(voteType, 0);
-                SetVoteCountMax(voteType, 0);
-            }
-            UpdateVoteTexts(connectedClients, VoteType.Mode);
-            UpdateVoteTexts(connectedClients, VoteType.Sub);
-#endif
-        }
     }
 }

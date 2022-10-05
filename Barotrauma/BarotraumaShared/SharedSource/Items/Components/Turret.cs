@@ -702,7 +702,7 @@ namespace Barotrauma.Items.Components
 
                 if (!ignorePower)
                 {
-                    List<PowerContainer> batteries = GetConnectedBatteries();
+                    List<PowerContainer> batteries = GetDirectlyConnectedBatteries();
                     float neededPower = GetPowerRequiredToShoot();
 
                     // tinkering is currently not factored into the common method as it is checked only when shooting
@@ -1066,7 +1066,7 @@ namespace Barotrauma.Items.Components
             bool canShoot = true;
             if (!HasPowerToShoot())
             {
-                List<PowerContainer> batteries = GetConnectedBatteries();
+                List<PowerContainer> batteries = GetDirectlyConnectedBatteries();
                 float lowestCharge = 0.0f;
                 PowerContainer batteryToLoad = null;
                 foreach (PowerContainer battery in batteries)
@@ -1308,9 +1308,13 @@ namespace Barotrauma.Items.Components
                                     }
                                 }
                                 float dist = Vector2.Distance(closestPoint, item.WorldPosition);
+
+                                //add one px to make sure the visibility raycast doesn't miss the cell due to the end position being right at the edge of the cell
+                                closestPoint += (closestPoint - item.WorldPosition) / Math.Max(dist, 1);
+
                                 if (dist > AIRange + 1000) { continue; }
                                 float dot = 0;
-                                if (item.Submarine.Velocity != Vector2.Zero)
+                                if (!MathUtils.NearlyEqual(item.Submarine.Velocity, Vector2.Zero))
                                 {
                                     dot = Vector2.Dot(Vector2.Normalize(item.Submarine.Velocity), Vector2.Normalize(closestPoint - item.Submarine.WorldPosition));
                                 }

@@ -118,7 +118,7 @@ namespace Barotrauma
             return GetDrawDepth(SpriteDepth + DrawDepthOffset, Sprite);
         }
 
-        public Color GetSpriteColor()
+        public Color GetSpriteColor(bool withHighlight = false)
         {
             Color color = spriteColor;
             if (Prefab.UseContainedSpriteColor && ownInventory != null)
@@ -127,6 +127,17 @@ namespace Barotrauma
                 {
                     color = item.ContainerColor;
                     break;
+                }
+            }
+            if (withHighlight)
+            {
+                if (IsHighlighted && !GUI.DisableItemHighlights && Screen.Selected != GameMain.GameScreen)
+                {
+                    color = GUIStyle.Orange * Math.Max(GetSpriteColor().A / (float)byte.MaxValue, 0.1f);
+                }
+                else if (IsHighlighted && HighlightColor.HasValue)
+                {
+                    color = Color.Lerp(color, HighlightColor.Value, (MathF.Sin((float)Timing.TotalTime * 3.0f) + 1.0f) / 2.0f);
                 }
             }
             return color;
@@ -281,9 +292,7 @@ namespace Barotrauma
                 else if (!ShowItems) { return; }
             }
 
-            Color color = IsIncludedInSelection && editing ? GUIStyle.Blue : IsHighlighted && !GUI.DisableItemHighlights && Screen.Selected != GameMain.GameScreen ? GUIStyle.Orange * Math.Max(GetSpriteColor().A / (float) byte.MaxValue, 0.1f) : GetSpriteColor();
-
-            //if (IsSelected && editing) color = Color.Lerp(color, Color.Gold, 0.5f);
+            Color color = IsIncludedInSelection && editing ?  GUIStyle.Blue : GetSpriteColor(withHighlight: true);
 
             bool isWiringMode = editing && SubEditorScreen.TransparentWiringMode && SubEditorScreen.IsWiringMode() && !isWire && parentInventory == null;
             bool renderTransparent = isWiringMode && GetComponent<ConnectionPanel>() == null;
@@ -823,7 +832,7 @@ namespace Barotrauma
                     reloadTextureButton.OnClicked += (button, data) =>
                     {
                         Sprite.ReloadXML();
-                        Sprite.ReloadTexture(updateAllSprites: true);
+                        Sprite.ReloadTexture();
                         return true;
                     };
                 }

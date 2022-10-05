@@ -466,7 +466,12 @@ namespace Barotrauma
                     }
                 }
             }
-            steeringManager.Update(Character.AnimController.GetCurrentSpeed(run && Character.CanRun));
+
+            //if someone is grabbing the bot and the bot isn't trying to run anywhere, let them keep dragging and "control" the bot
+            if (Character.SelectedBy == null || run)
+            {
+                steeringManager.Update(Character.AnimController.GetCurrentSpeed(run && Character.CanRun));
+            }
 
             bool ignorePlatforms = Character.AnimController.TargetMovement.Y < -0.5f && (-Character.AnimController.TargetMovement.Y > Math.Abs(Character.AnimController.TargetMovement.X));
             if (steeringManager == insideSteering)

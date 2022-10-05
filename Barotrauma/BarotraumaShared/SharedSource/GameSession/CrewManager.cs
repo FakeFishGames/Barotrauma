@@ -198,6 +198,34 @@ namespace Barotrauma
             }            
         }
 
+        /// <summary>
+        /// Remove the character from the crew (and crew menus).
+        /// </summary>
+        /// <param name="character">The character to remove</param>
+        /// <param name="removeInfo">If the character info is also removed, the character will not be visible in the round summary.</param>
+        public void RemoveCharacter(Character character, bool removeInfo = false, bool resetCrewListIndex = true)
+        {
+            if (character == null)
+            {
+                DebugConsole.ThrowError("Tried to remove a null character from CrewManager.\n" + Environment.StackTrace.CleanupStackTrace());
+                return;
+            }
+            characters.Remove(character);
+            if (removeInfo)
+            {
+                characterInfos.Remove(character.Info);
+#if CLIENT
+                RemoveCharacterFromCrewList(character);
+#endif
+            }
+#if CLIENT
+            if (resetCrewListIndex)
+            {
+                ResetCrewListIndex(character);
+            }
+#endif
+        }
+
         public void AddCharacterInfo(CharacterInfo characterInfo)
         {
             if (characterInfos.Contains(characterInfo))

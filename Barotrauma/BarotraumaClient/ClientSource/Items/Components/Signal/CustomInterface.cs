@@ -135,7 +135,7 @@ namespace Barotrauma.Items.Components
                         }
                         else
                         {
-                            DebugConsole.ShowError($"Error creating a CustomInterface component: unexpected NumberType \"{(ciElement.NumberType.HasValue ? ciElement.NumberType.Value.ToString() : "none")}\"");
+                            DebugConsole.LogError($"Error creating a CustomInterface component: unexpected NumberType \"{(ciElement.NumberType.HasValue ? ciElement.NumberType.Value.ToString() : "none")}\"");
                         }
                         if (numberInput != null)
                         {

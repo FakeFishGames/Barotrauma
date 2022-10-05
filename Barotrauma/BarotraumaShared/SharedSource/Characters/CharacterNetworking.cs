@@ -82,10 +82,10 @@ namespace Barotrauma
             public UInt16 networkUpdateID;
         }
 
-        private List<NetInputMem> memInput  = new List<NetInputMem>();
+        private readonly List<NetInputMem> memInput  = new List<NetInputMem>();
 
-        private List<CharacterStateInfo> memState        = new List<CharacterStateInfo>();
-        private List<CharacterStateInfo> memLocalState   = new List<CharacterStateInfo>();
+        private readonly List<CharacterStateInfo> memState        = new List<CharacterStateInfo>();
+        private readonly List<CharacterStateInfo> memLocalState   = new List<CharacterStateInfo>();
 
         public float healthUpdateTimer;
 

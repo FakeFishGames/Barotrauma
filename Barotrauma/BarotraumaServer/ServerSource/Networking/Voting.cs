@@ -216,6 +216,14 @@ namespace Barotrauma
             }
         }
 
+        public void ResetVotes(IEnumerable<Client> connectedClients, bool resetKickVotes)
+        {
+            foreach (Client client in connectedClients)
+            {
+                client.ResetVotes(resetKickVotes);
+            }
+        }
+
         public void ServerRead(IReadMessage inc, Client sender)
         {
             if (GameMain.Server == null || sender == null) { return; }

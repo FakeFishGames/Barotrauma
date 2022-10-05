@@ -24,24 +24,23 @@ namespace Barotrauma.Networking
 
         public new static Option<LidgrenEndpoint> Parse(string endpointStr)
         {
-            if (IPEndPoint.TryParse(endpointStr, out IPEndPoint? netEndpoint))
-            {
-                return Option<LidgrenEndpoint>.Some(new LidgrenEndpoint(netEndpoint!));
-            }
-
+            string hostName = endpointStr;
+            int port = NetConfig.DefaultPort;
             if (endpointStr.Count(c => c == ':') == 1)
             {
                 string[] split = endpointStr.Split(':');
-                string hostName = split[0];
-                if (LidgrenAddress.Parse(hostName).TryUnwrap(out var adr)
-                    && int.TryParse(split[1], out var port))
-                {
-                    return Option<LidgrenEndpoint>.Some(new LidgrenEndpoint(adr.NetAddress, port));
-                }
+                hostName = split[0];
+                port = int.TryParse(split[1], out var tmpPort) ? tmpPort : port;
             }
-
-            return LidgrenAddress.Parse(endpointStr)
-                .Select(adr => new LidgrenEndpoint(adr.NetAddress, NetConfig.DefaultPort));
+            
+            if (LidgrenAddress.Parse(hostName).TryUnwrap(out var adr))
+            {
+                return Option<LidgrenEndpoint>.Some(new LidgrenEndpoint(adr.NetAddress, port));
+            }
+            
+            return IPEndPoint.TryParse(endpointStr, out IPEndPoint? netEndpoint)
+                ? Option<LidgrenEndpoint>.Some(new LidgrenEndpoint(netEndpoint))
+                : Option<LidgrenEndpoint>.None();
         }
 
         public override bool Equals(object? obj)

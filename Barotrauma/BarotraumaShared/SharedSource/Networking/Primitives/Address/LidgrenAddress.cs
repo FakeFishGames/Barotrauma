@@ -17,31 +17,27 @@ namespace Barotrauma.Networking
 
         public LidgrenAddress(IPAddress netAddress)
         {
-            NetAddress = netAddress;
+            if (IPAddress.IsLoopback(netAddress))
+            {
+                NetAddress = IPAddress.Loopback;
+            }
+            else
+            {
+                NetAddress = netAddress;
+            }
         }
 
         public new static Option<LidgrenAddress> Parse(string endpointStr)
         {
-            if (IPAddress.TryParse(endpointStr, out IPAddress? netEndpoint))
+            if (endpointStr.Equals("localhost", StringComparison.OrdinalIgnoreCase))
+            {
+                return Option<LidgrenAddress>.Some(new LidgrenAddress(IPAddress.Loopback));
+            }
+            else if (IPAddress.TryParse(endpointStr, out IPAddress? netEndpoint))
             {
                 return Option<LidgrenAddress>.Some(new LidgrenAddress(netEndpoint!));
             }
-
-            try
-            {
-                var resolvedAddresses = Dns.GetHostAddresses(endpointStr);
-                return resolvedAddresses.Any()
-                    ? Option<LidgrenAddress>.Some(new LidgrenAddress(resolvedAddresses.First()))
-                    : Option<LidgrenAddress>.None();
-            }
-            catch (SocketException)
-            {
-                return Option<LidgrenAddress>.None();
-            }
-            catch (ArgumentOutOfRangeException)
-            {
-                return Option<LidgrenAddress>.None();
-            }
+            return Option<LidgrenAddress>.None();            
         }
 
         public override bool Equals(object? obj)

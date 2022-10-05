@@ -336,7 +336,7 @@ namespace Barotrauma
             {
                 ApplyTestPose();
             }
-            else
+            else if (character.SelectedBy == null)
             {
                 if (character.LockHands)
                 {
@@ -356,7 +356,7 @@ namespace Barotrauma
                     HandIK(rightHand, midPos, CurrentAnimationParams.ArmIKStrength, CurrentAnimationParams.HandIKStrength);
                     HandIK(leftHand, midPos, CurrentAnimationParams.ArmIKStrength, CurrentAnimationParams.HandIKStrength);
                 }
-                if (Anim != Animation.UsingItem && character.SelectedBy == null)
+                if (Anim != Animation.UsingItem)
                 {
                     if (Anim != Animation.UsingItemWhileClimbing)
                     {
@@ -1716,9 +1716,17 @@ namespace Barotrauma
                 }
                 else if (target is AICharacter && target != Character.Controlled)
                 {
-                    target.AnimController.TargetDir = WorldPosition.X > target.WorldPosition.X ? Direction.Right : Direction.Left;
-                    Vector2 movement =  (character.SimPosition + Vector2.UnitX * 0.5f * Dir) - target.SimPosition;
-                    target.AnimController.TargetMovement = movement.LengthSquared() > 0.01f ? movement : Vector2.Zero;                    
+                    if (target.AnimController.Dir > 0 == WorldPosition.X > target.WorldPosition.X)
+                    {
+                        target.AnimController.LockFlippingUntil = (float)Timing.TotalTime + 0.5f;
+                    }
+                    else
+                    {
+                        target.AnimController.TargetDir = WorldPosition.X > target.WorldPosition.X ? Direction.Right : Direction.Left;
+                    }
+                    //make the target stand 0.5 meters away from this character, on the side they're currently at
+                    Vector2 movement = (character.SimPosition + Vector2.UnitX * 0.5f * Math.Sign(target.SimPosition.X - character.SimPosition.X)) - target.SimPosition;
+                    target.AnimController.TargetMovement = movement.LengthSquared() > 0.01f ? movement : Vector2.Zero;
                 }
             }
         }

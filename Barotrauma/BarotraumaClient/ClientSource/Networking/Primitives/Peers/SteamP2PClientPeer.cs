@@ -10,7 +10,6 @@ namespace Barotrauma.Networking
 {
     internal sealed class SteamP2PClientPeer : ClientPeer
     {
-        private bool isActive;
         private readonly SteamId hostSteamId;
         private double timeout;
         private double heartbeatTimer;
@@ -37,6 +36,8 @@ namespace Barotrauma.Networking
 
         public override void Start()
         {
+            if (isActive) { return; }
+
             ContentPackageOrderReceived = false;
 
             steamAuthTicket = SteamManager.GetAuthSessionTicket();
@@ -97,8 +98,7 @@ namespace Barotrauma.Networking
 
             if (steamId != hostSteamId.Value) { return; }
 
-            Close($"SteamP2P connection failed: {error}");
-            callbacks.OnDisconnectMessageReceived.Invoke($"{DisconnectReason.SteamP2PError}/SteamP2P connection failed: {error}");
+            Close(PeerDisconnectPacket.SteamP2PError(error));
         }
 
         private void OnP2PData(ulong steamId, byte[] data, int dataLength)
@@ -117,8 +117,10 @@ namespace Barotrauma.Networking
 
             if (!packetHeader.IsServerMessage()) { return; }
 
-            if (packetHeader.IsConnectionInitializationStep() && initialization.HasValue)
+            if (packetHeader.IsConnectionInitializationStep())
             {
+                if (!initialization.HasValue) { return; }
+
                 var relayPacket = INetSerializableStruct.Read<SteamP2PInitializationRelayPacket>(inc);
 
                 SteamManager.JoinLobby(relayPacket.LobbyID, false);
@@ -127,7 +129,7 @@ namespace Barotrauma.Networking
                     incomingInitializationMessages.Add(new IncomingInitializationMessage
                     {
                         InitializationStep = initialization.Value,
-                        Message = relayPacket.Message.GetReadMessage()
+                        Message = relayPacket.Message.GetReadMessageUncompressed()
                     });
                 }
             }
@@ -138,13 +140,12 @@ namespace Barotrauma.Networking
             else if (packetHeader.IsDisconnectMessage())
             {
                 PeerDisconnectPacket packet = INetSerializableStruct.Read<PeerDisconnectPacket>(inc);
-                Close(packet.Message);
-                callbacks.OnDisconnectMessageReceived.Invoke(packet.Message);
+                Close(packet);
             }
             else
             {
                 var packet = INetSerializableStruct.Read<PeerPacketMessage>(inc);
-                incomingDataMessages.Add(packet.GetReadMessage());
+                incomingDataMessages.Add(packet.GetReadMessage(packetHeader.IsCompressed(), ServerConnection!));
             }
         }
 
@@ -170,14 +171,12 @@ namespace Barotrauma.Networking
                     {
                         if (state.P2PSessionError != Steamworks.P2PSessionError.None)
                         {
-                            Close($"SteamP2P error code: {state.P2PSessionError}");
-                            callbacks.OnDisconnectMessageReceived.Invoke($"{DisconnectReason.SteamP2PError}/SteamP2P error code: {state.P2PSessionError}");
+                            Close(PeerDisconnectPacket.SteamP2PError(state.P2PSessionError));
                         }
                     }
                     else
                     {
-                        Close("SteamP2P connection could not be established");
-                        callbacks.OnDisconnectMessageReceived.Invoke(DisconnectReason.SteamP2PError.ToString());
+                        Close(PeerDisconnectPacket.WithReason(DisconnectReason.Timeout));
                     }
 
                     connectionStatusTimer = 1.0f;
@@ -192,6 +191,7 @@ namespace Barotrauma.Networking
                 if (packet is { SteamId: var steamId, Data: var data })
                 {
                     OnP2PData(steamId, data, data.Length);
+                    if (!isActive) { return; }
                     receivedBytes += data.Length;
                 }
             }
@@ -212,8 +212,7 @@ namespace Barotrauma.Networking
 
             if (timeout < 0.0)
             {
-                Close("Timed out");
-                callbacks.OnDisconnectMessageReceived.Invoke(DisconnectReason.SteamP2PTimeOut.ToString());
+                Close(PeerDisconnectPacket.WithReason(DisconnectReason.SteamP2PTimeOut));
                 return;
             }
 
@@ -221,20 +220,26 @@ namespace Barotrauma.Networking
             {
                 if (incomingDataMessages.Count > 0)
                 {
-                    var incomingMessage = incomingDataMessages.First();
-                    byte incomingHeader = incomingMessage.LengthBytes > 0 ? incomingMessage.PeekByte() : (byte)0;
-                    if (ContentPackageOrderReceived)
+                    void initializationError(string errorMsg, string analyticsTag)
                     {
-#warning: TODO: do not allow completing initialization until content package order has been received?
-                        string errorMsg = $"Error during connection initialization: completed initialization before receiving content package order. Incoming header: {incomingHeader}";
-                        GameAnalyticsManager.AddErrorEventOnce("SteamP2PClientPeer.OnInitializationComplete:ContentPackageOrderNotReceived", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                        GameAnalyticsManager.AddErrorEventOnce($"SteamP2PClientPeer.OnInitializationComplete:{analyticsTag}", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                         DebugConsole.ThrowError(errorMsg);
+                        Close(PeerDisconnectPacket.WithReason(DisconnectReason.Disconnected));
+                    }
+                    
+                    if (!ContentPackageOrderReceived)
+                    {
+                        initializationError(
+                            errorMsg: "Error during connection initialization: completed initialization before receiving content package order.",
+                            analyticsTag: "ContentPackageOrderNotReceived");
+                        return;
                     }
                     if (ServerContentPackages.Length == 0)
                     {
-                        string errorMsg = $"Error during connection initialization: list of content packages enabled on the server was empty when completing initialization. Incoming header: {incomingHeader}";
-                        GameAnalyticsManager.AddErrorEventOnce("SteamP2PClientPeer.OnInitializationComplete:NoContentPackages", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
-                        DebugConsole.ThrowError(errorMsg);
+                        initializationError(
+                            errorMsg: "Error during connection initialization: list of content packages enabled on the server was empty when completing initialization.",
+                            analyticsTag: "NoContentPackages");
+                        return;
                     }
                     callbacks.OnInitializationComplete.Invoke();
                     initializationStep = ConnectionInitialization.Success;
@@ -320,7 +325,7 @@ namespace Barotrauma.Networking
             SendMsgInternal(headers, body);
         }
 
-        public override void Close(string? msg = null, bool disableReconnect = false)
+        public override void Close(PeerDisconnectPacket peerDisconnectPacket)
         {
             if (!isActive) { return; }
 
@@ -334,12 +339,7 @@ namespace Barotrauma.Networking
                 PacketHeader = PacketHeader.IsDisconnectMessage,
                 Initialization = null
             };
-            var body = new PeerDisconnectPacket
-            {
-                Message = msg ?? "Disconnected"
-            };
-
-            SendMsgInternal(headers, body);
+            SendMsgInternal(headers, peerDisconnectPacket);
 
             Thread.Sleep(100);
 
@@ -349,7 +349,7 @@ namespace Barotrauma.Networking
             steamAuthTicket?.Cancel();
             steamAuthTicket = null;
 
-            callbacks.OnDisconnect.Invoke(disableReconnect);
+            callbacks.OnDisconnect.Invoke(peerDisconnectPacket);
         }
 
         protected override void SendMsgInternal(PeerPacketHeaders headers, INetSerializableStruct? body)

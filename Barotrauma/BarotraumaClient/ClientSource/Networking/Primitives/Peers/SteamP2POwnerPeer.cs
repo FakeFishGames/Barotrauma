@@ -9,8 +9,6 @@ namespace Barotrauma.Networking
 {
     sealed class SteamP2POwnerPeer : ClientPeer
     {
-        private bool isActive;
-
         private readonly SteamId selfSteamID;
         private UInt64 ownerKey64 => unchecked((UInt64)ownerKey.Fallback(0));
 
@@ -68,6 +66,7 @@ namespace Barotrauma.Networking
                 : throw new InvalidOperationException("Steamworks not initialized");
         }
 
+
         public override void Start()
         {
             if (isActive) { return; }
@@ -93,22 +92,13 @@ namespace Barotrauma.Networking
         private void OnAuthChange(Steamworks.SteamId steamId, Steamworks.SteamId ownerId, Steamworks.AuthResponse status)
         {
             RemotePeer? remotePeer = remotePeers.Find(p => p.SteamId.Value == steamId);
-            DebugConsole.Log($"{steamId} validation: {status}, {remotePeer != null}");
 
             if (remotePeer == null) { return; }
 
-            if (remotePeer.Authenticated)
-            {
-                if (status != Steamworks.AuthResponse.OK)
-                {
-                    DisconnectPeer(remotePeer, $"{DisconnectReason.SteamAuthenticationFailed}/ Steam authentication status changed: {status}");
-                }
-
-                return;
-            }
-
             if (status == Steamworks.AuthResponse.OK)
             {
+                if (remotePeer.Authenticated) { return; }
+
                 SteamId ownerSteamId = new SteamId(ownerId);
                 remotePeer.OwnerSteamId = Option<SteamId>.Some(ownerSteamId);
                 remotePeer.Authenticated = true;
@@ -126,7 +116,7 @@ namespace Barotrauma.Networking
             }
             else
             {
-                DisconnectPeer(remotePeer, $"{DisconnectReason.SteamAuthenticationFailed}/ Steam authentication failed: {status}");
+                DisconnectPeer(remotePeer, PeerDisconnectPacket.SteamAuthError(status));
             }
         }
 
@@ -171,7 +161,7 @@ namespace Barotrauma.Networking
                     Steamworks.BeginAuthResult authSessionStartState = SteamManager.StartAuthSession(ticket, steamId);
                     if (authSessionStartState != Steamworks.BeginAuthResult.OK)
                     {
-                        DisconnectPeer(remotePeer, $"{DisconnectReason.SteamAuthenticationFailed}/ Steam auth session failed to start: {authSessionStartState}");
+                        DisconnectPeer(remotePeer, PeerDisconnectPacket.SteamAuthError(authSessionStartState));
                         return;
                     }
                 }
@@ -197,9 +187,9 @@ namespace Barotrauma.Networking
         {
             if (!isActive) { return; }
 
-            if (ChildServerRelay.HasShutDown || (ChildServerRelay.Process?.HasExited ?? true))
+            if (ChildServerRelay.HasShutDown || !(ChildServerRelay.Process is { HasExited: false }))
             {
-                Close();
+                Close(PeerDisconnectPacket.WithReason(DisconnectReason.ServerCrashed));
                 var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), ChildServerRelay.CrashMessage);
                 msgBox.Buttons[0].OnClicked += (btn, obj) =>
                 {
@@ -279,7 +269,7 @@ namespace Barotrauma.Networking
             if (packetHeader.IsDisconnectMessage())
             {
                 var packet = INetSerializableStruct.Read<PeerDisconnectPacket>(inc);
-                DisconnectPeer(peer, packet.Message);
+                DisconnectPeer(peer, packet);
                 return;
             }
 
@@ -366,30 +356,20 @@ namespace Barotrauma.Networking
             }
         }
         
-        private void DisconnectPeer(RemotePeer peer, string msg)
+        private void DisconnectPeer(RemotePeer peer, PeerDisconnectPacket peerDisconnectPacket)
         {
-            if (!string.IsNullOrWhiteSpace(msg))
-            {
-                peer.DisconnectTime ??= Timing.TotalTime + 1.0;
+            peer.DisconnectTime ??= Timing.TotalTime + 1.0;
 
-                IWriteMessage outMsg = new WriteOnlyMessage();
-                outMsg.WriteNetSerializableStruct(new PeerPacketHeaders
-                {
-                    DeliveryMethod = DeliveryMethod.Reliable,
-                    PacketHeader = PacketHeader.IsServerMessage | PacketHeader.IsDisconnectMessage
-                });
-                outMsg.WriteNetSerializableStruct(new PeerDisconnectPacket
-                {
-                    Message = msg
-                });
-                
-                Steamworks.SteamNetworking.SendP2PPacket(peer.SteamId.Value, outMsg.Buffer, outMsg.LengthBytes, 0, Steamworks.P2PSend.Reliable);
-                sentBytes += outMsg.LengthBytes;
-            }
-            else
+            IWriteMessage outMsg = new WriteOnlyMessage();
+            outMsg.WriteNetSerializableStruct(new PeerPacketHeaders
             {
-                ClosePeerSession(peer);
-            }
+                DeliveryMethod = DeliveryMethod.Reliable,
+                PacketHeader = PacketHeader.IsServerMessage | PacketHeader.IsDisconnectMessage
+            });
+            outMsg.WriteNetSerializableStruct(peerDisconnectPacket);
+            
+            Steamworks.SteamNetworking.SendP2PPacket(peer.SteamId.Value, outMsg.Buffer, outMsg.LengthBytes, 0, Steamworks.P2PSend.Reliable);
+            sentBytes += outMsg.LengthBytes;
         }
 
         private void ClosePeerSession(RemotePeer peer)
@@ -403,7 +383,7 @@ namespace Barotrauma.Networking
             //owner doesn't send passwords
         }
 
-        public override void Close(string? msg = null, bool disableReconnect = false)
+        public override void Close(PeerDisconnectPacket peerDisconnectPacket)
         {
             if (!isActive) { return; }
 
@@ -411,7 +391,7 @@ namespace Barotrauma.Networking
 
             for (int i = remotePeers.Count - 1; i >= 0; i--)
             {
-                DisconnectPeer(remotePeers[i], msg ?? DisconnectReason.ServerShutdown.ToString());
+                DisconnectPeer(remotePeers[i], PeerDisconnectPacket.WithReason(DisconnectReason.ServerShutdown));
             }
 
             Thread.Sleep(100);
@@ -423,7 +403,7 @@ namespace Barotrauma.Networking
 
             ChildServerRelay.ClosePipes();
 
-            callbacks.OnDisconnect.Invoke(disableReconnect);
+            callbacks.OnDisconnect.Invoke(peerDisconnectPacket);
 
             SteamManager.LeaveLobby();
             Steamworks.SteamNetworking.ResetActions();

@@ -64,6 +64,8 @@ namespace Barotrauma.Items.Components
         private const float MinZoom = 1.0f, MaxZoom = 4.0f;
         private float zoom = 1.0f;
 
+        /// <remarks>Accessed through event actions. Do not remove even if there are no references in code.</remarks>
+        public bool UseDirectionalPing => useDirectionalPing;
         private bool useDirectionalPing = false;
         private Vector2 pingDirection = new Vector2(1.0f, 0.0f);
         private bool useMineralScanner;
@@ -134,6 +136,13 @@ namespace Barotrauma.Items.Components
         public float Zoom
         {
             get { return zoom; }
+            set 
+            { 
+                zoom = MathHelper.Clamp(value, MinZoom, MaxZoom);
+#if CLIENT
+                zoomSlider.BarScroll = MathUtils.InverseLerp(MinZoom, MaxZoom, zoom);
+#endif
+            }
         }
 
         public Mode CurrentMode

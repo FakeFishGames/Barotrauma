@@ -50,10 +50,7 @@ namespace Barotrauma
             if (level > maxLevel) { maxLevel = level; }
 
             int price = BasePrice;
-            for (int i = 1; i <= level; i++)
-            {
-                price += (int)(price * MathHelper.Lerp(IncreaseLow, IncreaseHigh, i / (float)maxLevel) / 100);
-            }
+            price += (int)(price * MathHelper.Lerp(IncreaseLow, IncreaseHigh, level / (float)maxLevel) / 100);
             return location?.GetAdjustedMechanicalCost(price) ?? price;
         }
     }
@@ -331,8 +328,6 @@ namespace Barotrauma
 
         public ContentXElement SourceElement { get; }
 
-        private bool disposed;
-
         public bool SuppressWarnings { get; }
 
         public bool HideInMenus { get; }
@@ -525,18 +520,12 @@ namespace Barotrauma
 
         public override void Dispose()
         {
-            if (!disposed)
-            {
-                Prefabs.Remove(this);
 #if CLIENT
-                Sprite?.Remove();
-                Sprite = null;
-                DecorativeSprites.ForEach(sprite => sprite.Remove());
-                targetProperties.Clear();
+            Sprite?.Remove();
+            Sprite = null;
+            DecorativeSprites.ForEach(sprite => sprite.Remove());
+            targetProperties.Clear();
 #endif
-            }
-
-            disposed = true;
         }
     }
 }
