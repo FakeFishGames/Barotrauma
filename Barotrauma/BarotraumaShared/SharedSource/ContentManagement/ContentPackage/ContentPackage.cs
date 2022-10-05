@@ -123,7 +123,18 @@ namespace Barotrauma
             => NameMatches(name.ToIdentifier());
         
         public bool StringMatches(string workshop_id_or_name)
-            => (UInt64.TryParse(workshop_id_or_name, out UInt64 res)&& (res != 0 && res == SteamWorkshopId)) || NameMatches(workshop_id_or_name);
+            => (UgcId.TryUnwrap(out ContentPackageId id) && id.ToString().Equals(workshop_id_or_name) || NameMatches(workshop_id_or_name));
+
+        public string GetBestEffortId() {
+			if (UgcId.TryUnwrap(out ContentPackageId id))
+			{
+				return id.ToString();
+			}
+			else
+			{
+				return Name;
+			}
+		}
 
         public static ContentPackage? TryLoad(string path)
         {

@@ -8,9 +8,6 @@ using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 using Barotrauma.Networking;
-#if SERVER
-using Barotrauma.Networking;
-#endif
 
 namespace Barotrauma
 {
