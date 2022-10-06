@@ -26,7 +26,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NLog" Version="4.7.0" />
+    <PackageReference Include="NLog" Version="5.0.4" />
     <PackageReference Include="System.Data.SQLite" Version="1.0.111" />
   </ItemGroup>
 
