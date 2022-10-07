@@ -113,7 +113,10 @@ namespace Barotrauma
                 {
                     case ModType.Workshop:
                         pkgElem.SetAttributeValue("name", pkg.Name);
-                        pkgElem.SetAttributeValue("id", pkg.UgcId.Fallback(ContentPackageId.NULL).ToString());
+                        if (pkg.UgcId.TryUnwrap(out ContentPackageId ugcId))
+                        {
+                            pkgElem.SetAttributeValue("id", ugcId.ToString());
+                        }
                         break;
                     case ModType.Local:
                         pkgElem.SetAttributeValue("name", pkg.Name);

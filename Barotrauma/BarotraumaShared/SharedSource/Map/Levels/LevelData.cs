@@ -47,6 +47,9 @@ namespace Barotrauma
 
         public readonly Point Size;
 
+        /// <summary>
+        /// The depth at which the level starts at, in in-game coordinates. E.g. if this was set to 100 000 (= 1000 m), the nav terminal would display the depth as 1000 meters at the top of the level.
+        /// </summary>
         public readonly int InitialDepth;
 
         /// <summary>
@@ -59,6 +62,9 @@ namespace Barotrauma
 
         public bool EventsExhausted { get; set; }
 
+        /// <summary>
+        /// The crush depth of a non-upgraded submarine in in-game coordinates. Note that this can be above the top of the level!
+        /// </summary>
         public float CrushDepth
         {
             get
@@ -66,6 +72,10 @@ namespace Barotrauma
                 return Math.Max(Size.Y, Level.DefaultRealWorldCrushDepth / Physics.DisplayToRealWorldRatio) - InitialDepth;
             }
         }
+
+        /// <summary>
+        /// The crush depth of a non-upgraded submarine in "real world units" (meters from the surface of Europa). Note that this can be above the top of the level!
+        /// </summary>
         public float RealWorldCrushDepth
         {
             get

@@ -269,6 +269,9 @@ namespace Barotrauma
 
         public const float DefaultRealWorldCrushDepth = 3500.0f;
 
+        /// <summary>
+        /// The crush depth of a non-upgraded submarine in in-game coordinates. Note that this can be above the top of the level!
+        /// </summary>
         public float CrushDepth
         {
             get
@@ -277,6 +280,9 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// The crush depth of a non-upgraded submarine in "real world units" (meters from the surface of Europa). Note that this can be above the top of the level!
+        /// </summary>
         public float RealWorldCrushDepth
         {
             get
