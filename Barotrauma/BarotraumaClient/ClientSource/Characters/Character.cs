@@ -503,9 +503,8 @@ namespace Barotrauma
         /// </summary>
         /// <param name="character">The Character who is looking for the interactable item, only items that are close enough to this character are returned</param>
         /// <param name="simPosition">The item at the simPosition, with the lowest depth, is returned</param>
-        /// <param name="allowFindingNearestItem">If this is true and an item cannot be found at simPosition then a nearest item will be returned if possible</param>
-        /// <param name="hull">If a hull is specified, only items within that hull are returned</param>
-        public Item FindItemAtPosition(Vector2 simPosition, float aimAssistModifier = 0.0f, Item[] ignoredItems = null)
+        /// <param name="aimAssistModifier">Multiplier for the distance around the given point where items will be searched. Only applies when no item is selected yet</param>
+        public Item FindItemAtPosition(Vector2 simPosition, float aimAssistModifier = 0.0f, Func<Item, bool> filter = null)
         {
             if (Submarine != null)
             {
@@ -538,7 +537,9 @@ namespace Barotrauma
                 }
                 if (item.body != null && !item.body.Enabled) { continue; }
                 if (item.ParentInventory != null) { continue; }
-                if (ignoredItems != null && ignoredItems.Contains(item)) { continue; }
+                // At this point at least, it is very sane to avoid calculating everything for ALL items on the map
+                if ((item.WorldPosition - displayPosition).LengthSquared() > 1600.0f) { continue; }
+                if (filter != null && !filter(item)) { continue; }
                 if (item.Prefab.RequireCampaignInteract && item.CampaignInteractionType == CampaignMode.InteractionType.None) { continue; }
                 if (Screen.Selected is SubEditorScreen editor && editor.WiringMode && item.GetComponent<ConnectionPanel>() == null) { continue; }
 

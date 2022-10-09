@@ -307,7 +307,8 @@ namespace Barotrauma
                         { InputType.Use, Keys.E },
                         { InputType.Select, MouseButton.PrimaryMouse },
                         { InputType.Deselect, MouseButton.SecondaryMouse },
-                        { InputType.Shoot, MouseButton.PrimaryMouse }
+                        { InputType.Shoot, MouseButton.PrimaryMouse },
+                        { InputType.FilterItemFocus, Keys.LeftAlt },
                 }.ToImmutableDictionary();
 
                 public static KeyMapping GetDefault() => new KeyMapping

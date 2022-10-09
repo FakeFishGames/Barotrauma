@@ -23,6 +23,7 @@ namespace Barotrauma
         PreviousFireMode,
         ActiveChat,
         ToggleChatMode,
-        ChatBox
+        ChatBox,
+        FilterItemFocus
     }
 }

@@ -2650,7 +2650,24 @@ namespace Barotrauma
                             aimAssist = 0.0f;
                         }
 
-                        var item = FindItemAtPosition(mouseSimPos, aimAssist);
+                        Func<Item, bool> filter = null;
+                        if(PlayerInput.KeyDown(InputType.FilterItemFocus))
+                        {
+                            bool FilterPickables(Item item)
+                            {
+                                if (item.GetComponent<Pickable>() is { } pickable)
+                                {
+                                    if(!pickable.IsAttached)
+                                    {
+                                        return item.AllowedSlots.Any(x => (x & InvSlotType.Any) != 0);
+                                    }
+                                }
+                                return false;
+                            }
+                            filter = FilterPickables;
+                        }
+
+                        var item = FindItemAtPosition(mouseSimPos, aimAssist, filter);
                         
                         focusedItem = CanInteract ? item : null;
                         if (focusedItem != null && focusedItem.CampaignInteractionType != CampaignMode.InteractionType.None)

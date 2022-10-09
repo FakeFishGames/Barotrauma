@@ -23,7 +23,9 @@ namespace Barotrauma.Items.Components
         private readonly Sprite doorSprite, weldedSprite, brokenSprite;
         private readonly bool scaleBrokenSprite, fadeBrokenSprite;
         private readonly bool autoOrientGap;
-        
+
+        public override bool IsAttached => true;
+
         private bool isJammed;
         public bool IsJammed
         {
