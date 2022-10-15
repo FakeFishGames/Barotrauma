@@ -1011,7 +1011,7 @@ namespace Barotrauma
             }
         }
 
-        public bool EnableDespawn { get; set; } = true;
+        public bool EnableDespawn { get; set; } = false;
 
         public CauseOfDeath CauseOfDeath
         {
