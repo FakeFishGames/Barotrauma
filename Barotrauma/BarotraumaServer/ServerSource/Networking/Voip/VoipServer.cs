@@ -113,14 +113,14 @@ namespace Barotrauma.Networking
             {
                 if (recipient.SpectatePos == null) { return true; }
                 distanceFactor = MathHelper.Clamp(Vector2.Distance(sender.Character.WorldPosition, recipient.SpectatePos.Value) / ChatMessage.SpeakRange, 0.0f, 1.0f);
-                return distanceFactor < 1.0f;
+                return distanceFactor < 0.35f;
             }
             else
             {
                 //otherwise do a distance check
                 float garbleAmount = ChatMessage.GetGarbleAmount(recipient.Character, sender.Character, ChatMessage.SpeakRange);
                 distanceFactor = garbleAmount;
-                return garbleAmount < 1.0f;
+                return garbleAmount < 0.35f;
             }
         }
     }
