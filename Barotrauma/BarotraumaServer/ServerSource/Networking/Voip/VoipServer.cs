@@ -97,7 +97,7 @@ namespace Barotrauma.Networking
             }
 
             //otherwise do a distance check
-            return ChatMessage.GetGarbleAmount(recipient.Character, sender.Character, ChatMessage.SpeakRange) < 1.0f;
+            return ChatMessage.GetGarbleAmount(recipient.Character, sender.Character, ChatMessage.SpeakRange) < 0.35f;
         }
     }
 }
