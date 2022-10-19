@@ -53,3 +53,5 @@ Barotrauma/**/GameAnalyticsKeys.cs
 
 #Rider
 *.DotSettings.user
+Backup/WindowsSolution.sln
+UpgradeLog.htm
