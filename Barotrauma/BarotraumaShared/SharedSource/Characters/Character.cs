@@ -2053,6 +2053,18 @@ namespace Barotrauma
                 }
             }
 
+            if(IsKeyDown(InputType.DropItem))
+            {
+                if (HeldItems.Count() == 1)
+                {
+                    foreach (Item item in HeldItems)
+                    {
+                        if (Inventory.IsInLimbSlot(item, InvSlotType.LeftHand) && Inventory.IsInLimbSlot(item, InvSlotType.RightHand))
+                            item.Drop(this);
+					}
+                }
+            }
+
             bool CanUseItemsWhenSelected(Item item) => item == null || !item.Prefab.DisableItemUsageWhenSelected;
             if (CanUseItemsWhenSelected(SelectedItem) && CanUseItemsWhenSelected(SelectedSecondaryItem))
             {

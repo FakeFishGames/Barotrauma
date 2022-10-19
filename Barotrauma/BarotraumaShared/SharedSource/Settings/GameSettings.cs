@@ -276,6 +276,7 @@ namespace Barotrauma
                         { InputType.Health, Keys.H },
                         { InputType.Ragdoll, Keys.Space },
                         { InputType.Aim, MouseButton.SecondaryMouse },
+                        { InputType.DropItem, Keys.C },
 
                         { InputType.InfoTab, Keys.Tab },
                         { InputType.Chat, Keys.None },
