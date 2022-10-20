@@ -351,7 +351,7 @@ namespace Barotrauma.CharacterEditor
                                     {
                                         if (string.IsNullOrEmpty(contentPackageNameElement.Text))
                                         {
-                                            contentPackageNameElement.Flash();
+                                            contentPackageNameElement.Flash(useRectangleFlash: true);
                                             return false;
                                         }
                                         if (ContentPackageManager.AllPackages.Any(cp => cp.Name.ToLower() == contentPackageNameElement.Text.ToLower()))
@@ -405,7 +405,7 @@ namespace Barotrauma.CharacterEditor
                 {
                     if (ContentPackage == null)
                     {
-                        contentPackageDropDown.Flash();
+                        contentPackageDropDown.Flash(useRectangleFlash: true);
                         return false;
                     }
 
@@ -417,7 +417,7 @@ namespace Barotrauma.CharacterEditor
                         if (!File.Exists(evaluatedTexturePath))
                         {
                             GUI.AddMessage(GetCharacterEditorTranslation("TextureDoesNotExist"), GUIStyle.Red);
-                            texturePathElement.Flash(GUIStyle.Red);
+                            texturePathElement.Flash(useRectangleFlash: true);
                             return false;
                         }
                     }
@@ -425,7 +425,7 @@ namespace Barotrauma.CharacterEditor
                     if (!path.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
                     {
                         GUI.AddMessage(TextManager.Get("WrongFileType"), GUIStyle.Red);
-                        texturePathElement.Flash(GUIStyle.Red);
+                        texturePathElement.Flash(useRectangleFlash: true);
                         return false;
                     }
                     if (IsCopy)
@@ -486,7 +486,8 @@ namespace Barotrauma.CharacterEditor
                 {
                     PlaySoundOnSelect = true,
                 };
-                var removeLimbButton = new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), limbEditLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIMinusButton")
+                var limbButtonSize = Vector2.One * 0.8f;
+                var removeLimbButton = new GUIButton(new RectTransform(limbButtonSize, limbEditLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIMinusButton")
                 {
                     OnClicked = (b, d) =>
                     {
@@ -497,7 +498,7 @@ namespace Barotrauma.CharacterEditor
                         return true;
                     }
                 };
-                var addLimbButton = new GUIButton(new RectTransform(new Vector2(0.05f, 1.0f), limbEditLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIPlusButton")
+                var addLimbButton = new GUIButton(new RectTransform(limbButtonSize, limbEditLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIPlusButton")
                 {
                     OnClicked = (b, d) =>
                     {

@@ -273,13 +273,13 @@ namespace Barotrauma
             IsCampaignSet = element.GetAttributeBool("campaign", LevelType == LevelData.LevelType.Outpost || (parentSet?.IsCampaignSet ?? false));
             ResetTime = element.GetAttributeFloat("resettime", 0);
 
-            DefaultCommonness = 1.0f;
+            DefaultCommonness = element.GetAttributeFloat("commonness", 1.0f);
             foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "commonness":
-                        DefaultCommonness = subElement.GetAttributeFloat("commonness", 0.0f);
+                        DefaultCommonness = subElement.GetAttributeFloat("commonness", DefaultCommonness);
                         foreach (XElement overrideElement in subElement.Elements())
                         {
                             if (overrideElement.NameAsIdentifier() == "override")

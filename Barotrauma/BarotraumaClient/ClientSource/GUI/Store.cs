@@ -139,10 +139,10 @@ namespace Barotrauma
             return tab switch
             {
                 StoreTab.Buy => true,
-                StoreTab.Sell => campaignUI.Campaign.AllowedToManageCampaign(Networking.ClientPermissions.SellInventoryItems),
-                StoreTab.SellSub => campaignUI.Campaign.AllowedToManageCampaign(Networking.ClientPermissions.SellSubItems),
+                StoreTab.Sell => CampaignMode.AllowedToManageCampaign(Networking.ClientPermissions.SellInventoryItems),
+                StoreTab.SellSub => CampaignMode.AllowedToManageCampaign(Networking.ClientPermissions.SellSubItems),
                 _ => false,
-            };            
+            };
         }
 
         private void UpdatePermissions()

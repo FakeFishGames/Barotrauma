@@ -22,7 +22,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        const float MaxAttachDistance = 150.0f;
+        private const float MaxAttachDistance = ItemPrefab.DefaultInteractDistance * 0.95f;
 
         //the position(s) in the item that the Character grabs
         protected Vector2[] handlePos;
@@ -731,10 +731,24 @@ namespace Barotrauma.Items.Components
             mouseDiff = mouseDiff.ClampLength(MaxAttachDistance);
 
             Vector2 userPos = useWorldCoordinates ? user.WorldPosition : user.Position;
-
             Vector2 attachPos = userPos + mouseDiff;
 
-            if (user.Submarine == null && Level.Loaded != null)
+            if (user.Submarine != null)
+            {
+                if (Submarine.PickBody(
+                    ConvertUnits.ToSimUnits(user.Position), 
+                    ConvertUnits.ToSimUnits(user.Position + mouseDiff), collisionCategory: Physics.CollisionWall) != null)
+                {
+                    attachPos = userPos + mouseDiff * Submarine.LastPickedFraction;
+
+                    //round down if we're placing on the right side and vice versa: ensures we don't round the position inside a wall
+                    return
+                        new Vector2(
+                            mouseDiff.X > 0 ? (float)Math.Floor(attachPos.X / Submarine.GridSize.X) * Submarine.GridSize.X : (float)Math.Ceiling(attachPos.X / Submarine.GridSize.X) * Submarine.GridSize.X,
+                            mouseDiff.Y > 0 ? (float)Math.Floor(attachPos.Y / Submarine.GridSize.Y) * Submarine.GridSize.X : (float)Math.Ceiling(attachPos.Y / Submarine.GridSize.Y) * Submarine.GridSize.Y);
+                }
+            }
+            else if (Level.Loaded != null)
             {
                 bool edgeFound = false;
                 foreach (var cell in Level.Loaded.GetCells(attachPos))

@@ -139,7 +139,7 @@ namespace Barotrauma
                             humanPrefab.GiveItems(newCharacter, newCharacter.Submarine);
                             if (LootingIsStealing)
                             {
-                                foreach (Item item in newCharacter.Inventory.AllItems)
+                                foreach (Item item in newCharacter.Inventory.FindAllItems(recursive: true))
                                 {
                                     item.SpawnedInCurrentOutpost = true;
                                     item.AllowStealing = false;

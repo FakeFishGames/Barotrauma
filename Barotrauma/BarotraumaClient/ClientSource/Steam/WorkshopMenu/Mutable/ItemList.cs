@@ -598,13 +598,14 @@ namespace Barotrauma.Steam
 
             bool reinstallAction(GUIButton button, object o)
             {
+                SettingsMenu.Instance?.ApplyInstalledModChanges();
                 int prevIndex = ContentPackageManager.EnabledPackages.Regular.IndexOf(contentPackage);
                 TaskPool.AddIfNotFound($"Reinstall{workshopItem.Id}", 
                     SteamManager.Workshop.Reinstall(workshopItem), t =>
                 {
                     ContentPackageManager.WorkshopPackages.Refresh();
                     ContentPackageManager.EnabledPackages.RefreshUpdatedMods();
-                    if (SettingsMenu.Instance?.WorkshopMenu is MutableWorkshopMenu mutableWorkshopMenu)
+                    if (SettingsMenu.Instance?.WorkshopMenu is MutableWorkshopMenu mutableWorkshopMenu && !mutableWorkshopMenu.ViewingItemDetails)
                     {
                         mutableWorkshopMenu.PopulateInstalledModLists(forceRefreshEnabled: true);
                     }

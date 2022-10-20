@@ -906,11 +906,17 @@ namespace Barotrauma
 
         public LocationType GetLocationType()
         {
-            if (IsCriticallyRadiated() && LocationType.Prefabs[Type.ReplaceInRadiation] is { } newLocationType)
+            if (IsCriticallyRadiated() && !Type.ReplaceInRadiation.IsEmpty)
             {
-                return newLocationType;
+                if (LocationType.Prefabs.TryGet(Type.ReplaceInRadiation, out LocationType newLocationType))
+                {
+                    return newLocationType;
+                }
+                else
+                {
+                    DebugConsole.ThrowError($"Error when trying to get a new location type for an irradiated location - location type \"{newLocationType}\" not found.");
+                }
             }
-
             return Type;
         }
 

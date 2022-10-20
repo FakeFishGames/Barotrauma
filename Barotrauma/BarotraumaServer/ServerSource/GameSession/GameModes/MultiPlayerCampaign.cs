@@ -1019,7 +1019,7 @@ namespace Barotrauma
                 UpgradeManager.PurchaseUpgrade(prefab, category, client: sender);
 
                 // unstable logging
-                int price = prefab.Price.GetBuyprice(UpgradeManager.GetUpgradeLevel(prefab, category), Map?.CurrentLocation);
+                int price = prefab.Price.GetBuyPrice(UpgradeManager.GetUpgradeLevel(prefab, category), Map?.CurrentLocation);
                 int level = UpgradeManager.GetUpgradeLevel(prefab, category);
                 GameServer.Log($"SERVER: Purchased level {level} {category.Identifier}.{prefab.Identifier} for {price}", ServerLog.MessageType.ServerMessage);
             }

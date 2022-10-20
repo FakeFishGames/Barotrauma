@@ -24,6 +24,11 @@ namespace Barotrauma.Networking
 
         public new static Option<LidgrenEndpoint> Parse(string endpointStr)
         {
+            return ParseFromWithHostNameCheck(endpointStr, tryParseHostName: false);
+        }
+
+        public static Option<LidgrenEndpoint> ParseFromWithHostNameCheck(string endpointStr, bool tryParseHostName)
+        {
             string hostName = endpointStr;
             int port = NetConfig.DefaultPort;
             if (endpointStr.Count(c => c == ':') == 1)
@@ -33,7 +38,8 @@ namespace Barotrauma.Networking
                 port = int.TryParse(split[1], out var tmpPort) ? tmpPort : port;
             }
             
-            if (LidgrenAddress.Parse(hostName).TryUnwrap(out var adr))
+            if (LidgrenAddress.Parse(hostName).TryUnwrap(out var adr) || 
+                (tryParseHostName && LidgrenAddress.ParseHostName(hostName).TryUnwrap(out adr)))
             {
                 return Option<LidgrenEndpoint>.Some(new LidgrenEndpoint(adr.NetAddress, port));
             }

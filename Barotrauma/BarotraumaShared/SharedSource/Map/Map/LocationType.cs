@@ -65,7 +65,7 @@ namespace Barotrauma
             private set;
         }
 
-        public string ReplaceInRadiation { get; }
+        public Identifier ReplaceInRadiation { get; }
 
         public Sprite Sprite { get; private set; }
         public Sprite RadiationSprite { get; }
@@ -108,7 +108,7 @@ namespace Barotrauma
 
             HideEntitySubcategories = element.GetAttributeStringArray("hideentitysubcategories", Array.Empty<string>()).ToList();
 
-            ReplaceInRadiation = element.GetAttributeString(nameof(ReplaceInRadiation).ToLower(), "");
+            ReplaceInRadiation = element.GetAttributeIdentifier(nameof(ReplaceInRadiation), Identifier.Empty);
 
             string teamStr = element.GetAttributeString("outpostteam", "FriendlyNPC");
             Enum.TryParse(teamStr, out OutpostTeam);
