@@ -390,6 +390,8 @@ namespace Barotrauma
     {
         public static readonly PrefabCollection<ItemPrefab> Prefabs = new PrefabCollection<ItemPrefab>();
 
+        public const float DefaultInteractDistance = 120.0f;
+
         //default size
         public Vector2 Size { get; private set; }
 
@@ -590,7 +592,7 @@ namespace Barotrauma
         public override ImmutableHashSet<string> Aliases => aliases;
 
         //how close the Character has to be to the item to pick it up
-        [Serialize(120.0f, IsPropertySaveable.No)]
+        [Serialize(DefaultInteractDistance, IsPropertySaveable.No)]
         public float InteractDistance { get; private set; }
 
         // this can be used to allow items which are behind other items tp

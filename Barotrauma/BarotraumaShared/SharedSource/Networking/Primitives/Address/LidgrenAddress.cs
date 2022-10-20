@@ -40,6 +40,25 @@ namespace Barotrauma.Networking
             return Option<LidgrenAddress>.None();            
         }
 
+        public static Option<LidgrenAddress> ParseHostName(string endpointStr)
+        {
+            try
+            {
+                var resolvedAddresses = Dns.GetHostAddresses(endpointStr);
+                return resolvedAddresses.Any()
+                    ? Option<LidgrenAddress>.Some(new LidgrenAddress(resolvedAddresses.First()))
+                    : Option<LidgrenAddress>.None();
+            }
+            catch (SocketException)
+            {
+                return Option<LidgrenAddress>.None();
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                return Option<LidgrenAddress>.None();
+            }
+        }
+
         public override bool Equals(object? obj)
             => obj switch
             {

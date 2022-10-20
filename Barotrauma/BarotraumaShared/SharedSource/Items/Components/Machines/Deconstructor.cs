@@ -284,9 +284,10 @@ namespace Barotrauma.Items.Components
                 {
                     Entity.Spawner.AddItemToSpawnQueue(itemPrefab, outputContainer.Inventory, condition, onSpawned: (Item spawnedItem) =>
                     {
-                        spawnedItem.SpawnedInCurrentOutpost = item.SpawnedInCurrentOutpost;
                         spawnedItem.StolenDuringRound = targetItem.StolenDuringRound;
                         spawnedItem.AllowStealing = targetItem.AllowStealing;
+                        spawnedItem.OriginalOutpost = targetItem.OriginalOutpost;
+                        spawnedItem.SpawnedInCurrentOutpost = targetItem.SpawnedInCurrentOutpost;
                         for (int i = 0; i < outputContainer.Capacity; i++)
                         {
                             var containedItem = outputContainer.Inventory.GetItemAt(i);

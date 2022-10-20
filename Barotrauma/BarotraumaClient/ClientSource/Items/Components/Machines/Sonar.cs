@@ -1028,7 +1028,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach (var c in MineralClusters)
                 {
-                    var unobtainedMinerals = c.resources.Where(i => i != null && i.GetRootInventoryOwner() == i);
+                    var unobtainedMinerals = c.resources.Where(i => i != null && i.GetComponent<Holdable>() is { Attached: true });
                     if (unobtainedMinerals.None()) { continue; }
                     if (!CheckResourceMarkerVisibility(c.center, transducerCenter)) { continue; }
                     var i = unobtainedMinerals.FirstOrDefault();

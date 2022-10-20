@@ -113,6 +113,11 @@ namespace Barotrauma.Networking
                         break;
                     }
                 }
+                catch (AggregateException aggregateException)
+                {
+                    if (aggregateException.InnerException is OperationCanceledException) { return -1; }
+                    throw;
+                }
                 catch (OperationCanceledException)
                 {
                     return -1;

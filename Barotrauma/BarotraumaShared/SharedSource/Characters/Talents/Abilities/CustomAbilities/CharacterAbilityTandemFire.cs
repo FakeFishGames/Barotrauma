@@ -13,21 +13,23 @@ namespace Barotrauma.Abilities
 
         protected override void ApplyEffect()
         {
-            if (!SelectedItemHasTag(Character)) { return; }
+            if (!SelectedItemHasTag(Character, tag)) { return; }
 
             Character closestCharacter = null;
             float closestDistance = squaredMaxDistance;
 
             foreach (Character crewCharacter in Character.GetFriendlyCrew(Character))
             {
-                if (crewCharacter != Character && Vector2.DistanceSquared(Character.SimPosition, Character.GetRelativeSimPosition(crewCharacter)) is float tempDistance && tempDistance < closestDistance)
+                if (crewCharacter != Character && 
+                    Vector2.DistanceSquared(Character.WorldPosition, crewCharacter.WorldPosition) is float tempDistance && tempDistance < closestDistance &&
+                    SelectedItemHasTag(crewCharacter, tag))
                 {
                     closestCharacter = crewCharacter;
                     closestDistance = tempDistance;
                 }
             }
 
-            if (closestCharacter == null || !SelectedItemHasTag(closestCharacter)) { return; }
+            if (closestCharacter == null) { return; }
 
             if (closestDistance < squaredMaxDistance)
             {
@@ -35,7 +37,7 @@ namespace Barotrauma.Abilities
                 ApplyEffectSpecific(closestCharacter);
             }
 
-            bool SelectedItemHasTag(Character character) =>
+            static bool SelectedItemHasTag(Character character, string tag) =>
                 (character.SelectedItem != null && character.SelectedItem.HasTag(tag)) ||
                 (character.SelectedSecondaryItem != null && character.SelectedSecondaryItem.HasTag(tag));
         }

@@ -177,12 +177,13 @@ namespace Barotrauma
                 return;
             }
 
-            int price = prefab.Price.GetBuyprice(GetUpgradeLevel(prefab, category), Campaign.Map?.CurrentLocation);
+            int price = prefab.Price.GetBuyPrice(GetUpgradeLevel(prefab, category), Campaign.Map?.CurrentLocation);
             int currentLevel = GetUpgradeLevel(prefab, category);
 
-            if (currentLevel + 1 > prefab.MaxLevel)
+            int maxLevel = prefab.GetMaxLevelForCurrentSub();
+            if (currentLevel + 1 > maxLevel)
             {
-                DebugConsole.ThrowError($"Tried to purchase \"{prefab.Name}\" over the max level! ({currentLevel + 1} > {prefab.MaxLevel}). The transaction has been cancelled.");
+                DebugConsole.ThrowError($"Tried to purchase \"{prefab.Name}\" over the max level! ({currentLevel + 1} > {maxLevel}). The transaction has been cancelled.");
                 return;
             }
 
@@ -472,7 +473,7 @@ namespace Barotrauma
             {
                 int newLevel = BuyUpgrade(prefab, category, Submarine.MainSub, level);
                 DebugConsole.Log($"    - {category.Identifier}.{prefab.Identifier} lvl. {level}, new: ({newLevel})");
-                SetUpgradeLevel(prefab, category, Math.Clamp(GetRealUpgradeLevel(prefab, category) + level, 0, prefab.MaxLevel));
+                SetUpgradeLevel(prefab, category, GetRealUpgradeLevel(prefab, category) + level);
             }
 
             PendingUpgrades.Clear();
@@ -652,16 +653,13 @@ namespace Barotrauma
 
         /// <summary>
         /// Gets the progress that is shown on the store interface.
-        /// Includes values stored in the metadata and <see cref="PendingUpgrades"/>
+        /// Includes values stored in the metadata and <see cref="PendingUpgrades"/>, and takes submarine tier and class restrictions into account
         /// </summary>
-        /// <param name="prefab"></param>
-        /// <param name="category"></param>
-        /// <returns></returns>
         public int GetUpgradeLevel(UpgradePrefab prefab, UpgradeCategory category)
         {
             if (!Metadata.HasKey(FormatIdentifier(prefab, category))) { return GetPendingLevel(); }
 
-            return GetRealUpgradeLevel(prefab, category) + GetPendingLevel();
+            return Math.Min(GetRealUpgradeLevel(prefab, category) + GetPendingLevel(), prefab.GetMaxLevelForCurrentSub());
 
             int GetPendingLevel()
             {
@@ -671,11 +669,8 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Gets the level of the upgrade that is stored in the metadata.
+        /// Gets the level of the upgrade that is stored in the metadata. May be higher than the apparent level on the current sub if the player has switched to a lower-tier sub
         /// </summary>
-        /// <param name="prefab"></param>
-        /// <param name="category"></param>
-        /// <returns></returns>
         public int GetRealUpgradeLevel(UpgradePrefab prefab, UpgradeCategory category)
         {
             return !Metadata.HasKey(FormatIdentifier(prefab, category)) ? 0 : Metadata.GetInt(FormatIdentifier(prefab, category), 0);
@@ -684,9 +679,6 @@ namespace Barotrauma
         /// <summary>
         /// Stores the target upgrade level in the campaign metadata.
         /// </summary>
-        /// <param name="prefab"></param>
-        /// <param name="category"></param>
-        /// <param name="level"></param>
         private void SetUpgradeLevel(UpgradePrefab prefab, UpgradeCategory category, int level)
         {
             Metadata.SetValue(FormatIdentifier(prefab, category), level);
