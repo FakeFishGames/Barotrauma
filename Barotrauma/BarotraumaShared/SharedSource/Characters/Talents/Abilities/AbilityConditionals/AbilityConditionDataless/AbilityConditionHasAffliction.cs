@@ -17,7 +17,7 @@
             {
                 var affliction = character.CharacterHealth.GetAffliction(afflictionIdentifier);
                 if (affliction == null) { return false; }
-                return minimumPercentage <= affliction.Strength / affliction.Prefab.MaxStrength;
+                return affliction.Strength >= affliction.Prefab.ActivationThreshold && minimumPercentage <= affliction.Strength / affliction.Prefab.MaxStrength;
             }
             return false;
         }

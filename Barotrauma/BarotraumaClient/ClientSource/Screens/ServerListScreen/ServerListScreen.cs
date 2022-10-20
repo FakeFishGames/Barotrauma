@@ -7,6 +7,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -953,8 +955,19 @@ namespace Barotrauma
             okButton.Enabled = false;
             okButton.OnClicked = (btn, userdata) =>
             {
-                if (!Endpoint.Parse(endpointBox.Text).TryUnwrap(out var endpoint)) { return false; }
-                JoinServer(endpoint, "");
+                if (Endpoint.Parse(endpointBox.Text).TryUnwrap(out var endpoint))
+                {
+                    JoinServer(endpoint, "");
+                }
+                else if (LidgrenEndpoint.ParseFromWithHostNameCheck(endpointBox.Text, tryParseHostName: true).TryUnwrap(out var lidgrenEndpoint))
+                {
+                    JoinServer(lidgrenEndpoint, "");
+                }
+                else
+                {
+                    new GUIMessageBox(TextManager.Get("error"), TextManager.GetWithVariable("invalidipaddress", "[serverip]:[port]", endpointBox.Text));
+                    endpointBox.Flash();
+                }
                 msgBox.Close();
                 return false;
             };

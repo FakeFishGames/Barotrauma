@@ -543,7 +543,8 @@ namespace Barotrauma.Steam
                 
                 var localModProject = new ModProject(localPackage)
                 {
-                    UgcId = Option<ContentPackageId>.Some(new SteamWorkshopId(resultId))
+                    UgcId = Option<ContentPackageId>.Some(new SteamWorkshopId(resultId)),
+                    ModVersion = modVersion
                 };
                 localModProject.DiscardHashAndInstallTime();
                 localModProject.Save(localPackage.Path);

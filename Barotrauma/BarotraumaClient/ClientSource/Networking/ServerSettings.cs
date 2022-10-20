@@ -702,10 +702,30 @@ namespace Barotrauma.Networking
             {
                 Enabled = !GameMain.NetworkMember.GameStarted
             };
-            var cargoFrame = new GUIListBox(new RectTransform(new Vector2(0.6f, 0.7f), settingsTabs[(int)SettingsTab.Rounds].RectTransform, Anchor.BottomRight, Pivot.BottomLeft))
+
+            var cargoFrame = new GUIFrame(new RectTransform(new Vector2(0.6f, 0.7f), settingsTabs[(int)SettingsTab.Rounds].RectTransform, Anchor.BottomRight, Pivot.BottomLeft))
             {
                 Visible = false
             };
+            var cargoContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), cargoFrame.RectTransform, Anchor.Center))
+            {
+                Stretch = true
+            };
+
+            var filterText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), cargoContent.RectTransform), TextManager.Get("serverlog.filter"), font: GUIStyle.SubHeadingFont);
+            var entityFilterBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), filterText.RectTransform, Anchor.CenterRight), font: GUIStyle.Font, createClearButton: true);
+            filterText.RectTransform.MinSize = new Point(0, entityFilterBox.RectTransform.MinSize.Y);
+            var cargoList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.8f), cargoContent.RectTransform));
+            entityFilterBox.OnTextChanged += (textBox, text) =>
+            {
+                foreach (var child in cargoList.Content.Children)
+                {
+                    if (child.UserData is not ItemPrefab itemPrefab) { continue; }
+                    child.Visible = string.IsNullOrEmpty(text) || itemPrefab.Name.Contains(text, StringComparison.OrdinalIgnoreCase);
+                }
+                return true;
+            };
+
             cargoButton.UserData = cargoFrame;
             cargoButton.OnClicked = (button, obj) =>
             {
@@ -721,7 +741,7 @@ namespace Barotrauma.Networking
 
             GUITextBlock.AutoScaleAndNormalize(buttonHolder.Children.Select(c => ((GUIButton)c).TextBlock));
 
-            foreach (ItemPrefab ip in ItemPrefab.Prefabs)
+            foreach (ItemPrefab ip in ItemPrefab.Prefabs.OrderBy(ip => ip.Name))
             {
                 if (ip.AllowAsExtraCargo.HasValue)
                 {
@@ -732,10 +752,10 @@ namespace Barotrauma.Networking
                     if (!ip.CanBeBought) { continue; }
                 }
 
-                var itemFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), cargoFrame.Content.RectTransform) { MinSize = new Point(0, 30) }, isHorizontal: true)
+                var itemFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), cargoList.Content.RectTransform) { MinSize = new Point(0, 30) }, isHorizontal: true)
                 {
                     Stretch = true,
-                    UserData = cargoFrame,
+                    UserData = ip,
                     RelativeSpacing = 0.05f
                 };
 
@@ -778,7 +798,7 @@ namespace Barotrauma.Networking
                     numberInput.IntValue = ExtraCargo.ContainsKey(ip) ? ExtraCargo[ip] : 0;
                     CoroutineManager.Invoke(() =>
                     {
-                        foreach (var child in cargoFrame.Content.GetAllChildren())
+                        foreach (var child in cargoList.Content.GetAllChildren())
                         {
                             if (child.GetChild<GUINumberInput>() is GUINumberInput otherNumberInput)
                             {

@@ -17,7 +17,7 @@ namespace Barotrauma.Items.Components
         {
             var allowOutpostAutoDocking = (AllowOutpostAutoDocking)msg.ReadByte();
             if (outpostAutoDockingPromptShown &&
-                (GameMain.GameSession?.Campaign?.AllowedToManageCampaign(c, ClientPermissions.ManageMap) ?? false))
+                CampaignMode.AllowedToManageCampaign(c, ClientPermissions.ManageMap))
             {
                 this.allowOutpostAutoDocking = allowOutpostAutoDocking;
             }

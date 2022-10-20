@@ -1717,19 +1717,7 @@ namespace Barotrauma
                                     }
                                     float spread = Rand.Range(-chosenItemSpawnInfo.AimSpreadRad, chosenItemSpawnInfo.AimSpreadRad);
                                     float rotation = chosenItemSpawnInfo.RotationRad;
-                                    Vector2 worldPos;
-                                    if (sourceBody != null)
-                                    {
-                                        worldPos = sourceBody.Position;
-                                        if (user?.Submarine != null)
-                                        {
-                                            worldPos += user.Submarine.Position;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        worldPos = entity.WorldPosition;
-                                    }
+                                    Vector2 spawnPos = sourceBody != null ? sourceBody.SimPosition : entity.SimPosition;
                                     switch (chosenItemSpawnInfo.RotationType)
                                     {
                                         case ItemSpawnInfo.SpawnRotationType.Fixed:
@@ -1743,7 +1731,7 @@ namespace Barotrauma
                                             }
                                             break;
                                         case ItemSpawnInfo.SpawnRotationType.Target:
-                                            rotation = MathUtils.VectorToAngle(entity.WorldPosition - worldPos);
+                                            rotation = MathUtils.VectorToAngle(entity.SimPosition - spawnPos);
                                             break;
                                         case ItemSpawnInfo.SpawnRotationType.Limb:
                                             if (sourceBody != null)
@@ -1787,10 +1775,7 @@ namespace Barotrauma
                                     rotation += spread;
                                     if (projectile != null)
                                     {
-                                        projectile.Shoot(user, 
-                                            ConvertUnits.ToSimUnits(worldPos), 
-                                            ConvertUnits.ToSimUnits(worldPos),
-                                            rotation,
+                                        projectile.Shoot(user, spawnPos, spawnPos, rotation,
                                             ignoredBodies: user?.AnimController.Limbs.Where(l => !l.IsSevered).Select(l => l.body.FarseerBody).ToList(), createNetworkEvent: true);
                                     }
                                     else if (newItem.body != null)

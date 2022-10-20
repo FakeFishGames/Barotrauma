@@ -543,7 +543,7 @@ namespace Barotrauma
         
         private void GetName(Rand.RandSync randSync, out string name)
         {
-            var nameElement = CharacterConfigElement.GetChildElement("names") ?? CharacterConfigElement.GetChildElement("name");
+            ContentXElement nameElement = CharacterConfigElement.GetChildElement("names") ?? CharacterConfigElement.GetChildElement("name");
             ContentPath namesXmlFile = nameElement?.GetAttributeContentPath("path") ?? ContentPath.Empty;
             XElement namesXml = null;
             if (!namesXmlFile.IsNullOrEmpty()) //names.xml is defined 
@@ -554,8 +554,8 @@ namespace Barotrauma
             else //the legacy firstnames.txt/lastnames.txt shit is defined
             {
                 namesXml = new XElement("names", new XAttribute("format", "[firstname] [lastname]"));
-                var firstNamesPath = ReplaceVars(nameElement.GetAttributeContentPath("firstname")?.Value ?? "");
-                var lastNamesPath = ReplaceVars(nameElement.GetAttributeContentPath("lastname")?.Value ?? "");
+                string firstNamesPath = nameElement == null ? string.Empty : ReplaceVars(nameElement.GetAttributeContentPath("firstname")?.Value ?? "");
+                string lastNamesPath = nameElement == null ? string.Empty : ReplaceVars(nameElement.GetAttributeContentPath("lastname")?.Value ?? "");
                 if (File.Exists(firstNamesPath) && File.Exists(lastNamesPath))
                 {
                     var firstNames = File.ReadAllLines(firstNamesPath);
