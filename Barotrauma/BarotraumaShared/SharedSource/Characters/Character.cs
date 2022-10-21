@@ -2053,7 +2053,7 @@ namespace Barotrauma
                 }
             }
 
-            if(IsKeyDown(InputType.DropItem))
+            if (IsKeyDown(InputType.DropItem))
             {
                 foreach (Item item in HeldItems)
                 {
@@ -2063,9 +2063,9 @@ namespace Barotrauma
                         {
                             SelectedItem.OwnInventory.TryPutItem(item, this);
                         }
-                        else if (HeldItems.Count() == 1 && Inventory.IsInLimbSlot(item, InvSlotType.LeftHand) && Inventory.IsInLimbSlot(item, InvSlotType.RightHand))
+                        else if (Inventory.IsInLimbSlot(item, InvSlotType.LeftHand) && Inventory.IsInLimbSlot(item, InvSlotType.RightHand))
                         {
-                                item.Drop(this);
+                            item.Drop(this);
                         }
                     }
                 }
