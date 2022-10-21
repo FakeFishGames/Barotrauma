@@ -785,13 +785,7 @@ namespace Barotrauma
             {
                 OnClicked = (btn, obj) =>
                 {
-                    GameSettings.SetCurrentConfig(unsavedConfig);
-                    if (WorkshopMenu is MutableWorkshopMenu mutableWorkshopMenu && 
-                        mutableWorkshopMenu.CurrentTab == MutableWorkshopMenu.Tab.InstalledMods) 
-                    {
-                        mutableWorkshopMenu.Apply();
-                    }
-                    GameSettings.SaveCurrentConfig();
+                    ApplyInstalledModChanges();
                     mainFrame.Flash(color: GUIStyle.Green);
                     return false;
                 },
@@ -802,6 +796,17 @@ namespace Barotrauma
                         (WorkshopMenu is MutableWorkshopMenu mutableWorkshopMenu && mutableWorkshopMenu.CurrentTab == MutableWorkshopMenu.Tab.InstalledMods && !mutableWorkshopMenu.ViewingItemDetails);
                 }                
             };
+        }
+
+        public void ApplyInstalledModChanges()
+        {
+            GameSettings.SetCurrentConfig(unsavedConfig);
+            if (WorkshopMenu is MutableWorkshopMenu mutableWorkshopMenu &&
+                mutableWorkshopMenu.CurrentTab == MutableWorkshopMenu.Tab.InstalledMods)
+            {
+                mutableWorkshopMenu.Apply();
+            }
+            GameSettings.SaveCurrentConfig();
         }
 
         public void Close()

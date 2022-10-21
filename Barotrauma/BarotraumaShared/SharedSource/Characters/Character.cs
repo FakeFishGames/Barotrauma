@@ -2722,6 +2722,11 @@ namespace Barotrauma
                 }
             }
 
+            bool selectInputSameAsDeselect = false;
+#if CLIENT
+            selectInputSameAsDeselect = GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Select] == GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Deselect];
+#endif
+
             if (SelectedCharacter != null && (IsKeyHit(InputType.Grab) || IsKeyHit(InputType.Health))) //Let people use ladders and buttons and stuff when dragging chars
             {
                 DeselectCharacter();
@@ -2761,14 +2766,16 @@ namespace Barotrauma
             {
                 FocusedCharacter.onCustomInteract(FocusedCharacter, this);
             }
-            else if (IsKeyHit(InputType.Deselect) && SelectedItem != null)
+            else if (IsKeyHit(InputType.Deselect) && SelectedItem != null && 
+                (focusedItem == null || focusedItem == SelectedItem || !selectInputSameAsDeselect))
             {
                 SelectedItem = null;
 #if CLIENT
                 CharacterHealth.OpenHealthWindow = null;
 #endif
             }
-            else if (IsKeyHit(InputType.Deselect) && SelectedSecondaryItem != null)
+            else if (IsKeyHit(InputType.Deselect) && SelectedSecondaryItem != null && SelectedSecondaryItem.GetComponent<Ladder>() == null &&
+                (focusedItem == null || focusedItem == SelectedSecondaryItem || !selectInputSameAsDeselect))
             {
                 SelectedSecondaryItem = null;
 #if CLIENT
@@ -2783,6 +2790,10 @@ namespace Barotrauma
             {
 #if CLIENT
                 if (CharacterInventory.DraggingItemToWorld) { return; }
+                if (selectInputSameAsDeselect)
+                {
+                    keys[(int)InputType.Deselect].Reset();
+                }
 #endif
                 bool canInteract = focusedItem.TryInteract(this);
 #if CLIENT
