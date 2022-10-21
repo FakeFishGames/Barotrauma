@@ -2059,17 +2059,12 @@ namespace Barotrauma
                 {
                     if (CanInteractWith(item))
                     {
-                        if (SelectedItem != null && SelectedItem.OwnInventory != null && SelectedItem.OwnInventory.CanBePut(item))
+                        if (Inventory.IsInLimbSlot(item, InvSlotType.LeftHand) || Inventory.GetItemInLimbSlot(InvSlotType.LeftHand) == null)
                         {
-                            SelectedItem.OwnInventory.TryPutItem(item, this);
-                        }
-                        else if (Inventory.IsInLimbSlot(item, InvSlotType.LeftHand))
-                        {
-                            item.Drop(this);
-                        }
-                        else if (Inventory.GetItemInLimbSlot(InvSlotType.LeftHand) == null)
-                        {
-                            item.Drop(this);
+                            if (SelectedItem != null && SelectedItem.OwnInventory != null && SelectedItem.OwnInventory.CanBePut(item))
+                                SelectedItem.OwnInventory.TryPutItem(item, this);
+                            else
+                                item.Drop(this);
                         }
                     }
                 }
