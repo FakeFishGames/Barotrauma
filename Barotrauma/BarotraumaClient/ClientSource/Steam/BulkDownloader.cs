@@ -71,6 +71,7 @@ namespace Barotrauma.Steam
 
             return (await Task.WhenAll(outOfDatePackages.Where(p => !p.IsUpToDate)
                     .Select(p => p.Package.UgcId)
+                    .NotNone()
                     .OfType<SteamWorkshopId>()
                     .Select(async id => await SteamManager.Workshop.GetItem(id.Value))))
                 .Where(p => p.HasValue).Select(p => p ?? default).ToArray();

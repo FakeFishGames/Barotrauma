@@ -156,7 +156,7 @@ namespace Barotrauma
             {
                 if (!(e.ChangedData.BalanceChanged is Some<int> { Value: var changed })) { return; }
 
-                if (changed != 0) { return; }
+                if (changed == 0) { return; }
 
                 bool isGain = changed > 0;
                 Color clr = isGain ? GUIStyle.Yellow : GUIStyle.Red;

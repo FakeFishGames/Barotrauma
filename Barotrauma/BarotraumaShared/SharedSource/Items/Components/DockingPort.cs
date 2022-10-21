@@ -1164,10 +1164,13 @@ namespace Barotrauma.Items.Components
         public override void ReceiveSignal(Signal signal, Connection connection)
         {
 #if CLIENT
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && 
-                !(GameMain.GameSession?.Campaign?.AllowedToManageCampaign(ClientPermissions.ManageMap) ?? false)) 
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) 
             { 
                 return; 
+            }
+            if (GameMain.GameSession?.Campaign != null && !CampaignMode.AllowedToManageCampaign(ClientPermissions.ManageMap))
+            {
+                return;
             }
 #endif
 

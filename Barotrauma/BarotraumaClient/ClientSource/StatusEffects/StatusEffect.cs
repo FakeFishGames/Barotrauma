@@ -96,6 +96,8 @@ namespace Barotrauma
                     {
                         angle = targetLimb.body.Rotation + ((targetLimb.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
                         particleRotation = -targetLimb.body.Rotation;
+                        float offset = targetLimb.Params.GetSpriteOrientation() - MathHelper.PiOver2;
+                        particleRotation += offset;
                         if (targetLimb.body.Dir < 0.0f)
                         {
                             particleRotation += MathHelper.Pi;

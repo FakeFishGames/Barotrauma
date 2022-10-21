@@ -1334,7 +1334,7 @@ namespace Barotrauma
                         if (!prefab.UpgradeCategories.Contains(category)) { continue; }
                         if (!string.IsNullOrWhiteSpace(prefabIdentifier) && prefab.Identifier != prefabIdentifier) { continue; }
                         
-                        int targetLevel = prefab.MaxLevel - upgradeManager.GetRealUpgradeLevel(prefab, category);
+                        int targetLevel = prefab.GetMaxLevelForCurrentSub() - upgradeManager.GetRealUpgradeLevel(prefab, category);
                         for (int i = 0; i < targetLevel; i++)
                         {
                             upgradeManager.PurchaseUpgrade(prefab, category, force: true);

@@ -25,7 +25,7 @@ namespace Barotrauma
         private PlayerBalanceElement? playerBalanceElement;
 
         private List<CharacterInfo> PendingHires => campaign.Map?.CurrentLocation?.HireManager?.PendingHires;
-        private bool HasPermission => campaignUI.Campaign.AllowedToManageCampaign(ClientPermissions.ManageHires);
+        private bool HasPermission => CampaignMode.AllowedToManageCampaign(ClientPermissions.ManageHires);
 
         private Point resolutionWhenCreated;
 

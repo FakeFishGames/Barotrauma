@@ -1433,6 +1433,13 @@ namespace Barotrauma
             if (submarine?.Info.GameVersion != null)
             {
                 SerializableProperty.UpgradeGameVersion(s, s.Prefab.ConfigElement, submarine.Info.GameVersion);
+                //tier-based upgrade restrictions were added in 0.19.10.0, potentially soft-locking campaigns if you're
+                //far enough on the map on a submarine that can no longer have as many levels of hull upgrades.
+                // -> let's ensure that won't happen
+                if (submarine.Info.GameVersion < new Version(0, 19, 10) && GameMain.GameSession?.LevelData != null)
+                {
+                    s.CrushDepth = Math.Max(s.CrushDepth, GameMain.GameSession.LevelData.InitialDepth * Physics.DisplayToRealWorldRatio + 500);
+                }
             }
 
             bool hasDamage = false;
