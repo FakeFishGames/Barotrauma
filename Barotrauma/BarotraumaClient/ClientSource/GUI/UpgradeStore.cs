@@ -183,7 +183,7 @@ namespace Barotrauma
             var subItems = GetSubItems();
             foreach (GUIComponent component in categoryList.Content.Children)
             {
-                if (!(component.UserData is CategoryData data)) { continue; }
+                if (component.UserData is not CategoryData data) { continue; }
                 if (component.FindChild("indicators", true) is { } indicators && data.Prefabs != null)
                 {
                     // ReSharper disable once PossibleMultipleEnumeration
@@ -639,6 +639,7 @@ namespace Barotrauma
 
             foreach (UpgradeCategory category in UpgradeCategory.Categories.OrderBy(c => c.Name))
             {
+                DebugConsole.NewMessage(category.Identifier.Value);
                 foreach (UpgradePrefab prefab in UpgradePrefab.Prefabs.OrderBy(p => p.Name))
                 {
                     if (prefab.UpgradeCategories.Contains(category))
@@ -651,6 +652,16 @@ namespace Barotrauma
                         {
                             upgrades.Add(category, new List<UpgradePrefab> { prefab });
                         }
+                    }
+                }
+
+                if (!upgrades.ContainsKey(category))
+                {
+                    DebugConsole.NewMessage($"{category.Identifier.Value} not found, checking for swappable items");
+                    if (HasSwappableItems(category))
+                    {
+                        DebugConsole.NewMessage($"{category.Identifier.Value} found with swappable items, adding");
+                        upgrades.Add(category, new List<UpgradePrefab>());
                     }
                 }
             }
@@ -751,6 +762,7 @@ namespace Barotrauma
         {
             if (Submarine.MainSub == null) { return false; }
             subItems ??= GetSubItems();
+            DebugConsole.NewMessage($"{category.Name} looking for swappables, has mainsub. items count: {subItems.Count}");
             return subItems.Any(i =>
                 i.Prefab.SwappableItem != null &&
                 !i.HiddenInGame && i.AllowSwapping &&
@@ -764,7 +776,7 @@ namespace Barotrauma
         {
             if (selectedUpgradeCategoryLayout == null) { return; }
 
-            customizeTabOpen = false;
+            customizeTabOpen = prefabs.Count == 0;
 
             GUIComponent[] categoryFrames = GetFrames(category);
             foreach (GUIComponent itemFrame in itemPreviews.Values)
@@ -796,14 +808,15 @@ namespace Barotrauma
 
                 GUIButton customizeButton = new GUIButton(rectT(0.5f, 1f, buttonLayout), text: TextManager.Get("uicategory.customize"), style: "GUITabButton")
                 {
-                    UserData = "customizebutton"
+                    UserData = "customizebutton",
+                    Selected = prefabs.Count == 0
                 };
                 new GUIImage(new RectTransform(new Vector2(1.0f, 0.75f), customizeButton.RectTransform, Anchor.CenterLeft, scaleBasis: ScaleBasis.Smallest) { RelativeOffset = new Vector2(0.015f, 0.0f) }, "WeaponSwitchIcon", scaleToFit: true);
                 customizeButton.TextBlock.RectTransform.RelativeSize = new Vector2(0.7f, 1.0f);
 
                 GUIButton upgradeButton = new GUIButton(rectT(0.5f, 1f, buttonLayout), text: TextManager.Get("uicategory.upgrades"), style: "GUITabButton")
                 {
-                    Selected = true
+                    Selected = prefabs.Count > 0
                 };
 
                 GUITextBlock.AutoScaleAndNormalize(upgradeButton.TextBlock, customizeButton.TextBlock);
@@ -1325,9 +1338,10 @@ namespace Barotrauma
             Item[] entitiesOnSub = drawnSubmarine.GetItems(true).Where(i => drawnSubmarine.IsEntityFoundOnThisSub(i, true)).ToArray();
             foreach (UpgradeCategory category in UpgradeCategory.Categories)
             {
-                //hide categories with no upgrades in them
-                if (UpgradePrefab.Prefabs.None(p => p.UpgradeCategories.Contains(category))) { continue; }
-                if (entitiesOnSub.Any(item => category.CanBeApplied(item, null)))
+                //hide categories with no upgrades or swappables in them
+                bool hasSwappableItems = HasSwappableItems(category);
+                if (!hasSwappableItems && UpgradePrefab.Prefabs.None(p => p.UpgradeCategories.Contains(category))) { continue; }
+                if (hasSwappableItems || entitiesOnSub.Any(item => category.CanBeApplied(item, null)))
                 {
                     yield return category;
                 }
@@ -1676,10 +1690,10 @@ namespace Barotrauma
             Submarine? drawnSubmarine,
             IEnumerable<UpgradeCategory> applicableCategories)
         {
-            // Disables the parent and only re-enables if the submarine contains valid items
+            // Disables the parent and only re-enables if the submarine contains valid items or swappable components
             if (!category.IsWallUpgrade && drawnSubmarine?.Info != null)
             {
-                if (UpgradePrefab.Prefabs.None(p => p.UpgradeCategories.Contains(category) && p.GetMaxLevel(drawnSubmarine.Info) > 0))
+                if (UpgradePrefab.Prefabs.None(p => p.UpgradeCategories.Contains(category) && !HasSwappableItems(category) && p.GetMaxLevel(drawnSubmarine.Info) > 0))
                 {
                     parent.ToolTip = TextManager.Get("upgradecategorynotapplicable");
                     parent.Enabled = false;
