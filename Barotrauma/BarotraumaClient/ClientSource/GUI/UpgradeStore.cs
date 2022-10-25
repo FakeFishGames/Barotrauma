@@ -810,15 +810,14 @@ namespace Barotrauma
 
                 GUIButton customizeButton = new GUIButton(rectT(0.5f, 1f, buttonLayout), text: TextManager.Get("uicategory.customize"), style: "GUITabButton")
                 {
-                    UserData = "customizebutton",
-                    Selected = !hasUpgradeModules
+                    UserData = "customizebutton"
                 };
                 new GUIImage(new RectTransform(new Vector2(1.0f, 0.75f), customizeButton.RectTransform, Anchor.CenterLeft, scaleBasis: ScaleBasis.Smallest) { RelativeOffset = new Vector2(0.015f, 0.0f) }, "WeaponSwitchIcon", scaleToFit: true);
                 customizeButton.TextBlock.RectTransform.RelativeSize = new Vector2(0.7f, 1.0f);
 
                 GUIButton upgradeButton = new GUIButton(rectT(0.5f, 1f, buttonLayout), text: TextManager.Get("uicategory.upgrades"), style: "GUITabButton")
                 {
-                    Selected = hasUpgradeModules
+                    Selected = true
                 };
 
                 GUITextBlock.AutoScaleAndNormalize(upgradeButton.TextBlock, customizeButton.TextBlock);
