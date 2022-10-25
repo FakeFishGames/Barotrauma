@@ -116,8 +116,8 @@ namespace Barotrauma
 
         public void PrepareToOpen()
         {
-			SelectTab(UpgradeTab.Upgrade);
-		}
+            SelectTab(UpgradeTab.Upgrade);
+        }
 
         public void RequestRefresh()
         {
