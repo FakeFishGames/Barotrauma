@@ -114,6 +114,11 @@ namespace Barotrauma
             Campaign.OnMoneyChanged.RegisterOverwriteExisting(eventId, _ => RequestRefresh());
         }
 
+        public void PrepareToOpen()
+        {
+			SelectTab(UpgradeTab.Upgrade);
+		}
+
         public void RequestRefresh()
         {
             needsRefresh = true;

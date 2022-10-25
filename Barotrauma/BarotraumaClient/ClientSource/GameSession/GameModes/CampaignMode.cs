@@ -305,7 +305,7 @@ namespace Barotrauma
                 default:
                     ShowCampaignUI = true;
                     CampaignUI.SelectTab(npc.CampaignInteractionType, storeIdentifier: npc.MerchantIdentifier);
-                    CampaignUI.UpgradeStore?.RequestRefresh();
+                    CampaignUI.UpgradeStore?.PrepareToOpen();
                     break;
             }
         }
