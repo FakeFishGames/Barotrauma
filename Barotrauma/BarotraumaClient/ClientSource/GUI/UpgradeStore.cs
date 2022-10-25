@@ -777,7 +777,10 @@ namespace Barotrauma
         {
             if (selectedUpgradeCategoryLayout == null) { return; }
 
-            customizeTabOpen = prefabs.Count == 0;
+            bool hasSwappableItems = HasSwappableItems(category);
+            bool hasUpgradeModules = prefabs.Count > 0;
+
+            customizeTabOpen = !hasUpgradeModules && hasSwappableItems;
 
             GUIComponent[] categoryFrames = GetFrames(category);
             foreach (GUIComponent itemFrame in itemPreviews.Values)
@@ -791,9 +794,6 @@ namespace Barotrauma
             selectedUpgradeCategoryLayout.ClearChildren();
             GUIFrame frame = new GUIFrame(rectT(1.0f, 0.4f, selectedUpgradeCategoryLayout));
             GUIFrame paddedFrame = new GUIFrame(rectT(0.93f, 0.9f, frame, Anchor.Center), style: null);
-
-            bool hasSwappableItems = HasSwappableItems(category);
-            bool hasUpgradeModules = prefabs.Count > 0;
 
             float listHeight = hasSwappableItems && hasUpgradeModules ? 0.9f : 1.0f;
 
