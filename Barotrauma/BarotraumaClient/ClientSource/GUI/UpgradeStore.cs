@@ -877,7 +877,7 @@ namespace Barotrauma
         {
             parent.Content.ClearChildren();
             currentUpgradeCategory = category;
-            var entitiesOnSub = submarine.GetItems(true).Where(i => submarine.IsEntityFoundOnThisSub(i, true) && !i.HiddenInGame && i.AllowSwapping && i.Prefab.SwappableItem != null && category.ItemTags.Any(t => i.HasTag(t))).ToList();
+            var entitiesOnSub = submarine.GetItems(true).Where(i => submarine.IsEntityFoundOnThisSub(i, true) && !i.HiddenInGame && i.AllowSwapping && i.Prefab.SwappableItem != null && i.Prefab.SwappableItem.CanBeBought && category.ItemTags.Any(t => i.HasTag(t))).ToList();
 
             foreach (Item item in entitiesOnSub)
             {
