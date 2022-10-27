@@ -1401,8 +1401,12 @@ namespace Barotrauma.Items.Components
 
             if (canShoot)
             {
-                Vector2 start = ConvertUnits.ToSimUnits(item.WorldPosition);
+                Vector2 turretBase = ConvertUnits.ToSimUnits(item.WorldPosition);
+                Vector2 start = ConvertUnits.ToSimUnits(GetRelativeFiringPosition());
                 Vector2 end = ConvertUnits.ToSimUnits(targetPos.Value);
+
+                // Check that the target is not closer to us than the muzzle
+                if (Vector2.DistanceSquared(turretBase, start) > Vector2.DistanceSquared(turretBase, end)) { return false; }
                 // Check that there's not other entities that shouldn't be targeted (like a friendly sub) between us and the target.
                 Body worldTarget = CheckLineOfSight(start, end);
                 bool shoot;
