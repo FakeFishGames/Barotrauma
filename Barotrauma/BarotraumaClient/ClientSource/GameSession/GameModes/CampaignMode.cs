@@ -86,10 +86,12 @@ namespace Barotrauma
             }
         }
 
+        private static bool IsOwner(Client client) => client != null && client.IsOwner;
+
         /// <summary>
         /// There is a server-side implementation of the method in <see cref="MultiPlayerCampaign"/>
         /// </summary>
-        public bool AllowedToManageCampaign(ClientPermissions permissions)
+        public static bool AllowedToManageCampaign(ClientPermissions permissions)
         {
             //allow managing the round if the client has permissions, is the owner, the only client in the server,
             //or if no-one has management permissions
@@ -97,9 +99,8 @@ namespace Barotrauma
             return
                 GameMain.Client.HasPermission(permissions) ||
                 GameMain.Client.HasPermission(ClientPermissions.ManageCampaign) ||
-                GameMain.Client.ConnectedClients.Count == 1 ||
                 GameMain.Client.IsServerOwner ||
-                GameMain.Client.ConnectedClients.None(c => c.InGame && (c.IsOwner || c.HasPermission(permissions)));
+                AnyOneAllowedToManageCampaign(permissions);
         }
 
         public static bool AllowedToManageWallets()

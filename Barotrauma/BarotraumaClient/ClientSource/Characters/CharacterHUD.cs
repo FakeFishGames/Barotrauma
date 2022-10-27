@@ -307,7 +307,7 @@ namespace Barotrauma
             {
                 if (!brokenItem.IsInteractable(character)) { continue; }
                 float alpha = GetDistanceBasedIconAlpha(brokenItem);
-                if (alpha <= 0.0f) continue;
+                if (alpha <= 0.0f) { continue; }
                 GUI.DrawIndicator(spriteBatch, brokenItem.DrawPosition, cam, 100.0f, GUIStyle.BrokenIcon.Value.Sprite, 
                     Color.Lerp(GUIStyle.Red, GUIStyle.Orange * 0.5f, brokenItem.Condition / brokenItem.MaxCondition) * alpha);
             }

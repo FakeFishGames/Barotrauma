@@ -139,6 +139,15 @@ namespace Barotrauma
         public virtual bool PurchasedLostShuttles { get; set; }
         public virtual bool PurchasedItemRepairs { get; set; }
 
+        private static bool AnyOneAllowedToManageCampaign(ClientPermissions permissions)
+        {
+            if (GameMain.NetworkMember == null) { return true; }
+            //allow managing if no-one with permissions is alive
+            return 
+                GameMain.NetworkMember.ConnectedClients.Count == 1 ||
+                GameMain.NetworkMember.ConnectedClients.None(c => c.InGame && c.Character is { IsIncapacitated: false, IsDead: false } && (IsOwner(c) || c.HasPermission(permissions)));
+        }
+
         protected CampaignMode(GameModePreset preset, CampaignSettings settings)
             : base(preset)
         {
@@ -156,7 +165,7 @@ namespace Barotrauma
             {
                 if (!(e.ChangedData.BalanceChanged is Some<int> { Value: var changed })) { return; }
 
-                if (changed != 0) { return; }
+                if (changed == 0) { return; }
 
                 bool isGain = changed > 0;
                 Color clr = isGain ? GUIStyle.Yellow : GUIStyle.Red;
@@ -211,7 +220,7 @@ namespace Barotrauma
             return Level.Loaded?.StartLocation ?? Map.CurrentLocation;
         }
 
-        public List<Submarine> GetSubsToLeaveBehind(Submarine leavingSub)
+        public static List<Submarine> GetSubsToLeaveBehind(Submarine leavingSub)
         {
             //leave subs behind if they're not docked to the leaving sub and not at the same exit
             return Submarine.Loaded.FindAll(sub =>
@@ -266,7 +275,7 @@ namespace Barotrauma
             wasDocked = Level.Loaded.StartOutpost != null && connectedSubs.Contains(Level.Loaded.StartOutpost);
         }
 
-        public int GetHullRepairCost()
+        public static int GetHullRepairCost()
         {
             float totalDamage = 0;
             foreach (Structure wall in Structure.WallList)
@@ -283,7 +292,7 @@ namespace Barotrauma
             return (int)Math.Min(totalDamage * HullRepairCostPerDamage, MaxHullRepairCost);
         }
 
-        public int GetItemRepairCost()
+        public static int GetItemRepairCost()
         {
             float totalRepairDuration = 0.0f;
             foreach (Item item in Item.ItemList)
@@ -551,7 +560,7 @@ namespace Barotrauma
         /// <summary>
         /// Which submarine is at a position where it can leave the level and enter another one (if any).
         /// </summary>
-        private Submarine GetLeavingSub()
+        private static Submarine GetLeavingSub()
         {
             if (Level.IsLoadedOutpost)
             {
@@ -1025,7 +1034,7 @@ namespace Barotrauma
             }
         }
 
-        protected void LeaveUnconnectedSubs(Submarine leavingSub)
+        protected static void LeaveUnconnectedSubs(Submarine leavingSub)
         {
             if (leavingSub != Submarine.MainSub && !leavingSub.DockedTo.Contains(Submarine.MainSub))
             {

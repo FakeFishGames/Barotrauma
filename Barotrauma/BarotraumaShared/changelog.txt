@@ -1,4 +1,112 @@
 ---------------------------------------------------------------------------------------------------------
+v0.20.0.0
+---------------------------------------------------------------------------------------------------------
+
+Talent overhaul:
+- Redesigned and rebalanced talents: lots of new talents, changes and balancing to existing ones and replacing some of the more broken ones with new ones.
+- Redesigned talent tree structure: there's now a selection of "generic" talents, and after you've unlocked 4 of them, you can choose one specialization talent tree (meaning that you can no longer unlock all trees, but have to specialize in one).
+- There's still a lot to test, balance and fix in the new talents, so all feedback and issue reports regarding the talents are much appreciated:
+	- Are there some talents that don't work as expected?
+	- Are the XP bonuses too large or too small?
+	- In general, how balanced are the talents, are there any that feel OP or too weak?
+	- Any inaccuracies or things to improve in the talent descriptions?
+
+Changes and additions:
+- Added a button for opening the Steam Workshop to all tabs of the workshop menu.
+- Added tooltips that explain how the bot spawn modes work to the server lobby.
+- Made saline significantly less effective as a treatment for bloodloss to make blood packs more useful.
+- Nerfed flak cannon's explosive ammo.
+- Allow putting medium items (e.g. storage container) in medical and toxic cabinets.
+
+Multiplayer:
+- Fixed "Input contains duplicate packages" error still occuring if you try to join a server that has empty content packages when you don't have those packages yourself.
+- Fixed networking errors when the connection to the server is momentarily lost and then re-established.
+- Added a cooldown to client name changes to prevent using it for spamming.
+- Fixed bans issued with the "banaddress" command using a client's Steam ID not working.
+
+Bugfixes:
+- Fixed Esc not closing the campaign interfaces (map, store, shipyard, etc) but opening the pause menu instead.
+- Fixed bots sometimes firing in a random direction when they equip a weapon. Happened because the aim and shoot inputs could already be active when the bot switches from another item to the weapon (e.g. from underwater scooter to some gun).
+- Fixed pirates sometimes being unable to operate multiple turrets at the same time (even if there's enough crew to operate multiple), and attempting to operate hardpoints.
+- Fabricator chooses the available ingredient that's in the worst condition when there's multiple suitable ingredients available.
+- Fixed characters falling off ladders when using aimable tools.
+- Fixed currently selected mission being included in the mission count displayed on the campaign map (i.e. showing "1/2" when you're choosing a new destination at an empty location).
+- Fixed inability to sit in cafeteria chairs.
+- Fixed projectile impacts getting triggered by gravity spheres and other TriggerComponents (meaning you couldn't hit monsters near a gravity sphere).
+- Fixed blood pack fabrication recipe outputting only one item.
+- Fixed tutorial not progressing when inserting a welding fuel tank inside the welding tool straight away, rather than inventory first.
+- Fixed PUCS not beeping when you're underwater without a tank if you're inside a hull that has oxygen in it.
+- Fixed some issues in sonar AITargets which made monsters hear the sonar when they shouldn't: switching to passive would immediately make the current directional ping cover 360 degrees, and whether the ping was directional or not would actually depend on whether the previous ping was directional, not what the mode is now.
+- Fixed items getting autofilled into non-interactable containers in wrecks and outposts.
+- Fixes to ID card tag issues in wrecks (prevented accessing the secure containers with the ID cards looted from the corpses).
+- Fixed verifying file integrity on Steam resetting the server settings file.
+- Fixed crashing if you try to open an access-restricted directory in the file selection dialog.
+- Fixed a typo in physicorium shell's damage config, causing it to not do bleeding damage.
+- Fixed money gain/lose popups no longer showing in the campaign.
+- Fixed bloodloss and drunkenness never fully healing, just dropping below the threshold at which the icon appears. Caused e.g. drunkenness and bloodloss to never fully go away, causing issues with some talent effects.
+- Fixed bots always opening the door/hatch they're trying to repair.
+- Fixed power indicator not rotating with batteries.
+- Fixed lights on welding tools and plasma cutters emitting light the next round if the round ends while using them.
+- Fixed Camel's airlock not draining fully.
+- Fixed Berilia's bottom EDC not being wired to a supercapacitor and a loose wire between the flak cannon and the right supercapacitor.
+
+Modding:
+- Fixed increasing an item's HealthMultiplier making the items appear damaged in existing subs/saves (e.g. if you doubled an item's maximum condition, the items would remain in the old maximum condition and appear 50% damaged).
+- Fixed crashing if a talent is triggered when the character receives some affliction, and that talent applies the same affliction on the character.
+- Fixed crashing if the ingredient of a fabrication recipe can't be found.
+- Fixed inability to sync properties of ItemComponents that the item has multiple of (meaning that it was only possible to e.g. edit the light color of the item's first LightComponent if it has multiple).
+
+---------------------------------------------------------------------------------------------------------
+v0.19.14.0
+---------------------------------------------------------------------------------------------------------
+
+- Fixed submarine upgrades getting clamped to the maximum of that upgrade between rounds, disregarding class/tier bonuses.
+
+---------------------------------------------------------------------------------------------------------
+v0.19.13.0
+---------------------------------------------------------------------------------------------------------
+
+- Fixed "failed to find the end of the bit field after 100 reads" error when trying to join a server that has a large number of mods enabled.
+- Fixed "Tandem Fire" talent causing a crash due to the changes in the previous version.
+
+---------------------------------------------------------------------------------------------------------
+v0.19.12.0
+---------------------------------------------------------------------------------------------------------
+
+- Fixed submarine upgrades getting lost if you switch to a lower-tier sub that can't have as many levels of upgrades as the current sub, and then back again.
+- Fixed some monster events not being as common/uncommon as intended. In more technical terms (which may be of interest to modders): the commonness defined as an attribute of an EventSet did nothing, making the event default to a commonness of 1. The commonnesses defined for specific level types worked correctly.
+- Fixed clients getting stuck in a non-functional lobby if they happen to disconnect or get kicked back to the lobby at a specific point when loading a new round.
+- Fixed large turret hardpoint origin being off, causing turrets installed on a large hardpoint to be misaligned.
+- Attempt to fix crashing when disconnecting from the server you're hosting.
+- Fixed Ctrl+Shift+S shortcut (quicksave) not working in the sub editor.
+- Fixed toolbelts and storage containers in old subs going inside toolbelts.
+- Fixed submarine tier resetting to default when reopening the sub editor's save dialog.
+- Fixed sub editor not taking filename case into account when saving an existing sub: if you'd try to save the file with a different filename case, it'd ask about overwriting the existing sub, but save it as a new file even if you opt to overwrite.
+- Fixes to Herja room names (use Engineering, Gunnery compartment, etc. labels), add camera to the front, with a periscope for the captain.
+- Fixed non-purchaseable talent items not being available as extra cargo.
+- Sorted extra cargo alphabetically + added a filter box.
+- Fixed taking items that spawned inside another item (e.g. tanks in a diving mask) from NPCs spawned by an event not counting as stealing.
+- Fixed characters falling off ladders when using aimable tools.
+- Fixed money gain/lose popups no longer showing in the campaign.
+- Fixed inability to manage the campaign if there's no-one with permissions alive. Previously we allowed anyone to manage the campaign if there's no-one with permissions present in the server, but that's not enough, because the players with permissions can't end the round if they're dead. Now if there's no-one with permissions alive, anyone is allowed to manage the campaign.
+- If Select and Deselect have been bound to the same key, the deselect input is ignored when interacting with another item than the selected one. Prevents e.g. falling off ladders when trying to open a hatch when both Select and Deselect have been bound to E. 
+- Made it possible to enter a hostname (e.g. someserver.com) in the direct join prompt.
+- Adjusted the size of the submarine list elements in the server lobby to reduce the amount of empty space on large resolutions.
+- Fixed event texts for the "scan ruin" mission being in an incorrect language.
+- Attachable items cannot be attached inside walls.
+- Fixed distance at which you can attach items being slightly longer than the interact distance, making it possible to attach items out of reach.
+- Fixed inability to turn when you're dual wielding melee weapons and attacking continuously.
+- Fixed inability to cancel deconstruction if there's non-deconstructible items in the queue.
+- Fixed local copy of a mod you're publishing not using the version number you've entered in the publish menu.
+- Fixed crashing when trying to open the tab menu's character tab with a character who has no personality trait (may happen e.g. if you use a mod that adds custom personality traits and try to play that save without the mod).
+- Fixed sourcerect issue in alien generator + decorative sprite not disappearing when the fuel rod is taken out.
+- Fixed corrupted mods causing a nullref exception when autodetecting required mods in the sub editor.
+- Fixed minerals not disappearing from mineral scanner if they get detached by something else than a character picking them up (e.g. by the destructible ice wall they're on breaking).
+- Fixed event-specific metal crate deconstructing to steel.
+- Fixed inability to join servers that have enabled multiple mods with identical content.
+- Fixed tandem fire not working if there's a character between you and the other character on a periscope.
+
+---------------------------------------------------------------------------------------------------------
 v0.19.11.0
 ---------------------------------------------------------------------------------------------------------
 

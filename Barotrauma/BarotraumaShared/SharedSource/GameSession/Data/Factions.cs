@@ -1,6 +1,7 @@
 ﻿#nullable enable
 using Microsoft.Xna.Framework;
 using System;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -13,6 +14,13 @@ namespace Barotrauma
         {
             Prefab = prefab;
             Reputation = new Reputation(metadata, this, prefab.MinReputation, prefab.MaxReputation, prefab.InitialReputation);
+        }
+
+        public bool IsAffiliated()
+        {
+            if (GameMain.GameSession?.Campaign?.Factions.MaxBy(static f => f.Reputation.Value) is not { } highestFaction) { return false; }
+
+            return highestFaction.Reputation.Value < 0 || Prefab.Identifier == highestFaction.Prefab.Identifier;
         }
     }
 

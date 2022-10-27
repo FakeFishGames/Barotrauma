@@ -486,9 +486,18 @@ namespace Barotrauma.Networking
                 // -> something wen't wrong during startup, re-enable start button and reset AutoRestartTimer
                 if (startGameCoroutine != null && !CoroutineManager.IsCoroutineRunning(startGameCoroutine))
                 {
-                    if (ServerSettings.AutoRestart) ServerSettings.AutoRestartTimer = Math.Max(ServerSettings.AutoRestartInterval, 5.0f);
-                    //GameMain.NetLobbyScreen.StartButtonEnabled = true;
+                    if (ServerSettings.AutoRestart) { ServerSettings.AutoRestartTimer = Math.Max(ServerSettings.AutoRestartInterval, 5.0f); }
 
+                    if (startGameCoroutine.Exception != null && OwnerConnection != null)
+                    {
+                        SendConsoleMessage(
+                            startGameCoroutine.Exception.Message + '\n' +
+                            (startGameCoroutine.Exception.StackTrace?.CleanupStackTrace() ?? "null"),
+                            connectedClients.Find(c => c.Connection == OwnerConnection),
+                            Color.Red);
+                    }
+
+                    EndGame();
                     GameMain.NetLobbyScreen.LastUpdateID++;
 
                     startGameCoroutine = null;
@@ -1377,9 +1386,9 @@ namespace Barotrauma.Networking
                     bool end = inc.ReadBoolean();
                     if (end)
                     {
-                        if (mpCampaign == null || 
-                            mpCampaign.AllowedToManageCampaign(sender, ClientPermissions.ManageRound) || 
-                            mpCampaign.AllowedToManageCampaign(sender, ClientPermissions.ManageCampaign))
+                        if (mpCampaign == null ||
+                            CampaignMode.AllowedToManageCampaign(sender, ClientPermissions.ManageRound) ||
+                            CampaignMode.AllowedToManageCampaign(sender, ClientPermissions.ManageCampaign))
                         {
                             bool save = inc.ReadBoolean();
                             if (GameStarted)
@@ -1409,7 +1418,7 @@ namespace Barotrauma.Networking
                                 SendDirectChatMessage("Cannot continue the campaign from the previous save (round already running).", sender, ChatMessageType.Error);
                                 break;
                             }
-                            else if (mpCampaign.AllowedToManageCampaign(sender, ClientPermissions.ManageCampaign) || mpCampaign.AllowedToManageCampaign(sender, ClientPermissions.ManageMap))
+                            else if (CampaignMode.AllowedToManageCampaign(sender, ClientPermissions.ManageCampaign) || CampaignMode.AllowedToManageCampaign(sender, ClientPermissions.ManageMap))
                             {
                                 MultiPlayerCampaign.LoadCampaign(GameMain.GameSession.SavePath);
                             }
@@ -1420,7 +1429,7 @@ namespace Barotrauma.Networking
                             Log("Client \"" + ClientLogName(sender) + "\" started the round.", ServerLog.MessageType.ServerMessage);
                             StartGame();
                         }
-                        else if (mpCampaign != null && (mpCampaign.AllowedToManageCampaign(sender, ClientPermissions.ManageCampaign) || mpCampaign.AllowedToManageCampaign(sender, ClientPermissions.ManageMap)))
+                        else if (mpCampaign != null && (CampaignMode.AllowedToManageCampaign(sender, ClientPermissions.ManageCampaign) || CampaignMode.AllowedToManageCampaign(sender, ClientPermissions.ManageMap)))
                         {
                             var availableTransition = mpCampaign.GetAvailableTransition(out _, out _);
                             //don't force location if we've teleported
@@ -1991,7 +2000,7 @@ namespace Barotrauma.Networking
 
                 //and assume the message was received, so we don't have to keep resending
                 //these large initial messages until the client acknowledges receiving them
-                c.LastRecvLobbyUpdate++;
+                c.LastRecvLobbyUpdate = GameMain.NetLobbyScreen.LastUpdateID;
 
             }
             else
@@ -2010,7 +2019,7 @@ namespace Barotrauma.Networking
             c.ChatMsgQueue.RemoveAll(cMsg => !NetIdUtils.IdMoreRecent(cMsg.NetStateID, c.LastRecvChatMsgID));
             for (int i = 0; i < c.ChatMsgQueue.Count && i < ChatMessage.MaxMessagesPerPacket; i++)
             {
-                if (outmsg.LengthBytes + c.ChatMsgQueue[i].EstimateLengthBytesServer(c) > MsgConstants.MTU - 5)
+                if (outmsg.LengthBytes + c.ChatMsgQueue[i].EstimateLengthBytesServer(c) > MsgConstants.MTU - 5 && i > 0)
                 {
                     //not enough room in this packet
                     return;
@@ -2589,26 +2598,24 @@ namespace Barotrauma.Networking
 
         public void EndGame(CampaignMode.TransitionType transitionType = CampaignMode.TransitionType.None, bool wasSaved = false)
         {
-            if (!GameStarted)
+            if (GameStarted)
             {
-                return;
-            }
+                if (GameSettings.CurrentConfig.VerboseLogging)
+                {
+                    Log("Ending the round...\n" + Environment.StackTrace.CleanupStackTrace(), ServerLog.MessageType.ServerMessage);
 
-            if (GameSettings.CurrentConfig.VerboseLogging)
-            {
-                Log("Ending the round...\n" + Environment.StackTrace.CleanupStackTrace(), ServerLog.MessageType.ServerMessage);
-
-            }
-            else
-            {
-                Log("Ending the round...", ServerLog.MessageType.ServerMessage);
+                }
+                else
+                {
+                    Log("Ending the round...", ServerLog.MessageType.ServerMessage);
+                }
             }
 
             string endMessage = TextManager.FormatServerMessage("RoundSummaryRoundHasEnded");
             var traitorResults = TraitorManager?.GetEndResults() ?? new List<TraitorMissionResult>();
 
             List<Mission> missions = GameMain.GameSession.Missions.ToList();
-            if (GameMain.GameSession.IsRunning)
+            if (GameMain.GameSession is { IsRunning: true })
             {
                 GameMain.GameSession.EndRound(endMessage, traitorResults);
             }
@@ -2634,7 +2641,10 @@ namespace Barotrauma.Networking
                 c.PositionUpdateLastSent.Clear();
             }
 
-            KarmaManager.OnRoundEnded();
+            if (GameStarted)
+            {
+                KarmaManager.OnRoundEnded();
+            }
 
             RespawnManager = null;
             GameStarted = false;
@@ -2703,9 +2713,24 @@ namespace Barotrauma.Networking
             CharacterTeamType newTeam = (CharacterTeamType)inc.ReadByte();
 
             if (c == null || string.IsNullOrEmpty(newName) || !NetIdUtils.IdMoreRecent(nameId, c.NameId)) { return false; }
+
+            var timeSinceNameChange = DateTime.Now - c.LastNameChangeTime;
+            if (timeSinceNameChange < Client.NameChangeCoolDown)
+            {
+                //only send once per second at most to prevent using this for spamming
+                if (timeSinceNameChange.TotalSeconds > 1)
+                {
+                    var coolDownRemaining = Client.NameChangeCoolDown - timeSinceNameChange;
+                    SendDirectChatMessage($"ServerMessage.NameChangeFailedCooldownActive~[seconds]={(int)coolDownRemaining.TotalSeconds}", c);
+                }
+                c.NameId = nameId;
+                c.RejectedName = newName;
+                return false;
+            }
+
             if (!newJob.IsEmpty)
             {
-                if (!JobPrefab.Prefabs.TryGet(newJob, out JobPrefab newJobPrefab) || newJobPrefab.HiddenJob)                    
+                if (!JobPrefab.Prefabs.TryGet(newJob, out JobPrefab newJobPrefab) || newJobPrefab.HiddenJob)
                 {
                     newJob = Identifier.Empty;
                 }
@@ -2721,25 +2746,24 @@ namespace Barotrauma.Networking
         public bool TryChangeClientName(Client c, string newName)
         {
             newName = Client.SanitizeName(newName);
-            //update client list even if the name cannot be changed to the one sent by the client,
-            //so the client will be informed what their actual name is
-            LastClientListUpdateID++;
-
-            if (newName == c.Name || string.IsNullOrEmpty(newName)) { return false; }
-
-            if (IsNameValid(c, newName))
+            if (newName != c.Name && !string.IsNullOrEmpty(newName) && IsNameValid(c, newName))
             {
+                c.LastNameChangeTime = DateTime.Now;
                 string oldName = c.Name;
                 c.Name = newName;
+                c.RejectedName = string.Empty;
                 SendChatMessage($"ServerMessage.NameChangeSuccessful~[oldname]={oldName}~[newname]={newName}", ChatMessageType.Server);
+                LastClientListUpdateID++;
                 return true;
             }
             else
             {
+                //update client list even if the name cannot be changed to the one sent by the client,
+                //so the client will be informed what their actual name is
+                LastClientListUpdateID++;
                 return false;
             }
         }
-
 
         private bool IsNameValid(Client c, string newName)
         {

@@ -384,6 +384,8 @@ namespace Barotrauma
 
         private readonly ConstructorInfo constructor;
 
+        public readonly bool ResetBetweenRounds;
+
         public IEnumerable<KeyValuePair<Identifier, float>> TreatmentSuitability
         {
             get
@@ -464,6 +466,8 @@ namespace Barotrauma
             IconColors = element.GetAttributeColorArray("iconcolors", null);
             AfflictionOverlayAlphaIsLinear = element.GetAttributeBool("afflictionoverlayalphaislinear", false);
             AchievementOnRemoved = element.GetAttributeIdentifier("achievementonremoved", "");
+
+            ResetBetweenRounds = element.GetAttributeBool("resetbetweenrounds", false);
 
             foreach (var subElement in element.Elements())
             {

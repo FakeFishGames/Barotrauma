@@ -407,6 +407,11 @@ namespace Barotrauma
             GUI.SetSavingIndicatorState(success);
             crewDead = false;
 
+            if (success)
+            {
+                // Event history must be registered before ending the round or it will be cleared
+                GameMain.GameSession.EventManager.RegisterEventHistory();
+            }
             GameMain.GameSession.EndRound("", traitorResults, transitionType);
             var continueButton = GameMain.GameSession.RoundSummary?.ContinueButton;
             RoundSummary roundSummary = null;
@@ -466,7 +471,6 @@ namespace Barotrauma
             if (success)
             {
                 GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);
-                GameMain.GameSession.EventManager.RegisterEventHistory();
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
             else

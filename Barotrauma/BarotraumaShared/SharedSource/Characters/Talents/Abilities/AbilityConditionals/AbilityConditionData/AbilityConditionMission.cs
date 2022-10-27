@@ -1,38 +1,50 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Abilities
 {
     class AbilityConditionMission : AbilityConditionData
     {
-        private readonly MissionType missionType;
+        private readonly ImmutableHashSet<MissionType> missionType;
+        private readonly bool isAffiliated;
+
         public AbilityConditionMission(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
-            string missionTypeString = conditionElement.GetAttributeString("missiontype", "None");
-            if (!Enum.TryParse(missionTypeString, out missionType))
+            string[] missionTypeStrings = conditionElement.GetAttributeStringArray("missiontype", new []{ "None" })!;
+            HashSet<MissionType> missionTypes = new HashSet<MissionType>();
+            foreach (string missionTypeString in missionTypeStrings)
             {
-                DebugConsole.ThrowError("Error in AbilityConditionMission \"" + characterTalent.DebugIdentifier + "\" - \"" + missionTypeString + "\" is not a valid mission type.");
-                return;
+                if (!Enum.TryParse(missionTypeString, out MissionType parsedMission) || parsedMission is MissionType.None)
+                {
+                    DebugConsole.ThrowError($"Error in AbilityConditionMission \"{characterTalent.DebugIdentifier}\" - \"{missionTypeString}\" is not a valid mission type.");
+                    return;
+                }
+
+                missionTypes.Add(parsedMission);
             }
-            if (missionType == MissionType.None)
-            {
-                DebugConsole.ThrowError("Error in AbilityConditionMission \"" + characterTalent.DebugIdentifier + "\" - mission type cannot be none.");
-                return;
-            }
+
+            missionType = missionTypes.ToImmutableHashSet();
+            isAffiliated = conditionElement.GetAttributeBool("isaffiliated", false);
         }
 
         protected override bool MatchesConditionSpecific(AbilityObject abilityObject)
         {
-            if ((abilityObject as IAbilityMission)?.Mission is Mission mission)
+            if (abilityObject is IAbilityMission { Mission: { } mission })
             {
-                return mission.Prefab.Type == missionType;
+                if (isAffiliated && GameMain.GameSession?.Campaign?.Factions.MaxBy(static f => f.Reputation.Value) is { } highestFaction)
+                {
+                    if (highestFaction.Reputation.Value < 0 || !mission.ReputationRewards.ContainsKey(highestFaction.Reputation.Identifier))
+                    {
+                        return false;
+                    }
+                }
+                return missionType.Contains(mission.Prefab.Type);
             }
-            else
-            {
-                LogAbilityConditionError(abilityObject, typeof(IAbilityMission));
-                return false;
-            }
+
+            LogAbilityConditionError(abilityObject, typeof(IAbilityMission));
+            return false;
         }
     }
 }

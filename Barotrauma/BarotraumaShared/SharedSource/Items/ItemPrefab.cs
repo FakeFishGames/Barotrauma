@@ -47,8 +47,8 @@ namespace Barotrauma
             CopyCondition = element.GetAttributeBool("copycondition", false);
             Commonness = element.GetAttributeFloat("commonness", 1.0f);
             RequiredDeconstructor = element.GetAttributeStringArray("requireddeconstructor", 
-                element.Parent?.GetAttributeStringArray("requireddeconstructor", new string[0]) ?? new string[0]);
-            RequiredOtherItem = element.GetAttributeStringArray("requiredotheritem", new string[0]);
+                element.Parent?.GetAttributeStringArray("requireddeconstructor", Array.Empty<string>()) ?? Array.Empty<string>());
+            RequiredOtherItem = element.GetAttributeStringArray("requiredotheritem", Array.Empty<string>());
             ActivateButtonText = element.GetAttributeString("activatebuttontext", string.Empty);
             InfoText = element.GetAttributeString("infotext", string.Empty);
             InfoTextOnOtherItemMissing = element.GetAttributeString("infotextonotheritemmissing", string.Empty);
@@ -102,12 +102,13 @@ namespace Barotrauma
         {
             public readonly Identifier ItemPrefabIdentifier;
 
-            public ItemPrefab ItemPrefab => ItemPrefab.Prefabs.TryGet(ItemPrefabIdentifier, out var prefab) ? prefab
-                : MapEntityPrefab.FindByName(ItemPrefabIdentifier.Value) as ItemPrefab ?? throw new Exception($"No ItemPrefab with identifier or name \"{ItemPrefabIdentifier}\"");
+            public ItemPrefab ItemPrefab => 
+                ItemPrefab.Prefabs.TryGet(ItemPrefabIdentifier, out var prefab) ? prefab
+                : MapEntityPrefab.FindByName(ItemPrefabIdentifier.Value) as ItemPrefab;
             
             public override UInt32 UintIdentifier { get; }
 
-            public override IEnumerable<ItemPrefab> ItemPrefabs => ItemPrefab.ToEnumerable();
+            public override IEnumerable<ItemPrefab> ItemPrefabs => ItemPrefab == null ? Enumerable.Empty<ItemPrefab>() : ItemPrefab.ToEnumerable();
 
             public override ItemPrefab FirstMatchingPrefab => ItemPrefab;
 
@@ -121,6 +122,11 @@ namespace Barotrauma
                 ItemPrefabIdentifier = itemPrefab;
                 using MD5 md5 = MD5.Create();
                 UintIdentifier = ToolBox.IdentifierToUint32Hash(itemPrefab, md5);
+            }
+
+            public override string ToString()
+            {
+                return $"{base.ToString()} ({ItemPrefabIdentifier})";
             }
         }
 
@@ -145,6 +151,11 @@ namespace Barotrauma
                 Tag = tag;
                 using MD5 md5 = MD5.Create();
                 UintIdentifier = ToolBox.IdentifierToUint32Hash(tag, md5);
+            }
+
+            public override string ToString()
+            {
+                return $"{base.ToString()} ({Tag})";
             }
         }
 
@@ -390,6 +401,8 @@ namespace Barotrauma
     {
         public static readonly PrefabCollection<ItemPrefab> Prefabs = new PrefabCollection<ItemPrefab>();
 
+        public const float DefaultInteractDistance = 120.0f;
+
         //default size
         public Vector2 Size { get; private set; }
 
@@ -410,7 +423,6 @@ namespace Barotrauma
         public ImmutableArray<Rectangle> Triggers { get; private set; }
 
         private ImmutableDictionary<Identifier, float> treatmentSuitability;
-        private readonly List<XElement> fabricationRecipeElements = new List<XElement>();
 
         /// <summary>
         /// Is this prefab overriding a prefab in another content package
@@ -590,7 +602,7 @@ namespace Barotrauma
         public override ImmutableHashSet<string> Aliases => aliases;
 
         //how close the Character has to be to the item to pick it up
-        [Serialize(120.0f, IsPropertySaveable.No)]
+        [Serialize(DefaultInteractDistance, IsPropertySaveable.No)]
         public float InteractDistance { get; private set; }
 
         // this can be used to allow items which are behind other items tp
@@ -751,6 +763,9 @@ namespace Barotrauma
 
         [Serialize(false, IsPropertySaveable.No)]
         public bool DontTransferBetweenSubs { get; private set; }
+
+        [Serialize(true, IsPropertySaveable.No)]
+        public bool ShowHealthBar { get; private set; }
 
         protected override Identifier DetermineIdentifier(XElement element)
         {
@@ -1143,7 +1158,7 @@ namespace Barotrauma
         public bool CanBeBoughtFrom(Location.StoreInfo store, out PriceInfo priceInfo)
         {
             priceInfo = GetPriceInfo(store);
-            return priceInfo != null && priceInfo.CanBeBought && (store.Location?.LevelData?.Difficulty ?? 0) >= priceInfo.MinLevelDifficulty;
+            return priceInfo is { CanBeBought: true } && (store.Location?.LevelData?.Difficulty ?? 0) >= priceInfo.MinLevelDifficulty;
         }
 
         public bool CanBeBoughtFrom(Location location)
@@ -1240,13 +1255,12 @@ namespace Barotrauma
                 throw new ArgumentException("Both name and identifier cannot be null.");
             }
 
-            ItemPrefab prefab;
             if (identifier.IsEmpty)
             {
                 //legacy support
                 identifier = GenerateLegacyIdentifier(name);
             }
-            Prefabs.TryGet(identifier, out prefab);
+            Prefabs.TryGet(identifier, out ItemPrefab prefab);
 
             //not found, see if we can find a prefab with a matching alias
             if (prefab == null && !string.IsNullOrEmpty(name))
@@ -1294,8 +1308,8 @@ namespace Barotrauma
             return PreferredContainers.Any(pc => IsItemConditionAcceptable(item, pc) && IsContainerPreferred(pc.Secondary, identifiersOrTags));
         }
 
-        private bool IsItemConditionAcceptable(Item item, PreferredContainer pc) => item.ConditionPercentage >= pc.MinCondition && item.ConditionPercentage <= pc.MaxCondition;
-        private bool CanBeTransferred(Identifier item, PreferredContainer pc, ItemContainer targetContainer) => 
+        private static bool IsItemConditionAcceptable(Item item, PreferredContainer pc) => item.ConditionPercentage >= pc.MinCondition && item.ConditionPercentage <= pc.MaxCondition;
+        private static bool CanBeTransferred(Identifier item, PreferredContainer pc, ItemContainer targetContainer) => 
             pc.AllowTransfersHere && (!pc.TransferOnlyOnePerContainer || targetContainer.Inventory.AllItems.None(i => i.Prefab.Identifier == item));
 
         public static bool IsContainerPreferred(IEnumerable<Identifier> preferences, ItemContainer c) => preferences.Any(id => c.Item.Prefab.Identifier == id || c.Item.HasTag(id));

@@ -8,23 +8,7 @@ using Lidgren.Network;
 
 namespace Barotrauma
 {
-    interface IWritableBitField
-    {
-        public void WriteBoolean(bool b);
-        public void WriteInteger(int value, int min, int max);
-        public void WriteFloat(float value, float min, float max, int numberOfBits);
-
-        public void WriteToMessage(IWriteMessage msg);
-    }
-
-    interface IReadableBitField
-    {
-        public bool ReadBoolean();
-        public int ReadInteger(int min, int max);
-        public float ReadFloat(float min, float max, int numberOfBits);
-    }
-
-    sealed class WriteOnlyBitField : IWritableBitField, IDisposable
+    sealed class WriteOnlyBitField : IDisposable
     {
         private const int AmountOfBoolsInByte = 7; // Reserve last bit for end marker
         private readonly List<byte> Buffer = new List<byte>();
@@ -100,7 +84,7 @@ namespace Barotrauma
         }
     }
 
-    sealed class ReadOnlyBitField : IReadableBitField
+    sealed class ReadOnlyBitField
     {
         private const int AmountOfBoolsInByte = 7; // Reserve last bit for end marker
         private readonly ImmutableArray<byte> buffer;
@@ -110,17 +94,14 @@ namespace Barotrauma
         {
             List<byte> bytes = new List<byte>();
             byte currentByte;
-            int reads = 0;
             do
             {
+                if (inc.BitPosition >= inc.LengthBits)
+                {
+                    throw new Exception("Failed to find the end of the bit field: end of the message reached.");
+                }
                 currentByte = inc.ReadByte();
                 bytes.Add(currentByte);
-
-                reads++;
-                if (reads > 100)
-                {
-                    throw new Exception($"Failed to find the end of the bit field after 100 reads. Terminating to prevent the game from freezing.");
-                }
             }
             while (!IsBitSet(currentByte, AmountOfBoolsInByte));
 

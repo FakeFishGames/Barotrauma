@@ -43,6 +43,7 @@ namespace Barotrauma
         OnRepairComplete,
         OnItemFabricationSkillGain,
         OnItemFabricatedAmount,
+        OnItemFabricatedIngredients,
         OnAllyItemFabricatedAmount,
         OnOpenItemContainer,
         OnUseRangedWeapon,
@@ -51,6 +52,7 @@ namespace Barotrauma
         OnSelfRagdoll,
         OnRagdoll,
         OnRoundEnd,
+        OnLootCharacter,
         OnAnyMissionCompleted,
         OnAllMissionsCompleted,
         OnGiveOrder,
@@ -80,6 +82,11 @@ namespace Barotrauma
         // Skills
         ElectricalSkillBonus,
         HelmSkillBonus,
+        HelmSkillOverride,
+        MedicalSkillOverride,
+        WeaponsSkillOverride,
+        ElectricalSkillOverride,
+        MechanicalSkillOverride,
         MechanicalSkillBonus,
         MedicalSkillBonus,
         WeaponsSkillBonus,
@@ -105,6 +112,7 @@ namespace Barotrauma
         RangedSpreadReduction,
         // Utility
         RepairSpeed,
+        MechanicalRepairSpeed,
         DeconstructorSpeedMultiplier,
         RepairToolStructureRepairMultiplier,
         RepairToolStructureDamageMultiplier,
@@ -115,20 +123,53 @@ namespace Barotrauma
         GeneticMaterialRefineBonus,
         GeneticMaterialTaintedProbabilityReductionOnCombine,
         SkillGainSpeed,
+        ExtraLevelGain,
+        HelmSkillGainSpeed,
+        WeaponsSkillGainSpeed,
+        MedicalSkillGainSpeed,
+        ElectricalSkillGainSpeed,
+        MechanicalSkillGainSpeed,
         MedicalItemApplyingMultiplier,
+        MedicalItemDurationMultiplier,
+        PoisonMultiplier,
         // Tinker
         TinkeringDuration,
         TinkeringStrength,
         TinkeringDamage,
         // Misc
         ReputationGainMultiplier,
+        ReputationLossMultiplier,
         MissionMoneyGainMultiplier,
         ExperienceGainMultiplier,
         MissionExperienceGainMultiplier,
         ExtraMissionCount,
         ExtraSpecialSalesCount,
-        ApplyTreatmentsOnSelfFraction,
+        StoreSellMultiplier,
+        StoreBuyMultiplierAffiliated,
+        StoreBuyMultiplier,
         MaxAttachableCount,
+        ExplosionRadiusMultiplier,
+        ExplosionDamageMultiplier,
+        FabricateMedicineSpeedMultiplier,
+        BallastFloraDamageMultiplier,
+        HoldBreathMultiplier,
+        Apprenticeship,
+        CPRBoost
+    }
+
+    internal enum ItemTalentStats
+    {
+        None,
+        DetoriationSpeed,
+        BatteryCapacity,
+        EngineSpeed,
+        EngineMaxSpeed,
+        PumpSpeed,
+        PumpMaxFlow,
+        ReactorMaxOutput,
+        ReactorFuelEfficiency,
+        DeconstructorSpeed,
+        FabricationSpeed
     }
 
     [Flags]
@@ -145,8 +186,8 @@ namespace Barotrauma
         GainSkillPastMaximum = 0x80,
         RetainExperienceForNewCharacter = 0x100,
         AllowSecondOrderedTarget = 0x200,
-        PowerfulCPR = 0x400,
-        AlwaysStayConscious = 0x800,
+        AlwaysStayConscious = 0x400,
+        CanNotDieToAfflictions = 0x800,
     }
 
     [Flags]

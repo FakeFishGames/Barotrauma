@@ -791,6 +791,10 @@ namespace Barotrauma
                         {
                             GUI.TogglePauseMenu();
                         }
+                        else if (GameSession?.Campaign is { ShowCampaignUI: true, ForceMapUI: false })
+                        {
+                            GameSession.Campaign.ShowCampaignUI = false;
+                        }
                         //open the pause menu if not controlling a character OR if the character has no UIs active that can be closed with ESC
                         else if ((Character.Controlled == null || !itemHudActive())
                             && CharacterHealth.OpenHealthWindow == null
@@ -1200,7 +1204,7 @@ namespace Barotrauma
             base.OnExiting(sender, args);
         }
 
-        public void ShowOpenUrlInWebBrowserPrompt(string url, string promptExtensionTag = null)
+        public static void ShowOpenUrlInWebBrowserPrompt(string url, string promptExtensionTag = null)
         {
             if (string.IsNullOrEmpty(url)) { return; }
             if (GUIMessageBox.VisibleBox?.UserData as string == "verificationprompt") { return; }
@@ -1218,7 +1222,14 @@ namespace Barotrauma
             };
             msgBox.Buttons[0].OnClicked = (btn, userdata) =>
             {
-                ToolBox.OpenFileWithShell(url);
+                try
+                {
+                    ToolBox.OpenFileWithShell(url);
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError($"Failed to open the url {url}", e);
+                }
                 msgBox.Close();
                 return true;
             };

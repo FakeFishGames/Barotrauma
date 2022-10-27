@@ -65,7 +65,7 @@ namespace Barotrauma.Items.Components
         [Editable, Serialize(10.0f, IsPropertySaveable.Yes, description: "The maximum capacity of the device (kW * min). For example, a value of 1000 means the device can output 100 kilowatts of power for 10 minutes, or 1000 kilowatts for 1 minute.")]
         public float Capacity
         {
-            get { return capacity; }
+            get => capacity;
             set { capacity = Math.Max(value, 1.0f); }
         }
 
@@ -89,7 +89,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public float ChargePercentage => MathUtils.Percentage(Charge, Capacity);
+        public float ChargePercentage => MathUtils.Percentage(Charge, GetCapacity());
         
         [Editable, Serialize(10.0f, IsPropertySaveable.Yes, description: "How fast the device can be recharged. For example, a recharge speed of 100 kW and a capacity of 1000 kW*min would mean it takes 10 minutes to fully charge the device.")]
         public float MaxRechargeSpeed
@@ -125,10 +125,19 @@ namespace Barotrauma.Items.Components
             set { efficiency = MathHelper.Clamp(value, 0.0f, 1.0f); }
         }
 
+        private bool flipIndicator;
+        [Editable, Serialize(false, IsPropertySaveable.Yes, description: "Should the progress bar indicating the charge be flipped to fill from the other side.")]
+        public bool FlipIndicator
+        {
+            get { return flipIndicator; }
+            set { flipIndicator = value; }
+        }
+
         public float RechargeRatio => RechargeSpeed / MaxRechargeSpeed;
 
         public const float aiRechargeTargetRatio = 0.5f;
         private bool isRunning;
+
         public bool HasBeenTuned { get; private set; }
 
         public PowerContainer(Item item, ContentXElement element)
@@ -146,7 +155,7 @@ namespace Barotrauma.Items.Components
             return picker != null;
         }
 
-        public override void Update(float deltaTime, Camera cam) 
+        public override void Update(float deltaTime, Camera cam)
         {
             if (item.Connections == null) 
             {
@@ -283,7 +292,7 @@ namespace Barotrauma.Items.Components
             else
             {
                 //Decrease charge based on how much power is leaving the device
-                Charge = Math.Clamp(Charge - CurrPowerOutput / 60 * UpdateInterval, 0, Capacity);
+                Charge = Math.Clamp(Charge - CurrPowerOutput / 60 * UpdateInterval, 0, GetCapacity());
                 prevCharge = Charge;
             }
         }
@@ -370,5 +379,7 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
+
+        public float GetCapacity() => item.StatManager.GetAdjustedValue(ItemTalentStats.BatteryCapacity, Capacity);
     }
 }

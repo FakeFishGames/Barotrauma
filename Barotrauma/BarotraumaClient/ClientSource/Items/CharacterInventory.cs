@@ -774,7 +774,6 @@ namespace Barotrauma
             }
             else
             {
-                bool isEquippable = item.AllowedSlots.Any(s => s != InvSlotType.Any);
                 var selectedContainer = character.SelectedItem?.GetComponent<ItemContainer>();
 
                 if (selectedContainer != null && 
@@ -802,8 +801,7 @@ namespace Barotrauma
                 }
                 else if (character.HeldItems.Any(i => 
                     i.OwnInventory != null &&
-                    /*disallow putting into equipped item if the item is equippable (equip as the quick action instead)*/
-                    ((i.OwnInventory.CanBePut(item) && (allowInventorySwap || !isEquippable)) || (i.OwnInventory.Capacity == 1 && i.OwnInventory.AllowSwappingContainedItems && i.OwnInventory.Container.CanBeContained(item)))))
+                    (i.OwnInventory.CanBePut(item) || (i.OwnInventory.Capacity == 1 && i.OwnInventory.AllowSwappingContainedItems && i.OwnInventory.Container.CanBeContained(item)))))
                 {
                     return QuickUseAction.PutToEquippedItem;
                 }

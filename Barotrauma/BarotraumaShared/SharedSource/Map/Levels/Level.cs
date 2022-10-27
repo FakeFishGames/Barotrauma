@@ -3015,6 +3015,7 @@ namespace Barotrauma
             var selectedLocation = allValidLocations.FirstOrDefault(l =>
                 Vector2.Distance(l.Edge.Point1, l.Edge.Point2) is float edgeLength &&
                 !l.Edge.OutsideLevel &&
+                ((l.Edge.Cell1?.IsDestructible ?? false) || (l.Edge.Cell2?.IsDestructible ?? false)) &&
                 requiredAmount <= (int)Math.Floor(edgeLength / ((1.0f - maxResourceOverlap) * prefab.Size.X)));
 
 
@@ -3905,7 +3906,7 @@ namespace Barotrauma
 
         private bool HasEndOutpost()
         {
-            if (preSelectedStartOutpost != null) { return true; }
+            if (preSelectedEndOutpost != null) { return true; }
             //don't create an end outpost for locations
             if (LevelData.Type == LevelData.LevelType.Outpost) { return false; }
             if (EndLocation != null && !EndLocation.Type.HasOutpost) { return false; }
@@ -4323,6 +4324,10 @@ namespace Barotrauma
                             sp = corpsePoints.FirstOrDefault(sp => sp.AssignedJob == null) ?? pathPoints.FirstOrDefault(sp => sp.AssignedJob == null);
                             // Deduce the job from the selected prefab
                             selectedPrefab = GetCorpsePrefab(usedJobs);
+                            if (selectedPrefab != null)
+                            {
+                                job = selectedPrefab.GetJobPrefab();
+                            }
                         }
                     }
                     if (selectedPrefab == null) { continue; }

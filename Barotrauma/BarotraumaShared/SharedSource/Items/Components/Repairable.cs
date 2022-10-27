@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Abilities;
 
 namespace Barotrauma.Items.Components
 {
@@ -420,7 +421,8 @@ namespace Barotrauma.Items.Components
 
                     if (item.ConditionPercentage > MinDeteriorationCondition)
                     {
-                        item.Condition -= DeteriorationSpeed * deltaTime;
+                        float deteriorationSpeed = item.StatManager.GetAdjustedValue(ItemTalentStats.DetoriationSpeed, DeteriorationSpeed);
+                        item.Condition -= deteriorationSpeed * deltaTime;
                     }
                 }
                 return;
@@ -467,8 +469,14 @@ namespace Barotrauma.Items.Components
                 wasGoodCondition = true;
             }
 
+            float talentMultiplier = CurrentFixer.GetStatValue(StatTypes.RepairSpeed);
+            if (requiredSkills.Any(static skill => skill.Identifier == "mechanical"))
+            {
+                talentMultiplier += CurrentFixer.GetStatValue(StatTypes.MechanicalRepairSpeed);
+            }
+
             float fixDuration = MathHelper.Lerp(FixDurationLowSkill, FixDurationHighSkill, successFactor);
-            fixDuration /= 1 + CurrentFixer.GetStatValue(StatTypes.RepairSpeed) + currentRepairItem?.Prefab.AddedRepairSpeedMultiplier ?? 0f;
+            fixDuration /= 1 + talentMultiplier + currentRepairItem?.Prefab.AddedRepairSpeedMultiplier ?? 0f;
             fixDuration /= 1 + item.GetQualityModifier(Quality.StatType.RepairSpeed);
             
             item.MaxRepairConditionMultiplier = GetMaxRepairConditionMultiplier(CurrentFixer);
@@ -500,7 +508,7 @@ namespace Barotrauma.Items.Components
                                 SkillSettings.Current.SkillIncreasePerRepair / Math.Max(characterSkillLevel, 1.0f));
                         }
                         SteamAchievementManager.OnItemRepaired(item, CurrentFixer);
-                        CurrentFixer.CheckTalents(AbilityEffectType.OnRepairComplete);
+                        CurrentFixer.CheckTalents(AbilityEffectType.OnRepairComplete, new AbilityRepairable(item));
                     }
                     if (CurrentFixer?.SelectedItem == item) { CurrentFixer.SelectedItem = null; }
                     deteriorationTimer = Rand.Range(MinDeteriorationDelay, MaxDeteriorationDelay);
@@ -685,6 +693,16 @@ namespace Barotrauma.Items.Components
             //do nothing
             //Repairables should always stay active, so we don't want to use the default behavior
             //where set_active/set_state signals can disable the component
+        }
+    }
+
+    internal sealed class AbilityRepairable : AbilityObject, IAbilityItem
+    {
+        public Item Item { get; set; }
+
+        public AbilityRepairable(Item item)
+        {
+            Item = item;
         }
     }
 }

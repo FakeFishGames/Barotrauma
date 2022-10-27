@@ -347,6 +347,8 @@ namespace Barotrauma
                         (GameMain.GameSession?.GameMode as MultiPlayerCampaign)?.SaveExperiencePoints(c);
                     }
                 }
+                // Event history must be registered before ending the round or it will be cleared
+                GameMain.GameSession.EventManager.RegisterEventHistory();
             }
 
             GameMain.GameSession.EndRound("", traitorResults, transitionType);
@@ -360,7 +362,6 @@ namespace Barotrauma
                 LeaveUnconnectedSubs(leavingSub);
                 NextLevel = newLevel;
                 GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);
-                GameMain.GameSession.EventManager.RegisterEventHistory();
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
             else
@@ -1019,7 +1020,7 @@ namespace Barotrauma
                 UpgradeManager.PurchaseUpgrade(prefab, category, client: sender);
 
                 // unstable logging
-                int price = prefab.Price.GetBuyprice(UpgradeManager.GetUpgradeLevel(prefab, category), Map?.CurrentLocation);
+                int price = prefab.Price.GetBuyPrice(UpgradeManager.GetUpgradeLevel(prefab, category), Map?.CurrentLocation);
                 int level = UpgradeManager.GetUpgradeLevel(prefab, category);
                 GameServer.Log($"SERVER: Purchased level {level} {category.Identifier}.{prefab.Identifier} for {price}", ServerLog.MessageType.ServerMessage);
             }

@@ -1,4 +1,7 @@
-﻿namespace Barotrauma.Abilities
+﻿using System.Collections.Generic;
+using System.Linq;
+
+namespace Barotrauma.Abilities
 {
     class CharacterAbilityGroupInterval : CharacterAbilityGroup
     {
@@ -9,47 +12,70 @@
         private float effectDelayTimer;
 
 
-        public CharacterAbilityGroupInterval(AbilityEffectType abilityEffectType, CharacterTalent characterTalent, ContentXElement abilityElementGroup) : 
+        public CharacterAbilityGroupInterval(AbilityEffectType abilityEffectType, CharacterTalent characterTalent, ContentXElement abilityElementGroup) :
             base(abilityEffectType, characterTalent, abilityElementGroup)
-        {            
+        {
             // too many overlapping intervals could cause hitching? maybe randomize a little
             interval = abilityElementGroup.GetAttributeFloat("interval", 0f);
             effectDelay = abilityElementGroup.GetAttributeFloat("effectdelay", 0f);
         }
+
         public void UpdateAbilityGroup(float deltaTime)
         {
             if (!IsActive) { return; }
-            TimeSinceLastUpdate += deltaTime;
-            if (TimeSinceLastUpdate >= interval)
-            {
-                bool conditionsMatched = IsApplicable();
-                effectDelayTimer = conditionsMatched ? effectDelayTimer + TimeSinceLastUpdate : 0f;
-                conditionsMatched &= effectDelayTimer >= effectDelay;
 
-                foreach (var characterAbility in characterAbilities)
-                {
-                    if (characterAbility.IsViable())
-                    {
-                        characterAbility.UpdateCharacterAbility(conditionsMatched, TimeSinceLastUpdate);
-                    }
-                }
-                if (conditionsMatched)
-                {
-                    timesTriggered++;
-                }
-                TimeSinceLastUpdate = 0;
+            TimeSinceLastUpdate += deltaTime;
+            if (TimeSinceLastUpdate < interval) { return; }
+
+            bool shouldApplyDelayedEffect;
+            bool conditionsDidntMatch;
+
+            if (AllConditionsMatched())
+            {
+                effectDelayTimer += TimeSinceLastUpdate;
+                shouldApplyDelayedEffect = effectDelayTimer >= effectDelay;
+                conditionsDidntMatch = false;
             }
+            else
+            {
+                effectDelayTimer = 0f;
+                shouldApplyDelayedEffect = false;
+                conditionsDidntMatch = true;
+            }
+
+            bool hasFallbacks = fallbackAbilities.Count > 0;
+
+            List<CharacterAbility> abilitiesToRun =
+                conditionsDidntMatch && hasFallbacks
+                    ? fallbackAbilities
+                    : characterAbilities;
+
+            foreach (var characterAbility in abilitiesToRun)
+            {
+                if (!characterAbility.IsViable()) { continue; }
+
+                characterAbility.UpdateCharacterAbility(
+                    shouldApplyDelayedEffect || conditionsDidntMatch,
+                    TimeSinceLastUpdate);
+            }
+
+            if (shouldApplyDelayedEffect || (conditionsDidntMatch && hasFallbacks))
+            {
+                timesTriggered++;
+            }
+
+            TimeSinceLastUpdate = 0;
         }
-        private bool IsApplicable()
+
+        private bool AllConditionsMatched()
         {
             if (timesTriggered >= maxTriggerCount) { return false; }
+
             foreach (var abilityCondition in abilityConditions)
             {
-                if (!abilityCondition.MatchesCondition())
-                {
-                    return false;
-                }
+                if (!abilityCondition.MatchesCondition()) { return false; }
             }
+
             return true;
         }
     }

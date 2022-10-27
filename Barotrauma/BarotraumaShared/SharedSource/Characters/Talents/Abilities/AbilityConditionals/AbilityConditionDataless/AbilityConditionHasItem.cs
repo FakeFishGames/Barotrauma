@@ -22,7 +22,7 @@ namespace Barotrauma.Abilities
         {
             if (tags.None())
             {
-                return character.GetEquippedItem(null) is Item;
+                return character.GetEquippedItem(null) != null;
             }
 
             if (requireAll)

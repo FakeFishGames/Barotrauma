@@ -163,6 +163,7 @@ namespace Barotrauma
                 {
                     if (!subs.Contains(item.Submarine)) { continue; }
                     if (item.GetRootInventoryOwner() is Character) { continue; }
+                    if (item.NonInteractable) { continue; }
                     containers.AddRange(item.GetComponents<ItemContainer>());
                 }
                 containers.Shuffle(Rand.RandSync.ServerAndClient);

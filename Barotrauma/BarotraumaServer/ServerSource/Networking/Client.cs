@@ -40,6 +40,8 @@ namespace Barotrauma.Networking
         public float ChatSpamTimer;
         public int ChatSpamCount;
 
+        public string RejectedName;
+
         public int RoundsSincePlayedAsTraitor;
 
         public float KickAFKTimer;
@@ -68,6 +70,9 @@ namespace Barotrauma.Networking
         public float DeleteDisconnectedTimer;
 
         public DateTime JoinTime;
+
+        public static readonly TimeSpan NameChangeCoolDown = new TimeSpan(hours: 0, minutes: 0, seconds: 30);
+        public DateTime LastNameChangeTime;
 
         private CharacterInfo characterInfo;
         public CharacterInfo CharacterInfo

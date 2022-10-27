@@ -112,7 +112,7 @@ namespace Barotrauma.Items.Components
             reloadTimer = reload;
             reloadTimer /= 1f + character.GetStatValue(StatTypes.MeleeAttackSpeed);
             reloadTimer /= 1f + item.GetQualityModifier(Quality.StatType.StrikingSpeedMultiplier);
-            character.AnimController.LockFlippingUntil = (float)Timing.TotalTime + reloadTimer;
+            character.AnimController.LockFlippingUntil = (float)Timing.TotalTime + reloadTimer * 0.9f;
 
             item.body.FarseerBody.CollisionCategories = Physics.CollisionProjectile;
             item.body.FarseerBody.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionItemBlocking;
@@ -421,7 +421,7 @@ namespace Barotrauma.Items.Components
                     if (targetItem.Removed) { return; }
                     var attackResult = Attack.DoDamage(User, targetItem, item.WorldPosition, 1.0f);
 #if CLIENT
-                    if (attackResult.Damage > 0.0f)
+                    if (attackResult.Damage > 0.0f && targetItem.Prefab.ShowHealthBar)
                     {
                         Character.Controlled?.UpdateHUDProgressBar(targetItem,
                             targetItem.WorldPosition,

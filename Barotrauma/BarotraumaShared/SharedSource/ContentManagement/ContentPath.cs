@@ -57,7 +57,7 @@ namespace Barotrauma
                 {
                     Option<ContentPackageId> ugcId = ContentPackageId.Parse(otherModName.Value);
                     ContentPackage? otherMod =
-                        allPackages.FirstOrDefault(p => ugcId == p.UgcId)
+                        allPackages.FirstOrDefault(p => ugcId.IsSome() && ugcId == p.UgcId)
                         ?? allPackages.FirstOrDefault(p => p.Name == otherModName)
                         ?? allPackages.FirstOrDefault(p => p.NameMatches(otherModName))
                         ?? throw new MissingContentPackageException(ContentPackage, otherModName.Value);

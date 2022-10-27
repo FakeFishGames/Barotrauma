@@ -109,6 +109,22 @@ namespace Barotrauma
             set => grainStrength = Math.Max(0, value);
         }
 
+        /// <summary>
+        /// Can be used to set camera shake from status effects
+        /// </summary>
+        public float CameraShake
+        {
+            get { return Screen.Selected?.Cam?.Shake ?? 0.0f; }
+            set
+            {
+                if (!MathUtils.IsValid(value)) { return; }
+                if (Screen.Selected?.Cam != null)
+                {
+                    Screen.Selected.Cam.Shake = value;
+                }
+            }
+        }
+
         private readonly List<ParticleEmitter> bloodEmitters = new List<ParticleEmitter>();
         public IEnumerable<ParticleEmitter> BloodEmitters
         {

@@ -135,7 +135,7 @@ namespace Barotrauma
                 foreach (var stockElement in storeElement.GetChildElements("stock"))
                 {
                     var identifier = stockElement.GetAttributeIdentifier("id", Identifier.Empty);
-                    if (identifier.IsEmpty || !(ItemPrefab.FindByIdentifier(identifier) is ItemPrefab prefab)) { continue; }
+                    if (identifier.IsEmpty || ItemPrefab.FindByIdentifier(identifier) is not ItemPrefab prefab) { continue; }
                     int qty = stockElement.GetAttributeInt("qty", 0);
                     if (qty < 1) { continue; }
                     Stock.Add(new PurchasedItem(prefab, qty, buyer: null));
@@ -157,7 +157,7 @@ namespace Barotrauma
                     foreach (var childElement in element.GetChildElements("item"))
                     {
                         var id = childElement.GetAttributeIdentifier("id", Identifier.Empty);
-                        if (id.IsEmpty || !(ItemPrefab.FindByIdentifier(id) is ItemPrefab prefab)) { continue; }
+                        if (id.IsEmpty || ItemPrefab.FindByIdentifier(id) is not ItemPrefab prefab) { continue; }
                         specials.Add(prefab);
                     }
                     return specials;
@@ -240,7 +240,7 @@ namespace Barotrauma
                     availableStock.Add(stockItem.ItemPrefab, weight);
                 }
                 DailySpecials.Clear();
-                int extraSpecialSalesCount = Location.GetExtraSpecialSalesCount();
+                int extraSpecialSalesCount = GetExtraSpecialSalesCount();
                 for (int i = 0; i < Location.DailySpecialsCount + extraSpecialSalesCount; i++)
                 {
                     if (availableStock.None()) { break; }
@@ -283,6 +283,17 @@ namespace Barotrauma
                 }
                 // Adjust by current location reputation
                 price *= Location.GetStoreReputationModifier(true);
+
+                var characters = GameSession.GetSessionCrewCharacters(CharacterType.Both);
+                if (characters.Any())
+                {
+                    if (Location.Reputation?.Faction is { } faction && faction.IsAffiliated())
+                    {
+                        price *= 1f - characters.Max(static c => c.GetStatValue(StatTypes.StoreBuyMultiplierAffiliated));
+                    }
+                    price *= 1f - characters.Max(static c => c.GetStatValue(StatTypes.StoreBuyMultiplier));
+                    price *= 1f + characters.Max(c => item.Tags.Sum(tag => c.Info.GetSavedStatValue(StatTypes.StoreBuyMultiplier, tag)));
+                }
                 // Price should never go below 1 mk
                 return Math.Max((int)price, 1);
             }
@@ -303,6 +314,14 @@ namespace Barotrauma
                 }
                 // Adjust by current location reputation
                 price *= Location.GetStoreReputationModifier(false);
+
+                var characters = GameSession.GetSessionCrewCharacters(CharacterType.Both);
+                if (characters.Any())
+                {
+                    price *= 1f + characters.Max(static c => c.GetStatValue(StatTypes.StoreSellMultiplier));
+                    price *= 1f + characters.Max(c => item.Tags.Sum(tag => c.Info.GetSavedStatValue(StatTypes.StoreSellMultiplier, tag)));
+                }
+
                 // Price should never go below 1 mk
                 return Math.Max((int)price, 1);
             }
@@ -906,11 +925,17 @@ namespace Barotrauma
 
         public LocationType GetLocationType()
         {
-            if (IsCriticallyRadiated() && LocationType.Prefabs[Type.ReplaceInRadiation] is { } newLocationType)
+            if (IsCriticallyRadiated() && !Type.ReplaceInRadiation.IsEmpty)
             {
-                return newLocationType;
+                if (LocationType.Prefabs.TryGet(Type.ReplaceInRadiation, out LocationType newLocationType))
+                {
+                    return newLocationType;
+                }
+                else
+                {
+                    DebugConsole.ThrowError($"Error when trying to get a new location type for an irradiated location - location type \"{newLocationType}\" not found.");
+                }
             }
-
             return Type;
         }
 
@@ -1119,7 +1144,7 @@ namespace Barotrauma
         public void UpdateStores()
         {
             // In multiplayer, stores should be updated by the server and loaded from save data by clients
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+            if (GameMain.NetworkMember is { IsClient: true }) { return; }
             if (Stores == null)
             {
                 CreateStores();
@@ -1161,13 +1186,10 @@ namespace Barotrauma
                 stockToRemove.ForEach(i => stock.Remove(i));
                 store.Stock.Clear();
                 store.Stock.AddRange(stock);
-                int extraSpecialSalesCount = GetExtraSpecialSalesCount();
-                if (++StepsSinceSpecialsUpdated >= SpecialsUpdateInterval || store.DailySpecials.Count() != DailySpecialsCount + extraSpecialSalesCount)
-                {
-                    store.GenerateSpecials();
-                }
                 store.GeneratePriceModifier();
             }
+
+            StepsSinceSpecialsUpdated++;
             foreach (var identifier in storesToRemove)
             {
                 Stores.Remove(identifier);
@@ -1175,6 +1197,20 @@ namespace Barotrauma
             foreach (var identifier in StoreIdentifiers)
             {
                 AddNewStore(identifier);
+            }
+        }
+
+        public void UpdateSpecials()
+        {
+            if (GameMain.NetworkMember is { IsClient: true } || Stores is null) { return; }
+
+            int extraSpecialSalesCount = GetExtraSpecialSalesCount();
+
+            foreach (StoreInfo store in Stores.Values)
+            {
+                if (StepsSinceSpecialsUpdated < SpecialsUpdateInterval && store.DailySpecials.Count == DailySpecialsCount + extraSpecialSalesCount) { continue; }
+
+                store.GenerateSpecials();
             }
         }
 
@@ -1249,7 +1285,7 @@ namespace Barotrauma
             }
         }
 
-        public int GetExtraSpecialSalesCount()
+        public static int GetExtraSpecialSalesCount()
         {
             var characters = GameSession.GetSessionCrewCharacters(CharacterType.Both);
             if (!characters.Any()) { return 0; }

@@ -67,7 +67,7 @@ namespace Barotrauma.Abilities
             if (abilityObject is null)
             {
                 ApplyEffect();
-            } 
+            }
             else
             {
                 ApplyEffect(abilityObject);

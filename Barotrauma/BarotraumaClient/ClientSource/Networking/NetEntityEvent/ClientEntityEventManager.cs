@@ -277,16 +277,12 @@ namespace Barotrauma.Networking
 
         public void Clear()
         {
-            ID = 0;
-
             lastReceivedID = 0;
-
             firstNewID = null;
-
-            events.Clear();
             eventLastSent.Clear();
-
             MidRoundSyncingDone = false;
+
+            ClearSelf();
         }
 
         /// <summary>
@@ -297,6 +293,10 @@ namespace Barotrauma.Networking
         {
             ID = 0;
             events.Clear();
+            if (thisClient != null)
+            {
+                thisClient.LastSentEntityEventID = 0;
+            }
         }
     }
 }

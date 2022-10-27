@@ -208,6 +208,13 @@ namespace Barotrauma
             DecorativeSpriteGroups = decorativeSpriteGroups.Select(kvp => (kvp.Key, kvp.Value.ToImmutableArray())).ToImmutableDictionary();
         }
 
+        public bool CanCharacterBuy()
+        {
+            if (!DefaultPrice.RequiresUnlock) { return true; }
+
+            return Character.Controlled is not null && Character.Controlled.HasStoreAccessForItem(this);
+        }
+
         public override void UpdatePlacing(Camera cam)
         {
             Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);

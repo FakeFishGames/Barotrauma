@@ -22,7 +22,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        const float MaxAttachDistance = 150.0f;
+        private const float MaxAttachDistance = ItemPrefab.DefaultInteractDistance * 0.95f;
 
         //the position(s) in the item that the Character grabs
         protected Vector2[] handlePos;
@@ -127,7 +127,7 @@ namespace Barotrauma.Items.Components
             set { attachedByDefault = value; }
         }
 
-        [Editable, Serialize("0.0,0.0", IsPropertySaveable.No, description: "The position the character holds the item at (in pixels, as an offset from the character's shoulder)."+
+        [Serialize("0.0,0.0", IsPropertySaveable.No, description: "The position the character holds the item at (in pixels, as an offset from the character's shoulder)."+
             " For example, a value of 10,-100 would make the character hold the item 100 pixels below the shoulder and 10 pixels forwards.")]
         public Vector2 HoldPos
         {
@@ -143,7 +143,11 @@ namespace Barotrauma.Items.Components
             set { aimPos = ConvertUnits.ToSimUnits(value); }
         }
 
+#if DEBUG
         [Editable, Serialize(0.0f, IsPropertySaveable.No, description: "The rotation at which the character holds the item (in degrees, relative to the rotation of the character's hand).")]
+#else
+        [Serialize(0.0f, IsPropertySaveable.No)] 
+#endif
         public float HoldAngle
         {
             get { return MathHelper.ToDegrees(holdAngle); }
@@ -151,23 +155,50 @@ namespace Barotrauma.Items.Components
         }
 
         private Vector2 swingAmount;
+#if DEBUG
         [Editable, Serialize("0.0,0.0", IsPropertySaveable.No, description: "How much the item swings around when aiming/holding it (in pixels, as an offset from AimPos/HoldPos).")]
+#else
+        [Serialize("0.0,0.0", IsPropertySaveable.No)] 
+#endif
         public Vector2 SwingAmount
         {
             get { return ConvertUnits.ToDisplayUnits(swingAmount); }
             set { swingAmount = ConvertUnits.ToSimUnits(value); }
         }
-        
+#if DEBUG
         [Editable, Serialize(0.0f, IsPropertySaveable.No, description: "How fast the item swings around when aiming/holding it (only valid if SwingAmount is set).")]
+#else
+        [Serialize(0.0f, IsPropertySaveable.No)]
+#endif
+
         public float SwingSpeed { get; set; }
 
+#if DEBUG
         [Editable, Serialize(false, IsPropertySaveable.No, description: "Should the item swing around when it's being held.")]
+#else
+        [Serialize(false, IsPropertySaveable.No)]
+#endif
         public bool SwingWhenHolding { get; set; }
+
+#if DEBUG
         [Editable, Serialize(false, IsPropertySaveable.No, description: "Should the item swing around when it's being aimed.")]
+#else
+        [Serialize(false, IsPropertySaveable.No)]
+#endif
         public bool SwingWhenAiming { get; set; }
+
+#if DEBUG
         [Editable, Serialize(false, IsPropertySaveable.No, description: "Should the item swing around when it's being used (for example, when firing a weapon or a welding tool).")]
+#else
+        [Serialize(false, IsPropertySaveable.No)]
+#endif
         public bool SwingWhenUsing { get; set; }
+
+#if DEBUG
         [Editable, Serialize(false, IsPropertySaveable.No)]
+#else
+        [Serialize(false, IsPropertySaveable.No)]
+#endif
         public bool DisableHeadRotation { get; set; }
 
         [ConditionallyEditable(ConditionallyEditable.ConditionType.Attachable, MinValueFloat = 0.0f, MaxValueFloat = 0.999f, DecimalCount = 3), Serialize(0.55f, IsPropertySaveable.No, description: "Sprite depth that's used when the item is NOT attached to a wall.")]
@@ -731,10 +762,24 @@ namespace Barotrauma.Items.Components
             mouseDiff = mouseDiff.ClampLength(MaxAttachDistance);
 
             Vector2 userPos = useWorldCoordinates ? user.WorldPosition : user.Position;
-
             Vector2 attachPos = userPos + mouseDiff;
 
-            if (user.Submarine == null && Level.Loaded != null)
+            if (user.Submarine != null)
+            {
+                if (Submarine.PickBody(
+                    ConvertUnits.ToSimUnits(user.Position), 
+                    ConvertUnits.ToSimUnits(user.Position + mouseDiff), collisionCategory: Physics.CollisionWall) != null)
+                {
+                    attachPos = userPos + mouseDiff * Submarine.LastPickedFraction;
+
+                    //round down if we're placing on the right side and vice versa: ensures we don't round the position inside a wall
+                    return
+                        new Vector2(
+                            mouseDiff.X > 0 ? (float)Math.Floor(attachPos.X / Submarine.GridSize.X) * Submarine.GridSize.X : (float)Math.Ceiling(attachPos.X / Submarine.GridSize.X) * Submarine.GridSize.X,
+                            mouseDiff.Y > 0 ? (float)Math.Floor(attachPos.Y / Submarine.GridSize.Y) * Submarine.GridSize.X : (float)Math.Ceiling(attachPos.Y / Submarine.GridSize.Y) * Submarine.GridSize.Y);
+                }
+            }
+            else if (Level.Loaded != null)
             {
                 bool edgeFound = false;
                 foreach (var cell in Level.Loaded.GetCells(attachPos))

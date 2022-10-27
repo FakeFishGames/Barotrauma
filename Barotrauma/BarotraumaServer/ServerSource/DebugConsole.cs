@@ -1408,6 +1408,21 @@ namespace Barotrauma
                 GameMain.Server.PrintSenderTransters();
             }));
 
+
+            AssignOnExecute("resetcharacternetstate", (string[] args) =>
+            {
+                if (GameMain.Server == null) { return; }
+
+                if (args.Length < 1)
+                {
+                    ThrowError("Invalid parameters. The command should be formatted as \"resetcharacternetstate [character]\". If the names consist of multiple words, you should surround them with quotation marks.");
+                    return;
+                }
+
+                var character = FindMatchingCharacter(args.Skip(1).ToArray(), false);
+                character?.ResetNetState();
+            });
+
             commands.Add(new Command("eventdata", "", (string[] args) =>
             {
                 if (args.Length == 0) { return; }

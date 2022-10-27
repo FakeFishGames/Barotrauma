@@ -673,7 +673,7 @@ namespace Barotrauma
         {
             if (GameMain.GameSession?.Campaign?.PendingSubmarineSwitch == null)
             {
-                return Submarine.MainSub.Info;
+                return Submarine.MainSub?.Info;
             }
             else
             {

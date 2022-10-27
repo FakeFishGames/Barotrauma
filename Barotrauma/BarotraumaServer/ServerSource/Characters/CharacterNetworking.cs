@@ -219,9 +219,9 @@ namespace Barotrauma
             else if (NetIdUtils.Difference(networkUpdateID, LastNetworkUpdateID) > 500)
             {
 #if DEBUG || UNSTABLE
-                DebugConsole.AddWarning($"Large disrepancy between a client character's network update ID server-side and client-side (client: {networkUpdateID}, server: {LastNetworkUpdateID}). Resetting the ID.");
+                DebugConsole.AddWarning($"Large discrepancy between a client character's network update ID server-side and client-side (client: {networkUpdateID}, server: {LastNetworkUpdateID}). Resetting the ID.");
 #endif
-                LastNetworkUpdateID = networkUpdateID;
+                LastNetworkUpdateID = LastProcessedID = networkUpdateID;
             }
             if (memInput.Count > 60)
             {
@@ -549,7 +549,7 @@ namespace Barotrauma
                         msg.WriteByte((byte)statType);
                         foreach (var savedStatValue in Info.SavedStatValues[statType])
                         {
-                            msg.WriteString(savedStatValue.StatIdentifier);
+                            msg.WriteIdentifier(savedStatValue.StatIdentifier);
                             msg.WriteSingle(savedStatValue.StatValue);
                             msg.WriteBoolean(savedStatValue.RemoveOnDeath);
                         }

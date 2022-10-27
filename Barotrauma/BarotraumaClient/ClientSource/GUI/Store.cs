@@ -139,10 +139,10 @@ namespace Barotrauma
             return tab switch
             {
                 StoreTab.Buy => true,
-                StoreTab.Sell => campaignUI.Campaign.AllowedToManageCampaign(Networking.ClientPermissions.SellInventoryItems),
-                StoreTab.SellSub => campaignUI.Campaign.AllowedToManageCampaign(Networking.ClientPermissions.SellSubItems),
+                StoreTab.Sell => CampaignMode.AllowedToManageCampaign(Networking.ClientPermissions.SellInventoryItems),
+                StoreTab.SellSub => CampaignMode.AllowedToManageCampaign(Networking.ClientPermissions.SellSubItems),
                 _ => false,
-            };            
+            };
         }
 
         private void UpdatePermissions()
@@ -892,7 +892,7 @@ namespace Barotrauma
 
             void CreateOrUpdateItemFrame(ItemPrefab itemPrefab, int quantity)
             {
-                if (itemPrefab.CanBeBoughtFrom(ActiveStore, out PriceInfo priceInfo))
+                if (itemPrefab.CanBeBoughtFrom(ActiveStore, out PriceInfo priceInfo) && itemPrefab.CanCharacterBuy())
                 {
                     bool isDailySpecial = ActiveStore.DailySpecials.Contains(itemPrefab);
                     var itemFrame = isDailySpecial ?
@@ -1995,11 +1995,23 @@ namespace Barotrauma
             int totalPrice = 0;
             foreach (var item in itemsToPurchase)
             {
-                if (item?.ItemPrefab == null || !item.ItemPrefab.CanBeBoughtFrom(ActiveStore, out var priceInfo))
+                if (item is null) { continue; }
+
+                if (item.ItemPrefab == null || !item.ItemPrefab.CanBeBoughtFrom(ActiveStore, out var priceInfo))
                 {
                     itemsToRemove.Add(item);
                     continue;
                 }
+
+                if (item.ItemPrefab.DefaultPrice.RequiresUnlock)
+                {
+                    if (!CargoManager.HasUnlockedStoreItem(item.ItemPrefab))
+                    {
+                        itemsToRemove.Add(item);
+                        continue;
+                    }
+                }
+
                 totalPrice += item.Quantity * ActiveStore.GetAdjustedItemBuyPrice(item.ItemPrefab, priceInfo: priceInfo);
             }
             itemsToRemove.ForEach(i => itemsToPurchase.Remove(i));

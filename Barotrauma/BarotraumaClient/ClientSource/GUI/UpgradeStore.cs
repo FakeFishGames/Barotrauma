@@ -433,8 +433,8 @@ namespace Barotrauma
 
             Location location = Campaign.Map.CurrentLocation;
 
-            int hullRepairCost = Campaign.GetHullRepairCost();
-            int itemRepairCost = Campaign.GetItemRepairCost();
+            int hullRepairCost = CampaignMode.GetHullRepairCost();
+            int itemRepairCost = CampaignMode.GetItemRepairCost();
             int shuttleRetrieveCost = CampaignMode.ShuttleReplaceCost;
             if (location != null)
             {
@@ -847,7 +847,7 @@ namespace Barotrauma
 
             foreach (UpgradePrefab prefab in prefabs)
             {
-                if (prefab.MaxLevel is 0) { continue; }
+                if (prefab.GetMaxLevelForCurrentSub() == 0) { continue; }
                 CreateUpgradeEntry(prefab, category, parent.Content, submarine, entitiesOnSub);
             }
         }
@@ -1080,7 +1080,7 @@ namespace Barotrauma
 
         public static GUIFrame CreateUpgradeFrame(UpgradePrefab prefab, UpgradeCategory category, CampaignMode campaign, RectTransform rectTransform, bool addBuyButton = true)
         {
-            int price = prefab.Price.GetBuyprice(campaign.UpgradeManager.GetUpgradeLevel(prefab, category), campaign.Map?.CurrentLocation);
+            int price = prefab.Price.GetBuyPrice(campaign.UpgradeManager.GetUpgradeLevel(prefab, category), campaign.Map?.CurrentLocation);
             return CreateUpgradeEntry(rectTransform, prefab.Sprite, prefab.Name, prefab.Description, price, new CategoryData(category, prefab), addBuyButton, upgradePrefab: prefab, currentLevel: campaign.UpgradeManager.GetUpgradeLevel(prefab, category));
         }
 
@@ -1177,11 +1177,12 @@ namespace Barotrauma
 
         private static void UpdateUpgradePercentageText(GUITextBlock text, UpgradePrefab upgradePrefab, int currentLevel)
         {
-            float nextIncrease = upgradePrefab.IncreaseOnTooltip * (Math.Min(currentLevel + 1, upgradePrefab.MaxLevel));
+            int maxLevel = upgradePrefab.GetMaxLevelForCurrentSub();
+            float nextIncrease = upgradePrefab.IncreaseOnTooltip * Math.Min(currentLevel + 1, maxLevel);
             if (nextIncrease != 0f)
             {
                 text.Text = $"{Math.Round(nextIncrease, 1)} %";
-                if (currentLevel == upgradePrefab.MaxLevel)
+                if (currentLevel == maxLevel)
                 {
                     text.TextColor = Color.Gray;
                 }
@@ -1221,7 +1222,7 @@ namespace Barotrauma
             {
                 LocalizedString promptBody = TextManager.GetWithVariables("Upgrades.PurchasePromptBody",
                     ("[upgradename]", prefab.Name),
-                    ("[amount]", prefab.Price.GetBuyprice(Campaign.UpgradeManager.GetUpgradeLevel(prefab, category), Campaign.Map?.CurrentLocation).ToString()));
+                    ("[amount]", prefab.Price.GetBuyPrice(Campaign.UpgradeManager.GetUpgradeLevel(prefab, category), Campaign.Map?.CurrentLocation).ToString()));
                 currectConfirmation = EventEditorScreen.AskForConfirmation(TextManager.Get("Upgrades.PurchasePromptTitle"), promptBody, () =>
                 {
                     if (GameMain.NetworkMember != null)
@@ -1617,14 +1618,15 @@ namespace Barotrauma
         {
             int currentLevel = campaign.UpgradeManager.GetUpgradeLevel(prefab, category);
 
-            LocalizedString progressText = TextManager.GetWithVariables("upgrades.progressformat", ("[level]", currentLevel.ToString()), ("[maxlevel]", prefab.MaxLevel.ToString()));
+            int maxLevel = prefab.GetMaxLevelForCurrentSub();
+            LocalizedString progressText = TextManager.GetWithVariables("upgrades.progressformat", ("[level]", currentLevel.ToString()), ("[maxlevel]", maxLevel.ToString()));
             if (prefabFrame.FindChild("progressbar", true) is { } progressParent)
             {
                 GUIProgressBar bar = progressParent.GetChild<GUIProgressBar>();
                 if (bar != null)
                 {
-                    bar.BarSize = currentLevel / (float) prefab.MaxLevel;
-                    bar.Color = currentLevel >= prefab.MaxLevel ? GUIStyle.Green : GUIStyle.Orange;
+                    bar.BarSize = currentLevel / (float)maxLevel;
+                    bar.Color = currentLevel >= maxLevel ? GUIStyle.Green : GUIStyle.Orange;
                 }
 
                 GUITextBlock block = progressParent.GetChild<GUITextBlock>();
@@ -1637,12 +1639,12 @@ namespace Barotrauma
 
                 GUITextBlock priceLabel = textBlocks[0];
                 priceLabel.Visible = true;
-                int price = prefab.Price.GetBuyprice(campaign.UpgradeManager.GetUpgradeLevel(prefab, category), campaign.Map?.CurrentLocation);
+                int price = prefab.Price.GetBuyPrice(campaign.UpgradeManager.GetUpgradeLevel(prefab, category), campaign.Map?.CurrentLocation);
 
                 if (priceLabel != null && !WaitForServerUpdate)
                 {
                     priceLabel.Text = TextManager.FormatCurrency(price);
-                    if (currentLevel >= prefab.MaxLevel)
+                    if (currentLevel >= maxLevel)
                     {
                         priceLabel.Text = TextManager.Get("Upgrade.MaxedUpgrade");
                     }
@@ -1651,7 +1653,7 @@ namespace Barotrauma
                 GUIButton button = buttonParent.GetChild<GUIButton>();
                 if (button != null)
                 {
-                    button.Enabled = currentLevel < prefab.MaxLevel;
+                    button.Enabled = currentLevel < maxLevel;
                     if (WaitForServerUpdate || campaign.GetBalance() < price)
                     {
                         button.Enabled = false;
@@ -1697,13 +1699,14 @@ namespace Barotrauma
 
             foreach (GUIComponent component in indicators.Children)
             {
-                if (!(component is GUIImage image)) { continue; }
+                if (component is not GUIImage image) { continue; }
 
                 foreach (UpgradePrefab prefab in prefabs)
                 {
                     if (component.UserData != prefab) { continue; }
 
-                    if (prefab.MaxLevel is 0)
+                    int maxLevel = prefab.GetMaxLevelForCurrentSub();
+                    if (maxLevel == 0)
                     {
                         component.Visible = false;
                         continue;
@@ -1715,7 +1718,6 @@ namespace Barotrauma
                     GUIComponentStyle onStyle  = styles["upgradeindicatoron".ToIdentifier()];
                     GUIComponentStyle dimStyle = styles["upgradeindicatordim".ToIdentifier()];
                     GUIComponentStyle offStyle = styles["upgradeindicatoroff".ToIdentifier()];
-                    int maxLevel = prefab.MaxLevel;
 
                     if (maxLevel == 0)
                     {

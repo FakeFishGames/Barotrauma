@@ -83,19 +83,24 @@ namespace Barotrauma.Items.Components
             {
                 if (lastUser == value) { return; }
                 lastUser = value;
-                degreeOfSuccess = lastUser == null ? 0.0f : Math.Min(DegreeOfSuccess(lastUser), 1.0f);
-                LastUserWasPlayer = lastUser.IsPlayer;
+                if (lastUser == null)
+                {
+                    degreeOfSuccess = 0.0f;
+                    LastUserWasPlayer = false;
+                }
+                else
+                {
+                    degreeOfSuccess = Math.Min(DegreeOfSuccess(lastUser), 1.0f);
+                    LastUserWasPlayer = lastUser.IsPlayer;
+                }
             }
         }
-        
+
         [Editable(0.0f, float.MaxValue), Serialize(10000.0f, IsPropertySaveable.Yes, description: "How much power (kW) the reactor generates when operating at full capacity.", alwaysUseInstanceValues: true)]
         public float MaxPowerOutput
         {
-            get { return maxPowerOutput; }
-            set
-            {
-                maxPowerOutput = Math.Max(0.0f, value);
-            }
+            get => maxPowerOutput;
+            set => maxPowerOutput = Math.Max(0.0f, value);
         }
         
         [Editable(0.0f, float.MaxValue), Serialize(120.0f, IsPropertySaveable.Yes, description: "How long the temperature has to stay critical until a meltdown occurs.")]
@@ -144,11 +149,11 @@ namespace Barotrauma.Items.Components
                 turbineOutput = MathHelper.Clamp(value, 0.0f, 100.0f); 
             }
         }
-        
+
         [Serialize(0.2f, IsPropertySaveable.Yes, description: "How fast the condition of the contained fuel rods deteriorates per second."), Editable(0.0f, 1000.0f, decimals: 3)]
         public float FuelConsumptionRate
         {
-            get { return fuelConsumptionRate; }
+            get => fuelConsumptionRate;
             set
             {
                 if (!MathUtils.IsValid(value)) return;
@@ -248,6 +253,8 @@ namespace Barotrauma.Items.Components
             }
 #endif
 
+            float maxPowerOut = GetMaxOutput();
+
             if (signalControlledTargetFissionRate.HasValue && lastReceivedFissionRateSignalTime > Timing.TotalTime - 1)
             {
                 TargetFissionRate = adjustValueWithoutOverShooting(TargetFissionRate, signalControlledTargetFissionRate.Value, deltaTime * 5.0f);
@@ -281,9 +288,9 @@ namespace Barotrauma.Items.Components
 
             //use a smoothed "correct output" instead of the actual correct output based on the load
             //so the player doesn't have to keep adjusting the rate impossibly fast when the load fluctuates heavily
-            if (!MathUtils.NearlyEqual(MaxPowerOutput, 0.0f))
+            if (!MathUtils.NearlyEqual(maxPowerOut, 0.0f))
             {
-                CorrectTurbineOutput += MathHelper.Clamp((Load / MaxPowerOutput * 100.0f) - CorrectTurbineOutput, -20.0f, 20.0f) * deltaTime;
+                CorrectTurbineOutput += MathHelper.Clamp((Load / maxPowerOut * 100.0f) - CorrectTurbineOutput, -20.0f, 20.0f) * deltaTime;
             }
 
             //calculate tolerances of the meters based on the skills of the user
@@ -342,7 +349,7 @@ namespace Barotrauma.Items.Components
 
                         if (!isConnectedToFriendlyOutpost)
                         {
-                            item.Condition -= fissionRate / 100.0f * fuelConsumptionRate * deltaTime;
+                            item.Condition -= fissionRate / 100.0f * GetFuelConsumption() * deltaTime;
                         }
                     }
                     fuelLeft += item.ConditionPercentage;
@@ -351,10 +358,10 @@ namespace Barotrauma.Items.Components
 
             if (fissionRate > 0.0f)
             {
-                if (item.AiTarget != null && MaxPowerOutput > 0)
+                if (item.AiTarget != null && maxPowerOut > 0)
                 {
                     var aiTarget = item.AiTarget;
-                    float range = Math.Abs(currPowerConsumption) / MaxPowerOutput;
+                    float range = Math.Abs(currPowerConsumption) / maxPowerOut;
                     aiTarget.SoundRange = MathHelper.Lerp(aiTarget.MinSoundRange, aiTarget.MaxSoundRange, range);
                     if (item.CurrentHull != null)
                     {
@@ -425,15 +432,17 @@ namespace Barotrauma.Items.Components
                 tolerance = 3f;
             }
 
+            float maxPowerOut = GetMaxOutput();
+
             float temperatureFactor = Math.Min(temperature / 50.0f, 1.0f);
-            float minOutput = MaxPowerOutput * Math.Clamp(Math.Min((turbineOutput - tolerance) / 100.0f, temperatureFactor), 0, 1);
-            float maxOutput = MaxPowerOutput * Math.Min((turbineOutput + tolerance) / 100.0f, temperatureFactor);
+            float minOutput = maxPowerOut * Math.Clamp(Math.Min((turbineOutput - tolerance) / 100.0f, temperatureFactor), 0, 1);
+            float maxOutput = maxPowerOut * Math.Min((turbineOutput + tolerance) / 100.0f, temperatureFactor);
 
             minUpdatePowerOut = minOutput;
             maxUpdatePowerOut = maxOutput;
 
-            float reactorMax = PowerOn ? MaxPowerOutput : maxUpdatePowerOut;
- 
+            float reactorMax = PowerOn ? maxPowerOut : maxUpdatePowerOut;
+
             return new PowerRange(minOutput, maxOutput, reactorMax);
         }
 
@@ -456,11 +465,13 @@ namespace Barotrauma.Items.Components
             float output = MathHelper.Clamp(ratio * (maxUpdatePowerOut - minUpdatePowerOut) + minUpdatePowerOut, minUpdatePowerOut, maxUpdatePowerOut);
             float newLoad = loadLeft;
 
+            float maxOutput = GetMaxOutput();
+
             //Adjust behaviour for multi reactor setup
-            if (MaxPowerOutput != minMaxPower.ReactorMaxOutput)
+            if (maxOutput != minMaxPower.ReactorMaxOutput)
             {
-                float idealLoad = MaxPowerOutput / minMaxPower.ReactorMaxOutput * loadLeft;
-                float loadAdjust = MathHelper.Clamp((ratio - 0.5f) * 25 + idealLoad - (turbineOutput / 100 * MaxPowerOutput), -MaxPowerOutput / 100, MaxPowerOutput / 100);
+                float idealLoad = maxOutput / minMaxPower.ReactorMaxOutput * loadLeft;
+                float loadAdjust = MathHelper.Clamp((ratio - 0.5f) * 25 + idealLoad - (turbineOutput / 100 * maxOutput), -maxOutput / 100, maxOutput / 100);
                 newLoad = MathHelper.Clamp(loadLeft - (expectedPower - output) + loadAdjust, 0, loadLeft);
             }
 
@@ -501,7 +512,7 @@ namespace Barotrauma.Items.Components
             //calculate the maximum output if the fission rate is cranked as high as it goes and turbine output is at max
             float theoreticalMaxHeat = GetGeneratedHeat(fissionRate: maxFissionRate);             
             float temperatureFactor = Math.Min(theoreticalMaxHeat / 50.0f, 1.0f);
-            float theoreticalMaxOutput = Math.Min(maxTurbineOutput / 100.0f, temperatureFactor) * MaxPowerOutput;
+            float theoreticalMaxOutput = Math.Min(maxTurbineOutput / 100.0f, temperatureFactor) * GetMaxOutput();
 
             //maximum output not enough, we need more fuel
             return theoreticalMaxOutput < Load * minimumOutputRatio;
@@ -685,7 +696,7 @@ namespace Barotrauma.Items.Components
                     aiUpdateTimer = AIUpdateInterval;
                     // load more fuel if the current maximum output is only 50% of the current load
                     // or if the fuel rod is (almost) deplenished 
-                    float minCondition = fuelConsumptionRate * MathUtils.Pow2((degreeOfSuccess - refuelLimit) * 2);
+                    float minCondition = GetFuelConsumption() * MathUtils.Pow2((degreeOfSuccess - refuelLimit) * 2);
                     if (NeedMoreFuel(minimumOutputRatio: 0.5f, minCondition: minCondition))
                     {
                         bool outOfFuel = false;
@@ -863,5 +874,8 @@ namespace Barotrauma.Items.Components
                 if (GameMain.NetworkMember is { IsServer: true }) { unsentChanges = true; }
             }
         }
+
+        private float GetMaxOutput() => item.StatManager.GetAdjustedValue(ItemTalentStats.ReactorMaxOutput, MaxPowerOutput);
+        private float GetFuelConsumption() => item.StatManager.GetAdjustedValue(ItemTalentStats.ReactorFuelEfficiency, fuelConsumptionRate);
     }
 }

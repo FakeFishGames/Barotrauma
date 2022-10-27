@@ -106,6 +106,14 @@ namespace Barotrauma
                             $"Failed to write a ChangeProperty network event for the item \"{Name}\" ({e.Message})");
                     }
                     break;
+                case SetItemStatEventData setItemStatEventData:
+                    msg.WriteByte((byte)setItemStatEventData.Stats.Count);
+                    foreach (var (key, value) in setItemStatEventData.Stats)
+                    {
+                        msg.WriteNetSerializableStruct(key);
+                        msg.WriteSingle(value);
+                    }
+                    break;
                 case UpgradeEventData upgradeEventData:
                     var upgrade = upgradeEventData.Upgrade;
                     var upgradeTargets = upgrade.TargetComponents;

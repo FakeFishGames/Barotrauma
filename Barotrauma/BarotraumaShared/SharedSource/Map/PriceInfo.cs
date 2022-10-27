@@ -27,6 +27,8 @@ namespace Barotrauma
         public bool DisplayNonEmpty { get; } = false;
         public Identifier StoreIdentifier { get; }
 
+        public bool RequiresUnlock { get; }
+
         /// <summary>
         /// Used when both <see cref="MinAvailableAmount"/> and <see cref="MaxAvailableAmount"/> are set to 0.
         /// </summary>
@@ -48,6 +50,7 @@ namespace Barotrauma
             int maxAmount = GetMaxAmount(element);
             maxAmount = Math.Min(maxAmount, CargoManager.MaxQuantity);
             MaxAvailableAmount = Math.Max(maxAmount, MinAvailableAmount);
+            RequiresUnlock = element.GetAttributeBool("requiresunlock", false);
         }
 
         public PriceInfo(int price, bool canBeBought,

@@ -756,7 +756,7 @@ namespace Barotrauma
         /// </remarks>
         public static ImmutableHashSet<Character> GetSessionCrewCharacters(CharacterType type)
         {
-            if (!(GameMain.GameSession.CrewManager is { } crewManager)) { return ImmutableHashSet<Character>.Empty; }
+            if (GameMain.GameSession.CrewManager is not { } crewManager) { return ImmutableHashSet<Character>.Empty; }
 
             IEnumerable<Character> players;
             IEnumerable<Character> bots;
@@ -766,8 +766,8 @@ namespace Barotrauma
             players = GameMain.Server.ConnectedClients.Select(c => c.Character).Where(c => c?.Info != null && !c.IsDead);
             bots = crewManager.GetCharacters().Where(c => !c.IsRemotePlayer);
 #elif CLIENT
-            players = crewManager.GetCharacters().Where(c => c.IsPlayer);
-            bots = crewManager.GetCharacters().Where(c => c.IsBot);
+            players = crewManager.GetCharacters().Where(static c => c.IsPlayer);
+            bots = crewManager.GetCharacters().Where(static c => c.IsBot);
 #endif
             if (type.HasFlag(CharacterType.Bot))
             {

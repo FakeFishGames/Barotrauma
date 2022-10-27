@@ -140,9 +140,20 @@ namespace Barotrauma
         private float vitality;
         public float Vitality 
         {
-            get 
-            { 
-                return Character.IsDead ? minVitality : vitality; 
+            get
+            {
+                if (Character.IsDead)
+                {
+                    return minVitality;
+                }
+
+                if (Character.HasAbilityFlag(AbilityFlags.CanNotDieToAfflictions))
+                {
+                    return Math.Max(vitality, MinVitality + 1);
+                }
+
+                return vitality;
+
             }
             private set
             {
@@ -881,6 +892,9 @@ namespace Barotrauma
                 float oxygenlowResistance = GetResistance(oxygenLowAffliction.Prefab);
                 decreaseSpeed *= (1f - oxygenlowResistance);
                 increaseSpeed *= (1f + oxygenlowResistance);
+
+                float holdBreathMultiplier = 1f + GetStatValue(StatTypes.HoldBreathMultiplier);
+                decreaseSpeed *= holdBreathMultiplier;
                 OxygenAmount = MathHelper.Clamp(OxygenAmount + deltaTime * (Character.OxygenAvailable < InsufficientOxygenThreshold ? decreaseSpeed : increaseSpeed), -100.0f, 100.0f);
             }
 
@@ -1217,6 +1231,7 @@ namespace Barotrauma
                 var affliction = kvp.Key;
                 var limbHealth = kvp.Value;
                 if (affliction.Strength <= 0.0f || limbHealth != null) { continue; }
+                if (kvp.Key.Prefab.ResetBetweenRounds) { continue; }
                 healthElement.Add(new XElement("Affliction",
                     new XAttribute("identifier", affliction.Identifier),
                     new XAttribute("strength", affliction.Strength.ToString("G", CultureInfo.InvariantCulture))));

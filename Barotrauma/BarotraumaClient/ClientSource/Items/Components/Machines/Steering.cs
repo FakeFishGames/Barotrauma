@@ -390,7 +390,7 @@ namespace Barotrauma.Items.Components
                                 !ActiveDockingSource.Docked && DockingTarget?.Item?.Submarine == Level.Loaded.StartOutpost && (DockingTarget?.Item?.Submarine?.Info.IsOutpost ?? false))
                         {
                             // Docking to an outpost
-                            var subsToLeaveBehind = campaign.GetSubsToLeaveBehind(Item.Submarine);
+                            var subsToLeaveBehind = CampaignMode.GetSubsToLeaveBehind(Item.Submarine);
                             if (subsToLeaveBehind.Any())
                             {
                                 enterOutpostPrompt = new GUIMessageBox(

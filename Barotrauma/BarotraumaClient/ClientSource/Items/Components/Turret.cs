@@ -581,7 +581,7 @@ namespace Barotrauma.Items.Components
                 var battery = recipient.Item?.GetComponent<PowerContainer>();
                 if (battery == null || battery.Item.Condition <= 0.0f) { continue; }
                 availableCharge += battery.Charge;
-                availableCapacity += battery.Capacity;
+                availableCapacity += battery.GetCapacity();
             }            
         }
 

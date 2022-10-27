@@ -2,6 +2,7 @@
 
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -103,12 +104,7 @@ namespace Barotrauma
 
         private static int GetAddedMissionCount()
         {
-            int count = 0;
-            foreach (Character character in GameSession.GetSessionCrewCharacters(CharacterType.Both))
-            {
-                count += (int)character.GetStatValue(StatTypes.ExtraMissionCount);
-            }
-            return count;
+            return GameSession.GetSessionCrewCharacters(CharacterType.Both).Max(static character => (int)character.GetStatValue(StatTypes.ExtraMissionCount));
         }
     }
 }

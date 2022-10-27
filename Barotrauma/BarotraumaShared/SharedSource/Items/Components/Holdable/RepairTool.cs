@@ -514,7 +514,7 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
             {
-                if (Rand.Range(0.0f, 1.0f) < FireProbability * deltaTime)
+                if (Rand.Range(0.0f, 1.0f) < FireProbability * deltaTime && item.CurrentHull != null)
                 {
                     Vector2 displayPos = ConvertUnits.ToDisplayUnits(rayStart + (rayEnd - rayStart) * lastPickedFraction * 0.9f);
                     if (item.CurrentHull.Submarine != null) { displayPos += item.CurrentHull.Submarine.Position; }
@@ -636,11 +636,14 @@ namespace Barotrauma.Items.Components
                     float addedDetachTime = deltaTime * (1f + user.GetStatValue(StatTypes.RepairToolDeattachTimeMultiplier)) * (1f + item.GetQualityModifier(Quality.StatType.RepairToolDeattachTimeMultiplier));
                     levelResource.DeattachTimer += addedDetachTime;
 #if CLIENT
-                    Character.Controlled?.UpdateHUDProgressBar(
-                        this,
-                        targetItem.WorldPosition,
-                        levelResource.DeattachTimer / levelResource.DeattachDuration,
-                        GUIStyle.Red, GUIStyle.Green, "progressbar.deattaching");
+                    if (targetItem.Prefab.ShowHealthBar)
+                    {
+                        Character.Controlled?.UpdateHUDProgressBar(
+                            this,
+                            targetItem.WorldPosition,
+                            levelResource.DeattachTimer / levelResource.DeattachDuration,
+                            GUIStyle.Red, GUIStyle.Green, "progressbar.deattaching");
+                    }
 #endif
                     FixItemProjSpecific(user, deltaTime, targetItem, showProgressBar: false);
                     return true;

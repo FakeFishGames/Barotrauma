@@ -610,15 +610,18 @@ namespace Barotrauma
                 torsoAngle -= herpesStrength / 150.0f;
                 torso.body.SmoothRotate(torsoAngle * Dir, CurrentGroundedParams.TorsoTorque);
             }
-            if (!Aiming && CurrentGroundedParams.FixedHeadAngle && HeadAngle.HasValue)
+            if (!head.Disabled)
             {
-                float headAngle = HeadAngle.Value;
-                if (Crouching && !movingHorizontally) { headAngle -= HumanCrouchParams.ExtraHeadAngleWhenStationary; }
-                head.body.SmoothRotate(headAngle * Dir, CurrentGroundedParams.HeadTorque);
-            }
-            else
-            {
-                RotateHead(head);
+                if (!Aiming && CurrentGroundedParams.FixedHeadAngle && HeadAngle.HasValue)
+                {
+                    float headAngle = HeadAngle.Value;
+                    if (Crouching && !movingHorizontally) { headAngle -= HumanCrouchParams.ExtraHeadAngleWhenStationary; }
+                    head.body.SmoothRotate(headAngle * Dir, CurrentGroundedParams.HeadTorque);
+                }
+                else
+                {
+                    RotateHead(head);
+                }
             }
 
             if (!onGround)
@@ -1389,7 +1392,7 @@ namespace Barotrauma
                 target.Oxygen += deltaTime * 0.5f; //Stabilize them        
             }
 
-            bool powerfulCPR = character.HasAbilityFlag(AbilityFlags.PowerfulCPR);
+            float cprBoost = character.GetStatValue(StatTypes.CPRBoost);
            
             int skill = (int)character.GetSkillLevel("medical");
             //pump for 15 seconds (cprAnimTimer 0-15), then do mouth-to-mouth for 2 seconds (cprAnimTimer 15-17)
@@ -1406,7 +1409,7 @@ namespace Barotrauma
                 {
                     if (target.Oxygen < -10.0f)
                     {
-                        if (powerfulCPR)
+                        if (cprBoost >= 1f)
                         {
                             //prevent the patient from suffocating no matter how fast their oxygen level is dropping
                             target.Oxygen = Math.Max(target.Oxygen, -10.0f);
@@ -1453,7 +1456,7 @@ namespace Barotrauma
                         reviveChance = (float)Math.Pow(reviveChance, CPRSettings.Active.ReviveChanceExponent);
                         reviveChance = MathHelper.Clamp(reviveChance, CPRSettings.Active.ReviveChanceMin, CPRSettings.Active.ReviveChanceMax);
 
-                        if (powerfulCPR) { reviveChance *= 2.0f; }
+                        reviveChance *= 1f + cprBoost;
 
                         if (Rand.Range(0.0f, 1.0f, Rand.RandSync.ServerAndClient) <= reviveChance)
                         {

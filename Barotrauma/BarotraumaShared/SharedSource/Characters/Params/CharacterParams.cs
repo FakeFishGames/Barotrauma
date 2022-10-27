@@ -649,7 +649,7 @@ namespace Barotrauma
                 if (HasTag(tag))
                 {
                     target = null;
-                    DebugConsole.ThrowError($"Multiple targets with the same tag ('{tag}') defined! Only the first will be used!");
+                    DebugConsole.AddWarning($"Trying to add multiple targets with the same tag ('{tag}') defined! Only the first will be used!");
                     return false;
                 }
                 else

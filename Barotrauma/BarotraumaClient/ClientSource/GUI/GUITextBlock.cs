@@ -584,6 +584,13 @@ namespace Barotrauma
                 {
                     string textToShow = Censor ? censoredText : (Wrap ? wrappedText.Value : text.SanitizedValue);
                     Color colorToShow = currentTextColor * (currentTextColor.A / 255.0f);
+                    if (TextManager.DebugDraw)
+                    {
+                        if (!text.NestedStr.Loaded || text.NestedStr.Language == LanguageIdentifier.None)
+                        {
+                            colorToShow = Color.Magenta;
+                        }
+                    }
 
                     if (Shadow)
                     {

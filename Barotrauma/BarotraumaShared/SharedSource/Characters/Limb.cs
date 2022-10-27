@@ -778,6 +778,7 @@ namespace Barotrauma
                 {
                     var abilityAfflictionCharacter = new AbilityAfflictionCharacter(newAffliction, character);
                     attacker.CheckTalents(AbilityEffectType.OnAddDamageAffliction, abilityAfflictionCharacter);
+                    newAffliction = abilityAfflictionCharacter.Affliction;
                 }
                 if (applyAffliction)
                 {
@@ -896,6 +897,12 @@ namespace Barotrauma
             {
                 reEnableTimer = duration;
             }
+#if CLIENT
+            if (Hidden && LightSource != null)
+            {
+                LightSource.Enabled = false;
+            }
+#endif
         }
 
         public void ReEnable()
@@ -1194,7 +1201,25 @@ namespace Barotrauma
                 }
                 else
                 {
-                    if (statusEffect.HasTargetType(StatusEffect.TargetType.Character))
+
+                    if (statusEffect.HasTargetType(StatusEffect.TargetType.Contained) && character.Inventory is { } inventory)
+                    {
+                        foreach (Item item in inventory.AllItems)
+                        {
+                            if (statusEffect.TargetIdentifiers != null &&
+                                !statusEffect.TargetIdentifiers.Contains(item.Prefab.Identifier) &&
+                                statusEffect.TargetIdentifiers.None(id => item.HasTag(id)))
+                            {
+                                continue;
+                            }
+                            if (statusEffect.TargetSlot > -1)
+                            {
+                                if (inventory.FindIndex(item) != statusEffect.TargetSlot) { continue; }
+                            }
+                            targets.Add(item);
+                        }
+                    }
+                    else if (statusEffect.HasTargetType(StatusEffect.TargetType.Character))
                     {
                         statusEffect.Apply(actionType, deltaTime, character, character, WorldPosition);
                     }

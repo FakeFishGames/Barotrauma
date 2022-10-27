@@ -129,6 +129,7 @@ namespace Barotrauma
         public bool IsCommanding => IsPlayer || (AIController is HumanAIController humanAI && humanAI.ShipCommandManager != null && humanAI.ShipCommandManager.Active);
         public bool IsBot => !IsPlayer && AIController is HumanAIController humanAI && humanAI.Enabled;
         public bool IsEscorted { get; set; }
+        public Identifier JobIdentifier => Info?.Job?.Prefab.Identifier ?? Identifier.Empty;
 
         public readonly Dictionary<Identifier, SerializableProperty> Properties;
         public Dictionary<Identifier, SerializableProperty> SerializableProperties
@@ -611,7 +612,9 @@ namespace Barotrauma
                 CharacterHealth.SetHealthBarVisibility(value == null);
 #endif
                 bool isServerOrSingleplayer = GameMain.IsSingleplayer || GameMain.NetworkMember is { IsServer: true };
-                if (IsPlayer && isServerOrSingleplayer && value is { IsDead: true, Wallet: { Balance: var balance } grabbedWallet } && balance > 0)
+                CheckTalents(AbilityEffectType.OnLootCharacter, new AbilityCharacterLoot(value));
+
+                if (IsPlayer && isServerOrSingleplayer && value is { IsDead: true, Wallet: { Balance: var balance and > 0 } grabbedWallet })
                 {
 #if SERVER
                     if (GameMain.GameSession.Campaign is MultiPlayerCampaign mpCampaign && GameMain.Server is { ServerSettings: { } settings })
@@ -999,7 +1002,7 @@ namespace Barotrauma
             }
         }
 
-        public bool InWater => AnimController?.InWater ?? false;
+        public bool InWater => AnimController is AnimController { InWater: true };
 
         public bool GodMode = false;
 
@@ -1052,6 +1055,8 @@ namespace Barotrauma
                 return AnimController.MainLimb.body.DrawPosition;
             }
         }
+
+        public HashSet<Identifier> MarkedAsLooted = new();
 
         public bool IsInFriendlySub => Submarine != null && Submarine.TeamID == TeamID;
 
@@ -1574,14 +1579,23 @@ namespace Barotrauma
                 }
                 if (createNetworkEvent && GameMain.NetworkMember is { IsServer: true })
                 {
-                    GameMain.NetworkMember.CreateEntityEvent(item, new Item.ChangePropertyEventData(item.SerializableProperties[nameof(item.Tags).ToIdentifier()]));
+                    GameMain.NetworkMember.CreateEntityEvent(item, new Item.ChangePropertyEventData(item.SerializableProperties[nameof(item.Tags).ToIdentifier()], item));
                 }
             }
         }
 
         public float GetSkillLevel(string skillIdentifier) =>
             GetSkillLevel(skillIdentifier.ToIdentifier());
-        
+
+        private static readonly ImmutableDictionary<Identifier, StatTypes> overrideStatTypes = new Dictionary<Identifier, StatTypes>
+        {
+            { new("helm"), StatTypes.HelmSkillOverride },
+            { new("medical"), StatTypes.MedicalSkillOverride },
+            { new("weapons"), StatTypes.WeaponsSkillOverride },
+            { new("electrical"), StatTypes.ElectricalSkillOverride },
+            { new("mechanical"), StatTypes.MechanicalSkillOverride }
+        }.ToImmutableDictionary();
+
         public float GetSkillLevel(Identifier skillIdentifier)
         {
             if (Info?.Job == null) { return 0.0f; }
@@ -1616,6 +1630,16 @@ namespace Barotrauma
             }
 
             skillLevel += GetStatValue(GetSkillStatType(skillIdentifier));
+
+            if (overrideStatTypes.TryGetValue(skillIdentifier, out StatTypes statType))
+            {
+                float skillOverride = GetStatValue(statType);
+                if (skillOverride > skillLevel)
+                {
+                    skillLevel = skillOverride;
+                }
+            }
+
 
             return skillLevel;
         }
@@ -2058,30 +2082,42 @@ namespace Barotrauma
             {
                 foreach (Item item in HeldItems)
                 {
-                    if (IsKeyDown(InputType.Aim) || !item.RequireAimToSecondaryUse)
+                    tryUseItem(item, deltaTime);
+                }
+                foreach (Item item in Inventory.AllItems)
+                {
+                    if (item.GetComponent<Wearable>() is { AllowUseWhenWorn: true } && HasEquippedItem(item))
                     {
-                        item.SecondaryUse(deltaTime, this);
+                        tryUseItem(item, deltaTime);
                     }
-                    if (IsKeyDown(InputType.Use) && !item.IsShootable)
+                }
+            }
+
+            void tryUseItem(Item item, float deltaTime)
+            {
+                if (IsKeyDown(InputType.Aim) || !item.RequireAimToSecondaryUse)
+                {
+                    item.SecondaryUse(deltaTime, this);
+                }
+                if (IsKeyDown(InputType.Use) && !item.IsShootable)
+                {
+                    if (!item.RequireAimToUse || IsKeyDown(InputType.Aim))
                     {
-                        if (!item.RequireAimToUse || IsKeyDown(InputType.Aim))
-                        {
-                            item.Use(deltaTime, this);
-                        }
+                        item.Use(deltaTime, this);
                     }
-                    if (IsKeyDown(InputType.Shoot) && item.IsShootable)
+                }
+                if (IsKeyDown(InputType.Shoot) && item.IsShootable)
+                {
+                    if (!item.RequireAimToUse || IsKeyDown(InputType.Aim))
                     {
-                        if (!item.RequireAimToUse || IsKeyDown(InputType.Aim))
-                        {
-                            item.Use(deltaTime, this);
-                        }
+                        item.Use(deltaTime, this);
+                    }
 #if CLIENT
-                        else if (item.RequireAimToUse && !IsKeyDown(InputType.Aim))
-                        {
-                            HintManager.OnShootWithoutAiming(this, item);
-                        }
-#endif
+                    else if (item.RequireAimToUse && !IsKeyDown(InputType.Aim))
+                    {
+                        HintManager.OnShootWithoutAiming(this, item);
                     }
+#endif
                 }
             }
 
@@ -2721,6 +2757,11 @@ namespace Barotrauma
                 }
             }
 
+            bool selectInputSameAsDeselect = false;
+#if CLIENT
+            selectInputSameAsDeselect = GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Select] == GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Deselect];
+#endif
+
             if (SelectedCharacter != null && (IsKeyHit(InputType.Grab) || IsKeyHit(InputType.Health))) //Let people use ladders and buttons and stuff when dragging chars
             {
                 DeselectCharacter();
@@ -2760,14 +2801,16 @@ namespace Barotrauma
             {
                 FocusedCharacter.onCustomInteract(FocusedCharacter, this);
             }
-            else if (IsKeyHit(InputType.Deselect) && SelectedItem != null)
+            else if (IsKeyHit(InputType.Deselect) && SelectedItem != null && 
+                (focusedItem == null || focusedItem == SelectedItem || !selectInputSameAsDeselect))
             {
                 SelectedItem = null;
 #if CLIENT
                 CharacterHealth.OpenHealthWindow = null;
 #endif
             }
-            else if (IsKeyHit(InputType.Deselect) && SelectedSecondaryItem != null)
+            else if (IsKeyHit(InputType.Deselect) && SelectedSecondaryItem != null && SelectedSecondaryItem.GetComponent<Ladder>() == null &&
+                (focusedItem == null || focusedItem == SelectedSecondaryItem || !selectInputSameAsDeselect))
             {
                 SelectedSecondaryItem = null;
 #if CLIENT
@@ -2782,6 +2825,10 @@ namespace Barotrauma
             {
 #if CLIENT
                 if (CharacterInventory.DraggingItemToWorld) { return; }
+                if (selectInputSameAsDeselect)
+                {
+                    keys[(int)InputType.Deselect].Reset();
+                }
 #endif
                 bool canInteract = focusedItem.TryInteract(this);
 #if CLIENT
@@ -3787,7 +3834,7 @@ namespace Barotrauma
                 return;
             }
 #endif
-            if (damage < targetLimb.Params.MinSeveranceDamage) { return; }
+            if (damage > 0 && damage < targetLimb.Params.MinSeveranceDamage) { return; }
             if (!IsDead)
             {
                 if (!allowBeheading && targetLimb.type == LimbType.Head) { return; }
@@ -3805,7 +3852,7 @@ namespace Barotrauma
                 var referenceLimb = targetLimb.type == LimbType.Head && targetLimb.Params.ID == 0 ? joint.LimbA : joint.LimbB;
                 if (referenceLimb != targetLimb) { continue; }
                 float probability = severLimbsProbability;
-                if (!IsDead)
+                if (!IsDead && probability < 1)
                 {
                     probability *= joint.Params.SeveranceProbabilityModifier;
                 }
@@ -4778,6 +4825,32 @@ namespace Barotrauma
             return info.UnlockedTalents.Contains(identifier);
         }
 
+        private readonly HashSet<Hull> sameRoomHulls = new();
+
+        /// <summary>
+        /// Check if the character is in the same room
+        /// Room and hull differ in that a room can consist of multiple linked hulls
+        /// </summary>
+        public bool IsInSameRoomAs(Character character)
+        {
+            if (character == this) { return true; }
+
+            if (character.CurrentHull is null || CurrentHull is null)
+            {
+                // Outside doesn't count as a room
+                return false;
+            }
+
+            if (character.Submarine != Submarine) { return false; }
+            if (character.CurrentHull == CurrentHull) { return true; }
+
+            sameRoomHulls.Clear();
+            CurrentHull.GetLinkedEntities(sameRoomHulls);
+            sameRoomHulls.Add(CurrentHull);
+
+            return sameRoomHulls.Contains(character.CurrentHull);
+        }
+
         public bool HasUnlockedAllTalents()
         {
             if (TalentTree.JobTalentTrees.TryGet(Info.Job.Prefab.Identifier, out TalentTree talentTree))
@@ -4786,7 +4859,7 @@ namespace Barotrauma
                 {
                     foreach (TalentOption talentOption in talentSubTree.TalentOptionStages)
                     {
-                        if (talentOption.TalentIdentifiers.None(t => HasTalent(t)))
+                        if (talentOption.TalentIdentifiers.None(HasTalent))
                         {
                             return false;
                         }
@@ -4829,6 +4902,19 @@ namespace Barotrauma
         public bool HasRecipeForItem(Identifier recipeIdentifier)
         {
             return characterTalents.Any(t => t.UnlockedRecipes.Contains(recipeIdentifier));
+        }
+
+        public bool HasStoreAccessForItem(ItemPrefab prefab)
+        {
+            foreach (CharacterTalent talent in characterTalents)
+            {
+                foreach (Identifier unlockedItem in talent.UnlockedStoreItems)
+                {
+                    if (prefab.Tags.Contains(unlockedItem)) { return true; }
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -5040,6 +5126,16 @@ namespace Barotrauma
             DesiredTeamId = desiredTeamId;
             TeamChangePriority = teamChangePriority;
             AggressiveBehavior = aggressiveBehavior;
+        }
+    }
+
+    internal sealed class AbilityCharacterLoot : AbilityObject, IAbilityCharacter
+    {
+        public Character Character { get; set; }
+
+        public AbilityCharacterLoot(Character character)
+        {
+            Character = character;
         }
     }
 

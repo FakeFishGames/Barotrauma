@@ -1817,7 +1817,11 @@ namespace Barotrauma
                 subList = dropDown.ListBox.Content;
             }
 
-            var frame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.15f), subList.RectTransform) { MinSize = new Point(0, 25) },
+            var frame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), subList.RectTransform) 
+            { 
+                //enough space for 2 lines (price and class) + some padding
+                MinSize = new Point(0, (int)(GUIStyle.SmallFont.LineHeight * 2.3f)) 
+            },
                 style: "ListBoxElement")
             {
                 ToolTip = sub.Description,

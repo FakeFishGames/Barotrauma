@@ -265,6 +265,8 @@ namespace Barotrauma.Items.Components
                 foreach (DeconstructItem deconstructItem in it.Prefab.DeconstructItems)
                 {
                     if (!deconstructItem.IsValidDeconstructor(item)) { continue; }
+                    float percentageHealth = it.Condition / it.MaxCondition;
+                    if (percentageHealth < deconstructItem.MinCondition || percentageHealth > deconstructItem.MaxCondition) { continue; }
                     RegisterItem(deconstructItem.ItemIdentifier, deconstructItem.Amount);
                 }
 

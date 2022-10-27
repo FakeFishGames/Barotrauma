@@ -167,7 +167,7 @@ namespace Barotrauma
             foreach (GUITickBox tickBox in missionTickBoxes)
             {
                 bool disable = hasMaxMissions && !tickBox.Selected;
-                tickBox.Enabled = Campaign.AllowedToManageCampaign(ClientPermissions.ManageMap) && !disable;
+                tickBox.Enabled = CampaignMode.AllowedToManageCampaign(ClientPermissions.ManageMap) && !disable;
                 tickBox.Box.DisabledColor = disable ? tickBox.Box.Color * 0.5f : tickBox.Box.Color * 0.8f;
                 foreach (GUIComponent child in tickBox.Parent.Parent.Children)
                 {
@@ -315,7 +315,7 @@ namespace Barotrauma
                 if (GUI.MouseOn == tickBox) { return false; }
                 if (tickBox != null)
                 {
-                    if (Campaign.AllowedToManageCampaign(ClientPermissions.ManageMap) && tickBox.Enabled)
+                    if (CampaignMode.AllowedToManageCampaign(ClientPermissions.ManageMap) && tickBox.Enabled)
                     {
                         tickBox.Selected = !tickBox.Selected;
                     }
@@ -356,10 +356,10 @@ namespace Barotrauma
                         };
                         tickBox.RectTransform.MinSize = new Point(tickBox.Rect.Height, 0);
                         tickBox.RectTransform.IsFixedSize = true;
-                        tickBox.Enabled = Campaign.AllowedToManageCampaign(ClientPermissions.ManageMap);
+                        tickBox.Enabled = CampaignMode.AllowedToManageCampaign(ClientPermissions.ManageMap);
                         tickBox.OnSelected += (GUITickBox tb) =>
                         {
-                            if (!Campaign.AllowedToManageCampaign(Networking.ClientPermissions.ManageMap)) { return false; }
+                            if (!CampaignMode.AllowedToManageCampaign(Networking.ClientPermissions.ManageMap)) { return false; }
 
                             if (tb.Selected)
                             {
@@ -379,7 +379,7 @@ namespace Barotrauma
                             UpdateMaxMissions(connection.OtherLocation(currentDisplayLocation));
 
                             if ((Campaign is MultiPlayerCampaign multiPlayerCampaign) && !multiPlayerCampaign.SuppressStateSending &&
-                                Campaign.AllowedToManageCampaign(Networking.ClientPermissions.ManageMap))
+                                CampaignMode.AllowedToManageCampaign(Networking.ClientPermissions.ManageMap))
                             {
                                 GameMain.Client?.SendCampaignState();
                             }
@@ -472,7 +472,12 @@ namespace Barotrauma
             {
                 TextGetter = () =>
                 {
-                    return TextManager.AddPunctuation(':', TextManager.Get("Missions"), $"{Campaign.NumberOfMissionsAtLocation(destination)}/{Campaign.Settings.TotalMaxMissionCount}");
+                    int missionCount = 0;
+                    if (GameMain.GameSession != null && Campaign.Map?.CurrentLocation?.SelectedMissions != null)
+                    {
+                        missionCount = Campaign.Map.CurrentLocation.SelectedMissions.Count(m => m.Locations.Contains(location) && !GameMain.GameSession.Missions.Contains(m));
+                    }
+                    return TextManager.AddPunctuation(':', TextManager.Get("Missions"), $"{missionCount}/{Campaign.Settings.TotalMaxMissionCount}");
                 }
             };
 
@@ -500,7 +505,7 @@ namespace Barotrauma
                     return true;
                 },
                 Enabled = true,
-                Visible = Campaign.AllowedToManageCampaign(ClientPermissions.ManageMap)
+                Visible = CampaignMode.AllowedToManageCampaign(ClientPermissions.ManageMap)
             };
 
             buttonArea.RectTransform.MinSize = new Point(0, StartButton.RectTransform.MinSize.Y);

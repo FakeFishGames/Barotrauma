@@ -189,6 +189,15 @@ namespace Barotrauma
         [Serialize(20f, IsPropertySaveable.Yes)]
         public float RequiredAngle { get; set; }
 
+        [Serialize(0f, IsPropertySaveable.Yes, description: "By default uses the same value as RequiredAngle. Use if you want to allow selecting the attack but not shooting until the angle is smaller. Only affects ranged attacks."), Editable]
+        public float RequiredAngleToShoot { get; set; }
+
+        [Serialize(0f, IsPropertySaveable.Yes, description: "How much the attack limb is rotated towards the target. Default 0 = no rotation. Only affects ranged attacks."), Editable]
+        public float AimRotationTorque { get; set; }
+
+        [Serialize(-1, IsPropertySaveable.Yes, description: "Reference to the limb we apply the aim rotation to. By default same as the attack limb. Only affects ranged attacks."), Editable]
+        public int RotationLimbIndex { get; set; }
+
         /// <summary>
         /// Legacy support. Use Afflictions.
         /// </summary>
@@ -529,6 +538,12 @@ namespace Barotrauma
                         effect.Apply(effectType, deltaTime, targetEntity, attacker, worldPosition);
                     }
                 }
+                if (effect.HasTargetType(StatusEffect.TargetType.Contained))
+                {
+                    targets.Clear();
+                    targets.AddRange(attacker.Inventory.AllItems);
+                    effect.Apply(effectType, deltaTime, attacker, targets);
+                }
             }
 
             return attackResult;
@@ -590,6 +605,12 @@ namespace Barotrauma
                 if (effect.HasTargetType(StatusEffect.TargetType.UseTarget))
                 {
                     effect.Apply(effectType, deltaTime, targetLimb.character, attacker, worldPosition);
+                }
+                if (effect.HasTargetType(StatusEffect.TargetType.Contained))
+                {
+                    targets.Clear();
+                    targets.AddRange(attacker.Inventory.AllItems);
+                    effect.Apply(effectType, deltaTime, attacker, targets);
                 }
             }
 

@@ -1,8 +1,5 @@
-﻿using Microsoft.Xna.Framework;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Abilities
 {
@@ -34,6 +31,7 @@ namespace Barotrauma.Abilities
             Alive = 4,
             Monster = 5,
             InFriendlySubmarine = 6,
+            Large = 7,
         };
 
         protected List<TargetType> ParseTargetTypes(string[] targetTypeStrings)
@@ -41,8 +39,7 @@ namespace Barotrauma.Abilities
             List<TargetType> targetTypes = new List<TargetType>();
             foreach (string targetTypeString in targetTypeStrings)
             {
-                TargetType targetType = TargetType.Any;
-                if (!Enum.TryParse(targetTypeString, true, out targetType))
+                if (!Enum.TryParse(targetTypeString, true, out TargetType targetType))
                 {
                     DebugConsole.ThrowError("Invalid target type type \"" + targetTypeString + "\" in CharacterTalent (" + characterTalent.DebugIdentifier + ")");
                 }
@@ -83,6 +80,9 @@ namespace Barotrauma.Abilities
                     return !targetCharacter.IsHuman;
                 case TargetType.InFriendlySubmarine:
                     return targetCharacter.Submarine != null && targetCharacter.Submarine.TeamID == character.TeamID;
+                case TargetType.Large:
+                    // mass of mudraptor is ~48
+                    return targetCharacter.AnimController is { Mass: > 50.0f };
                 default:
                     return true;
             }

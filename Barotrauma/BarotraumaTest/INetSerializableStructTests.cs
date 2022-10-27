@@ -29,7 +29,17 @@ namespace TestProject
         [Fact]
         public void TestBitField()
         {
+            // 0-length bitfield test
+            SerializeDeserializeBitField(Array.Empty<bool>());
+            
+            // Normal bitfield test
             Prop.ForAll<bool[]>(SerializeDeserializeBitField).VerboseCheckThrowOnFailure();
+            
+            // Large bitfield test
+            Prop.ForAll(
+                Arb.Generate<bool[]>().Resize(1000).Where(arr => arr.Length >= 800)
+                    .ToArbitrary(),
+                SerializeDeserializeBitField).VerboseCheckThrowOnFailure();
         }
 
         [Fact]
@@ -278,7 +288,7 @@ namespace TestProject
         private static void SerializeDeserializeBitField(bool[] arg)
         {
             ReadWriteMessage msg = new ReadWriteMessage();
-            IWritableBitField bitFieldWrite = new WriteOnlyBitField();
+            WriteOnlyBitField bitFieldWrite = new WriteOnlyBitField();
 
             foreach (bool b in arg)
             {
@@ -288,7 +298,7 @@ namespace TestProject
             bitFieldWrite.WriteToMessage(msg);
             msg.BitPosition = 0;
 
-            IReadableBitField bitFieldRead = new ReadOnlyBitField(msg);
+            ReadOnlyBitField bitFieldRead = new ReadOnlyBitField(msg);
 
             foreach (bool b in arg)
             {

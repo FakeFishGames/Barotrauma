@@ -334,7 +334,7 @@ namespace Barotrauma
                 OnClicked = (button, userData) =>
                 {
                     string url = TextManager.Get("EditorDisclaimerWikiUrl").Fallback("https://barotraumagame.com/wiki").Value;
-                    GameMain.Instance.ShowOpenUrlInWebBrowserPrompt(url, promptExtensionTag: "wikinotice");
+                    GameMain.ShowOpenUrlInWebBrowserPrompt(url, promptExtensionTag: "wikinotice");
                     return true;
                 }
             };
@@ -1011,7 +1011,7 @@ namespace Barotrauma
                         GUI.DrawLine(spriteBatch, textPos, textPos - Vector2.UnitX * textSize.X, mouseOn ? Color.White : Color.White * 0.7f);
                         if (mouseOn && PlayerInput.PrimaryMouseButtonClicked())
                         {
-                            GameMain.Instance.ShowOpenUrlInWebBrowserPrompt("http://privacypolicy.daedalic.com");
+                            GameMain.ShowOpenUrlInWebBrowserPrompt("http://privacypolicy.daedalic.com");
                         }
                     }
                     textPos.Y -= textSize.Y;

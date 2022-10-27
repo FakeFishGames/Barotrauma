@@ -1,13 +1,12 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
+using Barotrauma.MapCreatures.Behavior;
 using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
-using Barotrauma.Extensions;
-using Barotrauma.MapCreatures.Behavior;
 
 namespace Barotrauma
 {
@@ -131,15 +130,21 @@ namespace Barotrauma
             if (damageSource is Item sourceItem)
             {
                 var launcher = sourceItem.GetComponent<Projectile>()?.Launcher;
-                displayRange *= 
-                    1.0f 
-                    + sourceItem.GetQualityModifier(Quality.StatType.ExplosionRadius) 
+                displayRange *=
+                    1.0f
+                    + sourceItem.GetQualityModifier(Quality.StatType.ExplosionRadius)
                     + (launcher?.GetQualityModifier(Quality.StatType.ExplosionRadius) ?? 0);
-                Attack.DamageMultiplier *= 
-                    1.0f 
+                Attack.DamageMultiplier *=
+                    1.0f
                     + sourceItem.GetQualityModifier(Quality.StatType.ExplosionDamage)
                     + (launcher?.GetQualityModifier(Quality.StatType.ExplosionDamage) ?? 0);
                 Attack.SourceItem ??= sourceItem;
+            }
+
+            if (attacker is not null)
+            {
+                displayRange *= 1f + attacker.GetStatValue(StatTypes.ExplosionRadiusMultiplier);
+                Attack.DamageMultiplier *= 1f + attacker.GetStatValue(StatTypes.ExplosionDamageMultiplier);
             }
 
             Vector2 cameraPos = GameMain.GameScreen.Cam.Position;
@@ -187,7 +192,7 @@ namespace Barotrauma
                     var powerContainer = item.GetComponent<PowerContainer>();
                     if (powerContainer != null)
                     {
-                        powerContainer.Charge -= powerContainer.Capacity * EmpStrength * distFactor;
+                        powerContainer.Charge -= powerContainer.GetCapacity() * EmpStrength * distFactor;
                     }
                 }
             }

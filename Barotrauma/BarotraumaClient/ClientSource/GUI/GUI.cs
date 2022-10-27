@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Barotrauma.IO;
 using System.Linq;
-using System.Xml.Linq;
 using Barotrauma.CharacterEditor;
 using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
@@ -50,6 +49,14 @@ namespace Barotrauma
 
     static class GUI
     {
+        // Controls where a line is drawn for given coords.
+        public enum OutlinePosition
+        {
+            Default = 0, // Thickness is inside of top left and outside of bottom right coord
+            Inside = 1, // Thickness is subtracted from the inside
+            Centered = 2, // Thickness is centered on given coords
+            Outside = 3, // Tickness is added to the outside
+        }
         public static GUICanvas Canvas => GUICanvas.Instance;
         public static CursorState MouseCursor = CursorState.Default;
 
@@ -1603,6 +1610,54 @@ namespace Barotrauma
                 sb.Draw(solidWhiteTexture, new Vector2(rect.X + thickness, rect.Bottom - thickness), srcRect, clr, 0.0f, Vector2.Zero, new Vector2(rect.Width - thickness, thickness), SpriteEffects.None, depth);
                 sb.Draw(solidWhiteTexture, new Vector2(rect.Right - thickness, rect.Y + thickness), srcRect, clr, 0.0f, Vector2.Zero, new Vector2(thickness, rect.Height - thickness * 2f), SpriteEffects.None, depth);
             }
+        }
+
+        public static void DrawRectangle(SpriteBatch sb, Vector2 position, Vector2 size, Vector2 origin, float rotation, Color clr, float depth = 0.0f, float thickness = 1, OutlinePosition outlinePos = OutlinePosition.Centered)
+        {
+            Vector2 topLeft = new Vector2(-origin.X, -origin.Y);
+            Vector2 topRight = new Vector2(-origin.X + size.X, -origin.Y);
+            Vector2 bottomLeft = new Vector2(-origin.X, -origin.Y + size.Y);
+            Vector2 actualSize = size;
+
+            switch(outlinePos)
+            {
+                case OutlinePosition.Default:
+                    actualSize += new Vector2(thickness);
+                    break;
+                case OutlinePosition.Centered:
+                    topLeft -= new Vector2(thickness * 0.5f);
+                    topRight -= new Vector2(thickness * 0.5f);
+                    bottomLeft -= new Vector2(thickness * 0.5f);
+                    actualSize += new Vector2(thickness);
+                    break;
+                case OutlinePosition.Inside:
+                    topRight -= new Vector2(thickness, 0.0f);
+                    bottomLeft -= new Vector2(0.0f, thickness);
+                    break;
+                case OutlinePosition.Outside:
+                    topLeft -= new Vector2(thickness);
+                    topRight -= new Vector2(0.0f, thickness);
+                    bottomLeft -= new Vector2(thickness, 0.0f);
+                    actualSize += new Vector2(thickness * 2.0f);
+                    break;
+            }
+
+            Matrix rotate = Matrix.CreateRotationZ(rotation);
+            topLeft = Vector2.Transform(topLeft, rotate) + position;
+            topRight = Vector2.Transform(topRight, rotate) + position;
+            bottomLeft = Vector2.Transform(bottomLeft, rotate) + position;
+
+            Rectangle srcRect = new Rectangle(0, 0, 1, 1);
+            sb.Draw(solidWhiteTexture, topLeft, srcRect, clr, rotation, Vector2.Zero, new Vector2(thickness, actualSize.Y), SpriteEffects.None, depth);
+            sb.Draw(solidWhiteTexture, topLeft, srcRect, clr, rotation, Vector2.Zero, new Vector2(actualSize.X, thickness), SpriteEffects.None, depth);
+            sb.Draw(solidWhiteTexture, topRight, srcRect, clr, rotation, Vector2.Zero, new Vector2(thickness, actualSize.Y), SpriteEffects.None, depth);
+            sb.Draw(solidWhiteTexture, bottomLeft, srcRect, clr, rotation, Vector2.Zero, new Vector2(actualSize.X, thickness), SpriteEffects.None, depth);
+        }
+
+        public static void DrawFilledRectangle(SpriteBatch sb, Vector2 position, Vector2 size, Vector2 pivot, float rotation, Color clr, float depth = 0.0f)
+        {
+            Rectangle srcRect = new Rectangle(0, 0, 1, 1);
+            sb.Draw(solidWhiteTexture, position, srcRect, clr, rotation, (pivot/size), size, SpriteEffects.None, depth);
         }
 
         public static void DrawFilledRectangle(SpriteBatch sb, RectangleF rect, Color clr, float depth = 0.0f)

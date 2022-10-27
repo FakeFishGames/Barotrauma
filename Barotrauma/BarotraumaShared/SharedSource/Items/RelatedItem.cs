@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -20,6 +21,8 @@ namespace Barotrauma
         public bool IsOptional { get; set; }
 
         public bool MatchOnEmpty { get; set; }
+
+        public bool RequireEmpty { get; set; }
 
         public bool IgnoreInEditor { get; set; }
 
@@ -133,27 +136,42 @@ namespace Barotrauma
                     if (parentItem == null) { return false; }
                     return CheckContained(parentItem);
                 case RelationType.Container:
-                    if (parentItem == null || parentItem.Container == null) { return MatchOnEmpty; }
-                    return (!ExcludeBroken || parentItem.Container.Condition > 0.0f) && (!ExcludeFullCondition || !parentItem.Container.IsFullCondition) && MatchesItem(parentItem.Container);
+                    if (parentItem == null || parentItem.Container == null) { return MatchOnEmpty || RequireEmpty; }
+                    return CheckItem(parentItem.Container, this);
                 case RelationType.Equipped:
                     if (character == null) { return false; }
-                    if (MatchOnEmpty && !character.HeldItems.Any()) { return true; }
-                    foreach (Item equippedItem in character.HeldItems)
+                    var heldItems = character.HeldItems;
+                    if ((RequireEmpty || MatchOnEmpty) && heldItems.None()) { return true; }
+                    foreach (Item equippedItem in heldItems)
                     {
                         if (equippedItem == null) { continue; }
-                        if ((!ExcludeBroken || equippedItem.Condition > 0.0f) && (!ExcludeFullCondition || !equippedItem.IsFullCondition) && MatchesItem(equippedItem)) { return true; }
+                        if (CheckItem(equippedItem, this))
+                        {
+                            if (RequireEmpty && equippedItem.Condition > 0) { return false; }
+                            return true;
+                        }
                     }
                     break;
                 case RelationType.Picked:
-                    if (character == null || character.Inventory == null) { return false; }
-                    foreach (Item pickedItem in character.Inventory.AllItems)
+                    if (character == null) { return false; }
+                    if (character.Inventory == null) { return MatchOnEmpty || RequireEmpty; }
+                    var allItems = character.Inventory.AllItems;
+                    if ((RequireEmpty || MatchOnEmpty) && allItems.None()) { return true; }
+                    foreach (Item pickedItem in allItems)
                     {
-                        if (MatchesItem(pickedItem)) { return true; }
+                        if (pickedItem == null) { continue; }
+                        if (CheckItem(pickedItem, this))
+                        {
+                            if (RequireEmpty && pickedItem.Condition > 0) { return false; }
+                            return true;
+                        }
                     }
                     break;
                 default:
                     return true;
             }
+
+            static bool CheckItem(Item i, RelatedItem ri) => (!ri.ExcludeBroken || ri.RequireEmpty || i.Condition > 0.0f) && (!ri.ExcludeFullCondition || !i.IsFullCondition) && ri.MatchesItem(i);
 
             return false;
         }
@@ -161,12 +179,9 @@ namespace Barotrauma
         private bool CheckContained(Item parentItem)
         {
             if (parentItem.OwnInventory == null) { return false; }
-
-            if (MatchOnEmpty && parentItem.OwnInventory.IsEmpty())
-            {
-                return true;
-            }
-
+            bool isEmpty = parentItem.OwnInventory.IsEmpty();
+            if (RequireEmpty && !isEmpty) { return false; }
+            if (MatchOnEmpty && isEmpty) { return true; }
             foreach (Item contained in parentItem.ContainedItems)
             {
                 if (TargetSlot > -1 && parentItem.OwnInventory.FindIndex(contained) != TargetSlot) { continue; }
@@ -184,6 +199,7 @@ namespace Barotrauma
                 new XAttribute("optional", IsOptional),
                 new XAttribute("ignoreineditor", IgnoreInEditor),
                 new XAttribute("excludebroken", ExcludeBroken),
+                new XAttribute("requireempty", RequireEmpty),
                 new XAttribute("excludefullcondition", ExcludeFullCondition),
                 new XAttribute("targetslot", TargetSlot),
                 new XAttribute("allowvariants", AllowVariants));
@@ -249,6 +265,7 @@ namespace Barotrauma
             RelatedItem ri = new RelatedItem(identifiers, excludedIdentifiers)
             {
                 ExcludeBroken = element.GetAttributeBool("excludebroken", true),
+                RequireEmpty = element.GetAttributeBool("requireempty", false),
                 ExcludeFullCondition = element.GetAttributeBool("excludefullcondition", false),
                 AllowVariants = element.GetAttributeBool("allowvariants", true)
             };

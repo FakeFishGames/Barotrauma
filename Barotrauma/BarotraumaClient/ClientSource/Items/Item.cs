@@ -1415,6 +1415,15 @@ namespace Barotrauma
                 case EventType.ChangeProperty:
                     ReadPropertyChange(msg, false);
                     break;
+                case EventType.ItemStat:
+                    byte length = msg.ReadByte();
+                    for (int i = 0; i < length; i++)
+                    {
+                        var statIdentifier = INetSerializableStruct.Read<ItemStatManager.TalentStatIdentifier>(msg);
+                        var statValue = msg.ReadSingle();
+                        StatManager.ApplyStat(statIdentifier, statValue);
+                    }
+                    break;
                 case EventType.Upgrade:
                     Identifier identifier = msg.ReadIdentifier();
                     byte level = msg.ReadByte();
