@@ -99,6 +99,9 @@ namespace Barotrauma.Items.Components
         [Serialize(100, IsPropertySaveable.No, description: "How many items are placed in a row before starting a new row.")]
         public int ItemsPerRow { get; set; }
 
+        [Serialize(false, IsPropertySaveable.No, description: "Should items be drawn based on their position within the inventory?")]
+        public bool ItemsUseInventoryPlacement { get; set; }
+
         [Serialize(true, IsPropertySaveable.No, description: "Should the inventory of this item be visible when the item is selected.")]
         public bool DrawInventory
         {

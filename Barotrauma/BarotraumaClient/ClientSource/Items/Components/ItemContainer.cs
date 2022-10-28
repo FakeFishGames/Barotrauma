@@ -307,8 +307,6 @@ namespace Barotrauma.Items.Components
                 transformedItemPos += item.body.DrawPosition;
             }
 
-            Vector2 currentItemPos = transformedItemPos;
-
             SpriteEffects spriteEffects = SpriteEffects.None;
             if ((item.body != null && item.body.Dir == -1) || item.FlippedX) 
             { 
@@ -321,10 +319,12 @@ namespace Barotrauma.Items.Components
 
             bool isWiringMode = SubEditorScreen.TransparentWiringMode && SubEditorScreen.IsWiringMode();
 
-            int i = 0;
-            foreach (Item containedItem in Inventory.AllItems)
+            int total = 0;
+            for (int i = 0; i < Inventory.Capacity; i++)
             {
-                if (containedItem?.Sprite == null) { continue; }
+                Item containedItem = Inventory.GetItemAt(i);
+                if (containedItem is null) { continue; }
+                if (containedItem.Sprite == null) { continue; }
 
                 if (AutoInteractWithContained)
                 {
@@ -343,6 +343,20 @@ namespace Barotrauma.Items.Components
                 }
                 containedSpriteDepth = itemDepth + (containedSpriteDepth - (item.Sprite?.Depth ?? item.SpriteDepth)) / 10000.0f;
 
+                Vector2 currentItemPos = transformedItemPos;
+                int targetPosition = ItemsUseInventoryPlacement ? i : total;
+                if (Math.Abs(ItemInterval.X) > 0.001f && Math.Abs(ItemInterval.Y) > 0.001f)
+                {
+                    //interval set on both axes -> use a grid layout
+                    currentItemPos += transformedItemIntervalHorizontal * (targetPosition % ItemsPerRow);
+                    currentItemPos += transformedItemIntervalVertical * (targetPosition / ItemsPerRow);
+                }
+                else
+                {
+                    currentItemPos += transformedItemInterval * targetPosition;
+                }
+                total++;
+
                 containedItem.Sprite.Draw(
                     spriteBatch,
                     new Vector2(currentItemPos.X, -currentItemPos.Y),
@@ -357,22 +371,6 @@ namespace Barotrauma.Items.Components
                 {
                     if (ic.hideItems) continue;
                     ic.DrawContainedItems(spriteBatch, containedSpriteDepth);
-                }
-
-                i++;
-                if (Math.Abs(ItemInterval.X) > 0.001f && Math.Abs(ItemInterval.Y) > 0.001f)
-                {
-                    //interval set on both axes -> use a grid layout
-                    currentItemPos += transformedItemIntervalHorizontal;
-                    if (i % ItemsPerRow == 0)
-                    {
-                        currentItemPos = transformedItemPos;
-                        currentItemPos += transformedItemIntervalVertical * (i / ItemsPerRow);
-                    }
-                }
-                else
-                {
-                    currentItemPos += transformedItemInterval;
                 }
             }
         }
