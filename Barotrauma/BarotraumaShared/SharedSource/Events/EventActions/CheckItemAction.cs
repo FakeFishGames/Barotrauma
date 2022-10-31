@@ -97,7 +97,7 @@ namespace Barotrauma
         {
             if (inventory == null) { return false; }
             int count = 0;
-            foreach (Item item in inventory.FindAllItems(it => itemTags.Any(it.HasTag) || itemIdentifierSplit.Contains(it.Prefab.Identifier)))
+            foreach (Item item in inventory.FindAllItems(it => itemTags.Any(it.HasTag) || itemIdentifierSplit.Contains(it.Prefab.Identifier), recursive: true))
             {
                 if (!ConditionalsMatch(item, character)) { continue; }
                 count++;
