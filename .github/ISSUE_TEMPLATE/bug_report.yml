@@ -54,6 +54,7 @@ body:
       options:      
         - 0.19.14.0
         - 0.20.1.0 (Unstable)
+        - Faction test branch
         - Other
     validations:
       required: true
