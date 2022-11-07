@@ -2340,6 +2340,53 @@ namespace Barotrauma
 
             //---------------------------------------
 
+            var enemySubmarineSettingsContainer = new GUILayoutGroup(new RectTransform(Vector2.One, subTypeDependentSettingFrame.RectTransform))
+            {
+                CanBeFocused = true,
+                Visible = false,
+                Stretch = true
+            };
+
+            // -------------------
+
+            var enemySubmarineRewardGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), enemySubmarineSettingsContainer.RectTransform), isHorizontal: true)
+            {
+                Stretch = true
+            };
+            new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), enemySubmarineRewardGroup.RectTransform),
+                TextManager.Get("enemysub.reward"), textAlignment: Alignment.CenterLeft, wrap: true);
+            var numInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), enemySubmarineRewardGroup.RectTransform), NumberType.Int, hidePlusMinusButtons: true)
+            {
+                IntValue = (int)(MainSub?.Info?.EnemySubmarineInfo?.Reward ?? 4000),
+                MinValueInt = 0,
+                MaxValueInt = 999999,
+                OnValueChanged = (numberInput) =>
+                {
+                    MainSub.Info.EnemySubmarineInfo.Reward = numberInput.IntValue;
+                }
+            };
+            enemySubmarineRewardGroup.RectTransform.MaxSize = numInput.TextBox.RectTransform.MaxSize;
+            var enemySubmarineDifficultyGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), enemySubmarineSettingsContainer.RectTransform), isHorizontal: true)
+            {
+                Stretch = true
+            };
+            new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), enemySubmarineDifficultyGroup.RectTransform),
+                TextManager.Get("preferreddifficulty"), textAlignment: Alignment.CenterLeft, wrap: true);
+            numInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), enemySubmarineDifficultyGroup.RectTransform), NumberType.Int)
+            {
+                IntValue = (int)(MainSub?.Info?.EnemySubmarineInfo?.PreferredDifficulty ?? 50),
+                MinValueInt = 0,
+                MaxValueInt = 100,
+                OnValueChanged = (numberInput) =>
+                {
+                    MainSub.Info.EnemySubmarineInfo.PreferredDifficulty = numberInput.IntValue;
+                }
+            };
+            enemySubmarineDifficultyGroup.RectTransform.MaxSize = numInput.TextBox.RectTransform.MaxSize;
+            enemySubmarineSettingsContainer.RectTransform.MinSize = new Point(0, enemySubmarineSettingsContainer.RectTransform.Children.Sum(c => c.Children.Any() ? c.Children.Max(c2 => c2.MinSize.Y) : 0));
+
+            //---------------------------------------
+
             var beaconSettingsContainer = new GUILayoutGroup(new RectTransform(Vector2.One, subTypeDependentSettingFrame.RectTransform))
             {
                 CanBeFocused = true,
@@ -2355,7 +2402,7 @@ namespace Barotrauma
             };
             new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), beaconMinDifficultyGroup.RectTransform),
                 TextManager.Get("minleveldifficulty"), textAlignment: Alignment.CenterLeft, wrap: true);
-            var numInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), beaconMinDifficultyGroup.RectTransform), NumberType.Int)
+            numInput = new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), beaconMinDifficultyGroup.RectTransform), NumberType.Int)
             {
                 IntValue = (int)(MainSub?.Info?.BeaconStationInfo?.MinLevelDifficulty ?? 0),
                 MinValueInt = 0,
@@ -2633,9 +2680,14 @@ namespace Barotrauma
                 {
                     MainSub.Info.BeaconStationInfo ??= new BeaconStationInfo(MainSub.Info);
                 }
+                else if (type == SubmarineType.EnemySubmarine)
+                {
+                    MainSub.Info.EnemySubmarineInfo ??= new EnemySubmarineInfo(MainSub.Info);
+                }
                 previewImageButtonHolder.Children.ForEach(c => c.Enabled = MainSub.Info.AllowPreviewImage);
                 outpostSettingsContainer.Visible = type == SubmarineType.OutpostModule;
                 beaconSettingsContainer.Visible = type == SubmarineType.BeaconStation;
+                enemySubmarineSettingsContainer.Visible = type == SubmarineType.EnemySubmarine;
                 subSettingsContainer.Visible = type == SubmarineType.Player;
                 return true;
             };
@@ -2913,6 +2965,7 @@ namespace Barotrauma
             subSettingsContainer.Recalculate();
             outpostSettingsContainer.Recalculate();
             beaconSettingsContainer.Recalculate();
+            enemySubmarineSettingsContainer.Recalculate();
 
             descriptionBox.Text = MainSub == null ? "" : MainSub.Info.Description.Value;
             submarineDescriptionCharacterCount.Text = descriptionBox.Text.Length + " / " + submarineDescriptionLimit;

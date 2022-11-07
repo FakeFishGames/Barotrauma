@@ -121,11 +121,13 @@ namespace Barotrauma
 
         public OutpostModuleInfo OutpostModuleInfo { get; set; }
         public BeaconStationInfo BeaconStationInfo { get; set; }
+        public EnemySubmarineInfo EnemySubmarineInfo { get; set; }
 
         public bool IsOutpost => Type == SubmarineType.Outpost || Type == SubmarineType.OutpostModule;
 
         public bool IsWreck => Type == SubmarineType.Wreck;
         public bool IsBeacon => Type == SubmarineType.BeaconStation;
+        public bool IsEnemySubmarine => Type == SubmarineType.EnemySubmarine;
         public bool IsPlayer => Type == SubmarineType.Player;
         public bool IsRuin => Type == SubmarineType.Ruin;
 
@@ -322,6 +324,10 @@ namespace Barotrauma
             {
                 BeaconStationInfo = new BeaconStationInfo(original.BeaconStationInfo);
             }
+            if (original.EnemySubmarineInfo != null)
+            {
+                EnemySubmarineInfo = new EnemySubmarineInfo(original.EnemySubmarineInfo);
+            }
 #if CLIENT
             PreviewImage = original.PreviewImage != null ? new Sprite(original.PreviewImage) : null;
 #endif
@@ -407,6 +413,10 @@ namespace Barotrauma
                     else if (Type == SubmarineType.BeaconStation)
                     {
                         BeaconStationInfo = new BeaconStationInfo(this, SubmarineElement);
+                    }
+                    else if (Type == SubmarineType.EnemySubmarine)
+                    {
+                        EnemySubmarineInfo = new EnemySubmarineInfo(this, SubmarineElement);
                     }
                 }
             }
@@ -575,6 +585,11 @@ namespace Barotrauma
             {
                 BeaconStationInfo.Save(newElement);
                 BeaconStationInfo = new BeaconStationInfo(this, newElement);
+            }
+            else if (Type == SubmarineType.EnemySubmarine)
+            {
+                EnemySubmarineInfo.Save(newElement);
+                EnemySubmarineInfo = new EnemySubmarineInfo(this, newElement);
             }
             XDocument doc = new XDocument(newElement);
 
