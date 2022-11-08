@@ -1,9 +1,11 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using FarseerPhysics;
+using FarseerPhysics.Collision;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -11,7 +13,6 @@ namespace Barotrauma
 {
     partial class PirateMission : Mission
     {
-        private readonly XElement submarineTypeConfig;
         private readonly XElement characterConfig;
         private readonly XElement characterTypeConfig;
         private readonly float addedMissionDifficultyPerPlayer;
@@ -80,7 +81,6 @@ namespace Barotrauma
 
         public PirateMission(MissionPrefab prefab, Location[] locations, Submarine sub) : base(prefab, locations, sub)
         {
-            submarineTypeConfig = prefab.ConfigElement.GetChildElement("SubmarineTypes");
             characterConfig = prefab.ConfigElement.GetChildElement("Characters");
             characterTypeConfig = prefab.ConfigElement.GetChildElement("CharacterTypes");
             addedMissionDifficultyPerPlayer = prefab.ConfigElement.GetAttributeFloat("addedmissiondifficultyperplayer", 0);
@@ -93,7 +93,7 @@ namespace Barotrauma
             }
         }
 
-        public override void SetLevel(LevelData level)
+        private new void SetLevel(LevelData level)
         {
             if (levelData != null)
             {
@@ -104,28 +104,11 @@ namespace Barotrauma
             levelData = level;
             missionDifficulty = level?.Difficulty ?? 0;
 
-            XElement submarineConfig = GetRandomDifficultyModifiedElement(submarineTypeConfig, missionDifficulty, ShipRandomnessModifier);
+            submarineInfo = GetRandomDifficultyModifiedSubmarine(missionDifficulty, ShipRandomnessModifier);
 
-            alternateReward = submarineConfig.GetAttributeInt("alternatereward", Reward);
-
+            alternateReward = (int)submarineInfo.EnemySubmarineInfo.Reward;
             string rewardText = $"‖color:gui.orange‖{string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:N0}", alternateReward)}‖end‖";
             if (descriptionWithoutReward != null) { description = descriptionWithoutReward.Replace("[reward]", rewardText); }
-
-            ContentPath submarinePath = submarineConfig.GetAttributeContentPath("path", Prefab.ContentPackage);
-            if (submarinePath.IsNullOrEmpty())
-            {
-                DebugConsole.ThrowError($"No path used for submarine for the pirate mission \"{Prefab.Identifier}\"!");
-                return;
-            }
-            // maybe a little redundant
-            var contentFile = ContentPackageManager.EnabledPackages.All.SelectMany(p => p.GetFiles<EnemySubmarineFile>()).FirstOrDefault(x => x.Path == submarinePath);
-            if (contentFile == null)
-            {
-                DebugConsole.ThrowError($"No submarine file found from the path {submarinePath}!");
-                return;
-            }
-
-            submarineInfo = new SubmarineInfo(contentFile.Path.Value);
         }
 
         private float GetDifficultyModifiedValue(float preferredDifficulty, float levelDifficulty, float randomnessModifier, Random rand)
@@ -153,6 +136,25 @@ namespace Barotrauma
                 }
             }
             return bestElement;
+        }
+
+        private SubmarineInfo GetRandomDifficultyModifiedSubmarine(float levelDifficulty, float randomnessModifier)
+        {
+            Random rand = new MTRandom(ToolBox.StringToInt(levelData.Seed));
+            // look for the saved submarine that is closest to our difficulty, with some randomness
+            SubmarineInfo bestSubmarine = null;
+            float bestValue = float.MaxValue;
+            var submarineInfos = SubmarineInfo.SavedSubmarines.Where(i => i.IsEnemySubmarine);
+            foreach (SubmarineInfo submarineInfo in submarineInfos)
+            {
+                float applicabilityValue = GetDifficultyModifiedValue(submarineInfo.EnemySubmarineInfo.PreferredDifficulty, levelDifficulty, randomnessModifier, rand);
+                if (applicabilityValue < bestValue)
+                {
+                    bestSubmarine = submarineInfo;
+                    bestValue = applicabilityValue;
+                }
+            }
+            return bestSubmarine;
         }
 
         private void CreateMissionPositions(out Vector2 preferredSpawnPos)
