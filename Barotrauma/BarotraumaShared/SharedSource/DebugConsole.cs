@@ -12,6 +12,9 @@ using Barotrauma.IO;
 using System.Linq;
 using System.Text;
 using Barotrauma.MapCreatures.Behavior;
+using System.Xml.Linq;
+using System.Xml;
+using System.Data;
 
 namespace Barotrauma
 {
@@ -1811,6 +1814,38 @@ namespace Barotrauma
             commands.Add(new Command("followsub", "Toggle whether the camera should follow the nearest submarine (client-only).", null));
             commands.Add(new Command("toggleaitargets|aitargets", "Toggle the visibility of AI targets (= targets that enemies can detect and attack/escape from) (client-only).", null, isCheat: true));
             commands.Add(new Command("debugai", "Toggle the ai debug mode on/off (works properly only in single player).", null, isCheat: true));
+
+            commands.Add(new Command("dump_prefab_id", "dump_prefab_id [prefab type] [identifier] [file (optional)]", (string[] args) =>
+            {
+                if (args.Length < 2)
+                {
+                    ThrowError($"Invalid arguments!");
+                    return;
+                }
+                string filePath = $"{args[1]}.xml";
+                if (args.Length > 2) {
+                    filePath = args[2];
+                }
+                XElement elem = null;
+                switch (args[0])
+                {
+                    case "Item":
+						elem = ItemPrefab.Prefabs[args[1].ToIdentifier()].ConfigElement.Element;
+                        break;
+                    case "Character":
+						elem = CharacterPrefab.Prefabs[args[1].ToIdentifier()].ConfigElement.Element;
+						break;
+                    default:
+						ThrowError($"Only support Item and Character that have IImplementVariants for now!");
+						return;
+                }
+                System.Xml.XmlWriterSettings settings = new();
+                settings.Indent = true;
+				var writer = System.Xml.XmlWriter.Create(filePath, settings);
+                elem.WriteTo(writer);
+                writer.Flush();
+                writer.Close();
+            }, null, false));
 
             InitProjectSpecific();
 

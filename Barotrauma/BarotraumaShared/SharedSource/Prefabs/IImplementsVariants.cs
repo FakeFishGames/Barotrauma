@@ -51,7 +51,9 @@ namespace Barotrauma
 
         public XElement originalElement{ get; }
 
-        public void InheritFrom(T parent);
+		public ContentXElement ConfigElement { get; }
+
+		public void InheritFrom(T parent);
 
         public bool CheckInheritHistory(T parent)
         {

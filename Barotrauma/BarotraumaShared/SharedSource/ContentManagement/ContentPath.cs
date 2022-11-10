@@ -199,7 +199,18 @@ namespace Barotrauma
                 cachedRelativePath = cleanvalue;
                 isVanilla = false;
             }
-            else if (cleanvalue.StartsWith(ModDirStr + "/", StringComparison.OrdinalIgnoreCase))
+            // .sub file loading does not trace the .sub file location, and
+            // some dead code uses the filepath="xxx" part that have no use in typical sub
+            // They now typically have "Mods/" starting
+			else if (cleanvalue.StartsWith("Mods/"))
+			{
+				// typically only used when loading filelist.xml.
+				// mod internal use should never use this.
+				cachedPackageName = "";
+				cachedRelativePath = cleanvalue;
+				isVanilla = false;
+			}
+			else if (cleanvalue.StartsWith(ModDirStr + "/", StringComparison.OrdinalIgnoreCase))
             {
                 cachedPackageName = modName;
                 cachedRelativePath = cleanvalue.Substring(ModDirStr.Length + 1);
