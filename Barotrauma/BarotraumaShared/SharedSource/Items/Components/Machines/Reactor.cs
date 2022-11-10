@@ -51,6 +51,9 @@ namespace Barotrauma.Items.Components
         private float? signalControlledTargetFissionRate, signalControlledTargetTurbineOutput;
         private double lastReceivedFissionRateSignalTime, lastReceivedTurbineOutputSignalTime;
 
+        private float wiredControlSpeed;
+        private float autoTempControlSpeed;
+    
         private float temperatureBoost;
 
         private bool _powerOn;
@@ -65,6 +68,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                 UpdateUIElementStates();
 #endif
+
             }
         }
 
@@ -118,6 +122,20 @@ namespace Barotrauma.Items.Components
         {
             get { return fireDelay; }
             set { fireDelay = Math.Max(value, 0.0f); }
+        }
+
+        [Editable(2.0f, float.MaxValue), Serialize(2.0f, IsPropertySaveable.Yes, description: "How fast can the reactor auto control change the fission rate and turbine ouput (percent/second).")]
+        public float AutoTempControlSpeed
+        {
+            get { return autoTempControlSpeed; }
+            set { autoTempControlSpeed = Math.Max(value, 0.0f); }
+        }
+
+        [Editable(5.0f, float.MaxValue), Serialize(5.0f, IsPropertySaveable.Yes, description: "How fast can the reactor fission rate and turbine output be changed by wires (percent/second).")]
+        public float WiredControlSpeed
+        {
+            get { return wiredControlSpeed; }
+            set { wiredControlSpeed = Math.Max(value, 0.0f); }
         }
 
         [Serialize(0.0f, IsPropertySaveable.Yes, description: "Current temperature of the reactor (0% - 100%). Indended to be used by StatusEffect conditionals.")]
@@ -258,7 +276,7 @@ namespace Barotrauma.Items.Components
 
             if (signalControlledTargetFissionRate.HasValue && lastReceivedFissionRateSignalTime > Timing.TotalTime - 1)
             {
-                TargetFissionRate = adjustValueWithoutOverShooting(TargetFissionRate, signalControlledTargetFissionRate.Value, deltaTime * 5.0f);
+                TargetFissionRate = adjustValueWithoutOverShooting(TargetFissionRate, signalControlledTargetFissionRate.Value, deltaTime * wiredControlSpeed);
 #if CLIENT
                 FissionRateScrollBar.BarScroll = TargetFissionRate / 100.0f;
 #endif
@@ -269,7 +287,7 @@ namespace Barotrauma.Items.Components
             }
             if (signalControlledTargetTurbineOutput.HasValue && lastReceivedTurbineOutputSignalTime > Timing.TotalTime - 1)
             {
-                TargetTurbineOutput = adjustValueWithoutOverShooting(TargetTurbineOutput, signalControlledTargetTurbineOutput.Value, deltaTime * 5.0f);                
+                TargetTurbineOutput = adjustValueWithoutOverShooting(TargetTurbineOutput, signalControlledTargetTurbineOutput.Value, deltaTime * wiredControlSpeed);                
 #if CLIENT
                 TurbineOutputScrollBar.BarScroll = TargetTurbineOutput / 100.0f;
 #endif
@@ -331,7 +349,7 @@ namespace Barotrauma.Items.Components
             }
             else if (autoTemp)
             {
-                UpdateAutoTemp(2.0f, deltaTime);
+                UpdateAutoTemp(autoTempControlSpeed, deltaTime);
             }
 
 
