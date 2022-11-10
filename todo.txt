@@ -7,3 +7,5 @@
 	specify preprocess to be "literal", relative path referering to parent's location?
 5 (done). package name to package instance resolution should be consistent (workshopid->name->alias)
 	initial loading still cannot ensure package created, but later name evaluation should be consistent everywhere.
+6 (new high priority). dump_prefab_xml <type> <id> [filename] command to facilitate modding.
+7 (new high priority). Ensure that one mod have only one prefab by certain id, avoid stack overflow in later inheritance resolve.
