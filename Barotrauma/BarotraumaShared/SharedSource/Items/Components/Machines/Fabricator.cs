@@ -419,7 +419,7 @@ namespace Barotrauma.Items.Components
                 }
 
                 var fabricationIngredients = new AbilityFabricationItemIngredients(foundAvailableItems);
-                user.CheckTalents(AbilityEffectType.OnItemFabricatedIngredients, fabricationIngredients);
+                user?.CheckTalents(AbilityEffectType.OnItemFabricatedIngredients, fabricationIngredients);
 
                 foreach (Item availableItem in fabricationIngredients.Items)
                 {
@@ -559,7 +559,7 @@ namespace Barotrauma.Items.Components
             if (fabricatedItem.TargetItem.ConfigElement.GetChildElement("Quality") == null) { return 0; }
             int quality = 0;
             float floatQuality = 0.0f;
-            floatQuality += user.GetStatValue(StatTypes.IncreaseFabricationQuality);
+            floatQuality += user.GetStatValue(StatTypes.IncreaseFabricationQuality, includeSaved: false);
             foreach (var tag in fabricatedItem.TargetItem.Tags)
             {
                 floatQuality += user.Info.GetSavedStatValue(StatTypes.IncreaseFabricationQuality, tag);
@@ -740,10 +740,27 @@ namespace Barotrauma.Items.Components
                 //order by condition (prefer using worst-condition items)
                 int index = 0;
                 while (index < availableIngredients[itemIdentifier].Count &&
-                    availableIngredients[itemIdentifier][index].Condition < item.Condition)
+                    compare(item, availableIngredients[itemIdentifier][index], inputContainer.Inventory) < 0)
                 {
                     index++;
                 }
+
+                static int compare(Item item1, Item item2, Inventory inputInventory)
+                {
+                    bool item1InInputInventory = item1.ParentInventory == inputInventory;
+                    bool item2InInputInventory = item2.ParentInventory == inputInventory;
+                    //prefer items in the input inventory
+                    if (item1InInputInventory != item2InInputInventory)
+                    {
+                        return item1InInputInventory ? 1 : -1;
+                    }
+                    else
+                    {
+                        //prefer items in worse condition
+                        return Math.Sign(item2.Condition - item1.Condition);
+                    }
+                }
+
                 availableIngredients[itemIdentifier].Insert(index, item);
             }
         }

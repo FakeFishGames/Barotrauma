@@ -749,6 +749,7 @@ namespace Barotrauma
                 location.LevelData = new LevelData(location, location.Biome.AdjustedMaxDifficulty);
                 location.Reset();
             }
+            Map.ClearLocationHistory();
             Map.SetLocation(Map.Locations.IndexOf(Map.StartLocation));
             Map.SelectLocation(-1);
             if (Map.Radiation != null)

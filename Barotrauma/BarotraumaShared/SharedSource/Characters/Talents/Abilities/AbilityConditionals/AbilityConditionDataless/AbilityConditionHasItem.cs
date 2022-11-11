@@ -1,9 +1,5 @@
-﻿using System;
-using Barotrauma.Items.Components;
-using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
+using System;
 
 namespace Barotrauma.Abilities
 {

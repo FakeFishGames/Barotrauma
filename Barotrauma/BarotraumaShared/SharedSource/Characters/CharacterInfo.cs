@@ -1233,10 +1233,6 @@ namespace Barotrauma
             int prevAmount = ExperiencePoints;
 
             var experienceGainMultiplier = new AbilityExperienceGainMultiplier(1f);
-            if (isMissionExperience)
-            {
-                Character?.CheckTalents(AbilityEffectType.OnGainMissionExperience, experienceGainMultiplier);
-            }
             experienceGainMultiplier.Value += Character?.GetStatValue(StatTypes.ExperienceGainMultiplier) ?? 0;
 
             amount = (int)(amount * experienceGainMultiplier.Value);
@@ -1808,7 +1804,7 @@ namespace Barotrauma
         {
             if (SavedStatValues.TryGetValue(statType, out var statValues))
             {
-                return statValues.Where(s => s.StatIdentifier == statIdentifier).Sum(v => v.StatValue);
+                return statValues.Where(value => ToolBox.StatIdentifierMatches(value.StatIdentifier, statIdentifier)).Sum(static v => v.StatValue);
             }
             else
             {

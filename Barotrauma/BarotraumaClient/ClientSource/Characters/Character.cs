@@ -981,7 +981,24 @@ namespace Barotrauma
             }
 
             if (IsDead) { return; }
-            
+
+            var healthBarMode = GameMain.NetworkMember?.ServerSettings.ShowEnemyHealthBars ?? GameSettings.CurrentConfig.ShowEnemyHealthBars;
+            if (healthBarMode != EnemyHealthBarMode.ShowAll)
+            {
+                if (Controlled == null)
+                {
+                    if (!IsOnPlayerTeam) { return; }
+                }
+                else
+                {
+                    if (!HumanAIController.IsFriendly(Controlled, this) || 
+                        (AIController is HumanAIController humanAi && humanAi.ObjectiveManager.CurrentObjective is AIObjectiveCombat combatObjective && HumanAIController.IsFriendly(Controlled, combatObjective.Enemy))) 
+                    { 
+                        return; 
+                    }
+                }
+            }
+
             if (CharacterHealth.DisplayedVitality < MaxVitality * 0.98f && hudInfoVisible)
             {
                 hudInfoAlpha = Math.Max(hudInfoAlpha, Math.Min(CharacterHealth.DamageOverlayTimer, 1.0f));

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
+using Microsoft.Xna.Framework;
 using Barotrauma.Extensions;
 
 namespace Barotrauma
@@ -56,6 +57,20 @@ namespace Barotrauma
         /// Index of the slot the target must be in when targeting a Contained item
         /// </summary>
         public int TargetSlot = -1;
+
+        /// <summary>
+        /// Overrides the position defined in ItemContainer.
+        /// </summary>
+        public Vector2? ItemPos;
+
+        /// <summary>
+        /// Only affects when ItemContainer.hideItems is false. Doesn't override the value.
+        /// </summary>
+        public bool? Hide;
+
+        public float Rotation;
+
+        public bool SetActive;
 
         public string JoinedIdentifiers
         {
@@ -202,7 +217,18 @@ namespace Barotrauma
                 new XAttribute("requireempty", RequireEmpty),
                 new XAttribute("excludefullcondition", ExcludeFullCondition),
                 new XAttribute("targetslot", TargetSlot),
-                new XAttribute("allowvariants", AllowVariants));
+                new XAttribute("allowvariants", AllowVariants),
+                new XAttribute("rotation", Rotation),
+                new XAttribute("setactive", SetActive));
+
+            if (Hide.HasValue)
+            {
+                element.Add(new XAttribute(nameof(Hide), Hide.Value));
+            }
+            if (ItemPos.HasValue)
+            {
+                element.Add(new XAttribute(nameof(ItemPos), ItemPos.Value));
+            }
 
             if (excludedIdentifiers.Count > 0)
             {
@@ -267,8 +293,18 @@ namespace Barotrauma
                 ExcludeBroken = element.GetAttributeBool("excludebroken", true),
                 RequireEmpty = element.GetAttributeBool("requireempty", false),
                 ExcludeFullCondition = element.GetAttributeBool("excludefullcondition", false),
-                AllowVariants = element.GetAttributeBool("allowvariants", true)
+                AllowVariants = element.GetAttributeBool("allowvariants", true),
+                Rotation = element.GetAttributeFloat("rotation", 0f),
+                SetActive = element.GetAttributeBool("setactive", false)
             };
+            if (element.GetAttribute(nameof(Hide)) != null)
+            {
+                ri.Hide = element.GetAttributeBool(nameof(Hide), false);
+            }
+            if (element.GetAttribute(nameof(ItemPos)) != null)
+            {
+                ri.ItemPos = element.GetAttributeVector2(nameof(ItemPos), Vector2.Zero);
+            }
             string typeStr = element.GetAttributeString("type", "");
             if (string.IsNullOrEmpty(typeStr))
             {

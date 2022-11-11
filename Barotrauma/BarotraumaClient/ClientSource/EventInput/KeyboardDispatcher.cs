@@ -1,8 +1,4 @@
-﻿using System;
-using System.Threading;
-#if WINDOWS
-using System.Windows;
-#endif
+﻿using Barotrauma;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
@@ -15,6 +11,11 @@ namespace EventInput
         void ReceiveCommandInput(char command);
         void ReceiveSpecialInput(Keys key);
 
+#if !WINDOWS
+        /// Windows build uses ImeSharp instead because SDL2's IME implementation is broken on Windows (https://github.com/libsdl-org/SDL/issues/2243)
+        void ReceiveEditingInput(string text, int start);
+#endif
+
         bool Selected { get; set; } //or Focused
     }
 
@@ -25,14 +26,26 @@ namespace EventInput
             EventInput.Initialize(window);
             EventInput.CharEntered += EventInput_CharEntered;
             EventInput.KeyDown += EventInput_KeyDown;
-        }
+#if !WINDOWS
+            EventInput.EditingText += EventInput_TextEditing;
+#endif
 
+            /*
+             * SDL by default starts in a state where it accepts IME inputs
+             * this is bad because this blocks keybinds since the IME thinks
+             * it's typing in a text box and not forwarding keybinds to the game.
+             */
+            TextInput.StopTextInput();
+        }
+#if !WINDOWS
+        public void EventInput_TextEditing(object sender, TextEditingEventArgs e)
+        {
+            _subscriber?.ReceiveEditingInput(e.Text, e.Start);
+        }
+#endif
         public void EventInput_KeyDown(object sender, KeyEventArgs e)
         {
-            if (_subscriber == null)
-                return;
-
-            _subscriber.ReceiveSpecialInput(e.KeyCode);
+            _subscriber?.ReceiveSpecialInput(e.KeyCode);
         }
 
         void EventInput_CharEntered(object sender, CharacterEventArgs e)
@@ -74,12 +87,25 @@ namespace EventInput
             get { return _subscriber; }
             set
             {
-                if (_subscriber == value) return;
-                if (_subscriber != null)
+                if (_subscriber == value) { return; }
+
+                if (_subscriber is GUITextBox)
+                {
+                    TextInput.StopTextInput();
                     _subscriber.Selected = false;
+                }
+
+                if (value is GUITextBox box)
+                {
+                    TextInput.SetTextInputRect(box.Rect);
+                    TextInput.StartTextInput();
+                }
+
                 _subscriber = value;
                 if (value != null)
+                {
                     value.Selected = true;
+                }
             }
         }
     }

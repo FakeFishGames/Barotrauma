@@ -877,10 +877,9 @@ namespace Barotrauma
             return true;
         }
 
-        public IReadOnlyList<ISerializableEntity> GetNearbyTargets(Vector2 worldPosition, List<ISerializableEntity> targets = null)
+        public void AddNearbyTargets(Vector2 worldPosition, List<ISerializableEntity> targets)
         {
-            targets ??= new List<ISerializableEntity>();
-            if (Range <= 0.0f) { return targets; }
+            if (Range <= 0.0f) { return; }
             if (HasTargetType(TargetType.NearbyCharacters))
             {
                 foreach (Character c in Character.CharacterList)
@@ -917,7 +916,6 @@ namespace Barotrauma
                     }
                 }
             }
-            return targets;
 
             bool CheckDistance(ISpatialEntity e)
             {
@@ -1362,7 +1360,7 @@ namespace Barotrauma
                     {
                         if (breakLimb)
                         {
-                            targetLimb.character.TrySeverLimbJoints(targetLimb, severLimbsProbability: 1, damage: -1, allowBeheading: true, attacker: user);
+                            targetLimb.character.TrySeverLimbJoints(targetLimb, severLimbsProbability: 1, damage: -1, allowBeheading: true, ignoreSeveranceProbabilityModifier: true, attacker: user);
                         }
                         if (hideLimb)
                         {
@@ -2163,7 +2161,7 @@ namespace Barotrauma
                     if (result.Afflictions != null && result.Afflictions.Any(a => a.Prefab == limbAffliction.Prefab) &&
                        (!affliction.Prefab.LimbSpecific || limb.character.CharacterHealth.GetAfflictionLimb(affliction) == limb))
                     {
-                        if (type == ActionType.OnUse)
+                        if (type == ActionType.OnUse || type == ActionType.OnSuccess)
                         {
                             limbAffliction.AppliedAsSuccessfulTreatmentTime = Timing.TotalTime;
                         }

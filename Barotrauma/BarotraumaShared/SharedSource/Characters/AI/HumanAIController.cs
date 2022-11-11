@@ -395,6 +395,10 @@ namespace Barotrauma
             }
             objectiveManager.UpdateObjectives(deltaTime);
 
+            if (reportProblemsTimer > 0)
+            {
+                reportProblemsTimer -= deltaTime;
+            }
             if (reactTimer > 0.0f)
             {
                 reactTimer -= deltaTime;
@@ -407,7 +411,6 @@ namespace Barotrauma
             else
             {
                 Character.UpdateTeam();
-
                 if (Character.CurrentHull != null)
                 {
                     if (Character.IsOnPlayerTeam)
@@ -425,19 +428,15 @@ namespace Barotrauma
                         }
                     }
                 }
-                if (Character.SpeechImpediment < 100.0f)
+                if (reportProblemsTimer <= 0.0f)
                 {
-                    reportProblemsTimer -= deltaTime;
-                    if (reportProblemsTimer <= 0.0f)
+                    if (Character.Submarine != null && (Character.Submarine.TeamID == Character.TeamID || Character.IsEscorted) && !Character.Submarine.Info.IsWreck)
                     {
-                        if (Character.Submarine != null && (Character.Submarine.TeamID == Character.TeamID || Character.IsEscorted) && !Character.Submarine.Info.IsWreck)
-                        {
-                            ReportProblems();
-                        }
-                        reportProblemsTimer = reportProblemsInterval;
+                        ReportProblems();
                     }
-                    UpdateSpeaking();
+                    reportProblemsTimer = reportProblemsInterval;
                 }
+                UpdateSpeaking();
                 UnequipUnnecessaryItems();
                 reactTimer = GetReactionTime();
             }
@@ -912,7 +911,7 @@ namespace Barotrauma
         {
             Order newOrder = null;
             Hull targetHull = null;
-            bool speak = true;
+            bool speak = Character.SpeechImpediment < 100;
             if (Character.CurrentHull != null)
             {
                 bool isFighting = ObjectiveManager.HasActiveObjective<AIObjectiveCombat>();
@@ -1063,17 +1062,15 @@ namespace Barotrauma
         private void UpdateSpeaking()
         {
             if (!Character.IsOnPlayerTeam) { return; }
-
+            if (Character.SpeechImpediment >= 100) { return; }
             if (Character.Oxygen < 20.0f)
             {
                 Character.Speak(TextManager.Get("DialogLowOxygen").Value, null, Rand.Range(0.5f, 5.0f), "lowoxygen".ToIdentifier(), 30.0f);
             }
-
             if (Character.Bleeding > 2.0f)
             {
                 Character.Speak(TextManager.Get("DialogBleeding").Value, null, Rand.Range(0.5f, 5.0f), "bleeding".ToIdentifier(), 30.0f);
             }
-
             if (Character.PressureTimer > 50.0f && Character.CurrentHull?.DisplayName != null)
             {
                 Character.Speak(TextManager.GetWithVariable("DialogPressure", "[roomname]", Character.CurrentHull.DisplayName, FormatCapitals.Yes).Value, null, Rand.Range(0.5f, 5.0f), "pressure".ToIdentifier(), 30.0f);
@@ -1860,6 +1857,7 @@ namespace Barotrauma
             bool targetAdded = false;
             DoForEachCrewMember(caller, humanAI =>
             {
+                if (caller != humanAI.Character && caller.SpeechImpediment >= 100) { return; }
                 var objective = humanAI.ObjectiveManager.GetObjective<T1>();
                 if (objective != null)
                 {

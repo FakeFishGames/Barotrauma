@@ -1610,15 +1610,19 @@ namespace Barotrauma
                         }
                         else if (itemContainer.ShowTotalStackCapacityInContainedStateIndicator)
                         {
-                            containedState = itemContainer.Inventory.AllItems.Count() / (float)(itemContainer.GetMaxStackSize(0) * itemContainer.Capacity);
+                            int ignoredItems = itemContainer.AllSubContainableItems == null ? 0 : itemContainer.AllSubContainableItems.Count;
+                            int itemCount = itemContainer.Inventory.AllItems.Count() - ignoredItems;
+                            containedState = itemCount / (float)(itemContainer.GetMaxStackSize(0) * itemContainer.MainContainerCapacity);
                         }
                         else
                         {
                             var containedItem = itemContainer.Inventory.slots[Math.Max(itemContainer.ContainedStateIndicatorSlot, 0)].FirstOrDefault();
+
                             containedState = itemContainer.Inventory.Capacity == 1 || itemContainer.ContainedStateIndicatorSlot > -1 ?
                                 (containedItem == null ? 0.0f : containedItem.Condition / containedItem.MaxCondition) :
                                 itemContainer.Inventory.slots.Count(i => !i.Empty()) / (float)itemContainer.Inventory.capacity;
-                            if (containedItem != null && itemContainer.Inventory.Capacity == 1)
+
+                            if (containedItem != null && (itemContainer.Inventory.Capacity == 1 || itemContainer.HasSubContainers))
                             {
                                 int maxStackSize = Math.Min(containedItem.Prefab.MaxStackSize, itemContainer.GetMaxStackSize(0));
                                 if (maxStackSize > 1 || containedItem.Prefab.HideConditionBar)

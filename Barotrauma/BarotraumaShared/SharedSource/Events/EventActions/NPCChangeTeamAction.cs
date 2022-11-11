@@ -67,7 +67,7 @@ namespace Barotrauma
 
                 void ChangeItemTeam(Submarine sub, bool allowStealing)
                 {
-                    foreach (Item item in npc.Inventory.AllItems)
+                    foreach (Item item in npc.Inventory.FindAllItems(recursive: true))
                     {
                         item.AllowStealing = allowStealing;
                         if (item.GetComponent<Items.Components.WifiComponent>() is { } wifiComponent)

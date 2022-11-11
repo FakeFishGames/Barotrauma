@@ -2199,7 +2199,7 @@ namespace Barotrauma
                         //Dont do a thing, random is basically Human points anyways - its in the help description.
                         break;
                     default:
-                        var matchingCharacter = FindMatchingCharacter(args.Skip(1).ToArray());
+                        var matchingCharacter = FindMatchingCharacter(args.Skip(1).Take(1).ToArray());
                         if (matchingCharacter != null){ spawnInventory = matchingCharacter.Inventory; }
                         break;
                 }

@@ -50,7 +50,7 @@ namespace Barotrauma.Abilities
                     else if (statusEffect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                     {
                         targets.Clear();
-                        targets.AddRange(statusEffect.GetNearbyTargets(targetCharacter.WorldPosition, targets));
+                        statusEffect.AddNearbyTargets(targetCharacter.WorldPosition, targets);
                         if (!nearbyCharactersAppliesToSelf)
                         {
                             targets.RemoveAll(c => c == Character);

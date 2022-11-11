@@ -6,6 +6,8 @@ namespace Barotrauma
     {
         public Tutorial Tutorial;
 
+        public override bool Paused => Tutorial.Paused;
+
         public TutorialMode(GameModePreset preset) : base(preset) { }
 
         public override void Start()
@@ -17,12 +19,6 @@ namespace Barotrauma
                 //don't consider the items to belong in the outpost to prevent the stealing icon from showing
                 item.SpawnedInCurrentOutpost = false;
             }
-        }
-
-        public override void AddToGUIUpdateList()
-        {
-            base.AddToGUIUpdateList();
-            Tutorial.AddToGUIUpdateList();
         }
 
         public override void Update(float deltaTime)

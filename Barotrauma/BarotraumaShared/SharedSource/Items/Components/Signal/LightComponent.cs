@@ -289,7 +289,7 @@ namespace Barotrauma.Items.Components
 #if CLIENT
             Light.ParentSub = item.Submarine;
 #endif
-            if (item.Container != null)
+            if (item.Container != null && !(item.GetRootInventoryOwner() is Character))
             {
                 SetLightSourceState(false, 0.0f);
                 return;
@@ -301,7 +301,7 @@ namespace Barotrauma.Items.Components
             if (body != null && !body.Enabled)
             {
                 SetLightSourceState(false, 0.0f);
-                return;                
+                return;
             }
 
             //currPowerConsumption = powerConsumption;

@@ -1836,8 +1836,7 @@ namespace Barotrauma
                                 float GetTargetMaxSpeed() => Character.ApplyTemporarySpeedLimits(Character.AnimController.CurrentSwimParams.MovementSpeed * 0.3f);
                         }
                     }
-
-                    if (AttackLimb is Limb attackLimb && attackLimb.attack.Ranged)
+                    if (selectedTargetingParams.AttackPattern == AttackPattern.Straight && AttackLimb is Limb attackLimb && attackLimb.attack.Ranged)
                     {
                         bool advance = !canAttack && Character.InWater || distance > attackLimb.attack.Range * 0.9f;
                         bool fallBack = canAttack && distance < Math.Min(250, attackLimb.attack.Range * 0.25f);
@@ -1881,19 +1880,11 @@ namespace Barotrauma
                     }
                 }
             }
-            IDamageable damageTarget = wallTarget != null ? wallTarget.Structure : SelectedAiTarget?.Entity as IDamageable;
-            if (AttackLimb?.attack is Attack { Ranged: true} attack)
+            Entity targetEntity = wallTarget?.Structure ?? SelectedAiTarget?.Entity;
+            IDamageable damageTarget = targetEntity as IDamageable;
+            if (AttackLimb?.attack is Attack { Ranged: true} attack && targetEntity != null)
             {
-                Limb limb = GetLimbToRotate(attack);
-                if (limb != null)
-                {
-                    Vector2 toTarget = damageTarget.WorldPosition - limb.WorldPosition;
-                    float offset = limb.Params.GetSpriteOrientation() - MathHelper.PiOver2;
-                    limb.body.SuppressSmoothRotationCalls = false;
-                    float angle = MathUtils.VectorToAngle(toTarget);
-                    limb.body.SmoothRotate(angle + offset, attack.AimRotationTorque);
-                    limb.body.SuppressSmoothRotationCalls = true;
-                }
+                AimRangedAttack(attack, targetEntity);
             }
             if (canAttack)
             {
@@ -1905,6 +1896,22 @@ namespace Barotrauma
             else if (IsAttackRunning)
             {
                 AttackLimb.attack.ResetAttackTimer();
+            }
+        }
+
+        public void AimRangedAttack(Attack attack, Entity targetEntity)
+        {
+            if (attack == null || attack.Ranged == false || targetEntity == null) { return; }
+            Character.SetInput(InputType.Aim, false, true);
+            Limb limb = GetLimbToRotate(attack);
+            if (limb != null)
+            {
+                Vector2 toTarget = targetEntity.WorldPosition - limb.WorldPosition;
+                float offset = limb.Params.GetSpriteOrientation() - MathHelper.PiOver2;
+                limb.body.SuppressSmoothRotationCalls = false;
+                float angle = MathUtils.VectorToAngle(toTarget);
+                limb.body.SmoothRotate(angle + offset, attack.AimRotationTorque);
+                limb.body.SuppressSmoothRotationCalls = true;
             }
         }
 
@@ -2190,11 +2197,11 @@ namespace Barotrauma
             if (!ActiveAttack.IsRunning)
             {
 #if SERVER
-                    GameMain.NetworkMember.CreateEntityEvent(Character, new Character.SetAttackTargetEventData(
-                        AttackLimb,
-                        damageTarget,
-                        targetLimb,
-                        SimPosition));
+                GameMain.NetworkMember.CreateEntityEvent(Character, new Character.SetAttackTargetEventData(
+                    AttackLimb,
+                    damageTarget,
+                    targetLimb,
+                    SimPosition));
 #else
                 Character.PlaySound(CharacterSound.SoundType.Attack, maxInterval: 3);
 #endif
@@ -3599,7 +3606,10 @@ namespace Barotrauma
             {
                 // We only want to check the visibility when the target is in ruins/wreck/similiar place where sneaking should be possible.
                 // When the monsters attack the player sub, they wall hack so that they can be more aggressive.
-                checkVisibility = target.Entity.Submarine != null && target.Entity.Submarine == Character.Submarine && target.Entity.Submarine.TeamID == CharacterTeamType.None;
+                // Pets should always check the visibility, unless the pet and the target are both outside the submarine -> shouldn't target when they can't perceive (= no wall hack)
+                checkVisibility = 
+                    Character.IsPet && (Character.Submarine == null) != (target.Entity.Submarine == null) || 
+                    target.Entity.Submarine != null && target.Entity.Submarine == Character.Submarine && target.Entity.Submarine.TeamID == CharacterTeamType.None;
             }
             if (dist > 0)
             {

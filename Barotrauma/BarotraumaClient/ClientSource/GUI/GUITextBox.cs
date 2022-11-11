@@ -11,7 +11,7 @@ namespace Barotrauma
 
     public delegate void TextBoxEvent(GUITextBox sender, Keys key);
 
-    public class GUITextBox : GUIComponent, IKeyboardSubscriber
+    public partial class GUITextBox : GUIComponent, IKeyboardSubscriber
     {        
         public event TextBoxEvent OnSelected;
         public event TextBoxEvent OnDeselected;
@@ -67,12 +67,12 @@ namespace Barotrauma
         private int selectionEndIndex;
         private bool IsLeftToRight => selectionStartIndex <= selectionEndIndex;
 
-        private GUICustomComponent caretAndSelectionRenderer;
+        private readonly GUICustomComponent caretAndSelectionRenderer;
 
         private bool mouseHeldInside;
 
         private readonly Memento<string> memento = new Memento<string>();
-        
+
         // Skip one update cycle, fixes Enter key instantly deselecting the chatbox
         private bool skipUpdate;
 
@@ -189,6 +189,7 @@ namespace Barotrauma
                 base.Font = value;
                 if (textBlock == null) { return; }
                 textBlock.Font = value;
+                imePreviewTextHandler.Font = Font;
             }
         }
 
@@ -253,6 +254,8 @@ namespace Barotrauma
 
         public override bool PlaySoundOnSelect { get; set; } = true;
 
+        private readonly IMEPreviewTextHandler imePreviewTextHandler;
+
         public GUITextBox(RectTransform rectT, string text = "", Color? textColor = null, GUIFont font = null,
                           Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null, bool createClearButton = false, bool createPenIcon = true)
             : base(style, rectT)
@@ -264,6 +267,7 @@ namespace Barotrauma
             frame = new GUIFrame(new RectTransform(Vector2.One, rectT, Anchor.Center), style, color);
             GUIStyle.Apply(frame, style == "" ? "GUITextBox" : style);
             textBlock = new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.CenterLeft), text ?? "", textColor, font, textAlignment, wrap);
+            imePreviewTextHandler = new IMEPreviewTextHandler(textBlock.Font);
             GUIStyle.Apply(textBlock, "", this);
             if (font != null) { textBlock.Font = font; }
             CaretEnabled = true;
@@ -295,18 +299,17 @@ namespace Barotrauma
                 textBlock.RectTransform.MaxSize = new Point(frame.Rect.Width - icon.Rect.Height - clearButtonWidth - icon.RectTransform.AbsoluteOffset.X * 2, int.MaxValue);
             }
             Font = textBlock.Font;
-            
             Enabled = true;
 
-            rectT.SizeChanged += () => 
+            rectT.SizeChanged += () =>
             {
                 if (icon != null) { textBlock.RectTransform.MaxSize = new Point(frame.Rect.Width - icon.Rect.Height - icon.RectTransform.AbsoluteOffset.X * 2, int.MaxValue); }
-                caretPosDirty = true; 
+                caretPosDirty = true;
             };
             rectT.ScaleChanged += () =>
             {
                 if (icon != null) { textBlock.RectTransform.MaxSize = new Point(frame.Rect.Width - icon.Rect.Height - icon.RectTransform.AbsoluteOffset.X * 2, int.MaxValue); }
-                caretPosDirty = true; 
+                caretPosDirty = true;
             };
         }
 
@@ -381,14 +384,16 @@ namespace Barotrauma
             {
                 GUI.KeyboardDispatcher.Subscriber = null;
             }
+
             OnDeselected?.Invoke(this, Keys.None);
+            imePreviewTextHandler.Reset();
         }
 
         public override void Flash(Color? color = null, float flashDuration = 1.5f, bool useRectangleFlash = false, bool useCircularFlash = false, Vector2? flashRectOffset = null)
         {
             frame.Flash(color, flashDuration, useRectangleFlash, useCircularFlash, flashRectOffset);
         }
-        
+
         protected override void Update(float deltaTime)
         {
             if (!Visible) return;
@@ -673,6 +678,18 @@ namespace Barotrauma
                     break;
             }
         }
+#if !WINDOWS
+        public void ReceiveEditingInput(string text, int start)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                if (start is 0) { imePreviewTextHandler.Reset(); }
+                return;
+            }
+
+            imePreviewTextHandler.UpdateText(text, start);
+        }
+#endif
 
         public void ReceiveSpecialInput(Keys key)
         {
@@ -862,6 +879,24 @@ namespace Barotrauma
             {
                 selectionStartIndex = CaretIndex;
             }
+        }
+
+        public void DrawIMEPreview(SpriteBatch spriteBatch)
+        {
+            if (!imePreviewTextHandler.HasText) { return; }
+
+            Vector2 imePosition = CaretScreenPos;
+            int inflate = GUI.IntScale(3);
+
+            RectangleF rect = new RectangleF(imePosition, imePreviewTextHandler.TextSize);
+            rect.Inflate(inflate, inflate);
+
+            RectangleF borderRect = rect;
+            borderRect.Inflate(1, 1);
+
+            GUI.DrawFilledRectangle(spriteBatch, borderRect, Color.White, depth: 0.02f);
+            GUI.DrawFilledRectangle(spriteBatch, rect, Color.Black, depth: 0.01f);
+            Font.DrawString(spriteBatch, imePreviewTextHandler.PreviewText, imePosition, GUIStyle.Orange, 0.0f, Vector2.Zero, 1f, SpriteEffects.None, 0, alignment: textBlock.TextAlignment, forceUpperCase: textBlock.ForceUpperCase);
         }
 
         private void CalculateSelection()

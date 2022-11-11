@@ -12,6 +12,8 @@ namespace Barotrauma.Abilities
 
         public override void InitializeAbility(bool addingFirstTime)
         {
+            if (!addingFirstTime) { return; }
+
             JobPrefab? apprentice = CharacterAbilityApplyStatusEffectsToApprenticeship.GetApprenticeJob(Character, JobPrefab.Prefabs.ToImmutableHashSet());
             if (apprentice is null)
             {

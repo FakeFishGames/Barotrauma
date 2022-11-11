@@ -447,7 +447,7 @@ namespace Barotrauma
 
         private Level(LevelData levelData) : base(null, 0)
         {
-            this.LevelData = levelData;
+            LevelData = levelData;
             borders = new Rectangle(Point.Zero, levelData.Size);
         }
 
@@ -3939,7 +3939,7 @@ namespace Barotrauma
                 }
 
                 SubmarineInfo outpostInfo;
-                Submarine outpost;
+                Submarine outpost = null;
                 if (i == 0 && preSelectedStartOutpost == null || i == 1 && preSelectedEndOutpost == null)
                 {
                     if (OutpostGenerationParams.OutpostParams.Any() || LevelData.ForceOutpostGenerationParams != null)

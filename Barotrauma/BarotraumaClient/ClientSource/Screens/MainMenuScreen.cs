@@ -269,7 +269,7 @@ namespace Barotrauma
             };
 
 #if USE_STEAM
-            steamWorkshopButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SteamWorkshopButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            steamWorkshopButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("settingstab.mods"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 ForceUpperCase = ForceUpperCase.Yes,
                 Enabled = true,
@@ -463,13 +463,17 @@ namespace Barotrauma
                 }
             };
             var tutorialPreview = new GUILayoutGroup(new RectTransform(new Vector2(0.6f, 1.0f), tutorialContent.RectTransform)) { RelativeSpacing = 0.05f, Stretch = true };
-            var imageContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.6f), tutorialPreview.RectTransform), style: "InnerFrame");
+            var imageContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), tutorialPreview.RectTransform), style: "InnerFrame");
             tutorialBanner = new GUIImage(new RectTransform(Vector2.One, imageContainer.RectTransform), style: null, scaleToFit: true);
 
-            var infoContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.4f), tutorialPreview.RectTransform), style: "GUIFrameListBox");
-            var infoContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), infoContainer.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter);
+            var infoContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), tutorialPreview.RectTransform), style: "GUIFrameListBox");
+            var infoContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), infoContainer.RectTransform, Anchor.Center), childAnchor: Anchor.TopLeft)
+            {
+                AbsoluteSpacing = GUI.IntScale(10)
+            };
 
-            tutorialHeader = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.75f), infoContent.RectTransform), string.Empty, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Center);
+            tutorialHeader = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), string.Empty, font: GUIStyle.SubHeadingFont);
+            tutorialDescription = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), string.Empty, wrap: true);
 
             var startButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.0f), infoContent.RectTransform, Anchor.BottomRight), text: TextManager.Get("startgamebutton")) 
             { 
@@ -500,6 +504,10 @@ namespace Barotrauma
         private void SelectTutorial(Tutorial tutorial)
         {
             tutorialHeader.Text = tutorial.DisplayName;
+            tutorialHeader.CalculateHeightFromText();
+            tutorialDescription.Text = tutorial.Description;
+            tutorialDescription.CalculateHeightFromText();
+            (tutorialDescription.Parent as GUILayoutGroup)?.Recalculate();
             tutorial.TutorialPrefab.Banner?.EnsureLazyLoaded();
             tutorialBanner.Sprite = tutorial.TutorialPrefab.Banner;
             tutorialBanner.Color = tutorial.TutorialPrefab.Banner == null ? Color.Black : Color.White;

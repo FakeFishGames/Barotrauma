@@ -73,6 +73,7 @@ namespace Barotrauma
 
         private readonly HashSet<Event> finishedEvents = new HashSet<Event>();
         private readonly HashSet<EventPrefab> nonRepeatableEvents = new HashSet<EventPrefab>();
+        private readonly HashSet<EventSet> usedUniqueSets = new HashSet<EventSet>();
 
 
 #if DEBUG && SERVER
@@ -155,12 +156,19 @@ namespace Barotrauma
             }
             rand = new MTRandom(seed);
 
-            EventSet initialEventSet = SelectRandomEvents(EventSet.Prefabs.ToList(), requireCampaignSet: GameMain.GameSession?.GameMode is CampaignMode, rand);
+            bool playingCampaign = GameMain.GameSession?.GameMode is CampaignMode;
+            EventSet initialEventSet = SelectRandomEvents(
+                EventSet.Prefabs.ToList(),
+                requireCampaignSet: playingCampaign,
+                random: rand);
             EventSet additiveSet = null;
             if (initialEventSet != null && initialEventSet.Additive)
             {
                 additiveSet = initialEventSet;
-                initialEventSet = SelectRandomEvents(EventSet.Prefabs.Where(e => !e.Additive).ToList(), requireCampaignSet: GameMain.GameSession?.GameMode is CampaignMode, rand);
+                initialEventSet = SelectRandomEvents(
+                    EventSet.Prefabs.Where(e => !e.Additive).ToList(),
+                    requireCampaignSet: playingCampaign,
+                    random: rand);
             }
             if (initialEventSet != null)
             {
@@ -201,6 +209,7 @@ namespace Barotrauma
                     }
 
                     AddChildEvents(initialEventSet);
+
                     void AddChildEvents(EventSet eventSet)
                     {
                         if (eventSet == null) { return; }
@@ -351,6 +360,7 @@ namespace Barotrauma
             QueuedEvents.Clear();
             finishedEvents.Clear();
             nonRepeatableEvents.Clear();
+            usedUniqueSets.Clear();
 
             preloadedSprites.ForEach(s => s.Remove());
             preloadedSprites.Clear();
@@ -364,15 +374,25 @@ namespace Barotrauma
         /// </summary>
         public void RegisterEventHistory()
         {
-            level.LevelData.EventsExhausted = true;
-            if (level?.LevelData != null && level.LevelData.Type == LevelData.LevelType.Outpost)
+            if (level?.LevelData != null)
             {
-                level.LevelData.EventHistory.AddRange(selectedEvents.Values.SelectMany(v => v).Select(e => e.Prefab).Where(e => !level.LevelData.EventHistory.Contains(e)));
-                if (level.LevelData.EventHistory.Count > MaxEventHistory)
+                level.LevelData.EventsExhausted = true;
+                if (level.LevelData.Type == LevelData.LevelType.Outpost)
                 {
-                    level.LevelData.EventHistory.RemoveRange(0, level.LevelData.EventHistory.Count - MaxEventHistory);
+                    level.LevelData.EventHistory.AddRange(selectedEvents.Values.SelectMany(v => v).Select(e => e.Prefab).Where(e => !level.LevelData.EventHistory.Contains(e)));
+                    if (level.LevelData.EventHistory.Count > MaxEventHistory)
+                    {
+                        level.LevelData.EventHistory.RemoveRange(0, level.LevelData.EventHistory.Count - MaxEventHistory);
+                    }
+                    level.LevelData.NonRepeatableEvents.AddRange(nonRepeatableEvents.Where(e => !level.LevelData.NonRepeatableEvents.Contains(e)));
                 }
-                level.LevelData.NonRepeatableEvents.AddRange(nonRepeatableEvents.Where(e => !level.LevelData.NonRepeatableEvents.Contains(e)));                
+                foreach (var usedUniqueSet in usedUniqueSets)
+                {
+                    if (!level.LevelData.UsedUniqueSets.Contains(usedUniqueSet.Identifier))
+                    {
+                        level.LevelData.UsedUniqueSets.Add(usedUniqueSet.Identifier);
+                    }
+                }
             }
         }
 
@@ -397,6 +417,11 @@ namespace Barotrauma
             if (eventSet.Exhaustible && level.LevelData.EventsExhausted) { return; }
 
             DebugConsole.NewMessage($"Loading event set {eventSet.Identifier}", Color.LightBlue, debugOnly: true);
+
+            if (eventSet.Unique && !usedUniqueSets.Contains(eventSet))
+            {
+                usedUniqueSets.Add(eventSet);
+            }
 
             int applyCount = 1;
             List<Func<Level.InterestingPosition, bool>> spawnPosFilter = new List<Func<Level.InterestingPosition, bool>>();
@@ -496,12 +521,12 @@ namespace Barotrauma
                         selectedEvents[eventSet].Add(newEvent);
                     }
 
-                    Location location = (GameMain.GameSession?.GameMode as CampaignMode)?.Map?.CurrentLocation ?? level?.StartLocation;
+                    var location = GetEventLocation();
                     foreach (EventSet childEventSet in eventSet.ChildSets)
                     {
                         if (!IsValidForLevel(childEventSet, level)) { continue; }
-                        if (location != null && !IsValidForLocation(childEventSet, location)) { continue; }
-                        CreateEvents(childEventSet);                        
+                        if (!IsValidForLocation(childEventSet, location)) { continue; }
+                        CreateEvents(childEventSet);
                     }
                 }
             }
@@ -536,10 +561,32 @@ namespace Barotrauma
                 }
             }
 
-            Location location = (GameMain.GameSession?.GameMode as CampaignMode)?.Map?.CurrentLocation ?? level?.StartLocation;
-            if (location != null)
+            var location = GetEventLocation();
+            allowedEventSets = allowedEventSets.Where(set => IsValidForLocation(set, location));
+
+            allowedEventSets = allowedEventSets.Where(set => !set.CampaignTutorialOnly ||
+                (GameMain.IsSingleplayer && GameMain.GameSession?.Campaign?.Settings is { TutorialEnabled: true }));
+
+            int? discoveryIndex = GameMain.GameSession?.Map?.GetDiscoveryIndex(location);
+            int? visitIndex = GameMain.GameSession?.Map?.GetVisitIndex(location);
+            if (discoveryIndex is not null && discoveryIndex >= 0 && allowedEventSets.Any(set => set.ForceAtDiscoveredNr == discoveryIndex))
             {
-                allowedEventSets = allowedEventSets.Where(set => IsValidForLocation(set, location));
+                allowedEventSets = allowedEventSets.Where(set => set.ForceAtDiscoveredNr == discoveryIndex);
+            }
+            else if (visitIndex is not null && visitIndex >= 0 && allowedEventSets.Any(set => set.ForceAtVisitedNr == visitIndex))
+            {
+                allowedEventSets = allowedEventSets.Where(set => set.ForceAtVisitedNr == visitIndex);
+            }
+            else
+            {
+                // When there are no forced sets, only allow sets that aren't forced at any specific location
+                allowedEventSets = allowedEventSets.Where(set => set.ForceAtDiscoveredNr < 0 && set.ForceAtVisitedNr < 0);
+            }
+
+            if (allowedEventSets.Count() == 1)
+            {
+                // When there's only a single set available, just select it directly
+                return allowedEventSets.First();
             }
 
             float totalCommonness = allowedEventSets.Sum(e => e.GetCommonness(level));
@@ -558,18 +605,27 @@ namespace Barotrauma
             return null;
         }
 
-        private bool IsValidForLevel(EventSet eventSet, Level level)
+        private static bool IsValidForLevel(EventSet eventSet, Level level)
         {
             return
                 level.Difficulty >= eventSet.MinLevelDifficulty && level.Difficulty <= eventSet.MaxLevelDifficulty &&
                 level.LevelData.Type == eventSet.LevelType &&
-                (eventSet.BiomeIdentifier.IsEmpty || eventSet.BiomeIdentifier == level.LevelData.Biome.Identifier);
+                (eventSet.BiomeIdentifier.IsEmpty || eventSet.BiomeIdentifier == level.LevelData.Biome.Identifier) &&
+                (!eventSet.Unique || !level.LevelData.UsedUniqueSets.Contains(eventSet.Identifier));
         }
 
         private bool IsValidForLocation(EventSet eventSet, Location location)
         {
-            return eventSet.LocationTypeIdentifiers == null ||
-                    eventSet.LocationTypeIdentifiers.Any(identifier => identifier == location.GetLocationType().Identifier);
+            if (location is null) { return true; }
+            var locationType = location.GetLocationType();
+            bool includeGenericEvents = level.Type == LevelData.LevelType.LocationConnection || !locationType.IgnoreGenericEvents;
+            if (includeGenericEvents && eventSet.LocationTypeIdentifiers == null) { return true; }
+            return eventSet.LocationTypeIdentifiers != null && eventSet.LocationTypeIdentifiers.Any(identifier => identifier == locationType.Identifier);
+        }
+
+        private Location GetEventLocation()
+        {
+            return GameMain.GameSession?.Campaign?.Map?.CurrentLocation ?? level?.StartLocation;
         }
 
         private bool CanStartEventSet(EventSet eventSet)

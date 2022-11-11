@@ -24,7 +24,7 @@ internal sealed class AbilityConditionNearbyCharacterCount : AbilityConditionDat
         foreach (Character otherCharacter in Character.CharacterList)
         {
             if (character.Submarine != otherCharacter.Submarine) { continue; }
-            if (!IsViableTarget(targetTypes, otherCharacter)) { return false; }
+            if (!IsViableTarget(targetTypes, otherCharacter)) { continue; }
 
             if (Vector2.DistanceSquared(character.WorldPosition, otherCharacter.WorldPosition) < distance * distance)
             {

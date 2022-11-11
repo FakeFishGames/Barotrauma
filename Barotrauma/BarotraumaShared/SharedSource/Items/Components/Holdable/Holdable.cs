@@ -843,10 +843,18 @@ namespace Barotrauma.Items.Components
         public override void Update(float deltaTime, Camera cam)
         {
             if (item.body == null || !item.body.Enabled) { return; }
+
+            Character owner = picker ?? item.GetRootInventoryOwner() as Character;
+
+            if (owner != null)
+            {
+                ApplyStatusEffects(ActionType.OnActive, deltaTime, owner);
+            }
+
             if (picker == null || !picker.HasEquippedItem(item))
             {
                 if (Pusher != null) { Pusher.Enabled = false; }
-                if (attachTargetCell == null) { IsActive = false; }
+                if (attachTargetCell == null && owner == null) { IsActive = false; }
                 return;
             }
 
@@ -855,23 +863,7 @@ namespace Barotrauma.Items.Components
                 Drawable = true;
             }
 
-            Vector2 swing = Vector2.Zero;
-            if (swingAmount != Vector2.Zero && !picker.IsUnconscious && picker.Stun <= 0.0f)
-            {
-                swingState += deltaTime;
-                swingState %= 1.0f;
-                if (SwingWhenHolding ||
-                    (SwingWhenAiming && picker.IsKeyDown(InputType.Aim)) ||
-                    (SwingWhenUsing && picker.IsKeyDown(InputType.Aim) && picker.IsKeyDown(InputType.Shoot)))
-                {
-                    swing = swingAmount * new Vector2(
-                        PerlinNoise.GetPerlin(swingState * SwingSpeed * 0.1f, swingState * SwingSpeed * 0.1f) - 0.5f,
-                        PerlinNoise.GetPerlin(swingState * SwingSpeed * 0.1f + 0.5f, swingState * SwingSpeed * 0.1f + 0.5f) - 0.5f);
-                }
-            }
-            
-            ApplyStatusEffects(ActionType.OnActive, deltaTime, picker);
-
+            UpdateSwingPos(deltaTime, out Vector2 swingPos);
             if (item.body.Dir != picker.AnimController.Dir) 
             {
                 item.FlipX(relativeToSub: false);
@@ -884,7 +876,7 @@ namespace Barotrauma.Items.Components
                 scaledHandlePos[0] = handlePos[0] * item.Scale;
                 scaledHandlePos[1] = handlePos[1] * item.Scale;
                 bool aim = picker.IsKeyDown(InputType.Aim) && aimPos != Vector2.Zero && picker.CanAim;
-                picker.AnimController.HoldItem(deltaTime, item, scaledHandlePos, holdPos + swing, aimPos + swing, aim, holdAngle);
+                picker.AnimController.HoldItem(deltaTime, item, scaledHandlePos, holdPos + swingPos, aimPos + swingPos, aim, holdAngle);
                 if (!aim)
                 {
                     var rope = GetRope();
@@ -917,6 +909,24 @@ namespace Barotrauma.Items.Components
 
                     item.body.ResetDynamics();
                     item.SetTransform(equipLimb.SimPosition - transformedHandlePos, itemAngle);
+                }
+            }
+        }
+
+        public void UpdateSwingPos(float deltaTime, out Vector2 swingPos)
+        {
+            swingPos = Vector2.Zero;
+            if (swingAmount != Vector2.Zero && !picker.IsUnconscious && picker.Stun <= 0.0f)
+            {
+                swingState += deltaTime;
+                swingState %= 1.0f;
+                if (SwingWhenHolding ||
+                    (SwingWhenAiming && picker.IsKeyDown(InputType.Aim)) ||
+                    (SwingWhenUsing && picker.IsKeyDown(InputType.Aim) && picker.IsKeyDown(InputType.Shoot)))
+                {
+                    swingPos = swingAmount * new Vector2(
+                        PerlinNoise.GetPerlin(swingState * SwingSpeed * 0.1f, swingState * SwingSpeed * 0.1f) - 0.5f,
+                        PerlinNoise.GetPerlin(swingState * SwingSpeed * 0.1f + 0.5f, swingState * SwingSpeed * 0.1f + 0.5f) - 0.5f);
                 }
             }
         }

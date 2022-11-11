@@ -9,6 +9,7 @@ using Barotrauma.IO;
 using RestSharp;
 using System.Net;
 using System.Collections.Immutable;
+using Barotrauma.Tutorials;
 
 namespace Barotrauma
 {
@@ -736,7 +737,7 @@ namespace Barotrauma
         
         public static void DrawToolTip(SpriteBatch spriteBatch, RichString toolTip, Vector2 pos)
         {
-            if (GameMain.GameSession?.GameMode is TutorialMode tutorialMode && tutorialMode.Tutorial.ContentRunning) { return; }
+            if (ObjectiveManager.ContentRunning) { return; }
 
             int width = (int)(400 * GUI.Scale);
             int height = (int)(18 * GUI.Scale);
@@ -759,7 +760,7 @@ namespace Barotrauma
 
         public static void DrawToolTip(SpriteBatch spriteBatch, RichString toolTip, Rectangle targetElement)
         {
-            if (GameMain.GameSession?.GameMode is TutorialMode tutorialMode && tutorialMode.Tutorial.ContentRunning) { return; }
+            if (ObjectiveManager.ContentRunning) { return; }
 
             int width = (int)(400 * GUI.Scale);
             int height = (int)(18 * GUI.Scale);

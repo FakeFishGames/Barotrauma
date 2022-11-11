@@ -154,6 +154,7 @@ namespace Barotrauma
         BallastFloraDamageMultiplier,
         HoldBreathMultiplier,
         Apprenticeship,
+        Affiliation,
         CPRBoost
     }
 

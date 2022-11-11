@@ -9,7 +9,7 @@ using Barotrauma.Networking;
 
 namespace Barotrauma
 {
-    internal partial class MedicalClinic
+    internal sealed partial class MedicalClinic
     {
         public enum RequestResult
         {
@@ -19,63 +19,11 @@ namespace Barotrauma
             Timeout
         }
 
-        public readonly struct RequestAction<T>
-        {
-            public readonly Action<T> Callback;
-            public readonly DateTimeOffset Timeout;
-
-            public RequestAction(Action<T> callback, DateTimeOffset timeout)
-            {
-                Callback = callback;
-                Timeout = timeout;
-            }
-        }
-
-        public readonly struct AfflictionRequest
-        {
-            public readonly RequestResult Result;
-            public readonly ImmutableArray<NetAffliction> Afflictions;
-
-            public AfflictionRequest(RequestResult result, ImmutableArray<NetAffliction> afflictions)
-            {
-                Result = result;
-                Afflictions = afflictions;
-            }
-        }
-
-        public readonly struct PendingRequest
-        {
-            public readonly RequestResult Result;
-            public readonly ImmutableArray<NetCrewMember> CrewMembers;
-
-            public PendingRequest(RequestResult result, ImmutableArray<NetCrewMember> crewMembers)
-            {
-                Result = result;
-                CrewMembers = crewMembers;
-            }
-        }
-
-        public readonly struct CallbackOnlyRequest
-        {
-            public readonly RequestResult Result;
-
-            public CallbackOnlyRequest(RequestResult result)
-            {
-                Result = result;
-            }
-        }
-
-        public readonly struct HealRequest
-        {
-            public readonly RequestResult Result;
-            public readonly HealRequestResult HealResult;
-
-            public HealRequest(RequestResult result, HealRequestResult healResult)
-            {
-                Result = result;
-                HealResult = healResult;
-            }
-        }
+        public readonly record struct RequestAction<T>(Action<T> Callback, DateTimeOffset Timeout);
+        public readonly record struct AfflictionRequest(RequestResult Result, ImmutableArray<NetAffliction> Afflictions);
+        public readonly record struct PendingRequest(RequestResult Result, NetCollection<NetCrewMember> CrewMembers);
+        public readonly record struct CallbackOnlyRequest(RequestResult Result);
+        public readonly record struct HealRequest(RequestResult Result, HealRequestResult HealResult);
 
         private readonly List<RequestAction<AfflictionRequest>> afflictionRequests = new List<RequestAction<AfflictionRequest>>();
         private readonly List<RequestAction<PendingRequest>> pendingHealRequests = new List<RequestAction<PendingRequest>>();
@@ -96,7 +44,7 @@ namespace Barotrauma
                 }
 #endif
 
-                if (!(info is { Character: { CharacterHealth: { } health } }))
+                if (info is not { Character.CharacterHealth: { } health })
                 {
                     onReceived.Invoke(new AfflictionRequest(RequestResult.Error, ImmutableArray<NetAffliction>.Empty));
                     return;
@@ -123,14 +71,14 @@ namespace Barotrauma
         public void Update(float deltaTime)
         {
             DateTimeOffset now = DateTimeOffset.Now;
-            UpdateQueue(afflictionRequests, now, onTimeout: callback => { callback(new AfflictionRequest(RequestResult.Timeout, ImmutableArray<NetAffliction>.Empty)); });
-            UpdateQueue(pendingHealRequests, now, onTimeout: callback => { callback(new PendingRequest(RequestResult.Timeout, ImmutableArray<NetCrewMember>.Empty)); });
-            UpdateQueue(healAllRequests, now, onTimeout: callback => { callback(new HealRequest(RequestResult.Timeout, HealRequestResult.Unknown)); });
+            UpdateQueue(afflictionRequests, now, onTimeout: static callback => { callback(new AfflictionRequest(RequestResult.Timeout, ImmutableArray<NetAffliction>.Empty)); });
+            UpdateQueue(pendingHealRequests, now, onTimeout: static callback => { callback(new PendingRequest(RequestResult.Timeout, NetCollection<NetCrewMember>.Empty)); });
+            UpdateQueue(healAllRequests, now, onTimeout: static callback => { callback(new HealRequest(RequestResult.Timeout, HealRequestResult.Unknown)); });
             UpdateQueue(clearAllRequests, now, onTimeout: CallbackOnlyTimeout);
             UpdateQueue(addRequests, now, onTimeout: CallbackOnlyTimeout);
             UpdateQueue(removeRequests, now, onTimeout: CallbackOnlyTimeout);
 
-            void CallbackOnlyTimeout(Action<CallbackOnlyRequest> callback) { callback(new CallbackOnlyRequest(RequestResult.Timeout)); }
+            static void CallbackOnlyTimeout(Action<CallbackOnlyRequest> callback) { callback(new CallbackOnlyRequest(RequestResult.Timeout)); }
         }
 
         public bool IsAfflictionPending(NetCrewMember character, NetAffliction affliction)
@@ -148,9 +96,9 @@ namespace Barotrauma
         private static bool TryDequeue<T>(List<RequestAction<T>> requestQueue, out Action<T> result)
         {
             RequestAction<T>? first = requestQueue.FirstOrNull();
-            if (!(first is { } action))
+            if (first is not { } action)
             {
-                result = _ => { };
+                result = static _ => { };
                 return false;
             }
 
@@ -191,9 +139,23 @@ namespace Barotrauma
 
         private static int GetPing()
         {
-            if (GameMain.IsSingleplayer || !(GameMain.Client?.Name is { } ownName) || !(GameMain.NetworkMember?.ConnectedClients is { } clients)) { return 0; }
+            if (GameMain.IsSingleplayer || GameMain.Client?.Name is not { } ownName || GameMain.NetworkMember?.ConnectedClients is not { } clients) { return 0; }
 
             return (from client in clients where client.Name == ownName select client.Ping).FirstOrDefault();
+        }
+
+        public void TreatAllButtonAction(Action<CallbackOnlyRequest> onReceived)
+        {
+            if (GameMain.IsSingleplayer)
+            {
+                AddEverythingToPending();
+                onReceived(new CallbackOnlyRequest(RequestResult.Success));
+                OnUpdate?.Invoke();
+                return;
+            }
+
+            addRequests.Add(new RequestAction<CallbackOnlyRequest>(onReceived, GetTimeout()));
+            ClientSend(null, NetworkHeader.ADD_EVERYTHING_TO_PENDING, DeliveryMethod.Reliable);
         }
 
         public void HealAllButtonAction(Action<HealRequest> onReceived)
@@ -296,8 +258,11 @@ namespace Barotrauma
 
         private void NewAdditonReceived(IReadMessage inc, MessageFlag flag)
         {
-            NetCrewMember crewMember = INetSerializableStruct.Read<NetCrewMember>(inc);
-            InsertPendingCrewMember(crewMember);
+            var crewMembers = INetSerializableStruct.Read<NetCollection<NetCrewMember>>(inc);
+            foreach (var crewMember in crewMembers)
+            {
+                InsertPendingCrewMember(crewMember);
+            }
             if (flag == MessageFlag.Response && TryDequeue(addRequests, out var callback))
             {
                 callback(new CallbackOnlyRequest(RequestResult.Success));
@@ -318,11 +283,7 @@ namespace Barotrauma
 
         private static void SendAfflictionRequest(CharacterInfo info)
         {
-            INetSerializableStruct crewMember = new NetCrewMember
-            {
-                CharacterInfo = info,
-                Afflictions = Array.Empty<NetAffliction>()
-            };
+            INetSerializableStruct crewMember = new NetCrewMember(info);
 
             ClientSend(crewMember, NetworkHeader.REQUEST_AFFLICTIONS, DeliveryMethod.Unreliable);
         }
@@ -337,17 +298,17 @@ namespace Barotrauma
             NetCrewMember crewMember = INetSerializableStruct.Read<NetCrewMember>(inc);
             if (TryDequeue(afflictionRequests, out var callback))
             {
-                RequestResult result = crewMember.CharacterInfoID == 0 ? RequestResult.Error : RequestResult.Success;
+                RequestResult result = crewMember.CharacterInfoID is 0 ? RequestResult.Error : RequestResult.Success;
                 callback(new AfflictionRequest(result, crewMember.Afflictions.ToImmutableArray()));
             }
         }
 
         private void PendingRequestReceived(IReadMessage inc)
         {
-            NetPendingCrew pendingCrew = INetSerializableStruct.Read<NetPendingCrew>(inc);
+            var pendingCrew = INetSerializableStruct.Read<NetCollection<NetCrewMember>>(inc);
             if (TryDequeue(pendingHealRequests, out var callback))
             {
-                callback(new PendingRequest(RequestResult.Success, pendingCrew.CrewMembers.ToImmutableArray()));
+                callback(new PendingRequest(RequestResult.Success, pendingCrew));
             }
         }
 

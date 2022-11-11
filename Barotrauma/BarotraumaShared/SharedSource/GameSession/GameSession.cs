@@ -582,6 +582,9 @@ namespace Barotrauma
                     }
                 }
 
+#if CLIENT
+                ObjectiveManager.ResetObjectives();
+#endif
                 EventManager?.StartRound(Level.Loaded);
                 SteamAchievementManager.OnStartRound();
 
@@ -847,6 +850,7 @@ namespace Barotrauma
                 if (GameMain.NetLobbyScreen != null) { GameMain.NetLobbyScreen.OnRoundEnded(); }
                 TabMenu.OnRoundEnded();
                 GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData as string == "ConversationAction" || ReadyCheck.IsReadyCheck(mb));
+                ObjectiveManager.ResetUI();
 #endif
                 SteamAchievementManager.OnRoundEnded(this);
 

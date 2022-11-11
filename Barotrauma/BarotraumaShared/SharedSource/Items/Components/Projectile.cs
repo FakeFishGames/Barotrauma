@@ -392,6 +392,7 @@ namespace Barotrauma.Items.Components
                 }
             }
             User = character;
+            ApplyStatusEffects(ActionType.OnUse, 1.0f, User, user: User);
             return true;
         }
 
@@ -916,23 +917,22 @@ namespace Barotrauma.Items.Components
 
             if (character != null) { character.LastDamageSource = item; }
 
-            ActionType actionType = ActionType.OnUse;
-            if (_user != null && Rand.Range(0.0f, 0.5f) > DegreeOfSuccess(_user))
+            ActionType conditionalActionType = ActionType.OnSuccess;
+            if (User != null && Rand.Range(0.0f, 0.5f) > DegreeOfSuccess(User))
             {
-                actionType = ActionType.OnFailure;
+                conditionalActionType = ActionType.OnFailure;
             }
-
 #if CLIENT
-            PlaySound(actionType, user: _user);
-            PlaySound(ActionType.OnImpact, user: _user);
+            PlaySound(conditionalActionType, user: User);
+            PlaySound(ActionType.OnImpact, user: User);
 #endif
 
             if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
             {
                 if (target.Body.UserData is Limb targetLimb)
                 {
-                    ApplyStatusEffects(actionType, 1.0f, character, targetLimb, user: _user);
-                    ApplyStatusEffects(ActionType.OnImpact, 1.0f, character, targetLimb, user: _user);
+                    ApplyStatusEffects(conditionalActionType, 1.0f, character, targetLimb, user: User);
+                    ApplyStatusEffects(ActionType.OnImpact, 1.0f, character, targetLimb, user: User);
                     var attack = targetLimb.attack;
                     if (attack != null)
                     {
@@ -941,8 +941,6 @@ namespace Barotrauma.Items.Components
                         {
                             if (effect.type == ActionType.OnImpact)
                             {
-                                //effect.Apply(effect.type, 1.0f, targetLimb.character, targetLimb.character, targetLimb.WorldPosition);
-
                                 if (effect.HasTargetType(StatusEffect.TargetType.This))
                                 {
                                     effect.Apply(effect.type, 1.0f, targetLimb.character, targetLimb.character, targetLimb.WorldPosition);
@@ -951,32 +949,27 @@ namespace Barotrauma.Items.Components
                                     effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                                 {
                                     targets.Clear();
-                                    targets.AddRange(effect.GetNearbyTargets(targetLimb.WorldPosition, targets));
+                                    effect.AddNearbyTargets(targetLimb.WorldPosition, targets);
                                     effect.Apply(ActionType.OnActive, 1.0f, targetLimb.character, targets);
                                 }
-
                             }
                         }
                     }
-#if SERVER
-                    if (GameMain.NetworkMember.IsServer)
+                    if (GameMain.NetworkMember is { IsServer: true } server)
                     {
-                        GameMain.Server?.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(actionType, this, targetLimb.character, targetLimb, null, item.WorldPosition));
-                        GameMain.Server?.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(ActionType.OnImpact, this, targetLimb.character, targetLimb, null, item.WorldPosition));
+                        server.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(conditionalActionType, this, targetLimb.character, targetLimb, null, item.WorldPosition));
+                        server.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(ActionType.OnImpact, this, targetLimb.character, targetLimb, null, item.WorldPosition));
                     }
-#endif
                 }
                 else
                 {
-                    ApplyStatusEffects(actionType, 1.0f, useTarget: target.Body.UserData as Entity, user: _user);
-                    ApplyStatusEffects(ActionType.OnImpact, 1.0f, useTarget: target.Body.UserData as Entity, user: _user);
-#if SERVER
-                    if (GameMain.NetworkMember.IsServer)
+                    ApplyStatusEffects(conditionalActionType, 1.0f, useTarget: target.Body.UserData as Entity, user: User);
+                    ApplyStatusEffects(ActionType.OnImpact, 1.0f, useTarget: target.Body.UserData as Entity, user: User);
+                    if (GameMain.NetworkMember is { IsServer: true } server)
                     {
-                        GameMain.Server?.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(actionType, this, null, null, target.Body.UserData as Entity, item.WorldPosition));
-                        GameMain.Server?.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(ActionType.OnImpact, this, null, null, target.Body.UserData as Entity, item.WorldPosition));
+                        server.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(conditionalActionType, this, null, null, target.Body.UserData as Entity, item.WorldPosition));
+                        server.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(ActionType.OnImpact, this, null, null, target.Body.UserData as Entity, item.WorldPosition));
                     }
-#endif
                 }
             }
 

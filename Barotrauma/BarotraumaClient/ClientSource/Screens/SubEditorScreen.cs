@@ -2487,7 +2487,7 @@ namespace Barotrauma
             {
                 IntValue = MainSub.Info.Tier,
                 MinValueInt = 1,
-                MaxValueInt = 3,
+                MaxValueInt = SubmarineInfo.HighestTier,
                 OnValueChanged = (numberInput) =>
                 {
                     MainSub.Info.Tier = numberInput.IntValue;
@@ -2495,7 +2495,7 @@ namespace Barotrauma
             };
             if (MainSub?.Info != null)
             {
-                MainSub.Info.Tier = Math.Clamp(MainSub.Info.Tier, 1, 3);
+                MainSub.Info.Tier = Math.Clamp(MainSub.Info.Tier, 1, SubmarineInfo.HighestTier);
             }
 
             var crewSizeArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), subSettingsContainer.RectTransform), isHorizontal: true)
@@ -3228,7 +3228,7 @@ namespace Barotrauma
                 }
 
                 string pathWithoutUserName = Path.GetFullPath(sub.FilePath);
-                string saveFolder = Path.GetFullPath(SaveUtil.SaveFolder);
+                string saveFolder = Path.GetFullPath(SaveUtil.DefaultSaveFolder);
                 if (pathWithoutUserName.StartsWith(saveFolder))
                 {
                     pathWithoutUserName = "..." + pathWithoutUserName[saveFolder.Length..];
@@ -4217,7 +4217,8 @@ namespace Barotrauma
             GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.9f, 0.9f), frame.RectTransform, Anchor.Center))
             {
                 PlaySoundOnSelect = true,
-                OnSelected = SelectWire
+                OnSelected = SelectWire,
+                CanTakeKeyBoardFocus = false
             };
 
             List<ItemPrefab> wirePrefabs = new List<ItemPrefab>();
@@ -5866,7 +5867,7 @@ namespace Barotrauma
                 decimal realWorldDistance = decimal.Round((decimal) (Vector2.Distance(startPos, mouseWorldPos) * Physics.DisplayToRealWorldRatio), 2);
 
                 Vector2 offset = new Vector2(GUI.IntScale(24));
-                GUI.DrawString(spriteBatch, PlayerInput.MousePosition + offset, $"{realWorldDistance}m", GUIStyle.TextColorNormal, font: GUIStyle.SubHeadingFont, backgroundColor: Color.Black, backgroundPadding: 4);
+                GUI.DrawString(spriteBatch, PlayerInput.MousePosition + offset, $"{realWorldDistance} m", GUIStyle.TextColorNormal, font: GUIStyle.Font, backgroundColor: Color.Black, backgroundPadding: 4);
             }
 
             spriteBatch.End();

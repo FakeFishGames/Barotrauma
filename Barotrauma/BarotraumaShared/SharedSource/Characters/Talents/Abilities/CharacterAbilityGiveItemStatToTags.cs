@@ -27,6 +27,8 @@ namespace Barotrauma.Abilities
 
         protected override void ApplyEffect()
         {
+            if (Character?.Submarine is null) { return; }
+
             foreach (Item item in Character.Submarine.GetItems(true))
             {
                 if (item.HasTag(tags) || tags.Contains(item.Prefab.Identifier))

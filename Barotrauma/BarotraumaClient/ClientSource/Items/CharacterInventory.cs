@@ -801,7 +801,7 @@ namespace Barotrauma
                 }
                 else if (character.HeldItems.Any(i => 
                     i.OwnInventory != null &&
-                    (i.OwnInventory.CanBePut(item) || (i.OwnInventory.Capacity == 1 && i.OwnInventory.AllowSwappingContainedItems && i.OwnInventory.Container.CanBeContained(item)))))
+                    (i.OwnInventory.CanBePut(item) || ((i.OwnInventory.Capacity == 1 || i.OwnInventory.Container.HasSubContainers) && i.OwnInventory.AllowSwappingContainedItems && i.OwnInventory.Container.CanBeContained(item)))))
                 {
                     return QuickUseAction.PutToEquippedItem;
                 }
@@ -975,7 +975,7 @@ namespace Barotrauma
                             heldItem.OwnInventory.GetItemAt(0)?.Prefab == item.Prefab && 
                             heldItem.OwnInventory.GetItemsAt(0).Count() > 1;
                         if (heldItem.OwnInventory.TryPutItem(item, Character.Controlled) || 
-                            (heldItem.OwnInventory.Capacity == 1 && heldItem.OwnInventory.TryPutItem(item, 0, allowSwapping: !disallowSwapping, allowCombine: false, user: Character.Controlled)))
+                            ((heldItem.OwnInventory.Capacity == 1 || heldItem.OwnInventory.Container.HasSubContainers) && heldItem.OwnInventory.TryPutItem(item, 0, allowSwapping: !disallowSwapping, allowCombine: false, user: Character.Controlled)))
                         {
                             success = true;
                             for (int j = 0; j < capacity; j++)

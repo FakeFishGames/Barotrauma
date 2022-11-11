@@ -310,7 +310,7 @@ namespace Barotrauma.Steam
                     + "unexpected deletion of your hard work.\n"
                     + "Instead, modify a copy of your mod in LocalMods.\n";
 
-                string workshopModDirReadmeLocation = Path.Combine(SaveUtil.SaveFolder, "WorkshopMods", "README.txt");
+                string workshopModDirReadmeLocation = Path.Combine(SaveUtil.DefaultSaveFolder, "WorkshopMods", "README.txt");
                 if (!File.Exists(workshopModDirReadmeLocation))
                 {
                     Directory.CreateDirectory(Path.GetDirectoryName(workshopModDirReadmeLocation)!);

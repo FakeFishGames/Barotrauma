@@ -661,7 +661,7 @@ namespace Barotrauma
                 if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) || effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                 {
                     targets.Clear();
-                    targets.AddRange(effect.GetNearbyTargets(worldPosition, targets));
+                    effect.AddNearbyTargets(worldPosition, targets);
                     effect.Apply(effect.type, deltaTime, triggerer, targets);
                 }
             }

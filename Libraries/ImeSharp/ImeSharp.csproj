@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net6.0</TargetFrameworks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Description>C# wrapper for Windows IME APIs. Its goal is to support both IMM32 and TSF.</Description>
+    <PackageTags>IME;netcoreapp3.1;net5.0;net6.0;winforms;windows;tsf;imm32</PackageTags>
+    <PackageId>ImeSharp</PackageId>
+    <PackageProjectUrl>https://github.com/ryancheung/ImeSharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ryancheung/ImeSharp</RepositoryUrl>
+    <Authors>ryancheung</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <BaseOutputPath>..\Artifacts</BaseOutputPath>
+    <AssemblyName>ImeSharp</AssemblyName>
+    <RootNamespace>ImeSharp</RootNamespace>
+    <LangVersion>5</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="TsfSharp" Version="1.0.0" />
+    <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
+  </ItemGroup>
+
+</Project>

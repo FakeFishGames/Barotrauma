@@ -1,10 +1,15 @@
 ﻿#nullable enable
 using Microsoft.Xna.Framework;
 using System;
-using System.Linq;
 
 namespace Barotrauma
 {
+    public enum FactionAffiliation
+    {
+        Affiliated,
+        Neutral
+    }
+
     class Faction
     {
         public Reputation Reputation { get; }
@@ -16,11 +21,25 @@ namespace Barotrauma
             Reputation = new Reputation(metadata, this, prefab.MinReputation, prefab.MaxReputation, prefab.InitialReputation);
         }
 
-        public bool IsAffiliated()
+        /// <summary>
+        /// Get what kind of affiliation this faction has towards the player depending on who they chose to side with via talents
+        /// </summary>
+        /// <returns></returns>
+        public FactionAffiliation GetPlayerAffiliationStatus()
         {
-            if (GameMain.GameSession?.Campaign?.Factions.MaxBy(static f => f.Reputation.Value) is not { } highestFaction) { return false; }
+            float affiliation = 1f;
+            foreach (Character character in GameSession.GetSessionCrewCharacters(CharacterType.Both))
+            {
+                if (character.Info is not { } info) { continue; }
 
-            return highestFaction.Reputation.Value < 0 || Prefab.Identifier == highestFaction.Prefab.Identifier;
+                affiliation *= 1f + info.GetSavedStatValue(StatTypes.Affiliation, Prefab.Identifier);
+            }
+
+            return affiliation switch
+            {
+                >= 1f => FactionAffiliation.Affiliated,
+                _ => FactionAffiliation.Neutral
+            };
         }
     }
 

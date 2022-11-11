@@ -745,7 +745,7 @@ namespace Barotrauma
             } ?? Enumerable.Empty<PurchasedItem>();
             foreach (var button in itemCategoryButtons)
             {
-                if (!(button.UserData is MapEntityCategory category))
+                if (button.UserData is not MapEntityCategory category)
                 {
                     continue;
                 }
@@ -1110,7 +1110,7 @@ namespace Barotrauma
 
         private void SetPriceGetters(GUIComponent itemFrame, bool buying)
         {
-            if (itemFrame == null || !(itemFrame.UserData is PurchasedItem pi)) { return; }
+            if (itemFrame == null || itemFrame.UserData is not PurchasedItem pi) { return; }
 
             if (itemFrame.FindChild("undiscountedprice", recursive: true) is GUITextBlock undiscountedPriceBlock)
             {
@@ -1667,8 +1667,8 @@ namespace Barotrauma
             {
                 foreach (var subItem in subItems)
                 {
-                    if (!subItem.Components.All(c => !(c is Holdable h) || !h.Attachable || !h.Attached)) { continue; }
-                    if (!subItem.Components.All(c => !(c is Wire w) || w.Connections.All(c => c == null))) { continue; }
+                    if (!subItem.Components.All(c => c is not Holdable h || !h.Attachable || !h.Attached)) { continue; }
+                    if (!subItem.Components.All(c => c is not Wire w || w.Connections.All(c => c == null))) { continue; }
                     if (!ItemAndAllContainersInteractable(subItem)) { continue; }
                     AddOwnedItem(subItem);
                 }
@@ -1701,7 +1701,7 @@ namespace Barotrauma
 
             void AddOwnedItem(Item item)
             {
-                if (!(item?.Prefab.GetPriceInfo(ActiveStore) is PriceInfo priceInfo)) { return; }
+                if (item?.Prefab.GetPriceInfo(ActiveStore) is not PriceInfo priceInfo) { return; }
                 bool isNonEmpty = !priceInfo.DisplayNonEmpty || item.ConditionPercentage > 5.0f;
                 if (OwnedItems.TryGetValue(item.Prefab, out ItemQuantity itemQuantity))
                 {
@@ -1729,7 +1729,7 @@ namespace Barotrauma
 
         private void SetItemFrameStatus(GUIComponent itemFrame, bool enabled)
         {
-            if (!(itemFrame?.UserData is PurchasedItem pi)) { return; }
+            if (itemFrame?.UserData is not PurchasedItem pi) { return; }
             bool refreshFrameStatus = !pi.IsStoreComponentEnabled.HasValue || pi.IsStoreComponentEnabled.Value != enabled;
             if (!refreshFrameStatus) { return; }
             if (itemFrame.FindChild("icon", recursive: true) is GUIImage icon)
@@ -1841,11 +1841,7 @@ namespace Barotrauma
                 LocalizedString toolTip = string.Empty;
                 if (purchasedItem.ItemPrefab != null)
                 {
-                    toolTip = purchasedItem.ItemPrefab.Name;
-                    if (!purchasedItem.ItemPrefab.Description.IsNullOrEmpty())
-                    {
-                        toolTip += $"\n{purchasedItem.ItemPrefab.Description}";
-                    }
+                    toolTip = purchasedItem.ItemPrefab.GetTooltip();
                     if (itemQuantity != null)
                     {
                         if (itemQuantity.AllNonEmpty)
@@ -1859,7 +1855,7 @@ namespace Barotrauma
                         }
                     }
                 }
-                itemComponent.ToolTip = toolTip;
+                itemComponent.ToolTip = RichString.Rich(toolTip);
             }
             if (ownedLabel != null)
             {
@@ -2181,7 +2177,7 @@ namespace Barotrauma
                     {
                         needsRefresh = itemsToSellFromSub.Count != prevSubItems.Count ||
                             itemsToSellFromSub.Sum(i => i.Quantity) != prevSubItems.Sum(i => i.Quantity) ||
-                            itemsToSellFromSub.Any(i => !(prevSubItems.FirstOrDefault(prev => prev.ItemPrefab == i.ItemPrefab) is PurchasedItem prev) || i.Quantity != prev.Quantity) ||
+                            itemsToSellFromSub.Any(i => prevSubItems.FirstOrDefault(prev => prev.ItemPrefab == i.ItemPrefab) is not PurchasedItem prev || i.Quantity != prev.Quantity) ||
                             prevSubItems.Any(prev => itemsToSellFromSub.None(i => i.ItemPrefab == prev.ItemPrefab));
                     }
                 }

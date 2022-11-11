@@ -811,7 +811,7 @@ namespace Barotrauma.Items.Components
                     if (distSqr > t.SoundRange * t.SoundRange * 2) { continue; }
 
                     float dist = (float)Math.Sqrt(distSqr);
-                    if (dist > prevPassivePingRadius * Range && dist <= passivePingRadius * Range && Rand.Int(sonarBlips.Count) < 500)
+                    if (dist > prevPassivePingRadius * Range && dist <= passivePingRadius * Range && Rand.Int(sonarBlips.Count) < 500 && t.IsWithinSector(transducerCenter))
                     {
                         Ping(t.WorldPosition, transducerCenter,
                             Math.Min(t.SoundRange, range * 0.5f) * displayScale, 0, displayScale, Math.Min(t.SoundRange, range * 0.5f), 
@@ -1276,7 +1276,7 @@ namespace Barotrauma.Items.Components
                 float indicatorSector = sector * 0.75f;
                 float indicatorSectorLength = (float)(midLength / Math.Cos(indicatorSector));
 
-                    bool withinSector =
+                bool withinSector =
                     (Math.Abs(diff.X) < steering.ActiveDockingSource.DistanceTolerance.X && Math.Abs(diff.Y) < steering.ActiveDockingSource.DistanceTolerance.Y) ||
                     Vector2.Dot(normalizedDockingDir, MathUtils.RotatePoint(normalizedDockingDir, indicatorSector)) <
                     Vector2.Dot(normalizedDockingDir, Vector2.Normalize(dockingDir));

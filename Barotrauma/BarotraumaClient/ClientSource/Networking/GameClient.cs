@@ -311,6 +311,12 @@ namespace Barotrauma.Networking
             CoroutineManager.StartCoroutine(WaitForStartingInfo(), "WaitForStartingInfo");
         }
 
+        public void SetLobbyPublic(bool isPublic)
+        {
+            GameMain.NetLobbyScreen.SetPublic(isPublic);
+            SteamManager.SetLobbyPublic(isPublic);
+        }
+
         private ClientPeer CreateNetPeer()
         {
             Networking.ClientPeer.Callbacks callbacks = new ClientPeer.Callbacks(
@@ -1319,6 +1325,7 @@ namespace Barotrauma.Networking
             ServerSettings.MaximumMoneyTransferRequest = inc.ReadInt32();
             bool usingShuttle = GameMain.NetLobbyScreen.UsingShuttle = inc.ReadBoolean();
             GameMain.LightManager.LosMode = (LosMode)inc.ReadByte();
+            ServerSettings.ShowEnemyHealthBars = (EnemyHealthBarMode)inc.ReadByte();
             bool includesFinalize = inc.ReadBoolean(); inc.ReadPadBits();
             GameMain.LightManager.LightingEnabled = true;
 
@@ -2521,7 +2528,7 @@ namespace Barotrauma.Networking
 
         public override void CreateEntityEvent(INetSerializable entity, NetEntityEvent.IData extraData = null)
         {
-            if (!(entity is IClientSerializable clientSerializable))
+            if (entity is not IClientSerializable clientSerializable)
             {
                 throw new InvalidCastException($"Entity is not {nameof(IClientSerializable)}");
             }

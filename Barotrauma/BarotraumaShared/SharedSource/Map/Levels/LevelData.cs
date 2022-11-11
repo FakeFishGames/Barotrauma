@@ -59,6 +59,7 @@ namespace Barotrauma
 
         public readonly List<EventPrefab> EventHistory = new List<EventPrefab>();
         public readonly List<EventPrefab> NonRepeatableEvents = new List<EventPrefab>();
+        public readonly HashSet<Identifier> UsedUniqueSets = new HashSet<Identifier>();
 
         public bool EventsExhausted { get; set; }
 
@@ -143,9 +144,10 @@ namespace Barotrauma
             string[] nonRepeatablePrefabNames = element.GetAttributeStringArray("nonrepeatableevents", new string[] { });
             NonRepeatableEvents.AddRange(EventPrefab.Prefabs.Where(p => nonRepeatablePrefabNames.Any(n => p.Identifier == n)));
 
+            UsedUniqueSets = element.GetAttributeIdentifierArray(nameof(UsedUniqueSets), Array.Empty<Identifier>()).ToHashSet();
+
             EventsExhausted = element.GetAttributeBool(nameof(EventsExhausted).ToLower(), false);
         }
-
 
         /// <summary>
         /// Instantiates level data using the properties of the connection (seed, size, difficulty)
@@ -284,6 +286,12 @@ namespace Barotrauma
                     newElement.Add(new XAttribute("nonrepeatableevents", string.Join(',', NonRepeatableEvents.Select(p => p.Identifier))));
                 }
             }
+
+            if (UsedUniqueSets.Any())
+            {
+                newElement.Add(new XAttribute(nameof(UsedUniqueSets), string.Join(',', UsedUniqueSets)));
+            }
+
             parentElement.Add(newElement);
         }
     }

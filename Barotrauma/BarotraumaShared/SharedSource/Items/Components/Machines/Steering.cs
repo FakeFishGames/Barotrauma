@@ -144,6 +144,11 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public float TargetVelocityLengthSquared
+        {
+            get => TargetVelocity.LengthSquared();
+        }
+
         public Vector2 SteeringInput
         {
             get { return steeringInput; }

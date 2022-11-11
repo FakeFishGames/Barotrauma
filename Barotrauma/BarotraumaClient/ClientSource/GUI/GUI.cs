@@ -255,7 +255,17 @@ namespace Barotrauma
                     ScreenChanged = false;
                 }
 
-                updateList.ForEach(c => c.DrawAuto(spriteBatch));
+                foreach (GUIComponent c in updateList)
+                {
+                    c.DrawAuto(spriteBatch);
+                }
+
+                // always draw IME preview on top of everything else
+                foreach (GUIComponent c in updateList)
+                {
+                    if (c is not GUITextBox box) { continue; }
+                    box.DrawIMEPreview(spriteBatch);
+                }
 
                 if (ScreenOverlayColor.A > 0.0f)
                 {
@@ -1251,6 +1261,10 @@ namespace Barotrauma
                 UpdateMessages(deltaTime);
                 UpdateSavingIndicator(deltaTime);
             }
+
+#if WINDOWS
+            GUITextBox.UpdateIME();
+#endif
         }
 
         public static void UpdateGUIMessageBoxesOnly(float deltaTime)
@@ -1357,7 +1371,7 @@ namespace Barotrauma
             }
         }
 
-        #region Element drawing
+#region Element drawing
 
         private static readonly List<float> usedIndicatorAngles = new List<float>();
 
@@ -1843,9 +1857,9 @@ namespace Barotrauma
             Vector2 pos = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) - new Vector2(HUDLayoutSettings.Padding) - 2 * Scale * sheet.FrameSize.ToVector2();
             sheet.Draw(spriteBatch, (int)Math.Floor(savingIndicatorSpriteIndex), pos, savingIndicatorColor, origin: Vector2.Zero, rotate: 0.0f, scale: new Vector2(Scale));
         }
-        #endregion
+#endregion
 
-        #region Element creation
+#region Element creation
 
         public static Texture2D CreateCircle(int radius, bool filled = false)
         {
@@ -2217,9 +2231,9 @@ namespace Barotrauma
             return msgBox;
         }
 
-        #endregion
+#endregion
 
-        #region Element positioning
+#region Element positioning
         private static List<T> CreateElements<T>(int count, RectTransform parent, Func<RectTransform, T> constructor,
             Vector2? relativeSize = null, Point? absoluteSize = null,
             Anchor anchor = Anchor.TopLeft, Pivot? pivot = null, Point? minSize = null, Point? maxSize = null,
@@ -2418,9 +2432,9 @@ namespace Barotrauma
             }
         }
 
-        #endregion
+#endregion
 
-        #region Misc
+#region Misc
         public static void TogglePauseMenu()
         {
             if (Screen.Selected == GameMain.MainMenuScreen) { return; }
@@ -2658,6 +2672,6 @@ namespace Barotrauma
             if (!isSavingIndicatorEnabled) { return; }
             timeUntilSavingIndicatorDisabled = delay;
         }
-        #endregion
+#endregion
     }
 }

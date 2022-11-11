@@ -1,9 +1,8 @@
-﻿using System;
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -11,6 +10,7 @@ namespace Barotrauma
     {
         public enum SpawnLocationType
         {
+            Any,
             MainSub,
             Outpost,
             MainPath,
@@ -40,7 +40,7 @@ namespace Barotrauma
         [Serialize("", IsPropertySaveable.Yes, description: "Tag of an entity with an inventory to spawn the item into.")]
         public Identifier TargetInventory { get; set; }
 
-        [Serialize(SpawnLocationType.MainSub, IsPropertySaveable.Yes)]
+        [Serialize(SpawnLocationType.Any, IsPropertySaveable.Yes)]
         public SpawnLocationType SpawnLocation { get; set; }
 
         [Serialize(SpawnType.Human, IsPropertySaveable.Yes)] 
@@ -177,7 +177,7 @@ namespace Barotrauma
             }
             else if (!ItemIdentifier.IsEmpty)
             {
-                if (!(MapEntityPrefab.FindByIdentifier(ItemIdentifier) is ItemPrefab itemPrefab))
+                if (MapEntityPrefab.FindByIdentifier(ItemIdentifier) is not ItemPrefab itemPrefab)
                 {
                     DebugConsole.ThrowError("Error in SpawnAction (item prefab \"" + ItemIdentifier + "\" not found)");
                 }
@@ -275,6 +275,7 @@ namespace Barotrauma
         {
             return spawnLocation switch
             {
+                SpawnLocationType.Any => true,
                 SpawnLocationType.MainSub => submarine == Submarine.MainSub,
                 SpawnLocationType.MainPath => submarine == null,
                 SpawnLocationType.Outpost => submarine is { Info: { IsOutpost: true } },

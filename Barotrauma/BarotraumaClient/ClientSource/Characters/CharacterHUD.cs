@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
-using Barotrauma.Tutorials;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -114,7 +113,7 @@ namespace Barotrauma
             return 
                 character?.Inventory != null && 
                 !character.Removed && !character.IsKnockedDown &&
-                (controller?.User != character || !controller.HideHUD) &&
+                (controller?.User != character || !controller.HideHUD || Screen.Selected.IsEditor) &&
                 !IsCampaignInterfaceOpen &&
                 !ConversationAction.FadeScreenToBlack;
         }
@@ -548,7 +547,7 @@ namespace Barotrauma
                     if (CharacterHealth.OpenHealthWindow == character.SelectedCharacter.CharacterHealth)
                     {
                         character.SelectedCharacter.CharacterHealth.Alignment = Alignment.Left;
-                        character.SelectedCharacter.CharacterHealth.DrawStatusHUD(spriteBatch);
+                        //character.SelectedCharacter.CharacterHealth.DrawStatusHUD(spriteBatch);
                     }
                 }
                 else if (character.Inventory != null)
@@ -644,6 +643,12 @@ namespace Barotrauma
         {
             if (character == null || character.IsDead || character.Removed) { return; }
 
+            var healthBarMode = GameMain.NetworkMember?.ServerSettings.ShowEnemyHealthBars ?? GameSettings.CurrentConfig.ShowEnemyHealthBars;
+            if (healthBarMode == EnemyHealthBarMode.HideAll)
+            {
+                return;
+            }
+
             var existingBar = bossHealthBars.Find(b => b.Character == character);
             if (existingBar != null)
             {
@@ -669,6 +674,8 @@ namespace Barotrauma
 
         public static void UpdateBossHealthBars(float deltaTime)
         {
+            var healthBarMode = GameMain.NetworkMember?.ServerSettings.ShowEnemyHealthBars ?? GameSettings.CurrentConfig.ShowEnemyHealthBars;
+
             for (int i = 0; i < bossHealthBars.Count; i++)
             {
                 var bossHealthBar = bossHealthBars[i];
@@ -710,7 +717,7 @@ namespace Barotrauma
             for (int i = bossHealthBars.Count - 1; i >= 0 ; i--)
             {
                 var bossHealthBar = bossHealthBars[i];
-                if (bossHealthBar.FadeTimer <= 0)
+                if (bossHealthBar.FadeTimer <= 0 || healthBarMode == EnemyHealthBarMode.HideAll)
                 {
                     bossHealthBar.SideContainer.Parent?.RemoveChild(bossHealthBar.SideContainer);
                     bossHealthBar.TopContainer.Parent?.RemoveChild(bossHealthBar.TopContainer);

@@ -2516,6 +2516,7 @@ namespace Barotrauma.Networking
             msg.WriteInt32(ServerSettings.MaximumMoneyTransferRequest);
             msg.WriteBoolean(IsUsingRespawnShuttle());
             msg.WriteByte((byte)ServerSettings.LosMode);
+            msg.WriteByte((byte)ServerSettings.ShowEnemyHealthBars);
             msg.WriteBoolean(includesFinalize); msg.WritePadBits();
 
             ServerSettings.WriteMonsterEnabled(msg);

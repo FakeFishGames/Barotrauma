@@ -5,15 +5,18 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using static Barotrauma.TalentTree;
-using static Barotrauma.TalentTree.TalentTreeStageState;
+using static Barotrauma.TalentTree.TalentStages;
 
 namespace Barotrauma
 {
-    internal readonly record struct TalentButton(GUIButton Button,
-                                                 GUIComponent IconComponent,
+    internal readonly record struct TalentShowCaseButton(ImmutableHashSet<TalentButton> Buttons,
+                                                         GUIComponent IconComponent);
+
+    internal readonly record struct TalentButton(GUIComponent IconComponent,
                                                  TalentPrefab Prefab)
     {
         public Identifier Identifier => Prefab.Identifier;
@@ -39,6 +42,11 @@ namespace Barotrauma
 
     internal sealed class TalentMenu
     {
+        public const string ManageBotTalentsButtonUserData = "managebottalentsbutton";
+
+        private Character? character;
+        private CharacterInfo? characterInfo;
+
         private static readonly Color unselectedColor = new Color(240, 255, 255, 225),
                                       unselectableColor = new Color(100, 100, 100, 225),
                                       pressedColor = new Color(60, 60, 60, 225),
@@ -46,8 +54,8 @@ namespace Barotrauma
                                       unlockedColor = new Color(24, 37, 31, 255),
                                       availableColor = new Color(50, 47, 33, 255);
 
-        private static readonly ImmutableDictionary<TalentTreeStageState, TalentTreeStyle> talentStageStyles =
-            new Dictionary<TalentTreeStageState, TalentTreeStyle>
+        private static readonly ImmutableDictionary<TalentStages, TalentTreeStyle> talentStageStyles =
+            new Dictionary<TalentStages, TalentTreeStyle>
             {
                 [Invalid] = new TalentTreeStyle("TalentTreeLocked", lockedColor),
                 [Locked] = new TalentTreeStyle("TalentTreeLocked", lockedColor),
@@ -57,9 +65,12 @@ namespace Barotrauma
             }.ToImmutableDictionary();
 
         private readonly HashSet<TalentButton> talentButtons = new HashSet<TalentButton>();
+        private readonly HashSet<TalentShowCaseButton> talentShowCaseButtons = new HashSet<TalentShowCaseButton>();
         private readonly HashSet<GUIComponent> showCaseTalentFrames = new HashSet<GUIComponent>();
         private readonly HashSet<TalentCornerIcon> talentCornerIcons = new HashSet<TalentCornerIcon>();
         private HashSet<Identifier> selectedTalents = new HashSet<Identifier>();
+
+        private readonly Queue<Identifier> showCaseClosureQueue = new();
 
         private GUIListBox? skillListBox;
         private GUITextBlock? talentPointText;
@@ -70,12 +81,16 @@ namespace Barotrauma
         private GUIButton? talentApplyButton,
                            talentResetButton;
 
-        public void CreateGUI(GUIFrame parent)
+        public void CreateGUI(GUIFrame parent, Character? targetCharacter)
         {
             parent.ClearChildren();
             talentButtons.Clear();
+            talentShowCaseButtons.Clear();
             talentCornerIcons.Clear();
             showCaseTalentFrames.Clear();
+
+            character = targetCharacter;
+            characterInfo = targetCharacter?.Info;
 
             GUIFrame background = new GUIFrame(new RectTransform(Vector2.One, parent.RectTransform, Anchor.TopCenter), style: "GUIFrameListBox");
             int padding = GUI.IntScale(15);
@@ -89,23 +104,21 @@ namespace Barotrauma
                 Stretch = true
             };
 
-            Character? controlledCharacter = Character.Controlled;
-            CharacterInfo? info = controlledCharacter?.Info ?? GameMain.Client?.CharacterInfo;
-            if (info is null) { return; }
+            if (characterInfo is null) { return; }
 
-            CreateStatPanel(contentLayout, info);
+            CreateStatPanel(contentLayout, characterInfo);
 
             new GUIFrame(new RectTransform(new Vector2(1f, 1f), contentLayout.RectTransform), style: "HorizontalLine");
 
-            if (JobTalentTrees.TryGet(info.Job.Prefab.Identifier, out TalentTree? talentTree))
+            if (JobTalentTrees.TryGet(characterInfo.Job.Prefab.Identifier, out TalentTree? talentTree))
             {
-                CreateTalentMenu(contentLayout, info, talentTree!);
+                CreateTalentMenu(contentLayout, characterInfo, talentTree!);
             }
 
-            CreateFooter(contentLayout, info);
+            CreateFooter(contentLayout, characterInfo);
             UpdateTalentInfo();
 
-            if (GameMain.NetworkMember != null)
+            if (GameMain.NetworkMember != null && IsOwnCharacter(characterInfo))
             {
                 CreateMultiplayerCharacterSettings(frame, content);
             }
@@ -164,7 +177,7 @@ namespace Barotrauma
                 OnClicked = (button, o) =>
                 {
                     GameMain.Client?.SendCharacterInfo(GameMain.Client.PendingName);
-                    characterSettingsFrame!.Visible = false;
+                    characterSettingsFrame.Visible = false;
                     content.Visible = true;
                     return true;
                 }
@@ -179,8 +192,7 @@ namespace Barotrauma
 
             new GUICustomComponent(new RectTransform(new Vector2(0.25f, 1f), topLayout.RectTransform), onDraw: (batch, component) =>
             {
-                float posY = component.Rect.Center.Y - component.Rect.Width / 2;
-                info.DrawPortrait(batch, new Vector2(component.Rect.X, posY), Vector2.Zero, component.Rect.Width, false, false);
+                info.DrawPortrait(batch, component.Rect.Location.ToVector2(), Vector2.Zero, component.Rect.Width, false, false);
             });
 
             GUILayoutGroup nameLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 1f), topLayout.RectTransform))
@@ -209,20 +221,22 @@ namespace Barotrauma
             if (talentsOutsideTree.Any())
             {
                 //spacing
-                new GUIFrame(new RectTransform(new Vector2(1.0f, 0.05f), nameLayout.RectTransform), style: null);
+                new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), nameLayout.RectTransform), style: null);
 
-                GUILayoutGroup extraTalentLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), nameLayout.RectTransform), childAnchor: Anchor.TopCenter);
+                GUILayoutGroup extraTalentLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.55f), nameLayout.RectTransform), childAnchor: Anchor.TopCenter);
 
-                talentPointText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), extraTalentLayout.RectTransform, anchor: Anchor.Center), TextManager.Get("talentmenu.extratalents"), font: GUIStyle.SubHeadingFont);
+                talentPointText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), extraTalentLayout.RectTransform, anchor: Anchor.Center), TextManager.Get("talentmenu.extratalents"), font: GUIStyle.SubHeadingFont)
+                {
+                    AutoScaleVertical = true
+                };
                 talentPointText.RectTransform.MaxSize = new Point(int.MaxValue, (int)talentPointText.TextSize.Y);
 
-                var extraTalentList = new GUIListBox(new RectTransform(new Vector2(0.9f, 0.8f), extraTalentLayout.RectTransform, anchor: Anchor.Center), isHorizontal: true)
+                var extraTalentList = new GUIListBox(new RectTransform(new Vector2(0.9f, 0.7f), extraTalentLayout.RectTransform, anchor: Anchor.Center), isHorizontal: true)
                 {
                     AutoHideScrollBar = false,
                     ResizeContentToMakeSpaceForScrollBar = false
                 };
                 extraTalentList.ScrollBar.RectTransform.SetPosition(Anchor.BottomCenter, Pivot.TopCenter);
-                extraTalentList.RectTransform.MinSize = new Point(0, GUI.IntScale(65));
                 extraTalentLayout.Recalculate();
                 extraTalentList.ForceLayoutRecalculation();
 
@@ -231,7 +245,7 @@ namespace Barotrauma
                     if (extraTalent is null) { continue; }
                     GUIImage talentImg = new GUIImage(new RectTransform(Vector2.One, extraTalentList.Content.RectTransform, scaleBasis: ScaleBasis.BothHeight), sprite: extraTalent.Icon, scaleToFit: true)
                     {
-                        ToolTip = RichString.Rich($"‖color:{Color.White.ToStringHex()}‖{extraTalent.DisplayName}‖color:end‖" + "\n\n" + extraTalent.Description),
+                        ToolTip = RichString.Rich($"‖color:{Color.White.ToStringHex()}‖{extraTalent.DisplayName}‖color:end‖" + "\n\n" + ToolBox.ExtendColorToPercentageSigns(extraTalent.Description.Value)),
                         Color = GUIStyle.Green
                     };
                 }
@@ -298,10 +312,11 @@ namespace Barotrauma
                     TalentOption option = subTree.TalentOptionStages[i];
                     CreateTalentOption(subTreeLayoutGroup, subTree, i, option, info);
                 }
-                subTreeLayoutGroup.RectTransform.Resize(new Point(subTreeLayoutGroup.Rect.Width, 
+                subTreeLayoutGroup.RectTransform.Resize(new Point(subTreeLayoutGroup.Rect.Width,
                     subTreeLayoutGroup.Children.Sum(c => c.Rect.Height + subTreeLayoutGroup.AbsoluteSpacing)));
                 subTreeLayoutGroup.RectTransform.MinSize = new Point(subTreeLayoutGroup.Rect.Width, subTreeLayoutGroup.Rect.Height);
                 subTreeLayoutGroup.Recalculate();
+
                 if (subTree.Type == TalentTreeType.Specialization)
                 {
                     talentList.RectTransform.Resize(new Point(talentList.Rect.Width, Math.Max(subTreeLayoutGroup.Rect.Height, talentList.Rect.Height)));
@@ -310,15 +325,15 @@ namespace Barotrauma
             }
 
             var specializationList = GetSpecializationList();
-            GetSpecializationList().RectTransform.Resize(new Point(specializationList.Content.Children.Sum(c => c.Rect.Width), specializationList.Rect.Height));
+            GetSpecializationList().RectTransform.Resize(new Point(specializationList.Content.Children.Sum(static c => c.Rect.Width), specializationList.Rect.Height));
 
             GUITextBlock.AutoScaleAndNormalize(subTreeNames);
 
             GUIListBox GetSpecializationList()
             {
-                if (mainList.Content.Children.LastOrDefault() is GUIListBox specializationList)
+                if (mainList.Content.Children.LastOrDefault() is GUIListBox specList)
                 {
-                    return specializationList;
+                    return specList;
                 }
 
                 GUIListBox newSpecializationList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.5f), mainList.Content.RectTransform, Anchor.TopCenter), isHorizontal: true, style: null);
@@ -354,21 +369,24 @@ namespace Barotrauma
             GUILayoutGroup talentOptionLayoutGroup = new GUILayoutGroup(new RectTransform(Vector2.One, talentOptionCenterGroup.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { Stretch = true };
 
             HashSet<Identifier> talentOptionIdentifiers = talentOption.TalentIdentifiers.OrderBy(static t => t).ToHashSet();
-            bool hasShowcase = talentOption.ShowcaseTalent.TryUnwrap(out Identifier showcaseTalentIdentifier);
-            GUILayoutGroup showcaseLayout = talentOptionLayoutGroup;
+            HashSet<TalentButton> buttonsToAdd = new();
 
-            if (hasShowcase)
+            Dictionary<GUILayoutGroup, ImmutableHashSet<Identifier>> showCaseTalentParents = new();
+            Dictionary<Identifier, GUIComponent> showCaseTalentButtonsToAdd = new();
+
+            foreach (var (showCaseTalentIdentifier, talents) in talentOption.ShowCaseTalents)
             {
-                talentOptionIdentifiers.Add(showcaseTalentIdentifier);
+                talentOptionIdentifiers.Add(showCaseTalentIdentifier);
                 Point parentSize = talentBackground.RectTransform.NonScaledSize;
-                GUIFrame showCaseFrame = new GUIFrame(new RectTransform(new Point((int)(parentSize.X / 3f * (talentOptionIdentifiers.Count - 1)), parentSize.Y)), style: "GUITooltip")
+                GUIFrame showCaseFrame = new GUIFrame(new RectTransform(new Point((int)(parentSize.X / 3f * (talents.Count - 1)), parentSize.Y)), style: "GUITooltip")
                 {
-                    UserData = showcaseTalentIdentifier,
+                    UserData = showCaseTalentIdentifier,
                     IgnoreLayoutGroups = true,
                     Visible = false
                 };
                 GUILayoutGroup showcaseCenterGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.7f), showCaseFrame.RectTransform, Anchor.Center), childAnchor: Anchor.CenterLeft);
-                showcaseLayout = new GUILayoutGroup(new RectTransform(Vector2.One, showcaseCenterGroup.RectTransform), isHorizontal: true) { Stretch = true };
+                GUILayoutGroup showcaseLayout = new GUILayoutGroup(new RectTransform(Vector2.One, showcaseCenterGroup.RectTransform), isHorizontal: true) { Stretch = true };
+                showCaseTalentParents.Add(showcaseLayout, talents);
                 showCaseTalentFrames.Add(showCaseFrame);
             }
 
@@ -376,16 +394,16 @@ namespace Barotrauma
             {
                 if (!TalentPrefab.TalentPrefabs.TryGet(talentId, out TalentPrefab? talent)) { continue; }
 
-                bool isShowCaseTalent = hasShowcase && talentId == showcaseTalentIdentifier;
-                GUIComponent talentParent;
+                bool isShowCaseTalent = talentOption.ShowCaseTalents.ContainsKey(talentId);
+                GUIComponent talentParent = talentOptionLayoutGroup;
 
-                if (hasShowcase && talentId != showcaseTalentIdentifier)
+                foreach (var (key, value) in showCaseTalentParents)
                 {
-                    talentParent = showcaseLayout;
-                }
-                else
-                {
-                    talentParent = talentOptionLayoutGroup;
+                    if (value.Contains(talentId))
+                    {
+                        talentParent = key;
+                        break;
+                    }
                 }
 
                 GUIFrame talentFrame = new GUIFrame(new RectTransform(Vector2.One, talentParent.RectTransform), style: null)
@@ -396,7 +414,7 @@ namespace Barotrauma
                 GUIFrame croppedTalentFrame = new GUIFrame(new RectTransform(Vector2.One, talentFrame.RectTransform, anchor: Anchor.Center, scaleBasis: ScaleBasis.BothHeight), style: null);
                 GUIButton talentButton = new GUIButton(new RectTransform(Vector2.One, croppedTalentFrame.RectTransform, anchor: Anchor.Center), style: null)
                 {
-                    ToolTip = RichString.Rich($"‖color:{Color.White.ToStringHex()}‖{talent.DisplayName}‖color:end‖" + "\n\n" + talent.Description),
+                    ToolTip = RichString.Rich($"‖color:{Color.White.ToStringHex()}‖{talent.DisplayName}‖color:end‖" + "\n\n" + ToolBox.ExtendColorToPercentageSigns(talent.Description.Value)),
                     UserData = talent.Identifier,
                     PressedColor = pressedColor,
                     Enabled = info.Character != null,
@@ -420,20 +438,18 @@ namespace Barotrauma
                             return true;
                         }
 
-                        Character? controlledCharacter = info.Character;
-                        if (controlledCharacter is null) { return false; }
+                        if (character is null) { return false; }
 
                         if (talentOption.MaxChosenTalents is 1)
                         {
                             // deselect other buttons in tier by removing their selected talents from pool
-                            foreach (GUIButton guiButton in talentOptionLayoutGroup.GetAllChildren<GUIButton>())
+                            foreach (Identifier identifier in selectedTalents)
                             {
-                                if (guiButton.UserData is Identifier otherTalentIdentifier && guiButton != button)
+                                if (character.HasTalent(identifier) || identifier == talentId) { continue; }
+
+                                if (talentOptionIdentifiers.Contains(identifier))
                                 {
-                                    if (!controlledCharacter.HasTalent(otherTalentIdentifier))
-                                    {
-                                        selectedTalents.Remove(otherTalentIdentifier);
-                                    }
+                                    selectedTalents.Remove(identifier);
                                 }
                             }
                         }
@@ -451,7 +467,7 @@ namespace Barotrauma
                                 selectedTalents.Remove(talentIdentifier);
                             }
                         }
-                        else if (!controlledCharacter.HasTalent(talentIdentifier))
+                        else if (!character.HasTalent(talentIdentifier))
                         {
                             selectedTalents.Remove(talentIdentifier);
                         }
@@ -487,9 +503,31 @@ namespace Barotrauma
                 }
 
                 iconImage.Enabled = talentButton.Enabled;
-                if (isShowCaseTalent) { continue; }
+                if (isShowCaseTalent)
+                {
+                    showCaseTalentButtonsToAdd.Add(talentId, iconImage);
+                    continue;
+                }
 
-                talentButtons.Add(new TalentButton(talentButton, iconImage, talent));
+                buttonsToAdd.Add(new TalentButton(iconImage, talent));
+            }
+
+            foreach (TalentButton button in buttonsToAdd)
+            {
+                talentButtons.Add(button);
+            }
+
+            foreach (var (key, value) in showCaseTalentButtonsToAdd)
+            {
+                HashSet<TalentButton> buttons = new();
+                foreach (Identifier identifier in talentOption.ShowCaseTalents[key])
+                {
+                    if (talentButtons.FirstOrNull(talentButton => talentButton.Identifier == identifier) is not { } button) { continue; }
+
+                    buttons.Add(button);
+                }
+
+                talentShowCaseButtons.Add(new TalentShowCaseButton(buttons.ToImmutableHashSet(), value));
             }
 
             talentCornerIcons.Add(new TalentCornerIcon(subTree.Identifier, index, cornerIcon, talentBackground, talentBackgroundHighlight));
@@ -534,6 +572,8 @@ namespace Barotrauma
 
         private bool ResetTalentSelection(GUIButton guiButton, object userData)
         {
+            if (characterInfo is null) { return false; }
+            selectedTalents = characterInfo.GetUnlockedTalentsInTree().ToHashSet();
             UpdateTalentInfo();
             return true;
         }
@@ -554,16 +594,15 @@ namespace Barotrauma
 
         private bool ApplyTalentSelection(GUIButton guiButton, object userData)
         {
-            Character controlledCharacter = Character.Controlled;
-            if (controlledCharacter is null) { return false; }
+            if (character is null) { return false; }
 
-            ApplyTalents(controlledCharacter);
+            ApplyTalents(character);
             return true;
         }
 
         public void UpdateTalentInfo()
         {
-            if (!(Character.Controlled is { Info: var info } character)) { return; }
+            if (character is null || characterInfo is null) { return; }
 
             bool unlockedAllTalents = character.HasUnlockedAllTalents();
 
@@ -576,15 +615,15 @@ namespace Barotrauma
             }
             else
             {
-                experienceText.Text = $"{info.ExperiencePoints - info.GetExperienceRequiredForCurrentLevel()} / {info.GetExperienceRequiredToLevelUp() - info.GetExperienceRequiredForCurrentLevel()}";
-                experienceBar.BarSize = info.GetProgressTowardsNextLevel();
+                experienceText.Text = $"{characterInfo.ExperiencePoints - characterInfo.GetExperienceRequiredForCurrentLevel()} / {characterInfo.GetExperienceRequiredToLevelUp() - characterInfo.GetExperienceRequiredForCurrentLevel()}";
+                experienceBar.BarSize = characterInfo.GetProgressTowardsNextLevel();
             }
 
             selectedTalents = CheckTalentSelection(character, selectedTalents).ToHashSet();
 
-            string pointsLeft = info.GetAvailableTalentPoints().ToString();
+            string pointsLeft = characterInfo.GetAvailableTalentPoints().ToString();
 
-            int talentCount = selectedTalents.Count - info.GetUnlockedTalentsInTree().Count();
+            int talentCount = selectedTalents.Count - characterInfo.GetUnlockedTalentsInTree().Count();
 
             if (unlockedAllTalents)
             {
@@ -603,7 +642,7 @@ namespace Barotrauma
 
             foreach (TalentCornerIcon cornerIcon in talentCornerIcons)
             {
-                TalentTreeStageState state = GetTalentOptionStageState(character, cornerIcon.TalentTree, cornerIcon.Index, selectedTalents);
+                TalentStages state = GetTalentOptionStageState(character, cornerIcon.TalentTree, cornerIcon.Index, selectedTalents);
                 TalentTreeStyle style = talentStageStyles[state];
                 GUIComponentStyle newStyle = style.ComponentStyle;
                 cornerIcon.IconComponent.ApplyStyle(newStyle);
@@ -614,60 +653,94 @@ namespace Barotrauma
 
             foreach (TalentButton talentButton in talentButtons)
             {
-                Identifier talentIdentifier = talentButton.Identifier;
-                bool unselectable = !IsViableTalentForCharacter(character, talentIdentifier, selectedTalents) || character.HasTalent(talentIdentifier);
-                Color newTalentColor = unselectable ? unselectableColor : unselectedColor;
-                Color hoverColor = Color.White;
-                bool selected = false;
+                TalentStages stage = GetTalentState(character, talentButton.Identifier, selectedTalents);
+                ApplyTalentIconColor(stage, talentButton.IconComponent, talentButton.Prefab.ColorOverride);
+            }
 
-                if (character.HasTalent(talentIdentifier))
-                {
-                    selected = true;
-                    newTalentColor = GUIStyle.Green;
-                }
-                else if (selectedTalents.Contains(talentIdentifier))
-                {
-                    selected = true;
-                    newTalentColor = GUIStyle.Orange;
-                    hoverColor = Color.Lerp(GUIStyle.Orange, Color.White, 0.7f);
-                }
-
-                bool shouldOverride = !unselectable || selected;
-
-                if (shouldOverride && talentButton.Prefab.ColorOverride.TryUnwrap(out Color overrideColor))
-                {
-                    newTalentColor = overrideColor;
-                }
-
-                talentButton.IconComponent.Color = newTalentColor;
-                talentButton.IconComponent.HoverColor = hoverColor;
+            foreach (TalentShowCaseButton showCaseTalentButton in talentShowCaseButtons)
+            {
+                TalentStages collectiveTalentStage = GetCollectiveTalentState(character, showCaseTalentButton.Buttons, selectedTalents);
+                ApplyTalentIconColor(collectiveTalentStage, showCaseTalentButton.IconComponent, Option<Color>.None());
             }
 
             if (skillListBox is null) { return; }
 
-            TabMenu.CreateSkillList(character, info, skillListBox);
-        }
+            TabMenu.CreateSkillList(character, characterInfo, skillListBox);
 
-        public void AddToGUIUpdateList()
-        {
-            bool mouseInteracted = PlayerInput.PrimaryMouseButtonClicked() || PlayerInput.SecondaryMouseButtonClicked() || PlayerInput.ScrollWheelSpeed != 0;
-            bool keyboardInteracted = PlayerInput.KeyHit(Keys.Escape) || GameSettings.CurrentConfig.KeyMap.Bindings[InputType.InfoTab].IsHit();
-
-            foreach (GUIComponent component in showCaseTalentFrames)
+            static TalentStages GetTalentState(Character character, Identifier talentIdentifier, IReadOnlyCollection<Identifier> selectedTalents)
             {
-                component.AddToGUIUpdateList(order: 1);
-                if (!component.Visible) { continue; }
-
-                if (keyboardInteracted || (mouseInteracted && !component.Rect.Contains(PlayerInput.MousePosition)))
+                bool unselectable = !IsViableTalentForCharacter(character, talentIdentifier, selectedTalents) || character.HasTalent(talentIdentifier);
+                TalentStages stage = unselectable ? Locked : Available;
+                if (unselectable)
                 {
-                    component.Visible = false;
+                    stage =  Locked;
                 }
+
+                if (character.HasTalent(talentIdentifier))
+                {
+                    stage =  Unlocked;
+                }
+                else if (selectedTalents.Contains(talentIdentifier))
+                {
+                    stage =  Highlighted;
+                }
+
+                return stage;
+            }
+
+            static void ApplyTalentIconColor(TalentStages stage, GUIComponent component, Option<Color> colorOverride)
+            {
+                Color color = stage switch
+                {
+                    Invalid => unselectableColor,
+                    Locked => unselectableColor,
+                    Unlocked => GetColorOrOverride(GUIStyle.Green, colorOverride),
+                    Highlighted => GetColorOrOverride(GUIStyle.Orange, colorOverride),
+                    Available => GetColorOrOverride(unselectedColor, colorOverride),
+                    _ => throw new ArgumentOutOfRangeException(nameof(stage), stage, null)
+                };
+
+                component.Color = color;
+                component.HoverColor = Color.Lerp(color, Color.White, 0.7f);
+
+                static Color GetColorOrOverride(Color color, Option<Color> colorOverride) => colorOverride.TryUnwrap(out Color overrideColor) ? overrideColor : color;
+            }
+
+            // this could also be reused for setting colors for talentCornerIcons but that's for another time
+            static TalentStages GetCollectiveTalentState(Character character, IReadOnlyCollection<TalentButton> buttons, IReadOnlyCollection<Identifier> selectedTalents)
+            {
+                HashSet<TalentStages> talentStages = new HashSet<TalentStages>();
+                foreach (TalentButton button in buttons)
+                {
+                    talentStages.Add(GetTalentState(character, button.Identifier, selectedTalents));
+                }
+
+                TalentStages collectiveStage = talentStages.Any(static stage => stage is Locked)
+                    ? Locked
+                    : Available;
+
+                foreach (TalentStages stage in talentStages)
+                {
+                    if (stage is Highlighted)
+                    {
+                        collectiveStage = Highlighted;
+                        break;
+                    }
+
+                    if (stage is Unlocked)
+                    {
+                        collectiveStage = Unlocked;
+                        break;
+                    }
+                }
+
+                return collectiveStage;
             }
         }
 
         public void Update()
         {
-            if (Character.Controlled?.Info is not { } characterInfo || talentResetButton is null || talentApplyButton is null) { return; }
+            if (characterInfo is null || talentResetButton is null || talentApplyButton is null) { return; }
 
             int talentCount = selectedTalents.Count - characterInfo.GetUnlockedTalentsInTree().Count();
             talentResetButton.Enabled = talentApplyButton.Enabled = talentCount > 0;
@@ -675,6 +748,58 @@ namespace Barotrauma
             {
                 talentApplyButton.Flash(GUIStyle.Orange);
             }
+
+            while (showCaseClosureQueue.TryDequeue(out Identifier identifier))
+            {
+                foreach (GUIComponent component in showCaseTalentFrames)
+                {
+                    if (component.UserData is Identifier showcaseIdentifier && showcaseIdentifier == identifier)
+                    {
+                        component.Visible = false;
+                    }
+                }
+            }
+
+            bool mouseInteracted = PlayerInput.PrimaryMouseButtonClicked() || PlayerInput.SecondaryMouseButtonClicked() || PlayerInput.ScrollWheelSpeed != 0;
+            bool keyboardInteracted = PlayerInput.KeyHit(Keys.Escape) || GameSettings.CurrentConfig.KeyMap.Bindings[InputType.InfoTab].IsHit();
+
+            foreach (GUIComponent component in showCaseTalentFrames)
+            {
+                if (component.UserData is not Identifier identifier) { continue; }
+
+                component.AddToGUIUpdateList(order: 1);
+                if (!component.Visible) { continue; }
+
+                if (keyboardInteracted || (mouseInteracted && !component.Rect.Contains(PlayerInput.MousePosition)))
+                {
+                    showCaseClosureQueue.Enqueue(identifier);
+                }
+            }
+        }
+
+        private static bool IsOwnCharacter(CharacterInfo? info)
+        {
+            if (info is null) { return false; }
+
+            CharacterInfo? ownCharacterInfo = Character.Controlled?.Info ?? GameMain.Client?.CharacterInfo;
+            if (ownCharacterInfo is null) { return false; }
+
+            return info == ownCharacterInfo;
+        }
+
+        public static bool CanManageTalents(CharacterInfo targetInfo)
+        {
+            // in singleplayer we can do whatever we want
+            if (GameMain.IsSingleplayer) { return true; }
+
+            // always allow managing talents for own character
+            if (IsOwnCharacter(targetInfo)) { return true; }
+
+            // don't allow controlling non-bot characters
+            if (targetInfo.Character is not { IsBot: true }) { return false; }
+
+            // lastly check if we have the permission to do this
+            return GameMain.Client is { } client && client.HasPermission(ClientPermissions.ManageBotTalents);
         }
     }
 }

@@ -133,13 +133,13 @@ namespace Barotrauma
         }
 
         partial void InitProjSpecific();
-        
+                
         public static string GetCharacterDataSavePath(string savePath)
         {
-            return Path.Combine(SaveUtil.MultiplayerSaveFolder, Path.GetFileNameWithoutExtension(savePath) + "_CharacterData.xml");
+            return Path.Combine(Path.GetDirectoryName(savePath), Path.GetFileNameWithoutExtension(savePath) + "_CharacterData.xml");
         }
 
-        public string GetCharacterDataSavePath()
+        public static string GetCharacterDataSavePath()
         {
             return GetCharacterDataSavePath(GameMain.GameSession.SavePath);
         }

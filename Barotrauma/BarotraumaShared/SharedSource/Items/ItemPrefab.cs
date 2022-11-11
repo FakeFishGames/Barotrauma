@@ -814,8 +814,6 @@ namespace Barotrauma
                 ? category
                 : MapEntityCategory.Misc;
 
-            var parentType = ConfigElement.Parent?.GetAttributeIdentifier("itemtype", "");
-
             //nameidentifier can be used to make multiple items use the same names and descriptions
             Identifier nameIdentifier = ConfigElement.GetAttributeIdentifier("nameidentifier", "");
 
@@ -831,7 +829,7 @@ namespace Barotrauma
                 name = name.Fallback(OriginalName);
             }
 
-            if (parentType == "wrecked")
+            if (category == MapEntityCategory.Wrecked)
             {
                 name = TextManager.GetWithVariable("wreckeditemformat", "[name]", name);
             }

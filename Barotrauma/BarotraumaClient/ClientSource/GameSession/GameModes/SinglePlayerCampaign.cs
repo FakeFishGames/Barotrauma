@@ -265,8 +265,8 @@ namespace Barotrauma
 
         private IEnumerable<CoroutineStatus> DoLoadInitialLevel(LevelData level, bool mirror)
         {
-            GameMain.GameSession.StartRound(level,
-                mirrorLevel: mirror);
+            
+            GameMain.GameSession.StartRound(level, mirrorLevel: mirror, startOutpost: GetPredefinedStartOutpost());
             GameMain.GameScreen.Select();
 
             CoroutineManager.StartCoroutine(DoInitialCameraTransition(), "SinglePlayerCampaign.DoInitialCameraTransition");

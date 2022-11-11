@@ -1836,8 +1836,6 @@ namespace Barotrauma
                 {
                     heldItem.FlipX(relativeToSub: false);
                 }
-                // TODO: was this added by a mistake?
-                //heldItem.FlipX(relativeToSub: false);
             }
 
             foreach (Limb limb in Limbs)

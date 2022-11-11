@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Barotrauma
@@ -285,8 +286,8 @@ namespace Barotrauma
         /// This is the new constructor.
         /// If the rectT height is set 0, the height is calculated from the text.
         /// </summary>
-        public GUITextBlock(RectTransform rectT, RichString text, Color? textColor = null, GUIFont font = null, 
-            Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null) 
+        public GUITextBlock(RectTransform rectT, RichString text, Color? textColor = null, GUIFont font = null,
+            Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null)
             : base(style, rectT)
         {
             if (color.HasValue)
@@ -551,6 +552,8 @@ namespace Barotrauma
 
             if (TextGetter != null) { Text = TextGetter(); }
 
+            string textToShow = Censor ? censoredText : (Wrap ? wrappedText.Value : text.SanitizedValue);
+
             Rectangle prevScissorRect = spriteBatch.GraphicsDevice.ScissorRectangle;
             if (overflowClipActive)
             {
@@ -561,7 +564,7 @@ namespace Barotrauma
                 spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             }
 
-            if (!text.IsNullOrEmpty())
+            if (!string.IsNullOrEmpty(textToShow))
             {
                 Vector2 pos = rect.Location.ToVector2() + textPos + TextOffset;
                 if (RoundToNearestPixel)
@@ -570,7 +573,8 @@ namespace Barotrauma
                     pos.Y = (int)pos.Y;
                 }
 
-                Color currentTextColor = State == ComponentState.Hover || State == ComponentState.HoverSelected ? HoverTextColor : TextColor;
+                Color currentTextColor = State is ComponentState.Hover or ComponentState.HoverSelected ? HoverTextColor : TextColor;
+
                 if (!enabled)
                 {
                     currentTextColor = disabledTextColor;
@@ -582,7 +586,6 @@ namespace Barotrauma
 
                 if (!HasColorHighlight)
                 {
-                    string textToShow = Censor ? censoredText : (Wrap ? wrappedText.Value : text.SanitizedValue);
                     Color colorToShow = currentTextColor * (currentTextColor.A / 255.0f);
                     if (TextManager.DebugDraw)
                     {
@@ -604,10 +607,10 @@ namespace Barotrauma
                 {
                     if (OverrideRichTextDataAlpha)
                     {
-                        RichTextData.Value.ForEach(rt => rt.Alpha = currentTextColor.A / 255.0f);
+                        RichTextData?.ForEach(rt => rt.Alpha = currentTextColor.A / 255.0f);
                     }
-                    Font.DrawStringWithColors(spriteBatch, Censor ? censoredText : (Wrap ? wrappedText : text.SanitizedString).Value, pos,
-                        currentTextColor * (currentTextColor.A / 255.0f), 0.0f, origin, TextScale, SpriteEffects.None, textDepth, RichTextData.Value, alignment: textAlignment, forceUpperCase: ForceUpperCase);
+                    Font.DrawStringWithColors(spriteBatch, textToShow, pos,
+                        currentTextColor * (currentTextColor.A / 255.0f), 0.0f, origin, TextScale, SpriteEffects.None, textDepth, RichTextData, alignment: textAlignment, forceUpperCase: ForceUpperCase);
                 }
 
                 Strikethrough?.Draw(spriteBatch, (int)Math.Ceiling(TextSize.X / 2f), pos.X,

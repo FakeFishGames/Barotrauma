@@ -61,7 +61,7 @@ namespace Barotrauma
 
         private LocationType addInitialMissionsForType;
 
-        public bool Discovered { get; private set; }
+        public bool Discovered => GameMain.GameSession?.Map?.IsDiscovered(this) ?? false;
 
         public readonly Dictionary<LocationTypeChange.Requirement, int> ProximityTimer = new Dictionary<LocationTypeChange.Requirement, int>();
         public (LocationTypeChange typeChange, int delay, MissionPrefab parentMission)? PendingLocationTypeChange;
@@ -287,12 +287,12 @@ namespace Barotrauma
                 var characters = GameSession.GetSessionCrewCharacters(CharacterType.Both);
                 if (characters.Any())
                 {
-                    if (Location.Reputation?.Faction is { } faction && faction.IsAffiliated())
+                    if (Location.Reputation?.Faction is { } faction && faction.GetPlayerAffiliationStatus() is FactionAffiliation.Affiliated)
                     {
                         price *= 1f - characters.Max(static c => c.GetStatValue(StatTypes.StoreBuyMultiplierAffiliated));
                     }
-                    price *= 1f - characters.Max(static c => c.GetStatValue(StatTypes.StoreBuyMultiplier));
-                    price *= 1f + characters.Max(c => item.Tags.Sum(tag => c.Info.GetSavedStatValue(StatTypes.StoreBuyMultiplier, tag)));
+                    price *= 1f - characters.Max(static c => c.GetStatValue(StatTypes.StoreBuyMultiplier, includeSaved: false));
+                    price *= 1f - characters.Max(c => item.Tags.Sum(tag => c.Info.GetSavedStatValue(StatTypes.StoreBuyMultiplier, tag)));
                 }
                 // Price should never go below 1 mk
                 return Math.Max((int)price, 1);
@@ -497,7 +497,6 @@ namespace Barotrauma
             baseName        = element.GetAttributeString("basename", "");
             Name            = element.GetAttributeString("name", "");
             MapPosition     = element.GetAttributeVector2("position", Vector2.Zero);
-            Discovered      = element.GetAttributeBool("discovered", false);
             PriceMultiplier = element.GetAttributeFloat("pricemultiplier", 1.0f);
             IsGateBetweenBiomes         = element.GetAttributeBool("isgatebetweenbiomes", false);
             MechanicalPriceMultiplier   = element.GetAttributeFloat("mechanicalpricemultipler", 1.0f);
@@ -1292,14 +1291,17 @@ namespace Barotrauma
             return characters.Sum(c => (int)c.GetStatValue(StatTypes.ExtraSpecialSalesCount));
         }
 
-        public void Discover(bool checkTalents = true)
+        public int HighestSubmarineTierAvailable(SubmarineClass submarineClass)
         {
-            if (Discovered) { return; }
-            Discovered = true;
-            if (checkTalents)
-            {
-                GameSession.GetSessionCrewCharacters(CharacterType.Both).ForEach(c => c.CheckTalents(AbilityEffectType.OnLocationDiscovered, new AbilityLocation(this)));
-            }
+            if (!HasOutpost()) { return 0; }
+            return Biome?.HighestSubmarineTierAvailable(submarineClass, Type.Identifier) ?? SubmarineInfo.HighestTier;
+        }
+
+        public int HighestSubmarineTierAvailable() => HighestSubmarineTierAvailable(SubmarineClass.Undefined);
+
+        public bool IsSubmarineAvailable(SubmarineInfo info)
+        {
+            return Biome?.IsSubmarineAvailable(info, Type.Identifier) ?? true;
         }
 
         public void Reset()
@@ -1313,7 +1315,6 @@ namespace Barotrauma
             ClearMissions();
             LevelData?.EventHistory?.Clear();
             UnlockInitialMissions();
-            Discovered = false;
         }
 
         public XElement Save(Map map, XElement parentElement)
@@ -1324,7 +1325,6 @@ namespace Barotrauma
                 new XAttribute("basename", BaseName),
                 new XAttribute("name", Name),
                 new XAttribute("biome", Biome?.Identifier.Value ?? string.Empty),
-                new XAttribute("discovered", Discovered),
                 new XAttribute("position", XMLExtensions.Vector2ToString(MapPosition)),
                 new XAttribute("pricemultiplier", PriceMultiplier),
                 new XAttribute("isgatebetweenbiomes", IsGateBetweenBiomes),
@@ -1453,7 +1453,7 @@ namespace Barotrauma
             HireManager?.Remove();
         }
 
-        class AbilityLocation : AbilityObject, IAbilityLocation
+        public class AbilityLocation : AbilityObject, IAbilityLocation
         {
             public AbilityLocation(Location location)
             {

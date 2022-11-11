@@ -27,7 +27,8 @@ namespace Barotrauma.Abilities
             {
                 if (isPositiveReputation)
                 {
-                    if (abilityLocation.Location.Reputation.Faction.Reputation.Value <= 0) { return false; }
+                    if (abilityLocation.Location?.Reputation is not { } reputation) { return false; }
+                    if (reputation.Value <= 0) { return false; }
                 }
 
                 if (locationIdentifiers.Any())

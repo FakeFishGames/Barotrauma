@@ -7,7 +7,7 @@ namespace Barotrauma
 {
     internal sealed class TalentTree : Prefab
     {
-        public enum TalentTreeStageState
+        public enum TalentStages
         {
             Invalid,
             Locked,
@@ -72,30 +72,30 @@ namespace Barotrauma
 
         // i hate this function - markus
         // me too - joonas
-        public static TalentTreeStageState GetTalentOptionStageState(Character character, Identifier subTreeIdentifier, int index, IReadOnlyCollection<Identifier> selectedTalents)
+        public static TalentStages GetTalentOptionStageState(Character character, Identifier subTreeIdentifier, int index, IReadOnlyCollection<Identifier> selectedTalents)
         {
-            if (character?.Info?.Job.Prefab is null) { return TalentTreeStageState.Invalid; }
+            if (character?.Info?.Job.Prefab is null) { return TalentStages.Invalid; }
 
-            if (!JobTalentTrees.TryGet(character.Info.Job.Prefab.Identifier, out TalentTree talentTree)) { return TalentTreeStageState.Invalid; }
+            if (!JobTalentTrees.TryGet(character.Info.Job.Prefab.Identifier, out TalentTree talentTree)) { return TalentStages.Invalid; }
 
             TalentSubTree subTree = talentTree!.TalentSubTrees.FirstOrDefault(tst => tst.Identifier == subTreeIdentifier);
-            if (subTree is null) { return TalentTreeStageState.Invalid; }
+            if (subTree is null) { return TalentStages.Invalid; }
 
             if (!TalentTreeMeetsRequirements(talentTree, subTree, selectedTalents))
             {
-                return TalentTreeStageState.Locked;
+                return TalentStages.Locked;
             }
 
             TalentOption targetTalentOption = subTree.TalentOptionStages[index];
 
             if (targetTalentOption.HasEnoughTalents(character.Info))
             {
-                return TalentTreeStageState.Unlocked;
+                return TalentStages.Unlocked;
             }
 
             if (targetTalentOption.HasSelectedTalent(selectedTalents))
             {
-                return TalentTreeStageState.Highlighted;
+                return TalentStages.Highlighted;
             }
 
             bool hasTalentInLastTier = true;
@@ -111,17 +111,17 @@ namespace Barotrauma
 
             if (!hasTalentInLastTier)
             {
-                return TalentTreeStageState.Locked;
+                return TalentStages.Locked;
             }
 
             bool hasPointsForNewTalent = character.Info.GetTotalTalentPoints() - selectedTalents.Count > 0;
 
             if (hasPointsForNewTalent)
             {
-                return isLastTalentPurchased ? TalentTreeStageState.Highlighted : TalentTreeStageState.Available;
+                return isLastTalentPurchased ? TalentStages.Highlighted : TalentStages.Available;
             }
 
-            return TalentTreeStageState.Locked;
+            return TalentStages.Locked;
         }
 
 
@@ -207,7 +207,7 @@ namespace Barotrauma
             {
                 nameIdentifier = $"talenttree.{Identifier}";
             }
-            DisplayName = TextManager.Get($"talenttree.{nameIdentifier}").Fallback(Identifier.Value);
+            DisplayName = TextManager.Get(nameIdentifier).Fallback(Identifier.Value);
             Type = subTreeElement.GetAttributeEnum("type", TalentTreeType.Specialization);
             RequiredTrees = subTreeElement.GetAttributeIdentifierImmutableHashSet("requires", ImmutableHashSet<Identifier>.Empty);
             BlockedTrees = subTreeElement.GetAttributeIdentifierImmutableHashSet("blocks", ImmutableHashSet<Identifier>.Empty);
@@ -234,7 +234,7 @@ namespace Barotrauma
         /// When specified the talent option will show talent with this identifier
         /// and clicking on it will expand the talent option to show the talents
         /// </summary>
-        public readonly Option<Identifier> ShowcaseTalent;
+        public readonly Dictionary<Identifier, ImmutableHashSet<Identifier>> ShowCaseTalents = new Dictionary<Identifier, ImmutableHashSet<Identifier>>();
 
         public bool HasEnoughTalents(CharacterInfo character) => CountMatchingTalents(character.UnlockedTalents) >= MaxChosenTalents;
         public bool HasEnoughTalents(IReadOnlyCollection<Identifier> selectedTalents) => CountMatchingTalents(selectedTalents) >= MaxChosenTalents;
@@ -269,19 +269,30 @@ namespace Barotrauma
         {
             MaxChosenTalents = talentOptionsElement.GetAttributeInt("maxchosentalents", 1);
 
-            Identifier showcaseTalent = talentOptionsElement.GetAttributeIdentifier("showcasetalent", Identifier.Empty);
-            ShowcaseTalent = !showcaseTalent.IsEmpty
-                ? Option<Identifier>.Some(showcaseTalent)
-                : Option<Identifier>.None();
+            HashSet<Identifier> identifiers = new HashSet<Identifier>();
 
-            var talentIdentifiers = new HashSet<Identifier>();
-            foreach (var talentOptionElement in talentOptionsElement.GetChildElements("talentoption"))
+            foreach (ContentXElement talentOptionElement in talentOptionsElement.Elements())
             {
-                Identifier identifier = talentOptionElement.GetAttributeIdentifier("identifier", Identifier.Empty);
-                talentIdentifiers.Add(identifier);
+                Identifier elementName = talentOptionElement.Name.ToIdentifier();
+                if (elementName == "talentoption")
+                {
+                    identifiers.Add(talentOptionElement.GetAttributeIdentifier("identifier", Identifier.Empty));
+                }
+                else if (elementName == "showcasetalent")
+                {
+                    Identifier showCaseIdentifier = talentOptionElement.GetAttributeIdentifier("identifier", Identifier.Empty);
+                    HashSet<Identifier> showCaseTalentIdentifiers = new HashSet<Identifier>();
+                    foreach (ContentXElement subElement in talentOptionElement.Elements())
+                    {
+                        Identifier identifier = subElement.GetAttributeIdentifier("identifier", Identifier.Empty);
+                        showCaseTalentIdentifiers.Add(identifier);
+                        identifiers.Add(identifier);
+                    }
+                    ShowCaseTalents.Add(showCaseIdentifier, showCaseTalentIdentifiers.ToImmutableHashSet());
+                }
             }
 
-            this.talentIdentifiers = talentIdentifiers.ToImmutableHashSet();
+            talentIdentifiers = identifiers.ToImmutableHashSet();
         }
     }
 }

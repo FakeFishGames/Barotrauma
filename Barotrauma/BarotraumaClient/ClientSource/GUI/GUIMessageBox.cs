@@ -24,7 +24,8 @@ namespace Barotrauma
             InGame,
             Vote,
             Hint,
-            Tutorial
+            Tutorial,
+            Warning // Keep this last so that it's always drawn in front
         }
 
         private bool IsAnimated => type == Type.InGame || type == Type.Hint || type == Type.Tutorial;
@@ -84,8 +85,8 @@ namespace Barotrauma
 
         public static GUIComponent VisibleBox => MessageBoxes.LastOrDefault();
 
-        public GUIMessageBox(LocalizedString headerText, LocalizedString text, Vector2? relativeSize = null, Point? minSize = null)
-            : this(headerText, text, new LocalizedString[] { "OK" }, relativeSize, minSize)
+        public GUIMessageBox(LocalizedString headerText, LocalizedString text, Vector2? relativeSize = null, Point? minSize = null, Type type = Type.Default)
+            : this(headerText, text, new LocalizedString[] { "OK" }, relativeSize, minSize, type: type)
         {
             this.Buttons[0].OnClicked = Close;
         }
@@ -147,7 +148,7 @@ namespace Barotrauma
             Tag = tag.ToIdentifier();
 
             #warning TODO: These should be broken into separate methods at least
-            if (type == Type.Default || type == Type.Vote)
+            if (type == Type.Default || type == Type.Vote || type == Type.Warning)
             {
                 Content = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 0.85f), InnerFrame.RectTransform, Anchor.Center)) { AbsoluteSpacing = 5 };
                             

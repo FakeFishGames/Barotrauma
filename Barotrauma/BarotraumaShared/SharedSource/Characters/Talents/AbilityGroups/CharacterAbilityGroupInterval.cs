@@ -27,39 +27,40 @@ namespace Barotrauma.Abilities
             TimeSinceLastUpdate += deltaTime;
             if (TimeSinceLastUpdate < interval) { return; }
 
-            bool shouldApplyDelayedEffect;
-            bool conditionsDidntMatch;
+            bool conditionsMatched;
 
             if (AllConditionsMatched())
             {
                 effectDelayTimer += TimeSinceLastUpdate;
-                shouldApplyDelayedEffect = effectDelayTimer >= effectDelay;
-                conditionsDidntMatch = false;
+                bool shouldApplyDelayedEffect = effectDelayTimer >= effectDelay;
+                conditionsMatched = shouldApplyDelayedEffect;
             }
             else
             {
                 effectDelayTimer = 0f;
-                shouldApplyDelayedEffect = false;
-                conditionsDidntMatch = true;
+                conditionsMatched = false;
             }
 
             bool hasFallbacks = fallbackAbilities.Count > 0;
 
             List<CharacterAbility> abilitiesToRun =
-                conditionsDidntMatch && hasFallbacks
+                !conditionsMatched && hasFallbacks
                     ? fallbackAbilities
                     : characterAbilities;
+
+            if (hasFallbacks)
+            {
+                conditionsMatched = true;
+            }
 
             foreach (var characterAbility in abilitiesToRun)
             {
                 if (!characterAbility.IsViable()) { continue; }
 
-                characterAbility.UpdateCharacterAbility(
-                    shouldApplyDelayedEffect || conditionsDidntMatch,
-                    TimeSinceLastUpdate);
+                characterAbility.UpdateCharacterAbility(conditionsMatched, TimeSinceLastUpdate);
             }
 
-            if (shouldApplyDelayedEffect || (conditionsDidntMatch && hasFallbacks))
+            if (conditionsMatched)
             {
                 timesTriggered++;
             }

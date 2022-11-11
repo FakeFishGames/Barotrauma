@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {    
@@ -530,7 +531,7 @@ namespace Barotrauma
                         effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                     {
                         targets.Clear();
-                        targets.AddRange(effect.GetNearbyTargets(worldPosition, targets));
+                        effect.AddNearbyTargets(worldPosition, targets);
                         effect.Apply(effectType, deltaTime, targetEntity, targets);
                     }
                     if (effect.HasTargetType(StatusEffect.TargetType.UseTarget))
@@ -569,7 +570,15 @@ namespace Barotrauma
 
             DamageParticles(deltaTime, worldPosition);
 
-            var attackResult = targetLimb.character.ApplyAttack(attacker, worldPosition, this, deltaTime, playSound, targetLimb, penetration: Penetration);
+            float penetration = Penetration;
+
+            float? penetrationValue = SourceItem?.GetComponent<RangedWeapon>()?.Penetration;
+            if (penetrationValue.HasValue)
+            {
+                penetration += penetrationValue.Value;
+            }
+
+            var attackResult = targetLimb.character.ApplyAttack(attacker, worldPosition, this, deltaTime, playSound, targetLimb, penetration);
             var effectType = attackResult.Damage > 0.0f ? ActionType.OnUse : ActionType.OnFailure;
 
             foreach (StatusEffect effect in statusEffects)
@@ -599,7 +608,7 @@ namespace Barotrauma
                     effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                 {
                     targets.Clear();
-                    targets.AddRange(effect.GetNearbyTargets(worldPosition, targets));                
+                    effect.AddNearbyTargets(worldPosition, targets);                
                     effect.Apply(effectType, deltaTime, targetLimb.character, targets);
                 }
                 if (effect.HasTargetType(StatusEffect.TargetType.UseTarget))

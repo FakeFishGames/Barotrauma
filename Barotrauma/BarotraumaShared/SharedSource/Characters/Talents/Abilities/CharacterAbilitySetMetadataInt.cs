@@ -13,6 +13,11 @@ namespace Barotrauma.Abilities
             value = abilityElement.GetAttributeInt("value", 0);
         }
 
+        public override void InitializeAbility(bool addingFirstTime)
+        {
+            ApplyEffect();
+        }
+
         protected override void ApplyEffect()
         {
             if (identifier == Identifier.Empty) { return; }

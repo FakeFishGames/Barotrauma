@@ -39,6 +39,7 @@ namespace Barotrauma.CharacterEditor
 
         private bool ShowExtraRagdollControls => editLimbs || editJoints;
 
+        public Character SpawnedCharacter => character;
         private Character character;
         private Vector2 spawnPosition;
 
@@ -1513,7 +1514,7 @@ namespace Barotrauma.CharacterEditor
             }
         }
 
-        private Character SpawnCharacter(Identifier speciesName, RagdollParams ragdoll = null)
+        public Character SpawnCharacter(Identifier speciesName, RagdollParams ragdoll = null)
         {
             DebugConsole.NewMessage(GetCharacterEditorTranslation("TryingToSpawnCharacter").Replace("[config]", speciesName.ToString()), Color.HotPink);
             OnPreSpawn();
@@ -3181,10 +3182,7 @@ namespace Barotrauma.CharacterEditor
                 OnClicked = (button, data) =>
                 {
                     ResetView();
-                    CharacterParams.Serialize();
-                    RagdollParams.Serialize();
-                    AnimParams.ForEach(a => a.Serialize());
-                    Wizard.Instance.CopyExisting(CharacterParams, RagdollParams, AnimParams);
+                    PrepareCharacterCopy();
                     Wizard.Instance.SelectTab(Wizard.Tab.Character);
                     return true;
                 }
@@ -3209,9 +3207,17 @@ namespace Barotrauma.CharacterEditor
 
             fileEditPanel.RectTransform.MinSize = new Point(0, (int)(layoutGroup.RectTransform.Children.Sum(c => c.MinSize.Y + layoutGroup.AbsoluteSpacing) * 1.2f));
         }
-#endregion
+        #endregion
 
-#region ToggleButtons 
+        public void PrepareCharacterCopy()
+        {
+            CharacterParams.Serialize();
+            RagdollParams.Serialize();
+            AnimParams.ForEach(a => a.Serialize());
+            Wizard.Instance.CopyExisting(CharacterParams, RagdollParams, AnimParams);
+        }
+
+        #region ToggleButtons 
         private enum Direction
         {
             Left,

@@ -138,7 +138,7 @@ namespace Barotrauma
         private ConcurrentQueue<float> impactQueue;
 
         //a dictionary containing lists of the status effects in all the components of the item
-        private readonly bool[] hasStatusEffectsOfType;
+        private readonly bool[] hasStatusEffectsOfType = new bool[Enum.GetValues(typeof(ActionType)).Length];
         private readonly Dictionary<ActionType, List<StatusEffect>> statusEffectLists;
 
         public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; protected set; }
@@ -630,7 +630,7 @@ namespace Barotrauma
             {
                 if (!spawnedInCurrentOutpost && value)
                 {
-                    OriginalOutpost = GameMain.GameSession?.StartLocation?.BaseName ?? "";
+                    OriginalOutpost = GameMain.GameSession?.LevelData?.Seed;
                 }
                 spawnedInCurrentOutpost = value;
             }
@@ -651,7 +651,9 @@ namespace Barotrauma
             set
             {
                 originalOutpost = value;
-                if (!string.IsNullOrEmpty(value) && GameMain.GameSession?.LevelData?.Type == LevelData.LevelType.Outpost && GameMain.GameSession?.StartLocation?.BaseName == value)
+                if (!string.IsNullOrEmpty(value) && 
+                    GameMain.GameSession?.LevelData?.Type == LevelData.LevelType.Outpost &&
+                    GameMain.GameSession?.LevelData?.Seed == value)
                 {
                     spawnedInCurrentOutpost = true;
                 }
@@ -1005,7 +1007,6 @@ namespace Barotrauma
                 }
             }
 
-            hasStatusEffectsOfType = new bool[Enum.GetValues(typeof(ActionType)).Length];
             foreach (ItemComponent ic in components)
             {
                 if (ic is Pickable pickable)
@@ -1654,7 +1655,7 @@ namespace Barotrauma
 
             if (effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters) || effect.HasTargetType(StatusEffect.TargetType.NearbyItems))
             {
-                targets.AddRange(effect.GetNearbyTargets(WorldPosition, targets));
+                effect.AddNearbyTargets(WorldPosition, targets);
                 if (targets.Count > 0)
                 {
                     hasTargets = true;
@@ -2764,18 +2765,20 @@ namespace Barotrauma
                 if (!ic.HasRequiredContainedItems(user, addMessage: user == Character.Controlled)) { continue; }
 
                 bool success = Rand.Range(0.0f, 0.5f) < ic.DegreeOfSuccess(user);
-                ActionType actionType = success ? ActionType.OnUse : ActionType.OnFailure;
+                ActionType conditionalActionType = success ? ActionType.OnSuccess : ActionType.OnFailure;
 
 #if CLIENT
-                ic.PlaySound(actionType, user);
+                ic.PlaySound(conditionalActionType, user);
+                ic.PlaySound(ActionType.OnUse, user);
 #endif
                 ic.WasUsed = true;
-                ic.ApplyStatusEffects(actionType, 1.0f, character, targetLimb, user: user);
+
+                ic.ApplyStatusEffects(conditionalActionType, 1.0f, character, targetLimb, user: user);
+                ic.ApplyStatusEffects(ActionType.OnUse, 1.0f, character, targetLimb, user: user);
 
                 if (GameMain.NetworkMember is { IsServer: true })
                 {
-                    GameMain.NetworkMember.CreateEntityEvent(this, new ApplyStatusEffectEventData(
-                        actionType, ic, character, targetLimb));
+                    GameMain.NetworkMember.CreateEntityEvent(this, new ApplyStatusEffectEventData(conditionalActionType, ic, character, targetLimb));
                 }
 
                 if (ic.DeleteOnUse) { remove = true; }

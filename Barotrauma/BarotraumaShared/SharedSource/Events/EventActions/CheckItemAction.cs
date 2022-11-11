@@ -25,6 +25,9 @@ namespace Barotrauma
         [Serialize(false, IsPropertySaveable.Yes)]
         public bool RequireEquipped { get; set; }
 
+        [Serialize(true, IsPropertySaveable.Yes)]
+        public bool Recursive { get; set; }
+
         [Serialize(-1, IsPropertySaveable.Yes)]
         public int ItemContainerIndex { get; set; }
 
@@ -97,7 +100,7 @@ namespace Barotrauma
         {
             if (inventory == null) { return false; }
             int count = 0;
-            foreach (Item item in inventory.FindAllItems(it => itemTags.Any(it.HasTag) || itemIdentifierSplit.Contains(it.Prefab.Identifier)))
+            foreach (Item item in inventory.FindAllItems(it => itemTags.Any(it.HasTag) || itemIdentifierSplit.Contains(it.Prefab.Identifier), recursive: Recursive))
             {
                 if (!ConditionalsMatch(item, character)) { continue; }
                 count++;

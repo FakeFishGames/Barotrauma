@@ -104,7 +104,7 @@ namespace Barotrauma
 
         public bool DoesBleed
         {
-            get => Character.Params.Health.DoesBleed;
+            get => Character.Params.Health.DoesBleed && !Character.Params.IsMachine;
             private set => Character.Params.Health.DoesBleed = value;
         }
 
@@ -550,7 +550,7 @@ namespace Barotrauma
                     amount -= reduceAmount;
                     if (treatmentAction != null)
                     {
-                        if (treatmentAction.Value == ActionType.OnUse)
+                        if (treatmentAction.Value == ActionType.OnUse || treatmentAction.Value == ActionType.OnSuccess)
                         {
                             matchingAffliction.AppliedAsSuccessfulTreatmentTime = Timing.TotalTime;
                         }
@@ -690,6 +690,7 @@ namespace Barotrauma
 
         private void AddLimbAffliction(LimbHealth limbHealth, Affliction newAffliction, bool allowStacking = true)
         {
+            if (Character.Params.IsMachine && !newAffliction.Prefab.AffectMachines) { return; }
             if (!DoesBleed && newAffliction is AfflictionBleeding) { return; }
             if (!Character.NeedsOxygen && newAffliction.Prefab == AfflictionPrefab.OxygenLow) { return; }
             if (Character.Params.Health.StunImmunity && newAffliction.Prefab.AfflictionType == "stun") { return; }
@@ -1076,6 +1077,7 @@ namespace Barotrauma
                 }
 
                 if (strength <= affliction.Prefab.TreatmentThreshold) { continue; }
+                if (afflictions.Any(otherAffliction => affliction.Prefab.IgnoreTreatmentIfAfflictedBy.Contains(otherAffliction.Key.Identifier))) { continue; }
 
                 if (ignoreHiddenAfflictions)
                 {

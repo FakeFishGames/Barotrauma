@@ -291,7 +291,7 @@ namespace Barotrauma
                 if (!currentDisplayLocation.Discovered)
                 {
                     RemoveFogOfWar(currentDisplayLocation);
-                    currentDisplayLocation.Discover();
+                    Discover(currentDisplayLocation);
                     if (currentDisplayLocation.MapPosition.X > furthestDiscoveredLocation.MapPosition.X)
                     {
                         furthestDiscoveredLocation = currentDisplayLocation;
@@ -452,7 +452,7 @@ namespace Barotrauma
                         Level.Loaded.DebugSetStartLocation(CurrentLocation);
                         Level.Loaded.DebugSetEndLocation(null);
 
-                        CurrentLocation.Discover();
+                        Discover(CurrentLocation);
                         OnLocationChanged?.Invoke(new LocationChangeInfo(prevLocation, CurrentLocation));
                         SelectLocation(-1);
                         if (GameMain.Client == null)
@@ -693,7 +693,22 @@ namespace Barotrauma
                 pos.Y = (int)pos.Y;
                 Vector2 nameSize = GUIStyle.LargeFont.MeasureString(HighlightedLocation.Name);
                 Vector2 typeSize = HighlightedLocation.Type.Name.IsNullOrEmpty() ? Vector2.Zero : GUIStyle.Font.MeasureString(HighlightedLocation.Type.Name);
-                Vector2 size = new Vector2(Math.Max(nameSize.X, typeSize.X), nameSize.Y + typeSize.Y);
+                Vector2 descSize = HighlightedLocation.Type.Description.IsNullOrEmpty() ? Vector2.Zero : GUIStyle.SmallFont.MeasureString(HighlightedLocation.Type.Description);
+                Vector2 size = new Vector2(Math.Max(nameSize.X, Math.Max(typeSize.X, descSize.X)), nameSize.Y + typeSize.Y + descSize.Y);
+
+                int highestSubTier = HighlightedLocation.HighestSubmarineTierAvailable();
+                var overrideTiers = new List<(SubmarineClass subClass, int tier)>();
+                foreach (SubmarineClass subClass in Enum.GetValues(typeof(SubmarineClass)))
+                {
+                    if (subClass == SubmarineClass.Undefined) { continue; }
+                    int highestClassTier = HighlightedLocation.HighestSubmarineTierAvailable(subClass);
+                    if (highestClassTier > 0 && highestClassTier > highestSubTier)
+                    {
+                        overrideTiers.Add((subClass, highestClassTier));
+                    }
+                }
+                size.Y += ((highestSubTier > 0 ? 1 : 0) + overrideTiers.Count) * GUIStyle.SmallFont.MeasureString(TextManager.Get("advancedsub.all")).Y;
+
                 bool showReputation = hudVisibility > 0.0f && HighlightedLocation.Discovered && HighlightedLocation.Type.HasOutpost && HighlightedLocation.Reputation != null;
                 LocalizedString repLabelText = null, repValueText = null;
                 Vector2 repLabelSize = Vector2.Zero, repBarSize = Vector2.Zero;
@@ -706,21 +721,51 @@ namespace Barotrauma
                     repValueText = HighlightedLocation.Reputation.GetFormattedReputationText(addColorTags: false);
                     size.X = Math.Max(size.X, repBarSize.X + GUIStyle.Font.MeasureString(repValueText).X + GUI.IntScale(10));
                 }
+
                 GUIStyle.GetComponentStyle("OuterGlow").Sprites[GUIComponent.ComponentState.None][0].Draw(
-                    spriteBatch, new Rectangle((int)(pos.X - 60 * GUI.Scale), (int)(pos.Y - size.Y), (int)(size.X + 120 * GUI.Scale), (int)(size.Y * 2.2f)), Color.Black * hudVisibility);
+                    spriteBatch,
+                    new Rectangle(
+                        (int)(pos.X - 60 * GUI.Scale),
+                        (int)(pos.Y - size.Y),
+                        (int)(size.X + 120 * GUI.Scale),
+                        (int)(size.Y * 2.2f)),
+                    Color.Black * hudVisibility);
+
                 var topLeftPos = pos - new Vector2(0.0f, size.Y / 2);
                 GUI.DrawString(spriteBatch, topLeftPos, HighlightedLocation.Name, GUIStyle.TextColorNormal * hudVisibility * 1.5f, font: GUIStyle.LargeFont);
                 topLeftPos += new Vector2(0.0f, nameSize.Y);
-                GUI.DrawString(spriteBatch, topLeftPos, HighlightedLocation.Type.Name, GUIStyle.TextColorNormal * hudVisibility * 1.5f);
+                DrawText(HighlightedLocation.Type.Name);
+                if (!HighlightedLocation.Type.Description.IsNullOrEmpty())
+                {
+                    topLeftPos += new Vector2(0.0f, descSize.Y);
+                    DrawText(HighlightedLocation.Type.Description, font: GUIStyle.SmallFont);
+                }
+
+                if (highestSubTier > 0)
+                {
+                    DrawSubAvailabilityText("advancedsub.all", highestSubTier);
+                }
+                foreach (var (subClass, tier) in overrideTiers)
+                {
+                    DrawSubAvailabilityText($"advancedsub.{subClass}", tier);
+                }
+                void DrawSubAvailabilityText(string tag, int tier)
+                {
+                    topLeftPos += new Vector2(0.0f, typeSize.Y);
+                    DrawText(TextManager.GetWithVariable(tag, "[tiernumber]", tier.ToString()), font: GUIStyle.SmallFont);
+                }
+
                 if (showReputation)
                 {
                     topLeftPos += new Vector2(0.0f, typeSize.Y + repLabelSize.Y);
-                    GUI.DrawString(spriteBatch, topLeftPos, repLabelText.Value, GUIStyle.TextColorNormal * hudVisibility * 1.5f);
+                    DrawText(repLabelText.Value);
                     topLeftPos += new Vector2(0.0f, repLabelSize.Y + GUI.IntScale(10));
                     Rectangle repBarRect = new Rectangle(new Point((int)topLeftPos.X, (int)topLeftPos.Y), new Point((int)repBarSize.X, (int)repBarSize.Y));
                     RoundSummary.DrawReputationBar(spriteBatch, repBarRect, HighlightedLocation.Reputation.NormalizedValue);
                     GUI.DrawString(spriteBatch, new Vector2(repBarRect.Right + GUI.IntScale(5), repBarRect.Top), repValueText.Value, Reputation.GetReputationColor(HighlightedLocation.Reputation.NormalizedValue));
                 }
+
+                void DrawText(LocalizedString text, GUIFont font = null) => GUI.DrawString(spriteBatch, topLeftPos, text, GUIStyle.TextColorNormal * hudVisibility * 1.5f, font: font);
             }
 
             if (drawRadiationTooltip)

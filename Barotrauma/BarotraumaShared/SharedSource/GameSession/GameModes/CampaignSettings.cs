@@ -18,6 +18,9 @@ namespace Barotrauma
         [Serialize("", IsPropertySaveable.Yes)]
         public string PresetName { get; set; } = string.Empty;
 
+        [Serialize(true, IsPropertySaveable.Yes)]
+        public bool TutorialEnabled { get; set; }
+
         [Serialize(false, IsPropertySaveable.Yes), NetworkSerialize]
         public bool RadiationEnabled { get; set; }
 
@@ -104,7 +107,9 @@ namespace Barotrauma
 
         private static int GetAddedMissionCount()
         {
-            return GameSession.GetSessionCrewCharacters(CharacterType.Both).Max(static character => (int)character.GetStatValue(StatTypes.ExtraMissionCount));
+            var characters = GameSession.GetSessionCrewCharacters(CharacterType.Both);
+            if (!characters.Any()) { return 0; }
+            return characters.Max(static character => (int)character.GetStatValue(StatTypes.ExtraMissionCount));
         }
     }
 }

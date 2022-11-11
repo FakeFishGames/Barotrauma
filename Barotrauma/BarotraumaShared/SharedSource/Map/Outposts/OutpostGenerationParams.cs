@@ -96,6 +96,8 @@ namespace Barotrauma
         [Serialize("", IsPropertySaveable.Yes), Editable]
         public string ReplaceInRadiation { get; set; }
 
+        public ContentPath OutpostFilePath { get; set; }
+
         public class ModuleCount
         {
             public Identifier Identifier;
@@ -182,6 +184,7 @@ namespace Barotrauma
             Name = element.GetAttributeString("name", Identifier.Value);
             allowedLocationTypes = element.GetAttributeIdentifierArray("allowedlocationtypes", Array.Empty<Identifier>()).ToHashSet();
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+            OutpostFilePath = element.GetAttributeContentPath(nameof(OutpostFilePath));
             
             var humanPrefabCollections = new List<IReadOnlyList<HumanPrefab>>();
             foreach (var subElement in element.Elements())

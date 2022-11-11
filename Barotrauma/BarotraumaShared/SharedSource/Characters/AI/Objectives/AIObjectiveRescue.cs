@@ -502,10 +502,12 @@ namespace Barotrauma
 
         public static IEnumerable<Affliction> GetTreatableAfflictions(Character character)
         {
-            foreach (Affliction affliction in character.CharacterHealth.GetAllAfflictions())
+            var allAfflictions = character.CharacterHealth.GetAllAfflictions();
+            foreach (Affliction affliction in allAfflictions)
             {
                 if (affliction.Prefab.IsBuff || affliction.Strength < affliction.Prefab.TreatmentThreshold) { continue; }
                 if (!affliction.Prefab.TreatmentSuitability.Any(kvp => kvp.Value > 0)) { continue; }
+                if (allAfflictions.Any(otherAffliction => affliction.Prefab.IgnoreTreatmentIfAfflictedBy.Contains(otherAffliction.Identifier))) { continue; }
                 yield return affliction;
             }
         }

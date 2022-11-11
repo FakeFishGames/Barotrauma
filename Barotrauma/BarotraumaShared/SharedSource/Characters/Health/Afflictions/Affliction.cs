@@ -429,7 +429,7 @@ namespace Barotrauma
                 statusEffect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
             {
                 targets.Clear();
-                targets.AddRange(statusEffect.GetNearbyTargets(characterHealth.Character.WorldPosition, targets));
+                statusEffect.AddNearbyTargets(characterHealth.Character.WorldPosition, targets);
                 statusEffect.Apply(type, deltaTime, characterHealth.Character, targets);
             }
         }

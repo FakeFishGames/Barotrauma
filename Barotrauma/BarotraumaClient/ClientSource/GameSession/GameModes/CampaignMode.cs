@@ -4,6 +4,7 @@ using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -203,6 +204,10 @@ namespace Barotrauma
                     }
                     break;
             }
+            if (Level.IsLoadedOutpost && !ObjectiveManager.AllActiveObjectivesCompleted())
+            {
+                endRoundButton.Visible = false;
+            }
 
             if (ReadyCheckButton != null) { ReadyCheckButton.Visible = endRoundButton.Visible; }
 
@@ -266,7 +271,7 @@ namespace Barotrauma
                 Rand.ThreadId = Thread.CurrentThread.ManagedThreadId;
                 try
                 {
-                    GameMain.GameSession.StartRound(newLevel, mirrorLevel: mirror);
+                    GameMain.GameSession.StartRound(newLevel, mirrorLevel: mirror, startOutpost: GetPredefinedStartOutpost());
                 }
                 catch (Exception e)
                 {
@@ -281,6 +286,18 @@ namespace Barotrauma
             });
 
             return loadTask;
+        }
+
+        protected SubmarineInfo GetPredefinedStartOutpost()
+        {
+            if (Map?.CurrentLocation?.Type?.GetForcedOutpostGenerationParams() is OutpostGenerationParams parameters && !parameters.OutpostFilePath.IsNullOrEmpty())
+            {
+                return new SubmarineInfo(parameters.OutpostFilePath.Value)
+                {
+                    OutpostGenerationParams = parameters
+                };
+            }
+            return null;
         }
 
         partial void NPCInteractProjSpecific(Character npc, Character interactor)

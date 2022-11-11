@@ -269,10 +269,13 @@ namespace Barotrauma
                 case EventType.UpdateTalents:
                     if (c.Character != this)
                     {
+                        if (!IsBot || !c.HasPermission(ClientPermissions.ManageBotTalents))
+                        {
 #if DEBUG
-                        DebugConsole.Log("Received a character update message from a client who's not controlling the character");
+                            DebugConsole.Log("Received a character update message from a client who's not controlling the character");
 #endif
-                        return;
+                            return;
+                        }
                     }
 
                     // get the full list of talents from the player, only give the ones

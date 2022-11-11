@@ -104,7 +104,7 @@ namespace Barotrauma
                     }
                 }
 
-                List<StatusEffect> successEffects = statusEffects.Where(se => se.type == ActionType.OnUse).ToList();
+                List<StatusEffect> successEffects = statusEffects.Where(se => se.type == ActionType.OnSuccess).ToList();
                 List<StatusEffect> failureEffects = statusEffects.Where(se => se.type == ActionType.OnFailure).ToList();
 
                 foreach (StatusEffect statusEffect in successEffects)

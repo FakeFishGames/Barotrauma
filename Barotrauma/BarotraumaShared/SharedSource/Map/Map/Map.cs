@@ -68,9 +68,14 @@ namespace Barotrauma
 
         public List<Location> Locations { get; private set; }
 
+        private readonly List<Location> locationsDiscovered = new List<Location>();
+        private readonly List<Location> outpostsVisited = new List<Location>();
+
         public List<LocationConnection> Connections { get; private set; }
 
         public Radiation Radiation;
+
+        private bool wasLocationDiscoveryOrderTracked = true;
 
         public Map(CampaignSettings settings)
         {
@@ -282,7 +287,12 @@ namespace Barotrauma
                 }
             }
 
-            CurrentLocation.Discover(true);
+            if (campaign.IsSinglePlayer && campaign.Settings.TutorialEnabled && LocationType.Prefabs.TryGet("tutorialoutpost", out var tutorialOutpost))
+            {
+                CurrentLocation.ChangeType(tutorialOutpost);
+            }
+            Discover(CurrentLocation);
+            Visit(CurrentLocation);
             CurrentLocation.CreateStores();
 
             foreach (var location in Locations)
@@ -820,7 +830,8 @@ namespace Barotrauma
             SelectedConnection.Passed = true;
 
             CurrentLocation = SelectedLocation;
-            CurrentLocation.Discover();
+            Discover(CurrentLocation);
+            Visit(CurrentLocation);
             SelectedLocation = null;
 
             CurrentLocation.CreateStores();
@@ -851,7 +862,7 @@ namespace Barotrauma
 
             Location prevLocation = CurrentLocation;
             CurrentLocation = Locations[index];
-            CurrentLocation.Discover();
+            Discover(CurrentLocation);
 
             CurrentLocation.CreateStores();
             if (prevLocation != CurrentLocation)
@@ -1184,6 +1195,51 @@ namespace Barotrauma
 
         partial void ClearAnimQueue();
 
+        public void Discover(Location location, bool checkTalents = true)
+        {
+            if (location is null) { return; }
+            if (locationsDiscovered.Contains(location)) { return; }
+            locationsDiscovered.Add(location);
+            if (checkTalents)
+            {
+                GameSession.GetSessionCrewCharacters(CharacterType.Both).ForEach(c => c.CheckTalents(AbilityEffectType.OnLocationDiscovered, new Location.AbilityLocation(location)));
+            }
+        }
+
+        public void Visit(Location location)
+        {
+            if (location is null) { return; }
+            if (!location.HasOutpost()) { return; }
+            if (outpostsVisited.Contains(location)) { return; }
+            outpostsVisited.Add(location);
+        }
+
+        public void ClearLocationHistory()
+        {
+            locationsDiscovered.Clear();
+            outpostsVisited.Clear();
+        }
+
+        public int? GetDiscoveryIndex(Location location)
+        {
+            if (!wasLocationDiscoveryOrderTracked) { return null; }
+            if (location is null) { return -1; }
+            return locationsDiscovered.IndexOf(location);
+        }
+
+        public int? GetVisitIndex(Location location)
+        {
+            if (!wasLocationDiscoveryOrderTracked) { return null; }
+            if (location is null) { return -1; }
+            return outpostsVisited.IndexOf(location);
+        }
+
+        public bool IsDiscovered(Location location)
+        {
+            if (location is null) { return false; }
+            return locationsDiscovered.Contains(location);
+        }
+
         /// <summary>
         /// Load a previously saved map from an xml element
         /// </summary>
@@ -1211,6 +1267,7 @@ namespace Barotrauma
                 return;
             }
 
+            ClearLocationHistory();
             foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -1226,19 +1283,12 @@ namespace Barotrauma
                             }
                         }
                         location.LoadLocationTypeChange(subElement);
+
+                        // Backwards compatibility
                         if (subElement.GetAttributeBool("discovered", false))
                         {
-                            location.Discover(checkTalents: false);
-                        }
-                        if (location.Discovered)
-                        {
-#if CLIENT
-                            RemoveFogOfWar(location);
-#endif
-                            if (furthestDiscoveredLocation == null || location.MapPosition.X > furthestDiscoveredLocation.MapPosition.X)
-                            {
-                                furthestDiscoveredLocation = location;
-                            }
+                            Discover(location);
+                            wasLocationDiscoveryOrderTracked = false;
                         }
 
                         Identifier locationType = subElement.GetAttributeIdentifier("type", Identifier.Empty);
@@ -1268,6 +1318,36 @@ namespace Barotrauma
                     case "radiation":
                         Radiation = new Radiation(this, generationParams.RadiationParams, subElement);
                         break;
+                    case "discovered":
+                        foreach (var childElement in subElement.GetChildElements("location"))
+                        {
+                            int index = childElement.GetAttributeInt("i", -1);
+                            if (index < 0) { continue; }
+                            if (Locations[index] is not Location l) { continue; }
+                            Discover(l);
+                        }
+                        break;
+                    case "visited":
+                        foreach (var childElement in subElement.GetChildElements("location"))
+                        {
+                            int index = childElement.GetAttributeInt("i", -1);
+                            if (index < 0) { continue; }
+                            if (Locations[index] is not Location l) { continue; }
+                            Visit(l);
+                        }
+                        break;
+                }
+            }
+
+            void Discover(Location location)
+            {
+                this.Discover(location, checkTalents: false);
+#if CLIENT
+                RemoveFogOfWar(location);
+#endif
+                if (furthestDiscoveredLocation == null || location.MapPosition.X > furthestDiscoveredLocation.MapPosition.X)
+                {
+                    furthestDiscoveredLocation = location;
                 }
             }
 
@@ -1341,6 +1421,30 @@ namespace Barotrauma
             if (Radiation != null)
             {
                 mapElement.Add(Radiation.Save());
+            }
+
+            if (locationsDiscovered.Any())
+            {
+                var discoveryElement = new XElement("discovered");
+                foreach (Location location in locationsDiscovered)
+                {
+                    int index = Locations.IndexOf(location);
+                    var locationElement = new XElement("location", new XAttribute("i", index));
+                    discoveryElement.Add(locationElement);
+                }
+                mapElement.Add(discoveryElement);
+            }
+
+            if (outpostsVisited.Any())
+            {
+                var visitElement = new XElement("visited");
+                foreach (Location location in outpostsVisited)
+                {
+                    int index = Locations.IndexOf(location);
+                    var locationElement = new XElement("location", new XAttribute("i", index));
+                    visitElement.Add(locationElement);
+                }
+                mapElement.Add(visitElement);
             }
 
             element.Add(mapElement);

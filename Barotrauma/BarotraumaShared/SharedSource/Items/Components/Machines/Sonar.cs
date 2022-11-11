@@ -197,11 +197,6 @@ namespace Barotrauma.Items.Components
                     if (currentPingIndex != -1)
                     {
                         var activePing = activePings[currentPingIndex];
-                        if (item.AiTarget != null)
-                        {
-                            float range = MathUtils.InverseLerp(item.AiTarget.MinSoundRange, item.AiTarget.MaxSoundRange, Range * activePing.State / zoom);
-                            item.AiTarget.SoundRange = MathHelper.Lerp(item.AiTarget.MinSoundRange, item.AiTarget.MaxSoundRange, range);
-                        }
                         if (activePing.State > 1.0f)
                         {
                             aiPingCheckPending = true;
@@ -235,6 +230,11 @@ namespace Barotrauma.Items.Components
 
             for (var pingIndex = 0; pingIndex < activePingsCount;)
             {
+                if (item.AiTarget != null)
+                {
+                    float range = MathUtils.InverseLerp(item.AiTarget.MinSoundRange, item.AiTarget.MaxSoundRange, Range * activePings[pingIndex].State / zoom);
+                    item.AiTarget.SoundRange = Math.Max(item.AiTarget.SoundRange, MathHelper.Lerp(item.AiTarget.MinSoundRange, item.AiTarget.MaxSoundRange, range));
+                }
                 if (activePings[pingIndex].State > 1.0f)
                 {
                     var lastIndex = --activePingsCount;

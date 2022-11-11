@@ -208,10 +208,7 @@ namespace Barotrauma
             }
             GameSession.UpdateTalentNotificationIndicator(talentPointNotification);
 
-            if (SelectedTab is InfoFrameTab.Talents)
-            {
-                talentMenu?.Update();
-            }
+            talentMenu?.Update();
 
             if (SelectedTab != InfoFrameTab.Crew) { return; }
             if (linkedGUIList == null) { return; }
@@ -248,10 +245,6 @@ namespace Barotrauma
         {
             infoFrame?.AddToGUIUpdateList();
             NetLobbyScreen.JobInfoFrame?.AddToGUIUpdateList();
-            if (SelectedTab is InfoFrameTab.Talents)
-            {
-                talentMenu?.AddToGUIUpdateList();
-            }
         }
 
         public static void OnRoundEnded()
@@ -404,7 +397,7 @@ namespace Barotrauma
                     CreateSubmarineInfo(infoFrameHolder, Submarine.MainSub);
                     break;
                 case InfoFrameTab.Talents:
-                    talentMenu.CreateGUI(infoFrameHolder);
+                    talentMenu.CreateGUI(infoFrameHolder, Character.Controlled ?? GameMain.Client?.Character);
                     break;
             }
         }
@@ -958,15 +951,25 @@ namespace Barotrauma
 
             if (character != null)
             {
-                if (GameMain.Client == null)
+                if (GameMain.Client is null)
                 {
                     GUIComponent preview = character.Info.CreateInfoFrame(background, false, null);
                 }
                 else
                 {
                     GUIComponent preview = character.Info.CreateInfoFrame(background, false, GetPermissionIcon(GameMain.Client.ConnectedClients.Find(c => c.Character == character)));
+
                     GameMain.Client.SelectCrewCharacter(character, preview);
                     if (!character.IsBot && GameMain.GameSession?.Campaign is MultiPlayerCampaign mpCampaign) { CreateWalletFrame(background, character, mpCampaign); }
+                }
+
+                if (background.FindChild(TalentMenu.ManageBotTalentsButtonUserData, recursive: true) is GUIButton { Enabled: true } talentButton)
+                {
+                    talentButton.OnClicked = (button, o) =>
+                    {
+                        talentMenu.CreateGUI(infoFrameHolder, character);
+                        return true;
+                    };
                 }
             }
             else if (client != null)
@@ -1792,10 +1795,10 @@ namespace Barotrauma
 
                 new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), skillContainer.RectTransform), Math.Floor(skill.Level).ToString("F0"), textAlignment: Alignment.TopRight);
 
-                float modifiedSkillLevel = character?.GetSkillLevel(skill.Identifier) ?? skill.Level;
+                float modifiedSkillLevel = MathF.Floor(character?.GetSkillLevel(skill.Identifier) ?? skill.Level);
                 if (!MathUtils.NearlyEqual(MathF.Floor(modifiedSkillLevel), MathF.Floor(skill.Level)))
                 {
-                    int skillChange = (int)MathF.Floor(modifiedSkillLevel - skill.Level);
+                    int skillChange = (int)MathF.Floor(modifiedSkillLevel - MathF.Floor(skill.Level));
                     string stringColor = skillChange switch
                     {
                         > 0 => XMLExtensions.ToStringHex(GUIStyle.Green),
@@ -1806,7 +1809,7 @@ namespace Barotrauma
                     RichString changeText = RichString.Rich($"(‖color:{stringColor}‖{(skillChange > 0 ? "+" : string.Empty) + skillChange}‖color:end‖)");
                     new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), skillContainer.RectTransform), changeText) { Padding = Vector4.Zero };
                 }
-                //skillContainer.Recalculate();
+                skillContainer.Recalculate();
             }
 
             parent.RecalculateChildren();

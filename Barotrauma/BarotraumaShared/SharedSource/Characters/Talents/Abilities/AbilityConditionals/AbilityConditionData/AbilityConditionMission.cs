@@ -33,13 +33,20 @@ namespace Barotrauma.Abilities
         {
             if (abilityObject is IAbilityMission { Mission: { } mission })
             {
-                if (isAffiliated && GameMain.GameSession?.Campaign?.Factions.MaxBy(static f => f.Reputation.Value) is { } highestFaction)
+                if (isAffiliated)
                 {
-                    if (highestFaction.Reputation.Value < 0 || !mission.ReputationRewards.ContainsKey(highestFaction.Reputation.Identifier))
+                    if (GameMain.GameSession?.Campaign?.Factions is not { } factions) { return false; }
+
+                    // FIXME there's probably a better way to check the faction affiliated with the mission later
+                    foreach (Identifier factionIdentifier in mission.ReputationRewards.Keys)
                     {
-                        return false;
+                        if (factions.Where(faction => factionIdentifier == faction.Prefab.Identifier).Any(static faction => faction.GetPlayerAffiliationStatus() != FactionAffiliation.Affiliated))
+                        {
+                            return false;
+                        }
                     }
                 }
+
                 return missionType.Contains(mission.Prefab.Type);
             }
 

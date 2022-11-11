@@ -459,6 +459,12 @@ namespace Barotrauma.Items.Components
                 progressTimer = 0.0f;
                 progressState = 0.0f;
             }
+#if CLIENT
+            else
+            {
+                HintManager.OnStartDeconstructing(user, this);
+            }
+#endif
 
             inputContainer.Inventory.Locked = IsActive;
         }

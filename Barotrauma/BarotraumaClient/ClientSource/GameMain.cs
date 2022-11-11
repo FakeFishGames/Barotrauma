@@ -4,6 +4,7 @@ using Barotrauma.Networking;
 using Barotrauma.Particles;
 using Barotrauma.Steam;
 using Barotrauma.Transition;
+using Barotrauma.Tutorials;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
@@ -774,9 +775,9 @@ namespace Barotrauma
                         {
                             GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox);
                         }
-                        else if (GameSession?.GameMode is TutorialMode tutorialMode && tutorialMode.Tutorial.ContentRunning)
+                        else if (ObjectiveManager.ContentRunning)
                         {
-                            tutorialMode.Tutorial.CloseActiveContentGUI();
+                            ObjectiveManager.CloseActiveContentGUI();
                         }
                         else if (GameSession.IsTabMenuOpen)
                         {
@@ -828,7 +829,7 @@ namespace Barotrauma
                     Paused =
                         (DebugConsole.IsOpen || DebugConsole.Paused ||
                             GUI.PauseMenuOpen || GUI.SettingsMenuOpen ||
-                            (GameSession?.GameMode is TutorialMode tutoMode && tutoMode.Tutorial.ContentRunning)) &&
+                            (GameSession?.GameMode is TutorialMode && ObjectiveManager.ContentRunning)) &&
                         (NetworkMember == null || !NetworkMember.GameStarted);
                     if (GameSession?.GameMode != null && GameSession.GameMode.Paused)
                     {
@@ -862,8 +863,9 @@ namespace Barotrauma
                     {
                         Screen.Selected.Update(Timing.Step);
                     }
-                    else if (GameSession?.GameMode is TutorialMode tutorialMode && tutorialMode.Tutorial.ContentRunning)
+                    else if (ObjectiveManager.ContentRunning && GameSession?.GameMode is TutorialMode tutorialMode)
                     {
+                        ObjectiveManager.VideoPlayer.Update();
                         tutorialMode.Update((float)Timing.Step);
                     }
                     else

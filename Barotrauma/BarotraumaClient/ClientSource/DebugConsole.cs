@@ -1823,7 +1823,18 @@ namespace Barotrauma
 
                         Identifier afflictionId = affliction.TranslationIdentifier;
                         addIfMissing($"afflictionname.{afflictionId}".ToIdentifier(), language);
-                        addIfMissing($"afflictiondescription.{afflictionId}".ToIdentifier(), language);
+
+                        if (affliction.Descriptions.Any())
+                        {
+                            foreach (var description in affliction.Descriptions)
+                            {
+                                addIfMissing(description.TextTag, language);
+                            }
+                        }
+                        else
+                        {
+                            addIfMissing($"afflictiondescription.{afflictionId}".ToIdentifier(), language);
+                        }
                     }
 
                     foreach (var talentTree in TalentTree.JobTalentTrees)
