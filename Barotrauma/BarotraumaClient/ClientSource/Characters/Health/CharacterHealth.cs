@@ -32,12 +32,6 @@ namespace Barotrauma
 
         public static Sprite DamageOverlay => DamageOverlayPrefab.Prefabs.ActivePrefab.DamageOverlay;
 
-        private readonly static LocalizedString[] strengthTexts = new LocalizedString[]
-        {
-            TextManager.Get("AfflictionStrengthLow"),
-            TextManager.Get("AfflictionStrengthMedium"),
-            TextManager.Get("AfflictionStrengthHigh")
-        };
 
         private Point screenResolution;
 
@@ -1065,7 +1059,7 @@ namespace Barotrauma
 
         private readonly List<Affliction> statusIcons = new List<Affliction>();
         private readonly Dictionary<AfflictionPrefab, float> statusIconVisibleTime = new Dictionary<AfflictionPrefab, float>();
-        private float hideStatusIconDelay = 5.0f;
+        private const float HideStatusIconDelay = 5.0f;
 
         public void UpdateStatusHUD(float deltaTime)
         {
@@ -1148,7 +1142,7 @@ namespace Barotrauma
                             CanBeFocused = false                            
                         };
                     }
-                    if (afflictionPrefab.HideIconAfterDelay && statusIconVisibleTime[afflictionPrefab] > hideStatusIconDelay)
+                    if (afflictionPrefab.HideIconAfterDelay && statusIconVisibleTime[afflictionPrefab] > HideStatusIconDelay)
                     {
                         matchingIcon.RectTransform.Parent = hiddenAfflictionIconContainer.RectTransform;
                     }
@@ -1179,6 +1173,7 @@ namespace Barotrauma
                     hiddenAfflictionHoverArea = Rectangle.Union(hiddenAfflictionHoverArea, child.Rect);
                 }
 
+                afflictionIconContainer.Visible = true;
                 hiddenAfflictionIconContainer.Visible = 
                     showHiddenAfflictionsButton.Rect.Contains(PlayerInput.MousePosition) ||
                     (hiddenAfflictionIconContainer.Visible && hiddenAfflictionHoverArea.Contains(PlayerInput.MousePosition));
@@ -1203,6 +1198,7 @@ namespace Barotrauma
             }
             else
             {
+                afflictionIconContainer.Visible = hiddenAfflictionIconContainer.Visible = false;
                 if (Vitality > 0.0f)
                 {
                     float currHealth = healthWindowHealthBar.BarSize;
@@ -1531,8 +1527,7 @@ namespace Barotrauma
 
             Point nameDims = new Point(afflictionName.Rect.Width, (int)(GUIStyle.LargeFont.Size * 1.5f));
 
-            afflictionStrength.Text = strengthTexts[
-                MathHelper.Clamp((int)Math.Floor((affliction.Strength / affliction.Prefab.MaxStrength) * strengthTexts.Length), 0, strengthTexts.Length - 1)];
+            afflictionStrength.Text = affliction.GetStrengthText();
 
             Vector2 strengthDims = GUIStyle.SubHeadingFont.MeasureString(afflictionStrength.Text);
 
@@ -1662,8 +1657,7 @@ namespace Barotrauma
 
             var strengthText = labelContainer.GetChildByUserData("strength") as GUITextBlock;
 
-            strengthText.Text = strengthTexts[
-                MathHelper.Clamp((int)Math.Floor((affliction.Strength / affliction.Prefab.MaxStrength) * strengthTexts.Length), 0, strengthTexts.Length - 1)];
+            strengthText.Text = affliction.GetStrengthText();
 
             strengthText.TextColor = Color.Lerp(GUIStyle.Orange, GUIStyle.Red,
                 affliction.Strength / affliction.Prefab.MaxStrength);

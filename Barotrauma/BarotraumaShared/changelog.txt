@@ -1,4 +1,36 @@
 ---------------------------------------------------------------------------------------------------------
+v0.20.6.0
+---------------------------------------------------------------------------------------------------------
+
+Unstable only:
+- Fixed scripted events looping and repeating some parts.
+- Depth charges don't explode when taking damage until they've been launched.
+- Fixed Acid Grenade quality doing nothing.
+- Fixed Acid Grenades not working in detonators.
+- Fixed genetic materials being too abundant with the "Blackmarket Genes" talent.
+- Fixed affliction icons overlapping with the inventory when grabbing someone or when a health interface is open.
+- Fixed scrap cannon's firing particle effect triggering without ammo.
+- Fixed scrap cannon barrel position.
+- Fixed messed up depleted fuel SMG magazine sprite.
+
+Bugfixes:
+- Fixed portable pump's per-sub limit not working if you attach them at a spot with no background wall.
+- Fixed oxygenlow resistance not affecting the time it takes to die in an unconscious state.
+- Fixed bloodloss resistance not affecting how fast bleeding causes bloodloss.
+- Fixed numpad keys toggling the chat when the Chat key is bind to nothing.
+- Fixed piezo crystals no longer spawning in the Great Sea.
+
+Modding:
+- Fixed sound's frequency multiplier not working in many cases (status effects, specific item sounds like turret movement sounds).
+
+---------------------------------------------------------------------------------------------------------
+v0.20.5.0
+---------------------------------------------------------------------------------------------------------
+
+Unstable only:
+- Fixed crashing when you enter the 2nd outpost.
+
+---------------------------------------------------------------------------------------------------------
 v0.20.4.0
 ---------------------------------------------------------------------------------------------------------
 

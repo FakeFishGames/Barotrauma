@@ -858,9 +858,9 @@ namespace Barotrauma
 
             GUITextBlock prefabBlock = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1f), topTextLayout.RectTransform), prefab.Name, font: GUIStyle.SubHeadingFont);
 
-            Color textColor = Color.Lerp(GUIStyle.Orange, GUIStyle.Red, (int)affliction.AfflictionSeverity / 2f);
+            Color textColor = Color.Lerp(GUIStyle.Orange, GUIStyle.Red, affliction.Strength / affliction.Prefab.MaxStrength);
 
-            LocalizedString vitalityText = TextManager.GetWithVariable("medicalclinic.vitalitydifference", "[amount]", (-affliction.Strength).ToString());
+            LocalizedString vitalityText = affliction.VitalityDecrease == 0 ? string.Empty : TextManager.GetWithVariable("medicalclinic.vitalitydifference", "[amount]", (-affliction.VitalityDecrease).ToString());
             GUITextBlock vitalityBlock = new GUITextBlock(new RectTransform(new Vector2(0.25f, 1f), topTextLayout.RectTransform), vitalityText, textAlignment: Alignment.Center)
             {
                 TextColor = textColor,
@@ -869,7 +869,7 @@ namespace Barotrauma
                 AutoScaleHorizontal = true
             };
 
-            LocalizedString severityText = TextManager.Get($"AfflictionStrength{affliction.AfflictionSeverity}");
+            LocalizedString severityText = Affliction.GetStrengthText(affliction.Strength, affliction.Prefab.MaxStrength);
             GUITextBlock severityBlock = new GUITextBlock(new RectTransform(new Vector2(0.25f, 1f), topTextLayout.RectTransform), severityText, textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont)
             {
                 TextColor = textColor,

@@ -58,41 +58,17 @@ namespace Barotrauma
             public ushort Strength;
 
             [NetworkSerialize]
+            public int VitalityDecrease;
+
+            [NetworkSerialize]
             public ushort Price;
 
-            public AfflictionSeverity AfflictionSeverity
+            public void SetAffliction(Affliction affliction, CharacterHealth characterHealth)
             {
-                get
-                {
-                    if (Prefab is null) { return AfflictionSeverity.Low; }
-
-                    float normalizedStrength = Strength / Prefab.MaxStrength;
-
-                    // lesser than 0.1
-                    if (normalizedStrength <= 0.1)
-                    {
-                        return AfflictionSeverity.Low;
-                    }
-
-                    // between 0.1 and 0.5
-                    if (normalizedStrength is > 0.1f and < 0.5f)
-                    {
-                        return AfflictionSeverity.Medium;
-                    }
-
-                    // greater than 0.5
-                    return AfflictionSeverity.High;
-                }
-            }
-
-            public Affliction Affliction
-            {
-                set
-                {
-                    Identifier = value.Identifier;
-                    Strength = (ushort)Math.Ceiling(value.Strength);
-                    Price = (ushort)(value.Prefab.BaseHealCost + Strength * value.Prefab.HealCostMultiplier);
-                }
+                Identifier = affliction.Identifier;
+                Strength = (ushort)Math.Ceiling(affliction.Strength);
+                Price = (ushort)(affliction.Prefab.BaseHealCost + Strength * affliction.Prefab.HealCostMultiplier);
+                VitalityDecrease = (int)affliction.GetVitalityDecrease(characterHealth);
             }
 
             private AfflictionPrefab? cachedPrefab;
@@ -306,7 +282,8 @@ namespace Barotrauma
                 }
                 else
                 {
-                    newAffliction = new NetAffliction { Affliction = affliction };
+                    newAffliction = new NetAffliction();
+                    newAffliction.SetAffliction(affliction, health);
                     newAffliction.Price = (ushort)GetAdjustedPrice(newAffliction.Price);
                 }
 

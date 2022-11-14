@@ -226,7 +226,7 @@ namespace Barotrauma
                     {
                         if (SoundChannels[i] == null || !SoundChannels[i].IsPlaying)
                         {
-                            SoundChannels[i] = roundSound.Sound.Play(roundSound.Volume, roundSound.Range, soundPos);
+                            SoundChannels[i] = roundSound.Sound.Play(roundSound.Volume, roundSound.Range, roundSound.GetRandomFrequencyMultiplier(), soundPos);
                         }
                         SoundChannels[i].Position = new Vector3(soundPos.X, soundPos.Y, 0.0f);
                     }

@@ -880,17 +880,19 @@ namespace Barotrauma
         {
             if (!Character.NeedsOxygen) { return; }
 
+            float oxygenlowResistance = GetResistance(oxygenLowAffliction.Prefab);
             float prevOxygen = OxygenAmount;
             if (IsUnconscious)
             {
+                //clamp above 0.1 (no amount of oxygen low resistance should keep the character alive indefinitely)
+                float decreaseSpeed = Math.Max(0.1f, 1f - oxygenlowResistance);
                 //the character dies of oxygen deprivation in 100 seconds after losing consciousness
-                OxygenAmount = MathHelper.Clamp(OxygenAmount - 1.0f * deltaTime, -100.0f, 100.0f);                
+                OxygenAmount = MathHelper.Clamp(OxygenAmount - decreaseSpeed * deltaTime, -100.0f, 100.0f);                
             }
             else
             {
                 float decreaseSpeed = -5.0f;
                 float increaseSpeed = 10.0f;
-                float oxygenlowResistance = GetResistance(oxygenLowAffliction.Prefab);
                 decreaseSpeed *= (1f - oxygenlowResistance);
                 increaseSpeed *= (1f + oxygenlowResistance);
 

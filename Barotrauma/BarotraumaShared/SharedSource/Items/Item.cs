@@ -3402,6 +3402,20 @@ namespace Barotrauma
                 item.PurchasedNewSwap = false;
             }
 
+            Version savedVersion = submarine?.Info.GameVersion;
+            if (element.Document?.Root != null && element.Document.Root.Name.ToString().Equals("gamesession", StringComparison.OrdinalIgnoreCase))
+            {
+                //character inventories are loaded from the game session file - use the version number of the saved game session instead of the sub
+                //(the sub may have already been saved and up-to-date, even though the character inventories aren't)
+                savedVersion = new Version(element.Document.Root.GetAttributeString("version", "0.0.0.0"));
+            }
+
+            float prevCondition = item.condition;
+            if (savedVersion != null)
+            {
+                SerializableProperty.UpgradeGameVersion(item, item.Prefab.ConfigElement, savedVersion);
+            }
+
             if (element.GetAttribute("conditionpercentage") != null)
             {
                 item.condition = element.GetAttributeFloat("conditionpercentage", 100.0f) / 100.0f * item.MaxCondition;
@@ -3413,7 +3427,7 @@ namespace Barotrauma
                 //if the item was in full condition considering the unmodified health
                 //(not taking possible HealthMultipliers added by mods into account),
                 //make sure it stays in full condition
-                bool wasFullCondition = item.condition >= item.Prefab.Health;
+                bool wasFullCondition = prevCondition >= item.Prefab.Health;
                 if (wasFullCondition)
                 {
                     item.condition = item.MaxCondition;
@@ -3423,19 +3437,6 @@ namespace Barotrauma
             item.lastSentCondition = item.condition;
             item.RecalculateConditionValues();
             item.SetActiveSprite();
-
-            Version savedVersion = submarine?.Info.GameVersion;
-            if (element.Document?.Root != null && element.Document.Root.Name.ToString().Equals("gamesession", StringComparison.OrdinalIgnoreCase))
-            {
-                //character inventories are loaded from the game session file - use the version number of the saved game session instead of the sub
-                //(the sub may have already been saved and up-to-date, even though the character inventories aren't)
-                savedVersion = new Version(element.Document.Root.GetAttributeString("version", "0.0.0.0"));
-            }
-            
-            if (savedVersion != null)
-            {
-                SerializableProperty.UpgradeGameVersion(item, item.Prefab.ConfigElement, savedVersion);
-            }
 
             foreach (ItemComponent component in item.components)
             {

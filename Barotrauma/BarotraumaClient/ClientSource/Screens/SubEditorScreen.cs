@@ -208,7 +208,7 @@ namespace Barotrauma
 
         private GUIFrame wiringToolPanel;
 
-        private DateTime editorSelectedTime;
+        private Option<DateTime> editorSelectedTime;
 
         private GUIImage previewImage;
         private GUILayoutGroup previewImageButtonHolder;
@@ -1391,7 +1391,7 @@ namespace Barotrauma
             if (backedUpSubInfo != null) { name = backedUpSubInfo.Name; }
             subNameLabel.Text = ToolBox.LimitString(name, subNameLabel.Font, subNameLabel.Rect.Width);
 
-            editorSelectedTime = DateTime.Now;
+            editorSelectedTime = Option<DateTime>.Some(DateTime.Now);
 
             GUI.ForceMouseOn(null);
             SetMode(Mode.Default);
@@ -1540,9 +1540,13 @@ namespace Barotrauma
             autoSaveLabel?.Parent?.RemoveChild(autoSaveLabel);
             autoSaveLabel = null;
 
-            TimeSpan timeInEditor = DateTime.Now - editorSelectedTime;
 #if USE_STEAM
-            SteamAchievementManager.IncrementStat("hoursineditor".ToIdentifier(), (float)timeInEditor.TotalHours);
+            if (editorSelectedTime.TryUnwrap(out DateTime selectedTime))
+            {
+                TimeSpan timeInEditor = DateTime.Now - selectedTime;
+                SteamAchievementManager.IncrementStat("hoursineditor".ToIdentifier(), (float)timeInEditor.TotalHours);
+                editorSelectedTime = Option<DateTime>.None();
+            }
 #endif
 
             GUI.ForceMouseOn(null);

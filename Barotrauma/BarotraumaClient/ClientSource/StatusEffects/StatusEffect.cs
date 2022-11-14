@@ -140,7 +140,7 @@ namespace Barotrauma
                             GameAnalyticsManager.AddErrorEventOnce("StatusEffect.ApplyProjSpecific:SoundNull1" + Environment.StackTrace.CleanupStackTrace(), GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                             return;
                         }
-                        soundChannel = SoundPlayer.PlaySound(sound.Sound, worldPosition, sound.Volume, sound.Range, hullGuess: hull, ignoreMuffling: sound.IgnoreMuffling);
+                        soundChannel = SoundPlayer.PlaySound(sound.Sound, worldPosition, sound.Volume, sound.Range, hullGuess: hull, ignoreMuffling: sound.IgnoreMuffling, freqMult: sound.GetRandomFrequencyMultiplier());
                         ignoreMuffling = sound.IgnoreMuffling;
                         if (soundChannel != null) { soundChannel.Looping = loopSound; }
                     }
@@ -167,7 +167,7 @@ namespace Barotrauma
                         GameAnalyticsManager.AddErrorEventOnce("StatusEffect.ApplyProjSpecific:SoundNull2" + Environment.StackTrace.CleanupStackTrace(), GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                         return;
                     }
-                    soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, worldPosition, selectedSound.Volume, selectedSound.Range, hullGuess: hull, ignoreMuffling: selectedSound.IgnoreMuffling);
+                    soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, worldPosition, selectedSound.Volume, selectedSound.Range, hullGuess: hull, ignoreMuffling: selectedSound.IgnoreMuffling, freqMult: selectedSound.GetRandomFrequencyMultiplier());
                     ignoreMuffling = selectedSound.IgnoreMuffling;
                     if (soundChannel != null) { soundChannel.Looping = loopSound; }
                 }

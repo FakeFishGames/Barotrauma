@@ -2182,8 +2182,6 @@ namespace Barotrauma
         private AttackTargetData currentAttackTarget;
         public void SetAttackTarget(Limb attackLimb, IDamageable damageTarget, Vector2 attackPos)
         {
-            DebugConsole.NewMessage($"SetAttackTarget {this.ToString()}: " + (damageTarget?.ToString() ?? null));
-
             currentAttackTarget = new AttackTargetData()
             {
                 AttackLimb = attackLimb,

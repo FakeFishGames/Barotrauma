@@ -2539,7 +2539,8 @@ namespace Barotrauma
                     levelResources.Add((itemPrefab, commonnessInfo));
                 }
                 else if (itemPrefab.LevelQuantity.TryGetValue(GenerationParams.Identifier, out var fixedQuantityResourceInfo) ||
-                         itemPrefab.LevelQuantity.TryGetValue(Identifier.Empty, out fixedQuantityResourceInfo))
+                        itemPrefab.LevelQuantity.TryGetValue(LevelData.Biome.Identifier, out fixedQuantityResourceInfo) ||
+                        itemPrefab.LevelQuantity.TryGetValue(Identifier.Empty, out fixedQuantityResourceInfo))
                 {
                     fixedResources.Add((itemPrefab, fixedQuantityResourceInfo));
                 }
