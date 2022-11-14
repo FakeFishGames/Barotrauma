@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Abilities
 {
@@ -13,6 +12,11 @@ namespace Barotrauma.Abilities
         {
             identifiers = conditionElement.GetAttributeStringArray("identifiers", Array.Empty<string>(), convertToLowerInvariant: true);
             tags = conditionElement.GetAttributeStringArray("tags", Array.Empty<string>(), convertToLowerInvariant: true);
+
+            if (!identifiers.Any() && !tags.Any())
+            {
+                DebugConsole.ThrowError($"Error in talent \"{characterTalent}\". No identifiers or tags defined.");
+            }
         }
 
         protected override bool MatchesConditionSpecific(AbilityObject abilityObject)

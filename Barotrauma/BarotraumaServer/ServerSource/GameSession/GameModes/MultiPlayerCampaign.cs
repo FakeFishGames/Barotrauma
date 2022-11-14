@@ -335,7 +335,7 @@ namespace Barotrauma
                     break;
             }
 
-            Map.ProgressWorld(transitionType, (float)(Timing.TotalTime - GameMain.GameSession.RoundStartTime));
+            Map.ProgressWorld(this, transitionType, (float)(Timing.TotalTime - GameMain.GameSession.RoundStartTime));
 
             bool success = GameMain.Server.ConnectedClients.Any(c => c.InGame && c.Character != null && !c.Character.IsDead);
             if (success)
@@ -347,6 +347,8 @@ namespace Barotrauma
                         (GameMain.GameSession?.GameMode as MultiPlayerCampaign)?.SaveExperiencePoints(c);
                     }
                 }
+                // Event history must be registered before ending the round or it will be cleared
+                GameMain.GameSession.EventManager.RegisterEventHistory();
             }
 
             GameMain.GameSession.EndRound("", traitorResults, transitionType);
@@ -360,7 +362,6 @@ namespace Barotrauma
                 LeaveUnconnectedSubs(leavingSub);
                 NextLevel = newLevel;
                 GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);
-                GameMain.GameSession.EventManager.RegisterEventHistory();
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
             else
@@ -384,17 +385,14 @@ namespace Barotrauma
             NextLevel = newLevel;
             MirrorLevel = mirror;
 
-            //give clients time to play the end cinematic before starting the next round
-            if (transitionType == TransitionType.End)
-            {
-                yield return new WaitForSeconds(EndCinematicDuration);
-            }
-            else
-            {
-                yield return new WaitForSeconds(EndTransitionDuration * 0.5f);
-            }
 
-            GameMain.Server.StartGame();
+            yield return new WaitForSeconds(EndTransitionDuration * 0.5f);
+            
+            //don't start the next round automatically if we just finished the campaign
+            if (transitionType != TransitionType.End)
+            {
+                GameMain.Server.StartGame();
+            }
 
             yield return CoroutineStatus.Success;
         }
@@ -417,7 +415,7 @@ namespace Barotrauma
         }
 
         public bool CanPurchaseSub(SubmarineInfo info, Client client)
-            => CanAfford(info.Price, client) && GetCampaignSubs().Contains(info);
+            => CanAfford(info.GetPrice(), client) && GetCampaignSubs().Contains(info);
 
         private readonly List<CharacterCampaignData> discardedCharacters = new List<CharacterCampaignData>();
         public void DiscardClientCharacterData(Client client)
@@ -486,7 +484,8 @@ namespace Barotrauma
                 if (Level.Loaded.Type == LevelData.LevelType.LocationConnection)
                 {
                     var transitionType = GetAvailableTransition(out _, out Submarine leavingSub); 
-                    if (transitionType == TransitionType.End)
+                    if (transitionType == TransitionType.End ||
+                        (Level.Loaded.IsEndBiome && transitionType == TransitionType.ProgressToNextLocation))
                     {
                         LoadNewLevel();
                     }
@@ -500,6 +499,14 @@ namespace Barotrauma
                         {
                             LoadNewLevel();
                         }
+                    }
+                }
+                else if (Level.Loaded.IsEndBiome)
+                {
+                    var transitionType = GetAvailableTransition(out _, out Submarine leavingSub);
+                    if (transitionType == TransitionType.ProgressToNextLocation)
+                    {
+                        LoadNewLevel();
                     }
                 }
                 else if (Level.Loaded.Type == LevelData.LevelType.Outpost)
@@ -697,10 +704,6 @@ namespace Barotrauma
             if (requiredFlags.HasFlag(NetFlags.Reputation))
             {
                 msg.WriteUInt16(GetLastUpdateIdForFlag(NetFlags.Reputation));
-                Reputation reputation = Map?.CurrentLocation?.Reputation;
-                msg.WriteBoolean(reputation != null);
-                if (reputation != null) { msg.WriteSingle(reputation.Value); }
-
                 // hopefully we'll never have more than 128 factions
                 msg.WriteByte((byte)Factions.Count);
                 foreach (Faction faction in Factions)
@@ -1014,12 +1017,13 @@ namespace Barotrauma
                 bool predicate(SoldItem i) => allowedToSellInventoryItems != (i.Origin == SoldItem.SellOrigin.Character);
             }
 
+            var characterList = GameSession.GetSessionCrewCharacters(CharacterType.Both);
             foreach (var (prefab, category, _) in purchasedUpgrades)
             {
                 UpgradeManager.PurchaseUpgrade(prefab, category, client: sender);
 
                 // unstable logging
-                int price = prefab.Price.GetBuyPrice(UpgradeManager.GetUpgradeLevel(prefab, category), Map?.CurrentLocation);
+                int price = prefab.Price.GetBuyPrice(UpgradeManager.GetUpgradeLevel(prefab, category), Map?.CurrentLocation, characterList);
                 int level = UpgradeManager.GetUpgradeLevel(prefab, category);
                 GameServer.Log($"SERVER: Purchased level {level} {category.Identifier}.{prefab.Identifier} for {price}", ServerLog.MessageType.ServerMessage);
             }

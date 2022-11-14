@@ -163,6 +163,7 @@ namespace Barotrauma
         
         private void SetSubmarineVotingText(Client starter, SubmarineInfo info, bool transferItems, VoteType type)
         {
+            int price = info.GetPrice();
             string name = starter.Name;
             JobPrefab prefab = starter?.Character?.Info?.Job?.Prefab;
             Color nameColor = prefab != null ? prefab.UIColor : Color.White;
@@ -177,14 +178,14 @@ namespace Barotrauma
                     text = TextManager.GetWithVariables(tag,
                         ("[playername]", characterRichString),
                         ("[submarinename]", submarineRichString),
-                        ("[amount]", info.Price.ToString()),
+                        ("[amount]", price.ToString()),
                         ("[currencyname]", TextManager.Get("credit").ToLower()));
                     break;
                 case VoteType.PurchaseSub:
                     text = TextManager.GetWithVariables("submarinepurchasevote",
                         ("[playername]", characterRichString),
                         ("[submarinename]", submarineRichString),
-                        ("[amount]", info.Price.ToString()),
+                        ("[amount]", price.ToString()),
                         ("[currencyname]", TextManager.Get("credit").ToLower()));
                     break;
                 case VoteType.SwitchSub:
@@ -218,6 +219,7 @@ namespace Barotrauma
 
         private LocalizedString GetSubmarineVoteResultMessage(SubmarineInfo info, VoteType type, int yesVoteCount, int noVoteCount, bool votePassed)
         {
+            int price = info.GetPrice();
             LocalizedString result = string.Empty;
 
             switch (type)
@@ -225,7 +227,7 @@ namespace Barotrauma
                 case VoteType.PurchaseAndSwitchSub:
                     result = TextManager.GetWithVariables(votePassed ? "submarinepurchaseandswitchvotepassed" : "submarinepurchaseandswitchvotefailed",
                         ("[submarinename]", info.DisplayName),
-                        ("[amount]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", info.Price)),
+                        ("[amount]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", price)),
                         ("[currencyname]", TextManager.Get("credit").ToLower()),
                         ("[yesvotecount]", yesVoteCount.ToString()),
                         ("[novotecount]" , noVoteCount.ToString()));
@@ -233,7 +235,7 @@ namespace Barotrauma
                 case VoteType.PurchaseSub:
                     result = TextManager.GetWithVariables(votePassed ? "submarinepurchasevotepassed" : "submarinepurchasevotefailed",
                         ("[submarinename]", info.DisplayName),
-                        ("[amount]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", info.Price)),
+                        ("[amount]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", price)),
                         ("[currencyname]", TextManager.Get("credit").ToLower()),
                         ("[yesvotecount]", yesVoteCount.ToString()),
                         ("[novotecount]", noVoteCount.ToString()));

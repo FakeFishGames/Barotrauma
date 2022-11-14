@@ -39,6 +39,7 @@ namespace Barotrauma.CharacterEditor
 
         private bool ShowExtraRagdollControls => editLimbs || editJoints;
 
+        public Character SpawnedCharacter => character;
         private Character character;
         private Vector2 spawnPosition;
 
@@ -997,7 +998,7 @@ namespace Barotrauma.CharacterEditor
                 var collider = character.AnimController.Collider;
                 var colliderDrawPos = SimToScreen(collider.SimPosition);
                 Vector2 forward = Vector2.Transform(Vector2.UnitY, Matrix.CreateRotationZ(collider.Rotation));
-                var endPos = SimToScreen(collider.SimPosition + forward * collider.radius);
+                var endPos = SimToScreen(collider.SimPosition + forward * collider.Radius);
                 GUI.DrawLine(spriteBatch, colliderDrawPos, endPos, GUIStyle.Green);
                 GUI.DrawLine(spriteBatch, colliderDrawPos, SimToScreen(collider.SimPosition + forward * 0.25f), Color.Blue);
                 Vector2 left = forward.Left();
@@ -1513,7 +1514,7 @@ namespace Barotrauma.CharacterEditor
             }
         }
 
-        private Character SpawnCharacter(Identifier speciesName, RagdollParams ragdoll = null)
+        public Character SpawnCharacter(Identifier speciesName, RagdollParams ragdoll = null)
         {
             DebugConsole.NewMessage(GetCharacterEditorTranslation("TryingToSpawnCharacter").Replace("[config]", speciesName.ToString()), Color.HotPink);
             OnPreSpawn();
@@ -3181,10 +3182,7 @@ namespace Barotrauma.CharacterEditor
                 OnClicked = (button, data) =>
                 {
                     ResetView();
-                    CharacterParams.Serialize();
-                    RagdollParams.Serialize();
-                    AnimParams.ForEach(a => a.Serialize());
-                    Wizard.Instance.CopyExisting(CharacterParams, RagdollParams, AnimParams);
+                    PrepareCharacterCopy();
                     Wizard.Instance.SelectTab(Wizard.Tab.Character);
                     return true;
                 }
@@ -3209,9 +3207,17 @@ namespace Barotrauma.CharacterEditor
 
             fileEditPanel.RectTransform.MinSize = new Point(0, (int)(layoutGroup.RectTransform.Children.Sum(c => c.MinSize.Y + layoutGroup.AbsoluteSpacing) * 1.2f));
         }
-#endregion
+        #endregion
 
-#region ToggleButtons 
+        public void PrepareCharacterCopy()
+        {
+            CharacterParams.Serialize();
+            RagdollParams.Serialize();
+            AnimParams.ForEach(a => a.Serialize());
+            Wizard.Instance.CopyExisting(CharacterParams, RagdollParams, AnimParams);
+        }
+
+        #region ToggleButtons 
         private enum Direction
         {
             Left,
@@ -4234,7 +4240,7 @@ namespace Barotrauma.CharacterEditor
                 int points = 1000;
                 float GetAmplitude() => ConvertUnits.ToDisplayUnits(fishSwimParams.WaveAmplitude) * Cam.Zoom / amplitudeMultiplier;
                 float GetWaveLength() => ConvertUnits.ToDisplayUnits(fishSwimParams.WaveLength) * Cam.Zoom / lengthMultiplier;
-                Vector2 GetRefPoint() => SimToScreen(collider.SimPosition) - GetScreenSpaceForward() * ConvertUnits.ToDisplayUnits(collider.radius) * 3 * Cam.Zoom;
+                Vector2 GetRefPoint() => SimToScreen(collider.SimPosition) - GetScreenSpaceForward() * ConvertUnits.ToDisplayUnits(collider.Radius) * 3 * Cam.Zoom;
                 Vector2 GetDrawPos() => GetRefPoint() - GetScreenSpaceForward() * GetWaveLength();
                 Vector2 GetDir() => GetRefPoint() - GetDrawPos();
                 Vector2 GetStartPoint() => GetDrawPos() + GetDir() / 2;
@@ -5007,9 +5013,9 @@ namespace Barotrauma.CharacterEditor
             // We want the collider to be slightly smaller than the source rect, because the source rect is usually a bit bigger than the graphic.
             float multiplier = 0.9f;
             l.body.SetSize(new Vector2(size.X, size.Y) * l.Scale * RagdollParams.TextureScale * multiplier);
-            TryUpdateLimbParam(l, "radius", ConvertUnits.ToDisplayUnits(l.body.radius / l.Params.Scale / RagdollParams.LimbScale / RagdollParams.TextureScale));
-            TryUpdateLimbParam(l, "width", ConvertUnits.ToDisplayUnits(l.body.width / l.Params.Scale / RagdollParams.LimbScale / RagdollParams.TextureScale));
-            TryUpdateLimbParam(l, "height", ConvertUnits.ToDisplayUnits(l.body.height / l.Params.Scale / RagdollParams.LimbScale / RagdollParams.TextureScale));
+            TryUpdateLimbParam(l, "radius", ConvertUnits.ToDisplayUnits(l.body.Radius / l.Params.Scale / RagdollParams.LimbScale / RagdollParams.TextureScale));
+            TryUpdateLimbParam(l, "width", ConvertUnits.ToDisplayUnits(l.body.Width / l.Params.Scale / RagdollParams.LimbScale / RagdollParams.TextureScale));
+            TryUpdateLimbParam(l, "height", ConvertUnits.ToDisplayUnits(l.body.Height / l.Params.Scale / RagdollParams.LimbScale / RagdollParams.TextureScale));
         }
 
         private void RecalculateOrigin(Limb l, Vector2? newOrigin = null)

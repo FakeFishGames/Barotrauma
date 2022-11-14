@@ -222,7 +222,7 @@ namespace Barotrauma
                     {
                         target.Item.TryInteract(character, forceSelectKey: true);
                     }
-                    if (component.AIOperate(deltaTime, character, this))
+                    if (component.CrewAIOperate(deltaTime, character, this))
                     {
                         isDoneOperating = completionCondition == null || completionCondition();
                     }
@@ -290,7 +290,7 @@ namespace Barotrauma
                         }
                         return;
                     }
-                    if (component.AIOperate(deltaTime, character, this))
+                    if (component.CrewAIOperate(deltaTime, character, this))
                     {
                         isDoneOperating = completionCondition == null || completionCondition();
                     }

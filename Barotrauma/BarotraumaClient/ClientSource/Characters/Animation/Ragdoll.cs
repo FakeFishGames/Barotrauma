@@ -99,12 +99,14 @@ namespace Barotrauma
                     float newAngularVelocity = Collider.AngularVelocity;
                     Collider.CorrectPosition(character.MemState, out newPosition, out newVelocity, out newRotation, out newAngularVelocity);
 
-                    newVelocity = newVelocity.ClampLength(100.0f);
-                    if (!MathUtils.IsValid(newVelocity)) { newVelocity = Vector2.Zero; }
-                    overrideTargetMovement = newVelocity.LengthSquared() > 0.01f ? newVelocity : Vector2.Zero;
-
-                    Collider.LinearVelocity = newVelocity;
-                    Collider.AngularVelocity = newAngularVelocity;
+                    if (Collider.BodyType == BodyType.Dynamic)
+                    {
+                        newVelocity = newVelocity.ClampLength(100.0f);
+                        if (!MathUtils.IsValid(newVelocity)) { newVelocity = Vector2.Zero; }
+                        overrideTargetMovement = newVelocity.LengthSquared() > 0.01f ? newVelocity : Vector2.Zero;
+                        Collider.LinearVelocity = newVelocity;
+                        Collider.AngularVelocity = newAngularVelocity;
+                    }
 
                     float distSqrd = Vector2.DistanceSquared(newPosition, Collider.SimPosition);
                     float errorTolerance = character.CanMove ? 0.01f : 0.2f;
@@ -442,8 +444,7 @@ namespace Barotrauma
         {
             foreach (Limb limb in Limbs)
             {
-                if (limb == null || limb.IsSevered || limb.ActiveSprite == null) { continue; }
-
+                if (limb == null || limb.IsSevered || limb.ActiveSprite == null || !limb.DoesFlip) { continue; }
                 Vector2 spriteOrigin = limb.ActiveSprite.Origin;
                 spriteOrigin.X = limb.ActiveSprite.SourceRect.Width - spriteOrigin.X;
                 limb.ActiveSprite.Origin = spriteOrigin;                
@@ -468,7 +469,10 @@ namespace Barotrauma
             {
                 var damageSound = character.GetSound(s => s.Type == CharacterSound.SoundType.Damage);
                 float range = damageSound != null ? damageSound.Range * 2 : ConvertUnits.ToDisplayUnits(character.AnimController.Collider.GetSize().Length() * 10);
-                SoundPlayer.PlayDamageSound(limbJoint.Params.BreakSound, 1.0f, limbJoint.LimbA.body.DrawPosition, range: range);
+                if (!limbJoint.Params.BreakSound.IsNullOrEmpty() && !limbJoint.Params.BreakSound.Equals("none", StringComparison.OrdinalIgnoreCase))
+                {
+                    SoundPlayer.PlayDamageSound(limbJoint.Params.BreakSound, 1.0f, limbJoint.LimbA.body.DrawPosition, range: range);
+                }
             }
         }
 

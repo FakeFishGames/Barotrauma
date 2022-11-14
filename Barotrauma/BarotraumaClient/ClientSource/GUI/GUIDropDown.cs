@@ -112,6 +112,10 @@ namespace Barotrauma
         public void ReceiveTextInput(string text) { }
         public void ReceiveCommandInput(char command) { }
 
+#if !WINDOWS
+        public void ReceiveEditingInput(string text, int start) {  }
+#endif
+
         public void ReceiveSpecialInput(Keys key)
         {
             switch (key)

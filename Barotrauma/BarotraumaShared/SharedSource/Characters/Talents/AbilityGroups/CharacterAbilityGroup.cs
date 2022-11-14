@@ -18,12 +18,15 @@ namespace Barotrauma.Abilities
         protected readonly int maxTriggerCount;
         protected int timesTriggered = 0;
 
-
-        // add support for OR conditions? 
+        // add support for OR conditions?
         protected readonly List<AbilityCondition> abilityConditions = new List<AbilityCondition>();
 
-        // separate dictionaries for each type of characterability?
-        protected readonly List<CharacterAbility> characterAbilities = new List<CharacterAbility>();
+        /// <summary>
+        /// List of abilities that are triggered by this group.
+        /// Fallback abilities are triggered if the conditional fails
+        /// </summary>
+        protected readonly List<CharacterAbility> characterAbilities = new List<CharacterAbility>(),
+                                                  fallbackAbilities = new List<CharacterAbility>();
 
         public CharacterAbilityGroup(AbilityEffectType abilityEffectType, CharacterTalent characterTalent, ContentXElement abilityElementGroup)
         {
@@ -38,6 +41,9 @@ namespace Barotrauma.Abilities
                     case "abilities":
                         LoadAbilities(subElement);
                         break;
+                    case "fallbackabilities":
+                        LoadFallbackAbilities(subElement);
+                        break;
                     case "conditions":
                         LoadConditions(subElement);
                         break;
@@ -47,10 +53,23 @@ namespace Barotrauma.Abilities
 
         public void ActivateAbilityGroup(bool addingFirstTime)
         {
+            if (!CheckActivatingCondition()) { return; }
+
             foreach (var characterAbility in characterAbilities)
             {
                 characterAbility.InitializeAbility(addingFirstTime);
             }
+
+            foreach (var characterAbility in fallbackAbilities)
+            {
+                characterAbility.InitializeAbility(addingFirstTime);
+            }
+        }
+
+        private bool CheckActivatingCondition()
+        {
+            if (AbilityEffectType is not AbilityEffectType.None) { return true; }
+            return !abilityConditions.Any(static abilityCondition => !abilityCondition.MatchesCondition());
         }
 
         public void LoadConditions(ContentXElement conditionElements)
@@ -83,6 +102,17 @@ namespace Barotrauma.Abilities
             }
 
             characterAbilities.Add(characterAbility);
+        }
+
+        public void AddFallbackAbility(CharacterAbility characterAbility)
+        {
+            if (characterAbility == null)
+            {
+                DebugConsole.ThrowError($"Trying to add null ability for talent {CharacterTalent.DebugIdentifier}!");
+                return;
+            }
+
+            fallbackAbilities.Add(characterAbility);
         }
 
         // XML
@@ -132,6 +162,14 @@ namespace Barotrauma.Abilities
             foreach (var abilityElementGroup in abilityElements.Elements())
             {
                 AddAbility(ConstructAbility(abilityElementGroup, CharacterTalent));
+            }
+        }
+
+        private void LoadFallbackAbilities(ContentXElement abilityElements)
+        {
+            foreach (var abilityElementGroup in abilityElements.Elements())
+            {
+                AddFallbackAbility(ConstructAbility(abilityElementGroup, CharacterTalent));
             }
         }
 

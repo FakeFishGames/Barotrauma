@@ -141,24 +141,25 @@ namespace Barotrauma
 
         private readonly bool requireChangeMessages;
         private readonly string messageTag;
-        private ImmutableArray<string>? messages = null;
-        public IReadOnlyList<string> Messages
-        {
-            get
-            {
-                if (!messages.HasValue)
-                {
-                    messages = TextManager.GetAll(messageTag).ToImmutableArray();
-                    if (messages.Value.None())
-                    {
-                        if (requireChangeMessages)
-                        {
-                            DebugConsole.ThrowError($"No messages defined for the location type change {CurrentType} -> {ChangeToType}");
-                        }
-                    }
-                }
 
-                return messages.Value;
+        public IReadOnlyList<string> GetMessages(Faction faction)
+        {
+            if (faction != null && TextManager.ContainsTag(messageTag + "." + faction.Prefab.Identifier))
+            {
+                return TextManager.GetAll(messageTag + "." + faction.Prefab.Identifier).ToImmutableArray();
+            }
+
+            if (TextManager.ContainsTag(messageTag))
+            {
+                return TextManager.GetAll(messageTag).ToImmutableArray();
+            }
+            else
+            {
+                if (requireChangeMessages)
+                {
+                    DebugConsole.ThrowError($"No messages defined for the location type change {CurrentType} -> {ChangeToType}");
+                }
+                return Enumerable.Empty<string>().ToImmutableArray();
             }
         }
 

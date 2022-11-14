@@ -19,6 +19,7 @@ namespace Barotrauma
 
         // works functionally but a missing recipe is not represented on GUI side. this might be better placed in the character class itself, though it might be fine here as well
         public List<Identifier> UnlockedRecipes { get; } = new List<Identifier>();
+        public List<Identifier> UnlockedStoreItems { get; } = new List<Identifier>();
 
         public CharacterTalent(TalentPrefab talentPrefab, Character character)
         {
@@ -45,7 +46,17 @@ namespace Barotrauma
                         }
                         else
                         {
-                            DebugConsole.ThrowError("No recipe identifier defined for talent " + DebugIdentifier);
+                            DebugConsole.ThrowError($"No recipe identifier defined for talent {DebugIdentifier}");
+                        }
+                        break;
+                    case "addedstoreitem":
+                        if (subElement.GetAttributeIdentifier("itemtag", Identifier.Empty) is { IsEmpty: false } storeItemTag)
+                        {
+                            UnlockedStoreItems.Add(storeItemTag);
+                        }
+                        else
+                        {
+                            DebugConsole.ThrowError($"No store item identifier defined for talent {DebugIdentifier}");
                         }
                         break;
                 }

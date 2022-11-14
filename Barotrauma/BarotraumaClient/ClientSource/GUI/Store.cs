@@ -724,7 +724,7 @@ namespace Barotrauma
                 ChangeStoreTab(StoreTab.Buy);
                 if (newLocation?.Reputation != null)
                 {
-                    CurrentLocation.Reputation.OnReputationValueChanged.RegisterOverwriteExisting("RefreshStore".ToIdentifier(), _ => { SetNeedsRefresh(); });
+                    newLocation.Reputation.OnReputationValueChanged.RegisterOverwriteExisting("RefreshStore".ToIdentifier(), _ => { SetNeedsRefresh(); });
                 }
             }
 
@@ -745,7 +745,7 @@ namespace Barotrauma
             } ?? Enumerable.Empty<PurchasedItem>();
             foreach (var button in itemCategoryButtons)
             {
-                if (!(button.UserData is MapEntityCategory category))
+                if (button.UserData is not MapEntityCategory category)
                 {
                     continue;
                 }
@@ -852,6 +852,28 @@ namespace Barotrauma
             FilterStoreItems(category, searchBox.Text);
         }
 
+        private static KeyValuePair<Identifier, float>? GetReputationRequirement(PriceInfo priceInfo)
+        {
+            return GameMain.GameSession?.Campaign is not null
+               ? priceInfo.MinReputation.FirstOrNull()
+               : null;
+        }
+
+        private static KeyValuePair<Identifier, float>? GetTooLowReputation(PriceInfo priceInfo)
+        {
+            if (GameMain.GameSession?.Campaign is CampaignMode campaign)
+            {
+                foreach (var minRep in priceInfo.MinReputation)
+                {
+                    if (campaign.GetReputation(minRep.Key) < minRep.Value)
+                    {
+                        return minRep;
+                    }
+                }
+            }
+            return null;
+        }
+
         int prevDailySpecialCount, prevRequestedGoodsCount, prevSubRequestedGoodsCount;
 
         private void RefreshStoreBuyList()
@@ -892,8 +914,9 @@ namespace Barotrauma
 
             void CreateOrUpdateItemFrame(ItemPrefab itemPrefab, int quantity)
             {
-                if (itemPrefab.CanBeBoughtFrom(ActiveStore, out PriceInfo priceInfo))
+                if (itemPrefab.CanBeBoughtFrom(ActiveStore, out PriceInfo priceInfo) && itemPrefab.CanCharacterBuy())
                 {
+
                     bool isDailySpecial = ActiveStore.DailySpecials.Contains(itemPrefab);
                     var itemFrame = isDailySpecial ?
                         storeDailySpecialsGroup.FindChild(c => c.UserData is PurchasedItem pi && pi.ItemPrefab == itemPrefab) :
@@ -918,7 +941,8 @@ namespace Barotrauma
                         SetOwnedText(itemFrame);
                         SetPriceGetters(itemFrame, true);
                     }
-                    SetItemFrameStatus(itemFrame, hasPermissions && quantity > 0);
+
+                    SetItemFrameStatus(itemFrame, hasPermissions && quantity > 0 && !GetTooLowReputation(priceInfo).HasValue);
                     existingItemFrames.Add(itemFrame);
                 }
             }
@@ -1110,7 +1134,7 @@ namespace Barotrauma
 
         private void SetPriceGetters(GUIComponent itemFrame, bool buying)
         {
-            if (itemFrame == null || !(itemFrame.UserData is PurchasedItem pi)) { return; }
+            if (itemFrame == null || itemFrame.UserData is not PurchasedItem pi) { return; }
 
             if (itemFrame.FindChild("undiscountedprice", recursive: true) is GUITextBlock undiscountedPriceBlock)
             {
@@ -1302,6 +1326,8 @@ namespace Barotrauma
                 {
                     if (x.GUIComponent.UserData is PurchasedItem itemX && y.GUIComponent.UserData is PurchasedItem itemY)
                     {
+                        int reputationCompare = CompareByReputationRestriction(itemX, itemY);
+                        if (reputationCompare != 0) { return reputationCompare; }
                         int sortResult = itemX.ItemPrefab.Name != itemY.ItemPrefab.Name ?
                             itemX.ItemPrefab.Name.CompareTo(itemY.ItemPrefab.Name) :
                             itemX.ItemPrefab.Identifier.CompareTo(itemY.ItemPrefab.Identifier);
@@ -1330,6 +1356,8 @@ namespace Barotrauma
                     {
                         if (x.GUIComponent.UserData is PurchasedItem itemX && y.GUIComponent.UserData is PurchasedItem itemY)
                         {
+                            int reputationCompare = CompareByReputationRestriction(itemX, itemY);
+                            if (reputationCompare != 0) { return reputationCompare; }
                             int sortResult = ActiveStore.GetAdjustedItemSellPrice(itemX.ItemPrefab).CompareTo(
                                 ActiveStore.GetAdjustedItemSellPrice(itemY.ItemPrefab));
                             if (sortingMethod == SortingMethod.PriceDesc) { sortResult *= -1; }
@@ -1354,6 +1382,8 @@ namespace Barotrauma
                     {
                         if (x.GUIComponent.UserData is PurchasedItem itemX && y.GUIComponent.UserData is PurchasedItem itemY)
                         {
+                            int reputationCompare = CompareByReputationRestriction(itemX, itemY);
+                            if (reputationCompare != 0) { return reputationCompare; }
                             int sortResult = ActiveStore.GetAdjustedItemBuyPrice(itemX.ItemPrefab).CompareTo(
                                 ActiveStore.GetAdjustedItemBuyPrice(itemY.ItemPrefab));
                             if (sortingMethod == SortingMethod.PriceDesc) { sortResult *= -1; }
@@ -1376,10 +1406,12 @@ namespace Barotrauma
                     specialsGroup.Recalculate();
                 }
 
-                static int CompareByCategory(RectTransform x, RectTransform y)
+                int CompareByCategory(RectTransform x, RectTransform y)
                 {
                     if (x.GUIComponent.UserData is PurchasedItem itemX && y.GUIComponent.UserData is PurchasedItem itemY)
                     {
+                        int reputationCompare = CompareByReputationRestriction(itemX, itemY);
+                        if (reputationCompare != 0) { return reputationCompare; }
                         return itemX.ItemPrefab.Category.CompareTo(itemY.ItemPrefab.Category);
                     }
                     else
@@ -1407,6 +1439,19 @@ namespace Barotrauma
                 {
                     return null;
                 }
+            }
+
+            int CompareByReputationRestriction(PurchasedItem item1, PurchasedItem item2)
+            {
+                PriceInfo priceInfo1 = item1.ItemPrefab.GetPriceInfo(ActiveStore);
+                PriceInfo priceInfo2 = item2.ItemPrefab.GetPriceInfo(ActiveStore);
+                if (priceInfo1 != null && priceInfo2 != null)
+                {
+                    var requiredReputation1 = GetTooLowReputation(priceInfo1)?.Value ?? 0.0f;
+                    var requiredReputation2 = GetTooLowReputation(priceInfo2)?.Value ?? 0.0f;
+                    return requiredReputation1.CompareTo(requiredReputation2);
+                }
+                return 0;                
             }
 
             static int CompareByElement(RectTransform x, RectTransform y)
@@ -1667,8 +1712,8 @@ namespace Barotrauma
             {
                 foreach (var subItem in subItems)
                 {
-                    if (!subItem.Components.All(c => !(c is Holdable h) || !h.Attachable || !h.Attached)) { continue; }
-                    if (!subItem.Components.All(c => !(c is Wire w) || w.Connections.All(c => c == null))) { continue; }
+                    if (!subItem.Components.All(c => c is not Holdable h || !h.Attachable || !h.Attached)) { continue; }
+                    if (!subItem.Components.All(c => c is not Wire w || w.Connections.All(c => c == null))) { continue; }
                     if (!ItemAndAllContainersInteractable(subItem)) { continue; }
                     AddOwnedItem(subItem);
                 }
@@ -1701,7 +1746,7 @@ namespace Barotrauma
 
             void AddOwnedItem(Item item)
             {
-                if (!(item?.Prefab.GetPriceInfo(ActiveStore) is PriceInfo priceInfo)) { return; }
+                if (item?.Prefab.GetPriceInfo(ActiveStore) is not PriceInfo priceInfo) { return; }
                 bool isNonEmpty = !priceInfo.DisplayNonEmpty || item.ConditionPercentage > 5.0f;
                 if (OwnedItems.TryGetValue(item.Prefab, out ItemQuantity itemQuantity))
                 {
@@ -1729,14 +1774,14 @@ namespace Barotrauma
 
         private void SetItemFrameStatus(GUIComponent itemFrame, bool enabled)
         {
-            if (!(itemFrame?.UserData is PurchasedItem pi)) { return; }
+            if (itemFrame?.UserData is not PurchasedItem pi) { return; }
             bool refreshFrameStatus = !pi.IsStoreComponentEnabled.HasValue || pi.IsStoreComponentEnabled.Value != enabled;
             if (!refreshFrameStatus) { return; }
             if (itemFrame.FindChild("icon", recursive: true) is GUIImage icon)
             {
                 if (pi.ItemPrefab?.InventoryIcon != null)
                 {
-                    icon.Color = pi.ItemPrefab.InventoryIconColor * (enabled ? 1.0f: 0.5f);
+                    icon.Color = pi.ItemPrefab.InventoryIconColor * (enabled ? 1.0f : 0.5f);
                 }
                 else if (pi.ItemPrefab?.Sprite != null)
                 {
@@ -1841,11 +1886,7 @@ namespace Barotrauma
                 LocalizedString toolTip = string.Empty;
                 if (purchasedItem.ItemPrefab != null)
                 {
-                    toolTip = purchasedItem.ItemPrefab.Name;
-                    if (!purchasedItem.ItemPrefab.Description.IsNullOrEmpty())
-                    {
-                        toolTip += $"\n{purchasedItem.ItemPrefab.Description}";
-                    }
+                    toolTip = purchasedItem.ItemPrefab.GetTooltip();
                     if (itemQuantity != null)
                     {
                         if (itemQuantity.AllNonEmpty)
@@ -1858,8 +1899,25 @@ namespace Barotrauma
                             toolTip += $"\n{TextManager.GetWithVariable("campaignstore.ownedtotal", "[amount]", itemQuantity.Total.ToString())}";
                         }
                     }
+
+                    PriceInfo priceInfo = purchasedItem.ItemPrefab.GetPriceInfo(ActiveStore);
+                    var campaign = GameMain.GameSession?.Campaign;
+                    if (priceInfo != null && campaign != null)
+                    {
+                        var requiredReputation = GetReputationRequirement(priceInfo);
+                        if (requiredReputation != null)
+                        {
+                            var repStr = TextManager.GetWithVariables(
+                                            "campaignstore.reputationrequired",
+                                            ("[amount]", ((int)requiredReputation.Value.Value).ToString()),
+                                            ("[faction]", TextManager.Get("faction." + requiredReputation.Value.Key).Value));
+                            Color color = campaign.GetReputation(requiredReputation.Value.Key) < requiredReputation.Value.Value ?
+                                GUIStyle.Orange : GUIStyle.Green;
+                            toolTip += $"\n‖color:{color.ToStringHex()}‖{repStr}‖color:end‖";
+                        }
+                    }
                 }
-                itemComponent.ToolTip = toolTip;
+                itemComponent.ToolTip = RichString.Rich(toolTip);
             }
             if (ownedLabel != null)
             {
@@ -1995,11 +2053,23 @@ namespace Barotrauma
             int totalPrice = 0;
             foreach (var item in itemsToPurchase)
             {
-                if (item?.ItemPrefab == null || !item.ItemPrefab.CanBeBoughtFrom(ActiveStore, out var priceInfo))
+                if (item is null) { continue; }
+
+                if (item.ItemPrefab == null || !item.ItemPrefab.CanBeBoughtFrom(ActiveStore, out var priceInfo))
                 {
                     itemsToRemove.Add(item);
                     continue;
                 }
+
+                if (item.ItemPrefab.DefaultPrice.RequiresUnlock)
+                {
+                    if (!CargoManager.HasUnlockedStoreItem(item.ItemPrefab))
+                    {
+                        itemsToRemove.Add(item);
+                        continue;
+                    }
+                }
+
                 totalPrice += item.Quantity * ActiveStore.GetAdjustedItemBuyPrice(item.ItemPrefab, priceInfo: priceInfo);
             }
             itemsToRemove.ForEach(i => itemsToPurchase.Remove(i));
@@ -2169,7 +2239,7 @@ namespace Barotrauma
                     {
                         needsRefresh = itemsToSellFromSub.Count != prevSubItems.Count ||
                             itemsToSellFromSub.Sum(i => i.Quantity) != prevSubItems.Sum(i => i.Quantity) ||
-                            itemsToSellFromSub.Any(i => !(prevSubItems.FirstOrDefault(prev => prev.ItemPrefab == i.ItemPrefab) is PurchasedItem prev) || i.Quantity != prev.Quantity) ||
+                            itemsToSellFromSub.Any(i => prevSubItems.FirstOrDefault(prev => prev.ItemPrefab == i.ItemPrefab) is not PurchasedItem prev || i.Quantity != prev.Quantity) ||
                             prevSubItems.Any(prev => itemsToSellFromSub.None(i => i.ItemPrefab == prev.ItemPrefab));
                     }
                 }

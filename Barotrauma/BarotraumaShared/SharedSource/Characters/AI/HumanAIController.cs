@@ -395,6 +395,10 @@ namespace Barotrauma
             }
             objectiveManager.UpdateObjectives(deltaTime);
 
+            if (reportProblemsTimer > 0)
+            {
+                reportProblemsTimer -= deltaTime;
+            }
             if (reactTimer > 0.0f)
             {
                 reactTimer -= deltaTime;
@@ -407,7 +411,6 @@ namespace Barotrauma
             else
             {
                 Character.UpdateTeam();
-
                 if (Character.CurrentHull != null)
                 {
                     if (Character.IsOnPlayerTeam)
@@ -425,19 +428,15 @@ namespace Barotrauma
                         }
                     }
                 }
-                if (Character.SpeechImpediment < 100.0f)
+                if (reportProblemsTimer <= 0.0f)
                 {
-                    reportProblemsTimer -= deltaTime;
-                    if (reportProblemsTimer <= 0.0f)
+                    if (Character.Submarine != null && (Character.Submarine.TeamID == Character.TeamID || Character.Submarine.TeamID == Character.OriginalTeamID || Character.IsEscorted) && !Character.Submarine.Info.IsWreck)
                     {
-                        if (Character.Submarine != null && (Character.Submarine.TeamID == Character.TeamID || Character.IsEscorted) && !Character.Submarine.Info.IsWreck)
-                        {
-                            ReportProblems();
-                        }
-                        reportProblemsTimer = reportProblemsInterval;
+                        ReportProblems();
                     }
-                    UpdateSpeaking();
+                    reportProblemsTimer = reportProblemsInterval;
                 }
+                UpdateSpeaking();
                 UnequipUnnecessaryItems();
                 reactTimer = GetReactionTime();
             }
@@ -912,7 +911,7 @@ namespace Barotrauma
         {
             Order newOrder = null;
             Hull targetHull = null;
-            bool speak = true;
+            bool speak = Character.SpeechImpediment < 100;
             if (Character.CurrentHull != null)
             {
                 bool isFighting = ObjectiveManager.HasActiveObjective<AIObjectiveCombat>();
@@ -1063,17 +1062,15 @@ namespace Barotrauma
         private void UpdateSpeaking()
         {
             if (!Character.IsOnPlayerTeam) { return; }
-
+            if (Character.SpeechImpediment >= 100) { return; }
             if (Character.Oxygen < 20.0f)
             {
                 Character.Speak(TextManager.Get("DialogLowOxygen").Value, null, Rand.Range(0.5f, 5.0f), "lowoxygen".ToIdentifier(), 30.0f);
             }
-
             if (Character.Bleeding > 2.0f)
             {
                 Character.Speak(TextManager.Get("DialogBleeding").Value, null, Rand.Range(0.5f, 5.0f), "bleeding".ToIdentifier(), 30.0f);
             }
-
             if (Character.PressureTimer > 50.0f && Character.CurrentHull?.DisplayName != null)
             {
                 Character.Speak(TextManager.GetWithVariable("DialogPressure", "[roomname]", Character.CurrentHull.DisplayName, FormatCapitals.Yes).Value, null, Rand.Range(0.5f, 5.0f), "pressure".ToIdentifier(), 30.0f);
@@ -1517,7 +1514,7 @@ namespace Barotrauma
             startPos.X += MathHelper.Clamp(Character.AnimController.TargetMovement.X, -1.0f, 1.0f);
 
             //do a raycast upwards to find any walls
-            float minCeilingDist = Character.AnimController.Collider.height / 2 + Character.AnimController.Collider.radius + 0.1f;
+            float minCeilingDist = Character.AnimController.Collider.Height / 2 + Character.AnimController.Collider.Radius + 0.1f;
 
             shouldCrouch = Submarine.PickBody(startPos, startPos + Vector2.UnitY * minCeilingDist, null, Physics.CollisionWall, customPredicate: (fixture) => { return !(fixture.Body.UserData is Submarine); }) != null;
         }
@@ -1615,7 +1612,7 @@ namespace Barotrauma
             {
                 if (otherCharacter == character || otherCharacter.TeamID == character.TeamID || otherCharacter.IsDead ||
                     otherCharacter.Info?.Job == null ||
-                    !(otherCharacter.AIController is HumanAIController otherHumanAI) ||
+                    otherCharacter.AIController is not HumanAIController otherHumanAI ||
                     !otherHumanAI.VisibleHulls.Contains(character.CurrentHull))
                 {
                     continue;
@@ -1628,7 +1625,7 @@ namespace Barotrauma
                 float accumulatedDamage = Math.Max(otherHumanAI.structureDamageAccumulator[character], maxAccumulatedDamage);
                 maxAccumulatedDamage = Math.Max(accumulatedDamage, maxAccumulatedDamage);
 
-                if (GameMain.GameSession?.Campaign?.Map?.CurrentLocation != null)
+                if (GameMain.GameSession?.Campaign?.Map?.CurrentLocation?.Reputation != null)
                 {
                     var reputationLoss = damageAmount * Reputation.ReputationLossPerWallDamage;
                     GameMain.GameSession.Campaign.Map.CurrentLocation.Reputation.AddReputation(-reputationLoss);
@@ -1724,7 +1721,7 @@ namespace Barotrauma
                             var reputationLoss = MathHelper.Clamp(
                                 (item.Prefab.GetMinPrice() ?? 0) * Reputation.ReputationLossPerStolenItemPrice, 
                                 Reputation.MinReputationLossPerStolenItem, Reputation.MaxReputationLossPerStolenItem);
-                            GameMain.GameSession.Campaign.Map.CurrentLocation.Reputation.AddReputation(-reputationLoss);
+                            GameMain.GameSession.Campaign.Map.CurrentLocation.Reputation?.AddReputation(-reputationLoss);
                         }
                         item.StolenDuringRound = true;
                         otherCharacter.Speak(TextManager.Get("dialogstealwarning").Value, null, Rand.Range(0.5f, 1.0f), "thief".ToIdentifier(), 10.0f);
@@ -1860,6 +1857,7 @@ namespace Barotrauma
             bool targetAdded = false;
             DoForEachCrewMember(caller, humanAI =>
             {
+                if (caller != humanAI.Character && caller.SpeechImpediment >= 100) { return; }
                 var objective = humanAI.ObjectiveManager.GetObjective<T1>();
                 if (objective != null)
                 {
@@ -2021,7 +2019,7 @@ namespace Barotrauma
             bool friendlyTeam = IsOnFriendlyTeam(me, other);
             bool teamGood = sameTeam || friendlyTeam && !onlySameTeam;
             if (!teamGood) { return false; }
-            bool speciesGood = other.SpeciesName == me.SpeciesName || other.Params.CompareGroup(me.Params.Group);
+            bool speciesGood = other.IsPet || other.SpeciesName == me.SpeciesName || other.Params.CompareGroup(me.Params.Group);
             if (!speciesGood) { return false; }
             if (me.TeamID == CharacterTeamType.FriendlyNPC && other.TeamID == CharacterTeamType.Team1 && GameMain.GameSession?.GameMode is CampaignMode campaign)
             {

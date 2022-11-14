@@ -158,7 +158,7 @@ namespace Barotrauma
             XDocument doc = XMLExtensions.TryLoadXml(ServerSettings.SettingsFile);
             if (doc?.Root == null)
             {
-                DebugConsole.ThrowError("File \"" + ServerSettings.SettingsFile + "\" not found. Starting the server with default settings.");
+                DebugConsole.AddWarning("File \"" + ServerSettings.SettingsFile + "\" not found. Starting the server with default settings.");
             }
             else
             {

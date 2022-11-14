@@ -168,9 +168,10 @@ namespace Barotrauma.Networking
                 if (!bufferedEvent.Character.IsIncapacitated &&
                     NetIdUtils.IdMoreRecent(bufferedEvent.CharacterStateID, bufferedEvent.Character.LastProcessedID))
                 {
+                    DebugConsole.Log($"Delaying reading entity event sent by a client until the character state has been processed. Event's character state: {bufferedEvent.CharacterStateID}, last processed character state: {bufferedEvent.Character.LastProcessedID}");
                     continue;
                 }
-                
+
                 try
                 {
                     ReadEvent(bufferedEvent.Data, bufferedEvent.TargetEntity, bufferedEvent.Sender);

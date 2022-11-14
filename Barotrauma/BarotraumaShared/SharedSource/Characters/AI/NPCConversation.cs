@@ -88,6 +88,10 @@ namespace Barotrauma
                     {
                         currentFlags.Add("EnterOutpost".ToIdentifier()); 
                     }
+                    if (Level.Loaded.IsEndBiome)
+                    {
+                        currentFlags.Add("EndLevel".ToIdentifier());
+                    }
                 }
                 if (GameMain.GameSession.EventManager.CurrentIntensity <= 0.2f)
                 {
@@ -126,6 +130,10 @@ namespace Barotrauma
                 if (speaker.TeamID == CharacterTeamType.FriendlyNPC && speaker.Submarine != null && speaker.Submarine.Info.IsOutpost)
                 {
                     currentFlags.Add("OutpostNPC".ToIdentifier());
+                    if (GameMain.GameSession?.Level?.StartLocation?.Faction is Faction faction)
+                    {
+                        currentFlags.Add($"OutpostNPC{faction.Prefab.Identifier}".ToIdentifier());
+                    }
                 }
                 if (speaker.CampaignInteractionType != CampaignMode.InteractionType.None)
                 {

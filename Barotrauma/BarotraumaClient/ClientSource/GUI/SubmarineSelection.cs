@@ -406,7 +406,7 @@ namespace Barotrauma
 
                     if (!GameMain.GameSession.IsSubmarineOwned(subToDisplay))
                     {
-                        LocalizedString amountString = TextManager.FormatCurrency(subToDisplay.Price);
+                        LocalizedString amountString = TextManager.FormatCurrency(subToDisplay.GetPrice());
                         submarineDisplays[i].submarineFee.Text = TextManager.GetWithVariable("price", "[amount]", amountString);
                     }
                     else
@@ -472,7 +472,7 @@ namespace Barotrauma
             if (transferService)
             {
                 subsToShow.AddRange(GameMain.GameSession.OwnedSubmarines);
-                subsToShow.Sort((x, y) => x.SubmarineClass.CompareTo(y.SubmarineClass));
+                subsToShow.Sort(ComparePrice);
                 string currentSubName = CurrentOrPendingSubmarine().Name;
                 int currentIndex = subsToShow.FindIndex(s => s.Name == currentSubName);
                 if (currentIndex != -1)
@@ -484,7 +484,11 @@ namespace Barotrauma
             {
                 subsToShow.AddRange((GameMain.Client is null ? SubmarineInfo.SavedSubmarines : MultiPlayerCampaign.GetCampaignSubs())
                     .Where(s => s.IsCampaignCompatible && !GameMain.GameSession.OwnedSubmarines.Any(os => os.Name == s.Name)));
-                subsToShow.Sort((x, y) => x.SubmarineClass.CompareTo(y.SubmarineClass));
+                if (GameMain.GameSession.Campaign?.Map?.CurrentLocation is Location currentLocation)
+                {
+                    subsToShow.RemoveAll(sub => !currentLocation.IsSubmarineAvailable(sub));
+                }
+                subsToShow.Sort(ComparePrice);
             }
 
             if (transferService)
@@ -492,10 +496,14 @@ namespace Barotrauma
                 SetConfirmButtonState(selectedSubmarine != null && selectedSubmarine.Name != CurrentOrPendingSubmarine().Name);
             }
 
-            subsToShow.Sort((x, y) => x.SubmarineClass.CompareTo(y.SubmarineClass));
             pageCount = Math.Max(1, (int)Math.Ceiling(subsToShow.Count / (float)submarinesPerPage));
             UpdatePaging();
             ContentRefreshRequired = false;
+
+            static int ComparePrice(SubmarineInfo x, SubmarineInfo y)
+            {
+                return x.Price.CompareTo(y.Price) * 100 + x.Name.CompareTo(y.Name);
+            }
         }
 
         private SubmarineInfo GetSubToDisplay(int index)
@@ -673,7 +681,7 @@ namespace Barotrauma
         {
             if (GameMain.GameSession?.Campaign?.PendingSubmarineSwitch == null)
             {
-                return Submarine.MainSub.Info;
+                return Submarine.MainSub?.Info;
             }
             else
             {
@@ -789,7 +797,9 @@ namespace Barotrauma
 
         private void ShowBuyPrompt(bool purchaseOnly)
         {
-            if (!GameMain.GameSession.Campaign.CanAfford(selectedSubmarine.Price))
+            int price = selectedSubmarine.GetPrice();
+
+            if (!GameMain.GameSession.Campaign.CanAfford(price))
             {
                 new GUIMessageBox(TextManager.Get("purchasesubmarineheader"), TextManager.GetWithVariables("notenoughmoneyforpurchasetext",
                     ("[currencyname]", currencyName),
@@ -802,7 +812,7 @@ namespace Barotrauma
             {
                 var text = TextManager.GetWithVariables("purchaseandswitchsubmarinetext",
                     ("[submarinename1]", selectedSubmarine.DisplayName),
-                    ("[amount]", selectedSubmarine.Price.ToString()),
+                    ("[amount]", price.ToString()),
                     ("[currencyname]", currencyName),
                     ("[submarinename2]", CurrentOrPendingSubmarine().DisplayName));
                 text += GetItemTransferText();
@@ -860,7 +870,7 @@ namespace Barotrauma
             {
                 msgBox = new GUIMessageBox(TextManager.Get("purchasesubmarineheader"), TextManager.GetWithVariables("purchasesubmarinetext",
                     ("[submarinename]", selectedSubmarine.DisplayName),
-                    ("[amount]", selectedSubmarine.Price.ToString()),
+                    ("[amount]", price.ToString()),
                     ("[currencyname]", currencyName)) + '\n' + TextManager.Get("submarineswitchinstruction"), messageBoxOptions);
 
                 msgBox.Buttons[0].OnClicked = (applyButton, obj) =>

@@ -493,6 +493,10 @@ namespace Barotrauma
             base.PutItem(item, i, user, removeItem, createNetworkEvent);
 #if CLIENT
             CreateSlots();
+            if (character == Character.Controlled)
+            {
+                HintManager.OnObtainedItem(character, item);
+            }
 #endif
             if (item.CampaignInteractionType == CampaignMode.InteractionType.Cargo)
             {

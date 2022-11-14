@@ -133,35 +133,43 @@ namespace Barotrauma.Items.Components
 
         public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
         {
-            if (indicatorSize.X <= 1.0f || indicatorSize.Y <= 1.0f) { return; }
+            Vector2 scaledIndicatorSize = indicatorSize * item.Scale;
+            if (scaledIndicatorSize.X <= 2.0f || scaledIndicatorSize.Y <= 2.0f) { return; }
 
+            const float outlineThickness = 1.0f;
             Vector2 itemSize = new Vector2(item.Sprite.SourceRect.Width, item.Sprite.SourceRect.Height) * item.Scale;
-            Vector2 indicatorPos = -itemSize / 2 + indicatorPosition * item.Scale;
-            if (item.FlippedX && item.Prefab.CanSpriteFlipX) { indicatorPos.X = -indicatorPos.X - indicatorSize.X * item.Scale; }
-            if (item.FlippedY && item.Prefab.CanSpriteFlipY) { indicatorPos.Y = -indicatorPos.Y - indicatorSize.Y * item.Scale; }
+            Vector2 indicatorPos = -itemSize / 2.0f + indicatorPosition * item.Scale;
+            Vector2 itemPosition = new Vector2(item.DrawPosition.X, -item.DrawPosition.Y);
+            Vector2 flip = new Vector2(item.FlippedX && item.Prefab.CanSpriteFlipX ? -1.0f : 1.0f, item.FlippedY && item.Prefab.CanSpriteFlipY ? -1.0f : 1.0f);
+            Matrix rotate = Matrix.CreateRotationZ(item.RotationRad);
+            Vector2 center = Vector2.Transform((indicatorPos + (scaledIndicatorSize * 0.5f)) * flip, rotate) + itemPosition;
 
             if (charge > 0 && capacity > 0)
             {
                 float chargeRatio = MathHelper.Clamp(charge / capacity, 0.0f, 1.0f);
                 Color indicatorColor = ToolBox.GradientLerp(chargeRatio, Color.Red, Color.Orange, Color.Green);
-                if (!isHorizontal)
+                Vector2 indicatorCenter = (indicatorPos + (scaledIndicatorSize * 0.5f)) * flip;
+                Vector2 indicatorSize;
+
+                if (isHorizontal)
                 {
-                    GUI.DrawRectangle(spriteBatch,
-                        new Vector2(item.DrawPosition.X, -item.DrawPosition.Y + ((indicatorSize.Y * item.Scale) * (1.0f - chargeRatio))) + indicatorPos,
-                        new Vector2(indicatorSize.X * item.Scale, (indicatorSize.Y * item.Scale) * chargeRatio), indicatorColor, true,
-                        depth: item.SpriteDepth - 0.00001f);
+                    float indicatorLength = (scaledIndicatorSize.X - outlineThickness * 2.0f) * chargeRatio;
+                    indicatorCenter.X += -scaledIndicatorSize.X * 0.5f + (flipIndicator ? scaledIndicatorSize.X - outlineThickness - indicatorLength * 0.5f : outlineThickness + indicatorLength * 0.5f);
+                    indicatorSize = new Vector2(indicatorLength, scaledIndicatorSize.Y);
                 }
                 else
                 {
-                    GUI.DrawRectangle(spriteBatch,
-                        new Vector2(item.DrawPosition.X, -item.DrawPosition.Y) + indicatorPos,
-                        new Vector2((indicatorSize.X * item.Scale) * chargeRatio, indicatorSize.Y * item.Scale), indicatorColor, true, 
-                        depth: item.SpriteDepth - 0.00001f);
+                    float indicatorLength = (scaledIndicatorSize.Y - outlineThickness * 2.0f) * chargeRatio;
+                    indicatorCenter.Y += -scaledIndicatorSize.Y * 0.5f + (flipIndicator ? outlineThickness + indicatorLength * 0.5f : scaledIndicatorSize.Y - outlineThickness - indicatorLength * 0.5f);
+                    indicatorSize = new Vector2(scaledIndicatorSize.X, indicatorLength);
                 }
+
+                indicatorCenter = Vector2.Transform(indicatorCenter, rotate) + itemPosition;
+
+                GUI.DrawFilledRectangle(spriteBatch, indicatorCenter, indicatorSize, indicatorSize * 0.5f, item.RotationRad, indicatorColor, item.SpriteDepth - 0.00001f);
             }
-            GUI.DrawRectangle(spriteBatch,
-                new Vector2(item.DrawPosition.X, -item.DrawPosition.Y) + indicatorPos,
-                indicatorSize * item.Scale, Color.Black, depth: item.SpriteDepth - 0.000015f);
+
+            GUI.DrawRectangle(spriteBatch, center, scaledIndicatorSize, scaledIndicatorSize * 0.5f, item.RotationRad, Color.Black, item.SpriteDepth - 0.000015f, outlineThickness, GUI.OutlinePosition.Inside);
         }
 
         public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData)

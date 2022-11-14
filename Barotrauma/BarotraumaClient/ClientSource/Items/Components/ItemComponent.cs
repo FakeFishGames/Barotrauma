@@ -524,11 +524,13 @@ namespace Barotrauma.Items.Components
                         VolumeProperty = subElement.GetAttributeIdentifier("volumeproperty", "")
                     };
 
-                    if (soundSelectionModes == null) soundSelectionModes = new Dictionary<ActionType, SoundSelectionMode>();
+                    if (soundSelectionModes == null)
+                    {
+                        soundSelectionModes = new Dictionary<ActionType, SoundSelectionMode>();
+                    }
                     if (!soundSelectionModes.ContainsKey(type) || soundSelectionModes[type] == SoundSelectionMode.Random)
                     {
-                        Enum.TryParse(subElement.GetAttributeString("selectionmode", "Random"), out SoundSelectionMode selectionMode);
-                        soundSelectionModes[type] = selectionMode;
+                        soundSelectionModes[type] = subElement.GetAttributeEnum("selectionmode", SoundSelectionMode.Random);
                     }
 
                     if (!sounds.TryGetValue(itemSound.Type, out List<ItemSound> soundList))
@@ -584,6 +586,8 @@ namespace Barotrauma.Items.Components
         {
             if (GuiFrame != null && GuiFrameSource.GetAttributeBool("draggable", true))
             {
+                bool hideDragIcons = GuiFrameSource.GetAttributeBool("hidedragicons", false);
+
                 var handle = new GUIDragHandle(new RectTransform(Vector2.One, GuiFrame.RectTransform, Anchor.Center),
                     GuiFrame.RectTransform, style: null)
                 {
@@ -623,7 +627,7 @@ namespace Barotrauma.Items.Components
                 };
 
                 int buttonHeight = (int)(GUIStyle.ItemFrameMargin.Y * 0.4f);
-                new GUIButton(new RectTransform(new Point(buttonHeight), handle.RectTransform, Anchor.TopLeft) { AbsoluteOffset = new Point(buttonHeight / 4), MinSize = new Point(buttonHeight) },
+                var settingsIcon = new GUIButton(new RectTransform(new Point(buttonHeight), handle.RectTransform, Anchor.TopLeft) { AbsoluteOffset = new Point(buttonHeight / 4), MinSize = new Point(buttonHeight) },
                     style: "GUIButtonSettings")
                 {
                     OnClicked = (btn, userdata) =>
@@ -648,6 +652,12 @@ namespace Barotrauma.Items.Components
                         return true;
                     }
                 };
+
+                if (hideDragIcons)
+                {
+                    dragIcon.Visible = false;
+                    settingsIcon.Visible = false;
+                }
             }
         }
 

@@ -310,7 +310,7 @@ namespace Barotrauma
             // Only humanoids can climb ladders
             bool canClimb = character.AnimController is HumanoidAnimController;
             //if not in water and the waypoint is between the top and bottom of the collider, no need to move vertically
-            if (canClimb && !character.AnimController.InWater && !character.IsClimbing && diff.Y < collider.height / 2 + collider.radius)
+            if (canClimb && !character.AnimController.InWater && !character.IsClimbing && diff.Y < collider.Height / 2 + collider.Radius)
             {
                 diff.Y = 0.0f;
             }
@@ -395,7 +395,7 @@ namespace Barotrauma
                 }
                 //at the same height as the waypoint
                 float heightDiff = Math.Abs(collider.SimPosition.Y - currentPath.CurrentNode.SimPosition.Y);
-                float colliderSize = (collider.height / 2 + collider.radius) * 1.25f;
+                float colliderSize = (collider.Height / 2 + collider.Radius) * 1.25f;
                 if (heightDiff < colliderSize)
                 {
                     float heightFromFloor = character.AnimController.GetHeightFromFloor();

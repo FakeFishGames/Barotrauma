@@ -135,8 +135,14 @@ namespace Barotrauma
 
         public override void UpdateAnim(float deltaTime)
         {
-            if (Frozen) return;
-            if (MainLimb == null) { return; }
+            //wait a bit for the ragdoll to "settle" (for joints to force the limbs to appropriate positions) before starting to animate
+            if (Timing.TotalTime - character.SpawnTime < 0.1f) { return; }
+            if (Frozen) { return; }
+            if (MainLimb == null)
+            {
+                ResetState();
+                return;
+            }
             var mainLimb = MainLimb;
 
             levitatingCollider = !IsHanging;
@@ -164,6 +170,7 @@ namespace Barotrauma
                     //cannot walk but on dry land -> wiggle around
                     UpdateDying(deltaTime);
                 }
+                ResetState();
                 return;
             }
             else
@@ -176,11 +183,17 @@ namespace Barotrauma
             {
                 var lowestLimb = FindLowestLimb();
 
-                Collider.SetTransform(new Vector2(
-                    Collider.SimPosition.X,
-                    Math.Max(lowestLimb.SimPosition.Y + (Collider.radius + Collider.height / 2), Collider.SimPosition.Y)),
-                    0.0f);
-
+                if (InWater)
+                {
+                    Collider.SetTransform(new Vector2(Collider.SimPosition.X, MainLimb.SimPosition.Y), 0.0f);
+                }
+                else
+                {
+                    Collider.SetTransform(new Vector2(
+                        Collider.SimPosition.X,
+                        Math.Max(lowestLimb.SimPosition.Y + (Collider.Radius + Collider.Height / 2), Collider.SimPosition.Y)),
+                        0.0f);
+                }
                 Collider.Enabled = true;
             }
 
@@ -223,6 +236,7 @@ namespace Barotrauma
             if (character.SelectedCharacter != null)
             {
                 DragCharacter(character.SelectedCharacter, deltaTime);
+                ResetState();
                 return;
             }
             if (character.AnimController.AnimationTestPose)
@@ -230,7 +244,11 @@ namespace Barotrauma
                 ApplyTestPose();
             }
             //don't flip when simply physics is enabled
-            if (SimplePhysicsEnabled) { return; }
+            if (SimplePhysicsEnabled)
+            {
+                ResetState();
+                return;
+            }
             
             if (!character.IsRemotelyControlled && (character.AIController == null || character.AIController.CanFlip) && !Aiming)
             {
@@ -264,43 +282,47 @@ namespace Barotrauma
                 }
             }
 
-            if (!CurrentFishAnimation.Flip) { return; }
-            if (IsStuck) { return; }
-            if (character.AIController != null && !character.AIController.CanFlip) { return; }
-
-            flipCooldown -= deltaTime;
-            if (TargetDir != Direction.None && TargetDir != dir)
+            if (!IsStuck && CurrentFishAnimation.Flip && character.AIController is not { CanFlip: false })
             {
-                flipTimer += deltaTime;
-                // Speed reductions are not taken into account here. It's intentional: an ai character cannot flip if it's heavily paralyzed (for example).
-                float requiredSpeed = CurrentAnimationParams.MovementSpeed / 2;
-                if (CurrentHull != null)
+                flipCooldown -= deltaTime;
+                if (TargetDir != Direction.None && TargetDir != dir)
                 {
-                    // Enemy movement speeds are halved inside submarines
-                    requiredSpeed /= 2;
-                }
-                bool isMovingFastEnough = Math.Abs(MainLimb.LinearVelocity.X) > requiredSpeed;
-                bool isTryingToMoveHorizontally = Math.Abs(TargetMovement.X) > Math.Abs(TargetMovement.Y);
-                if ((flipTimer > CurrentFishAnimation.FlipDelay && flipCooldown <= 0.0f && ((isMovingFastEnough && isTryingToMoveHorizontally) || IsMovingBackwards))
-                    || character.IsRemotePlayer)
-                {
-                    Flip();
-                    if (!inWater || (CurrentSwimParams != null && CurrentSwimParams.Mirror))
+                    flipTimer += deltaTime;
+                    // Speed reductions are not taken into account here. It's intentional: an ai character cannot flip if it's heavily paralyzed (for example).
+                    float requiredSpeed = CurrentAnimationParams.MovementSpeed / 2;
+                    if (CurrentHull != null)
                     {
-                        Mirror(CurrentSwimParams != null ? CurrentSwimParams.MirrorLerp : true);
+                        // Enemy movement speeds are halved inside submarines
+                        requiredSpeed /= 2;
                     }
+                    bool isMovingFastEnough = Math.Abs(MainLimb.LinearVelocity.X) > requiredSpeed;
+                    bool isTryingToMoveHorizontally = Math.Abs(TargetMovement.X) > Math.Abs(TargetMovement.Y);
+                    if ((flipTimer > CurrentFishAnimation.FlipDelay && flipCooldown <= 0.0f && ((isMovingFastEnough && isTryingToMoveHorizontally) || IsMovingBackwards))
+                        || character.IsRemotePlayer)
+                    {
+                        Flip();
+                        if (!inWater || (CurrentSwimParams != null && CurrentSwimParams.Mirror))
+                        {
+                            Mirror(CurrentSwimParams != null ? CurrentSwimParams.MirrorLerp : true);
+                        }
+                        flipTimer = 0.0f;
+                        flipCooldown = CurrentFishAnimation.FlipCooldown;
+                    }
+                }
+                else
+                {
                     flipTimer = 0.0f;
-                    flipCooldown = CurrentFishAnimation.FlipCooldown;
                 }
             }
-            else
+            ResetState();
+
+            void ResetState()
             {
-                flipTimer = 0.0f;
+                wasAiming = aiming;
+                aiming = false;
+                wasAimingMelee = aimingMelee;
+                aimingMelee = false;
             }
-            wasAiming = aiming;
-            aiming = false;
-            wasAimingMelee = aimingMelee;
-            aimingMelee = false;
         }
 
         private bool CanDrag(Character target)
@@ -463,19 +485,26 @@ namespace Barotrauma
             if (SimplePhysicsEnabled) { return; }
             mainLimb.PullJointEnabled = true;
 
-            if (aiming && movement.Length() <= 0.1f)
-            {
-                Vector2 mousePos = ConvertUnits.ToSimUnits(character.CursorPosition);
-                Vector2 diff = (mousePos - (GetLimb(LimbType.Torso) ?? MainLimb).SimPosition) * Dir;
-                TargetMovement = new Vector2(0.0f, -0.1f);
-                float newRotation = MathUtils.VectorToAngle(diff);
-                Collider.SmoothRotate(newRotation, CurrentSwimParams.SteerTorque * character.SpeedMultiplier);
-            }
-
-            if (!isMoving)
+            if (!isMoving && !CurrentSwimParams.UpdateAnimationWhenNotMoving)
             {
                 WalkPos = MathHelper.SmoothStep(WalkPos, MathHelper.PiOver2, deltaTime * 5);
                 mainLimb.PullJointWorldAnchorB = Collider.SimPosition;
+                if (aiming)
+                {
+                    Vector2 mousePos = ConvertUnits.ToSimUnits(character.CursorPosition);
+                    Vector2 diff = (mousePos - (GetLimb(LimbType.Torso) ?? MainLimb).SimPosition) * Dir;
+                    TargetMovement = new Vector2(0.0f, -0.1f);
+                    float newRotation = MathHelper.WrapAngle(MathUtils.VectorToAngle(diff) - MathHelper.PiOver2 * Dir);
+                    Collider.SmoothRotate(newRotation, CurrentSwimParams.SteerTorque * character.SpeedMultiplier * 2);
+                    if (TorsoAngle.HasValue)
+                    {
+                        Limb torso = GetLimb(LimbType.Torso);
+                        if (torso != null)
+                        {
+                            SmoothRotateWithoutWrapping(torso, newRotation + TorsoAngle.Value * Dir, mainLimb, TorsoTorque * 2);
+                        }
+                    }
+                }
             }
             else
             {

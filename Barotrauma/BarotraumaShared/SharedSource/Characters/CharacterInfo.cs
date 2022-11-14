@@ -305,6 +305,8 @@ namespace Barotrauma
 
         public HashSet<Identifier> UnlockedTalents { get; private set; } = new HashSet<Identifier>();
 
+        public (Identifier factionId, float reputation) MinReputationToHire;
+
         /// <summary>
         /// Endocrine boosters can unlock talents outside the user's talent tree. This method is used to cull them from the selection
         /// </summary>
@@ -657,7 +659,6 @@ namespace Barotrauma
                 {
                     Name = GetRandomName(randSync);
                 }
-
                 TryLoadNameAndTitle(npcIdentifier);
                 SetPersonalityTrait();
 
@@ -735,9 +736,7 @@ namespace Barotrauma
             Name = infoElement.GetAttributeString("name", "");
             OriginalName = infoElement.GetAttributeString("originalname", null);
             Salary = infoElement.GetAttributeInt("salary", 1000);
-
             ExperiencePoints = infoElement.GetAttributeInt("experiencepoints", 0);
-            UnlockedTalents = new HashSet<Identifier>(infoElement.GetAttributeIdentifierArray("unlockedtalents", Array.Empty<Identifier>()));
             AdditionalTalentPoints = infoElement.GetAttributeInt("additionaltalentpoints", 0);
             HashSet<Identifier> tags = infoElement.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>()).ToHashSet();
             LoadTagsBackwardsCompatibility(infoElement, tags);
@@ -813,18 +812,24 @@ namespace Barotrauma
                 infoElement.GetAttributeIdentifier("npcid", Identifier.Empty));
 
             MissionsCompletedSinceDeath = infoElement.GetAttributeInt("missionscompletedsincedeath", 0);
+            UnlockedTalents = new HashSet<Identifier>();
+
+            MinReputationToHire = (infoElement.GetAttributeIdentifier("factionId", Identifier.Empty), infoElement.GetAttributeFloat("minreputation", 0.0f));
 
             foreach (var subElement in infoElement.Elements())
             {
                 bool jobCreated = false;
-                if (subElement.Name.ToString().Equals("job", StringComparison.OrdinalIgnoreCase) && !jobCreated)
+
+                Identifier elementName = subElement.Name.ToIdentifier();
+
+                if (elementName == "job" && !jobCreated)
                 {
                     Job = new Job(subElement);
                     jobCreated = true;
                     // there used to be a break here, but it had to be removed to make room for statvalues
                     // using the jobCreated boolean to make sure that only the first job found is created
                 }
-                else if (subElement.Name.ToString().Equals("savedstatvalues", StringComparison.OrdinalIgnoreCase))
+                else if (elementName == "savedstatvalues")
                 {
                     foreach (XElement savedStat in subElement.Elements())
                     {
@@ -838,8 +843,8 @@ namespace Barotrauma
                         float value = savedStat.GetAttributeFloat("statvalue", 0f);
                         if (value == 0f) { continue; }
 
-                        string statIdentifier = savedStat.GetAttributeString("statidentifier", "").ToLowerInvariant();
-                        if (string.IsNullOrEmpty(statIdentifier))
+                        Identifier statIdentifier = savedStat.GetAttributeIdentifier("statidentifier", Identifier.Empty);
+                        if (statIdentifier.IsEmpty)
                         {
                             DebugConsole.ThrowError("Stat identifier not specified for Stat Value when loading character data in CharacterInfo!");
                             return;
@@ -847,6 +852,20 @@ namespace Barotrauma
 
                         bool removeOnDeath = savedStat.GetAttributeBool("removeondeath", true);
                         ChangeSavedStatValue(statType, value, statIdentifier, removeOnDeath);
+                    }
+                }
+                else if (elementName == "talents")
+                {
+                    Version version = subElement.GetAttributeVersion("version", GameMain.Version); // for future maybe
+
+                    foreach (XElement talentElement in subElement.Elements())
+                    {
+                        if (talentElement.Name.ToIdentifier() != "talent") { continue; }
+
+                        Identifier talentIdentifier = talentElement.GetAttributeIdentifier("identifier", Identifier.Empty);
+                        if (talentIdentifier == Identifier.Empty) { continue; }
+
+                        UnlockedTalents.Add(talentIdentifier);
                     }
                 }
             }
@@ -1125,7 +1144,7 @@ namespace Barotrauma
 
         partial void LoadAttachmentSprites();
         
-        private int CalculateSalary()
+        public int CalculateSalary()
         {
             if (Name == null || Job == null) { return 0; }
 
@@ -1149,13 +1168,17 @@ namespace Barotrauma
 
             increase *= 1f + Character.GetStatValue(StatTypes.SkillGainSpeed);
 
+            increase = GetSkillSpecificGain(increase, skillIdentifier);
+
             float prevLevel = Job.GetSkillLevel(skillIdentifier);
             Job.IncreaseSkillLevel(skillIdentifier, increase, Character.HasAbilityFlag(AbilityFlags.GainSkillPastMaximum));
 
             float newLevel = Job.GetSkillLevel(skillIdentifier);
 
             if ((int)newLevel > (int)prevLevel)
-            {                
+            {
+                float extraLevel = Character.GetStatValue(StatTypes.ExtraLevelGain);
+                Job.IncreaseSkillLevel(skillIdentifier, extraLevel, Character.HasAbilityFlag(AbilityFlags.GainSkillPastMaximum));
                 // assume we are getting at least 1 point in skill, since this logic only runs in such cases
                 float increaseSinceLastSkillPoint = MathHelper.Max(increase, 1f);
                 var abilitySkillGain = new AbilitySkillGain(increaseSinceLastSkillPoint, skillIdentifier, Character, gainedFromAbility);
@@ -1167,6 +1190,25 @@ namespace Barotrauma
             }
 
             OnSkillChanged(skillIdentifier, prevLevel, newLevel);
+        }
+
+        private static readonly ImmutableDictionary<Identifier, StatTypes> skillGainStatValues = new Dictionary<Identifier, StatTypes>
+        {
+            { new("helm"), StatTypes.HelmSkillGainSpeed },
+            { new("medical"), StatTypes.WeaponsSkillGainSpeed },
+            { new("weapons"), StatTypes.MedicalSkillGainSpeed },
+            { new("electrical"), StatTypes.ElectricalSkillGainSpeed },
+            { new("mechanical"), StatTypes.MechanicalSkillGainSpeed }
+        }.ToImmutableDictionary();
+
+        private float GetSkillSpecificGain(float increase, Identifier skillIdentifier)
+        {
+            if (skillGainStatValues.TryGetValue(skillIdentifier, out StatTypes statType))
+            {
+                increase *= 1f + Character.GetStatValue(statType);
+            }
+
+            return increase;
         }
 
         public void SetSkillLevel(Identifier skillIdentifier, float level)
@@ -1194,10 +1236,6 @@ namespace Barotrauma
             int prevAmount = ExperiencePoints;
 
             var experienceGainMultiplier = new AbilityExperienceGainMultiplier(1f);
-            if (isMissionExperience)
-            {
-                Character?.CheckTalents(AbilityEffectType.OnGainMissionExperience, experienceGainMultiplier);
-            }
             experienceGainMultiplier.Value += Character?.GetStatValue(StatTypes.ExperienceGainMultiplier) ?? 0;
 
             amount = (int)(amount * experienceGainMultiplier.Value);
@@ -1314,7 +1352,6 @@ namespace Barotrauma
                 new XAttribute("tags", string.Join(",", Head.Preset.TagSet)),
                 new XAttribute("salary", Salary),
                 new XAttribute("experiencepoints", ExperiencePoints),
-                new XAttribute("unlockedtalents", string.Join(",", UnlockedTalents)),
                 new XAttribute("additionaltalentpoints", AdditionalTalentPoints),
                 new XAttribute("hairindex", Head.HairIndex),
                 new XAttribute("beardindex", Head.BeardIndex),
@@ -1336,6 +1373,13 @@ namespace Barotrauma
             }
 
             charElement.Add(new XAttribute("missionscompletedsincedeath", MissionsCompletedSinceDeath));
+
+            if (MinReputationToHire.factionId != default)
+            {
+                charElement.Add(
+                    new XAttribute("factionId", Name),
+                    new XAttribute("minreputation", MinReputationToHire.reputation));
+            }
 
             if (Character != null)
             {
@@ -1363,7 +1407,16 @@ namespace Barotrauma
                 }
             }
 
+            XElement talentElement = new XElement("Talents");
+            talentElement.Add(new XAttribute("version", GameMain.Version.ToString()));
+
+            foreach (Identifier talentIdentifier in UnlockedTalents)
+            {
+                talentElement.Add(new XElement("Talent", new XAttribute("identifier", talentIdentifier)));
+            }
+
             charElement.Add(savedStatElement);
+            charElement.Add(talentElement);
             parentElement?.Add(charElement);
             return charElement;
         }
@@ -1717,19 +1770,32 @@ namespace Barotrauma
             }
         }
 
-        public void ResetSavedStatValue(string statIdentifier)
+        public void ResetSavedStatValue(Identifier statIdentifier)
         {
             foreach (StatTypes statType in SavedStatValues.Keys)
             {
                 bool changed = false;
                 foreach (SavedStatValue savedStatValue in SavedStatValues[statType])
                 {
-                    if (savedStatValue.StatIdentifier != statIdentifier) { continue; }
+                    if (!MatchesIdentifier(savedStatValue.StatIdentifier, statIdentifier)) { continue; }
+
                     if (MathUtils.NearlyEqual(savedStatValue.StatValue, 0.0f)) { continue; }
                     savedStatValue.StatValue = 0.0f;
                     changed = true;
                 }
                 if (changed) { OnPermanentStatChanged(statType); }
+            }
+
+            static bool MatchesIdentifier(Identifier statIdentifier, Identifier identifier)
+            {
+                if (statIdentifier == identifier) { return true; }
+
+                if (identifier.IndexOf('*') is var index and > -1)
+                {
+                    return statIdentifier.StartsWith(identifier[0..index]);
+                }
+
+                return false;
             }
         }
 
@@ -1748,7 +1814,7 @@ namespace Barotrauma
         {
             if (SavedStatValues.TryGetValue(statType, out var statValues))
             {
-                return statValues.Where(s => s.StatIdentifier == statIdentifier).Sum(v => v.StatValue);
+                return statValues.Where(value => ToolBox.StatIdentifierMatches(value.StatIdentifier, statIdentifier)).Sum(static v => v.StatValue);
             }
             else
             {
@@ -1756,7 +1822,7 @@ namespace Barotrauma
             }
         }
 
-        public void ChangeSavedStatValue(StatTypes statType, float value, string statIdentifier, bool removeOnDeath, float maxValue = float.MaxValue, bool setValue = false)
+        public void ChangeSavedStatValue(StatTypes statType, float value, Identifier statIdentifier, bool removeOnDeath, float maxValue = float.MaxValue, bool setValue = false)
         {
             if (!SavedStatValues.ContainsKey(statType))
             {
@@ -1779,13 +1845,13 @@ namespace Barotrauma
         }
     }
 
-    public class SavedStatValue
+    internal sealed class SavedStatValue
     {
-        public string StatIdentifier { get; set; }
+        public Identifier StatIdentifier { get; set; }
         public float StatValue { get; set; }
         public bool RemoveOnDeath { get; set; }
 
-        public SavedStatValue(string statIdentifier, float value, bool removeOnDeath)
+        public SavedStatValue(Identifier statIdentifier, float value, bool removeOnDeath)
         {
             StatValue = value;
             RemoveOnDeath = removeOnDeath;
@@ -1793,7 +1859,7 @@ namespace Barotrauma
         }
     }
 
-    class AbilitySkillGain : AbilityObject, IAbilityValue, IAbilitySkillIdentifier, IAbilityCharacter
+    internal sealed class AbilitySkillGain : AbilityObject, IAbilityValue, IAbilitySkillIdentifier, IAbilityCharacter
     {
         public AbilitySkillGain(float skillAmount, Identifier skillIdentifier, Character character, bool gainedFromAbility)
         {

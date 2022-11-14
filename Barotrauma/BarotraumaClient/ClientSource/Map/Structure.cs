@@ -295,6 +295,7 @@ namespace Barotrauma
             if (isWiringMode) { color *= 0.15f; }
 
             Vector2 drawOffset = Submarine == null ? Vector2.Zero : Submarine.DrawPosition;
+            drawOffset += GetCollapseEffectOffset();
 
             float depth = GetDrawDepth();
 

@@ -1119,7 +1119,7 @@ namespace Barotrauma.Items.Components
 
                     if (it.GetComponent<PowerContainer>() is { } battery)
                     {
-                        int batteryCapacity = (int)(battery.Charge / battery.Capacity * 100f);
+                        int batteryCapacity = (int)(battery.Charge / battery.GetCapacity() * 100f);
                         line2 = TextManager.GetWithVariable("statusmonitor.battery.tooltip", "[amount]", batteryCapacity.ToString());
                     }
                     else if (it.GetComponent<PowerTransfer>() is { } powerTransfer)

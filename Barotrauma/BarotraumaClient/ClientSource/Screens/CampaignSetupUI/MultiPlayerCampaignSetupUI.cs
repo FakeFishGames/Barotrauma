@@ -46,7 +46,7 @@ namespace Barotrauma
 
             nameSeedLayout.RectTransform.MinSize = new Point(0, nameSeedLayout.Children.Sum(c => c.RectTransform.MinSize.Y));
 
-            CampaignSettingElements elements = CreateCampaignSettingList(campaignSettingLayout, CampaignSettings.Empty);
+            CampaignSettingElements elements = CreateCampaignSettingList(campaignSettingLayout, CampaignSettings.Empty, false);
 
             var buttonContainer = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.1f),
                 verticalLayout.RectTransform) { MaxSize = new Point(int.MaxValue, 60) }, childAnchor: Anchor.BottomRight, isHorizontal: true);

@@ -82,7 +82,13 @@ namespace Barotrauma.Extensions
                 return count == 0 ? default : source.ElementAt(Rand.Range(0, count, Rand.RandSync.Unsynced));
             }
         }
-        
+
+        public static T GetRandom<T>(this IEnumerable<T> source, Random rand)
+            where T : PrefabWithUintIdentifier
+        {
+            return source.OrderBy(p => p.UintIdentifier).ToArray().GetRandom(rand);
+        }
+
         public static T GetRandom<T>(this IEnumerable<T> source, Rand.RandSync randSync)
             where T : PrefabWithUintIdentifier
         {
@@ -217,6 +223,8 @@ namespace Barotrauma.Extensions
             if (immutableDictionary == null) { return null; }
             return new Dictionary<TKey, TValue>(immutableDictionary);
         }
+
+        public static NetCollection<T> ToNetCollection<T>(this IEnumerable<T> enumerable) => new NetCollection<T>(enumerable.ToImmutableArray());
 
         /// <summary>
         /// Returns whether a given collection has at least a certain amount

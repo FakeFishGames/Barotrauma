@@ -326,7 +326,7 @@ namespace Barotrauma.Items.Components
             }
             foreach (StatusEffect effect in btnElement.StatusEffects)
             {
-                item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f);
+                item.ApplyStatusEffect(effect, ActionType.OnUse, 1.0f, character: item.ParentInventory?.Owner as Character);
             }
         }
 

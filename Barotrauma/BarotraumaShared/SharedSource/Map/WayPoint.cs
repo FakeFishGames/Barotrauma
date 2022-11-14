@@ -11,7 +11,7 @@ using Barotrauma.Extensions;
 namespace Barotrauma
 {
     [Flags]
-    public enum SpawnType { Path = 0, Human = 1, Enemy = 2, Cargo = 4, Corpse = 8 };
+    public enum SpawnType { Path = 0, Human = 1, Enemy = 2, Cargo = 4, Corpse = 8, Submarine = 16, ExitPoint = 32 };
 
     partial class WayPoint : MapEntity
     {
@@ -53,6 +53,12 @@ namespace Barotrauma
             get { return spawnType; }
             set { spawnType = value; }
         }
+
+        public Point ExitPointSize { get; private set; }
+
+        public Rectangle ExitPointWorldRect => new Rectangle(
+                        (int)WorldPosition.X - ExitPointSize.X / 2, (int)WorldPosition.Y + ExitPointSize.Y / 2,
+                        ExitPointSize.X, ExitPointSize.Y);
 
         public Action<WayPoint> OnLinksChanged { get; set; }
 
@@ -140,7 +146,9 @@ namespace Barotrauma
                     { "Cargo", new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(384,0,128,128)) },
                     { "Corpse", new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(512,0,128,128)) },
                     { "Ladder", new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(0,128,128,128)) },
-                    { "Door", new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(128,128,128,128)) }
+                    { "Door", new Sprite("Content/UI/MainIconsAtlas.png", new Rectangle(128,128,128,128)) },
+                    { "Submarine", new Sprite("Content/UI/CommandUIBackground.png", new Rectangle(0,896,128,128)) },
+                    { "ExitPoint", new Sprite("Content/UI/CommandUIBackground.png", new Rectangle(0,896,128,128)) }
                 };
             }
 #endif
@@ -1018,7 +1026,6 @@ namespace Barotrauma
                 int.Parse(element.GetAttribute("y").Value),
                 (int)Submarine.GridSize.X, (int)Submarine.GridSize.Y);
 
-
             Enum.TryParse(element.GetAttributeString("spawn", "Path"), out SpawnType spawnType);
             WayPoint w = new WayPoint(spawnType == SpawnType.Path ? Type.WayPoint : Type.SpawnPoint, rect, submarine, idRemap.GetOffsetId(element))
             {
@@ -1035,6 +1042,8 @@ namespace Barotrauma
             {
                 w.IdCardTags = idCardTagString.Split(',');
             }
+
+            w.ExitPointSize = element.GetAttributePoint("exitpointsize", Point.Zero);
 
             w.tags = element.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>()).ToHashSet();
 
@@ -1076,6 +1085,10 @@ namespace Barotrauma
                 new XAttribute("x", (int)(rect.X - Submarine.HiddenSubPosition.X)),
                 new XAttribute("y", (int)(rect.Y - Submarine.HiddenSubPosition.Y)),
                 new XAttribute("spawn", spawnType));
+            if (SpawnType == SpawnType.ExitPoint)
+            {
+                element.Add(new XAttribute("exitpointsize", XMLExtensions.PointToString(ExitPointSize)));
+            }
 
             if (!string.IsNullOrWhiteSpace(IdCardDesc)) element.Add(new XAttribute("idcarddesc", IdCardDesc));            
             if (idCardTags.Length > 0)

@@ -176,6 +176,10 @@ namespace Barotrauma
             void updateWaterAmbience(Sound sound, float volume)
             {
                 SoundChannel chn = waterAmbienceChannels.FirstOrDefault(c => c.Sound == sound);
+                if (Level.Loaded != null)
+                {
+                    volume *= Level.Loaded.GenerationParams.WaterAmbienceVolume;
+                }
                 if (chn is null || !chn.IsPlaying)
                 {
                     if (volume < 0.01f) { return; }
@@ -564,11 +568,21 @@ namespace Barotrauma
                     }
                 }
 
-                if (Level.Loaded?.Type == LevelData.LevelType.LocationConnection)
+                if (Level.Loaded != null && (Level.Loaded.Type == LevelData.LevelType.LocationConnection || Level.Loaded.GenerationParams.PlayNoiseLoopInOutpostLevel))
                 {
+                    Identifier biome = Level.Loaded.LevelData.Biome.Identifier;
+                    if (Level.Loaded.IsEndBiome && GameMain.GameSession?.Campaign is CampaignMode campaign)
+                    {
+                        //don't play end biome music in the path leading up to the end level(s)
+                        if (!campaign.Map.EndLocations.Contains(Level.Loaded.StartLocation))
+                        {
+                            biome = Level.Loaded.StartLocation.Biome.Identifier;
+                        }
+                    }
+
                     // Find background noise loop for the current biome
                     IEnumerable<BackgroundMusic> suitableNoiseLoops = Screen.Selected == GameMain.GameScreen ?
-                        GetSuitableMusicClips(Level.Loaded.LevelData.Biome.Identifier, currentIntensity) :
+                        GetSuitableMusicClips(biome, currentIntensity) :
                         Enumerable.Empty<BackgroundMusic>();
                     if (suitableNoiseLoops.Count() == 0)
                     {
@@ -755,6 +769,11 @@ namespace Barotrauma
                 }
             }
 
+            if (Level.Loaded is { IsEndBiome: true })
+            {
+                return "endlevel".ToIdentifier();
+            }
+
             Submarine targetSubmarine = Character.Controlled?.Submarine;
             if (targetSubmarine != null && targetSubmarine.AtDamageDepth)
             {
@@ -766,8 +785,8 @@ namespace Barotrauma
                 return "deep".ToIdentifier();
             }
 
-                if (targetSubmarine != null)
-            {                
+            if (targetSubmarine != null)
+            {
                 float floodedArea = 0.0f;
                 float totalArea = 0.0f;
                 foreach (Hull hull in Hull.HullList)

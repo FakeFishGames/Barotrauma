@@ -50,13 +50,13 @@ namespace Barotrauma
         /// </summary>
         private readonly float resourceHandoverAmount;
 
-        public override IEnumerable<Vector2> SonarPositions
+        public override IEnumerable<(LocalizedString Label, Vector2 Position)> SonarLabels
         {
             get
             {
                 return missionClusterPositions
-                    .Where(p => spawnedResources.ContainsKey(p.Item1) && AnyAreUncollected(spawnedResources[p.Item1]))
-                    .Select(p => p.Item2);
+                    .Where(p => spawnedResources.ContainsKey(p.Identifier) && AnyAreUncollected(spawnedResources[p.Identifier]))
+                    .Select(p => (ModifyMessage(Prefab.SonarLabel, color: false), p.Position));
             }
         }
 
@@ -64,7 +64,6 @@ namespace Barotrauma
         public override LocalizedString FailureMessage => ModifyMessage(base.FailureMessage);
         public override LocalizedString Description => ModifyMessage(description);
         public override LocalizedString Name => ModifyMessage(base.Name, false);
-        public override LocalizedString SonarLabel => ModifyMessage(base.SonarLabel, false);
 
         public MineralMission(MissionPrefab prefab, Location[] locations, Submarine sub) : base(prefab, locations, sub)
         {
@@ -175,7 +174,7 @@ namespace Barotrauma
                     State = 1;
                     break;
                 case 1:
-                    if (!Submarine.MainSub.AtEndExit && !Submarine.MainSub.AtStartExit) { return; }
+                    if (!Submarine.MainSub.AtEitherExit) { return; }
                     State = 2;
                     break;
             }

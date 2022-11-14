@@ -1,5 +1,4 @@
 using Barotrauma.Extensions;
-using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -28,6 +27,8 @@ namespace Barotrauma
         private const float EndDelay = 5.0f;
         private float endTimer;
 
+        private bool allowOrderingRescuees;
+
         public override bool AllowRespawn => false;
 
         public override bool AllowUndocking
@@ -39,17 +40,17 @@ namespace Barotrauma
             }
         }
 
-        public override IEnumerable<Vector2> SonarPositions
+        public override IEnumerable<(LocalizedString Label, Vector2 Position)> SonarLabels
         {
             get
             {
-                if (State > 0)
+                if (State == 0)
                 {
-                    return Enumerable.Empty<Vector2>();
+                    return Targets.Select(t => (Prefab.SonarLabel, t.WorldPosition));
                 }
                 else
                 {
-                    return Targets.Select(t => t.WorldPosition);
+                    return Enumerable.Empty<(LocalizedString Label, Vector2 Position)>();
                 }
             }
         }
@@ -82,6 +83,8 @@ namespace Barotrauma
             base(prefab, locations, sub)
         {
             characterConfig = prefab.ConfigElement.GetChildElement("Characters");
+
+            allowOrderingRescuees = prefab.ConfigElement.GetAttributeBool(nameof(allowOrderingRescuees), true);
 
             string msgTag = prefab.ConfigElement.GetAttributeString("hostageskilledmessage", "");
             hostagesKilledMessage = TextManager.Get(msgTag).Fallback(msgTag);
@@ -214,8 +217,9 @@ namespace Barotrauma
         {
             Identifier[] moduleFlags = element.GetAttributeIdentifierArray("moduleflags", null);
             Identifier[] spawnPointTags = element.GetAttributeIdentifierArray("spawnpointtags", null);
+            var spawnPointType = element.GetAttributeEnum("spawnpointtype", SpawnType.Human);
             ISpatialEntity spawnPos = SpawnAction.GetSpawnPos(
-                SpawnAction.SpawnLocationType.Outpost, SpawnType.Human,
+                SpawnAction.SpawnLocationType.Outpost, spawnPointType,
                 moduleFlags ?? humanPrefab.GetModuleFlags(),
                 spawnPointTags ?? humanPrefab.GetSpawnPointTags(),
                 element.GetAttributeBool("asfaraspossible", false));
@@ -226,8 +230,16 @@ namespace Barotrauma
 
             bool requiresRescue = element.GetAttributeBool("requirerescue", false);
 
-            Character spawnedCharacter = CreateHuman(humanPrefab, characters, characterItems, submarine, requiresRescue ? CharacterTeamType.FriendlyNPC : CharacterTeamType.None, spawnPos, giveTags: true);
-
+            var teamId = element.GetAttributeEnum("teamid", requiresRescue ? CharacterTeamType.FriendlyNPC : CharacterTeamType.None);
+            Character spawnedCharacter = CreateHuman(humanPrefab, characters, characterItems, submarine, teamId, spawnPos, giveTags: true);
+            if (Level.Loaded?.StartOutpost?.Info is { } outPostInfo)
+            {
+                outPostInfo.AddOutpostNPCIdentifierOrTag(spawnedCharacter, humanPrefab.Identifier);
+                foreach (Identifier tag in humanPrefab.GetTags())
+                {
+                    outPostInfo.AddOutpostNPCIdentifierOrTag(spawnedCharacter, tag);
+                }
+            }
             if (spawnPos is WayPoint wp)
             {
                 spawnedCharacter.GiveIdCardTags(wp);
@@ -237,7 +249,10 @@ namespace Barotrauma
             {
                 requireRescue.Add(spawnedCharacter);
 #if CLIENT
-                GameMain.GameSession.CrewManager.AddCharacterToCrewList(spawnedCharacter);
+                if (allowOrderingRescuees)
+                {
+                    GameMain.GameSession.CrewManager.AddCharacterToCrewList(spawnedCharacter);
+                }
 #endif
             }
 

@@ -600,7 +600,7 @@ namespace Barotrauma
                     {
                         if (damageModifier.DamageMultiplier > 0 && !string.IsNullOrWhiteSpace(damageModifier.DamageParticle))
                         {
-                            overrideParticle = GameMain.ParticleManager?.FindPrefab(damageModifier.DamageParticle);
+                            overrideParticle = ParticleManager.FindPrefab(damageModifier.DamageParticle);
                             break;
                         }
                     }
@@ -647,7 +647,7 @@ namespace Barotrauma
                     dripParticleTimer += wetTimer * deltaTime * Mass * (wetTimer > 0.9f ? 50.0f : 5.0f);
                     if (dripParticleTimer > 1.0f)
                     {
-                        float dropRadius = body.BodyShape == PhysicsBody.Shape.Rectangle ? Math.Min(body.width, body.height) : body.radius;
+                        float dropRadius = body.BodyShape == PhysicsBody.Shape.Rectangle ? Math.Min(body.Width, body.Height) : body.Radius;
                         GameMain.ParticleManager.CreateParticle(
                             "waterdrop", 
                             WorldPosition + Rand.Vector(Rand.Range(0.0f, ConvertUnits.ToDisplayUnits(dropRadius))), 
@@ -684,10 +684,10 @@ namespace Barotrauma
 
         public void Draw(SpriteBatch spriteBatch, Camera cam, Color? overrideColor = null, bool disableDeformations = false)
         {
-            float brightness = Math.Max(1.0f - burnOverLayStrength, 0.2f);
             var spriteParams = Params.GetSprite();
             if (spriteParams == null) { return; }
-
+            float burn = spriteParams.IgnoreTint ? 0 : burnOverLayStrength;
+            float brightness = Math.Max(1.0f - burn, 0.2f);
             Color clr = spriteParams.Color;
             if (!spriteParams.IgnoreTint)
             {

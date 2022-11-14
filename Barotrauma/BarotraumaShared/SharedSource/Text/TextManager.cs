@@ -20,6 +20,8 @@ namespace Barotrauma
 
     public static class TextManager
     {
+        public static bool DebugDraw;
+
         public readonly static LanguageIdentifier DefaultLanguage = "English".ToLanguageIdentifier();
         public readonly static ConcurrentDictionary<LanguageIdentifier, ImmutableHashSet<TextPack>> TextPacks = new ConcurrentDictionary<LanguageIdentifier, ImmutableHashSet<TextPack>>();
         public static IEnumerable<LanguageIdentifier> AvailableLanguages => TextPacks.Keys;

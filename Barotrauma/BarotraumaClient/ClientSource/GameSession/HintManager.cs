@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.IO;
 using Barotrauma.Items.Components;
+using Barotrauma.Tutorials;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -209,7 +210,7 @@ namespace Barotrauma
                     {
                         if (item.CurrentHull == null) { continue; }
                         if (item.GetComponent<Pump>() == null) { continue; }
-                        if (!item.HasTag("ballast")) { continue; }
+                        if (!item.HasTag("ballast") && !item.CurrentHull.RoomName.Contains("ballast", StringComparison.OrdinalIgnoreCase)) { continue; }
                         BallastHulls.Add(item.CurrentHull);
                     }
                 }
@@ -383,6 +384,34 @@ namespace Barotrauma
             IgnoreReminder("tabmenu");
         }
 
+        public static void OnObtainedItem(Character character, Item item)
+        {
+            if (!CanDisplayHints()) { return; }
+            if (character != Character.Controlled || item == null) { return; }
+
+            if (DisplayHint($"onobtaineditem.{item.Prefab.Identifier}".ToIdentifier())) { return; }
+            foreach (Identifier tag in item.GetTags())
+            {
+                if (DisplayHint($"onobtaineditem.{tag}".ToIdentifier())) { return; }
+            }
+
+            if ((item.HasTag("geneticmaterial") && character.Inventory.FindItemByTag("geneticdevice".ToIdentifier(), recursive: true) != null) ||
+                (item.HasTag("geneticdevice") && character.Inventory.FindItemByTag("geneticmaterial".ToIdentifier(), recursive: true) != null))
+            {
+                if (DisplayHint($"geneticmaterial.useinstructions".ToIdentifier())) { return; }
+            }
+        }
+
+        public static void OnStartDeconstructing(Character character, Deconstructor deconstructor)
+        {
+            if (!CanDisplayHints()) { return; }
+            if (character != Character.Controlled || deconstructor == null) { return; }
+            if (deconstructor.InputContainer.Inventory.AllItems.All(it => it.GetComponent<GeneticMaterial>() is not null))
+            {
+                DisplayHint($"geneticmaterial.onrefiningorcombining".ToIdentifier());
+            }
+        }
+
         public static void OnStoleItem(Character character, Item item)
         {
             if (!CanDisplayHints()) { return; }
@@ -507,7 +536,7 @@ namespace Barotrauma
             if (!CanDisplayHints()) { return; }
             if (character != Character.Controlled) { return; }
             // Could make this more generic if there will ever be any other status effect related hints
-            if (!(component is Repairable) || actionType != ActionType.OnFailure) { return; }
+            if (component is not Repairable || actionType != ActionType.OnFailure) { return; }
             DisplayHint("onrepairfailed".ToIdentifier());
         }
 
@@ -563,7 +592,7 @@ namespace Barotrauma
                 foreach (var me in gap.linkedTo)
                 {
                     if (me == Character.Controlled.CurrentHull) { continue; }
-                    if (!(me is Hull adjacentHull)) { continue; }
+                    if (me is not Hull adjacentHull) { continue; }
                     if (!IsOnFriendlySub()) { continue; }
                     if (IsWearingDivingSuit()) { continue; }
                     if (adjacentHull.LethalPressure > 5.0f && DisplayHint("onadjacenthull.highpressure".ToIdentifier())) { return; }
@@ -720,6 +749,7 @@ namespace Barotrauma
             if (requireControllingCharacter && Character.Controlled == null) { return false; }
             var gameMode = GameMain.GameSession?.GameMode;
             if (!(gameMode is CampaignMode || gameMode is MissionMode)) { return false; }
+            if (ObjectiveManager.AnyObjectives) { return false; }
             if (requireGameScreen && Screen.Selected != GameMain.GameScreen) { return false; }
             return true;
         }

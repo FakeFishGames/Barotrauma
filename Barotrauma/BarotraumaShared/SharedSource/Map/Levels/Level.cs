@@ -16,6 +16,11 @@ namespace Barotrauma
 {
     partial class Level : Entity, IServerSerializable
     {
+        public enum PlacementType
+        {
+            Top, Bottom
+        }
+
         public enum EventType
         {
             SingleDestructibleWall,
@@ -61,6 +66,7 @@ namespace Barotrauma
         [Flags]
         public enum PositionType
         {
+            None = 0,
             MainPath = 0x1,
             SidePath = 0x2,
             Cave = 0x4,
@@ -68,7 +74,8 @@ namespace Barotrauma
             Wreck = 0x10,
             BeaconStation = 0x20,
             Abyss = 0x40,
-            AbyssCave = 0x80
+            AbyssCave = 0x80,
+            Outpost = 0x100,
         }
 
         public struct InterestingPosition
@@ -413,6 +420,9 @@ namespace Barotrauma
             get { return LevelData.Type; }
         }
 
+
+        public bool IsEndBiome => LevelData.Biome != null && LevelData.Biome.IsEndBiome;
+
         /// <summary>
         /// Is there a loaded level set and is it an outpost?
         /// </summary>
@@ -447,7 +457,7 @@ namespace Barotrauma
 
         private Level(LevelData levelData) : base(null, 0)
         {
-            this.LevelData = levelData;
+            LevelData = levelData;
             borders = new Rectangle(Point.Zero, levelData.Size);
         }
 
@@ -482,11 +492,8 @@ namespace Barotrauma
             EntitiesBeforeGenerate = GetEntities().ToList();
             EntityCountBeforeGenerate = EntitiesBeforeGenerate.Count();
 
-            if (LevelData.ForceOutpostGenerationParams == null)
-            {
-                StartLocation = startLocation;
-                EndLocation = endLocation;
-            }
+            StartLocation = startLocation;
+            EndLocation = endLocation;            
 
             GenerateEqualityCheckValue(LevelGenStage.GenStart);
             SetEqualityCheckValue(LevelGenStage.LevelGenParams, unchecked((int)GenerationParams.UintIdentifier));
@@ -886,6 +893,12 @@ namespace Barotrauma
             //----------------------------------------------------------------------------------
             // remove unnecessary cells and create some holes at the bottom of the level
             //----------------------------------------------------------------------------------
+
+            if (GenerationParams.NoLevelGeometry)
+            {
+                cells.ForEach(c => c.CellType = CellType.Removed);
+                cells.Clear();
+            }
 
             cells = cells.Except(pathCells).ToList();
             //remove cells from the edges and bottom of the map because a clean-cut edge of the level looks bad
@@ -2539,7 +2552,8 @@ namespace Barotrauma
                     levelResources.Add((itemPrefab, commonnessInfo));
                 }
                 else if (itemPrefab.LevelQuantity.TryGetValue(GenerationParams.Identifier, out var fixedQuantityResourceInfo) ||
-                         itemPrefab.LevelQuantity.TryGetValue(Identifier.Empty, out fixedQuantityResourceInfo))
+                        itemPrefab.LevelQuantity.TryGetValue(LevelData.Biome.Identifier, out fixedQuantityResourceInfo) ||
+                        itemPrefab.LevelQuantity.TryGetValue(Identifier.Empty, out fixedQuantityResourceInfo))
                 {
                     fixedResources.Add((itemPrefab, fixedQuantityResourceInfo));
                 }
@@ -3545,6 +3559,13 @@ namespace Barotrauma
 
             var subDoc = SubmarineInfo.OpenFile(contentFile.Path.Value);
             Rectangle subBorders = Submarine.GetBorders(subDoc.Root);
+            SubmarineInfo info = new SubmarineInfo(contentFile.Path.Value)
+            {
+                Type = type
+            };
+
+            //place downwards by default
+            var placement = info.BeaconStationInfo?.Placement ?? PlacementType.Bottom;
 
             // Add some margin so that the sub doesn't block the path entirely. It's still possible that some larger subs can't pass by.
             Point paddedDimensions = new Point(subBorders.Width + 3000, subBorders.Height + 3000);
@@ -3565,7 +3586,7 @@ namespace Barotrauma
                 attemptsLeft--;
                 if (TryGetSpawnPoint(out spawnPoint))
                 {
-                    success = TryPositionSub(subBorders, subName, ref spawnPoint);
+                    success = TryPositionSub(subBorders, subName, placement, ref spawnPoint);
                     if (success)
                     {
                         break;
@@ -3586,10 +3607,6 @@ namespace Barotrauma
             {
                 Debug.WriteLine($"Sub {subName} successfully positioned to {spawnPoint} in {tempSW.ElapsedMilliseconds} (ms)");
                 tempSW.Restart();
-                SubmarineInfo info = new SubmarineInfo(contentFile.Path.Value)
-                {
-                    Type = type
-                };
                 Submarine sub = new Submarine(info);
                 if (type == SubmarineType.Wreck)
                 {
@@ -3639,10 +3656,10 @@ namespace Barotrauma
                 return null;
             }
 
-            bool TryPositionSub(Rectangle subBorders, string subName, ref Vector2 spawnPoint)
-            {
+            bool TryPositionSub(Rectangle subBorders, string subName, PlacementType placement, ref Vector2 spawnPoint)
+            {                
                 positions.Add(spawnPoint);
-                bool bottomFound = TryRaycastToBottom(subBorders, ref spawnPoint);
+                bool bottomFound = TryRaycast(subBorders, placement, ref spawnPoint);
                 positions.Add(spawnPoint);
 
                 bool leftSideBlocked = IsSideBlocked(subBorders, false);
@@ -3650,21 +3667,21 @@ namespace Barotrauma
                 int step = 5;
                 if (rightSideBlocked && !leftSideBlocked)
                 {
-                    bottomFound = TryMove(subBorders, ref spawnPoint, -step);
+                    bottomFound = TryMove(subBorders, placement, ref spawnPoint, -step);
                 }
                 else if (leftSideBlocked && !rightSideBlocked)
                 {
-                    bottomFound = TryMove(subBorders, ref spawnPoint, step);
+                    bottomFound = TryMove(subBorders, placement, ref spawnPoint, step);
                 }
                 else if (!bottomFound)
                 {
                     if (!leftSideBlocked)
                     {
-                        bottomFound = TryMove(subBorders, ref spawnPoint, -step);
+                        bottomFound = TryMove(subBorders, placement, ref spawnPoint, -step);
                     }
                     else if (!rightSideBlocked)
                     {
-                        bottomFound = TryMove(subBorders, ref spawnPoint, step);
+                        bottomFound = TryMove(subBorders, placement, ref spawnPoint, step);
                     }
                     else
                     {
@@ -3694,14 +3711,14 @@ namespace Barotrauma
                 }
                 return !isBlocked && bottomFound;
 
-                bool TryMove(Rectangle subBorders, ref Vector2 spawnPoint, float amount)
+                bool TryMove(Rectangle subBorders, PlacementType placement, ref Vector2 spawnPoint, float amount)
                 {
                     float maxMovement = 5000;
                     float totalAmount = 0;
-                    bool foundBottom = TryRaycastToBottom(subBorders, ref spawnPoint);
+                    bool foundBottom = TryRaycast(subBorders, placement, ref spawnPoint);
                     while (!IsSideBlocked(subBorders, amount > 0))
                     {
-                        foundBottom = TryRaycastToBottom(subBorders, ref spawnPoint);
+                        foundBottom = TryRaycast(subBorders, placement, ref spawnPoint);
                         totalAmount += amount;
                         spawnPoint = new Vector2(spawnPoint.X + amount, spawnPoint.Y);
                         if (Math.Abs(totalAmount) > maxMovement)
@@ -3730,7 +3747,7 @@ namespace Barotrauma
                 return false;
             }
 
-            bool TryRaycastToBottom(Rectangle subBorders, ref Vector2 spawnPoint)
+            bool TryRaycast(Rectangle subBorders, PlacementType placement, ref Vector2 spawnPoint)
             {
                 // Shoot five rays and pick the highest hit point.
                 int rayCount = 5;
@@ -3756,16 +3773,18 @@ namespace Barotrauma
                             break;
                     }
                     var simPos = ConvertUnits.ToSimUnits(rayStart);
-                    var body = Submarine.PickBody(simPos, new Vector2(simPos.X, -1),
-                        customPredicate: f => f.Body?.UserData is VoronoiCell cell && cell.Body.BodyType == BodyType.Static && !ExtraWalls.Any(w => w.Body == f.Body),
+                    var body = Submarine.PickBody(simPos, new Vector2(simPos.X, placement == PlacementType.Bottom ? -1 : Size.Y + 1),
+                        customPredicate: f => f.Body == TopBarrier || f.Body == BottomBarrier || (f.Body?.UserData is VoronoiCell cell && cell.Body.BodyType == BodyType.Static && !ExtraWalls.Any(w => w.Body == f.Body)),
                         collisionCategory: Physics.CollisionLevel | Physics.CollisionWall);
                     if (body != null)
                     {
-                        positions[i] = ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition) + new Vector2(0, subBorders.Height / 2);
+                        positions[i] = 
+                            ConvertUnits.ToDisplayUnits(Submarine.LastPickedPosition) + 
+                            new Vector2(0, subBorders.Height / 2 * (placement == PlacementType.Bottom ? 1 : -1));
                         hit = true;
                     }
                 }
-                float highestPoint = positions.Max(p => p.Y);
+                float highestPoint = placement == PlacementType.Bottom ? positions.Max(p => p.Y) : positions.Min(p => p.Y);
                 spawnPoint = new Vector2(spawnPoint.X, highestPoint);
                 return hit;
             }
@@ -3939,7 +3958,7 @@ namespace Barotrauma
                 }
 
                 SubmarineInfo outpostInfo;
-                Submarine outpost;
+                Submarine outpost = null;
                 if (i == 0 && preSelectedStartOutpost == null || i == 1 && preSelectedEndOutpost == null)
                 {
                     if (OutpostGenerationParams.OutpostParams.Any() || LevelData.ForceOutpostGenerationParams != null)
@@ -3953,10 +3972,14 @@ namespace Barotrauma
                         }
                         else
                         {
-                            var suitableParams = OutpostGenerationParams.OutpostParams.Where(p => location == null || p.AllowedLocationTypes.Contains(location.Type.Identifier));
+                            var suitableParams = OutpostGenerationParams.OutpostParams
+                                .Where(p => p.LevelType == null || LevelData.Type == p.LevelType)
+                                .Where(p => location == null || p.AllowedLocationTypes.Contains(location.Type.Identifier));
                             if (!suitableParams.Any())
                             {
-                                suitableParams = OutpostGenerationParams.OutpostParams.Where(p => location == null || !p.AllowedLocationTypes.Any());
+                                suitableParams = OutpostGenerationParams.OutpostParams
+                                    .Where(p => p.LevelType == null || LevelData.Type == p.LevelType)
+                                    .Where(p => location == null || !p.AllowedLocationTypes.Any());
                                 if (!suitableParams.Any())
                                 {
                                     DebugConsole.ThrowError($"No suitable outpost generation parameters found for the location type \"{location.Type.Identifier}\". Selecting random parameters.");
@@ -4042,52 +4065,70 @@ namespace Barotrauma
                     }
                 }
 
-                DockingPort outpostPort = null;
-                closestDistance = float.MaxValue;
-                foreach (DockingPort port in DockingPort.List)
+                Vector2 spawnPos;
+                if (GenerationParams.ForceOutpostPosition != Vector2.Zero)
                 {
-                    if (port.IsHorizontal || port.Docked) { continue; }
-                    if (port.Item.Submarine != outpost) { continue; }
-                    //the outpost port has to be at the bottom of the outpost
-                    if (port.Item.WorldPosition.Y > outpost.WorldPosition.Y) { continue; }
-                    float dist = Math.Abs(port.Item.WorldPosition.X - outpost.WorldPosition.X);
-                    if (dist < closestDistance)
+                    spawnPos = new Vector2(Size.X * GenerationParams.ForceOutpostPosition.X, Size.Y * GenerationParams.ForceOutpostPosition.Y);
+                }
+                else
+                {
+                    DockingPort outpostPort = null;
+                    closestDistance = float.MaxValue;
+                    foreach (DockingPort port in DockingPort.List)
                     {
-                        outpostPort = port;
-                        closestDistance = dist;
+                        if (port.IsHorizontal || port.Docked) { continue; }
+                        if (port.Item.Submarine != outpost) { continue; }
+                        //the outpost port has to be at the bottom of the outpost
+                        if (port.Item.WorldPosition.Y > outpost.WorldPosition.Y) { continue; }
+                        float dist = Math.Abs(port.Item.WorldPosition.X - outpost.WorldPosition.X);
+                        if (dist < closestDistance)
+                        {
+                            outpostPort = port;
+                            closestDistance = dist;
+                        }
                     }
-                }
 
-                float subDockingPortOffset = subPort == null ? 0.0f : subPort.Item.WorldPosition.X - Submarine.MainSub.WorldPosition.X;
-                //don't try to compensate if the port is very far from the sub's center of mass
-                if (Math.Abs(subDockingPortOffset) > 5000.0f)
-                {
-                    subDockingPortOffset = MathHelper.Clamp(subDockingPortOffset, -5000.0f, 5000.0f);
-                    string warningMsg = "Docking port very far from the sub's center of mass (submarine: " + Submarine.MainSub.Info.Name + ", dist: " + subDockingPortOffset + "). The level generator may not be able to place the outpost so that docking is possible.";
-                    DebugConsole.NewMessage(warningMsg, Color.Orange);
-                    GameAnalyticsManager.AddErrorEventOnce("Lever.CreateOutposts:DockingPortVeryFar" + Submarine.MainSub.Info.Name, GameAnalyticsManager.ErrorSeverity.Warning, warningMsg);
-                }
-
-                float? outpostDockingPortOffset = null;
-                if (outpostPort != null)
-                {
-                    outpostDockingPortOffset = subPort == null ? 0.0f : outpostPort.Item.WorldPosition.X - outpost.WorldPosition.X;
-                    //don't try to compensate if the port is very far from the outpost's center of mass
-                    if (Math.Abs(outpostDockingPortOffset.Value) > 5000.0f)
+                    float subDockingPortOffset = subPort == null ? 0.0f : subPort.Item.WorldPosition.X - Submarine.MainSub.WorldPosition.X;
+                    //don't try to compensate if the port is very far from the sub's center of mass
+                    if (Math.Abs(subDockingPortOffset) > 5000.0f)
                     {
-                        outpostDockingPortOffset = MathHelper.Clamp(outpostDockingPortOffset.Value, -5000.0f, 5000.0f);
-                        string warningMsg = "Docking port very far from the outpost's center of mass (outpost: " + outpost.Info.Name + ", dist: " + outpostDockingPortOffset + "). The level generator may not be able to place the outpost so that docking is possible.";
+                        subDockingPortOffset = MathHelper.Clamp(subDockingPortOffset, -5000.0f, 5000.0f);
+                        string warningMsg = "Docking port very far from the sub's center of mass (submarine: " + Submarine.MainSub.Info.Name + ", dist: " + subDockingPortOffset + "). The level generator may not be able to place the outpost so that docking is possible.";
                         DebugConsole.NewMessage(warningMsg, Color.Orange);
-                        GameAnalyticsManager.AddErrorEventOnce("Lever.CreateOutposts:OutpostDockingPortVeryFar" + outpost.Info.Name, GameAnalyticsManager.ErrorSeverity.Warning, warningMsg);
+                        GameAnalyticsManager.AddErrorEventOnce("Lever.CreateOutposts:DockingPortVeryFar" + Submarine.MainSub.Info.Name, GameAnalyticsManager.ErrorSeverity.Warning, warningMsg);
+                    }
+
+                    float? outpostDockingPortOffset = null;
+                    if (outpostPort != null)
+                    {
+                        outpostDockingPortOffset = subPort == null ? 0.0f : outpostPort.Item.WorldPosition.X - outpost.WorldPosition.X;
+                        //don't try to compensate if the port is very far from the outpost's center of mass
+                        if (Math.Abs(outpostDockingPortOffset.Value) > 5000.0f)
+                        {
+                            outpostDockingPortOffset = MathHelper.Clamp(outpostDockingPortOffset.Value, -5000.0f, 5000.0f);
+                            string warningMsg = "Docking port very far from the outpost's center of mass (outpost: " + outpost.Info.Name + ", dist: " + outpostDockingPortOffset + "). The level generator may not be able to place the outpost so that docking is possible.";
+                            DebugConsole.NewMessage(warningMsg, Color.Orange);
+                            GameAnalyticsManager.AddErrorEventOnce("Lever.CreateOutposts:OutpostDockingPortVeryFar" + outpost.Info.Name, GameAnalyticsManager.ErrorSeverity.Warning, warningMsg);
+                        }
+                    }
+
+                    spawnPos = outpost.FindSpawnPos(i == 0 ? StartPosition : EndPosition, minSize, outpostDockingPortOffset != null ? subDockingPortOffset - outpostDockingPortOffset.Value : 0.0f, verticalMoveDir: 1);
+                    if (Type == LevelData.LevelType.Outpost)
+                    {
+                        spawnPos.Y = Math.Min(Size.Y - outpost.Borders.Height * 0.6f, spawnPos.Y + outpost.Borders.Height / 2);
                     }
                 }
 
-                Vector2 spawnPos = outpost.FindSpawnPos(i == 0 ? StartPosition : EndPosition, minSize, outpostDockingPortOffset != null ? subDockingPortOffset - outpostDockingPortOffset.Value : 0.0f, verticalMoveDir: 1);
-                if (Type == LevelData.LevelType.Outpost)
-                {
-                    spawnPos.Y = Math.Min(Size.Y - outpost.Borders.Height * 0.6f, spawnPos.Y + outpost.Borders.Height / 2);
-                }
                 outpost.SetPosition(spawnPos, forceUndockFromStaticSubmarines: false);
+
+                foreach (WayPoint wp in WayPoint.WayPointList)
+                {
+                    if (wp.Submarine == outpost && wp.SpawnType != SpawnType.Path)
+                    {
+                        PositionsOfInterest.Add(new InterestingPosition(wp.WorldPosition.ToPoint(), PositionType.Outpost, outpost));                        
+                    }
+                }
+
                 if ((i == 0) == !Mirrored)
                 {
                     StartOutpost = outpost;
@@ -4106,13 +4147,12 @@ namespace Barotrauma
                         outpost.Info.Name = EndLocation.Name; 
                     }
                 }
-
             }
         }
 
         private void CreateBeaconStation()
         {
-            if (!LevelData.HasBeaconStation) { return; }
+            if (!LevelData.HasBeaconStation && string.IsNullOrEmpty(GenerationParams.ForceBeaconStation)) { return; }
             var beaconStationFiles = ContentPackageManager.EnabledPackages.All
                 .SelectMany(p => p.GetFiles<BeaconStationFile>())
                 .OrderBy(f => f.UintIdentifier).ToList();
@@ -4123,27 +4163,40 @@ namespace Barotrauma
             }
 
             var beaconInfos = SubmarineInfo.SavedSubmarines.Where(i => i.IsBeacon);
-            for (int i = beaconStationFiles.Count - 1; i >= 0; i--)
+            ContentFile contentFile = null;
+            if (!string.IsNullOrEmpty(GenerationParams.ForceBeaconStation))
             {
-                var beaconStationFile = beaconStationFiles[i];
-                var matchingInfo = beaconInfos.SingleOrDefault(info => info.FilePath == beaconStationFile.Path.Value);
-                Debug.Assert(matchingInfo != null);
-                if (matchingInfo?.BeaconStationInfo is BeaconStationInfo beaconInfo)
+                contentFile = beaconStationFiles.FirstOrDefault(f => f.Path == GenerationParams.ForceBeaconStation);
+                if (contentFile == null)
                 {
-                    if (LevelData.Difficulty < beaconInfo.MinLevelDifficulty || LevelData.Difficulty > beaconInfo.MaxLevelDifficulty)
-                    {
-                        beaconStationFiles.RemoveAt(i);
-                    }
+                    DebugConsole.ThrowError($"Failed to find the beacon station \"{GenerationParams.ForceBeaconStation}\". Using a random one instead...");
                 }
             }
-            if (beaconStationFiles.None())
-            {
-                DebugConsole.ThrowError($"No BeaconStation files found for the level difficulty {LevelData.Difficulty}!");
-                return;
-            }
-            var contentFile = beaconStationFiles.GetRandom(Rand.RandSync.ServerAndClient);
-            string beaconStationName = System.IO.Path.GetFileNameWithoutExtension(contentFile.Path.Value);
 
+            if (contentFile == null)
+            {
+                for (int i = beaconStationFiles.Count - 1; i >= 0; i--)
+                {
+                    var beaconStationFile = beaconStationFiles[i];
+                    var matchingInfo = beaconInfos.SingleOrDefault(info => info.FilePath == beaconStationFile.Path.Value);
+                    Debug.Assert(matchingInfo != null);
+                    if (matchingInfo?.BeaconStationInfo is BeaconStationInfo beaconInfo)
+                    {
+                        if (LevelData.Difficulty < beaconInfo.MinLevelDifficulty || LevelData.Difficulty > beaconInfo.MaxLevelDifficulty)
+                        {
+                            beaconStationFiles.RemoveAt(i);
+                        }
+                    }
+                }
+                if (beaconStationFiles.None())
+                {
+                    DebugConsole.ThrowError($"No BeaconStation files found for the level difficulty {LevelData.Difficulty}!");
+                    return;
+                }
+                contentFile = beaconStationFiles.GetRandom(Rand.RandSync.ServerAndClient);
+            }
+
+            string beaconStationName = System.IO.Path.GetFileNameWithoutExtension(contentFile.Path.Value);
             BeaconStation = SpawnSubOnPath(beaconStationName, contentFile, SubmarineType.BeaconStation);
             if (BeaconStation == null) 
             {
@@ -4207,7 +4260,7 @@ namespace Barotrauma
                 {
                     bool allowDisconnectedWires = true;
                     bool allowDamagedWalls = true;
-                    if (BeaconStation.Info?.BeaconStationInfo is BeaconStationInfo info)
+                    if (BeaconStation?.Info?.BeaconStationInfo is BeaconStationInfo info)
                     {
                         allowDisconnectedWires = info.AllowDisconnectedWires;
                         allowDamagedWalls = info.AllowDamagedWalls;
@@ -4324,6 +4377,10 @@ namespace Barotrauma
                             sp = corpsePoints.FirstOrDefault(sp => sp.AssignedJob == null) ?? pathPoints.FirstOrDefault(sp => sp.AssignedJob == null);
                             // Deduce the job from the selected prefab
                             selectedPrefab = GetCorpsePrefab(usedJobs);
+                            if (selectedPrefab != null)
+                            {
+                                job = selectedPrefab.GetJobPrefab();
+                            }
                         }
                     }
                     if (selectedPrefab == null) { continue; }

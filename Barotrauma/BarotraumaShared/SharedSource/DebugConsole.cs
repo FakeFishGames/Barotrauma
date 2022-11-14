@@ -844,7 +844,15 @@ namespace Barotrauma
                     ThrowError("Please specify an identifier and a value.");
                     return;
                 }
-                SetDataAction.PerformOperation(campaign.CampaignMetadata, args[0].ToIdentifier(), args[1], SetDataAction.OperationType.Set);
+                if (float.TryParse(args[1], out float floatVal))
+                {
+                    SetDataAction.PerformOperation(campaign.CampaignMetadata, args[0].ToIdentifier(), floatVal, SetDataAction.OperationType.Set);
+                }
+                else
+                {
+                    SetDataAction.PerformOperation(campaign.CampaignMetadata, args[0].ToIdentifier(), args[1], SetDataAction.OperationType.Set);
+                }
+
             }, isCheat: true));
 
             commands.Add(new Command("setskill", "setskill [all/identifier] [max/level] [character]: Set your skill level.", (string[] args) =>
@@ -1046,11 +1054,6 @@ namespace Barotrauma
             commands.Add(new Command("teleportsub", "teleportsub [start/end/cursor]: Teleport the submarine to the position of the cursor, or the start or end of the level. WARNING: does not take outposts into account, so often leads to physics glitches. Only use for debugging.", (string[] args) =>
             {
                 if (Submarine.MainSub == null) { return; }
-                if (Level.Loaded?.Type == LevelData.LevelType.Outpost && GameMain.GameSession != null)
-                {
-                    NewMessage("The teleportsub command is unavailable in outpost levels!", Color.Red);
-                    return;
-                }
 
                 if (args.Length == 0 || args[0].Equals("cursor", StringComparison.OrdinalIgnoreCase))
                 {
@@ -1222,7 +1225,7 @@ namespace Barotrauma
                     if (args.Length == 0) { return; }
                     if (float.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out float reputation))
                     {
-                        campaign.Map.CurrentLocation.Reputation.SetReputation(reputation);
+                        campaign.Map.CurrentLocation.Reputation?.SetReputation(reputation);
                     }
                     else
                     {
@@ -1750,6 +1753,17 @@ namespace Barotrauma
                 NewMessage("Set minimum loading time to " + time + " seconds.", Color.White);
             }));
 
+
+            commands.Add(new Command("resetcharacternetstate", "resetcharacternetstate [character name]: A debug-only command that resets a character's network state, intended for diagnosing character syncing issues.", null,
+            () =>
+            {
+                if (GameMain.NetworkMember == null) { return null; }
+                return new string[][]
+                {
+                    Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n).ToArray()
+                };
+            }));
+
             commands.Add(new Command("storeinfo", "", (string[] args) =>
             {
                 if (GameMain.GameSession?.Map?.CurrentLocation is Location location)
@@ -1803,6 +1817,7 @@ namespace Barotrauma
             commands.Add(new Command("lighting|lights", "Toggle lighting on/off (client-only).", null, isCheat: true));
             commands.Add(new Command("ambientlight", "ambientlight [color]: Change the color of the ambient light in the level.", null, isCheat: true));
             commands.Add(new Command("debugdraw", "Toggle the debug drawing mode on/off (client-only).", null, isCheat: true));
+            commands.Add(new Command("debugdrawlocalization", "Toggle the localization debug drawing mode on/off (client-only). Colors all text that hasn't been fetched from a localization file magenta, making it easier to spot hard-coded or missing texts.", null, isCheat: false));
             commands.Add(new Command("togglevoicechatfilters", "Toggle the radio/muffle filters in the voice chat (client-only).", null, isCheat: false));
             commands.Add(new Command("togglehud|hud", "Toggle the character HUD (inventories, icons, buttons, etc) on/off (client-only).", null));
             commands.Add(new Command("toggleupperhud", "Toggle the upper part of the ingame HUD (chatbox, crewmanager) on/off (client-only).", null));
@@ -2187,7 +2202,7 @@ namespace Barotrauma
                         //Dont do a thing, random is basically Human points anyways - its in the help description.
                         break;
                     default:
-                        var matchingCharacter = FindMatchingCharacter(args.Skip(1).ToArray());
+                        var matchingCharacter = FindMatchingCharacter(args.Skip(1).Take(1).ToArray());
                         if (matchingCharacter != null){ spawnInventory = matchingCharacter.Inventory; }
                         break;
                 }

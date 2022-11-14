@@ -104,6 +104,8 @@ namespace Barotrauma
                 (float)Math.Floor(value / div) * div;
         }
 
+        public static int RoundToInt(float v) => (int)MathF.Round(v);
+
         public static float RoundTowardsClosest(float value, float div)
         {
             return (float)Math.Round(value / div) * div;

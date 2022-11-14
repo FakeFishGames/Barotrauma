@@ -1,10 +1,9 @@
-﻿using System;
+﻿using Barotrauma.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.Extensions;
-using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -89,7 +88,9 @@ namespace Barotrauma
         public readonly LevelData.LevelType LevelType;
 
         public readonly ImmutableArray<Identifier> LocationTypeIdentifiers;
-        
+
+        public readonly Identifier Faction;
+
         public readonly bool ChooseRandom;
 
         private readonly int eventCount = 1;
@@ -110,10 +111,21 @@ namespace Barotrauma
 
         public readonly bool IgnoreCoolDown;
 
+        public readonly bool IgnoreIntensity;
+
         public readonly bool PerRuin, PerCave, PerWreck;
         public readonly bool DisableInHuntingGrounds;
 
+        /// <summary>
+        /// If true, events from this set shouldn't be selected again as long as they remain in <see cref="LevelData.NonRepeatableEvents"/> which has a limited size.
+        /// Use <see cref="Unique"/> to prevent selecting the whole set again altogether.
+        /// </summary>
         public readonly bool OncePerOutpost;
+
+        /// <summary>
+        /// If true, the whole set can only be selected once for a level.
+        /// </summary>
+        public readonly bool Unique;
 
         public readonly bool DelayWhenCrewAway;
 
@@ -126,13 +138,26 @@ namespace Barotrauma
 
         public readonly float ResetTime;
 
+        /// <summary>
+        /// Used to force an event set based on how many other locations have been discovered before this. (Used for campaign tutorial event sets.)
+        /// </summary>
+        public readonly int ForceAtDiscoveredNr;
+
+        /// <summary>
+        /// Used to force an event set based on how many other outposts have been visited before this. (Used for campaign tutorial event sets.)
+        /// </summary>
+        public readonly int ForceAtVisitedNr;
+
+        public readonly bool CampaignTutorialOnly;
+
         public readonly struct SubEventPrefab
         {
-            public SubEventPrefab(Either<Identifier[], EventPrefab> prefabOrIdentifiers, float? commonness, float? probability)
+            public SubEventPrefab(Either<Identifier[], EventPrefab> prefabOrIdentifiers, float? commonness, float? probability, Identifier factionId)
             {
                 PrefabOrIdentifier = prefabOrIdentifiers;
                 SelfCommonness = commonness;
                 SelfProbability = probability;
+                Faction = factionId;
             }
 
             public readonly Either<Identifier[], EventPrefab> PrefabOrIdentifier;
@@ -162,6 +187,8 @@ namespace Barotrauma
 
             public readonly float? SelfProbability;
             public float Probability => SelfProbability ?? EventPrefabs.MaxOrNull(p => p.Probability) ?? 0.0f;
+
+            public readonly Identifier Faction;
 
             public void Deconstruct(out IEnumerable<EventPrefab> eventPrefabs, out float commonness, out float probability)
             {
@@ -245,6 +272,8 @@ namespace Barotrauma
                 DebugConsole.ThrowError($"Error in event set \"{Identifier}\". \"{levelTypeStr}\" is not a valid level type.");
             }
 
+            Faction = element.GetAttributeIdentifier(nameof(Faction), Identifier.Empty);
+
             Identifier[] locationTypeStr = element.GetAttributeIdentifierArray("locationtype", null);
             if (locationTypeStr != null)
             {
@@ -267,11 +296,21 @@ namespace Barotrauma
             PerWreck = element.GetAttributeBool("perwreck", false);
             DisableInHuntingGrounds = element.GetAttributeBool("disableinhuntinggrounds", false);
             IgnoreCoolDown = element.GetAttributeBool("ignorecooldown", parentSet?.IgnoreCoolDown ?? (PerRuin || PerCave || PerWreck));
+            IgnoreIntensity = element.GetAttributeBool("ignoreintensity", parentSet?.IgnoreIntensity ?? false);
             DelayWhenCrewAway = element.GetAttributeBool("delaywhencrewaway", !PerRuin && !PerCave && !PerWreck);
             OncePerOutpost = element.GetAttributeBool("onceperoutpost", false);
+            Unique = element.GetAttributeBool("unique", false);
             TriggerEventCooldown = element.GetAttributeBool("triggereventcooldown", true);
             IsCampaignSet = element.GetAttributeBool("campaign", LevelType == LevelData.LevelType.Outpost || (parentSet?.IsCampaignSet ?? false));
             ResetTime = element.GetAttributeFloat("resettime", 0);
+            CampaignTutorialOnly = element.GetAttributeBool(nameof(CampaignTutorialOnly), false);
+
+            ForceAtDiscoveredNr = element.GetAttributeInt(nameof(ForceAtDiscoveredNr), -1);
+            ForceAtVisitedNr = element.GetAttributeInt(nameof(ForceAtVisitedNr), -1);
+            if (ForceAtDiscoveredNr >= 0 && ForceAtVisitedNr >= 0)
+            {
+                DebugConsole.ThrowError($"Error with event set \"{Identifier}\" - both ForceAtDiscoveredNr and ForceAtVisitedNr are defined, this could lead to unexpected behavior");
+            }
 
             DefaultCommonness = element.GetAttributeFloat("commonness", 1.0f);
             foreach (var subElement in element.Elements())
@@ -309,15 +348,17 @@ namespace Barotrauma
                             Identifier[] identifiers = subElement.GetAttributeIdentifierArray("identifier", Array.Empty<Identifier>());
                             float commonness = subElement.GetAttributeFloat("commonness", -1f);
                             float probability = subElement.GetAttributeFloat("probability", -1f);
+                            Identifier factionId = subElement.GetAttributeIdentifier(nameof(Faction), Identifier.Empty);
                             eventPrefabs.Add(new SubEventPrefab(
                                 identifiers,
                                 commonness >= 0f ? commonness : (float?)null,
-                                probability >= 0f ? probability : (float?)null));
+                                probability >= 0f ? probability : (float?)null,
+                                factionId));
                         }
                         else
                         {
                             var prefab = new EventPrefab(subElement, file, $"{Identifier}-{subElement.ElementsBeforeSelf().Count()}".ToIdentifier());
-                            eventPrefabs.Add(new SubEventPrefab(prefab, prefab.Commonness, prefab.Probability));
+                            eventPrefabs.Add(new SubEventPrefab(prefab, prefab.Commonness, prefab.Probability, prefab.Faction));
                         }
                         break;
                 }
@@ -342,8 +383,22 @@ namespace Barotrauma
 
         public float GetCommonness(Level level)
         {
-            Identifier key = level.GenerationParams?.Identifier ?? Identifier.Empty;
-            return OverrideCommonness.ContainsKey(key) ? OverrideCommonness[key] : DefaultCommonness;
+            if (level.GenerationParams?.Identifier != null && 
+                OverrideCommonness.TryGetValue(level.GenerationParams.Identifier, out float generationParamsCommonness))
+            {
+                return generationParamsCommonness;
+            }
+            else if (level.StartOutpost?.Info.OutpostGenerationParams?.Identifier != null && 
+                OverrideCommonness.TryGetValue(level.StartOutpost.Info.OutpostGenerationParams.Identifier, out float startOutpostParamsCommonness))
+            {
+                return startOutpostParamsCommonness;
+            }
+            else if (level.EndOutpost?.Info.OutpostGenerationParams?.Identifier != null &&
+                OverrideCommonness.TryGetValue(level.EndOutpost.Info.OutpostGenerationParams.Identifier, out float endOutpostParamsCommonness))
+            {
+                return endOutpostParamsCommonness;
+            }
+            return DefaultCommonness;
         }
 
         public int GetEventCount(Level level)
@@ -487,6 +542,11 @@ namespace Barotrauma
                     return string.Join(", ", stats.Select(mc => mc.Key + " x " + mc.Value));
                 }      
             }
+        }
+
+        public override string ToString()
+        {
+            return $"{base.ToString()} ({Identifier.Value})";
         }
 
         public override void Dispose() { }

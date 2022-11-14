@@ -50,8 +50,14 @@ namespace Barotrauma
         [Serialize(false, IsPropertySaveable.Yes, description: "Can the creature live without water or does it die on dry land?"), Editable]
         public bool NeedsWater { get; set; }
 
+        [Serialize(false, IsPropertySaveable.Yes, description: "Is this creature an artificial creature, like robot or machine that shouldn't be affected by afflictions that affect only organic creatures? Overrides DoesBleed."), Editable]
+        public bool IsMachine { get; set; }
+
         [Serialize(false, IsPropertySaveable.No), Editable]
         public bool CanSpeak { get; set; }
+
+        [Serialize(true, IsPropertySaveable.Yes), Editable]
+        public bool ShowHealthBar { get; private set; }
 
         [Serialize(false, IsPropertySaveable.Yes), Editable]
         public bool UseBossHealthBar { get; private set; }
@@ -606,6 +612,9 @@ namespace Barotrauma
             [Serialize(false, IsPropertySaveable.Yes, description:"Does the creature know how to open doors (still requires a proper ID card). Humans can always open doors (They don't use this AI definition)."), Editable]
             public bool CanOpenDoors { get; private set; }
 
+            [Serialize(false, IsPropertySaveable.Yes), Editable]
+            public bool UsePathFindingToGetInside { get; set; }
+
             [Serialize(false, IsPropertySaveable.Yes, description: "Does the creature close the doors behind it. Humans don't use this AI definition."), Editable]
             public bool KeepDoorsClosed { get; private set; }
 
@@ -649,7 +658,7 @@ namespace Barotrauma
                 if (HasTag(tag))
                 {
                     target = null;
-                    DebugConsole.ThrowError($"Multiple targets with the same tag ('{tag}') defined! Only the first will be used!");
+                    DebugConsole.AddWarning($"Trying to add multiple targets with the same tag ('{tag}') defined! Only the first will be used!");
                     return false;
                 }
                 else
@@ -814,10 +823,19 @@ namespace Barotrauma
             [Serialize(5000f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0f, MaxValueFloat = 20000f)]
             public float CircleStartDistance { get; private set; }
 
-            [Serialize(1f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0.5f, MaxValueFloat = 2f)]
+            [Serialize(false, IsPropertySaveable.Yes, description:"Normally the target size is taken into account when calculating the distance to the target. Set this true to skip that.")]
+            public bool IgnoreTargetSize { get; private set; }
+
+            [Serialize(1f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0f, MaxValueFloat = 100f)]
             public float CircleRotationSpeed { get; private set; }
 
-            [Serialize(5f, IsPropertySaveable.Yes), Editable(MinValueFloat = 1f, MaxValueFloat = 10f)]
+            [Serialize(false, IsPropertySaveable.Yes, description:"When enabled, the circle rotation speed can change when the target is far. When this setting is disabled (default), the character will head directly towards the target when it's too far."), Editable]
+            public bool DynamicCircleRotationSpeed { get; private set; }
+
+            [Serialize(0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0f, MaxValueFloat = 1f)]
+            public float CircleRandomRotationFactor { get; private set; }
+
+            [Serialize(5f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0f, MaxValueFloat = 10f)]
             public float CircleStrikeDistanceMultiplier { get; private set; }
 
             [Serialize(0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0f, MaxValueFloat = 50f)]

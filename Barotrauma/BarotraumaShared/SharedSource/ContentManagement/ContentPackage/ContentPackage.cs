@@ -18,7 +18,7 @@ namespace Barotrauma
         
         public const string LocalModsDir = "LocalMods";
         public static readonly string WorkshopModsDir = Barotrauma.IO.Path.Combine(
-            SaveUtil.SaveFolder,
+            SaveUtil.DefaultSaveFolder,
             "WorkshopMods",
             "Installed");
 

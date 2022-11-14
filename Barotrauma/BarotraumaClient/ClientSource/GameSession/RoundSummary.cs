@@ -21,7 +21,6 @@ namespace Barotrauma
 
         private readonly GameMode gameMode;
 
-        private readonly float initialLocationReputation;
         private readonly Dictionary<Faction, float> initialFactionReputations = new Dictionary<Faction, float>();
 
         public GUILayoutGroup ButtonArea { get; private set; }
@@ -36,7 +35,6 @@ namespace Barotrauma
             this.selectedMissions = selectedMissions.ToList();
             this.startLocation = startLocation;
             this.endLocation = endLocation;
-            initialLocationReputation = startLocation?.Reputation?.Value ?? 0.0f;
             if (gameMode is CampaignMode campaignMode)
             {
                 foreach (Faction faction in campaignMode.Factions)
@@ -214,11 +212,12 @@ namespace Barotrauma
                 Stretch = true
             };
 
-            List<Mission> missionsToDisplay = new List<Mission>(selectedMissions);
+            List<Mission> missionsToDisplay = new List<Mission>(selectedMissions.Where(m => m.Prefab.ShowInMenus));
             if (!selectedMissions.Any() && startLocation != null)
             {
                 foreach (Mission mission in startLocation.SelectedMissions)
                 {
+                    if (!mission.Prefab.ShowInMenus) { continue; }
                     if (mission.Locations[0] == mission.Locations[1] ||
                         mission.Locations.Contains(campaignMode?.Map.SelectedLocation))
                     {
@@ -401,7 +400,7 @@ namespace Barotrauma
             };
             reputationList.ContentBackground.Color = Color.Transparent;
 
-            if (startLocation.Type.HasOutpost && startLocation.Reputation != null)
+            /*if (startLocation.Type.HasOutpost && startLocation.Reputation != null)
             {
                 var iconStyle = GUIStyle.GetComponentStyle("LocationReputationIcon");
                 var locationFrame = CreateReputationElement(
@@ -411,7 +410,7 @@ namespace Barotrauma
                     startLocation.Type.Name, "",
                     iconStyle?.GetDefaultSprite(), startLocation.Type.GetPortrait(0), iconStyle?.Color ?? Color.White);
                 CreatePathUnlockElement(locationFrame, null, startLocation);
-            }
+            }*/
 
             foreach (Faction faction in campaignMode.Factions.OrderBy(f => f.Prefab.MenuOrder).ThenBy(f => f.Prefab.Name))
             {
@@ -462,27 +461,25 @@ namespace Barotrauma
                         if (!connection.Locked || (!connection.Locations[0].Discovered && !connection.Locations[1].Discovered)) { continue; }
 
                         var gateLocation = connection.Locations[0].IsGateBetweenBiomes ? connection.Locations[0] : connection.Locations[1];
-                        var unlockEvent =
-                            EventPrefab.Prefabs.FirstOrDefault(ep => ep.UnlockPathEvent && ep.BiomeIdentifier == gateLocation.LevelData.Biome.Identifier) ??
-                            EventPrefab.Prefabs.FirstOrDefault(ep => ep.UnlockPathEvent && ep.BiomeIdentifier == Identifier.Empty);
+                        var unlockEvent = EventPrefab.GetUnlockPathEvent(gateLocation.LevelData.Biome.Identifier, gateLocation.Faction);
 
                         if (unlockEvent == null) { continue; }
-                        if (string.IsNullOrEmpty(unlockEvent.UnlockPathFaction) || unlockEvent.UnlockPathFaction.Equals("location", StringComparison.OrdinalIgnoreCase))
+                        if (unlockEvent.Faction.IsEmpty)
                         {
                             if (location == null || gateLocation != location) { continue; }
                         }
                         else
                         {
-                            if (faction == null || faction.Prefab.Identifier != unlockEvent.UnlockPathFaction) { continue; }
+                            if (faction == null || faction.Prefab.Identifier != unlockEvent.Faction) { continue; }
                         }
 
                         if (unlockEvent != null)
                         {
                             Reputation unlockReputation = gateLocation.Reputation;
                             Faction unlockFaction = null;
-                            if (!string.IsNullOrEmpty(unlockEvent.UnlockPathFaction))
+                            if (!unlockEvent.Faction.IsEmpty)
                             {
-                                unlockFaction = GameMain.GameSession.Campaign.Factions.Find(f => f.Prefab.Identifier == unlockEvent.UnlockPathFaction);
+                                unlockFaction = GameMain.GameSession.Campaign.Factions.Find(f => f.Prefab.Identifier == unlockEvent.Faction);
                                 unlockReputation = unlockFaction?.Reputation;
                             }
                             float normalizedUnlockReputation = MathUtils.InverseLerp(unlockReputation.MinReputation, unlockReputation.MaxReputation, unlockEvent.UnlockPathReputation);
@@ -506,7 +503,7 @@ namespace Barotrauma
 
         private LocalizedString GetHeaderText(bool gameOver, CampaignMode.TransitionType transitionType)
         {
-            string locationName = Submarine.MainSub.AtEndExit ? endLocation?.Name : startLocation?.Name;
+            string locationName = Submarine.MainSub is { AtEndExit: true } ? endLocation?.Name : startLocation?.Name;
 
             string textTag;
             if (gameOver)
@@ -541,6 +538,11 @@ namespace Barotrauma
                         textTag = Submarine.MainSub.AtEndExit ? "RoundSummaryProgress" : "RoundSummaryReturn";
                         break;
                 }
+            }
+
+            if (startLocation?.Biome != null && startLocation.Biome.IsEndBiome)
+            {
+                locationName ??= startLocation.Name;
             }
 
             if (textTag == null) { return ""; }

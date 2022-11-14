@@ -24,6 +24,9 @@ namespace Barotrauma
         public readonly Dictionary<int, int> MinCountPerZone = new Dictionary<int, int>();
 
         public readonly LocalizedString Name;
+        public readonly LocalizedString Description;
+
+        public readonly LocalizedString ForceLocationName;
 
         public readonly float BeaconStationChance;
 
@@ -38,7 +41,13 @@ namespace Barotrauma
 
         public bool IsEnterable { get; private set; }
 
-        public bool UseInMainMenu
+        public bool UsePortraitInMainMenu
+        {
+            get;
+            private set;
+        }
+
+        public bool UsePortraitInRandomLoadingScreens
         {
             get;
             private set;
@@ -70,6 +79,13 @@ namespace Barotrauma
         public Sprite Sprite { get; private set; }
         public Sprite RadiationSprite { get; }
 
+        private readonly Identifier forceOutpostGenerationParamsIdentifier;
+
+        /// <summary>
+        /// If set to true, only event sets that explicitly define this location type in <see cref="EventSet.LocationTypeIdentifiers"/> can be selected at this location. Defaults to false.
+        /// </summary>
+        public bool IgnoreGenericEvents { get; }
+
         public Color SpriteColor
         {
             get;
@@ -88,6 +104,8 @@ namespace Barotrauma
         public int DailySpecialsCount { get; } = 1;
         public int RequestedGoodsCount { get; } = 1;
 
+        public readonly bool ShowSonarMarker = true;
+
         public override string ToString()
         {
             return $"LocationType (" + Identifier + ")";
@@ -96,12 +114,16 @@ namespace Barotrauma
         public LocationType(ContentXElement element, LocationTypesFile file) : base(file, element.GetAttributeIdentifier("identifier", element.Name.LocalName))
         {
             Name = TextManager.Get("LocationName." + Identifier, "unknown");
+            Description = TextManager.Get("LocationDescription." + Identifier, "");
 
             BeaconStationChance = element.GetAttributeFloat("beaconstationchance", 0.0f);
 
-            UseInMainMenu = element.GetAttributeBool("useinmainmenu", false);
+            UsePortraitInMainMenu = element.GetAttributeBool(nameof(UsePortraitInMainMenu), element.GetAttributeBool("useinmainmenu", false));
+            UsePortraitInRandomLoadingScreens = element.GetAttributeBool(nameof(UsePortraitInRandomLoadingScreens), true);
             HasOutpost = element.GetAttributeBool("hasoutpost", true);
             IsEnterable = element.GetAttributeBool("isenterable", HasOutpost);
+
+            ShowSonarMarker = element.GetAttributeBool("showsonarmarker", true);
 
             MissionIdentifiers = element.GetAttributeIdentifierArray("missionidentifiers", Array.Empty<Identifier>()).ToImmutableArray();
             MissionTags = element.GetAttributeIdentifierArray("missiontags", Array.Empty<Identifier>()).ToImmutableArray();
@@ -110,26 +132,37 @@ namespace Barotrauma
 
             ReplaceInRadiation = element.GetAttributeIdentifier(nameof(ReplaceInRadiation), Identifier.Empty);
 
+            forceOutpostGenerationParamsIdentifier = element.GetAttributeIdentifier("forceoutpostgenerationparams", Identifier.Empty);
+
+            IgnoreGenericEvents = element.GetAttributeBool(nameof(IgnoreGenericEvents), false);
+
             string teamStr = element.GetAttributeString("outpostteam", "FriendlyNPC");
             Enum.TryParse(teamStr, out OutpostTeam);
 
-            string[] rawNamePaths = element.GetAttributeStringArray("namefile", new string[] { "Content/Map/locationNames.txt" });
-            names = new List<string>();
-            foreach (string rawPath in rawNamePaths)
+            if (element.GetAttribute("name") != null)
             {
-                try
-                {
-                    var path = ContentPath.FromRaw(element.ContentPackage, rawPath.Trim());
-                    names.AddRange(File.ReadAllLines(path.Value).ToList());
-                }
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowError($"Failed to read name file \"rawPath\" for location type \"{Identifier}\"!", e);
-                }
+                ForceLocationName = TextManager.Get(element.GetAttributeString("name", string.Empty));
             }
-            if (!names.Any())
+            else
             {
-                names.Add("ERROR: No names found");
+                string[] rawNamePaths = element.GetAttributeStringArray("namefile", new string[] { "Content/Map/locationNames.txt" });
+                names = new List<string>();
+                foreach (string rawPath in rawNamePaths)
+                {
+                    try
+                    {
+                        var path = ContentPath.FromRaw(element.ContentPackage, rawPath.Trim());
+                        names.AddRange(File.ReadAllLines(path.Value).ToList());
+                    }
+                    catch (Exception e)
+                    {
+                        DebugConsole.ThrowError($"Failed to read name file \"rawPath\" for location type \"{Identifier}\"!", e);
+                    }
+                }
+                if (!names.Any())
+                {
+                    names.Add("ERROR: No names found");
+                }
             }
 
             string[] commonnessPerZoneStrs = element.GetAttributeStringArray("commonnessperzone", Array.Empty<string>());
@@ -259,6 +292,15 @@ namespace Barotrauma
             {
                 return allowedLocationTypes[rand.Next() % allowedLocationTypes.Length];
             }
+        }
+
+        public OutpostGenerationParams GetForcedOutpostGenerationParams()
+        {
+            if (OutpostGenerationParams.OutpostParams.TryGet(forceOutpostGenerationParamsIdentifier, out var parameters))
+            {
+                return parameters;
+            }
+            return null;
         }
 
         public override void Dispose() { }

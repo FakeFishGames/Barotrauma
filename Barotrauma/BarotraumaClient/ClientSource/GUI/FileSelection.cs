@@ -357,6 +357,17 @@ namespace Barotrauma
                     string txt = directory;
                     if (txt.StartsWith(currentDirectory)) { txt = txt.Substring(currentDirectory.Length); }
                     if (!txt.EndsWith("/")) { txt += "/"; }
+                    //get directory info
+                    DirectoryInfo dirInfo = new DirectoryInfo(directory);
+                    try
+                    {
+                        //this will throw an exception if the directory can't be opened
+                        Directory.GetDirectories(directory);
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        continue;
+                    }
                     var itemFrame = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.05f), fileList.Content.RectTransform), txt)
                     {
                         UserData = ItemIsDirectory.Yes

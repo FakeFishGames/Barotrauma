@@ -214,11 +214,18 @@ namespace Barotrauma
             return splitValue;
         }
 
+
         public static Identifier[] GetAttributeIdentifierArray(this XElement element, string name, Identifier[] defaultValue, bool trim = true)
         {
             return element.GetAttributeStringArray(name, null, trim: trim, convertToLowerInvariant: false)
                     ?.ToIdentifiers()
                 ?? defaultValue;
+        }
+
+        public static ImmutableHashSet<Identifier> GetAttributeIdentifierImmutableHashSet(this XElement element, string key, ImmutableHashSet<Identifier> defaultValue, bool trim = true)
+        {
+            return element.GetAttributeIdentifierArray(key, null, trim)?.ToImmutableHashSet()
+                   ?? defaultValue;
         }
 
         public static float GetAttributeFloat(this XElement element, float defaultValue, params string[] matchingAttributeName)
@@ -769,7 +776,15 @@ namespace Barotrauma
 #endif
                 return Color.White;
             }
-
+            if (stringColor.StartsWith("faction.", StringComparison.OrdinalIgnoreCase))
+            {
+                Identifier factionId = stringColor.Substring(8).ToIdentifier();
+                if (FactionPrefab.Prefabs.TryGet(factionId, out var faction))
+                {
+                    return faction.IconColor;
+                }
+                return Color.White;
+            }
 
             string[] strComponents = stringColor.Split(',');
 

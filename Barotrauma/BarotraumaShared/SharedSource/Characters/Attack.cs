@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Items.Components;
 
 namespace Barotrauma
 {    
@@ -180,14 +181,29 @@ namespace Barotrauma
         [Serialize(0.0f, IsPropertySaveable.Yes), Editable(MinValueFloat = 0.0f, MaxValueFloat = 1000.0f)]
         public float LevelWallDamage { get; set; }
 
-        [Serialize(false, IsPropertySaveable.Yes)]
+        [Serialize(false, IsPropertySaveable.Yes), Editable]
         public bool Ranged { get; set; }
 
-        [Serialize(false, IsPropertySaveable.Yes, description:"Only affects ranged attacks.")]
+        [Serialize(false, IsPropertySaveable.Yes, description:"Only affects ranged attacks."), Editable]
         public bool AvoidFriendlyFire { get; set; }
 
-        [Serialize(20f, IsPropertySaveable.Yes)]
+        [Serialize(20f, IsPropertySaveable.Yes, description: "Only affects ranged attacks."), Editable]
         public float RequiredAngle { get; set; }
+
+        [Serialize(0f, IsPropertySaveable.Yes, description: "By default uses the same value as RequiredAngle. Use if you want to allow selecting the attack but not shooting until the angle is smaller. Only affects ranged attacks."), Editable]
+        public float RequiredAngleToShoot { get; set; }
+
+        [Serialize(0f, IsPropertySaveable.Yes, description: "How much the attack limb is rotated towards the target. Default 0 = no rotation. Only affects ranged attacks."), Editable]
+        public float AimRotationTorque { get; set; }
+
+        [Serialize(-1, IsPropertySaveable.Yes, description: "Reference to the limb we apply the aim rotation to. By default same as the attack limb. Only affects ranged attacks."), Editable]
+        public int RotationLimbIndex { get; set; }
+
+        [Serialize(0f, IsPropertySaveable.Yes, description:"How much the held weapon is swayed back and forth while aiming. Only affects monsters using ranged weapons (items). Default 0 means the weapon is not swayed at all."), Editable]
+        public float SwayAmount { get; set; }
+
+        [Serialize(5f, IsPropertySaveable.Yes, description: "How fast the held weapon is swayed back and forth while aiming. Only affects monsters using ranged weapons (items)."), Editable]
+        public float SwayFrequency { get; set; }
 
         /// <summary>
         /// Legacy support. Use Afflictions.
@@ -521,13 +537,19 @@ namespace Barotrauma
                         effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                     {
                         targets.Clear();
-                        targets.AddRange(effect.GetNearbyTargets(worldPosition, targets));
+                        effect.AddNearbyTargets(worldPosition, targets);
                         effect.Apply(effectType, deltaTime, targetEntity, targets);
                     }
                     if (effect.HasTargetType(StatusEffect.TargetType.UseTarget))
                     {
                         effect.Apply(effectType, deltaTime, targetEntity, attacker, worldPosition);
                     }
+                }
+                if (effect.HasTargetType(StatusEffect.TargetType.Contained))
+                {
+                    targets.Clear();
+                    targets.AddRange(attacker.Inventory.AllItems);
+                    effect.Apply(effectType, deltaTime, attacker, targets);
                 }
             }
 
@@ -554,7 +576,15 @@ namespace Barotrauma
 
             DamageParticles(deltaTime, worldPosition);
 
-            var attackResult = targetLimb.character.ApplyAttack(attacker, worldPosition, this, deltaTime, playSound, targetLimb, penetration: Penetration);
+            float penetration = Penetration;
+
+            float? penetrationValue = SourceItem?.GetComponent<RangedWeapon>()?.Penetration;
+            if (penetrationValue.HasValue)
+            {
+                penetration += penetrationValue.Value;
+            }
+
+            var attackResult = targetLimb.character.ApplyAttack(attacker, worldPosition, this, deltaTime, playSound, targetLimb, penetration);
             var effectType = attackResult.Damage > 0.0f ? ActionType.OnUse : ActionType.OnFailure;
 
             foreach (StatusEffect effect in statusEffects)
@@ -584,12 +614,18 @@ namespace Barotrauma
                     effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                 {
                     targets.Clear();
-                    targets.AddRange(effect.GetNearbyTargets(worldPosition, targets));                
+                    effect.AddNearbyTargets(worldPosition, targets);                
                     effect.Apply(effectType, deltaTime, targetLimb.character, targets);
                 }
                 if (effect.HasTargetType(StatusEffect.TargetType.UseTarget))
                 {
                     effect.Apply(effectType, deltaTime, targetLimb.character, attacker, worldPosition);
+                }
+                if (effect.HasTargetType(StatusEffect.TargetType.Contained))
+                {
+                    targets.Clear();
+                    targets.AddRange(attacker.Inventory.AllItems);
+                    effect.Apply(effectType, deltaTime, attacker, targets);
                 }
             }
 

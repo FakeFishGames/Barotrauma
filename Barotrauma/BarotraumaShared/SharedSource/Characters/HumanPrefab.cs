@@ -27,6 +27,32 @@ namespace Barotrauma
         [Serialize(1f, IsPropertySaveable.No)]
         public float AimAccuracy { get; protected set; }
 
+        [Serialize(1f, IsPropertySaveable.No)]
+        public float SkillMultiplier { get; protected set; }
+
+        [Serialize(0, IsPropertySaveable.No)]
+        public int ExperiencePoints { get; private set; }
+
+        private readonly HashSet<Identifier> tags = new HashSet<Identifier>();
+
+        [Serialize("", IsPropertySaveable.Yes)]
+        public string Tags
+        {
+            get => string.Join(",", tags);
+            set
+            {
+                tags.Clear();
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    string[] splitTags = value.Split(',');
+                    foreach (var tag in splitTags)
+                    {
+                        tags.Add(tag.ToIdentifier());
+                    }
+                }
+            }
+        }
+
         private readonly HashSet<Identifier> moduleFlags = new HashSet<Identifier>();
 
         [Serialize("", IsPropertySaveable.Yes, "What outpost module tags does the NPC prefer to spawn in.")]
@@ -79,6 +105,9 @@ namespace Barotrauma
 
         public Identifier[] PreferredOutpostModuleTypes { get; protected set; }
 
+        [Serialize("", IsPropertySaveable.No)]
+        public Identifier Faction { get; set; }
+
         public XElement Element { get; protected set; }
         
 
@@ -95,6 +124,11 @@ namespace Barotrauma
             element.GetChildElements("character").ForEach(e => CustomCharacterInfos.Add((e, e.GetAttributeFloat("commonness", 1))));
             PreferredOutpostModuleTypes = element.GetAttributeIdentifierArray("preferredoutpostmoduletypes", Array.Empty<Identifier>());
             this.NpcSetIdentifier = npcSetIdentifier;
+        }
+
+        public IEnumerable<Identifier> GetTags()
+        {
+            return tags;
         }
 
         public IEnumerable<Identifier> GetModuleFlags()
@@ -177,13 +211,23 @@ namespace Barotrauma
             CharacterInfo characterInfo;
             if (characterElement == null)
             {
-                characterInfo= new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: GetJobPrefab(randSync), npcIdentifier: Identifier);
+                characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: GetJobPrefab(randSync), npcIdentifier: Identifier);
             }
             else
             {
                 characterInfo = new CharacterInfo(characterElement, Identifier);
             }
+            if (characterInfo.Job != null && !MathUtils.NearlyEqual(SkillMultiplier, 1.0f))
+            {
+                foreach (var skill in characterInfo.Job.GetSkills())
+                {
+                    float newSkill = skill.Level * SkillMultiplier;
+                    skill.IncreaseSkill(newSkill - skill.Level, increasePastMax: false);
+                }
+                characterInfo.Salary = characterInfo.CalculateSalary();
+            }
             characterInfo.HumanPrefabIds = (NpcSetIdentifier, Identifier);
+            characterInfo.GiveExperience(ExperiencePoints);
             return characterInfo;
         }
 

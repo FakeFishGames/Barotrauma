@@ -501,7 +501,7 @@ namespace Barotrauma
                     info?.ClearSavedStatValues(statType);                        
                     for (int i = 0; i < savedStatValueCount; i++)
                     {
-                        string statIdentifier = msg.ReadString();
+                        Identifier statIdentifier = msg.ReadIdentifier();
                         float statValue = msg.ReadSingle();
                         bool removeOnDeath = msg.ReadBoolean();
                         info?.ChangeSavedStatValue(statType, statValue, statIdentifier, removeOnDeath, setValue: true);

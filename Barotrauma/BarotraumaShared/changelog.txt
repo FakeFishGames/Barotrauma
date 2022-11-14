@@ -1,3 +1,276 @@
+---------------------------------------------------------------------------------------------------------
+v100.4.0.0
+---------------------------------------------------------------------------------------------------------
+
+- Updated loading screen and main menu graphics.
+- Hid some of the endgame items from the sub editor.
+- Fixed research beacon station sometimes spawning in normal levels.
+- Fixed research beacon station's generator not generating any power.
+- Fixed end boss sometimes spawning a bit off from the intended spawn position.
+
+---------------------------------------------------------------------------------------------------------
+v100.3.0.0
+---------------------------------------------------------------------------------------------------------
+
+- Fixed crashing when you enter the shipyard interface.
+
+---------------------------------------------------------------------------------------------------------
+v100.2.0.0
+---------------------------------------------------------------------------------------------------------
+
+- Added a new ending for the campaign.
+- New loading screen / location portraits.
+
+Fixes: 
+- Fixed cultist robe's hood rendering over diving suit helmets.
+- Fixed colonies sometimes failing to generate properly (falling back to a small pre-made outpost).
+- Fixed some of the hireable characters spawning without a headset.
+- Made honker blast require and consume fuel to prevent it from being infinitely spammable.
+- Fixed NPCs not attacking you in the Subra rescue mission.
+- Fixed "no mission selected" popup being shown if there's no missions available for the next round, but an outpost mission available in the destination.
+- Fixed mining mission sonar labels displaying as [resourcename]. 
+
+---------------------------------------------------------------------------------------------------------
+v100.1.0.0
+---------------------------------------------------------------------------------------------------------
+
+- Fixed all colonies having clown deco in them.
+- Made Funbringer 3000 craftable.
+- Fixed Clownhaven mission sometimes unlocking in non-colony outposts.
+- Fixed texts duplicating after each round in the Book of Chalices and Honkmotherian Scriptures.
+- Fixed bots fleeing from the huskified storage container.
+- Fixed console error about "missionevent_escort1" when entering the 2nd outpost.
+
+---------------------------------------------------------------------------------------------------------
+v100.0.0.0
+---------------------------------------------------------------------------------------------------------
+
+Test version of the faction overhaul:
+- Outposts are controlled by the Europa Coalition or Jovian Separatists, and some of them include a module belonging to the Church of Husk or Children of the Honkmother.
+- Lots of new outpost events, and a longer "event chain" for the secondary factions.
+- Lots of new facion-specific missions: some variants of existing missions, some new.
+- Got rid of location-specific reputation. Now all the events/missions give faction reputation instead (excluding missions that aren't related to or given by a faction, e.g. abandoned outpost missions).
+- Faction-specific hires: "generic" high-level characters with more experience points and better gear than normal hireable NPCs. Available for hiring when Coalition or Separatist reputation is high enough.
+- Special, named characters who can be hired via scripted events after reaching a high enough reputation.
+- Faction-specific vendors (separatists, husks, clowns) who sell special items (many of which are completely new) if your reputation is high enough.
+- If your Coalition/Separatist reputation is low enough, you may get attacked by their vessel during missions.
+- There's now always two paths from biome to another, one controlled by the Coalition and one by Separatists.
+- Improvements to the campaign map.
+
+---------------------------------------------------------------------------------------------------------
+v0.20.6.0
+---------------------------------------------------------------------------------------------------------
+
+Unstable only:
+- Fixed scripted events looping and repeating some parts.
+- Depth charges don't explode when taking damage until they've been launched.
+- Fixed Acid Grenade quality doing nothing.
+- Fixed Acid Grenades not working in detonators.
+- Fixed genetic materials being too abundant with the "Blackmarket Genes" talent.
+- Fixed affliction icons overlapping with the inventory when grabbing someone or when a health interface is open.
+- Fixed scrap cannon's firing particle effect triggering without ammo.
+- Fixed scrap cannon barrel position.
+- Fixed messed up depleted fuel SMG magazine sprite.
+
+Bugfixes:
+- Fixed portable pump's per-sub limit not working if you attach them at a spot with no background wall.
+- Fixed oxygenlow resistance not affecting the time it takes to die in an unconscious state.
+- Fixed bloodloss resistance not affecting how fast bleeding causes bloodloss.
+- Fixed numpad keys toggling the chat when the Chat key is bind to nothing.
+- Fixed piezo crystals no longer spawning in the Great Sea.
+
+Modding:
+- Fixed sound's frequency multiplier not working in many cases (status effects, specific item sounds like turret movement sounds).
+
+---------------------------------------------------------------------------------------------------------
+v0.20.5.0
+---------------------------------------------------------------------------------------------------------
+
+Unstable only:
+- Fixed crashing when you enter the 2nd outpost.
+
+---------------------------------------------------------------------------------------------------------
+v0.20.4.0
+---------------------------------------------------------------------------------------------------------
+
+Changes and additions:
+- Added an objective to give the order to "Operate Turret" alongside other orders in the campaign tutorial.
+- Added popups when completing tutorial chapters that allow you to restart or continue and to return back to the menu.
+- Rebalanced clothing and apparel resistances. Overall basic clothes will give less resistance.
+- Rebalanced damage dealt by tools. Damage should be a bit higher overall.
+- SMG can now be crafted.
+- Items' damage modifiers are shown in store tooltips.
+- Added an option to hide enemy health bars.
+- Server visibility can be adjusted in the server lobby (instead of having to restart the server).
+- When throwing an item (such as a grenade), the whole throw animation is played before the item is actually launched. Prevents being able to throw items at a ridiculous rate by spamming the hotkeys and LMB.
+- Players can select talents for bots in multiplayer.
+- Some changes to wrecked item sprites (replacing the old low-res pictures with modified versions of the normal items' sprites).
+
+Balance:
+- Made some weapons available later in game, to increase feeling of progression.
+
+Unstable only:
+- Fixed campaign tutorial progress resetting.
+- Fixed tutorial mudraptors spawning in the wrong places.
+- Fixed a Role tutorial cabinet staying highlighted after completing the required action.
+- Fixed fabricator taking items from linked containers even if there's suitable ones in the input slots.
+- Fixed typos in europabrew and sulphuric acid syringes that made them craftable by anyone.
+- Fixed several talents that were not working as described.
+- Various balance changes to talents.
+- Fixed an exploit that allowed making sonar pings undetectable by turning the sonar off after the ping.
+- Fixed swapping magazines no longer working due to the addition of the flashlight slots.
+- Fixed bots being unable to swap Exosuit's oxygen tanks or use it as divining gear.
+- Fixed rifle bullets appearing at the tip of the rifle.
+- Fixed limbs sometimes getting severed off mudraptors or other monsters when the target is alive, leading to floating mudraptors.
+
+Fixed:
+- Fixed candidate box not being visible when using the Chinese input method.
+- Fixed switching characters interrupting outpost events (even if there's currently no dialog active).
+- Fixed certain events preventing other events from triggering when half-finished (e.g. preventing you from unlocking missions when an event is still running and for example waiting for you to talk to some other NPC).
+- Fixed other players not seeing the spray particles when someone uses a sprayer in multiplayer.
+- Fixed ability to "fire" (just dropping the projectile) hardpoints that are connected to a periscope and loader.
+
+---------------------------------------------------------------------------------------------------------
+v0.20.3.0
+---------------------------------------------------------------------------------------------------------
+
+Changes and additions:
+- New weapons: Rifle, Heavy Machine Gun, Machine Pistol, Harpoon Coil-Rifle.
+- Limit which submarines are available in each outpost: high-tier subs become available as you get further in the campaign, and the submarine class selection depends on the type of the outpost.
+- Added in-game hints for the genetic system.
+- Added a button for treating all characters in one go to the medical clinic.
+- Affliction descriptions change depending on the strength of the affliction, and whether you're treating someone else or yourself.
+
+Unstable only:
+- Various balance changes to talents.
+- Fixed clear button not doing anythign in new talent menu.
+- Fixed various XP-giving talents causing console errors at the end of the round.
+- Rum can be drunk (not just applied in the health interface).
+- Fixed defense bot not aiming properly client-side.
+- Fixed some talent items being craftable without the talent.
+- Fixed some talent items being sold in outpost stores.
+- Replaced some placeholder talent item sprites.
+- Fixed "Mailman" talent multiplying mission rewards by 151.
+- Fixed container indicator showing how full the 1st slot is when it should show how full the container is.
+- Fixed crashing if a fabricator finishes fabricating with no user.
+- Fixed skedaddle talent only giving 1 second of the buff instead of 5.
+- Fixed clown crate not fit in crate shelf.
+
+Balance:
+- Slightly adjusted values of handheld weapons.
+  - Power levels match cost better.
+  - Damage to structures has been revised (f.e. knives shouldn't be so efficient at cutting through walls).
+  - Some tools are now slightly more damaging and viable as a last resort weapon (don't atually try to fight mudraptors with a wrench though).
+  - Improved ammo availability for basic weapons.
+- Slightly adjusted values of apparel (armor, clothing, diving suits) to better highlight strengths and weaknesses.
+  - Combat Diving Suit is now actually better for combat than the regular diving suit, due to higher damage resistances.
+  - PUCS no longer gives a bonus to speed when using Underwater Scooter, as it has plenty of other strengths.
+  - Mechanic's apparel now has higher laceration protection than Engineer's apparel, as that's typically the damage they'd get from failing to repair.
+  - All starter clothing gives less protection now, while some shop/npc clothing now gives some benefit.
+- Usage of a minimum difficulty level to have some weapons appear in stores only later in the game. Even some previously talent-only items can appear in stores now in very late biomes.
+- Plasma cutter is now much better at cutting.
+
+Bugfixes:
+- Fixed a rounding error that caused Health Scanner HUD to display every level of bleeding below 100% as "minor".
+
+Modding:
+- Allow 'launchimpulse' on RangedWeapon to affect projectile's speed (sum of launch impulses).
+- Allow 'penetration' on RangedWeapon to affect projectile's penetration (sum of penetration).
+- Added 'DontApplyToHands' property to Propulsion, preventing extra force applying to hands when the item is held in hands (instead applying only to the character's whole body).
+- Added a skill requirement conditional for StatusEffect, example: <Conditional skillrequirement="true" weapons="lt 35" /> to make a status effect occur only if the target has less than 35 weapon skill.
+- Added ReloadSkillRequirement and ReloadNoSkill to RangedWeapon. F.e. a weapon with reload=2s, ReloadSkillRequirement=40, ReloadNoSkill=5s will have a character with 20 weapons skill reload at 3.5 s.
+
+---------------------------------------------------------------------------------------------------------
+v0.20.2.0
+---------------------------------------------------------------------------------------------------------
+
+Unstable only:
+- Balance improvements to the new talents.
+- Fixed mistakes and inconsistencies in talent descriptions.
+- Fixed several talents reducing item stats instead of increasing them.
+- Fixed console errors caused by the Bounty Hunter talent.
+- Fixed Bloody Business not working if you have the Gene Harvester talent unlocked.
+- Added a proper sprite for the exosuit.
+- Fixed exosuit working after you take out the battery. 
+- Fixed exosuit working regardless of which slot you put the battery and oxygen tank in.
+- Fixed arc emitter sprite when worn on back.
+- Fixed console error when hitting a shield with a melee weapon.
+- Reduced makeshift shelves to 2 slots to match sprite.
+- Reduced amount of talents available through Endocrine Booster usage.
+- Add missing recipe unlocks: Ceremonial Sword, Handcannon.
+- Moved "Steady Tune" to tier 2, added a new "Trickle Down" talent to the 3rd tier.
+
+---------------------------------------------------------------------------------------------------------
+v0.20.1.0
+---------------------------------------------------------------------------------------------------------
+
+Tutorial improvements:
+- A new campaign-integrated tutorial that teaches the basics of the campaign mode in the first outpost. 1st version: feedback and issue reports are much appreciated!
+- Various fixes and improvements to the Basic and Role tutorials.
+
+Unstable only:
+- Made saline a bit more effective (the nerf in the previous unstable version was a bit too much).
+- Fixed ranged creature attacks causing a crash when the creature is targeting a hull.
+- Fixed monsters with no inventory (e.g. watcher, hammerhead spawns) causing a crash. 
+- Most of the talent fixes and improvements we've been doing didn't make it into this build, but they're coming soon!
+
+---------------------------------------------------------------------------------------------------------
+v0.20.0.0
+---------------------------------------------------------------------------------------------------------
+
+Talent overhaul:
+- Redesigned and rebalanced talents: lots of new talents, changes and balancing to existing ones and replacing some of the more broken ones with new ones.
+- Redesigned talent tree structure: there's now a selection of "generic" talents, and after you've unlocked 4 of them, you can choose one specialization talent tree (meaning that you can no longer unlock all trees, but have to specialize in one).
+- There's still a lot to test, balance and fix in the new talents, so all feedback and issue reports regarding the talents are much appreciated:
+	- Are there some talents that don't work as expected?
+	- Are the XP bonuses too large or too small?
+	- In general, how balanced are the talents, are there any that feel OP or too weak?
+	- Any inaccuracies or things to improve in the talent descriptions?
+
+Changes and additions:
+- Added a button for opening the Steam Workshop to all tabs of the workshop menu.
+- Added tooltips that explain how the bot spawn modes work to the server lobby.
+- Made saline significantly less effective as a treatment for bloodloss to make blood packs more useful.
+- Nerfed flak cannon's explosive ammo.
+- Allow putting medium items (e.g. storage container) in medical and toxic cabinets.
+
+Multiplayer:
+- Fixed "Input contains duplicate packages" error still occuring if you try to join a server that has empty content packages when you don't have those packages yourself.
+- Fixed networking errors when the connection to the server is momentarily lost and then re-established.
+- Added a cooldown to client name changes to prevent using it for spamming.
+- Fixed bans issued with the "banaddress" command using a client's Steam ID not working.
+
+Bugfixes:
+- Fixed Esc not closing the campaign interfaces (map, store, shipyard, etc) but opening the pause menu instead.
+- Fixed bots sometimes firing in a random direction when they equip a weapon. Happened because the aim and shoot inputs could already be active when the bot switches from another item to the weapon (e.g. from underwater scooter to some gun).
+- Fixed pirates sometimes being unable to operate multiple turrets at the same time (even if there's enough crew to operate multiple), and attempting to operate hardpoints.
+- Fabricator chooses the available ingredient that's in the worst condition when there's multiple suitable ingredients available.
+- Fixed characters falling off ladders when using aimable tools.
+- Fixed currently selected mission being included in the mission count displayed on the campaign map (i.e. showing "1/2" when you're choosing a new destination at an empty location).
+- Fixed inability to sit in cafeteria chairs.
+- Fixed projectile impacts getting triggered by gravity spheres and other TriggerComponents (meaning you couldn't hit monsters near a gravity sphere).
+- Fixed blood pack fabrication recipe outputting only one item.
+- Fixed tutorial not progressing when inserting a welding fuel tank inside the welding tool straight away, rather than inventory first.
+- Fixed PUCS not beeping when you're underwater without a tank if you're inside a hull that has oxygen in it.
+- Fixed some issues in sonar AITargets which made monsters hear the sonar when they shouldn't: switching to passive would immediately make the current directional ping cover 360 degrees, and whether the ping was directional or not would actually depend on whether the previous ping was directional, not what the mode is now.
+- Fixed items getting autofilled into non-interactable containers in wrecks and outposts.
+- Fixes to ID card tag issues in wrecks (prevented accessing the secure containers with the ID cards looted from the corpses).
+- Fixed verifying file integrity on Steam resetting the server settings file.
+- Fixed crashing if you try to open an access-restricted directory in the file selection dialog.
+- Fixed a typo in physicorium shell's damage config, causing it to not do bleeding damage.
+- Fixed money gain/lose popups no longer showing in the campaign.
+- Fixed bloodloss and drunkenness never fully healing, just dropping below the threshold at which the icon appears. Caused e.g. drunkenness and bloodloss to never fully go away, causing issues with some talent effects.
+- Fixed bots always opening the door/hatch they're trying to repair.
+- Fixed power indicator not rotating with batteries.
+- Fixed lights on welding tools and plasma cutters emitting light the next round if the round ends while using them.
+- Fixed Camel's airlock not draining fully.
+- Fixed Berilia's bottom EDC not being wired to a supercapacitor and a loose wire between the flak cannon and the right supercapacitor.
+
+Modding:
+- Fixed increasing an item's HealthMultiplier making the items appear damaged in existing subs/saves (e.g. if you doubled an item's maximum condition, the items would remain in the old maximum condition and appear 50% damaged).
+- Fixed crashing if a talent is triggered when the character receives some affliction, and that talent applies the same affliction on the character.
+- Fixed crashing if the ingredient of a fabrication recipe can't be found.
+- Fixed inability to sync properties of ItemComponents that the item has multiple of (meaning that it was only possible to e.g. edit the light color of the item's first LightComponent if it has multiple).
 
 ---------------------------------------------------------------------------------------------------------
 v0.19.14.0
@@ -75,6 +348,30 @@ Fixes to new issues in the previous build:
 - Fixed clients sometimes failing to reconnect to the server if the connection is momentarily lost.
 - Fixed item conditions resetting to 100% between rounds.
 - Fixed mineral missions always causing a crash.
+feature/combat-n-handhelds-balance branch changes
+---------------------------------------------------------------------------------------------------------
+
+Balance:
+- Slightly adjusted values of handheld weapons
+-- Power levels match cost better
+-- Damage to structures has been revised (f.e. knives shouldn't be so efficient at cutting through walls)
+-- Some tools are now slightly more damaging and viable as a last resort weapon (don't atually try to fight mudraptors with a wrench though)
+-- Improved ammo availability for basic weapons
+- Slightly adjusted values of apparel (armor, clothing, diving suits) to better highlight strengths and weaknesses
+-- Combat Diving Suit is now actually better for combat than the regular diving suit, due to higher damage resistances
+-- PUCS no longer gives a bonus to speed when using Underwater Scooter, as it has plenty of other strengths
+-- Mechanic's apparel now has higher laceration protection than Engineer's apparel, as that's typically the damage they'd get from failing to repair
+-- All starter clothing gives less protection now, while some shop/npc clothing now gives some benefit
+- Usage of a minimum difficulty level to have some weapons appear in stores only later in the game. Even some previously talent-only items can appear in stores now in very late biomes.
+- Plasma cutter is now much better at cutting
+
+Modding:
+- Allow 'launchimpulse' on RangedWeapon to affect projectile's speed (sum of launch impulses)
+- Allow 'penetration' on RangedWeapon to affect projectile's penetration (sum of penetration)
+- Added 'ApplyToHands' property to Propulsion (default=true), preventing extra force applying to hands when the item is held in hands when set to false (instead applying only to the character's whole body)
+- Added a skill requirement conditional for StatusEffect, example: <Conditional skillrequirement="true" weapons="lt 35" /> to make a status effect occur only if the target has less than 35 weapon skill
+- Added ReloadSkillRequirement and ReloadNoSkill to RangedWeapon. F.e. a weapon with reload=2s, ReloadSkillRequirement=40, ReloadNoSkill=5s will have a character with 20 weapons skill reload at 3.5s
+
 
 ---------------------------------------------------------------------------------------------------------
 v0.19.8.0
@@ -404,7 +701,8 @@ Changes:
 - Handheld sonars can't detect minerals from inside the sub.
 - Changed the plus and minus button in the campaign settings into arrows. The button on the right increases difficulty, which in the case of the starting balance and supplies means reducing them, making the plus and minus buttons misleading.
 - Reduced costs of handheld weapon ammunition significantly.
-- Slightly reduced effectiveness of harpoons and revolver round to compensate for the cheaper ammo.
+- Up revolver & harpoon shop availability (especially at military outposts / armory merchants)
+- Slightly reduced effectiveness of harpoons and revolver round to compensate for the cheaper / more available ammo.
 - Changed recipes for Handcannon, Assault Rifle and Auto-Shotgun. Weapon crafting is more expensive, to compensate for cheaper ammo.
 - Adjusted numerous other recipes and price costs of materials. Previously little used materials (like tin) are now used more.
 - Partially reintroduced the "toggle inventory" keybind, now called "toggle entity list". Even though toggling the in-game inventory is no longer possible, the keybind can be used to change the hotkey for toggling the sub editor's entity list.

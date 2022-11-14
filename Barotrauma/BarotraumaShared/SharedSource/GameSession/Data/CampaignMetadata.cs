@@ -8,19 +8,14 @@ namespace Barotrauma
 {
     internal partial class CampaignMetadata
     {
-        public CampaignMode Campaign { get; }
-
         private readonly Dictionary<Identifier, object> data = new Dictionary<Identifier, object>();
 
-        public CampaignMetadata(CampaignMode campaign)
+        public CampaignMetadata()
         {
-            Campaign = campaign;
         }
 
-        public CampaignMetadata(CampaignMode campaign, XElement element)
+        public CampaignMetadata(XElement element)
         {
-            Campaign = campaign;
-
             foreach (var subElement in element.Elements())
             {
                 if (string.Equals(subElement.Name.ToString(), "data", StringComparison.InvariantCultureIgnoreCase))

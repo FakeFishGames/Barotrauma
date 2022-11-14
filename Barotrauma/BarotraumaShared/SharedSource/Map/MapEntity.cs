@@ -158,7 +158,7 @@ namespace Barotrauma
             {
                 if (!float.IsNaN(value))
                 {
-                    _spriteOverrideDepth = MathHelper.Clamp(value, 0.001f, 0.999f);
+                    _spriteOverrideDepth = MathHelper.Clamp(value, 0.001f, 0.999999f);
                     if (this is Item) { _spriteOverrideDepth = Math.Min(_spriteOverrideDepth, 0.9f); }
                     SpriteDepthOverrideIsSet = true;
                 }

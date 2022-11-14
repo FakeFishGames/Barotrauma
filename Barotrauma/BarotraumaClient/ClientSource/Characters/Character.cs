@@ -109,6 +109,42 @@ namespace Barotrauma
             set => grainStrength = Math.Max(0, value);
         }
 
+        /// <summary>
+        /// Can be used by status effects
+        /// </summary>
+        public float CollapseEffectStrength
+        {
+            get { return Level.Loaded?.Renderer?.CollapseEffectStrength ?? 0.0f; }
+            set
+            {
+                if (Level.Loaded?.Renderer == null) { return; }
+                if (Controlled == this)
+                {
+                    float strength = MathHelper.Clamp(value, 0.0f, 1.0f);
+                    Level.Loaded.Renderer.CollapseEffectStrength = strength;
+                    Level.Loaded.Renderer.CollapseEffectOrigin = Submarine?.WorldPosition ?? WorldPosition;
+                    Screen.Selected.Cam.Shake = Math.Max(MathF.Pow(strength, 3) * 100.0f, Screen.Selected.Cam.Shake);
+                    Screen.Selected.Cam.Rotation = strength * (PerlinNoise.GetPerlin((float)Timing.TotalTime * 0.01f, (float)Timing.TotalTime * 0.05f) - 0.5f);
+                    Level.Loaded.Renderer.ChromaticAberrationStrength = value * 50.0f;
+                }
+            }
+        }
+        /// <summary>
+        /// Can be used to set camera shake from status effects
+        /// </summary>
+        public float CameraShake
+        {
+            get { return Screen.Selected?.Cam?.Shake ?? 0.0f; }
+            set
+            {
+                if (!MathUtils.IsValid(value)) { return; }
+                if (Screen.Selected?.Cam != null)
+                {
+                    Screen.Selected.Cam.Shake = value;
+                }
+            }
+        }
+
         private readonly List<ParticleEmitter> bloodEmitters = new List<ParticleEmitter>();
         public IEnumerable<ParticleEmitter> BloodEmitters
         {
@@ -907,7 +943,7 @@ namespace Barotrauma
                     { 
                         name += " " + TextManager.Get("Disguised"); 
                     }
-                    else if (Info.Title != null)
+                    else if (Info.Title != null && TeamID != CharacterTeamType.Team1)
                     {
                         name += '\n' + Info.Title;
                     }
@@ -965,14 +1001,31 @@ namespace Barotrauma
             }
 
             if (IsDead) { return; }
-            
-            if (CharacterHealth.DisplayedVitality < MaxVitality * 0.98f && hudInfoVisible)
+
+            var healthBarMode = GameMain.NetworkMember?.ServerSettings.ShowEnemyHealthBars ?? GameSettings.CurrentConfig.ShowEnemyHealthBars;
+            if (healthBarMode != EnemyHealthBarMode.ShowAll)
+            {
+                if (Controlled == null)
+                {
+                    if (!IsOnPlayerTeam) { return; }
+                }
+                else
+                {
+                    if (!HumanAIController.IsFriendly(Controlled, this) || 
+                        (AIController is HumanAIController humanAi && humanAi.ObjectiveManager.CurrentObjective is AIObjectiveCombat combatObjective && HumanAIController.IsFriendly(Controlled, combatObjective.Enemy))) 
+                    { 
+                        return; 
+                    }
+                }
+            }
+
+            if (Params.ShowHealthBar && CharacterHealth.DisplayedVitality < MaxVitality * 0.98f && hudInfoVisible)
             {
                 hudInfoAlpha = Math.Max(hudInfoAlpha, Math.Min(CharacterHealth.DamageOverlayTimer, 1.0f));
 
                 Vector2 healthBarPos = new Vector2(pos.X - 50, -pos.Y);
                 GUI.DrawProgressBar(spriteBatch, healthBarPos, new Vector2(100.0f, 15.0f),
-                    CharacterHealth.DisplayedVitality / MaxVitality, 
+                    CharacterHealth.DisplayedVitality / MaxVitality,
                     Color.Lerp(GUIStyle.Red, GUIStyle.Green, CharacterHealth.DisplayedVitality / MaxVitality) * 0.8f * hudInfoAlpha,
                     new Color(0.5f, 0.57f, 0.6f, 1.0f) * hudInfoAlpha);
             }

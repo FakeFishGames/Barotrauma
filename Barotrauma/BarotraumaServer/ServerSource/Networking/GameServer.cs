@@ -2516,6 +2516,7 @@ namespace Barotrauma.Networking
             msg.WriteInt32(ServerSettings.MaximumMoneyTransferRequest);
             msg.WriteBoolean(IsUsingRespawnShuttle());
             msg.WriteByte((byte)ServerSettings.LosMode);
+            msg.WriteByte((byte)ServerSettings.ShowEnemyHealthBars);
             msg.WriteBoolean(includesFinalize); msg.WritePadBits();
 
             ServerSettings.WriteMonsterEnabled(msg);
@@ -2713,9 +2714,24 @@ namespace Barotrauma.Networking
             CharacterTeamType newTeam = (CharacterTeamType)inc.ReadByte();
 
             if (c == null || string.IsNullOrEmpty(newName) || !NetIdUtils.IdMoreRecent(nameId, c.NameId)) { return false; }
+
+            var timeSinceNameChange = DateTime.Now - c.LastNameChangeTime;
+            if (timeSinceNameChange < Client.NameChangeCoolDown)
+            {
+                //only send once per second at most to prevent using this for spamming
+                if (timeSinceNameChange.TotalSeconds > 1)
+                {
+                    var coolDownRemaining = Client.NameChangeCoolDown - timeSinceNameChange;
+                    SendDirectChatMessage($"ServerMessage.NameChangeFailedCooldownActive~[seconds]={(int)coolDownRemaining.TotalSeconds}", c);
+                }
+                c.NameId = nameId;
+                c.RejectedName = newName;
+                return false;
+            }
+
             if (!newJob.IsEmpty)
             {
-                if (!JobPrefab.Prefabs.TryGet(newJob, out JobPrefab newJobPrefab) || newJobPrefab.HiddenJob)                    
+                if (!JobPrefab.Prefabs.TryGet(newJob, out JobPrefab newJobPrefab) || newJobPrefab.HiddenJob)
                 {
                     newJob = Identifier.Empty;
                 }
@@ -2731,25 +2747,24 @@ namespace Barotrauma.Networking
         public bool TryChangeClientName(Client c, string newName)
         {
             newName = Client.SanitizeName(newName);
-            //update client list even if the name cannot be changed to the one sent by the client,
-            //so the client will be informed what their actual name is
-            LastClientListUpdateID++;
-
-            if (newName == c.Name || string.IsNullOrEmpty(newName)) { return false; }
-
-            if (IsNameValid(c, newName))
+            if (newName != c.Name && !string.IsNullOrEmpty(newName) && IsNameValid(c, newName))
             {
+                c.LastNameChangeTime = DateTime.Now;
                 string oldName = c.Name;
                 c.Name = newName;
+                c.RejectedName = string.Empty;
                 SendChatMessage($"ServerMessage.NameChangeSuccessful~[oldname]={oldName}~[newname]={newName}", ChatMessageType.Server);
+                LastClientListUpdateID++;
                 return true;
             }
             else
             {
+                //update client list even if the name cannot be changed to the one sent by the client,
+                //so the client will be informed what their actual name is
+                LastClientListUpdateID++;
                 return false;
             }
         }
-
 
         private bool IsNameValid(Client c, string newName)
         {

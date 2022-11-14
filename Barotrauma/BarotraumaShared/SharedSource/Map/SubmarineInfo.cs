@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel;
 #if DEBUG
 using System.IO;
@@ -314,6 +315,7 @@ namespace Barotrauma
             Tier = original.Tier;
             IsManuallyOutfitted = original.IsManuallyOutfitted;
             Tags = original.Tags;
+            OutpostGenerationParams = original.OutpostGenerationParams;
             if (original.OutpostModuleInfo != null)
             {
                 OutpostModuleInfo = new OutpostModuleInfo(original.OutpostModuleInfo);
@@ -554,6 +556,14 @@ namespace Barotrauma
             }
             return realWorldCrushDepth;
         }
+        public void AddOutpostNPCIdentifierOrTag(Character npc, Identifier idOrTag)
+        {
+            if (!OutpostNPCs.ContainsKey(idOrTag))
+            {
+                OutpostNPCs.Add(idOrTag, new List<Character>());
+            }
+            OutpostNPCs[idOrTag].Add(npc);
+        }
 
         //saving/loading ----------------------------------------------------
         public void SaveAs(string filePath, System.IO.MemoryStream previewImage = null)
@@ -747,6 +757,36 @@ namespace Barotrauma
             return doc;
         }
 
-        public static int GetDefaultTier(int price) => price > 20000 ? 3 : price > 10000 ? 2 : 1;
+        public int GetPrice(Location location = null, ImmutableHashSet<Character> characterList = null)
+        {
+            if (location is null)
+            {
+                if (GameMain.GameSession?.Campaign?.Map?.CurrentLocation is { } currentLocation)
+                {
+                    location = currentLocation;
+                }
+                else
+                {
+
+                    return Price;
+                }
+            }
+
+            characterList ??= GameSession.GetSessionCrewCharacters(CharacterType.Both);
+
+            float price = Price;
+
+            if (location.Faction is { } faction && Faction.GetPlayerAffiliationStatus(faction, characterList) is FactionAffiliation.Positive)
+            {
+                price *= 1f - characterList.Max(static c => c.GetStatValue(StatTypes.ShipyardBuyMultiplierAffiliated));
+            }
+            price *= 1f - characterList.Max(static c => c.GetStatValue(StatTypes.ShipyardBuyMultiplier));
+
+            return (int)price;
+        }
+
+        public static int GetDefaultTier(int price) => price > 20000 ? HighestTier : price > 10000 ? 2 : 1;
+
+        public const int HighestTier = 3;
     }
 }

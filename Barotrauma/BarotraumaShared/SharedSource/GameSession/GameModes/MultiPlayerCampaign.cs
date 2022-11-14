@@ -105,9 +105,9 @@ namespace Barotrauma
 #endif
             }
             CampaignID = currentCampaignID;
-            CampaignMetadata = new CampaignMetadata(this);
+            CampaignMetadata = new CampaignMetadata();
             UpgradeManager = new UpgradeManager(this);
-            InitCampaignData();
+            InitFactions();
         }
 
         public static MultiPlayerCampaign StartNew(string mapSeed, CampaignSettings settings)
@@ -133,13 +133,13 @@ namespace Barotrauma
         }
 
         partial void InitProjSpecific();
-        
+                
         public static string GetCharacterDataSavePath(string savePath)
         {
-            return Path.Combine(SaveUtil.MultiplayerSaveFolder, Path.GetFileNameWithoutExtension(savePath) + "_CharacterData.xml");
+            return Path.Combine(Path.GetDirectoryName(savePath), Path.GetFileNameWithoutExtension(savePath) + "_CharacterData.xml");
         }
 
-        public string GetCharacterDataSavePath()
+        public static string GetCharacterDataSavePath()
         {
             return GetCharacterDataSavePath(GameMain.GameSession.SavePath);
         }
@@ -190,11 +190,11 @@ namespace Barotrauma
                             //map already created, update it
                             //if we're not downloading the initial save file (LastSaveID > 0), 
                             //show notifications about location type changes
-                            map.LoadState(subElement, LastSaveID > 0);
+                            map.LoadState(this, subElement, LastSaveID > 0);
                         }
                         break;
                     case "metadata":
-                        CampaignMetadata = new CampaignMetadata(this, subElement);
+                        CampaignMetadata = new CampaignMetadata(subElement);
                         break;
                     case "upgrademanager":
                     case "pendingupgrades":
@@ -237,10 +237,10 @@ namespace Barotrauma
                 };
             }
 
-            CampaignMetadata ??= new CampaignMetadata(this);
+            CampaignMetadata ??= new CampaignMetadata();
             UpgradeManager ??= new UpgradeManager(this);
 
-            InitCampaignData();
+            InitFactions();
 #if SERVER
             characterData.Clear();
             string characterDataPath = GetCharacterDataSavePath();

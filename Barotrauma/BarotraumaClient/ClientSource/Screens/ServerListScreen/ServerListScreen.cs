@@ -1636,12 +1636,10 @@ namespace Barotrauma
             graphics.Clear(Color.CornflowerBlue);
 
             GameMain.TitleScreen.DrawLoadingText = false;
-            GameMain.MainMenuScreen.DrawBackground(graphics, spriteBatch);
 
             spriteBatch.Begin(SpriteSortMode.Deferred, null, GUI.SamplerState, null, GameMain.ScissorTestEnable);
-            
+            GameMain.MainMenuScreen.DrawBackground(graphics, spriteBatch);            
             GUI.Draw(Cam, spriteBatch);
-
             spriteBatch.End();
         }
 

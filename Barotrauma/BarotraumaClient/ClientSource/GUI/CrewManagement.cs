@@ -3,7 +3,6 @@ using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using PlayerBalanceElement = Barotrauma.CampaignUI.PlayerBalanceElement;
 
@@ -29,6 +28,8 @@ namespace Barotrauma
 
         private Point resolutionWhenCreated;
 
+        private bool needsHireableRefresh;
+
         private enum SortingMethod
         {
             AlphabeticalAsc,
@@ -50,6 +51,8 @@ namespace Barotrauma
             campaignUI.Campaign.Map.OnLocationChanged.RegisterOverwriteExisting(
                 "CrewManagement.UpdateLocationView".ToIdentifier(), 
                 (locationChangeInfo) => UpdateLocationView(locationChangeInfo.NewLocation, true, locationChangeInfo.PrevLocation));
+            Reputation.OnAnyReputationValueChanged.RegisterOverwriteExisting(
+                "CrewManagement.UpdateLocationView".ToIdentifier(), _ => needsHireableRefresh = true);
         }
 
         public void RefreshPermissions()
@@ -68,7 +71,13 @@ namespace Barotrauma
             {
                 if (child.FindChild(c => c is GUIButton && c.UserData is CharacterInfo, true) is GUIButton buyButton)
                 {
-                    buyButton.Enabled = HasPermission;
+                    CharacterInfo characterInfo = buyButton.UserData as CharacterInfo;
+                    bool enoughReputationToHire = EnoughReputationToHire(characterInfo);
+                    buyButton.Enabled = HasPermission && enoughReputationToHire;
+                    foreach (GUITextBlock text in child.GetAllChildren<GUITextBlock>())
+                    {
+                        text.TextColor = new Color(text.TextColor, buyButton.Enabled ? 1.0f : 0.6f);
+                    }
                 }
             }
         }
@@ -294,18 +303,21 @@ namespace Barotrauma
             if (sortingMethod == SortingMethod.AlphabeticalAsc)
             {
                 list.Content.RectTransform.SortChildren((x, y) =>
+                    CompareReputationRequirement(x.GUIComponent, y.GUIComponent) ??
                     ((InfoSkill)x.GUIComponent.UserData).CharacterInfo.Name.CompareTo(((InfoSkill)y.GUIComponent.UserData).CharacterInfo.Name));
             }
             else if (sortingMethod == SortingMethod.JobAsc)
             {
                 SortCharacters(list, SortingMethod.AlphabeticalAsc);
                 list.Content.RectTransform.SortChildren((x, y) =>
-                    String.Compare(((InfoSkill)x.GUIComponent.UserData).CharacterInfo.Job.Name.Value, ((InfoSkill)y.GUIComponent.UserData).CharacterInfo.Job.Name.Value, StringComparison.Ordinal));
+                    CompareReputationRequirement(x.GUIComponent, y.GUIComponent) ??
+                    string.Compare(((InfoSkill)x.GUIComponent.UserData).CharacterInfo.Job.Name.Value, ((InfoSkill)y.GUIComponent.UserData).CharacterInfo.Job.Name.Value, StringComparison.Ordinal));
             }
             else if (sortingMethod == SortingMethod.PriceAsc || sortingMethod == SortingMethod.PriceDesc)
             {
                 SortCharacters(list, SortingMethod.AlphabeticalAsc);
                 list.Content.RectTransform.SortChildren((x, y) =>
+                    CompareReputationRequirement(x.GUIComponent, y.GUIComponent) ??
                     ((InfoSkill)x.GUIComponent.UserData).CharacterInfo.Salary.CompareTo(((InfoSkill)y.GUIComponent.UserData).CharacterInfo.Salary));
                 if (sortingMethod == SortingMethod.PriceDesc) { list.Content.RectTransform.ReverseChildren(); }
             }
@@ -313,8 +325,25 @@ namespace Barotrauma
             {
                 SortCharacters(list, SortingMethod.AlphabeticalAsc);
                 list.Content.RectTransform.SortChildren((x, y) =>
+                    CompareReputationRequirement(x.GUIComponent, y.GUIComponent) ??
                     ((InfoSkill)x.GUIComponent.UserData).SkillLevel.CompareTo(((InfoSkill)y.GUIComponent.UserData).SkillLevel));
                 if (sortingMethod == SortingMethod.SkillDesc) { list.Content.RectTransform.ReverseChildren(); }
+            }
+
+            int? CompareReputationRequirement(GUIComponent c1, GUIComponent c2)
+            {
+                CharacterInfo info1 = ((InfoSkill)c1.UserData).CharacterInfo;
+                CharacterInfo info2 = ((InfoSkill)c2.UserData).CharacterInfo;
+                float requirement1 = EnoughReputationToHire(info1) ? 0 : info1.MinReputationToHire.reputation;
+                float requirement2 = EnoughReputationToHire(info2) ? 0 : info2.MinReputationToHire.reputation;
+                if (MathUtils.NearlyEqual(requirement1, 0.0f) && MathUtils.NearlyEqual(requirement2, 0.0f))
+                {
+                    return null;
+                }
+                else
+                {
+                    return requirement1.CompareTo(requirement2);
+                }
             }
         }
 
@@ -367,12 +396,25 @@ namespace Barotrauma
             nameBlock.Text = ToolBox.LimitString(nameBlock.Text, nameBlock.Font, nameBlock.Rect.Width);
 
             GUITextBlock jobBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), nameAndJobGroup.RectTransform),
-                characterInfo.Job.Name, textColor: Color.White, font: GUIStyle.SmallFont, textAlignment: Alignment.TopLeft)
+                characterInfo.Title ?? characterInfo.Job.Name, textColor: Color.White, font: GUIStyle.SmallFont, textAlignment: Alignment.TopLeft)
             {
                 CanBeFocused = false
             };
-            jobBlock.Text = ToolBox.LimitString(jobBlock.Text, jobBlock.Font, jobBlock.Rect.Width);
-
+            if (!characterInfo.MinReputationToHire.factionId.IsEmpty)
+            {
+                var faction = campaign.Factions.Find(f => f.Prefab.Identifier == characterInfo.MinReputationToHire.factionId);
+                if (faction != null)
+                {
+                    jobBlock.TextColor = faction.Prefab.IconColor;
+                }
+            }
+            var fullJobText = jobBlock.Text;
+            jobBlock.Text = ToolBox.LimitString(fullJobText, jobBlock.Font, jobBlock.Rect.Width);
+            if (jobBlock.Text != fullJobText)
+            {
+                jobBlock.ToolTip = fullJobText;
+                jobBlock.CanBeFocused = true;
+            }
             float width =  0.6f / 3;
             if (characterInfo.Job != null && skill != null)
             {
@@ -410,7 +452,7 @@ namespace Barotrauma
                 {
                     ClickSound = GUISoundType.Cart,
                     UserData = characterInfo,
-                    Enabled = HasPermission,
+                    Enabled = CanHire(characterInfo),
                     OnClicked = (b, o) => AddPendingHire(o as CharacterInfo)
                 };
                 hireButton.OnAddedToGUIUpdateList += (GUIComponent btn) =>
@@ -426,10 +468,9 @@ namespace Barotrauma
                     else if (!btn.Enabled)
                     {
                         btn.ToolTip = string.Empty;
-                        btn.Enabled = HasPermission;
+                        btn.Enabled = CanHire(characterInfo);
                     }
                 };
-
             }
             else if (listBox == pendingList)
             {
@@ -437,7 +478,7 @@ namespace Barotrauma
                 {
                     ClickSound = GUISoundType.Cart,
                     UserData = characterInfo,
-                    Enabled = HasPermission,
+                    Enabled = CanHire(characterInfo),
                     OnClicked = (b, o) => RemovePendingHire(o as CharacterInfo)
                 };
             }
@@ -474,12 +515,30 @@ namespace Barotrauma
                 size = new Point(3 * mainGroup.AbsoluteSpacing + icon.Rect.Width + nameAndJobGroup.Rect.Width, mainGroup.Rect.Height);
                 new GUIButton(new RectTransform(size, frame.RectTransform) { RelativeOffset = new Vector2(0.025f) }, style: null)
                 {
-                    Enabled = HasPermission,
+                    Enabled = CanHire(characterInfo),
                     ToolTip = TextManager.GetWithVariable("campaigncrew.givenicknametooltip", "[mouseprimary]", TextManager.Get($"input.{(PlayerInput.MouseButtonsSwapped() ? "rightmouse" : "leftmouse")}")), 
                     UserData = characterInfo,
                     OnClicked = CreateRenamingComponent
                 };
             }
+
+            bool CanHire(CharacterInfo characterInfo)
+            {
+                if (!HasPermission) { return false; }
+                return EnoughReputationToHire(characterInfo);
+            }
+        }
+
+        private bool EnoughReputationToHire(CharacterInfo characterInfo)
+        {
+            if (characterInfo.MinReputationToHire.factionId != Identifier.Empty)
+            {
+                if (campaign.GetReputation(characterInfo.MinReputationToHire.factionId) < characterInfo.MinReputationToHire.reputation)
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         private void CreateCharacterPreviewFrame(GUIListBox listBox, GUIFrame characterFrame, CharacterInfo characterInfo)
@@ -488,13 +547,13 @@ namespace Barotrauma
             Point absoluteOffset = new Point(
                 pivot == Pivot.TopLeft ? listBox.Parent.Parent.Rect.Right + 5 : listBox.Parent.Parent.Rect.Left - 5,
                 characterFrame.Rect.Top);
-            int frameSize = (int)(GUI.Scale * 300);
-            if (GameMain.GraphicsHeight - (absoluteOffset.Y + frameSize) < 0)
+            Point frameSize = new Point(GUI.IntScale(300), GUI.IntScale(350));
+            if (GameMain.GraphicsHeight - (absoluteOffset.Y + frameSize.Y) < 0)
             {
                 pivot = listBox == hireableList ? Pivot.BottomLeft : Pivot.BottomRight;
                 absoluteOffset.Y = characterFrame.Rect.Bottom;
             }
-            characterPreviewFrame = new GUIFrame(new RectTransform(new Point(frameSize), parent: campaignUI.GetTabContainer(CampaignMode.InteractionType.Crew).Parent.RectTransform, pivot: pivot)
+            characterPreviewFrame = new GUIFrame(new RectTransform(frameSize, parent: campaignUI.GetTabContainer(CampaignMode.InteractionType.Crew).Parent.RectTransform, pivot: pivot)
                 {
                     AbsoluteOffset = absoluteOffset
                 }, style: "InnerFrame")
@@ -503,7 +562,8 @@ namespace Barotrauma
             };
             GUILayoutGroup mainGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.95f), characterPreviewFrame.RectTransform, anchor: Anchor.Center))
             {
-                RelativeSpacing = 0.01f
+                RelativeSpacing = 0.01f,
+                Stretch = true
             };
 
             // Character info
@@ -545,9 +605,23 @@ namespace Barotrauma
             blockHeight = 1.0f / characterSkills.Count();
             foreach (Skill skill in characterSkills)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, blockHeight), skillNameGroup.RectTransform), TextManager.Get("SkillName." + skill.Identifier));
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, blockHeight), skillNameGroup.RectTransform), TextManager.Get("SkillName." + skill.Identifier), font: GUIStyle.SmallFont);
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, blockHeight), skillLevelGroup.RectTransform), ((int)skill.Level).ToString(), textAlignment: Alignment.Right);
             }
+
+            if (characterInfo.MinReputationToHire.reputation > 0.0f)
+            {
+                var repStr = TextManager.GetWithVariables(
+                    "campaignstore.reputationrequired",
+                    ("[amount]", ((int)characterInfo.MinReputationToHire.reputation).ToString()),
+                    ("[faction]", TextManager.Get("faction." + characterInfo.MinReputationToHire.factionId).Value));
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), mainGroup.RectTransform),
+                    repStr, textColor: !EnoughReputationToHire(characterInfo) ? GUIStyle.Orange : GUIStyle.Green, 
+                    font: GUIStyle.SmallFont, wrap: true, textAlignment: Alignment.Center);
+            }
+            mainGroup.Recalculate();
+            characterPreviewFrame.RectTransform.MinSize = 
+                new Point(0, (int)(mainGroup.Children.Sum(c => c.Rect.Height + mainGroup.Rect.Height * mainGroup.RelativeSpacing) / mainGroup.RectTransform.RelativeSize.Y));
         }
 
         private bool SelectCharacter(GUIListBox listBox, GUIFrame characterFrame, CharacterInfo characterInfo)
@@ -636,7 +710,7 @@ namespace Barotrauma
             List<CharacterInfo> nonDuplicateHires = new List<CharacterInfo>();
             hires.ForEach(hireInfo =>
             {
-                if(campaign.CrewManager.GetCharacterInfos().None(crewInfo => crewInfo.IsNewHire && crewInfo.GetIdentifierUsingOriginalName() == hireInfo.GetIdentifierUsingOriginalName()))
+                if (campaign.CrewManager.GetCharacterInfos().None(crewInfo => crewInfo.IsNewHire && crewInfo.GetIdentifierUsingOriginalName() == hireInfo.GetIdentifierUsingOriginalName()))
                 {
                     nonDuplicateHires.Add(hireInfo);
                 }
@@ -789,6 +863,16 @@ namespace Barotrauma
             else
             {
                 playerBalanceElement = CampaignUI.UpdateBalanceElement(playerBalanceElement);
+            }
+
+            if (needsHireableRefresh)
+            {
+                RefreshCrewFrames(hireableList);
+                if (sortingDropDown?.SelectedItemData != null)
+                {
+                    SortCharacters(hireableList, (SortingMethod)sortingDropDown.SelectedItemData);
+                }
+                needsHireableRefresh = false;
             }
 
             (GUIComponent highlightedFrame, CharacterInfo highlightedInfo) = FindHighlightedCharacter(GUI.MouseOn);

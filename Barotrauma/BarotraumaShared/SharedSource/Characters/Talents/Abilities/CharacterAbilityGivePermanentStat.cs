@@ -1,11 +1,17 @@
-﻿using Barotrauma.Extensions;
-using System.Xml.Linq;
+﻿using System;
 
 namespace Barotrauma.Abilities
 {
+    public enum PermanentStatPlaceholder
+    {
+        None,
+        LocationName,
+        LocationIndex
+    }
+    
     class CharacterAbilityGivePermanentStat : CharacterAbility
     {
-        private readonly string statIdentifier;
+        private readonly Identifier statIdentifier;
         private readonly StatTypes statType;
         private readonly float value;
         private readonly float maxValue;
@@ -13,6 +19,7 @@ namespace Barotrauma.Abilities
         private readonly bool removeOnDeath;
         private readonly bool giveOnAddingFirstTime;
         private readonly bool setValue;
+        private readonly PermanentStatPlaceholder placeholder;
 
         //private readonly float maximumValue;
         public override bool AllowClientSimulation => true;
@@ -20,7 +27,7 @@ namespace Barotrauma.Abilities
 
         public CharacterAbilityGivePermanentStat(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
-            statIdentifier = abilityElement.GetAttributeString("statidentifier", "").ToLowerInvariant();
+            statIdentifier = abilityElement.GetAttributeIdentifier("statidentifier", Identifier.Empty);
             string statTypeName = abilityElement.GetAttributeString("stattype", string.Empty);
             statType = string.IsNullOrEmpty(statTypeName) ? StatTypes.None : CharacterAbilityGroup.ParseStatType(statTypeName, CharacterTalent.DebugIdentifier);
             value = abilityElement.GetAttributeFloat("value", 0f);
@@ -29,6 +36,7 @@ namespace Barotrauma.Abilities
             removeOnDeath = abilityElement.GetAttributeBool("removeondeath", false);
             giveOnAddingFirstTime = abilityElement.GetAttributeBool("giveonaddingfirsttime", characterAbilityGroup.AbilityEffectType == AbilityEffectType.None);
             setValue = abilityElement.GetAttributeBool("setvalue", false);
+            placeholder = abilityElement.GetAttributeEnum("placeholder", PermanentStatPlaceholder.None);
         }
 
         public override void InitializeAbility(bool addingFirstTime)
@@ -51,14 +59,33 @@ namespace Barotrauma.Abilities
 
         private void ApplyEffectSpecific()
         {
+            Identifier identifier = HandlePlaceholders(placeholder, statIdentifier);
             if (targetAllies)
             {
-                Character.GetFriendlyCrew(Character).ForEach(c => c?.Info.ChangeSavedStatValue(statType, value, statIdentifier, removeOnDeath, maxValue: maxValue, setValue: setValue));
+                foreach (Character c in Character.GetFriendlyCrew(Character))
+                {
+                    c?.Info.ChangeSavedStatValue(statType, value, identifier, removeOnDeath, maxValue: maxValue, setValue: setValue);
+                }
             }
             else
             {
-                Character?.Info.ChangeSavedStatValue(statType, value, statIdentifier, removeOnDeath, maxValue: maxValue, setValue: setValue);
+                Character?.Info.ChangeSavedStatValue(statType, value, identifier, removeOnDeath, maxValue: maxValue, setValue: setValue);
             }
+        }
+
+        public static Identifier HandlePlaceholders(PermanentStatPlaceholder placeholder, Identifier original)
+        {
+            if (GameMain.GameSession?.Campaign?.Map is not { } map) { return original; }
+
+            switch (placeholder)
+            {
+                case PermanentStatPlaceholder.LocationName when map.CurrentLocation is { } location:
+                    return original.Replace("[placeholder]", location.Name);
+                case PermanentStatPlaceholder.LocationIndex:
+                    return original.Replace("[placeholder]", map.CurrentLocationIndex.ToString());
+            }
+
+            return original;
         }
     }
 }

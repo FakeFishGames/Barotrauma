@@ -113,6 +113,12 @@ namespace Microsoft.Xna.Framework
             Sdl.SetHint("SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS", "0");
             Sdl.SetHint("SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS", "1");
 
+            /*
+             * By default SDL2 will hide IME popups since it probably assumes the game will implement their own suggestions box.
+             * We don't want that, so this hint will allow the system native IME popups to show up when typing in the game.
+             */
+            Sdl.SetHint("SDL_HINT_IME_SHOW_UI", "1");
+
             // when running NUnit tests entry assembly can be null
             if (Assembly.GetEntryAssembly() != null)
             {
@@ -331,6 +337,11 @@ namespace Microsoft.Xna.Framework
         public void CallTextInput(char c, Keys key = Keys.None)
         {
             OnTextInput(this, new TextInputEventArgs(c, key));
+        }
+
+        public void CallTextEditing(string text, int start, int length)
+        {
+            OnTextEditing(this, new TextEditingEventArgs(text, start, length));
         }
 
         public void DropFile(string filePath)

@@ -1,38 +1,53 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Abilities
 {
     class AbilityConditionMission : AbilityConditionData
     {
-        private readonly MissionType missionType;
+        private readonly ImmutableHashSet<MissionType> missionType;
+        private readonly ImmutableHashSet<Identifier> factions;
+
         public AbilityConditionMission(CharacterTalent characterTalent, ContentXElement conditionElement) : base(characterTalent, conditionElement)
         {
-            string missionTypeString = conditionElement.GetAttributeString("missiontype", "None");
-            if (!Enum.TryParse(missionTypeString, out missionType))
+            string[] missionTypeStrings = conditionElement.GetAttributeStringArray("missiontype", new []{ "None" })!;
+            HashSet<MissionType> missionTypes = new HashSet<MissionType>();
+            factions = conditionElement.GetAttributeIdentifierImmutableHashSet("faction", ImmutableHashSet<Identifier>.Empty);
+
+            foreach (string missionTypeString in missionTypeStrings)
             {
-                DebugConsole.ThrowError("Error in AbilityConditionMission \"" + characterTalent.DebugIdentifier + "\" - \"" + missionTypeString + "\" is not a valid mission type.");
-                return;
+                if (!Enum.TryParse(missionTypeString, out MissionType parsedMission) || parsedMission is MissionType.None)
+                {
+                    if (factions.IsEmpty)
+                    {
+                        DebugConsole.ThrowError($"Error in AbilityConditionMission \"{characterTalent.DebugIdentifier}\" - \"{missionTypeString}\" is not a valid mission type.");
+                    }
+                    continue;
+                }
+
+                missionTypes.Add(parsedMission);
             }
-            if (missionType == MissionType.None)
-            {
-                DebugConsole.ThrowError("Error in AbilityConditionMission \"" + characterTalent.DebugIdentifier + "\" - mission type cannot be none.");
-                return;
-            }
+
+            missionType = missionTypes.ToImmutableHashSet();
         }
 
         protected override bool MatchesConditionSpecific(AbilityObject abilityObject)
         {
-            if ((abilityObject as IAbilityMission)?.Mission is Mission mission)
+            if (abilityObject is IAbilityMission { Mission: { } mission })
             {
-                return mission.Prefab.Type == missionType;
+                if (factions.Any())
+                {
+                    // FIXME there's probably a better way to check the faction affiliated with the mission later
+                    return mission.ReputationRewards.Keys.Any(factionIdentifier => factions.Contains(factionIdentifier));
+                }
+
+                return missionType.Contains(mission.Prefab.Type);
             }
-            else
-            {
-                LogAbilityConditionError(abilityObject, typeof(IAbilityMission));
-                return false;
-            }
+
+            LogAbilityConditionError(abilityObject, typeof(IAbilityMission));
+            return false;
         }
     }
 }

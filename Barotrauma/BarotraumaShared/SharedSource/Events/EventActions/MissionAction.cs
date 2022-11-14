@@ -1,8 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Xml.Linq;
+using Barotrauma.Extensions;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -14,8 +16,10 @@ namespace Barotrauma
         [Serialize("", IsPropertySaveable.Yes)]
         public Identifier MissionTag { get; set; }
 
-        [Serialize("", IsPropertySaveable.Yes, description: "The type of the location the mission will be unlocked in (if empty, any location can be selected).")]
-        public string LocationType { get; set; }
+        [Serialize("", IsPropertySaveable.Yes)]
+        public Identifier RequiredFaction { get; set; }
+
+        public ImmutableArray<Identifier> LocationTypes { get; }
 
         [Serialize(0, IsPropertySaveable.Yes, description: "Minimum distance to the location the mission is unlocked in (1 = one path between locations).")]
         public int MinLocationDistance { get; set; }
@@ -38,6 +42,7 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError($"Error in event \"{parentEvent.Prefab.Identifier}\": both MissionIdentifier or MissionTag have been configured. The tag will be ignored.");
             }
+            LocationTypes = element.GetAttributeIdentifierArray("locationtype", Array.Empty<Identifier>()).ToImmutableArray();
         }
 
         public override bool IsFinished(ref string goTo)
@@ -56,14 +61,14 @@ namespace Barotrauma
             if (GameMain.GameSession.GameMode is CampaignMode campaign)
             {
                 Mission unlockedMission = null;
-                var unlockLocation = FindUnlockLocation();
+                var unlockLocation = FindUnlockLocation(MinLocationDistance, UnlockFurtherOnMap, LocationTypes);
                 if (unlockLocation == null && CreateLocationIfNotFound)
                 {
                     //find an empty location at least 3 steps away, further on the map
-                    var emptyLocation = FindUnlockLocationRecursive(campaign.Map.CurrentLocation, Math.Max(MinLocationDistance, 3), "none", true, new HashSet<Location>());
+                    var emptyLocation = FindUnlockLocation(Math.Max(MinLocationDistance, 3), unlockFurtherOnMap: true, "none".ToIdentifier().ToEnumerable());
                     if (emptyLocation != null)
                     {
-                        emptyLocation.ChangeType(Barotrauma.LocationType.Prefabs[LocationType]);
+                        emptyLocation.ChangeType(campaign, Barotrauma.LocationType.Prefabs[LocationTypes[0]]);
                         unlockLocation = emptyLocation;
                     }
                 }
@@ -84,6 +89,7 @@ namespace Barotrauma
                     }
                     if (unlockedMission != null)
                     {
+                        campaign.Map.Discover(unlockLocation, checkTalents: false);
                         if (unlockedMission.Locations[0] == unlockedMission.Locations[1] || unlockedMission.Locations[1] ==null)
                         {
                             DebugConsole.NewMessage($"Unlocked mission \"{unlockedMission.Name}\" in the location \"{unlockLocation.Name}\".");
@@ -99,46 +105,80 @@ namespace Barotrauma
                             IconColor = unlockedMission.Prefab.IconColor
                         };
 #else
-                        NotifyMissionUnlock(unlockedMission);
-    #endif
+                        NotifyMissionUnlock(unlockedMission, unlockLocation);
+#endif
                     }
                 }
                 else
                 {
-                    DebugConsole.AddWarning($"Failed to find a suitable location to unlock a mission in (LocationType: {LocationType}, MinLocationDistance: {MinLocationDistance}, UnlockFurtherOnMap: {UnlockFurtherOnMap})");
+                    DebugConsole.AddWarning($"Failed to find a suitable location to unlock a mission in (LocationType: {LocationTypes}, MinLocationDistance: {MinLocationDistance}, UnlockFurtherOnMap: {UnlockFurtherOnMap})");
                 }
             }
             isFinished = true;
         }
 
-        private Location FindUnlockLocation()
+        private Location FindUnlockLocation(int minDistance, bool unlockFurtherOnMap, IEnumerable<Identifier> locationTypes)
         {
             var campaign = GameMain.GameSession.GameMode as CampaignMode;
-            if (string.IsNullOrEmpty(LocationType) && MinLocationDistance <= 1)
+            if (LocationTypes.Length == 0 && minDistance <= 1)
             {
                 return campaign.Map.CurrentLocation;
             }
 
-            return FindUnlockLocationRecursive(campaign.Map.CurrentLocation, 0, LocationType, UnlockFurtherOnMap, new HashSet<Location>());
+            var currentLocation = campaign.Map.CurrentLocation;
+            int distance = 0;
+            HashSet<Location> checkedLocations = new HashSet<Location>();
+            HashSet<Location> pendingLocations = new HashSet<Location>() { currentLocation };
+            do
+            {
+                List<Location> currentLocations = pendingLocations.ToList();
+                pendingLocations.Clear();
+                foreach (var location in currentLocations)
+                {
+                    checkedLocations.Add(location);
+                    if (IsLocationValid(currentLocation, location, unlockFurtherOnMap, distance, minDistance, locationTypes)) 
+                    {
+                        return location;
+                    }
+                    else
+                    {
+                        foreach (LocationConnection connection in location.Connections)
+                        {
+                            var otherLocation = connection.OtherLocation(location);
+                            if (checkedLocations.Contains(otherLocation)) { continue; }
+                            pendingLocations.Add(otherLocation);
+                        }
+                    }
+                }
+                distance++;
+            } while (pendingLocations.Any());
+
+            return null;
         }
 
-        private Location FindUnlockLocationRecursive(Location currLocation, int currDistance, string locationType, bool unlockFurtherOnMap, HashSet<Location> checkedLocations)
+        private bool IsLocationValid(Location currLocation, Location location, bool unlockFurtherOnMap, int distance, int minDistance, IEnumerable<Identifier> locationTypes)
         {
-            var campaign = GameMain.GameSession.GameMode as CampaignMode;
-            if (currLocation.Type.Identifier == locationType && currDistance >= MinLocationDistance &&
-                (!unlockFurtherOnMap || currLocation.MapPosition.X > campaign.Map.CurrentLocation.MapPosition.X))
+            if (!RequiredFaction.IsEmpty)
             {
-                return currLocation;
+                if (location.Faction?.Prefab.Identifier != RequiredFaction &&
+                    location.SecondaryFaction?.Prefab.Identifier != RequiredFaction)
+                {
+                    return false;
+                }
             }
-            checkedLocations.Add(currLocation);
-            foreach (LocationConnection connection in currLocation.Connections)
+            if (!locationTypes.Contains(location.Type.Identifier) && !(location.HasOutpost() && locationTypes.Contains("AnyOutpost".ToIdentifier())))
             {
-                var otherLocation = connection.OtherLocation(currLocation);
-                if (checkedLocations.Contains(otherLocation)) { continue; }
-                var unlockLocation = FindUnlockLocationRecursive(otherLocation, ++currDistance, locationType, unlockFurtherOnMap, checkedLocations);
-                if (unlockLocation != null) { return unlockLocation; }
+                return false;
             }
-            return null;
+            if (distance < minDistance) 
+            { 
+                return false; 
+            }
+            if (unlockFurtherOnMap && location.MapPosition.X < currLocation.MapPosition.X)
+            {
+                return false;
+            }
+            return true;
         }
 
         public override string ToDebugString()
@@ -147,7 +187,7 @@ namespace Barotrauma
         }
 
 #if SERVER
-        private void NotifyMissionUnlock(Mission mission)
+        private static void NotifyMissionUnlock(Mission mission, Location unlockLocation)
         {
             foreach (Client client in GameMain.Server.ConnectedClients)
             {
@@ -155,6 +195,7 @@ namespace Barotrauma
                 outmsg.WriteByte((byte)ServerPacketHeader.EVENTACTION);
                 outmsg.WriteByte((byte)EventManager.NetworkEventType.MISSION);
                 outmsg.WriteIdentifier(mission.Prefab.Identifier);
+                outmsg.WriteInt32(GameMain.GameSession?.Map?.Locations.IndexOf(unlockLocation) ?? -1);
                 outmsg.WriteString(mission.Name.Value);
                 GameMain.Server.ServerPeer.Send(outmsg, client.Connection, DeliveryMethod.Reliable);
             }

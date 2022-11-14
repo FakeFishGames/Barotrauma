@@ -74,7 +74,13 @@ namespace Barotrauma.Items.Components
                     return 0.0f;
                 }
             }
-        } 
+        }
+
+        [Serialize(false, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
+        public bool ApplyEffectsToCharactersInsideSub { get; set; }
+
+        [Serialize(false, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
+        public bool MoveOutsideSub { get; set; }
 
         private readonly LevelTrigger.TriggererType triggeredBy;
         private readonly HashSet<Entity> triggerers = new HashSet<Entity>();
@@ -131,7 +137,7 @@ namespace Barotrauma.Items.Components
             PhysicsBody.FarseerBody.SetIsSensor(true);
             PhysicsBody.FarseerBody.OnCollision += OnCollision;
             PhysicsBody.FarseerBody.OnSeparation += OnSeparation;
-            RadiusInDisplayUnits = ConvertUnits.ToDisplayUnits(PhysicsBody.radius);
+            RadiusInDisplayUnits = ConvertUnits.ToDisplayUnits(PhysicsBody.Radius);
         }
 
         public override void OnMapLoaded()
@@ -144,7 +150,7 @@ namespace Barotrauma.Items.Components
         private bool OnCollision(Fixture sender, Fixture other, Contact contact)
         {
             if (!(LevelTrigger.GetEntity(other) is Entity entity)) { return false; }
-            if (!LevelTrigger.IsTriggeredByEntity(entity, triggeredBy, mustBeOnSpecificSub: (true, item.Submarine))) { return false; }
+            if (!LevelTrigger.IsTriggeredByEntity(entity, triggeredBy, mustBeOnSpecificSub: (!MoveOutsideSub, item.Submarine))) { return false; }
             triggerers.Add(entity);
             return true;
         }
@@ -169,6 +175,15 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+            if (item.Submarine != null && MoveOutsideSub)
+            {                
+                item.SetTransform(ConvertUnits.ToSimUnits(item.WorldPosition), item.Rotation);
+                item.CurrentHull = null;
+                item.Submarine = null;
+                PhysicsBody.SetTransformIgnoreContacts(item.SimPosition, 0.0f);
+                PhysicsBody.Submarine = item.Submarine;
+            }
+
             LevelTrigger.RemoveInActiveTriggerers(PhysicsBody, triggerers);
 
             if (triggerOnce)
@@ -208,6 +223,13 @@ namespace Barotrauma.Items.Components
                 else if (triggerer is Submarine submarine)
                 {
                     LevelTrigger.ApplyAttacks(attacks, item.WorldPosition, deltaTime);
+                    foreach (Character c2 in Character.CharacterList)
+                    {
+                        if (c2.Submarine == submarine)
+                        {
+                            LevelTrigger.ApplyAttacks(attacks, c2, item.WorldPosition, deltaTime);
+                        }
+                    }
                 }
 
                 if (Math.Abs(Force) < 0.01f)

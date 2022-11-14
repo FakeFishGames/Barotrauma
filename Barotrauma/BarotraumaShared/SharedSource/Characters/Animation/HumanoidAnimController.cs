@@ -168,7 +168,7 @@ namespace Barotrauma
         {
             get
             {
-                float shoulderHeight = Collider.height / 2.0f;
+                float shoulderHeight = Collider.Height / 2.0f;
                 if (inWater)
                 {
                     shoulderHeight += 0.4f;
@@ -299,7 +299,7 @@ namespace Barotrauma
                 
                 Collider.SetTransform(new Vector2(
                     Collider.SimPosition.X,
-                    Math.Max(lowestLimb.SimPosition.Y + (Collider.radius + Collider.height / 2), Collider.SimPosition.Y)),
+                    Math.Max(lowestLimb.SimPosition.Y + (Collider.Radius + Collider.Height / 2), Collider.SimPosition.Y)),
                     Collider.Rotation);
                 
                 Collider.FarseerBody.ResetDynamics();
@@ -610,15 +610,18 @@ namespace Barotrauma
                 torsoAngle -= herpesStrength / 150.0f;
                 torso.body.SmoothRotate(torsoAngle * Dir, CurrentGroundedParams.TorsoTorque);
             }
-            if (!Aiming && CurrentGroundedParams.FixedHeadAngle && HeadAngle.HasValue)
+            if (!head.Disabled)
             {
-                float headAngle = HeadAngle.Value;
-                if (Crouching && !movingHorizontally) { headAngle -= HumanCrouchParams.ExtraHeadAngleWhenStationary; }
-                head.body.SmoothRotate(headAngle * Dir, CurrentGroundedParams.HeadTorque);
-            }
-            else
-            {
-                RotateHead(head);
+                if (!Aiming && CurrentGroundedParams.FixedHeadAngle && HeadAngle.HasValue)
+                {
+                    float headAngle = HeadAngle.Value;
+                    if (Crouching && !movingHorizontally) { headAngle -= HumanCrouchParams.ExtraHeadAngleWhenStationary; }
+                    head.body.SmoothRotate(headAngle * Dir, CurrentGroundedParams.HeadTorque);
+                }
+                else
+                {
+                    RotateHead(head);
+                }
             }
 
             if (!onGround)
@@ -1117,7 +1120,7 @@ namespace Barotrauma
                 ladderSimPos -= currentHull.Submarine.SimPosition;
             }
 
-            float bottomPos = Collider.SimPosition.Y - ColliderHeightFromFloor - Collider.radius - Collider.height / 2.0f;
+            float bottomPos = Collider.SimPosition.Y - ColliderHeightFromFloor - Collider.Radius - Collider.Height / 2.0f;
             float torsoPos = TorsoPosition ?? 0;
             MoveLimb(torso, new Vector2(ladderSimPos.X - 0.35f * Dir, bottomPos + torsoPos), 10.5f);
             float headPos = HeadPosition ?? 0;
@@ -1212,7 +1215,7 @@ namespace Barotrauma
 
             if (character.SimPosition.Y > ladderSimPos.Y) { climbForce.Y = Math.Min(0.0f, climbForce.Y); }
             //reached the bottom -> can't go further down
-            float minHeightFromFloor = ColliderHeightFromFloor / 2 + Collider.height;
+            float minHeightFromFloor = ColliderHeightFromFloor / 2 + Collider.Height;
             if (floorFixture != null && 
                 !floorFixture.CollisionCategories.HasFlag(Physics.CollisionStairs) &&
                 !floorFixture.CollisionCategories.HasFlag(Physics.CollisionPlatform) &&
@@ -1389,7 +1392,7 @@ namespace Barotrauma
                 target.Oxygen += deltaTime * 0.5f; //Stabilize them        
             }
 
-            bool powerfulCPR = character.HasAbilityFlag(AbilityFlags.PowerfulCPR);
+            float cprBoost = character.GetStatValue(StatTypes.CPRBoost);
            
             int skill = (int)character.GetSkillLevel("medical");
             //pump for 15 seconds (cprAnimTimer 0-15), then do mouth-to-mouth for 2 seconds (cprAnimTimer 15-17)
@@ -1406,7 +1409,7 @@ namespace Barotrauma
                 {
                     if (target.Oxygen < -10.0f)
                     {
-                        if (powerfulCPR)
+                        if (cprBoost >= 1f)
                         {
                             //prevent the patient from suffocating no matter how fast their oxygen level is dropping
                             target.Oxygen = Math.Max(target.Oxygen, -10.0f);
@@ -1453,7 +1456,7 @@ namespace Barotrauma
                         reviveChance = (float)Math.Pow(reviveChance, CPRSettings.Active.ReviveChanceExponent);
                         reviveChance = MathHelper.Clamp(reviveChance, CPRSettings.Active.ReviveChanceMin, CPRSettings.Active.ReviveChanceMax);
 
-                        if (powerfulCPR) { reviveChance *= 2.0f; }
+                        reviveChance *= 1f + cprBoost;
 
                         if (Rand.Range(0.0f, 1.0f, Rand.RandSync.ServerAndClient) <= reviveChance)
                         {
@@ -1833,8 +1836,6 @@ namespace Barotrauma
                 {
                     heldItem.FlipX(relativeToSub: false);
                 }
-                // TODO: was this added by a mistake?
-                //heldItem.FlipX(relativeToSub: false);
             }
 
             foreach (Limb limb in Limbs)

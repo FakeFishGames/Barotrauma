@@ -168,6 +168,7 @@ namespace Barotrauma
         public void FaceTarget(ISpatialEntity target) => Character.AnimController.TargetDir = target.WorldPosition.X > Character.WorldPosition.X ? Direction.Right : Direction.Left;
 
         public bool IsSteeringThroughGap { get; protected set; }
+        public bool IsTryingToSteerThroughGap { get; protected set; }
 
         public virtual bool SteerThroughGap(Structure wall, WallSection section, Vector2 targetWorldPos, float deltaTime)
         {

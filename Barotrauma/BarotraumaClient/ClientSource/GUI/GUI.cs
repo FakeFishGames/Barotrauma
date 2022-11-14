@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Barotrauma.IO;
 using System.Linq;
-using System.Xml.Linq;
 using Barotrauma.CharacterEditor;
 using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
@@ -50,6 +49,14 @@ namespace Barotrauma
 
     static class GUI
     {
+        // Controls where a line is drawn for given coords.
+        public enum OutlinePosition
+        {
+            Default = 0, // Thickness is inside of top left and outside of bottom right coord
+            Inside = 1, // Thickness is subtracted from the inside
+            Centered = 2, // Thickness is centered on given coords
+            Outside = 3, // Tickness is added to the outside
+        }
         public static GUICanvas Canvas => GUICanvas.Instance;
         public static CursorState MouseCursor = CursorState.Default;
 
@@ -133,13 +140,20 @@ namespace Barotrauma
         public static Texture2D WhiteTexture => solidWhiteTexture;
         private static GUICursor MouseCursorSprites => GUIStyle.CursorSprite;
 
-        private static bool debugDrawSounds, debugDrawEvents, debugDrawMetadata;
-        private static int debugDrawMetadataOffset;
-        private static readonly string[] ignoredMetadataInfo = { string.Empty, string.Empty, string.Empty, string.Empty };
+        private static bool debugDrawSounds, debugDrawEvents;
+
+        private static DebugDrawMetaData debugDrawMetaData;
+
+        public struct DebugDrawMetaData
+        {
+            public bool Enabled;
+            public bool FactionMetadata, UpgradeLevels, UpgradePrices;
+            public int Offset;
+        }
 
         public static GraphicsDevice GraphicsDevice => GameMain.Instance.GraphicsDevice;
 
-        private static List<GUIMessage> messages = new List<GUIMessage>();
+        private static readonly List<GUIMessage> messages = new List<GUIMessage>();
 
         public static GUIFrame PauseMenu { get; private set; }
         public static GUIFrame SettingsMenuContainer { get; private set; }
@@ -188,8 +202,9 @@ namespace Barotrauma
                     SettingsMenuOpen ||
                     DebugConsole.IsOpen ||
                     GameSession.IsTabMenuOpen ||
-                    (GameMain.GameSession?.GameMode?.Paused ?? false) ||
-                    CharacterHUD.IsCampaignInterfaceOpen;
+                    GameMain.GameSession?.GameMode is { Paused: true } ||
+                    CharacterHUD.IsCampaignInterfaceOpen ||
+                    GameMain.GameSession?.Campaign is { SlideshowPlayer: { Finished: false, Visible: true } };
             }
         }
 
@@ -248,7 +263,17 @@ namespace Barotrauma
                     ScreenChanged = false;
                 }
 
-                updateList.ForEach(c => c.DrawAuto(spriteBatch));
+                foreach (GUIComponent c in updateList)
+                {
+                    c.DrawAuto(spriteBatch);
+                }
+
+                // always draw IME preview on top of everything else
+                foreach (GUIComponent c in updateList)
+                {
+                    if (c is not GUITextBox box) { continue; }
+                    box.DrawIMEPreview(spriteBatch);
+                }
 
                 if (ScreenOverlayColor.A > 0.0f)
                 {
@@ -516,18 +541,17 @@ namespace Barotrauma
                     if (GameMain.GameSession?.GameMode is CampaignMode campaignMode)
                     {
                         // TODO: TEST THIS
-                        if (debugDrawMetadata)
+                        if (debugDrawMetaData.Enabled)
                         {
                             string text = "Ctrl+M to hide campaign metadata debug info\n\n" +
-                                          $"Ctrl+1 to {(string.IsNullOrWhiteSpace(ignoredMetadataInfo[0]) ? "hide" : "show")} outpost reputations, \n" +
-                                          $"Ctrl+2 to {(string.IsNullOrWhiteSpace(ignoredMetadataInfo[1]) ? "hide" : "show")} faction reputations, \n" +
-                                          $"Ctrl+3 to {(string.IsNullOrWhiteSpace(ignoredMetadataInfo[2]) ? "hide" : "show")} upgrade levels, \n" +
-                                          $"Ctrl+4 to {(string.IsNullOrWhiteSpace(ignoredMetadataInfo[3]) ? "hide" : "show")} upgrade prices";
+                                          $"Ctrl+1 to {(debugDrawMetaData.FactionMetadata ? "hide" : "show")} faction reputations, \n" +
+                                          $"Ctrl+2 to {(debugDrawMetaData.UpgradeLevels ? "hide" : "show")} upgrade levels, \n" +
+                                          $"Ctrl+3 to {(debugDrawMetaData.UpgradePrices ? "hide" : "show")} upgrade prices";
                             Vector2 textSize = GUIStyle.SmallFont.MeasureString(text);
                             Vector2 pos = new Vector2(GameMain.GraphicsWidth - (textSize.X + 10), 300);
                             DrawString(spriteBatch, pos, text, Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
                             pos.Y += textSize.Y + 8;
-                            campaignMode.CampaignMetadata?.DebugDraw(spriteBatch, pos, debugDrawMetadataOffset, ignoredMetadataInfo);
+                            campaignMode.CampaignMetadata?.DebugDraw(spriteBatch, pos, campaignMode, debugDrawMetaData);
                         }
                         else
                         {
@@ -581,6 +605,10 @@ namespace Barotrauma
                 if (HUDLayoutSettings.DebugDraw) { HUDLayoutSettings.Draw(spriteBatch); }
 
                 GameMain.Client?.Draw(spriteBatch);
+
+                string factionWaterMark = "FACTION/ENDGAME TEST VERSION - please do not publicly share any material you see here!".ToUpper();
+                DrawString(spriteBatch, new Vector2(GameMain.GraphicsWidth / 2, 100 * yScale) - GUIStyle.SubHeadingFont.MeasureString(factionWaterMark) / 2, factionWaterMark,
+                    GUIStyle.Red * 0.5f, font: GUIStyle.SubHeadingFont, backgroundColor: Color.Black * 0.5f, backgroundPadding: 10);
 
                 if (Character.Controlled?.Inventory != null)
                 {
@@ -667,21 +695,8 @@ namespace Barotrauma
             }
         }
 
-        public static void DrawBackgroundSprite(SpriteBatch spriteBatch, Sprite backgroundSprite, float aberrationStrength = 1.0f)
+        public static void DrawBackgroundSprite(SpriteBatch spriteBatch, Sprite backgroundSprite, Color color)
         {
-            double aberrationT = (Timing.TotalTime * 0.5f);
-            GameMain.GameScreen.PostProcessEffect.Parameters["blurDistance"].SetValue(0.001f * aberrationStrength);
-            GameMain.GameScreen.PostProcessEffect.Parameters["chromaticAberrationStrength"].SetValue(new Vector3(-0.025f, -0.01f, -0.05f) *
-                (float)(PerlinNoise.CalculatePerlin(aberrationT, aberrationT, 0) + 0.5f) * aberrationStrength);
-
-            Matrix.CreateOrthographicOffCenter(0, GameMain.GraphicsWidth, GameMain.GraphicsHeight, 0, 0, -1, out Matrix projection);
-
-            GameMain.GameScreen.PostProcessEffect.Parameters["MatrixTransform"].SetValue(projection);
-            GameMain.GameScreen.PostProcessEffect.CurrentTechnique = GameMain.GameScreen.PostProcessEffect.Techniques["BlurChromaticAberration"];
-            GameMain.GameScreen.PostProcessEffect.CurrentTechnique.Passes[0].Apply();
-
-            spriteBatch.Begin(SpriteSortMode.Immediate, effect: GameMain.GameScreen.PostProcessEffect);
-
             float scale = Math.Max(
                 (float)GameMain.GraphicsWidth / backgroundSprite.SourceRect.Width,
                 (float)GameMain.GraphicsHeight / backgroundSprite.SourceRect.Height) * 1.1f;
@@ -694,10 +709,8 @@ namespace Barotrauma
 
             spriteBatch.Draw(backgroundSprite.Texture,
                 new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) / 2 + pos,
-                null, Color.White, 0.0f, backgroundSprite.size / 2,
+                null, color, 0.0f, backgroundSprite.size / 2,
                 scale, SpriteEffects.None, 0.0f);
-
-            spriteBatch.End();
         }
 
         #region Update list
@@ -1189,48 +1202,37 @@ namespace Barotrauma
                 }
                 if (PlayerInput.IsCtrlDown() && PlayerInput.KeyHit(Keys.M))
                 {
-                    debugDrawMetadata = !debugDrawMetadata;
+                    debugDrawMetaData.Enabled = !debugDrawMetaData.Enabled;
                 }
 
-                if (debugDrawMetadata)
+                if (debugDrawMetaData.Enabled)
                 {
                     if (PlayerInput.KeyHit(Keys.Up))
                     {
-                        debugDrawMetadataOffset--;
+                        debugDrawMetaData.Offset--;
                     }
-
                     if (PlayerInput.KeyHit(Keys.Down))
                     {
-                        debugDrawMetadataOffset++;
+                        debugDrawMetaData.Offset++;
                     }
-
                     if (PlayerInput.IsCtrlDown())
                     {
                         if (PlayerInput.KeyHit(Keys.D1))
                         {
-                            ignoredMetadataInfo[0] = ignoredMetadataInfo[0] == string.Empty ? "reputation.location" : string.Empty;
-                            debugDrawMetadataOffset = 0;
+                            debugDrawMetaData.FactionMetadata = !debugDrawMetaData.FactionMetadata;
+                            debugDrawMetaData.Offset = 0;
                         }
-
                         if (PlayerInput.KeyHit(Keys.D2))
                         {
-                            ignoredMetadataInfo[1] = ignoredMetadataInfo[1] == string.Empty ? "reputation.faction" : string.Empty;
-                            debugDrawMetadataOffset = 0;
+                            debugDrawMetaData.UpgradeLevels = !debugDrawMetaData.UpgradeLevels;
+                            debugDrawMetaData.Offset = 0;
                         }
-
                         if (PlayerInput.KeyHit(Keys.D3))
                         {
-                            ignoredMetadataInfo[2] = ignoredMetadataInfo[2] == string.Empty ? "upgrade." : string.Empty;
-                            debugDrawMetadataOffset = 0;
-                        }
-
-                        if (PlayerInput.KeyHit(Keys.D4))
-                        {
-                            ignoredMetadataInfo[3] = ignoredMetadataInfo[3] == string.Empty ? "upgradeprice." : string.Empty;
-                            debugDrawMetadataOffset = 0;
+                            debugDrawMetaData.UpgradePrices = !debugDrawMetaData.UpgradePrices;
+                            debugDrawMetaData.Offset = 0;
                         }
                     }
-
                 }
 
                 HandlePersistingElements(deltaTime);
@@ -1244,6 +1246,10 @@ namespace Barotrauma
                 UpdateMessages(deltaTime);
                 UpdateSavingIndicator(deltaTime);
             }
+
+#if WINDOWS
+            GUITextBox.UpdateIME();
+#endif
         }
 
         public static void UpdateGUIMessageBoxesOnly(float deltaTime)
@@ -1350,7 +1356,7 @@ namespace Barotrauma
             }
         }
 
-        #region Element drawing
+#region Element drawing
 
         private static readonly List<float> usedIndicatorAngles = new List<float>();
 
@@ -1605,6 +1611,54 @@ namespace Barotrauma
             }
         }
 
+        public static void DrawRectangle(SpriteBatch sb, Vector2 position, Vector2 size, Vector2 origin, float rotation, Color clr, float depth = 0.0f, float thickness = 1, OutlinePosition outlinePos = OutlinePosition.Centered)
+        {
+            Vector2 topLeft = new Vector2(-origin.X, -origin.Y);
+            Vector2 topRight = new Vector2(-origin.X + size.X, -origin.Y);
+            Vector2 bottomLeft = new Vector2(-origin.X, -origin.Y + size.Y);
+            Vector2 actualSize = size;
+
+            switch(outlinePos)
+            {
+                case OutlinePosition.Default:
+                    actualSize += new Vector2(thickness);
+                    break;
+                case OutlinePosition.Centered:
+                    topLeft -= new Vector2(thickness * 0.5f);
+                    topRight -= new Vector2(thickness * 0.5f);
+                    bottomLeft -= new Vector2(thickness * 0.5f);
+                    actualSize += new Vector2(thickness);
+                    break;
+                case OutlinePosition.Inside:
+                    topRight -= new Vector2(thickness, 0.0f);
+                    bottomLeft -= new Vector2(0.0f, thickness);
+                    break;
+                case OutlinePosition.Outside:
+                    topLeft -= new Vector2(thickness);
+                    topRight -= new Vector2(0.0f, thickness);
+                    bottomLeft -= new Vector2(thickness, 0.0f);
+                    actualSize += new Vector2(thickness * 2.0f);
+                    break;
+            }
+
+            Matrix rotate = Matrix.CreateRotationZ(rotation);
+            topLeft = Vector2.Transform(topLeft, rotate) + position;
+            topRight = Vector2.Transform(topRight, rotate) + position;
+            bottomLeft = Vector2.Transform(bottomLeft, rotate) + position;
+
+            Rectangle srcRect = new Rectangle(0, 0, 1, 1);
+            sb.Draw(solidWhiteTexture, topLeft, srcRect, clr, rotation, Vector2.Zero, new Vector2(thickness, actualSize.Y), SpriteEffects.None, depth);
+            sb.Draw(solidWhiteTexture, topLeft, srcRect, clr, rotation, Vector2.Zero, new Vector2(actualSize.X, thickness), SpriteEffects.None, depth);
+            sb.Draw(solidWhiteTexture, topRight, srcRect, clr, rotation, Vector2.Zero, new Vector2(thickness, actualSize.Y), SpriteEffects.None, depth);
+            sb.Draw(solidWhiteTexture, bottomLeft, srcRect, clr, rotation, Vector2.Zero, new Vector2(actualSize.X, thickness), SpriteEffects.None, depth);
+        }
+
+        public static void DrawFilledRectangle(SpriteBatch sb, Vector2 position, Vector2 size, Vector2 pivot, float rotation, Color clr, float depth = 0.0f)
+        {
+            Rectangle srcRect = new Rectangle(0, 0, 1, 1);
+            sb.Draw(solidWhiteTexture, position, srcRect, clr, rotation, (pivot/size), size, SpriteEffects.None, depth);
+        }
+
         public static void DrawFilledRectangle(SpriteBatch sb, RectangleF rect, Color clr, float depth = 0.0f)
         {
             DrawFilledRectangle(sb, rect.Location, rect.Size, clr, depth);
@@ -1788,9 +1842,9 @@ namespace Barotrauma
             Vector2 pos = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) - new Vector2(HUDLayoutSettings.Padding) - 2 * Scale * sheet.FrameSize.ToVector2();
             sheet.Draw(spriteBatch, (int)Math.Floor(savingIndicatorSpriteIndex), pos, savingIndicatorColor, origin: Vector2.Zero, rotate: 0.0f, scale: new Vector2(Scale));
         }
-        #endregion
+#endregion
 
-        #region Element creation
+#region Element creation
 
         public static Texture2D CreateCircle(int radius, bool filled = false)
         {
@@ -2162,9 +2216,9 @@ namespace Barotrauma
             return msgBox;
         }
 
-        #endregion
+#endregion
 
-        #region Element positioning
+#region Element positioning
         private static List<T> CreateElements<T>(int count, RectTransform parent, Func<RectTransform, T> constructor,
             Vector2? relativeSize = null, Point? absoluteSize = null,
             Anchor anchor = Anchor.TopLeft, Pivot? pivot = null, Point? minSize = null, Point? maxSize = null,
@@ -2363,9 +2417,9 @@ namespace Barotrauma
             }
         }
 
-        #endregion
+#endregion
 
-        #region Misc
+#region Misc
         public static void TogglePauseMenu()
         {
             if (Screen.Selected == GameMain.MainMenuScreen) { return; }
@@ -2603,6 +2657,6 @@ namespace Barotrauma
             if (!isSavingIndicatorEnabled) { return; }
             timeUntilSavingIndicatorDisabled = delay;
         }
-        #endregion
+#endregion
     }
 }

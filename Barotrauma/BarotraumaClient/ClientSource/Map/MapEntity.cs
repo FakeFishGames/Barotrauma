@@ -99,9 +99,22 @@ namespace Barotrauma
         {
             float depth = baseDepth
                 //take texture into account to get entities with (roughly) the same base depth and texture to render consecutively to minimize texture swaps
-                + (sprite?.Texture?.SortingKey ?? 0) % 100 * 0.00001f
-                + ID % 100 * 0.000001f;
+                + (sprite?.Texture?.SortingKey ?? 0) % 100 * 0.000001f
+                + ID % 100 * 0.0000001f;
             return Math.Min(depth, 1.0f);
+        }
+
+        protected Vector2 GetCollapseEffectOffset()
+        {
+            if (Level.Loaded?.Renderer?.CollapseEffectStrength is float collapseEffectStrength and > 0.0f && Submarine is not { Info.Type: SubmarineType.Player })
+            {
+                   Vector2 noisePos = new Vector2(
+                    (float)PerlinNoise.GetPerlin((float)(Timing.TotalTime + ID) * 0.1f, (float)(Timing.TotalTime + ID) * 0.5f) - 0.5f,
+                    (float)PerlinNoise.GetPerlin((float)(Timing.TotalTime + ID) * 0.1f, (float)(Timing.TotalTime + ID) * 0.1f) - 0.5f);
+                Vector2 offsetFromOrigin = Level.Loaded.Renderer.CollapseEffectOrigin - DrawPosition;
+                return offsetFromOrigin * MathF.Pow(collapseEffectStrength, MathHelper.Lerp(1, 4, ID % 1000 / 1000.0f)) + (noisePos * 100.0f * collapseEffectStrength);                
+            }
+            return Vector2.Zero;
         }
 
         /// <summary>

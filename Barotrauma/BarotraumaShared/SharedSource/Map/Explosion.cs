@@ -1,13 +1,12 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
+using Barotrauma.MapCreatures.Behavior;
 using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
-using Barotrauma.Extensions;
-using Barotrauma.MapCreatures.Behavior;
 
 namespace Barotrauma
 {
@@ -131,15 +130,21 @@ namespace Barotrauma
             if (damageSource is Item sourceItem)
             {
                 var launcher = sourceItem.GetComponent<Projectile>()?.Launcher;
-                displayRange *= 
-                    1.0f 
-                    + sourceItem.GetQualityModifier(Quality.StatType.ExplosionRadius) 
+                displayRange *=
+                    1.0f
+                    + sourceItem.GetQualityModifier(Quality.StatType.ExplosionRadius)
                     + (launcher?.GetQualityModifier(Quality.StatType.ExplosionRadius) ?? 0);
-                Attack.DamageMultiplier *= 
-                    1.0f 
+                Attack.DamageMultiplier *=
+                    1.0f
                     + sourceItem.GetQualityModifier(Quality.StatType.ExplosionDamage)
                     + (launcher?.GetQualityModifier(Quality.StatType.ExplosionDamage) ?? 0);
                 Attack.SourceItem ??= sourceItem;
+            }
+
+            if (attacker is not null)
+            {
+                displayRange *= 1f + attacker.GetStatValue(StatTypes.ExplosionRadiusMultiplier);
+                Attack.DamageMultiplier *= 1f + attacker.GetStatValue(StatTypes.ExplosionDamageMultiplier);
             }
 
             Vector2 cameraPos = GameMain.GameScreen.Cam.Position;
@@ -150,6 +155,10 @@ namespace Barotrauma
             {
                 Color flashColor = Color.Lerp(Color.Transparent, screenColor, Math.Max((screenColorRange - cameraDist) / screenColorRange, 0.0f));
                 Screen.Selected.ColorFade(flashColor, Color.Transparent, screenColorDuration);
+            }
+            foreach (Item item in Item.ItemList)
+            {
+                item.GetComponent<Sonar>()?.RegisterExplosion(this, worldPosition);
             }
 #endif
 
@@ -171,13 +180,13 @@ namespace Barotrauma
                 foreach (Item item in Item.ItemList)
                 {
                     float distSqr = Vector2.DistanceSquared(item.WorldPosition, worldPosition);
-                    if (distSqr > displayRangeSqr) continue;
+                    if (distSqr > displayRangeSqr) { continue; }
                     
                     float distFactor = 1.0f - (float)Math.Sqrt(distSqr) / displayRange;
 
                     //damage repairable power-consuming items
                     var powered = item.GetComponent<Powered>();
-                    if (powered == null || !powered.VulnerableToEMP) continue;
+                    if (powered == null || !powered.VulnerableToEMP) { continue; }
                     if (item.Repairables.Any())
                     {
                         item.Condition -= item.MaxCondition * EmpStrength * distFactor;
@@ -187,7 +196,7 @@ namespace Barotrauma
                     var powerContainer = item.GetComponent<PowerContainer>();
                     if (powerContainer != null)
                     {
-                        powerContainer.Charge -= powerContainer.Capacity * EmpStrength * distFactor;
+                        powerContainer.Charge -= powerContainer.GetCapacity() * EmpStrength * distFactor;
                     }
                 }
             }
@@ -198,7 +207,7 @@ namespace Barotrauma
                 foreach (Item item in Item.ItemList)
                 {
                     float distSqr = Vector2.DistanceSquared(item.WorldPosition, worldPosition);
-                    if (distSqr > displayRangeSqr) continue;
+                    if (distSqr > displayRangeSqr) { continue; }
 
                     float distFactor = 1.0f - (float)Math.Sqrt(distSqr) / displayRange;
                     //repair repairable items
@@ -355,25 +364,31 @@ namespace Barotrauma
                         }
                     }
 
-                    AbilityAttackData attackData = new AbilityAttackData(Attack, c, attacker);
-                    if (attackData.Afflictions != null)
+                    if (attack.Afflictions.Any() || attack.Stun > 0.0f)
                     {
-                        modifiedAfflictions.AddRange(attackData.Afflictions);
-                    }
+                        AbilityAttackData attackData = new AbilityAttackData(Attack, c, attacker);
+                        if (attackData.Afflictions != null)
+                        {
+                            modifiedAfflictions.AddRange(attackData.Afflictions);
+                        }
 
-                    //use a position slightly from the limb's position towards the explosion
-                    //ensures that the attack hits the correct limb and that the direction of the hit can be determined correctly in the AddDamage methods
-                    Vector2 dir = worldPosition - limb.WorldPosition;
-                    Vector2 hitPos = limb.WorldPosition + (dir.LengthSquared() <= 0.001f ? Rand.Vector(1.0f) : Vector2.Normalize(dir)) * 0.01f;
-                    AttackResult attackResult = c.AddDamage(hitPos, modifiedAfflictions, attack.Stun * distFactor, false, attacker: attacker, damageMultiplier: attack.DamageMultiplier * attackData.DamageMultiplier);
-                    damages.Add(limb, attackResult.Damage);
+                        //use a position slightly from the limb's position towards the explosion
+                        //ensures that the attack hits the correct limb and that the direction of the hit can be determined correctly in the AddDamage methods
+                        Vector2 dir = worldPosition - limb.WorldPosition;
+                        Vector2 hitPos = limb.WorldPosition + (dir.LengthSquared() <= 0.001f ? Rand.Vector(1.0f) : Vector2.Normalize(dir)) * 0.01f;
+                        AttackResult attackResult = c.AddDamage(hitPos, modifiedAfflictions, attack.Stun * distFactor, false, attacker: attacker, damageMultiplier: attack.DamageMultiplier * attackData.DamageMultiplier);
+                        damages.Add(limb, attackResult.Damage);
+                    }
                     
                     if (attack.StatusEffects != null && attack.StatusEffects.Any())
                     {
                         attack.SetUser(attacker);
-                        var statusEffectTargets = new List<ISerializableEntity>() { c, limb };
+                        var statusEffectTargets = new List<ISerializableEntity>();
                         foreach (StatusEffect statusEffect in attack.StatusEffects)
                         {
+                            statusEffectTargets.Clear();
+                            if (statusEffect.HasTargetType(StatusEffect.TargetType.Character)) { statusEffectTargets.Add(c); }
+                            if (statusEffect.HasTargetType(StatusEffect.TargetType.Limb)) { statusEffectTargets.Add(limb); }
                             statusEffect.Apply(ActionType.OnUse, 1.0f, damageSource, statusEffectTargets);
                             statusEffect.Apply(ActionType.Always, 1.0f, damageSource, statusEffectTargets);
                             statusEffect.Apply(underWater ? ActionType.InWater : ActionType.NotInWater, 1.0f, damageSource, statusEffectTargets);
@@ -430,7 +445,7 @@ namespace Barotrauma
             damagedStructureList.Clear();
             foreach (MapEntity entity in MapEntity.mapEntityList)
             {
-                if (!(entity is Structure structure)) { continue; }
+                if (entity is not Structure structure) { continue; }
                 if (ignoredSubmarines != null && entity.Submarine != null && ignoredSubmarines.Contains(entity.Submarine)) { continue; }
 
                 if (structure.HasBody &&
@@ -479,7 +494,7 @@ namespace Barotrauma
 
                 for (int i = Level.Loaded.ExtraWalls.Count - 1; i >= 0; i--)
                 {
-                    if (!(Level.Loaded.ExtraWalls[i] is DestructibleLevelWall destructibleWall)) { continue; }
+                    if (Level.Loaded.ExtraWalls[i] is not DestructibleLevelWall destructibleWall) { continue; }
                     foreach (var cell in destructibleWall.Cells)
                     {
                         if (cell.IsPointInside(worldPosition))
@@ -502,7 +517,7 @@ namespace Barotrauma
             return damagedStructures;
         }
 
-        public void RangedBallastFloraDamage(Vector2 worldPosition, float worldRange, float damage, Character attacker = null)
+        public static void RangedBallastFloraDamage(Vector2 worldPosition, float worldRange, float damage, Character attacker = null)
         {
             List<BallastFloraBehavior> ballastFlorae = new List<BallastFloraBehavior>();
 

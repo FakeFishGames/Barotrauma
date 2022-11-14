@@ -129,6 +129,13 @@ namespace Barotrauma
         public bool IsCommanding => IsPlayer || (AIController is HumanAIController humanAI && humanAI.ShipCommandManager != null && humanAI.ShipCommandManager.Active);
         public bool IsBot => !IsPlayer && AIController is HumanAIController humanAI && humanAI.Enabled;
         public bool IsEscorted { get; set; }
+        public Identifier JobIdentifier => Info?.Job?.Prefab.Identifier ?? Identifier.Empty;
+
+        public bool DoesBleed
+        {
+            get => Params.Health.DoesBleed;
+            set => Params.Health.DoesBleed = value;
+        }
 
         public readonly Dictionary<Identifier, SerializableProperty> Properties;
         public Dictionary<Identifier, SerializableProperty> SerializableProperties
@@ -178,6 +185,13 @@ namespace Barotrauma
             }
         }
 
+
+        private CharacterTeamType? originalTeamID;
+        public CharacterTeamType OriginalTeamID
+        {
+            get { return originalTeamID ?? teamID; }
+        }
+
         private Wallet wallet;
 
         public Wallet Wallet
@@ -199,7 +213,7 @@ namespace Barotrauma
 
         protected readonly Dictionary<string, ActiveTeamChange> activeTeamChanges = new Dictionary<string, ActiveTeamChange>();
         protected ActiveTeamChange currentTeamChange;
-        const string OriginalTeamIdentifier = "original";
+        private const string OriginalChangeTeamIdentifier = "original";
 
         private void ThrowIfAccessingWalletsInSingleplayer()
         {
@@ -214,20 +228,16 @@ namespace Barotrauma
 
         public void SetOriginalTeam(CharacterTeamType newTeam)
         {
-            TryRemoveTeamChange(OriginalTeamIdentifier);
+            TryRemoveTeamChange(OriginalChangeTeamIdentifier);
             currentTeamChange = new ActiveTeamChange(newTeam, ActiveTeamChange.TeamChangePriorities.Base);
-            TryAddNewTeamChange(OriginalTeamIdentifier, currentTeamChange);
+            TryAddNewTeamChange(OriginalChangeTeamIdentifier, currentTeamChange);
         }
 
-        protected void ChangeTeam(CharacterTeamType newTeam)
+        private void ChangeTeam(CharacterTeamType newTeam)
         {
-            if (newTeam == teamID)
-            {
-                return;
-            }
-            teamID = newTeam;
-            if (info != null) { info.TeamID = newTeam; }
-
+            if (newTeam == teamID) { return; }
+            if (originalTeamID == null) { originalTeamID = teamID; }
+            TeamID = newTeam;
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
             {
                 return;
@@ -271,7 +281,7 @@ namespace Barotrauma
             {
                 if (currentTeamChange == removedTeamChange)
                 {
-                    currentTeamChange = activeTeamChanges[OriginalTeamIdentifier];
+                    currentTeamChange = activeTeamChanges[OriginalChangeTeamIdentifier];
                 }
             }
             return activeTeamChanges.Remove(identifier);
@@ -305,7 +315,9 @@ namespace Barotrauma
             }
         }
 
-        public bool IsOnPlayerTeam => TeamID == CharacterTeamType.Team1 || TeamID == CharacterTeamType.Team2;
+        public bool IsOnPlayerTeam => teamID == CharacterTeamType.Team1 || teamID == CharacterTeamType.Team2;
+
+        public bool IsOriginallyOnPlayerTeam => originalTeamID == CharacterTeamType.Team1 || originalTeamID == CharacterTeamType.Team2;
 
         public bool IsInstigator => CombatAction != null && CombatAction.IsInstigator;
         public CombatAction CombatAction;
@@ -611,7 +623,9 @@ namespace Barotrauma
                 CharacterHealth.SetHealthBarVisibility(value == null);
 #endif
                 bool isServerOrSingleplayer = GameMain.IsSingleplayer || GameMain.NetworkMember is { IsServer: true };
-                if (IsPlayer && isServerOrSingleplayer && value is { IsDead: true, Wallet: { Balance: var balance } grabbedWallet } && balance > 0)
+                CheckTalents(AbilityEffectType.OnLootCharacter, new AbilityCharacterLoot(value));
+
+                if (IsPlayer && isServerOrSingleplayer && value is { IsDead: true, Wallet: { Balance: var balance and > 0 } grabbedWallet })
                 {
 #if SERVER
                     if (GameMain.GameSession.Campaign is MultiPlayerCampaign mpCampaign && GameMain.Server is { ServerSettings: { } settings })
@@ -999,7 +1013,7 @@ namespace Barotrauma
             }
         }
 
-        public bool InWater => AnimController?.InWater ?? false;
+        public bool InWater => AnimController is AnimController { InWater: true };
 
         public bool GodMode = false;
 
@@ -1052,6 +1066,8 @@ namespace Barotrauma
                 return AnimController.MainLimb.body.DrawPosition;
             }
         }
+
+        public HashSet<Identifier> MarkedAsLooted = new();
 
         public bool IsInFriendlySub => Submarine != null && Submarine.TeamID == TeamID;
 
@@ -1574,18 +1590,36 @@ namespace Barotrauma
                 }
                 if (createNetworkEvent && GameMain.NetworkMember is { IsServer: true })
                 {
-                    GameMain.NetworkMember.CreateEntityEvent(item, new Item.ChangePropertyEventData(item.SerializableProperties[nameof(item.Tags).ToIdentifier()]));
+                    GameMain.NetworkMember.CreateEntityEvent(item, new Item.ChangePropertyEventData(item.SerializableProperties[nameof(item.Tags).ToIdentifier()], item));
                 }
             }
         }
 
         public float GetSkillLevel(string skillIdentifier) =>
             GetSkillLevel(skillIdentifier.ToIdentifier());
-        
+
+        private static readonly ImmutableDictionary<Identifier, StatTypes> overrideStatTypes = new Dictionary<Identifier, StatTypes>
+        {
+            { new("helm"), StatTypes.HelmSkillOverride },
+            { new("medical"), StatTypes.MedicalSkillOverride },
+            { new("weapons"), StatTypes.WeaponsSkillOverride },
+            { new("electrical"), StatTypes.ElectricalSkillOverride },
+            { new("mechanical"), StatTypes.MechanicalSkillOverride }
+        }.ToImmutableDictionary();
+
         public float GetSkillLevel(Identifier skillIdentifier)
         {
             if (Info?.Job == null) { return 0.0f; }
             float skillLevel = Info.Job.GetSkillLevel(skillIdentifier);
+
+            if (overrideStatTypes.TryGetValue(skillIdentifier, out StatTypes statType))
+            {
+                float skillOverride = GetStatValue(statType);
+                if (skillOverride > skillLevel)
+                {
+                    skillLevel = skillOverride;
+                }
+            }
 
             // apply multipliers first so that multipliers only affect base skill value
             foreach (Affliction affliction in CharacterHealth.GetAllAfflictions())
@@ -1616,6 +1650,7 @@ namespace Barotrauma
             }
 
             skillLevel += GetStatValue(GetSkillStatType(skillIdentifier));
+
 
             return skillLevel;
         }
@@ -1948,6 +1983,15 @@ namespace Barotrauma
                 }
             }
 #endif
+
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && Controlled != this && IsKeyDown(InputType.Aim))
+            {
+                if (currentAttackTarget.AttackLimb?.attack is Attack { Ranged: true } attack && AIController is EnemyAIController enemyAi)
+                {
+                    enemyAi.AimRangedAttack(attack, currentAttackTarget.DamageTarget as Entity);
+                }
+            }
+
             if (attackCoolDown > 0.0f)
             {
                 attackCoolDown -= deltaTime;
@@ -1958,7 +2002,7 @@ namespace Barotrauma
                 {
                     if ((currentAttackTarget.DamageTarget as Entity)?.Removed ?? false)
                     {
-                        currentAttackTarget = default(AttackTargetData);                        
+                        currentAttackTarget = default;
                     }
                     currentAttackTarget.AttackLimb?.UpdateAttack(deltaTime, currentAttackTarget.AttackPos, currentAttackTarget.DamageTarget, out _);
                 }
@@ -2053,58 +2097,56 @@ namespace Barotrauma
                 }
             }
 
-            bool CanUseItemsWhenSelected(Item item) => item == null || !item.Prefab.DisableItemUsageWhenSelected;
-            if (CanUseItemsWhenSelected(SelectedItem) && CanUseItemsWhenSelected(SelectedSecondaryItem))
+            if (Inventory != null)
             {
-                foreach (Item item in HeldItems)
+                bool CanUseItemsWhenSelected(Item item) => item == null || !item.Prefab.DisableItemUsageWhenSelected;
+                if (CanUseItemsWhenSelected(SelectedItem) && CanUseItemsWhenSelected(SelectedSecondaryItem))
                 {
-                    if (IsKeyDown(InputType.Aim) || !item.RequireAimToSecondaryUse)
+                    foreach (Item item in HeldItems)
                     {
-                        item.SecondaryUse(deltaTime, this);
+                        tryUseItem(item, deltaTime);
                     }
-                    if (IsKeyDown(InputType.Use) && !item.IsShootable)
+                    foreach (Item item in Inventory.AllItems)
                     {
-                        if (!item.RequireAimToUse || IsKeyDown(InputType.Aim))
+                        if (item.GetComponent<Wearable>() is { AllowUseWhenWorn: true } && HasEquippedItem(item))
                         {
-                            item.Use(deltaTime, this);
+                            tryUseItem(item, deltaTime);
                         }
                     }
-                    if (IsKeyDown(InputType.Shoot) && item.IsShootable)
+                }
+            }
+
+            void tryUseItem(Item item, float deltaTime)
+            {
+                if (IsKeyDown(InputType.Aim) || !item.RequireAimToSecondaryUse)
+                {
+                    item.SecondaryUse(deltaTime, this);
+                }
+                if (IsKeyDown(InputType.Use) && !item.IsShootable)
+                {
+                    if (!item.RequireAimToUse || IsKeyDown(InputType.Aim))
                     {
-                        if (!item.RequireAimToUse || IsKeyDown(InputType.Aim))
-                        {
-                            item.Use(deltaTime, this);
-                        }
+                        item.Use(deltaTime, this);
+                    }
+                }
+                if (IsKeyDown(InputType.Shoot) && item.IsShootable)
+                {
+                    if (!item.RequireAimToUse || IsKeyDown(InputType.Aim))
+                    {
+                        item.Use(deltaTime, this);
+                    }
 #if CLIENT
-                        else if (item.RequireAimToUse && !IsKeyDown(InputType.Aim))
-                        {
-                            HintManager.OnShootWithoutAiming(this, item);
-                        }
-#endif
+                    else if (item.RequireAimToUse && !IsKeyDown(InputType.Aim))
+                    {
+                        HintManager.OnShootWithoutAiming(this, item);
                     }
+#endif
                 }
             }
 
             if (SelectedItem != null)
             {
-                if (IsKeyDown(InputType.Aim) || !SelectedItem.RequireAimToSecondaryUse)
-                {
-                    SelectedItem.SecondaryUse(deltaTime, this);
-                }
-                if (IsKeyDown(InputType.Use) && SelectedItem != null && !SelectedItem.IsShootable)
-                {
-                    if (!SelectedItem.RequireAimToUse || IsKeyDown(InputType.Aim))
-                    {
-                        SelectedItem.Use(deltaTime, this);
-                    }
-                }
-                if (IsKeyDown(InputType.Shoot) && SelectedItem != null && SelectedItem.IsShootable)
-                {
-                    if (!SelectedItem.RequireAimToUse || IsKeyDown(InputType.Aim))
-                    {
-                        SelectedItem.Use(deltaTime, this);
-                    }
-                }
+                tryUseItem(SelectedItem, deltaTime);
             }
 
             if (SelectedCharacter != null)
@@ -2878,7 +2920,9 @@ namespace Barotrauma
 
             for (int i = 0; i < CharacterList.Count; i++)
             {
-                CharacterList[i].Update(deltaTime, cam);
+                var character = CharacterList[i];
+                System.Diagnostics.Debug.Assert(character != null && !character.Removed);
+                character.Update(deltaTime, cam);
             }
         }
 
@@ -3788,7 +3832,7 @@ namespace Barotrauma
             return attackResult;
         }
 
-        public void TrySeverLimbJoints(Limb targetLimb, float severLimbsProbability, float damage, bool allowBeheading, Character attacker = null)
+        public void TrySeverLimbJoints(Limb targetLimb, float severLimbsProbability, float damage, bool allowBeheading, bool ignoreSeveranceProbabilityModifier = false, Character attacker = null)
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 #if DEBUG
@@ -3798,7 +3842,7 @@ namespace Barotrauma
                 return;
             }
 #endif
-            if (damage < targetLimb.Params.MinSeveranceDamage) { return; }
+            if (damage > 0 && damage < targetLimb.Params.MinSeveranceDamage) { return; }
             if (!IsDead)
             {
                 if (!allowBeheading && targetLimb.type == LimbType.Head) { return; }
@@ -3816,7 +3860,7 @@ namespace Barotrauma
                 var referenceLimb = targetLimb.type == LimbType.Head && targetLimb.Params.ID == 0 ? joint.LimbA : joint.LimbB;
                 if (referenceLimb != targetLimb) { continue; }
                 float probability = severLimbsProbability;
-                if (!IsDead)
+                if (!IsDead && !ignoreSeveranceProbabilityModifier)
                 {
                     probability *= joint.Params.SeveranceProbabilityModifier;
                 }
@@ -3938,13 +3982,6 @@ namespace Barotrauma
                 }
             }
 
-#if CLIENT
-            if (Params.UseBossHealthBar && Controlled != null && Controlled.teamID == attacker?.teamID)
-            {
-                CharacterHUD.ShowBossHealthBar(this);
-            }
-#endif
-
             Vector2 dir = hitLimb.WorldPosition - worldPosition;
             if (Math.Abs(attackImpulse) > 0.0f)
             {
@@ -3992,7 +4029,12 @@ namespace Barotrauma
                 ApplyStatusEffects(ActionType.OnDamaged, 1.0f);
                 hitLimb.ApplyStatusEffects(ActionType.OnDamaged, 1.0f);
             }
-
+#if CLIENT
+            if (Params.UseBossHealthBar && Controlled != null && Controlled.teamID == attacker?.teamID)
+            {
+                CharacterHUD.ShowBossHealthBar(this, attackResult.Damage);
+            }
+#endif
             return attackResult;
         }
 
@@ -4075,7 +4117,7 @@ namespace Barotrauma
                         statusEffect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                     {
                         targets.Clear();
-                        targets.AddRange(statusEffect.GetNearbyTargets(WorldPosition, targets));
+                        statusEffect.AddNearbyTargets(WorldPosition, targets);
                         statusEffect.Apply(actionType, deltaTime, this, targets);
                     }
                     else if (statusEffect.targetLimbs != null)
@@ -4709,6 +4751,8 @@ namespace Barotrauma
 
         public bool HasJob(string identifier) => Info?.Job?.Prefab.Identifier == identifier;
 
+        public bool HasJob(Identifier identifier) => Info?.Job?.Prefab.Identifier == identifier;
+
         public bool IsProtectedFromPressure()
         {
             return HasAbilityFlag(AbilityFlags.ImmuneToPressure) || PressureProtection >= (Level.Loaded?.GetRealWorldDepth(WorldPosition.Y) ?? 1.0f);
@@ -4789,6 +4833,32 @@ namespace Barotrauma
             return info.UnlockedTalents.Contains(identifier);
         }
 
+        private readonly HashSet<Hull> sameRoomHulls = new();
+
+        /// <summary>
+        /// Check if the character is in the same room
+        /// Room and hull differ in that a room can consist of multiple linked hulls
+        /// </summary>
+        public bool IsInSameRoomAs(Character character)
+        {
+            if (character == this) { return true; }
+
+            if (character.CurrentHull is null || CurrentHull is null)
+            {
+                // Outside doesn't count as a room
+                return false;
+            }
+
+            if (character.Submarine != Submarine) { return false; }
+            if (character.CurrentHull == CurrentHull) { return true; }
+
+            sameRoomHulls.Clear();
+            CurrentHull.GetLinkedEntities(sameRoomHulls);
+            sameRoomHulls.Add(CurrentHull);
+
+            return sameRoomHulls.Contains(character.CurrentHull);
+        }
+
         public bool HasUnlockedAllTalents()
         {
             if (TalentTree.JobTalentTrees.TryGet(Info.Job.Prefab.Identifier, out TalentTree talentTree))
@@ -4797,7 +4867,7 @@ namespace Barotrauma
                 {
                     foreach (TalentOption talentOption in talentSubTree.TalentOptionStages)
                     {
-                        if (talentOption.TalentIdentifiers.None(t => HasTalent(t)))
+                        if (talentOption.TalentIdentifiers.None(HasTalent))
                         {
                             return false;
                         }
@@ -4840,6 +4910,19 @@ namespace Barotrauma
         public bool HasRecipeForItem(Identifier recipeIdentifier)
         {
             return characterTalents.Any(t => t.UnlockedRecipes.Contains(recipeIdentifier));
+        }
+
+        public bool HasStoreAccessForItem(ItemPrefab prefab)
+        {
+            foreach (CharacterTalent talent in characterTalents)
+            {
+                foreach (Identifier unlockedItem in talent.UnlockedStoreItems)
+                {
+                    if (prefab.Tags.Contains(unlockedItem)) { return true; }
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -4900,7 +4983,7 @@ namespace Barotrauma
         /// </summary>
         private readonly Dictionary<StatTypes, float> wearableStatValues = new Dictionary<StatTypes, float>();
 
-        public float GetStatValue(StatTypes statType)
+        public float GetStatValue(StatTypes statType, bool includeSaved = true)
         {
             if (!IsHuman) { return 0f; }
 
@@ -4913,7 +4996,7 @@ namespace Barotrauma
             {
                 statValue += CharacterHealth.GetStatValue(statType);
             }
-            if (Info != null)
+            if (Info != null && includeSaved)
             {
                 // could be optimized by instead updating the Character.cs statvalues dictionary whenever the CharacterInfo.cs values change
                 statValue += Info.GetSavedStatValue(statType);
@@ -5051,6 +5134,16 @@ namespace Barotrauma
             DesiredTeamId = desiredTeamId;
             TeamChangePriority = teamChangePriority;
             AggressiveBehavior = aggressiveBehavior;
+        }
+    }
+
+    internal sealed class AbilityCharacterLoot : AbilityObject, IAbilityCharacter
+    {
+        public Character Character { get; set; }
+
+        public AbilityCharacterLoot(Character character)
+        {
+            Character = character;
         }
     }
 

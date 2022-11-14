@@ -241,6 +241,22 @@ internal static class Sdl
     }
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate bool d_sdl_istextinputactive();
+    public static d_sdl_istextinputactive SDL_IsTextInputActive = FuncLoader.LoadFunction<d_sdl_istextinputactive>(NativeLibrary, "SDL_IsTextInputActive");
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_sdl_starttextinput();
+    public static d_sdl_starttextinput SDL_StartTextInput = FuncLoader.LoadFunction<d_sdl_starttextinput>(NativeLibrary, "SDL_StartTextInput");
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_sdl_stoptextinput();
+    public static d_sdl_stoptextinput SDL_StopTextInput = FuncLoader.LoadFunction<d_sdl_stoptextinput>(NativeLibrary, "SDL_StopTextInput");
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void d_sdl_settextinputrect(ref Rectangle rect);
+    public static d_sdl_settextinputrect SDL_SetTextInputRect = FuncLoader.LoadFunction<d_sdl_settextinputrect>(NativeLibrary, "SDL_SetTextInputRect");
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_sdl_clearerror();
     public static d_sdl_clearerror ClearError = FuncLoader.LoadFunction<d_sdl_clearerror>(NativeLibrary, "SDL_ClearError");
 

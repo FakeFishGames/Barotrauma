@@ -71,6 +71,13 @@ namespace Barotrauma
         /// </summary>
         public Character Source;
 
+        private readonly static LocalizedString[] strengthTexts = new LocalizedString[]
+        {
+            TextManager.Get("AfflictionStrengthLow"),
+            TextManager.Get("AfflictionStrengthMedium"),
+            TextManager.Get("AfflictionStrengthHigh")
+        };
+
         public Affliction(AfflictionPrefab prefab, float strength)
         {
 #if CLIENT
@@ -88,6 +95,7 @@ namespace Barotrauma
                 PeriodicEffectTimers[periodicEffect] = Rand.Range(periodicEffect.MinInterval, periodicEffect.MaxInterval);
             }
         }
+
 
         public void Serialize(XElement element)
         {
@@ -107,6 +115,17 @@ namespace Barotrauma
         }
 
         public override string ToString() => Prefab == null ? "Affliction (Invalid)" : $"Affliction ({Prefab.Name})";
+
+        public LocalizedString GetStrengthText()
+        {
+            return GetStrengthText(Strength, Prefab.MaxStrength);
+        }
+
+        public static LocalizedString GetStrengthText(float strength, float maxStrength)
+        {
+            return strengthTexts[
+                MathHelper.Clamp((int)Math.Floor(strength / maxStrength * strengthTexts.Length), 0, strengthTexts.Length - 1)];
+        }
 
         public AfflictionPrefab.Effect GetActiveEffect() => Prefab.GetActiveEffect(Strength);
 
@@ -429,7 +448,7 @@ namespace Barotrauma
                 statusEffect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
             {
                 targets.Clear();
-                targets.AddRange(statusEffect.GetNearbyTargets(characterHealth.Character.WorldPosition, targets));
+                statusEffect.AddNearbyTargets(characterHealth.Character.WorldPosition, targets);
                 statusEffect.Apply(type, deltaTime, characterHealth.Character, targets);
             }
         }

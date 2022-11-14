@@ -3,6 +3,7 @@ using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using Barotrauma.IO;
 using System.Linq;
@@ -101,7 +102,7 @@ namespace Barotrauma
 
             string startPath = directory ?? "";
 
-            string saveFolder = SaveUtil.SaveFolder.Replace('\\', '/');
+            string saveFolder = SaveUtil.DefaultSaveFolder.Replace('\\', '/');
             if (originalFilename.Replace('\\', '/').StartsWith(saveFolder))
             {
                 //paths that lead to the save folder might have incorrect case,
@@ -720,6 +721,120 @@ namespace Barotrauma
         public static string GetFormattedPercentage(float v)
         {
             return TextManager.GetWithVariable("percentageformat", "[value]", ((int)MathF.Round(v * 100)).ToString()).Value;
+        }
+
+        private static readonly ImmutableHashSet<char> affectedCharacters = ImmutableHashSet.Create('%', '+', '％');
+
+        /// <summary>
+        /// Extends % and + characters to color tags in talent name tooltips to make them look nicer.
+        /// This obviously does not work in languages like French where a non breaking space is used
+        /// so it's just a a bit extra for the languages it works with.
+        /// </summary>
+        /// <param name="original"></param>
+        /// <returns></returns>
+        public static string ExtendColorToPercentageSigns(string original)
+        {
+            const string colorEnd = "‖color:end‖",
+                         colorStart = "‖color:";
+
+            const char definitionIndicator = '‖';
+
+            char[] chars = original.ToCharArray();
+
+            for (int i = 0; i < chars.Length; i++)
+            {
+                if (!TryGetAt(i, chars, out char currentChar) || !affectedCharacters.Contains(currentChar)) { continue; }
+
+                // look behind
+                if (TryGetAt(i - 1, chars, out char c) && c is definitionIndicator)
+                {
+                    int offset = colorEnd.Length;
+
+                    if (MatchesSequence(i - offset, colorEnd, chars))
+                    {
+                        // push the color end tag forwards until the character is within the tag
+                        char prev = currentChar;
+                        for (int k = i - offset; k <= i; k++)
+                        {
+                            if (!TryGetAt(k, chars, out c)) { continue; }
+
+                            chars[k] = prev;
+                            prev = c;
+                        }
+                        continue;
+                    }
+                }
+
+                // look ahead
+                if (TryGetAt(i + 1, chars, out c) && c is definitionIndicator)
+                {
+                    if (!MatchesSequence(i + 1, colorStart, chars)) { continue; }
+
+                    int offset = FindNextDefinitionOffset(i, colorStart.Length, chars);
+
+                    // we probably reached the end of the string
+                    if (offset > chars.Length) { continue; }
+
+                    // push the color start tag back until the character is within the tag
+                    char prev = currentChar;
+                    for (int k = i + offset; k >= i; k--)
+                    {
+                        if (!TryGetAt(k, chars, out c)) { continue; }
+
+                        chars[k] = prev;
+                        prev = c;
+                    }
+
+                    // skip needlessly checking this section again since we already know what's ahead
+                    i += offset;
+                }
+            }
+
+            static int FindNextDefinitionOffset(int index, int initialOffset, char[] chars)
+            {
+                int offset = initialOffset;
+                while (TryGetAt(index + offset, chars, out char c) && c is not definitionIndicator) { offset++; }
+                return offset;
+            }
+
+            static bool MatchesSequence(int index, string sequence, char[] chars)
+            {
+                for (int i = 0; i < sequence.Length; i++)
+                {
+                    if (!TryGetAt(index + i, chars, out char c) || c != sequence[i]) { return false; }
+                }
+
+                return true;
+            }
+
+            static bool TryGetAt(int i, char[] chars, out char c)
+            {
+                if (i >= 0 && i < chars.Length)
+                {
+                    c = chars[i];
+                    return true;
+                }
+
+                c = default;
+                return false;
+            }
+
+            return new string(chars);
+        }
+
+        public static bool StatIdentifierMatches(Identifier original, Identifier match)
+        {
+            if (original == match) { return true; }
+
+            for (int i = 0; i < match.Value.Length; i++)
+            {
+                if (i >= original.Value.Length) { return match[i] is '~'; }
+                if (!CharEquals(original[i], match[i])) { return false; }
+            }
+
+            return false;
+
+            static bool CharEquals(char a, char b) => char.ToLowerInvariant(a) == char.ToLowerInvariant(b);
         }
     }
 }

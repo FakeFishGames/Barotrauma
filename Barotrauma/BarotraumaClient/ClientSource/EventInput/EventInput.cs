@@ -70,6 +70,7 @@ namespace EventInput
 
     public delegate void CharEnteredHandler(object sender, CharacterEventArgs e);
     public delegate void KeyEventHandler(object sender, KeyEventArgs e);
+    public delegate void EditingTextHandler(object sender, TextEditingEventArgs e);
 
     public static class EventInput
     {
@@ -88,6 +89,15 @@ namespace EventInput
         /// </summary>
         public static event KeyEventHandler KeyUp;
 
+
+#if !WINDOWS
+        /// <summary>
+        /// Raised when the user is editing text and IME is in progress. 
+        /// Windows build uses ImeSharp instead because SDL2's IME implementation is broken on Windows (https://github.com/libsdl-org/SDL/issues/2243)
+        /// </summary>
+        public static event EditingTextHandler EditingText;
+#endif
+
         static bool initialized;
 
         /// <summary>
@@ -102,6 +112,9 @@ namespace EventInput
             }
             
             window.TextInput += ReceiveInput;
+#if !WINDOWS
+            window.TextEditing += ReceiveTextEditing;
+#endif
 
             initialized = true;
         }
@@ -111,6 +124,13 @@ namespace EventInput
             OnCharEntered(e.Character);
             KeyDown?.Invoke(sender, new KeyEventArgs(e.Key));
         }
+
+#if !WINDOWS
+        private static void ReceiveTextEditing(object sender, TextEditingEventArgs e)
+        {
+            EditingText?.Invoke(sender, e);
+        }
+#endif
 
         public static void OnCharEntered(char character)
         {

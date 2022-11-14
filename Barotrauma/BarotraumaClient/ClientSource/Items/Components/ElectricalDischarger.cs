@@ -25,14 +25,31 @@ namespace Barotrauma.Items.Components
             foreach (Node node in nodes)
             {
                 GameMain.ParticleManager.CreateParticle("swirlysmoke", node.WorldPosition, Vector2.Zero);
+
+                if (node.ParentIndex > -1)
+                {
+                    Vector2 diff = nodes[node.ParentIndex].WorldPosition - node.WorldPosition;
+                    float dist = diff.Length();
+                    Vector2 normalizedDiff = diff / dist;
+                    for (float x = 0.0f; x < dist; x += 50.0f)
+                    {
+                        var spark = GameMain.ParticleManager.CreateParticle("ElectricShock", node.WorldPosition + normalizedDiff * x, Vector2.Zero);
+                        if (spark != null)
+                        {
+                            spark.Size *= 0.3f;
+                        }
+                    }
+
+                }
             }
         }
 
         public void DrawElectricity(SpriteBatch spriteBatch)
         {
+            if (timer <= 0.0f) { return; }
             for (int i = 0; i < nodes.Count; i++)
             {
-                if (nodes[i].Length <= 1.0f) continue;
+                if (nodes[i].Length <= 1.0f) { continue; }
                 var node = nodes[i];
                 electricitySprite.Draw(spriteBatch,
                     (i + frameOffset) % electricitySprite.FrameCount,
@@ -46,10 +63,16 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.DebugDraw)
             {
-                for (int i = 0; i < nodes.Count; i++)
+                for (int i = 1; i < nodes.Count; i++)
                 {
-                    if (nodes[i].Length <= 1.0f) continue;
-                    GUI.DrawRectangle(spriteBatch, new Vector2(nodes[i].WorldPosition.X, -nodes[i].WorldPosition.Y), Vector2.One * 5, Color.LightCyan, isFilled: true);
+                    GUI.DrawLine(spriteBatch, 
+                        new Vector2(nodes[i].WorldPosition.X, -nodes[i].WorldPosition.Y), 
+                        new Vector2(nodes[nodes[i].ParentIndex].WorldPosition.X, -nodes[nodes[i].ParentIndex].WorldPosition.Y),
+                         Color.LightCyan,
+                         width: 3);
+
+                    if (nodes[i].Length <= 1.0f) { continue; }
+                    GUI.DrawRectangle(spriteBatch, new Vector2(nodes[i].WorldPosition.X, -nodes[i].WorldPosition.Y), Vector2.One * 10, Color.LightCyan, isFilled: true);
                 }
             }
         }

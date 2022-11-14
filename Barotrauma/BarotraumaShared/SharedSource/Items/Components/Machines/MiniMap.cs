@@ -15,6 +15,8 @@ namespace Barotrauma.Items.Components
             public float? ReceivedOxygenAmount,
                           ReceivedWaterAmount;
 
+            public double LastOxygenDataTime, LastWaterDataTime;
+
             public readonly HashSet<IdCard> Cards = new HashSet<IdCard>();
 
             public bool Distort;
@@ -83,7 +85,7 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            //periodically reset all hull data
+            //reset data if we haven't received anything in a while
             //(so that outdated hull info won't be shown if detectors stop sending signals)
             if (DateTime.Now > resetDataTime)
             {
@@ -91,8 +93,8 @@ namespace Barotrauma.Items.Components
                 {
                     if (!hullData.Distort)
                     {
-                        hullData.ReceivedOxygenAmount = null;
-                        hullData.ReceivedWaterAmount = null;
+                        if (Timing.TotalTime > hullData.LastOxygenDataTime + 1.0) { hullData.ReceivedOxygenAmount = null; }
+                        if (Timing.TotalTime > hullData.LastWaterDataTime + 1.0) { hullData.ReceivedWaterAmount = null; }
                     }
                 }
                 resetDataTime = DateTime.Now + new TimeSpan(0, 0, 1);
@@ -159,6 +161,7 @@ namespace Barotrauma.Items.Components
                     //cheating a bit because water detectors don't actually send the water level
                     bool fromWaterDetector = source.GetComponent<WaterDetector>() != null;
                     hullData.ReceivedWaterAmount = null;
+                    hullData.LastWaterDataTime = Timing.TotalTime;
                     if (fromWaterDetector)
                     {
                         hullData.ReceivedWaterAmount = WaterDetector.GetWaterPercentage(sourceHull);
@@ -184,9 +187,10 @@ namespace Barotrauma.Items.Components
                         oxy = Rand.Range(0.0f, 100.0f);
                     }
                     hullData.ReceivedOxygenAmount = oxy;
+                    hullData.LastOxygenDataTime = Timing.TotalTime;
                     foreach (var linked in sourceHull.linkedTo)
                     {
-                        if (!(linked is Hull linkedHull)) { continue; }
+                        if (linked is not Hull linkedHull) { continue; }
                         if (!hullDatas.TryGetValue(linkedHull, out HullData linkedHullData))
                         {
                             linkedHullData = new HullData();

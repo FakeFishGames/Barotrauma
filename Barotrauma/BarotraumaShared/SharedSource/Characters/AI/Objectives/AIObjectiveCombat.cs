@@ -748,6 +748,9 @@ namespace Barotrauma
             }
             if (!character.HasEquippedItem(Weapon, predicate: IsHandSlotType))
             {
+                //clear aim and shoot inputs so the bot doesn't immediately fire the weapon if it was previously e.g. using a scooter
+                character.ClearInput(InputType.Aim);
+                character.ClearInput(InputType.Shoot);
                 Weapon.TryInteract(character, forceSelectKey: true);
                 var slots = Weapon.AllowedSlots.Where(s => IsHandSlotType(s));
                 if (character.Inventory.TryPutItem(Weapon, character, slots))
@@ -764,7 +767,7 @@ namespace Barotrauma
             }
             return true;
 
-            bool IsHandSlotType(InvSlotType s) => s == InvSlotType.LeftHand || s == InvSlotType.RightHand || s == (InvSlotType.LeftHand | InvSlotType.RightHand);
+            static bool IsHandSlotType(InvSlotType s) => s == InvSlotType.LeftHand || s == InvSlotType.RightHand || s == (InvSlotType.LeftHand | InvSlotType.RightHand);
         }
 
         private float findHullTimer;

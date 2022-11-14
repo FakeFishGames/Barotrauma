@@ -43,33 +43,41 @@ namespace Barotrauma
             List<LocalizedString> reputationRewardTexts = new List<LocalizedString>();
             foreach (var reputationReward in ReputationRewards)
             {
-                LocalizedString name = "";
-                
-                if (reputationReward.Key == "location")
+                FactionPrefab targetFaction;
+                if (reputationReward.Key == "location" )
                 {
-                    name = $"‖color:gui.orange‖{currLocation.Name}‖end‖";
+                    targetFaction = currLocation.Faction?.Prefab;
                 }
                 else
                 {
-                    var faction = FactionPrefab.Prefabs.Find(f => f.Identifier == reputationReward.Key);
-                    if (faction != null)
-                    {
-                        name = $"‖color:{XMLExtensions.ColorToString(faction.IconColor)}‖{faction.Name}‖end‖";
-                    }
-                    else
-                    {
-                        name = TextManager.Get(reputationReward.Key);
-                    }
+                    FactionPrefab.Prefabs.TryGet(reputationReward.Key, out targetFaction);
+                }
+
+                LocalizedString name;
+                if (targetFaction != null)
+                {
+                    name = $"‖color:{XMLExtensions.ToStringHex(targetFaction.IconColor)}‖{targetFaction.Name}‖end‖";
+                }
+                else
+                {
+                    name = TextManager.Get(reputationReward.Key);
                 }
                 float normalizedValue = MathUtils.InverseLerp(-100.0f, 100.0f, reputationReward.Value);
                 string formattedValue = ((int)reputationReward.Value).ToString("+#;-#;0"); //force plus sign for positive numbers
                 LocalizedString rewardText = TextManager.GetWithVariables(
                     "reputationformat",
                     ("[reputationname]", name),
-                    ("[reputationvalue]", $"‖color:{XMLExtensions.ColorToString(Reputation.GetReputationColor(normalizedValue))}‖{formattedValue}‖end‖" ));
+                    ("[reputationvalue]", $"‖color:{XMLExtensions.ToStringHex(Reputation.GetReputationColor(normalizedValue))}‖{formattedValue}‖end‖" ));
                 reputationRewardTexts.Add(rewardText.Value);
             }
-            return RichString.Rich(TextManager.AddPunctuation(':', TextManager.Get("reputation"), LocalizedString.Join(", ", reputationRewardTexts)));
+            if (reputationRewardTexts.Any())
+            {
+                return RichString.Rich(TextManager.AddPunctuation(':', TextManager.Get("reputation"), LocalizedString.Join(", ", reputationRewardTexts)));
+            }
+            else
+            {
+                return string.Empty;
+            }
         }
 
         partial void ShowMessageProjSpecific(int missionState)

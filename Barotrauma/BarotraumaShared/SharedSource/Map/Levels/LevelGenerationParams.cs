@@ -116,6 +116,13 @@ namespace Barotrauma
             set;
         }
 
+        [Serialize("255,255,255", IsPropertySaveable.Yes), Editable]
+        public Color WaterParticleColor
+        {
+            get;
+            set;
+        }
+
         private Vector2 startPosition;
         [Serialize("0,0", IsPropertySaveable.Yes, "Start position of the level (relative to the size of the level. 0,0 = top left corner, 1,1 = bottom right corner)"), Editable(DecimalCount = 2)]
         public Vector2 StartPosition
@@ -142,6 +149,19 @@ namespace Barotrauma
             }
         }
 
+        private Vector2 forceOutpostPosition;
+        [Serialize("0,0", IsPropertySaveable.Yes, "Position of the outpost (relative to the size of the level. 0,0 = top left corner, 1,1 = bottom right corner). If set to 0,0, the outpost is placed in a suitable position automatically."), Editable(DecimalCount = 2)]
+        public Vector2 ForceOutpostPosition
+        {
+            get { return forceOutpostPosition; }
+            set
+            {
+                forceOutpostPosition = new Vector2(
+                    MathHelper.Clamp(value.X, 0.0f, 1.0f),
+                    MathHelper.Clamp(value.Y, 0.0f, 1.0f));
+            }
+        }
+
         [Serialize(true, IsPropertySaveable.Yes, "Should there be a hole in the wall next to the end outpost (can be used to prevent players from having to backtrack if they approach the outpost from the wrong side of the main path's walls)."), Editable]
         public bool CreateHoleNextToEnd
         {
@@ -151,6 +171,13 @@ namespace Barotrauma
 
         [Serialize(true, IsPropertySaveable.Yes, "Should the generator force a hole to the bottom of the level to ensure there's a way to the abyss."), Editable]
         public bool CreateHoleToAbyss
+        {
+            get;
+            set;
+        }
+
+        [Serialize(false, IsPropertySaveable.Yes, ""), Editable]
+        public bool NoLevelGeometry
         {
             get;
             set;
@@ -478,14 +505,14 @@ namespace Barotrauma
         [Serialize(1, IsPropertySaveable.Yes, description: "The number of alien ruins in the level."), Editable(MinValueInt = 0, MaxValueInt = 10)]
         public int RuinCount { get; set; }
 
+        // TODO: Move the wreck parameters under a separate class?
+#region Wreck parameters
         [Serialize(1, IsPropertySaveable.Yes, description: "The minimum number of wrecks in the level. Note that this value cannot be higher than the amount of wreck prefabs (subs)."), Editable(MinValueInt = 0, MaxValueInt = 10)]
         public int MinWreckCount { get; set; }
 
         [Serialize(1, IsPropertySaveable.Yes, description: "The maximum number of wrecks in the level. Note that this value cannot be higher than the amount of wreck prefabs (subs)."), Editable(MinValueInt = 0, MaxValueInt = 10)]
         public int MaxWreckCount { get; set; }
 
-        // TODO: Move the wreck parameters under a separate class?
-#region Wreck parameters
         [Serialize(1, IsPropertySaveable.Yes, description: "The minimum number of corpses per wreck."), Editable(MinValueInt = 0, MaxValueInt = 20)]
         public int MinCorpseCount { get; set; }
 
@@ -503,7 +530,10 @@ namespace Barotrauma
 
         [Serialize(1.0f, IsPropertySaveable.Yes, description: "The min water percentage of randomly flooding hulls in wrecks."), Editable(MinValueFloat = 0, MaxValueFloat = 1)]
         public float WreckFloodingHullMaxWaterPercentage { get; set; }
-#endregion
+        #endregion
+
+        [Serialize("", IsPropertySaveable.Yes)]
+        public string ForceBeaconStation { get; set; }
 
         [Serialize(0.4f, IsPropertySaveable.Yes, description: "The probability for wall cells to be removed from the bottom of the map. A value of 0 will produce a completely enclosed tunnel and 1 will make the entire bottom of the level completely open."), Editable()]
         public float BottomHoleProbability
@@ -519,6 +549,14 @@ namespace Barotrauma
             private set { waterParticleScale = Math.Max(value, 0.01f); }
         }
 
+        private Vector2 waterParticleVelocity;
+        [Serialize("0,10", IsPropertySaveable.Yes, description: "How fast the water particle texture scrolls."), Editable]
+        public Vector2 WaterParticleVelocity
+        {
+            get { return waterParticleVelocity; }
+            private set { waterParticleVelocity = value; }
+        }
+
         [Serialize(2048.0f, IsPropertySaveable.Yes, description: "Size of the level wall texture."), Editable(minValue: 10.0f, maxValue: 10000.0f)]
         public float WallTextureSize
         {
@@ -531,6 +569,34 @@ namespace Barotrauma
         {
             get;
             private set;
+        }
+
+        [Serialize("0,0", IsPropertySaveable.Yes), Editable]
+        public Vector2 FlashInterval
+        {
+            get;
+            set;
+        }
+
+        [Serialize("0,0,0,0", IsPropertySaveable.Yes), Editable]
+        public Color FlashColor
+        {
+            get;
+            set;
+        }
+
+        [Serialize(false, IsPropertySaveable.Yes), Editable]
+        public bool PlayNoiseLoopInOutpostLevel
+        {
+            get;
+            set;
+        }
+
+        [Serialize(1.0f, IsPropertySaveable.Yes), Editable]
+        public float WaterAmbienceVolume
+        {
+            get;
+            set;
         }
 
         [Serialize(120.0f, IsPropertySaveable.Yes, description: "How far the level walls' edge texture portrudes outside the actual, \"physical\" edge of the cell."), Editable(minValue: 0.0f, maxValue: 1000.0f)]
@@ -556,8 +622,13 @@ namespace Barotrauma
         public Sprite WallSpriteDestroyed { get; private set; }
         public Sprite WaterParticles { get; private set; }
 
+#if CLIENT
+        public Sounds.Sound FlashSound { get; private set; }
+#endif
+
         #warning TODO: this should be in the unit test project (#3164)
         public static void CheckValidity()
+
         {
             foreach (Biome biome in Biome.Prefabs)
             {
@@ -661,6 +732,11 @@ namespace Barotrauma
                     case "waterparticles":
                         WaterParticles = new Sprite(subElement);
                         break;
+#if CLIENT
+                    case "flashsound":
+                        FlashSound = GameMain.SoundManager.LoadSound(subElement);
+                        break;
+#endif
                 }
             }
         }

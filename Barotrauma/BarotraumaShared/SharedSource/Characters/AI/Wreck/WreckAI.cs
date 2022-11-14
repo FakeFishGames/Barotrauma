@@ -8,16 +8,81 @@ using System;
 
 namespace Barotrauma
 {
-    partial class WreckAI : IServerSerializable
+    internal class SubmarineTurretAI
     {
-        public Submarine Wreck { get; private set; }
+        public Submarine Submarine { get; protected set; }
+        protected readonly List<Turret> turrets = new List<Turret>();
+        public Identifier FriendlyTag;
 
+        public SubmarineTurretAI(Submarine submarine, Identifier friendlyTag = default)
+        {
+            FriendlyTag = friendlyTag;
+            Submarine = submarine;
+            foreach (Item item in Item.ItemList)
+            {
+                if (item.Submarine != Submarine) { continue; }
+                var turret = item.GetComponent<Turret>();
+                if (turret != null)
+                {
+                    turrets.Add(turret);
+                    // Set false, because we manage the turrets in the Update method.
+                    turret.AutoOperate = false;
+                }
+            }
+            LoadAllTurrets();
+        }
+
+        public virtual void Update(float deltaTime)
+        {
+            if (Submarine == null || Submarine.Removed) { return; }
+            OperateTurrets(deltaTime, FriendlyTag);
+        }
+
+        protected virtual void LoadAllTurrets()
+        {
+            foreach (var turret in turrets)
+            {
+                LoadTurret(turret);
+            }
+        }
+
+        protected void LoadTurret(Turret turret, Func<ItemPrefab, bool> ammoFilter = null)
+        {
+            foreach (var linkedItem in turret.Item.GetLinkedEntities<Item>())
+            {
+                var container = linkedItem.GetComponent<ItemContainer>();
+                if (container == null) { continue; }
+                for (int i = 0; i < container.Inventory.Capacity; i++)
+                {
+                    if (container.Inventory.GetItemAt(i) != null) { continue; }
+                    if (MapEntityPrefab.List.GetRandom(e => e is ItemPrefab ip && container.CanBeContained(ip, i) && (ammoFilter == null || ammoFilter(ip)), Rand.RandSync.ServerAndClient) is ItemPrefab ammoPrefab)
+                    {
+                        Item ammo = new Item(ammoPrefab, container.Item.WorldPosition, Submarine);
+                        if (!container.Inventory.TryPutItem(ammo, i, allowSwapping: false, allowCombine: false, user: null, createNetworkEvent: false))
+                        {
+                            turret.Item.Remove();
+                        }
+                    }
+                }
+            }
+        }
+
+        protected void OperateTurrets(float deltaTime, Identifier friendlyTag)
+        {
+            foreach (var turret in turrets)
+            {
+                turret.UpdateAutoOperate(deltaTime, friendlyTag);
+            }
+        }
+    }
+
+    partial class WreckAI : SubmarineTurretAI, IServerSerializable
+    {
         public bool IsAlive { get; private set; }
 
         private readonly List<Item> allItems;
         private readonly List<Item> thalamusItems;
         private readonly List<Structure> thalamusStructures;
-        private readonly List<Turret> turrets = new List<Turret>();
         private readonly List<WayPoint> wayPoints = new List<WayPoint>();
         private readonly List<Hull> hulls = new List<Hull>();
         private readonly List<Item> spawnOrgans = new List<Item>();
@@ -25,7 +90,7 @@ namespace Barotrauma
 
         private bool initialCellsSpawned;
 
-        public readonly WreckAIConfig Config;
+        public WreckAIConfig Config { get; private set; }
 
         private bool IsClient => GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
 
@@ -44,15 +109,10 @@ namespace Barotrauma
             return wreckAI;
         }
 
-        private WreckAI(Submarine wreck)
+        private WreckAI(Submarine wreck) : base(wreck)
         {
-            Wreck = wreck;
-            Config = WreckAIConfig.GetRandom();
-            if (Config == null)
-            {
-                DebugConsole.ThrowError("WreckAI: No wreck AI config found!");
-                return;
-            }
+            GetConfig();
+            if (Config == null) { return; }
             var thalamusPrefabs = ItemPrefab.Prefabs.Where(p => IsThalamus(p));
             var brainPrefab = thalamusPrefabs.GetRandom(i => i.Tags.Contains(Config.Brain), Rand.RandSync.ServerAndClient);
             if (brainPrefab == null)
@@ -60,20 +120,20 @@ namespace Barotrauma
                 DebugConsole.ThrowError($"WreckAI: Could not find any brain prefab with the tag {Config.Brain}! Cannot continue. Failed to create wreck AI.");
                 return;
             }
-            allItems = Wreck.GetItems(false);
+            allItems = wreck.GetItems(false);
             thalamusItems = allItems.FindAll(i => IsThalamus(((MapEntity)i).Prefab));
-            hulls.AddRange(Wreck.GetHulls(false));
+            hulls.AddRange(wreck.GetHulls(false));
             var potentialBrainHulls = new List<(Hull hull, float weight)>();
-            brain = new Item(brainPrefab, Vector2.Zero, Wreck);
+            brain = new Item(brainPrefab, Vector2.Zero, wreck);
             thalamusItems.Add(brain);
             Point minSize = brain.Rect.Size.Multiply(brain.Scale);
             // Bigger hulls are allowed, but not preferred more than what's sufficent.
             Vector2 sufficentSize = new Vector2(minSize.X * 2, minSize.Y * 1.1f);
             // Shrink the horizontal axis so that the brain is not placed in the left or right side, where we often have curved walls.
-            Rectangle shrinkedBounds = ToolBox.GetWorldBounds(Wreck.WorldPosition.ToPoint(), new Point(Wreck.Borders.Width - 500, Wreck.Borders.Height));
+            Rectangle shrinkedBounds = ToolBox.GetWorldBounds(wreck.WorldPosition.ToPoint(), new Point(wreck.Borders.Width - 500, wreck.Borders.Height));
             foreach (Hull hull in hulls)
             {
-                float distanceFromCenter = Vector2.Distance(Wreck.WorldPosition, hull.WorldPosition);
+                float distanceFromCenter = Vector2.Distance(wreck.WorldPosition, hull.WorldPosition);
                 float distanceFactor = MathHelper.Lerp(1.0f, 0.5f, MathUtils.InverseLerp(0, Math.Max(shrinkedBounds.Width, shrinkedBounds.Height) / 2, distanceFromCenter));
                 float horizontalSizeFactor = MathHelper.Lerp(0.5f, 1.0f, MathUtils.InverseLerp(minSize.X, sufficentSize.X, hull.Rect.Width));
                 float verticalSizeFactor = MathHelper.Lerp(0.5f, 1.0f, MathUtils.InverseLerp(minSize.Y, sufficentSize.Y, hull.Rect.Height));
@@ -121,7 +181,7 @@ namespace Barotrauma
             var backgroundPrefab = thalamusStructurePrefabs.GetRandom(i => i.Tags.Contains(Config.BrainRoomBackground), Rand.RandSync.ServerAndClient);
             if (backgroundPrefab != null)
             {
-                new Structure(brainHull.Rect, backgroundPrefab, Wreck);
+                new Structure(brainHull.Rect, backgroundPrefab, wreck);
             }
             var horizontalWallPrefab = thalamusStructurePrefabs.GetRandom(p => p.Tags.Contains(Config.BrainRoomHorizontalWall), Rand.RandSync.ServerAndClient);
             if (horizontalWallPrefab != null)
@@ -129,8 +189,8 @@ namespace Barotrauma
                 int height = (int)horizontalWallPrefab.Size.Y;
                 int halfHeight = height / 2;
                 int quarterHeight = halfHeight / 2;
-                new Structure(new Rectangle(brainHull.Rect.Left, brainHull.Rect.Top + quarterHeight, brainHull.Rect.Width, height), horizontalWallPrefab, Wreck);
-                new Structure(new Rectangle(brainHull.Rect.Left, brainHull.Rect.Top - brainHull.Rect.Height + halfHeight + quarterHeight, brainHull.Rect.Width, height), horizontalWallPrefab, Wreck);
+                new Structure(new Rectangle(brainHull.Rect.Left, brainHull.Rect.Top + quarterHeight, brainHull.Rect.Width, height), horizontalWallPrefab, wreck);
+                new Structure(new Rectangle(brainHull.Rect.Left, brainHull.Rect.Top - brainHull.Rect.Height + halfHeight + quarterHeight, brainHull.Rect.Width, height), horizontalWallPrefab, wreck);
             }
             var verticalWallPrefab = thalamusStructurePrefabs.GetRandom(p => p.Tags.Contains(Config.BrainRoomVerticalWall), Rand.RandSync.ServerAndClient);
             if (verticalWallPrefab != null)
@@ -138,50 +198,13 @@ namespace Barotrauma
                 int width = (int)verticalWallPrefab.Size.X;
                 int halfWidth = width / 2;
                 int quarterWidth = halfWidth / 2;
-                new Structure(new Rectangle(brainHull.Rect.Left - quarterWidth, brainHull.Rect.Top, width, brainHull.Rect.Height), verticalWallPrefab, Wreck);
-                new Structure(new Rectangle(brainHull.Rect.Right - halfWidth - quarterWidth, brainHull.Rect.Top, width, brainHull.Rect.Height), verticalWallPrefab, Wreck);
+                new Structure(new Rectangle(brainHull.Rect.Left - quarterWidth, brainHull.Rect.Top, width, brainHull.Rect.Height), verticalWallPrefab, wreck);
+                new Structure(new Rectangle(brainHull.Rect.Right - halfWidth - quarterWidth, brainHull.Rect.Top, width, brainHull.Rect.Height), verticalWallPrefab, wreck);
             }
-            foreach (Item item in allItems)
+            foreach (Item item in thalamusItems)
             {
-                if (thalamusItems.Contains(item))
-                {
-                    // Ensure that thalamus items are visible
-                    item.HiddenInGame = false;
-                }
-                else
-                {
-                    // Load regular turrets
-                    var turret = item.GetComponent<Turret>();
-                    if (turret != null)
-                    {
-                        foreach (var linkedItem in item.GetLinkedEntities<Item>())
-                        {
-                            var container = linkedItem.GetComponent<ItemContainer>();
-                            if (container == null) { continue; }
-                            for (int i = 0; i < container.Inventory.Capacity; i++)
-                            {
-                                if (container.Inventory.GetItemAt(i) != null) { continue; }
-                                if (MapEntityPrefab.List.GetRandom(e => e is ItemPrefab ip && container.CanBeContained(ip, i) && 
-                                        Config.ForbiddenAmmunition.None(id => id == ip.Identifier), Rand.RandSync.ServerAndClient) is ItemPrefab ammoPrefab)
-                                {
-                                    Item ammo = new Item(ammoPrefab, container.Item.WorldPosition, Wreck);
-                                    if (!container.Inventory.TryPutItem(ammo, i, allowSwapping: false, allowCombine: false, user: null, createNetworkEvent: false))
-                                    {
-                                        item.Remove();
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            foreach (var item in allItems)
-            {
-                var turret = item.GetComponent<Turret>();
-                if (turret != null)
-                {
-                    turrets.Add(turret);
-                }
+                // Ensure that thalamus items are visible
+                item.HiddenInGame = false;
                 if (item.HasTag(Config.Spawner))
                 {
                     if (!spawnOrgans.Contains(item))
@@ -195,16 +218,34 @@ namespace Barotrauma
                     }
                 }
             }
-            wayPoints.AddRange(Wreck.GetWaypoints(false));
+            wayPoints.AddRange(wreck.GetWaypoints(false));
             IsAlive = true;
-            thalamusStructures = GetThalamusEntities<Structure>(Wreck, Config.Entity).ToList();
+            thalamusStructures = GetThalamusEntities<Structure>(wreck, Config.Entity).ToList();
+        }
+
+        private void GetConfig()
+        {
+            Config ??= WreckAIConfig.GetRandom();
+            if (Config == null)
+            {
+                DebugConsole.ThrowError("WreckAI: No wreck AI config found!");
+            }
+        }
+
+        protected override void LoadAllTurrets()
+        {
+            GetConfig();
+            foreach (var turret in turrets)
+            {
+                LoadTurret(turret, ip => Config.ForbiddenAmmunition.None(id => id == ip.Identifier));
+            }
         }
 
         private readonly List<Item> destroyedOrgans = new List<Item>();
-        public void Update(float deltaTime)
+        public override void Update(float deltaTime)
         {
             if (!IsAlive) { return; }
-            if (Wreck == null || Wreck.Removed)
+            if (Submarine == null || Submarine.Removed)
             {
                 Remove();
                 return;
@@ -228,7 +269,7 @@ namespace Barotrauma
             foreach (Submarine submarine in Submarine.Loaded)
             {
                 if (submarine.Info.Type != SubmarineType.Player) { continue; }
-                if (Vector2.DistanceSquared(submarine.WorldPosition, Wreck.WorldPosition) < minDist * minDist)
+                if (Vector2.DistanceSquared(submarine.WorldPosition, Submarine.WorldPosition) < minDist * minDist)
                 {
                     someoneNearby = true;
                     break;
@@ -237,14 +278,14 @@ namespace Barotrauma
             foreach (Character c in Character.CharacterList)
             {
                 if (c != Character.Controlled && !c.IsRemotePlayer) { continue; }
-                if (Vector2.DistanceSquared(c.WorldPosition, Wreck.WorldPosition) < minDist * minDist)
+                if (Vector2.DistanceSquared(c.WorldPosition, Submarine.WorldPosition) < minDist * minDist)
                 {
                     someoneNearby = true;
                     break;
                 }
             }
             if (!someoneNearby) { return; }
-            OperateTurrets(deltaTime);
+            OperateTurrets(deltaTime, Config.Entity);
             if (!IsClient)
             {
                 if (!initialCellsSpawned) { SpawnInitialCells(); }
@@ -287,7 +328,7 @@ namespace Barotrauma
                 // Snap all tendons
                 foreach (Item item in turret.ActiveProjectiles)
                 {
-                    if (item.GetComponent<Projectile>()?.IsStuckToTarget ?? false)
+                    if (item.GetComponent<Projectile>() is { IsStuckToTarget: true })
                     {
                         item.Condition = 0;
                     }
@@ -314,7 +355,7 @@ namespace Barotrauma
                                 {
                                     // Sonar distance is used also for wreck positioning. No wreck should be closer to each other than this.
                                     float maxDistance = Sonar.DefaultSonarRange;
-                                    if (Vector2.DistanceSquared(character.WorldPosition, Wreck.WorldPosition) < maxDistance * maxDistance)
+                                    if (Vector2.DistanceSquared(character.WorldPosition, Submarine.WorldPosition) < maxDistance * maxDistance)
                                     {
                                         character.Kill(CauseOfDeathType.Unknown, null);
                                     }
@@ -333,7 +374,7 @@ namespace Barotrauma
         public void Remove()
         {
             Kill();
-            RemoveThalamusItems(Wreck);
+            RemoveThalamusItems(Submarine);
             thalamusItems?.Clear();
             thalamusStructures?.Clear();
         }
@@ -385,7 +426,7 @@ namespace Barotrauma
             return MathHelper.Lerp(max, min, MathUtils.InverseLerp(0, 100, t));
         }
 
-        void UpdateReinforcements(float deltaTime)
+        private void UpdateReinforcements(float deltaTime)
         {
             if (spawnOrgans.Count == 0) { return; }
             cellSpawnTimer -= deltaTime;
@@ -396,7 +437,7 @@ namespace Barotrauma
             }
         }
 
-        bool TrySpawnCell(out Character cell, ISpatialEntity targetEntity = null)
+        private bool TrySpawnCell(out Character cell, ISpatialEntity targetEntity = null)
         {
             cell = null;
             if (protectiveCells.Count >= MaxCellCount) { return false; }
@@ -421,19 +462,6 @@ namespace Barotrauma
             cell.OnDeath += OnCellDeath;
             cellSpawnTimer = GetSpawnTime();
             return true;
-        }
-        
-        void OperateTurrets(float deltaTime)
-        {
-            foreach (var turret in turrets)
-            {
-                // Never target other creatures than humans with the turrets.
-                turret.ThalamusOperate(this, deltaTime, 
-                    !turret.Item.HasTag("ignorecharacters"), 
-                    targetOtherCreatures: false, 
-                    !turret.Item.HasTag("ignoresubmarines"), 
-                    turret.Item.HasTag("ignoreaimdelay"));
-            }
         }
 
         void OnCellDeath(Character character, CauseOfDeath causeOfDeath)

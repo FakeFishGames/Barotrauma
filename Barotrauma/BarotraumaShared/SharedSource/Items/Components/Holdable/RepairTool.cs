@@ -636,11 +636,14 @@ namespace Barotrauma.Items.Components
                     float addedDetachTime = deltaTime * (1f + user.GetStatValue(StatTypes.RepairToolDeattachTimeMultiplier)) * (1f + item.GetQualityModifier(Quality.StatType.RepairToolDeattachTimeMultiplier));
                     levelResource.DeattachTimer += addedDetachTime;
 #if CLIENT
-                    Character.Controlled?.UpdateHUDProgressBar(
-                        this,
-                        targetItem.WorldPosition,
-                        levelResource.DeattachTimer / levelResource.DeattachDuration,
-                        GUIStyle.Red, GUIStyle.Green, "progressbar.deattaching");
+                    if (targetItem.Prefab.ShowHealthBar)
+                    {
+                        Character.Controlled?.UpdateHUDProgressBar(
+                            this,
+                            targetItem.WorldPosition,
+                            levelResource.DeattachTimer / levelResource.DeattachDuration,
+                            GUIStyle.Red, GUIStyle.Green, "progressbar.deattaching");
+                    }
 #endif
                     FixItemProjSpecific(user, deltaTime, targetItem, showProgressBar: false);
                     return true;
@@ -689,7 +692,7 @@ namespace Barotrauma.Items.Components
         private float repairTimer;
         private Gap previousGap;
         private readonly float repairTimeOut = 5;
-        public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
+        public override bool CrewAIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             if (!(objective.OperateTarget is Gap leak))
             {

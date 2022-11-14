@@ -33,6 +33,11 @@ namespace Barotrauma
         public bool DebugLogWhenFails { get; set; } = true;
         public bool UsePathingOutside { get; set; } = true;
 
+        /// <summary>
+        /// Which event action created this objective (if any)
+        /// </summary>
+        public EventAction SourceEventAction;
+
         public float ExtraDistanceWhileSwimming;
         public float ExtraDistanceOutsideSub;
         private float _closeEnoughMultiplier = 1;

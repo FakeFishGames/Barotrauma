@@ -24,7 +24,7 @@ namespace Barotrauma
 
         public readonly Biome Biome;
 
-        public readonly LevelGenerationParams GenerationParams;
+        public LevelGenerationParams GenerationParams { get; private set; }
 
         public bool HasBeaconStation;
         public bool IsBeaconActive;
@@ -57,8 +57,9 @@ namespace Barotrauma
         /// </summary>
         public int? MinMainPathWidth;
 
-        public readonly List<EventPrefab> EventHistory = new List<EventPrefab>();
-        public readonly List<EventPrefab> NonRepeatableEvents = new List<EventPrefab>();
+        public readonly List<Identifier> EventHistory = new List<Identifier>();
+        public readonly List<Identifier> NonRepeatableEvents = new List<Identifier>();
+        public readonly HashSet<Identifier> UsedUniqueSets = new HashSet<Identifier>();
 
         public bool EventsExhausted { get; set; }
 
@@ -137,15 +138,16 @@ namespace Barotrauma
                 Biome = Biome.Prefabs.First();
             }
 
-            string[] prefabNames = element.GetAttributeStringArray("eventhistory", new string[] { });
-            EventHistory.AddRange(EventPrefab.Prefabs.Where(p => prefabNames.Any(n => p.Identifier == n)));
+            string[] prefabNames = element.GetAttributeStringArray("eventhistory", Array.Empty<string>());
+            EventHistory.AddRange(EventPrefab.Prefabs.Where(p => prefabNames.Any(n => p.Identifier == n)).Select(p => p.Identifier));
 
-            string[] nonRepeatablePrefabNames = element.GetAttributeStringArray("nonrepeatableevents", new string[] { });
-            NonRepeatableEvents.AddRange(EventPrefab.Prefabs.Where(p => nonRepeatablePrefabNames.Any(n => p.Identifier == n)));
+            string[] nonRepeatablePrefabNames = element.GetAttributeStringArray("nonrepeatableevents", Array.Empty<string>());
+            NonRepeatableEvents.AddRange(EventPrefab.Prefabs.Where(p => nonRepeatablePrefabNames.Any(n => p.Identifier == n)).Select(p => p.Identifier));
+
+            UsedUniqueSets = element.GetAttributeIdentifierArray(nameof(UsedUniqueSets), Array.Empty<Identifier>()).ToHashSet();
 
             EventsExhausted = element.GetAttributeBool(nameof(EventsExhausted).ToLower(), false);
         }
-
 
         /// <summary>
         /// Instantiates level data using the properties of the connection (seed, size, difficulty)
@@ -243,6 +245,11 @@ namespace Barotrauma
             return levelData;
         }
 
+        public void ReassignGenerationParams(string seed)
+        {
+            GenerationParams = LevelGenerationParams.GetRandom(seed, Type, Difficulty, Biome.Identifier);
+        }
+
         public void Save(XElement parentElement)
         {
             var newElement = new XElement("Level",
@@ -277,13 +284,19 @@ namespace Barotrauma
             {
                 if (EventHistory.Any())
                 {
-                    newElement.Add(new XAttribute("eventhistory", string.Join(',', EventHistory.Select(p => p.Identifier))));
+                    newElement.Add(new XAttribute("eventhistory", string.Join(',', EventHistory)));
                 }
                 if (NonRepeatableEvents.Any())
                 {
-                    newElement.Add(new XAttribute("nonrepeatableevents", string.Join(',', NonRepeatableEvents.Select(p => p.Identifier))));
+                    newElement.Add(new XAttribute("nonrepeatableevents", string.Join(',', NonRepeatableEvents)));
                 }
             }
+
+            if (UsedUniqueSets.Any())
+            {
+                newElement.Add(new XAttribute(nameof(UsedUniqueSets), string.Join(',', UsedUniqueSets)));
+            }
+
             parentElement.Add(newElement);
         }
     }

@@ -207,7 +207,7 @@ namespace Barotrauma
                 price = 0;
             }
 
-            if (Campaign.TryPurchase(client, price))
+            if (force || Campaign.TryPurchase(client, price))
             {
                 if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
                 {

@@ -293,7 +293,7 @@ namespace Barotrauma.Items.Components
 
                 if (target.Bleeding > 0.0f)
                 {
-                    int bleedingTextIndex = MathHelper.Clamp((int)Math.Floor(target.Bleeding / 100.0f) * BleedingTexts.Length, 0, BleedingTexts.Length - 1);
+                    int bleedingTextIndex = MathHelper.Clamp((int)Math.Floor(target.Bleeding / 100.0f * BleedingTexts.Length), 0, BleedingTexts.Length - 1);
                     texts.Add(BleedingTexts[bleedingTextIndex]);
                     textColors.Add(Color.Lerp(GUIStyle.Orange, GUIStyle.Red, target.Bleeding / 100.0f));
                 }

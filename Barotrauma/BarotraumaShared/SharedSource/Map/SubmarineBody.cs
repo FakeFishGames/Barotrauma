@@ -18,6 +18,13 @@ namespace Barotrauma
     {
         public const float NeutralBallastPercentage = 0.07f;
 
+        public const Category CollidesWith =
+                Physics.CollisionItem |
+                Physics.CollisionLevel |
+                Physics.CollisionCharacter |
+                Physics.CollisionProjectile |
+                Physics.CollisionWall;
+
         const float HorizontalDrag = 0.01f;
         const float VerticalDrag = 0.05f;
         const float MaxDrag = 0.1f;
@@ -146,9 +153,13 @@ namespace Barotrauma
                 farseerBody.CollidesWith = collidesWith;
                 farseerBody.Enabled = false;
                 farseerBody.UserData = this;
+                if (sub.Info.IsOutpost)
+                {
+                    farseerBody.BodyType = BodyType.Static;
+                }
                 foreach (var mapEntity in MapEntity.mapEntityList)
                 {
-                    if (mapEntity.Submarine != submarine || !(mapEntity is Structure wall)) { continue; }
+                    if (mapEntity.Submarine != submarine || mapEntity is not Structure wall) { continue; }
 
                     bool hasCollider = wall.HasBody && !wall.IsPlatform && wall.StairDirection == Direction.None;
                     Rectangle rect = wall.Rect;
@@ -185,13 +196,20 @@ namespace Barotrauma
                 foreach (Item item in Item.ItemList)
                 {
                     if (item.Submarine != submarine) { continue; }
-                    if (item.StaticBodyConfig == null || item.Submarine != submarine) { continue; }
+
+                    Vector2 simPos  = ConvertUnits.ToSimUnits(item.Position);
+                    if (item.GetComponent<Door>() is Door door)
+                    {
+                        door.OutsideSubmarineFixture = farseerBody.CreateRectangle(door.Body.Width, door.Body.Height, 5.0f, simPos, collisionCategory, collidesWith);
+                        door.OutsideSubmarineFixture.UserData = item;
+                    }
+
+                    if (item.StaticBodyConfig == null) { continue; }
 
                     float radius    = item.StaticBodyConfig.GetAttributeFloat("radius", 0.0f) * item.Scale;
                     float width     = item.StaticBodyConfig.GetAttributeFloat("width", 0.0f) * item.Scale;
                     float height    = item.StaticBodyConfig.GetAttributeFloat("height", 0.0f) * item.Scale;
 
-                    Vector2 simPos  = ConvertUnits.ToSimUnits(item.Position);
                     float simRadius = ConvertUnits.ToSimUnits(radius);
                     float simWidth  = ConvertUnits.ToSimUnits(width);
                     float simHeight = ConvertUnits.ToSimUnits(height);
@@ -623,7 +641,7 @@ namespace Barotrauma
                 attackMultiplier = enemyAI.ActiveAttack.SubmarineImpactMultiplier;
             }
 
-            if (impactMass * attackMultiplier > MinImpactLimbMass)
+            if (impactMass * attackMultiplier > MinImpactLimbMass && Body.BodyType != BodyType.Static)
             {
                 Vector2 normal = 
                     Vector2.DistanceSquared(Body.SimPosition, limb.SimPosition) < 0.0001f ?

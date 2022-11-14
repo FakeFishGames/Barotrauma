@@ -23,8 +23,8 @@ namespace Barotrauma
 
         protected override float TargetEvaluation()
         {
-            if (!character.IsOnPlayerTeam) { return Targets.None() ? 0 : 100; }
-            int totalEnemies = Targets.Count();
+            if (!character.IsOnPlayerTeam && !character.IsOriginallyOnPlayerTeam) { return Targets.None() ? 0 : 100; }
+            int totalEnemies = Targets.Count;
             if (totalEnemies == 0) { return 0; }
             if (character.IsSecurity) { return 100; }
             if (objectiveManager.IsOrder(this)) { return 100; }
@@ -67,7 +67,7 @@ namespace Barotrauma
             if (target.CurrentHull == null) { return false; }
             if (HumanAIController.IsFriendly(character, target)) { return false; }
             if (!character.Submarine.IsConnectedTo(target.Submarine)) { return false; }
-            if (!targetCharactersInOtherSubs && character.Submarine.TeamID != target.Submarine.TeamID) { return false; }
+            if (!targetCharactersInOtherSubs && character.Submarine.TeamID != target.Submarine.TeamID && character.Submarine.TeamID != character.OriginalTeamID) { return false; }
             if (target.HasAbilityFlag(AbilityFlags.IgnoredByEnemyAI)) { return false; }
             if (target.IsArrested) { return false; }
             if (EnemyAIController.IsLatchedToSomeoneElse(target, character)) { return false; }

@@ -270,6 +270,9 @@ namespace Barotrauma.Items.Components
         public bool AutoEquipWhenFull { get; private set; }
         public bool DisplayContainedStatus { get; private set; }
 
+        [Serialize(false, IsPropertySaveable.No, description: "Can the item be used (assuming it has components that are usable in some way) when worn."), Editable(MinValueFloat = -1000.0f, MaxValueFloat = 1000.0f)]
+        public bool AllowUseWhenWorn { get; set; }
+
         public readonly int Variants;
 
         private int variant;
@@ -512,8 +515,11 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            item.SetTransform(picker.SimPosition, 0.0f);
-            
+            //if the item is also being held, let the Holdable component control the position
+            if (item.GetComponent<Holdable>() is not { IsActive: true })
+            {
+                item.SetTransform(picker.SimPosition, 0.0f);
+            }            
             item.ApplyStatusEffects(ActionType.OnWearing, deltaTime, picker);
 
 #if CLIENT

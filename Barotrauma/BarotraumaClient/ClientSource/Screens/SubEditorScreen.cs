@@ -208,7 +208,7 @@ namespace Barotrauma
 
         private GUIFrame wiringToolPanel;
 
-        private DateTime editorSelectedTime;
+        private Option<DateTime> editorSelectedTime;
 
         private GUIImage previewImage;
         private GUILayoutGroup previewImageButtonHolder;
@@ -1391,7 +1391,7 @@ namespace Barotrauma
             if (backedUpSubInfo != null) { name = backedUpSubInfo.Name; }
             subNameLabel.Text = ToolBox.LimitString(name, subNameLabel.Font, subNameLabel.Rect.Width);
 
-            editorSelectedTime = DateTime.Now;
+            editorSelectedTime = Option<DateTime>.Some(DateTime.Now);
 
             GUI.ForceMouseOn(null);
             SetMode(Mode.Default);
@@ -1540,9 +1540,13 @@ namespace Barotrauma
             autoSaveLabel?.Parent?.RemoveChild(autoSaveLabel);
             autoSaveLabel = null;
 
-            TimeSpan timeInEditor = DateTime.Now - editorSelectedTime;
 #if USE_STEAM
-            SteamAchievementManager.IncrementStat("hoursineditor".ToIdentifier(), (float)timeInEditor.TotalHours);
+            if (editorSelectedTime.TryUnwrap(out DateTime selectedTime))
+            {
+                TimeSpan timeInEditor = DateTime.Now - selectedTime;
+                SteamAchievementManager.IncrementStat("hoursineditor".ToIdentifier(), (float)timeInEditor.TotalHours);
+                editorSelectedTime = Option<DateTime>.None();
+            }
 #endif
 
             GUI.ForceMouseOn(null);
@@ -2407,6 +2411,17 @@ namespace Barotrauma
                     return true;
                 }
             };
+            new GUITickBox(new RectTransform(new Vector2(1.0f, 0.25f), beaconSettingsContainer.RectTransform), TextManager.Get("beaconstationplacement"))
+            {
+                Selected = MainSub.Info.BeaconStationInfo is { Placement: Level.PlacementType.Top },
+                OnSelected = (tb) =>
+                {
+                    MainSub.Info.BeaconStationInfo.Placement = tb.Selected ? 
+                        Level.PlacementType.Top :
+                        Level.PlacementType.Bottom;
+                    return true;
+                }
+            };
             beaconSettingsContainer.RectTransform.MinSize = new Point(0, beaconSettingsContainer.RectTransform.Children.Sum(c => c.Children.Any() ? c.Children.Max(c2 => c2.MinSize.Y) : 0));
 
             //------------------------------------------------------------------
@@ -2487,7 +2502,7 @@ namespace Barotrauma
             {
                 IntValue = MainSub.Info.Tier,
                 MinValueInt = 1,
-                MaxValueInt = 3,
+                MaxValueInt = SubmarineInfo.HighestTier,
                 OnValueChanged = (numberInput) =>
                 {
                     MainSub.Info.Tier = numberInput.IntValue;
@@ -2495,7 +2510,7 @@ namespace Barotrauma
             };
             if (MainSub?.Info != null)
             {
-                MainSub.Info.Tier = Math.Clamp(MainSub.Info.Tier, 1, 3);
+                MainSub.Info.Tier = Math.Clamp(MainSub.Info.Tier, 1, SubmarineInfo.HighestTier);
             }
 
             var crewSizeArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), subSettingsContainer.RectTransform), isHorizontal: true)
@@ -3228,7 +3243,7 @@ namespace Barotrauma
                 }
 
                 string pathWithoutUserName = Path.GetFullPath(sub.FilePath);
-                string saveFolder = Path.GetFullPath(SaveUtil.SaveFolder);
+                string saveFolder = Path.GetFullPath(SaveUtil.DefaultSaveFolder);
                 if (pathWithoutUserName.StartsWith(saveFolder))
                 {
                     pathWithoutUserName = "..." + pathWithoutUserName[saveFolder.Length..];
@@ -4217,7 +4232,8 @@ namespace Barotrauma
             GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.9f, 0.9f), frame.RectTransform, Anchor.Center))
             {
                 PlaySoundOnSelect = true,
-                OnSelected = SelectWire
+                OnSelected = SelectWire,
+                CanTakeKeyBoardFocus = false
             };
 
             List<ItemPrefab> wirePrefabs = new List<ItemPrefab>();
@@ -5866,7 +5882,7 @@ namespace Barotrauma
                 decimal realWorldDistance = decimal.Round((decimal) (Vector2.Distance(startPos, mouseWorldPos) * Physics.DisplayToRealWorldRatio), 2);
 
                 Vector2 offset = new Vector2(GUI.IntScale(24));
-                GUI.DrawString(spriteBatch, PlayerInput.MousePosition + offset, $"{realWorldDistance}m", GUIStyle.TextColorNormal, font: GUIStyle.SubHeadingFont, backgroundColor: Color.Black, backgroundPadding: 4);
+                GUI.DrawString(spriteBatch, PlayerInput.MousePosition + offset, $"{realWorldDistance} m", GUIStyle.TextColorNormal, font: GUIStyle.Font, backgroundColor: Color.Black, backgroundPadding: 4);
             }
 
             spriteBatch.End();

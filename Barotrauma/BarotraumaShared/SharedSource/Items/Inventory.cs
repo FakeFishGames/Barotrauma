@@ -226,6 +226,14 @@ namespace Barotrauma
                 {
                     foreach (var item in slots[i].Items)
                     {
+                        if (item == null)
+                        {
+#if DEBUG
+                            DebugConsole.ThrowError($"Null item in inventory {Owner.ToString() ?? "null"}, slot {i}!");
+#endif
+                            continue;
+                        }
+
                         bool duplicateFound = false;
                         for (int j = 0; j < i; j++)
                         {

@@ -651,6 +651,7 @@ namespace Barotrauma
                     break;
                 case NetworkEventType.MISSION:
                     Identifier missionIdentifier = msg.ReadIdentifier();
+                    int locationIndex = msg.ReadInt32();
                     string missionName = msg.ReadString();
                     MissionPrefab? prefab = MissionPrefab.Prefabs.Find(mp => mp.Identifier == missionIdentifier);
                     if (prefab != null)
@@ -660,6 +661,10 @@ namespace Barotrauma
                         {
                             IconColor = prefab.IconColor
                         };
+                        if (GameMain.GameSession?.Map is { } map && locationIndex > 0 && locationIndex < map.Locations.Count)
+                        {
+                            map.Discover(map.Locations[locationIndex], checkTalents: false);
+                        }
                     }
                     break;
                 case NetworkEventType.UNLOCKPATH:

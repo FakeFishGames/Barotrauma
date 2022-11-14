@@ -301,7 +301,9 @@ namespace Barotrauma
             BrokenItemSprite fadeInBrokenSprite = null;
             float fadeInBrokenSpriteAlpha = 0.0f;
             float displayCondition = FakeBroken ? 0.0f : ConditionPercentage;
-            Vector2 drawOffset = Vector2.Zero;
+            Vector2 drawOffset = GetCollapseEffectOffset();
+            drawOffset.Y = -drawOffset.Y;            
+
             if (displayCondition < MaxCondition)
             {
                 for (int i = 0; i < Prefab.BrokenSprites.Length; i++)
@@ -417,6 +419,8 @@ namespace Barotrauma
                     var holdable = GetComponent<Holdable>();
                     if (holdable != null && holdable.Picker?.AnimController != null)
                     {
+                        //don't draw the item on hands if it's also being worn
+                        if (GetComponent<Wearable>() is { IsActive: true }) { return; }
                         if (!back) { return; }
                         float depthStep = 0.000001f;
                         if (holdable.Picker.Inventory?.GetItemInLimbSlot(InvSlotType.RightHand) == this)
@@ -1415,6 +1419,15 @@ namespace Barotrauma
                 case EventType.ChangeProperty:
                     ReadPropertyChange(msg, false);
                     break;
+                case EventType.ItemStat:
+                    byte length = msg.ReadByte();
+                    for (int i = 0; i < length; i++)
+                    {
+                        var statIdentifier = INetSerializableStruct.Read<ItemStatManager.TalentStatIdentifier>(msg);
+                        var statValue = msg.ReadSingle();
+                        StatManager.ApplyStat(statIdentifier, statValue);
+                    }
+                    break;
                 case EventType.Upgrade:
                     Identifier identifier = msg.ReadIdentifier();
                     byte level = msg.ReadByte();
@@ -1654,25 +1667,24 @@ namespace Barotrauma
             bool hasIdCard          = msg.ReadBoolean();
             string ownerName = "", ownerTags = "";
             int ownerBeardIndex = -1, ownerHairIndex = -1, ownerMoustacheIndex = -1, ownerFaceAttachmentIndex = -1;
-            Color ownerHairColor = Microsoft.Xna.Framework.Color.White,
-                ownerFacialHairColor = Microsoft.Xna.Framework.Color.White,
-                ownerSkinColor = Microsoft.Xna.Framework.Color.White;
+            Color ownerHairColor = Color.White,
+                ownerFacialHairColor = Color.White,
+                ownerSkinColor = Color.White;
             Identifier ownerJobId = Identifier.Empty;
             Vector2 ownerSheetIndex = Vector2.Zero;
+            int submarineSpecificId = 0;
             if (hasIdCard)
             {
+                submarineSpecificId = msg.ReadInt32();
                 ownerName = msg.ReadString();
-                ownerTags = msg.ReadString();
-                
+                ownerTags = msg.ReadString();                
                 ownerBeardIndex = msg.ReadByte() - 1;
                 ownerHairIndex = msg.ReadByte() - 1;
                 ownerMoustacheIndex = msg.ReadByte() - 1;
-                ownerFaceAttachmentIndex = msg.ReadByte() - 1;
-                
+                ownerFaceAttachmentIndex = msg.ReadByte() - 1;                
                 ownerHairColor = msg.ReadColorR8G8B8();
                 ownerFacialHairColor = msg.ReadColorR8G8B8();
-                ownerSkinColor = msg.ReadColorR8G8B8();
-                
+                ownerSkinColor = msg.ReadColorR8G8B8();                
                 ownerJobId = msg.ReadIdentifier();
                 
                 int x = msg.ReadByte();
@@ -1776,6 +1788,7 @@ namespace Barotrauma
             }
             foreach (IdCard idCard in item.GetComponents<IdCard>())
             {
+                idCard.SubmarineSpecificID = submarineSpecificId;
                 idCard.TeamID = (CharacterTeamType)teamID;
                 idCard.OwnerName = ownerName;
                 idCard.OwnerTags = ownerTags;

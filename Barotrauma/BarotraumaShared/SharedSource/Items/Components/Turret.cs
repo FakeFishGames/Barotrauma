@@ -317,6 +317,39 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
+        [Serialize(false, IsPropertySaveable.Yes, description:"Should the turret operate automatically using AI targeting? Comes with some optional random movement that can be adjusted below."), Editable]
+        public bool AutoOperate { get; set; }
+
+        [Serialize(0f, IsPropertySaveable.Yes, description: "[Auto Operate] How much the turret should adjust the aim off the target randomly instead of tracking the target perfectly?"), Editable]
+        public float RandomAimAmount { get; private set; }
+
+        [Serialize(0f, IsPropertySaveable.Yes, description: "[Auto Operate] How often the turret should adjust the aim randomly instead of tracking the target perfectly?"), Editable]
+        public float RandomAimMinTime { get; private set; }
+
+        [Serialize(0f, IsPropertySaveable.Yes, description: "[Auto Operate] How often the turret should adjust the aim randomly instead of tracking the target perfectly?"), Editable]
+        public float RandomAimMaxTime { get; private set; }
+
+        [Serialize(false, IsPropertySaveable.Yes, description: "[Auto Operate] Should the turret move randomly while idle?"), Editable]
+        public bool RandomMovement { get; set; }
+
+        [Serialize(false, IsPropertySaveable.Yes, description: "[Auto Operate] Should the turret always aim at targets without delay?"), Editable]
+        public bool IgnoreAimDelay { get; set; }
+
+        [Serialize(true, IsPropertySaveable.Yes, description: "[Auto Operate] Should the turret target characters?"), Editable]
+        public bool TargetCharacters { get; set; }
+
+        [Serialize(true, IsPropertySaveable.Yes, description: "[Auto Operate] Should the turret target monsters?"), Editable]
+        public bool TargetMonsters { get; set; }
+
+        [Serialize(true, IsPropertySaveable.Yes, description: "[Auto Operate] Should the turret target humans (or pets)"), Editable]
+        public bool TargetHumans { get; set; }
+
+        [Serialize(true, IsPropertySaveable.Yes, description: "[Auto Operate] Should the turret target other submarines?"), Editable]
+        public bool TargetSubmarines { get; set; }
+
+        [Serialize("", IsPropertySaveable.Yes, description: "[Auto Operate] Group or SpeciesName that the AI ignores when the turret is operated automatically."), Editable]
+        public Identifier FriendlyTag { get; private set; }
+
         public Turret(Item item, ContentXElement element)
             : base(item, element)
         {
@@ -558,6 +591,11 @@ namespace Barotrauma.Items.Components
             }
 
             UpdateLightComponents();
+
+            if (AutoOperate)
+            {
+                UpdateAutoOperate(deltaTime);
+            }
         }
 
         public void UpdateLightComponents()
@@ -656,13 +694,20 @@ namespace Barotrauma.Items.Components
                             loaderBroken = true;
                             continue;
                         }
-                        ItemContainer projectileContainer = linkedItem.GetComponent<ItemContainer>();
+                        if (tryUseProjectileContainer(linkedItem)) { break; }
+                    }
+                    tryUseProjectileContainer(item);
+
+                    bool tryUseProjectileContainer(Item containerItem)
+                    {
+                        ItemContainer projectileContainer = containerItem.GetComponent<ItemContainer>();
                         if (projectileContainer != null)
                         {
-                            linkedItem.Use(deltaTime, null);
+                            containerItem.Use(deltaTime, null);
                             projectiles = GetLoadedProjectiles();
-                            if (projectiles.Any()) { break; }
+                            if (projectiles.Any()) { return true; }                            
                         }
+                        return false;
                     }
                 }
                 if (projectiles.Count == 0 && !LaunchWithoutProjectile)
@@ -898,11 +943,19 @@ namespace Barotrauma.Items.Components
         private float prevTargetRotation;
         private float updateTimer;
         private bool updatePending;
-        public void ThalamusOperate(WreckAI ai, float deltaTime, bool targetHumans, bool targetOtherCreatures, bool targetSubmarines, bool ignoreDelay)
-        {
-            if (ai == null) { return; }
 
+        public void UpdateAutoOperate(float deltaTime, Identifier friendlyTag = default)
+        {
             IsActive = true;
+
+            bool targetCharacters = TargetCharacters || TargetHumans || TargetMonsters;
+            bool targetHumans = TargetCharacters && TargetHumans;
+            bool targetMonsters = TargetCharacters && TargetMonsters;
+
+            if (friendlyTag.IsEmpty)
+            {
+                friendlyTag = FriendlyTag;
+            }
 
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
             {
@@ -922,7 +975,7 @@ namespace Barotrauma.Items.Components
                 updateTimer -= deltaTime;
             }
 
-            if (!ignoreDelay && waitTimer > 0)
+            if (!IgnoreAimDelay && waitTimer > 0)
             {
                 waitTimer -= deltaTime;
                 return;
@@ -932,12 +985,12 @@ namespace Barotrauma.Items.Components
             float shootDistance = AIRange;
             ISpatialEntity target = null;
             float closestDist = shootDistance * shootDistance;
-            if (targetHumans || targetOtherCreatures)
+            if (targetCharacters)
             {
                 foreach (var character in Character.CharacterList)
                 {
                     if (character == null || character.Removed || character.IsDead) { continue; }
-                    if (character.Params.Group == ai.Config.Entity) { continue; }
+                    if (!friendlyTag.IsEmpty && (character.SpeciesName.Equals(friendlyTag) || character.Group.Equals(friendlyTag))) { continue; }
                     bool isHuman = character.IsHuman || character.Params.Group == CharacterPrefab.HumanSpeciesName;
                     if (isHuman)
                     {
@@ -947,7 +1000,7 @@ namespace Barotrauma.Items.Components
                             continue;
                         }
                     }
-                    else if (!targetOtherCreatures)
+                    else if (!targetMonsters)
                     {
                         // Don't target other creatures if not defined to.
                         continue;
@@ -958,7 +1011,7 @@ namespace Barotrauma.Items.Components
                     closestDist = dist;
                 }
             }
-            if (targetSubmarines)
+            if (TargetSubmarines)
             {
                 if (target == null || target.Submarine != null)
                 {
@@ -966,6 +1019,7 @@ namespace Barotrauma.Items.Components
                     foreach (Submarine sub in Submarine.Loaded)
                     {
                         if (sub.Info.Type != SubmarineType.Player) { continue; }
+                        if (sub == Item.Submarine) { continue; }
                         float dist = Vector2.DistanceSquared(sub.WorldPosition, item.WorldPosition);
                         if (dist > closestDist) { continue; }
                         closestSub = sub;
@@ -985,28 +1039,33 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
-            if (!ignoreDelay)
+
+            if (target == null && RandomMovement)
             {
-                if (target == null)
+                // Random movement while there's no target
+                waitTimer = Rand.Value(Rand.RandSync.Unsynced) < 0.98f ? 0f : Rand.Range(5f, 20f);
+                targetRotation = Rand.Range(minRotation, maxRotation);
+                updatePending = true;
+                return;
+            }
+
+            if (!IgnoreAimDelay)
+            {
+                if (RandomAimAmount > 0)
                 {
-                    // Random movement
-                    waitTimer = Rand.Value(Rand.RandSync.Unsynced) < 0.98f ? 0f : Rand.Range(5f, 20f);
-                    targetRotation = Rand.Range(minRotation, maxRotation);
-                    updatePending = true;
-                    return;
-                }
-                if (disorderTimer < 0)
-                {
-                    // Random disorder
-                    disorderTimer = Rand.Range(0f, 3f);
-                    waitTimer = Rand.Range(0.25f, 1f);
-                    targetRotation = MathUtils.WrapAngleTwoPi(targetRotation += Rand.Range(-1f, 1f));
-                    updatePending = true;
-                    return;
-                }
-                else
-                {
-                    disorderTimer -= deltaTime;
+                    if (disorderTimer < 0)
+                    {
+                        // Random disorder
+                        disorderTimer = Rand.Range(RandomAimMinTime, RandomAimMaxTime);
+                        waitTimer = Rand.Range(0.25f, 1f);
+                        targetRotation = MathUtils.WrapAngleTwoPi(targetRotation += Rand.Range(-RandomAimAmount, RandomAimAmount));
+                        updatePending = true;
+                        return;
+                    }
+                    else
+                    {
+                        disorderTimer -= deltaTime;
+                    }
                 }
             }
             if (target == null) { return; }
@@ -1041,11 +1100,11 @@ namespace Barotrauma.Items.Components
                 start -= target.Submarine.SimPosition;
                 end -= target.Submarine.SimPosition;
                 Body transformedTarget = CheckLineOfSight(start, end);
-                shoot = CanShoot(transformedTarget, user: null, ai, targetSubmarines) && (worldTarget == null || CanShoot(worldTarget, user: null, ai, targetSubmarines));
+                shoot = CanShoot(transformedTarget, user: null, friendlyTag, TargetSubmarines) && (worldTarget == null || CanShoot(worldTarget, user: null, friendlyTag, TargetSubmarines));
             }
             else
             {
-                shoot = CanShoot(worldTarget, user: null, ai, targetSubmarines);
+                shoot = CanShoot(worldTarget, user: null, friendlyTag, TargetSubmarines);
             }
             if (shoot)
             {
@@ -1053,7 +1112,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
+        public override bool CrewAIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             if (character.AIController.SelectedAiTarget?.Entity is Character previousTarget && previousTarget.IsDead)
             {
@@ -1438,7 +1497,7 @@ namespace Barotrauma.Items.Components
             return 0;
         }
 
-        private bool CanShoot(Body targetBody, Character user = null, WreckAI ai = null, bool targetSubmarines = true)
+        private bool CanShoot(Body targetBody, Character user = null, Identifier friendlyTag = default, bool targetSubmarines = true)
         {
             if (targetBody == null) { return false; }
             Character targetCharacter = null;
@@ -1459,9 +1518,9 @@ namespace Barotrauma.Items.Components
                         return false;
                     }
                 }
-                if (ai != null)
+                if (!friendlyTag.IsEmpty)
                 {
-                    if (targetCharacter.Params.Group == ai.Config.Entity)
+                    if (targetCharacter.SpeciesName.Equals(friendlyTag) || targetCharacter.Group.Equals(friendlyTag))
                     {
                         return false;
                     }

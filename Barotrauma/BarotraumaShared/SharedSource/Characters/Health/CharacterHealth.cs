@@ -104,7 +104,7 @@ namespace Barotrauma
 
         public bool DoesBleed
         {
-            get => Character.Params.Health.DoesBleed;
+            get => Character.Params.Health.DoesBleed && !Character.Params.IsMachine;
             private set => Character.Params.Health.DoesBleed = value;
         }
 
@@ -140,9 +140,20 @@ namespace Barotrauma
         private float vitality;
         public float Vitality 
         {
-            get 
-            { 
-                return Character.IsDead ? minVitality : vitality; 
+            get
+            {
+                if (Character.IsDead)
+                {
+                    return minVitality;
+                }
+
+                if (Character.HasAbilityFlag(AbilityFlags.CanNotDieToAfflictions))
+                {
+                    return Math.Max(vitality, MinVitality + 1);
+                }
+
+                return vitality;
+
             }
             private set
             {
@@ -539,7 +550,7 @@ namespace Barotrauma
                     amount -= reduceAmount;
                     if (treatmentAction != null)
                     {
-                        if (treatmentAction.Value == ActionType.OnUse)
+                        if (treatmentAction.Value == ActionType.OnUse || treatmentAction.Value == ActionType.OnSuccess)
                         {
                             matchingAffliction.AppliedAsSuccessfulTreatmentTime = Timing.TotalTime;
                         }
@@ -679,17 +690,12 @@ namespace Barotrauma
 
         private void AddLimbAffliction(LimbHealth limbHealth, Affliction newAffliction, bool allowStacking = true)
         {
+            if (Character.Params.IsMachine && !newAffliction.Prefab.AffectMachines) { return; }
             if (!DoesBleed && newAffliction is AfflictionBleeding) { return; }
             if (!Character.NeedsOxygen && newAffliction.Prefab == AfflictionPrefab.OxygenLow) { return; }
             if (Character.Params.Health.StunImmunity && newAffliction.Prefab.AfflictionType == "stun") { return; }
             if (Character.Params.Health.PoisonImmunity && newAffliction.Prefab.AfflictionType == "poison") { return; }
-            if (newAffliction.Prefab is AfflictionPrefabHusk huskPrefab)
-            {
-                if (huskPrefab.TargetSpecies.None(s => s == Character.SpeciesName))
-                {
-                    return;
-                }
-            }
+            if (newAffliction.Prefab.TargetSpecies.Any() && newAffliction.Prefab.TargetSpecies.None(s => s == Character.SpeciesName)) { return; }
 
             Affliction existingAffliction = null;
             foreach (KeyValuePair<Affliction, LimbHealth> kvp in afflictions)
@@ -868,19 +874,24 @@ namespace Barotrauma
         {
             if (!Character.NeedsOxygen) { return; }
 
+            float oxygenlowResistance = GetResistance(oxygenLowAffliction.Prefab);
             float prevOxygen = OxygenAmount;
             if (IsUnconscious)
             {
+                //clamp above 0.1 (no amount of oxygen low resistance should keep the character alive indefinitely)
+                float decreaseSpeed = Math.Max(0.1f, 1f - oxygenlowResistance);
                 //the character dies of oxygen deprivation in 100 seconds after losing consciousness
-                OxygenAmount = MathHelper.Clamp(OxygenAmount - 1.0f * deltaTime, -100.0f, 100.0f);                
+                OxygenAmount = MathHelper.Clamp(OxygenAmount - decreaseSpeed * deltaTime, -100.0f, 100.0f);                
             }
             else
             {
                 float decreaseSpeed = -5.0f;
                 float increaseSpeed = 10.0f;
-                float oxygenlowResistance = GetResistance(oxygenLowAffliction.Prefab);
                 decreaseSpeed *= (1f - oxygenlowResistance);
                 increaseSpeed *= (1f + oxygenlowResistance);
+
+                float holdBreathMultiplier = 1f + GetStatValue(StatTypes.HoldBreathMultiplier);
+                decreaseSpeed *= holdBreathMultiplier;
                 OxygenAmount = MathHelper.Clamp(OxygenAmount + deltaTime * (Character.OxygenAvailable < InsufficientOxygenThreshold ? decreaseSpeed : increaseSpeed), -100.0f, 100.0f);
             }
 
@@ -1062,6 +1073,7 @@ namespace Barotrauma
                 }
 
                 if (strength <= affliction.Prefab.TreatmentThreshold) { continue; }
+                if (afflictions.Any(otherAffliction => affliction.Prefab.IgnoreTreatmentIfAfflictedBy.Contains(otherAffliction.Key.Identifier))) { continue; }
 
                 if (ignoreHiddenAfflictions)
                 {
@@ -1217,6 +1229,7 @@ namespace Barotrauma
                 var affliction = kvp.Key;
                 var limbHealth = kvp.Value;
                 if (affliction.Strength <= 0.0f || limbHealth != null) { continue; }
+                if (kvp.Key.Prefab.ResetBetweenRounds) { continue; }
                 healthElement.Add(new XElement("Affliction",
                     new XAttribute("identifier", affliction.Identifier),
                     new XAttribute("strength", affliction.Strength.ToString("G", CultureInfo.InvariantCulture))));

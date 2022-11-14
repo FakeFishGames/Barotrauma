@@ -1408,6 +1408,21 @@ namespace Barotrauma
                 GameMain.Server.PrintSenderTransters();
             }));
 
+
+            AssignOnExecute("resetcharacternetstate", (string[] args) =>
+            {
+                if (GameMain.Server == null) { return; }
+
+                if (args.Length < 1)
+                {
+                    ThrowError("Invalid parameters. The command should be formatted as \"resetcharacternetstate [character]\". If the names consist of multiple words, you should surround them with quotation marks.");
+                    return;
+                }
+
+                var character = FindMatchingCharacter(args.Skip(1).ToArray(), false);
+                character?.ResetNetState();
+            });
+
             commands.Add(new Command("eventdata", "", (string[] args) =>
             {
                 if (args.Length == 0) { return; }
@@ -1665,13 +1680,7 @@ namespace Barotrauma
                 "teleportsub",
                 (Client client, Vector2 cursorWorldPos, string[] args) =>
                 {
-                    if (Submarine.MainSub == null || Level.Loaded == null) return;
-                    if (Level.Loaded.Type == LevelData.LevelType.Outpost)
-                    {
-                        GameMain.Server.SendConsoleMessage("The teleportsub command is unavailable in outpost levels!", client, Color.Red);
-                        return;
-                    }
-
+                    if (Submarine.MainSub == null || Level.Loaded == null) { return; }
                     if (args.Length == 0 || args[0].Equals("cursor", StringComparison.OrdinalIgnoreCase))
                     {
                         Submarine.MainSub.SetPosition(cursorWorldPos);

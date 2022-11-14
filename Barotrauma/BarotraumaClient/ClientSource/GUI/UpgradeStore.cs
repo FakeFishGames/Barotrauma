@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
@@ -78,6 +79,8 @@ namespace Barotrauma
 
         private PlayerBalanceElement? playerBalanceElement;
 
+        private static ImmutableHashSet<Character> characterList = ImmutableHashSet<Character>.Empty;
+
         /// <summary>
         /// While set to true any call to <see cref="RefreshUpgradeList"/> will cause the buy button to be disabled and to not update the prices.
         /// This is to prevent us from buying another upgrade before the server has given us the new prices and causing potential syncing issues.
@@ -93,6 +96,7 @@ namespace Barotrauma
         public UpgradeStore(CampaignUI campaignUI, GUIComponent parent)
         {
             WaitForServerUpdate = false;
+            characterList = GameSession.GetSessionCrewCharacters(CharacterType.Both);
             this.campaignUI = campaignUI;
             GUIFrame upgradeFrame = new GUIFrame(rectT(1, 1, parent, Anchor.Center), style: "OuterGlow", color: Color.Black * 0.7f)
             {
@@ -121,6 +125,7 @@ namespace Barotrauma
 
         private void RefreshAll()
         {
+            characterList = GameSession.GetSessionCrewCharacters(CharacterType.Both);
             switch (selectedUpgradeTab)
             {
                 case UpgradeTab.Repairs:
@@ -278,10 +283,13 @@ namespace Barotrauma
              * |    upgrades    |    maintenance    | <- 1/3rd                  empty space                        |
              * |---------------------------------------------------------------------------------------------------|
              */
-            GUILayoutGroup leftLayout = new GUILayoutGroup(rectT(0.5f, 1, topHeaderLayout)) { RelativeSpacing = 0.05f };
+            GUILayoutGroup leftLayout = new GUILayoutGroup(rectT(0.4f, 1, topHeaderLayout)) { RelativeSpacing = 0.05f };
                 GUILayoutGroup locationLayout = new GUILayoutGroup(rectT(1, 0.5f, leftLayout), isHorizontal: true);
                     GUIImage submarineIcon = new GUIImage(rectT(new Point(locationLayout.Rect.Height, locationLayout.Rect.Height), locationLayout), style: "SubmarineIcon", scaleToFit: true);
-                    new GUITextBlock(rectT(1.0f - submarineIcon.RectTransform.RelativeSize.X, 1, locationLayout), TextManager.Get("UpgradeUI.Title"), font: GUIStyle.LargeFont);
+                    var header = new GUITextBlock(rectT(1.0f - submarineIcon.RectTransform.RelativeSize.X, 1, locationLayout), TextManager.Get("UpgradeUI.Title"), font: GUIStyle.LargeFont);
+                    header.RectTransform.MaxSize = new Point((int)(header.TextSize.X + header.Padding.X + header.Padding.Z), int.MaxValue);
+                    new GUITextBlock(rectT(1.0f, 1, locationLayout), TextManager.Get("UpgradeUI.AllSubmarinesInfo"), font: GUIStyle.SmallFont, wrap: true);                
+            
                 categoryButtonLayout = new GUILayoutGroup(rectT(0.4f, 0.3f, leftLayout), isHorizontal: true) { Stretch = true };
                     GUIButton upgradeButton = new GUIButton(rectT(1, 1f, categoryButtonLayout), TextManager.Get("UICategory.Upgrades"), style: "GUITabButton") { UserData = UpgradeTab.Upgrade, Selected = selectedUpgradeTab == UpgradeTab.Upgrade };
                     GUIButton repairButton = new GUIButton(rectT(1, 1f, categoryButtonLayout), TextManager.Get("UICategory.Maintenance"), style: "GUITabButton") { UserData = UpgradeTab.Repairs, Selected = selectedUpgradeTab == UpgradeTab.Repairs };
@@ -433,8 +441,8 @@ namespace Barotrauma
 
             Location location = Campaign.Map.CurrentLocation;
 
-            int hullRepairCost = Campaign.GetHullRepairCost();
-            int itemRepairCost = Campaign.GetItemRepairCost();
+            int hullRepairCost = CampaignMode.GetHullRepairCost();
+            int itemRepairCost = CampaignMode.GetItemRepairCost();
             int shuttleRetrieveCost = CampaignMode.ShuttleReplaceCost;
             if (location != null)
             {
@@ -1080,7 +1088,7 @@ namespace Barotrauma
 
         public static GUIFrame CreateUpgradeFrame(UpgradePrefab prefab, UpgradeCategory category, CampaignMode campaign, RectTransform rectTransform, bool addBuyButton = true)
         {
-            int price = prefab.Price.GetBuyPrice(campaign.UpgradeManager.GetUpgradeLevel(prefab, category), campaign.Map?.CurrentLocation);
+            int price = prefab.Price.GetBuyPrice(campaign.UpgradeManager.GetUpgradeLevel(prefab, category), campaign.Map?.CurrentLocation, characterList);
             return CreateUpgradeEntry(rectTransform, prefab.Sprite, prefab.Name, prefab.Description, price, new CategoryData(category, prefab), addBuyButton, upgradePrefab: prefab, currentLevel: campaign.UpgradeManager.GetUpgradeLevel(prefab, category));
         }
 
@@ -1222,7 +1230,7 @@ namespace Barotrauma
             {
                 LocalizedString promptBody = TextManager.GetWithVariables("Upgrades.PurchasePromptBody",
                     ("[upgradename]", prefab.Name),
-                    ("[amount]", prefab.Price.GetBuyPrice(Campaign.UpgradeManager.GetUpgradeLevel(prefab, category), Campaign.Map?.CurrentLocation).ToString()));
+                    ("[amount]", prefab.Price.GetBuyPrice(Campaign.UpgradeManager.GetUpgradeLevel(prefab, category), Campaign.Map?.CurrentLocation, characterList).ToString()));
                 currectConfirmation = EventEditorScreen.AskForConfirmation(TextManager.Get("Upgrades.PurchasePromptTitle"), promptBody, () =>
                 {
                     if (GameMain.NetworkMember != null)
@@ -1639,7 +1647,7 @@ namespace Barotrauma
 
                 GUITextBlock priceLabel = textBlocks[0];
                 priceLabel.Visible = true;
-                int price = prefab.Price.GetBuyPrice(campaign.UpgradeManager.GetUpgradeLevel(prefab, category), campaign.Map?.CurrentLocation);
+                int price = prefab.Price.GetBuyPrice(campaign.UpgradeManager.GetUpgradeLevel(prefab, category), campaign.Map?.CurrentLocation, characterList);
 
                 if (priceLabel != null && !WaitForServerUpdate)
                 {

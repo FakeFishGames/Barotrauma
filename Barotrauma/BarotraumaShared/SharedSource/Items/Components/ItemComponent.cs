@@ -111,6 +111,13 @@ namespace Barotrauma.Items.Components
 
         private bool drawable = true;
 
+        [Serialize(PropertyConditional.Comparison.And, IsPropertySaveable.No)]
+        public PropertyConditional.Comparison IsActiveConditionalComparison
+        {
+            get;
+            set;
+        }
+
         public List<PropertyConditional> IsActiveConditionals;
 
         public bool Drawable
@@ -241,6 +248,11 @@ namespace Barotrauma.Items.Components
         [Serialize(0, IsPropertySaveable.Yes, alwaysUseInstanceValues: true)]
         public int ManuallySelectedSound { get; private set; }
 
+        /// <summary>
+        /// Can be used by status effects or conditionals to the speed of the item
+        /// </summary>
+        public float Speed => item.Speed;
+        
         public ItemComponent(Item item, ContentXElement element)
         {
             this.item = item;
@@ -431,7 +443,7 @@ namespace Barotrauma.Items.Components
         public virtual void Drop(Character dropper) { }
 
         /// <returns>true if the operation was completed</returns>
-        public virtual bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
+        public virtual bool CrewAIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
             return false;
         }
@@ -814,7 +826,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb targetLimb = null, Entity useTarget = null, Character user = null, Vector2? worldPosition = null, float afflictionMultiplier = 1.0f, float applyOnUserFraction = 0.0f)
+        public void ApplyStatusEffects(ActionType type, float deltaTime, Character character = null, Limb targetLimb = null, Entity useTarget = null, Character user = null, Vector2? worldPosition = null, float afflictionMultiplier = 1.0f)
         {
             if (statusEffectLists == null) { return; }
 
@@ -828,11 +840,6 @@ namespace Barotrauma.Items.Components
                 if (user != null) { effect.SetUser(user); }
                 effect.AfflictionMultiplier = afflictionMultiplier;
                 item.ApplyStatusEffect(effect, type, deltaTime, character, targetLimb, useTarget, isNetworkEvent: false, checkCondition: false, worldPosition);
-                if (user != null && applyOnUserFraction > 0.0f && effect.HasTargetType(StatusEffect.TargetType.Character))
-                {
-                    effect.AfflictionMultiplier = applyOnUserFraction;
-                    item.ApplyStatusEffect(effect, type, deltaTime, user, targetLimb == null ? null : user.AnimController.GetLimb(targetLimb.type), useTarget, false, false, worldPosition);
-                }
                 effect.AfflictionMultiplier = 1.0f;
                 reducesCondition |= effect.ReducesItemCondition();
             }

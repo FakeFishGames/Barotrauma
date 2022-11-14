@@ -64,13 +64,18 @@ namespace Barotrauma
 
             msg.WriteString(ragdollFileName);
             msg.WriteIdentifier(HumanPrefabIds.NpcIdentifier);
+            msg.WriteIdentifier(MinReputationToHire.factionId);
+            if (MinReputationToHire.factionId != default)
+            {
+                msg.WriteSingle(MinReputationToHire.reputation);
+            }
             if (Job != null)
             {
                 msg.WriteUInt32(Job.Prefab.UintIdentifier);
                 msg.WriteByte((byte)Job.Variant);
                 foreach (SkillPrefab skillPrefab in Job.Prefab.Skills.OrderBy(s => s.Identifier))
                 {
-                    msg.WriteSingle(Job.GetSkill(skillPrefab.Identifier).Level);
+                    msg.WriteSingle(Job.GetSkill(skillPrefab.Identifier)?.Level ?? 0.0f);
                 }
             }
             else

@@ -22,7 +22,7 @@ namespace Barotrauma
         public virtual int State
         {
             get { return state; }
-            protected set
+            set
             {
                 if (state != value)
                 {
@@ -30,6 +30,11 @@ namespace Barotrauma
                     TryTriggerEvents(state);
 #if SERVER
                     GameMain.Server?.UpdateMissionState(this);
+#elif CLIENT
+                    if (Prefab.ShowProgressBar)
+                    {
+                        CharacterHUD.ShowMissionProgressBar(this);
+                    }
 #endif
                     ShowMessage(State);
                     OnMissionStateChanged?.Invoke(this);
@@ -113,12 +118,10 @@ namespace Barotrauma
             get { return null; }
         }
 
-        public virtual IEnumerable<Vector2> SonarPositions
+        public virtual IEnumerable<(LocalizedString Label, Vector2 Position)> SonarLabels
         {
-            get { return Enumerable.Empty<Vector2>(); }
+            get { return Enumerable.Empty<(LocalizedString Label, Vector2 Position)>(); }
         }
-
-        public virtual LocalizedString SonarLabel => Prefab.SonarLabel;
 
         public Identifier SonarIconIdentifier => Prefab.SonarIconIdentifier;
 
@@ -307,7 +310,7 @@ namespace Barotrauma
         private void TryTriggerEvent(MissionPrefab.TriggerEvent trigger)
         {
             if (trigger.CampaignOnly && GameMain.GameSession?.Campaign == null) { return; }
-            if (trigger.Delay > 0)
+            if (trigger.Delay > 0 || trigger.State == 0)
             {
                 if (!delayedTriggerEvents.Any(t => t.TriggerEvent == trigger))
                 {
@@ -378,7 +381,7 @@ namespace Barotrauma
             IEnumerable<Character> crewCharacters = GameSession.GetSessionCrewCharacters(CharacterType.Both);
 
             // use multipliers here so that we can easily add them together without introducing multiplicative XP stacking
-            var experienceGainMultiplier = new AbilityExperienceGainMultiplier(1f);
+            var experienceGainMultiplier = new AbilityMissionExperienceGainMultiplier(this, 1f);
             crewCharacters.ForEach(c => c.CheckTalents(AbilityEffectType.OnAllyGainMissionExperience, experienceGainMultiplier));
             crewCharacters.ForEach(c => experienceGainMultiplier.Value += c.GetStatValue(StatTypes.MissionExperienceGainMultiplier));
 
@@ -386,13 +389,20 @@ namespace Barotrauma
 #if CLIENT
             foreach (Character character in crewCharacters)
             {
+                var experienceGainMultiplierIndividual = new AbilityMissionExperienceGainMultiplier(this, 1f);
+                character.CheckTalents(AbilityEffectType.OnGainMissionExperience, experienceGainMultiplierIndividual);
                 character.Info?.GiveExperience(experienceGain, isMissionExperience: true);
             }
 #else
             foreach (Barotrauma.Networking.Client c in GameMain.Server.ConnectedClients)
             {
                 //give the experience to the stored characterinfo if the client isn't currently controlling a character
-                (c.Character?.Info ?? c.CharacterInfo)?.GiveExperience(experienceGain, isMissionExperience: true);
+                CharacterInfo info = c.Character?.Info ?? c.CharacterInfo;
+
+                var experienceGainMultiplierIndividual = new AbilityMissionExperienceGainMultiplier(this, 1f);
+                info?.Character?.CheckTalents(AbilityEffectType.OnGainMissionExperience, experienceGainMultiplierIndividual);
+
+                info?.GiveExperience((int)(experienceGain * experienceGainMultiplier.Value), isMissionExperience: true);
             }
 #endif
 
@@ -422,8 +432,7 @@ namespace Barotrauma
             {
                 if (reputationReward.Key == "location")
                 {
-                    Locations[0].Reputation.AddReputation(reputationReward.Value);
-                    Locations[1].Reputation.AddReputation(reputationReward.Value);
+                    Locations[0].Reputation?.AddReputation(reputationReward.Value);
                 }
                 else
                 {
@@ -484,7 +493,7 @@ namespace Barotrauma
         protected void ChangeLocationType(LocationTypeChange change)
         {
             if (change == null) { throw new ArgumentException(); }
-            if (GameMain.GameSession.GameMode is CampaignMode && !IsClient)
+            if (GameMain.GameSession.GameMode is CampaignMode campaign && !IsClient)
             {
                 int srcIndex = -1;
                 for (int i = 0; i < Locations.Length; i++)
@@ -504,7 +513,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    location.ChangeType(LocationType.Prefabs[change.ChangeToType]);
+                    location.ChangeType(campaign, LocationType.Prefabs[change.ChangeToType]);
                     location.LocationTypeChangeCooldown = change.CooldownAfterChange;
                 }
             }
@@ -518,7 +527,6 @@ namespace Barotrauma
             if (element.Attribute("name") != null)
             {
                 DebugConsole.ThrowError("Error in mission \"" + Name + "\" - use character identifiers instead of names to configure the characters.");
-
                 return null;
             }
 
@@ -527,7 +535,7 @@ namespace Barotrauma
             HumanPrefab humanPrefab = NPCSet.Get(characterFrom, characterIdentifier);
             if (humanPrefab == null)
             {
-                DebugConsole.ThrowError("Couldn't spawn character for mission: character prefab \"" + characterIdentifier + "\" not found");
+                DebugConsole.ThrowError($"Couldn't spawn character for mission: character prefab \"{characterIdentifier}\" not found in the NPC set \"{characterFrom}\".");
                 return null;
             }
 
@@ -615,6 +623,18 @@ namespace Barotrauma
             Value = moneyGainMultiplier;
             Mission = mission;
         }
+        public float Value { get; set; }
+        public Mission Mission { get; set; }
+    }
+
+    class AbilityMissionExperienceGainMultiplier : AbilityObject, IAbilityValue, IAbilityMission
+    {
+        public AbilityMissionExperienceGainMultiplier(Mission mission, float missionExperienceGainMultiplier)
+        {
+            Value = missionExperienceGainMultiplier;
+            Mission = mission;
+        }
+
         public float Value { get; set; }
         public Mission Mission { get; set; }
     }

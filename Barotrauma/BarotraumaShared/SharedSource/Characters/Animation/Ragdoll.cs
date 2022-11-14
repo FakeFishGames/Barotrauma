@@ -169,18 +169,18 @@ namespace Barotrauma
                 if (value == colliderIndex || collider == null) { return; }
                 if (value >= collider.Count || value < 0) { return; }
 
-                if (collider[colliderIndex].height < collider[value].height)
+                if (collider[colliderIndex].Height < collider[value].Height)
                 {
                     Vector2 pos1 = collider[colliderIndex].SimPosition;
-                    pos1.Y -= collider[colliderIndex].height * ColliderHeightFromFloor;
+                    pos1.Y -= collider[colliderIndex].Height * ColliderHeightFromFloor;
                     Vector2 pos2 = pos1;
-                    pos2.Y += collider[value].height * 1.1f;
+                    pos2.Y += collider[value].Height * 1.1f;
                     if (GameMain.World.RayCast(pos1, pos2).Any(f => f.CollisionCategories.HasFlag(Physics.CollisionWall) && !(f.Body.UserData is Submarine))) { return; }
                 }
 
                 Vector2 pos = collider[colliderIndex].SimPosition;
-                pos.Y -= collider[colliderIndex].height * 0.5f;
-                pos.Y += collider[value].height * 0.5f;
+                pos.Y -= collider[colliderIndex].Height * 0.5f;
+                pos.Y += collider[value].Height * 0.5f;
                 collider[value].SetTransform(pos, collider[colliderIndex].Rotation);
 
                 collider[value].LinearVelocity  = collider[colliderIndex].LinearVelocity;
@@ -571,6 +571,10 @@ namespace Barotrauma
 
         protected void AddLimb(LimbParams limbParams)
         {
+            if (limbParams.ID < 0 || limbParams.ID > 255)
+            {
+                throw new Exception($"Invalid limb params in limb \"{limbParams.Type}\". \"{limbParams.ID}\" is not a valid limb ID.");
+            }
             byte ID = Convert.ToByte(limbParams.ID);
             Limb limb = new Limb(this, character, limbParams);
             limb.body.FarseerBody.OnCollision += OnLimbCollision;
@@ -675,6 +679,10 @@ namespace Barotrauma
                     }
                 }
                 return true;
+            }
+            else if (character.Submarine != null && structure.Submarine != null && character.Submarine != structure.Submarine)
+            {
+                return false;
             }
 
             Vector2 colliderBottom = GetColliderBottom();
@@ -873,7 +881,7 @@ namespace Barotrauma
 
             foreach (Limb limb in Limbs)
             {
-                if (limb == null || limb.IsSevered) { continue; }
+                if (limb == null || limb.IsSevered || !limb.DoesFlip) { continue; }
                 limb.Dir = Dir;
                 limb.MouthPos = new Vector2(-limb.MouthPos.X, limb.MouthPos.Y);
                 limb.MirrorPullJoint();
@@ -1279,7 +1287,7 @@ namespace Barotrauma
 
             if (!inWater && character.AllowInput && levitatingCollider && Collider.LinearVelocity.Y > -ImpactTolerance && onGround)
             {
-                float targetY = standOnFloorY + ((float)Math.Abs(Math.Cos(Collider.Rotation)) * Collider.height * 0.5f) + Collider.radius + ColliderHeightFromFloor;
+                float targetY = standOnFloorY + ((float)Math.Abs(Math.Cos(Collider.Rotation)) * Collider.Height * 0.5f) + Collider.Radius + ColliderHeightFromFloor;
                 if (Math.Abs(Collider.SimPosition.Y - targetY) > 0.01f && onGround)
                 {
                     if (Stairs != null)
@@ -1597,7 +1605,7 @@ namespace Barotrauma
             {
                 floorFixture = standOnFloorFixture;
                 standOnFloorY = rayStart.Y + (rayEnd.Y - rayStart.Y) * standOnFloorFraction;
-                if (rayStart.Y - standOnFloorY < Collider.height * 0.5f + Collider.radius + ColliderHeightFromFloor * 1.2f)
+                if (rayStart.Y - standOnFloorY < Collider.Height * 0.5f + Collider.Radius + ColliderHeightFromFloor * 1.2f)
                 {
                     onGround = true;
                     if (standOnFloorFixture.CollisionCategories == Physics.CollisionStairs)
@@ -1787,7 +1795,7 @@ namespace Barotrauma
 
         protected void CheckDistFromCollider()
         {
-            float allowedDist = Math.Max(Math.Max(Collider.radius, Collider.width), Collider.height) * 2.0f;
+            float allowedDist = Math.Max(Math.Max(Collider.Radius, Collider.Width), Collider.Height) * 2.0f;
             allowedDist = Math.Max(allowedDist, 1.0f);
             float resetDist = allowedDist * 5.0f;
 

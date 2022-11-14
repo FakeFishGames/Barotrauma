@@ -213,9 +213,21 @@ namespace Barotrauma
             get
             {
                 if (Level.Loaded == null) { return false; }
-                if (Level.Loaded.EndOutpost != null && DockedTo.Contains(Level.Loaded.EndOutpost))
+                if (Level.Loaded.EndOutpost != null)
                 {
-                    return true;
+                    if (DockedTo.Contains(Level.Loaded.EndOutpost))
+                    {
+                        return true;
+                    }
+                    else if (Level.Loaded.EndOutpost.exitPoints.Any())
+                    {
+                        return IsAtOutpostExit(Level.Loaded.EndOutpost);
+                    }
+                }
+                else if (Level.Loaded.Type == LevelData.LevelType.Outpost && Level.Loaded.StartOutpost != null)
+                {
+                    //in outpost levels, the outpost is always the start outpost: check it if has an exit
+                    return IsAtOutpostExit(Level.Loaded.StartOutpost);
                 }
                 return (Vector2.DistanceSquared(Position + HiddenSubPosition, Level.Loaded.EndExitPosition) < Level.ExitDistance * Level.ExitDistance);
             }
@@ -226,12 +238,42 @@ namespace Barotrauma
             get
             {
                 if (Level.Loaded == null) { return false; }
-                if (Level.Loaded.StartOutpost != null && DockedTo.Contains(Level.Loaded.StartOutpost))
+                if (Level.Loaded.StartOutpost != null)
                 {
-                    return true;
+                    if (DockedTo.Contains(Level.Loaded.StartOutpost))
+                    {
+                        return true;
+                    }
+                    else if (Level.Loaded.StartOutpost.exitPoints.Any())
+                    {
+                        return IsAtOutpostExit(Level.Loaded.StartOutpost);
+                    }
                 }
                 return (Vector2.DistanceSquared(Position + HiddenSubPosition, Level.Loaded.StartExitPosition) < Level.ExitDistance * Level.ExitDistance);
             }
+        }
+
+        public bool AtEitherExit => AtStartExit || AtEndExit;
+
+        private bool IsAtOutpostExit(Submarine outpost)
+        {
+            if (outpost.exitPoints.Any())
+            {
+                Rectangle worldBorders = Borders;
+                worldBorders.Location += WorldPosition.ToPoint();
+                foreach (var exitPoint in outpost.exitPoints)
+                {
+                    if (exitPoint.ExitPointSize != Point.Zero)
+                    {
+                        if (RectsOverlap(worldBorders, exitPoint.ExitPointWorldRect)) { return true; }
+                    }
+                    else
+                    {
+                        if (RectContains(worldBorders, exitPoint.WorldPosition)) { return true; }
+                    }
+                }
+            }
+            return false;
         }
 
 
@@ -283,6 +325,9 @@ namespace Barotrauma
                 return RealWorldDepth > Level.Loaded.RealWorldCrushDepth && RealWorldDepth > RealWorldCrushDepth;
             }
         }
+
+        private readonly List<WayPoint> exitPoints = new List<WayPoint>();
+        public IReadOnlyList<WayPoint> ExitPoints { get { return exitPoints; } }
 
         public override string ToString()
         {
@@ -350,10 +395,21 @@ namespace Barotrauma
         }
 
         public WreckAI WreckAI { get; private set; }
+        public SubmarineTurretAI TurretAI { get; private set; }
+
         public bool CreateWreckAI()
         {
             WreckAI = WreckAI.Create(this);
             return WreckAI != null;
+        }
+
+        /// <summary>
+        /// Creates an AI that operates all the turrets on a sub, same as Thalamus but only operates the turrets.
+        /// </summary>
+        public bool CreateTurretAI()
+        {
+            TurretAI = new SubmarineTurretAI(this);
+            return TurretAI != null;
         }
 
         public void DisableWreckAI()
@@ -991,6 +1047,7 @@ namespace Barotrauma
             {
                 WreckAI?.Update(deltaTime);
             }
+            TurretAI?.Update(deltaTime);
 
             if (subBody?.Body == null) { return; }
 
@@ -1114,7 +1171,8 @@ namespace Barotrauma
             {
                 if (item.Submarine != this) { continue; }
                 var pump = item.GetComponent<Pump>();
-                if (pump == null || !item.HasTag("ballast") || item.CurrentHull == null) { continue; }
+                if (pump == null || item.CurrentHull == null) { continue; }
+                if (!item.HasTag("ballast") && !item.CurrentHull.RoomName.Contains("ballast", StringComparison.OrdinalIgnoreCase)) { continue; }
                 pump.FlowPercentage = 0.0f;
                 ballastHulls.Add(item.CurrentHull);
             }
@@ -1388,7 +1446,6 @@ namespace Barotrauma
                     if (info.IsOutpost)
                     {
                         ShowSonarMarker = false;
-                        PhysicsBody.FarseerBody.BodyType = BodyType.Static;
                         TeamID = CharacterTeamType.FriendlyNPC;
 
                         bool indestructible =
@@ -1459,9 +1516,14 @@ namespace Barotrauma
                 MapEntity.MapLoaded(newEntities, true);
                 foreach (MapEntity me in MapEntity.mapEntityList)
                 {
-                    if (me is LinkedSubmarine linkedSub && linkedSub.Submarine == this)
+                    if (me.Submarine != this) { continue; }
+                    if (me is LinkedSubmarine linkedSub)
                     {
                         linkedSub.LinkDummyToMainSubmarine();
+                    }
+                    else if (me is WayPoint wayPoint && wayPoint.SpawnType.HasFlag(SpawnType.ExitPoint))
+                    {
+                        exitPoints.Add(wayPoint);
                     }
                 }
 

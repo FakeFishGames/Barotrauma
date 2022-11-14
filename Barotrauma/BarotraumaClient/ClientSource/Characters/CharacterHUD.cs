@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
-using Barotrauma.Tutorials;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -14,9 +13,8 @@ namespace Barotrauma
     {        
         const float BossHealthBarDuration = 120.0f;
 
-        class BossHealthBar
+        abstract class BossProgressBar
         {
-            public readonly Character Character;
             public float FadeTimer;
 
             public readonly GUIComponent TopContainer;
@@ -25,9 +23,14 @@ namespace Barotrauma
             public readonly GUIProgressBar TopHealthBar;
             public readonly GUIProgressBar SideHealthBar;
 
-            public BossHealthBar(Character character)
+            public abstract bool Completed { get; }
+
+            public abstract bool Interrupted { get; }
+
+            public abstract float State { get; }
+
+            public BossProgressBar(LocalizedString label)
             {
-                Character = character;
                 FadeTimer = BossHealthBarDuration;
 
                 TopContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.18f, 0.03f), HUDFrame.RectTransform, Anchor.TopCenter)
@@ -35,7 +38,7 @@ namespace Barotrauma
                     MinSize = new Point(100, 50),
                     RelativeOffset = new Vector2(0.0f, 0.01f)
                 }, isHorizontal: false, childAnchor: Anchor.TopCenter);
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), TopContainer.RectTransform), character.DisplayName, textAlignment: Alignment.Center, textColor: GUIStyle.Red);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.4f), TopContainer.RectTransform), label, textAlignment: Alignment.Center, textColor: GUIStyle.Red);
                 TopHealthBar = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.6f), TopContainer.RectTransform)
                 {
                     MinSize = new Point(100, HUDLayoutSettings.HealthBarArea.Size.Y)
@@ -48,7 +51,7 @@ namespace Barotrauma
                 {
                     MinSize = new Point(80, 60)
                 }, isHorizontal: false, childAnchor: Anchor.TopRight);
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), SideContainer.RectTransform), character.DisplayName, textAlignment: Alignment.CenterRight, textColor: GUIStyle.Red);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.3f), SideContainer.RectTransform), label, textAlignment: Alignment.CenterRight, textColor: GUIStyle.Red);
                 SideHealthBar = new GUIProgressBar(new RectTransform(new Vector2(1.0f, 0.7f), SideContainer.RectTransform), barSize: 0.0f, style: "CharacterHealthBar")
                 {
                     Color = GUIStyle.Red
@@ -60,6 +63,50 @@ namespace Barotrauma
                 SideContainer.CanBeFocused = false;
                 SideContainer.Children.ForEach(c => c.CanBeFocused = false);
             }
+
+            public abstract bool IsDuplicate(BossProgressBar progressBar);
+        }
+
+        class BossHealthBar : BossProgressBar
+        {
+            public readonly Character Character;
+
+            public override float State => Character.Vitality / Character.MaxVitality;
+
+            public override bool Completed => Character.IsDead;
+
+            public override bool Interrupted => Character.Removed || !Character.Enabled;
+
+            public BossHealthBar(Character character) : base(character.DisplayName)
+            {
+                Character = character;
+            }
+
+            public override bool IsDuplicate(BossProgressBar progressBar)
+            {
+                return progressBar is BossHealthBar bossHealthBar && bossHealthBar.Character == Character;
+            }
+        }
+
+        class MissionProgressBar : BossProgressBar
+        {
+            public readonly Mission Mission;
+
+            public override float State => Mission.State / (float)Mission.Prefab.MaxProgressState;
+
+            public override bool Completed => Mission.State >= Mission.Prefab.MaxProgressState;
+
+            public override bool Interrupted => Mission.Failed;
+
+            public MissionProgressBar(Mission mission) : base(mission.Prefab.ProgressBarLabel)
+            {
+                Mission = mission;
+            }
+
+            public override bool IsDuplicate(BossProgressBar progressBar)
+            {
+                return progressBar is MissionProgressBar missionProgressBar && missionProgressBar.Mission == Mission;
+            }
         }
 
         private static readonly Dictionary<ISpatialEntity, int> orderIndicatorCount = new Dictionary<ISpatialEntity, int>();
@@ -70,7 +117,7 @@ namespace Barotrauma
         private static readonly List<Item> brokenItems = new List<Item>();
         private static float brokenItemsCheckTimer;
 
-        private static readonly List<BossHealthBar> bossHealthBars = new List<BossHealthBar>();
+        private static readonly List<BossProgressBar> bossHealthBars = new List<BossProgressBar>();
 
         private static readonly Dictionary<Identifier, LocalizedString> cachedHudTexts = new Dictionary<Identifier, LocalizedString>();
 
@@ -114,7 +161,7 @@ namespace Barotrauma
             return 
                 character?.Inventory != null && 
                 !character.Removed && !character.IsKnockedDown &&
-                (controller?.User != character || !controller.HideHUD) &&
+                (controller?.User != character || !controller.HideHUD || Screen.Selected.IsEditor) &&
                 !IsCampaignInterfaceOpen &&
                 !ConversationAction.FadeScreenToBlack;
         }
@@ -159,7 +206,7 @@ namespace Barotrauma
 
         public static void Update(float deltaTime, Character character, Camera cam)
         {
-            UpdateBossHealthBars(deltaTime);
+            UpdateBossProgressBars(deltaTime);
 
             if (GUI.DisableHUD)
             {
@@ -307,7 +354,7 @@ namespace Barotrauma
             {
                 if (!brokenItem.IsInteractable(character)) { continue; }
                 float alpha = GetDistanceBasedIconAlpha(brokenItem);
-                if (alpha <= 0.0f) continue;
+                if (alpha <= 0.0f) { continue; }
                 GUI.DrawIndicator(spriteBatch, brokenItem.DrawPosition, cam, 100.0f, GUIStyle.BrokenIcon.Value.Sprite, 
                     Color.Lerp(GUIStyle.Red, GUIStyle.Orange * 0.5f, brokenItem.Condition / brokenItem.MaxCondition) * alpha);
             }
@@ -548,7 +595,7 @@ namespace Barotrauma
                     if (CharacterHealth.OpenHealthWindow == character.SelectedCharacter.CharacterHealth)
                     {
                         character.SelectedCharacter.CharacterHealth.Alignment = Alignment.Left;
-                        character.SelectedCharacter.CharacterHealth.DrawStatusHUD(spriteBatch);
+                        //character.SelectedCharacter.CharacterHealth.DrawStatusHUD(spriteBatch);
                     }
                 }
                 else if (character.Inventory != null)
@@ -602,7 +649,9 @@ namespace Barotrauma
             GUI.DrawString(spriteBatch, textPos, focusName, nameColor, Color.Black * 0.7f, 2, GUIStyle.SubHeadingFont, ForceUpperCase.No);
             textPos.Y += GUIStyle.SubHeadingFont.MeasureString(focusName).Y;
 
-            if (character.FocusedCharacter.Info?.Title != null && !character.FocusedCharacter.Info.Title.IsNullOrEmpty())
+            if (character.FocusedCharacter.Info?.Title != null && 
+                !character.FocusedCharacter.Info.Title.IsNullOrEmpty() && 
+                character.FocusedCharacter.TeamID != CharacterTeamType.Team1)
             {
                 GUI.DrawString(spriteBatch, textPos, character.FocusedCharacter.Info.Title, nameColor, Color.Black * 0.7f, 2, GUIStyle.SubHeadingFont, ForceUpperCase.No);
                 textPos.Y += GUIStyle.SubHeadingFont.MeasureString(character.FocusedCharacter.Info.Title.Value).Y;
@@ -640,20 +689,41 @@ namespace Barotrauma
             }
         }
 
-        public static void ShowBossHealthBar(Character character)
+        public static void ShowBossHealthBar(Character character, float damage)
         {
             if (character == null || character.IsDead || character.Removed) { return; }
+            AddBossProgressBar(new BossHealthBar(character), damage);
+        }
 
-            var existingBar = bossHealthBars.Find(b => b.Character == character);
-            if (existingBar != null)
+        public static void ShowMissionProgressBar(Mission mission)
+        {
+            if (mission == null || mission.Completed || mission.Failed) { return; }
+            AddBossProgressBar(new MissionProgressBar(mission));
+        }
+
+        private static void AddBossProgressBar(BossProgressBar progressBar, float damage = 0.0f)
+        {
+            var healthBarMode = GameMain.NetworkMember?.ServerSettings.ShowEnemyHealthBars ?? GameSettings.CurrentConfig.ShowEnemyHealthBars;
+            if (healthBarMode == EnemyHealthBarMode.HideAll)
             {
-                existingBar.FadeTimer = BossHealthBarDuration;
                 return;
             }
 
+            var existingBar = bossHealthBars.Find(b => b.IsDuplicate(progressBar));
+            if (existingBar != null)
+            {
+                existingBar.FadeTimer = BossHealthBarDuration;
+                if (damage > 0)
+                {
+                    // Show the most recent target at the top of the screen
+                    bossHealthBars.Remove(existingBar);
+                    bossHealthBars.Add(existingBar);
+                }
+                return;
+            }
             if (bossHealthBars.Count > 5)
             {
-                BossHealthBar oldestHealthBar = bossHealthBars.First();
+                BossProgressBar oldestHealthBar = bossHealthBars.First();
                 foreach (var bar in bossHealthBars)
                 {
                     if (bar.TopHealthBar.BarSize < oldestHealthBar.TopHealthBar.BarSize)
@@ -663,54 +733,65 @@ namespace Barotrauma
                 }
                 oldestHealthBar.FadeTimer = Math.Min(oldestHealthBar.FadeTimer, 1.0f);
             }
-
-            bossHealthBars.Add(new BossHealthBar(character));
+            bossHealthBars.Add(progressBar);
         }
 
-        public static void UpdateBossHealthBars(float deltaTime)
+        public static void UpdateBossProgressBars(float deltaTime)
         {
+            var healthBarMode = GameMain.NetworkMember?.ServerSettings.ShowEnemyHealthBars ?? GameSettings.CurrentConfig.ShowEnemyHealthBars;
+
             for (int i = 0; i < bossHealthBars.Count; i++)
             {
                 var bossHealthBar = bossHealthBars[i];
 
-                bool showTopBar = i == 0;
-                if (showTopBar != bossHealthBar.TopContainer.Visible)
+                bool showTopBar = i == bossHealthBars.Count - 1;
+                if (showTopBar && !bossHealthBar.TopContainer.Visible)
                 {
-                    bossHealthContainer.Recalculate();
+                    bossHealthBar.SideContainer.SetAsLastChild();
+                    SetColor(bossHealthBar, bossHealthBar.SideContainer, 0);
                 }
 
                 bossHealthBar.TopContainer.Visible = showTopBar;
                 bossHealthBar.SideContainer.Visible = !bossHealthBar.TopContainer.Visible;
 
-                float health =  bossHealthBar.Character.Vitality / bossHealthBar.Character.MaxVitality;
-
+                bossHealthBar.TopHealthBar.BarSize = bossHealthBar.SideHealthBar.BarSize = bossHealthBar.State;
                 float alpha = Math.Min(bossHealthBar.FadeTimer, 1.0f);
-                foreach (var c in bossHealthBar.SideContainer.GetAllChildren().Concat(bossHealthBar.TopContainer.GetAllChildren()))
+
+                if (bossHealthBar.TopContainer.Visible)
                 {
-                    c.Color = new Color(c.Color, (byte)(alpha * 255));
-                    if (c is GUITextBlock textBlock)
+                    SetColor(bossHealthBar, bossHealthBar.TopContainer, alpha);
+                }
+                if (bossHealthBar.SideContainer.Visible)
+                {
+                    SetColor(bossHealthBar, bossHealthBar.SideContainer, alpha);
+                }
+
+                static void SetColor(BossProgressBar bossHealthBar, GUIComponent container, float alpha)
+                {
+                    foreach (var component in container.GetAllChildren())
                     {
-                        textBlock.TextColor = new Color(bossHealthBar.Character.IsDead ? Color.Gray : textBlock.TextColor, (byte)(alpha * 255));
+                        component.Color = new Color(component.Color, (byte)(alpha * 255));
+                        if (component is GUITextBlock textBlock)
+                        {
+                            textBlock.TextColor = new Color(bossHealthBar.Completed ? Color.Gray : textBlock.TextColor, (byte)(alpha * 255));
+                        }
                     }
                 }
 
-                bossHealthBar.TopHealthBar.BarSize = bossHealthBar.SideHealthBar.BarSize = health;
-
-                if (bossHealthBar.Character.Removed || !bossHealthBar.Character.Enabled)
+                if (bossHealthBar.Interrupted)
                 {
                     bossHealthBar.FadeTimer = Math.Min(bossHealthBar.FadeTimer, 1.0f);
                 }
-                else if (bossHealthBar.Character.IsDead)
+                else if (bossHealthBar.Completed)
                 {
                     bossHealthBar.FadeTimer = Math.Min(bossHealthBar.FadeTimer, 5.0f);
                 }
                 bossHealthBar.FadeTimer -= deltaTime;
             }
-
             for (int i = bossHealthBars.Count - 1; i >= 0 ; i--)
             {
                 var bossHealthBar = bossHealthBars[i];
-                if (bossHealthBar.FadeTimer <= 0)
+                if (bossHealthBar.FadeTimer <= 0 || healthBarMode == EnemyHealthBarMode.HideAll)
                 {
                     bossHealthBar.SideContainer.Parent?.RemoveChild(bossHealthBar.SideContainer);
                     bossHealthBar.TopContainer.Parent?.RemoveChild(bossHealthBar.TopContainer);

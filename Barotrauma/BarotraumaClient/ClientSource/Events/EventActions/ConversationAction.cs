@@ -323,7 +323,10 @@ namespace Barotrauma
                 AlwaysOverrideCursor = true
             };
 
-            LocalizedString translatedText = TextManager.ParseInputTypes(TextManager.Get(text)).Fallback(text);
+            LocalizedString translatedText = speaker?.DisplayName is not null ?
+                TextManager.GetWithVariable(text, "[speakername]", speaker?.DisplayName) :
+                TextManager.Get(text);
+            translatedText = TextManager.ParseInputTypes(translatedText).Fallback(text);
 
             if (speaker?.Info != null && drawChathead)
             {

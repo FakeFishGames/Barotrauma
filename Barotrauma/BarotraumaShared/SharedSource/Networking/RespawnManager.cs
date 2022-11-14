@@ -258,7 +258,7 @@ namespace Barotrauma.Networking
                 var powerContainer = item.GetComponent<PowerContainer>();
                 if (powerContainer != null)
                 {
-                    powerContainer.Charge = powerContainer.Capacity;
+                    powerContainer.Charge = powerContainer.GetCapacity();
                 }
 
                 var door = item.GetComponent<Door>();

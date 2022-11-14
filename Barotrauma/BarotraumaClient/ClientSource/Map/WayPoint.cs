@@ -123,6 +123,11 @@ namespace Barotrauma
                     }
                 }
             }
+            else if (spawnType == SpawnType.ExitPoint && ExitPointSize != Point.Zero)
+            {
+                GUI.DrawRectangle(spriteBatch, drawPos - ExitPointSize.ToVector2() / 2, ExitPointSize.ToVector2(), Color.Cyan, thickness: 5);
+            }
+
             GUIStyle.SmallFont.DrawString(spriteBatch,
                 ID.ToString(),
                 new Vector2(DrawPosition.X - 10, -DrawPosition.Y - 30),
@@ -251,6 +256,7 @@ namespace Barotrauma
 
         private bool ChangeSpawnType(GUIButton button, object obj)
         {
+            var prevSpawnType = spawnType;
             GUITextBlock spawnTypeText = button.Parent.GetChildByUserData("spawntypetext") as GUITextBlock;
             var values = (SpawnType[])Enum.GetValues(typeof(SpawnType));
             int currIndex = values.IndexOf(spawnType);
@@ -267,6 +273,7 @@ namespace Barotrauma
             }
             spawnType = values[currIndex];
             spawnTypeText.Text = spawnType.ToString();
+            if (spawnType == SpawnType.ExitPoint || prevSpawnType == SpawnType.ExitPoint) { CreateEditingHUD(); } 
             return true;
         }
 
@@ -412,6 +419,28 @@ namespace Barotrauma
                     textBox.Text = string.Join(",", tags);
                     textBox.Flash(GUIStyle.Green);
                 };
+
+                if (SpawnType == SpawnType.ExitPoint)
+                {
+                    var sizeField = GUI.CreatePointField(ExitPointSize, GUI.IntScale(20), TextManager.Get("dimensions"), paddedFrame.RectTransform);
+                    GUINumberInput xField = null, yField = null;
+                    foreach (GUIComponent child in sizeField.GetAllChildren())
+                    {
+                        if (yField == null)
+                        {
+                            yField = child as GUINumberInput;
+                        }
+                        else
+                        {
+                            xField = child as GUINumberInput;
+                            if (xField != null) { break; }
+                        }
+                    }
+                    xField.MinValueInt = 0;
+                    xField.OnValueChanged = (numberInput) => { ExitPointSize = new Point(numberInput.IntValue, ExitPointSize.Y); };
+                    yField.MinValueInt = 0;
+                    yField.OnValueChanged = (numberInput) => { ExitPointSize = new Point(ExitPointSize.X, numberInput.IntValue); };
+                }
             }
 
             editingHUD.RectTransform.Resize(new Point(

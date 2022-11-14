@@ -1,16 +1,15 @@
-﻿using System.Xml.Linq;
-
+﻿
 namespace Barotrauma.Abilities
 {
     class CharacterAbilityResetPermanentStat : CharacterAbility
     {
-        private readonly string statIdentifier;
+        private readonly Identifier statIdentifier;
         public override bool AppliesEffectOnIntervalUpdate => true;
         public override bool AllowClientSimulation => true;
 
         public CharacterAbilityResetPermanentStat(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
-            statIdentifier = abilityElement.GetAttributeString("statidentifier", "").ToLowerInvariant();
+            statIdentifier = abilityElement.GetAttributeIdentifier("statidentifier", Identifier.Empty);
         }
         protected override void ApplyEffect(AbilityObject abilityObject)
         {

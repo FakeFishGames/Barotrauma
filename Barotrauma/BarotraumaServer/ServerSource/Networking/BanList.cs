@@ -152,7 +152,9 @@ namespace Barotrauma.Networking
         public bool IsBanned(AccountId accountId, out string reason)
         {
             RemoveExpired();
-            var bannedPlayer = bannedPlayers.Find(bp => bp.AddressOrAccountId.TryGet(out AccountId id) && accountId.Equals(id));
+            var bannedPlayer =
+                bannedPlayers.Find(bp => bp.AddressOrAccountId.TryGet(out AccountId id) && accountId.Equals(id)) ??
+                bannedPlayers.Find(bp => bp.AddressOrAccountId.TryGet(out Address adr) && adr is SteamP2PAddress steamAdr && steamAdr.SteamId.Equals(accountId));
             reason = bannedPlayer?.Reason ?? string.Empty;
             return bannedPlayer != null;
         }
