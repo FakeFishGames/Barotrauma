@@ -32,6 +32,8 @@ namespace Barotrauma.Items.Components
 
     partial class Controller : ItemComponent, IServerSerializable
     {
+        protected string output, falseOutput;
+
         //where the limbs of the user should be positioned when using the controller
         private readonly List<LimbPos> limbPositions = new List<LimbPos>();
 
@@ -49,6 +51,32 @@ namespace Barotrauma.Items.Components
         private Item focusTarget;
         private float targetRotation;
 
+        [InGameEditable, Serialize("1", IsPropertySaveable.Yes, description: "The signal sent when the condition is met (if empty, no signal is sent).", alwaysUseInstanceValues: true)]
+        public string Output
+        {
+            get { return output; }
+            set
+            {
+                if (value == null) { return; }
+                output = value;
+                //reactivate (we may not have been previously sending a signal, but might now)
+                IsActive = true;
+            }
+        }
+
+        [InGameEditable, Serialize("0", IsPropertySaveable.Yes, description: "The signal sent when the condition is not met (if empty, no signal is sent).", alwaysUseInstanceValues: true)]
+        public string FalseOutput
+        {
+            get { return falseOutput; }
+            set
+            {
+                if (value == null) { return; }
+                falseOutput = value;
+                //reactivate (we may not have been previously sending a signal, but might now)
+                IsActive = true;
+            }
+        }
+
         public Vector2 UserPos
         {
             get { return userPos; }
@@ -62,7 +90,7 @@ namespace Barotrauma.Items.Components
 
         public IEnumerable<LimbPos> LimbPositions { get { return limbPositions; } }
 
-        [Editable, Serialize(false, IsPropertySaveable.No, description: "When enabled, the item will continuously send out a 0/1 signal and interacting with it will flip the signal (making the item behave like a switch). When disabled, the item will simply send out 1 when interacted with.", alwaysUseInstanceValues: true)]
+        [Editable, Serialize(false, IsPropertySaveable.No, description: "When enabled, the item will continuously send out a signal and interacting with it will flip the signal (making the item behave like a switch). When disabled, the item will simply send out a signal when interacted with.", alwaysUseInstanceValues: true)]
         public bool IsToggle
         {
             get;
@@ -152,8 +180,13 @@ namespace Barotrauma.Items.Components
 
             if (IsToggle)
             {
-                item.SendSignal(State ? "1" : "0", "signal_out");
-                item.SendSignal(State ? "1" : "0", "trigger_out");
+                item.SendSignal(State ? output : falseOutput, "signal_out");
+                item.SendSignal(State ? output : falseOutput, "trigger_out");
+            }
+            else
+            {
+                item.SendSignal(falseOutput, "signal_out");
+                item.SendSignal(falseOutput, "trigger_out");
             }
 
             if (user == null 
@@ -169,7 +202,7 @@ namespace Barotrauma.Items.Components
                     CancelUsing(user);
                     user = null;
                 }
-                if (!IsToggle || item.Connections == null) { IsActive = false; }
+                if (item.Connections == null) { IsActive = false; }
                 return;
             }
 
@@ -301,7 +334,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                item.SendSignal(new Signal("1", sender: user), "trigger_out");
+                item.SendSignal(new Signal(output, sender: user), "trigger_out");
             }
 
             lastUsed = Timing.TotalTime;
@@ -407,7 +440,7 @@ namespace Barotrauma.Items.Components
             }
             else
             {
-                item.SendSignal(new Signal("1", sender: picker), "signal_out");
+                item.SendSignal(new Signal(output, sender: picker), "signal_out");
             }
 #if CLIENT
             PlaySound(ActionType.OnUse, picker);
@@ -476,7 +509,7 @@ namespace Barotrauma.Items.Components
 #if SERVER
             item.CreateServerEvent(this);
 #endif
-            item.SendSignal(new Signal("1", sender: user), "signal_out");
+            item.SendSignal(new Signal(output, sender: user), "signal_out");
             return true;
         }
 
