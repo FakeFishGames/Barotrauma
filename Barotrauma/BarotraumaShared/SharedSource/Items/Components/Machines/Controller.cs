@@ -178,16 +178,13 @@ namespace Barotrauma.Items.Components
             this.cam = cam;
             UserInCorrectPosition = false;
 
-            if (IsToggle)
+            string signal = State && IsToggle ? output : falseOutput;
+            if (!string.IsNullOrEmpty(signal))
             {
-                item.SendSignal(State ? output : falseOutput, "signal_out");
-                item.SendSignal(State ? output : falseOutput, "trigger_out");
+                item.SendSignal(signal, "signal_out");
+                item.SendSignal(signal, "trigger_out");
             }
-            else
-            {
-                item.SendSignal(falseOutput, "signal_out");
-                item.SendSignal(falseOutput, "trigger_out");
-            }
+
 
             if (user == null 
                 || user.Removed
@@ -332,7 +329,7 @@ namespace Barotrauma.Items.Components
 #endif
                 }
             }
-            else
+            else if (!string.IsNullOrEmpty(output))
             {
                 item.SendSignal(new Signal(output, sender: user), "trigger_out");
             }
@@ -438,7 +435,7 @@ namespace Barotrauma.Items.Components
 #endif
                 }
             }
-            else
+            else if (!string.IsNullOrEmpty(output))
             {
                 item.SendSignal(new Signal(output, sender: picker), "signal_out");
             }
@@ -509,7 +506,10 @@ namespace Barotrauma.Items.Components
 #if SERVER
             item.CreateServerEvent(this);
 #endif
-            item.SendSignal(new Signal(output, sender: user), "signal_out");
+            if (!string.IsNullOrEmpty(output))
+            {
+                item.SendSignal(new Signal(output, sender: user), "signal_out");
+            }
             return true;
         }
 
