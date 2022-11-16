@@ -43,9 +43,9 @@ namespace Barotrauma
             }
         }
 
-        public int GetBuyprice(int level, Location? location = null)
+        public int GetBuyPrice(int level, Location? location = null)
         {
-            int maxLevel = Prefab.MaxLevel;
+            int maxLevel = Prefab.GetMaxLevelForCurrentSub();
 
             if (level > maxLevel) { maxLevel = level; }
 
@@ -292,16 +292,10 @@ namespace Barotrauma
             onRemoveOverrideFile: null
         );
 
-        private readonly int maxLevel;
-
-        public int MaxLevel
-        {
-            get
-            {
-                Submarine? sub = GameMain.GameSession?.Submarine ?? Submarine.MainSub;
-                return sub is { Info: var info } ? GetMaxLevel(info) : maxLevel;
-            }
-        }
+        /// <summary>
+        /// Maximum upgrade level without taking submarine tier or class restrictions into account
+        /// </summary>
+        public readonly int MaxLevel;
 
         public LocalizedString Name { get; }
 
@@ -343,7 +337,7 @@ namespace Barotrauma
         {
             Name = element.GetAttributeString("name", string.Empty)!;
             Description = element.GetAttributeString("description", string.Empty)!;
-            maxLevel = element.GetAttributeInt("maxlevel", 1);
+            MaxLevel = element.GetAttributeInt("maxlevel", 1);
             SuppressWarnings = element.GetAttributeBool("supresswarnings", false);
             HideInMenus = element.GetAttributeBool("hideinmenus", false);
             SourceElement = element;
@@ -428,9 +422,21 @@ namespace Barotrauma
                 .ToImmutableHashSet() ?? ImmutableHashSet<Identifier>.Empty;
         }
 
+        /// <summary>
+        /// Returns the maximum upgrade level for the current sub, taking tier and class restrictions into account
+        /// </summary>
+        public int GetMaxLevelForCurrentSub()
+        {
+            Submarine? sub = GameMain.GameSession?.Submarine ?? Submarine.MainSub;
+            return sub is { Info: var info } ? GetMaxLevel(info) : MaxLevel;
+        }
+
+        /// <summary>
+        /// Returns the maximum upgrade level for the specified sub, taking tier and class restrictions into account
+        /// </summary>
         public int GetMaxLevel(SubmarineInfo info)
         {
-            int level = maxLevel;
+            int level = MaxLevel;
 
             foreach (UpgradeMaxLevelMod mod in MaxLevelsMods)
             {

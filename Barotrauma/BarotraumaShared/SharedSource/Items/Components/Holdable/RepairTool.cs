@@ -514,7 +514,7 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
             {
-                if (Rand.Range(0.0f, 1.0f) < FireProbability * deltaTime)
+                if (Rand.Range(0.0f, 1.0f) < FireProbability * deltaTime && item.CurrentHull != null)
                 {
                     Vector2 displayPos = ConvertUnits.ToDisplayUnits(rayStart + (rayEnd - rayStart) * lastPickedFraction * 0.9f);
                     if (item.CurrentHull.Submarine != null) { displayPos += item.CurrentHull.Submarine.Position; }

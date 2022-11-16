@@ -1920,9 +1920,15 @@ namespace Barotrauma
                 {
                     filePath = $"{ContentPath.ModDirStr}/{filePath[packageDir.Length..]}";
                 }
-                if (!modProject.Files.Any(f => f.Type == subFileType &&
-                                                   f.Path == filePath))
+                if (!modProject.Files.Any(f => f.Type == subFileType && f.Path == filePath))
                 {
+                    //check if there's a file with the same name but different filename case
+                    var matchingFile = modProject.Files.FirstOrDefault(f => f.Type == subFileType && filePath.CleanUpPath().Equals(f.Path.CleanUpPath(), StringComparison.OrdinalIgnoreCase));
+                    if (matchingFile != null)
+                    {
+                        File.Delete(matchingFile.Path.Replace(ContentPath.ModDirStr, packageDir));
+                        modProject.RemoveFile(matchingFile);
+                    }
                     var newFile = ModProject.File.FromPath(filePath, subFileType);
                     modProject.AddFile(newFile);
                 }
@@ -2526,7 +2532,7 @@ namespace Barotrauma
 
             new GUINumberInput(new RectTransform(new Vector2(0.4f, 1.0f), tierGroup.RectTransform), NumberType.Int)
             {
-                IntValue = SubmarineInfo.GetDefaultTier(MainSub.Info.Price),
+                IntValue = MainSub.Info.Tier,
                 MinValueInt = 1,
                 MaxValueInt = 3,
                 OnValueChanged = (numberInput) =>
@@ -2873,6 +2879,7 @@ namespace Barotrauma
                 OnClicked = (button, o) =>
                 {
                     var requiredPackages = MapEntity.mapEntityList.Select(e => e.Prefab.ContentPackage)
+                        .Where(cp => cp != null)
                         .Distinct().OfType<ContentPackage>().Select(p => p.Name).ToHashSet();
                     var tickboxes = requiredContentPackList.Content.Children.OfType<GUITickBox>().ToArray();
                     tickboxes.ForEach(tb => tb.Selected = requiredPackages.Contains(tb.UserData as string ?? ""));
@@ -2972,7 +2979,7 @@ namespace Barotrauma
 
             subTypeDropdown.SelectItem(MainSub.Info.Type);
 
-            if (quickSave) { SaveSub(null); }
+            if (quickSave) { SaveSub(packageToSaveInList.SelectedData as ContentPackage); }
         }
 
         private void CreateSaveAssemblyScreen()

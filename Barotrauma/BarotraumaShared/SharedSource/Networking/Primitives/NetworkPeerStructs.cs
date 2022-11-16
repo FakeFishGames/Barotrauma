@@ -286,8 +286,13 @@ namespace Barotrauma.Networking
         }
 
         public DateTime InstallTime => cachedDateTime ??= DateTime.UtcNow + TimeSpan.FromSeconds(InstallTimeDiffInSeconds);
-        public RegularPackage? RegularPackage => ContentPackageManager.RegularPackages.FirstOrDefault(p => p.Hash.Equals(Hash));
-        public CorePackage? CorePackage => ContentPackageManager.CorePackages.FirstOrDefault(p => p.Hash.Equals(Hash));
+        public RegularPackage? RegularPackage => 
+            ContentPackageManager.RegularPackages.FirstOrDefault(p => p.Name.Equals(Name) && p.Hash.Equals(Hash)) ??
+            ContentPackageManager.RegularPackages.FirstOrDefault(p => p.Hash.Equals(Hash));
+
+        public CorePackage? CorePackage =>
+            ContentPackageManager.CorePackages.FirstOrDefault(p => p.Name.Equals(Name) && p.Hash.Equals(Hash)) ??
+            ContentPackageManager.CorePackages.FirstOrDefault(p => p.Hash.Equals(Hash));
         public ContentPackage? ContentPackage => (ContentPackage?)RegularPackage ?? CorePackage;
 
         public ServerContentPackage() { }

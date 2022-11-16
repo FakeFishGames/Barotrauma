@@ -269,6 +269,9 @@ namespace Barotrauma
 
         public const float DefaultRealWorldCrushDepth = 3500.0f;
 
+        /// <summary>
+        /// The crush depth of a non-upgraded submarine in in-game coordinates. Note that this can be above the top of the level!
+        /// </summary>
         public float CrushDepth
         {
             get
@@ -277,6 +280,9 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// The crush depth of a non-upgraded submarine in "real world units" (meters from the surface of Europa). Note that this can be above the top of the level!
+        /// </summary>
         public float RealWorldCrushDepth
         {
             get
@@ -3009,6 +3015,7 @@ namespace Barotrauma
             var selectedLocation = allValidLocations.FirstOrDefault(l =>
                 Vector2.Distance(l.Edge.Point1, l.Edge.Point2) is float edgeLength &&
                 !l.Edge.OutsideLevel &&
+                ((l.Edge.Cell1?.IsDestructible ?? false) || (l.Edge.Cell2?.IsDestructible ?? false)) &&
                 requiredAmount <= (int)Math.Floor(edgeLength / ((1.0f - maxResourceOverlap) * prefab.Size.X)));
 
 
@@ -3899,7 +3906,7 @@ namespace Barotrauma
 
         private bool HasEndOutpost()
         {
-            if (preSelectedStartOutpost != null) { return true; }
+            if (preSelectedEndOutpost != null) { return true; }
             //don't create an end outpost for locations
             if (LevelData.Type == LevelData.LevelType.Outpost) { return false; }
             if (EndLocation != null && !EndLocation.Type.HasOutpost) { return false; }

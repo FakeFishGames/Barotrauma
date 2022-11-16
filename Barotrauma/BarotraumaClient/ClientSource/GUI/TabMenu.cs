@@ -1867,10 +1867,13 @@ namespace Barotrauma
                 GUITextBlock jobBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), nameLayout.RectTransform), job.Name, font: GUIStyle.SmallFont) { TextColor = job.Prefab.UIColor };
             }
 
-            LocalizedString traitString = TextManager.AddPunctuation(':', TextManager.Get("PersonalityTrait"), info.PersonalityTrait.DisplayName);
-            Vector2 traitSize = GUIStyle.SmallFont.MeasureString(traitString);
-            GUITextBlock traitBlock = new GUITextBlock(new RectTransform(Vector2.One, nameLayout.RectTransform), traitString, font: GUIStyle.SmallFont);
-            traitBlock.RectTransform.NonScaledSize = traitSize.Pad(traitBlock.Padding).ToPoint();
+            if (info.PersonalityTrait != null)
+            {
+                LocalizedString traitString = TextManager.AddPunctuation(':', TextManager.Get("PersonalityTrait"), info.PersonalityTrait.DisplayName);
+                Vector2 traitSize = GUIStyle.SmallFont.MeasureString(traitString);
+                GUITextBlock traitBlock = new GUITextBlock(new RectTransform(Vector2.One, nameLayout.RectTransform), traitString, font: GUIStyle.SmallFont);
+                traitBlock.RectTransform.NonScaledSize = traitSize.Pad(traitBlock.Padding).ToPoint();
+            }
 
             IEnumerable<TalentPrefab> talentsOutsideTree = info.GetUnlockedTalentsOutsideTree().Select(e => TalentPrefab.TalentPrefabs.Find(c => c.Identifier == e));
             if (talentsOutsideTree.Count() > 0)

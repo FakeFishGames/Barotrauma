@@ -83,8 +83,16 @@ namespace Barotrauma.Items.Components
             {
                 if (lastUser == value) { return; }
                 lastUser = value;
-                degreeOfSuccess = lastUser == null ? 0.0f : Math.Min(DegreeOfSuccess(lastUser), 1.0f);
-                LastUserWasPlayer = lastUser.IsPlayer;
+                if (lastUser == null)
+                {
+                    degreeOfSuccess = 0.0f;
+                    LastUserWasPlayer = false;
+                }
+                else
+                {
+                    degreeOfSuccess = Math.Min(DegreeOfSuccess(lastUser), 1.0f);
+                    LastUserWasPlayer = lastUser.IsPlayer;
+                }
             }
         }
         

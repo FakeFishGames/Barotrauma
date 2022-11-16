@@ -560,6 +560,42 @@ namespace Barotrauma
                 }
             }
 
+            //make sure the location at the right side of the gate between biomes isn't a dead-end
+            //those may sometimes generate if all the connections of the right-side location lead to the previous biome
+            //(i.e. a situation where the adjacent locations happen to be at the left side of the border of the biomes, see see Regalis11/Barotrauma#10047)
+            for (int i = 0; i < Connections.Count; i++)
+            {
+                var connection = Connections[i];
+                if (!connection.Locked) { continue; }
+                var rightMostLocation =
+                    connection.Locations[0].MapPosition.X > connection.Locations[1].MapPosition.X ?
+                    connection.Locations[0] :
+                    connection.Locations[1];
+
+                //if there's only one connection (= the connection between biomes), create a new connection to the closest location to the right
+                if (rightMostLocation.Connections.Count == 1)
+                {
+                    Location closestLocation = null;
+                    float closestDist = float.PositiveInfinity;
+                    foreach (Location otherLocation in Locations)
+                    {
+                        if (otherLocation == rightMostLocation || otherLocation.MapPosition.X < rightMostLocation.MapPosition.X) { continue; }
+                        float dist = Vector2.DistanceSquared(rightMostLocation.MapPosition, otherLocation.MapPosition);
+                        if (dist < closestDist || closestLocation == null)
+                        {
+                            closestLocation = otherLocation;
+                            closestDist = dist;
+                        }
+                    }
+
+                    var newConnection = new LocationConnection(rightMostLocation, closestLocation);
+                    rightMostLocation.Connections.Add(newConnection);
+                    closestLocation.Connections.Add(newConnection);
+                    Connections.Add(newConnection);
+                    GenerateLocationConnectionVisuals(newConnection);
+                }
+            }
+
             //remove orphans
             Locations.RemoveAll(l => !Connections.Any(c => c.Locations.Contains(l)));
 
@@ -606,7 +642,9 @@ namespace Barotrauma
             }
         }
 
-        partial void GenerateLocationConnectionVisuals();
+        partial void GenerateAllLocationConnectionVisuals();
+
+        partial void GenerateLocationConnectionVisuals(LocationConnection connection);
 
         private int GetZoneIndex(float xPos)
         {

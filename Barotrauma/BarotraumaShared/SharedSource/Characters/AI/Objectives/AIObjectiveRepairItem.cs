@@ -186,8 +186,8 @@ namespace Barotrauma
                     {
                         if (character.SelectedItem != Item)
                         {
-                            if (Item.TryInteract(character, ignoreRequiredItems: true, forceSelectKey: true) ||
-                                Item.TryInteract(character, ignoreRequiredItems: true, forceUseKey: true))
+                            if (Item.TryInteract(character, ignoreRequiredItems: true, forceUseKey: true) ||
+                                Item.TryInteract(character, ignoreRequiredItems: true, forceSelectKey: true))
                             {
                                 character.SelectedItem = Item;
                             }
