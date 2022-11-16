@@ -12,7 +12,9 @@ namespace Barotrauma
 
         public readonly bool IsEndBiome;
         public readonly float MinDifficulty;
-        public readonly float MaxDifficulty;
+        private readonly float maxDifficulty;
+        public float ActualMaxDifficulty => maxDifficulty;
+        public float AdjustedMaxDifficulty => maxDifficulty - 0.1f;
 
         public readonly ImmutableHashSet<int> AllowedZones;
 
@@ -31,7 +33,7 @@ namespace Barotrauma
             IsEndBiome = element.GetAttributeBool("endbiome", false);
             AllowedZones = element.GetAttributeIntArray("AllowedZones", new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 }).ToImmutableHashSet();
             MinDifficulty = element.GetAttributeFloat("MinDifficulty", 0);
-            MaxDifficulty = element.GetAttributeFloat("MaxDifficulty", 100);
+            maxDifficulty = element.GetAttributeFloat("MaxDifficulty", 100);
         }
 
         public static Identifier ParseIdentifier(ContentXElement element)

@@ -45,8 +45,8 @@ namespace Barotrauma.Items.Components
 
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            msg.Write(autoTemp);
-            msg.Write(_powerOn);
+            msg.WriteBoolean(autoTemp);
+            msg.WriteBoolean(_powerOn);
             msg.WriteRangedSingle(temperature, 0.0f, 100.0f, 8);
             msg.WriteRangedSingle(TargetFissionRate, 0.0f, 100.0f, 8);
             msg.WriteRangedSingle(TargetTurbineOutput, 0.0f, 100.0f, 8);

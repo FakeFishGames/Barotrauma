@@ -3,6 +3,7 @@ using Barotrauma.IO;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -20,6 +21,16 @@ namespace Barotrauma.Steam
         public const string PreviewImageName = "PreviewImage.png";
         public const string DefaultPreviewImagePath = "Content/DefaultWorkshopPreviewImage.png";
 
+        public static bool TryExtractSteamWorkshopId(this ContentPackage contentPackage, [NotNullWhen(true)]out SteamWorkshopId? workshopId)
+        {
+            workshopId = null;
+            if (!contentPackage.UgcId.TryUnwrap(out var ugcId)) { return false; }
+            if (!(ugcId is SteamWorkshopId steamWorkshopId)) { return false; }
+
+            workshopId = steamWorkshopId;
+            return true;
+        }
+        
         public static partial class Workshop
         {
             private struct ItemEqualityComparer : IEqualityComparer<Steamworks.Ugc.Item>
@@ -110,7 +121,10 @@ namespace Barotrauma.Steam
             {
                 NukeDownload(workshopItem);
                 var toUninstall
-                    = ContentPackageManager.WorkshopPackages.Where(p => p.SteamWorkshopId == workshopItem.Id)
+                    = ContentPackageManager.WorkshopPackages.Where(p =>
+                            p.UgcId.TryUnwrap(out var ugcId)
+                            && ugcId is SteamWorkshopId { Value: var itemId }
+                            && itemId == workshopItem.Id)
                         .ToHashSet();
                 ContentPackageManager.EnabledPackages.DisableMods(toUninstall);
                 toUninstall.Select(p => p.Dir).ForEach(d => Directory.Delete(d));

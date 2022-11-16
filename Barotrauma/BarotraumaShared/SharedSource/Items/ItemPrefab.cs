@@ -14,6 +14,8 @@ namespace Barotrauma
     readonly struct DeconstructItem
     {
         public readonly Identifier ItemIdentifier;
+        //number of items to output
+        public readonly int Amount;
         //minCondition does <= check, meaning that below or equal to min condition will be skipped.
         public readonly float MinCondition;
         //maxCondition does > check, meaning that above this max the deconstruct item will be skipped.
@@ -37,6 +39,7 @@ namespace Barotrauma
         public DeconstructItem(XElement element, Identifier parentDebugName)
         {
             ItemIdentifier = element.GetAttributeIdentifier("identifier", "");
+            Amount = element.GetAttributeInt("amount", 1);
             MinCondition = element.GetAttributeFloat("mincondition", -0.1f);
             MaxCondition = element.GetAttributeFloat("maxcondition", 1.0f);
             OutConditionMin = element.GetAttributeFloat("outconditionmin", element.GetAttributeFloat("outcondition", 1.0f));
@@ -50,6 +53,11 @@ namespace Barotrauma
             InfoText = element.GetAttributeString("infotext", string.Empty);
             InfoTextOnOtherItemMissing = element.GetAttributeString("infotextonotheritemmissing", string.Empty);
         }
+
+        public bool IsValidDeconstructor(Item deconstructor)
+        {
+            return RequiredDeconstructor.Length == 0 || RequiredDeconstructor.Any(r => deconstructor.HasTag(r) || deconstructor.Prefab.Identifier == r);
+        }
     }
 
     class FabricationRecipe
@@ -58,6 +66,10 @@ namespace Barotrauma
         {
             public abstract IEnumerable<ItemPrefab> ItemPrefabs { get; }
             public abstract UInt32 UintIdentifier { get; }
+
+            public abstract bool MatchesItem(Item item);
+
+            public abstract ItemPrefab FirstMatchingPrefab { get; }
 
             public RequiredItem(int amount, float minCondition, float maxCondition, bool useCondition)
             {
@@ -70,16 +82,39 @@ namespace Barotrauma
             public readonly float MinCondition;
             public readonly float MaxCondition;
             public readonly bool UseCondition;
+
+            public bool IsConditionSuitable(float conditionPercentage)
+            {
+                float normalizedCondition = conditionPercentage / 100.0f;
+                if (MathUtils.NearlyEqual(normalizedCondition, MinCondition) || MathUtils.NearlyEqual(normalizedCondition, MaxCondition))
+                {
+                    return true;
+                }
+                else if (normalizedCondition >= MinCondition && normalizedCondition <= MaxCondition)
+                {
+                    return true;
+                }
+                return false;
+            }
         }
 
         public class RequiredItemByIdentifier : RequiredItem
         {
             public readonly Identifier ItemPrefabIdentifier;
+
             public ItemPrefab ItemPrefab => ItemPrefab.Prefabs.TryGet(ItemPrefabIdentifier, out var prefab) ? prefab
                 : MapEntityPrefab.FindByName(ItemPrefabIdentifier.Value) as ItemPrefab ?? throw new Exception($"No ItemPrefab with identifier or name \"{ItemPrefabIdentifier}\"");
+            
             public override UInt32 UintIdentifier { get; }
 
             public override IEnumerable<ItemPrefab> ItemPrefabs => ItemPrefab.ToEnumerable();
+
+            public override ItemPrefab FirstMatchingPrefab => ItemPrefab;
+
+            public override bool MatchesItem(Item item)
+            {
+                return item?.Prefab.Identifier == ItemPrefabIdentifier;
+            }
 
             public RequiredItemByIdentifier(Identifier itemPrefab, int amount, float minCondition, float maxCondition, bool useCondition) : base(amount, minCondition, maxCondition, useCondition)
             {
@@ -92,9 +127,18 @@ namespace Barotrauma
         public class RequiredItemByTag : RequiredItem
         {
             public readonly Identifier Tag;
+
             public override UInt32 UintIdentifier { get; }
 
             public override IEnumerable<ItemPrefab> ItemPrefabs => ItemPrefab.Prefabs.Where(p => p.Tags.Contains(Tag));
+
+            public override ItemPrefab FirstMatchingPrefab => ItemPrefab.Prefabs.FirstOrDefault(p => p.Tags.Contains(Tag));
+
+            public override bool MatchesItem(Item item)
+            {
+                if (item == null) { return false; }
+                return item.HasTag(Tag);
+            }
 
             public RequiredItemByTag(Identifier tag, int amount, float minCondition, float maxCondition, bool useCondition) : base(amount, minCondition, maxCondition, useCondition)
             {
@@ -191,10 +235,10 @@ namespace Barotrauma
                         if (requiredItemIdentifier != Identifier.Empty)
                         {
                             var existing = requiredItems.FindIndex(r =>
-                            r is RequiredItemByIdentifier ri &&
-                            ri.ItemPrefabIdentifier == requiredItemIdentifier &&
-                            MathUtils.NearlyEqual(r.MinCondition, minCondition) &&
-                            MathUtils.NearlyEqual(r.MaxCondition, maxCondition));
+                                r is RequiredItemByIdentifier ri &&
+                                ri.ItemPrefabIdentifier == requiredItemIdentifier &&
+                                MathUtils.NearlyEqual(r.MinCondition, minCondition) &&
+                                MathUtils.NearlyEqual(r.MaxCondition, maxCondition));
                             if (existing >= 0)
                             {
                                 amount += requiredItems[existing].Amount;
@@ -205,10 +249,10 @@ namespace Barotrauma
                         else
                         {
                             var existing = requiredItems.FindIndex(r =>
-                            r is RequiredItemByTag rt &&
-                            rt.Tag == requiredItemTag &&
-                            MathUtils.NearlyEqual(r.MinCondition, minCondition) &&
-                            MathUtils.NearlyEqual(r.MaxCondition, maxCondition));
+                                r is RequiredItemByTag rt &&
+                                rt.Tag == requiredItemTag &&
+                                MathUtils.NearlyEqual(r.MinCondition, minCondition) &&
+                                MathUtils.NearlyEqual(r.MaxCondition, maxCondition));
                             if (existing >= 0)
                             {
                                 amount += requiredItems[existing].Amount;
@@ -346,6 +390,8 @@ namespace Barotrauma
     {
         public static readonly PrefabCollection<ItemPrefab> Prefabs = new PrefabCollection<ItemPrefab>();
 
+        public const float DefaultInteractDistance = 120.0f;
+
         //default size
         public Vector2 Size { get; private set; }
 
@@ -393,12 +439,106 @@ namespace Barotrauma
             private set;
         }
 
+        public readonly struct CommonnessInfo
+        {
+            public float Commonness
+            {
+                get
+                {
+                    return commonness;
+                }
+            }
+            public float AbyssCommonness
+            {
+                get
+                {
+                    return abyssCommonness ?? 0.0f;
+                }
+            }
+            public float CaveCommonness
+            {
+                get
+                {
+                    return caveCommonness ?? Commonness;
+                }
+            }
+            public bool CanAppear
+            {
+                get
+                {
+                    if (Commonness > 0.0f) { return true; }
+                    if (AbyssCommonness > 0.0f) { return true; }
+                    if (CaveCommonness > 0.0f) { return true; }
+                    return false;
+                }
+            }
+
+            public readonly float commonness;
+            public readonly float? abyssCommonness;
+            public readonly float? caveCommonness;
+
+            public CommonnessInfo(XElement element)
+            {
+                this.commonness = Math.Max(element?.GetAttributeFloat("commonness", 0.0f) ?? 0.0f, 0.0f);
+
+                float? abyssCommonness = null;
+                XAttribute abyssCommonnessAttribute = element?.GetAttribute("abysscommonness") ?? element?.GetAttribute("abyss");
+                if (abyssCommonnessAttribute != null)
+                {
+                    abyssCommonness = Math.Max(abyssCommonnessAttribute.GetAttributeFloat(0.0f), 0.0f);
+                }
+                this.abyssCommonness = abyssCommonness;
+
+                float? caveCommonness = null;
+                XAttribute caveCommonnessAttribute = element?.GetAttribute("cavecommonness") ?? element?.GetAttribute("cave");
+                if (caveCommonnessAttribute != null)
+                {
+                    caveCommonness =  Math.Max(caveCommonnessAttribute.GetAttributeFloat(0.0f), 0.0f);
+                }
+                this.caveCommonness = caveCommonness;
+            }
+
+            public CommonnessInfo(float commonness, float? abyssCommonness, float? caveCommonness)
+            {
+                this.commonness = commonness;
+                this.abyssCommonness = abyssCommonness != null ? (float?)Math.Max(abyssCommonness.Value, 0.0f) : null;
+                this.caveCommonness = caveCommonness != null ? (float?)Math.Max(caveCommonness.Value, 0.0f) : null;
+            }
+
+            public CommonnessInfo WithInheritedCommonness(CommonnessInfo? parentInfo)
+            {
+                return new CommonnessInfo(commonness,
+                    abyssCommonness ?? parentInfo?.abyssCommonness,
+                    caveCommonness ?? parentInfo?.caveCommonness);
+            }
+
+            public CommonnessInfo WithInheritedCommonness(params CommonnessInfo?[] parentInfos)
+            {
+                CommonnessInfo info = this;
+                foreach (var parentInfo in parentInfos)
+                {
+                    info = info.WithInheritedCommonness(parentInfo);
+                }
+                return info;
+            }
+
+            public float GetCommonness(Level.TunnelType tunnelType)
+            {
+                if (tunnelType == Level.TunnelType.Cave)
+                {
+                    return CaveCommonness;
+                }
+                else
+                {
+                    return Commonness;
+                }
+            }
+        }
+
         /// <summary>
         /// How likely it is for the item to spawn in a level of a given type.
-        /// Key = name of the LevelGenerationParameters (empty string = default value) /* TODO: empty string = default value???? */
-        /// Value = commonness
         /// </summary>
-        public ImmutableDictionary<Identifier, float> LevelCommonness { get; private set; }
+        private ImmutableDictionary<Identifier, CommonnessInfo> LevelCommonness { get; set; }
 
         public readonly struct FixedQuantityResourceInfo
         {
@@ -452,7 +592,7 @@ namespace Barotrauma
         public override ImmutableHashSet<string> Aliases => aliases;
 
         //how close the Character has to be to the item to pick it up
-        [Serialize(120.0f, IsPropertySaveable.No)]
+        [Serialize(DefaultInteractDistance, IsPropertySaveable.No)]
         public float InteractDistance { get; private set; }
 
         // this can be used to allow items which are behind other items tp
@@ -669,22 +809,12 @@ namespace Barotrauma
             //only used if the item doesn't have a name/description defined in the currently selected language
             string fallbackNameIdentifier = ConfigElement.GetAttributeString("fallbacknameidentifier", "");
 
-            //works the same as nameIdentifier, but just replaces the description
-            Identifier descriptionIdentifier = ConfigElement.GetAttributeIdentifier("descriptionidentifier", "");
-
-            if (string.IsNullOrEmpty(OriginalName))
-            {
-                name = TextManager.Get(nameIdentifier.IsEmpty
-                        ? $"EntityName.{Identifier}"
-                        : $"EntityName.{nameIdentifier}",
-                    $"EntityName.{fallbackNameIdentifier}");
-            }
-            else if (Category.HasFlag(MapEntityCategory.Legacy))
-            {
-                // Legacy items use names as identifiers, so we have to define them in the xml. But we also want to support the translations. Therefore
-                name = TextManager.Get(nameIdentifier.IsEmpty
+            name = TextManager.Get(nameIdentifier.IsEmpty
                     ? $"EntityName.{Identifier}"
-                    : $"EntityName.{nameIdentifier}");
+                    : $"EntityName.{nameIdentifier}",
+                $"EntityName.{fallbackNameIdentifier}");
+            if (!string.IsNullOrEmpty(OriginalName))
+            {
                 name = name.Fallback(OriginalName);
             }
 
@@ -727,27 +857,13 @@ namespace Barotrauma
 
             SerializableProperty.DeserializeProperties(this, ConfigElement);
 
-            if (Description.IsNullOrEmpty())
-            {
-                if (descriptionIdentifier != Identifier.Empty)
-                {
-                    Description = TextManager.Get($"EntityDescription.{descriptionIdentifier}");
-                }
-                else if (nameIdentifier == Identifier.Empty)
-                {
-                    Description = TextManager.Get($"EntityDescription.{Identifier}");
-                }
-                else
-                {
-                    Description = TextManager.Get($"EntityDescription.{nameIdentifier}");
-                }
-            }
+            LoadDescription(ConfigElement);
 
             var allowDroppingOnSwapWith = ConfigElement.GetAttributeIdentifierArray("allowdroppingonswapwith", Array.Empty<Identifier>());
             AllowDroppingOnSwapWith = allowDroppingOnSwapWith.ToImmutableHashSet();
             AllowDroppingOnSwap = allowDroppingOnSwapWith.Any();
 
-            var levelCommonness = new Dictionary<Identifier, float>();
+            var levelCommonness = new Dictionary<Identifier, CommonnessInfo>();
             var levelQuantity = new Dictionary<Identifier, FixedQuantityResourceInfo>();
 
             foreach (ContentXElement subElement in ConfigElement.Elements())
@@ -871,7 +987,7 @@ namespace Barotrauma
                             {
                                 if (!levelCommonness.ContainsKey(levelName))
                                 {
-                                    levelCommonness.Add(levelName, levelCommonnessElement.GetAttributeFloat("commonness", 0.0f));
+                                    levelCommonness.Add(levelName, new CommonnessInfo(levelCommonnessElement));
                                 }
                             }
                             else
@@ -962,6 +1078,40 @@ namespace Barotrauma
             this.allowedLinks = ConfigElement.GetAttributeIdentifierArray("allowedlinks", Array.Empty<Identifier>()).ToImmutableHashSet();
         }
 
+        public CommonnessInfo? GetCommonnessInfo(Level level)
+        {
+            CommonnessInfo? levelCommonnessInfo = GetValueOrNull(level.GenerationParams.Identifier);
+            CommonnessInfo? biomeCommonnessInfo = GetValueOrNull(level.LevelData.Biome.Identifier);
+            CommonnessInfo? defaultCommonnessInfo = GetValueOrNull(Identifier.Empty);
+
+            if (levelCommonnessInfo.HasValue)
+            {
+                return levelCommonnessInfo?.WithInheritedCommonness(biomeCommonnessInfo, defaultCommonnessInfo);
+            }
+            else if (biomeCommonnessInfo.HasValue)
+            {
+                return biomeCommonnessInfo?.WithInheritedCommonness(defaultCommonnessInfo);
+            }
+            else if (defaultCommonnessInfo.HasValue)
+            {
+                return defaultCommonnessInfo;
+            }
+
+            return null;
+
+            CommonnessInfo? GetValueOrNull(Identifier identifier)
+            {
+                if (LevelCommonness.TryGetValue(identifier, out CommonnessInfo info))
+                {
+                    return info;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
         public float GetTreatmentSuitability(Identifier treatmentIdentifier)
         {
             return treatmentSuitability.TryGetValue(treatmentIdentifier, out float suitability) ? suitability : 0.0f;
@@ -975,7 +1125,7 @@ namespace Barotrauma
             {
                 string message = $"Tried to get price info for \"{Identifier}\" with a null store parameter!\n{Environment.StackTrace.CleanupStackTrace()}";
 #if DEBUG
-                DebugConsole.ShowError(message);
+                DebugConsole.LogError(message);
 #else
                 DebugConsole.AddWarning(message);
                 GameAnalyticsManager.AddErrorEventOnce("ItemPrefab.GetPriceInfo:StoreParameterNull", GameAnalyticsManager.ErrorSeverity.Error, message);
@@ -1158,12 +1308,8 @@ namespace Barotrauma
             throw new InvalidOperationException("Can't call ItemPrefab.CreateInstance");
         }
 
-        private bool disposed = false;
         public override void Dispose()
         {
-            if (disposed) { return; }
-            disposed = true;
-            Prefabs.Remove(this);
             Item.RemoveByPrefab(this);
         }
 

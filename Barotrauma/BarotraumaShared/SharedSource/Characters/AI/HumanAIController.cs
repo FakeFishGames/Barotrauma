@@ -466,7 +466,12 @@ namespace Barotrauma
                     }
                 }
             }
-            steeringManager.Update(Character.AnimController.GetCurrentSpeed(run && Character.CanRun));
+
+            //if someone is grabbing the bot and the bot isn't trying to run anywhere, let them keep dragging and "control" the bot
+            if (Character.SelectedBy == null || run)
+            {
+                steeringManager.Update(Character.AnimController.GetCurrentSpeed(run && Character.CanRun));
+            }
 
             bool ignorePlatforms = Character.AnimController.TargetMovement.Y < -0.5f && (-Character.AnimController.TargetMovement.Y > Math.Abs(Character.AnimController.TargetMovement.X));
             if (steeringManager == insideSteering)
@@ -511,9 +516,9 @@ namespace Barotrauma
                     {
                         newDir = Direction.Left;
                     }
-                    if (Character.SelectedConstruction != null)
+                    if (Character.SelectedItem != null)
                     {
-                        Character.SelectedConstruction.SecondaryUse(deltaTime, Character);
+                        Character.SelectedItem.SecondaryUse(deltaTime, Character);
                     }
                 }
                 else if (AutoFaceMovement && Math.Abs(Character.AnimController.TargetMovement.X) > 0.1f && !Character.AnimController.InWater)
@@ -2148,7 +2153,7 @@ namespace Barotrauma
                 if (c.Removed) { continue; }
                 if (c.TeamID != team) { continue; }
                 if (c.IsIncapacitated) { continue; }
-                if (c.SelectedConstruction == target.Item)
+                if (c.SelectedItem == target.Item)
                 {
                     operatingCharacter = c;
                     return true;
@@ -2185,7 +2190,7 @@ namespace Barotrauma
                 if (c.IsIncapacitated) { continue; }
                 if (c.IsPlayer)
                 {
-                    if (c.SelectedConstruction == target.Item)
+                    if (c.SelectedItem == target.Item)
                     {
                         // If the other character is player, don't try to operate
                         other = c;

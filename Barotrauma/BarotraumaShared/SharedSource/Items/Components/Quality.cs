@@ -29,25 +29,14 @@ namespace Barotrauma.Items.Components
             FirepowerMultiplier,
             StrikingPowerMultiplier,
             StrikingSpeedMultiplier,
-            FiringRateMultiplier,
-            // unused as of now
-            AttackMultiplier,
-            // unused as of now
-            AttackSpeedMultiplier,
-            ForceDoorsOpenSpeedMultiplier,
-            RangedSpreadReduction,
-            ChargeSpeedMultiplier,
-            MovementSpeedMultiplier,
-            EffectivenessMultiplier,
-            PowerOutputMultiplier,
-            ConsumptionReductionMultiplier,
+            FiringRateMultiplier
         }
 
         private readonly Dictionary<StatType, float> statValues = new Dictionary<StatType, float>();
 
         private int qualityLevel;
 
-        [Editable, Serialize(0, IsPropertySaveable.Yes)]
+        [Editable(MinValueInt = 0, MaxValueInt = MaxQuality), Serialize(0, IsPropertySaveable.Yes)]
         public int QualityLevel
         {
             get { return qualityLevel; }

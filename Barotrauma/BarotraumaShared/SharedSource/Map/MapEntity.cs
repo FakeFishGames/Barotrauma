@@ -338,7 +338,7 @@ namespace Barotrauma
         /// </summary>
         public virtual bool AddUpgrade(Upgrade upgrade, bool createNetworkEvent = false)
         {
-            if (this is Item item && !upgrade.Prefab.UpgradeCategories.Any(category => category.CanBeApplied(item, upgrade.Prefab)))
+            if (!upgrade.Prefab.UpgradeCategories.Any(category => category.CanBeApplied(this, upgrade.Prefab)))
             {
                 return false;
             }
@@ -359,16 +359,6 @@ namespace Barotrauma
                 Upgrades.Add(upgrade);
             }
 
-            // not used anymore
-#if SERVER
-            // if (createNetworkEvent)
-            // {
-            //     if (this is IServerSerializable serializable)
-            //     {
-            //         GameMain.Server.CreateEntityEvent(serializable, new object[] { NetEntityEvent.Type.Upgrade, upgrade });
-            //     }
-            // }
-#endif
             return true;
         }
 

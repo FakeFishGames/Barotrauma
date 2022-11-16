@@ -15,7 +15,7 @@ namespace Barotrauma.Abilities
 
         public readonly AbilityEffectType AbilityEffectType;
 
-        protected int maxTriggerCount { get; }
+        protected readonly int maxTriggerCount;
         protected int timesTriggered = 0;
 
 
@@ -88,8 +88,6 @@ namespace Barotrauma.Abilities
         // XML
         private AbilityCondition ConstructCondition(CharacterTalent characterTalent, ContentXElement conditionElement, bool errorMessages = true)
         {
-            AbilityCondition newCondition = null;
-
             Type conditionType;
             string type = conditionElement.Name.ToString().ToLowerInvariant();
             try
@@ -109,6 +107,7 @@ namespace Barotrauma.Abilities
 
             object[] args = { characterTalent, conditionElement };
 
+            AbilityCondition newCondition;
             try
             {
                 newCondition = (AbilityCondition)Activator.CreateInstance(conditionType, args);
@@ -210,8 +209,7 @@ namespace Barotrauma.Abilities
 
         public static AbilityFlags ParseFlagType(string flagTypeString, string debugIdentifier)
         {
-            AbilityFlags flagType = AbilityFlags.None;
-            if (!Enum.TryParse(flagTypeString, true, out flagType))
+            if (!Enum.TryParse(flagTypeString, true, out AbilityFlags flagType))
             {
                 DebugConsole.ThrowError("Invalid flag type type \"" + flagTypeString + "\" in CharacterTalent (" + debugIdentifier + ")");
             }

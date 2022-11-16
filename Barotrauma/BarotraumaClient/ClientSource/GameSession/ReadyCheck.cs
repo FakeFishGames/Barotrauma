@@ -83,7 +83,7 @@ namespace Barotrauma
 
             foreach (var (id, _) in Clients)
             {
-                Client? client = GameMain.Client.ConnectedClients.FirstOrDefault(c => c.ID == id);
+                Client? client = GameMain.Client.ConnectedClients.FirstOrDefault(c => c.SessionId == id);
                 GUIFrame container = new GUIFrame(new RectTransform(new Vector2(1f, 0.15f), listBox.Content.RectTransform), style: "ListBoxElement") { UserData = id };
                 GUILayoutGroup frame = new GUILayoutGroup(new RectTransform(Vector2.One, container.RectTransform), isHorizontal: true) { Stretch = true };
 
@@ -93,7 +93,7 @@ namespace Barotrauma
 
                 if (client == null)
                 {
-                    string list = GameMain.Client.ConnectedClients.Aggregate("Available clients:\n", (current, c) => current + $"{c.ID}: {c.Name}\n");
+                    string list = GameMain.Client.ConnectedClients.Aggregate("Available clients:\n", (current, c) => current + $"{c.SessionId}: {c.Name}\n");
                     DebugConsole.ThrowError($"Client ID {id} was reported in ready check but was not found.\n" + list.TrimEnd('\n'));
                 }
 
@@ -139,9 +139,9 @@ namespace Barotrauma
 
         public static void ClientRead(IReadMessage inc)
         {
-            ReadyCheckState state = (ReadyCheckState) inc.ReadByte();
+            ReadyCheckState state = (ReadyCheckState)inc.ReadByte();
             CrewManager? crewManager = GameMain.GameSession?.CrewManager;
-            List<Client> otherClients = GameMain.Client.ConnectedClients;
+            var otherClients = GameMain.Client.ConnectedClients;
             if (crewManager == null || otherClients == null)
             {
                 if (state == ReadyCheckState.Start)
@@ -165,7 +165,7 @@ namespace Barotrauma
                     if (hasAuthor)
                     {
                         authorId = inc.ReadByte();
-                        isOwn = authorId == GameMain.Client.ID;
+                        isOwn = authorId == GameMain.Client.SessionId;
                     }
 
                     ushort clientCount = inc.ReadUInt16();
@@ -196,7 +196,7 @@ namespace Barotrauma
                     }
                     break;
                 case ReadyCheckState.Update:
-                    ReadyStatus newState = (ReadyStatus) inc.ReadByte();
+                    ReadyStatus newState = (ReadyStatus)inc.ReadByte();
                     byte targetId = inc.ReadByte();
                     if (crewManager.ActiveReadyCheck != null)
                     {
@@ -208,7 +208,7 @@ namespace Barotrauma
                     for (int i = 0; i < count; i++)
                     {
                         byte id = inc.ReadByte();
-                        ReadyStatus status = (ReadyStatus) inc.ReadByte();
+                        ReadyStatus status = (ReadyStatus)inc.ReadByte();
                         crewManager.ActiveReadyCheck?.UpdateState(id, status);
                     }
 
@@ -269,9 +269,9 @@ namespace Barotrauma
         private static void SendState(ReadyStatus status)
         {
             IWriteMessage msg = new WriteOnlyMessage();
-            msg.Write((byte) ClientPacketHeader.READY_CHECK);
-            msg.Write((byte) ReadyCheckState.Update);
-            msg.Write((byte) status);
+            msg.WriteByte((byte)ClientPacketHeader.READY_CHECK);
+            msg.WriteByte((byte)ReadyCheckState.Update);
+            msg.WriteByte((byte)status);
             GameMain.Client?.ClientPeer?.Send(msg, DeliveryMethod.Reliable);
         }
 
@@ -283,8 +283,8 @@ namespace Barotrauma
                 ReadyCheckCooldown = DateTime.Now.AddMinutes(1);
 #endif
                 IWriteMessage msg = new WriteOnlyMessage();
-                msg.Write((byte) ClientPacketHeader.READY_CHECK);
-                msg.Write((byte) ReadyCheckState.Start);
+                msg.WriteByte((byte)ClientPacketHeader.READY_CHECK);
+                msg.WriteByte((byte)ReadyCheckState.Start);
                 GameMain.Client?.ClientPeer?.Send(msg, DeliveryMethod.Reliable);
                 return;
             }

@@ -80,7 +80,7 @@ namespace Barotrauma
         {
             if (ID != Entity.NullEntityID)
             {
-                DebugConsole.ShowError("Error setting SoldItem.ID: ID has already been set and should not be changed.");
+                DebugConsole.LogError("Error setting SoldItem.ID: ID has already been set and should not be changed.");
                 return;
             }
             ID = id;
@@ -128,7 +128,7 @@ namespace Barotrauma
             {
                 if (Item != null)
                 {
-                    DebugConsole.ShowError($"Trying to set SoldEntity.Item, but it's already set!\n{Environment.StackTrace.CleanupStackTrace()}");
+                    DebugConsole.LogError($"Trying to set SoldEntity.Item, but it's already set!\n{Environment.StackTrace.CleanupStackTrace()}");
                     return;
                 }
                 Item = item;
@@ -302,6 +302,10 @@ namespace Barotrauma
             var itemsInStoreCrate = GetBuyCrateItems(storeIdentifier, create: true);
             foreach (PurchasedItem item in itemsToPurchase)
             {
+                // Exchange money
+                int itemValue = item.Quantity * buyValues[item.ItemPrefab];
+                if (!campaign.TryPurchase(client, itemValue)) { continue; }
+
                 // Add to the purchased items
                 var purchasedItem = itemsPurchasedFromStore.Find(pi => pi.ItemPrefab == item.ItemPrefab);
                 if (purchasedItem != null)
@@ -313,9 +317,6 @@ namespace Barotrauma
                     purchasedItem = new PurchasedItem(item.ItemPrefab, item.Quantity, client);
                     itemsPurchasedFromStore.Add(purchasedItem);
                 }
-                // Exchange money
-                int itemValue = item.Quantity * buyValues[item.ItemPrefab];
-                campaign.TryPurchase(client, itemValue);
                 if (GameMain.IsSingleplayer)
                 {
                     GameAnalyticsManager.AddMoneySpentEvent(itemValue, GameAnalyticsManager.MoneySink.Store, item.ItemPrefab.Identifier.Value);

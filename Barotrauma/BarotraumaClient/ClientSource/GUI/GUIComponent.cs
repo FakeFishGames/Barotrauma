@@ -486,7 +486,7 @@ namespace Barotrauma
             {
                 if (bounceTimer > 3.0f || bounceDown)
                 {
-                    RectTransform.ScreenSpaceOffset = new Point(RectTransform.ScreenSpaceOffset.X, (int) -(bounceJump * 10f));
+                    RectTransform.ScreenSpaceOffset = new Point(RectTransform.ScreenSpaceOffset.X, (int) -(bounceJump * 15f * GUI.Scale));
                     if (!bounceDown)
                     {
                         bounceJump += deltaTime * 4;
@@ -503,6 +503,7 @@ namespace Barotrauma
                             bounceJump = 0.0f;
                             bounceTimer = 0.0f;
                             bounceDown = false;
+                            Bounce = false;
                         }
                     }
                 }
@@ -730,7 +731,7 @@ namespace Barotrauma
         public void DrawToolTip(SpriteBatch spriteBatch)
         {
             if (!Visible) { return; }
-            DrawToolTip(spriteBatch, ToolTip, GUI.MouseOn.Rect);
+            DrawToolTip(spriteBatch, ToolTip, Rect);
         }
         
         public static void DrawToolTip(SpriteBatch spriteBatch, RichString toolTip, Vector2 pos)
@@ -781,7 +782,7 @@ namespace Barotrauma
             if (toolTipBlock.Rect.Bottom > GameMain.GraphicsHeight - 10)
             {
                 toolTipBlock.RectTransform.AbsoluteOffset -= new Point(
-                    (targetElement.Width / 2) * Math.Sign(targetElement.Center.X - toolTipBlock.Center.X), 
+                    0, 
                     toolTipBlock.Rect.Bottom - (GameMain.GraphicsHeight - 10));
             }
             toolTipBlock.SetTextPos();
@@ -806,9 +807,16 @@ namespace Barotrauma
             flashColor = (color == null) ? GUIStyle.Red : (Color)color;
         }
 
-        public void FadeOut(float duration, bool removeAfter, float wait = 0.0f)
+        public void ImmediateFlash(Color? color = null)
         {
-            CoroutineManager.StartCoroutine(LerpAlpha(0.0f, duration, removeAfter, wait));
+            flashTimer = MathHelper.Pi / 4.0f * 0.1f;
+            flashDuration = 1.0f *0.1f;
+            flashColor = (color == null) ? GUIStyle.Red : (Color)color;
+        }
+
+        public void FadeOut(float duration, bool removeAfter, float wait = 0.0f, Action onRemove = null)
+        {
+            CoroutineManager.StartCoroutine(LerpAlpha(0.0f, duration, removeAfter, wait, onRemove));
         }
 
         public void FadeIn(float wait, float duration)
@@ -870,7 +878,7 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        private IEnumerable<CoroutineStatus> LerpAlpha(float to, float duration, bool removeAfter, float wait = 0.0f)
+        private IEnumerable<CoroutineStatus> LerpAlpha(float to, float duration, bool removeAfter, float wait = 0.0f, Action onRemove = null)
         {
             State = ComponentState.None;
             float t = 0.0f;
@@ -895,6 +903,7 @@ namespace Barotrauma
             if (removeAfter && Parent != null)
             {
                 Parent.RemoveChild(this);
+                onRemove?.Invoke();
             }
 
             yield return CoroutineStatus.Success;
@@ -1156,7 +1165,7 @@ namespace Barotrauma
                 try
                 {
 #if USE_STEAM
-                    Steam.SteamManager.OverlayCustomURL(url);
+                    Steam.SteamManager.OverlayCustomUrl(url);
 #else
                     ToolBox.OpenFileWithShell(url);
 #endif

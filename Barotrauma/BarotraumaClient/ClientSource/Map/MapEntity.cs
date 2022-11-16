@@ -21,6 +21,7 @@ namespace Barotrauma
         private static float keyDelay;
 
         public static Vector2 StartMovingPos => startMovingPos;
+        public static Vector2 SelectionPos => selectionPos;
 
         public event Action<Rectangle> Resized;
 
@@ -128,7 +129,9 @@ namespace Barotrauma
                 return;
             }
 
-            if (GUI.MouseOn != null || !PlayerInput.MouseInsideWindow)
+            if (startMovingPos == Vector2.Zero
+                && selectionPos == Vector2.Zero
+                && (GUI.MouseOn != null || !PlayerInput.MouseInsideWindow))
             {
                 if (highlightedListBox == null ||
                     (GUI.MouseOn != highlightedListBox && !highlightedListBox.IsParentOf(GUI.MouseOn)))
@@ -819,7 +822,7 @@ namespace Barotrauma
                     selectionPos = Vector2.Zero;
                 }
             }
-            if (selectionPos != null && selectionPos != Vector2.Zero)
+            if (selectionPos != Vector2.Zero)
             {
                 var (sizeX, sizeY) = selectionSize;
                 var (posX, posY) = selectionPos;
@@ -1097,6 +1100,10 @@ namespace Barotrauma
                         resizeDirY = y;
                         resizing = true;
                         startMovingPos = Vector2.Zero;
+                        foreach (var mapEntity in mapEntityList)
+                        {
+                            if (mapEntity != this) { mapEntity.isHighlighted = false; }
+                        }
                     }
                 }
             }

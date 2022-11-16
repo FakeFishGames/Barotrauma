@@ -265,10 +265,6 @@ namespace Barotrauma
                     Vector2 velocity = flowForce;
                     if (!IsHorizontal)
                     {
-                        velocity.X = Rand.Range(-100.0f, 100.0f) * open;
-                    }
-                    else
-                    {
                         velocity.X *= Rand.Range(1.0f, 3.0f);
                     }
 

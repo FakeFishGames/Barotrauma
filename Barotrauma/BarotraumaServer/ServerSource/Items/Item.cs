@@ -62,14 +62,14 @@ namespace Barotrauma
                         throw error("component \"" + components[containerIndex] + "\" is not server serializable");
                     }
                     msg.WriteRangedInteger(containerIndex, 0, components.Count - 1);
-                    msg.Write(GameMain.Server.EntityEventManager.Events.Last()?.ID ?? (ushort)0);
+                    msg.WriteUInt16(GameMain.Server.EntityEventManager.Events.Last()?.ID ?? (ushort)0);
                     itemContainer.Inventory.ServerEventWrite(msg, c);
                     break;
                 case ItemStatusEventData _:
-                    msg.Write(condition);
+                    msg.WriteSingle(condition);
                     break;
                 case AssignCampaignInteractionEventData _:
-                    msg.Write((byte)CampaignInteractionType);
+                    msg.WriteByte((byte)CampaignInteractionType);
                     break;
                 case ApplyStatusEffectEventData applyStatusEffectEventData:
                     {
@@ -83,15 +83,15 @@ namespace Barotrauma
                         byte targetLimbIndex = targetLimb != null && targetCharacter != null ? (byte)Array.IndexOf(targetCharacter.AnimController.Limbs, targetLimb) : (byte)255;
 
                         msg.WriteRangedInteger((int)actionType, 0, Enum.GetValues(typeof(ActionType)).Length - 1);
-                        msg.Write((byte)(targetComponent == null ? 255 : components.IndexOf(targetComponent)));
-                        msg.Write(applyStatusEffectEventData.TargetCharacter?.ID ?? (ushort)0);
-                        msg.Write(targetLimbIndex);
-                        msg.Write(applyStatusEffectEventData.UseTarget?.ID ?? (ushort)0);
-                        msg.Write(worldPosition.HasValue);
+                        msg.WriteByte((byte)(targetComponent == null ? 255 : components.IndexOf(targetComponent)));
+                        msg.WriteUInt16(applyStatusEffectEventData.TargetCharacter?.ID ?? (ushort)0);
+                        msg.WriteByte(targetLimbIndex);
+                        msg.WriteUInt16(applyStatusEffectEventData.UseTarget?.ID ?? (ushort)0);
+                        msg.WriteBoolean(worldPosition.HasValue);
                         if (worldPosition.HasValue)
                         {
-                            msg.Write(worldPosition.Value.X);
-                            msg.Write(worldPosition.Value.Y);
+                            msg.WriteSingle(worldPosition.Value.X);
+                            msg.WriteSingle(worldPosition.Value.Y);
                         }
                     }
                     break;
@@ -109,16 +109,16 @@ namespace Barotrauma
                 case UpgradeEventData upgradeEventData:
                     var upgrade = upgradeEventData.Upgrade;
                     var upgradeTargets = upgrade.TargetComponents;
-                    msg.Write(upgrade.Identifier);
-                    msg.Write((byte)upgrade.Level);
-                    msg.Write((byte)upgradeTargets.Count);
+                    msg.WriteIdentifier(upgrade.Identifier);
+                    msg.WriteByte((byte)upgrade.Level);
+                    msg.WriteByte((byte)upgradeTargets.Count);
                     foreach (var (_, value) in upgrade.TargetComponents)
                     {
-                        msg.Write((byte)value.Length);
+                        msg.WriteByte((byte)value.Length);
                         foreach (var propertyReference in value)
                         {
                             object originalValue = propertyReference.OriginalValue;
-                            msg.Write((float)(originalValue ?? -1));
+                            msg.WriteSingle((float)(originalValue ?? -1));
                         }
                     }
                     break;
@@ -189,35 +189,35 @@ namespace Barotrauma
         {
             if (GameMain.Server == null) { return; }
 
-            msg.Write(Prefab.OriginalName);
-            msg.Write(Prefab.Identifier);
-            msg.Write(Description != base.Prefab.Description);
+            msg.WriteString(Prefab.OriginalName);
+            msg.WriteIdentifier(Prefab.Identifier);
+            msg.WriteBoolean(Description != base.Prefab.Description);
             if (Description != base.Prefab.Description)
             {
-                msg.Write(Description);
+                msg.WriteString(Description);
             }
 
-            msg.Write(entityID);
+            msg.WriteUInt16(entityID);
 
             if (ParentInventory == null || ParentInventory.Owner == null || originalInventoryID == 0)
             {
-                msg.Write((ushort)0);
+                msg.WriteUInt16((ushort)0);
 
-                msg.Write(Position.X);
-                msg.Write(Position.Y);
+                msg.WriteSingle(Position.X);
+                msg.WriteSingle(Position.Y);
                 msg.WriteRangedSingle(body == null ? 0.0f : MathUtils.WrapAngleTwoPi(body.Rotation), 0.0f, MathHelper.TwoPi, 8);
-                msg.Write(Submarine != null ? Submarine.ID : (ushort)0);
+                msg.WriteUInt16(Submarine != null ? Submarine.ID : (ushort)0);
             }
             else
             {
-                msg.Write(originalInventoryID);
-                msg.Write(originalItemContainerIndex);
-                msg.Write(originalSlotIndex < 0 ? (byte)255 : (byte)originalSlotIndex);
+                msg.WriteUInt16(originalInventoryID);
+                msg.WriteByte(originalItemContainerIndex);
+                msg.WriteByte(originalSlotIndex < 0 ? (byte)255 : (byte)originalSlotIndex);
             }
 
-            msg.Write(body == null ? (byte)0 : (byte)body.BodyType);
-            msg.Write(SpawnedInCurrentOutpost);
-            msg.Write(AllowStealing);
+            msg.WriteByte(body == null ? (byte)0 : (byte)body.BodyType);
+            msg.WriteBoolean(SpawnedInCurrentOutpost);
+            msg.WriteBoolean(AllowStealing);
             msg.WriteRangedInteger(Quality, 0, Items.Components.Quality.MaxQuality);
 
             byte teamID = 0;
@@ -237,39 +237,39 @@ namespace Barotrauma
                 }
             }
 
-            msg.Write(teamID);
+            msg.WriteByte(teamID);
 
             bool hasIdCard = idCardComponent != null;
-            msg.Write(hasIdCard);
+            msg.WriteBoolean(hasIdCard);
             if (hasIdCard)
             {
-                msg.Write(idCardComponent.OwnerName);
-                msg.Write(idCardComponent.OwnerTags);
-                msg.Write((byte)Math.Max(0, idCardComponent.OwnerBeardIndex+1));
-                msg.Write((byte)Math.Max(0, idCardComponent.OwnerHairIndex+1));
-                msg.Write((byte)Math.Max(0, idCardComponent.OwnerMoustacheIndex+1));
-                msg.Write((byte)Math.Max(0, idCardComponent.OwnerFaceAttachmentIndex+1));
+                msg.WriteString(idCardComponent.OwnerName);
+                msg.WriteString(idCardComponent.OwnerTags);
+                msg.WriteByte((byte)Math.Max(0, idCardComponent.OwnerBeardIndex+1));
+                msg.WriteByte((byte)Math.Max(0, idCardComponent.OwnerHairIndex+1));
+                msg.WriteByte((byte)Math.Max(0, idCardComponent.OwnerMoustacheIndex+1));
+                msg.WriteByte((byte)Math.Max(0, idCardComponent.OwnerFaceAttachmentIndex+1));
                 msg.WriteColorR8G8B8(idCardComponent.OwnerHairColor);
                 msg.WriteColorR8G8B8(idCardComponent.OwnerFacialHairColor);
                 msg.WriteColorR8G8B8(idCardComponent.OwnerSkinColor);
-                msg.Write(idCardComponent.OwnerJobId);
-                msg.Write((byte)idCardComponent.OwnerSheetIndex.X);
-                msg.Write((byte)idCardComponent.OwnerSheetIndex.Y);
+                msg.WriteIdentifier(idCardComponent.OwnerJobId);
+                msg.WriteByte((byte)idCardComponent.OwnerSheetIndex.X);
+                msg.WriteByte((byte)idCardComponent.OwnerSheetIndex.Y);
             }
             
             bool tagsChanged = tags.Count != base.Prefab.Tags.Count || !tags.All(t => base.Prefab.Tags.Contains(t));
-            msg.Write(tagsChanged);
+            msg.WriteBoolean(tagsChanged);
             if (tagsChanged)
             {
                 IEnumerable<Identifier> splitTags = Tags.Split(',').ToIdentifiers();
-                msg.Write(string.Join(',', splitTags.Where(t => !base.Prefab.Tags.Contains(t))));
-                msg.Write(string.Join(',', base.Prefab.Tags.Where(t => !splitTags.Contains(t))));
+                msg.WriteString(string.Join(',', splitTags.Where(t => !base.Prefab.Tags.Contains(t))));
+                msg.WriteString(string.Join(',', base.Prefab.Tags.Where(t => !splitTags.Contains(t))));
             }
             var nameTag = GetComponent<NameTag>();
-            msg.Write(nameTag != null);
+            msg.WriteBoolean(nameTag != null);
             if (nameTag != null)
             {
-                msg.Write(nameTag.WrittenName ?? "");
+                msg.WriteString(nameTag.WrittenName ?? "");
             }
         }
 
@@ -342,12 +342,12 @@ namespace Barotrauma
 
         public void ServerWritePosition(IWriteMessage msg, Client c)
         {
-            msg.Write(ID);
+            msg.WriteUInt16(ID);
 
             IWriteMessage tempBuffer = new WriteOnlyMessage();
             body.ServerWrite(tempBuffer);
             msg.WriteVariableUInt32((uint)tempBuffer.LengthBytes);
-            msg.Write(tempBuffer.Buffer, 0, tempBuffer.LengthBytes);
+            msg.WriteBytes(tempBuffer.Buffer, 0, tempBuffer.LengthBytes);
             msg.WritePadBits();
         }
 

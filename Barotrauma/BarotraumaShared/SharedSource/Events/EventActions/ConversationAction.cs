@@ -59,7 +59,11 @@ namespace Barotrauma
         [Serialize(false, IsPropertySaveable.Yes)]
         public bool ContinueConversation { get; set; }
 
-        private Character speaker;
+        public Character speaker
+        {
+            get;
+            private set;
+        }
 
         private AIObjective prevIdleObjective, prevGotoObjective;
 
@@ -120,7 +124,7 @@ namespace Barotrauma
 #else
                     foreach (Client c in GameMain.Server.ConnectedClients)
                     {
-                        if (c.InGame && c.Character != null) { ServerWrite(speaker, c); }
+                        if (c.InGame && c.Character != null) { ServerWrite(speaker, c, interrupt); }
                     }
 #endif
                     ResetSpeaker();
@@ -331,8 +335,10 @@ namespace Barotrauma
             if (!TargetTag.IsEmpty)
             {
                 targets = ParentEvent.GetTargets(TargetTag).Where(e => IsValidTarget(e));
-                if (!targets.Any() || IsBlockedByAnotherConversation(targets)) { return; }
+                if (!targets.Any() || IsBlockedByAnotherConversation(targets, BlockOtherConversationsDuration)) { return; }
             }
+
+            if (targetCharacter != null && IsBlockedByAnotherConversation(targetCharacter.ToEnumerable(), 0.1f)) { return; }
 
             if (speaker?.AIController is HumanAIController humanAI)
             {

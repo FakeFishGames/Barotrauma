@@ -121,13 +121,10 @@ namespace Barotrauma.Networking
 
             ReadMonsterEnabled(incMsg);
             BanList.ClientAdminRead(incMsg);
-            Whitelist.ClientAdminRead(incMsg);
         }
 
         public void ClientRead(IReadMessage incMsg)
         {
-            cachedServerListInfo = null;
-
             NetFlags requiredFlags = (NetFlags)incMsg.ReadByte();
 
             if (requiredFlags.HasFlag(NetFlags.Name))
@@ -147,7 +144,6 @@ namespace Barotrauma.Networking
             AllowFileTransfers = incMsg.ReadBoolean();
             incMsg.ReadPadBits();
             TickRate = incMsg.ReadRangedInteger(1, 60);
-            GameMain.NetworkMember.TickRate = TickRate;
 
             if (requiredFlags.HasFlag(NetFlags.Properties))
             {
@@ -183,9 +179,9 @@ namespace Barotrauma.Networking
 
             IWriteMessage outMsg = new WriteOnlyMessage();
 
-            outMsg.Write((byte)ClientPacketHeader.SERVER_SETTINGS);
+            outMsg.WriteByte((byte)ClientPacketHeader.SERVER_SETTINGS);
 
-            outMsg.Write((byte)dataToSend);
+            outMsg.WriteByte((byte)dataToSend);
 
             if (dataToSend.HasFlag(NetFlags.Name))
             {
@@ -193,7 +189,7 @@ namespace Barotrauma.Networking
                 {
                     ServerName = GameMain.NetLobbyScreen.ServerName.Text;
                 }
-                outMsg.Write(ServerName);
+                outMsg.WriteString(ServerName);
             }
 
             if (dataToSend.HasFlag(NetFlags.Message))
@@ -202,7 +198,7 @@ namespace Barotrauma.Networking
                 {
                     ServerMessageText = GameMain.NetLobbyScreen.ServerMessage.Text;
                 }
-                outMsg.Write(ServerMessageText);
+                outMsg.WriteString(ServerMessageText);
             }
 
             if (dataToSend.HasFlag(NetFlags.Properties))
@@ -214,18 +210,17 @@ namespace Barotrauma.Networking
                 UInt32 count = (UInt32)changedProperties.Count();
                 bool changedMonsterSettings = tempMonsterEnabled != null && tempMonsterEnabled.Any(p => p.Value != MonsterEnabled[p.Key]);
 
-                outMsg.Write(count);
+                outMsg.WriteUInt32(count);
                 foreach (KeyValuePair<UInt32, NetPropertyData> prop in changedProperties)
                 {
                     DebugConsole.NewMessage(prop.Value.Name.Value, Color.Lime);
-                    outMsg.Write(prop.Key);
+                    outMsg.WriteUInt32(prop.Key);
                     prop.Value.Write(outMsg, prop.Value.GUIComponentValue);
                 }
 
-                outMsg.Write(changedMonsterSettings); outMsg.WritePadBits();
+                outMsg.WriteBoolean(changedMonsterSettings); outMsg.WritePadBits();
                 if (changedMonsterSettings) WriteMonsterEnabled(outMsg, tempMonsterEnabled);
                 BanList.ClientAdminWrite(outMsg);
-                Whitelist.ClientAdminWrite(outMsg);
             }
 
             if (dataToSend.HasFlag(NetFlags.HiddenSubs))
@@ -237,23 +232,24 @@ namespace Barotrauma.Networking
             {
                 outMsg.WriteRangedInteger(missionTypeOr ?? (int)Barotrauma.MissionType.None, 0, (int)Barotrauma.MissionType.All);
                 outMsg.WriteRangedInteger(missionTypeAnd ?? (int)Barotrauma.MissionType.All, 0, (int)Barotrauma.MissionType.All);
-                outMsg.Write((byte)(traitorSetting + 1));
-                outMsg.Write((byte)(botCount + 1));
-                outMsg.Write((byte)(botSpawnMode + 1));
+                outMsg.WriteByte((byte)(traitorSetting + 1));
+                outMsg.WriteByte((byte)(botCount + 1));
+                outMsg.WriteByte((byte)(botSpawnMode + 1));
 
-                outMsg.Write(levelDifficulty ?? -1000.0f);
+                outMsg.WriteSingle(levelDifficulty ?? -1000.0f);
 
-                outMsg.Write(useRespawnShuttle ?? UseRespawnShuttle);
+                outMsg.WriteBoolean(useRespawnShuttle != null);
+                outMsg.WriteBoolean(useRespawnShuttle ?? false);
 
-                outMsg.Write(autoRestart != null);
-                outMsg.Write(autoRestart ?? false);
+                outMsg.WriteBoolean(autoRestart != null);
+                outMsg.WriteBoolean(autoRestart ?? false);
 
                 outMsg.WritePadBits();
             }
 
             if (dataToSend.HasFlag(NetFlags.LevelSeed))
             {
-                outMsg.Write(GameMain.NetLobbyScreen.SeedBox.Text);
+                outMsg.WriteString(GameMain.NetLobbyScreen.SeedBox.Text);
             }
 
             GameMain.Client.ClientPeer.Send(outMsg, DeliveryMethod.Reliable);
@@ -273,8 +269,7 @@ namespace Barotrauma.Networking
             General,
             Rounds,
             Antigriefing,
-            Banlist,
-            Whitelist
+            Banlist
         }
 
         private NetPropertyData GetPropertyData(string name)
@@ -707,10 +702,30 @@ namespace Barotrauma.Networking
             {
                 Enabled = !GameMain.NetworkMember.GameStarted
             };
-            var cargoFrame = new GUIListBox(new RectTransform(new Vector2(0.6f, 0.7f), settingsTabs[(int)SettingsTab.Rounds].RectTransform, Anchor.BottomRight, Pivot.BottomLeft))
+
+            var cargoFrame = new GUIFrame(new RectTransform(new Vector2(0.6f, 0.7f), settingsTabs[(int)SettingsTab.Rounds].RectTransform, Anchor.BottomRight, Pivot.BottomLeft))
             {
                 Visible = false
             };
+            var cargoContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.95f), cargoFrame.RectTransform, Anchor.Center))
+            {
+                Stretch = true
+            };
+
+            var filterText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), cargoContent.RectTransform), TextManager.Get("serverlog.filter"), font: GUIStyle.SubHeadingFont);
+            var entityFilterBox = new GUITextBox(new RectTransform(new Vector2(0.5f, 1.0f), filterText.RectTransform, Anchor.CenterRight), font: GUIStyle.Font, createClearButton: true);
+            filterText.RectTransform.MinSize = new Point(0, entityFilterBox.RectTransform.MinSize.Y);
+            var cargoList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.8f), cargoContent.RectTransform));
+            entityFilterBox.OnTextChanged += (textBox, text) =>
+            {
+                foreach (var child in cargoList.Content.Children)
+                {
+                    if (child.UserData is not ItemPrefab itemPrefab) { continue; }
+                    child.Visible = string.IsNullOrEmpty(text) || itemPrefab.Name.Contains(text, StringComparison.OrdinalIgnoreCase);
+                }
+                return true;
+            };
+
             cargoButton.UserData = cargoFrame;
             cargoButton.OnClicked = (button, obj) =>
             {
@@ -726,7 +741,7 @@ namespace Barotrauma.Networking
 
             GUITextBlock.AutoScaleAndNormalize(buttonHolder.Children.Select(c => ((GUIButton)c).TextBlock));
 
-            foreach (ItemPrefab ip in ItemPrefab.Prefabs)
+            foreach (ItemPrefab ip in ItemPrefab.Prefabs.OrderBy(ip => ip.Name))
             {
                 if (ip.AllowAsExtraCargo.HasValue)
                 {
@@ -737,10 +752,10 @@ namespace Barotrauma.Networking
                     if (!ip.CanBeBought) { continue; }
                 }
 
-                var itemFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), cargoFrame.Content.RectTransform) { MinSize = new Point(0, 30) }, isHorizontal: true)
+                var itemFrame = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.15f), cargoList.Content.RectTransform) { MinSize = new Point(0, 30) }, isHorizontal: true)
                 {
                     Stretch = true,
-                    UserData = cargoFrame,
+                    UserData = ip,
                     RelativeSpacing = 0.05f
                 };
 
@@ -783,7 +798,7 @@ namespace Barotrauma.Networking
                     numberInput.IntValue = ExtraCargo.ContainsKey(ip) ? ExtraCargo[ip] : 0;
                     CoroutineManager.Invoke(() =>
                     {
-                        foreach (var child in cargoFrame.Content.GetAllChildren())
+                        foreach (var child in cargoList.Content.GetAllChildren())
                         {
                             if (child.GetChild<GUINumberInput>() is GUINumberInput otherNumberInput)
                             {
@@ -949,13 +964,6 @@ namespace Barotrauma.Networking
             //--------------------------------------------------------------------------------
 
             BanList.CreateBanFrame(settingsTabs[(int)SettingsTab.Banlist]);
-
-            //--------------------------------------------------------------------------------
-            //                              whitelist
-            //--------------------------------------------------------------------------------
-
-            Whitelist.CreateWhiteListFrame(settingsTabs[(int)SettingsTab.Whitelist]);
-            Whitelist.localEnabled = Whitelist.Enabled;
         }
 
         private void CreateLabeledSlider(GUIComponent parent, string labelTag, out GUIScrollBar slider, out GUITextBlock label)
@@ -1067,15 +1075,7 @@ namespace Barotrauma.Networking
                 }
                 settingsFrame = null;
             }
-
             return false;
-        }
-
-        private ServerInfo cachedServerListInfo = null;
-        public ServerInfo GetServerListInfo()
-        {
-            cachedServerListInfo ??= GameMain.ServerListScreen.UpdateServerInfoWithServerSettings(GameMain.Client.ClientPeer.ServerConnection, this);
-            return cachedServerListInfo;
         }
     }
 }

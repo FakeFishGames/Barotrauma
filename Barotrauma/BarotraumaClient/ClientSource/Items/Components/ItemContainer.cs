@@ -45,6 +45,8 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
+        public override bool RecreateGUIOnResolutionChange => true;
+
         /// <summary>
         /// Depth at which the contained sprites are drawn. If not set, the original depth of the item sprites is used.
         /// </summary>
@@ -189,7 +191,7 @@ namespace Barotrauma.Items.Components
                 onDraw: (SpriteBatch spriteBatch, GUICustomComponent component) => { Inventory.Draw(spriteBatch); },
                 onUpdate: null)
             {
-                CanBeFocused = false
+                CanBeFocused = true
             };
 
             // Expand the frame vertically if it's too small to fit the text
@@ -322,6 +324,8 @@ namespace Barotrauma.Items.Components
             int i = 0;
             foreach (Item containedItem in Inventory.AllItems)
             {
+                if (containedItem?.Sprite == null) { continue; }
+
                 if (AutoInteractWithContained)
                 {
                     containedItem.IsHighlighted = item.IsHighlighted;
@@ -342,7 +346,7 @@ namespace Barotrauma.Items.Components
                 containedItem.Sprite.Draw(
                     spriteBatch,
                     new Vector2(currentItemPos.X, -currentItemPos.Y),
-                    isWiringMode ? containedItem.GetSpriteColor() * 0.15f : containedItem.GetSpriteColor(),
+                    isWiringMode ? containedItem.GetSpriteColor(withHighlight: true) * 0.15f : containedItem.GetSpriteColor(withHighlight: true),
                     origin,
                     -(containedItem.body == null ? 0.0f : containedItem.body.DrawRotation ),
                     containedItem.Scale,
@@ -381,10 +385,15 @@ namespace Barotrauma.Items.Components
                 guiCustomComponent.RectTransform.Parent = Inventory.RectTransform;
             }
 
+            if (item.ParentInventory?.Owner == character && character.SelectedItem == item)
+            {
+                character.SelectedItem = null;
+            }
+
             //if the item is in the character's inventory, no need to update the item's inventory 
-            //because the player can see it by hovering the cursor over the item
-            guiCustomComponent.Visible = item.ParentInventory?.Owner != character && DrawInventory;
-            if (!guiCustomComponent.Visible) { return; }
+            //because the player can see it by hovering the cursor over the item        
+            guiCustomComponent.Visible = DrawInventory && item.ParentInventory?.Owner != character;
+            if (!guiCustomComponent.Visible) { return; }           
 
             Inventory.Update(deltaTime, cam);
         }

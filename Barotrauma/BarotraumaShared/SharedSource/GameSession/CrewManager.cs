@@ -1,4 +1,7 @@
 ﻿using Barotrauma.Extensions;
+#if CLIENT
+using Barotrauma.Tutorials;
+#endif
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -195,6 +198,34 @@ namespace Barotrauma
             }            
         }
 
+        /// <summary>
+        /// Remove the character from the crew (and crew menus).
+        /// </summary>
+        /// <param name="character">The character to remove</param>
+        /// <param name="removeInfo">If the character info is also removed, the character will not be visible in the round summary.</param>
+        public void RemoveCharacter(Character character, bool removeInfo = false, bool resetCrewListIndex = true)
+        {
+            if (character == null)
+            {
+                DebugConsole.ThrowError("Tried to remove a null character from CrewManager.\n" + Environment.StackTrace.CleanupStackTrace());
+                return;
+            }
+            characters.Remove(character);
+            if (removeInfo)
+            {
+                characterInfos.Remove(character.Info);
+#if CLIENT
+                RemoveCharacterFromCrewList(character);
+#endif
+            }
+#if CLIENT
+            if (resetCrewListIndex)
+            {
+                ResetCrewListIndex(character);
+            }
+#endif
+        }
+
         public void AddCharacterInfo(CharacterInfo characterInfo)
         {
             if (characterInfos.Contains(characterInfo))
@@ -348,6 +379,9 @@ namespace Barotrauma
         private void UpdateConversations(float deltaTime)
         {
             if (GameMain.GameSession?.GameMode?.Preset == GameModePreset.TestMode) { return; }
+#if CLIENT
+            if (GameMain.GameSession?.GameMode is TutorialMode tutorialMode && tutorialMode.Tutorial is Tutorial tutorial && tutorial.TutorialPrefab.DisableBotConversations) { return; }
+#endif
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.ServerSettings.DisableBotConversations) { return; }
 
             conversationTimer -= deltaTime;

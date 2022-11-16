@@ -11,7 +11,9 @@ namespace Barotrauma
     class MultiPlayerCampaignSetupUI : CampaignSetupUI
     {
         private GUIButton deleteMpSaveButton;
-        
+
+        private int prevInitialMoney;
+
         public MultiPlayerCampaignSetupUI(GUIComponent newGameContainer, GUIComponent loadGameContainer, List<CampaignMode.SaveInfo> saveFiles = null)
             : base(newGameContainer, loadGameContainer)
         {
@@ -133,6 +135,7 @@ namespace Barotrauma
             StartButton.RectTransform.MaxSize = RectTransform.MaxPoint;
             StartButton.Children.ForEach(c => c.RectTransform.MaxSize = RectTransform.MaxPoint);
 
+            prevInitialMoney = 8000;
             InitialMoneyText = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1f), buttonContainer.RectTransform), "", font: GUIStyle.SmallFont, textColor: GUIStyle.Green)
             {
                 TextGetter = () =>
@@ -142,11 +145,17 @@ namespace Barotrauma
                     {
                         initialMoney = definition.GetInt(elements.StartingFunds.GetValue().ToIdentifier());
                     }
+                    if (prevInitialMoney != initialMoney)
+                    {
+                        GameMain.NetLobbyScreen.RefreshEnabledElements();
+                        prevInitialMoney = initialMoney;
+                    }
                     if (GameMain.NetLobbyScreen.SelectedSub != null)
                     {
                         initialMoney -= GameMain.NetLobbyScreen.SelectedSub.Price;
                     }
-                    initialMoney = Math.Max(initialMoney, MultiPlayerCampaign.MinimumInitialMoney);
+                    initialMoney = Math.Max(initialMoney, 0);
+
                     return TextManager.GetWithVariable("campaignstartingmoney", "[money]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", initialMoney));
                 }
             };

@@ -98,7 +98,7 @@ namespace Barotrauma.Networking
             Task<int> readTask = readStream?.ReadAsync(readTempBytes, 0, readTempBytes.Length, readCancellationToken.Token);
             if (readTask is null) { return -1; }
 
-            TimeSpan timeOut = TimeSpan.FromMilliseconds(100);
+            int timeOutMilliseconds = 100;
             for (int i = 0; i < 150; i++)
             {
                 if (shutDown)
@@ -106,26 +106,22 @@ namespace Barotrauma.Networking
                     readCancellationToken?.Cancel();
                     return -1;
                 }
-
-                // BUG workaround for crash when closing the server under .NET 6.0, not sure if this is the proper way to fix it but it prevents it from crashing the client. - Markus
-#if NET6_0
                 try
                 {
-                    if (readTask.IsCompleted || readTask.Wait(100, readCancellationToken.Token))
+                    if (readTask.IsCompleted || readTask.Wait(timeOutMilliseconds, readCancellationToken.Token))
                     {
                         break;
                     }
+                }
+                catch (AggregateException aggregateException)
+                {
+                    if (aggregateException.InnerException is OperationCanceledException) { return -1; }
+                    throw;
                 }
                 catch (OperationCanceledException)
                 {
                     return -1;
                 }
-#else
-                if (readTask.IsCompleted || readTask.Wait(timeOut))
-                {
-                    break;
-                }
-#endif
             }
 
             if (readTask.Status != TaskStatus.RanToCompletion)

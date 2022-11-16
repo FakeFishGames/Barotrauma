@@ -1426,7 +1426,7 @@ namespace Barotrauma
 
             static bool ShouldRemoveLinkedEntity(MapEntity e, bool doorInUse, PlacedModule module)
             {
-                if (e is Item it && it.GetComponent<Ladder>() != null)
+                if (e is Item it && it.IsLadder)
                 {
                     if (module.UsedGapPositions.HasFlag(OutpostModuleInfo.GapPosition.Top) || module.UsedGapPositions.HasFlag(OutpostModuleInfo.GapPosition.Bottom))
                     {
@@ -1568,7 +1568,7 @@ namespace Barotrauma
             foreach (HumanPrefab humanPrefab in humanPrefabs)
             {
                 if (humanPrefab is null) { continue; }
-                var characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: humanPrefab.GetJobPrefab(Rand.RandSync.ServerAndClient), randSync: Rand.RandSync.ServerAndClient);
+                var characterInfo = humanPrefab.CreateCharacterInfo(Rand.RandSync.ServerAndClient);
                 if (location != null && location.KilledCharacterIdentifiers.Contains(characterInfo.GetIdentifier())) 
                 {
                     killedCharacters.Add(humanPrefab);
@@ -1582,7 +1582,7 @@ namespace Barotrauma
             {
                 for (int tries = 0; tries < 100; tries++)
                 {
-                    var characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: killedCharacter.GetJobPrefab(Rand.RandSync.ServerAndClient), randSync: Rand.RandSync.ServerAndClient);
+                    var characterInfo = killedCharacter.CreateCharacterInfo(Rand.RandSync.ServerAndClient);
                     if (!location.KilledCharacterIdentifiers.Contains(characterInfo.GetIdentifier()))
                     {
                         selectedCharacters.Add((killedCharacter, characterInfo));

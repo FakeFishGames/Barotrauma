@@ -149,7 +149,7 @@ namespace Barotrauma.Items.Components
         {
             if (TryExtractEventData(extraData, out ClientEventData eventData))
             {
-                msg.Write(eventData.Text);
+                msg.WriteString(eventData.Text);
             }
         }
 

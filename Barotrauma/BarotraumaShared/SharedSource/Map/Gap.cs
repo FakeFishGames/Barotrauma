@@ -25,6 +25,12 @@ namespace Barotrauma
             private set;
         }
 
+        /// <summary>
+        /// "Diagonal" gaps are used on sloped walls to allow characters to pass through them either horizontally or vertically. 
+        /// Water still flows through them only horizontally or vertically
+        /// </summary>
+        public bool IsDiagonal { get; }
+
         //a value between 0.0f-1.0f (0.0 = closed, 1.0f = open)
         private float open;
 
@@ -135,12 +141,13 @@ namespace Barotrauma
             : this(rect, rect.Width < rect.Height, submarine)
         { }
 
-        public Gap(Rectangle rect, bool isHorizontal, Submarine submarine, ushort id = Entity.NullEntityID)
+        public Gap(Rectangle rect, bool isHorizontal, Submarine submarine, bool isDiagonal = false, ushort id = Entity.NullEntityID)
             : base(CoreEntityPrefab.GapPrefab, submarine, id)
         {
             this.rect = rect;
             flowForce = Vector2.Zero;
             IsHorizontal = isHorizontal;
+            IsDiagonal = isDiagonal;
             open = 1.0f;
 
             FindHulls();
@@ -666,15 +673,15 @@ namespace Barotrauma
         {
             foreach (Gap gap in gaps)
             {
-                if (gap.Open == 0.0f || gap.IsRoomToRoom) continue;
+                if (gap.Open == 0.0f || gap.IsRoomToRoom) { continue; }
 
                 if (gap.ConnectedWall != null)
                 {
                     int sectionIndex = gap.ConnectedWall.FindSectionIndex(gap.Position);
-                    if (sectionIndex > -1 && !gap.ConnectedWall.SectionBodyDisabled(sectionIndex)) continue;
+                    if (sectionIndex > -1 && !gap.ConnectedWall.SectionBodyDisabled(sectionIndex)) { continue; }
                 }
 
-                if (gap.IsHorizontal)
+                if (gap.IsHorizontal || gap.IsDiagonal)
                 {
                     if (worldPos.Y < gap.WorldRect.Y && worldPos.Y > gap.WorldRect.Y - gap.WorldRect.Height &&
                         Math.Abs(gap.WorldRect.Center.X - worldPos.X) < allowedOrthogonalDist)
@@ -682,7 +689,7 @@ namespace Barotrauma
                         return gap;
                     }
                 }
-                else
+                if (!gap.IsHorizontal || gap.IsDiagonal)
                 {
                     if (worldPos.X > gap.WorldRect.X && worldPos.X < gap.WorldRect.Right &&
                         Math.Abs(gap.WorldRect.Y - gap.WorldRect.Height / 2 - worldPos.Y) < allowedOrthogonalDist)
@@ -754,7 +761,7 @@ namespace Barotrauma
                 isHorizontal = horizontalAttribute.Value.ToString() == "true";
             }
 
-            Gap g = new Gap(rect, isHorizontal, submarine, idRemap.GetOffsetId(element))
+            Gap g = new Gap(rect, isHorizontal, submarine, id: idRemap.GetOffsetId(element))
             {
                 linkedToID = new List<ushort>(),
             };

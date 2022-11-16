@@ -117,7 +117,7 @@ namespace Barotrauma.Items.Components
             Force = MathHelper.Lerp(force, (Voltage < MinVoltage) ? 0.0f : targetForce, deltaTime * 10.0f);
             if (Math.Abs(Force) > 1.0f)
             {
-                float voltageFactor = MinVoltage <= 0.0f ? 1.0f : Math.Min(Voltage, 1.0f);
+                float voltageFactor = MinVoltage <= 0.0f ? 1.0f : Math.Min(Voltage, MaxOverVoltageFactor);
                 float currForce = force * voltageFactor;
                 float condition = item.Condition / item.MaxCondition;
                 // Broken engine makes more noise.

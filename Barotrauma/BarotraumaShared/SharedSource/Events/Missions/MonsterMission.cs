@@ -2,21 +2,19 @@
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
     partial class MonsterMission : Mission
     {
-        //string = filename, point = min,max
         private readonly HashSet<(CharacterPrefab character, Point amountRange)> monsterPrefabs = new HashSet<(CharacterPrefab character, Point amountRange)>();
         private readonly List<Character> monsters = new List<Character>();
         private readonly List<Vector2> sonarPositions = new List<Vector2>();
-
         private readonly List<Vector2> tempSonarPositions = new List<Vector2>();
-
         private readonly float maxSonarMarkerDistance = 10000.0f;
-
         private readonly Level.PositionType spawnPosType;
+        private Vector2? spawnPos = null;
 
         public override IEnumerable<Vector2> SonarPositions
         {
@@ -114,7 +112,16 @@ namespace Barotrauma
 
             if (!IsClient)
             {
-                Level.Loaded.TryGetInterestingPosition(true, spawnPosType, Level.Loaded.Size.X * 0.3f, out Vector2 spawnPos);
+                float minDistBetweenMonsterMissions = 10000;
+                float mindDistFromSub = Level.Loaded.Size.X * 0.3f;
+                var monsterMissions = GameMain.GameSession.Missions.Select(e => e as MonsterMission).Where(m => m != null && m != this && m.spawnPos.HasValue);
+                if (!Level.Loaded.TryGetInterestingPosition(useSyncedRand: true, spawnPosType, mindDistFromSub, out Vector2 spawnPos, 
+                        filter: p => monsterMissions.None(m => Vector2.DistanceSquared(p.Position.ToVector2(), m.spawnPos.Value) < minDistBetweenMonsterMissions * minDistBetweenMonsterMissions), 
+                        suppressWarning: true))
+                {
+                    Level.Loaded.TryGetInterestingPosition(useSyncedRand: true, spawnPosType, mindDistFromSub, out spawnPos);
+                }
+                this.spawnPos = spawnPos;
                 foreach (var (character, amountRange) in monsterPrefabs)
                 {
                     int amount = Rand.Range(amountRange.X, amountRange.Y + 1);
@@ -123,9 +130,8 @@ namespace Barotrauma
                         monsters.Add(Character.Create(character.Identifier, spawnPos, ToolBox.RandomSeed(8), createNetworkEvent: false));
                     }
                 }
-
                 InitializeMonsters(monsters);
-            }                         
+            }
         }
 
         private void InitializeMonsters(IEnumerable<Character> monsters)
@@ -181,7 +187,7 @@ namespace Barotrauma
                         }
 
                         if (monsters[i].Removed || monsters[i].IsDead) { continue; }
-                        Vector2 diff = tempSonarPositions[i] - monsters[i].Position;
+                        Vector2 diff = tempSonarPositions[i] - monsters[i].WorldPosition;
 
                         float maxDist = maxSonarMarkerDistance; 
                         Submarine refSub = Character.Controlled?.Submarine ?? Submarine.MainSub;
@@ -191,12 +197,12 @@ namespace Barotrauma
                             float subDist = Vector2.Distance(refPos, tempSonarPositions[i]) / maxDist;
 
                             maxDist = Math.Min(subDist * subDist * maxDist, maxDist);
-                            maxDist = Math.Min(Vector2.Distance(refPos, monsters[i].Position), maxDist);
+                            maxDist = Math.Min(Vector2.Distance(refPos, monsters[i].WorldPosition), maxDist);
                         }
 
                         if (diff.LengthSquared() > maxDist * maxDist)
                         {
-                            tempSonarPositions[i] = monsters[i].Position + Vector2.Normalize(diff) * maxDist;
+                            tempSonarPositions[i] = monsters[i].WorldPosition + Vector2.Normalize(diff) * maxDist;
                         }
                     }
                     
@@ -217,26 +223,26 @@ namespace Barotrauma
                     break;
             }
         }
-        
-        public override void End()
+
+        protected override bool DetermineCompleted()
+        {
+            return state > 0;
+        }
+
+        protected override void EndMissionSpecific(bool completed)
         {
             tempSonarPositions.Clear();
             monsters.Clear();
-            if (State < 1) { return; }
-
-            if (Prefab.LocationTypeChangeOnCompleted != null)
+            if (completed)
             {
-                ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
-            }
-            GiveReward();
-            completed = true;
-            if (level?.LevelData != null && Prefab.Tags.Any(t => t.Equals("huntinggrounds", StringComparison.OrdinalIgnoreCase)))
-            {
-                level.LevelData.HasHuntingGrounds = false;
+                if (level?.LevelData != null && Prefab.Tags.Contains("huntinggrounds"))
+                {
+                    level.LevelData.HasHuntingGrounds = false;
+                }
             }
         }
 
-        public bool IsEliminated(Character enemy) =>
+        public static bool IsEliminated(Character enemy) =>
             enemy == null ||
             enemy.Removed || 
             enemy.IsDead || 

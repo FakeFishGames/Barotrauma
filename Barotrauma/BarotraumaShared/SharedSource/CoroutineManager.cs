@@ -84,7 +84,9 @@ namespace Barotrauma
     {
         static readonly List<CoroutineHandle> Coroutines = new List<CoroutineHandle>();
 
-        public static float UnscaledDeltaTime, DeltaTime;
+        public static float DeltaTime { get; private set; }
+
+        public static bool Paused { get; private set; }
 
         public static CoroutineHandle StartCoroutine(IEnumerable<CoroutineStatus> func, string name = "", bool useSeparateThread = false)
         {
@@ -191,7 +193,7 @@ namespace Barotrauma
             if (current != null)
             {
                 if (current.EndsCoroutine(handle) || handle.AbortRequested) { return true; }
-                if (!current.CheckFinished(UnscaledDeltaTime)) { return false; }
+                if (!current.CheckFinished(DeltaTime)) { return false; }
             }
             if (!handle.Coroutine.MoveNext()) { return true; }
             return false;
@@ -204,7 +206,7 @@ namespace Barotrauma
                 while (!handle.AbortRequested)
                 {
                     if (PerformCoroutineStep(handle)) { return; }
-                    Thread.Sleep((int)(UnscaledDeltaTime * 1000));
+                    Thread.Sleep((int)(DeltaTime * 1000));
                 }
             }
             catch (ThreadAbortException)
@@ -232,7 +234,7 @@ namespace Barotrauma
                 {
                     if (handle.Thread.ThreadState.HasFlag(ThreadState.Stopped))
                     {
-                        if (handle.Exception!=null || handle.Coroutine.Current == CoroutineStatus.Failure)
+                        if (handle.Exception != null || handle.Coroutine.Current == CoroutineStatus.Failure)
                         {
                             DebugConsole.ThrowError("Coroutine \"" + handle.Name + "\" has failed");
                         }
@@ -254,9 +256,9 @@ namespace Barotrauma
 #endif
         }
         // Updating just means stepping through all the coroutines
-        public static void Update(float unscaledDeltaTime, float deltaTime)
+        public static void Update(bool paused, float deltaTime)
         {
-            UnscaledDeltaTime = unscaledDeltaTime;
+            Paused = paused;
             DeltaTime = deltaTime;
 
             List<CoroutineHandle> coroutineList;
@@ -276,14 +278,27 @@ namespace Barotrauma
                 }
             }
         }
+
+        public static void ListCoroutines()
+        {
+            lock (Coroutines)
+            {
+                DebugConsole.NewMessage("***********");
+                DebugConsole.NewMessage($"{Coroutines.Count} coroutine(s)");
+                foreach (var c in Coroutines)
+                {
+                    DebugConsole.NewMessage($"- {c.Name}");
+                }
+            }
+        }
     }
   
     class WaitForSeconds : CoroutineStatus
     {
         public readonly float TotalTime;
 
-        float timer;
-        bool ignorePause;
+        private float timer;
+        private readonly bool ignorePause;
 
         public WaitForSeconds(float time, bool ignorePause = true)
         {
@@ -295,7 +310,7 @@ namespace Barotrauma
         public override bool CheckFinished(float deltaTime) 
         {
 #if !SERVER
-            if (ignorePause || !GUI.PauseMenuOpen)
+            if (ignorePause || !CoroutineManager.Paused)
             {
                 timer -= deltaTime;
             }

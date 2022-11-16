@@ -103,7 +103,7 @@ namespace Barotrauma.Networking
                 eventLastSent[entityEvent.ID] = (float)Lidgren.Network.NetTime.Now;
             }
 
-            msg.Write((byte)ClientNetObject.ENTITY_STATE);
+            msg.WriteByte((byte)ClientNetObject.ENTITY_STATE);
             Write(msg, eventsToSync, out _);
         }
 
@@ -203,7 +203,7 @@ namespace Barotrauma.Networking
                         DebugConsole.NewMessage(
                             "Received msg " + thisEventID + ", entity " + entityID + " not found",
                             GUIStyle.Red);
-                        GameMain.Client.ReportError(ClientNetError.MISSING_ENTITY, eventID: thisEventID, entityID: entityID);
+                        GameMain.Client.ReportError(ClientNetError.MISSING_ENTITY, eventId: thisEventID, entityId: entityID);
                         return false;
                     }
                     

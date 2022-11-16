@@ -308,13 +308,32 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Error in " + element + "! ", e);
+                    DebugConsole.ThrowError($"Error when reading attribute \"{name}\" from {element}!", e);
                 }
             }
 
             return floatValue;
         }
 
+        public static bool TryGetAttributeInt(this XElement element, string name, out int result)
+        {
+            var attribute = element?.GetAttribute(name);
+            result = default;
+            if (attribute == null) { return false; }
+
+            if (int.TryParse(attribute.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var intVal))
+            {
+                result = intVal;
+                return true;
+            }
+            if (float.TryParse(attribute.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var floatVal))
+            {
+                result = (int)floatVal;
+                return true;
+            }
+            return false;
+        }
+        
         public static int GetAttributeInt(this XElement element, string name, int defaultValue)
         {
             var attribute = element?.GetAttribute(name);
@@ -331,7 +350,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error in " + element + "! ", e);
+                DebugConsole.ThrowError($"Error when reading attribute \"{name}\" from {element}!", e);
             }
 
             return val;
@@ -350,7 +369,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error in " + element + "! ", e);
+                DebugConsole.ThrowError($"Error when reading attribute \"{name}\" from {element}!", e);
             }
 
             return val;
@@ -369,7 +388,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error in " + element + "! ", e);
+                DebugConsole.ThrowError($"Error when reading attribute \"{name}\" from {element}!", e);
             }
 
             return val;
@@ -388,26 +407,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError("Error in " + element + "! ", e);
-            }
-
-            return val;
-        }
-
-        public static UInt64 GetAttributeSteamID(this XElement element, string name, UInt64 defaultValue)
-        {
-            var attribute = element?.GetAttribute(name);
-            if (attribute == null) { return defaultValue; }
-
-            UInt64 val = defaultValue;
-
-            try
-            {
-                val = Steam.SteamManager.SteamIDStringToUInt64(attribute.Value);
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Error in " + element + "! ", e);
+                DebugConsole.ThrowError($"Error when reading attribute \"{name}\" from {element}!", e);
             }
 
             return val;
@@ -432,7 +432,7 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Error in " + element + "! ", e);
+                    DebugConsole.ThrowError($"Error when reading attribute \"{name}\" from {element}!", e);
                 }
             }
 
@@ -457,7 +457,7 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Error in " + element + "! ", e);
+                    DebugConsole.ThrowError($"Error when reading attribute \"{name}\" from {element}!", e);
                 }
             }
 
@@ -559,7 +559,7 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError("Error in " + element + "! ", e);
+                    DebugConsole.ThrowError($"Error when reading attribute \"{name}\" from {element}!", e);
                 }
             }
 

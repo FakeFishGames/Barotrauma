@@ -1,12 +1,9 @@
 ﻿#nullable enable
 using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
-using ItemOrPackage = Barotrauma.Either<Steamworks.Ugc.Item, Barotrauma.ContentPackage>;
 
 namespace Barotrauma.Steam
 {
@@ -28,6 +25,8 @@ namespace Barotrauma.Steam
             ShowOnlySubs,
             ShowOnlyItemAssemblies
         }
+
+        public Tab CurrentTab { get; private set; }
         
         private readonly GUILayoutGroup tabber;
         private readonly Dictionary<Tab, (GUIButton Button, GUIFrame Content)> tabContents;
@@ -78,6 +77,7 @@ namespace Barotrauma.Steam
 
         public void SelectTab(Tab tab)
         {
+            CurrentTab = tab;
             SwitchContent(tabContents[tab].Content);
             tabber.Children.ForEach(c =>
             {
@@ -137,7 +137,7 @@ namespace Barotrauma.Steam
             {
                 OnClicked = (button, o) =>
                 {
-                    SteamManager.OverlayCustomURL($"https://steamcommunity.com/app/{SteamManager.AppID}/workshop/");
+                    SteamManager.OverlayCustomUrl($"https://steamcommunity.com/app/{SteamManager.AppID}/workshop/");
                     return false;
                 }
             };

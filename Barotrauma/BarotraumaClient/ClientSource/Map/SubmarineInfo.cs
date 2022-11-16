@@ -80,7 +80,8 @@ namespace Barotrauma
             {
                 UserData = "descriptionbox",
                 ScrollBarVisible = true,
-                Spacing = 5
+                Spacing = 5,
+                CurrentSelectMode = GUIListBox.SelectMode.None
             };
             
             GUIFont font = parent.Rect.Width < 350 ? GUIStyle.SmallFont : GUIStyle.Font;
@@ -92,22 +93,33 @@ namespace Barotrauma
         {
             float leftPanelWidth = 0.6f;
             float rightPanelWidth = 0.4f / leftPanelWidth;
-            LocalizedString className = !HasTag(SubmarineTag.Shuttle) ? TextManager.Get($"submarineclass.{SubmarineClass}") : TextManager.Get("shuttle");
+            LocalizedString className = !HasTag(SubmarineTag.Shuttle) ?
+                TextManager.GetWithVariables("submarine.classandtier",
+                    ("[class]", TextManager.Get($"submarineclass.{SubmarineClass}")),
+                    ("[tier]", TextManager.Get($"submarinetier.{Tier}"))) :
+                TextManager.Get("shuttle");
 
             int classHeight = (int)GUIStyle.SubHeadingFont.MeasureString(className).Y;
-            int leftPanelWidthInt = (int)(parent.Rect.Width * leftPanelWidth);
+            int leftPanelWidthInt = (int)(parent.Rect.Width * leftPanelWidth); 
 
             GUITextBlock submarineNameText = null;
             GUITextBlock submarineClassText = null;
             if (includeTitle)
             {
                 int nameHeight = (int)GUIStyle.LargeFont.MeasureString(DisplayName, true).Y;
-                submarineNameText = new GUITextBlock(new RectTransform(new Point(leftPanelWidthInt, nameHeight + HUDLayoutSettings.Padding / 2), parent.Content.RectTransform), DisplayName, textAlignment: Alignment.CenterLeft, font: GUIStyle.LargeFont) { CanBeFocused = false };
+                submarineNameText = new GUITextBlock(new RectTransform(new Point(leftPanelWidthInt, nameHeight + HUDLayoutSettings.Padding / 2), parent.Content.RectTransform), DisplayName, textAlignment: Alignment.CenterLeft, font: GUIStyle.LargeFont)
+                {
+                    CanBeFocused = false
+                };
                 submarineNameText.RectTransform.MinSize = new Point(0, (int)submarineNameText.TextSize.Y);
             }
             if (includeClass)
             {
-                submarineClassText = new GUITextBlock(new RectTransform(new Point(leftPanelWidthInt, classHeight), parent.Content.RectTransform), className, textAlignment: Alignment.CenterLeft, font: GUIStyle.SubHeadingFont) { CanBeFocused = false };
+                submarineClassText = new GUITextBlock(new RectTransform(new Point(leftPanelWidthInt, classHeight), parent.Content.RectTransform), className, textAlignment: Alignment.CenterLeft, font: GUIStyle.SubHeadingFont)
+                {
+                    ToolTip = TextManager.Get("submarinetierandclass.description")+"\n\n"+ TextManager.Get($"submarineclass.{SubmarineClass}.description")
+                };
+                submarineClassText.HoverColor = Color.Transparent;
                 submarineClassText.RectTransform.MinSize = new Point(0, (int)submarineClassText.TextSize.Y);
             }
 

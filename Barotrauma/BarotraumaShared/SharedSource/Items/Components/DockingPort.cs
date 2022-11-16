@@ -46,7 +46,7 @@ namespace Barotrauma.Items.Components
         private float forceLockTimer;
         //if the submarine isn't in the correct position to lock within this time after docking has been activated,
         //force the sub to the correct position
-        const float ForceLockDelay = 1.0f;        
+        const float ForceLockDelay = 1.0f;
 
         public int DockingDir { get; set; }
 
@@ -81,11 +81,17 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Editable, Serialize(DirectionType.None, IsPropertySaveable.No, description: "Which direction the port is allowed to dock in. For example, \"Top\" would mean the port can dock to another port above it.\n"+
+        [Editable, Serialize(DirectionType.None, IsPropertySaveable.No, description: "Which direction the port is allowed to dock in. For example, \"Top\" would mean the port can dock to another port above it.\n" +
              "Normally there's no need to touch this setting, but if you notice the docking position is incorrect (for example due to some unusual docking port configuration without hulls or doors), you can use this to enforce the direction.")]
         public DirectionType ForceDockingDirection { get; set; }
-        
+
         public DockingPort DockingTarget { get; private set; }
+
+        /// <summary>
+        /// Can be used by status effects
+        /// </summary>
+        public bool AtStartExit => Item.Submarine is { AtStartExit: true};
+        public bool AtEndExit => Item.Submarine is { AtEndExit: true };
 
         public Door Door { get; private set; }
 
@@ -115,6 +121,8 @@ namespace Barotrauma.Items.Components
         {
             get { return joint is WeldJoint || DockingTarget?.joint is WeldJoint; }
         }
+
+        public bool AnotherPortInProximity => FindAdjacentPort() != null;
 
         /// <summary>
         /// Automatically cleared after docking -> no need to unregister
@@ -989,7 +997,7 @@ namespace Barotrauma.Items.Components
                 dockingState = MathHelper.Lerp(dockingState, 0.0f, deltaTime * 10.0f);
                 if (dockingState < 0.01f) { docked = false; }
                 item.SendSignal("0", "state_out");
-                item.SendSignal((FindAdjacentPort() != null) ? "1" : "0", "proximity_sensor");
+                item.SendSignal(AnotherPortInProximity ? "1" : "0", "proximity_sensor");
             }
             else
             {
@@ -1156,10 +1164,13 @@ namespace Barotrauma.Items.Components
         public override void ReceiveSignal(Signal signal, Connection connection)
         {
 #if CLIENT
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && 
-                !(GameMain.GameSession?.Campaign?.AllowedToManageCampaign(ClientPermissions.ManageMap) ?? false)) 
+            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) 
             { 
                 return; 
+            }
+            if (GameMain.GameSession?.Campaign != null && !CampaignMode.AllowedToManageCampaign(ClientPermissions.ManageMap))
+            {
+                return;
             }
 #endif
 
@@ -1191,7 +1202,7 @@ namespace Barotrauma.Items.Components
                 //trying to dock/undock from an outpost and the signal was sent by some automated system instead of a character
                 // -> ask if the player really wants to dock/undock to prevent a softlock if someone's wired the docking port
                 //    in a way that makes always makes it dock/undock immediately at the start of the roun
-                if (tryingToToggleOutpostDocking && signal.sender == null)
+                if (GameMain.NetworkMember != null && tryingToToggleOutpostDocking && signal.sender == null)
                 {
                     if (allowOutpostAutoDocking == AllowOutpostAutoDocking.Ask)
                     {

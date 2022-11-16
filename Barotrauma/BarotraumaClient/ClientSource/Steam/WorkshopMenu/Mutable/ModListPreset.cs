@@ -6,6 +6,7 @@ using System.Linq;
 using System.Xml.Linq;
 using Barotrauma.IO;
 using Barotrauma.Extensions;
+using Barotrauma.Steam;
 using Microsoft.Xna.Framework;
 
 namespace Barotrauma
@@ -49,21 +50,18 @@ namespace Barotrauma
                     case ModType.Workshop:
                         {
                             var id = element.GetAttributeUInt64("id", 0);
-                            var pkg = ContentPackageManager.WorkshopPackages.FirstOrDefault(p => p.SteamWorkshopId == id);
-                            if (id != 0 && pkg != null)
-                            {
-                                addPkg(pkg);
-                            }
+                            if (id == 0) { continue; }
+                            var pkg = ContentPackageManager.WorkshopPackages.FirstOrDefault(p =>
+                                p.TryExtractSteamWorkshopId(out var workshopId) && workshopId.Value == id);
+                            if (pkg != null) { addPkg(pkg); }
                         }
                         break;
                     case ModType.Local:
                         {
                             var name = element.GetAttributeString("name", "");
+                            if (name.IsNullOrEmpty()) { continue; }
                             var pkg = ContentPackageManager.LocalPackages.FirstOrDefault(p => p.NameMatches(name));
-                            if (!name.IsNullOrEmpty() && pkg != null)
-                            {
-                                addPkg(pkg);
-                            }
+                            if (pkg != null) { addPkg(pkg); }
                         }
                         break;
                 }
@@ -115,7 +113,10 @@ namespace Barotrauma
                 {
                     case ModType.Workshop:
                         pkgElem.SetAttributeValue("name", pkg.Name);
-                        pkgElem.SetAttributeValue("id", pkg.SteamWorkshopId.ToString());
+                        if (pkg.UgcId.TryUnwrap(out ContentPackageId ugcId))
+                        {
+                            pkgElem.SetAttributeValue("id", ugcId.ToString());
+                        }
                         break;
                     case ModType.Local:
                         pkgElem.SetAttributeValue("name", pkg.Name);

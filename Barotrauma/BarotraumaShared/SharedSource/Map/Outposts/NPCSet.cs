@@ -19,7 +19,7 @@ namespace Barotrauma
 
         public NPCSet(ContentXElement element, NPCSetsFile file) : base(file, element.GetAttributeIdentifier("identifier", ""))
         {
-            Humans = element.Elements().Select(npcElement => new HumanPrefab(npcElement, file)).ToImmutableArray();
+            Humans = element.Elements().Select(npcElement => new HumanPrefab(npcElement, file, Identifier)).ToImmutableArray();
         }
 
         public static HumanPrefab? Get(Identifier setIdentifier, Identifier npcidentifier)

@@ -3,8 +3,8 @@ namespace Barotrauma
 {
     partial class GameMode
     {
-        public virtual void Draw(SpriteBatch spriteBatch)
-        {
-        }
+        public virtual void HUDScaleChanged() { }
+
+        public virtual void Draw(SpriteBatch spriteBatch) { }
     }
 }

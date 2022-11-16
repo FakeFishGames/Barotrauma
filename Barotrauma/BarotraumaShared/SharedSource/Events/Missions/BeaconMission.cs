@@ -100,7 +100,8 @@ namespace Barotrauma
                     if (!connectedSubs.Contains(item.Submarine)) { continue; }
                     if (item.GetComponent<PowerTransfer>() != null ||
                         item.GetComponent<PowerContainer>() != null ||
-                        item.GetComponent<Reactor>() != null)
+                        item.GetComponent<Reactor>() != null ||
+                        item.GetComponent<Sonar>() != null)
                     {
                         item.InvulnerableToDamage = true;
                     }
@@ -162,20 +163,16 @@ namespace Barotrauma
 #endif
         }
 
-        public override void End()
+        protected override bool DetermineCompleted()
         {
-            completed = level.CheckBeaconActive();
-            if (completed)
+            return level.CheckBeaconActive();
+        }
+
+        protected override void EndMissionSpecific(bool completed)
+        {
+            if (completed && level.LevelData != null)
             {
-                if (Prefab.LocationTypeChangeOnCompleted != null)
-                {
-                    ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
-                }
-                GiveReward();
-                if (level.LevelData != null)
-                {
-                    level.LevelData.IsBeaconActive = true;
-                }
+                level.LevelData.IsBeaconActive = true;                
             }
         }
 

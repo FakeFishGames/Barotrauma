@@ -48,7 +48,7 @@ namespace Barotrauma
         WaitingBackground = 6, // Cursor + Hourglass
     }
 
-    public static class GUI
+    static class GUI
     {
         public static GUICanvas Canvas => GUICanvas.Instance;
         public static CursorState MouseCursor = CursorState.Default;
@@ -410,7 +410,7 @@ namespace Barotrauma
                     {
                         y += yStep;
                         DrawString(spriteBatch, new Vector2(10, y),
-                            "Sub pos: " + Submarine.MainSub.Position.ToPoint(),
+                            "Sub pos: " + Submarine.MainSub.WorldPosition.ToPoint(),
                             Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
                     }
 
@@ -879,6 +879,11 @@ namespace Barotrauma
                 }
             }
         }
+
+        public static IEnumerable<GUIComponent> GetAdditions()
+        {
+            return additions;
+        }
         #endregion
 
         public static GUIComponent MouseOn { get; private set; }
@@ -958,7 +963,7 @@ namespace Barotrauma
                 // Wire cursors
                 if (Character.Controlled != null)
                 {
-                    if (Character.Controlled.SelectedConstruction?.GetComponent<ConnectionPanel>() != null)
+                    if (Character.Controlled.SelectedItem?.GetComponent<ConnectionPanel>() != null)
                     {
                         if (Connection.DraggingConnected != null)
                         {
@@ -981,7 +986,7 @@ namespace Barotrauma
                             return editor.GetMouseCursorState();
                         // Portrait area during gameplay
                         case GameScreen _ when !(Character.Controlled?.ShouldLockHud() ?? true):
-                            if (HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition) || CharacterHealth.IsMouseOnHealthBar())
+                            if (CharacterHUD.MouseOnCharacterPortrait() || CharacterHealth.IsMouseOnHealthBar())
                             {
                                 return CursorState.Hand;
                             }
@@ -1018,6 +1023,11 @@ namespace Barotrauma
 
                     if (c.Enabled)
                     {
+                        var dragHandle = c as GUIDragHandle ?? parent as GUIDragHandle;
+                        if (dragHandle != null)
+                        {
+                            return dragHandle.Dragging ? CursorState.Dragging : CursorState.Hand;
+                        }
                         // Some parent elements take priority
                         // but not when the child is a GUIButton or GUITickBox
                         if (!(parent is GUIButton) && !(parent is GUIListBox) ||
@@ -1026,6 +1036,7 @@ namespace Barotrauma
                             if (!c.Rect.Equals(monitorRect)) { return c.HoverCursor; }
                         }
                     }
+
 
                     // Children in list boxes can be interacted with despite not having
                     // a GUIButton inside of them so instead of hard coding we check if
@@ -1097,6 +1108,8 @@ namespace Barotrauma
                                         return list;
                                     case GUIScrollBar bar:
                                         return bar;
+                                    case GUIDragHandle dragHandle:
+                                        return dragHandle;
                                 }
                             }
                             component = parent;
@@ -1344,7 +1357,7 @@ namespace Barotrauma
         /// <param name="createOffset">Should the indicator move based on the camera position?</param>
         /// <param name="overrideAlpha">Override the distance-based alpha value with the specified alpha value</param>
         public static void DrawIndicator(SpriteBatch spriteBatch, in Vector2 worldPosition, Camera cam, in Range<float> visibleRange, Sprite sprite, in Color color,
-            bool createOffset = true, float scaleMultiplier = 1.0f, float? overrideAlpha = null)
+            bool createOffset = true, float scaleMultiplier = 1.0f, float? overrideAlpha = null, LocalizedString label = null)
         {
             Vector2 diff = worldPosition - cam.WorldViewCenter;
             float dist = diff.Length();
@@ -1394,10 +1407,6 @@ namespace Barotrauma
 
                 angle = MathHelper.Lerp(originalAngle, angle, MathHelper.Clamp(((screenDist + 10f) - iconDiff.Length()) / 10f, 0f, 1f));
 
-                /*Vector2 unclampedDiff = new Vector2(
-                    (float)Math.Cos(angle) * screenDist,
-                    (float)-Math.Sin(angle) * screenDist);*/
-
                 iconDiff = new Vector2(
                     (float)Math.Cos(angle) * Math.Min(GameMain.GraphicsWidth * 0.4f, screenDist),
                     (float)-Math.Sin(angle) * Math.Min(GameMain.GraphicsHeight * 0.4f, screenDist));
@@ -1405,7 +1414,20 @@ namespace Barotrauma
                 Vector2 iconPos = cam.WorldToScreen(cam.WorldViewCenter) + iconDiff;
                 sprite.Draw(spriteBatch, iconPos, color * alpha, rotate: 0.0f, scale: symbolScale);
 
-                if (/*unclampedDiff.Length()*/ screenDist - 10 > iconDiff.Length())
+                if (label != null)
+                {
+                    float cursorDist = Vector2.Distance(PlayerInput.MousePosition, iconPos);
+                    if (cursorDist < sprite.size.X * symbolScale)
+                    {
+                        Vector2 textSize = GUIStyle.Font.MeasureString(label);
+                        Vector2 textPos = iconPos + new Vector2(sprite.size.X * symbolScale * 0.7f * Math.Sign(-iconDiff.X), -textSize.Y / 2);
+                        if (iconDiff.X > 0) { textPos.X -= textSize.X; }
+                        DrawString(spriteBatch, textPos + Vector2.One, label, Color.Black);
+                        DrawString(spriteBatch, textPos, label,   color);
+                    }
+                }
+
+                if (screenDist - 10 > iconDiff.Length())
                 {
                     Vector2 normalizedDiff = Vector2.Normalize(targetScreenPos - iconPos);
                     Vector2 arrowOffset = normalizedDiff * sprite.size.X * symbolScale * 0.7f;
@@ -1465,9 +1487,9 @@ namespace Barotrauma
                 depth);
         }
 
-        public static void DrawString(SpriteBatch sb, Vector2 pos, LocalizedString text, Color color, Color? backgroundColor = null, int backgroundPadding = 0, GUIFont font = null)
+        public static void DrawString(SpriteBatch sb, Vector2 pos, LocalizedString text, Color color, Color? backgroundColor = null, int backgroundPadding = 0, GUIFont font = null, ForceUpperCase forceUpperCase = ForceUpperCase.Inherit)
         {
-            DrawString(sb, pos, text.Value, color, backgroundColor, backgroundPadding, font);
+            DrawString(sb, pos, text.Value, color, backgroundColor, backgroundPadding, font, forceUpperCase);
         }
 
         public static void DrawString(SpriteBatch sb, Vector2 pos, string text, Color color, Color? backgroundColor = null, int backgroundPadding = 0, GUIFont font = null, ForceUpperCase forceUpperCase = ForceUpperCase.Inherit)

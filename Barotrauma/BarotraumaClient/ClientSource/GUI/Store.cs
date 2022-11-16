@@ -139,10 +139,10 @@ namespace Barotrauma
             return tab switch
             {
                 StoreTab.Buy => true,
-                StoreTab.Sell => campaignUI.Campaign.AllowedToManageCampaign(Networking.ClientPermissions.SellInventoryItems),
-                StoreTab.SellSub => campaignUI.Campaign.AllowedToManageCampaign(Networking.ClientPermissions.SellSubItems),
+                StoreTab.Sell => CampaignMode.AllowedToManageCampaign(Networking.ClientPermissions.SellInventoryItems),
+                StoreTab.SellSub => CampaignMode.AllowedToManageCampaign(Networking.ClientPermissions.SellSubItems),
                 _ => false,
-            };            
+            };
         }
 
         private void UpdatePermissions()
@@ -238,7 +238,7 @@ namespace Barotrauma
                         errorId = "Store.SelectStore:StoreDoesntExist";
                         msg = $"Error selecting store with identifier \"{identifier}\" at {CurrentLocation}: store with the identifier doesn't exist at the location.";
                     }
-                    DebugConsole.ShowError(msg);
+                    DebugConsole.LogError(msg);
                     GameAnalyticsManager.AddErrorEventOnce(errorId, GameAnalyticsManager.ErrorSeverity.Error, msg);
                 }
             }
@@ -263,7 +263,7 @@ namespace Barotrauma
                 }
                 if (!msg.IsNullOrEmpty())
                 {
-                    DebugConsole.ShowError(msg);
+                    DebugConsole.LogError(msg);
                     GameAnalyticsManager.AddErrorEventOnce(errorId, GameAnalyticsManager.ErrorSeverity.Error, msg);
                 }
             }
@@ -1250,7 +1250,7 @@ namespace Barotrauma
                 }
                 catch (NotImplementedException e)
                 {
-                    DebugConsole.ShowError($"Error getting item price: Uknown store tab type. {e.StackTrace.CleanupStackTrace()}");
+                    DebugConsole.LogError($"Error getting item price: Uknown store tab type. {e.StackTrace.CleanupStackTrace()}");
                 }
             }
 
@@ -1808,7 +1808,7 @@ namespace Barotrauma
             {
                 string errorMsg = $"Error creating a store quantity label text: unknown store tab.\n{e.StackTrace.CleanupStackTrace()}";
 #if DEBUG
-                DebugConsole.ShowError(errorMsg);
+                DebugConsole.LogError(errorMsg);
 #else
                 DebugConsole.AddWarning(errorMsg);
 #endif
@@ -1882,7 +1882,7 @@ namespace Barotrauma
             }
             catch (NotImplementedException e)
             {
-                DebugConsole.ShowError($"Error getting item availability: Uknown store tab type. {e.StackTrace.CleanupStackTrace()}");
+                DebugConsole.LogError($"Error getting item availability: Uknown store tab type. {e.StackTrace.CleanupStackTrace()}");
             }
             if (list != null && list.Find(i => i.ItemPrefab == itemPrefab) is PurchasedItem item)
             {
@@ -1962,7 +1962,7 @@ namespace Barotrauma
             }
             catch (NotImplementedException e)
             {
-                DebugConsole.ShowError($"Error adding an item to the shopping crate: Uknown store tab type. {e.StackTrace.CleanupStackTrace()}");
+                DebugConsole.LogError($"Error adding an item to the shopping crate: Uknown store tab type. {e.StackTrace.CleanupStackTrace()}");
                 return false;
             }
         }
@@ -1982,7 +1982,7 @@ namespace Barotrauma
             }
             catch (NotImplementedException e)
             {
-                DebugConsole.ShowError($"Error clearing the shopping crate: Uknown store tab type. {e.StackTrace.CleanupStackTrace()}");
+                DebugConsole.LogError($"Error clearing the shopping crate: Uknown store tab type. {e.StackTrace.CleanupStackTrace()}");
                 return false;
             }
         }
@@ -2029,7 +2029,7 @@ namespace Barotrauma
             }
             catch (NotImplementedException e)
             {
-                DebugConsole.ShowError($"Error confirming the store transaction: Uknown store tab type. {e.StackTrace.CleanupStackTrace()}");
+                DebugConsole.LogError($"Error confirming the store transaction: Uknown store tab type. {e.StackTrace.CleanupStackTrace()}");
                 return false;
             }
             var itemsToRemove = new List<PurchasedItem>();

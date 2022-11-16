@@ -87,11 +87,11 @@ namespace Barotrauma
                 if (_attackLimb != value)
                 {
                     _previousAttackLimb = _attackLimb;
-                    _previousAttackLimb?.AttachedRope?.Snap();
+                    if (_previousAttackLimb != null && _previousAttackLimb.attack.SnapRopeOnNewAttack) { _previousAttackLimb.AttachedRope?.Snap(); }
                 }
                 else if (_attackLimb != null && _attackLimb.attack.CoolDownTimer <= 0)
                 {
-                    _attackLimb.AttachedRope?.Snap();
+                    if (_attackLimb != null && _attackLimb.attack.SnapRopeOnNewAttack) { _attackLimb.AttachedRope?.Snap(); }
                 }
                 _attackLimb = value;
                 attackVector = null;
@@ -3660,7 +3660,7 @@ namespace Barotrauma
                     targetDir = Vector2.UnitY;
                 }
             }
-            float margin = 30000;
+            float margin = Level.OutsideBoundsCurrentMargin;
             if (pos.X < -margin)
             {
                 // Too far left
@@ -3847,7 +3847,7 @@ namespace Barotrauma
 
         public override void ServerWrite(IWriteMessage msg)
         {
-            msg.Write((byte)State);
+            msg.WriteByte((byte)State);
             PetBehavior?.ServerWrite(msg);
         }
 

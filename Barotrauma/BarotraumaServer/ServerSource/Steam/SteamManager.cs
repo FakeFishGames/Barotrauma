@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Barotrauma.Networking;
 
 namespace Barotrauma.Steam
 {
@@ -52,13 +53,13 @@ namespace Barotrauma.Steam
             Steamworks.SteamServer.Passworded = server.ServerSettings.HasPassword;
             Steamworks.SteamServer.MapName = GameMain.NetLobbyScreen?.SelectedSub?.DisplayName?.Value ?? "";
             Steamworks.SteamServer.SetKey("haspassword", server.ServerSettings.HasPassword.ToString());
-            Steamworks.SteamServer.SetKey("message", GameMain.Server.ServerSettings.ServerMessageText);
+            Steamworks.SteamServer.SetKey("message", server.ServerSettings.ServerMessageText);
             Steamworks.SteamServer.SetKey("version", GameMain.Version.ToString());
-            Steamworks.SteamServer.SetKey("playercount", GameMain.Server.ConnectedClients.Count.ToString());
+            Steamworks.SteamServer.SetKey("playercount", server.ConnectedClients.Count.ToString());
             Steamworks.SteamServer.SetKey("contentpackage", string.Join(",", contentPackages.Select(cp => cp.Name)));
             Steamworks.SteamServer.SetKey("contentpackagehash", string.Join(",", contentPackages.Select(cp => cp.Hash.StringRepresentation)));
-            Steamworks.SteamServer.SetKey("contentpackageid", string.Join(",", contentPackages.Select(cp => cp.SteamWorkshopId)));
-            Steamworks.SteamServer.SetKey("usingwhitelist", (server.ServerSettings.Whitelist != null && server.ServerSettings.Whitelist.Enabled).ToString());
+            Steamworks.SteamServer.SetKey("contentpackageid", string.Join(",", contentPackages.Select(cp
+                => cp.UgcId.TryUnwrap(out var ugcId) ? ugcId.StringRepresentation : "")));
             Steamworks.SteamServer.SetKey("modeselectionmode", server.ServerSettings.ModeSelectionMode.ToString());
             Steamworks.SteamServer.SetKey("subselectionmode", server.ServerSettings.SubSelectionMode.ToString());
             Steamworks.SteamServer.SetKey("voicechatenabled", server.ServerSettings.VoiceChatEnabled.ToString());
@@ -76,12 +77,12 @@ namespace Barotrauma.Steam
             return true;
         }
 
-        public static Steamworks.BeginAuthResult StartAuthSession(byte[] authTicketData, ulong clientSteamID)
+        public static Steamworks.BeginAuthResult StartAuthSession(byte[] authTicketData, SteamId clientSteamID)
         {
             if (!IsInitialized || !Steamworks.SteamServer.IsValid) return Steamworks.BeginAuthResult.ServerNotConnectedToSteam;
 
             DebugConsole.Log("SteamManager authenticating Steam client " + clientSteamID);
-            Steamworks.BeginAuthResult startResult = Steamworks.SteamServer.BeginAuthSession(authTicketData, clientSteamID);
+            Steamworks.BeginAuthResult startResult = Steamworks.SteamServer.BeginAuthSession(authTicketData, clientSteamID.Value);
             if (startResult != Steamworks.BeginAuthResult.OK)
             {
                 DebugConsole.Log("Authentication failed: failed to start auth session (" + startResult.ToString() + ")");
@@ -90,12 +91,12 @@ namespace Barotrauma.Steam
             return startResult;
         }
 
-        public static void StopAuthSession(ulong clientSteamID)
+        public static void StopAuthSession(SteamId clientSteamId)
         {
             if (!IsInitialized || !Steamworks.SteamServer.IsValid) return;
 
-            DebugConsole.Log("SteamManager ending auth session with Steam client " + clientSteamID);
-            Steamworks.SteamServer.EndSession(clientSteamID);
+            DebugConsole.Log("SteamManager ending auth session with Steam client " + clientSteamId);
+            Steamworks.SteamServer.EndSession(clientSteamId.Value);
         }
 
         public static bool CloseServer()

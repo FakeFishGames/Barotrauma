@@ -342,6 +342,21 @@ namespace Barotrauma
         }
         private static Implementation? loadedImplementation;
 
+        private static void ValidateEventID(string eventID)
+        {
+#if DEBUG
+            string[] parts = eventID.Split(':');
+            if (parts.Length > 5)
+            {
+                DebugConsole.ThrowError($"Invalid GameAnalytics event id \"{eventID}\". Only 5 id parts allowed separated by ':'");
+            }
+            if (parts.Any(p => p.Length > 32))
+            {
+                DebugConsole.ThrowError($"Invalid GameAnalytics event id \"{eventID}\". Each id part separated by ':' must be 32 characters or less.");
+            }
+#endif
+        }
+
         public static void AddErrorEvent(ErrorSeverity errorSeverity, string message)
         {
             if (!SendUserStatistics) { return; }
@@ -368,12 +383,14 @@ namespace Barotrauma
         public static void AddDesignEvent(string eventID)
         {
             if (!SendUserStatistics) { return; }
+            ValidateEventID(eventID);
             loadedImplementation?.AddDesignEvent(eventID);
         }
 
         public static void AddDesignEvent(string eventID, double value)
         {
             if (!SendUserStatistics) { return; }
+            ValidateEventID(eventID);
             loadedImplementation?.AddDesignEvent(eventID, value);
         }
 

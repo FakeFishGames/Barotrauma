@@ -3,6 +3,7 @@ using Barotrauma.Extensions;
 using Barotrauma.Networking;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -39,8 +40,6 @@ namespace Barotrauma.Items.Components
         [Editable, Serialize(1.0f, IsPropertySaveable.Yes)]
         public float DeconstructionSpeed { get; set; }
 
-        public override bool RecreateGUIOnResolutionChange => true;
-
         public Deconstructor(Item item, ContentXElement element)
             : base(item, element)
         {
@@ -62,10 +61,17 @@ namespace Barotrauma.Items.Components
             inputContainer = containers[0];
             outputContainer = containers[1];
 
+#if CLIENT
+            Identifier eventIdentifier = new Identifier(nameof(Deconstructor));
+            inputContainer.OnContainedItemsChanged.RegisterOverwriteExisting(eventIdentifier, OnItemSlotsChanged);
+#endif
+
             OnItemLoadedProjSpecific();
         }
 
         partial void OnItemLoadedProjSpecific();
+
+        partial void OnItemSlotsChanged(ItemContainer container);
 
         public override void Update(float deltaTime, Camera cam)
         {
@@ -88,7 +94,7 @@ namespace Barotrauma.Items.Components
 
             ApplyStatusEffects(ActionType.OnActive, deltaTime, null);
 
-            progressTimer += deltaTime * Math.Min(powerConsumption <= 0.0f ? 1 : Voltage, 1.0f);
+            progressTimer += deltaTime * Math.Min(powerConsumption <= 0.0f ? 1 : Voltage, MaxOverVoltageFactor);
 
             float tinkeringStrength = 0f;
             if (repairable.IsTinkering)
@@ -114,7 +120,7 @@ namespace Barotrauma.Items.Components
                     {
                         if ((Entity.Spawner?.IsInRemoveQueue(targetItem) ?? false) || !inputContainer.Inventory.AllItems.Contains(targetItem)) { continue; }
                         var validDeconstructItems = targetItem.Prefab.DeconstructItems.Where(it =>
-                            (it.RequiredDeconstructor.Length == 0 || it.RequiredDeconstructor.Any(r => item.HasTag(r) || item.Prefab.Identifier == r)) &&
+                            it.IsValidDeconstructor(item) &&
                             (it.RequiredOtherItem.Length == 0 || it.RequiredOtherItem.Any(r => items.Any(it => it != targetItem && (it.HasTag(r) || it.Prefab.Identifier == r))))).ToList();
 
                         ProcessItem(targetItem, items, validDeconstructItems, allowRemove: validDeconstructItems.Any() || !targetItem.Prefab.DeconstructItems.Any());                        
@@ -132,9 +138,7 @@ namespace Barotrauma.Items.Components
                 var targetItem = inputContainer.Inventory.LastOrDefault();
                 if (targetItem == null) { return; }
 
-                var validDeconstructItems = targetItem.Prefab.DeconstructItems.Where(it =>
-                    it.RequiredDeconstructor.Length == 0 || it.RequiredDeconstructor.Any(r => item.HasTag(r) || item.Prefab.Identifier == r)).ToList();
-
+                var validDeconstructItems = targetItem.Prefab.DeconstructItems.Where(it => it.IsValidDeconstructor(item)).ToList();
                 float deconstructTime = validDeconstructItems.Any() ? targetItem.Prefab.DeconstructTime / (DeconstructionSpeed * deconstructionSpeedModifier) : 1.0f;
 
                 progressState = Math.Min(progressTimer / deconstructTime, 1.0f);
@@ -197,18 +201,18 @@ namespace Barotrauma.Items.Components
 
                 foreach (DeconstructItem deconstructProduct in products)
                 {
-                    CreateDeconstructProduct(deconstructProduct, inputItems, amountMultiplier);
+                    CreateDeconstructProduct(deconstructProduct, inputItems, (int)(amountMultiplier * deconstructProduct.Amount));
                 }
             }
             else
             {
                 foreach (DeconstructItem deconstructProduct in validDeconstructItems)
                 {
-                    CreateDeconstructProduct(deconstructProduct, inputItems, amountMultiplier);
+                    CreateDeconstructProduct(deconstructProduct, inputItems, (int)(amountMultiplier * deconstructProduct.Amount));
                 }
             }
 
-            void CreateDeconstructProduct(DeconstructItem deconstructProduct, IEnumerable<Item> inputItems, float amountMultiplier)
+            void CreateDeconstructProduct(DeconstructItem deconstructProduct, IEnumerable<Item> inputItems, int amount)
             {
                 float percentageHealth = targetItem.Condition / targetItem.MaxCondition;
 
@@ -276,13 +280,14 @@ namespace Barotrauma.Items.Components
                     user.CheckTalents(AbilityEffectType.OnItemDeconstructedInventory, itemDeconstructedInventory);
                 }
 
-                int amount = (int)amountMultiplier;
                 for (int i = 0; i < amount; i++)
                 {
                     Entity.Spawner.AddItemToSpawnQueue(itemPrefab, outputContainer.Inventory, condition, onSpawned: (Item spawnedItem) =>
                     {
                         spawnedItem.StolenDuringRound = targetItem.StolenDuringRound;
                         spawnedItem.AllowStealing = targetItem.AllowStealing;
+                        spawnedItem.OriginalOutpost = targetItem.OriginalOutpost;
+                        spawnedItem.SpawnedInCurrentOutpost = targetItem.SpawnedInCurrentOutpost;
                         for (int i = 0; i < outputContainer.Capacity; i++)
                         {
                             var containedItem = outputContainer.Inventory.GetItemAt(i);

@@ -22,7 +22,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        const float MaxAttachDistance = 150.0f;
+        private const float MaxAttachDistance = ItemPrefab.DefaultInteractDistance * 0.95f;
 
         //the position(s) in the item that the Character grabs
         protected Vector2[] handlePos;
@@ -295,12 +295,11 @@ namespace Barotrauma.Items.Components
 
             if (attachable)
             {
-                DeattachFromWall();
-
                 if (body != null)
                 {
                     item.body = body;
                 }
+                DeattachFromWall();
             }
 
             if (Pusher != null) { Pusher.Enabled = false; }
@@ -619,6 +618,10 @@ namespace Barotrauma.Items.Components
 #if CLIENT
             item.DrawDepthOffset = SpriteDepthWhenDropped - item.SpriteDepth;
 #endif
+            foreach (LightComponent light in item.GetComponents<LightComponent>())
+            {
+                light.CheckIfNeedsUpdate();
+            }
         }
 
         public override void ParseMsg()
@@ -691,11 +694,29 @@ namespace Barotrauma.Items.Components
                 {
                     item.Drop(character);
                     item.SetTransform(ConvertUnits.ToSimUnits(GetAttachPosition(character)), 0.0f, findNewHull: false);
+                    //the light source won't get properly updated if lighting is disabled (even though the light sprite is still drawn when lighting is disabled)
+                    //so let's ensure the light source is up-to-date
+                    RefreshLightSources(item);
                 }
                 AttachToWall();
             }
             return true;
+
+            static void RefreshLightSources(Item item)
+            {
+                item.body?.UpdateDrawPosition();
+                foreach (var light in item.GetComponents<LightComponent>())
+                {
+                    light.SetLightSourceTransform();
+                }
+                item.GetComponent<ItemContainer>()?.SetContainedItemPositions();
+                foreach (var containedItem in item.ContainedItems)
+                {
+                    RefreshLightSources(containedItem);
+                }
+            }
         }
+
 
         public override bool SecondaryUse(float deltaTime, Character character = null)
         {
@@ -710,10 +731,24 @@ namespace Barotrauma.Items.Components
             mouseDiff = mouseDiff.ClampLength(MaxAttachDistance);
 
             Vector2 userPos = useWorldCoordinates ? user.WorldPosition : user.Position;
-
             Vector2 attachPos = userPos + mouseDiff;
 
-            if (user.Submarine == null && Level.Loaded != null)
+            if (user.Submarine != null)
+            {
+                if (Submarine.PickBody(
+                    ConvertUnits.ToSimUnits(user.Position), 
+                    ConvertUnits.ToSimUnits(user.Position + mouseDiff), collisionCategory: Physics.CollisionWall) != null)
+                {
+                    attachPos = userPos + mouseDiff * Submarine.LastPickedFraction;
+
+                    //round down if we're placing on the right side and vice versa: ensures we don't round the position inside a wall
+                    return
+                        new Vector2(
+                            mouseDiff.X > 0 ? (float)Math.Floor(attachPos.X / Submarine.GridSize.X) * Submarine.GridSize.X : (float)Math.Ceiling(attachPos.X / Submarine.GridSize.X) * Submarine.GridSize.X,
+                            mouseDiff.Y > 0 ? (float)Math.Floor(attachPos.Y / Submarine.GridSize.Y) * Submarine.GridSize.X : (float)Math.Ceiling(attachPos.Y / Submarine.GridSize.Y) * Submarine.GridSize.Y);
+                }
+            }
+            else if (Level.Loaded != null)
             {
                 bool edgeFound = false;
                 foreach (var cell in Level.Loaded.GetCells(attachPos))

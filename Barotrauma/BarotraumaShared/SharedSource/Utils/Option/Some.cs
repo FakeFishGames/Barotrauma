@@ -13,5 +13,13 @@ namespace Barotrauma
         }
 
         public static Option<T> Create(T value) => new Some<T>(value);
+        
+        public override Option<T> Fallback(Option<T> fallback) => this;
+        public override T Fallback(T fallback) => Value;
+
+        public override bool ValueEquals(T value) => Value.Equals(value);
+
+        public override string ToString()
+            => $"Some<{typeof(T).Name}>({Value})";
     }
 }

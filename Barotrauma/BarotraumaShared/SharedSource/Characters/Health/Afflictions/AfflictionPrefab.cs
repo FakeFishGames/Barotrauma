@@ -63,8 +63,10 @@ namespace Barotrauma
             if (HuskedSpeciesName.IsEmpty)
             {
                 DebugConsole.NewMessage($"No 'huskedspeciesname' defined for the husk affliction ({Identifier}) in {element}", Color.Orange);
-                HuskedSpeciesName = "[speciesname]husk".ToIdentifier();
+                HuskedSpeciesName = "husk".ToIdentifier();
             }
+            // Remove "[speciesname]" for backward support (we don't use it anymore)
+            HuskedSpeciesName = HuskedSpeciesName.Remove("[speciesname]").ToIdentifier();
             TargetSpecies = element.GetAttributeIdentifierArray("targets", Array.Empty<Identifier>(), trim: true);
             if (TargetSpecies.Length == 0)
             {
@@ -108,7 +110,6 @@ namespace Barotrauma
 
         public readonly Identifier HuskedSpeciesName;
         public readonly Identifier[] TargetSpecies;
-        public static readonly Identifier Tag = "[speciesname]".ToIdentifier();
 
         public readonly bool TransferBuffs;
         public readonly bool SendMessages;
@@ -404,8 +405,18 @@ namespace Barotrauma
             
             AfflictionType = element.GetAttributeIdentifier("type", "");
             TranslationIdentifier = element.GetAttributeIdentifier("translationoverride", Identifier);
-            Name = TextManager.Get($"AfflictionName.{TranslationIdentifier}").Fallback(element.GetAttributeString("name", ""));
-            Description = TextManager.Get($"AfflictionDescription.{TranslationIdentifier}").Fallback(element.GetAttributeString("description", ""));
+            Name = TextManager.Get($"AfflictionName.{TranslationIdentifier}");
+            string fallbackName = element.GetAttributeString("name", "");
+            if (!string.IsNullOrEmpty(fallbackName))
+            {
+                Name = Name.Fallback(fallbackName);
+            }                
+            Description = TextManager.Get($"AfflictionDescription.{TranslationIdentifier}");
+            string fallbackDescription = element.GetAttributeString("description", "");
+            if (!string.IsNullOrEmpty(fallbackDescription))
+            {
+                Description = Description.Fallback(fallbackDescription);
+            }
             IsBuff = element.GetAttributeBool("isbuff", false);
 
             HealableInMedicalClinic = element.GetAttributeBool("healableinmedicalclinic", 

@@ -278,7 +278,7 @@ namespace Barotrauma
             float cprSuitability = targetCharacter.Oxygen < 0.0f ? -targetCharacter.Oxygen * 100.0f : 0.0f;
 
             //find which treatments are the most suitable to treat the character's current condition
-            targetCharacter.CharacterHealth.GetSuitableTreatments(currentTreatmentSuitabilities, normalize: false, predictFutureDuration: 10.0f);
+            targetCharacter.CharacterHealth.GetSuitableTreatments(currentTreatmentSuitabilities, user: character, normalize: false, predictFutureDuration: 10.0f);
 
             //check if we already have a suitable treatment for any of the afflictions
             foreach (Affliction affliction in GetSortedAfflictions(targetCharacter))

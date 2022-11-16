@@ -450,13 +450,12 @@ namespace Barotrauma
 
         public static Identifier GetHuskedSpeciesName(Identifier speciesName, AfflictionPrefabHusk prefab)
         {
-            return prefab.HuskedSpeciesName.Replace(AfflictionPrefabHusk.Tag, speciesName);
+            return new Identifier(speciesName.Value + prefab.HuskedSpeciesName.Value);
         }
 
         public static Identifier GetNonHuskedSpeciesName(Identifier huskedSpeciesName, AfflictionPrefabHusk prefab)
         {
-            Identifier nonTag = prefab.HuskedSpeciesName.Remove(AfflictionPrefabHusk.Tag);
-            return huskedSpeciesName.Remove(nonTag);
+            return huskedSpeciesName.Remove(prefab.HuskedSpeciesName);
         }
     }
 }

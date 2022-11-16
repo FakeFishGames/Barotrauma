@@ -130,7 +130,7 @@ namespace Barotrauma.Items.Components
 
             if (item.CurrentHull == null) { return; }      
 
-            float powerFactor = Math.Min(currPowerConsumption <= 0.0f || MinVoltage <= 0.0f ? 1.0f : Voltage, 1.0f);
+            float powerFactor = Math.Min(currPowerConsumption <= 0.0f || MinVoltage <= 0.0f ? 1.0f : Voltage, MaxOverVoltageFactor);
 
             currFlow = flowPercentage / 100.0f * maxFlow * powerFactor;
 

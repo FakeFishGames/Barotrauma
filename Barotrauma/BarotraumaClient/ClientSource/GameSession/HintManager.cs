@@ -112,19 +112,19 @@ namespace Barotrauma
             CheckReminders();
         }
 
-        public static void OnSetSelectedConstruction(Character character, Item oldConstruction, Item newConstruction)
+        public static void OnSetSelectedItem(Character character, Item oldItem, Item newItem)
         {
-            if (oldConstruction == newConstruction) { return; }
+            if (oldItem == newItem) { return; }
 
-            if (Character.Controlled != null && Character.Controlled == character && oldConstruction != null && oldConstruction.GetComponent<Ladder>() == null)
+            if (Character.Controlled != null && Character.Controlled == character && oldItem != null && !oldItem.IsLadder)
             {
                 TimeStoppedInteracting = Timing.TotalTime;
             }
 
-            if (newConstruction == null) { return; }
-            if (newConstruction.GetComponent<Ladder>() != null) { return; }
-            if (newConstruction.GetComponent<ConnectionPanel>() is ConnectionPanel cp && cp.User == character) { return; }
-            OnStartedInteracting(character, newConstruction);
+            if (newItem == null) { return; }
+            if (newItem.IsLadder) { return; }
+            if (newItem.GetComponent<ConnectionPanel>() is ConnectionPanel cp && cp.User == character) { return; }
+            OnStartedInteracting(character, newItem);
         }
 
         private static void OnStartedInteracting(Character character, Item item)
@@ -177,10 +177,10 @@ namespace Barotrauma
         private static void CheckIsInteracting()
         {
             if (!CanDisplayHints()) { return; }
-            if (Character.Controlled?.SelectedConstruction == null) { return; }
+            if (Character.Controlled?.SelectedItem == null) { return; }
 
-            if (Character.Controlled.SelectedConstruction.GetComponent<Reactor>() is Reactor reactor && reactor.PowerOn &&
-                Character.Controlled.SelectedConstruction.OwnInventory?.AllItems is IEnumerable<Item> containedItems &&
+            if (Character.Controlled.SelectedItem.GetComponent<Reactor>() is Reactor reactor && reactor.PowerOn &&
+                Character.Controlled.SelectedItem.OwnInventory?.AllItems is IEnumerable<Item> containedItems &&
                 containedItems.Count(i => i.HasTag("reactorfuel")) > 1)
             {
                 if (DisplayHint("onisinteracting.reactorwithextrarods".ToIdentifier())) { return; }
@@ -272,7 +272,7 @@ namespace Barotrauma
             if (!CanDisplayHints()) { return; }
             if (sonar == null || sonar.Removed) { return; }
             if (spottedCharacter == null || spottedCharacter.Removed || spottedCharacter.IsDead) { return; }
-            if (Character.Controlled.SelectedConstruction != sonar) { return; }
+            if (Character.Controlled.SelectedItem != sonar) { return; }
             if (HumanAIController.IsFriendly(Character.Controlled, spottedCharacter)) { return; }
             DisplayHint("onsonarspottedenemy".ToIdentifier());
         }
@@ -305,7 +305,7 @@ namespace Barotrauma
         {
             if (!CanDisplayHints()) { return; }
             if (character != Character.Controlled) { return; }
-            if (character.SelectedConstruction != null || character.FocusedItem != null) { return; }
+            if (character.HasSelectedAnyItem || character.FocusedItem != null) { return; }
             if (item == null || !item.IsShootable || !item.RequireAimToUse) { return; }
             if (TimeStoppedInteracting + 1 > Timing.TotalTime) { return; }
             if (GUI.MouseOn != null) { return; }
@@ -317,7 +317,7 @@ namespace Barotrauma
                 variables: new[] { ("[key]".ToIdentifier(), GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.Aim)) },
                 onUpdate: () =>
                 {
-                    if (character.SelectedConstruction == null && GUI.MouseOn == null && PlayerInput.KeyDown(InputType.Aim))
+                    if (character.SelectedItem == null && GUI.MouseOn == null && PlayerInput.KeyDown(InputType.Aim))
                     {
                         ActiveHintMessageBox.Close();
                     }

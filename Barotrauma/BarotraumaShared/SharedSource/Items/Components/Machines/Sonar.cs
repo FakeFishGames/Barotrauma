@@ -64,6 +64,8 @@ namespace Barotrauma.Items.Components
         private const float MinZoom = 1.0f, MaxZoom = 4.0f;
         private float zoom = 1.0f;
 
+        /// <remarks>Accessed through event actions. Do not remove even if there are no references in code.</remarks>
+        public bool UseDirectionalPing => useDirectionalPing;
         private bool useDirectionalPing = false;
         private Vector2 pingDirection = new Vector2(1.0f, 0.0f);
         private bool useMineralScanner;
@@ -113,13 +115,34 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Editable, Serialize(false, IsPropertySaveable.No, description: "Does the sonar have mineral scanning mode. " +
-                                                                        "Only available in-game when the Item has no Steering component.")]
-        public bool HasMineralScanner { get; set; }
+        private bool hasMineralScanner;
+
+        [Editable, Serialize(false, IsPropertySaveable.No, description: "Does the sonar have mineral scanning mode. ")]
+        public bool HasMineralScanner
+        {
+            get => hasMineralScanner;
+            set
+            {
+#if CLIENT
+                if (controlContainer != null && !hasMineralScanner && value)
+                {
+                    AddMineralScannerSwitchToGUI();
+                }
+#endif
+                hasMineralScanner = value;
+            }
+        }
 
         public float Zoom
         {
             get { return zoom; }
+            set 
+            { 
+                zoom = MathHelper.Clamp(value, MinZoom, MaxZoom);
+#if CLIENT
+                zoomSlider.BarScroll = MathUtils.InverseLerp(MinZoom, MaxZoom, zoom);
+#endif
+            }
         }
 
         public Mode CurrentMode
@@ -143,8 +166,6 @@ namespace Barotrauma.Items.Components
 #endif
             }
         }
-
-        public override bool RecreateGUIOnResolutionChange => true;
 
         public Sonar(Item item, ContentXElement element)
             : base(item, element)
@@ -396,17 +417,17 @@ namespace Barotrauma.Items.Components
 
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            msg.Write(currentMode == Mode.Active);
+            msg.WriteBoolean(currentMode == Mode.Active);
             if (currentMode == Mode.Active)
             {
                 msg.WriteRangedSingle(zoom, MinZoom, MaxZoom, 8);
-                msg.Write(useDirectionalPing);
+                msg.WriteBoolean(useDirectionalPing);
                 if (useDirectionalPing)
                 {
                     float pingAngle = MathUtils.WrapAngleTwoPi(MathUtils.VectorToAngle(pingDirection));
                     msg.WriteRangedSingle(MathUtils.InverseLerp(0.0f, MathHelper.TwoPi, pingAngle), 0.0f, 1.0f, 8);
                 }
-                msg.Write(useMineralScanner);
+                msg.WriteBoolean(useMineralScanner);
             }
         }
     }

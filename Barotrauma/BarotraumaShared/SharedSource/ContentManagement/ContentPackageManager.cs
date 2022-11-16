@@ -7,7 +7,6 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 using Barotrauma.IO;
 using Barotrauma.Steam;
@@ -182,7 +181,7 @@ namespace Barotrauma
             {
                 if (Core != null && !ContentPackageManager.CorePackages.Contains(Core))
                 {
-                    SetCore(ContentPackageManager.WorkshopPackages.Core.FirstOrDefault(p => p.SteamWorkshopId == Core.SteamWorkshopId) ??
+                    SetCore(ContentPackageManager.WorkshopPackages.Core.FirstOrDefault(p => p.UgcId == Core.UgcId) ??
                         ContentPackageManager.CorePackages.First());
                 }
 
@@ -194,7 +193,7 @@ namespace Barotrauma
                         newRegular.Add(p);
                     }
                     else if (ContentPackageManager.WorkshopPackages.Regular.FirstOrDefault(p2
-                                 => p2.SteamWorkshopId == p.SteamWorkshopId) is { } newP)
+                                 => p2.UgcId == p.UgcId) is { } newP)
                     {
                         newRegular.Add(newP);
                     }

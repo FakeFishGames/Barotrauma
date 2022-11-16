@@ -1,5 +1,4 @@
 #nullable enable
-using System;
 using System.Linq;
 using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
@@ -14,18 +13,14 @@ using Microsoft.Xna.Framework.Graphics;
  */
 namespace Barotrauma
 {
-    class TestScreen : EditorScreen
+    internal sealed class TestScreen : EditorScreen
     {
         public override Camera Cam { get; }
 
         private Item? miniMapItem;
 
-        private Submarine? submarine;
         public static Character? dummyCharacter;
         public static Effect? BlueprintEffect;
-        private GUIFrame? container;
-
-        private TabMenu? tabMenu;
 
         public TestScreen()
         {
@@ -43,14 +38,11 @@ namespace Barotrauma
                     return true;
                 }
             };
-
         }
 
         public override void Select()
         {
             base.Select();
-            container = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: "InnerGlow", color: Color.Black);
-            var tab = new GUIFrame(new RectTransform(Vector2.One, container.RectTransform), color: Color.Black * 0.9f);
             if (dummyCharacter is { Removed: false })
             {
                 dummyCharacter?.Remove();
@@ -61,30 +53,50 @@ namespace Barotrauma
             dummyCharacter.Info.Name = "Galldren";
             dummyCharacter.Inventory.CreateSlots();
 
+            miniMapItem = new Item(ItemPrefab.Find(null, "deconstructor".ToIdentifier()), Vector2.Zero, null, 1337, false);
+
+            foreach (ItemComponent component in miniMapItem.Components)
+            {
+                component.OnItemLoaded();
+            }
             Character.Controlled = dummyCharacter;
             GameMain.World.ProcessChanges();
-            tabMenu = new TabMenu();
         }
 
         public override void AddToGUIUpdateList()
         {
             Frame.AddToGUIUpdateList();
-            container?.AddToGUIUpdateList();
-            tabMenu?.AddToGUIUpdateList();
-            // CharacterHUD.AddToGUIUpdateList(dummyCharacter);
-            // dummyCharacter?.SelectedConstruction?.AddToGUIUpdateList();
+            CharacterHUD.AddToGUIUpdateList(dummyCharacter);
+            dummyCharacter?.SelectedItem?.AddToGUIUpdateList();
         }
 
         public override void Update(double deltaTime)
         {
             base.Update(deltaTime);
 
-            if (dummyCharacter is { } dummy)
+            if (dummyCharacter is { } dummy && miniMapItem is { } item)
             {
+                if (dummy.SelectedItem != item)
+                {
+                    dummy.SelectedItem = item;
+                }
+
+                dummy.SelectedItem?.UpdateHUD(Cam, dummy, (float)deltaTime);
+                Vector2 pos = FarseerPhysics.ConvertUnits.ToSimUnits(item.Position);
+
+                foreach (Limb limb in dummy.AnimController.Limbs)
+                {
+                    limb.body.SetTransform(pos, 0.0f);
+                }
+
+                if (dummy.AnimController?.Collider is { } collider)
+                {
+                    collider.SetTransform(pos, 0);
+                }
+
                 dummy.ControlLocalPlayer((float)deltaTime, Cam, false);
                 dummy.Control((float)deltaTime, Cam);
             }
-            tabMenu?.Update((float)deltaTime);
         }
 
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
@@ -93,12 +105,13 @@ namespace Barotrauma
             graphics.Clear(BackgroundColor);
 
             spriteBatch.Begin(SpriteSortMode.BackToFront, transformMatrix: Cam.Transform);
-            // miniMapItem?.Draw(spriteBatch, false);
-            // if (dummyCharacter is { } dummy)
-            // {
-            //     dummyCharacter.DrawFront(spriteBatch, Cam);
-            //     dummyCharacter.Draw(spriteBatch, Cam);
-            // }
+            miniMapItem?.Draw(spriteBatch, false);
+            if (dummyCharacter is { } dummy)
+            {
+                dummyCharacter.DrawFront(spriteBatch, Cam);
+                dummyCharacter.Draw(spriteBatch, Cam);
+            }
+
             spriteBatch.End();
 
             spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState);

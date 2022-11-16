@@ -959,14 +959,14 @@ namespace Barotrauma
         
         public void SharedWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
-            msg.Write((byte)capacity);
+            msg.WriteByte((byte)capacity);
             for (int i = 0; i < capacity; i++)
             {
                 msg.WriteRangedInteger(slots[i].Items.Count, 0, MaxStackSize);
                 for (int j = 0; j < Math.Min(slots[i].Items.Count, MaxStackSize); j++)
                 {
                     var item = slots[i].Items[j];
-                    msg.Write(item?.ID ?? (ushort)0);
+                    msg.WriteUInt16(item?.ID ?? (ushort)0);
                 }
             }
         }

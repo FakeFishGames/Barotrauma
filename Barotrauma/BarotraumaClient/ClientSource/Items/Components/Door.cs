@@ -4,6 +4,7 @@ using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -177,7 +178,7 @@ namespace Barotrauma.Items.Components
 
         public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
         {
-            Color color = item.SpriteColor;
+            Color color = item.GetSpriteColor(withHighlight: true);
             if (brokenSprite == null)
             {
                 //broken doors turn black if no broken sprite has been configured
@@ -220,11 +221,15 @@ namespace Barotrauma.Items.Components
                     color, 0.0f, doorSprite.Origin, item.Scale, item.SpriteEffects, doorSprite.Depth);
             }
 
-            if (brokenSprite != null && item.Health < item.MaxCondition)
+            float maxCondition = item.Repairables.Any() ? 
+                item.Repairables.Min(r => r.RepairThreshold) / 100.0f * item.MaxCondition : 
+                item.MaxCondition;
+            float healthRatio = item.Health / maxCondition;
+            if (brokenSprite != null && healthRatio < 1.0f)
             {
-                Vector2 scale = scaleBrokenSprite ? new Vector2(1.0f - item.Health / item.MaxCondition) : Vector2.One;
+                Vector2 scale = scaleBrokenSprite ? new Vector2(1.0f - healthRatio) : Vector2.One;
                 if (IsHorizontal) { scale.X = 1; } else { scale.Y = 1; }
-                float alpha = fadeBrokenSprite ? 1.0f - item.Health / item.MaxCondition : 1.0f;
+                float alpha = fadeBrokenSprite ? 1.0f - healthRatio : 1.0f;
                 spriteBatch.Draw(brokenSprite.Texture, pos,
                     getSourceRect(brokenSprite, openState, IsHorizontal),
                     color * alpha, 0.0f, brokenSprite.Origin, scale * item.Scale, item.SpriteEffects,

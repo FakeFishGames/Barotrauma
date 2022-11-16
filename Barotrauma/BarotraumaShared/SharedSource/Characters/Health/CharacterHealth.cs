@@ -55,13 +55,27 @@ namespace Barotrauma
                             if (vitalityMultipliers != null)
                             {
                                 float multiplier = subElement.GetAttributeFloat("multiplier", 1.0f);
-                                vitalityMultipliers.ForEach(i => VitalityMultipliers.Add(i, multiplier));
+                                foreach (var vitalityMultiplier in vitalityMultipliers)
+                                {
+                                    VitalityMultipliers.Add(vitalityMultiplier, multiplier);
+                                    if (AfflictionPrefab.Prefabs.None(p => p.Identifier == vitalityMultiplier))
+                                    {
+                                        DebugConsole.AddWarning($"Potentially incorrectly defined vitality multiplier in \"{characterHealth.Character.Name}\". Could not find any afflictions with the identifier \"{vitalityMultiplier}\". Did you mean to define the afflictions by type instead?");
+                                    }
+                                }
                             }
                             var vitalityTypeMultipliers = subElement.GetAttributeIdentifierArray("type", null) ?? subElement.GetAttributeIdentifierArray("types", null);
                             if (vitalityTypeMultipliers != null)
                             {
                                 float multiplier = subElement.GetAttributeFloat("multiplier", 1.0f);
-                                vitalityTypeMultipliers.ForEach(i => VitalityTypeMultipliers.Add(i, multiplier));
+                                foreach (var vitalityTypeMultiplier in vitalityTypeMultipliers)
+                                {
+                                    VitalityTypeMultipliers.Add(vitalityTypeMultiplier, multiplier);
+                                    if (AfflictionPrefab.Prefabs.None(p => p.AfflictionType == vitalityTypeMultiplier))
+                                    {
+                                        DebugConsole.AddWarning($"Potentially incorrectly defined vitality multiplier in \"{characterHealth.Character.Name}\". Could not find any afflictions of the type \"{vitalityTypeMultiplier}\". Did you mean to define the afflictions by identifier instead?");
+                                    }
+                                }
                             }
                             if (vitalityMultipliers == null && VitalityTypeMultipliers == null)
                             {
@@ -895,25 +909,44 @@ namespace Barotrauma
                 float vitalityDecrease = affliction.GetVitalityDecrease(this);
                 if (limbHealth != null)
                 {
-                    if (limbHealth.VitalityMultipliers.ContainsKey(affliction.Prefab.Identifier))
-                    {
-                        vitalityDecrease *= limbHealth.VitalityMultipliers[affliction.Prefab.Identifier];
-                    }
-                    if (limbHealth.VitalityTypeMultipliers.ContainsKey(affliction.Prefab.AfflictionType))
-                    {
-                        vitalityDecrease *= limbHealth.VitalityTypeMultipliers[affliction.Prefab.AfflictionType];
-                    }
+                    vitalityDecrease *= GetVitalityMultiplier(affliction, limbHealth);
                 }
                 Vitality -= vitalityDecrease;
                 affliction.CalculateDamagePerSecond(vitalityDecrease);
             }
-
 #if CLIENT
             if (IsUnconscious)
             {
                 HintManager.OnCharacterUnconscious(Character);
             }
 #endif
+        }
+
+        private float GetVitalityMultiplier(Affliction affliction, LimbHealth limbHealth)
+        {
+            float multiplier = 1.0f;
+            if (limbHealth.VitalityMultipliers.TryGetValue(affliction.Prefab.Identifier, out float vitalityMultiplier))
+            {
+                multiplier *= vitalityMultiplier;
+            }
+            if (limbHealth.VitalityTypeMultipliers.TryGetValue(affliction.Prefab.AfflictionType, out float vitalityTypeMultiplier))
+            {
+                multiplier *= vitalityTypeMultiplier;
+            }
+            return multiplier;
+        }
+
+        /// <summary>
+        /// How much vitality the affliction reduces, taking into account the effects of vitality modifiers on the limb the affliction is on (if limb-based)
+        /// </summary>
+        private float GetVitalityDecreaseWithVitalityMultipliers(Affliction affliction)
+        {
+            float vitalityDecrease = affliction.GetVitalityDecrease(this);
+            if (afflictions.TryGetValue(affliction, out LimbHealth limbHealth) && limbHealth != null)
+            {
+                vitalityDecrease *= GetVitalityMultiplier(affliction, limbHealth);
+            }            
+            return vitalityDecrease;
         }
 
         private void Kill()
@@ -1005,7 +1038,7 @@ namespace Barotrauma
         /// <param name="treatmentSuitability">A dictionary where the key is the identifier of the item and the value the suitability</param>
         /// <param name="normalize">If true, the suitability values are normalized between 0 and 1. If not, they're arbitrary values defined in the medical item XML, where negative values are unsuitable, and positive ones suitable.</param>   
         /// <param name="predictFutureDuration">If above 0, the method will take into account how much currently active status effects while affect the afflictions in the next x seconds.</param>   
-        public void GetSuitableTreatments(Dictionary<Identifier, float> treatmentSuitability, bool normalize, Limb limb = null, bool ignoreHiddenAfflictions = false, float predictFutureDuration = 0.0f)
+        public void GetSuitableTreatments(Dictionary<Identifier, float> treatmentSuitability, bool normalize, Character user, Limb limb = null, bool ignoreHiddenAfflictions = false, float predictFutureDuration = 0.0f)
         {
             //key = item identifier
             //float = suitability
@@ -1029,7 +1062,18 @@ namespace Barotrauma
                 }
 
                 if (strength <= affliction.Prefab.TreatmentThreshold) { continue; }
-                if (ignoreHiddenAfflictions && strength < affliction.Prefab.ShowIconThreshold) { continue; }
+
+                if (ignoreHiddenAfflictions)
+                {
+                    if (user == Character)
+                    {
+                        if (strength < affliction.Prefab.ShowIconThreshold) { continue; }
+                    }
+                    else
+                    {
+                        if (strength < affliction.Prefab.ShowIconToOthersThreshold) { continue; }
+                    }
+                }
 
                 foreach (KeyValuePair<Identifier, float> treatment in affliction.Prefab.TreatmentSuitability)
                 {
@@ -1113,17 +1157,17 @@ namespace Barotrauma
                     activeAfflictions.Add(affliction);
                 }
             }
-            msg.Write((byte)activeAfflictions.Count);
+            msg.WriteByte((byte)activeAfflictions.Count);
             foreach (Affliction affliction in activeAfflictions)
             {
-                msg.Write(affliction.Prefab.UintIdentifier);
+                msg.WriteUInt32(affliction.Prefab.UintIdentifier);
                 msg.WriteRangedSingle(
                     MathHelper.Clamp(affliction.Strength, 0.0f, affliction.Prefab.MaxStrength), 
                     0.0f, affliction.Prefab.MaxStrength, 8);
-                msg.Write((byte)affliction.Prefab.PeriodicEffects.Count());
+                msg.WriteByte((byte)affliction.Prefab.PeriodicEffects.Count);
                 foreach (AfflictionPrefab.PeriodicEffect periodicEffect in affliction.Prefab.PeriodicEffects)
                 {
-                    msg.WriteRangedSingle(affliction.PeriodicEffectTimers[periodicEffect], periodicEffect.MinInterval, periodicEffect.MaxInterval, 8);
+                    msg.WriteRangedSingle(affliction.PeriodicEffectTimers[periodicEffect], 0, periodicEffect.MaxInterval, 8);
                 }
             }
 
@@ -1137,15 +1181,15 @@ namespace Barotrauma
                 limbAfflictions.Add((limbHealth, limbAffliction));                
             }
 
-            msg.Write((byte)limbAfflictions.Count);
+            msg.WriteByte((byte)limbAfflictions.Count);
             foreach (var (limbHealth, affliction) in limbAfflictions)
             {
                 msg.WriteRangedInteger(limbHealths.IndexOf(limbHealth), 0, limbHealths.Count - 1);
-                msg.Write(affliction.Prefab.UintIdentifier);
+                msg.WriteUInt32(affliction.Prefab.UintIdentifier);
                 msg.WriteRangedSingle(
                     MathHelper.Clamp(affliction.Strength, 0.0f, affliction.Prefab.MaxStrength), 
                     0.0f, affliction.Prefab.MaxStrength, 8);
-                msg.Write((byte)affliction.Prefab.PeriodicEffects.Count());
+                msg.WriteByte((byte)affliction.Prefab.PeriodicEffects.Count);
                 foreach (AfflictionPrefab.PeriodicEffect periodicEffect in affliction.Prefab.PeriodicEffects)
                 {
                     msg.WriteRangedSingle(affliction.PeriodicEffectTimers[periodicEffect], periodicEffect.MinInterval, periodicEffect.MaxInterval, 8);
@@ -1194,7 +1238,7 @@ namespace Barotrauma
             }
         }
 
-        public void Load(XElement element)
+        public void Load(XElement element, Func<AfflictionPrefab, bool> afflictionPredicate = null)
         {
             foreach (var subElement in element.Elements())
             {
@@ -1227,6 +1271,7 @@ namespace Barotrauma
                     DebugConsole.ThrowError($"Error while loading character health: affliction \"{id}\" not found.");
                     return;
                 }
+                if (afflictionPredicate != null && !afflictionPredicate.Invoke(afflictionPrefab)) { return; }
                 float strength = afflictionElement.GetAttributeFloat("strength", 0.0f);
                 var irremovableAffliction = irremovableAfflictions.FirstOrDefault(a => a.Prefab == afflictionPrefab);
                 if (irremovableAffliction != null)

@@ -222,13 +222,14 @@ namespace Barotrauma
 
             if (!ResizeHorizontal && !ResizeVertical)
             {
-                if (PlayerInput.PrimaryMouseButtonClicked())
+                if (PlayerInput.PrimaryMouseButtonClicked() && GUI.MouseOn == null)
                 {
                     var item = new Item(new Rectangle((int)position.X, (int)position.Y, (int)(Sprite.size.X * Scale), (int)(Sprite.size.Y * Scale)), this, Submarine.MainSub)
                     {
                         Submarine = Submarine.MainSub
                     };
                     item.SetTransform(ConvertUnits.ToSimUnits(Submarine.MainSub == null ? item.Position : item.Position - Submarine.MainSub.Position), 0.0f);
+                    item.GetComponent<Items.Components.Door>()?.RefreshLinkedGap();
                     item.FindHull();
                     item.Submarine = Submarine.MainSub;
 
@@ -252,7 +253,7 @@ namespace Barotrauma
 
                 if (placePosition == Vector2.Zero)
                 {
-                    if (PlayerInput.PrimaryMouseButtonHeld()) placePosition = position;
+                    if (PlayerInput.PrimaryMouseButtonHeld() && GUI.MouseOn == null) { placePosition = position; }
                 }
                 else
                 {
@@ -270,11 +271,10 @@ namespace Barotrauma
                         item.SetTransform(ConvertUnits.ToSimUnits(Submarine.MainSub == null ? item.Position : item.Position - Submarine.MainSub.Position), 0.0f);
                         item.FindHull();
 
-                        //selected = null;
+                        SubEditorScreen.StoreCommand(new AddOrDeleteCommand(new List<MapEntity> { item }, false));
+
                         return;
                     }
-
-                    position = placePosition;
                 }
             }
 
@@ -282,21 +282,11 @@ namespace Barotrauma
             {
                 potentialContainer.IsHighlighted = true;
             }
-
-
-            //if (PlayerInput.GetMouseState.RightButton == ButtonState.Pressed) selected = null;
-
         }
 
         public override void DrawPlacing(SpriteBatch spriteBatch, Camera cam)
         {
             Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
-
-            if (PlayerInput.SecondaryMouseButtonClicked())
-            {
-                Selected = null;
-                return;
-            }
 
             if (!ResizeHorizontal && !ResizeVertical)
             {

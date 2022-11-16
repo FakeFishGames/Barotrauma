@@ -17,13 +17,13 @@ namespace Barotrauma
 
         public void ServerWrite(IWriteMessage msg)
         {
-            msg.Write(MissionIdentifier);
-            msg.Write(EndMessage);
-            msg.Write(Success);
-            msg.Write((byte)Characters.Count);
+            msg.WriteIdentifier(MissionIdentifier);
+            msg.WriteString(EndMessage);
+            msg.WriteBoolean(Success);
+            msg.WriteByte((byte)Characters.Count);
             foreach (Character character in Characters)
             {
-                msg.Write(character.ID);
+                msg.WriteUInt16(character.ID);
             }
         }
     }

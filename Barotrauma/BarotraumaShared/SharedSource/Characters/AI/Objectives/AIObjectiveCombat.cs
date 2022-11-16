@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using FarseerPhysics.Dynamics;
 using static Barotrauma.AIObjectiveFindSafety;
+using System.Collections.Immutable;
 
 namespace Barotrauma
 {
@@ -512,6 +513,23 @@ namespace Barotrauma
             foreach (var weapon in weaponList)
             {
                 float priority = weapon.CombatPriority;
+                if (weapon is RepairTool repairTool)
+                {
+                    switch (repairTool.UsableIn)
+                    {
+                        case RepairTool.UseEnvironment.Air:
+                            if (character.InWater) { continue; }
+                            break;
+                        case RepairTool.UseEnvironment.Water:
+                            if (!character.InWater) { continue; }
+                            break;
+                        case RepairTool.UseEnvironment.None:
+                            continue;
+                        case RepairTool.UseEnvironment.Both:
+                        default:
+                            break;
+                    }
+                }
                 if (prioritizeMelee)
                 {
                     if (weapon is MeleeWeapon)
@@ -895,11 +913,14 @@ namespace Barotrauma
 
         private void RemoveFollowTarget()
         {
-            if (arrestingRegistered)
+            if (followTargetObjective != null)
             {
-                followTargetObjective.Completed -= OnArrestTargetReached;
+                if (arrestingRegistered)
+                {
+                    followTargetObjective.Completed -= OnArrestTargetReached;
+                }
+                RemoveSubObjective(ref followTargetObjective);
             }
-            RemoveSubObjective(ref followTargetObjective);
             arrestingRegistered = false;
         }
 
@@ -950,7 +971,7 @@ namespace Barotrauma
         /// <summary>
         /// Seeks for more ammunition. Creates a new subobjective.
         /// </summary>
-        private void SeekAmmunition(Identifier[] ammunitionIdentifiers)
+        private void SeekAmmunition(ImmutableHashSet<Identifier> ammunitionIdentifiers)
         {
             retreatTarget = null;
             RemoveSubObjective(ref retreatObjective);
@@ -985,7 +1006,7 @@ namespace Barotrauma
             HumanAIController.UnequipEmptyItems(Weapon);
             RelatedItem item = null;
             Item ammunition = null;
-            Identifier[] ammunitionIdentifiers = null;
+            ImmutableHashSet<Identifier> ammunitionIdentifiers = null;
             if (WeaponComponent.requiredItems.ContainsKey(RelatedItem.RelationType.Contained))
             {
                 foreach (RelatedItem requiredItem in WeaponComponent.requiredItems[RelatedItem.RelationType.Contained])
@@ -1011,8 +1032,8 @@ namespace Barotrauma
                 if (ammunitionIdentifiers != null)
                 {
                     // Try reload ammunition from inventory
-                    bool IsInsideHeadset(Item i) => i.ParentInventory?.Owner is Item ownerItem && ownerItem.HasTag("mobileradio");
-                    ammunition = character.Inventory.FindItem(i => ammunitionIdentifiers.Any(id => id == i.Prefab.Identifier || i.HasTag(id)) && i.Condition > 0 && !IsInsideHeadset(i), recursive: true);
+                    static bool IsInsideHeadset(Item i) => i.ParentInventory?.Owner is Item ownerItem && ownerItem.HasTag("mobileradio");
+                    ammunition = character.Inventory.FindItem(i => CheckItemIdentifiersOrTags(i, ammunitionIdentifiers) && i.Condition > 0 && !IsInsideHeadset(i), recursive: true);
                     if (ammunition != null)
                     {
                         var container = Weapon.GetComponent<ItemContainer>();

@@ -611,7 +611,7 @@ namespace Barotrauma
                 case DecalEventData decalEventData:
                     var decal = decalEventData.Decal;
                     int decalIndex = decals.IndexOf(decal);
-                    msg.Write((byte)(decalIndex < 0 ? 255 : decalIndex));
+                    msg.WriteByte((byte)(decalIndex < 0 ? 255 : decalIndex));
                     msg.WriteRangedSingle(decal.BaseAlpha, 0.0f, 1.0f, 8);
                     break;
                 default:

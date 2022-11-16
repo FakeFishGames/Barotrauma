@@ -73,6 +73,11 @@ namespace Barotrauma
             }
             GUI.DrawString(spriteBatch, pos - Vector2.UnitY * 80.0f, State.ToString(), stateColor, Color.Black);
 
+            if (State == AIState.Attack && selectedTargetingParams != null && selectedTargetingParams.AttackPattern == AttackPattern.Circle)
+            {
+                GUI.DrawString(spriteBatch, pos - Vector2.UnitY * 100.0f, CirclePhase.ToString(), stateColor, Color.Black);
+            }
+
             if (LatchOntoAI != null && (State == AIState.Idle || LatchOntoAI.IsAttachedToSub))
             {
                 foreach (Joint attachJoint in LatchOntoAI.AttachJoints)

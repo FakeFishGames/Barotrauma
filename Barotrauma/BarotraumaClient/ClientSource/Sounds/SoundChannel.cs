@@ -7,7 +7,7 @@ using System.Diagnostics;
 
 namespace Barotrauma.Sounds
 {
-    public class SoundSourcePool : IDisposable
+    class SoundSourcePool : IDisposable
     {
         public uint[] ALSources
         {
@@ -80,7 +80,7 @@ namespace Barotrauma.Sounds
         }
     }
 
-    public class SoundChannel : IDisposable
+    class SoundChannel : IDisposable
     {
         private const int STREAM_BUFFER_SIZE = 8820;
         private short[] streamShortBuffer;

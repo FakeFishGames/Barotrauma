@@ -380,12 +380,16 @@ namespace Barotrauma
             }
 
             LocalizedString toolTip = TextManager.Get($"sp.{propertyTag}.description");
+            if (toolTip.IsNullOrEmpty() && entity.GetType() != property.PropertyInfo.DeclaringType)
+            {
+                Identifier propertyTagForDerivedClass = $"{entity.GetType().Name}.{property.PropertyInfo.Name}".ToIdentifier();
+                toolTip = TextManager.Get($"{propertyTagForDerivedClass}.description", $"sp.{propertyTagForDerivedClass}.description");
+            }
             if (toolTip.IsNullOrEmpty())
             {
-                toolTip =  TextManager.Get($"{propertyTag}.description", $"sp.{fallbackTag}.description");
+                toolTip = TextManager.Get($"{propertyTag}.description", $"sp.{fallbackTag}.description");
             }
-
-            if (toolTip == null)
+            if (toolTip.IsNullOrEmpty())
             {
                 toolTip = property.GetAttribute<Serialize>().Description;
             }

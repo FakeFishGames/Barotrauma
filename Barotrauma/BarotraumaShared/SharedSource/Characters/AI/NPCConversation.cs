@@ -14,24 +14,17 @@ namespace Barotrauma
         public readonly LanguageIdentifier Language;
 
         public readonly List<NPCConversation> Conversations;
-        public readonly Dictionary<Identifier, NPCPersonalityTrait> PersonalityTraits;
 
         public NPCConversationCollection(NPCConversationsFile file, ContentXElement element) : base(file, element.GetAttributeIdentifier("identifier", ""))
         {
             Language = element.GetAttributeIdentifier("language", "English").ToLanguageIdentifier();
             Conversations = new List<NPCConversation>();
-            PersonalityTraits = new Dictionary<Identifier, NPCPersonalityTrait>();
             foreach (var subElement in element.Elements())
             {
                 Identifier elemName = new Identifier(subElement.Name.LocalName);
                 if (elemName == "Conversation")
                 {
                     Conversations.Add(new NPCConversation(subElement));
-                }
-                else if (elemName == "PersonalityTrait")
-                {
-                    var personalityTrait = new NPCPersonalityTrait(subElement);
-                    PersonalityTraits.Add(personalityTrait.Name, personalityTrait);
                 }
             }
         }
@@ -361,10 +354,13 @@ namespace Barotrauma
 
         private static float GetConversationProbability(NPCConversation conversation)
         {
-            int index = previousConversations.IndexOf(conversation);
-            if (index < 0) return 10.0f;
+            //prefer choosing conversations with more flags (= for more specific situations) when possible
+            float baseProbability = MathF.Pow(conversation.Flags.Count + 1, 2);
 
-            return 1.0f - 1.0f / (index + 1);
+            int index = previousConversations.IndexOf(conversation);
+            if (index < 0) { return baseProbability * 10.0f; }
+
+            return baseProbability + 1.0f - 1.0f / (index + 1);
         }
 
 #if DEBUG

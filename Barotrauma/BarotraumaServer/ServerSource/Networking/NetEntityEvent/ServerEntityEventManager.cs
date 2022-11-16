@@ -246,7 +246,7 @@ namespace Barotrauma.Networking
                                 " (created " + (Timing.TotalTime - firstEventToResend.CreateTime).ToString("0.##") + " s ago, " +
                                 (lastSentToAnyoneTime - firstEventToResend.CreateTime).ToString("0.##") + " s older than last event sent to anyone)" +
                                 " Events queued: " + events.Count + ", last sent to all: " + lastSentToAll, ServerLog.MessageType.Error);
-                            server.DisconnectClient(c, "", DisconnectReason.ExcessiveDesyncOldEvent + "/ServerMessage.ExcessiveDesyncOldEvent");
+                            server.DisconnectClient(c, PeerDisconnectPacket.WithReason(DisconnectReason.ExcessiveDesyncOldEvent));
                         }
                     );
                 }
@@ -260,7 +260,7 @@ namespace Barotrauma.Networking
                     {
                         DebugConsole.NewMessage(c.Name + " was kicked because they were expecting a removed network event (" + (c.LastRecvEntityEventID + 1).ToString() + ", last available is " + events[0].ID.ToString() + ")", Color.Red);
                         GameServer.Log(GameServer.ClientLogName(c) + " was kicked because they were expecting a removed network event (" + (c.LastRecvEntityEventID + 1).ToString() + ", last available is " + events[0].ID.ToString() + ")", ServerLog.MessageType.Error);
-                        server.DisconnectClient(c, "", DisconnectReason.ExcessiveDesyncRemovedEvent + "/ServerMessage.ExcessiveDesyncRemovedEvent");
+                        server.DisconnectClient(c, PeerDisconnectPacket.WithReason(DisconnectReason.ExcessiveDesyncRemovedEvent));
                     });
                 }
             }
@@ -269,7 +269,7 @@ namespace Barotrauma.Networking
             foreach (Client timedOutClient in timedOutClients)
             {
                 GameServer.Log("Disconnecting client " + GameServer.ClientLogName(timedOutClient) + ". Syncing the client with the server took too long.", ServerLog.MessageType.Error);
-                GameMain.Server.DisconnectClient(timedOutClient, "", DisconnectReason.SyncTimeout + "/ServerMessage.SyncTimeout");
+                GameMain.Server.DisconnectClient(timedOutClient, PeerDisconnectPacket.WithReason(DisconnectReason.SyncTimeout));
             }
 
             bufferedEvents.RemoveAll(b => b.IsProcessed);
@@ -344,15 +344,15 @@ namespace Barotrauma.Networking
 
             if (client.NeedsMidRoundSync)
             {
-                msg.Write((byte)ServerNetObject.ENTITY_EVENT_INITIAL);                
-                msg.Write(client.UnreceivedEntityEventCount);
-                msg.Write(client.FirstNewEventID);
+                msg.WriteByte((byte)ServerNetObject.ENTITY_EVENT_INITIAL);                
+                msg.WriteUInt16(client.UnreceivedEntityEventCount);
+                msg.WriteUInt16(client.FirstNewEventID);
 
                 Write(msg, eventsToSync, out sentEvents, client);
             }
             else
             {
-                msg.Write((byte)ServerNetObject.ENTITY_EVENT);
+                msg.WriteByte((byte)ServerNetObject.ENTITY_EVENT);
                 Write(msg, eventsToSync, out sentEvents, client);
             }
 
@@ -499,7 +499,7 @@ namespace Barotrauma.Networking
 
                     ReadWriteMessage buffer = new ReadWriteMessage();
                     byte[] temp = msg.ReadBytes(msgLength - 2);
-                    buffer.Write(temp, 0, msgLength - 2);
+                    buffer.WriteBytes(temp, 0, msgLength - 2);
                     buffer.BitPosition = 0;
                     BufferEvent(new BufferedEvent(sender, sender.Character, characterStateID, entity, buffer));
 

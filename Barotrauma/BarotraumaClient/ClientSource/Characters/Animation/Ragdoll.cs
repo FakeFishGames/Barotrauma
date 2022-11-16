@@ -1,15 +1,14 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
+using Barotrauma.Particles;
 using Barotrauma.SpriteDeformations;
-using Barotrauma.Extensions;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
-using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Linq;
 using System.Collections.Generic;
-using Barotrauma.Particles;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -55,21 +54,34 @@ namespace Barotrauma
 
                     if (character.MemState[0].SelectedItem == null || character.MemState[0].SelectedItem.Removed)
                     {
-                        character.SelectedConstruction = null;
+                        character.SelectedItem = null;
                     }
-                    else
+                    else if (character.SelectedItem != character.MemState[0].SelectedItem)
                     {
-                        if (character.SelectedConstruction != character.MemState[0].SelectedItem)
+                        foreach (var ic in character.MemState[0].SelectedItem.Components)
                         {
-                            foreach (var ic in character.MemState[0].SelectedItem.Components)
+                            if (ic.CanBeSelected)
                             {
-                                if (ic.CanBeSelected)
-                                {
-                                    ic.Select(character);
-                                }
+                                ic.Select(character);
                             }
                         }
-                        character.SelectedConstruction = character.MemState[0].SelectedItem;
+                        character.SelectedItem = character.MemState[0].SelectedItem;
+                    }
+
+                    if (character.MemState[0].SelectedSecondaryItem == null || character.MemState[0].SelectedSecondaryItem.Removed)
+                    {
+                        character.SelectedSecondaryItem = null;
+                    }
+                    else if (character.SelectedSecondaryItem != character.MemState[0].SelectedSecondaryItem)
+                    {
+                        foreach (var ic in character.MemState[0].SelectedSecondaryItem.Components)
+                        {
+                            if (ic.CanBeSelected)
+                            {
+                                ic.Select(character);
+                            }
+                        }
+                        character.SelectedSecondaryItem = character.MemState[0].SelectedSecondaryItem;
                     }
 
                     if (character.MemState[0].Animation == AnimController.Animation.CPR)
@@ -201,15 +213,24 @@ namespace Barotrauma
                     {
                         if (serverPos.SelectedItem == null || serverPos.SelectedItem.Removed)
                         {
-                            character.SelectedConstruction = null;
+                            character.SelectedItem = null;
                         }
-                        else if (serverPos.SelectedItem != null)
+                        else if (character.SelectedItem != serverPos.SelectedItem)
                         {
-                            if (character.SelectedConstruction != serverPos.SelectedItem)
-                            {
-                                serverPos.SelectedItem.TryInteract(character, ignoreRequiredItems: true, forceSelectKey: true);
-                            }
-                            character.SelectedConstruction = serverPos.SelectedItem;
+                            serverPos.SelectedItem.TryInteract(character, ignoreRequiredItems: true, forceSelectKey: true);
+                            character.SelectedItem = serverPos.SelectedItem;
+                        }
+                    }
+                    if (localPos.SelectedSecondaryItem != serverPos.SelectedSecondaryItem)
+                    {
+                        if (serverPos.SelectedSecondaryItem == null || serverPos.SelectedSecondaryItem.Removed)
+                        {
+                            character.SelectedSecondaryItem = null;
+                        }
+                        else if (character.SelectedSecondaryItem != serverPos.SelectedSecondaryItem)
+                        {
+                            serverPos.SelectedSecondaryItem.TryInteract(character, ignoreRequiredItems: true, forceSelectKey: true);
+                            character.SelectedSecondaryItem = serverPos.SelectedSecondaryItem;
                         }
                     }
 
@@ -496,12 +517,11 @@ namespace Barotrauma
             float maxDepth = 0.0f;
             float minDepth = 1.0f;
             float depthOffset = 0.0f;
-            var ladder = character.SelectedConstruction?.GetComponent<Ladder>();
-            
-            if (ladder != null)
+  
+            if (character.SelectedSecondaryItem?.GetComponent<Ladder>() is Ladder ladder)
             {
                 CalculateLimbDepths();
-                if (character.WorldPosition.X < character.SelectedConstruction.WorldPosition.X)
+                if (character.WorldPosition.X < character.SelectedSecondaryItem.WorldPosition.X)
                 {
                     //at the left side of the ladder, needs to be drawn in front of the rungs
                     if (maxDepth > ladder.BackgroundSpriteDepth)
@@ -522,16 +542,21 @@ namespace Barotrauma
             else
             {
                 CalculateLimbDepths();
-                var controller = character.SelectedConstruction?.GetComponent<Controller>();
-                if (controller != null && controller.ControlCharacterPose && controller.User == character && controller.UserInCorrectPosition)
+                AdjustDepthOffset(character.SelectedItem);
+                AdjustDepthOffset(character.SelectedSecondaryItem);
+                
+                void AdjustDepthOffset(Item item)
                 {
-                    if (controller.Item.SpriteDepth <= maxDepth || controller.DrawUserBehind)
+                    if (item?.GetComponent<Controller>() is { ControlCharacterPose: true, UserInCorrectPosition: true } controller && controller.User == character)
                     {
-                        depthOffset = Math.Max(controller.Item.GetDrawDepth() + 0.0001f - minDepth, -minDepth);
-                    }
-                    else
-                    {
-                        depthOffset = Math.Max(controller.Item.GetDrawDepth() - 0.0001f - maxDepth, 0.0f);
+                        if (controller.Item.SpriteDepth <= maxDepth || controller.DrawUserBehind)
+                        {
+                            depthOffset = Math.Max(controller.Item.GetDrawDepth() + 0.0001f - minDepth, -minDepth);
+                        }
+                        else
+                        {
+                            depthOffset = Math.Max(controller.Item.GetDrawDepth() - 0.0001f - maxDepth, 0.0f);
+                        }
                     }
                 }
             }

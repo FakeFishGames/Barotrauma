@@ -64,7 +64,7 @@
     <Command name="banid"/>
     <Command name="banip"/>
     <Command name="unban"/>
-    <Command name="unbanip"/>
+    <Command name="unbanaddress"/>
     <Command name="teleportcharacter"/>
     <Command name="mute"/>
     <Command name="unmute"/>

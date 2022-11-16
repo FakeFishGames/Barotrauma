@@ -65,13 +65,7 @@ namespace Barotrauma
     {
         public static readonly PrefabCollection<JobPrefab> Prefabs = new PrefabCollection<JobPrefab>();
 
-        private bool disposed = false;
-        public override void Dispose()
-        {
-            if (disposed) { return; }
-            disposed = true;
-            Prefabs.Remove(this);
-        }
+        public override void Dispose() { }
 
         private static readonly Dictionary<Identifier, float> _itemRepairPriorities = new Dictionary<Identifier, float>();
         /// <summary>
@@ -79,7 +73,7 @@ namespace Barotrauma
         /// </summary>
         public static IReadOnlyDictionary<Identifier, float> ItemRepairPriorities => _itemRepairPriorities;
 
-        public static JobPrefab Get(string identifier)
+        public static JobPrefab Get(Identifier identifier)
         {
             if (Prefabs.ContainsKey(identifier))
             {

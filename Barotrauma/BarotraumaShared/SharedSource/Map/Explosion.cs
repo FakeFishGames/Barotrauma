@@ -33,8 +33,6 @@ namespace Barotrauma
         private readonly float? flashRange;
         private readonly string decal;
         private readonly float decalSize;
-        // used to apply friendly afflictions in an area without effects displaying
-        private readonly bool abilityExplosion;
         private readonly bool applyToSelf;
 
         private readonly float itemRepairStrength;
@@ -70,6 +68,7 @@ namespace Barotrauma
 
             applyToSelf = element.GetAttributeBool("applytoself", true);
 
+            //the "abilityexplosion" field is kept for backwards compatibility (basically the opposite of "showeffects")
             bool showEffects = !element.GetAttributeBool("abilityexplosion", false) && element.GetAttributeBool("showeffects", true);
             sparks = element.GetAttributeBool("sparks", showEffects);
             shockwave = element.GetAttributeBool("shockwave", showEffects);
@@ -131,8 +130,15 @@ namespace Barotrauma
             float displayRange = Attack.Range;
             if (damageSource is Item sourceItem)
             {
-                displayRange *= 1.0f + sourceItem.GetQualityModifier(Quality.StatType.ExplosionRadius);
-                Attack.DamageMultiplier *= 1.0f + sourceItem.GetQualityModifier(Quality.StatType.ExplosionDamage);
+                var launcher = sourceItem.GetComponent<Projectile>()?.Launcher;
+                displayRange *= 
+                    1.0f 
+                    + sourceItem.GetQualityModifier(Quality.StatType.ExplosionRadius) 
+                    + (launcher?.GetQualityModifier(Quality.StatType.ExplosionRadius) ?? 0);
+                Attack.DamageMultiplier *= 
+                    1.0f 
+                    + sourceItem.GetQualityModifier(Quality.StatType.ExplosionDamage)
+                    + (launcher?.GetQualityModifier(Quality.StatType.ExplosionDamage) ?? 0);
                 Attack.SourceItem ??= sourceItem;
             }
 
@@ -203,7 +209,7 @@ namespace Barotrauma
                 }
             }
 
-            if (MathUtils.NearlyEqual(force, 0.0f) && MathUtils.NearlyEqual(Attack.Stun, 0.0f) && MathUtils.NearlyEqual(Attack.GetTotalDamage(false), 0.0f) && !abilityExplosion)
+            if (MathUtils.NearlyEqual(force, 0.0f) && MathUtils.NearlyEqual(Attack.Stun, 0.0f) && Attack.Afflictions.None())
             {
                 return;
             }
@@ -293,12 +299,13 @@ namespace Barotrauma
                 Dictionary<Limb, float> distFactors = new Dictionary<Limb, float>();
                 Dictionary<Limb, float> damages = new Dictionary<Limb, float>();
                 List<Affliction> modifiedAfflictions = new List<Affliction>();
+
                 foreach (Limb limb in c.AnimController.Limbs)
                 {
                     if (limb.IsSevered || limb.IgnoreCollisions || !limb.body.Enabled) { continue; }
 
                     float dist = Vector2.Distance(limb.WorldPosition, worldPosition);
-                    
+
                     //calculate distance from the "outer surface" of the physics body
                     //doesn't take the rotation of the limb into account, but should be accurate enough for this purpose
                     float limbRadius = limb.body.GetMaxExtent();
@@ -313,17 +320,27 @@ namespace Barotrauma
                     {
                         distFactor *= GetObstacleDamageMultiplier(explosionPos, worldPosition, limb.SimPosition);
                     }
-                    distFactors.Add(limb, distFactor);
+                    if (distFactor > 0)
+                    {
+                        distFactors.Add(limb, distFactor);
+                    }
+                }
 
+                foreach (Limb limb in distFactors.Keys)
+                {
+                    if (!distFactors.TryGetValue(limb, out float distFactor)) { continue; }
                     modifiedAfflictions.Clear();
                     foreach (Affliction affliction in attack.Afflictions.Keys)
                     {
-                        //previously the damage would be divided by the number of limbs (the intention was to prevent characters with more limbs taking more damage from explosions)
-                        //that didn't work well on large characters like molochs and endworms: the explosions tend to only damage one or two of their limbs, and since the characters
-                        //have lots of limbs, they tended to only take a fraction of the damage they should
-
-                        //now we just divide by 10, which keeps the damage to normal-sized characters roughly the same as before and fixes the large characters
-                        modifiedAfflictions.Add(affliction.CreateMultiplied(distFactor / 10));
+                        // Shouldn't go above 15, or the damage can be unexpectedly low -> doesn't break armor
+                        // Effectively this makes large explosions more effective against large creatures (because more limbs are affected), but I don't think that's necessarily a bad thing.
+                        float limbCountFactor = Math.Min(distFactors.Count, 15);
+                        float dmgMultiplier = distFactor;
+                        if (affliction.DivideByLimbCount)
+                        {
+                            dmgMultiplier /= limbCountFactor;
+                        }
+                        modifiedAfflictions.Add(affliction.CreateMultiplied(dmgMultiplier, affliction.Probability));
                     }
                     c.LastDamageSource = damageSource;
                     if (attacker == null)
@@ -368,7 +385,7 @@ namespace Barotrauma
                         Vector2 limbDiff = Vector2.Normalize(limb.WorldPosition - worldPosition);
                         if (!MathUtils.IsValid(limbDiff)) { limbDiff = Rand.Vector(1.0f); }
                         Vector2 impulse = limbDiff * distFactor * force;
-                        Vector2 impulsePoint = limb.SimPosition - limbDiff * limbRadius;
+                        Vector2 impulsePoint = limb.SimPosition - limbDiff * limb.body.GetMaxExtent();
                         limb.body.ApplyLinearImpulse(impulse, impulsePoint, maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.2f);
                     }
                 }

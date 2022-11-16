@@ -19,7 +19,8 @@ namespace Barotrauma.Items.Components
             Human = 1,
             Monster = 2,
             Wall = 4,
-            Any = Human | Monster | Wall,
+            Pet = 8,
+            Any = Human | Monster | Wall | Pet,
         }
 
         [Serialize(false, IsPropertySaveable.No, description: "Has the item currently detected movement. Intended to be used by StatusEffect conditionals (setting this value in XML has no effect).")]
@@ -253,7 +254,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (Target.HasFlag(TargetType.Human) || Target.HasFlag(TargetType.Monster))
+            if (Target.HasFlag(TargetType.Human) || Target.HasFlag(TargetType.Pet) || Target.HasFlag(TargetType.Monster))
             {
                 foreach (Character c in Character.CharacterList)
                 {
@@ -267,7 +268,11 @@ namespace Barotrauma.Items.Components
                     {
                         if (!Target.HasFlag(TargetType.Human)) { continue; }
                     }
-                    else if (!c.IsPet)
+                    else if (c.IsPet)
+                    {
+                        if (!Target.HasFlag(TargetType.Pet)) { continue; }
+                    }
+                    else
                     {
                         if (!Target.HasFlag(TargetType.Monster)) { continue; }
                     }

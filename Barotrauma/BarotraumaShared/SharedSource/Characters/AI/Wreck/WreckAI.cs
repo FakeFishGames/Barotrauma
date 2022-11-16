@@ -444,7 +444,7 @@ namespace Barotrauma
 #if SERVER
         public void ServerEventWrite(IWriteMessage msg, Client client, NetEntityEvent.IData extraData = null)
         {
-            msg.Write(IsAlive);
+            msg.WriteBoolean(IsAlive);
         }
 #endif
     }

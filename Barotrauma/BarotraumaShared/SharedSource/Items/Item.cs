@@ -99,6 +99,7 @@ namespace Barotrauma
         private bool hasComponentsToDraw;
 
         public PhysicsBody body;
+        private float waterDragCoefficient;
 
         public readonly XElement StaticBodyConfig;
 
@@ -303,6 +304,10 @@ namespace Barotrauma
                     {
                         light.SetLightSourceTransform();
                     }
+                    foreach (var turret in GetComponents<Turret>())
+                    {
+                        turret.UpdateLightComponents();
+                    }
                 }
 #endif
             }
@@ -417,6 +422,8 @@ namespace Barotrauma
             }
         }
 
+        public Color? HighlightColor;
+
 
         [Serialize("", IsPropertySaveable.Yes)]
 
@@ -458,7 +465,7 @@ namespace Barotrauma
 
         [Serialize(0.0f, IsPropertySaveable.No)]
         /// <summary>
-        /// Can be used by status effects or conditionals to modify the sound range
+        /// Can be used by status effects or conditionals to modify the sight range
         /// </summary>
         public new float SightRange
         {
@@ -518,6 +525,7 @@ namespace Barotrauma
             {
                 float prevConditionPercentage = ConditionPercentage;
                 healthMultiplier = MathHelper.Clamp(value, 0.0f, float.PositiveInfinity);
+                RecalculateConditionValues();
                 condition = MaxCondition * prevConditionPercentage / 100.0f;
                 RecalculateConditionValues();
             }
@@ -746,6 +754,9 @@ namespace Barotrauma
             get { return Prefab.Linkable; }
         }
 
+        public float WorldPositionX => WorldPosition.X;
+        public float WorldPositionY => WorldPosition.Y;
+
         /// <summary>
         /// Can be used to move the item from XML (e.g. to correct the positions of items whose sprite origin has been changed)
         /// </summary>
@@ -806,6 +817,10 @@ namespace Barotrauma
             }
         }
 
+        public bool IsLadder { get; }
+
+        public bool IsSecondaryItem { get; }
+
         public Item(ItemPrefab itemPrefab, Vector2 position, Submarine submarine, ushort id = Entity.NullEntityID, bool callOnItemLoaded = true)
             : this(new Rectangle(
                 (int)(position.X - itemPrefab.Sprite.size.X / 2 * itemPrefab.Scale), 
@@ -852,12 +867,14 @@ namespace Barotrauma
 
             SetActiveSprite();
 
+            ContentXElement bodyElement = null;
             foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "body":
-                        float density = subElement.GetAttributeFloat("density", 10.0f);
+                        bodyElement = subElement;
+                        float density = subElement.GetAttributeFloat("density", Physics.NeutralDensity);
                         float minDensity = subElement.GetAttributeFloat("mindensity", density);
                         float maxDensity = subElement.GetAttributeFloat("maxdensity", density);
                         if (minDensity < maxDensity)
@@ -896,6 +913,7 @@ namespace Barotrauma
                         }
                         body = new PhysicsBody(subElement, ConvertUnits.ToSimUnits(Position), Scale, density, collisionCategory, collidesWith, findNewContacts: false);
                         body.FarseerBody.AngularDamping = subElement.GetAttributeFloat("angulardamping", 0.2f);
+                        body.FarseerBody.LinearDamping = subElement.GetAttributeFloat("lineardamping", 0.1f);
                         body.FarseerBody.LinearDamping = subElement.GetAttributeFloat("lineardamping", 0.1f);
                         body.UserData = this;
                         break;
@@ -986,6 +1004,8 @@ namespace Barotrauma
             if (body != null)
             {
                 body.Submarine = submarine;
+                waterDragCoefficient = bodyElement.GetAttributeFloat("waterdragcoefficient", 
+                    GetComponent<Projectile>() != null || GetComponent<Throwable>() != null ? 0.1f : 1.0f);
             }
 
             //cache connections into a dictionary for faster lookups
@@ -1012,6 +1032,9 @@ namespace Barotrauma
             }
 
             qualityComponent = GetComponent<Quality>();
+
+            IsLadder = GetComponent<Ladder>() != null;
+            IsSecondaryItem = IsLadder || GetComponent<Controller>() is { IsSecondaryItem: true };
 
             InitProjSpecific();
 
@@ -1519,7 +1542,7 @@ namespace Barotrauma
             return false;
         }
 
-        private bool ConditionalMatches(PropertyConditional conditional)
+        public bool ConditionalMatches(PropertyConditional conditional)
         {
             if (string.IsNullOrEmpty(conditional.TargetItemComponentName))
             {
@@ -1887,10 +1910,22 @@ namespace Barotrauma
 
             if (needsWaterCheck)
             {
+                bool wasInWater = inWater;
                 inWater = IsInWater();
                 bool waterProof = WaterProof;
                 if (inWater)
                 {
+                    //the item has gone through the surface of the water
+                    if (!wasInWater && CurrentHull != null && body != null && body.LinearVelocity.Y < -1.0f)
+                    {
+                        Splash();
+                        if (GetComponent<Projectile>() is not { IsActive: true })
+                        {
+                            //slow the item down (not physically accurate, but looks good enough)
+                            body.LinearVelocity *= 0.2f;
+                        }                   
+                    }
+
                     Item container = this.Container;
                     while (!waterProof && container != null)
                     {
@@ -1918,7 +1953,8 @@ namespace Barotrauma
             }
         }
 
-                
+        partial void Splash();
+
         public void UpdateTransform()
         {
             if (body == null) { return; }
@@ -2006,23 +2042,47 @@ namespace Barotrauma
             {
                 float floor = CurrentHull.Rect.Y - CurrentHull.Rect.Height;
                 float waterLevel = floor + CurrentHull.WaterVolume / CurrentHull.Rect.Width;
-
                 //forceFactor is 1.0f if the item is completely submerged, 
                 //and goes to 0.0f as the item goes through the surface
                 forceFactor = Math.Min((waterLevel - Position.Y) / rect.Height, 1.0f);
-                if (forceFactor <= 0.0f) return;
+                if (forceFactor <= 0.0f) { return; }
             }
 
+            bool moving = body.LinearVelocity.LengthSquared() > 0.001f;
             float volume = body.Mass / body.Density;
+            if (moving)
+            {
+                //measure velocity from the velocity of the front of the item and apply the drag to the other end to get the drag to turn the item the "pointy end first"
 
-            var uplift = -GameMain.World.Gravity * forceFactor * volume;
+                //a more "proper" (but more expensive) way to do this would be to e.g. calculate the drag separately for each edge of the fixture
+                //but since we define the "front" as the "pointy end", we can cheat a bit by using that, and actually even make the drag appear more realistic in some cases
+                //(e.g. a bullet with a rectangular fixture would be just as "aerodynamic" travelling backwards, but with this method we get it to turn the correct way)
+                Vector2 localFront = body.GetLocalFront();
+                Vector2 frontVel = body.FarseerBody.GetLinearVelocityFromLocalPoint(localFront);
 
-            Vector2 drag = body.LinearVelocity * volume;
+                float speed = frontVel.Length();
+                float drag = speed * speed * waterDragCoefficient * volume * Physics.NeutralDensity;
+                //very small drag on active projectiles to prevent affecting their trajectories much
+                if (body.FarseerBody.IsBullet) { drag *= 0.1f; }
+                Vector2 dragVec = -frontVel / speed * drag;
 
-            body.ApplyForce((uplift - drag) * 10.0f);
+                //apply the force slightly towards the back of the item to make it turn the front first
+                Vector2 back = body.FarseerBody.GetWorldPoint(-localFront * 0.01f);
+                body.ApplyForce(dragVec, back);
+            }
+
+            //no need to apply buoyancy if the item is still and not light enough to float
+            if (moving || body.Density < 10.0f)
+            {
+                Vector2 buoyancy = -GameMain.World.Gravity * forceFactor * volume * Physics.NeutralDensity;
+                body.ApplyForce(buoyancy);
+            }
 
             //apply simple angular drag
-            body.ApplyTorque(body.AngularVelocity * volume * -0.05f);
+            if (Math.Abs(body.AngularVelocity) > 0.0001f)
+            {
+                body.ApplyTorque(body.AngularVelocity * volume * -0.1f);
+            }
         }
 
 
@@ -2128,7 +2188,7 @@ namespace Barotrauma
         /// <summary>
         /// Note: This function generates garbage and might be a bit too heavy to be used once per frame.
         /// </summary>
-        public List<T> GetConnectedComponents<T>(bool recursive = false, bool allowTraversingBackwards = true) where T : ItemComponent
+        public List<T> GetConnectedComponents<T>(bool recursive = false, bool allowTraversingBackwards = true, Func<Connection, bool> connectionFilter = null) where T : ItemComponent
         {
             List<T> connectedComponents = new List<T>();
 
@@ -2144,6 +2204,7 @@ namespace Barotrauma
 
             foreach (Connection c in connectionPanel.Connections)
             {
+                if (connectionFilter != null && !connectionFilter.Invoke(c)) { continue; }
                 var recipients = c.Recipients;
                 foreach (Connection recipient in recipients)
                 {
@@ -2491,16 +2552,30 @@ namespace Barotrauma
 
             if (user != null)
             {
-                if (user.SelectedConstruction == this)
+                if (user.SelectedItem == this)
                 {
                     if (user.IsKeyHit(InputType.Select) || forceSelectKey)
                     {
-                        user.SelectedConstruction = null;
+                        user.SelectedItem = null;
+                    }
+                }
+                else if (user.SelectedSecondaryItem == this)
+                {
+                    if (user.IsKeyHit(InputType.Select) || forceSelectKey)
+                    {
+                        user.SelectedSecondaryItem = null;
                     }
                 }
                 else if (selected)
                 {
-                    user.SelectedConstruction = this;
+                    if (IsSecondaryItem)
+                    {
+                        user.SelectedSecondaryItem = this;
+                    }
+                    else
+                    {
+                        user.SelectedItem = this;
+                    }
                 }
             }
 
@@ -2796,77 +2871,77 @@ namespace Barotrauma
                 var propertyOwner = allProperties.Find(p => p.property == property);
                 if (allProperties.Count > 1)
                 {
-                    msg.Write((byte)allProperties.FindIndex(p => p.property == property));
+                    msg.WriteByte((byte)allProperties.FindIndex(p => p.property == property));
                 }
 
                 object value = property.GetValue(propertyOwner.obj);
                 if (value is string stringVal)
                 {
-                    msg.Write(stringVal);
+                    msg.WriteString(stringVal);
                 }
                 else if (value is Identifier idValue)
                 {
-                    msg.Write(idValue);
+                    msg.WriteIdentifier(idValue);
                 }
                 else if (value is float floatVal)
                 {
-                    msg.Write(floatVal);
+                    msg.WriteSingle(floatVal);
                 }
                 else if (value is int intVal)
                 {
-                    msg.Write(intVal);
+                    msg.WriteInt32(intVal);
                 }
                 else if (value is bool boolVal)
                 {
-                    msg.Write(boolVal);
+                    msg.WriteBoolean(boolVal);
                 }
                 else if (value is Color color)
                 {
-                    msg.Write(color.R);
-                    msg.Write(color.G);
-                    msg.Write(color.B);
-                    msg.Write(color.A);
+                    msg.WriteByte(color.R);
+                    msg.WriteByte(color.G);
+                    msg.WriteByte(color.B);
+                    msg.WriteByte(color.A);
                 }
                 else if (value is Vector2 vector2)
                 {
-                    msg.Write(vector2.X);
-                    msg.Write(vector2.Y);
+                    msg.WriteSingle(vector2.X);
+                    msg.WriteSingle(vector2.Y);
                 }
                 else if (value is Vector3 vector3)
                 {
-                    msg.Write(vector3.X);
-                    msg.Write(vector3.Y);
-                    msg.Write(vector3.Z);
+                    msg.WriteSingle(vector3.X);
+                    msg.WriteSingle(vector3.Y);
+                    msg.WriteSingle(vector3.Z);
                 }
                 else if (value is Vector4 vector4)
                 {
-                    msg.Write(vector4.X);
-                    msg.Write(vector4.Y);
-                    msg.Write(vector4.Z);
-                    msg.Write(vector4.W);
+                    msg.WriteSingle(vector4.X);
+                    msg.WriteSingle(vector4.Y);
+                    msg.WriteSingle(vector4.Z);
+                    msg.WriteSingle(vector4.W);
                 }
                 else if (value is Point point)
                 {
-                    msg.Write(point.X);
-                    msg.Write(point.Y);
+                    msg.WriteInt32(point.X);
+                    msg.WriteInt32(point.Y);
                 }
                 else if (value is Rectangle rect)
                 {
-                    msg.Write(rect.X);
-                    msg.Write(rect.Y);
-                    msg.Write(rect.Width);
-                    msg.Write(rect.Height);
+                    msg.WriteInt32(rect.X);
+                    msg.WriteInt32(rect.Y);
+                    msg.WriteInt32(rect.Width);
+                    msg.WriteInt32(rect.Height);
                 }
                 else if (value is Enum)
                 {
-                    msg.Write((int)value);
+                    msg.WriteInt32((int)value);
                 }
                 else if (value is string[] a)
                 {
-                    msg.Write(a.Length);
+                    msg.WriteInt32(a.Length);
                     for (int i = 0; i < a.Length; i++)
                     {
-                        msg.Write(a[i] ?? "");
+                        msg.WriteString(a[i] ?? "");
                     }
                 }
                 else
@@ -3274,10 +3349,9 @@ namespace Barotrauma
                 item.PurchasedNewSwap = false;
             }
 
-            float condition = element.GetAttributeFloat("condition", item.MaxCondition);
-            item.condition = MathHelper.Clamp(condition, 0, item.MaxCondition);
+            item.condition = element.GetAttributeFloat("condition", item.condition);
+            item.condition = MathHelper.Clamp(item.condition, 0, item.MaxCondition);
             item.lastSentCondition = item.condition;
-
             item.RecalculateConditionValues();
             item.SetActiveSprite();
 
@@ -3433,7 +3507,8 @@ namespace Barotrauma
 
             foreach (Character character in Character.CharacterList)
             {
-                if (character.SelectedConstruction == this) { character.SelectedConstruction = null; }
+                if (character.SelectedItem == this) { character.SelectedItem = null; }
+                if (character.SelectedSecondaryItem == this) { character.SelectedSecondaryItem = null; }
             }
 
             Door door = GetComponent<Door>();

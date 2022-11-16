@@ -11,7 +11,7 @@ using Barotrauma.Sounds;
 
 namespace Barotrauma.Media
 {
-    public partial class Video : IDisposable
+    partial class Video : IDisposable
     {
         private static Internal.EventCallback VideoFrameCallback;
         private static Internal.EventCallback VideoAudioCallback;

@@ -1,8 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
-
-namespace Barotrauma.Abilities
+﻿namespace Barotrauma.Abilities
 {
     class CharacterAbilityUnlockTree : CharacterAbility
     {
@@ -14,22 +10,19 @@ namespace Barotrauma.Abilities
         {
             if (!TalentTree.JobTalentTrees.TryGet(Character.Info.Job.Prefab.Identifier, out TalentTree talentTree)) { return; }
 
-            var subTree = talentTree.TalentSubTrees.Find(t => t.TalentOptionStages.Any(ts => ts.Talents.Contains(CharacterTalent.Prefab)));
+            var subTree = talentTree.TalentSubTrees.Find(t => t.AllTalentIdentifiers.Contains(CharacterTalent.Prefab.Identifier));
             if (subTree == null) { return; }
             
             subTree.ForceUnlock = true;
             if (!addingFirstTime) { return; }
 
-            foreach (var talentOption in subTree.TalentOptionStages)
+            foreach (var talentId in subTree.AllTalentIdentifiers)
             {
-                foreach (var talent in talentOption.Talents)
+                if (talentId == CharacterTalent.Prefab.Identifier) { continue; }
+                if (Character.GiveTalent(talentId))
                 {
-                    if (talent == CharacterTalent.Prefab) { continue; }
-                    if (Character.GiveTalent(talent))
-                    {
-                        Character.Info.AdditionalTalentPoints++;
-                    }
-                }
+                    Character.Info.AdditionalTalentPoints++;
+                }                
             }            
         }
     }

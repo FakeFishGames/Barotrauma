@@ -52,7 +52,7 @@ namespace Barotrauma.Networking
                 }
             }
 
-            public const int MaxPacketsPerUpdate = 4;
+            public const int MaxPacketsPerUpdate = 10;
             public float PacketsPerUpdate { get; set; } = 1.0f;
 
             public byte[] Data { get; }
@@ -219,27 +219,27 @@ namespace Barotrauma.Networking
                 if (!transfer.Acknowledged)
                 {
                     message = new WriteOnlyMessage();
-                    message.Write((byte)ServerPacketHeader.FILE_TRANSFER);
+                    message.WriteByte((byte)ServerPacketHeader.FILE_TRANSFER);
 
                     //if the recipient is the owner of the server (= a client running the server from the main exe)
                     //we don't need to send anything, the client can just read the file directly
                     if (transfer.Connection == GameMain.Server.OwnerConnection)
                     {
-                        message.Write((byte)FileTransferMessageType.TransferOnSameMachine);
-                        message.Write((byte)transfer.ID);
-                        message.Write((byte)transfer.FileType);
-                        message.Write(transfer.FilePath);
+                        message.WriteByte((byte)FileTransferMessageType.TransferOnSameMachine);
+                        message.WriteByte((byte)transfer.ID);
+                        message.WriteByte((byte)transfer.FileType);
+                        message.WriteString(transfer.FilePath);
                         peer.Send(message, transfer.Connection, DeliveryMethod.Unreliable);
                         transfer.Status = FileTransferStatus.Finished;
                     }
                     else
                     {
-                        message.Write((byte)FileTransferMessageType.Initiate);
-                        message.Write((byte)transfer.ID);
-                        message.Write((byte)transfer.FileType);
+                        message.WriteByte((byte)FileTransferMessageType.Initiate);
+                        message.WriteByte((byte)transfer.ID);
+                        message.WriteByte((byte)transfer.FileType);
                         //message.Write((ushort)chunkLen);
-                        message.Write(transfer.Data.Length);
-                        message.Write(transfer.FileName);
+                        message.WriteInt32(transfer.Data.Length);
+                        message.WriteString(transfer.FileName);
                         peer.Send(message, transfer.Connection, DeliveryMethod.Unreliable);
 
                         transfer.Status = FileTransferStatus.Sending;
@@ -262,13 +262,13 @@ namespace Barotrauma.Networking
                     int sendByteCount = (remaining > chunkLen ? chunkLen : (int)remaining);
                     
                     message = new WriteOnlyMessage();
-                    message.Write((byte)ServerPacketHeader.FILE_TRANSFER);
-                    message.Write((byte)FileTransferMessageType.Data);
+                    message.WriteByte((byte)ServerPacketHeader.FILE_TRANSFER);
+                    message.WriteByte((byte)FileTransferMessageType.Data);
 
-                    message.Write((byte)transfer.ID);
-                    message.Write(transfer.SentOffset);
+                    message.WriteByte((byte)transfer.ID);
+                    message.WriteInt32(transfer.SentOffset);
 
-                    message.Write((ushort)sendByteCount);
+                    message.WriteUInt16((ushort)sendByteCount);
                     int chunkDestPos = message.BytePosition;
                     message.BitPosition += sendByteCount * 8;
                     message.LengthBits = Math.Max(message.LengthBits, message.BitPosition);

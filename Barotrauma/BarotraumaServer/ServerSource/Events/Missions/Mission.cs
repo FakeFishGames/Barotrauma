@@ -12,18 +12,22 @@ namespace Barotrauma
 
             LocalizedString header = messageIndex < Headers.Length ? Headers[messageIndex] : "";
             LocalizedString message = messageIndex < Messages.Length ? Messages[messageIndex] : "";
+            if (!message.IsNullOrEmpty())
+            {
+                message = ModifyMessage(message, color: false);
+            }
 
             GameServer.Log($"{TextManager.Get("MissionInfo")}: {header} - {message}", ServerLog.MessageType.ServerMessage);
         }
 
         public virtual void ServerWriteInitial(IWriteMessage msg, Client c)
         {
-            msg.Write((ushort)State);
+            msg.WriteUInt16((ushort)State);
         }
 
         public virtual void ServerWrite(IWriteMessage msg)
         {
-            msg.Write((ushort)State);
+            msg.WriteUInt16((ushort)State);
         }
     }
 }

@@ -26,7 +26,9 @@ namespace Barotrauma
             Gameplay,
             Mods
         }
-        
+
+        public Tab CurrentTab { get; private set; }
+
         private GameSettings.Config unsavedConfig;
 
         private readonly GUIFrame mainFrame;
@@ -37,7 +39,13 @@ namespace Barotrauma
 
         public readonly WorkshopMenu WorkshopMenu;
 
-        private static readonly ImmutableHashSet<InputType> LegacyInputTypes = new List<InputType>() { InputType.Chat, InputType.RadioChat }.ToImmutableHashSet();
+        private static readonly ImmutableHashSet<InputType> LegacyInputTypes = new List<InputType>()
+        {
+            InputType.Chat,
+            InputType.RadioChat,
+            InputType.LocalVoice,
+            InputType.RadioVoice,
+        }.ToImmutableHashSet();
 
         public static SettingsMenu Create(RectTransform mainParent)
         {
@@ -97,6 +105,7 @@ namespace Barotrauma
         
         public void SelectTab(Tab tab)
         {
+            CurrentTab = tab;
             SwitchContent(tabContents[tab].Content);
             tabber.Children.ForEach(c =>
             {
@@ -220,7 +229,7 @@ namespace Barotrauma
             };
         }
 
-        private string Percentage(float v) => TextManager.GetWithVariable("percentageformat", "[value]", Round(v * 100).ToString()).Value;
+        private string Percentage(float v) => ToolBox.GetFormattedPercentage(v);
 
         private int Round(float v) => (int)MathF.Round(v);
         
@@ -764,27 +773,40 @@ namespace Barotrauma
 
         private void CreateBottomButtons()
         {
-            GUIButton cancelButton =
-                new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), bottom.RectTransform), text: TextManager.Get("Cancel"))
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), bottom.RectTransform), text: TextManager.Get("Cancel"))
+            {
+                OnClicked = (btn, obj) =>
                 {
-                    OnClicked = (btn, obj) =>
-                    {
-                        Close();
-                        return false;
-                    }
-                };
-            GUIButton applyButton =
-                new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), bottom.RectTransform), text: TextManager.Get("applysettingsbutton"))
+                    Close();
+                    return false;
+                }
+            };
+            new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), bottom.RectTransform), text: TextManager.Get("applysettingsbutton"))
+            {
+                OnClicked = (btn, obj) =>
                 {
-                    OnClicked = (btn, obj) =>
-                    {
-                        GameSettings.SetCurrentConfig(unsavedConfig);
-                        if (WorkshopMenu is MutableWorkshopMenu mutableWorkshopMenu) { mutableWorkshopMenu.Apply(); }
-                        GameSettings.SaveCurrentConfig();
-                        mainFrame.Flash(color: GUIStyle.Green);
-                        return false;
-                    }
-                };
+                    ApplyInstalledModChanges();
+                    mainFrame.Flash(color: GUIStyle.Green);
+                    return false;
+                },
+                OnAddedToGUIUpdateList = (GUIComponent component) =>
+                {
+                    component.Enabled = 
+                        CurrentTab != Tab.Mods ||
+                        (WorkshopMenu is MutableWorkshopMenu mutableWorkshopMenu && mutableWorkshopMenu.CurrentTab == MutableWorkshopMenu.Tab.InstalledMods && !mutableWorkshopMenu.ViewingItemDetails);
+                }                
+            };
+        }
+
+        public void ApplyInstalledModChanges()
+        {
+            GameSettings.SetCurrentConfig(unsavedConfig);
+            if (WorkshopMenu is MutableWorkshopMenu mutableWorkshopMenu &&
+                mutableWorkshopMenu.CurrentTab == MutableWorkshopMenu.Tab.InstalledMods)
+            {
+                mutableWorkshopMenu.Apply();
+            }
+            GameSettings.SaveCurrentConfig();
         }
 
         public void Close()

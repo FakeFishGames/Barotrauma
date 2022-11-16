@@ -211,7 +211,7 @@ namespace Barotrauma
                 if (selectedSub != null)
                 {
                     campaign.Bank.Deduct(selectedSub.Price);
-                    campaign.Bank.Balance = Math.Max(campaign.Bank.Balance, MultiPlayerCampaign.MinimumInitialMoney);
+                    campaign.Bank.Balance = Math.Max(campaign.Bank.Balance, 0);
                 }
                 return campaign;
             }
@@ -222,7 +222,7 @@ namespace Barotrauma
                 if (selectedSub != null)
                 {
                     campaign.Bank.TryDeduct(selectedSub.Price);
-                    campaign.Bank.Balance = Math.Max(campaign.Bank.Balance, MultiPlayerCampaign.MinimumInitialMoney);
+                    campaign.Bank.Balance = Math.Max(campaign.Bank.Balance, 0);
                 }
                 return campaign;
             }
@@ -602,7 +602,7 @@ namespace Barotrauma
                 if (GameMode is MultiPlayerCampaign mpCampaign)
                 {
                     mpCampaign.UpgradeManager.ApplyUpgrades();
-                    mpCampaign.UpgradeManager.SanityCheckUpgrades(Submarine);
+                    mpCampaign.UpgradeManager.SanityCheckUpgrades();
                 }
             }
 
@@ -864,7 +864,7 @@ namespace Barotrauma
                 double roundDuration = Timing.TotalTime - RoundStartTime;
                 GameAnalyticsManager.AddProgressionEvent(
                     success ? GameAnalyticsManager.ProgressionStatus.Complete : GameAnalyticsManager.ProgressionStatus.Fail,
-                    GameMode?.Name?.Value ?? "none",
+                    GameMode?.Preset.Identifier.Value ?? "none",
                     roundDuration);
                 string eventId = "EndRound:" + (GameMode?.Preset?.Identifier.Value ?? "none") + ":";
                 LogEndRoundStats(eventId);

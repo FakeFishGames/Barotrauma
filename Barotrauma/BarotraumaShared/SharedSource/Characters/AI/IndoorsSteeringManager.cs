@@ -79,7 +79,8 @@ namespace Barotrauma
         {
             pathFinder = new PathFinder(WayPoint.WayPointList.FindAll(wp => wp.SpawnType == SpawnType.Path), true)
             {
-                GetNodePenalty = GetNodePenalty
+                GetNodePenalty = GetNodePenalty,
+                GetSingleNodePenalty = GetSingleNodePenalty
             };
 
             this.canOpenDoors = canOpenDoors;
@@ -360,7 +361,7 @@ namespace Barotrauma
             Ladder nextLadder = GetNextLadder();
             var ladders = currentLadder ?? nextLadder;
             bool useLadders = canClimb && ladders != null && steering.LengthSquared() > 0.1f && (!isDiving || steering.Y > 1);
-            if (useLadders && character.SelectedConstruction != ladders.Item)
+            if (useLadders && character.SelectedSecondaryItem != ladders.Item)
             {
                 if (character.CanInteractWith(ladders.Item))
                 {
@@ -372,7 +373,7 @@ namespace Barotrauma
                     // Try to select the previous ladder, unless it's already selected, unless the previous ladder is not adjacent to the current ladder.
                     // The intention of this code is to prevent the bots from dropping from the "double ladders".
                     var previousLadders = currentPath.PrevNode?.Ladders;
-                    if (previousLadders != null && previousLadders != ladders && character.SelectedConstruction != previousLadders.Item &&
+                    if (previousLadders != null && previousLadders != ladders && character.SelectedSecondaryItem != previousLadders.Item &&
                         character.CanInteractWith(previousLadders.Item) && Math.Abs(previousLadders.Item.WorldPosition.X - ladders.Item.WorldPosition.X) < 5)
                     {
                         previousLadders.Item.TryInteract(character, forceSelectKey: true);
@@ -382,8 +383,7 @@ namespace Barotrauma
             var collider = character.AnimController.Collider;
             if (character.IsClimbing && !useLadders)
             {
-                character.AnimController.Anim = AnimController.Animation.None;
-                character.SelectedConstruction = null;
+                character.StopClimbing();
             }
             if (character.IsClimbing && useLadders)
             {
@@ -402,15 +402,14 @@ namespace Barotrauma
                     // We need some margin, because if a hatch has closed, it's possible that the height from floor is slightly negative.
                     bool isAboveFloor = heightFromFloor > -0.1f;
                     // If the next waypoint is horizontally far, we don't want to keep holding the ladders
-                    if (isAboveFloor && (nextLadder == null || Math.Abs(currentPath.CurrentNode.WorldPosition.X - currentPath.NextNode.WorldPosition.X) > 50))
+                    if (isAboveFloor && !currentPath.IsAtEndNode && (nextLadder == null || Math.Abs(currentPath.CurrentNode.WorldPosition.X - currentPath.NextNode.WorldPosition.X) > 50))
                     {
-                        character.AnimController.Anim = AnimController.Animation.None;
-                        character.SelectedConstruction = null;
+                        character.StopClimbing();
                     }
                     else if (nextLadder != null && !nextLadderSameAsCurrent)
                     {
                         // Try to change the ladder (hatches between two submarines)
-                        if (character.SelectedConstruction != nextLadder.Item && character.CanInteractWith(nextLadder.Item))
+                        if (character.SelectedSecondaryItem != nextLadder.Item && character.CanInteractWith(nextLadder.Item))
                         {
                             if (nextLadder.Item.TryInteract(character, forceSelectKey: true))
                             {
@@ -418,7 +417,7 @@ namespace Barotrauma
                             }
                         }
                     }
-                    if (isAboveFloor || nextLadderSameAsCurrent || nextLadder == null && Math.Abs(diff.Y) < 10)
+                    if (!currentPath.IsAtEndNode && (isAboveFloor || nextLadderSameAsCurrent || nextLadder == null && Math.Abs(diff.Y) < 10))
                     {
                         NextNode(!doorsChecked);
                     }
@@ -528,7 +527,7 @@ namespace Barotrauma
             {
                 // We'll want this to run each time, because the delegate is used to find a valid button component.
                 bool canAccessButtons = false;
-                foreach (var button in door.Item.GetConnectedComponents<Controller>(true))
+                foreach (var button in door.Item.GetConnectedComponents<Controller>(true, connectionFilter: c => c.Name == "toggle" || c.Name == "set_state"))
                 {
                     if (button.HasAccess(character) && (buttonFilter == null || buttonFilter(button)))
                     {
@@ -676,6 +675,8 @@ namespace Barotrauma
                             }
                         }
                         float distance = Vector2.DistanceSquared(button.Item.WorldPosition, character.WorldPosition);
+                        //heavily prefer buttons linked to the door, so sub builders can help the bots figure out which button to use by linking them
+                        if (door.Item.linkedTo.Contains(button.Item)) { distance *= 0.1f; }
                         if (closestButton == null || distance < closestDist && character.CanSeeTarget(button.Item))
                         {
                             closestButton = button;
@@ -756,42 +757,8 @@ namespace Barotrauma
         private float? GetNodePenalty(PathNode node, PathNode nextNode)
         {
             if (character == null) { return 0.0f; }
-            if (nextNode.Waypoint.isObstructed) { return null; }
-            float penalty = 0.0f;
-            if (nextNode.Waypoint.ConnectedGap != null && nextNode.Waypoint.ConnectedGap.Open < 0.9f)
-            {
-                var door = nextNode.Waypoint.ConnectedDoor;
-                if (door == null)
-                {
-                    penalty = 100.0f;
-                }
-                else
-                {
-                    if (!CanAccessDoor(door, button =>
-                        {
-                            // Ignore buttons that are on the wrong side of the door
-                            if (door.IsHorizontal)
-                            {
-                                if (Math.Sign(button.Item.WorldPosition.Y - door.Item.WorldPosition.Y) != Math.Sign(character.WorldPosition.Y - door.Item.WorldPosition.Y))
-                                {
-                                    return false;
-                                }
-                            }
-                            else
-                            {
-                                if (Math.Sign(button.Item.WorldPosition.X - door.Item.WorldPosition.X) != Math.Sign(character.WorldPosition.X - door.Item.WorldPosition.X))
-                                {
-                                    return false;
-                                }
-                            }
-                            return true;
-                        }))
-                    {
-                        return null;
-                    }
-                }
-            }
-
+            float? penalty = GetSingleNodePenalty(nextNode);
+            if (penalty == null) { return null; }
             bool nextNodeAboveWaterLevel = nextNode.Waypoint.CurrentHull != null && nextNode.Waypoint.CurrentHull.Surface < nextNode.Waypoint.Position.Y;
             //non-humanoids can't climb up ladders
             if (!(character.AnimController is HumanoidAnimController))
@@ -836,6 +803,47 @@ namespace Barotrauma
                 }
             }
 
+            return penalty;
+        }
+
+        private float? GetSingleNodePenalty(PathNode node)
+        {
+            if (node.Waypoint.isObstructed) { return null; }
+            if (node.IsBlocked()) { return null; }
+            float penalty = 0.0f;
+            if (node.Waypoint.ConnectedGap != null && node.Waypoint.ConnectedGap.Open < 0.9f)
+            {
+                var door = node.Waypoint.ConnectedDoor;
+                if (door == null)
+                {
+                    penalty = 100.0f;
+                }
+                else
+                {
+                    if (!CanAccessDoor(door, button =>
+                    {
+                        // Ignore buttons that are on the wrong side of the door
+                        if (door.IsHorizontal)
+                        {
+                            if (Math.Sign(button.Item.WorldPosition.Y - door.Item.WorldPosition.Y) != Math.Sign(character.WorldPosition.Y - door.Item.WorldPosition.Y))
+                            {
+                                return false;
+                            }
+                        }
+                        else
+                        {
+                            if (Math.Sign(button.Item.WorldPosition.X - door.Item.WorldPosition.X) != Math.Sign(character.WorldPosition.X - door.Item.WorldPosition.X))
+                            {
+                                return false;
+                            }
+                        }
+                        return true;
+                    }))
+                    {
+                        return null;
+                    }
+                }
+            }
             return penalty;
         }
 
