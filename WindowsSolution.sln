@@ -44,7 +44,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeployAll", "Deploy\DeployAll\DeployAll.csproj", "{C98FE0D0-BC7D-4806-B592-734B53016FD8}"
 EndProject
 Global
-	
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Libraries\GameAnalytics\GA-SDK-MONO-SHARED\GA-SDK-MONO-SHARED.projitems*{95c4d59d-9be4-4278-b4f8-46c0ba1a3916}*SharedItemsImports = 5
 	EndGlobalSection
