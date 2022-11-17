@@ -2089,10 +2089,6 @@ namespace Barotrauma
             {
                 if (subType == SubmarineType.Ruin) { continue; }
                 string textTag = "SubmarineType." + subType;
-                if (subType == SubmarineType.EnemySubmarine && !TextManager.ContainsTag(textTag))
-                {
-                    textTag = "MissionType.Pirate";
-                }
                 subTypeDropdown.AddItem(TextManager.Get(textTag), subType);
             }
 
@@ -2389,6 +2385,19 @@ namespace Barotrauma
                 }
             };
             enemySubmarineDifficultyGroup.RectTransform.MaxSize = numInput.TextBox.RectTransform.MaxSize;
+            var enemySubmarineTagsGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), enemySubmarineSettingsContainer.RectTransform), isHorizontal: true)
+            {
+                Stretch = true
+            };
+            new GUITextBlock(new RectTransform(new Vector2(0.6f, 1.0f), enemySubmarineTagsGroup.RectTransform),
+                TextManager.Get("sp.item.tags.name"), textAlignment: Alignment.CenterLeft, wrap: true);
+            var tagsBox = new GUITextBox(new RectTransform(new Vector2(0.4f, 1.0f), enemySubmarineTagsGroup.RectTransform))
+            {
+                OnEnterPressed = ChangeEnemySubTags
+            };
+            tagsBox.Text = MainSub?.Info?.EnemySubmarineInfo?.MissionTags ?? "default";
+
+            enemySubmarineTagsGroup.RectTransform.MaxSize = tagsBox.RectTransform.MaxSize;
             enemySubmarineSettingsContainer.RectTransform.MinSize = new Point(0, enemySubmarineSettingsContainer.RectTransform.Children.Sum(c => c.Children.Any() ? c.Children.Max(c2 => c2.MinSize.Y) : 0));
 
             //---------------------------------------
@@ -3268,10 +3277,6 @@ namespace Barotrauma
                 if (prevSub == null || prevSub.Type != sub.Type)
                 {
                     string textTag = "SubmarineType." + sub.Type;
-                    if (sub.Type == SubmarineType.EnemySubmarine && !TextManager.ContainsTag(textTag))
-                    {
-                        textTag = "MissionType.Pirate";
-                    }
                     new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), subList.Content.RectTransform) { MinSize = new Point(0, 35) },
                         TextManager.Get(textTag), font: GUIStyle.LargeFont, textAlignment: Alignment.Center, style: "ListBoxElement")
                     {
@@ -4417,6 +4422,24 @@ namespace Barotrauma
             }
 
             if (MainSub != null) MainSub.Info.Name = text;
+            textBox.Deselect();
+
+            textBox.Text = text;
+
+            textBox.Flash(GUIStyle.Green);
+
+            return true;
+        }
+
+        private bool ChangeEnemySubTags(GUITextBox textBox, string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                textBox.Flash(GUIStyle.Red);
+                return false;
+            }
+
+            if (MainSub != null) MainSub.Info.EnemySubmarineInfo.MissionTags = text;
             textBox.Deselect();
 
             textBox.Text = text;

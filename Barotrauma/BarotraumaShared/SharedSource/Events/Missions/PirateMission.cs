@@ -147,6 +147,17 @@ namespace Barotrauma
             var submarineInfos = SubmarineInfo.SavedSubmarines.Where(i => i.IsEnemySubmarine);
             foreach (SubmarineInfo submarineInfo in submarineInfos)
             {
+                string[] tags = submarineInfo.EnemySubmarineInfo.MissionTags.Split(',');
+                var value = tags.Length;
+                foreach (string tag in tags)
+                {
+                    if (!this.Prefab.Tags.Contains(tag))
+                    {
+                        value--;
+                    }
+                }
+                if (value == 0) { continue; }
+
                 float applicabilityValue = GetDifficultyModifiedValue(submarineInfo.EnemySubmarineInfo.PreferredDifficulty, levelDifficulty, randomnessModifier, rand);
                 if (applicabilityValue < bestValue)
                 {
@@ -154,6 +165,13 @@ namespace Barotrauma
                     bestValue = applicabilityValue;
                 }
             }
+
+            if (bestSubmarine == null)
+            {
+                DebugConsole.ThrowError("No EnemySubmarine found that matches the mission's tags!");
+                return SubmarineInfo.SavedSubmarines.Where(i => i.IsEnemySubmarine).First();
+            }
+
             return bestSubmarine;
         }
 

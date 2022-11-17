@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 
@@ -10,6 +11,9 @@ namespace Barotrauma
 
         [Serialize(50.0f, IsPropertySaveable.Yes), Editable]
         public float PreferredDifficulty { get; set; }
+
+        [Serialize("default", IsPropertySaveable.Yes), Editable]
+        public string MissionTags { get; set; }
 
         public string Name { get; private set; }
 
