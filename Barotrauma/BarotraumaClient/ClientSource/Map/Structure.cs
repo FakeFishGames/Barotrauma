@@ -226,6 +226,9 @@ namespace Barotrauma
                 min.Y = Math.Min(worldPos.Y - decorativeSprite.Sprite.size.Y * (1.0f - decorativeSprite.Sprite.RelativeOrigin.Y) * scale, min.Y);
                 max.Y = Math.Max(worldPos.Y + decorativeSprite.Sprite.size.Y * decorativeSprite.Sprite.RelativeOrigin.Y * scale, max.Y);
             }
+            Vector2 offset = GetCollapseEffectOffset();
+            min += offset;
+            max += offset;
 
             if (min.X > worldView.Right || max.X < worldView.X) { return false; }
             if (min.Y > worldView.Y || max.Y < worldView.Y - worldView.Height) { return false; }

@@ -1,8 +1,9 @@
 #nullable enable
 
+using Barotrauma.Extensions;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using Barotrauma.Extensions;
+using System.Linq;
 
 namespace Barotrauma.Abilities
 {
@@ -23,11 +24,33 @@ namespace Barotrauma.Abilities
 
             if (!TalentTree.JobTalentTrees.TryGet(apprentice.Identifier, out TalentTree? talentTree)) { return; }
 
+            ImmutableHashSet<Character> characters = GameSession.GetSessionCrewCharacters(CharacterType.Both);
+
             HashSet<ImmutableHashSet<Identifier>> talentsTrees = new HashSet<ImmutableHashSet<Identifier>>();
             foreach (TalentSubTree subTree in talentTree.TalentSubTrees)
             {
                 if (subTree.Type != TalentTreeType.Specialization) { continue; }
-                talentsTrees.Add(subTree.AllTalentIdentifiers);
+
+                HashSet<Identifier> identifiers = new HashSet<Identifier>();
+                foreach (TalentOption option in subTree.TalentOptionStages)
+                {
+                    foreach (Identifier identifier in option.TalentIdentifiers)
+                    {
+                        if (IsShowCaseTalent(identifier, option) || TalentTree.IsTalentLocked(identifier, characters)) { continue; }
+
+                        identifiers.Add(identifier);
+                    }
+
+                    foreach (var (_, value) in option.ShowCaseTalents)
+                    {
+                        var ids = value.Where(i => !TalentTree.IsTalentLocked(i, characters)).ToImmutableHashSet();
+                        if (ids.Count is 0) { continue; }
+
+                        identifiers.Add(value.GetRandomUnsynced());
+                    }
+                }
+
+                talentsTrees.Add(identifiers.ToImmutableHashSet());
             }
 
             ImmutableHashSet<Identifier> selectedTalentTree = talentsTrees.GetRandomUnsynced();
@@ -39,6 +62,16 @@ namespace Barotrauma.Abilities
                 {
                     Character.Info.AdditionalTalentPoints++;
                 }
+            }
+
+            static bool IsShowCaseTalent(Identifier identifier, TalentOption option)
+            {
+                foreach (var (_, value) in option.ShowCaseTalents)
+                {
+                    if (value.Contains(identifier)) { return true; }
+                }
+
+                return false;
             }
         }
 

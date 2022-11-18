@@ -93,9 +93,9 @@ namespace Barotrauma
         }
 
         public float StoreMaxReputationModifier { get; } = 0.1f;
-        public float StoreSellPriceModifier { get; } = 0.8f;
+        public float StoreSellPriceModifier { get; } = 0.3f;
         public float DailySpecialPriceModifier { get; } = 0.5f;
-        public float RequestGoodPriceModifier { get; } = 1.5f;
+        public float RequestGoodPriceModifier { get; } = 2f;
         public int StoreInitialBalance { get; } = 5000;
         /// <summary>
         /// In percentages

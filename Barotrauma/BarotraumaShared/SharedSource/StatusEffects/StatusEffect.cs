@@ -343,7 +343,7 @@ namespace Barotrauma
         private readonly float lifeTime;
         private float lifeTimer;
 
-        public float intervalTimer;
+        public Dictionary<Entity, float> intervalTimers = new Dictionary<Entity, float>();
 
         private readonly bool oneShot;
 
@@ -1128,6 +1128,26 @@ namespace Barotrauma
             }
         }
 
+        private static readonly List<Entity> intervalsToRemove = new List<Entity>();
+        public bool ShouldWaitForInterval(Entity entity, float deltaTime)
+        {
+            if (Interval > 0.0f && entity != null)
+            {
+                if (intervalTimers.ContainsKey(entity))
+                {
+                    intervalTimers[entity] -= deltaTime;
+                    if (intervalTimers[entity] > 0.0f) { return true; }
+                }
+                intervalsToRemove.Clear();
+                intervalsToRemove.AddRange(intervalTimers.Keys.Where(e => e.Removed));
+                foreach (var toRemove in intervalsToRemove)
+                {
+                    intervalTimers.Remove(toRemove);
+                }
+            }
+            return false;
+        }
+
         public virtual void Apply(ActionType type, float deltaTime, Entity entity, ISerializableEntity target, Vector2? worldPosition = null)
         {
             if (Disabled) { return; }
@@ -1157,12 +1177,7 @@ namespace Barotrauma
         {
             if (Disabled) { return; }
             if (this.type != type) { return; }
-
-            if (intervalTimer > 0.0f)
-            {
-                intervalTimer -= deltaTime;
-                return;
-            }
+            if (ShouldWaitForInterval(entity, deltaTime)) { return; }
 
             currentTargets.Clear();
             foreach (ISerializableEntity target in targets)
@@ -1266,11 +1281,8 @@ namespace Barotrauma
                 lifeTimer -= deltaTime;
                 if (lifeTimer <= 0) { return; }
             }
-            if (intervalTimer > 0.0f)
-            {
-                intervalTimer -= deltaTime;
-                return;
-            }
+            if (ShouldWaitForInterval(entity, deltaTime)) { return; }
+
             Hull hull = GetHull(entity);
             Vector2 position = GetPosition(entity, targets, worldPosition);
             if (useItemCount > 0)
@@ -1968,10 +1980,13 @@ namespace Barotrauma
 
             ApplyProjSpecific(deltaTime, entity, targets, hull, position, playSound: true);
 
-            intervalTimer = Interval;
             if (oneShot)
             {
                 Disabled = true;
+            }
+            if (Interval > 0.0f && entity != null)
+            {
+                intervalTimers[entity] = Interval;
             }
 
             static Character CharacterFromTarget(ISerializableEntity target)

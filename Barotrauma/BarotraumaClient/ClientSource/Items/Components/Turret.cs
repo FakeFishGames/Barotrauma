@@ -411,6 +411,14 @@ namespace Barotrauma.Items.Components
                     SpriteEffects.None, newDepth);
             }
 
+            if (GameMain.DebugDraw)
+            {
+                Vector2 firingPos = GetRelativeFiringPosition();
+                firingPos.Y = -firingPos.Y;
+                GUI.DrawLine(spriteBatch, firingPos - Vector2.UnitX * 5, firingPos + Vector2.UnitX * 5, Color.Red);
+                GUI.DrawLine(spriteBatch, firingPos - Vector2.UnitY * 5, firingPos + Vector2.UnitY * 5, Color.Red);
+            }
+
             if (!editing || GUI.DisableHUD || !item.IsSelected) { return; }
 
             const float widgetRadius = 60.0f;

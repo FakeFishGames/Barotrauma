@@ -1,7 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-using System.Xml.Linq;
-
-namespace Barotrauma.Abilities
+﻿namespace Barotrauma.Abilities
 {
     class CharacterAbilityRevive : CharacterAbility
     {

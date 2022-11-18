@@ -151,7 +151,6 @@ namespace Barotrauma.Items.Components
             set
             {
                 bool changed = currentMode != value;
-
                 currentMode = value;
 #if CLIENT
                 if (changed) { prevPassivePingRadius = float.MaxValue; }

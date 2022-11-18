@@ -9,7 +9,11 @@ namespace Barotrauma.Abilities
 
         public CharacterAbilityResetPermanentStat(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
-            statIdentifier = abilityElement.GetAttributeIdentifier("statidentifier", Identifier.Empty);
+            statIdentifier = abilityElement.GetAttributeIdentifier("statidentifier", Identifier.Empty); 
+            if (statIdentifier.IsEmpty)
+            {
+                DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier}, {nameof(CharacterAbilityResetPermanentStat)} - statIdentifier is empty.");
+            }
         }
         protected override void ApplyEffect(AbilityObject abilityObject)
         {

@@ -57,10 +57,19 @@ namespace Barotrauma
         /// </summary>
         public int? MinMainPathWidth;
 
+        /// <summary>
+        /// Events that have previously triggered in this level. Used for making events the player hasn't seen yet more likely to trigger when re-entering the level. Has a maximum size of <see cref="EventManager.MaxEventHistory"/>.
+        /// </summary>
         public readonly List<Identifier> EventHistory = new List<Identifier>();
-        public readonly List<Identifier> NonRepeatableEvents = new List<Identifier>();
-        public readonly HashSet<Identifier> UsedUniqueSets = new HashSet<Identifier>();
 
+        /// <summary>
+        /// Events that have already triggered in this level and can never trigger again. <see cref="EventSet.OncePerLevel"/>.
+        /// </summary>
+        public readonly List<Identifier> NonRepeatableEvents = new List<Identifier>();
+
+        /// <summary>
+        /// 'Exhaustible' sets won't appear in the same level until after one world step (~10 min, see Map.ProgressWorld) has passed. <see cref="EventSet.Exhaustible"/>.
+        /// </summary>
         public bool EventsExhausted { get; set; }
 
         /// <summary>
@@ -143,8 +152,6 @@ namespace Barotrauma
 
             string[] nonRepeatablePrefabNames = element.GetAttributeStringArray("nonrepeatableevents", Array.Empty<string>());
             NonRepeatableEvents.AddRange(EventPrefab.Prefabs.Where(p => nonRepeatablePrefabNames.Any(n => p.Identifier == n)).Select(p => p.Identifier));
-
-            UsedUniqueSets = element.GetAttributeIdentifierArray(nameof(UsedUniqueSets), Array.Empty<Identifier>()).ToHashSet();
 
             EventsExhausted = element.GetAttributeBool(nameof(EventsExhausted).ToLower(), false);
         }
@@ -249,6 +256,26 @@ namespace Barotrauma
         {
             GenerationParams = LevelGenerationParams.GetRandom(seed, Type, Difficulty, Biome.Identifier);
         }
+        public bool OutpostGenerationParamsExist => ForceOutpostGenerationParams != null || OutpostGenerationParams.OutpostParams.Any();
+
+        public static IEnumerable<OutpostGenerationParams> GetSuitableOutpostGenerationParams(Location location, LevelData levelData)
+        {
+            var suitableParams = OutpostGenerationParams.OutpostParams
+                    .Where(p => p.LevelType == null || levelData.Type == p.LevelType)
+                    .Where(p => location == null || p.AllowedLocationTypes.Contains(location.Type.Identifier));
+            if (!suitableParams.Any())
+            {
+                suitableParams = OutpostGenerationParams.OutpostParams
+                    .Where(p => p.LevelType == null || levelData.Type == p.LevelType)
+                    .Where(p => location == null || !p.AllowedLocationTypes.Any());
+                if (!suitableParams.Any())
+                {
+                    DebugConsole.ThrowError($"No suitable outpost generation parameters found for the location type \"{location.Type.Identifier}\". Selecting random parameters.");
+                    suitableParams = OutpostGenerationParams.OutpostParams;
+                }
+            }
+            return suitableParams;
+        }
 
         public void Save(XElement parentElement)
         {
@@ -290,11 +317,6 @@ namespace Barotrauma
                 {
                     newElement.Add(new XAttribute("nonrepeatableevents", string.Join(',', NonRepeatableEvents)));
                 }
-            }
-
-            if (UsedUniqueSets.Any())
-            {
-                newElement.Add(new XAttribute(nameof(UsedUniqueSets), string.Join(',', UsedUniqueSets)));
             }
 
             parentElement.Add(newElement);

@@ -35,14 +35,14 @@ namespace Barotrauma
             };
 
             // New game
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.03f), nameSeedLayout.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("SaveName"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.BottomLeft);
-            saveNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.03f), nameSeedLayout.RectTransform) { MinSize = new Point(0, 20) }, string.Empty)
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.03f), nameSeedLayout.RectTransform) { MinSize = new Point(0, GUI.IntScale(24)) }, TextManager.Get("SaveName"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.BottomLeft);
+            saveNameBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.03f), nameSeedLayout.RectTransform), string.Empty)
             {
                 textFilterFunction = ToolBox.RemoveInvalidFileNameChars
             };
 
-            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.03f), nameSeedLayout.RectTransform) { MinSize = new Point(0, 20) }, TextManager.Get("MapSeed"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.BottomLeft);
-            seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.03f), nameSeedLayout.RectTransform) { MinSize = new Point(0, 20) }, ToolBox.RandomSeed(8));
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.03f), nameSeedLayout.RectTransform) { MinSize = new Point(0, GUI.IntScale(24)) }, TextManager.Get("MapSeed"), font: GUIStyle.SubHeadingFont, textAlignment: Alignment.BottomLeft);
+            seedBox = new GUITextBox(new RectTransform(new Vector2(1.0f, 0.03f), nameSeedLayout.RectTransform), ToolBox.RandomSeed(8));
 
             nameSeedLayout.RectTransform.MinSize = new Point(0, nameSeedLayout.Children.Sum(c => c.RectTransform.MinSize.Y));
 

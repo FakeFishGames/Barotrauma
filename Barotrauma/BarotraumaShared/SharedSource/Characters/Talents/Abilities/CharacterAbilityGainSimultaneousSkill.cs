@@ -1,7 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-using System.Xml.Linq;
-
-namespace Barotrauma.Abilities
+﻿namespace Barotrauma.Abilities
 {
     class CharacterAbilityGainSimultaneousSkill : CharacterAbility
     {
@@ -15,6 +12,10 @@ namespace Barotrauma.Abilities
             skillIdentifier = abilityElement.GetAttributeIdentifier("skillidentifier", "");
             ignoreAbilitySkillGain = abilityElement.GetAttributeBool("ignoreabilityskillgain", true);
             targetAllies = abilityElement.GetAttributeBool("targetallies", false);
+            if (skillIdentifier.IsEmpty)
+            {
+                DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier}: skill identifier not defined.");
+            }
         }
 
         protected override void ApplyEffect(AbilityObject abilityObject)
@@ -23,13 +24,12 @@ namespace Barotrauma.Abilities
             {
                 if (ignoreAbilitySkillGain && abilitySkillGain.GainedFromAbility) { return; }
                 Identifier identifier = skillIdentifier == "inherit" ? abilitySkillGain.SkillIdentifier : skillIdentifier;
-
                 if (targetAllies)
                 {
-                    foreach (Character character in Character.GetFriendlyCrew(Character))
+                    foreach (Character otherCharacter in Character.GetFriendlyCrew(Character))
                     {
-                        if (character == Character) { continue; }
-                        Character.Info?.IncreaseSkillLevel(identifier, abilitySkillGain.Value, gainedFromAbility: true);
+                        if (otherCharacter == Character) { continue; }
+                        otherCharacter.Info?.IncreaseSkillLevel(identifier, abilitySkillGain.Value, gainedFromAbility: true);
                     }
                 }
                 else

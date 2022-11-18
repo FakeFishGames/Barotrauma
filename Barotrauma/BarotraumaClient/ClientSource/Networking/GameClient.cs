@@ -449,7 +449,7 @@ namespace Barotrauma.Networking
             foreach (Client c in ConnectedClients)
             {
                 if (c.Character != null && c.Character.Removed) { c.Character = null; }
-                c.UpdateSoundPosition();
+                c.UpdateVoipSound();
             }
 
             if (VoipCapture.Instance != null)

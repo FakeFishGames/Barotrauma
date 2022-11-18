@@ -260,6 +260,13 @@ namespace Barotrauma.Networking
                             }
                         }
                     }
+
+                    if (Screen.Selected is ModDownloadScreen)
+                    {
+                        allowEnqueue = false;
+                        captureTimer = 0;
+                    }
+
                     if (allowEnqueue || captureTimer > 0)
                     {
                         LastEnqueueAudio = DateTime.Now;

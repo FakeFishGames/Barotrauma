@@ -7,6 +7,7 @@ using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using Barotrauma.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -825,16 +826,29 @@ namespace Barotrauma
         public static bool StatIdentifierMatches(Identifier original, Identifier match)
         {
             if (original == match) { return true; }
+            return Matches(original, match) || Matches(match, original);
 
-            for (int i = 0; i < match.Value.Length; i++)
+            static bool Matches(Identifier a, Identifier b)
             {
-                if (i >= original.Value.Length) { return match[i] is '~'; }
-                if (!CharEquals(original[i], match[i])) { return false; }
+                for (int i = 0; i < b.Value.Length; i++)
+                {
+                    if (i >= a.Value.Length) { return b[i] is '~'; }
+                    if (!CharEquals(a[i], b[i])) { return false; }
+                }
+                return false;
             }
 
-            return false;
-
             static bool CharEquals(char a, char b) => char.ToLowerInvariant(a) == char.ToLowerInvariant(b);
+        }
+
+        public static bool EquivalentTo(this IPEndPoint self, IPEndPoint other)
+            => self.Address.EquivalentTo(other.Address) && self.Port == other.Port;
+
+        public static bool EquivalentTo(this IPAddress self, IPAddress other)
+        {
+            if (self.IsIPv4MappedToIPv6) { self = self.MapToIPv4(); }
+            if (other.IsIPv4MappedToIPv6) { other = other.MapToIPv4(); }
+            return self.Equals(other);
         }
     }
 }

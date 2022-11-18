@@ -677,12 +677,9 @@ namespace Barotrauma
             {
                 if (Controlled == null || Controlled == this || (Controlled.CharacterHealth.GetAffliction("psychosis")?.Strength ?? 0.0f) <= 0.0f)
                 {
-                    InvisibleTimer = 0.0f;
+                    InvisibleTimer = Math.Min(InvisibleTimer, 1.0f);
                 }
-                else
-                {
-                    InvisibleTimer -= deltaTime;
-                }
+                InvisibleTimer -= deltaTime;                
             }
 
             foreach (GUIMessage message in guiMessages)

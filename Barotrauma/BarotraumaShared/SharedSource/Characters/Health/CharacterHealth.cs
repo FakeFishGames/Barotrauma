@@ -881,7 +881,7 @@ namespace Barotrauma
                 //clamp above 0.1 (no amount of oxygen low resistance should keep the character alive indefinitely)
                 float decreaseSpeed = Math.Max(0.1f, 1f - oxygenlowResistance);
                 //the character dies of oxygen deprivation in 100 seconds after losing consciousness
-                OxygenAmount = MathHelper.Clamp(OxygenAmount - decreaseSpeed * deltaTime, -100.0f, 100.0f);                
+                OxygenAmount = MathHelper.Clamp(OxygenAmount - decreaseSpeed * deltaTime, -100.0f, 100.0f);
             }
             else
             {
@@ -889,15 +889,21 @@ namespace Barotrauma
                 float increaseSpeed = 10.0f;
                 decreaseSpeed *= (1f - oxygenlowResistance);
                 increaseSpeed *= (1f + oxygenlowResistance);
-
-                float holdBreathMultiplier = 1f + GetStatValue(StatTypes.HoldBreathMultiplier);
-                decreaseSpeed *= holdBreathMultiplier;
-                OxygenAmount = MathHelper.Clamp(OxygenAmount + deltaTime * (Character.OxygenAvailable < InsufficientOxygenThreshold ? decreaseSpeed : increaseSpeed), -100.0f, 100.0f);
+                float holdBreathMultiplier = Character.GetStatValue(StatTypes.HoldBreathMultiplier);
+                if (holdBreathMultiplier <= -1.0f)
+                {
+                    OxygenAmount = -100.0f;
+                }
+                else
+                {
+                    decreaseSpeed /= 1.0f + Character.GetStatValue(StatTypes.HoldBreathMultiplier);
+                    OxygenAmount = MathHelper.Clamp(OxygenAmount + deltaTime * (Character.OxygenAvailable < InsufficientOxygenThreshold ? decreaseSpeed : increaseSpeed), -100.0f, 100.0f);
+                }
             }
 
             UpdateOxygenProjSpecific(prevOxygen, deltaTime);
         }
-        
+
         partial void UpdateOxygenProjSpecific(float prevOxygen, float deltaTime);
 
         partial void UpdateBleedingProjSpecific(AfflictionBleeding affliction, Limb targetLimb, float deltaTime);

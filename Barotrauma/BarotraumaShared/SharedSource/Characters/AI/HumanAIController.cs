@@ -2019,7 +2019,7 @@ namespace Barotrauma
             bool friendlyTeam = IsOnFriendlyTeam(me, other);
             bool teamGood = sameTeam || friendlyTeam && !onlySameTeam;
             if (!teamGood) { return false; }
-            bool speciesGood = other.IsPet || other.SpeciesName == me.SpeciesName || other.Params.CompareGroup(me.Params.Group);
+            bool speciesGood = other.IsPet || other.SpeciesName == me.SpeciesName || CharacterParams.CompareGroup(me.Group, other.Group);
             if (!speciesGood) { return false; }
             if (me.TeamID == CharacterTeamType.FriendlyNPC && other.TeamID == CharacterTeamType.Team1 && GameMain.GameSession?.GameMode is CampaignMode campaign)
             {

@@ -2219,6 +2219,15 @@ namespace Barotrauma
                 }
             }));
 
+            commands.Add(new Command("spawnallitems", "", (string[] args) =>
+            {
+                var cursorPos = Screen.Selected.Cam?.ScreenToWorld(PlayerInput.MousePosition) ?? Vector2.Zero;
+                foreach (ItemPrefab itemPrefab in ItemPrefab.Prefabs)
+                {
+                    Entity.Spawner?.AddItemToSpawnQueue(itemPrefab, cursorPos);
+                }                
+            }));
+
             commands.Add(new Command("camerasettings", "camerasettings [defaultzoom] [zoomsmoothness] [movesmoothness] [minzoom] [maxzoom]: debug command for testing camera settings. The values default to 1.1, 8.0, 8.0, 0.1 and 2.0.", (string[] args) =>
             {
                 float defaultZoom = Screen.Selected.Cam.DefaultZoom;

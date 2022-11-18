@@ -389,22 +389,26 @@ namespace Barotrauma
 #if CLIENT
             foreach (Character character in crewCharacters)
             {
-                var experienceGainMultiplierIndividual = new AbilityMissionExperienceGainMultiplier(this, 1f);
-                character.CheckTalents(AbilityEffectType.OnGainMissionExperience, experienceGainMultiplierIndividual);
-                character.Info?.GiveExperience(experienceGain, isMissionExperience: true);
+                GiveMissionExperience(character.Info);
             }
 #else
             foreach (Barotrauma.Networking.Client c in GameMain.Server.ConnectedClients)
             {
                 //give the experience to the stored characterinfo if the client isn't currently controlling a character
-                CharacterInfo info = c.Character?.Info ?? c.CharacterInfo;
-
-                var experienceGainMultiplierIndividual = new AbilityMissionExperienceGainMultiplier(this, 1f);
-                info?.Character?.CheckTalents(AbilityEffectType.OnGainMissionExperience, experienceGainMultiplierIndividual);
-
-                info?.GiveExperience((int)(experienceGain * experienceGainMultiplier.Value), isMissionExperience: true);
+                GiveMissionExperience(c.Character?.Info ?? c.CharacterInfo);
+            }
+            foreach (Character bot in GameSession.GetSessionCrewCharacters(CharacterType.Bot))
+            {
+                GiveMissionExperience(bot.Info);
             }
 #endif
+
+            void GiveMissionExperience(CharacterInfo info)
+            {
+                var experienceGainMultiplierIndividual = new AbilityMissionExperienceGainMultiplier(this, 1f);
+                info?.Character?.CheckTalents(AbilityEffectType.OnGainMissionExperience, experienceGainMultiplierIndividual);
+                info?.GiveExperience((int)(experienceGain * experienceGainMultiplier.Value), isMissionExperience: true);
+            }
 
             // apply money gains afterwards to prevent them from affecting XP gains
             var missionMoneyGainMultiplier = new AbilityMissionMoneyGainMultiplier(this, 1f);

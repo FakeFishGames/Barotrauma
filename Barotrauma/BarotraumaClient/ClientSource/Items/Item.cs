@@ -272,7 +272,8 @@ namespace Barotrauma
                 cachedVisibleExtents = extents = new Rectangle(min.ToPoint(), max.ToPoint());
             }
 
-            Vector2 worldPosition = WorldPosition;
+            Vector2 worldPosition = WorldPosition + GetCollapseEffectOffset();
+
             if (worldPosition.X + extents.X > worldView.Right || worldPosition.X + extents.Width < worldView.X) { return false; }
             if (worldPosition.Y + extents.Height < worldView.Y - worldView.Height || worldPosition.Y + extents.Y > worldView.Y) { return false; }
 

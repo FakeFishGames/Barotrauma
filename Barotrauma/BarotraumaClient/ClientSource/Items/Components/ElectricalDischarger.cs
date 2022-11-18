@@ -28,18 +28,27 @@ namespace Barotrauma.Items.Components
 
                 if (node.ParentIndex > -1)
                 {
-                    Vector2 diff = nodes[node.ParentIndex].WorldPosition - node.WorldPosition;
-                    float dist = diff.Length();
-                    Vector2 normalizedDiff = diff / dist;
-                    for (float x = 0.0f; x < dist; x += 50.0f)
-                    {
-                        var spark = GameMain.ParticleManager.CreateParticle("ElectricShock", node.WorldPosition + normalizedDiff * x, Vector2.Zero);
-                        if (spark != null)
-                        {
-                            spark.Size *= 0.3f;
-                        }
-                    }
+                    CreateParticlesBetween(nodes[node.ParentIndex].WorldPosition, node.WorldPosition);
+                }
+            }
+            foreach (var character in charactersInRange)
+            {
+                CreateParticlesBetween(character.character.WorldPosition, character.node.WorldPosition);
+            }
 
+            static void CreateParticlesBetween(Vector2 start, Vector2 end)
+            {
+                const float ParticleInterval = 50.0f;
+                Vector2 diff = end - start;
+                float dist = diff.Length();
+                Vector2 normalizedDiff = MathUtils.NearlyEqual(dist, 0.0f) ? Vector2.Zero : diff / dist;
+                for (float x = 0.0f; x < dist; x += ParticleInterval)
+                {
+                    var spark = GameMain.ParticleManager.CreateParticle("ElectricShock", start + normalizedDiff * x, Vector2.Zero);
+                    if (spark != null)
+                    {
+                        spark.Size *= 0.3f;
+                    }
                 }
             }
         }

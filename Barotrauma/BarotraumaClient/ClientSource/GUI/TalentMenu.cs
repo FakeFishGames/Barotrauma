@@ -325,7 +325,7 @@ namespace Barotrauma
             }
 
             var specializationList = GetSpecializationList();
-            GetSpecializationList().RectTransform.Resize(new Point(specializationList.Content.Children.Sum(static c => c.Rect.Width), specializationList.Rect.Height));
+            GetSpecializationList().Content.RectTransform.Resize(new Point(specializationList.Content.Children.Sum(static c => c.Rect.Width), specializationList.Rect.Height), resizeChildren: false);
 
             GUITextBlock.AutoScaleAndNormalize(subTreeNames);
 
@@ -439,7 +439,8 @@ namespace Barotrauma
                         }
 
                         if (character is null) { return false; }
-
+                        
+                        Identifier talentIdentifier = (Identifier)userData;
                         if (talentOption.MaxChosenTalents is 1)
                         {
                             // deselect other buttons in tier by removing their selected talents from pool
@@ -454,9 +455,11 @@ namespace Barotrauma
                             }
                         }
 
-                        Identifier talentIdentifier = (Identifier)userData;
-
-                        if (IsViableTalentForCharacter(info.Character, talentIdentifier, selectedTalents))
+                        if (character.HasTalent(talentIdentifier))
+                        {
+                            return true;
+                        }
+                        else if (IsViableTalentForCharacter(info.Character, talentIdentifier, selectedTalents))
                         {
                             if (!selectedTalents.Contains(talentIdentifier))
                             {
@@ -467,7 +470,7 @@ namespace Barotrauma
                                 selectedTalents.Remove(talentIdentifier);
                             }
                         }
-                        else if (!character.HasTalent(talentIdentifier))
+                        else
                         {
                             selectedTalents.Remove(talentIdentifier);
                         }

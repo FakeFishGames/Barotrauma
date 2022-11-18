@@ -1356,17 +1356,30 @@ namespace Barotrauma
             return characters.Sum(c => (int)c.GetStatValue(StatTypes.ExtraSpecialSalesCount));
         }
 
-        public int HighestSubmarineTierAvailable(SubmarineClass submarineClass)
+        public bool CanHaveSubsForSale()
         {
-            if (!HasOutpost()) { return 0; }
-            return Biome?.HighestSubmarineTierAvailable(submarineClass, Type.Identifier) ?? SubmarineInfo.HighestTier;
+            return HasOutpost() && CanHaveCampaignInteraction(CampaignMode.InteractionType.PurchaseSub);
         }
 
-        public int HighestSubmarineTierAvailable() => HighestSubmarineTierAvailable(SubmarineClass.Undefined);
+        public int HighestSubmarineTierAvailable(SubmarineClass submarineClass = SubmarineClass.Undefined)
+        {
+            if (CanHaveSubsForSale())
+            {
+                return Biome?.HighestSubmarineTierAvailable(submarineClass, Type.Identifier) ?? SubmarineInfo.HighestTier;
+            }
+            return 0;
+        }
 
         public bool IsSubmarineAvailable(SubmarineInfo info)
         {
             return Biome?.IsSubmarineAvailable(info, Type.Identifier) ?? true;
+        }
+
+        private  bool CanHaveCampaignInteraction(CampaignMode.InteractionType interactionType)
+        {
+            return LevelData != null &&
+                LevelData.OutpostGenerationParamsExist &&
+                LevelData.GetSuitableOutpostGenerationParams(this, LevelData).Any(p => p.CanHaveCampaignInteraction(interactionType));
         }
 
         public void Reset(CampaignMode campaign)

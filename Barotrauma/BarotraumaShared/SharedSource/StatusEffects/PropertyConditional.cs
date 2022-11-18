@@ -267,7 +267,7 @@ namespace Barotrauma
                     {
                         if (target == null) { return Operator == OperatorType.NotEquals; }
                         if (!(target is Character targetCharacter)) { return false; }
-                        return (Operator == OperatorType.Equals) == targetCharacter.Params.CompareGroup(AttributeValue.ToIdentifier());
+                        return (Operator == OperatorType.Equals) == CharacterParams.CompareGroup(AttributeValue.ToIdentifier(), targetCharacter.Group);
                     }
                 case ConditionType.EntityType:
                     switch (AttributeValue)
@@ -416,22 +416,26 @@ namespace Barotrauma
                 return false;
             }
 
-
             switch (Operator)
             {
                 case OperatorType.Equals:
-                    if (type == typeof(bool))
                     {
-                        return property.GetBoolValue(target) == (AttributeValue == "true" || AttributeValue == "True");
+                        if (type == typeof(bool))
+                        {
+                            return property.GetBoolValue(target) == (AttributeValue == "true" || AttributeValue == "True");
+                        }
+                        var value = property.GetValue(target);
+                        return Equals(value, AttributeValue);
                     }
-                    return property.GetValue(target).ToString().Equals(AttributeValue);
-
                 case OperatorType.NotEquals:
-                    if (type == typeof(bool))
                     {
-                        return property.GetBoolValue(target) != (AttributeValue == "true" || AttributeValue == "True");
+                        if (type == typeof(bool))
+                        {
+                            return property.GetBoolValue(target) != (AttributeValue == "true" || AttributeValue == "True");
+                        }
+                        var value = property.GetValue(target);
+                        return !Equals(value, AttributeValue);
                     }
-                    return !property.GetValue(target).ToString().Equals(AttributeValue);
                 case OperatorType.GreaterThan:
                 case OperatorType.LessThanEquals:
                 case OperatorType.LessThan:
@@ -441,6 +445,18 @@ namespace Barotrauma
                     break;
             }
             return false;
+
+            static bool Equals(object value, string desiredValue)
+            {
+                if (value == null)
+                {
+                    return desiredValue.Equals("null", StringComparison.OrdinalIgnoreCase);
+                }
+                else
+                {
+                    return value.ToString().Equals(desiredValue);
+                }
+            }
         }
     }
 

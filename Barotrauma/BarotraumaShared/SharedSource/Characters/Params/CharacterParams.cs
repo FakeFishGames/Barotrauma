@@ -217,7 +217,7 @@ namespace Barotrauma
             return true;
         }
 
-        public bool CompareGroup(Identifier group) => group != Identifier.Empty && Group != Identifier.Empty && group == Group;
+        public static bool CompareGroup(Identifier group1, Identifier group2) => group1 != Identifier.Empty && group2 != Identifier.Empty && group1 == group2;
 
         protected void CreateSubParams()
         {

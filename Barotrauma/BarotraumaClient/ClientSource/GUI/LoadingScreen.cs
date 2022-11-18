@@ -144,8 +144,9 @@ namespace Barotrauma
             currentBackgroundTexture ??= defaultBackgroundTexture;
 
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, samplerState: GUI.SamplerState);
-
-            float scale = (GameMain.GraphicsWidth / (float)currentBackgroundTexture.Width) * 1.2f;
+            float scale = Math.Max(
+                (float)GameMain.GraphicsWidth / currentBackgroundTexture.Width,
+                (float)GameMain.GraphicsHeight / currentBackgroundTexture.Height) * 1.2f;
             float paddingX = currentBackgroundTexture.Width * scale - GameMain.GraphicsWidth;
             float paddingY = currentBackgroundTexture.Height * scale - GameMain.GraphicsHeight;
 

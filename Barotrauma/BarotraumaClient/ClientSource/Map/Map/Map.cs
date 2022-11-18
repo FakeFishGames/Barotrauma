@@ -794,17 +794,22 @@ namespace Barotrauma
                 Vector2 size = new Vector2(Math.Max(factionSize.X, Math.Max(nameSize.X, Math.Max(typeSize.X, descSize.X))), nameSize.Y  + factionSize.Y+ typeSize.Y + descSize.Y);
 
                 int highestSubTier = HighlightedLocation.HighestSubmarineTierAvailable();
-                var overrideTiers = new List<(SubmarineClass subClass, int tier)>();
-                foreach (SubmarineClass subClass in Enum.GetValues(typeof(SubmarineClass)))
+                List<(SubmarineClass subClass, int tier)> overrideTiers = null;
+                if (HighlightedLocation.CanHaveSubsForSale())
                 {
-                    if (subClass == SubmarineClass.Undefined) { continue; }
-                    int highestClassTier = HighlightedLocation.HighestSubmarineTierAvailable(subClass);
-                    if (highestClassTier > 0 && highestClassTier > highestSubTier)
+                    overrideTiers = new List<(SubmarineClass subClass, int tier)>();
+                    foreach (SubmarineClass subClass in Enum.GetValues(typeof(SubmarineClass)))
                     {
-                        overrideTiers.Add((subClass, highestClassTier));
+                        if (subClass == SubmarineClass.Undefined) { continue; }
+                        int highestClassTier = HighlightedLocation.HighestSubmarineTierAvailable(subClass);
+                        if (highestClassTier > 0 && highestClassTier > highestSubTier)
+                        {
+                            overrideTiers.Add((subClass, highestClassTier));
+                        }
                     }
                 }
-                size.Y += ((highestSubTier > 0 ? 1 : 0) + overrideTiers.Count) * GUIStyle.SmallFont.MeasureString(TextManager.Get("advancedsub.all")).Y;
+                int subAvailabilityTextCount = (highestSubTier > 0 ? 1 : 0) + (overrideTiers?.Count ?? 0);
+                size.Y += subAvailabilityTextCount * GUIStyle.SmallFont.MeasureString(TextManager.Get("advancedsub.all")).Y;
 
                 LocalizedString repLabelText = null, repValueText = null;
                 Vector2 repLabelSize = Vector2.Zero, repBarSize = Vector2.Zero;
@@ -850,9 +855,12 @@ namespace Barotrauma
                 {
                     DrawSubAvailabilityText("advancedsub.all", highestSubTier);
                 }
-                foreach (var (subClass, tier) in overrideTiers)
+                if (overrideTiers != null)
                 {
-                    DrawSubAvailabilityText($"advancedsub.{subClass}", tier);
+                    foreach (var (subClass, tier) in overrideTiers)
+                    {
+                        DrawSubAvailabilityText($"advancedsub.{subClass}", tier);
+                    }
                 }
                 void DrawSubAvailabilityText(string tag, int tier)
                 {

@@ -15,10 +15,7 @@ namespace Barotrauma
         }
 
         [NetworkSerialize]
-        public readonly record struct TalentStatIdentifier(ItemTalentStats Stat, Identifier TalentIdentifier, UInt32 CharacterID) : INetSerializableStruct
-        {
-            public override int GetHashCode() => HashCode.Combine(TalentIdentifier, CharacterID, Stat);
-        }
+        public readonly record struct TalentStatIdentifier(ItemTalentStats Stat, Identifier TalentIdentifier, UInt32 CharacterID) : INetSerializableStruct;
 
         private readonly Dictionary<TalentStatIdentifier, float> talentStats = new();
 

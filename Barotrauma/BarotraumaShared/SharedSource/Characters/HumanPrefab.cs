@@ -108,6 +108,9 @@ namespace Barotrauma
         [Serialize("", IsPropertySaveable.No)]
         public Identifier Faction { get; set; }
 
+        [Serialize("", IsPropertySaveable.No)]
+        public Identifier Group { get; set; }
+
         public XElement Element { get; protected set; }
         
 

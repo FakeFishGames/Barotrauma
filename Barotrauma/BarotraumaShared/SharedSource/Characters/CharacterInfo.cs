@@ -63,27 +63,34 @@ namespace Barotrauma
             public readonly CharacterInfo CharacterInfo;
             public readonly HeadPreset Preset;
 
-            private int hairIndex;
+            public int HairIndex { get; set; }
 
-            public int HairIndex
+            private int? hairWithHatIndex;
+
+            public void SetHairWithHatIndex()
             {
-                get => hairIndex;
-                set
+                if (CharacterInfo.Hairs is null)
                 {
-                    hairIndex = value;
-                    if (CharacterInfo.Hairs is null)
+                    if (HairIndex == -1)
                     {
-                        HairWithHatIndex = value;
-                        return;
+#if DEBUG
+                        DebugConsole.ThrowError("Setting \"hairWithHatIndex\" before \"Hairs\" are defined!");
+#else
+                        DebugConsole.AddWarning("Setting \"hairWithHatIndex\" before \"Hairs\" are defined!");
+#endif
                     }
-                    HairWithHatIndex = HairElement?.GetAttributeInt("replacewhenwearinghat", hairIndex) ?? -1;
-                    if (HairWithHatIndex < 0 || HairWithHatIndex >= CharacterInfo.Hairs.Count)
+                    hairWithHatIndex = HairIndex;
+                }
+                else
+                {
+                    hairWithHatIndex = HairElement?.GetAttributeInt("replacewhenwearinghat", HairIndex) ?? -1;
+                    if (hairWithHatIndex < 0 || hairWithHatIndex >= CharacterInfo.Hairs.Count)
                     {
-                        HairWithHatIndex = hairIndex;
+                        hairWithHatIndex = HairIndex;
                     }
                 }
             }
-            public int HairWithHatIndex { get; private set; }
+
             public int BeardIndex;
             public int MoustacheIndex;
             public int FaceAttachmentIndex;
@@ -99,26 +106,29 @@ namespace Barotrauma
                 get
                 {
                     if (CharacterInfo.Hairs == null) { return null; }
-                    if (hairIndex >= CharacterInfo.Hairs.Count)
+                    if (HairIndex >= CharacterInfo.Hairs.Count)
                     {
-                        DebugConsole.AddWarning($"Hair index out of range (character: {CharacterInfo?.Name ?? "null"}, index: {hairIndex})");
+                        DebugConsole.AddWarning($"Hair index out of range (character: {CharacterInfo?.Name ?? "null"}, index: {HairIndex})");
                     }
-                    return CharacterInfo.Hairs.ElementAtOrDefault(hairIndex);
+                    return CharacterInfo.Hairs.ElementAtOrDefault(HairIndex);
                 }
             }
             public ContentXElement HairWithHatElement
             {
                 get
                 {
-                    if (CharacterInfo.Hairs == null) { return null; }
-                    if (HairWithHatIndex >= CharacterInfo.Hairs.Count)
+                    if (hairWithHatIndex == null)
                     {
-                        DebugConsole.AddWarning($"Hair with hat index out of range (character: {CharacterInfo?.Name ?? "null"}, index: {HairWithHatIndex})");
+                        SetHairWithHatIndex();
                     }
-                    return CharacterInfo.Hairs.ElementAtOrDefault(HairWithHatIndex);
+                    if (CharacterInfo.Hairs == null) { return null; }
+                    if (hairWithHatIndex >= CharacterInfo.Hairs.Count)
+                    {
+                        DebugConsole.AddWarning($"Hair with hat index out of range (character: {CharacterInfo?.Name ?? "null"}, index: {hairWithHatIndex})");
+                    }
+                    return CharacterInfo.Hairs.ElementAtOrDefault(hairWithHatIndex.Value);
                 }
             }            
-
             public ContentXElement BeardElement
             {
                 get
@@ -712,7 +722,7 @@ namespace Barotrauma
         private bool IsColorValid(in Color clr)
             => clr.R != 0 || clr.G != 0 || clr.B != 0;
         
-        private void CheckColors()
+        public void CheckColors()
         {
             if (!IsColorValid(Head.HairColor))
             {

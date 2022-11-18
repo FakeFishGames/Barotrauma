@@ -9,6 +9,10 @@ namespace Barotrauma.Abilities
         public CharacterAbilityGiveTalentPointsToAllies(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             amount = abilityElement.GetAttributeInt("amount", 0);
+            if (amount == 0)
+            {
+                DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier}, amount of talent points to give is 0.");
+            }
         }
 
         public override void InitializeAbility(bool addingFirstTime)

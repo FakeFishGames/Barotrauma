@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Barotrauma.Abilities
+﻿namespace Barotrauma.Abilities
 {
     public enum PermanentStatPlaceholder
     {
@@ -28,6 +26,10 @@ namespace Barotrauma.Abilities
         public CharacterAbilityGivePermanentStat(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             statIdentifier = abilityElement.GetAttributeIdentifier("statidentifier", Identifier.Empty);
+            if (statIdentifier.IsEmpty)
+            {
+                DebugConsole.ThrowError($"Error in talent \"{CharacterTalent.DebugIdentifier}\" - stat identifier not defined.");
+            }
             string statTypeName = abilityElement.GetAttributeString("stattype", string.Empty);
             statType = string.IsNullOrEmpty(statTypeName) ? StatTypes.None : CharacterAbilityGroup.ParseStatType(statTypeName, CharacterTalent.DebugIdentifier);
             value = abilityElement.GetAttributeFloat("value", 0f);

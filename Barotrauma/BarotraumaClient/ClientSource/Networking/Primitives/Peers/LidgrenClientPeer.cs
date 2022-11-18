@@ -111,7 +111,7 @@ namespace Barotrauma.Networking
 
             foreach (NetIncomingMessage inc in incomingLidgrenMessages)
             {
-                if (!inc.SenderConnection.RemoteEndPoint.Equals(lidgrenEndpoint.NetEndpoint))
+                if (!inc.SenderConnection.RemoteEndPoint.EquivalentTo(lidgrenEndpoint.NetEndpoint))
                 {
                     DebugConsole.AddWarning($"Mismatched endpoint: expected {lidgrenEndpoint.NetEndpoint}, got {inc.SenderConnection.RemoteEndPoint}");
                     continue;

@@ -66,8 +66,8 @@ namespace Barotrauma
             IEnumerable<TalentSubTree> blockingSubTrees = tree.TalentSubTrees.Where(tst => tst.BlockedTrees.Contains(targetTree.Identifier)),
                                        requiredSubTrees = tree.TalentSubTrees.Where(tst => targetTree.RequiredTrees.Contains(tst.Identifier));
 
-            return requiredSubTrees.All(tst => tst.IsCompleted(selectedTalents)) &&  // check if we meet requirements
-                   !blockingSubTrees.Any(tst => tst.HasAnyTalent(selectedTalents)); // check if any other talent trees are blocking this one
+            return requiredSubTrees.All(tst => tst.HasEnoughTalents(selectedTalents)) &&  // check if we meet requirements
+                   !blockingSubTrees.Any(tst => tst.HasAnyTalent(selectedTalents) && !tst.HasMaxTalents(selectedTalents)); // check if any other talent trees are blocking this one
         }
 
         // i hate this function - markus
@@ -128,21 +128,28 @@ namespace Barotrauma
         public static bool IsViableTalentForCharacter(Character character, Identifier talentIdentifier, IReadOnlyCollection<Identifier> selectedTalents)
         {
             if (character?.Info?.Job.Prefab == null) { return false; }
-
             if (character.Info.GetTotalTalentPoints() - selectedTalents.Count <= 0) { return false; }
-
             if (!JobTalentTrees.TryGet(character.Info.Job.Prefab.Identifier, out TalentTree talentTree)) { return false; }
 
-            foreach (Character c in GameSession.GetSessionCrewCharacters(CharacterType.Both))
-            {
-                if (c.Info.GetSavedStatValue(StatTypes.LockedTalents, talentIdentifier) >= 1) { return false; }
-            }
+            if (IsTalentLocked(talentIdentifier)) { return false; }
 
             foreach (var subTree in talentTree!.TalentSubTrees)
             {
+                if (subTree.AllTalentIdentifiers.Contains(talentIdentifier) && subTree.HasMaxTalents(selectedTalents)) { return false; }
+
                 foreach (var talentOptionStage in subTree.TalentOptionStages)
                 {
-                    bool hasTalentInThisTier = talentOptionStage.HasEnoughTalents(selectedTalents);
+                    if (talentOptionStage.TalentIdentifiers.Contains(talentIdentifier))
+                    {
+                        return TalentTreeMeetsRequirements(talentTree, subTree, selectedTalents);
+                    }
+                    bool optionStageCompleted = talentOptionStage.HasEnoughTalents(selectedTalents);
+                    if (!optionStageCompleted)
+                    {
+                        break;
+                    }
+
+                    /*bool hasTalentInThisTier = talentOptionStage.HasMaxTalents(selectedTalents);
                     if (!hasTalentInThisTier)
                     {
                         if (talentOptionStage.TalentIdentifiers.Contains(talentIdentifier))
@@ -150,8 +157,20 @@ namespace Barotrauma
                             return TalentTreeMeetsRequirements(talentTree, subTree, selectedTalents);
                         }
                         break;
-                    }
+                    }*/
                 }
+            }
+
+            return false;
+        }
+
+        public static bool IsTalentLocked(Identifier talentIdentifier, ImmutableHashSet<Character> characterList = null)
+        {
+            characterList ??= GameSession.GetSessionCrewCharacters(CharacterType.Both);
+
+            foreach (Character c in characterList)
+            {
+                if (c.Info.GetSavedStatValue(StatTypes.LockedTalents, talentIdentifier) >= 1) { return true; }
             }
 
             return false;
@@ -201,7 +220,8 @@ namespace Barotrauma
         public readonly ImmutableHashSet<Identifier> RequiredTrees;
         public readonly ImmutableHashSet<Identifier> BlockedTrees;
 
-        public bool IsCompleted(IReadOnlyCollection<Identifier> talents) => TalentOptionStages.All(option => option.HasEnoughTalents(talents));
+        public bool HasEnoughTalents(IReadOnlyCollection<Identifier> talents) => TalentOptionStages.All(option => option.HasEnoughTalents(talents));
+        public bool HasMaxTalents(IReadOnlyCollection<Identifier> talents) => TalentOptionStages.All(option => option.HasMaxTalents(talents));
         public bool HasAnyTalent(IReadOnlyCollection<Identifier> talents) => TalentOptionStages.Any(option => option.HasSelectedTalent(talents));
 
         public TalentSubTree(ContentXElement subTreeElement)
@@ -233,6 +253,13 @@ namespace Barotrauma
 
         public IEnumerable<Identifier> TalentIdentifiers => talentIdentifiers;
 
+        /// <summary>
+        /// How many talents need to be unlocked to consider this tree completed
+        /// </summary>
+        public readonly int RequiredTalents;
+        /// <summary>
+        /// How many talents can be unlocked in total
+        /// </summary>
         public readonly int MaxChosenTalents;
 
         /// <summary>
@@ -241,8 +268,9 @@ namespace Barotrauma
         /// </summary>
         public readonly Dictionary<Identifier, ImmutableHashSet<Identifier>> ShowCaseTalents = new Dictionary<Identifier, ImmutableHashSet<Identifier>>();
 
-        public bool HasEnoughTalents(CharacterInfo character) => CountMatchingTalents(character.UnlockedTalents) >= MaxChosenTalents;
-        public bool HasEnoughTalents(IReadOnlyCollection<Identifier> selectedTalents) => CountMatchingTalents(selectedTalents) >= MaxChosenTalents;
+        public bool HasEnoughTalents(CharacterInfo character) => CountMatchingTalents(character.UnlockedTalents) >= RequiredTalents;
+        public bool HasEnoughTalents(IReadOnlyCollection<Identifier> selectedTalents) => CountMatchingTalents(selectedTalents) >= RequiredTalents;
+        public bool HasMaxTalents(IReadOnlyCollection<Identifier> selectedTalents) => CountMatchingTalents(selectedTalents) >= MaxChosenTalents;
 
         // No LINQ
         public bool HasSelectedTalent(IReadOnlyCollection<Identifier> selectedTalents)
@@ -272,10 +300,15 @@ namespace Barotrauma
 
         public TalentOption(ContentXElement talentOptionsElement, Identifier debugIdentifier)
         {
-            MaxChosenTalents = talentOptionsElement.GetAttributeInt("maxchosentalents", 1);
+            MaxChosenTalents = talentOptionsElement.GetAttributeInt(nameof(MaxChosenTalents), 1);
+            RequiredTalents = talentOptionsElement.GetAttributeInt(nameof(RequiredTalents), MaxChosenTalents);
+
+            if (RequiredTalents > MaxChosenTalents)
+            {
+                DebugConsole.ThrowError($"Error in talent tree {debugIdentifier} - MaxChosenTalents is larger than RequiredTalents.");
+            }
 
             HashSet<Identifier> identifiers = new HashSet<Identifier>();
-
             foreach (ContentXElement talentOptionElement in talentOptionsElement.Elements())
             {
                 Identifier elementName = talentOptionElement.Name.ToIdentifier();
@@ -298,6 +331,15 @@ namespace Barotrauma
             }
 
             talentIdentifiers = identifiers.ToImmutableHashSet();
+
+            if (RequiredTalents > talentIdentifiers.Count)
+            {
+                DebugConsole.ThrowError($"Error in talent tree {debugIdentifier} - completing a stage of the tree requires more talents than there are in the stage.");
+            }
+            if (MaxChosenTalents > talentIdentifiers.Count)
+            {
+                DebugConsole.ThrowError($"Error in talent tree {debugIdentifier} - maximum number of talents to choose is larger than the number of talents.");
+            }
         }
     }
 }

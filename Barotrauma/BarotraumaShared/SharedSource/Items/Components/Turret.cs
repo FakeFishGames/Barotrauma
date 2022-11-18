@@ -991,7 +991,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (character == null || character.Removed || character.IsDead) { continue; }
                     if (!friendlyTag.IsEmpty && (character.SpeciesName.Equals(friendlyTag) || character.Group.Equals(friendlyTag))) { continue; }
-                    bool isHuman = character.IsHuman || character.Params.Group == CharacterPrefab.HumanSpeciesName;
+                    bool isHuman = character.IsHuman || character.Group == CharacterPrefab.HumanSpeciesName;
                     if (isHuman)
                     {
                         if (!targetHumans)

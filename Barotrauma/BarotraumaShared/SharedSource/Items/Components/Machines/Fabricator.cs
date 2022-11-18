@@ -15,6 +15,8 @@ namespace Barotrauma.Items.Components
     {
         private ImmutableDictionary<uint, FabricationRecipe> fabricationRecipes; //this is not readonly because tutorials fuck this up!!!!
 
+        private const int MaxAmountToFabricate = 99;
+
         private FabricationRecipe fabricatedItem;
         private float timeUntilReady;
         private float requiredTime;
@@ -38,6 +40,16 @@ namespace Barotrauma.Items.Components
         
         [Serialize(1.0f, IsPropertySaveable.Yes)]
         public float SkillRequirementMultiplier { get; set; }
+
+        private int amountToFabricate;
+        [Serialize(1, IsPropertySaveable.Yes)]
+        public int AmountToFabricate 
+        {
+            get { return amountToFabricate; }
+            set { amountToFabricate = MathHelper.Clamp(value, 1, MaxAmountToFabricate); }
+        }
+
+        private int amountRemaining;
 
         private const float TinkeringSpeedIncrease = 2.5f;
 
@@ -183,15 +195,19 @@ namespace Barotrauma.Items.Components
             if (selectedItem == null) { return; }
             if (!outputContainer.Inventory.CanBePut(selectedItem.TargetItem, selectedItem.OutCondition * selectedItem.TargetItem.Health)) { return; }
 
-#if CLIENT
-            itemList.Enabled = false;
-            activateButton.Text = TextManager.Get("FabricatorCancel");
-#endif
-
             IsActive = true;
             this.user = user;
             fabricatedItem = selectedItem;
             RefreshAvailableIngredients();
+
+#if CLIENT
+            itemList.Enabled = false;
+            if (amountInput != null)
+            {
+                amountInput.Enabled = false;
+            }
+            RefreshActivateButtonText();
+#endif
 
             bool isClient = GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
             if (!isClient)
@@ -249,10 +265,11 @@ namespace Barotrauma.Items.Components
             }
 #elif CLIENT
             itemList.Enabled = true;
-            if (activateButton != null)
+            if (amountInput != null)
             {
-                activateButton.Text = TextManager.Get(CreateButtonText);
+                amountInput.Enabled = true;
             }
+            RefreshActivateButtonText();
 #endif
             fabricatedItem = null;
         }
@@ -518,20 +535,16 @@ namespace Barotrauma.Items.Components
                     }
                 }
 
-                //disabled "continuous fabrication" for now
-                //before we enable it, there should be some UI controls for fabricating a specific number of items
-
-                /*var prevFabricatedItem = fabricatedItem;
+                var prevFabricatedItem = fabricatedItem;
                 var prevUser = user;
                 CancelFabricating();
-                if (CanBeFabricated(prevFabricatedItem))
+
+                amountRemaining--;
+                if (amountRemaining > 0 && CanBeFabricated(prevFabricatedItem, availableIngredients, prevUser))
                 {
                     //keep fabricating if we can fabricate more
                     StartFabricating(prevFabricatedItem, prevUser, addToServerLog: false);
-                }*/
-
-
-                CancelFabricating();
+                }
             }
 
         }
@@ -594,7 +607,15 @@ namespace Barotrauma.Items.Components
         private bool CanBeFabricated(FabricationRecipe fabricableItem, IReadOnlyDictionary<Identifier, List<Item>> availableIngredients, Character character)
         {
             if (fabricableItem == null) { return false; }
-            if (fabricableItem.RequiresRecipe && (character == null || !character.HasRecipeForItem(fabricableItem.TargetItem.Identifier))) { return false; }
+            if (fabricableItem.RequiresRecipe) 
+            {
+                if (character == null) { return false; }
+                if (!character.HasRecipeForItem(fabricableItem.TargetItem.Identifier) &&
+                    GameSession.GetSessionCrewCharacters(CharacterType.Bot).None(c => c.HasRecipeForItem(fabricableItem.TargetItem.Identifier)))
+                {
+                    return false; 
+                }
+            }
 
             if (fabricableItem.RequiredMoney > 0)
             {
