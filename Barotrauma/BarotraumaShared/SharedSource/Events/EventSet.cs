@@ -114,15 +114,9 @@ namespace Barotrauma
         public readonly bool DisableInHuntingGrounds;
 
         /// <summary>
-        /// If true, events from this set shouldn't be selected again as long as they remain in <see cref="LevelData.NonRepeatableEvents"/> which has a limited size.
-        /// Use <see cref="Unique"/> to prevent selecting the whole set again altogether.
+        /// If true, events from this set can only occur once in the level.
         /// </summary>
-        public readonly bool OncePerOutpost;
-
-        /// <summary>
-        /// If true, the whole set can only be selected once for a level.
-        /// </summary>
-        public readonly bool Unique;
+        public readonly bool OncePerLevel;
 
         public readonly bool DelayWhenCrewAway;
 
@@ -289,8 +283,7 @@ namespace Barotrauma
             DisableInHuntingGrounds = element.GetAttributeBool("disableinhuntinggrounds", false);
             IgnoreCoolDown = element.GetAttributeBool("ignorecooldown", parentSet?.IgnoreCoolDown ?? (PerRuin || PerCave || PerWreck));
             DelayWhenCrewAway = element.GetAttributeBool("delaywhencrewaway", !PerRuin && !PerCave && !PerWreck);
-            OncePerOutpost = element.GetAttributeBool("onceperoutpost", false);
-            Unique = element.GetAttributeBool("unique", false);
+            OncePerLevel = element.GetAttributeBool("onceperlevel", element.GetAttributeBool("onceperoutpost", false));
             TriggerEventCooldown = element.GetAttributeBool("triggereventcooldown", true);
             IsCampaignSet = element.GetAttributeBool("campaign", LevelType == LevelData.LevelType.Outpost || (parentSet?.IsCampaignSet ?? false));
             ResetTime = element.GetAttributeFloat("resettime", 0);

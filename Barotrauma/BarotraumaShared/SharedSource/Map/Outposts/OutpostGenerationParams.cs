@@ -260,6 +260,21 @@ namespace Barotrauma
             return humanPrefabCollections.GetRandom(randSync);
         }
 
+        public bool CanHaveCampaignInteraction(CampaignMode.InteractionType interactionType)
+        {
+            foreach (var collection in humanPrefabCollections)
+            {
+                foreach (var prefab in collection)
+                {
+                    if (prefab.CampaignInteractionType == interactionType)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         public ImmutableHashSet<Identifier> GetStoreIdentifiers()
         {
             if (StoreIdentifiers == null)

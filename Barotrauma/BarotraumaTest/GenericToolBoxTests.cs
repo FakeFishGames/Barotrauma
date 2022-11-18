@@ -46,6 +46,7 @@ public sealed class GenericToolBoxTests
         Prop.ForAll<DifferentIdentifierPair>(static pair =>
         {
             ToolBox.StatIdentifierMatches(pair.First, $"{pair.First}~{pair.Second}".ToIdentifier()).Should().BeTrue();
+            ToolBox.StatIdentifierMatches($"{pair.First}~{pair.Second}".ToIdentifier(), pair.First).Should().BeTrue();
             ToolBox.StatIdentifierMatches(pair.First, pair.First).Should().BeTrue();
 
             ToolBox.StatIdentifierMatches(pair.First, $"{pair.Second}~{pair.First}".ToIdentifier()).Should().BeFalse();

@@ -22,7 +22,7 @@ namespace Barotrauma
         [Serialize("", IsPropertySaveable.Yes)]
         public Identifier OrderTargetTag { get; set; }
 
-        [Serialize(OrderPriority.Top, IsPropertySaveable.Yes)]
+        [Serialize(OrderPriority.Any, IsPropertySaveable.Yes)]
         public OrderPriority Priority { get; set; }
 
         public CheckOrderAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }

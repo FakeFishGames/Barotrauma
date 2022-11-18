@@ -1371,7 +1371,7 @@ namespace Barotrauma
 
             Limb head = GetLimb(LimbType.Head);
             Limb torso = GetLimb(LimbType.Torso);
-            
+
             Vector2 headDiff = targetHead == null ? diff : targetHead.SimPosition - character.SimPosition;
             targetMovement = new Vector2(diff.X, 0.0f);
             TargetDir = headDiff.X > 0.0f ? Direction.Right : Direction.Left;
@@ -1386,15 +1386,25 @@ namespace Barotrauma
 
             float prevVitality = target.Vitality;
             bool wasCritical = prevVitality < 0.0f;
-            
+
             if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient) //Serverside code
             {
                 target.Oxygen += deltaTime * 0.5f; //Stabilize them        
             }
 
             float cprBoost = character.GetStatValue(StatTypes.CPRBoost);
-           
+
             int skill = (int)character.GetSkillLevel("medical");
+
+            if (GameMain.NetworkMember is not { IsClient: true })
+            {
+                if (cprBoost >= 1f)
+                {
+                    //prevent the patient from suffocating no matter how fast their oxygen level is dropping
+                    target.Oxygen = Math.Max(target.Oxygen, -10.0f);
+                }
+            }
+
             //pump for 15 seconds (cprAnimTimer 0-15), then do mouth-to-mouth for 2 seconds (cprAnimTimer 15-17)
             if (cprAnimTimer > 15.0f && targetHead != null && head != null)
             {
@@ -1405,23 +1415,15 @@ namespace Barotrauma
                 torso.PullJointEnabled = true;
 
                 //Serverside code
-                if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
+                if (GameMain.NetworkMember is not { IsClient: true })
                 {
                     if (target.Oxygen < -10.0f)
                     {
-                        if (cprBoost >= 1f)
-                        {
-                            //prevent the patient from suffocating no matter how fast their oxygen level is dropping
-                            target.Oxygen = Math.Max(target.Oxygen, -10.0f);
-                        }
-                        else
-                        {
-                            //stabilize the oxygen level but don't allow it to go positive and revive the character yet
-                            float stabilizationAmount = skill * CPRSettings.Active.StabilizationPerSkill;
-                            stabilizationAmount = MathHelper.Clamp(stabilizationAmount, CPRSettings.Active.StabilizationMin, CPRSettings.Active.StabilizationMax);
-                            character.Oxygen -= 1.0f / stabilizationAmount * deltaTime; //Worse skill = more oxygen required
-                            if (character.Oxygen > 0.0f) { target.Oxygen += stabilizationAmount * deltaTime; } //we didn't suffocate yet did we
-                        }
+                        //stabilize the oxygen level but don't allow it to go positive and revive the character yet
+                        float stabilizationAmount = skill * CPRSettings.Active.StabilizationPerSkill;
+                        stabilizationAmount = MathHelper.Clamp(stabilizationAmount, CPRSettings.Active.StabilizationMin, CPRSettings.Active.StabilizationMax);
+                        character.Oxygen -= 1.0f / stabilizationAmount * deltaTime; //Worse skill = more oxygen required
+                        if (character.Oxygen > 0.0f) { target.Oxygen += stabilizationAmount * deltaTime; } //we didn't suffocate yet did we
                     }
                 }
             }

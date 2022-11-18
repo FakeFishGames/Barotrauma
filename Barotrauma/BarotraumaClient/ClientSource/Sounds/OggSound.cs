@@ -11,7 +11,7 @@ namespace Barotrauma.Sounds
         private VorbisReader reader;
 
         //key = sample rate, value = filter
-        private static Dictionary<int, BiQuad> muffleFilters = new Dictionary<int, BiQuad>();
+        private static readonly Dictionary<int, BiQuad> muffleFilters = new Dictionary<int, BiQuad>();
 
         private static List<float> playbackAmplitude;
         private const int AMPLITUDE_SAMPLE_COUNT = 4410; //100ms in a 44100hz file
@@ -29,8 +29,8 @@ namespace Barotrauma.Sounds
 
         public override int FillStreamBuffer(int samplePos, short[] buffer)
         {
-            if (!Stream) throw new Exception("Called FillStreamBuffer on a non-streamed sound!");
-            if (reader == null) throw new Exception("Called FillStreamBuffer when the reader is null!");
+            if (!Stream) { throw new Exception("Called FillStreamBuffer on a non-streamed sound!"); }
+            if (reader == null) { throw new Exception("Called FillStreamBuffer when the reader is null!"); }
 
             if (samplePos >= reader.TotalSamples * reader.Channels * 2) return 0;
 

@@ -1,4 +1,48 @@
 ---------------------------------------------------------------------------------------------------------
+v0.20.7.0
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Added a slider to the fabricator that can be used to select how many items to fabricate.
+- Chance of finding good/excellent/masterwork quality items in higher-difficulty levels.
+- Changed engines' default repair threshold to 50 to 80.
+- Quality of the radio voice chat diminishes with distance (gradually fading into radio static), similar to the way as the quality of the text chat.
+- Voice chat range also affects spectators (= spectators can't hear players talking at the other side of the level).
+
+Unstable only:
+- Changed how the restrictions on specialization talent trees work: instead of being only allowed to choose one, you can unlock all of them (but need to complete the entire specialization tree before you can choose another one).
+- Any number of generic talents can be chosen (but you can still only pick talents from the next tier when you've unlocked 2 generic talents).
+- Anyone can use the recipes bots have unlocked via talents.
+- Various fixes, balance changes and improvements to talents.
+- Fixed Arc Emitter damaging nearby characters that aren't near the arc (e.g. characters behind the shooter's back).
+- Fixed null reference exception in EnemyAIController.UpdateLimbAttack (caused frequent crashes when getting attacked by swarms).
+- Improvements to the exosuit sprite.
+- Fixed bots not being able to apply medical treatment anymore.
+- Fixed switching from a directional ping to passive immediately making the item's AITarget sector a full 360 degrees, and AITarget's sector not being taken into account when determining what it should reveal on passive sonar. 
+- Fixed submarine availability being displayed incorrectly on some locations (e.g. abandoned outposts) on the campaign map.
+- Fixed feign death not working when you have a provocative items (e.g. items that make sounds or otherwise attrack monsters) in the inventory.
+- Restored some of the wrecked sprites that were replaced with tinted version of the normal sprite in the previous builds (WIP).
+- Fixed fiber plant sprite.
+- Fixed bigbrother event getting stuck when choosing "not interested".
+- Fixed autoinjectors (autoinjector headset, PUCS) no longer working.
+
+Bugfixes:
+- Fixed main menu sometimes appearing half obstructed when starting the game on Mac.
+- Fixed speech impediments only affecting the text chat, not the voice chat.
+- Fixed radio voice chat not working properly if the range of the radio is larger than 250 meters. Happened because characters' positions aren't synced if they're further away than 250 meters from the client. In practice, the quality/volume of the chat would stop diminishing after 250 meters, and then immediately cut off when outside the radio range.
+- Fixed inability to connect to IPv4 servers when IPv6 is disabled.
+- Fixed husk appendage breaking if the character already has extra limbs from e.g. genes.
+- Fixed blocked doorways in Alien_Entrance3.
+- Fixed Cyrillic symbols not being visible in the server list's server info panel when playing in a language other than Russian.
+- Fixed certain genetic effects (such as regeneration from Hammerhead Matriarch genes) not working properly when multiple characters have the same effect.
+- Adjusted railgun, coilgun and double coilgun firing offsets to make the projectile spawn closer to the end of the barrel.
+- Fixed incorrect tags in the vending machine in EngineeringModule_01_Colony, causing engineering gear to spawn in the output slot.
+
+Modding:
+- Made it possible to check if some value is null or not with PropertyConditionals (e.g. CurrentHull="eq null").
+- Added UseEnvironment.None to Propulsion component.
+
+---------------------------------------------------------------------------------------------------------
 v0.20.6.0
 ---------------------------------------------------------------------------------------------------------
 

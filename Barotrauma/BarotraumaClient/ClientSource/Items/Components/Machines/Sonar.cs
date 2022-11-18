@@ -802,21 +802,34 @@ namespace Barotrauma.Items.Components
             if (passivePingRadius > 0.0f)
             {
                 if (activePingsCount == 0) { disruptedDirections.Clear(); }
+                //emit "pings" from nearby sound-emitting AITargets to reveal what's around them
                 foreach (AITarget t in AITarget.List)
                 {
                     if (t.Entity is Character c && !c.IsUnconscious && c.Params.HideInSonar) { continue; }
                     if (t.SoundRange <= 0.0f || float.IsNaN(t.SoundRange) || float.IsInfinity(t.SoundRange)) { continue; }
-                    
+
                     float distSqr = Vector2.DistanceSquared(t.WorldPosition, transducerCenter);
                     if (distSqr > t.SoundRange * t.SoundRange * 2) { continue; }
 
                     float dist = (float)Math.Sqrt(distSqr);
-                    if (dist > prevPassivePingRadius * Range && dist <= passivePingRadius * Range && Rand.Int(sonarBlips.Count) < 500 && t.IsWithinSector(transducerCenter))
+                    if (dist > prevPassivePingRadius * Range && dist <= passivePingRadius * Range && Rand.Int(sonarBlips.Count) < 500)
                     {
+                        int prevBlipCount = sonarBlips.Count;
                         Ping(t.WorldPosition, transducerCenter,
-                            Math.Min(t.SoundRange, range * 0.5f) * displayScale, 0, displayScale, Math.Min(t.SoundRange, range * 0.5f), 
+                            Math.Min(t.SoundRange, range * 0.5f) * displayScale, 0, displayScale, Math.Min(t.SoundRange, range * 0.5f),
                             passive: true, pingStrength: 0.5f);
                         sonarBlips.Add(new SonarBlip(t.WorldPosition, 1.0f, 1.0f));
+                        //remove blips that weren't in the AITarget's sector
+                        if (t.HasSector())
+                        {
+                            for (int i = sonarBlips.Count - 1; i >= prevBlipCount; i--)
+                            {
+                                if (!t.IsWithinSector(sonarBlips[i].Position))
+                                {
+                                    sonarBlips.RemoveAt(i);
+                                }
+                            }
+                        }
                     }
                 }
             }

@@ -450,6 +450,7 @@ namespace Barotrauma.Items.Components
         public override bool Select(Character activator)
         {
             if (activator == null || activator.Removed) { return false; }
+            if (Item.Condition <= 0.0f && !UpdateWhenInactive) { return false; }
 
             if (UsableIn == UseEnvironment.Water && !activator.AnimController.InWater ||
                 UsableIn == UseEnvironment.Air && activator.AnimController.InWater)

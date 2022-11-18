@@ -11,6 +11,14 @@ namespace Barotrauma.Abilities
         {
             factionIdentifier = abilityElement.GetAttributeIdentifier("identifier", Identifier.Empty);
             amount = abilityElement.GetAttributeFloat("amount", 0f);
+            if (factionIdentifier.IsEmpty)
+            {
+                DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier}, faction identifier not defined.");
+            }
+            if (amount == 0)
+            {
+                DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier}, amount of reputation to give is 0.");
+            }
         }
 
         protected override void ApplyEffect()

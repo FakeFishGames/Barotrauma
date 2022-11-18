@@ -25,6 +25,8 @@ namespace Barotrauma
         FriendlyNPC = 3
     }
 
+    public readonly record struct TalentResistanceIdentifier(Identifier ResistanceIdentifier, Identifier TalentIdentifier);
+
     partial class Character : Entity, IDamageable, ISerializableEntity, IClientSerializable, IServerPositionSync
     {
         public readonly static List<Character> CharacterList = new List<Character>();
@@ -347,7 +349,7 @@ namespace Barotrauma
         private readonly Dictionary<ItemPrefab, double> itemSelectedDurations = new Dictionary<ItemPrefab, double>();
         private double itemSelectedTime;
 
-        public float InvisibleTimer;
+        public float InvisibleTimer { get; set; }
 
         public readonly CharacterPrefab Prefab;
 
@@ -1372,7 +1374,28 @@ namespace Barotrauma
                 tags.RemoveWhere(t => t.StartsWith("variant"));
                 tags.Add($"variant{headId.Value}".ToIdentifier());
             }
+            var oldHeadInfo = Info.Head;
             Info.RecreateHead(tags.ToImmutableHashSet(), hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
+            if (hairIndex == -1)
+            {
+                Info.Head.HairIndex = oldHeadInfo.HairIndex;
+            }
+            if (beardIndex == -1)
+            {
+                Info.Head.BeardIndex = oldHeadInfo.BeardIndex;
+            }
+            if (moustacheIndex == -1)
+            {
+                Info.Head.MoustacheIndex = oldHeadInfo.MoustacheIndex;
+            }
+            if (faceAttachmentIndex == -1)
+            {
+                Info.Head.FaceAttachmentIndex = oldHeadInfo.FaceAttachmentIndex;
+            }
+            Info.Head.SkinColor = oldHeadInfo.SkinColor;
+            Info.Head.HairColor = oldHeadInfo.HairColor;
+            Info.Head.FacialHairColor = oldHeadInfo.FacialHairColor;
+            Info.CheckColors();
 #if CLIENT
             head.RecreateSprites();
 #endif
@@ -3050,7 +3073,8 @@ namespace Barotrauma
             ApplyStatusEffects(AnimController.InWater ? ActionType.InWater : ActionType.NotInWater, deltaTime);
             ApplyStatusEffects(ActionType.OnActive, deltaTime);
 
-            if (aiTarget != null)
+            //wait 0.1 seconds so status effects that continuously set InDetectable to true can keep the character InDetectable
+            if (aiTarget != null && Timing.TotalTime > aiTarget.InDetectableSetTime + 0.1f)
             {
                 aiTarget.InDetectable = false;
             }
@@ -5087,24 +5111,47 @@ namespace Barotrauma
             return abilityFlags.HasFlag(abilityFlag) || CharacterHealth.HasFlag(abilityFlag);
         }
 
-        private readonly Dictionary<Identifier, float> abilityResistances = new Dictionary<Identifier, float>();
- 
+        private readonly Dictionary<TalentResistanceIdentifier, float> abilityResistances = new();
+
         public float GetAbilityResistance(AfflictionPrefab affliction)
         {
-            return abilityResistances.TryGetValue(affliction.Identifier, out float value) ? value : abilityResistances.TryGetValue(affliction.AfflictionType, out float typeValue) ? typeValue : 1f;
+            float resistance = 0f;
+            bool hadResistance = false;
+
+            foreach (var (key, value) in abilityResistances)
+            {
+                if (key.ResistanceIdentifier == affliction.AfflictionType ||
+                    key.ResistanceIdentifier == affliction.Identifier)
+                {
+                    resistance += value;
+                    hadResistance = true;
+                }
+            }
+
+            return hadResistance ? resistance : 1f;
         }
 
-        public void ChangeAbilityResistance(Identifier resistanceId, float value)
+        public void ChangeAbilityResistance(TalentResistanceIdentifier identifier, float value)
         {
-            if (abilityResistances.ContainsKey(resistanceId))
+            if (!MathUtils.IsValid(value))
             {
-                abilityResistances[resistanceId] *= value;
+#if DEBUG
+                DebugConsole.ThrowError($"Attempted to set ability resistance to an invalid value ({value})\n" + Environment.StackTrace.CleanupStackTrace());
+#endif
+                return;
+            }
+
+            if (abilityResistances.ContainsKey(identifier))
+            {
+                abilityResistances[identifier] *= value;
             }
             else
             {
-                abilityResistances.Add(resistanceId, value);
+                abilityResistances.Add(identifier, value);
             }
         }
+
+        public void RemoveAbilityResistance(TalentResistanceIdentifier identifier) => abilityResistances.Remove(identifier);
 
         /// <summary>
         /// Compares just the species name and the group, ignores teams. There's a more complex version found in HumanAIController.cs

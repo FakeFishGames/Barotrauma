@@ -394,6 +394,7 @@ namespace Barotrauma
 
             showHiddenAfflictionsButton = new GUIButton(new RectTransform(new Point(afflictionIconContainer.Rect.Height), afflictionIconContainer.RectTransform), style: "GUIButtonCircular")
             {
+                Visible = false,
                 CanBeFocused = false
             };
 

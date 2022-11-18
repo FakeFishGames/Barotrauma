@@ -6,6 +6,10 @@ namespace Barotrauma.Abilities
         public CharacterAbilityMarkAsLooted(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             identifier = abilityElement.GetAttributeIdentifier("identifier", Identifier.Empty);
+            if (identifier.IsEmpty)
+            {
+                DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier}, identifier is empty in {nameof(CharacterAbilityMarkAsLooted)}.");
+            }
         }
 
         protected override void ApplyEffect(AbilityObject abilityObject)

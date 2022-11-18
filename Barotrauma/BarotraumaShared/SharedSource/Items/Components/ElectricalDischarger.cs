@@ -276,7 +276,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            //get all walls within range
+            //get all walls within range the arc could potentially hit
             List<Entity> entitiesInRange = new List<Entity>(100);
             foreach (Structure structure in Structure.WallList)
             {
@@ -284,10 +284,10 @@ namespace Barotrauma.Items.Components
                 if (structure.Submarine != null&& !submarinesInRange.Contains(structure.Submarine)) { continue; }
 
                 var structureWorldRect = structure.WorldRect;
-                if (worldPosition.X < structureWorldRect.X - range) continue;
-                if (worldPosition.X > structureWorldRect.Right + range) continue;
-                if (worldPosition.Y > structureWorldRect.Y + range) continue;
-                if (worldPosition.Y < structureWorldRect.Y -structureWorldRect.Height - range) continue;
+                if (worldPosition.X < structureWorldRect.X - range) { continue; }
+                if (worldPosition.X > structureWorldRect.Right + range) { continue; }
+                if (worldPosition.Y > structureWorldRect.Y + range) { continue; }
+                if (worldPosition.Y < structureWorldRect.Y - structureWorldRect.Height - range) { continue; }
 
                 if (structure.Submarine != null)
                 {
@@ -317,6 +317,7 @@ namespace Barotrauma.Items.Components
                 nodes.Add(new Node(worldPosition, -1));
             }
 
+            //get all characters within range the arc could potentially hit
             float totalRange = RaycastRange + range;
             foreach (Character character in Character.CharacterList)
             {
@@ -325,11 +326,20 @@ namespace Barotrauma.Items.Components
                 if (OutdoorsOnly && character.Submarine != null) { continue; }
                 if (character.Submarine != null && !submarinesInRange.Contains(character.Submarine)) { continue; }
 
-                if (Vector2.DistanceSquared(character.WorldPosition, worldPosition) < totalRange * totalRange * RangeMultiplierInWalls ||
-                    (RaycastRange > 0.0f && MathUtils.LineToPointDistanceSquared(worldPosition, item.WorldPosition, character.WorldPosition) < range * range * RangeMultiplierInWalls))
+                if (Vector2.DistanceSquared(character.WorldPosition, worldPosition) < totalRange * totalRange * RangeMultiplierInWalls)
                 {
                     entitiesInRange.Add(character);
-                    charactersInRange.Add((character, nodes[0]));
+                }
+                //if the weapon does a raycast, check distance to the ray too (not just the end of the ray)
+                if (RaycastRange > 0)
+                {
+                    float distSqr = MathUtils.LineSegmentToPointDistanceSquared(worldPosition, item.WorldPosition, character.WorldPosition);
+                    //if the distance from the initial raycast to the character is small (e.g. goes through the character), we know it must hit
+                    if (distSqr < range * range * RangeMultiplierInWalls)
+                    {
+                        if (!entitiesInRange.Contains(character)) { entitiesInRange.Add(character); }                   
+                        charactersInRange.Add((character, nodes.First()));                        
+                    }
                 }
             }
 
@@ -378,7 +388,7 @@ namespace Barotrauma.Items.Components
                 }
                 else if (entitiesInRange[i] is Character character)
                 {
-                    dist = Vector2.Distance(character.WorldPosition, currPos);
+                    dist = MathUtils.LineSegmentToPointDistanceSquared(currPos, nodes[parentNodeIndex].WorldPosition, character.WorldPosition);
                 }
 
                 if (dist < closestDist)
@@ -494,17 +504,31 @@ namespace Barotrauma.Items.Components
                     if (IgnoreUser && character == user) { continue; }
                     if (OutdoorsOnly && character.Submarine != null) { continue; }
 
+                    Vector2 characterMin = new Vector2(character.AnimController.Limbs.Min(l => l.WorldPosition.X), character.AnimController.Limbs.Min(l => l.WorldPosition.Y));
+                    Vector2 characterMax = new Vector2(character.AnimController.Limbs.Max(l => l.WorldPosition.X), character.AnimController.Limbs.Max(l => l.WorldPosition.Y));
                     if (targetStructure.IsHorizontal)
                     {
-                        if (otherEntity.WorldPosition.X < targetStructure.WorldRect.X) { continue; }
-                        if (otherEntity.WorldPosition.X > targetStructure.WorldRect.Right) { continue; }
-                        if (Math.Abs(otherEntity.WorldPosition.Y - targetStructure.WorldPosition.Y) > currentRange) { continue; }
+                        if (characterMax.X < targetStructure.WorldRect.X) { continue; }
+                        if (characterMin.X > targetStructure.WorldRect.Right) { continue; }
+                        if (Math.Abs(characterMin.Y - targetStructure.WorldPosition.Y) > currentRange && 
+                            Math.Abs(characterMax.Y - targetStructure.WorldPosition.Y) > currentRange) 
+                        {
+                            continue;
+                        }
                     }
                     else
                     {
-                        if (otherEntity.WorldPosition.Y < targetStructure.WorldRect.Y - targetStructure.Rect.Height) { continue; }
-                        if (otherEntity.WorldPosition.Y > targetStructure.WorldRect.Y) { continue; }
-                        if (Math.Abs(otherEntity.WorldPosition.X - targetStructure.WorldPosition.X) > currentRange) { continue; }
+                        if (characterMax.Y < targetStructure.WorldRect.Y - targetStructure.Rect.Height) { continue; }
+                        if (characterMin.Y > targetStructure.WorldRect.Y) { continue; }
+                        if (Math.Abs(characterMin.X - targetStructure.WorldPosition.X) > currentRange &&
+                            Math.Abs(characterMax.X - targetStructure.WorldPosition.X) > currentRange) 
+                        { 
+                            continue; 
+                        }
+                    }
+                    if (!charactersInRange.Any(c => c.character == character))
+                    {
+                        charactersInRange.Add((character, nodes[parentNodeIndex]));
                     }
                     float closestNodeDistSqr = float.MaxValue;
                     int closestNodeIndex = -1;

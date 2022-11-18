@@ -207,25 +207,23 @@ namespace Barotrauma
                             level.StartLocation.Connections.ForEach(c => c.Locked = false);
                         }
                     }
-
-                    AddChildEvents(initialEventSet);
-
-                    void AddChildEvents(EventSet eventSet)
+                }
+                RegisterNonRepeatableChildEvents(initialEventSet);
+                void RegisterNonRepeatableChildEvents(EventSet eventSet)
+                {
+                    if (eventSet == null) { return; }
+                    if (eventSet.OncePerLevel)
                     {
-                        if (eventSet == null) { return; }
-                        if (eventSet.OncePerOutpost)
+                        foreach (EventPrefab ep in eventSet.EventPrefabs.SelectMany(e => e.EventPrefabs))
                         {
-                            foreach (EventPrefab ep in eventSet.EventPrefabs.SelectMany(e => e.EventPrefabs))
-                            {
-                                nonRepeatableEvents.Add(ep);                                
-                            }
-                        }
-                        foreach (EventSet childSet in eventSet.ChildSets)
-                        {
-                            AddChildEvents(childSet);
+                            nonRepeatableEvents.Add(ep);                                
                         }
                     }
-                }
+                    foreach (EventSet childSet in eventSet.ChildSets)
+                    {
+                        RegisterNonRepeatableChildEvents(childSet);
+                    }
+                }                
             }
 
             PreloadContent(GetFilesToPreload());
@@ -374,26 +372,18 @@ namespace Barotrauma
         /// </summary>
         public void RegisterEventHistory()
         {
-            if (level?.LevelData != null)
+            if (level?.LevelData == null) { return; }
+
+            level.LevelData.EventsExhausted = true;
+            if (level.LevelData.Type == LevelData.LevelType.Outpost)
             {
-                level.LevelData.EventsExhausted = true;
-                if (level.LevelData.Type == LevelData.LevelType.Outpost)
+                level.LevelData.EventHistory.AddRange(selectedEvents.Values.SelectMany(v => v).Select(e => e.Prefab).Where(e => !level.LevelData.EventHistory.Contains(e)));
+                if (level.LevelData.EventHistory.Count > MaxEventHistory)
                 {
-                    level.LevelData.EventHistory.AddRange(selectedEvents.Values.SelectMany(v => v).Select(e => e.Prefab).Where(e => !level.LevelData.EventHistory.Contains(e)));
-                    if (level.LevelData.EventHistory.Count > MaxEventHistory)
-                    {
-                        level.LevelData.EventHistory.RemoveRange(0, level.LevelData.EventHistory.Count - MaxEventHistory);
-                    }
-                    level.LevelData.NonRepeatableEvents.AddRange(nonRepeatableEvents.Where(e => !level.LevelData.NonRepeatableEvents.Contains(e)));
-                }
-                foreach (var usedUniqueSet in usedUniqueSets)
-                {
-                    if (!level.LevelData.UsedUniqueSets.Contains(usedUniqueSet.Identifier))
-                    {
-                        level.LevelData.UsedUniqueSets.Add(usedUniqueSet.Identifier);
-                    }
+                    level.LevelData.EventHistory.RemoveRange(0, level.LevelData.EventHistory.Count - MaxEventHistory);
                 }
             }
+            level.LevelData.NonRepeatableEvents.AddRange(nonRepeatableEvents.Where(e => !level.LevelData.NonRepeatableEvents.Contains(e)));
         }
 
         public void SkipEventCooldown()
@@ -418,16 +408,11 @@ namespace Barotrauma
 
             DebugConsole.NewMessage($"Loading event set {eventSet.Identifier}", Color.LightBlue, debugOnly: true);
 
-            if (eventSet.Unique && !usedUniqueSets.Contains(eventSet))
-            {
-                usedUniqueSets.Add(eventSet);
-            }
-
             int applyCount = 1;
             List<Func<Level.InterestingPosition, bool>> spawnPosFilter = new List<Func<Level.InterestingPosition, bool>>();
             if (eventSet.PerRuin)
             {
-                applyCount = level.Ruins.Count();
+                applyCount = level.Ruins.Count;
                 foreach (var ruin in level.Ruins)
                 {
                     spawnPosFilter.Add(pos => pos.Ruin == ruin);
@@ -435,7 +420,7 @@ namespace Barotrauma
             }
             else if (eventSet.PerCave)
             {
-                applyCount = level.Caves.Count();
+                applyCount = level.Caves.Count;
                 foreach (var cave in level.Caves)
                 {
                     spawnPosFilter.Add(pos => pos.Cave == cave);
@@ -452,8 +437,8 @@ namespace Barotrauma
             }
 
             bool isPrefabSuitable(EventPrefab e)
-                => e.BiomeIdentifier.IsEmpty ||
-                   e.BiomeIdentifier == level.LevelData?.Biome?.Identifier;
+                => (e.BiomeIdentifier.IsEmpty || e.BiomeIdentifier == level.LevelData?.Biome?.Identifier) &&
+                    !level.LevelData.NonRepeatableEvents.Contains(e);
 
             foreach (var subEventPrefab in eventSet.EventPrefabs)
             {
@@ -610,8 +595,7 @@ namespace Barotrauma
             return
                 level.Difficulty >= eventSet.MinLevelDifficulty && level.Difficulty <= eventSet.MaxLevelDifficulty &&
                 level.LevelData.Type == eventSet.LevelType &&
-                (eventSet.BiomeIdentifier.IsEmpty || eventSet.BiomeIdentifier == level.LevelData.Biome.Identifier) &&
-                (!eventSet.Unique || !level.LevelData.UsedUniqueSets.Contains(eventSet.Identifier));
+                (eventSet.BiomeIdentifier.IsEmpty || eventSet.BiomeIdentifier == level.LevelData.Biome.Identifier);
         }
 
         private bool IsValidForLocation(EventSet eventSet, Location location)

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
+using System.Xml.Linq;
 using Barotrauma.Threading;
 
 namespace Barotrauma
@@ -37,7 +38,7 @@ namespace Barotrauma
             private set;
         }
 
-        public bool IsCJK
+        public TextManager.SpeciallyHandledCharCategory SpeciallyHandledCharCategory
         {
             get;
             private set;
@@ -84,17 +85,35 @@ namespace Barotrauma
             }
         }
 
+        public static TextManager.SpeciallyHandledCharCategory ExtractShccFromXElement(XElement element)
+            => TextManager.SpeciallyHandledCharCategories
+                .Where(category => element.GetAttributeBool($"is{category}", category switch {
+                    // CJK isn't supported by default
+                    TextManager.SpeciallyHandledCharCategory.CJK => false,
+                    
+                    // For backwards compatibility, we assume that Cyrillic is supported by default
+                    TextManager.SpeciallyHandledCharCategory.Cyrillic => true,
+                    
+                    _ => throw new Exception("unreachable")
+                }))
+                .Aggregate(TextManager.SpeciallyHandledCharCategory.None, (current, category) => current | category);
+
         public ScalableFont(ContentXElement element, GraphicsDevice gd = null)
             : this(
                 element.GetAttributeContentPath("file")?.Value,
                 (uint)element.GetAttributeInt("size", 14),
                 gd,
                 element.GetAttributeBool("dynamicloading", false),
-                element.GetAttributeBool("iscjk", false))
+                ExtractShccFromXElement(element))
         {
         }
 
-        public ScalableFont(string filename, uint size, GraphicsDevice gd = null, bool dynamicLoading = false, bool isCJK = false)
+        public ScalableFont(
+            string filename,
+            uint size,
+            GraphicsDevice gd = null,
+            bool dynamicLoading = false,
+            TextManager.SpeciallyHandledCharCategory speciallyHandledCharCategory = TextManager.SpeciallyHandledCharCategory.None)
         {
             lock (globalMutex)
             {
@@ -120,7 +139,7 @@ namespace Barotrauma
             this.textures = new List<Texture2D>();
             this.texCoords = new Dictionary<uint, GlyphData>();
             this.DynamicLoading = dynamicLoading;
-            this.IsCJK = isCJK;
+            this.SpeciallyHandledCharCategory = speciallyHandledCharCategory;
             this.graphicsDevice = gd;
 
             if (gd != null && !dynamicLoading)

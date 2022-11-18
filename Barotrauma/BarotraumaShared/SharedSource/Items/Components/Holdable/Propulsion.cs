@@ -12,7 +12,7 @@ namespace Barotrauma.Items.Components
     {
         public enum UseEnvironment
         {
-            Air, Water, Both
+            Air, Water, Both, None
         };
 
         private float useState;
@@ -44,6 +44,7 @@ namespace Barotrauma.Items.Components
         {
             if (character == null || character.Removed) { return false; }
             if (!character.IsKeyDown(InputType.Aim) || character.Stun > 0.0f) { return false; }
+            if (UsableIn == UseEnvironment.None) { return false; }
 
             IsActive = true;
             useState = 0.1f;

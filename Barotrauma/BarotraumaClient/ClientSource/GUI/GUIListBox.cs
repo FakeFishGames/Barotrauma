@@ -150,7 +150,6 @@ namespace Barotrauma
             }
         }
 
-        // TODO: fix implicit hiding
         public override bool Selected
         {
             get { return isSelected; }

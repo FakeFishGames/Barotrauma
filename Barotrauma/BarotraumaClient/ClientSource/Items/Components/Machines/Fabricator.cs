@@ -14,7 +14,10 @@ namespace Barotrauma.Items.Components
 
         private GUIFrame selectedItemFrame;
         private GUIFrame selectedItemReqsFrame;
-        
+
+        private GUITextBlock amountTextMin, amountTextMax;
+        private GUIScrollBar amountInput;
+
         public GUIButton ActivateButton
         {
             get { return activateButton; }
@@ -160,14 +163,46 @@ namespace Barotrauma.Items.Components
                 new GUICustomComponent(new RectTransform(Vector2.One, inputInventoryHolder.RectTransform), DrawInputOverLay) { CanBeFocused = false };
 
                 // === ACTIVATE BUTTON === //
-                var buttonFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.8f), inputArea.RectTransform), childAnchor: Anchor.CenterRight);
-                activateButton = new GUIButton(new RectTransform(new Vector2(1f, 0.6f), buttonFrame.RectTransform),
-                    TextManager.Get(CreateButtonText), style: "DeviceButtonFixedSize")
+                var buttonFrame = new GUILayoutGroup(new RectTransform(new Vector2(0.3f, 0.9f), inputArea.RectTransform))
+                {
+                    Stretch = true,
+                    RelativeSpacing = 0.05f
+                };
+
+                var amountInputHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.4f), buttonFrame.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft)
+                {
+                    Stretch = true
+                };
+
+                amountTextMin = new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), amountInputHolder.RectTransform), "1", textAlignment: Alignment.Center);
+
+                amountInput = new GUIScrollBar(new RectTransform(new Vector2(0.7f, 1.0f), amountInputHolder.RectTransform), barSize: 0.1f, style: "GUISlider")
+                {
+                    OnMoved = (GUIScrollBar scrollBar, float barScroll) =>
+                    {
+                        scrollBar.Step = 1.0f / Math.Max(scrollBar.Range.Y - 1, 1);
+                        AmountToFabricate = (int)MathF.Round(scrollBar.BarScrollValue);
+                        RefreshActivateButtonText();
+                        if (GameMain.Client != null)
+                        {
+                            item.CreateClientEvent(this);
+                        }
+                        return true;
+                    }
+                };
+
+                amountTextMax = new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), amountInputHolder.RectTransform), "1", textAlignment: Alignment.Center);
+
+                activateButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.6f), buttonFrame.RectTransform),
+                    TextManager.Get(CreateButtonText), style: "DeviceButton")
                 {
                     OnClicked = StartButtonClicked,
                     UserData = selectedItem,
                     Enabled = false
-                };
+                }; 
+
+                //spacing
+                new GUIFrame(new RectTransform(new Vector2(1.0f, 0.01f), buttonFrame.RectTransform), style: null);
             }
             else
             {
@@ -190,6 +225,21 @@ namespace Barotrauma.Items.Components
                 CanBeFocused = false
             };
             CreateRecipes();
+        }
+
+        private void RefreshActivateButtonText()
+        {
+            if (amountInput == null)
+            {
+                activateButton.Text = TextManager.Get(IsActive ? "FabricatorCancel" : CreateButtonText);
+            }
+            else
+            {
+                activateButton.Text =
+                    IsActive ?
+                    $"{TextManager.Get("FabricatorCancel")} ({amountRemaining})" :
+                    $"{TextManager.Get(CreateButtonText)} ({AmountToFabricate})";
+            }
         }
 
         partial void CreateRecipes()
@@ -247,7 +297,7 @@ namespace Barotrauma.Items.Components
             outputContainer.Inventory.RectTransform = outputInventoryHolder.RectTransform;
         }
 
-        private LocalizedString GetRecipeNameAndAmount(FabricationRecipe fabricationRecipe)
+        private static LocalizedString GetRecipeNameAndAmount(FabricationRecipe fabricationRecipe)
         {
             if (fabricationRecipe == null) { return ""; }
             if (fabricationRecipe.Amount > 1)
@@ -269,7 +319,7 @@ namespace Barotrauma.Items.Components
 
         partial void SelectProjSpecific(Character character)
         {
-            var nonItems = itemList.Content.Children.Where(c => !(c.UserData is FabricationRecipe)).ToList();
+            var nonItems = itemList.Content.Children.Where(c => c.UserData is not FabricationRecipe).ToList();
             nonItems.ForEach(i => itemList.Content.RemoveChild(i));
 
             itemList.Content.RectTransform.SortChildren((c1, c2) =>
@@ -567,7 +617,7 @@ namespace Barotrauma.Items.Components
             bool recipeVisible = false;
             foreach (GUIComponent child in itemList.Content.Children.Reverse())
             {
-                if (!(child.UserData is FabricationRecipe recipe))
+                if (child.UserData is not FabricationRecipe recipe)
                 {
                     if (child.Enabled)
                     {
@@ -598,9 +648,23 @@ namespace Barotrauma.Items.Components
         {
             this.selectedItem = selectedItem;
 
+            int max = Math.Max(selectedItem.TargetItem.MaxStackSize / selectedItem.Amount, 1);
+
+            if (amountInput != null)
+            {
+                float prevBarScroll = amountInput.BarScroll;
+                amountInput.Range = new Vector2(1, max);
+                amountInput.BarScroll = prevBarScroll;
+
+                amountTextMax.Text = max.ToString();
+                amountInput.Enabled = amountTextMax.Enabled = max > 1;
+                AmountToFabricate = Math.Min((int)amountInput.BarScrollValue, max);
+            }
+            RefreshActivateButtonText();
+
             selectedItemFrame.ClearChildren();
             selectedItemReqsFrame.ClearChildren();
-            
+
             var paddedFrame = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.9f), selectedItemFrame.RectTransform, Anchor.Center)) { RelativeSpacing = 0.03f };
             var paddedReqFrame = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.9f), selectedItemReqsFrame.RectTransform, Anchor.Center)) { RelativeSpacing = 0.03f };
 
@@ -734,7 +798,9 @@ namespace Barotrauma.Items.Components
                 outputSlot.Flash(GUIStyle.Red);
                 return false;
             }
-            
+
+            amountRemaining = AmountToFabricate;
+
             if (GameMain.Client != null)
             {
                 pendingFabricatedItem = fabricatedItem != null ? null : selectedItem;
@@ -777,7 +843,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach (GUIComponent child in itemList.Content.Children)
                 {
-                    if (!(child.UserData is FabricationRecipe recipe)) { continue; }
+                    if (child.UserData is not FabricationRecipe recipe) { continue; }
 
                     if (recipe != selectedItem &&
                         (child.Rect.Y > itemList.Rect.Bottom || child.Rect.Bottom < itemList.Rect.Y))
@@ -811,11 +877,14 @@ namespace Barotrauma.Items.Components
         {
             uint recipeHash = pendingFabricatedItem?.RecipeHash ?? 0;
             msg.WriteUInt32(recipeHash);
+            msg.WriteRangedInteger(AmountToFabricate, 1, MaxAmountToFabricate);
         }
 
         public void ClientEventRead(IReadMessage msg, float sendingTime)
         {
             FabricatorState newState = (FabricatorState)msg.ReadByte();
+            int amountToFabricate = msg.ReadRangedInteger(0, MaxAmountToFabricate);
+            int amountRemaining = msg.ReadRangedInteger(0, MaxAmountToFabricate);
             float newTimeUntilReady = msg.ReadSingle();
             uint recipeHash = msg.ReadUInt32();
             UInt16 userID = msg.ReadUInt16();
@@ -828,6 +897,8 @@ namespace Barotrauma.Items.Components
             }
 
             State = newState;
+            this.amountToFabricate = amountToFabricate;
+            this.amountRemaining = amountRemaining;
             if (newState == FabricatorState.Stopped || recipeHash == 0)
             {
                 CancelFabricating();

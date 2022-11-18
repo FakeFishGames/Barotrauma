@@ -1617,11 +1617,7 @@ namespace Barotrauma
 
         public void ApplyStatusEffect(StatusEffect effect, ActionType type, float deltaTime, Character character = null, Limb limb = null, Entity useTarget = null, bool isNetworkEvent = false, bool checkCondition = true, Vector2? worldPosition = null)
         {
-            if (effect.intervalTimer > 0.0f)
-            {
-                effect.intervalTimer -= deltaTime;
-                return;
-            }
+            if (effect.ShouldWaitForInterval(this, deltaTime)) { return; }
             if (!isNetworkEvent && checkCondition)
             {
                 if (condition == 0.0f && !effect.AllowWhenBroken && effect.type != ActionType.OnBroken) { return; }
@@ -2758,7 +2754,6 @@ namespace Barotrauma
                 return;
             }
 #endif
-
             bool remove = false;
             foreach (ItemComponent ic in components)
             {
@@ -2788,7 +2783,6 @@ namespace Barotrauma
             {
                 var abilityItem = new AbilityApplyTreatment(user, character, this);
                 user.CheckTalents(AbilityEffectType.OnApplyTreatment, abilityItem);
-
             }
 
             if (remove) { Spawner?.AddItemToRemoveQueue(this); }

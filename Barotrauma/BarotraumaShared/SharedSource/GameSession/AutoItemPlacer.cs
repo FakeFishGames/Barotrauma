@@ -306,14 +306,6 @@ namespace Barotrauma
             return validContainers;
         }
 
-        private static readonly (int quality, float commonness)[] qualityCommonnesses = new (int quality, float commonness)[Quality.MaxQuality + 1]
-        {
-            (0, 1.0f),
-            (1, 0.0f),
-            (2, 0.0f),
-            (3, 0.0f),
-        };
-
         private static List<Item> CreateItems(ItemPrefab itemPrefab, List<ItemContainer> containers, KeyValuePair<ItemContainer, PreferredContainer> validContainer)
         {
             List<Item> newItems = new List<Item>();
@@ -336,11 +328,7 @@ namespace Barotrauma
                     break;
                 }
                 var existingItem = validContainer.Key.Inventory.AllItems.FirstOrDefault(it => it.Prefab == itemPrefab);
-                int quality = 
-                    existingItem?.Quality ??
-                    ToolBox.SelectWeightedRandom(
-                        qualityCommonnesses.Select(q => q.quality).ToList(),
-                        qualityCommonnesses.Select(q => q.commonness).ToList(), Rand.RandSync.ServerAndClient);
+                int quality = existingItem?.Quality ?? Quality.GetSpawnedItemQuality(validContainer.Key.Item.Submarine, Level.Loaded, Rand.RandSync.ServerAndClient);
                 if (!validContainer.Key.Inventory.CanBePut(itemPrefab, quality: quality)) { break; }
                 var item = new Item(itemPrefab, validContainer.Key.Item.Position, validContainer.Key.Item.Submarine, callOnItemLoaded: false)
                 {

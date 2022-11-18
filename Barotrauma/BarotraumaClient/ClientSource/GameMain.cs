@@ -314,7 +314,7 @@ namespace Barotrauma
             GraphicsDeviceManager.SynchronizeWithVerticalRetrace = GameSettings.CurrentConfig.Graphics.VSync;
             SetWindowMode(GameSettings.CurrentConfig.Graphics.DisplayMode);
 
-            defaultViewport = GraphicsDevice.Viewport;
+            defaultViewport = new Viewport(0, 0, GraphicsWidth, GraphicsHeight);
 
             if (recalculateFontsAndStyles)
             {
@@ -353,6 +353,7 @@ namespace Barotrauma
         public void ResetViewPort()
         {
             GraphicsDevice.Viewport = defaultViewport;
+            GraphicsDevice.ScissorRectangle = defaultViewport.Bounds;
         }
 
         /// <summary>

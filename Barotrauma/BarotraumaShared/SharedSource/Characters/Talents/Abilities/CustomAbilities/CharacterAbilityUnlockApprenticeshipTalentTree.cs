@@ -1,8 +1,8 @@
 #nullable enable
 
+using Barotrauma.Extensions;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using Barotrauma.Extensions;
 
 namespace Barotrauma.Abilities
 {

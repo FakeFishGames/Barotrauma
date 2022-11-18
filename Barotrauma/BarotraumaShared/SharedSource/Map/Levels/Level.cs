@@ -3943,31 +3943,11 @@ namespace Barotrauma
                 Submarine outpost = null;
                 if (i == 0 && preSelectedStartOutpost == null || i == 1 && preSelectedEndOutpost == null)
                 {
-                    if (OutpostGenerationParams.OutpostParams.Any() || LevelData.ForceOutpostGenerationParams != null)
+                    if (LevelData.OutpostGenerationParamsExist)
                     {
                         Location location = i == 0 ? StartLocation : EndLocation;
-
-                        OutpostGenerationParams outpostGenerationParams = null;
-                        if (LevelData.ForceOutpostGenerationParams != null)
-                        {
-                            outpostGenerationParams = LevelData.ForceOutpostGenerationParams;
-                        }
-                        else
-                        {
-                            var suitableParams = OutpostGenerationParams.OutpostParams.Where(p => location == null || p.AllowedLocationTypes.Contains(location.Type.Identifier));
-                            if (!suitableParams.Any())
-                            {
-                                suitableParams = OutpostGenerationParams.OutpostParams.Where(p => location == null || !p.AllowedLocationTypes.Any());
-                                if (!suitableParams.Any())
-                                {
-                                    DebugConsole.ThrowError($"No suitable outpost generation parameters found for the location type \"{location.Type.Identifier}\". Selecting random parameters.");
-                                    suitableParams = OutpostGenerationParams.OutpostParams;
-                                }
-                            }
-
-                            outpostGenerationParams = suitableParams.GetRandom(Rand.RandSync.ServerAndClient);
-                        }
-
+                        OutpostGenerationParams outpostGenerationParams = LevelData.ForceOutpostGenerationParams ??
+                            LevelData.GetSuitableOutpostGenerationParams(location).GetRandom(Rand.RandSync.ServerAndClient);
                         LocationType locationType = location?.Type;
                         if (locationType == null)
                         {

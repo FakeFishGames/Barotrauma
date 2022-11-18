@@ -19,7 +19,7 @@ namespace Barotrauma.Networking
 
         public LidgrenEndpoint(IPEndPoint netEndpoint) : base(new LidgrenAddress(netEndpoint.Address))
         {
-            NetEndpoint = netEndpoint;
+            NetEndpoint = new IPEndPoint((Address as LidgrenAddress)!.NetAddress, netEndpoint.Port);
         }
 
         public new static Option<LidgrenEndpoint> Parse(string endpointStr)

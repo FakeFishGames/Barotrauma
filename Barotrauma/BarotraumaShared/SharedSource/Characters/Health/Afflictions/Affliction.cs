@@ -27,6 +27,14 @@ namespace Barotrauma
             get { return _strength; }
             set
             {
+                if (!MathUtils.IsValid(value))
+                {
+#if DEBUG
+                    DebugConsole.ThrowError($"Attempted to set an affliction to an invalid strength ({value})\n" + Environment.StackTrace.CleanupStackTrace());
+#endif
+                    return;
+                }
+
                 if (_nonClampedStrength < 0 && value > 0)
                 {
                     _nonClampedStrength = value;
@@ -440,9 +448,9 @@ namespace Barotrauma
             {
                 statusEffect.Apply(type, deltaTime, characterHealth.Character, targetLimb);
             }
-            if (targetLimb != null && statusEffect.HasTargetType(StatusEffect.TargetType.AllLimbs))
+            if (characterHealth?.Character?.AnimController?.Limbs != null && statusEffect.HasTargetType(StatusEffect.TargetType.AllLimbs))
             {
-                statusEffect.Apply(type, deltaTime, targetLimb.character, targets: targetLimb.character.AnimController.Limbs);
+                statusEffect.Apply(type, deltaTime, characterHealth.Character, targets: characterHealth.Character.AnimController.Limbs);
             }
             if (statusEffect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
                 statusEffect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))

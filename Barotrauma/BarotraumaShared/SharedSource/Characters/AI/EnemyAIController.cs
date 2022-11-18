@@ -1083,7 +1083,7 @@ namespace Barotrauma
                         State = AIState.Idle;
                         return;
                     }
-                    else
+                    else if (!owner.HasAbilityFlag(AbilityFlags.IgnoredByEnemyAI))
                     {
                         SelectedAiTarget = owner.AiTarget;
                     }
@@ -2147,7 +2147,6 @@ namespace Barotrauma
             if (SelectedAiTarget?.Entity == null) { return false; }
             if (AttackLimb?.attack == null) { return false; }
             if (damageTarget == null) { return false; }
-            ActiveAttack = AttackLimb.attack;
             if (wallTarget != null)
             {
                 // If the selected target is not the wall target, make the wall target the selected target.
@@ -2156,9 +2155,10 @@ namespace Barotrauma
                 {
                     SelectTarget(aiTarget, GetTargetMemory(SelectedAiTarget, addIfNotFound: true).Priority);
                     State = AIState.Attack;
+                    return true;
                 }
             }
-            if (damageTarget == null) { return false; }
+            ActiveAttack = AttackLimb.attack;
             if (ActiveAttack.Ranged && ActiveAttack.RequiredAngleToShoot > 0)
             {
                 Limb referenceLimb = GetLimbToRotate(ActiveAttack);
@@ -3810,6 +3810,7 @@ namespace Barotrauma
                         {
                             SelectTarget(door.Item.AiTarget, SelectedTargetMemory.Priority);
                             State = AIState.Attack;
+                            return false;
                         }
                     }
                 }
@@ -3881,9 +3882,8 @@ namespace Barotrauma
             return targetLimb;
         }
 
-        private Character GetOwner(Item item)
+        private static Character GetOwner(Item item)
         {
-            // If the item is held by a character, attack the character instead.
             var pickable = item.GetComponent<Pickable>();
             if (pickable != null)
             {
