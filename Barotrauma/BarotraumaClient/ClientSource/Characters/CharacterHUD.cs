@@ -101,6 +101,7 @@ namespace Barotrauma
 
         public static bool ShouldRecreateHudTexts { get; set; } = true;
         private static bool heldDownShiftWhenGotHudTexts;
+        private static float timeHealthWindowClosed;
 
         public static bool IsCampaignInterfaceOpen =>
             GameMain.GameSession?.Campaign != null && 
@@ -174,7 +175,8 @@ namespace Barotrauma
                 if (character.Info != null && !character.ShouldLockHud() && character.SelectedCharacter == null && Screen.Selected != GameMain.SubEditorScreen)
                 {
                     bool mouseOnPortrait = MouseOnCharacterPortrait() && GUI.MouseOn == null;
-                    if (mouseOnPortrait && PlayerInput.PrimaryMouseButtonClicked() && Inventory.DraggingItems.None())
+                    bool healthWindowOpen = CharacterHealth.OpenHealthWindow != null || timeHealthWindowClosed < 0.2f;
+                    if (mouseOnPortrait && !healthWindowOpen && PlayerInput.PrimaryMouseButtonClicked() && Inventory.DraggingItems.None())
                     {
                         CharacterHealth.OpenHealthWindow = character.CharacterHealth;
                     }
@@ -241,6 +243,15 @@ namespace Barotrauma
                         brokenItems.Add(item); 
                     }                   
                 }
+            }
+
+            if (CharacterHealth.OpenHealthWindow != null)
+            {
+                timeHealthWindowClosed = 0.0f;
+            }
+            else
+            {
+                timeHealthWindowClosed += deltaTime;
             }
         }
         
@@ -491,7 +502,17 @@ namespace Barotrauma
                 {
                     var item = character.Inventory.GetItemAt(i);
                     if (item == null || character.Inventory.SlotTypes[i] == InvSlotType.Any) { continue; }
-
+                    //if the item is also equipped in another slot we already went through, don't draw the hud again
+                    bool duplicateFound = false;
+                    for (int j = 0; j < i; j++)
+                    {
+                        if (character.Inventory.SlotTypes[j] != InvSlotType.Any && character.Inventory.GetItemAt(j) == item)
+                        {
+                            duplicateFound = true;
+                            break;
+                        }
+                    }
+                    if (duplicateFound) { continue; }
                     foreach (ItemComponent ic in item.Components)
                     {
                         if (ic.DrawHudWhenEquipped) { ic.DrawHUD(spriteBatch, character); }

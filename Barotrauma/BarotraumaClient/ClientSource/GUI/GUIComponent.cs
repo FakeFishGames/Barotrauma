@@ -758,7 +758,7 @@ namespace Barotrauma
             toolTipBlock.DrawManually(spriteBatch);
         }
 
-        public static void DrawToolTip(SpriteBatch spriteBatch, RichString toolTip, Rectangle targetElement)
+        public static void DrawToolTip(SpriteBatch spriteBatch, RichString toolTip, Rectangle targetElement, Anchor anchor = Anchor.BottomCenter, Pivot pivot = Pivot.TopLeft)
         {
             if (ObjectiveManager.ContentRunning) { return; }
 
@@ -775,7 +775,10 @@ namespace Barotrauma
                 toolTipBlock.UserData = toolTip;
             }
 
-            toolTipBlock.RectTransform.AbsoluteOffset = new Point(targetElement.Center.X, targetElement.Bottom);
+            toolTipBlock.RectTransform.AbsoluteOffset =
+                RectTransform.CalculateAnchorPoint(anchor, targetElement) +
+                RectTransform.CalculatePivotOffset(pivot, toolTipBlock.RectTransform.NonScaledSize);
+
             if (toolTipBlock.Rect.Right > GameMain.GraphicsWidth - 10)
             {
                 toolTipBlock.RectTransform.AbsoluteOffset -= new Point(toolTipBlock.Rect.Width, 0);

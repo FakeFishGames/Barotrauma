@@ -552,7 +552,8 @@ namespace Barotrauma
                         Connections[i].Locations[1];
                     if (!leftMostLocation.Type.HasOutpost || leftMostLocation.Type.Identifier == "abandoned")
                     {
-                        leftMostLocation.ChangeType(LocationType.Prefabs.OrderBy(lt => lt.Identifier).First(lt => lt.HasOutpost && lt.Identifier != "abandoned"));
+                        leftMostLocation.ChangeType(LocationType.Prefabs.OrderBy(lt => lt.Identifier).First(lt => lt.HasOutpost && lt.Identifier != "abandoned"),
+                            createStores: false);
                     }
                     leftMostLocation.IsGateBetweenBiomes = true;
                     Connections[i].Locked = true;
@@ -628,6 +629,7 @@ namespace Barotrauma
             foreach (Location location in Locations)
             {
                 location.LevelData = new LevelData(location, CalculateDifficulty(location.MapPosition.X, location.Biome));
+                location.CreateStores(force: true);
             }
             foreach (LocationConnection connection in Connections) 
             { 
@@ -734,7 +736,7 @@ namespace Barotrauma
 
             if (LocationType.Prefabs.TryGet("none", out LocationType locationType))
             {
-                previousToEndLocation.ChangeType(locationType);
+                previousToEndLocation.ChangeType(locationType, createStores: false);
             }
 
             //remove all locations from the end biome except the end location

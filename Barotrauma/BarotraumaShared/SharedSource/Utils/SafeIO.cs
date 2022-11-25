@@ -314,6 +314,19 @@ namespace Barotrauma.IO
             //TODO: validate recursion?
             System.IO.Directory.Delete(path, recursive);
         }
+
+        public static bool TryDelete(string path, bool recursive = true)
+        {
+            try
+            {
+                Directory.Delete(path, recursive);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
         
         public static DateTime GetLastWriteTime(string path)
         {

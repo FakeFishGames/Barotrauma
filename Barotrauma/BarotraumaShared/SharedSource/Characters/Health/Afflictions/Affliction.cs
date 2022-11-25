@@ -61,6 +61,9 @@ namespace Barotrauma
         [Serialize(true, IsPropertySaveable.Yes, description: "Explosion damage is applied per each affected limb. Should this affliction damage be divided by the count of affected limbs (1-15) or applied in full? Default: true. Only affects explosions."), Editable]
         public bool DivideByLimbCount { get; set; }
 
+        [Serialize(false, IsPropertySaveable.Yes, description: "Is the damage relative to the max vitality (percentage) or absolute (normal)"), Editable]
+        public bool MultiplyByMaxVitality { get; private set; }
+
         public float DamagePerSecond;
         public float DamagePerSecondTimer;
         public float PreviousVitalityDecrease;
@@ -104,6 +107,15 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Copy properties here instead of using SerializableProperties (with reflection).
+        /// </summary>
+        public void CopyProperties(Affliction source)
+        {
+            Probability = source.Probability;
+            DivideByLimbCount = source.DivideByLimbCount;
+            MultiplyByMaxVitality = source.MultiplyByMaxVitality;
+        }
 
         public void Serialize(XElement element)
         {
@@ -115,10 +127,10 @@ namespace Barotrauma
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
         }
 
-        public Affliction CreateMultiplied(float multiplier, float probability)
+        public Affliction CreateMultiplied(float multiplier, Affliction affliction)
         {
             var instance = Prefab.Instantiate(NonClampedStrength * multiplier, Source);
-            instance.Probability = probability;
+            instance.CopyProperties(affliction);
             return instance;
         }
 

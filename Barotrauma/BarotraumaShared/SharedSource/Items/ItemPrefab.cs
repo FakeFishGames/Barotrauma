@@ -1156,7 +1156,7 @@ namespace Barotrauma
         public bool CanBeBoughtFrom(Location.StoreInfo store, out PriceInfo priceInfo)
         {
             priceInfo = GetPriceInfo(store);
-            return priceInfo is { CanBeBought: true } && (store.Location?.LevelData?.Difficulty ?? 0) >= priceInfo.MinLevelDifficulty;
+            return priceInfo is { CanBeBought: true } && (store?.Location.LevelData?.Difficulty ?? 0) >= priceInfo.MinLevelDifficulty;
         }
 
         public bool CanBeBoughtFrom(Location location)
@@ -1167,7 +1167,7 @@ namespace Barotrauma
                 var priceInfo = GetPriceInfo(store.Value);
                 if (priceInfo == null) { continue; }
                 if (!priceInfo.CanBeBought) { continue; }
-                if ((location.LevelData?.Difficulty ?? 0) < priceInfo.MinLevelDifficulty) { continue; }
+                if (location.LevelData.Difficulty < priceInfo.MinLevelDifficulty) { continue; }
                 return true;
             }
             return false;

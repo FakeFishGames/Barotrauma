@@ -757,6 +757,10 @@ namespace Barotrauma
                 }
                 if (!foundMatchingModifier && random > affliction.Probability) { continue; }
                 float finalDamageModifier = damageMultiplier;
+                if (affliction.Prefab.AfflictionType == "emp" && character.EmpVulnerability > 0)
+                {
+                    finalDamageModifier *= character.EmpVulnerability;
+                }
                 foreach (DamageModifier damageModifier in tempModifiers)
                 {
                     float damageModifierValue = damageModifier.DamageMultiplier;
@@ -766,9 +770,13 @@ namespace Barotrauma
                     }
                     finalDamageModifier *= damageModifierValue;
                 }
+                if (affliction.MultiplyByMaxVitality)
+                {
+                    finalDamageModifier *= character.MaxVitality / 100f;
+                }
                 if (!MathUtils.NearlyEqual(finalDamageModifier, 1.0f))
                 {
-                    newAffliction = affliction.CreateMultiplied(finalDamageModifier, affliction.Probability);
+                    newAffliction = affliction.CreateMultiplied(finalDamageModifier, affliction);
                 }
                 else
                 {

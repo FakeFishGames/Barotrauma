@@ -6,9 +6,9 @@ namespace Barotrauma.Networking
 {
     partial class ChatMessage
     {
-        public virtual void ClientWrite(IWriteMessage msg)
+        public virtual void ClientWrite(in SegmentTableWriter<ClientNetSegment> segmentTableWriter, IWriteMessage msg)
         {
-            msg.WriteByte((byte)ClientNetObject.CHAT_MESSAGE);
+            segmentTableWriter.StartNewSegment(ClientNetSegment.ChatMessage);
             msg.WriteUInt16(NetStateID);
             msg.WriteRangedInteger((int)Type, 0, Enum.GetValues(typeof(ChatMessageType)).Length - 1);
             msg.WriteRangedInteger((int)ChatMode, 0, Enum.GetValues(typeof(ChatMode)).Length - 1);

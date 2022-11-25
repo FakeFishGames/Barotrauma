@@ -246,11 +246,13 @@ namespace Barotrauma
         {
             public readonly Identifier SkillIdentifier;
             public readonly float Amount;
+            public readonly bool TriggerTalents;
 
             public GiveSkill(XElement element, string parentDebugName)
             {
-                SkillIdentifier = element.GetAttributeIdentifier("skillidentifier", Identifier.Empty);
-                Amount = element.GetAttributeFloat("amount", 0);
+                SkillIdentifier = element.GetAttributeIdentifier(nameof(SkillIdentifier), Identifier.Empty);
+                Amount = element.GetAttributeFloat(nameof(Amount), 0);
+                TriggerTalents = element.GetAttributeBool(nameof(TriggerTalents), true);
 
                 if (SkillIdentifier == Identifier.Empty)
                 {
@@ -424,7 +426,7 @@ namespace Barotrauma
             private set;
         }
 
-        private readonly bool multiplyAfflictionsByMaxVitality;
+        private readonly bool? multiplyAfflictionsByMaxVitality;
 
         public IEnumerable<CharacterSpawnInfo> SpawnCharacters
         {
@@ -490,7 +492,11 @@ namespace Barotrauma
             talentTriggers = new List<Identifier>();
             giveExperiences = new List<int>();
             giveSkills = new List<GiveSkill>();
-            multiplyAfflictionsByMaxVitality = element.GetAttributeBool("multiplyafflictionsbymaxvitality", false);
+            var multiplyAfflictionsElement = element.GetAttribute(nameof(multiplyAfflictionsByMaxVitality));
+            if (multiplyAfflictionsElement != null)
+            {
+                multiplyAfflictionsByMaxVitality = multiplyAfflictionsElement.GetAttributeBool(false);
+            }
 
             tags = new HashSet<string>(element.GetAttributeString("tags", "").Split(','));
             OnlyInside = element.GetAttributeBool("onlyinside", false);
@@ -1294,7 +1300,7 @@ namespace Barotrauma
                 }
                 for (int i = 0; i < targets.Count; i++)
                 {
-                    if (!(targets[i] is Item item)) { continue; }                
+                    if (targets[i] is not Item item) { continue; }                
                     for (int j = 0; j < useItemCount; j++)
                     {
                         if (item.Removed) { continue; }
@@ -1325,6 +1331,13 @@ namespace Barotrauma
                             {
                                 containedItem.Drop(dropper: null);
                             }
+                        }
+                    }
+                    else if (targets[i] is Character character && character.Inventory != null)
+                    {
+                        foreach (var containedItem in character.Inventory.AllItemsMod)
+                        {
+                            containedItem.Drop(dropper: null);
                         }
                     }
                 }
@@ -1566,9 +1579,7 @@ namespace Barotrauma
                             if (targetCharacter != null && !targetCharacter.Removed)
                             {
                                 Identifier skillIdentifier = giveSkill.SkillIdentifier == "randomskill" ? GetRandomSkill() : giveSkill.SkillIdentifier;
-
-                                targetCharacter.Info?.IncreaseSkillLevel(skillIdentifier, giveSkill.Amount);
-
+                                targetCharacter.Info?.IncreaseSkillLevel(skillIdentifier, giveSkill.Amount, !giveSkill.TriggerTalents);
                                 Identifier GetRandomSkill()
                                 {
                                     return targetCharacter.Info?.Job?.GetSkills().GetRandomUnsynced()?.Identifier ?? Identifier.Empty;
@@ -2140,10 +2151,10 @@ namespace Barotrauma
             return multiplier * AfflictionMultiplier;
         }
 
-        private Affliction GetMultipliedAffliction(Affliction affliction, Entity entity, Character targetCharacter, float deltaTime, bool modifyByMaxVitality)
+        private Affliction GetMultipliedAffliction(Affliction affliction, Entity entity, Character targetCharacter, float deltaTime, bool? multiplyByMaxVitality)
         {
             float afflictionMultiplier = GetAfflictionMultiplier(entity, targetCharacter, deltaTime);
-            if (modifyByMaxVitality)
+            if (multiplyByMaxVitality ?? affliction.MultiplyByMaxVitality)
             {
                 afflictionMultiplier *= targetCharacter.MaxVitality / 100f;
             }
@@ -2162,7 +2173,7 @@ namespace Barotrauma
 
             if (!MathUtils.NearlyEqual(afflictionMultiplier, 1.0f))
             {
-                return affliction.CreateMultiplied(afflictionMultiplier, affliction.Probability);
+                return affliction.CreateMultiplied(afflictionMultiplier, affliction);
             }
             return affliction;
         }

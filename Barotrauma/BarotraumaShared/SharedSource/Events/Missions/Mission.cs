@@ -404,7 +404,7 @@ namespace Barotrauma
             {
                 var experienceGainMultiplierIndividual = new AbilityMissionExperienceGainMultiplier(this, 1f);
                 info?.Character?.CheckTalents(AbilityEffectType.OnGainMissionExperience, experienceGainMultiplierIndividual);
-                info?.GiveExperience((int)(experienceGain * experienceGainMultiplier.Value), isMissionExperience: true);
+                info?.GiveExperience((int)(experienceGain * experienceGainMultiplier.Value));
             }
 
             // apply money gains afterwards to prevent them from affecting XP gains

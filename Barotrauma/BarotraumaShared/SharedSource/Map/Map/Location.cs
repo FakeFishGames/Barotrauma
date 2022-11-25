@@ -318,7 +318,7 @@ namespace Barotrauma
                 var characters = GameSession.GetSessionCrewCharacters(CharacterType.Both);
                 if (characters.Any())
                 {
-                    price *= 1f + characters.Max(static c => c.GetStatValue(StatTypes.StoreSellMultiplier));
+                    price *= 1f + characters.Max(static c => c.GetStatValue(StatTypes.StoreSellMultiplier, includeSaved: false));
                     price *= 1f + characters.Max(c => item.Tags.Sum(tag => c.Info.GetSavedStatValue(StatTypes.StoreSellMultiplier, tag)));
                 }
 
@@ -659,7 +659,7 @@ namespace Barotrauma
             return new Location(position, zone, rand, requireOutpost, forceLocationType, existingLocations);
         }
 
-        public void ChangeType(LocationType newType)
+        public void ChangeType(LocationType newType, bool createStores = true)
         {
             if (newType == Type) { return; }
 
@@ -683,7 +683,10 @@ namespace Barotrauma
                 UnlockMissionByTag(Type.MissionTags.GetRandomUnsynced());
             }
 
-            CreateStores(force: true);
+            if (createStores)
+            {
+                CreateStores(force: true);
+            }
         }
 
         public void UnlockInitialMissions()

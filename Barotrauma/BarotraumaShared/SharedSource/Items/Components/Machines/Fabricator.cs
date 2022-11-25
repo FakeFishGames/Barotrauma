@@ -539,7 +539,7 @@ namespace Barotrauma.Items.Components
                 var prevUser = user;
                 CancelFabricating();
 
-                amountRemaining--;
+                amountRemaining--; 
                 if (amountRemaining > 0 && CanBeFabricated(prevFabricatedItem, availableIngredients, prevUser))
                 {
                     //keep fabricating if we can fabricate more
@@ -745,7 +745,7 @@ namespace Barotrauma.Items.Components
                     itemList.AddRange(container.Inventory.AllItems);
                 }
             }
-            if (user?.Inventory != null)
+            if (user?.Inventory != null && user.SelectedItem == item)
             {
                 itemList.AddRange(user.Inventory.AllItems);
                 linkedInventories.Add(user.Inventory);

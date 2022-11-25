@@ -67,10 +67,10 @@ namespace Barotrauma
                 .ToImmutableHashSet();
         }
 
-        public static Result<ContentFile, LoadError> CreateFromXElement(ContentPackage contentPackage, XElement element)
+        public static Result<ContentFile, ContentPackage.LoadError> CreateFromXElement(ContentPackage contentPackage, XElement element)
         {
-            static Result<ContentFile, LoadError> fail(string error, Exception? exception = null)
-                => Result<ContentFile, LoadError>.Failure(new LoadError(error, exception));
+            static Result<ContentFile, ContentPackage.LoadError> fail(string error, Exception? exception = null)
+                => Result<ContentFile, ContentPackage.LoadError>.Failure(new ContentPackage.LoadError(error, exception));
             
             Identifier elemName = element.NameAsIdentifier();
             var type = Types.FirstOrDefault(t => t.Names.Contains(elemName));
@@ -83,6 +83,8 @@ namespace Barotrauma
             {
                 return fail($"No content path defined for file of type \"{elemName}\"");
             }
+
+            using var errorCatcher = DebugConsole.ErrorCatcher.Create();
             try
             {
                 filePath = type.MutateContentPath(filePath);
@@ -90,10 +92,16 @@ namespace Barotrauma
                 {
                     return fail($"Failed to load file \"{filePath}\" of type \"{elemName}\": file not found.");
                 }
+
                 var file = type.CreateInstance(contentPackage, filePath);
-                return file is null
-                    ? throw new Exception($"Content type is not implemented correctly")
-                    : Result<ContentFile, LoadError>.Success(file);
+                if (file is null) { return fail($"Content type {type.Type.Name} is not implemented correctly"); }
+
+                if (errorCatcher.Errors.Any())
+                {
+                    return fail(
+                        $"Errors were issued to the debug console when loading \"{filePath}\" of type \"{elemName}\"");
+                }
+                return Result<ContentFile, ContentPackage.LoadError>.Success(file);
             }
             catch (Exception e)
             {
@@ -123,23 +131,5 @@ namespace Barotrauma
         }
 
         public bool NotSyncedInMultiplayer => Types.Any(t => t.Type == GetType() && t.NotSyncedInMultiplayer);
-
-        public readonly struct LoadError
-        {
-            public readonly string Message;
-            public readonly Exception? Exception;
-            
-            public LoadError(string message, Exception? exception)
-            {
-                Message = message;
-                Exception = exception;
-            }
-
-            public override string ToString()
-                => Message
-                   + (Exception is { StackTrace: var stackTrace }
-                       ? '\n' + stackTrace.CleanupStackTrace()
-                       : string.Empty);
-        }
     }
 }

@@ -971,7 +971,7 @@ namespace Barotrauma
                         //don't allow swapping if we're moving items into an item with 1 slot holding a stack of items
                         //(in that case, the quick action should just fill up the stack)
                         bool disallowSwapping = 
-                            heldItem.OwnInventory.Capacity == 1 &&
+                            (heldItem.OwnInventory.Capacity == 1 || heldItem.OwnInventory.Container.HasSubContainers) &&
                             heldItem.OwnInventory.GetItemAt(0)?.Prefab == item.Prefab && 
                             heldItem.OwnInventory.GetItemsAt(0).Count() > 1;
                         if (heldItem.OwnInventory.TryPutItem(item, Character.Controlled) || 
@@ -1131,7 +1131,7 @@ namespace Barotrauma
                 GUI.DrawRectangle(spriteBatch, inventoryArea, new Color(30,30,30,100), isFilled: true);
                 var lockIcon = GUIStyle.GetComponentStyle("LockIcon")?.GetDefaultSprite();
                 lockIcon?.Draw(spriteBatch, inventoryArea.Center.ToVector2(), scale: Math.Min(inventoryArea.Height / lockIcon.size.Y * 0.7f, 1.0f));
-                if (inventoryArea.Contains(PlayerInput.MousePosition))
+                if (inventoryArea.Contains(PlayerInput.MousePosition) && character.LockHands)
                 {
                     GUIComponent.DrawToolTip(spriteBatch, TextManager.Get("handcuffed"), new Rectangle(inventoryArea.Center - new Point(inventoryArea.Height / 2), new Point(inventoryArea.Height)));
                 }

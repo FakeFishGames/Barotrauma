@@ -653,15 +653,6 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(float deltaTime, Camera cam)
         {
-            if (InvisibleTimer > 0.0f)
-            {
-                if (Controlled == null || Controlled == this || (Controlled.CharacterHealth.GetAffliction("psychosis")?.Strength ?? 0.0f) <= 0.0f)
-                {
-                    InvisibleTimer = Math.Min(InvisibleTimer, 1.0f);
-                }
-                InvisibleTimer -= deltaTime;                
-            }
-
             foreach (GUIMessage message in guiMessages)
             {
                 bool wasPending = message.Timer < 0.0f;

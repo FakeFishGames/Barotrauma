@@ -35,10 +35,8 @@ namespace Barotrauma.Abilities
             foreach (Identifier identifier in selectedTalentTree)
             {
                 if (Character.HasTalent(identifier)) { continue; }
-                if (Character.GiveTalent(identifier))
-                {
-                    Character.Info.AdditionalTalentPoints++;
-                }
+
+                Character.GiveTalent(identifier);
             }
         }
 

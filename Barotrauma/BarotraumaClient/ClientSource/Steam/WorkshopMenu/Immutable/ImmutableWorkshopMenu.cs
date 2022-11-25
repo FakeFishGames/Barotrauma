@@ -40,7 +40,7 @@ namespace Barotrauma.Steam
                     CanBeFocused = false,
                     UserData = p
                 };
-                if (p.Errors.Any())
+                if (p.FatalLoadErrors.Any())
                 {
                     CreateModErrorInfo(p, regularBox, regularBox);
                     regularBox.CanBeFocused = true;

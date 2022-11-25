@@ -408,6 +408,8 @@ namespace Barotrauma.Items.Components
             var wire = it.GetComponent<Wire>();
             if (wire != null && wire.Connections.Any(c => c != null)) { return false; }
 
+            if (it.Container?.GetComponent<ItemContainer>() is { DrawInventory: false }) { return false; }
+
             if (it.HasTag("traitormissionitem")) { return false; }
 
             return true;

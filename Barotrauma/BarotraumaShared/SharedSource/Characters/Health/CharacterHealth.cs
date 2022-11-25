@@ -693,8 +693,15 @@ namespace Barotrauma
             if (Character.Params.IsMachine && !newAffliction.Prefab.AffectMachines) { return; }
             if (!DoesBleed && newAffliction is AfflictionBleeding) { return; }
             if (!Character.NeedsOxygen && newAffliction.Prefab == AfflictionPrefab.OxygenLow) { return; }
-            if (Character.Params.Health.StunImmunity && newAffliction.Prefab.AfflictionType == "stun") { return; }
+            if (Character.Params.Health.StunImmunity && newAffliction.Prefab.AfflictionType == "stun")
+            {
+                if (Character.EmpVulnerability <= 0 || GetAfflictionStrength("emp", allowLimbAfflictions: false) <= 0)
+                {
+                    return;
+                }
+            }
             if (Character.Params.Health.PoisonImmunity && newAffliction.Prefab.AfflictionType == "poison") { return; }
+            if (Character.EmpVulnerability <= 0 && newAffliction.Prefab.AfflictionType == "emp") { return; }
             if (newAffliction.Prefab is AfflictionPrefabHusk huskPrefab)
             {
                 if (huskPrefab.TargetSpecies.None(s => s == Character.SpeciesName))

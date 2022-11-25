@@ -315,6 +315,7 @@ namespace Barotrauma.Items.Components
             if (f2.Body.UserData is Limb targetLimb)
             {
                 if (targetLimb.IsSevered || targetLimb.character == null || targetLimb.character == User) { return false; }
+                if (targetLimb.character.IgnoreMeleeWeapons) { return false; }
                 var targetCharacter = targetLimb.character;
                 if (targetCharacter == picker) { return false; }
                 if (AllowHitMultiple)
@@ -330,6 +331,7 @@ namespace Barotrauma.Items.Components
             else if (f2.Body.UserData is Character targetCharacter)
             {
                 if (targetCharacter == picker || targetCharacter == User) { return false; }
+                if (targetCharacter.IgnoreMeleeWeapons) { return false; }
                 targetLimb = targetCharacter.AnimController.GetLimb(LimbType.Torso); //Otherwise armor can be bypassed in strange ways
                 if (AllowHitMultiple)
                 {

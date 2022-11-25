@@ -639,7 +639,13 @@ namespace Barotrauma.Items.Components
                     ItemContainer projectileContainer = projectiles.First().Item.Container?.GetComponent<ItemContainer>();
                     if (projectileContainer != null && projectileContainer.Item != item)
                     {
-                        projectileContainer?.Item.Use(deltaTime, null);
+                        projectileContainer.Item.Use(deltaTime, null);
+                        //Use root container (e.g. loader) too in case it needs to react to firing somehow
+                        var rootContainer = projectileContainer.Item.GetRootContainer();
+                        if (rootContainer != projectileContainer.Item)
+                        {
+                            rootContainer.Use(deltaTime, null);
+                        }
                     }
                 }
                 else
@@ -649,7 +655,7 @@ namespace Barotrauma.Items.Components
                         var e = item.linkedTo[(j + currentLoaderIndex) % item.linkedTo.Count];
                         //use linked projectile containers in case they have to react to the turret being launched somehow
                         //(play a sound, spawn more projectiles)
-                        if (!(e is Item linkedItem)) { continue; }
+                        if (e is not Item linkedItem) { continue; }
                         if (!item.Prefab.IsLinkAllowed(e.Prefab)) { continue; }
                         if (linkedItem.Condition <= 0.0f)
                         {
@@ -692,7 +698,7 @@ namespace Barotrauma.Items.Components
 
                 foreach (MapEntity e in item.linkedTo)
                 {
-                    if (!(e is Item linkedItem)) { continue; }
+                    if (e is not Item linkedItem) { continue; }
                     if (!((MapEntity)item).Prefab.IsLinkAllowed(e.Prefab)) { continue; }
                     if (linkedItem.GetComponent<Repairable>() is Repairable repairable && repairable.IsTinkering && linkedItem.HasTag("turretammosource"))
                     {
@@ -872,7 +878,7 @@ namespace Barotrauma.Items.Components
 
         partial void LaunchProjSpecific();
 
-        private void ShiftItemsInProjectileContainer(ItemContainer container)
+        private static void ShiftItemsInProjectileContainer(ItemContainer container)
         {
             if (container == null) { return; }
             bool moved;
@@ -1063,8 +1069,8 @@ namespace Barotrauma.Items.Components
                 character.AIController.SelectTarget(null);
             }
 
-            bool canShoot = true;
-            if (!HasPowerToShoot())
+            bool canShoot = HasPowerToShoot();
+            if (!canShoot)
             {
                 List<PowerContainer> batteries = GetDirectlyConnectedBatteries();
                 float lowestCharge = 0.0f;
@@ -1089,7 +1095,6 @@ namespace Barotrauma.Items.Components
                             character.Speak(TextManager.Get("DialogSupercapacitorIsBroken").Value,
                                 identifier: "supercapacitorisbroken".ToIdentifier(),
                                 minDurationBetweenSimilar: 30.0f);
-                            canShoot = false;
                         }
                     }
                 }
@@ -1104,7 +1109,6 @@ namespace Barotrauma.Items.Components
                     character.Speak(TextManager.Get("DialogTurretHasNoPower").Value,
                         identifier: "turrethasnopower".ToIdentifier(),
                         minDurationBetweenSimilar: 30.0f);
-                    canShoot = false;
                 }
             }
 
@@ -1283,7 +1287,7 @@ namespace Barotrauma.Items.Components
                 closestDistance = shootDistance;
                 foreach (var wall in Level.Loaded.ExtraWalls)
                 {
-                    if (!(wall is DestructibleLevelWall destructibleWall) || destructibleWall.Destroyed) { continue; }
+                    if (wall is not DestructibleLevelWall destructibleWall || destructibleWall.Destroyed) { continue; }
                     foreach (var cell in wall.Cells)
                     {
                         if (cell.DoesDamage)
@@ -1405,19 +1409,18 @@ namespace Barotrauma.Items.Components
                 Vector2 end = ConvertUnits.ToSimUnits(targetPos.Value);
                 // Check that there's not other entities that shouldn't be targeted (like a friendly sub) between us and the target.
                 Body worldTarget = CheckLineOfSight(start, end);
-                bool shoot;
                 if (closestEnemy != null && closestEnemy.Submarine != null)
                 {
                     start -= closestEnemy.Submarine.SimPosition;
                     end -= closestEnemy.Submarine.SimPosition;
                     Body transformedTarget = CheckLineOfSight(start, end);
-                    shoot = CanShoot(transformedTarget, character) && (worldTarget == null || CanShoot(worldTarget, character));
+                    canShoot = CanShoot(transformedTarget, character) && (worldTarget == null || CanShoot(worldTarget, character));
                 }
                 else
                 {
-                    shoot = CanShoot(worldTarget, character);
+                    canShoot = CanShoot(worldTarget, character);
                 }
-                if (!shoot) { return false; }
+                if (!canShoot) { return false; }
                 if (character.IsOnPlayerTeam)
                 {
                     character.Speak(TextManager.Get("DialogFireTurret").Value,
@@ -1471,6 +1474,7 @@ namespace Barotrauma.Items.Components
             {
                 if (targetBody.UserData is ISpatialEntity e)
                 {
+                    if (e is Structure s && s.Indestructible) { return false; }
                     Submarine sub = e.Submarine ?? e as Submarine;
                     if (!targetSubmarines && e is Submarine) { return false; }
                     if (sub == null) { return false; }
@@ -1559,7 +1563,7 @@ namespace Barotrauma.Items.Components
             return projectiles;
         }
 
-        private void CheckProjectileContainer(Item projectileContainer, List<Projectile> projectiles, out bool stopSearching)
+        private static void CheckProjectileContainer(Item projectileContainer, List<Projectile> projectiles, out bool stopSearching)
         {
             stopSearching = false;
             if (projectileContainer.Condition <= 0.0f) { return; }

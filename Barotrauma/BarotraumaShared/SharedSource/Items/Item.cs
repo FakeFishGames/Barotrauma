@@ -866,6 +866,8 @@ namespace Barotrauma
             }
         }
 
+        public Action<Character> OnDeselect;
+
         public Item(ItemPrefab itemPrefab, Vector2 position, Submarine submarine, ushort id = Entity.NullEntityID, bool callOnItemLoaded = true)
             : this(new Rectangle(
                 (int)(position.X - itemPrefab.Sprite.size.X / 2 * itemPrefab.Scale), 
@@ -2155,12 +2157,15 @@ namespace Barotrauma
                 if (projectile.ShouldIgnoreSubmarineCollision(f2, contact)) { return false; }
             }
 
-            contact.GetWorldManifold(out Vector2 normal, out _);
-            if (contact.FixtureA.Body == f1.Body) { normal = -normal; }
-            float impact = Vector2.Dot(f1.Body.LinearVelocity, -normal);
+            if (GameMain.GameSession == null || GameMain.GameSession.RoundDuration > 1.0f)
+            {
+                contact.GetWorldManifold(out Vector2 normal, out _);
+                if (contact.FixtureA.Body == f1.Body) { normal = -normal; }
+                float impact = Vector2.Dot(f1.Body.LinearVelocity, -normal);
+                impactQueue ??= new ConcurrentQueue<float>();
+                impactQueue.Enqueue(impact);
+            }
 
-            impactQueue ??= new ConcurrentQueue<float>();
-            impactQueue.Enqueue(impact);
             isActive = true;
 
             return true;
@@ -2774,6 +2779,7 @@ namespace Barotrauma
                 if (GameMain.NetworkMember is { IsServer: true })
                 {
                     GameMain.NetworkMember.CreateEntityEvent(this, new ApplyStatusEffectEventData(conditionalActionType, ic, character, targetLimb));
+                    GameMain.NetworkMember.CreateEntityEvent(this, new ApplyStatusEffectEventData(ActionType.OnUse, ic, character, targetLimb));
                 }
 
                 if (ic.DeleteOnUse) { remove = true; }

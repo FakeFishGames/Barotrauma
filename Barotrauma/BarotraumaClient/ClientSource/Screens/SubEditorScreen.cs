@@ -3075,11 +3075,17 @@ namespace Barotrauma
                 
                 XDocument doc = new XDocument(ItemAssemblyPrefab.Save(MapEntity.SelectedList.ToList(), nameBox.Text, descriptionBox.Text, hideInMenus));
                 doc.SaveSafe(filePath);
-                
-                var resultPackage = ContentPackageManager.ReloadContentPackage(existingContentPackage) as RegularPackage;
-                if (!ContentPackageManager.EnabledPackages.Regular.Contains(resultPackage))
+
+                var result = ContentPackageManager.ReloadContentPackage(existingContentPackage);
+                if (!result.TryUnwrapSuccess(out var resultPackage))
                 {
-                    ContentPackageManager.EnabledPackages.EnableRegular(resultPackage);
+                    throw new Exception($"Failed to reload content package \"{existingContentPackage.Name}\"",
+                        result.TryUnwrapFailure(out var exception) ? exception : null);
+                }
+                if (resultPackage is RegularPackage regularPackage
+                    && !ContentPackageManager.EnabledPackages.Regular.Contains(regularPackage))
+                {
+                    ContentPackageManager.EnabledPackages.EnableRegular(regularPackage);
                     GameSettings.SaveCurrentConfig();
                 }
 

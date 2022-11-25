@@ -814,7 +814,7 @@ namespace Barotrauma
                 {
                     return "levelend".ToIdentifier();
                 }
-                if (Timing.TotalTime < GameMain.GameSession.RoundStartTime + 120.0 && 
+                if (GameMain.GameSession.RoundDuration > 120.0 && 
                     Level.Loaded?.Type == LevelData.LevelType.LocationConnection)
                 {
                     return "start".ToIdentifier();

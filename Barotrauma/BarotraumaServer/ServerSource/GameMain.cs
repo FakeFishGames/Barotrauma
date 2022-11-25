@@ -162,13 +162,13 @@ namespace Barotrauma
             }
             else
             {
-                name = doc.Root.GetAttributeString("name", "Server");
-                port = doc.Root.GetAttributeInt("port", NetConfig.DefaultPort);
-                queryPort = doc.Root.GetAttributeInt("queryport", NetConfig.DefaultQueryPort);
-                publiclyVisible = doc.Root.GetAttributeBool("public", false);
+                name = doc.Root.GetAttributeString(nameof(ServerSettings.Name), "Server");
+                port = doc.Root.GetAttributeInt(nameof(ServerSettings.Port), NetConfig.DefaultPort);
+                queryPort = doc.Root.GetAttributeInt(nameof(ServerSettings.QueryPort), NetConfig.DefaultQueryPort);
+                publiclyVisible = doc.Root.GetAttributeBool(nameof(ServerSettings.IsPublic), false);
+                enableUpnp = doc.Root.GetAttributeBool(nameof(ServerSettings.EnableUPnP), false);
+                maxPlayers = doc.Root.GetAttributeInt(nameof(ServerSettings.MaxPlayers), 10);
                 password = doc.Root.GetAttributeString("password", "");
-                enableUpnp = doc.Root.GetAttributeBool("enableupnp", false);
-                maxPlayers = doc.Root.GetAttributeInt("maxplayers", 10);
                 ownerKey = Option<int>.None();
             }
             
@@ -361,7 +361,7 @@ namespace Barotrauma
                     if (prevUpdateRates.Count >= 10)
                     {
                         int avgUpdateRate = (int)prevUpdateRates.Average();
-                        if (avgUpdateRate < Timing.FixedUpdateRate * 0.98 && GameSession != null && Timing.TotalTime > GameSession.RoundStartTime + 1.0)
+                        if (avgUpdateRate < Timing.FixedUpdateRate * 0.98 && GameSession != null && GameSession.RoundDuration > 1.0)
                         {
                             DebugConsole.AddWarning($"Running slowly ({avgUpdateRate} updates/s)!");
                             if (Server != null)

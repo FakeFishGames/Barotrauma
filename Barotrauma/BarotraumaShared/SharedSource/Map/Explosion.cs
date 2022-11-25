@@ -27,12 +27,13 @@ namespace Barotrauma
         private readonly bool applyFireEffects;
         private readonly string[] ignoreFireEffectsForTags;
         private readonly bool ignoreCover;
-        private readonly bool onlyInside,onlyOutside;
         private readonly float flashDuration;
         private readonly float? flashRange;
         private readonly string decal;
         private readonly float decalSize;
         private readonly bool applyToSelf;
+
+        public bool OnlyInside, OnlyOutside;
 
         private readonly float itemRepairStrength;
 
@@ -81,8 +82,8 @@ namespace Barotrauma
             ignoreFireEffectsForTags = element.GetAttributeStringArray("ignorefireeffectsfortags", Array.Empty<string>(), convertToLowerInvariant: true);
 
             ignoreCover = element.GetAttributeBool("ignorecover", false);
-            onlyInside = element.GetAttributeBool("onlyinside", false);
-            onlyOutside = element.GetAttributeBool("onlyoutside", false);
+            OnlyInside = element.GetAttributeBool("onlyinside", false);
+            OnlyOutside = element.GetAttributeBool("onlyoutside", false);
 
             flash           = element.GetAttributeBool("flash", showEffects);
             flashDuration   = element.GetAttributeFloat("flashduration", 0.05f);
@@ -176,13 +177,12 @@ namespace Barotrauma
                 foreach (Item item in Item.ItemList)
                 {
                     float distSqr = Vector2.DistanceSquared(item.WorldPosition, worldPosition);
-                    if (distSqr > displayRangeSqr) continue;
-                    
-                    float distFactor = 1.0f - (float)Math.Sqrt(distSqr) / displayRange;
+                    if (distSqr > displayRangeSqr) { continue; }
+                    float distFactor = CalculateDistanceFactor(distSqr, displayRange);
 
                     //damage repairable power-consuming items
                     var powered = item.GetComponent<Powered>();
-                    if (powered == null || !powered.VulnerableToEMP) continue;
+                    if (powered == null || !powered.VulnerableToEMP) { continue; }
                     if (item.Repairables.Any())
                     {
                         item.Condition -= item.MaxCondition * EmpStrength * distFactor;
@@ -195,6 +195,7 @@ namespace Barotrauma
                         powerContainer.Charge -= powerContainer.GetCapacity() * EmpStrength * distFactor;
                     }
                 }
+                static float CalculateDistanceFactor(float distSqr, float displayRange) => 1.0f - (float)Math.Sqrt(distSqr) / displayRange;
             }
 
             if (itemRepairStrength > 0.0f)
@@ -288,10 +289,16 @@ namespace Barotrauma
                 {
                     continue;
                 }
-                if (c == attacker && !applyToSelf) { continue; }
+                //if (c == attacker && !applyToSelf) { continue; }
 
-                if (onlyInside && c.Submarine == null) { continue; }
-                else if (onlyOutside && c.Submarine != null) { continue; }
+                if (OnlyInside && c.Submarine == null) 
+                { 
+                    continue; 
+                }
+                else if (OnlyOutside && c.Submarine != null) 
+                { 
+                    continue; 
+                }
 
                 Vector2 explosionPos = worldPosition;
                 if (c.Submarine != null) { explosionPos -= c.Submarine.Position; }
@@ -337,15 +344,19 @@ namespace Barotrauma
                     modifiedAfflictions.Clear();
                     foreach (Affliction affliction in attack.Afflictions.Keys)
                     {
-                        // Shouldn't go above 15, or the damage can be unexpectedly low -> doesn't break armor
-                        // Effectively this makes large explosions more effective against large creatures (because more limbs are affected), but I don't think that's necessarily a bad thing.
-                        float limbCountFactor = Math.Min(distFactors.Count, 15);
                         float dmgMultiplier = distFactor;
                         if (affliction.DivideByLimbCount)
                         {
+                            float limbCountFactor = distFactors.Count;
+                            if (affliction.Prefab.LimbSpecific && affliction.Prefab.AfflictionType == "damage")
+                            {
+                                // Shouldn't go above 15, or the damage can be unexpectedly low -> doesn't break armor
+                                // Effectively this makes large explosions more effective against large creatures (because more limbs are affected), but I don't think that's necessarily a bad thing.
+                                limbCountFactor = Math.Min(distFactors.Count, 15);
+                            }
                             dmgMultiplier /= limbCountFactor;
                         }
-                        modifiedAfflictions.Add(affliction.CreateMultiplied(dmgMultiplier, affliction.Probability));
+                        modifiedAfflictions.Add(affliction.CreateMultiplied(dmgMultiplier, affliction));
                     }
                     c.LastDamageSource = damageSource;
                     if (attacker == null)
@@ -353,29 +364,29 @@ namespace Barotrauma
                         if (damageSource is Item item)
                         {
                             attacker = item.GetComponent<Projectile>()?.User;
-                            if (attacker == null)
-                            {
-                                attacker = item.GetComponent<MeleeWeapon>()?.User;
-                            }
+                            attacker ??= item.GetComponent<MeleeWeapon>()?.User;
                         }
                     }
 
                     if (attack.Afflictions.Any() || attack.Stun > 0.0f)
                     {
-                        AbilityAttackData attackData = new AbilityAttackData(Attack, c, attacker);
-                        if (attackData.Afflictions != null)
+                        if (!attack.OnlyHumans || c.IsHuman)
                         {
-                            modifiedAfflictions.AddRange(attackData.Afflictions);
-                        }
+                            AbilityAttackData attackData = new AbilityAttackData(Attack, c, attacker);
+                            if (attackData.Afflictions != null)
+                            {
+                                modifiedAfflictions.AddRange(attackData.Afflictions);
+                            }
 
-                        //use a position slightly from the limb's position towards the explosion
-                        //ensures that the attack hits the correct limb and that the direction of the hit can be determined correctly in the AddDamage methods
-                        Vector2 dir = worldPosition - limb.WorldPosition;
-                        Vector2 hitPos = limb.WorldPosition + (dir.LengthSquared() <= 0.001f ? Rand.Vector(1.0f) : Vector2.Normalize(dir)) * 0.01f;
-                        AttackResult attackResult = c.AddDamage(hitPos, modifiedAfflictions, attack.Stun * distFactor, false, attacker: attacker, damageMultiplier: attack.DamageMultiplier * attackData.DamageMultiplier);
-                        damages.Add(limb, attackResult.Damage);
+                            //use a position slightly from the limb's position towards the explosion
+                            //ensures that the attack hits the correct limb and that the direction of the hit can be determined correctly in the AddDamage methods
+                            Vector2 dir = worldPosition - limb.WorldPosition;
+                            Vector2 hitPos = limb.WorldPosition + (dir.LengthSquared() <= 0.001f ? Rand.Vector(1.0f) : Vector2.Normalize(dir)) * 0.01f;
+                            AttackResult attackResult = c.AddDamage(hitPos, modifiedAfflictions, attack.Stun * distFactor, false, attacker: attacker, damageMultiplier: attack.DamageMultiplier * attackData.DamageMultiplier);
+                            damages.Add(limb, attackResult.Damage);
+                        }
                     }
-                    
+
                     if (attack.StatusEffects != null && attack.StatusEffects.Any())
                     {
                         attack.SetUser(attacker);
@@ -438,7 +449,7 @@ namespace Barotrauma
             damagedStructureList.Clear();
             foreach (MapEntity entity in MapEntity.mapEntityList)
             {
-                if (!(entity is Structure structure)) { continue; }
+                if (entity is not Structure structure) { continue; }
                 if (ignoredSubmarines != null && entity.Submarine != null && ignoredSubmarines.Contains(entity.Submarine)) { continue; }
 
                 if (structure.HasBody &&
@@ -487,7 +498,7 @@ namespace Barotrauma
 
                 for (int i = Level.Loaded.ExtraWalls.Count - 1; i >= 0; i--)
                 {
-                    if (!(Level.Loaded.ExtraWalls[i] is DestructibleLevelWall destructibleWall)) { continue; }
+                    if (Level.Loaded.ExtraWalls[i] is not DestructibleLevelWall destructibleWall) { continue; }
                     foreach (var cell in destructibleWall.Cells)
                     {
                         if (cell.IsPointInside(worldPosition))
@@ -510,7 +521,7 @@ namespace Barotrauma
             return damagedStructures;
         }
 
-        public void RangedBallastFloraDamage(Vector2 worldPosition, float worldRange, float damage, Character attacker = null)
+        public static void RangedBallastFloraDamage(Vector2 worldPosition, float worldRange, float damage, Character attacker = null)
         {
             List<BallastFloraBehavior> ballastFlorae = new List<BallastFloraBehavior>();
 

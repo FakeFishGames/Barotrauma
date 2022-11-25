@@ -327,7 +327,7 @@ namespace Barotrauma
                     DrawString(spriteBatch, new Vector2(10, y),
                         "FPS: " + Math.Round(GameMain.PerformanceCounter.AverageFramesPerSecond),
                         Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                    if (GameMain.GameSession != null && Timing.TotalTime > GameMain.GameSession.RoundStartTime + 1.0)
+                    if (GameMain.GameSession != null && GameMain.GameSession.RoundDuration > 1.0)
                     {
                         y += yStep;
                         DrawString(spriteBatch, new Vector2(10, y),

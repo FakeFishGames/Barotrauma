@@ -113,9 +113,9 @@ namespace Barotrauma
             }
         }
 
-        public void ClientWriteInput(IWriteMessage msg)
+        public void ClientWriteInput(in SegmentTableWriter<ClientNetSegment> segmentTableWriter, IWriteMessage msg)
         {
-            msg.WriteByte((byte)ClientNetObject.CHARACTER_INPUT);
+            segmentTableWriter.StartNewSegment(ClientNetSegment.CharacterInput);
 
             if (memInput.Count > 60)
             {

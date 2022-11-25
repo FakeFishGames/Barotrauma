@@ -156,7 +156,7 @@ namespace Barotrauma
                     Character.Controlled.DeselectCharacter();
                 }
 
-                Character.Controlled.ResetInteract = true;
+                Character.Controlled.DisableInteract = true;
                 if (openHealthWindow != null)
                 {
                     if (value.Character.Info == null || value.Character == Character.Controlled || Character.Controlled.HasEquippedItem("healthscanner".ToIdentifier()))

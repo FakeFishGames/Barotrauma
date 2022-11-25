@@ -128,21 +128,17 @@ namespace Barotrauma
 
         public static void Update(float deltaTime)
         {
-            lock (queuedMessages)
+            while (queuedMessages.TryDequeue(out var newMsg))
             {
-                while (queuedMessages.Count > 0)
-                {
-                    var newMsg = queuedMessages.Dequeue();
-                    AddMessage(newMsg);
+                AddMessage(newMsg);
 
-                    if (GameSettings.CurrentConfig.SaveDebugConsoleLogs || GameSettings.CurrentConfig.VerboseLogging)
+                if (GameSettings.CurrentConfig.SaveDebugConsoleLogs || GameSettings.CurrentConfig.VerboseLogging)
+                {
+                    unsavedMessages.Add(newMsg);
+                    if (unsavedMessages.Count >= messagesPerFile)
                     {
-                        unsavedMessages.Add(newMsg);
-                        if (unsavedMessages.Count >= messagesPerFile)
-                        {
-                            SaveLogs();
-                            unsavedMessages.Clear();
-                        }
+                        SaveLogs();
+                        unsavedMessages.Clear();
                     }
                 }
             }
@@ -258,25 +254,21 @@ namespace Barotrauma
 
         public static void DequeueMessages()
         {
-            lock (queuedMessages)
+            while (queuedMessages.TryDequeue(out var newMsg))
             {
-                while (queuedMessages.Count > 0)
+                if (listBox == null)
                 {
-                    var newMsg = queuedMessages.Dequeue();
-                    if (listBox == null)
-                    {
-                        //don't attempt to add to the listbox if it hasn't been created yet                    
-                        Messages.Add(newMsg);
-                    }
-                    else
-                    {
-                        AddMessage(newMsg);
-                    }
+                    //don't attempt to add to the listbox if it hasn't been created yet                    
+                    Messages.Add(newMsg);
+                }
+                else
+                {
+                    AddMessage(newMsg);
+                }
 
-                    if (GameSettings.CurrentConfig.SaveDebugConsoleLogs || GameSettings.CurrentConfig.VerboseLogging)
-                    { 
-                        unsavedMessages.Add(newMsg); 
-                    }
+                if (GameSettings.CurrentConfig.SaveDebugConsoleLogs || GameSettings.CurrentConfig.VerboseLogging)
+                { 
+                    unsavedMessages.Add(newMsg); 
                 }
             }
         }

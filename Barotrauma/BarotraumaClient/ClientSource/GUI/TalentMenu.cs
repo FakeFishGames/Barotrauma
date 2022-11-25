@@ -283,7 +283,7 @@ namespace Barotrauma
                         break;
                     case TalentTreeType.Specialization:
                         talentList = GetSpecializationList();
-                        treeSize = new Vector2(0.333f, 1f);
+                        treeSize = new Vector2(Math.Max(0.333f, 1.0f / tree.TalentSubTrees.Count(t => t.Type == TalentTreeType.Specialization)), 1f);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException($"Invalid TalentTreeType \"{subTree.Type}\"");
@@ -325,7 +325,9 @@ namespace Barotrauma
             }
 
             var specializationList = GetSpecializationList();
-            GetSpecializationList().Content.RectTransform.Resize(new Point(specializationList.Content.Children.Sum(static c => c.Rect.Width), specializationList.Rect.Height), resizeChildren: false);
+            //resize (scale up) children if there's less than 3 of them to make them cover the whole width of the menu
+            specializationList.Content.RectTransform.Resize(new Point(specializationList.Content.Children.Sum(static c => c.Rect.Width), specializationList.Rect.Height), 
+                resizeChildren: specializationList.Content.Children.Count() < 3);
 
             GUITextBlock.AutoScaleAndNormalize(subTreeNames);
 

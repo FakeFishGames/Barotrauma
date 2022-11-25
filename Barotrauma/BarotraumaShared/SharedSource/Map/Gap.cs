@@ -549,21 +549,24 @@ namespace Barotrauma
                 if (hull1.WaterVolume < hull1.Volume / Hull.MaxCompress &&
                     hull1.Surface < rect.Y)
                 {
+                    //create a wave from the side of the hull the water is leaking from
                     if (rect.X > hull1.Rect.X + hull1.Rect.Width / 2.0f)
                     {
-                        float vel = ((rect.Y - rect.Height / 2) - (hull1.Surface + hull1.WaveY[hull1.WaveY.Length - 1])) * 6.0f;
-                        vel *= Math.Min(Math.Abs(flowForce.X) / 200.0f, 1.0f);
-
-                        hull1.WaveVel[hull1.WaveY.Length - 1] += vel * deltaTime;
-                        hull1.WaveVel[hull1.WaveY.Length - 2] += vel * deltaTime;
+                        CreateWave(rect, hull1, hull1.WaveY.Length - 1, hull1.WaveY.Length - 2, flowForce, deltaTime);
                     }
                     else
                     {
-                        float vel = ((rect.Y - rect.Height / 2) - (hull1.Surface + hull1.WaveY[0])) * 6.0f;
+                        CreateWave(rect, hull1, 0, 1, flowForce, deltaTime);
+                    }
+                    static void CreateWave(Rectangle rect, Hull hull1, int index1, int index2, Vector2 flowForce, float deltaTime)
+                    {
+                        float vel = (rect.Y - rect.Height / 2) - (hull1.Surface + hull1.WaveY[index1]);
                         vel *= Math.Min(Math.Abs(flowForce.X) / 200.0f, 1.0f);
-
-                        hull1.WaveVel[0] += vel * deltaTime;
-                        hull1.WaveVel[1] += vel * deltaTime;
+                        if (vel > 0.0f)
+                        {
+                            hull1.WaveVel[index1] += vel * deltaTime;
+                            hull1.WaveVel[index2] += vel * deltaTime;
+                        }
                     }
                 }
                 else
