@@ -202,24 +202,24 @@ namespace Barotrauma.Networking
 
         public virtual void ServerWrite(IWriteMessage msg, Client c)
         {
-            msg.Write((byte)ServerNetObject.CHAT_MESSAGE);
-            msg.Write(NetStateID);
+            msg.WriteByte((byte)ServerNetObject.CHAT_MESSAGE);
+            msg.WriteUInt16(NetStateID);
             msg.WriteRangedInteger((int)Type, 0, Enum.GetValues(typeof(ChatMessageType)).Length - 1);
-            msg.Write((byte)ChangeType);
-            msg.Write(Text);
+            msg.WriteByte((byte)ChangeType);
+            msg.WriteString(Text);
 
-            msg.Write(SenderName);
-            msg.Write(SenderClient != null);
+            msg.WriteString(SenderName);
+            msg.WriteBoolean(SenderClient != null);
             if (SenderClient != null)
             {
-                msg.Write((SenderClient.SteamID != 0) ? SenderClient.SteamID : SenderClient.ID);
+                msg.WriteString(SenderClient.AccountId.TryUnwrap(out var accountId) ? accountId.StringRepresentation : SenderClient.SessionId.ToString());
             }
-            msg.Write(Sender != null && c.InGame);
+            msg.WriteBoolean(Sender != null && c.InGame);
             if (Sender != null && c.InGame)
             {
-                msg.Write(Sender.ID);
+                msg.WriteUInt16(Sender.ID);
             }
-            msg.Write(customTextColor != null);
+            msg.WriteBoolean(customTextColor != null);
             if (customTextColor != null)
             {
                 msg.WriteColorR8G8B8A8(customTextColor.Value);
@@ -227,7 +227,7 @@ namespace Barotrauma.Networking
             msg.WritePadBits();
             if (Type == ChatMessageType.ServerMessageBoxInGame)
             {
-                msg.Write(IconStyle);
+                msg.WriteString(IconStyle);
             }
         }
     }

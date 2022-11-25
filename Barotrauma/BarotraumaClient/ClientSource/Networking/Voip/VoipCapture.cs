@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework;
 using OpenAL;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -22,13 +21,13 @@ namespace Barotrauma.Networking
         public static IReadOnlyList<string> CaptureDeviceNames =>
             Alc.GetStringList(IntPtr.Zero, OpenAL.Alc.CaptureDeviceSpecifier);
 
-        private IntPtr captureDevice;
+        private readonly IntPtr captureDevice;
 
         private Thread captureThread;
 
         private bool capturing;
 
-        private OpusEncoder encoder;
+        private readonly OpusEncoder encoder;
 
         public double LastdB
         {
@@ -53,7 +52,7 @@ namespace Barotrauma.Networking
         {
             get
             {
-                return GameMain.Client?.ID ?? 0;
+                return GameMain.Client?.SessionId ?? 0;
             }
             protected set
             {
@@ -82,7 +81,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        private VoipCapture(string deviceName) : base(GameMain.Client?.ID ?? 0, true, false)
+        private VoipCapture(string deviceName) : base(GameMain.Client?.SessionId ?? 0, true, false)
         {
             Disconnected = false;
 
@@ -171,8 +170,8 @@ namespace Barotrauma.Networking
         }
 
         IntPtr nativeBuffer;
-        short[] uncompressedBuffer = new short[VoipConfig.BUFFER_SIZE];
-        short[] prevUncompressedBuffer = new short[VoipConfig.BUFFER_SIZE];
+        readonly short[] uncompressedBuffer = new short[VoipConfig.BUFFER_SIZE];
+        readonly short[] prevUncompressedBuffer = new short[VoipConfig.BUFFER_SIZE];
         bool prevCaptured = true;
         int captureTimer;
 
@@ -227,13 +226,20 @@ namespace Barotrauma.Networking
                     bool allowEnqueue = overrideSound != null;
                     if (GameMain.WindowActive && SettingsMenu.Instance is null)
                     {
-                        bool pttDown = PlayerInput.KeyDown(InputType.Voice) && GUI.KeyboardDispatcher.Subscriber == null;
-                        if (pttDown || captureTimer <= 0)
-                        {
-                            ForceLocal = GameMain.ActiveChatMode == ChatMode.Local;
-                        }
+                        bool usingLocalMode = PlayerInput.KeyDown(InputType.LocalVoice);
+                        bool usingRadioMode = PlayerInput.KeyDown(InputType.RadioVoice);
                         if (GameSettings.CurrentConfig.Audio.VoiceSetting == VoiceMode.Activity)
                         {
+                            bool pttDown = (usingLocalMode || usingRadioMode) && GUI.KeyboardDispatcher.Subscriber == null;
+                            if (pttDown)
+                            {
+                                ForceLocal = usingLocalMode;
+                            }
+                            //in Activity mode, we default to the active mode UNLESS a specific ptt key is held
+                            else
+                            {
+                                ForceLocal = GameMain.ActiveChatMode == ChatMode.Local;
+                            }
                             if (dB > GameSettings.CurrentConfig.Audio.NoiseGateThreshold)
                             {
                                 allowEnqueue = true;
@@ -241,6 +247,13 @@ namespace Barotrauma.Networking
                         }
                         else if (GameSettings.CurrentConfig.Audio.VoiceSetting == VoiceMode.PushToTalk)
                         {
+                            //in push-to-talk mode, InputType.Voice uses the active chat mode
+                            bool usingActiveMode = PlayerInput.KeyDown(InputType.Voice);
+                            bool pttDown = (usingActiveMode || usingLocalMode || usingRadioMode) && GUI.KeyboardDispatcher.Subscriber == null;
+                            if (pttDown || captureTimer <= 0)
+                            {
+                                ForceLocal = (usingActiveMode && GameMain.ActiveChatMode == ChatMode.Local) || usingLocalMode;
+                            }
                             if (pttDown)
                             {
                                 allowEnqueue = true;

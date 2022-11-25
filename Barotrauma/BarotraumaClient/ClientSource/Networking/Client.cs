@@ -31,11 +31,16 @@ namespace Barotrauma.Networking
 
         public bool IsOwner;
 
-        public bool AllowKicking;
 
         public bool IsDownloading;
 
         public float Karma;
+
+        public bool AllowKicking =>
+            !IsOwner &&
+            !HasPermission(ClientPermissions.Ban) &&
+            !HasPermission(ClientPermissions.Kick) &&
+            !HasPermission(ClientPermissions.Unban);
 
         public void UpdateSoundPosition()
         {
@@ -72,8 +77,8 @@ namespace Barotrauma.Networking
         partial void InitProjSpecific()
         {
             VoipQueue = null; VoipSound = null;
-            if (ID == GameMain.Client.ID) return;
-            VoipQueue = new VoipQueue(ID, false, true);
+            if (SessionId == GameMain.Client.SessionId) { return; }
+            VoipQueue = new VoipQueue(SessionId, canSend: false, canReceive: true);
             GameMain.Client?.VoipClient?.RegisterQueue(VoipQueue);
             VoipSound = null;
         }
@@ -132,6 +137,14 @@ namespace Barotrauma.Networking
             }
 
             return Permissions.HasFlag(permission);
+        }
+
+        public void ResetVotes()
+        {
+            for (int i = 0; i < votes.Length; i++)
+            {
+                votes[i] = null;
+            }
         }
 
         partial void DisposeProjSpecific()

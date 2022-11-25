@@ -1,21 +1,18 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.ClientSource.Settings;
+using Barotrauma.Extensions;
+using Barotrauma.IO;
+using Barotrauma.Items.Components;
+using Barotrauma.MapCreatures.Behavior;
 using Barotrauma.Networking;
+using Barotrauma.Steam;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
-using Barotrauma.IO;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
-using System.Globalization;
-using FarseerPhysics;
-using Barotrauma.Extensions;
-using Barotrauma.Steam;
-using System.Threading.Tasks;
-using Barotrauma.ClientSource.Settings;
-using Barotrauma.MapCreatures.Behavior;
 using static Barotrauma.FabricationRecipe;
 
 namespace Barotrauma
@@ -229,7 +226,7 @@ namespace Barotrauma
                     return client.HasPermission(ClientPermissions.Kick);
                 case "ban":
                 case "banip":
-                case "banendpoint":
+                case "banaddress":
                     return client.HasPermission(ClientPermissions.Ban);
                 case "unban":
                 case "unbanip":
@@ -429,24 +426,6 @@ namespace Barotrauma
                 {
                     ShowQuestionPrompt("The automatic hull generation may not work correctly if your submarine uses curved walls. Do you want to continue? Y/N",
                         (option) => { if (option.ToLowerInvariant() == "y") GameMain.SubEditorScreen.AutoHull(); });
-                }
-            }));
-
-            commands.Add(new Command("startlidgrenclient", "", (string[] args) =>
-            {
-                if (args.Length == 0) return;
-
-                if (GameMain.Client == null)
-                {
-                    GameMain.Client = new GameClient("Name", args[0], 0);
-                }
-            }));
-
-            commands.Add(new Command("startsteamp2pclient", "", (string[] args) =>
-            {
-                if (GameMain.Client == null)
-                {
-                    GameMain.Client = new GameClient("Name", null, 76561198977850505); //this is juan's alt account, feel free to abuse this one
                 }
             }));
 
@@ -744,7 +723,7 @@ namespace Barotrauma
 
             AssignOnExecute("explosion", (string[] args) =>
             {
-                Vector2 explosionPos = GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition);
+                Vector2 explosionPos = Screen.Selected.Cam.ScreenToWorld(PlayerInput.MousePosition);
                 float range = 500, force = 10, damage = 50, structureDamage = 20, itemDamage = 100, empStrength = 0.0f, ballastFloraStrength = 50f;
                 if (args.Length > 0) float.TryParse(args[0], out range);
                 if (args.Length > 1) float.TryParse(args[1], out force);
@@ -1299,7 +1278,7 @@ namespace Barotrauma
                     int? fabricationCost = null;
                     int? deconstructProductCost = null;
 
-                    var fabricationRecipe = fabricableItems.Find(f => f.TargetItem == itemPrefab);
+                    var fabricationRecipe = fabricableItems.Find(f => f.TargetItem == itemPrefab && f.RequiredItems.Any());
                     if (fabricationRecipe != null)
                     {
                         foreach (var ingredient in fabricationRecipe.RequiredItems)
@@ -1334,6 +1313,21 @@ namespace Barotrauma
                         if (fabricationRecipe != null)
                         {
                             var ingredient = fabricationRecipe.RequiredItems.Find(r => r.ItemPrefabs.Contains(targetItem));
+
+                            if (ingredient == null)
+                            {
+                                foreach (var requiredItem in fabricationRecipe.RequiredItems)
+                                {
+                                    foreach (var itemPrefab2 in requiredItem.ItemPrefabs)
+                                    {
+                                        foreach (var recipe in itemPrefab2.FabricationRecipes.Values)
+                                        {
+                                            ingredient ??= recipe.RequiredItems.Find(r => r.ItemPrefabs.Contains(targetItem));
+                                        }
+                                    }
+                                }
+                            }
+
                             if (ingredient == null)
                             {
                                 NewMessage("Deconstructing \"" + itemPrefab.Name + "\" produces \"" + deconstructItem.ItemIdentifier + "\", which isn't required in the fabrication recipe of the item.", Color.Red);
@@ -2077,7 +2071,17 @@ namespace Barotrauma
                 var prefab = MapEntityPrefab.Find(null, args[0]);
                 if (prefab != null)
                 {
-                    DebugConsole.NewMessage(prefab.Name + " " + prefab.Identifier + " " + prefab.GetType().ToString());
+                    NewMessage(prefab.Name + " " + prefab.Identifier + " " + prefab.GetType().ToString());
+                }
+            }));
+
+            commands.Add(new Command("copycharacterinfotoclipboard", "", (string[] args) =>
+            {
+                if (Character.Controlled?.Info != null)
+                {
+                    XElement element = Character.Controlled?.Info.Save(null);
+                    Clipboard.SetText(element.ToString());
+                    DebugConsole.NewMessage($"Copied the characterinfo of {Character.Controlled.Name} to clipboard.");
                 }
             }));
 
@@ -2485,29 +2489,11 @@ namespace Barotrauma
                 Barotrauma.IO.Validation.SkipValidationInDebugBuilds = false;
                 ToolBox.OpenFileWithShell(Path.GetFullPath(filePath));
             }));
+
 #if DEBUG
-            commands.Add(new Command("playovervc", "Plays a sound over voice chat.", (args) =>
-            {
-                VoipCapture.Instance?.SetOverrideSound(args.Length > 0 ? args[0] : null);
-            }));
-
-            commands.Add(new Command("querylobbies", "Queries all SteamP2P lobbies", (args) =>
-            {
-                TaskPool.Add("DebugQueryLobbies",
-                    SteamManager.LobbyQueryRequest(), (t) =>
-                    {
-                        t.TryGetResult(out List<Steamworks.Data.Lobby> lobbies);
-                        foreach (var lobby in lobbies)
-                        {
-                            NewMessage(lobby.GetData("name") + ", " + lobby.GetData("lobbyowner"), Color.Yellow);
-                        }
-                        NewMessage($"Retrieved a total of {lobbies.Count} lobbies", Color.Lime);
-                    });
-            }));
-
             commands.Add(new Command("checkduplicates", "Checks the given language for duplicate translation keys and writes to file.", (string[] args) =>
             {
-                if (args.Length != 1) return;
+                if (args.Length != 1) { return; }
                 TextManager.CheckForDuplicates(args[0].ToIdentifier().ToLanguageIdentifier());
             }));
 
@@ -2517,9 +2503,20 @@ namespace Barotrauma
                 NPCConversation.WriteToCSV();
             }));
 
-            commands.Add(new Command("csvtoxml", "csvtoxml [language] -> Converts .csv localization files in Content/NPCConversations & Content/Texts to .xml for use in-game.", (string[] args) =>
+            commands.Add(new Command("csvtoxml", "csvtoxml -> Converts .csv localization files Content/Texts/Texts.csv and Content/Texts/NPCConversations.csv to .xml for use in-game.", (string[] args) =>
             {
-                LocalizationCSVtoXML.Convert();
+                ShowQuestionPrompt("Do you want to save the text files to the project folder (../../../BarotraumaShared/Content/Texts/)? If not, they are saved in the current working directory. Y/N",
+                    (option1) => 
+                    {
+                        ShowQuestionPrompt("Do you want to convert the NPC conversations as well? Y/N",
+                            (option2) =>
+                            {
+                                LocalizationCSVtoXML.ConvertMasterLocalizationKit(
+                                    option1.ToLowerInvariant() == "y" ? "../../../BarotraumaShared/Content/Texts/" : "Content/Texts",
+                                    option1.ToLowerInvariant() == "y" ? "../../../BarotraumaShared/Content/NPCConversations/" : "Content/NPCConversations",
+                                    convertConversations: option2.ToLowerInvariant() == "y");
+                            });
+                    });
             }));
 
             commands.Add(new Command("printproperties", "Goes through the currently collected property list for missing localizations and writes them to a file.", (string[] args) =>
@@ -2816,7 +2813,7 @@ namespace Barotrauma
             );
 
             AssignOnClientExecute(
-                "banendpoint|banip",
+                "banaddress|banip",
                 (string[] args) =>
                 {
                     if (GameMain.Client == null || args.Length == 0) return;
@@ -2838,7 +2835,7 @@ namespace Barotrauma
                             }
 
                             GameMain.Client?.SendConsoleCommand(
-                                "banendpoint " +
+                                "banaddress " +
                                 args[0] + " " +
                                 (banDuration.HasValue ? banDuration.Value.TotalSeconds.ToString() : "0") + " " +
                                 reason);
@@ -2851,13 +2848,16 @@ namespace Barotrauma
             {
                 if (GameMain.Client == null || args.Length == 0) return;
                 string clientName = string.Join(" ", args);
-                GameMain.Client.UnbanPlayer(clientName, "");
+                GameMain.Client.UnbanPlayer(clientName);
             }));
 
-            commands.Add(new Command("unbanip", "unbanip [ip]: Unban a specific IP.", (string[] args) =>
+            commands.Add(new Command("unbanaddress", "unbanaddress [endpoint]: Unban a specific endpoint.", (string[] args) =>
             {
                 if (GameMain.Client == null || args.Length == 0) return;
-                GameMain.Client.UnbanPlayer("", args[0]);
+                if (Endpoint.Parse(args[0]).TryUnwrap(out var endpoint))
+                {
+                    GameMain.Client.UnbanPlayer(endpoint);
+                }
             }));
 
             AssignOnClientExecute(

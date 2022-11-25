@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Collections.Immutable;
-using Barotrauma.Items.Components;
-using Barotrauma.Networking;
+﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -25,9 +26,10 @@ namespace Barotrauma
             UpdateSkills = 12,
             UpdateMoney = 13,
             UpdatePermanentStats = 14,
+            RemoveFromCrew = 15,
             
             MinValue = 0,
-            MaxValue = 14
+            MaxValue = 15
         }
         
         private interface IEventData : NetEntityEvent.IData
@@ -54,6 +56,15 @@ namespace Barotrauma
         public struct CharacterStatusEventData : IEventData
         {
             public EventType EventType => EventType.Status;
+
+#if SERVER
+            public bool ForceAfflictionData;
+
+            public CharacterStatusEventData(bool forceAfflictionData)
+            {
+                ForceAfflictionData = forceAfflictionData;
+            }
+#endif
         }
 
         public struct TreatmentEventData : IEventData
@@ -124,18 +135,30 @@ namespace Barotrauma
             public EventType EventType => EventType.TeamChange;
         }
 
+        [NetworkSerialize]
+        public readonly record struct ItemTeamChange(CharacterTeamType TeamId, ImmutableArray<UInt16> ItemIds) : INetSerializableStruct;
+
+
         public struct AddToCrewEventData : IEventData
         {
             public EventType EventType => EventType.AddToCrew;
-            public readonly CharacterTeamType TeamType;
-            public readonly ImmutableArray<Item> InventoryItems;
+            public readonly ItemTeamChange ItemTeamChange;
             
             public AddToCrewEventData(CharacterTeamType teamType, IEnumerable<Item> inventoryItems)
             {
-                TeamType = teamType;
-                InventoryItems = inventoryItems.ToImmutableArray();
+                ItemTeamChange = new ItemTeamChange(teamType, inventoryItems.Select(it => it.ID).ToImmutableArray());
+            }            
+        }
+
+        public struct RemoveFromCrewEventData : IEventData
+        {
+            public EventType EventType => EventType.RemoveFromCrew;
+            public readonly ItemTeamChange ItemTeamChange;
+
+            public RemoveFromCrewEventData(CharacterTeamType teamType, IEnumerable<Item> inventoryItems)
+            {
+                ItemTeamChange = new ItemTeamChange(teamType, inventoryItems.Select(it => it.ID).ToImmutableArray());
             }
-            
         }
 
         public struct UpdateExperienceEventData : IEventData

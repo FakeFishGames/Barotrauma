@@ -161,10 +161,7 @@ namespace Barotrauma
                 character.DeselectCharacter();
             }
 
-            if (!character.IsClimbing)
-            {
-                character.SelectedConstruction = null;
-            }
+            character.SelectedItem = null;
 
             CleanupItems(deltaTime);
 
@@ -262,7 +259,8 @@ namespace Barotrauma
                             // Check that there is no unsafe hulls on the way to the target
                             if (node.Waypoint.CurrentHull != character.CurrentHull && HumanAIController.UnsafeHulls.Contains(node.Waypoint.CurrentHull)) { return false; }
                             return true;
-                        }, endNodeFilter: node => !isCurrentHullAllowed | !IsForbidden(node.Waypoint.CurrentHull));
+                            //don't stop at ladders when idling
+                        }, endNodeFilter: node => node.Waypoint.Ladders == null && (!isCurrentHullAllowed || !IsForbidden(node.Waypoint.CurrentHull)));
                         if (path.Unreachable)
                         {
                             //can't go to this room, remove it from the list and try another room
@@ -293,7 +291,9 @@ namespace Barotrauma
                 }
                 else if (currentTarget != null)
                 {
-                    PathSteering.SteeringSeek(character.GetRelativeSimPosition(currentTarget), weight: 1, nodeFilter: node => node.Waypoint.CurrentHull != null);
+                    PathSteering.SteeringSeek(character.GetRelativeSimPosition(currentTarget), weight: 1, 
+                        nodeFilter: node => node.Waypoint.CurrentHull != null, 
+                        endNodeFilter: node => node.Waypoint.Ladders == null);
                 }
                 else
                 {
@@ -310,7 +310,7 @@ namespace Barotrauma
                 if (character.AnimController.GetHeightFromFloor() < 0.1f)
                 {
                     character.AnimController.Anim = AnimController.Animation.None;
-                    character.SelectedConstruction = null;
+                    character.SelectedSecondaryItem = null;
                 }
                 return;
             }
@@ -375,7 +375,7 @@ namespace Barotrauma
                     }
 
                     chairCheckTimer -= deltaTime;
-                    if (chairCheckTimer <= 0.0f && character.SelectedConstruction == null)
+                    if (chairCheckTimer <= 0.0f && character.SelectedSecondaryItem == null)
                     {
                         foreach (Item item in Item.ItemList)
                         {

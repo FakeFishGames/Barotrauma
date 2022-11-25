@@ -37,7 +37,7 @@ namespace Barotrauma.Items.Components
 
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            msg.WriteRangedSingle(Health, 0f, (float) MaxHealth, 8);
+            msg.WriteRangedSingle(Health, 0f, (float)MaxHealth, 8);
             if (TryExtractEventData(extraData, out EventData eventData))
             {
                 int offset = eventData.Offset;
@@ -48,11 +48,11 @@ namespace Barotrauma.Items.Components
                 {
                     VineTile vine = Vines[i];
                     var (x, y) = vine.Position;
-                    msg.WriteRangedInteger((byte) vine.Type, 0b0000, 0b1111);
+                    msg.WriteRangedInteger((byte)vine.Type, 0b0000, 0b1111);
                     msg.WriteRangedInteger(vine.FlowerConfig.Serialize(), 0, 0xFFF);
                     msg.WriteRangedInteger(vine.LeafConfig.Serialize(), 0, 0xFFF);
-                    msg.Write((byte) (x / VineTile.Size));
-                    msg.Write((byte) (y / VineTile.Size));
+                    msg.WriteByte((byte)(x / VineTile.Size));
+                    msg.WriteByte((byte)(y / VineTile.Size));
                 }
             }
             else

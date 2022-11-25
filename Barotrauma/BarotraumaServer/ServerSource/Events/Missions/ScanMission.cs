@@ -7,7 +7,7 @@ namespace Barotrauma
         public override void ServerWriteInitial(IWriteMessage msg, Client c)
         {
             base.ServerWriteInitial(msg, c);
-            msg.Write((ushort)startingItems.Count);
+            msg.WriteUInt16((ushort)startingItems.Count);
             foreach (var item in startingItems)
             {
                 item.WriteSpawnData(msg,
@@ -27,11 +27,11 @@ namespace Barotrauma
 
         private void ServerWriteScanTargetStatus(IWriteMessage msg)
         {
-            msg.Write((byte)scanTargets.Count);
+            msg.WriteByte((byte)scanTargets.Count);
             foreach (var kvp in scanTargets)
             {
-                msg.Write(kvp.Key != null ? kvp.Key.ID : Entity.NullEntityID);
-                msg.Write(kvp.Value);
+                msg.WriteUInt16(kvp.Key != null ? kvp.Key.ID : Entity.NullEntityID);
+                msg.WriteBoolean(kvp.Value);
             }
         }
     }

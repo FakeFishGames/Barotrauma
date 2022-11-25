@@ -343,7 +343,7 @@ namespace Barotrauma.Items.Components
                 {
                     CurrentFixer.CheckTalents(AbilityEffectType.OnStopTinkering);
                 }
-                CurrentFixer.AnimController.Anim = AnimController.Animation.None;
+                CurrentFixer.AnimController.StopUsingItem();
                 CurrentFixer = null;
                 currentRepairItem = null;
                 currentFixerAction = FixActions.None;
@@ -430,7 +430,7 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
-            if (CurrentFixer != null && (CurrentFixer.SelectedConstruction != item || !CurrentFixer.CanInteractWith(item) || CurrentFixer.IsDead))
+            if (CurrentFixer != null && (CurrentFixer.SelectedItem != item || !CurrentFixer.CanInteractWith(item) || CurrentFixer.IsDead))
             {
                 StopRepairing(CurrentFixer);
                 return;
@@ -502,7 +502,7 @@ namespace Barotrauma.Items.Components
                         SteamAchievementManager.OnItemRepaired(item, CurrentFixer);
                         CurrentFixer.CheckTalents(AbilityEffectType.OnRepairComplete);
                     }
-                    if (CurrentFixer?.SelectedConstruction == item) { CurrentFixer.SelectedConstruction = null; }
+                    if (CurrentFixer?.SelectedItem == item) { CurrentFixer.SelectedItem = null; }
                     deteriorationTimer = Rand.Range(MinDeteriorationDelay, MaxDeteriorationDelay);
                     wasBroken = false;
                     StopRepairing(CurrentFixer);
@@ -603,6 +603,9 @@ namespace Barotrauma.Items.Components
         private bool ShouldDeteriorate()
         {
             if (Level.IsLoadedFriendlyOutpost) { return false; }
+#if CLIENT
+            if (GameMain.GameSession?.GameMode is TutorialMode) { return false; }
+#endif
 
             if (LastActiveTime > Timing.TotalTime) { return true; }
             foreach (ItemComponent ic in item.Components)

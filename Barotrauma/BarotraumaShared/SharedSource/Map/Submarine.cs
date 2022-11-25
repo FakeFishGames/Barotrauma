@@ -187,7 +187,6 @@ namespace Barotrauma
                         if (structure.Submarine != this || !structure.HasBody || structure.Indestructible) { continue; }
                         realWorldCrushDepth = Math.Min(structure.CrushDepth, realWorldCrushDepth.Value);
                     }
-                    realWorldCrushDepth *= Info.GetRealWorldCrushDepthMultiplier();
                 }
                 return realWorldCrushDepth.Value;
             }
@@ -452,10 +451,27 @@ namespace Barotrauma
                 verticalMoveDir = Math.Sign(verticalMoveDir);
                 //do a raycast towards the top/bottom of the level depending on direction
                 Vector2 potentialPos = new Vector2(spawnPos.X, verticalMoveDir > 0 ? Level.Loaded.Size.Y : 0);
-                if (PickBody(ConvertUnits.ToSimUnits(spawnPos), ConvertUnits.ToSimUnits(potentialPos), collisionCategory: Physics.CollisionLevel | Physics.CollisionWall) != null)
+
+                //3 raycasts (left, middle and right side of the sub, so we don't accidentally raycast up a passage too narrow for the sub)
+                for (int x = -1; x <= 1; x++)
                 {
-                    //if the raycast hit a wall, attempt to place the spawnpos there
-                    potentialPos.Y = ConvertUnits.ToDisplayUnits(LastPickedPosition.Y) - 10;
+                    Vector2 xOffset = Vector2.UnitX * minWidth / 2 * x;
+                    if (PickBody(
+                        ConvertUnits.ToSimUnits(spawnPos + xOffset),
+                        ConvertUnits.ToSimUnits(potentialPos + xOffset),
+                        collisionCategory: Physics.CollisionLevel | Physics.CollisionWall) != null)
+                    {
+                        int offsetFromWall = 10 * -verticalMoveDir;
+                        //if the raycast hit a wall, attempt to place the spawnpos there
+                        if (verticalMoveDir > 0)
+                        {
+                            potentialPos.Y = Math.Min(potentialPos.Y, ConvertUnits.ToDisplayUnits(LastPickedPosition.Y) + offsetFromWall);
+                        }
+                        else
+                        {
+                            potentialPos.Y = Math.Max(potentialPos.Y, ConvertUnits.ToDisplayUnits(LastPickedPosition.Y) + offsetFromWall);
+                        }
+                    }
                 }
 
                 //step away from the top/bottom of the level, or from whatever wall the raycast hit,
@@ -986,14 +1002,6 @@ namespace Barotrauma
                 subBody.Body.ResetDynamics();
                 subBody.Body.Enabled = false;
 
-                foreach (MapEntity e in MapEntity.mapEntityList)
-                {
-                    if (e.Submarine == this)
-                    {
-                        Spawner.AddEntityToRemoveQueue(e);
-                    }
-                }
-
                 foreach (Character c in Character.CharacterList)
                 {
                     if (c.Submarine == this)
@@ -1226,7 +1234,7 @@ namespace Barotrauma
         public List<(ItemContainer container, int freeSlots)> GetCargoContainers()
         {
             List<(ItemContainer container, int freeSlots)> containers = new List<(ItemContainer container, int freeSlots)>();
-            var connectedSubs = GetConnectedSubs();
+            var connectedSubs = GetConnectedSubs().Where(sub => sub.Info?.Type == Info.Type);
             foreach (Item item in Item.ItemList.ToList())
             {
                 if (!connectedSubs.Contains(item.Submarine)) { continue; }
@@ -1540,6 +1548,7 @@ namespace Barotrauma
             element.Add(new XAttribute("description", Info.Description ?? ""));
             element.Add(new XAttribute("checkval", Rand.Int(int.MaxValue)));
             element.Add(new XAttribute("price", Info.Price));
+            element.Add(new XAttribute("tier", Info.Tier));
             element.Add(new XAttribute("initialsuppliesspawned", Info.InitialSuppliesSpawned));
             element.Add(new XAttribute("noitems", Info.NoItems));
             element.Add(new XAttribute("lowfuel", !CheckFuel()));

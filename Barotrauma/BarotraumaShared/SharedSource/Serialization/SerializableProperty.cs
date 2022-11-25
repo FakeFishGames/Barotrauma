@@ -508,7 +508,14 @@ namespace Barotrauma
 
             try
             {
-                return (float)PropertyInfo.GetValue(parentObject, null);
+                if (PropertyType == typeof(int))
+                {
+                    return (int)PropertyInfo.GetValue(parentObject, null);
+                }
+                else
+                {
+                    return (float)PropertyInfo.GetValue(parentObject, null);
+                }
             }
             catch (TargetInvocationException e)
             {

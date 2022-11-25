@@ -153,7 +153,7 @@ namespace Barotrauma.Items.Components
             {
                 if (GetAvailableInstantaneousBatteryPower() >= PowerConsumption)
                 {
-                    List<PowerContainer> batteries = GetConnectedBatteries();
+                    List<PowerContainer> batteries = GetDirectlyConnectedBatteries();
                     float neededPower = PowerConsumption;
                     while (neededPower > 0.0001f && batteries.Count > 0)
                     {
@@ -203,7 +203,7 @@ namespace Barotrauma.Items.Components
                 foreach ((Character character, Node node) in charactersInRange)
                 {
                     if (character == null || character.Removed) { continue; }
-                    character.ApplyAttack(null, node.WorldPosition, attack, 1.0f);
+                    character.ApplyAttack(null, node.WorldPosition, attack, MathHelper.Clamp(Voltage, 1.0f, MaxOverVoltageFactor));
                 }
             }
             DischargeProjSpecific();

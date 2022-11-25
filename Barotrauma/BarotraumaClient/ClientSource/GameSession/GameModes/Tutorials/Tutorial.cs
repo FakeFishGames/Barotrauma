@@ -1,104 +1,140 @@
-﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
+﻿using Barotrauma.Extensions;
+using Barotrauma.IO;
+using Barotrauma.Items.Components;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Linq;
-using System.Xml.Linq;
-using Barotrauma.Items.Components;
-using Barotrauma.Extensions;
-using System.Collections.Immutable;
 
 namespace Barotrauma.Tutorials
 {
-    enum TutorialContentType { None = 0, Video = 1, ManualVideo = 2, TextOnly = 3 };
+    enum AutoPlayVideo { Yes, No };
 
-    /// <summary>
-    /// If you're seeing this and are currently working on improving the tutorials, consider
-    /// deleting this class and all that derive from it, and starting from scratch.
-    /// </summary>
-    abstract class Tutorial
+    enum TutorialSegmentType { MessageBox, InfoBox, Objective };
+
+    sealed class Tutorial
     {
         #region Constants
-        public const string PlayableContentPath = "Content/Tutorials/TutorialVideos/";
+
+        private const SpawnType SpawnPointType = SpawnType.Human;
+        private const float FadeOutTime = 3f;
+        private const float WaitBeforeFade = 4f;
+
         #endregion
 
         #region Tutorial variables
-        public static ImmutableHashSet<Type> Types;
-        static Tutorial()
-        {
-            Types = ReflectionUtils.GetDerivedNonAbstract<Tutorial>()
-                .ToImmutableHashSet();
-        }
 
         public readonly Identifier Identifier;
 
         public LocalizedString DisplayName { get; }
 
-        public bool ContentRunning { get; protected set; }
+        public bool ContentRunning { get; private set; }
 
-        protected GUIComponent infoBox;
+        private GUIComponent infoBox;
         private Action infoBoxClosedCallback;
 
-        protected VideoPlayer videoPlayer;
-        protected Point screenResolution;
-        protected WindowMode windowMode;
-        protected float prevUIScale;
+        private VideoPlayer videoPlayer;
+        private Point screenResolution;
+        private WindowMode windowMode;
+        private float prevUIScale;
 
-        private GUIFrame holderFrame, objectiveFrame;
-        private readonly List<Index> activeObjectives;
-        private readonly LocalizedString objectiveTranslated;
+        private GUILayoutGroup objectiveGroup;
+        private readonly LocalizedString objectiveTextTranslated;
 
-        protected readonly ImmutableArray<Segment> segments;
-        protected Index activeContentSegmentIndex;
-        protected Segment activeContentSegment => segments[activeContentSegmentIndex];
+        private readonly List<Segment> ActiveObjectives = new List<Segment>();
+        private const float ObjectiveComponentAnimationTime = 1.5f;
+        private Segment ActiveContentSegment { get; set; }
 
-        protected class Segment
+        public class Segment
         {
-            public struct Text
+            public readonly record struct Text(
+                Identifier Tag,
+                int Width = DefaultWidth,
+                int Height = DefaultHeight,
+                Anchor Anchor = Anchor.Center);
+
+            public readonly record struct Video(
+                string FullPath,
+                Identifier TextTag,
+                int Width = DefaultWidth,
+                int Height = DefaultHeight)
             {
-                public Identifier Tag;
-                public int Width;
-                public int Height;
-                public Anchor Anchor;
+                public string FileName => Path.GetFileName(FullPath.CleanUpPath());
+                public string ContentPath => Path.GetDirectoryName(FullPath.CleanUpPath());
             }
 
-            public struct Video
-            {
-                public string File;
-                public Identifier TextTag;
-                public int Width;
-                public int Height;
-            }
+            private const int DefaultWidth = 450;
+            private const int DefaultHeight = 80;
 
-            public bool IsTriggered;
-            public GUIButton ReplayButton;
-            public GUITextBlock LinkedTitle, LinkedText;
-            public object[] Args;
-            public LocalizedString Objective;
+            public GUIImage ObjectiveStateIndicator;
+            public GUIButton ObjectiveButton;
+            public GUITextBlock LinkedTextBlock;
+            public LocalizedString ObjectiveText;
 
             public readonly Identifier Id;
-            public readonly Text? TextContent;
-            public readonly Video? VideoContent;
-            public readonly TutorialContentType ContentType;
+            public readonly Text TextContent;
+            public readonly Video VideoContent;
+            public readonly AutoPlayVideo AutoPlayVideo;
 
-            public Segment(Identifier id, Identifier objectiveTextTag, TutorialContentType contentType, Text? textContent = null, Video? videoContent = null)
+            public Action OnClickObjective;
+
+            public TutorialSegmentType SegmentType { get; private set; }
+
+            public static Segment CreateInfoBoxSegment(Identifier id, Identifier objectiveTextTag, AutoPlayVideo autoPlayVideo, Text textContent = default, Video videoContent = default)
+            {
+                return new Segment(id, objectiveTextTag, autoPlayVideo, textContent, videoContent);
+            }
+
+            public static Segment CreateMessageBoxSegment(Identifier id, Identifier objectiveTextTag, Action onClickObjective)
+            {
+                return new Segment(id, objectiveTextTag, onClickObjective);
+            }
+
+            public static Segment CreateObjectiveSegment(Identifier id, Identifier objectiveTextTag)
+            {
+                return new Segment(id, objectiveTextTag);
+            }
+
+            private Segment(Identifier id, Identifier objectiveTextTag, AutoPlayVideo autoPlayVideo, Text textContent = default, Video videoContent = default)
             {
                 Id = id;
-                Objective = TextManager.ParseInputTypes(TextManager.Get(objectiveTextTag));
-                ContentType = contentType;
+                ObjectiveText = TextManager.ParseInputTypes(TextManager.Get(objectiveTextTag));
+                AutoPlayVideo = autoPlayVideo;
                 TextContent = textContent;
                 VideoContent = videoContent;
-
-                IsTriggered = false;
+                SegmentType = TutorialSegmentType.InfoBox;
             }
-        }
+
+            private Segment(Identifier id, Identifier objectiveTextTag, Action onClickObjective)
+            {
+                Id = id;
+                ObjectiveText = TextManager.ParseInputTypes(TextManager.Get(objectiveTextTag));
+                OnClickObjective = onClickObjective;
+                SegmentType = TutorialSegmentType.MessageBox;
+            }
+
+            private Segment(Identifier id, Identifier objectiveTextTag)
+            {
+                Id = id;
+                ObjectiveText = TextManager.ParseInputTypes(TextManager.Get(objectiveTextTag));
+                SegmentType = TutorialSegmentType.Objective;
+            }
+
+            public void ConnectMessageBox(Segment messageBoxSegment)
+            {
+                SegmentType = TutorialSegmentType.MessageBox;
+                OnClickObjective = messageBoxSegment.OnClickObjective;
+            }
+    }
 
         private bool completed;
         public bool Completed
         {
-            get { return completed; }
-            protected set
+            get
+            {
+                return completed;
+            }
+            private set
             {
                 if (completed == value) { return; }
                 completed = value;
@@ -109,26 +145,149 @@ namespace Barotrauma.Tutorials
                 GameSettings.SaveCurrentConfig();
             }
         }
+
+        public readonly TutorialPrefab TutorialPrefab;
+        private readonly EventPrefab eventPrefab;
+
+        private CoroutineHandle tutorialCoroutine;
+        private CoroutineHandle completedCoroutine;
+
+        private Character character;
+
+        private string SubmarinePath => TutorialPrefab.SubmarinePath.Value;
+        private string StartOutpostPath => TutorialPrefab.OutpostPath.Value;
+        private string LevelSeed => TutorialPrefab.LevelSeed;
+        private string LevelParams => TutorialPrefab.LevelParams;
+
+        private SubmarineInfo startOutpost = null;
+
+        public readonly List<(Entity entity, Identifier iconStyle)> Icons = new List<(Entity entity, Identifier iconStyle)>();
+
         #endregion
 
         #region Tutorial Controls
-        protected Tutorial(Identifier identifier, params Segment[] segments)
+
+        public Tutorial(TutorialPrefab prefab)
         {
-            Identifier = identifier;
-            this.segments = segments.ToImmutableArray();
+            Identifier = $"tutorial.{prefab.Identifier}".ToIdentifier();
             DisplayName = TextManager.Get(Identifier);
-            activeObjectives = new List<Index>();
-            objectiveTranslated = TextManager.Get("Tutorial.Objective");
+            objectiveTextTranslated = TextManager.Get("Tutorial.Objective");
+
+            TutorialPrefab = prefab;
+            eventPrefab = EventSet.GetEventPrefab(prefab.EventIdentifier);
         }
 
-        protected abstract IEnumerable<CoroutineStatus> Loading();
+        private IEnumerable<CoroutineStatus> Loading()
+        {
+            SubmarineInfo subInfo = new SubmarineInfo(SubmarinePath);
+
+            LevelGenerationParams.LevelParams.TryGet(LevelParams, out LevelGenerationParams generationParams);
+
+            yield return CoroutineStatus.Running;
+
+            GameMain.GameSession = new GameSession(subInfo, GameModePreset.Tutorial, missionPrefabs: null);
+            (GameMain.GameSession.GameMode as TutorialMode).Tutorial = this;
+
+            if (generationParams is not null)
+            {
+                Biome biome =
+                    Biome.Prefabs.FirstOrDefault(b => generationParams.AllowedBiomeIdentifiers.Contains(b.Identifier)) ??
+                    Biome.Prefabs.First();
+
+                if (!string.IsNullOrEmpty(StartOutpostPath))
+                {
+                    startOutpost = new SubmarineInfo(StartOutpostPath);
+                }
+
+                LevelData tutorialLevel = new LevelData(LevelSeed, 0, 0, generationParams, biome);
+                GameMain.GameSession.StartRound(tutorialLevel, startOutpost: startOutpost);
+            }
+            else
+            {
+                GameMain.GameSession.StartRound(LevelSeed);
+            }
+
+            GameMain.GameSession.EventManager.ActiveEvents.Clear();
+            GameMain.GameSession.EventManager.Enabled = true;
+            GameMain.GameScreen.Select();
+
+            if (Submarine.MainSub != null)
+            {
+                Submarine.MainSub.GodMode = true;
+            }
+            foreach (Structure wall in Structure.WallList)
+            {
+                if (wall.Submarine != null && wall.Submarine.Info.IsOutpost)
+                {
+                    wall.Indestructible = true;
+                }
+            }
+
+            var charInfo = TutorialPrefab.GetTutorialCharacterInfo();
+
+            var wayPoint = WayPoint.GetRandom(SpawnPointType, charInfo.Job?.Prefab, Level.Loaded.StartOutpost);
+
+            if (wayPoint == null)
+            {
+                DebugConsole.ThrowError("A waypoint with the spawntype \"" + SpawnPointType + "\" is required for the tutorial event");
+                yield return CoroutineStatus.Failure;
+                yield break;
+            }
+
+            character = Character.Create(charInfo, wayPoint.WorldPosition, "", isRemotePlayer: false, hasAi: false);
+            character.TeamID = CharacterTeamType.Team1;
+            Character.Controlled = character;
+            character.GiveJobItems(null);
+
+            var idCard = character.Inventory.FindItemByTag("identitycard".ToIdentifier());
+            if (idCard == null)
+            {
+                DebugConsole.ThrowError("Item prefab \"ID Card\" not found!");
+                yield return CoroutineStatus.Failure;
+                yield break;
+            }
+            idCard.AddTag("com");
+            idCard.AddTag("eng");
+
+            foreach (Item item in Item.ItemList)
+            {
+                Door door = item.GetComponent<Door>();
+                if (door != null)
+                {
+                    door.CanBeWelded = false;
+                }
+            }
+
+            tutorialCoroutine = CoroutineManager.StartCoroutine(UpdateState());
+
+            Initialize();
+
+            yield return CoroutineStatus.Success;
+        }
+
+        private void Initialize()
+        {
+            GameMain.GameSession.CrewManager.AllowCharacterSwitch = TutorialPrefab.AllowCharacterSwitch;
+            GameMain.GameSession.CrewManager.AutoHideCrewList();
+
+            if (Character.Controlled is Character character)
+            {
+                foreach (Item item in character.Inventory.AllItemsMod)
+                {
+                    if (item.HasTag(TutorialPrefab.StartingItemTags)) { continue; }
+                    item.Unequip(character);
+                    character.Inventory.RemoveItem(item);
+                }
+            }
+        }
 
         public void Start()
         {
             videoPlayer = new VideoPlayer();
             GameMain.Instance.ShowLoading(Loading());
-            
-            activeObjectives.Clear();
+            ActiveObjectives.Clear();
+            ActiveContentSegment = null;
+
             CreateObjectiveFrame();
 
             // Setup doors:  Clear all requirements, unless the door is setup as locked.
@@ -145,33 +304,74 @@ namespace Barotrauma.Tutorials
             }
         }
 
-        public virtual void AddToGUIUpdateList()
+        public void AddToGUIUpdateList()
         {
             if (GameMain.GraphicsWidth != screenResolution.X || GameMain.GraphicsHeight != screenResolution.Y || prevUIScale != GUI.Scale || GameSettings.CurrentConfig.Graphics.DisplayMode != windowMode)
             {
                 CreateObjectiveFrame();
             }
-
-            if (objectiveFrame != null && activeObjectives.Count > 0)
+            if (ActiveObjectives.Count > 0)
             {
-                objectiveFrame.AddToGUIUpdateList(order: -1);
+                objectiveGroup?.AddToGUIUpdateList(order: -1);
             }
-
-            if (infoBox != null) infoBox.AddToGUIUpdateList(order: 100);
-            if (videoPlayer != null) videoPlayer.AddToGUIUpdateList(order: 100);
+            infoBox?.AddToGUIUpdateList(order: 100);
+            videoPlayer?.AddToGUIUpdateList(order: 100);
         }
 
-        public virtual void Update(float deltaTime)
+        public void Update()
         {
             videoPlayer?.Update();
 
-            if (activeObjectives != null)
+            if (character != null)
             {
-                for (int i = 0; i < activeObjectives.Count; i++)
+                if (character.Oxygen < 1)
                 {
-                    CheckActiveObjectives(activeObjectives[i], deltaTime);
+                    character.Oxygen = 1;
+                }
+                if (character.IsDead)
+                {
+                    CoroutineManager.StartCoroutine(Dead());
+                }
+                else if (Character.Controlled == null)
+                {
+                    if (tutorialCoroutine != null)
+                    {
+                        CoroutineManager.StopCoroutines(tutorialCoroutine);
+                    }
+                    if (completedCoroutine == null && !CoroutineManager.IsCoroutineRunning(completedCoroutine))
+                    {
+                        GUI.PreventPauseMenuToggle = false;
+                    }
+                    ContentRunning = false;
+                    infoBox = null;
+                }
+                else
+                {
+                    character = Character.Controlled;
                 }
             }
+        }
+
+        private IEnumerable<CoroutineStatus> Dead()
+        {
+            GUI.PreventPauseMenuToggle = true;
+            Character.Controlled = character = null;
+            Stop();
+
+            GameAnalyticsManager.AddDesignEvent("Tutorial:Died");
+
+            yield return new WaitForSeconds(3.0f);
+
+            var messageBox = new GUIMessageBox(TextManager.Get("Tutorial.TryAgainHeader"), TextManager.Get("Tutorial.TryAgain"), new LocalizedString[] { TextManager.Get("Yes"), TextManager.Get("No") });
+
+            messageBox.Buttons[0].OnClicked += Restart;
+            messageBox.Buttons[0].OnClicked += messageBox.Close;
+
+
+            messageBox.Buttons[1].OnClicked = GameMain.MainMenuScreen.ReturnToMainMenu;
+            messageBox.Buttons[1].OnClicked += messageBox.Close;
+
+            yield return CoroutineStatus.Success;
         }
 
         public void CloseActiveContentGUI()
@@ -182,257 +382,338 @@ namespace Barotrauma.Tutorials
             }
             else if (infoBox != null)
             {
-                CloseInfoFrame(null, null);
+                CloseInfoFrame();
             }
         }
 
-        public virtual IEnumerable<CoroutineStatus> UpdateState()
+        public IEnumerable<CoroutineStatus> UpdateState()
         {
-            yield return CoroutineStatus.Success;
-        }
-
-        protected bool Restart(GUIButton button, object obj)
-        {
-            GUI.PreventPauseMenuToggle = false;
-            return true;
-        }
-
-        protected virtual void TriggerTutorialSegment(Index index, params object[] args)
-        {
-            Inventory.DraggingItems.Clear();
-            ContentRunning = true;
-            activeContentSegmentIndex = index;
-            segments[index].Args = args;
-
-            LocalizedString tutorialText = TextManager.GetFormatted(segments[index].TextContent.Value.Tag, args);
-            tutorialText = TextManager.ParseInputTypes(tutorialText);
-            LocalizedString objectiveText = string.Empty;
-
-            if (!segments[index].Objective.IsNullOrEmpty())
+            while (GameMain.Instance.LoadingScreenOpen || Level.Loaded == null || Level.Loaded.Generating)
             {
-                if (args.Length == 0)
+                yield return new WaitForSeconds(0.1f);
+            }
+
+            if (eventPrefab == null)
+            {
+                DebugConsole.LogError($"No tutorial event defined for the tutorial (identifier: \"{TutorialPrefab?.Identifier.ToString() ?? "null"})\"");
+                yield return CoroutineStatus.Failure;
+            }
+
+            if (eventPrefab.CreateInstance() is Event eventInstance)
+            {
+                GameMain.GameSession.EventManager.QueuedEvents.Enqueue(eventInstance);
+                while (!eventInstance.IsFinished)
                 {
-                    objectiveText = segments[index].Objective;
+                    yield return CoroutineStatus.Running;
                 }
-                else
-                {
-                    objectiveText = TextManager.GetFormatted(segments[index].Objective, args);
-                }
-                objectiveText = TextManager.ParseInputTypes(objectiveText);
-                segments[index].Objective = objectiveText;
             }
             else
             {
-                segments[index].IsTriggered = true; // Complete at this stage only if no related objective
+                DebugConsole.LogError($"Failed to create an instance for a tutorial event (identifier: \"{eventPrefab.Identifier}\"");
+                yield return CoroutineStatus.Failure;
             }
 
+            yield return CoroutineStatus.Success;
+        }
 
-            switch (segments[index].ContentType)
+        public void Complete()
+        {
+            GameAnalyticsManager.AddDesignEvent($"Tutorial:{Identifier}:Completed");
+            completedCoroutine = CoroutineManager.StartCoroutine(TutorialCompleted());
+
+            IEnumerable<CoroutineStatus> TutorialCompleted()
             {
-                case TutorialContentType.None:
+                while (GUI.PauseMenuOpen) { yield return CoroutineStatus.Running; }
+
+                GUI.PreventPauseMenuToggle = true;
+                Character.Controlled.ClearInputs();
+                Character.Controlled = null;
+                GameAnalyticsManager.AddDesignEvent("Tutorial:Completed");
+
+                yield return new WaitForSeconds(WaitBeforeFade);
+
+                var endCinematic = new CameraTransition(Submarine.MainSub, GameMain.GameScreen.Cam, null, Alignment.Center, panDuration: FadeOutTime);
+                Completed = true;
+
+                while (endCinematic.Running) { yield return CoroutineStatus.Running; }
+
+                Stop();
+                GameMain.MainMenuScreen.ReturnToMainMenu(null, null);
+            }
+        }
+
+        private bool Restart(GUIButton button, object obj)
+        {
+            GUIMessageBox.MessageBoxes.Clear();
+            GameMain.MainMenuScreen.ReturnToMainMenu(button, obj);
+            Start();
+            return true;
+        }
+
+        public void TriggerTutorialSegment(Segment segment, bool connectObjective = false)
+        {
+            if (segment.SegmentType != TutorialSegmentType.InfoBox)
+            {
+                ActiveObjectives.Add(segment);
+                AddToObjectiveList(segment, connectObjective);
+                return;
+            }
+
+            Inventory.DraggingItems.Clear();
+            ContentRunning = true;
+            ActiveContentSegment = segment;
+
+            var title = TextManager.Get(segment.Id);
+            LocalizedString tutorialText = TextManager.GetFormatted(segment.TextContent.Tag);
+            tutorialText = TextManager.ParseInputTypes(tutorialText);
+
+            switch (segment.AutoPlayVideo)
+            {
+                case AutoPlayVideo.Yes:
+                    infoBox = CreateInfoFrame(
+                        title,
+                        tutorialText,
+                        segment.TextContent.Width,
+                        segment.TextContent.Height,
+                        segment.TextContent.Anchor,
+                        hasButton: true,
+                        onInfoBoxClosed: LoadActiveContentVideo);
                     break;
-                case TutorialContentType.Video:
-                    infoBox = CreateInfoFrame(TextManager.Get(activeContentSegment.Id), tutorialText,
-                              activeContentSegment.TextContent.Value.Width,
-                              activeContentSegment.TextContent.Value.Height,
-                              activeContentSegment.TextContent.Value.Anchor, true, () => LoadVideo(activeContentSegment));
-                    break;
-                case TutorialContentType.ManualVideo:
-                    infoBox = CreateInfoFrame(TextManager.Get(activeContentSegment.Id), tutorialText,
-                            activeContentSegment.TextContent.Value.Width,
-                            activeContentSegment.TextContent.Value.Height,
-                        activeContentSegment.TextContent.Value.Anchor, true, StopCurrentContentSegment, () => LoadVideo(activeContentSegment));
-                    break;
-                case TutorialContentType.TextOnly:
-                    infoBox = CreateInfoFrame(TextManager.Get(activeContentSegment.Id), tutorialText,
-                            activeContentSegment.TextContent.Value.Width,
-                            activeContentSegment.TextContent.Value.Height,
-                            activeContentSegment.TextContent.Value.Anchor, true, StopCurrentContentSegment);
+                case AutoPlayVideo.No:
+                    infoBox = CreateInfoFrame(
+                        title,
+                        tutorialText,
+                        segment.TextContent.Width,
+                        segment.TextContent.Height,
+                        segment.TextContent.Anchor,
+                        hasButton: true,
+                        onInfoBoxClosed: StopCurrentContentSegment,
+                        onVideoButtonClicked: LoadActiveContentVideo);
                     break;
             }
         }
 
-        public virtual void Stop()
+        public void CompleteTutorialSegment(Identifier segmentId)
         {
+            if (GetActiveObjective(segmentId) is not Segment segment)
+            {
+                DebugConsole.AddWarning($"Warning: tried to complete the tutorial segment \"{segmentId}\" in tutorial \"{Identifier}\" but it isn't active!");
+                return;
+            }
+            if (GUIStyle.GetComponentStyle("ObjectiveIndicatorCompleted") is GUIComponentStyle style)
+            {
+                //return if already completed
+                if (segment.ObjectiveStateIndicator.Style == style) { return; }
+                segment.ObjectiveStateIndicator.ApplyStyle(style);
+            }
+            segment.ObjectiveStateIndicator.Parent.Flash(color: GUIStyle.Green, flashDuration: 0.35f, useRectangleFlash: true);
+            segment.ObjectiveButton.OnClicked = null;
+            segment.ObjectiveButton.CanBeFocused = false;
+            GameAnalyticsManager.AddDesignEvent($"Tutorial:{Identifier}:{segmentId}:Completed");
+        }
+
+        public void RemoveTutorialSegment(Identifier segmentId)
+        {
+            if (GetActiveObjective(segmentId) is not Segment segment)
+            {
+                DebugConsole.AddWarning($"Warning: tried to remove the tutorial segment \"{segmentId}\" in tutorial \"{Identifier}\" but it isn't active!");
+                return;
+            }
+            segment.ObjectiveStateIndicator.FadeOut(ObjectiveComponentAnimationTime, false);
+            segment.LinkedTextBlock.FadeOut(ObjectiveComponentAnimationTime, false);
+            var parent = segment.LinkedTextBlock.Parent;
+            parent.FadeOut(ObjectiveComponentAnimationTime, true, onRemove: () =>
+            {
+                ActiveObjectives.Remove(segment);
+                objectiveGroup?.Recalculate();
+            });
+            parent.RectTransform.MoveOverTime(GetObjectiveHiddenPosition(parent.RectTransform), ObjectiveComponentAnimationTime);
+            segment.ObjectiveButton.OnClicked = null;
+            segment.ObjectiveButton.CanBeFocused = false;
+        }
+
+        private Segment GetActiveObjective(Identifier id) => ActiveObjectives.FirstOrDefault(s => s.Id == id);
+
+        public void Stop()
+        {
+            if (tutorialCoroutine != null)
+            {
+                CoroutineManager.StopCoroutines(tutorialCoroutine);
+            }
             ContentRunning = false;
             infoBox = null;
-            videoPlayer.Remove();
+            videoPlayer?.Remove();
         }
+
         #endregion
 
         #region Objectives
+
+        /// <summary>
+        /// Create the objective list that holds the objectives (called on start and on resolution change)
+        /// </summary>
         private void CreateObjectiveFrame()
         {
-            holderFrame = new GUIFrame(new RectTransform(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight), GUI.Canvas, Anchor.Center));
-            objectiveFrame = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ObjectiveAnchor, holderFrame.RectTransform), style: null);
-
-            for (int i = 0; i < activeObjectives.Count; i++)
+            var objectiveListFrame = new GUIFrame(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.TutorialObjectiveListArea, GUI.Canvas), style: null);
+            objectiveGroup = new GUILayoutGroup(new RectTransform(Vector2.One, objectiveListFrame.RectTransform))
             {
-                CreateObjectiveGUI(activeObjectives[i], i, segments[activeObjectives[i]].ContentType);
+                AbsoluteSpacing = (int)GUIStyle.Font.LineHeight
+            };
+            for (int i = 0; i < ActiveObjectives.Count; i++)
+            {
+                AddToObjectiveList(ActiveObjectives[i]);
             }
-
             screenResolution = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
             windowMode = GameSettings.CurrentConfig.Graphics.DisplayMode;
             prevUIScale = GUI.Scale;
         }
 
-        protected void StopCurrentContentSegment()
+        /// <summary>
+        /// Stops content running and adds the active segment to the objective list
+        /// </summary>
+        private void StopCurrentContentSegment()
         {
-            if (!activeContentSegment.Objective.IsNullOrEmpty())
+            if (!ActiveContentSegment.ObjectiveText.IsNullOrEmpty())
             {
-                AddNewObjective(activeContentSegmentIndex, activeContentSegment.ContentType);
+                ActiveObjectives.Add(ActiveContentSegment);
+                AddToObjectiveList(ActiveContentSegment);
+            }
+            ContentRunning = false;
+            ActiveContentSegment = null;
+        }
+
+        /// <summary>
+        /// Adds the segment to the objective list
+        /// </summary>
+        private void AddToObjectiveList(Segment segment, bool connectExisting = false)
+        {
+            if (connectExisting)
+            {
+                if (ActiveObjectives.Find(o => o.Id == segment.Id) is { } existingSegment)
+                {
+                    existingSegment.ConnectMessageBox(segment);
+                    SetButtonBehavior(existingSegment);   
+                }
+                return;
             }
 
-            ContentRunning = false;
-            activeContentSegmentIndex = Index.End;
-        }
-
-        protected virtual void CheckActiveObjectives(Index objective, float deltaTime)
-        {
-
-        }
-
-        protected bool HasObjective(Index segment)
-        {
-            return activeObjectives.Contains(segment);
-        }
-
-        protected void AddNewObjective(Index segment, TutorialContentType type)
-        {
-            activeObjectives.Add(segment);
-            CreateObjectiveGUI(segment, activeObjectives.Count - 1, type);
-        }
-
-        private void CreateObjectiveGUI(Index segmentIndex, int index, TutorialContentType type)
-        {
-            var segment = segments[segmentIndex];
-            LocalizedString objectiveText = TextManager.ParseInputTypes(segment.Objective);
-            Point replayButtonSize = new Point((int)(GUIStyle.LargeFont.MeasureString(objectiveText).X), (int)(GUIStyle.LargeFont.MeasureString(objectiveText).Y * 1.45f));
-
-            segment.ReplayButton = new GUIButton(new RectTransform(replayButtonSize, objectiveFrame.RectTransform, Anchor.TopLeft, Pivot.TopLeft) { AbsoluteOffset = new Point(0, (replayButtonSize.Y + (int)(20f * GUI.Scale)) * index) }, style: null);
-            segment.ReplayButton.OnClicked += (GUIButton btn, object userdata) =>
+            var frameRt = new RectTransform(new Vector2(1.0f, 0.1f), objectiveGroup.RectTransform)
             {
-                if (type == TutorialContentType.Video)
-                {
-                    ReplaySegmentVideo(segment);
-                }
-                else
-                {
-                    ShowSegmentText(segment);
-                }
-                return true;
+                AbsoluteOffset = GetObjectiveHiddenPosition(),
+                MinSize = new Point(0, objectiveGroup.AbsoluteSpacing)
             };
-
-            LocalizedString objectiveTitleText = TextManager.ParseInputTypes(objectiveTranslated);
-            int yOffset = (int)((GUIStyle.SubHeadingFont.MeasureString(objectiveTitleText).Y + 5));
-            segment.LinkedTitle = new GUITextBlock(new RectTransform(new Point((int)GUIStyle.SubHeadingFont.MeasureString(objectiveTitleText).X, yOffset), segment.ReplayButton.RectTransform, Anchor.CenterLeft, Pivot.BottomLeft) /*{ AbsoluteOffset = new Point((int)(-10 * GUI.Scale), 0) }*/,
-                objectiveTitleText, textColor: Color.White, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.CenterLeft)
+            var frame = new GUIFrame(frameRt, style: null)
             {
-                ForceUpperCase = ForceUpperCase.Yes
+                CanBeFocused = true
             };
+            objectiveGroup.Recalculate();
 
-            segment.LinkedText = new GUITextBlock(new RectTransform(new Point((int)GUIStyle.LargeFont.MeasureString(objectiveText).X, yOffset), segment.ReplayButton.RectTransform, Anchor.CenterLeft, Pivot.TopLeft) /*{ AbsoluteOffset = new Point((int)(10 * GUI.Scale), 0) }*/,
-                objectiveText, textColor: new Color(4, 180, 108), font: GUIStyle.LargeFont, textAlignment: Alignment.CenterLeft);
-            
-            segment.LinkedTitle.Color = segment.LinkedTitle.HoverColor = segment.LinkedTitle.PressedColor = segment.LinkedTitle.SelectedColor = Color.Transparent;
-            segment.LinkedText.Color = segment.LinkedText.HoverColor = segment.LinkedText.PressedColor = segment.LinkedText.SelectedColor = Color.Transparent;
-            segment.ReplayButton.Color = segment.ReplayButton.HoverColor = segment.ReplayButton.PressedColor = segment.ReplayButton.SelectedColor = Color.Transparent;
+            segment.LinkedTextBlock = new GUITextBlock(
+                new RectTransform(new Point(frameRt.Rect.Width - objectiveGroup.AbsoluteSpacing, 0), frame.RectTransform, anchor: Anchor.TopRight),
+                TextManager.ParseInputTypes(segment.ObjectiveText),
+                wrap: true);
+
+            var size = new Point(segment.LinkedTextBlock.Rect.Width, segment.LinkedTextBlock.Rect.Height);
+            segment.LinkedTextBlock.RectTransform.NonScaledSize = size;
+            segment.LinkedTextBlock.RectTransform.MinSize = size;
+            segment.LinkedTextBlock.RectTransform.MaxSize = size;
+            segment.LinkedTextBlock.RectTransform.IsFixedSize = true;
+            frame.RectTransform.Resize(new Point(frame.Rect.Width, segment.LinkedTextBlock.RectTransform.Rect.Height), resizeChildren: false);
+            frame.RectTransform.IsFixedSize = true;
+
+            var indicatorRt = new RectTransform(new Point(objectiveGroup.AbsoluteSpacing), frame.RectTransform, isFixedSize: true);
+            segment.ObjectiveStateIndicator = new GUIImage(indicatorRt, "ObjectiveIndicatorIncomplete");
+
+            SetTransparent(segment.LinkedTextBlock);
+
+            segment.ObjectiveButton = new GUIButton(new RectTransform(Vector2.One, segment.LinkedTextBlock.RectTransform, Anchor.TopLeft, Pivot.TopLeft), style: null)
+            {
+                ToolTip = objectiveTextTranslated
+            };
+            SetButtonBehavior(segment);
+            SetTransparent(segment.ObjectiveButton);
+
+            frameRt.MoveOverTime(new Point(0, frameRt.AbsoluteOffset.Y), ObjectiveComponentAnimationTime, onDoneMoving: () => objectiveGroup?.Recalculate());
+
+            static void SetTransparent(GUIComponent component) => component.Color = component.HoverColor = component.PressedColor = component.SelectedColor = Color.Transparent;
+
+            void SetButtonBehavior(Segment segment)
+            {
+                segment.ObjectiveButton.CanBeFocused = segment.SegmentType != TutorialSegmentType.Objective;
+                segment.ObjectiveButton.OnClicked = (GUIButton btn, object userdata) =>
+                {
+                    if (segment.SegmentType == TutorialSegmentType.InfoBox)
+                    {
+                        if (segment.AutoPlayVideo == AutoPlayVideo.Yes)
+                        {
+                            ReplaySegmentVideo(segment);
+                        }
+                        else
+                        {
+                            ShowSegmentText(segment);
+                        }
+                    }
+                    else if (segment.SegmentType == TutorialSegmentType.MessageBox)
+                    {
+                        segment.OnClickObjective?.Invoke();
+                    }
+                    return true;
+                };
+            }
         }
 
         private void ReplaySegmentVideo(Segment segment)
         {
-            if (ContentRunning) return;
+            if (ContentRunning) { return; }
             Inventory.DraggingItems.Clear();
             ContentRunning = true;
             LoadVideo(segment);
-            //videoPlayer.LoadContent(playableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent), new VideoPlayer.TextSettings(segment.VideoContent), segment.Id, true, callback: () => ContentRunning = false);
         }
 
         private void ShowSegmentText(Segment segment)
         {
-            if (ContentRunning) return;
+            if (ContentRunning) { return; }
             Inventory.DraggingItems.Clear();
             ContentRunning = true;
-
-            LocalizedString tutorialText = TextManager.GetFormatted(segment.TextContent.Value.Tag, segment.Args);
-
-            Action videoAction = null;
-
-            if (segment.ContentType != TutorialContentType.TextOnly)
-            {
-                videoAction = () => LoadVideo(segment);
-            }
-
-            infoBox = CreateInfoFrame(TextManager.Get(segment.Id), tutorialText,
-            segment.TextContent.Value.Width,
-            segment.TextContent.Value.Height,
-            segment.TextContent.Value.Anchor, true, () => ContentRunning = false, videoAction);
+            ActiveContentSegment = segment;
+            infoBox = CreateInfoFrame(
+                TextManager.Get(segment.Id),
+                TextManager.Get(segment.TextContent.Tag),
+                segment.TextContent.Width,
+                segment.TextContent.Height,
+                segment.TextContent.Anchor,
+                hasButton: true,
+                onInfoBoxClosed: () => ContentRunning = false,
+                onVideoButtonClicked: () => LoadVideo(segment));
         }
 
-        protected void RemoveCompletedObjective(Index segmentIndex)
+        private Point GetObjectiveHiddenPosition(RectTransform rt = null)
         {
-            if (!HasObjective(segmentIndex)) return;
-            var segment = segments[segmentIndex];
-            segment.IsTriggered = true;
-            segment.ReplayButton.OnClicked = null;
-
-            int checkMarkHeight = (int)(segment.ReplayButton.Rect.Height * 1.2f);
-            int checkMarkWidth = (int)(checkMarkHeight * 0.93f);
-
-            Color color = new Color(4, 180, 108);
-
-            int objectiveTextWidth = segment.LinkedText.Rect.Width;
-            int objectiveTitleWidth = segment.LinkedTitle.Rect.Width;
-
-            RectTransform rectTA;
-            if (objectiveTextWidth > objectiveTitleWidth)
-            {
-                rectTA = new RectTransform(new Point(checkMarkWidth, checkMarkHeight), segment.ReplayButton.RectTransform, Anchor.BottomRight, Pivot.BottomRight);
-                rectTA.AbsoluteOffset = new Point(-rectTA.Rect.Width - (int)(25 * GUI.Scale), 0);
-            }
-            else
-            {
-                rectTA = new RectTransform(new Point(checkMarkWidth, checkMarkHeight), segment.ReplayButton.RectTransform, Anchor.BottomRight, Pivot.BottomRight);
-                rectTA.AbsoluteOffset = new Point(-rectTA.Rect.Width - (int)(25 * GUI.Scale) - (objectiveTitleWidth - objectiveTextWidth), 0);
-            }
-
-            GUIImage checkmark = new GUIImage(rectTA, "CheckMark");
-            checkmark.Color = checkmark.SelectedColor = checkmark.HoverColor = checkmark.PressedColor = color;  
-
-            RectTransform rectTB = new RectTransform(new Vector2(1.0f, .8f), segment.LinkedText.RectTransform, Anchor.Center, Pivot.Center);
-            GUIImage stroke = new GUIImage(rectTB, "Stroke");
-            stroke.Color = stroke.SelectedColor = stroke.HoverColor = stroke.PressedColor = color;
-
-            CoroutineManager.StartCoroutine(WaitForObjectiveEnd(segmentIndex));
-        }
-
-        private IEnumerable<CoroutineStatus> WaitForObjectiveEnd(Index objectiveIndex)
-        {
-            var objective = segments[objectiveIndex];
-            yield return new WaitForSeconds(2.0f);
-            objectiveFrame.RemoveChild(objective.ReplayButton);
-            activeObjectives.Remove(objectiveIndex);
-
-            for (int i = 0; i < activeObjectives.Count; i++)
-            {
-                var activeObjective = segments[activeObjectives[i]];
-                activeObjective.ReplayButton.RectTransform.AbsoluteOffset = new Point(0, (activeObjective.ReplayButton.Rect.Height + 20) * i);
-            }
+            return new Point(GameMain.GraphicsWidth - objectiveGroup.Rect.X, rt?.AbsoluteOffset.Y ?? 0);
         }
 
         #endregion
 
         #region InfoFrame
-        protected bool CloseInfoFrame(GUIButton button, object userData)
+
+        private void CloseInfoFrame() => CloseInfoFrame(null, null);
+
+        private bool CloseInfoFrame(GUIButton button, object userData)
         {
             infoBox = null;
             infoBoxClosedCallback?.Invoke();
             return true;
         }
 
-        protected GUIComponent CreateInfoFrame(LocalizedString title, LocalizedString text, int width = 300, int height = 80, Anchor anchor = Anchor.TopRight, bool hasButton = false, Action callback = null, Action showVideo = null)
+        /// <summary>
+        //  Creates and displays a tutorial info box
+        /// </summary>
+        private GUIComponent CreateInfoFrame(LocalizedString title, LocalizedString text, int width = 300, int height = 80, Anchor anchor = Anchor.TopRight, bool hasButton = false, Action onInfoBoxClosed = null, Action onVideoButtonClicked = null)
         {
-            if (hasButton) height += 60;
+            if (hasButton)
+            {
+                height += 60;
+            }
 
             width = (int)(width * GUI.Scale);
             height = (int)(height * GUI.Scale);
@@ -467,7 +748,7 @@ namespace Barotrauma.Tutorials
             GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), text, wrap: true);
 
             textBlock.RectTransform.IsFixedSize = true;
-            infoBoxClosedCallback = callback;
+            infoBoxClosedCallback = onInfoBoxClosed;
 
             if (hasButton)
             {
@@ -477,7 +758,7 @@ namespace Barotrauma.Tutorials
                 };
                 buttonContainer.RectTransform.IsFixedSize = true;
 
-                if (showVideo != null)
+                if (onVideoButtonClicked != null)
                 {
                     buttonContainer.Stretch = true;
                     var videoButton = new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), buttonContainer.RectTransform),
@@ -485,7 +766,7 @@ namespace Barotrauma.Tutorials
                     {
                         OnClicked = (GUIButton button, object obj) =>
                         {
-                            showVideo();
+                            onVideoButtonClicked();
                             return true;
                         }
                     };
@@ -509,57 +790,39 @@ namespace Barotrauma.Tutorials
 
             return background;
         }
+
         #endregion
 
         #region Video
-        protected void LoadVideo(Segment segment)
+
+        private void LoadVideo(Segment segment)
         {
-            if (videoPlayer == null) videoPlayer = new VideoPlayer();
-            if (segment.ContentType != TutorialContentType.ManualVideo)
+            videoPlayer ??= new VideoPlayer();
+            if (segment.AutoPlayVideo == AutoPlayVideo.Yes)
             {
                 videoPlayer.LoadContent(
-                    PlayableContentPath,
-                    new VideoPlayer.VideoSettings(segment.VideoContent.Value.File),
-                    new VideoPlayer.TextSettings(segment.VideoContent.Value.TextTag, segment.VideoContent.Value.Width),
-                    segment.Id, true, segment.Objective, StopCurrentContentSegment);
+                    contentPath: segment.VideoContent.ContentPath,
+                    videoSettings: new VideoPlayer.VideoSettings(segment.VideoContent.FileName),
+                    textSettings: new VideoPlayer.TextSettings(segment.VideoContent.TextTag, segment.VideoContent.Width),
+                    contentId: segment.Id,
+                    startPlayback: true,
+                    objective: segment.ObjectiveText,
+                    onStop: StopCurrentContentSegment);
             }
             else
             {
-                videoPlayer.LoadContent(PlayableContentPath, new VideoPlayer.VideoSettings(segment.VideoContent.Value.File), null, segment.Id, true, string.Empty, null);
-            }
-        }
-        #endregion
-
-        #region Highlights
-        protected void HighlightInventorySlot(Inventory inventory, Identifier identifier, Color color, float fadeInDuration, float fadeOutDuration, float scaleUpAmount)
-        {
-            if (inventory.visualSlots == null) { return; }
-            for (int i = 0; i < inventory.Capacity; i++)
-            {
-                if (inventory.GetItemAt(i)?.Prefab.Identifier == identifier)
-                {
-                    HighlightInventorySlot(inventory, i, color, fadeInDuration, fadeOutDuration, scaleUpAmount);
-                }
+                videoPlayer.LoadContent(
+                    contentPath: segment.VideoContent.ContentPath,
+                    videoSettings: new VideoPlayer.VideoSettings(segment.VideoContent.FileName),
+                    textSettings: null,
+                    contentId: segment.Id,
+                    startPlayback: true,
+                    objective: string.Empty);
             }
         }
 
-        protected void HighlightInventorySlotWithTag(Inventory inventory, Identifier tag, Color color, float fadeInDuration, float fadeOutDuration, float scaleUpAmount)
-        {
-            if (inventory.visualSlots == null) { return; }
-            for (int i = 0; i < inventory.Capacity; i++)
-            {
-                if (inventory.GetItemAt(i)?.HasTag(tag) ?? false)
-                {
-                    HighlightInventorySlot(inventory, i, color, fadeInDuration, fadeOutDuration, scaleUpAmount);
-                }
-            }
-        }
+        private void LoadActiveContentVideo() => LoadVideo(ActiveContentSegment);
 
-        protected void HighlightInventorySlot(Inventory inventory, int index, Color color, float fadeInDuration, float fadeOutDuration, float scaleUpAmount)
-        {
-            if (inventory.visualSlots == null || index < 0 || inventory.visualSlots[index].HighlightTimer > 0) { return; }
-            inventory.visualSlots[index].ShowBorderHighlight(color, fadeInDuration, fadeOutDuration, scaleUpAmount);
-        }
         #endregion
     }
 }

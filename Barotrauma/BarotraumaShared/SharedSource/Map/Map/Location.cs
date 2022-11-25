@@ -700,7 +700,7 @@ namespace Barotrauma
 #endif
         }
 
-        public MissionPrefab UnlockMissionByIdentifier(Identifier identifier)
+        public Mission UnlockMissionByIdentifier(Identifier identifier)
         {
             if (AvailableMissions.Any(m => m.Prefab.Identifier == identifier)) { return null; }
 
@@ -721,17 +721,17 @@ namespace Barotrauma
 #if CLIENT
                 GameMain.GameSession?.Campaign?.CampaignUI?.RefreshLocationInfo();
 #endif
-                return missionPrefab;
+                return mission;
             }
             return null;
         }
 
-        public MissionPrefab UnlockMissionByTag(Identifier tag)
+        public Mission UnlockMissionByTag(Identifier tag)
         {
             var matchingMissions = MissionPrefab.Prefabs.Where(mp => mp.Tags.Any(t => t == tag));
             if (!matchingMissions.Any())
             {
-                DebugConsole.ThrowError($"Failed to unlock a mission with the tag \"{tag}\": no matching missions not found.");
+                DebugConsole.ThrowError($"Failed to unlock a mission with the tag \"{tag}\": no matching missions found.");
             }
             else
             {
@@ -754,7 +754,7 @@ namespace Barotrauma
 #if CLIENT
                     GameMain.GameSession?.Campaign?.CampaignUI?.RefreshLocationInfo();
 #endif
-                    return missionPrefab;
+                    return mission;
                 }
                 else
                 {
@@ -906,11 +906,17 @@ namespace Barotrauma
 
         public LocationType GetLocationType()
         {
-            if (IsCriticallyRadiated() && LocationType.Prefabs[Type.ReplaceInRadiation] is { } newLocationType)
+            if (IsCriticallyRadiated() && !Type.ReplaceInRadiation.IsEmpty)
             {
-                return newLocationType;
+                if (LocationType.Prefabs.TryGet(Type.ReplaceInRadiation, out LocationType newLocationType))
+                {
+                    return newLocationType;
+                }
+                else
+                {
+                    DebugConsole.ThrowError($"Error when trying to get a new location type for an irradiated location - location type \"{newLocationType}\" not found.");
+                }
             }
-
             return Type;
         }
 
@@ -1253,7 +1259,7 @@ namespace Barotrauma
         {
             var characters = GameSession.GetSessionCrewCharacters(CharacterType.Both);
             if (!characters.Any()) { return 0; }
-            return characters.Max(c => (int)c.GetStatValue(StatTypes.ExtraSpecialSalesCount));
+            return characters.Sum(c => (int)c.GetStatValue(StatTypes.ExtraSpecialSalesCount));
         }
 
         public void Discover(bool checkTalents = true)

@@ -178,19 +178,19 @@ namespace Barotrauma
     {
         public GUIFont(string identifier) : base(identifier) { }
 
-        public bool HasValue => Prefabs.Any();
+        public bool HasValue => !Prefabs.IsEmpty;
         
         public ScalableFont Value => Prefabs.ActivePrefab.Font;
 
         public static implicit operator ScalableFont(GUIFont reference) => reference.Value;
 
-        public bool ForceUpperCase => HasValue && Value.ForceUpperCase;
+        public bool ForceUpperCase => Prefabs.ActivePrefab?.Font is { ForceUpperCase: true };
 
         public uint Size => HasValue ? Value.Size : 0;
 
         private ScalableFont GetFontForStr(LocalizedString str) => GetFontForStr(str.Value);
         
-        private ScalableFont GetFontForStr(string str) =>
+        public ScalableFont GetFontForStr(string str) =>
             TextManager.IsCJK(str) ? Prefabs.ActivePrefab.CjkFont : Prefabs.ActivePrefab.Font;
         
         public void DrawString(SpriteBatch sb, LocalizedString text, Vector2 position, Color color, float rotation, Vector2 origin, Vector2 scale, SpriteEffects se, float layerDepth)

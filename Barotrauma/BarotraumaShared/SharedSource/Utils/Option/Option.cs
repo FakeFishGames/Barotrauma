@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 
 namespace Barotrauma
@@ -15,18 +16,18 @@ namespace Barotrauma
         public bool IsNone() => this is None<T>;
         public bool IsSome() => this is Some<T>;
 
-        public bool TryUnwrap(out T outValue)
+        public bool TryUnwrap(out T outValue) => TryUnwrap<T>(out outValue);
+
+        public bool TryUnwrap<T1>(out T1 outValue) where T1 : T
         {
             switch (this)
             {
-                case Some<T> { Value: var value }:
+                case Some<T> { Value: T1 value }:
                     outValue = value;
                     return true;
-                case None<T> _:
-                    outValue = default;
-                    return false;
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    outValue = default!;
+                    return false;
             }
         }
 
@@ -37,5 +38,30 @@ namespace Barotrauma
                 None<T> _ => Option<TType>.None(),
                 _ => throw new ArgumentOutOfRangeException()
             };
+
+        public abstract Option<T> Fallback(Option<T> fallback);
+        public abstract T Fallback(T fallback);
+
+        public abstract bool ValueEquals(T value);
+
+        public override bool Equals(object? obj)
+            => obj switch
+            {
+                Some<T> { Value: var value } => this is Some<T> { Value: { } selfValue } && selfValue.Equals(value),
+                None<T> _ => IsNone(),
+                T value => this is Some<T> { Value: { } selfValue } && selfValue.Equals(value),
+                _ => false
+            };
+
+        public override int GetHashCode()
+            => this is Some<T> { Value: { } value } ? value.GetHashCode() : 0;
+
+        public static bool operator ==(Option<T> a, Option<T> b)
+            => a.Equals(b);
+
+        public static bool operator !=(Option<T> a, Option<T> b)
+            => !(a == b);
+
+        public abstract override string ToString();
     }
 }

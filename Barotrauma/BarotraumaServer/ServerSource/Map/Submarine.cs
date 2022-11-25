@@ -7,11 +7,11 @@ namespace Barotrauma
     {
         public void ServerWritePosition(IWriteMessage msg, Client c)
         {
-            msg.Write(ID);
+            msg.WriteUInt16(ID);
             IWriteMessage tempBuffer = new WriteOnlyMessage();
             subBody.Body.ServerWrite(tempBuffer);
-            msg.Write((byte)tempBuffer.LengthBytes);
-            msg.Write(tempBuffer.Buffer, 0, tempBuffer.LengthBytes);
+            msg.WriteByte((byte)tempBuffer.LengthBytes);
+            msg.WriteBytes(tempBuffer.Buffer, 0, tempBuffer.LengthBytes);
             msg.WritePadBits();
         }
         

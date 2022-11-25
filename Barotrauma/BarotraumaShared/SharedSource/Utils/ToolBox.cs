@@ -3,13 +3,12 @@ using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using Barotrauma.IO;
 using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
-using System.Runtime.CompilerServices;
 
 namespace Barotrauma
 {
@@ -26,14 +25,14 @@ namespace Barotrauma
         }
     }
 
-    public static partial class ToolBox
+    static partial class ToolBox
     {
-        static internal class Epoch
+        internal static class Epoch
         {
             private static readonly DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
             /// <summary>
-            /// Returns the current Unix Epoch (Coordinated Universal Time )
+            /// Returns the current Unix Epoch (Coordinated Universal Time)
             /// </summary>
             public static int NowUTC
             {
@@ -161,7 +160,7 @@ namespace Barotrauma
 
         public static string RemoveInvalidFileNameChars(string fileName)
         {
-            var invalidChars = Path.GetInvalidFileNameChars().Concat(new char[] {':', ';', '<', '>', '"', '/', '\\', '|', '?', '*'});
+            var invalidChars = Path.GetInvalidFileNameCharsCrossPlatform().Concat(new char[] {';'});
             foreach (char invalidChar in invalidChars)
             {
                 fileName = fileName.Replace(invalidChar.ToString(), "");
@@ -424,7 +423,7 @@ namespace Barotrauma
             for (int i = 0; i < numberOfBits; i++)
             {
                 bool bit = originalBuffer.ReadBoolean();
-                buffer.Write(bit);
+                buffer.WriteBoolean(bit);
             }
             buffer.BitPosition = 0;
 
@@ -711,6 +710,16 @@ namespace Barotrauma
             while (e.InnerException != null) { e = e.InnerException; }
 
             return e;
+        }
+
+        public static void ThrowIfNull<T>([NotNull] T o)
+        {
+            if (o is null) { throw new ArgumentNullException(); }
+        }
+
+        public static string GetFormattedPercentage(float v)
+        {
+            return TextManager.GetWithVariable("percentageformat", "[value]", ((int)MathF.Round(v * 100)).ToString()).Value;
         }
     }
 }

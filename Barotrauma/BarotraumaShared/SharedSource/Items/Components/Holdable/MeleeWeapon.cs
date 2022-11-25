@@ -1,12 +1,11 @@
-﻿using Barotrauma.Networking;
-using FarseerPhysics;
+﻿using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -64,7 +63,7 @@ namespace Barotrauma.Items.Components
         /// <summary>
         /// Defines items that boost the weapon functionality, like battery cell for stun batons.
         /// </summary>
-        public readonly Identifier[] PreferredContainedItems;
+        public readonly ImmutableHashSet<Identifier> PreferredContainedItems;
 
         public MeleeWeapon(Item item, ContentXElement element)
             : base(item, element)
@@ -79,7 +78,7 @@ namespace Barotrauma.Items.Components
             }
             item.IsShootable = true;
             item.RequireAimToUse = element.Parent.GetAttributeBool("requireaimtouse", true);
-            PreferredContainedItems = element.GetAttributeIdentifierArray("preferredcontaineditems", Array.Empty<Identifier>());
+            PreferredContainedItems = element.GetAttributeIdentifierArray("preferredcontaineditems", Array.Empty<Identifier>()).ToImmutableHashSet();
         }
 
         public override void Equip(Character character)
@@ -113,7 +112,7 @@ namespace Barotrauma.Items.Components
             reloadTimer = reload;
             reloadTimer /= 1f + character.GetStatValue(StatTypes.MeleeAttackSpeed);
             reloadTimer /= 1f + item.GetQualityModifier(Quality.StatType.StrikingSpeedMultiplier);
-            character.AnimController.LockFlippingUntil = (float)Timing.TotalTime + reloadTimer;
+            character.AnimController.LockFlippingUntil = (float)Timing.TotalTime + reloadTimer * 0.9f;
 
             item.body.FarseerBody.CollisionCategories = Physics.CollisionProjectile;
             item.body.FarseerBody.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionItemBlocking;
@@ -292,7 +291,6 @@ namespace Barotrauma.Items.Components
             item.body.PhysEnabled = false;
         }
 
-
         private bool OnCollision(Fixture f1, Fixture f2, Contact contact)
         {
             if (User == null || User.Removed)
@@ -390,14 +388,16 @@ namespace Barotrauma.Items.Components
                 User = null;
                 return;
             }
-            
+
+            float damageMultiplier = 1 + User.GetStatValue(StatTypes.MeleeAttackMultiplier);
+            damageMultiplier *= 1.0f + item.GetQualityModifier(Quality.StatType.StrikingPowerMultiplier);
+
             Limb targetLimb = target.UserData as Limb;
             Character targetCharacter = targetLimb?.character ?? target.UserData as Character;
             if (Attack != null)
             {
                 Attack.SetUser(User);
-                Attack.DamageMultiplier = 1 + User.GetStatValue(StatTypes.MeleeAttackMultiplier);
-                Attack.DamageMultiplier *= 1.0f + item.GetQualityModifier(Quality.StatType.StrikingPowerMultiplier);
+                Attack.DamageMultiplier = damageMultiplier;
 
                 if (targetLimb != null)
                 {
@@ -419,7 +419,18 @@ namespace Barotrauma.Items.Components
                 else if (target.UserData is Item targetItem && targetItem.Prefab.DamagedByMeleeWeapons && targetItem.Condition > 0)
                 {
                     if (targetItem.Removed) { return; }
-                    Attack.DoDamage(User, targetItem, item.WorldPosition, 1.0f);
+                    var attackResult = Attack.DoDamage(User, targetItem, item.WorldPosition, 1.0f);
+#if CLIENT
+                    if (attackResult.Damage > 0.0f)
+                    {
+                        Character.Controlled?.UpdateHUDProgressBar(targetItem,
+                            targetItem.WorldPosition,
+                            targetItem.Condition / targetItem.MaxCondition,
+                            emptyColor: GUIStyle.HealthBarColorLow,
+                            fullColor: GUIStyle.HealthBarColorHigh,
+                            textTag: targetItem.Name);
+                    }
+#endif
                 }
                 else if (target.UserData is Holdable holdable && holdable.CanPush)
                 {
@@ -459,7 +470,7 @@ namespace Barotrauma.Items.Components
 
             if (targetCharacter != null) //TODO: Allow OnUse to happen on structures too maybe??
             {
-                ApplyStatusEffects(success ? ActionType.OnUse : ActionType.OnFailure, 1.0f, targetCharacter, targetLimb, user: User);
+                ApplyStatusEffects(success ? ActionType.OnUse : ActionType.OnFailure, 1.0f, targetCharacter, targetLimb, user: User, afflictionMultiplier: damageMultiplier);
             }
 
             if (DeleteOnUse)

@@ -134,7 +134,7 @@ namespace Barotrauma
 
         public static EventAction Instantiate(ScriptedEvent scriptedEvent, ContentXElement element)
         {
-            Type actionType = null;
+            Type actionType;
             try
             {
                 actionType = Type.GetType("Barotrauma." + element.Name, true, true);

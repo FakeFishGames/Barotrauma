@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
 using Barotrauma.Extensions;
+using System.Collections.Immutable;
 
 namespace Barotrauma
 {
@@ -528,6 +529,15 @@ namespace Barotrauma
                 }
             }
             return canEquip;
+        }
+        protected bool CheckItemIdentifiersOrTags(Item item, ImmutableHashSet<Identifier> identifiersOrTags)
+        {
+            if (identifiersOrTags.Contains(item.Prefab.Identifier)) { return true; }
+            foreach (var identifier in identifiersOrTags)
+            {
+                if (item.HasTag(identifier)) { return true; }
+            }
+            return false;
         }
 
         protected bool CanEquip(Item item) => CanEquip(character, item);

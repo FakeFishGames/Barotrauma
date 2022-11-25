@@ -67,7 +67,7 @@ namespace Barotrauma
             if (!ViableForRepair(item, character, HumanAIController)) { return false; };
             if (!Objectives.ContainsKey(item))
             {
-                if (item != character.SelectedConstruction)
+                if (item != character.SelectedItem)
                 {
                     if (NearlyFullCondition(item)) { return false; }
                 }
@@ -96,7 +96,7 @@ namespace Barotrauma
 
         protected override float TargetEvaluation()
         {
-            var selectedItem = character.SelectedConstruction;
+            var selectedItem = character.SelectedItem;
             if (selectedItem != null && AIObjectiveRepairItem.IsRepairing(character, selectedItem) && selectedItem.ConditionPercentage < 100)
             {
                 // Don't stop fixing until completely done

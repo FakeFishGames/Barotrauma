@@ -6,10 +6,7 @@ namespace Barotrauma
     {
         public Tutorial Tutorial;
 
-        public TutorialMode(GameModePreset preset)
-            : base(preset)
-        {
-        }
+        public TutorialMode(GameModePreset preset) : base(preset) { }
 
         public override void Start()
         {
@@ -31,7 +28,7 @@ namespace Barotrauma
         public override void Update(float deltaTime)
         {
             base.Update(deltaTime);
-            Tutorial.Update(deltaTime);
+            Tutorial.Update();
         }
     }
 }

@@ -154,7 +154,7 @@ namespace Barotrauma
         private IWriteMessage StartSending()
         {
             IWriteMessage msg = new WriteOnlyMessage();
-            msg.Write((byte)ServerPacketHeader.MEDICAL);
+            msg.WriteByte((byte)ServerPacketHeader.MEDICAL);
             return msg;
         }
 
@@ -181,8 +181,8 @@ namespace Barotrauma
                 }
 
                 IWriteMessage msg = StartSending();
-                msg.Write((byte)header);
-                msg.Write((byte)flag);
+                msg.WriteByte((byte)header);
+                msg.WriteByte((byte)flag);
                 netStruct?.Write(msg);
                 GameMain.Server.ServerPeer.Send(msg, c.Connection, deliveryMethod);
             }

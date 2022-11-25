@@ -56,11 +56,6 @@ namespace Barotrauma
             }
         }
 
-        private bool disposed = false;
-        public override void Dispose()
-        {
-            if (disposed) { return; }
-            disposed = true;
-        }
+        public override void Dispose() { }
     }
 }

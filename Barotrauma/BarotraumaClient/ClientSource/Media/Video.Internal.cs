@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace Barotrauma.Media
 {
-    public partial class Video : IDisposable
+    partial class Video : IDisposable
     {
         private static class Internal
         {

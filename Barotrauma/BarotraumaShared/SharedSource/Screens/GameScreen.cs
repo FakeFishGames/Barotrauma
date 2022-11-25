@@ -87,10 +87,12 @@ namespace Barotrauma
             GameSettings.SaveCurrentConfig();
             GameMain.SoundManager.SetCategoryMuffle("default", false);
             GUI.ClearMessages();
+#if !DEBUG
             if (GameMain.GameSession?.GameMode is TestGameMode)
             {
                 DebugConsole.DeactivateCheats();
             }
+#endif
 #endif
         }
 
@@ -168,9 +170,9 @@ namespace Barotrauma
 
             if (Character.Controlled != null)
             {
-                if (Character.Controlled.SelectedConstruction != null && Character.Controlled.CanInteractWith(Character.Controlled.SelectedConstruction))
+                if (Character.Controlled.SelectedItem != null && Character.Controlled.CanInteractWith(Character.Controlled.SelectedItem))
                 {
-                    Character.Controlled.SelectedConstruction.UpdateHUD(cam, Character.Controlled, (float)deltaTime);                
+                    Character.Controlled.SelectedItem.UpdateHUD(cam, Character.Controlled, (float)deltaTime);                
                 }
                 if (Character.Controlled.Inventory != null)
                 {

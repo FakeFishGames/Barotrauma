@@ -144,10 +144,11 @@ namespace Barotrauma
 
             specsContainer = new GUIListBox(new RectTransform(new Vector2(0.4f, 1f), innerPadded.RectTransform, Anchor.TopLeft) { RelativeOffset = new Vector2(0.015f, 0.07f) })
             {
+                CurrentSelectMode = GUIListBox.SelectMode.None,
                 Color = Color.Black * 0.65f,
                 ScrollBarEnabled = false,
                 ScrollBarVisible = false,
-                Spacing = 5
+                Spacing = GUI.IntScale(5)
             };
             subInfo.CreateSpecsWindow(specsContainer, GUIStyle.Font, includeTitle: false, includeDescription: true);
             int width = specsContainer.Rect.Width;

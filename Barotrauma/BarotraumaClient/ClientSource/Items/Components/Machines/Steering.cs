@@ -1,13 +1,11 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Linq;
 using System.Collections.Generic;
-using System.Xml.Linq;
-using Barotrauma.Extensions;
+using System.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -25,7 +23,9 @@ namespace Barotrauma.Items.Components
 
         private GUITickBox maintainPosTickBox, levelEndTickBox, levelStartTickBox;
 
-        private GUIComponent statusContainer, dockingContainer, controlContainer;
+        private GUIComponent statusContainer, dockingContainer;
+
+        public GUIComponent ControlContainer { get; private set; }
 
         private bool dockingNetworkMessagePending;
 
@@ -90,6 +90,24 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        private bool disableControls;
+        /// <summary>
+        /// Can be used by status effects to disable all the UI controls
+        /// </summary>
+        public bool DisableControls
+        {
+            get { return disableControls; }
+            set 
+            {
+                if (disableControls == value) { return; }
+                disableControls = value; 
+                UpdateGUIElements();
+            }
+        }
+
+        public override bool RecreateGUIOnResolutionChange => true;
+
+
         partial void InitProjSpecific(ContentXElement element)
         {
             foreach (var subElement in element.Elements())
@@ -112,8 +130,8 @@ namespace Barotrauma.Items.Components
 
         protected override void CreateGUI()
         {
-            controlContainer = new GUIFrame(new RectTransform(new Vector2(Sonar.controlBoxSize.X, 1 - Sonar.controlBoxSize.Y * 2), GuiFrame.RectTransform, Anchor.CenterRight), "ItemUI");
-            var paddedControlContainer = new GUIFrame(new RectTransform(controlContainer.Rect.Size - GUIStyle.ItemFrameMargin, controlContainer.RectTransform, Anchor.Center)
+            ControlContainer = new GUIFrame(new RectTransform(new Vector2(Sonar.controlBoxSize.X, 1 - Sonar.controlBoxSize.Y * 2), GuiFrame.RectTransform, Anchor.CenterRight), "ItemUI");
+            var paddedControlContainer = new GUIFrame(new RectTransform(ControlContainer.Rect.Size - GUIStyle.ItemFrameMargin, ControlContainer.RectTransform, Anchor.Center)
             {
                 AbsoluteOffset = GUIStyle.ItemFrameOffset
             }, style: null);
@@ -121,6 +139,7 @@ namespace Barotrauma.Items.Components
             var steeringModeArea = new GUIFrame(new RectTransform(new Vector2(1, 0.4f), paddedControlContainer.RectTransform, Anchor.TopLeft), style: null);
             steeringModeSwitch = new GUIButton(new RectTransform(new Vector2(0.2f, 1), steeringModeArea.RectTransform), string.Empty, style: "SwitchVertical")
             {
+                UserData = UIHighlightAction.ElementId.SteeringModeSwitch,
                 Selected = autoPilot,
                 Enabled = true,
                 ClickSound = GUISoundType.UISwitch,
@@ -162,6 +181,7 @@ namespace Barotrauma.Items.Components
             maintainPosTickBox = new GUITickBox(new RectTransform(new Vector2(1, 0.333f), paddedAutoPilotControls.RectTransform, Anchor.TopCenter),
                 TextManager.Get("SteeringMaintainPos"), font: GUIStyle.SmallFont, style: "GUIRadioButton")
             {
+                UserData = UIHighlightAction.ElementId.MaintainPosTickBox,
                 Enabled = autoPilot,
                 Selected = maintainPos,
                 OnSelected = tickBox =>
@@ -472,7 +492,6 @@ namespace Barotrauma.Items.Components
 
         protected override void OnResolutionChanged()
         {
-            base.OnResolutionChanged();
             UpdateGUIElements();
         }
 
@@ -658,6 +677,11 @@ namespace Barotrauma.Items.Components
                 }
             }
 
+            if (DisableControls)
+            {
+                dockingModeEnabled = false;
+            }
+
             dockingContainer.Visible = DockingModeEnabled;
             statusContainer.Visible = !DockingModeEnabled;
             if (!DockingModeEnabled)
@@ -745,7 +769,7 @@ namespace Barotrauma.Items.Components
 
             iceSpireWarningText.Visible = item.Submarine != null && !pressureWarningText.Visible && showIceSpireWarning && Timing.TotalTime % 1.0f < 0.8f;
 
-            if (Vector2.DistanceSquared(PlayerInput.MousePosition, steerArea.Rect.Center.ToVector2()) < steerRadius * steerRadius)
+            if (!disableControls && Vector2.DistanceSquared(PlayerInput.MousePosition, steerArea.Rect.Center.ToVector2()) < steerRadius * steerRadius)
             {
                 if (PlayerInput.PrimaryMouseButtonHeld() && !CrewManager.IsCommandInterfaceOpen && !GameSession.IsTabMenuOpen && 
                     (!GameMain.GameSession?.Campaign?.ShowCampaignUI ?? true) && !GUIMessageBox.MessageBoxes.Any(msgBox => msgBox is GUIMessageBox { MessageBoxType: GUIMessageBox.Type.Default }))
@@ -815,7 +839,7 @@ namespace Barotrauma.Items.Components
                 keyboardInput = Vector2.Zero;
             }
 
-            if (!UseAutoDocking) { return; }
+            if (!UseAutoDocking || DisableControls) { return; }
 
             if (checkConnectedPortsTimer <= 0.0f)
             {
@@ -871,13 +895,11 @@ namespace Barotrauma.Items.Components
                 posToMaintain = item.Submarine.WorldPosition;
             }
             MaintainPos = true;
-            if (userdata is Vector2)
+            if (userdata is Vector2 nudgeAmount)
             {
-                Sonar sonar = item.GetComponent<Sonar>();
-                Vector2 nudgeAmount = (Vector2)userdata;
-                if (sonar != null)
+                if (item.GetComponent<Sonar>() is Sonar sonar)
                 {
-                    nudgeAmount *= sonar == null ? 500.0f : 500.0f / sonar.Zoom;
+                    nudgeAmount *= 500.0f / sonar.Zoom;
                 }
                 PosToMaintain += nudgeAmount;
             }
@@ -896,27 +918,27 @@ namespace Barotrauma.Items.Components
 
         public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
-            msg.Write(AutoPilot);
-            msg.Write(dockingNetworkMessagePending);
+            msg.WriteBoolean(AutoPilot);
+            msg.WriteBoolean(dockingNetworkMessagePending);
             dockingNetworkMessagePending = false;
 
             if (!AutoPilot)
             {
                 //no need to write steering info if autopilot is controlling
-                msg.Write(steeringInput.X);
-                msg.Write(steeringInput.Y);
+                msg.WriteSingle(steeringInput.X);
+                msg.WriteSingle(steeringInput.Y);
             }
             else
             {
-                msg.Write(posToMaintain != null);
+                msg.WriteBoolean(posToMaintain != null);
                 if (posToMaintain != null)
                 {
-                    msg.Write(((Vector2)posToMaintain).X);
-                    msg.Write(((Vector2)posToMaintain).Y);
+                    msg.WriteSingle(((Vector2)posToMaintain).X);
+                    msg.WriteSingle(((Vector2)posToMaintain).Y);
                 }
                 else
                 {
-                    msg.Write(LevelStartSelected);
+                    msg.WriteBoolean(LevelStartSelected);
                 }
             }
         }
@@ -1000,9 +1022,20 @@ namespace Barotrauma.Items.Components
             steeringModeSwitch.Selected = AutoPilot;
             autopilotIndicator.Selected = AutoPilot;
             manualPilotIndicator.Selected = !AutoPilot;
-            maintainPosTickBox.Enabled = AutoPilot;
-            levelEndTickBox.Enabled = AutoPilot;
-            levelStartTickBox.Enabled = AutoPilot;
+            if (DisableControls)
+            {
+                steeringModeSwitch.Enabled = false;
+                maintainPosTickBox.Enabled = false;
+                levelEndTickBox.Enabled = false;
+                levelStartTickBox.Enabled = false;
+            }
+            else
+            {
+                steeringModeSwitch.Enabled = true;
+                maintainPosTickBox.Enabled = AutoPilot;
+                levelEndTickBox.Enabled = AutoPilot;
+                levelStartTickBox.Enabled = AutoPilot;
+            }
         }
     }
 }

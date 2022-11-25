@@ -1,15 +1,13 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using Barotrauma.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Xml.Linq;
-using Steamworks.Data;
-using Color = Microsoft.Xna.Framework.Color;
 using System.Text.RegularExpressions;
+using Barotrauma.IO;
+using Microsoft.Xna.Framework;
 
 namespace Barotrauma
 {
@@ -20,7 +18,7 @@ namespace Barotrauma
 
 #if OSX
         //"/*user*/Library/Application Support/Daedalic Entertainment GmbH/" on Mac
-        public static string SaveFolder = Path.Combine(
+        public static readonly string SaveFolder = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.Personal), 
             "Library",
             "Application Support",
@@ -29,7 +27,7 @@ namespace Barotrauma
 #else
         //"C:/Users/*user*/AppData/Local/Daedalic Entertainment GmbH/" on Windows
         //"/home/*user*/.local/share/Daedalic Entertainment GmbH/" on Linux
-        public static string SaveFolder = Path.Combine(
+        public static readonly string SaveFolder = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "Daedalic Entertainment GmbH",
             "Barotrauma");
@@ -164,15 +162,6 @@ namespace Barotrauma
             }
             return ownedSubmarines;
         }
-
-        /*public static void LoadMultiplayerCampaignState(string filePath, MultiPlayerCampaign multiplayerCampaign)
-        {
-            DebugConsole.Log("Loading save file for an existing game session (" + filePath + ")");
-            DecompressToDirectory(filePath, TempPath, null);
-            XDocument doc = XMLExtensions.TryLoadXml(Path.Combine(TempPath, "gamesession.xml"));
-            if (doc == null) { return; }
-            gameSession.Load(doc.Root);
-        }*/
 
         public static XDocument LoadGameSessionDoc(string filePath)
         {
@@ -391,73 +380,69 @@ namespace Barotrauma
         }
 
 
-        public static System.IO.Stream DecompressFiletoStream(string fileName)
+        public static System.IO.Stream DecompressFileToStream(string fileName)
         {
-            using (FileStream originalFileStream = File.Open(fileName, System.IO.FileMode.Open))
-            {
-                System.IO.MemoryStream decompressedFileStream = new System.IO.MemoryStream();
+            using FileStream originalFileStream = File.Open(fileName, System.IO.FileMode.Open, System.IO.FileAccess.Read);
+            System.IO.MemoryStream streamToReturn = new System.IO.MemoryStream();
 
-                using (GZipStream decompressionStream = new GZipStream(originalFileStream, CompressionMode.Decompress))
-                {
-                    decompressionStream.CopyTo(decompressedFileStream);
-                    return decompressedFileStream;
-                }
-            }
+            using GZipStream gzipStream = new GZipStream(originalFileStream, CompressionMode.Decompress);
+            gzipStream.CopyTo(streamToReturn);
+            
+            streamToReturn.Position = 0;
+            return streamToReturn;
         }
 
-        private static bool DecompressFile(bool writeFile, string sDir, GZipStream zipStream, ProgressDelegate progress, out string fileName)
+        private static bool IsExtractionPathValid(string rootDir, string fileDir)
+        {
+            string getFullPath(string dir)
+                => (string.IsNullOrEmpty(dir)
+                        ? Directory.GetCurrentDirectory()
+                        : Path.GetFullPath(dir))
+                    .CleanUpPathCrossPlatform(correctFilenameCase: false);
+            
+            string rootDirFull = getFullPath(rootDir);
+            string fileDirFull = getFullPath(fileDir);
+
+            return fileDirFull.StartsWith(rootDirFull, StringComparison.OrdinalIgnoreCase);
+        }
+        
+        private static bool DecompressFile(bool writeFile, string sDir, System.IO.BinaryReader reader, ProgressDelegate progress, out string fileName)
         {
             fileName = null;
 
+            if (reader.PeekChar() < 0) { return false; }
+            
             //Decompress file name
-            byte[] bytes = new byte[sizeof(int)];
-            int Readed = Read(zipStream, bytes, sizeof(int));
-            if (Readed < sizeof(int))
-                return false;
-
-            int iNameLen = BitConverter.ToInt32(bytes, 0);
-            if (iNameLen > 255)
+            int nameLen = reader.ReadInt32();
+            if (nameLen > 255)
             {
-                throw new Exception("Failed to decompress \"" + sDir + "\" (file name length > 255). The file may be corrupted.");
+                throw new Exception(
+                    $"Failed to decompress \"{sDir}\" (file name length > 255). The file may be corrupted.");
             }
 
-            bytes = new byte[sizeof(char)];
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < iNameLen; i++)
-            {
-                Read(zipStream, bytes, sizeof(char));
-                char c = BitConverter.ToChar(bytes, 0);
-                sb.Append(c);
-            }
-            string sFileName = sb.ToString().Replace('\\', '/');
+            byte[] strBytes = reader.ReadBytes(nameLen * sizeof(char));
+            string sFileName = Encoding.Unicode.GetString(strBytes)
+                .Replace('\\', '/');
 
             fileName = sFileName;
             progress?.Invoke(sFileName);
 
             //Decompress file content
-            bytes = new byte[sizeof(int)];
-            Read(zipStream, bytes, sizeof(int));
-            int iFileLen = BitConverter.ToInt32(bytes, 0);
-
-            bytes = new byte[iFileLen];
-            Read(zipStream, bytes, bytes.Length);
+            int contentLen = reader.ReadInt32();
+            byte[] contentBytes = reader.ReadBytes(contentLen);
 
             string sFilePath = Path.Combine(sDir, sFileName);
             string sFinalDir = Path.GetDirectoryName(sFilePath);
 
-            string sDirFull = (string.IsNullOrEmpty(sDir) ? Directory.GetCurrentDirectory() : Path.GetFullPath(sDir)).CleanUpPathCrossPlatform(correctFilenameCase: false);
-            string sFinalDirFull = (string.IsNullOrEmpty(sFinalDir) ? Directory.GetCurrentDirectory() : Path.GetFullPath(sFinalDir)).CleanUpPathCrossPlatform(correctFilenameCase: false);
-
-            if (!sFinalDirFull.StartsWith(sDirFull, StringComparison.OrdinalIgnoreCase))
+            if (!IsExtractionPathValid(sDir, sFinalDir))
             {
                 throw new InvalidOperationException(
                     $"Error extracting \"{sFileName}\": cannot be extracted to parent directory");
             }
-
+            
             if (!writeFile) { return true; }
-            if (!Directory.Exists(sFinalDir))
-                Directory.CreateDirectory(sFinalDir);
 
+            Directory.CreateDirectory(sFinalDir);
             int maxRetries = 4;
             for (int i = 0; i <= maxRetries; i++)
             {
@@ -465,7 +450,7 @@ namespace Barotrauma
                 {
                     using (FileStream outFile = File.Open(sFilePath, System.IO.FileMode.Create, System.IO.FileAccess.Write))
                     {
-                        outFile.Write(bytes, 0, iFileLen);
+                        outFile.Write(contentBytes, 0, contentLen);
                     }
                     break;
                 }
@@ -479,26 +464,6 @@ namespace Barotrauma
             return true;
         }
 
-        private static int Read(GZipStream zipStream, byte[] bytes, int amount)
-        {
-            int read = 0;
-
-            // BUG workaround for .NET6 causing save decompression to fail
-#if NET6_0
-            for (int i = 0; i < amount; i++)
-            {
-                int result = zipStream.ReadByte();
-                if (result < 0) { break; }
-
-                bytes[i] = (byte) result;
-                read++;
-            }
-#else
-            read = zipStream.Read(bytes, 0, amount);
-#endif
-            return read;
-        }
-
         public static void DecompressToDirectory(string sCompressedFile, string sDir, ProgressDelegate progress)
         {
             DebugConsole.Log("Decompressing " + sCompressedFile + " to " + sDir + "...");
@@ -507,9 +472,9 @@ namespace Barotrauma
             {
                 try
                 {
-                    using (FileStream inFile = File.Open(sCompressedFile, System.IO.FileMode.Open, System.IO.FileAccess.Read))
-                    using (GZipStream zipStream = new GZipStream(inFile, CompressionMode.Decompress, true))
-                        while (DecompressFile(true, sDir, zipStream, progress, out _)) { };
+                    using (var memStream = DecompressFileToStream(sCompressedFile))
+                    using (System.IO.BinaryReader reader = new System.IO.BinaryReader(memStream))
+                        while (DecompressFile(true, sDir, reader, progress, out _)) { };
 
                     break;
                 }
@@ -530,12 +495,12 @@ namespace Barotrauma
             {
                 try
                 {
-                    using FileStream inFile = File.Open(sCompressedFile, System.IO.FileMode.Open, System.IO.FileAccess.Read);
-                    using GZipStream zipStream = new GZipStream(inFile, CompressionMode.Decompress, true);
-                    while (DecompressFile(false, "", zipStream, null, out string fileName))
-                    {
-                        paths.Add(fileName);
-                    }
+                    using (var memStream = DecompressFileToStream(sCompressedFile))
+                    using (System.IO.BinaryReader reader = new System.IO.BinaryReader(memStream))
+                        while (DecompressFile(false, "", reader, null, out string fileName))
+                        {
+                            paths.Add(fileName);
+                        }
                 }
                 catch (System.IO.IOException e)
                 {

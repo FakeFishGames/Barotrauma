@@ -8,7 +8,7 @@ using System.Collections.Generic;
 
 namespace Barotrauma.Sounds
 {
-    public class VoipSound : Sound
+    class VoipSound : Sound
     {
         public override SoundManager.SourcePoolIndex SourcePoolIndex
         {

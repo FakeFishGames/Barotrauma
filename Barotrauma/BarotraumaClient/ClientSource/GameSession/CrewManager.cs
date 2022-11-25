@@ -183,14 +183,13 @@ namespace Barotrauma
             {
                 chatBox.ToggleButton = new GUIButton(new RectTransform(new Point((int)(182f * GUI.Scale * 0.4f), (int)(99f * GUI.Scale * 0.4f)), chatBox.GUIFrame.Parent.RectTransform), style: "ChatToggleButton")
                 {
-                    ToolTip = TextManager.Get("chat"),
+                    ToolTip = TextManager.GetWithVariable("hudbutton.chatbox", "[key]", GameSettings.CurrentConfig.KeyMap.KeyBindText(InputType.ChatBox)),
                     ClampMouseRectToParent = false
                 };
                 chatBox.ToggleButton.RectTransform.AbsoluteOffset = new Point(0, HUDLayoutSettings.ChatBoxArea.Height - chatBox.ToggleButton.Rect.Height);
                 chatBox.ToggleButton.OnClicked += (GUIButton btn, object userdata) =>
                 {
-                    chatBox.ToggleOpen = !chatBox.ToggleOpen;
-                    chatBox.CloseAfterMessageSent = false;
+                    chatBox.Toggle();
                     return true;
                 };
             }
@@ -293,28 +292,12 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Remove the character from the crew (and crew menus).
-        /// </summary>
-        /// <param name="character">The character to remove</param>
-        /// <param name="removeInfo">If the character info is also removed, the character will not be visible in the round summary.</param>
-        public void RemoveCharacter(Character character, bool removeInfo = false, bool resetCrewListIndex = true)
-        {
-            if (character == null)
-            {
-                DebugConsole.ThrowError("Tried to remove a null character from CrewManager.\n" + Environment.StackTrace.CleanupStackTrace());
-                return;
-            }
-            characters.Remove(character);
-            if (removeInfo) { characterInfos.Remove(character.Info); }
-            if (resetCrewListIndex) { ResetCrewListIndex(character); }
-        }
-
-        /// <summary>
         /// Add character to the list without actually adding it to the crew
         /// </summary>
         public GUIComponent AddCharacterToCrewList(Character character)
         {
             if (character == null) { return null; }
+            if (crewList.Content.Children.Any(c => c.UserData as Character == character)) { return null; }
 
             var background = new GUIFrame(
                 new RectTransform(crewListEntrySize, parent: crewList.Content.RectTransform, anchor: Anchor.TopRight),
@@ -510,7 +493,15 @@ namespace Barotrauma
             return background;
         }
 
-        private void SetCharacterComponentTooltip(GUIComponent characterComponent)
+        public void RemoveCharacterFromCrewList(Character character)
+        {
+            if (crewList?.Content.GetChildByUserData(character) is { } component)
+            {
+                crewList.RemoveChild(component);
+            }
+        }
+
+        private static void SetCharacterComponentTooltip(GUIComponent characterComponent)
         {
             if (!(characterComponent?.UserData is Character character)) { return; }
             if (character.Info?.Job?.Prefab == null) { return; }
@@ -1390,7 +1381,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    CreateCommandUI(HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition) ? Character.Controlled : GUI.MouseOn?.UserData as Character);
+                    CreateCommandUI(CharacterHUD.MouseOnCharacterPortrait() ? Character.Controlled : GUI.MouseOn?.UserData as Character);
                 }
                 SoundPlayer.PlayUISound(GUISoundType.PopupMenu);
                 clicklessSelectionActive = isOpeningClick = true;
@@ -2412,7 +2403,7 @@ namespace Barotrauma
                 float reactorOutput = -reactor.CurrPowerConsumption;
                 // If player is not an engineer AND the reactor is not powered up AND nobody is using the reactor
                 // --> Create shortcut node for "Operate Reactor" order's "Power Up" option
-                if (ShouldDelegateOrder("operatereactor") && reactorOutput < float.Epsilon && characters.None(c => c.SelectedConstruction == reactor.Item))
+                if (ShouldDelegateOrder("operatereactor") && reactorOutput < float.Epsilon && characters.None(c => c.SelectedItem == reactor.Item))
                 {
                     var orderPrefab = OrderPrefab.Prefabs["operatereactor"];
                     var order = new Order(orderPrefab, orderPrefab.Options[0], reactor.Item, reactor);
@@ -2426,7 +2417,7 @@ namespace Barotrauma
             // If player is not a captain AND nobody is using the nav terminal AND the nav terminal is powered up
             // --> Create shortcut node for Steer order
             if (CanFitMoreNodes() && ShouldDelegateOrder("steer") && IsNonDuplicateOrderPrefab(OrderPrefab.Prefabs["steer"]) &&
-                subItems.Find(i => i.HasTag("navterminal") && i.IsPlayerTeamInteractable) is Item nav && characters.None(c => c.SelectedConstruction == nav) &&
+                subItems.Find(i => i.HasTag("navterminal") && i.IsPlayerTeamInteractable) is Item nav && characters.None(c => c.SelectedItem == nav) &&
                 nav.GetComponent<Steering>() is Steering steering && steering.Voltage > steering.MinVoltage)
             {
                 var order = new Order(OrderPrefab.Prefabs["steer"], steering.Item, steering);
@@ -2822,7 +2813,7 @@ namespace Barotrauma
             return node;
         }
 
-        private struct MinimapNodeData
+        public struct MinimapNodeData
         {
             public Order Order;
         }
@@ -3517,9 +3508,9 @@ namespace Barotrauma
             if (node == null || characterContext != null) { return false; }
             if (node.UserData is Order nodeOrder)
             {
-                return !nodeOrder.TargetAllCharacters && !nodeOrder.Prefab.HasOptions &&
-                    (!nodeOrder.MustSetTarget || itemContext != null ||
-                     nodeOrder.GetMatchingItems(GetTargetSubmarine(), true, interactableFor: Character.Controlled).Count < 2);
+                return !nodeOrder.TargetAllCharacters &&
+                    (!nodeOrder.Prefab.HasOptions || !nodeOrder.Option.IsEmpty) &&
+                    (!nodeOrder.MustSetTarget || itemContext != null || nodeOrder.GetMatchingItems(GetTargetSubmarine(), true, interactableFor: Character.Controlled).Count < 2);
             }
             return false;
         }

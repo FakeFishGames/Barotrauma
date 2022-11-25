@@ -1,5 +1,4 @@
 ﻿using Barotrauma.Networking;
-using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -47,42 +46,40 @@ namespace Barotrauma
 
         public void ServerWrite(IWriteMessage msg)
         {
-            msg.Write(ID);
-            msg.Write(Name);
-            msg.Write(OriginalName);
-            msg.Write((byte)Head.Preset.TagSet.Count);
+            msg.WriteUInt16(ID);
+            msg.WriteString(Name);
+            msg.WriteString(OriginalName);
+            msg.WriteByte((byte)Head.Preset.TagSet.Count);
             foreach (Identifier tag in Head.Preset.TagSet)
             {
-                msg.Write(tag);
+                msg.WriteIdentifier(tag);
             }
-            msg.Write((byte)Head.HairIndex);
-            msg.Write((byte)Head.BeardIndex);
-            msg.Write((byte)Head.MoustacheIndex);
-            msg.Write((byte)Head.FaceAttachmentIndex);
+            msg.WriteByte((byte)Head.HairIndex);
+            msg.WriteByte((byte)Head.BeardIndex);
+            msg.WriteByte((byte)Head.MoustacheIndex);
+            msg.WriteByte((byte)Head.FaceAttachmentIndex);
             msg.WriteColorR8G8B8(Head.SkinColor);
             msg.WriteColorR8G8B8(Head.HairColor);
             msg.WriteColorR8G8B8(Head.FacialHairColor);
-            msg.Write(ragdollFileName);
 
+            msg.WriteString(ragdollFileName);
+            msg.WriteIdentifier(HumanPrefabIds.NpcIdentifier);
             if (Job != null)
             {
-                msg.Write(Job.Prefab.Identifier);
-                msg.Write((byte)Job.Variant);
-                var skills = Job.GetSkills();
-                msg.Write((byte)skills.Count());
-                foreach (Skill skill in skills)
+                msg.WriteUInt32(Job.Prefab.UintIdentifier);
+                msg.WriteByte((byte)Job.Variant);
+                foreach (SkillPrefab skillPrefab in Job.Prefab.Skills.OrderBy(s => s.Identifier))
                 {
-                    msg.Write(skill.Identifier);
-                    msg.Write(skill.Level);
+                    msg.WriteSingle(Job.GetSkill(skillPrefab.Identifier).Level);
                 }
             }
             else
             {
-                msg.Write("");
-                msg.Write((byte)0);
+                msg.WriteUInt32((uint)0);
+                msg.WriteByte((byte)0);
             }
 
-            msg.Write((ushort)ExperiencePoints);
+            msg.WriteUInt16((ushort)ExperiencePoints);
             msg.WriteRangedInteger(AdditionalTalentPoints, 0, MaxAdditionalTalentPoints);
         }
     }

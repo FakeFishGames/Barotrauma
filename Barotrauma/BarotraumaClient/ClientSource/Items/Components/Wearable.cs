@@ -26,7 +26,7 @@ namespace Barotrauma.Items.Components
             {
                 foreach (DamageModifier damageModifier in damageModifiers)
                 {
-                    if (MathUtils.NearlyEqual(damageModifier.DamageMultiplier, 1f))
+                    if (MathUtils.NearlyEqual(damageModifier.DamageMultiplier * damageModifier.ProbabilityMultiplier, 1f))
                     {
                         continue;
                     }

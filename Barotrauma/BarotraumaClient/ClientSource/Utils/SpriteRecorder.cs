@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Barotrauma
 {
-    public class SpriteRecorder : ISpriteBatch, IDisposable
+    class SpriteRecorder : ISpriteBatch, IDisposable
     {
         private struct Command
         {

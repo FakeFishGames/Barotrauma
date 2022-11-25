@@ -40,7 +40,7 @@ namespace Barotrauma
             }
             set
             {
-                if (value == enabled) return;
+                if (value == enabled) { return; }
 
                 if (Removed)
                 {
@@ -60,6 +60,32 @@ namespace Barotrauma
                     UpdateLimbLightSource(limb);
                 }
                 AnimController.Collider.Enabled = value;
+            }
+        }
+
+
+        private bool disabledByEvent;
+        /// <summary>
+        /// MonsterEvents disable monsters (which includes removing them from the character list, so they essentially "don't exist") until they're ready to spawn
+        /// </summary>
+        public bool DisabledByEvent
+        {
+            get { return disabledByEvent; }
+            set 
+            {
+                if (value == disabledByEvent) { return; }
+                disabledByEvent = value;
+                if (disabledByEvent)
+                {
+                    Enabled = false;
+                    CharacterList.Remove(this);
+                    if (AiTarget != null) { AITarget.List.Remove(AiTarget); }
+                }
+                else
+                {
+                    if (!CharacterList.Contains(this)) { CharacterList.Add(this); }
+                    if (AiTarget != null && !AITarget.List.Contains(AiTarget)) { AITarget.List.Add(AiTarget); }
+                }
             }
         }
 
@@ -523,6 +549,10 @@ namespace Barotrauma
             set
             {
                 lockHandsTimer = MathHelper.Clamp(lockHandsTimer + (value ? 1.0f : -0.5f), 0.0f, 10.0f);
+                if (value)
+                {
+                    SelectedCharacter = null;
+                }
 #if CLIENT
                 HintManager.OnHandcuffed(this);
 #endif
@@ -573,13 +603,10 @@ namespace Barotrauma
             get { return selectedCharacter; }
             set
             {
-                if (value == selectedCharacter) return;
-                if (selectedCharacter != null)
-                    selectedCharacter.selectedBy = null;
+                if (value == selectedCharacter) { return; }
+                if (selectedCharacter != null) { selectedCharacter.selectedBy = null; }                   
                 selectedCharacter = value;
-                if (selectedCharacter != null)
-                    selectedCharacter.selectedBy = this;
-
+                if (selectedCharacter != null) {selectedCharacter.selectedBy = this; }
 #if CLIENT
                 CharacterHealth.SetHealthBarVisibility(value == null);
 #endif
@@ -679,6 +706,14 @@ namespace Barotrauma
         public bool InPressure
         {
             get { return CurrentHull == null || CurrentHull.LethalPressure > 5.0f; }
+        }
+
+        /// <summary>
+        /// Can be used by status effects
+        /// </summary>
+        public AnimController.Animation Anim
+        {
+            get { return AnimController?.Anim ?? AnimController.Animation.None; }
         }
 
         public const float KnockbackCooldown = 5.0f;
@@ -813,43 +848,65 @@ namespace Barotrauma
             get { return AnimController?.Collider?.LinearVelocity.Length() ?? 0.0f; }
         }
 
-        private Item _selectedConstruction;
-        public Item SelectedConstruction
+        private Item _selectedItem;
+        /// <summary>
+        /// The primary selected item. It can be any device that character interacts with. This excludes items like ladders and chairs which are assigned to <see cref="SelectedSecondaryItem"/>.
+        /// </summary>
+        public Item SelectedItem
         {
-            get => _selectedConstruction;
+            get => _selectedItem;
             set
             {
-                var prevSelectedConstruction = _selectedConstruction;
-                _selectedConstruction = value;
+                var prevSelectedItem = _selectedItem;
+                _selectedItem = value;
 #if CLIENT
-                HintManager.OnSetSelectedConstruction(this, prevSelectedConstruction, _selectedConstruction);
+                HintManager.OnSetSelectedItem(this, prevSelectedItem, _selectedItem);
                 if (Controlled == this)
                 {
-                    if (_selectedConstruction == null)
+                    if (_selectedItem == null)
                     {
                         GameMain.GameSession?.CrewManager?.ResetCrewList();
                     }
-                    else if (_selectedConstruction.GetComponent<Ladder>() == null)
+                    else if (!_selectedItem.IsLadder)
                     {
                         GameMain.GameSession?.CrewManager?.AutoHideCrewList();
                     }
                 }
 #endif
-                if (prevSelectedConstruction == null && _selectedConstruction != null)
+                if (prevSelectedItem != null && (_selectedItem == null || _selectedItem != prevSelectedItem) && itemSelectedTime > 0)
+                {
+                    double selectedDuration = Timing.TotalTime - itemSelectedTime;
+                    if (itemSelectedDurations.ContainsKey(prevSelectedItem.Prefab))
+                    {
+                        itemSelectedDurations[prevSelectedItem.Prefab] += selectedDuration;
+                    }
+                    else
+                    {
+                        itemSelectedDurations.Add(prevSelectedItem.Prefab, selectedDuration);
+                    }
+                    itemSelectedTime = 0;
+                }
+                if (_selectedItem != null && (prevSelectedItem == null || prevSelectedItem != _selectedItem))
                 {
                     itemSelectedTime = Timing.TotalTime;
                 }
-                else if (prevSelectedConstruction != null && _selectedConstruction == null && itemSelectedTime > 0)
-                {
-                    if (!itemSelectedDurations.ContainsKey(prevSelectedConstruction.Prefab))
-                    {
-                        itemSelectedDurations.Add(prevSelectedConstruction.Prefab, 0);
-                    }
-                    itemSelectedDurations[prevSelectedConstruction.Prefab] += Timing.TotalTime - itemSelectedTime;
-                    itemSelectedTime = 0;
-                }
             }
         }
+        /// <summary>
+        /// The secondary selected item. It's an item other than a device (see <see cref="SelectedItem"/>), e.g. a ladder or a chair.
+        /// </summary>
+        public Item SelectedSecondaryItem { get; set; }
+        /// <summary>
+        /// Has the characters selected a primary or a secondary item?
+        /// </summary>
+        public bool HasSelectedAnyItem => SelectedItem != null || SelectedSecondaryItem != null;
+        /// <summary>
+        /// Is the item either the primary or the secondary selected item?
+        /// </summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        public bool IsAnySelectedItem(Item item) => item == SelectedItem || item == SelectedSecondaryItem;
+        public bool HasSelectedAnotherSecondaryItem(Item item) => SelectedSecondaryItem != null && SelectedSecondaryItem != item;
 
         public Item FocusedItem
         {
@@ -938,7 +995,7 @@ namespace Barotrauma
         {
             get
             {
-                return SelectedConstruction == null || SelectedConstruction.GetComponent<Ladder>() != null || (SelectedConstruction.GetComponent<Controller>()?.AllowAiming ?? false);
+                return SelectedItem == null || (SelectedItem.GetComponent<Controller>()?.AllowAiming ?? false);
             }
         }
 
@@ -1225,22 +1282,29 @@ namespace Barotrauma
 
             if (Params.Husk && speciesName != "husk" && Prefab.VariantOf != "husk")
             {
-                // Get the non husked name and find the ragdoll with it
-                var matchingAffliction = AfflictionPrefab.List
-                    .Where(p => p is AfflictionPrefabHusk)
-                    .Select(p => p as AfflictionPrefabHusk)
-                    .FirstOrDefault(p => p.TargetSpecies.Any(t => t == AfflictionHusk.GetNonHuskedSpeciesName(speciesName, p)));
                 Identifier nonHuskedSpeciesName = Identifier.Empty;
-                if (matchingAffliction == null)
+                AfflictionPrefabHusk matchingAffliction = null; 
+                foreach (var huskPrefab in AfflictionPrefab.Prefabs.OfType<AfflictionPrefabHusk>())
                 {
-                    DebugConsole.ThrowError("Cannot find a husk infection that matches this species! Please add the speciesnames as 'targets' in the husk affliction prefab definition!");
+                    var nonHuskedName = AfflictionHusk.GetNonHuskedSpeciesName(speciesName, huskPrefab);
+                    if (huskPrefab.TargetSpecies.Contains(nonHuskedName))
+                    {
+                        var huskedSpeciesName = AfflictionHusk.GetHuskedSpeciesName(nonHuskedName, huskPrefab);
+                        if (huskedSpeciesName.Equals(speciesName))
+                        {
+                            nonHuskedSpeciesName = nonHuskedName;
+                            matchingAffliction = huskPrefab;
+                            break;
+                        }
+                    }                    
+                }
+                if (matchingAffliction == null || nonHuskedSpeciesName.IsEmpty)
+                {
+                    DebugConsole.ThrowError($"Cannot find a husk infection that matches {speciesName}! Please make sure that the speciesname is added as 'targets' in the husk affliction prefab definition!\n"
+                        + "Note that all the infected speciesnames and files must stick the following pattern: [nonhuskedspeciesname][huskedspeciesname]. E.g. Humanhusk, Crawlerhusk, or Humancustomhusk, or Crawlerzombie. Not \"Customhumanhusk!\" or \"Zombiecrawler\"");
                     // Crashes if we fail to create a ragdoll -> Let's just use some ragdoll so that the user sees the error msg.
                     nonHuskedSpeciesName = IsHumanoid ? CharacterPrefab.HumanSpeciesName : "crawler".ToIdentifier();
                     speciesName = nonHuskedSpeciesName;
-                }
-                else
-                {
-                    nonHuskedSpeciesName = AfflictionHusk.GetNonHuskedSpeciesName(speciesName, matchingAffliction);
                 }
                 if (ragdollParams == null && prefab.VariantOf == null)
                 {
@@ -1481,8 +1545,20 @@ namespace Barotrauma
 
         public void GiveJobItems(WayPoint spawnPoint = null)
         {
-            if (info?.Job == null) { return; }
-            info.Job.GiveJobItems(this, spawnPoint);
+            if (info == null) { return; }
+            if (info.HumanPrefabIds != default)
+            {
+                var humanPrefab = NPCSet.Get(info.HumanPrefabIds.NpcSetIdentifier, info.HumanPrefabIds.NpcIdentifier);
+                if (humanPrefab == null)
+                {
+                    DebugConsole.ThrowError($"Failed to give job items for the character \"{Name}\" - could not find human prefab with the id \"{info.HumanPrefabIds.NpcIdentifier}\" from \"{info.HumanPrefabIds.NpcSetIdentifier}\".");
+                }
+                else if (humanPrefab.GiveItems(this, Submarine))
+                {
+                    return;
+                }
+            }
+            info.Job?.GiveJobItems(this, spawnPoint);
         }
 
         public void GiveIdCardTags(WayPoint spawnPoint, bool createNetworkEvent = false)
@@ -1524,10 +1600,17 @@ namespace Barotrauma
                     if (item?.GetComponent<Wearable>() is Wearable wearable &&
                         !Inventory.IsInLimbSlot(item, InvSlotType.Any))
                     {
-                        if (wearable.SkillModifiers.TryGetValue(skillIdentifier, out float skillValue))
+                        foreach (var allowedSlot in wearable.AllowedSlots)
                         {
-                            skillLevel += skillValue;
+                            if (allowedSlot == InvSlotType.Any) { continue; }
+                            if (!Inventory.IsInLimbSlot(item, allowedSlot)) { continue; }
+                            if (wearable.SkillModifiers.TryGetValue(skillIdentifier, out float skillValue))
+                            {
+                                skillLevel += skillValue;
+                                    break;
+                            }
                         }
+
                     }
                 }
             }
@@ -1541,7 +1624,7 @@ namespace Barotrauma
         public Vector2? OverrideMovement { get; set; }
         public bool ForceRun { get; set; }
 
-        public bool IsClimbing => AnimController.Anim == AnimController.Animation.Climbing;
+        public bool IsClimbing => AnimController.IsClimbing;
 
         public Vector2 GetTargetMovement()
         {
@@ -1771,6 +1854,11 @@ namespace Barotrauma
             return speed;
         }
 
+        /// <summary>
+        /// Values lower than this seem to cause constantious flipping when the mouse is near the player and the player is running, because the root collider moves after flipping.
+        /// </summary>
+        private const float cursorFollowMargin = 40;
+
         public void Control(float deltaTime, Camera cam)
         {
             ViewTarget = null;
@@ -1803,10 +1891,10 @@ namespace Barotrauma
             }
 
             if (!aiControlled &&
-                AnimController.Anim != AnimController.Animation.UsingConstruction &&
+                !AnimController.IsUsingItem && 
                 AnimController.Anim != AnimController.Animation.CPR &&
                 (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient || Controlled == this) &&
-                AnimController.OnGround && !AnimController.InWater)
+                (AnimController.OnGround || IsClimbing) && !AnimController.InWater)
             {
                 if (dontFollowCursor)
                 {
@@ -1814,13 +1902,11 @@ namespace Barotrauma
                 }
                 else
                 {
-                    // Values lower than this seem to cause constantious flipping when the mouse is near the player and the player is running, because the root collider moves after flipping.
-                    float followMargin = 40;
-                    if (CursorPosition.X < AnimController.Collider.Position.X - followMargin)
+                    if (CursorPosition.X < AnimController.Collider.Position.X - cursorFollowMargin)
                     {
                         AnimController.TargetDir = Direction.Left;
                     }
-                    else if (CursorPosition.X > AnimController.Collider.Position.X + followMargin)
+                    else if (CursorPosition.X > AnimController.Collider.Position.X + cursorFollowMargin)
                     {
                         AnimController.TargetDir = Direction.Right;
                     }
@@ -1967,7 +2053,8 @@ namespace Barotrauma
                 }
             }
 
-            if (SelectedConstruction == null || !SelectedConstruction.Prefab.DisableItemUsageWhenSelected)
+            bool CanUseItemsWhenSelected(Item item) => item == null || !item.Prefab.DisableItemUsageWhenSelected;
+            if (CanUseItemsWhenSelected(SelectedItem) && CanUseItemsWhenSelected(SelectedSecondaryItem))
             {
                 foreach (Item item in HeldItems)
                 {
@@ -1998,24 +2085,24 @@ namespace Barotrauma
                 }
             }
 
-            if (SelectedConstruction != null)
+            if (SelectedItem != null)
             {
-                if (IsKeyDown(InputType.Aim) || !SelectedConstruction.RequireAimToSecondaryUse)
+                if (IsKeyDown(InputType.Aim) || !SelectedItem.RequireAimToSecondaryUse)
                 {
-                    SelectedConstruction.SecondaryUse(deltaTime, this);
+                    SelectedItem.SecondaryUse(deltaTime, this);
                 }
-                if (IsKeyDown(InputType.Use) && SelectedConstruction != null && !SelectedConstruction.IsShootable)
+                if (IsKeyDown(InputType.Use) && SelectedItem != null && !SelectedItem.IsShootable)
                 {
-                    if (!SelectedConstruction.RequireAimToUse || IsKeyDown(InputType.Aim))
+                    if (!SelectedItem.RequireAimToUse || IsKeyDown(InputType.Aim))
                     {
-                        SelectedConstruction.Use(deltaTime, this);
+                        SelectedItem.Use(deltaTime, this);
                     }
                 }
-                if (IsKeyDown(InputType.Shoot) && SelectedConstruction != null && SelectedConstruction.IsShootable)
+                if (IsKeyDown(InputType.Shoot) && SelectedItem != null && SelectedItem.IsShootable)
                 {
-                    if (!SelectedConstruction.RequireAimToUse || IsKeyDown(InputType.Aim))
+                    if (!SelectedItem.RequireAimToUse || IsKeyDown(InputType.Aim))
                     {
-                        SelectedConstruction.Use(deltaTime, this);
+                        SelectedItem.Use(deltaTime, this);
                     }
                 }
             }
@@ -2351,15 +2438,15 @@ namespace Barotrauma
 
                 //wires are interactable if the character has selected an item the wire is connected to,
                 //and it's disconnected from the other end
-                if (wire.Connections[0]?.Item != null && SelectedConstruction == wire.Connections[0].Item)
+                if (wire.Connections[0]?.Item != null && SelectedItem == wire.Connections[0].Item)
                 {
                     return wire.Connections[1] == null;
                 }
-                if (wire.Connections[1]?.Item != null && SelectedConstruction == wire.Connections[1].Item)
+                if (wire.Connections[1]?.Item != null && SelectedItem == wire.Connections[1].Item)
                 {
                     return wire.Connections[0] == null;
                 }
-                if (SelectedConstruction?.GetComponent<ConnectionPanel>()?.DisconnectedWires.Contains(wire) ?? false)
+                if (SelectedItem?.GetComponent<ConnectionPanel>()?.DisconnectedWires.Contains(wire) ?? false)
                 {
                     return wire.Connections[0] == null && wire.Connections[1] == null;
                 }
@@ -2385,7 +2472,7 @@ namespace Barotrauma
             Pickable pickableComponent = item.GetComponent<Pickable>();
             if (pickableComponent != null && pickableComponent.Picker != this && pickableComponent.Picker != null && !pickableComponent.Picker.IsDead) { return false; }
 
-            if (SelectedConstruction?.GetComponent<RemoteController>()?.TargetItem == item) { return true; }
+            if (SelectedItem?.GetComponent<RemoteController>()?.TargetItem == item) { return true; }
             //optimization: don't use HeldItems because it allocates memory and this method is executed very frequently
             var heldItem1 = Inventory?.GetItemInLimbSlot(InvSlotType.RightHand);
             if (heldItem1?.GetComponent<RemoteController>()?.TargetItem == item) { return true; }
@@ -2428,27 +2515,43 @@ namespace Barotrauma
                 distanceToItem = Vector2.Distance(rectIntersectionPoint, playerDistanceCheckPosition);
             }
 
-            if (distanceToItem > item.InteractDistance && item.InteractDistance > 0.0f) { return false; }
+            float interactDistance = item.InteractDistance;
+            if ((SelectedSecondaryItem != null || item.IsSecondaryItem) && AnimController is HumanoidAnimController c)
+            {
+                // Use a distance slightly shorter than the arms length to keep the character in a comfortable pose
+                float armLength = 0.75f * ConvertUnits.ToDisplayUnits(c.ArmLength);
+                interactDistance = Math.Min(interactDistance, armLength);
+            }
+            if (distanceToItem > interactDistance && item.InteractDistance > 0.0f) { return false; }
+
+            Vector2 itemPosition = item.SimPosition;
+            if (Submarine == null && item.Submarine != null)
+            {
+                //character is outside, item inside
+                itemPosition += item.Submarine.SimPosition;
+            }
+            else if (Submarine != null && item.Submarine == null)
+            {
+                //character is inside, item outside
+                itemPosition -= Submarine.SimPosition;
+            }
+            else if (Submarine != item.Submarine)
+            {
+                //character and the item are inside different subs
+                itemPosition += item.Submarine.SimPosition;
+                itemPosition -= Submarine.SimPosition;
+            }
+
+            if (SelectedSecondaryItem != null && !item.IsSecondaryItem)
+            {
+                if (item.GetComponent<Controller>() is { } controller && controller.Direction != 0 && controller.Direction != AnimController.Direction) { return false; }
+                float threshold = ConvertUnits.ToSimUnits(cursorFollowMargin);
+                if (AnimController.Direction == Direction.Left && SimPosition.X + threshold < itemPosition.X) { return false; }
+                if (AnimController.Direction == Direction.Right && SimPosition.X - threshold > itemPosition.X) { return false; }
+            }
 
             if (!item.Prefab.InteractThroughWalls && Screen.Selected != GameMain.SubEditorScreen && !insideTrigger)
             {
-                Vector2 itemPosition = item.SimPosition;
-                if (Submarine == null && item.Submarine != null)
-                {
-                    //character is outside, item inside
-                    itemPosition += item.Submarine.SimPosition;
-                }
-                else if (Submarine != null && item.Submarine == null)
-                {
-                    //character is inside, item outside
-                    itemPosition -= Submarine.SimPosition;
-                }
-                else if (Submarine != item.Submarine)
-                {
-                    //character and the item are inside different subs
-                    itemPosition += item.Submarine.SimPosition;
-                    itemPosition -= Submarine.SimPosition;
-                }
                 var body = Submarine.CheckVisibility(SimPosition, itemPosition, ignoreLevel: true);
                 if (body != null && body.UserData as Item != item && (body.UserData as ItemComponent)?.Item != item && Submarine.LastPickedFixture?.UserData as Item != item) 
                 { 
@@ -2521,12 +2624,12 @@ namespace Barotrauma
 
             if (!CanInteract)
             {
-                SelectedConstruction = null;
+                SelectedItem = SelectedSecondaryItem = null;
                 focusedItem = null;
                 if (!AllowInput)
                 {
                     FocusedCharacter = null;
-                    if (SelectedCharacter != null) DeselectCharacter();
+                    if (SelectedCharacter != null) { DeselectCharacter(); }
                     return;
                 }
             }
@@ -2570,8 +2673,8 @@ namespace Barotrauma
                 AnimController.InWater : 
                 head.InWater;
             //climb ladders automatically when pressing up/down inside their trigger area
-            Ladder currentLadder = SelectedConstruction?.GetComponent<Ladder>();
-            if ((SelectedConstruction == null || currentLadder != null) &&
+            Ladder currentLadder = SelectedSecondaryItem?.GetComponent<Ladder>();
+            if ((SelectedSecondaryItem == null || currentLadder != null) &&
                 !headInWater && Screen.Selected != GameMain.SubEditorScreen)
             {
                 bool climbInput = IsKeyDown(InputType.Up) || IsKeyDown(InputType.Down);
@@ -2613,10 +2716,15 @@ namespace Barotrauma
                 {
                     if (nearbyLadder.Select(this))
                     {
-                        SelectedConstruction = nearbyLadder.Item;
+                        SelectedSecondaryItem = nearbyLadder.Item;
                     }
                 }
             }
+
+            bool selectInputSameAsDeselect = false;
+#if CLIENT
+            selectInputSameAsDeselect = GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Select] == GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Deselect];
+#endif
 
             if (SelectedCharacter != null && (IsKeyHit(InputType.Grab) || IsKeyHit(InputType.Health))) //Let people use ladders and buttons and stuff when dragging chars
             {
@@ -2657,21 +2765,34 @@ namespace Barotrauma
             {
                 FocusedCharacter.onCustomInteract(FocusedCharacter, this);
             }
-            else if (IsKeyHit(InputType.Deselect) && SelectedConstruction != null && SelectedConstruction.GetComponent<Ladder>() == null)
+            else if (IsKeyHit(InputType.Deselect) && SelectedItem != null && 
+                (focusedItem == null || focusedItem == SelectedItem || !selectInputSameAsDeselect))
             {
-                SelectedConstruction = null;
+                SelectedItem = null;
 #if CLIENT
                 CharacterHealth.OpenHealthWindow = null;
 #endif
             }
-            else if (IsKeyHit(InputType.Health) && SelectedConstruction != null && SelectedConstruction.GetComponent<Ladder>() == null)
+            else if (IsKeyHit(InputType.Deselect) && SelectedSecondaryItem != null && SelectedSecondaryItem.GetComponent<Ladder>() == null &&
+                (focusedItem == null || focusedItem == SelectedSecondaryItem || !selectInputSameAsDeselect))
             {
-                SelectedConstruction = null;
+                SelectedSecondaryItem = null;
+#if CLIENT
+                CharacterHealth.OpenHealthWindow = null;
+#endif
+            }
+            else if (IsKeyHit(InputType.Health) && (SelectedItem != null || SelectedSecondaryItem != null))
+            {
+                SelectedItem = SelectedSecondaryItem = null;
             }
             else if (focusedItem != null)
             {
 #if CLIENT
                 if (CharacterInventory.DraggingItemToWorld) { return; }
+                if (selectInputSameAsDeselect)
+                {
+                    keys[(int)InputType.Deselect].Reset();
+                }
 #endif
                 bool canInteract = focusedItem.TryInteract(this);
 #if CLIENT
@@ -2868,7 +2989,7 @@ namespace Barotrauma
             }
             else if ((GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient) &&
                 PressureProtection < (Level.Loaded?.GetRealWorldDepth(WorldPosition.Y) ?? 1.0f) &&
-                WorldPosition.Y < CharacterHealth.CrushDepth)
+                WorldPosition.Y < CharacterHealth.CrushDepth && !HasAbilityFlag(AbilityFlags.ImmuneToPressure))
             {
                 //implode if below crush depth, and either outside or in a high-pressure hull                
                 if (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure >= 80.0f)
@@ -2901,7 +3022,7 @@ namespace Barotrauma
             {
                 Stun = Math.Max(5.0f, Stun);
                 AnimController.ResetPullJoints();
-                SelectedConstruction = null;
+                SelectedItem = SelectedSecondaryItem = null;
                 return;
             }
 
@@ -2958,7 +3079,7 @@ namespace Barotrauma
                     humanAnimController.Crouching = false; 
                 }
                 AnimController.ResetPullJoints();
-                SelectedConstruction = null;
+                SelectedItem = SelectedSecondaryItem = null;
                 return;
             }
 
@@ -2974,9 +3095,13 @@ namespace Barotrauma
                 DoInteractionUpdate(deltaTime, mouseSimPos);
             }
 
-            if (SelectedConstruction != null && !CanInteractWith(SelectedConstruction))
+            if (SelectedItem != null && !CanInteractWith(SelectedItem))
             {
-                SelectedConstruction = null;
+                SelectedItem = null;
+            }
+            if (SelectedSecondaryItem != null && !CanInteractWith(SelectedSecondaryItem))
+            {
+                SelectedSecondaryItem = null;
             }
 
             if (!IsDead) { LockHands = false; }
@@ -3531,7 +3656,7 @@ namespace Barotrauma
                     string modifiedMessage = ChatMessage.ApplyDistanceEffect(message.Message, message.MessageType.Value, this, Controlled);
                     if (!string.IsNullOrEmpty(modifiedMessage))
                     {
-                        GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(info.Name, modifiedMessage, message.MessageType.Value, this);
+                        GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(Name, modifiedMessage, message.MessageType.Value, this);
                     }
                 }
 #endif
@@ -3914,7 +4039,8 @@ namespace Barotrauma
             CharacterHealth.Stun = newStun;
             if (newStun > 0.0f)
             {
-                SelectedConstruction = null;
+                SelectedItem = SelectedSecondaryItem = null;
+                if (SelectedCharacter != null) { DeselectCharacter(); }
             }
             HealthUpdateInterval = 0.0f;
         }
@@ -3930,77 +4056,79 @@ namespace Barotrauma
                     CharacterHealth.ReduceAfflictionOnAllLimbs("damage".ToIdentifier(), eatingRegen * deltaTime);
                 }
             }
-            if (!statusEffects.TryGetValue(actionType, out var statusEffectList)) { return; }
-            foreach (StatusEffect statusEffect in statusEffectList)
+            if (statusEffects.TryGetValue(actionType, out var statusEffectList))
             {
-                if (statusEffect.type == ActionType.OnDamaged)
+                foreach (StatusEffect statusEffect in statusEffectList)
                 {
-                    if (!statusEffect.HasRequiredAfflictions(LastDamage)) { continue; }
-                    if (statusEffect.OnlyPlayerTriggered)
+                    if (statusEffect.type == ActionType.OnDamaged)
                     {
-                        if (LastAttacker == null || !LastAttacker.IsPlayer)
+                        if (!statusEffect.HasRequiredAfflictions(LastDamage)) { continue; }
+                        if (statusEffect.OnlyPlayerTriggered)
                         {
-                            continue;
+                            if (LastAttacker == null || !LastAttacker.IsPlayer)
+                            {
+                                continue;
+                            }
                         }
                     }
-                }
-                if (statusEffect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
-                    statusEffect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
-                {
-                    targets.Clear();
-                    targets.AddRange(statusEffect.GetNearbyTargets(WorldPosition, targets));
-                    statusEffect.Apply(actionType, deltaTime, this, targets);
-                }
-                else if (statusEffect.targetLimbs != null)
-                {
-                    foreach (var limbType in statusEffect.targetLimbs)
+                    if (statusEffect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
+                        statusEffect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                     {
-                        if (statusEffect.HasTargetType(StatusEffect.TargetType.AllLimbs))
+                        targets.Clear();
+                        targets.AddRange(statusEffect.GetNearbyTargets(WorldPosition, targets));
+                        statusEffect.Apply(actionType, deltaTime, this, targets);
+                    }
+                    else if (statusEffect.targetLimbs != null)
+                    {
+                        foreach (var limbType in statusEffect.targetLimbs)
                         {
-                            // Target all matching limbs
-                            foreach (var limb in AnimController.Limbs)
+                            if (statusEffect.HasTargetType(StatusEffect.TargetType.AllLimbs))
                             {
-                                if (limb.IsSevered) { continue; }
-                                if (limb.type == limbType)
+                                // Target all matching limbs
+                                foreach (var limb in AnimController.Limbs)
+                                {
+                                    if (limb.IsSevered) { continue; }
+                                    if (limb.type == limbType)
+                                    {
+                                        statusEffect.sourceBody = limb.body;
+                                        statusEffect.Apply(actionType, deltaTime, this, limb);
+                                    }
+                                }
+                            }
+                            else if (statusEffect.HasTargetType(StatusEffect.TargetType.Limb))
+                            {
+                                // Target just the first matching limb
+                                Limb limb = AnimController.GetLimb(limbType);
+                                if (limb != null)
+                                {
+                                    statusEffect.sourceBody = limb.body;
+                                    statusEffect.Apply(actionType, deltaTime, this, limb);
+                                }
+                            }
+                            else if (statusEffect.HasTargetType(StatusEffect.TargetType.LastLimb))
+                            {
+                                // Target just the last matching limb
+                                Limb limb = AnimController.Limbs.LastOrDefault(l => l.type == limbType && !l.IsSevered && !l.Hidden);
+                                if (limb != null)
                                 {
                                     statusEffect.sourceBody = limb.body;
                                     statusEffect.Apply(actionType, deltaTime, this, limb);
                                 }
                             }
                         }
-                        else if (statusEffect.HasTargetType(StatusEffect.TargetType.Limb))
-                        {
-                            // Target just the first matching limb
-                            Limb limb = AnimController.GetLimb(limbType);
-                            if (limb != null)
-                            {
-                                statusEffect.sourceBody = limb.body;
-                                statusEffect.Apply(actionType, deltaTime, this, limb);
-                            }
-                        }
-                        else if (statusEffect.HasTargetType(StatusEffect.TargetType.LastLimb))
-                        {
-                            // Target just the last matching limb
-                            Limb limb = AnimController.Limbs.LastOrDefault(l => l.type == limbType && !l.IsSevered && !l.Hidden);
-                            if (limb != null)
-                            {
-                                statusEffect.sourceBody = limb.body;
-                                statusEffect.Apply(actionType, deltaTime, this, limb);
-                            }
-                        }
+                    }
+                    if (statusEffect.HasTargetType(StatusEffect.TargetType.This) || statusEffect.HasTargetType(StatusEffect.TargetType.Character))
+                    {
+                        statusEffect.Apply(actionType, deltaTime, this, this);
                     }
                 }
-                if (statusEffect.HasTargetType(StatusEffect.TargetType.This) || statusEffect.HasTargetType(StatusEffect.TargetType.Character))
+                if (actionType != ActionType.OnDamaged && actionType != ActionType.OnSevered)
                 {
-                    statusEffect.Apply(actionType, deltaTime, this, this);
-                }
-            }
-            if (actionType != ActionType.OnDamaged && actionType != ActionType.OnSevered)
-            {
-                // OnDamaged is called only for the limb that is hit.
-                foreach (Limb limb in AnimController.Limbs)
-                {
-                    limb.ApplyStatusEffects(actionType, deltaTime);
+                    // OnDamaged is called only for the limb that is hit.
+                    foreach (Limb limb in AnimController.Limbs)
+                    {
+                        limb.ApplyStatusEffects(actionType, deltaTime);
+                    }
                 }
             }
             //OnActive effects are handled by the afflictions themselves
@@ -4075,10 +4203,12 @@ namespace Barotrauma
                 return;
             }
 
+#if SERVER
             if (GameMain.NetworkMember is { IsServer: true })
             {
-                GameMain.NetworkMember.CreateEntityEvent(this, new CharacterStatusEventData());
+                GameMain.NetworkMember.CreateEntityEvent(this, new CharacterStatusEventData(forceAfflictionData: true));
             }
+#endif
 
             isDead = true;
 
@@ -4153,7 +4283,7 @@ namespace Barotrauma
                 }
             }
 
-            SelectedConstruction = null;
+            SelectedItem = SelectedSecondaryItem = null;
             SelectedCharacter = null;
             
             AnimController.ResetPullJoints();
@@ -4667,7 +4797,7 @@ namespace Barotrauma
                 {
                     foreach (TalentOption talentOption in talentSubTree.TalentOptionStages)
                     {
-                        if (talentOption.Talents.None(t => HasTalent(t.Identifier)))
+                        if (talentOption.TalentIdentifiers.None(t => HasTalent(t)))
                         {
                             return false;
                         }
@@ -4896,6 +5026,12 @@ namespace Barotrauma
         /// Compares just the species name and the group, ignores teams. There's a more complex version found in HumanAIController.cs
         /// </summary>
         public static bool IsFriendly(Character me, Character other) => other.SpeciesName == me.SpeciesName || other.Params.CompareGroup(me.Params.Group);
+
+        public void StopClimbing()
+        {
+            AnimController.StopClimbing();
+            SelectedSecondaryItem = null;
+        }
     }
 
     class ActiveTeamChange

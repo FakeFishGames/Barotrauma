@@ -246,6 +246,7 @@ namespace Barotrauma.Items.Components
         protected override void CreateGUI()
         {
             GuiFrame.ClearChildren();
+            TryCreateDragHandle();
 
             GuiFrame.RectTransform.RelativeOffset = new Vector2(0.05f, 0.0f);
             GuiFrame.CanBeFocused = true;
@@ -509,7 +510,7 @@ namespace Barotrauma.Items.Components
                             Vector2 origin = weaponSprite.Origin;
                             float scale = parentWidth / Math.Max(weaponSprite.size.X, weaponSprite.size.Y);
                             Color color = !hasPower ? NoPowerColor : turret.ActiveUser is null ? Color.DimGray : GUIStyle.Green;
-                            weaponSprite.Draw(batch, center, color, origin, rotation, scale, it.SpriteEffects);
+                            weaponSprite.Draw(batch, center, color, origin, rotation, scale, SpriteEffects.None);
                         }
                     });
 
@@ -1012,12 +1013,14 @@ namespace Barotrauma.Items.Components
                 }
                 else if (hullData.LinkedHulls.Any())
                 {
-                    hullData.HullWaterAmount = 0.0f;
+                    float waterVolume = 0.0f;
+                    float totalVolume = 0.0f;
                     foreach (Hull linkedHull in hullData.LinkedHulls)
                     {
-                        hullData.HullWaterAmount += WaterDetector.GetWaterPercentage(linkedHull);
+                        waterVolume += linkedHull.WaterVolume;
+                        totalVolume += linkedHull.Volume;
                     }
-                    hullData.HullWaterAmount /= hullData.LinkedHulls.Count;
+                    hullData.HullWaterAmount = MathHelper.Clamp((int)Math.Ceiling(waterVolume / totalVolume * 100), 0, 100);
                 }
                 else
                 {

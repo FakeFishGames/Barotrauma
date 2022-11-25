@@ -6,7 +6,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Sounds
 {
-    public class OggSound : Sound
+    class OggSound : Sound
     {
         private VorbisReader reader;
 
@@ -49,7 +49,7 @@ namespace Barotrauma.Sounds
         {
             if (!muffleFilters.TryGetValue(sampleRate, out BiQuad filter))
             {
-                filter = new LowpassFilter(sampleRate, 800);
+                filter = new LowpassFilter(sampleRate, 1600);
                 muffleFilters.Add(sampleRate, filter);
             }
             filter.Process(buffer);

@@ -55,8 +55,8 @@ namespace Barotrauma.Networking
 
                     IWriteMessage msg = new WriteOnlyMessage();
 
-                    msg.Write((byte)ServerPacketHeader.VOICE);
-                    msg.Write((byte)queue.QueueID);
+                    msg.WriteByte((byte)ServerPacketHeader.VOICE);
+                    msg.WriteByte((byte)queue.QueueID);
                     queue.Write(msg);
                     
                     netServer.Send(msg, recipient.Connection, DeliveryMethod.Unreliable);

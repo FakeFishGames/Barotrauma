@@ -430,7 +430,7 @@ namespace Barotrauma
                 if (GameMain.NetworkMember == null || args.Length == 0) return;
 
                 int.TryParse(args[0], out int id);
-                var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.ID == id);
+                var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.SessionId == id);
                 if (client == null)
                 {
                     ThrowError("Client id \"" + id + "\" not found.");
@@ -466,7 +466,7 @@ namespace Barotrauma
                             banDuration = parsedBanDuration;
                         }
 
-                        GameMain.NetworkMember.BanPlayer(clientName, reason, false, banDuration);
+                        GameMain.NetworkMember.BanPlayer(clientName, reason, banDuration);
                     });
                 });
             },
@@ -485,7 +485,7 @@ namespace Barotrauma
                 if (GameMain.NetworkMember == null || args.Length == 0) return;
 
                 int.TryParse(args[0], out int id);
-                var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.ID == id);
+                var client = GameMain.NetworkMember.ConnectedClients.Find(c => c.SessionId == id);
                 if (client == null)
                 {
                     ThrowError("Client id \"" + id + "\" not found.");
@@ -509,12 +509,12 @@ namespace Barotrauma
                             banDuration = parsedBanDuration;
                         }
 
-                        GameMain.NetworkMember.BanPlayer(client.Name, reason, false, banDuration);
+                        GameMain.NetworkMember.BanPlayer(client.Name, reason, banDuration);
                     });
                 });
             }));
             
-            commands.Add(new Command("banendpoint|banip", "banendpoint [endpoint]: Ban the IP address/SteamID from the server.", null));
+            commands.Add(new Command("banaddress|banip", "banaddress [endpoint]: Ban the IP address/SteamID from the server.", null));
             
             commands.Add(new Command("teleportcharacter|teleport", "teleport [character name]: Teleport the specified character to the position of the cursor. If the name parameter is omitted, the controlled character will be teleported.", null,
             () =>
@@ -798,7 +798,55 @@ namespace Barotrauma
                    eventPrefabs.Select(prefab => prefab.Identifier).Distinct().Select(id => id.Value).ToArray()
                 };
             }));
-            
+
+            commands.Add(new Command("unlockmission", "unlockmission [identifier/tag]: Unlocks a mission in a random adjacent level.", (string[] args) =>
+            {
+                if (!(GameMain.GameSession?.GameMode is CampaignMode campaign))
+                {
+                    ThrowError("The unlockmission command is only usable in the campaign mode.");
+                    return;
+                }
+                if (args.Length == 0)
+                {
+                    ThrowError("Please enter the identifier or a tag of the mission you want to unlock.");
+                    return;
+                }
+                var currentLocation = campaign.Map.CurrentLocation;
+                if (MissionPrefab.Prefabs.Any(p => p.Identifier == args[0]))
+                {
+                    currentLocation.UnlockMissionByIdentifier(args[0].ToIdentifier());
+                }
+                else
+                {
+                    currentLocation.UnlockMissionByTag(args[0].ToIdentifier());
+                }
+                if (campaign is MultiPlayerCampaign mpCampaign)
+                {
+                    mpCampaign.IncrementLastUpdateIdForFlag(MultiPlayerCampaign.NetFlags.MapAndMissions);
+                }
+            }, isCheat: true, getValidArgs: () =>
+            {
+                return new[]
+                {
+                   MissionPrefab.Prefabs.Select(p => p.Identifier.ToString()).ToArray()
+                };
+            }));
+
+            commands.Add(new Command("setcampaignmetadata", "setcampaignmetadata [identifier] [value]: Sets the specified campaign metadata value.", (string[] args) =>
+            {
+                if (!(GameMain.GameSession?.GameMode is CampaignMode campaign))
+                {
+                    ThrowError("The setcampaignmetadata command is only usable in the campaign mode.");
+                    return;
+                }
+                if (args.Length < 2)
+                {
+                    ThrowError("Please specify an identifier and a value.");
+                    return;
+                }
+                SetDataAction.PerformOperation(campaign.CampaignMetadata, args[0].ToIdentifier(), args[1], SetDataAction.OperationType.Set);
+            }, isCheat: true));
+
             commands.Add(new Command("setskill", "setskill [all/identifier] [max/level] [character]: Set your skill level.", (string[] args) =>
             {
                 if (args.Length < 2)
@@ -917,16 +965,10 @@ namespace Barotrauma
 
                 foreach (var talentTree in talentTrees)
                 {
-                    foreach (var subTree in talentTree.TalentSubTrees)
+                    foreach (var talentId in talentTree.AllTalentIdentifiers)
                     {
-                        foreach (var option in subTree.TalentOptionStages)
-                        {
-                            foreach (var talent in option.Talents)
-                            {
-                                character.GiveTalent(talent);
-                                NewMessage($"Unlocked talent \"{talent.DisplayName}\".");
-                            }
-                        }
+                        character.GiveTalent(talentId);
+                        NewMessage($"Unlocked talent \"{talentId}\".");                        
                     }
                 }
             },
@@ -1225,7 +1267,11 @@ namespace Barotrauma
                 }
             }, () =>
             {
-                return new[] { FactionPrefab.Prefabs.Select(f => f.Identifier.Value).ToArray() };
+                return new[] 
+                { 
+                    FactionPrefab.Prefabs.Select(f => f.Identifier.Value).ToArray(), 
+                    GameMain.GameSession?.Campaign.Factions.Select(f => f.Prefab.Identifier.ToString()).ToArray() ?? Array.Empty<string>()
+                };
             }, true));
 
             commands.Add(new Command("fixitems", "fixitems: Repairs all items and restores them to full condition.", (string[] args) =>
@@ -1256,102 +1302,7 @@ namespace Barotrauma
                     }
                 }
             }, null, true));
-            
-            commands.Add(new Command("upgradeitem", "upgradeitem [upgrade] [level] [items]: Adds an upgrade to the current targeted item.", args =>
-            {
-                if (args.Length > 0)
-                {
-                    int level;
-                    if (args.Length > 1)
-                    {
-                        if (int.TryParse(args[1], out int result))
-                        {
-                            level = result;
-                        }
-                        else
-                        {
-                            ThrowError($"\"{args[1]}\" is not a valid level.");
-                            return;
-                        }
-                        
-                    }
-                    else
-                    {
-                        ThrowError("Parameter \"level\" is required.");
-                        return;
-                    }
 
-                    var upgradePrefab = UpgradePrefab.Find(args[0].ToIdentifier());
-
-                    if (upgradePrefab == null)
-                    {
-                        ThrowError($"Unknown upgrade: {args[0]}.");
-                        return;
-                    }
-
-                    List<MapEntity> targetItems = new List<MapEntity>();
-
-                    if (upgradePrefab.IsWallUpgrade)
-                    {
-                        targetItems.AddRange(Submarine.MainSub.GetWalls(true).Cast<MapEntity>());
-                    }
-                    else
-                    {
-                        if (args.Length > 2)
-                        {
-                            targetItems.AddRange(Item.ItemList.Where(item => item.Submarine == Submarine.MainSub).Where(item => item.HasTag(args[2])).Cast<MapEntity>());
-                        }
-                        else
-                        {
-                            ThrowError("Argument \"tag\" is required.");
-                            return;
-                        }
-                    }
-
-                    if (!targetItems.Any())
-                    {
-                        ThrowError("No valid items found.");
-                        return;
-                    }
-
-                    foreach (MapEntity targetItem in targetItems)
-                    {
-                        Upgrade existingUpgrade = targetItem.GetUpgrade(args[0].ToIdentifier());
-
-                        if (!(targetItem is ISerializableEntity sEntity)) { continue; }
-
-                        var upgrade = new Upgrade(sEntity, upgradePrefab, level);
-                        if (targetItem.AddUpgrade(upgrade, true))
-                        {
-                            if (existingUpgrade == null)
-                            {
-                                NewMessage($"Added {upgradePrefab.Identifier}:{level} to {sEntity.Name}.", Color.Green);
-                                upgrade.ApplyUpgrade(); 
-                            }
-                            else
-                            {
-                                NewMessage($"Set {sEntity.Name}'s {upgradePrefab.Identifier} upgrade to level {existingUpgrade.Level}.", Color.Cyan);
-                                existingUpgrade.ApplyUpgrade(); 
-                            }
-                        }
-                        else
-                        {
-                            ThrowError($"{upgrade.Prefab.Identifier} cannot be applied to {sEntity.Name}");
-                        }
-                    }
-                }
-                else
-                {
-                    ThrowError("Parameter \"upgrade\" is required.");
-                }
-            }, () =>
-            {
-                return new[]
-                {
-                    UpgradePrefab.Prefabs.Select(c => c.Identifier).Distinct().Select(i => i.Value).ToArray()
-                };
-            }, true));
-            
             commands.Add(new Command("maxupgrades", "maxupgrades [category] [prefab]: Maxes out all upgrades or only specific one if given arguments.", args =>
             {
                 UpgradeManager upgradeManager = GameMain.GameSession?.Campaign?.UpgradeManager;
@@ -1383,7 +1334,7 @@ namespace Barotrauma
                         if (!prefab.UpgradeCategories.Contains(category)) { continue; }
                         if (!string.IsNullOrWhiteSpace(prefabIdentifier) && prefab.Identifier != prefabIdentifier) { continue; }
                         
-                        int targetLevel = prefab.MaxLevel - upgradeManager.GetRealUpgradeLevel(prefab, category);
+                        int targetLevel = prefab.GetMaxLevelForCurrentSub() - upgradeManager.GetRealUpgradeLevel(prefab, category);
                         for (int i = 0; i < targetLevel; i++)
                         {
                             upgradeManager.PurchaseUpgrade(prefab, category, force: true);
@@ -1704,6 +1655,8 @@ namespace Barotrauma
             }, isCheat: false));
 
             commands.Add(new Command("listtasks", "listtasks: Lists all asynchronous tasks currently in the task pool.", (string[] args) => { TaskPool.ListTasks(); }));
+            
+            commands.Add(new Command("listcoroutines", "listcoroutines: Lists all coroutines currently running.", (string[] args) => { CoroutineManager.ListCoroutines(); }));
 
             commands.Add(new Command("calculatehashes", "calculatehashes [content package name]: Show the MD5 hashes of the files in the selected content package. If the name parameter is omitted, the first content package is selected.", (string[] args) =>
             {
@@ -2286,7 +2239,7 @@ namespace Barotrauma
             }
         }
 
-        public static void ShowError(string msg, Color? color = null)
+        public static void LogError(string msg, Color? color = null)
         {
             color ??= Color.Red;
             NewMessage(msg, color.Value, isCommand: false, isError: true);
@@ -2314,7 +2267,7 @@ namespace Barotrauma
             {
                 NewMessage(msg, color.Value, isCommand: false, isError: false);
             }
-#if DEBUG
+#if DEBUG && CLIENT
             Console.WriteLine(msg);
 #endif
         }
@@ -2458,7 +2411,7 @@ namespace Barotrauma
             }
 #endif
 
-            ShowError(error);
+            LogError(error);
         }
         
         public static void AddWarning(string warning)
@@ -2499,7 +2452,7 @@ namespace Barotrauma
 #endif
 
             fileName += DateTime.Now.ToShortDateString() + "_" + DateTime.Now.ToShortTimeString();
-            var invalidChars = Path.GetInvalidFileNameChars();
+            var invalidChars = Path.GetInvalidFileNameCharsCrossPlatform();
             foreach (char invalidChar in invalidChars)
             {
                 fileName = fileName.Replace(invalidChar.ToString(), "");
@@ -2532,9 +2485,12 @@ namespace Barotrauma
 #if CLIENT
             GameMain.DebugDraw = false;
             GameMain.LightManager.LightingEnabled = true;
+            Character.DebugDrawInteract = false;
 #endif
             Hull.EditWater = false;
             Hull.EditFire = false;
+            EnemyAIController.DisableEnemyAI = false;
+            HumanAIController.DisableCrewAI = false;
         }
     }
 }

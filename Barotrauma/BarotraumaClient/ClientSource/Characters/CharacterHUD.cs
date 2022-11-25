@@ -1,5 +1,6 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
+using Barotrauma.Tutorials;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -108,7 +109,7 @@ namespace Barotrauma
 
         private static bool ShouldDrawInventory(Character character)
         {
-            var controller = character.SelectedConstruction?.GetComponent<Controller>();
+            var controller = character.SelectedItem?.GetComponent<Controller>();
 
             return 
                 character?.Inventory != null && 
@@ -173,8 +174,8 @@ namespace Barotrauma
             {
                 if (character.Info != null && !character.ShouldLockHud() && character.SelectedCharacter == null && Screen.Selected != GameMain.SubEditorScreen)
                 {
-                    bool mouseOnPortrait = HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition) && GUI.MouseOn == null;
-                    if (mouseOnPortrait && PlayerInput.PrimaryMouseButtonClicked())
+                    bool mouseOnPortrait = MouseOnCharacterPortrait() && GUI.MouseOn == null;
+                    if (mouseOnPortrait && PlayerInput.PrimaryMouseButtonClicked() && Inventory.DraggingItems.None())
                     {
                         CharacterHealth.OpenHealthWindow = character.CharacterHealth;
                     }
@@ -398,32 +399,63 @@ namespace Barotrauma
                     progressBar.Draw(spriteBatch, cam);
                 }
 
-                foreach (Character npc in Character.CharacterList)
+                void DrawInteractionIcon(Entity entity, Identifier iconStyle)
                 {
-                    if (npc.CampaignInteractionType == CampaignMode.InteractionType.None || npc.Submarine != character.Submarine || npc.IsDead || npc.IsIncapacitated) { continue; }
+                    if (entity == null || entity.Removed) { return; }
 
-                    var iconStyle = GUIStyle.GetComponentStyle("CampaignInteractionIcon." + npc.CampaignInteractionType);
-                    if (iconStyle == null) { continue; }
-                    Range<float> visibleRange = new Range<float>(npc.CurrentHull == Character.Controlled.CurrentHull ? 500.0f : 100.0f, float.PositiveInfinity);
-                    if (npc.CampaignInteractionType == CampaignMode.InteractionType.Examine)
+                    Hull currentHull = entity switch
                     {
-                        //TODO: we could probably do better than just hardcoding
-                        //a check for InteractionType.Examine here.
+                        Character character => character.CurrentHull,
+                        Item item => item.CurrentHull,
+                        _ => null
+                    };
+                    Range<float> visibleRange = new Range<float>(currentHull == Character.Controlled.CurrentHull ? 500.0f : 100.0f, float.PositiveInfinity);
+                    LocalizedString label = null;
+                    if (entity is Character characterEntity)
+                    {
+                        if (characterEntity.IsDead || characterEntity.IsIncapacitated) { return; }
+                        if (characterEntity?.CampaignInteractionType == CampaignMode.InteractionType.Examine)
+                        {
+                            //TODO: we could probably do better than just hardcoding
+                            //a check for InteractionType.Examine here.
 
-                        if (Vector2.DistanceSquared(character.Position, npc.Position) > 500f * 500f) { continue; }
+                            if (Vector2.DistanceSquared(character.Position, entity.Position) > 500f * 500f) { return; }
 
-                        var body = Submarine.CheckVisibility(character.SimPosition, npc.SimPosition, ignoreLevel: true);
-                        if (body != null && body.UserData as Character != npc) { continue; }
+                            var body = Submarine.CheckVisibility(character.SimPosition, entity.SimPosition, ignoreLevel: true);
+                            if (body != null && body.UserData != entity) { return; }
 
-                        visibleRange = new Range<float>(-100f, 500f);
+                            visibleRange = new Range<float>(-100f, 500f);
+                        }
+                        label = characterEntity?.Info?.Title;
                     }
+
+                    if (GUIStyle.GetComponentStyle(iconStyle) is not GUIComponentStyle style) { return; }
+
+                    float dist = Vector2.Distance(character.WorldPosition, entity.WorldPosition);
+                    float distFactor = 1.0f - MathUtils.InverseLerp(1000.0f, 3000.0f, dist);
+                    float alpha = MathHelper.Lerp(0.3f, 1.0f, distFactor);
                     GUI.DrawIndicator(
                         spriteBatch,
-                        npc.WorldPosition,
+                        entity.WorldPosition,
                         cam,
                         visibleRange,
-                        iconStyle.GetDefaultSprite(),
-                        iconStyle.Color);
+                        style.GetDefaultSprite(),
+                        style.Color * alpha,
+                        label: label);
+                }
+
+                foreach (Character npc in Character.CharacterList)
+                {
+                    if (npc.CampaignInteractionType == CampaignMode.InteractionType.None) { continue; }
+                    DrawInteractionIcon(npc, ("CampaignInteractionIcon." + npc.CampaignInteractionType).ToIdentifier());
+                }
+
+                if (GameMain.GameSession?.GameMode is TutorialMode tutorialMode && tutorialMode.Tutorial is not null)
+                {
+                    foreach (var (entity, iconStyle) in tutorialMode.Tutorial.Icons)
+                    {
+                        DrawInteractionIcon(entity, iconStyle);
+                    }
                 }
 
                 foreach (Item item in Item.ItemList)
@@ -436,10 +468,10 @@ namespace Barotrauma
                 }
             }
 
-            if (character.SelectedConstruction != null && 
-                (character.CanInteractWith(character.SelectedConstruction) || Screen.Selected == GameMain.SubEditorScreen))
+            if (character.SelectedItem != null && 
+                (character.CanInteractWith(character.SelectedItem) || Screen.Selected == GameMain.SubEditorScreen))
             {
-                character.SelectedConstruction.DrawHUD(spriteBatch, cam, character);
+                character.SelectedItem.DrawHUD(spriteBatch, cam, character);
             }
             if (character.Inventory != null)
             {
@@ -487,7 +519,7 @@ namespace Barotrauma
                         character.Info.DrawPortrait(spriteBatch, HUDLayoutSettings.PortraitArea.Location.ToVector2(), new Vector2(-12 * GUI.Scale, yOffset), targetWidth: HUDLayoutSettings.PortraitArea.Width, true, character.Info.IsDisguisedAsAnother);
                         character.Info.DrawForeground(spriteBatch);
                     }
-                    mouseOnPortrait = HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition) && !character.ShouldLockHud();
+                    mouseOnPortrait = MouseOnCharacterPortrait() && !character.ShouldLockHud();
                     if (mouseOnPortrait)
                     {
                         GUIStyle.UIGlow.Draw(spriteBatch, HUDLayoutSettings.BottomRightInfoArea, GUIStyle.Green * 0.5f);
@@ -534,6 +566,13 @@ namespace Barotrauma
             }
         }
 
+        public static bool MouseOnCharacterPortrait()
+        {
+            if (Character.Controlled == null) { return false; }
+            if (CharacterHealth.OpenHealthWindow != null || Character.Controlled.SelectedCharacter != null) { return false; }
+            return HUDLayoutSettings.BottomRightInfoArea.Contains(PlayerInput.MousePosition);
+        }
+
         private static void DrawCharacterHoverTexts(SpriteBatch spriteBatch, Camera cam, Character character)
         {
             var allItems = character.Inventory?.AllItems;
@@ -561,8 +600,14 @@ namespace Barotrauma
 
             Color nameColor = character.FocusedCharacter.GetNameColor();
             GUI.DrawString(spriteBatch, textPos, focusName, nameColor, Color.Black * 0.7f, 2, GUIStyle.SubHeadingFont, ForceUpperCase.No);
-            textPos.X += 10.0f * GUI.Scale;
             textPos.Y += GUIStyle.SubHeadingFont.MeasureString(focusName).Y;
+
+            if (character.FocusedCharacter.Info?.Title != null && !character.FocusedCharacter.Info.Title.IsNullOrEmpty())
+            {
+                GUI.DrawString(spriteBatch, textPos, character.FocusedCharacter.Info.Title, nameColor, Color.Black * 0.7f, 2, GUIStyle.SubHeadingFont, ForceUpperCase.No);
+                textPos.Y += GUIStyle.SubHeadingFont.MeasureString(character.FocusedCharacter.Info.Title.Value).Y;
+            }
+            textPos.X += 10.0f * GUI.Scale;
 
             if (!character.FocusedCharacter.IsIncapacitated && character.FocusedCharacter.IsPet)
             {

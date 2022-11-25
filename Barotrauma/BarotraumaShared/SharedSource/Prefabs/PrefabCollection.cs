@@ -38,6 +38,14 @@ namespace Barotrauma
         }
 
         /// <summary>
+        /// Constructor with only the OnSort callback provided.
+        /// </summary>
+        public PrefabCollection(Action? onSort) : this()
+        {
+            OnSort = onSort;
+        }
+
+        /// <summary>
         /// Method to be called when calling Add(T prefab, bool override).
         /// If provided, the method is called only if Add succeeds.
         /// </summary>

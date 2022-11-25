@@ -37,17 +37,6 @@ namespace Barotrauma
             }
         }
 
-#if DEBUG
-        [Editable, Serialize("", IsPropertySaveable.Yes)]
-#else
-        [Serialize("", IsPropertySaveable.Yes)]
-#endif
-        public string SpecialTag
-        {
-            get;
-            set;
-        }
-
         partial void InitProjSpecific()
         {
             Prefab.Sprite?.EnsureLazyLoaded();
@@ -174,7 +163,7 @@ namespace Barotrauma
                 OnClicked = (button, data) =>
                 {
                     Sprite.ReloadXML();
-                    Sprite.ReloadTexture(updateAllSprites: true);
+                    Sprite.ReloadTexture();
                     return true;
                 }
             };

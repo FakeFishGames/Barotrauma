@@ -63,7 +63,7 @@ namespace Barotrauma
             files = contentPackage.Files.Select(File.FromContentFile).ToList();
             ModVersion = IncrementModVersion(contentPackage.ModVersion);
             IsCore = contentPackage is CorePackage;
-            SteamWorkshopId = contentPackage.SteamWorkshopId;
+            UgcId = contentPackage.UgcId;
             ExpectedHash = contentPackage.Hash;
             InstallTime = contentPackage.InstallTime;
         }
@@ -74,7 +74,7 @@ namespace Barotrauma
             get => name;
             set
             {
-                var charsToRemove = Path.GetInvalidFileNameChars();
+                var charsToRemove = Path.GetInvalidFileNameCharsCrossPlatform();
                 name = string.Concat(value.Where(c => !charsToRemove.Contains(c)));
             }
         }
@@ -90,9 +90,9 @@ namespace Barotrauma
 
         public bool IsCore = false;
 
-        public UInt64 SteamWorkshopId = 0;
+        public Option<ContentPackageId> UgcId = Option<ContentPackageId>.None();
 
-        public DateTime? InstallTime = null;
+        public Option<DateTime> InstallTime = Option<DateTime>.None();
 
         public bool HasFile(File file)
             => Files.Any(f =>
@@ -120,7 +120,7 @@ namespace Barotrauma
         public void DiscardHashAndInstallTime()
         {
             ExpectedHash = null;
-            InstallTime = null;
+            InstallTime = Option<DateTime>.None();
         }
         
         public static string IncrementModVersion(string modVersion)
@@ -155,11 +155,11 @@ namespace Barotrauma
             addRootAttribute("name", Name);
             if (!ModVersion.IsNullOrEmpty()) { addRootAttribute("modversion", ModVersion); }
             addRootAttribute("corepackage", IsCore);
-            if (SteamWorkshopId != 0) { addRootAttribute("steamworkshopid", SteamWorkshopId); }
+            if (UgcId.TryUnwrap(out var ugcId) && ugcId is SteamWorkshopId steamWorkshopId) { addRootAttribute("steamworkshopid", steamWorkshopId.Value); }
             addRootAttribute("gameversion", GameMain.Version);
             if (AltNames.Any()) { addRootAttribute("altnames", string.Join(",", AltNames)); }
             if (ExpectedHash != null) { addRootAttribute("expectedhash", ExpectedHash.StringRepresentation); }
-            if (InstallTime != null) { addRootAttribute("installtime", ToolBox.Epoch.FromDateTime(InstallTime.Value)); }
+            if (InstallTime.TryUnwrap(out var installTime)) { addRootAttribute("installtime", ToolBox.Epoch.FromDateTime(installTime)); }
             
             files.ForEach(f => rootElement.Add(f.ToXElement()));
             

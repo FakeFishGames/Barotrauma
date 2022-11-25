@@ -562,7 +562,7 @@ namespace Barotrauma
                         break;
                     }
                     //if putting an item to a container with a max stack size of 1, only put one item from the stack
-                    if (quickUseAction == QuickUseAction.PutToContainer && (character.SelectedConstruction?.GetComponent<ItemContainer>()?.MaxStackSize ?? 0) <= 1)
+                    if (quickUseAction == QuickUseAction.PutToContainer && (character.SelectedItem?.GetComponent<ItemContainer>()?.MaxStackSize ?? 0) <= 1)
                     {
                         break;
                     }
@@ -595,14 +595,14 @@ namespace Barotrauma
 
                 if (rootInventory != null &&
                     rootInventory.Owner != Character.Controlled &&
-                    rootInventory.Owner != Character.Controlled.SelectedConstruction &&
+                    rootInventory.Owner != Character.Controlled.SelectedItem &&
                     rootInventory.Owner != Character.Controlled.SelectedCharacter)
                 {
                     //allow interacting if the container is linked to the item the character is interacting with
                     if (!(rootContainer != null && 
                         rootContainer.DisplaySideBySideWhenLinked && 
-                        Character.Controlled.SelectedConstruction != null &&
-                        rootContainer.linkedTo.Contains(Character.Controlled.SelectedConstruction)))
+                        Character.Controlled.SelectedItem != null &&
+                        rootContainer.linkedTo.Contains(Character.Controlled.SelectedItem)))
                     {
                         DraggingItems.Clear();
                     }
@@ -756,7 +756,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        var selectedContainer = character.SelectedConstruction?.GetComponent<ItemContainer>();
+                        var selectedContainer = character.SelectedItem?.GetComponent<ItemContainer>();
                         if (selectedContainer != null &&
                             selectedContainer.Inventory != null &&
                             !selectedContainer.Inventory.Locked)
@@ -775,7 +775,8 @@ namespace Barotrauma
             else
             {
                 bool isEquippable = item.AllowedSlots.Any(s => s != InvSlotType.Any);
-                var selectedContainer = character.SelectedConstruction?.GetComponent<ItemContainer>();
+                var selectedContainer = character.SelectedItem?.GetComponent<ItemContainer>();
+
                 if (selectedContainer != null && 
                     selectedContainer.Inventory != null && 
                     !selectedContainer.Inventory.Locked && 
@@ -930,7 +931,7 @@ namespace Barotrauma
                     }
                     break;
                 case QuickUseAction.PutToContainer:
-                    var selectedContainer = character.SelectedConstruction?.GetComponent<ItemContainer>();
+                    var selectedContainer = character.SelectedItem?.GetComponent<ItemContainer>();
                     if (selectedContainer != null && selectedContainer.Inventory != null)
                     {
                         //player has selected the inventory of another item -> attempt to move the item there
@@ -965,8 +966,8 @@ namespace Barotrauma
                     }
                     break;
                 case QuickUseAction.PutToEquippedItem:
-
-                    foreach (Item heldItem in character.HeldItems)
+                    //order by the condition of the contained item to prefer putting into the item with the emptiest ammo/battery/tank
+                    foreach (Item heldItem in character.HeldItems.OrderBy(it => it.ContainedItems.FirstOrDefault()?.Condition ?? 0.0f))
                     {
                         if (heldItem.OwnInventory == null) { continue; }
                         //don't allow swapping if we're moving items into an item with 1 slot holding a stack of items

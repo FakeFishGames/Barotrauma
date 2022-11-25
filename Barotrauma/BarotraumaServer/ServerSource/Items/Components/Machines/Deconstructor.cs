@@ -18,9 +18,9 @@ namespace Barotrauma.Items.Components
 
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            msg.Write(user?.ID ?? 0);
-            msg.Write(IsActive);
-            msg.Write(progressTimer);
+            msg.WriteUInt16(user?.ID ?? 0);
+            msg.WriteBoolean(IsActive);
+            msg.WriteSingle(progressTimer);
         }
     }
 }

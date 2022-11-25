@@ -95,36 +95,41 @@ namespace Barotrauma
                 randSync = Rand.RandSync.Unsynced; 
             }
 
-            //if any of the escortees have a job defined, try to use a spawnpoint designated for that job
+            List<HumanPrefab> humanPrefabsToSpawn = new List<HumanPrefab>();
             foreach (XElement element in characterConfig.Elements())
             {
+                int count = CalculateScalingEscortedCharacterCount(inMission: true);
                 var humanPrefab = GetHumanPrefabFromElement(element);
-                if (humanPrefab == null || string.IsNullOrEmpty(humanPrefab.Job) || humanPrefab.Job.Equals("any", StringComparison.OrdinalIgnoreCase)) { continue; }
+                for (int i = 0; i < count; i++)
+                {
+                    humanPrefabsToSpawn.Add(humanPrefab);
+                }
+            }
 
-                var jobPrefab = humanPrefab.GetJobPrefab();
+            //if any of the escortees have a job defined, try to use a spawnpoint designated for that job
+            foreach (var humanPrefab in humanPrefabsToSpawn)
+            {
+                if (humanPrefab == null || humanPrefab.Job.IsEmpty || humanPrefab.Job == "any") { continue; }
+                var jobPrefab = humanPrefab.GetJobPrefab(randSync);
                 if (jobPrefab != null)
                 {
                     var jobSpecificSpawnPos = WayPoint.GetRandom(SpawnType.Human, jobPrefab, Submarine.MainSub);
-                    if (jobSpecificSpawnPos != null) 
+                    if (jobSpecificSpawnPos != null)
                     {
                         explicitStayInHullPos = jobSpecificSpawnPos;
                         break;
                     }
                 }
             }
-
-            foreach (XElement element in characterConfig.Elements())
+            foreach (var humanPrefab in humanPrefabsToSpawn)
             {
-                int count = CalculateScalingEscortedCharacterCount(inMission: true);
-                for (int i = 0; i < count; i++)
+                Character spawnedCharacter = CreateHuman(humanPrefab, characters, characterItems, Submarine.MainSub, CharacterTeamType.FriendlyNPC, explicitStayInHullPos, humanPrefabRandSync: randSync);
+                if (spawnedCharacter.AIController is HumanAIController humanAI)
                 {
-                    Character spawnedCharacter = CreateHuman(GetHumanPrefabFromElement(element), characters, characterItems, Submarine.MainSub, CharacterTeamType.FriendlyNPC, explicitStayInHullPos, humanPrefabRandSync: randSync);
-                    if (spawnedCharacter.AIController is HumanAIController humanAI)
-                    {
-                        humanAI.InitMentalStateManager();
-                    }
+                    humanAI.InitMentalStateManager();
                 }
             }
+
 
             if (terroristChance > 0f)
             {
@@ -300,7 +305,7 @@ namespace Barotrauma
             return character.LockHands && character.HasTeamChange(TerroristTeamChangeIdentifier);
         }
 
-        public override void End()
+        protected override bool DetermineCompleted()
         {
             if (Submarine.MainSub != null && Submarine.MainSub.AtEndExit)
             {
@@ -316,11 +321,14 @@ namespace Barotrauma
 
                 if (friendliesSurvived && !terroristsSurvived && !vipDied)
                 {
-                    GiveReward();
-                    completed = true;
+                    return true;
                 }
             }
+            return false;
+        }
 
+        protected override void EndMissionSpecific(bool completed)
+        {
             if (!IsClient)
             {
                 foreach (Character character in characters)

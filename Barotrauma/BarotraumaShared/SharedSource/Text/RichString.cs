@@ -181,7 +181,7 @@ namespace Barotrauma
         public static bool operator !=(string? a, RichString? b) => !(a == b);
     }
     
-    public class StripRichTagsLString : LocalizedString
+    class StripRichTagsLString : LocalizedString
     {
         public readonly RichString RichStr;
 

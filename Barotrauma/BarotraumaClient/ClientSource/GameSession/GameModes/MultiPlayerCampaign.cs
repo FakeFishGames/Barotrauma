@@ -115,12 +115,16 @@ namespace Barotrauma
 
         partial void InitProjSpecific()
         {
-            var buttonContainer = new GUILayoutGroup(HUDLayoutSettings.ToRectTransform(HUDLayoutSettings.ButtonAreaTop, GUI.Canvas),
-                isHorizontal: true, childAnchor: Anchor.CenterRight)
-            {
-                CanBeFocused = false
-            };
+            CreateButtons();
+        }
 
+        public override void HUDScaleChanged()
+        {
+            CreateButtons();
+        }
+
+        private void CreateButtons()
+        {
             int buttonHeight = (int) (GUI.Scale * 40),
                 buttonWidth = GUI.IntScale(450),
                 buttonCenter = buttonHeight / 2,
@@ -166,8 +170,6 @@ namespace Barotrauma
                 },
                 UserData = "ReadyCheckButton"
             };
-            
-            buttonContainer.Recalculate();
         }
 
         private void InitCampaignUI()
@@ -311,7 +313,7 @@ namespace Barotrauma
 
             if (prevControlled != null)
             {
-                prevControlled.SelectedConstruction = null;
+                prevControlled.SelectedItem = prevControlled.SelectedSecondaryItem = null;
                 if (prevControlled.AIController != null)
                 {
                     prevControlled.AIController.Enabled = true;
@@ -362,7 +364,7 @@ namespace Barotrauma
             float t = 0.0f;
             while (t < fadeOutDuration || endTransition.Running)
             {
-                t += CoroutineManager.UnscaledDeltaTime;
+                t += CoroutineManager.DeltaTime;
                 overlayColor = Color.Lerp(Color.Transparent, Color.White, t / fadeOutDuration);
                 yield return CoroutineStatus.Running;
             }
@@ -469,7 +471,6 @@ namespace Barotrauma
         {
             base.End(transitionType);
             ForceMapUI = ShowCampaignUI = false;
-            UpgradeManager.CanUpgrade = true;
             
             // remove all event dialogue boxes
             GUIMessageBox.MessageBoxes.ForEachMod(mb =>
@@ -539,37 +540,37 @@ namespace Barotrauma
         {
             System.Diagnostics.Debug.Assert(map.Locations.Count < UInt16.MaxValue);
 
-            msg.Write(map.CurrentLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.CurrentLocationIndex);
-            msg.Write(map.SelectedLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.SelectedLocationIndex);
+            msg.WriteUInt16(map.CurrentLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.CurrentLocationIndex);
+            msg.WriteUInt16(map.SelectedLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.SelectedLocationIndex);
 
             var selectedMissionIndices = map.GetSelectedMissionIndices();
-            msg.Write((byte)selectedMissionIndices.Count());
+            msg.WriteByte((byte)selectedMissionIndices.Count());
             foreach (int selectedMissionIndex in selectedMissionIndices)
             {
-                msg.Write((byte)selectedMissionIndex);
+                msg.WriteByte((byte)selectedMissionIndex);
             }
-            msg.Write(PurchasedHullRepairs);
-            msg.Write(PurchasedItemRepairs);
-            msg.Write(PurchasedLostShuttles);
+            msg.WriteBoolean(PurchasedHullRepairs);
+            msg.WriteBoolean(PurchasedItemRepairs);
+            msg.WriteBoolean(PurchasedLostShuttles);
 
             WriteItems(msg, CargoManager.ItemsInBuyCrate);
             WriteItems(msg, CargoManager.ItemsInSellFromSubCrate);
             WriteItems(msg, CargoManager.PurchasedItems);
             WriteItems(msg, CargoManager.SoldItems);
 
-            msg.Write((ushort)UpgradeManager.PurchasedUpgrades.Count);
+            msg.WriteUInt16((ushort)UpgradeManager.PurchasedUpgrades.Count);
             foreach (var (prefab, category, level) in UpgradeManager.PurchasedUpgrades)
             {
-                msg.Write(prefab.Identifier);
-                msg.Write(category.Identifier);
-                msg.Write((byte)level);
+                msg.WriteIdentifier(prefab.Identifier);
+                msg.WriteIdentifier(category.Identifier);
+                msg.WriteByte((byte)level);
             }
 
-            msg.Write((ushort)UpgradeManager.PurchasedItemSwaps.Count);
+            msg.WriteUInt16((ushort)UpgradeManager.PurchasedItemSwaps.Count);
             foreach (var itemSwap in UpgradeManager.PurchasedItemSwaps)
             {
-                msg.Write(itemSwap.ItemToRemove.ID);
-                msg.Write(itemSwap.ItemToInstall?.Identifier ?? Identifier.Empty);
+                msg.WriteUInt16(itemSwap.ItemToRemove.ID);
+                msg.WriteIdentifier(itemSwap.ItemToInstall?.Identifier ?? Identifier.Empty);
             }
         }
 
@@ -760,6 +761,7 @@ namespace Barotrauma
                             item.PendingItemSwap = null;
                         }
                     }
+                    campaign.CampaignUI?.UpgradeStore?.RequestRefresh();
                 }
             }
 

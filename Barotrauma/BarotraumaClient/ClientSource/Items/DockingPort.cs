@@ -185,7 +185,7 @@ namespace Barotrauma.Items.Components
 
         public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
-            msg.Write((byte)allowOutpostAutoDocking);
+            msg.WriteByte((byte)allowOutpostAutoDocking);
         }
     }
 }

@@ -41,6 +41,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpFont.NetStandard", "Li
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsTest", "Barotrauma\BarotraumaTest\WindowsTest.csproj", "{C7212AE2-A925-4225-A639-AE0653EF65B0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeployAll", "Deploy\DeployAll\DeployAll.csproj", "{C98FE0D0-BC7D-4806-B592-734B53016FD8}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Libraries\GameAnalytics\GA-SDK-MONO-SHARED\GA-SDK-MONO-SHARED.projitems*{95c4d59d-9be4-4278-b4f8-46c0ba1a3916}*SharedItemsImports = 5
@@ -123,6 +125,12 @@ Global
 		{C7212AE2-A925-4225-A639-AE0653EF65B0}.Release|x64.Build.0 = Release|Any CPU
 		{C7212AE2-A925-4225-A639-AE0653EF65B0}.Unstable|x64.ActiveCfg = Debug|Any CPU
 		{C7212AE2-A925-4225-A639-AE0653EF65B0}.Unstable|x64.Build.0 = Debug|Any CPU
+		{C98FE0D0-BC7D-4806-B592-734B53016FD8}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C98FE0D0-BC7D-4806-B592-734B53016FD8}.Debug|x64.Build.0 = Debug|Any CPU
+		{C98FE0D0-BC7D-4806-B592-734B53016FD8}.Release|x64.ActiveCfg = Release|Any CPU
+		{C98FE0D0-BC7D-4806-B592-734B53016FD8}.Release|x64.Build.0 = Release|Any CPU
+		{C98FE0D0-BC7D-4806-B592-734B53016FD8}.Unstable|x64.ActiveCfg = Debug|Any CPU
+		{C98FE0D0-BC7D-4806-B592-734B53016FD8}.Unstable|x64.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -141,6 +149,7 @@ Global
 		{1F318AC4-F808-4130-867F-B98DF9AA8F95} = {DE36F45F-F09E-4719-B953-00D148F7722A}
 		{6911872D-40EF-400C-B0A1-9985A19ED488} = {DE36F45F-F09E-4719-B953-00D148F7722A}
 		{C7212AE2-A925-4225-A639-AE0653EF65B0} = {78A9F0AA-5519-407A-9B72-2A09F5DF7068}
+		{C98FE0D0-BC7D-4806-B592-734B53016FD8} = {F35DF9BF-0BED-4FEF-A51C-DD83C531882F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {17032EAB-554B-4B44-A4F6-EFB177ACAB7A}

@@ -131,9 +131,9 @@ namespace Barotrauma
             LoadContent(contentPath, videoSettings, textSettings, contentId, startPlayback, new RawLString(""), null);
         }
 
-        public void LoadContent(string contentPath, VideoSettings videoSettings, TextSettings textSettings, Identifier contentId, bool startPlayback, LocalizedString objective, Action callback = null)
+        public void LoadContent(string contentPath, VideoSettings videoSettings, TextSettings textSettings, Identifier contentId, bool startPlayback, LocalizedString objective, Action onStop = null)
         {
-            callbackOnStop = callback;
+            callbackOnStop = onStop;
             filePath = contentPath + videoSettings.File;
 
             if (!File.Exists(filePath))

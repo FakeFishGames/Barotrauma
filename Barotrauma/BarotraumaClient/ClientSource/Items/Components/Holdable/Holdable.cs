@@ -69,8 +69,8 @@ namespace Barotrauma.Items.Components
             var eventData = ExtractEventData<EventData>(extraData);
 
             Vector2 attachPos = eventData.AttachPos;
-            msg.Write(attachPos.X);
-            msg.Write(attachPos.Y);
+            msg.WriteSingle(attachPos.X);
+            msg.WriteSingle(attachPos.Y);
         }
 
         public override void ClientEventRead(IReadMessage msg, float sendingTime)

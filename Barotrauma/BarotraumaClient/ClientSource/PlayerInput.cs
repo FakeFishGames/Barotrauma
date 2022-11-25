@@ -132,11 +132,11 @@ namespace Barotrauma
             }
             else if (a.MouseButton != MouseButton.None)
             {
-                return a.MouseButton == b.MouseButton;
+                return !(b is null) && a.MouseButton == b.MouseButton;
             }
             else
             {
-                return a.Key.Equals(b.Key);
+                return !(b is null) && a.Key.Equals(b.Key);
             }
         }
 

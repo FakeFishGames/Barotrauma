@@ -1,10 +1,7 @@
 using Barotrauma.Extensions;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -36,6 +33,7 @@ namespace Barotrauma
                 ("crew", v => TagCrew()),
                 ("humanprefabidentifier", TagHumansByIdentifier),
                 ("structureidentifier", TagStructuresByIdentifier),
+                ("structurespecialtag", TagStructuresBySpecialTag),
                 ("itemidentifier", TagItemsByIdentifier),
                 ("itemtag", TagItemsByTag),
                 ("hullname", TagHullsByName)
@@ -98,6 +96,11 @@ namespace Barotrauma
         private void TagStructuresByIdentifier(Identifier identifier)
         {
             ParentEvent.AddTargetPredicate(Tag, e => e is Structure s && SubmarineTypeMatches(s.Submarine) && s.Prefab.Identifier == identifier);
+        }
+
+        private void TagStructuresBySpecialTag(Identifier tag)
+        {
+            ParentEvent.AddTargetPredicate(Tag, e => e is Structure s && SubmarineTypeMatches(s.Submarine) && s.SpecialTag.ToIdentifier() == tag);
         }
 
         private void TagItemsByIdentifier(Identifier identifier)

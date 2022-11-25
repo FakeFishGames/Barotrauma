@@ -19,7 +19,7 @@ namespace Barotrauma
 
         public int Variant;
 
-        public Skill PrimarySkill { get; }
+        public Skill PrimarySkill { get; private set; }
 
         public Job(JobPrefab jobPrefab) : this(jobPrefab, randSync: Rand.RandSync.Unsynced, variant: 0) { }
 
@@ -102,9 +102,14 @@ namespace Barotrauma
         public void OverrideSkills(Dictionary<Identifier, float> newSkills)
         {
             skills.Clear();            
-            foreach (var newSkill in newSkills)
+            foreach (var newSkillInfo in newSkills)
             {
-                skills.Add(newSkill.Key, new Skill(newSkill.Key, newSkill.Value));
+                var newSkill = new Skill(newSkillInfo.Key, newSkillInfo.Value);
+                if (PrimarySkill != null && newSkill.Identifier == PrimarySkill.Identifier)
+                {
+                    PrimarySkill = newSkill;
+                }
+                skills.Add(newSkillInfo.Key, newSkill);
             }
         }
 

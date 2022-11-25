@@ -2,6 +2,8 @@
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Linq;
+using Barotrauma.Extensions;
+using System;
 
 namespace Barotrauma
 {
@@ -54,7 +56,7 @@ namespace Barotrauma
             voteCountMax[voteType] = value;
         }
 
-        public void UpdateVoteTexts(List<Client> clients, VoteType voteType)
+        public void UpdateVoteTexts(IEnumerable<Client> clients, VoteType voteType)
         {
             switch (voteType)
             {
@@ -92,7 +94,7 @@ namespace Barotrauma
 
         private void SetVoteText(GUIListBox listBox, object userData, int votes)
         {
-            if (userData == null) return;
+            if (userData == null) { return; }
             foreach (GUIComponent comp in listBox.Content.Children)
             {
                 if (comp.UserData != userData) { continue; }
@@ -110,37 +112,54 @@ namespace Barotrauma
             }
         }
 
+        public void ResetVotes(IEnumerable<Client> connectedClients)
+        {
+            foreach (Client client in connectedClients)
+            {
+                client.ResetVotes();
+            }
+
+            foreach (VoteType voteType in Enum.GetValues(typeof(VoteType)))
+            {
+                SetVoteCountYes(voteType, 0);
+                SetVoteCountNo(voteType, 0);
+                SetVoteCountMax(voteType, 0);
+            }
+            UpdateVoteTexts(connectedClients, VoteType.Mode);
+            UpdateVoteTexts(connectedClients, VoteType.Sub);
+        }
+
         public void ClientWrite(IWriteMessage msg, VoteType voteType, object data)
         {
-            msg.Write((byte)voteType);
+            msg.WriteByte((byte)voteType);
 
             switch (voteType)
             {
                 case VoteType.Sub:
                     if (!(data is SubmarineInfo sub)) { return; }
-                    msg.Write(sub.EqualityCheckVal);
+                    msg.WriteInt32(sub.EqualityCheckVal);
                     if (sub.EqualityCheckVal == 0)
                     {
                         //sub doesn't exist client-side, use hash to let the server know which one we voted for
-                        msg.Write(sub.MD5Hash.StringRepresentation);
+                        msg.WriteString(sub.MD5Hash.StringRepresentation);
                     }
                     break;
                 case VoteType.Mode:
                     if (!(data is GameModePreset gameMode)) { return; }
-                    msg.Write(gameMode.Identifier);
+                    msg.WriteIdentifier(gameMode.Identifier);
                     break;
                 case VoteType.EndRound:
                     if (!(data is bool)) { return; }
-                    msg.Write((bool)data);
+                    msg.WriteBoolean((bool)data);
                     break;
                 case VoteType.Kick:
                     if (!(data is Client votedClient)) { return; }
 
-                    msg.Write(votedClient.ID);
+                    msg.WriteByte(votedClient.SessionId);
                     break;
                 case VoteType.StartRound:
                     if (!(data is bool)) { return; }
-                    msg.Write((bool)data);
+                    msg.WriteBoolean((bool)data);
                     break;
                 case VoteType.PurchaseAndSwitchSub:
                 case VoteType.PurchaseSub:
@@ -148,22 +167,22 @@ namespace Barotrauma
                     if (data is (SubmarineInfo voteSub, bool transferItems))
                     { 
                         //initiate sub vote
-                        msg.Write(true);
-                        msg.Write(voteSub.Name);
-                        msg.Write(transferItems);
+                        msg.WriteBoolean(true);
+                        msg.WriteString(voteSub.Name);
+                        msg.WriteBoolean(transferItems);
                     }
                     else
                     {
                         // vote
                         if (!(data is int)) { return; }
-                        msg.Write(false);
-                        msg.Write((int)data);
+                        msg.WriteBoolean(false);
+                        msg.WriteInt32((int)data);
                     }
                     break;
                 case VoteType.TransferMoney:
                     if (!(data is int)) { return; }
-                    msg.Write(false); //not initiating a vote
-                    msg.Write((int)data);
+                    msg.WriteBoolean(false); //not initiating a vote
+                    msg.WriteInt32((int)data);
                     break;
             }
 
@@ -233,21 +252,22 @@ namespace Barotrauma
                     DebugConsole.ThrowError("Failed to cast vote type \"" + voteTypeByte + "\"", e);
                 }
 
-                byte yesClientCount = inc.ReadByte();
-                for (int i = 0; i < yesClientCount; i++)
+                int readVote(int value)
                 {
-                    byte clientID = inc.ReadByte();
-                    var matchingClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.ID == clientID);
-                    matchingClient?.SetVote(voteType, 2);
-                }
+                    byte clientCount = inc.ReadByte();
+                    for (int i = 0; i < clientCount; i++)
+                    {
+                        byte clientId = inc.ReadByte();
+                        var matchingClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.SessionId == clientId);
+                        matchingClient?.SetVote(voteType, value);
+                    }
 
-                byte noClientCount = inc.ReadByte();
-                for (int i = 0; i < noClientCount; i++)
-                {
-                    byte clientID = inc.ReadByte();
-                    var matchingClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.ID == clientID);
-                    matchingClient?.SetVote(voteType, 1);
+                    return clientCount;
                 }
+                
+                int yesClientCount = readVote(value: 2);
+                int noClientCount = readVote(value: 1);
+
                 byte maxClientCount = inc.ReadByte();
 
                 SetVoteCountYes(voteType, yesClientCount);
@@ -258,10 +278,10 @@ namespace Barotrauma
                 {
                     case VoteState.Started:
                         byte starterID = inc.ReadByte();
-                        Client starterClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.ID == starterID);
+                        Client starterClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.SessionId == starterID);
                         float timeOut = inc.ReadByte();
 
-                        Client myClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.ID == GameMain.Client.ID);
+                        Client myClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.SessionId == GameMain.Client.SessionId);
                         if (myClient == null || !myClient.InGame)  { return; }
 
                         switch (voteType)
@@ -284,8 +304,8 @@ namespace Barotrauma
                                 byte toClientId = inc.ReadByte();
                                 int transferAmount = inc.ReadInt32();
 
-                                Client fromClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.ID == fromClientId);
-                                Client toClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.ID == toClientId);
+                                Client fromClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.SessionId == fromClientId);
+                                Client toClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.SessionId == toClientId);
                                 GameMain.Client.ShowMoneyTransferVoteInterface(starterClient, fromClient, transferAmount, toClient, timeOut);
                                 break;
                         }
@@ -343,8 +363,8 @@ namespace Barotrauma
             byte readyClientCount = inc.ReadByte();
             for (int i = 0; i < readyClientCount; i++)
             {
-                byte clientID = inc.ReadByte();
-                var matchingClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.ID == clientID);
+                byte clientId = inc.ReadByte();
+                var matchingClient = GameMain.NetworkMember.ConnectedClients.Find(c => c.SessionId == clientId);
                 matchingClient?.SetVote(VoteType.StartRound, true);
             }
             UpdateVoteTexts(GameMain.NetworkMember.ConnectedClients, VoteType.StartRound);

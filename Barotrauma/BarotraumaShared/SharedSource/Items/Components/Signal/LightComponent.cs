@@ -248,8 +248,19 @@ namespace Barotrauma.Items.Components
 
         public override void OnMapLoaded()
         {
-            if (item.body == null && powerConsumption <= 0.0f && Parent == null && turret == null && IsOn &&
-                (statusEffectLists == null || !statusEffectLists.ContainsKey(ActionType.OnActive)) && 
+            CheckIfNeedsUpdate();
+        }
+
+        public void CheckIfNeedsUpdate()
+        {
+            if (!IsOn) 
+            {
+                base.IsActive = false;
+                return; 
+            }
+
+            if (item.body == null && powerConsumption <= 0.0f && Parent == null && turret == null &&
+                (statusEffectLists == null || !statusEffectLists.ContainsKey(ActionType.OnActive)) &&
                 (IsActiveConditionals == null || IsActiveConditionals.Count == 0))
             {
                 lightBrightness = 1.0f;
@@ -260,6 +271,10 @@ namespace Barotrauma.Items.Components
 #if CLIENT
                 Light.ParentSub = item.Submarine;
 #endif
+            }
+            else
+            {
+                base.IsActive = true;
             }
         }
 

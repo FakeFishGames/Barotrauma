@@ -3,7 +3,9 @@ using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
+using PositionType = Barotrauma.Level.PositionType;
 
 namespace Barotrauma
 {
@@ -29,6 +31,25 @@ namespace Barotrauma
 
         private readonly HashSet<Level.Cave> caves = new HashSet<Level.Cave>();
 
+        private readonly PositionType positionType = PositionType.Cave;
+        /// <remarks>
+        /// The list order is important.
+        /// It defines the order in which we "override" <see cref="positionType"/> in case no valid position types are found
+        /// in the level when generating them in <see cref="Level.GenerateMissionResources(ItemPrefab, int, PositionType, out float)"/>.
+        /// </remarks>
+        public static readonly ImmutableArray<PositionType> ValidPositionTypes = new PositionType[]
+        {
+            PositionType.Cave,
+            PositionType.SidePath,
+            PositionType.MainPath,
+            PositionType.AbyssCave,
+        }.ToImmutableArray();
+
+        /// <summary>
+        /// Percentage. Value between 0 and 1.
+        /// </summary>
+        private readonly float resourceHandoverAmount;
+
         public override IEnumerable<Vector2> SonarPositions
         {
             get
@@ -39,8 +60,23 @@ namespace Barotrauma
             }
         }
 
+        public override LocalizedString SuccessMessage => ModifyMessage(base.SuccessMessage);
+        public override LocalizedString FailureMessage => ModifyMessage(base.FailureMessage);
+        public override LocalizedString Description => ModifyMessage(description);
+        public override LocalizedString Name => ModifyMessage(base.Name, false);
+        public override LocalizedString SonarLabel => ModifyMessage(base.SonarLabel, false);
+
         public MineralMission(MissionPrefab prefab, Location[] locations, Submarine sub) : base(prefab, locations, sub)
         {
+            var positionType = prefab.ConfigElement.GetAttributeEnum("PositionType", in this.positionType);
+            if (ValidPositionTypes.Contains(positionType))
+            {
+                this.positionType = positionType;
+            }
+
+            float handoverAmount = prefab.ConfigElement.GetAttributeFloat("ResourceHandoverAmount", 0.0f);
+            resourceHandoverAmount = Math.Clamp(handoverAmount, 0.0f, 1.0f);
+
             var configElement = prefab.ConfigElement.GetChildElement("Items");
             foreach (var c in configElement.GetChildElements("Item"))
             {
@@ -92,27 +128,28 @@ namespace Barotrauma
             caves.Clear();
 
             if (IsClient) { return; }
-            foreach (var kvp in resourceClusters)
+
+            foreach ((Identifier identifier, ResourceCluster cluster) in resourceClusters)
             {
-                var prefab = ItemPrefab.Find(null, kvp.Key);
-                if (prefab == null)
+                if (MapEntityPrefab.FindByIdentifier(identifier) is not ItemPrefab prefab)
                 {
-                    DebugConsole.ThrowError("Error in MineralMission - " +
-                        "couldn't find an item prefab with the identifier " + kvp.Key);
+                    DebugConsole.ThrowError($"Error in MineralMission: couldn't find an item prefab (identifier: \"{identifier}\")");
                     continue;
                 }
-                var spawnedResources = level.GenerateMissionResources(prefab, kvp.Value.Amount, out float rotation);
-                if (spawnedResources.Count < kvp.Value.Amount)
-                {
-                    DebugConsole.ThrowError("Error in MineralMission - " +
-                        "spawned " + spawnedResources.Count + "/" + kvp.Value.Amount + " of " + prefab.Name);
-                }
-                if (spawnedResources.None()) { continue; }
-                this.spawnedResources.Add(kvp.Key, spawnedResources);
 
-                foreach (Level.Cave cave in Level.Loaded.Caves)
+                var spawnedResources = level.GenerateMissionResources(prefab, cluster.Amount, positionType, out float rotation, caves);
+                if (spawnedResources.Count < cluster.Amount)
                 {
-                    foreach (Item spawnedResource in spawnedResources)
+                    DebugConsole.ThrowError($"Error in MineralMission: spawned only {spawnedResources.Count}/{cluster.Amount} of {prefab.Name}");
+                }
+
+                if (spawnedResources.None()) { continue; }
+
+                this.spawnedResources.Add(identifier, spawnedResources);
+
+                foreach (var cave in Level.Loaded.Caves)
+                {
+                    foreach (var spawnedResource in spawnedResources)
                     {
                         if (cave.Area.Contains(spawnedResource.WorldPosition))
                         {
@@ -123,6 +160,7 @@ namespace Barotrauma
                     }
                 }
             }
+
             CalculateMissionClusterPositions();
             FindRelevantLevelResources();
         }
@@ -143,16 +181,38 @@ namespace Barotrauma
             }
         }
 
-        public override void End()
+        protected override bool DetermineCompleted()
         {
-            if (EnoughHaveBeenCollected())
+            return EnoughHaveBeenCollected();
+        }
+
+        protected override void EndMissionSpecific(bool completed)
+        {
+            failed = !completed && state > 0;
+            if (completed)
             {
-                if (Prefab.LocationTypeChangeOnCompleted != null)
+                if (!IsClient)
                 {
-                    ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
+                    // When mission is completed successfully, half of the resources will be removed from the player (i.e. given to the outpost as a part of the mission)
+                    var handoverResources = new List<Item>();
+                    foreach (Identifier identifier in resourceClusters.Keys)
+                    {
+                        if (relevantLevelResources.TryGetValue(identifier, out var availableResources))
+                        {
+                            var collectedResources = availableResources.Where(HasBeenCollected);
+                            if (!collectedResources.Any()) { continue; }
+                            int handoverCount = (int)MathF.Round(resourceHandoverAmount * collectedResources.Count());
+                            for (int i = 0; i < handoverCount; i++)
+                            {
+                                handoverResources.Add(collectedResources.ElementAt(i));
+                            }
+                        }
+                    }
+                    foreach (var resource in handoverResources)
+                    {
+                        resource.Remove();
+                    }
                 }
-                GiveReward();
-                completed = true;
             }
             foreach (var kvp in spawnedResources)
             {
@@ -167,7 +227,6 @@ namespace Barotrauma
             spawnedResources.Clear();
             relevantLevelResources.Clear();
             missionClusterPositions.Clear();
-            failed = !completed && state > 0;
         }
 
         private void FindRelevantLevelResources()
@@ -235,6 +294,28 @@ namespace Barotrauma
                 }
                 pos /= itemCount;
                 missionClusterPositions.Add((kvp.Key, pos));
+            }
+        }
+
+        protected override LocalizedString ModifyMessage(LocalizedString message, bool color = true)
+        {
+            int i = 1;
+            foreach ((Identifier identifier, ResourceCluster cluster) in resourceClusters)
+            {
+                Replace($"[resourcename{i}]", ItemPrefab.FindByIdentifier(identifier)?.Name.Value ?? "");
+                Replace($"[resourcequantity{i}]", cluster.Amount.ToString());
+                i++;
+            }
+            Replace("[handoverpercentage]", ToolBox.GetFormattedPercentage(resourceHandoverAmount));
+            return message;
+
+            void Replace(string find, string replace)
+            {
+                if (color)
+                {
+                    replace = $"‖color:gui.orange‖{replace}‖end‖";
+                }
+                message = message.Replace(find, replace);
             }
         }
     }    

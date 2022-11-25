@@ -298,5 +298,15 @@ namespace Barotrauma.Extensions
 
             return null;
         }
+
+        public static IEnumerable<T> NotNull<T>(this IEnumerable<T?> source) where T : struct
+            => source
+                .Where(nullable => nullable.HasValue)
+                .Select(nullable => nullable.Value);
+        
+        public static IEnumerable<T> NotNone<T>(this IEnumerable<Option<T>> source)
+            => source
+                .OfType<Some<T>>()
+                .Select(some => some.Value);
     }
 }

@@ -29,7 +29,7 @@ namespace Barotrauma
 
             foreach (var npc in affectedNpcs)
             {
-                if (!(npc.AIController is HumanAIController humanAiController)) { continue; }
+                if (npc.AIController is not HumanAIController humanAiController) { continue; }
 
                 if (Wait)
                 {
@@ -62,7 +62,7 @@ namespace Barotrauma
             {
                 foreach (var npc in affectedNpcs)
                 {
-                    if (npc.Removed || !(npc.AIController is HumanAIController)) { continue; }
+                    if (npc.Removed || npc.AIController is not HumanAIController) { continue; }
                     if (gotoObjective != null)
                     {
                         gotoObjective.Abandon = true;

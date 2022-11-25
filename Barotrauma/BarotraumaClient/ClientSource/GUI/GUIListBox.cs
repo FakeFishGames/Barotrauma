@@ -49,7 +49,7 @@ namespace Barotrauma
                 //scaling the bar linearly with the resolution tends to make them too large on large resolutions
                 float desiredSize = 25.0f;
                 float scaledSize = desiredSize * GUI.Scale;
-                return (int)((desiredSize + scaledSize) / 2.0f);
+                return (int)Math.Min((desiredSize + scaledSize) / 2.0f, Rect.Height / 3);
             }
         }
 
@@ -57,7 +57,8 @@ namespace Barotrauma
         {
             SelectSingle,
             SelectMultiple,
-            RequireShiftToSelectMultiple
+            RequireShiftToSelectMultiple,
+            None
         }
         
         public SelectMode CurrentSelectMode = SelectMode.SelectSingle;
@@ -72,6 +73,8 @@ namespace Barotrauma
         }
 
         public bool HideChildrenOutsideFrame = true;
+
+        public bool ResizeContentToMakeSpaceForScrollBar = true;
 
         private bool useGridLayout;
 
@@ -419,7 +422,7 @@ namespace Barotrauma
         {
             dimensionsNeedsRecalculation = false;
             ContentBackground.RectTransform.Resize(Rect.Size);
-            bool reduceScrollbarSize = KeepSpaceForScrollBar ? ScrollBarEnabled : ScrollBarVisible;
+            bool reduceScrollbarSize = ResizeContentToMakeSpaceForScrollBar && (KeepSpaceForScrollBar ? ScrollBarEnabled : ScrollBarVisible);
             Point contentSize = reduceScrollbarSize ? CalculateFrameSize(ScrollBar.IsHorizontal, ScrollBarSize) : Rect.Size;
             Content.RectTransform.Resize(new Point((int)(contentSize.X - Padding.X - Padding.Z), (int)(contentSize.Y - Padding.Y - Padding.W)));
             if (!IsScrollBarOnDefaultSide) { Content.RectTransform.SetPosition(Anchor.BottomRight); }
@@ -598,16 +601,13 @@ namespace Barotrauma
                     yield return CoroutineStatus.Success;
                 }
                 float t = 0.0f;
-                float startScroll = BarScroll * BarSize;
+                float startScroll = BarScroll;
                 float distanceToTravel = ScrollBar.MaxValue - startScroll;
-                float progress = startScroll;
                 float speed = distanceToTravel / duration;
-
-                while (t < duration && !MathUtils.NearlyEqual(ScrollBar.MaxValue, progress))
+                while (t < duration && !MathUtils.NearlyEqual(ScrollBar.MaxValue, BarScroll))
                 {
                     t += CoroutineManager.DeltaTime;
-                    progress += speed * CoroutineManager.DeltaTime;
-                    BarScroll = progress;
+                    BarScroll += speed * CoroutineManager.DeltaTime;
                     yield return CoroutineStatus.Running;
                 }
 
@@ -1056,7 +1056,7 @@ namespace Barotrauma
 
         public void Select(int childIndex, Force force = Force.No, AutoScroll autoScroll = AutoScroll.Enabled, TakeKeyBoardFocus takeKeyBoardFocus = TakeKeyBoardFocus.No, PlaySelectSound playSelectSound = PlaySelectSound.No)
         {
-            if (childIndex >= Content.CountChildren || childIndex < 0) { return; }
+            if (childIndex >= Content.CountChildren || childIndex < 0 || CurrentSelectMode == SelectMode.None) { return; }
 
             GUIComponent child = Content.GetChild(childIndex);
             if (child is null) { return; }
@@ -1155,6 +1155,7 @@ namespace Barotrauma
 
         public void Select(IEnumerable<GUIComponent> children)
         {
+            if (CurrentSelectMode == SelectMode.None) { return; }
             Selected = true;
             selected.Clear();
             selected.AddRange(children.Where(c => Content.Children.Contains(c)));

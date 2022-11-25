@@ -162,22 +162,26 @@ namespace Barotrauma
 
             RemoveFogOfWar(StartLocation);
 
-            GenerateLocationConnectionVisuals();
+            GenerateAllLocationConnectionVisuals();
         }
 
-        partial void GenerateLocationConnectionVisuals()
+        partial void GenerateAllLocationConnectionVisuals()
         {
             foreach (LocationConnection connection in Connections)
             {
-                Vector2 connectionStart = connection.Locations[0].MapPosition;
-                Vector2 connectionEnd = connection.Locations[1].MapPosition;
-                float connectionLength = Vector2.Distance(connectionStart, connectionEnd);
-                int iterations = Math.Min((int)Math.Sqrt(connectionLength * generationParams.ConnectionIndicatorIterationMultiplier), 5);
-                connection.CrackSegments.Clear();
-                connection.CrackSegments.AddRange(MathUtils.GenerateJaggedLine(
-                    connectionStart, connectionEnd,
-                    iterations, connectionLength * generationParams.ConnectionIndicatorDisplacementMultiplier));
+                GenerateLocationConnectionVisuals(connection);
             }
+        }
+        partial void GenerateLocationConnectionVisuals(LocationConnection connection)
+        {
+            Vector2 connectionStart = connection.Locations[0].MapPosition;
+            Vector2 connectionEnd = connection.Locations[1].MapPosition;
+            float connectionLength = Vector2.Distance(connectionStart, connectionEnd);
+            int iterations = Math.Min((int)Math.Sqrt(connectionLength * generationParams.ConnectionIndicatorIterationMultiplier), 5);
+            connection.CrackSegments.Clear();
+            connection.CrackSegments.AddRange(MathUtils.GenerateJaggedLine(
+                connectionStart, connectionEnd,
+                iterations, connectionLength * generationParams.ConnectionIndicatorDisplacementMultiplier));
         }
 
         private void LocationChanged(Location prevLocation, Location newLocation)
@@ -414,7 +418,7 @@ namespace Barotrauma
                                 new GUIMessageBox(string.Empty, TextManager.Get("LockedPathTooltip"));
                             }
                             //clients aren't allowed to select the location without a permission
-                            else if ((GameMain.GameSession?.GameMode as CampaignMode)?.AllowedToManageCampaign(Networking.ClientPermissions.ManageMap) ?? false)
+                            else if (CampaignMode.AllowedToManageCampaign(Networking.ClientPermissions.ManageMap))
                             {
                                 connectionHighlightState = 0.0f;
                                 SelectedConnection = connection;
@@ -666,7 +670,7 @@ namespace Barotrauma
                             GUI.DrawRectangle(spriteBatch, new Rectangle((int)dPos.X, (int)dPos.Y, 256, 32), Color.White);
                         }
                         dPos.Y += 48;
-                        GUI.DrawString(spriteBatch, dPos, $"Difficulty: {location.LevelData.Difficulty.FormatZeroDecimal()}", Color.White, Color.Black * 0.8f, 4, font: GUIStyle.SmallFont);
+                        GUI.DrawString(spriteBatch, dPos, $"Difficulty: {location.LevelData.Difficulty.FormatSingleDecimal()}", Color.White, Color.Black * 0.8f, 4, font: GUIStyle.SmallFont);
                     }
                 }
             }
@@ -981,7 +985,7 @@ namespace Barotrauma
                 Vector2 center = rectCenter + (connection.CenterPos + viewOffset) * zoom;
                 if (viewArea.Contains(center) && connection.Biome != null)
                 {
-                    GUI.DrawString(spriteBatch, center, (connection.LevelData?.GenerationParams?.Identifier ?? connection.Biome.Identifier) + " (" + (int)connection.Difficulty + ")", Color.White);
+                    GUI.DrawString(spriteBatch, center, (connection.LevelData?.GenerationParams?.Identifier ?? connection.Biome.Identifier) + " (" + connection.Difficulty.FormatSingleDecimal() + ")", Color.White);
                 }
             }
 

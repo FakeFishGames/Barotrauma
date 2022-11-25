@@ -203,7 +203,7 @@ namespace Barotrauma
                             }
                             else
                             {
-                                newCollection.Add(new HumanPrefab(npcElement, file));
+                                newCollection.Add(new HumanPrefab(npcElement, file, npcSetIdentifier: from));
                             }
                         }
                         humanPrefabCollections.Add(newCollection);

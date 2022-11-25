@@ -56,6 +56,7 @@ namespace Barotrauma
             public SubmarineInfo displayedSubmarine;
             public GUITextBlock submarineName;
             public GUITextBlock submarineClass;
+            public GUITextBlock submarineTier;
             public GUITextBlock submarineFee;
             public GUIButton selectSubmarineButton;
             public GUITextBlock middleTextBlock;
@@ -162,7 +163,12 @@ namespace Barotrauma
                 IgnoreLayoutGroups = true                
             };
             new GUIListBox(new RectTransform(Vector2.One, infoFrame.RectTransform)) { IgnoreLayoutGroups = true, CanBeFocused = false };
-            specsFrame = new GUIListBox(new RectTransform(new Vector2(0.39f, 1f), infoFrame.RectTransform), style: null) { Spacing = GUI.IntScale(5), Padding = new Vector4(HUDLayoutSettings.Padding / 2f, HUDLayoutSettings.Padding, 0, 0) };
+            specsFrame = new GUIListBox(new RectTransform(new Vector2(0.39f, 1f), infoFrame.RectTransform), style: null) 
+            {
+                CurrentSelectMode = GUIListBox.SelectMode.None,
+                Spacing = GUI.IntScale(5), 
+                Padding = new Vector4(HUDLayoutSettings.Padding / 2f, HUDLayoutSettings.Padding, 0, 0) 
+            };
             new GUIFrame(new RectTransform(new Vector2(0.02f, 0.8f), infoFrame.RectTransform) { RelativeOffset = new Vector2(0.0f, 0.1f) }, style: "VerticalLine");
             GUIListBox descriptionFrame = new GUIListBox(new RectTransform(new Vector2(0.59f, 1f), infoFrame.RectTransform), style: null) { Padding = new Vector4(HUDLayoutSettings.Padding / 2f, HUDLayoutSettings.Padding * 1.5f, HUDLayoutSettings.Padding * 1.5f, HUDLayoutSettings.Padding / 2f) };
             descriptionTextBlock = new GUITextBlock(new RectTransform(new Vector2(1, 0), descriptionFrame.Content.RectTransform), string.Empty, font: GUIStyle.Font, wrap: true) { CanBeFocused = false };
@@ -220,16 +226,18 @@ namespace Barotrauma
                 };
                 submarineDisplayElement.submarineImage = new GUIImage(new RectTransform(new Vector2(0.8f, 1f), submarineDisplayElement.background.RectTransform, Anchor.Center), null, true);
                 submarineDisplayElement.middleTextBlock = new GUITextBlock(new RectTransform(new Vector2(0.8f, 1f), submarineDisplayElement.background.RectTransform, Anchor.Center), string.Empty, textAlignment: Alignment.Center);
-                submarineDisplayElement.submarineName = new GUITextBlock(new RectTransform(new Vector2(1f, 0.1f), submarineDisplayElement.background.RectTransform, Anchor.TopCenter, Pivot.TopCenter) { AbsoluteOffset = new Point(0, HUDLayoutSettings.Padding) }, string.Empty, textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont);
-                submarineDisplayElement.submarineClass = new GUITextBlock(new RectTransform(new Vector2(1f, 0.1f), submarineDisplayElement.background.RectTransform, Anchor.TopCenter, Pivot.TopCenter) { AbsoluteOffset = new Point(0, HUDLayoutSettings.Padding + (int)GUIStyle.Font.MeasureString(submarineDisplayElement.submarineName.Text).Y) }, string.Empty, textAlignment: Alignment.Center);
-                submarineDisplayElement.submarineFee = new GUITextBlock(new RectTransform(new Vector2(1f, 0.1f), submarineDisplayElement.background.RectTransform, Anchor.BottomCenter, Pivot.BottomCenter) { AbsoluteOffset = new Point(0, HUDLayoutSettings.Padding) }, string.Empty, textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont);
+                submarineDisplayElement.submarineName = new GUITextBlock(new RectTransform(new Vector2(1f, 0.1f), submarineDisplayElement.background.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, HUDLayoutSettings.Padding) }, string.Empty, textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont);
+                submarineDisplayElement.submarineFee = new GUITextBlock(new RectTransform(new Vector2(1f, 0.1f), submarineDisplayElement.background.RectTransform, Anchor.BottomCenter) { AbsoluteOffset = new Point(0, HUDLayoutSettings.Padding) }, string.Empty, textAlignment: Alignment.Center, font: GUIStyle.SubHeadingFont);
                 submarineDisplayElement.selectSubmarineButton = new GUIButton(new RectTransform(Vector2.One, submarineDisplayElement.background.RectTransform), style: null);
-                submarineDisplayElement.previewButton = new GUIButton(new RectTransform(Vector2.One * 0.12f, submarineDisplayElement.background.RectTransform, anchor: Anchor.BottomRight, pivot: Pivot.BottomRight, scaleBasis: ScaleBasis.BothHeight) { AbsoluteOffset = new Point((int)(0.03f * background.Rect.Height)) }, style: "ExpandButton")
+                submarineDisplayElement.previewButton = new GUIButton(new RectTransform(Vector2.One * 0.12f, submarineDisplayElement.background.RectTransform, anchor: Anchor.BottomRight, scaleBasis: ScaleBasis.BothHeight) { AbsoluteOffset = new Point((int)(0.03f * background.Rect.Height)) }, style: "ExpandButton")
                 {
                     Color = Color.White,
                     HoverColor = Color.White,
                     PressedColor = Color.White
                 };
+                submarineDisplayElement.submarineClass = new GUITextBlock(new RectTransform(new Vector2(1f, 0.1f), submarineDisplayElement.background.RectTransform, Anchor.TopCenter) { AbsoluteOffset = new Point(0, HUDLayoutSettings.Padding + (int)GUIStyle.Font.MeasureString(submarineDisplayElement.submarineName.Text).Y) }, string.Empty, textAlignment: Alignment.Left);
+                submarineDisplayElement.submarineTier = new GUITextBlock(new RectTransform(new Vector2(0.5f, 0.1f), submarineDisplayElement.background.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(0, HUDLayoutSettings.Padding + (int)GUIStyle.Font.MeasureString(submarineDisplayElement.submarineName.Text).Y) }, string.Empty, textAlignment: Alignment.Right);
+
                 submarineDisplays[i] = submarineDisplayElement;
             }
 
@@ -355,6 +363,7 @@ namespace Barotrauma
                     submarineDisplays[i].submarineName.Text = string.Empty;
                     submarineDisplays[i].submarineFee.Text = string.Empty;
                     submarineDisplays[i].submarineClass.Text = string.Empty;
+                    submarineDisplays[i].submarineTier.Text = string.Empty;
                     submarineDisplays[i].selectSubmarineButton.Enabled = false;
                     submarineDisplays[i].selectSubmarineButton.OnClicked = null;
                     submarineDisplays[i].displayedSubmarine = null;
@@ -387,8 +396,13 @@ namespace Barotrauma
                         return true;
                     };
 
-                    submarineDisplays[i].submarineName.Text = subToDisplay.DisplayName;
+                    submarineDisplays[i].submarineName.Text = subToDisplay.DisplayName;                    
+                    
                     submarineDisplays[i].submarineClass.Text = TextManager.GetWithVariable("submarineclass.classsuffixformat", "[type]", TextManager.Get($"submarineclass.{subToDisplay.SubmarineClass}"));
+                    submarineDisplays[i].submarineClass.ToolTip = TextManager.Get("submarineclass.description") + "\n\n" + TextManager.Get($"submarineclass.{subToDisplay.SubmarineClass}.description"); 
+
+                    submarineDisplays[i].submarineTier.Text = TextManager.Get($"submarinetier.{subToDisplay.Tier}");
+                    submarineDisplays[i].submarineTier.ToolTip = TextManager.Get("submarinetier.description");
 
                     if (!GameMain.GameSession.IsSubmarineOwned(subToDisplay))
                     {
@@ -847,7 +861,7 @@ namespace Barotrauma
                 msgBox = new GUIMessageBox(TextManager.Get("purchasesubmarineheader"), TextManager.GetWithVariables("purchasesubmarinetext",
                     ("[submarinename]", selectedSubmarine.DisplayName),
                     ("[amount]", selectedSubmarine.Price.ToString()),
-                    ("[currencyname]", currencyName)), messageBoxOptions);
+                    ("[currencyname]", currencyName)) + '\n' + TextManager.Get("submarineswitchinstruction"), messageBoxOptions);
 
                 msgBox.Buttons[0].OnClicked = (applyButton, obj) =>
                 {

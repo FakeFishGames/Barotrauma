@@ -157,7 +157,7 @@ namespace Barotrauma
         
         public void Delete()
         {
-            Dispose();
+            Prefabs.Remove(this);
             try
             {
                 if (ContentPackage is { Files: { Length: 1 } }

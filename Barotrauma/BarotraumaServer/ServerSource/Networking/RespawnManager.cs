@@ -8,11 +8,6 @@ namespace Barotrauma.Networking
 {
     partial class RespawnManager : Entity, IServerSerializable
     {
-        /// <summary>
-        /// How much skills drop towards the job's default skill levels when respawning midround in the campaign
-        /// </summary>
-        const float SkillReductionOnCampaignMidroundRespawn = 0.75f;
-
         private DateTime despawnTime;
 
         private float shuttleEmptyTimer;
@@ -125,7 +120,7 @@ namespace Barotrauma.Networking
             return characterToRespawnCount >= GetMinCharactersToRespawn();
         }
 
-        partial void UpdateWaiting(float deltaTime)
+        partial void UpdateWaiting(float _)
         {
             if (RespawnShuttle != null)
             {
@@ -444,26 +439,28 @@ namespace Barotrauma.Networking
                     }
 
                     clients[i].Character = character;
-                    character.OwnerClientEndPoint = clients[i].Connection.EndPointString;
+                    character.OwnerClientAddress = clients[i].Connection.Endpoint.Address;
                     character.OwnerClientName = clients[i].Name;
-                    GameServer.Log(string.Format("Respawning {0} ({1}) as {2}", GameServer.ClientLogName(clients[i]), clients[i].Connection?.EndPointString, characterInfos[i].Job.Name), ServerLog.MessageType.Spawning);
+                    GameServer.Log(
+                        $"Respawning {GameServer.ClientLogName(clients[i])} ({clients[i].Connection.Endpoint}) as {characterInfos[i].Job.Name}", ServerLog.MessageType.Spawning);
                 }
 
                 if (RespawnShuttle != null)
                 {
-                    Vector2 pos = cargoSp == null ? character.Position : cargoSp.Position;
+                    List<Item> newRespawnItems = new List<Item>();
+                    Vector2 pos = cargoSp?.Position ?? character.Position;
                     if (divingSuitPrefab != null)
                     {
                         var divingSuit = new Item(divingSuitPrefab, pos, respawnSub);
                         Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(divingSuit));
-                        respawnItems.Add(divingSuit);
+                        newRespawnItems.Add(divingSuit);
 
                         if (oxyPrefab != null && divingSuit.GetComponent<ItemContainer>() != null)
                         {
                             var oxyTank = new Item(oxyPrefab, pos, respawnSub);
                             Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(oxyTank));
                             divingSuit.Combine(oxyTank, user: null);
-                            respawnItems.Add(oxyTank);
+                            newRespawnItems.Add(oxyTank);
                         }
                     }
 
@@ -473,13 +470,13 @@ namespace Barotrauma.Networking
                         {
                             var scooter = new Item(scooterPrefab, pos, respawnSub);
                             Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(scooter));
-                            respawnItems.Add(scooter);
+                            newRespawnItems.Add(scooter);
                             if (batteryPrefab != null)
                             {
                                 var battery = new Item(batteryPrefab, pos, respawnSub);
                                 Spawner.CreateNetworkEvent(new EntitySpawner.SpawnEntity(battery));
                                 scooter.Combine(battery, user: null);
-                                respawnItems.Add(battery);
+                                newRespawnItems.Add(battery);
                             }
                         }
                     }
@@ -487,14 +484,31 @@ namespace Barotrauma.Networking
                     {
                         AutoItemPlacer.RegenerateLoot(RespawnShuttle, respawnContainer);
                     }
+
+                    //try to put the items in containers in the shuttle
+                    foreach (var respawnItem in newRespawnItems)
+                    {
+                        System.Diagnostics.Debug.Assert(!respawnItem.Removed);
+                        foreach (Item shuttleItem in RespawnShuttle.GetItems(alsoFromConnectedSubs: false))
+                        {
+                            if (shuttleItem.NonInteractable || shuttleItem.NonPlayerTeamInteractable) { continue; }
+                            var container = shuttleItem.GetComponent<ItemContainer>();
+                            if (container != null && container.Inventory.TryPutItem(respawnItem, user: null))
+                            {
+                                break;
+                            }
+                        }
+                        respawnItems.Add(respawnItem);
+                    }
                 }
 
                 var characterData = campaign?.GetClientCharacterData(clients[i]);
                 if (characterData != null && Level.Loaded?.Type != LevelData.LevelType.Outpost && characterData.HasSpawned)
                 {
+                    //we need to reapply the previous respawn penalty affliction or successive deaths won't make it stack
+                    characterData.ApplyHealthData(character, (AfflictionPrefab ap) => ap == GetRespawnPenaltyAfflictionPrefab());
                     GiveRespawnPenaltyAffliction(character);
                 }
-
                 if (characterData == null || characterData.HasSpawned)
                 {
                     //give the character the items they would've gotten if they had spawned in the main sub
@@ -542,8 +556,8 @@ namespace Barotrauma.Networking
             foreach (Skill skill in characterInfo.Job.GetSkills())
             {
                 var skillPrefab = characterInfo.Job.Prefab.Skills.Find(s => skill.Identifier == s.Identifier);
-                if (skillPrefab == null) { continue; }
-                skill.Level = MathHelper.Lerp(skill.Level, skillPrefab.LevelRange.Start, SkillReductionOnCampaignMidroundRespawn);
+                if (skillPrefab == null || skill.Level < skillPrefab.LevelRange.End) { continue; }
+                skill.Level = MathHelper.Lerp(skill.Level, skillPrefab.LevelRange.End, SkillReductionOnDeath);
             }
         }
 
@@ -554,20 +568,20 @@ namespace Barotrauma.Networking
             switch (CurrentState)
             {
                 case State.Transporting:
-                    msg.Write(ReturnCountdownStarted);
-                    msg.Write(GameMain.Server.ServerSettings.MaxTransportTime);
-                    msg.Write((float)(ReturnTime - DateTime.Now).TotalSeconds);
+                    msg.WriteBoolean(ReturnCountdownStarted);
+                    msg.WriteSingle(GameMain.Server.ServerSettings.MaxTransportTime);
+                    msg.WriteSingle((float)(ReturnTime - DateTime.Now).TotalSeconds);
                     break;
                 case State.Waiting:
                     MultiPlayerCampaign campaign = GameMain.GameSession.GameMode as MultiPlayerCampaign;
                     var matchingData = campaign?.GetClientCharacterData(c);
                     bool forceSpawnInMainSub = matchingData != null && !matchingData.HasSpawned;
-                    msg.Write((ushort)pendingRespawnCount);
-                    msg.Write((ushort)requiredRespawnCount);
-                    msg.Write(IsRespawnPromptPendingForClient(c));
-                    msg.Write(RespawnCountdownStarted);
-                    msg.Write(forceSpawnInMainSub);
-                    msg.Write((float)(RespawnTime - DateTime.Now).TotalSeconds);
+                    msg.WriteUInt16((ushort)pendingRespawnCount);
+                    msg.WriteUInt16((ushort)requiredRespawnCount);
+                    msg.WriteBoolean(IsRespawnPromptPendingForClient(c));
+                    msg.WriteBoolean(RespawnCountdownStarted);
+                    msg.WriteBoolean(forceSpawnInMainSub);
+                    msg.WriteSingle((float)(RespawnTime - DateTime.Now).TotalSeconds);
                     break;
                 case State.Returning:
                     break;

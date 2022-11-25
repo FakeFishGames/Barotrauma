@@ -14,6 +14,7 @@ namespace Barotrauma
         public static bool IsTabMenuOpen => GameMain.GameSession?.tabMenu != null;
         public static TabMenu TabMenuInstance => GameMain.GameSession?.tabMenu;
 
+        private float prevHudScale;
 
         private TabMenu tabMenu;
 
@@ -119,6 +120,7 @@ namespace Barotrauma
                     return true;
                 }
             };
+            prevHudScale = GameSettings.CurrentConfig.Graphics.HUDScale;
         }
 
         public void AddToGUIUpdateList()
@@ -176,6 +178,12 @@ namespace Barotrauma
                     indicator.Visible = Character.Controlled.Info.GetAvailableTalentPoints() > 0 && !Character.Controlled.HasUnlockedAllTalents();
                 }
             }
+        }
+
+        public void HUDScaleChanged()
+        {
+            CreateTopLeftButtons();
+            GameMode?.HUDScaleChanged();
         }
 
         partial void UpdateProjSpecific(float deltaTime)

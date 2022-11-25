@@ -25,7 +25,7 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
-            if (Character.Controlled?.SelectedConstruction != item)
+            if (Character.Controlled?.SelectedItem != item)
             {
                 IsActive = false;
                 return;

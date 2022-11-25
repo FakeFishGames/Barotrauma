@@ -76,8 +76,6 @@ namespace Barotrauma.Items.Components
             get { return outputContainer; }
         }
 
-        public override bool RecreateGUIOnResolutionChange => true;
-
         private float progressState;
 
         private readonly Dictionary<uint, int> fabricationLimits = new Dictionary<uint, int>();
@@ -305,7 +303,7 @@ namespace Barotrauma.Items.Components
 
             float fabricationSpeedIncrease = 1f + tinkeringStrength * TinkeringSpeedIncrease;
 
-            timeUntilReady -= deltaTime * fabricationSpeedIncrease * Math.Min(powerConsumption <= 0 ? 1 : Voltage, 1.0f);
+            timeUntilReady -= deltaTime * fabricationSpeedIncrease * Math.Min(powerConsumption <= 0 ? 1 : Voltage, MaxOverVoltageFactor);
 
             UpdateRequiredTimeProjSpecific();
 
@@ -371,8 +369,7 @@ namespace Barotrauma.Items.Components
                             var availableItems = availableIngredients[requiredPrefab.Identifier];
                             var availableItem = availableItems.FirstOrDefault(potentialPrefab =>
                             {
-                                return potentialPrefab.ConditionPercentage >= requiredItem.MinCondition * 100.0f &&
-                                       potentialPrefab.ConditionPercentage <= requiredItem.MaxCondition * 100.0f;
+                                return requiredItem.IsConditionSuitable(potentialPrefab.ConditionPercentage);
                             });
 
                             if (availableItem == null) { continue; }
@@ -556,8 +553,20 @@ namespace Barotrauma.Items.Components
 
             const int MaxCraftingSkill = 100;
 
+            //having a higher-than-100 skill (e.g. due to talents) gives +1 quality
             quality += fabricatedItem.RequiredSkills.All(s => user.GetSkillLevel(s.Identifier) >= MaxCraftingSkill) ? 1 : 0;
-            quality += FabricationDegreeOfSuccess(user, fabricatedItem.RequiredSkills) >= 0.5f ? 1 : 0;
+            foreach (var skill in fabricatedItem.RequiredSkills)
+            {
+                //+1 quality if the character's skill level is >20% from the min requirement towards max skill
+                //e.g. if the skill requirement is 10 -> 28
+                //40 -> 52
+                //90 -> 92
+                float skillRequirement = MathHelper.Lerp(skill.Level, MaxCraftingSkill, 0.2f);
+                if (user.GetSkillLevel(skill.Identifier) > skillRequirement)
+                {
+                    quality += 1;
+                }
+            }
             return quality;
         }
 
@@ -604,8 +613,7 @@ namespace Barotrauma.Items.Components
                     var availablePrefabs = availableIngredients[requiredPrefab.Identifier];
                     foreach (Item availablePrefab in availablePrefabs)
                     {
-                        if (availablePrefab.ConditionPercentage / 100.0f >= requiredItem.MinCondition &&
-                            availablePrefab.ConditionPercentage / 100.0f <= requiredItem.MaxCondition)
+                        if (requiredItem.IsConditionSuitable(availablePrefab.ConditionPercentage))
                         {
                             availablePrefabsAmount++;
                         }
@@ -637,10 +645,13 @@ namespace Barotrauma.Items.Components
             if (skills.Length == 0) { return 1.0f; }
             if (character == null) { return 0.0f; }
 
-            float skillSum = (from t in skills let characterLevel = character.GetSkillLevel(t.Identifier) select (characterLevel - (t.Level * SkillRequirementMultiplier))).Sum();
-            float average = skillSum / skills.Length;
-
-            return (average + 100.0f) / 2.0f / 100.0f;
+            float minDegreeOfSuccess = 1.0f;
+            foreach (var skill in skills)
+            {
+                float characterLevel = character.GetSkillLevel(skill.Identifier);
+                minDegreeOfSuccess = Math.Min(minDegreeOfSuccess, (characterLevel - (skill.Level * SkillRequirementMultiplier) + 100.0f) / 2.0f / 100.0f);
+            }
+            return minDegreeOfSuccess;
         }
 
         public override float GetSkillMultiplier()
@@ -648,13 +659,16 @@ namespace Barotrauma.Items.Components
             return SkillRequirementMultiplier;
         }
 
+
+        private readonly HashSet<Inventory> linkedInventories = new HashSet<Inventory>();
+
         private void RefreshAvailableIngredients()
         {
             Character user = this.user;
 #if CLIENT
             user ??= Character.Controlled;
 #endif
-
+            linkedInventories.Clear();
             List<Item> itemList = new List<Item>();
             itemList.AddRange(inputContainer.Inventory.AllItems);
             foreach (MapEntity linkedTo in item.linkedTo)
@@ -674,6 +688,7 @@ namespace Barotrauma.Items.Components
                         itemContainer = deconstructor.OutputContainer;
                     }
 
+                    linkedInventories.Add(itemContainer.Inventory);
                     itemList.AddRange(itemContainer.Inventory.AllItems);
                 }
             }
@@ -688,6 +703,7 @@ namespace Barotrauma.Items.Components
             if (user?.Inventory != null)
             {
                 itemList.AddRange(user.Inventory.AllItems);
+                linkedInventories.Add(user.Inventory);
             }
             availableIngredients.Clear();
             foreach (Item item in itemList)
@@ -720,9 +736,7 @@ namespace Barotrauma.Items.Components
                         var availablePrefabs = availableIngredients[requiredPrefab.Identifier];
                         var availablePrefab = availablePrefabs.FirstOrDefault(potentialPrefab =>
                         {
-                            return !usedItems.Contains(potentialPrefab) &&
-                                   potentialPrefab.ConditionPercentage >= requiredItem.MinCondition * 100.0f &&
-                                   potentialPrefab.ConditionPercentage <= requiredItem.MaxCondition * 100.0f;
+                            return !usedItems.Contains(potentialPrefab) && requiredItem.IsConditionSuitable(potentialPrefab.ConditionPercentage);
                         });
                         if (availablePrefab == null) { continue; }
 

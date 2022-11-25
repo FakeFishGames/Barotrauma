@@ -401,13 +401,13 @@ namespace Barotrauma
             return character == null || character.Removed || character.Submarine == null || (character.LockHands && character.Submarine == Submarine.MainSub) || character.IsIncapacitated;
         }
 
-        public override void End()
+        protected override bool DetermineCompleted()
         {
-            if (state == 2)
-            {
-                GiveReward();
-                completed = true;
-            }
+            return state == 2;
+        }
+
+        protected override void EndMissionSpecific(bool completed)
+        {
             characters.Clear();
             characterItems.Clear();
             failed = !completed;

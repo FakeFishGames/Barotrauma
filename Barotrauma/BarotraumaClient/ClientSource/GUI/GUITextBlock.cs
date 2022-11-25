@@ -587,7 +587,7 @@ namespace Barotrauma
 
                     if (Shadow)
                     {
-                        Vector2 shadowOffset = new Vector2(GUI.IntScale(2));
+                        Vector2 shadowOffset = new Vector2(Math.Max(GUI.IntScale(2), 1));
                         Font.DrawString(spriteBatch, textToShow, pos + shadowOffset, Color.Black, 0.0f, origin, TextScale, SpriteEffects.None, textDepth, alignment: textAlignment, forceUpperCase: ForceUpperCase);
                     }
 

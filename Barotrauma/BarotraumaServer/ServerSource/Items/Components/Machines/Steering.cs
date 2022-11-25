@@ -100,30 +100,30 @@ namespace Barotrauma.Items.Components
 
         public void ServerEventWrite(IWriteMessage msg, Barotrauma.Networking.Client c, NetEntityEvent.IData extraData = null)
         {
-            msg.Write(autoPilot);
-            msg.Write(TryExtractEventData<EventData>(extraData, out var eventData) && eventData.DockingButtonClicked);
-            msg.Write(user?.ID ?? Entity.NullEntityID);
+            msg.WriteBoolean(autoPilot);
+            msg.WriteBoolean(TryExtractEventData<EventData>(extraData, out var eventData) && eventData.DockingButtonClicked);
+            msg.WriteUInt16(user?.ID ?? Entity.NullEntityID);
 
             if (!autoPilot)
             {
                 //no need to write steering info if autopilot is controlling
-                msg.Write(steeringInput.X);
-                msg.Write(steeringInput.Y);
-                msg.Write(targetVelocity.X);
-                msg.Write(targetVelocity.Y);
-                msg.Write(steeringAdjustSpeed);
+                msg.WriteSingle(steeringInput.X);
+                msg.WriteSingle(steeringInput.Y);
+                msg.WriteSingle(targetVelocity.X);
+                msg.WriteSingle(targetVelocity.Y);
+                msg.WriteSingle(steeringAdjustSpeed);
             }
             else
             {
-                msg.Write(posToMaintain != null);
+                msg.WriteBoolean(posToMaintain != null);
                 if (posToMaintain != null)
                 {
-                    msg.Write(((Vector2)posToMaintain).X);
-                    msg.Write(((Vector2)posToMaintain).Y);
+                    msg.WriteSingle(((Vector2)posToMaintain).X);
+                    msg.WriteSingle(((Vector2)posToMaintain).Y);
                 }
                 else
                 {
-                    msg.Write(LevelStartSelected);
+                    msg.WriteBoolean(LevelStartSelected);
                 }
             }
         }

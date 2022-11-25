@@ -109,9 +109,7 @@ namespace Barotrauma
 
         private readonly GameTime fixedTime;
 
-        public string ConnectName;
-        public string ConnectEndpoint;
-        public UInt64 ConnectLobby;
+        public Option<ConnectCommand> ConnectCommand = Option<ConnectCommand>.None();
 
         private static SpriteBatch spriteBatch;
 
@@ -232,20 +230,14 @@ namespace Barotrauma
 
             ConsoleArguments = args;
 
-            ConnectName = null;
-            ConnectEndpoint = null;
-            ConnectLobby = 0;
-
             try
             {
-                ToolBox.ParseConnectCommand(ConsoleArguments, out ConnectName, out ConnectEndpoint, out ConnectLobby);
+                ConnectCommand = ToolBox.ParseConnectCommand(ConsoleArguments);
             }
             catch (IndexOutOfRangeException e)
             {
                 DebugConsole.ThrowError($"Failed to parse console arguments ({string.Join(' ', ConsoleArguments)})", e);
-                ConnectName = null;
-                ConnectEndpoint = null;
-                ConnectLobby = 0;
+                ConnectCommand = Option<ConnectCommand>.None();
             }
 
             GUI.KeyboardDispatcher = new EventInput.KeyboardDispatcher(Window);
@@ -469,7 +461,7 @@ namespace Barotrauma
 
             yield return CoroutineStatus.Running;
 
-            UgcTransition.Prepare();
+            LegacySteamUgcTransition.Prepare();
             var contentPackageLoadRoutine = ContentPackageManager.Init();
             foreach (var progress in contentPackageLoadRoutine)
             {
@@ -565,6 +557,8 @@ namespace Barotrauma
                 new GUIMessageBox(TextManager.Get("Error"), TextManager.Get(steamError));
             }
 
+            GameSettings.OnGameMainHasLoaded?.Invoke();
+
             TitleScreen.LoadState = 100.0f;
             HasLoaded = true;
             if (GameSettings.CurrentConfig.VerboseLogging)
@@ -595,7 +589,7 @@ namespace Barotrauma
         {
             try
             {
-                ToolBox.ParseConnectCommand(ToolBox.SplitCommand(connectCommand), out ConnectName, out ConnectEndpoint, out ConnectLobby);
+                ConnectCommand = ToolBox.ParseConnectCommand(ToolBox.SplitCommand(connectCommand));
             }
             catch (IndexOutOfRangeException e)
             {
@@ -604,12 +598,8 @@ namespace Barotrauma
 #else
                 DebugConsole.Log($"Failed to parse a Steam friend's connect invitation command ({connectCommand})\n" + e.StackTrace.CleanupStackTrace());
 #endif
-                ConnectName = null;
-                ConnectEndpoint = null;
-                ConnectLobby = 0;
+                ConnectCommand = Option<ConnectCommand>.None();
             }
-
-            DebugConsole.NewMessage(ConnectName + ", " + ConnectEndpoint, Color.Yellow);
         }
 
         public void OnLobbyJoinRequested(Steamworks.Data.Lobby lobby, Steamworks.SteamId friendId)
@@ -725,7 +715,7 @@ namespace Barotrauma
                     }
 #endif
 
-                    NetworkMember?.Update((float)Timing.Step);
+                    Client?.Update((float)Timing.Step);
 
                     if (!HasLoaded && !CoroutineManager.IsCoroutineRunning(loadingCoroutine))
                     {
@@ -734,38 +724,29 @@ namespace Barotrauma
                 }
                 else if (HasLoaded)
                 {
-                    if (ConnectLobby != 0)
+                    if (ConnectCommand is Some<ConnectCommand> { Value: var connectCommand })
                     {
                         if (Client != null)
                         {
-                            Client.Disconnect();
+                            Client.Quit();
                             Client = null;
-
-                            GameMain.MainMenuScreen.Select();
+                            MainMenuScreen.Select();
                         }
-                        Steam.SteamManager.JoinLobby(ConnectLobby, true);
 
-                        ConnectLobby = 0;
-                        ConnectEndpoint = null;
-                        ConnectName = null;
-                    }
-                    else if (!string.IsNullOrWhiteSpace(ConnectEndpoint))
-                    {
-                        if (Client != null)
+                        if (connectCommand.EndpointOrLobby.TryGet(out ulong lobbyId))
                         {
-                            Client.Disconnect();
-                            Client = null;
-
-                            GameMain.MainMenuScreen.Select();
+                            SteamManager.JoinLobby(lobbyId, joinServer: true);
                         }
-                        UInt64 serverSteamId = SteamManager.SteamIDStringToUInt64(ConnectEndpoint);
-                        Client = new GameClient(MultiplayerPreferences.Instance.PlayerName.FallbackNullOrEmpty(SteamManager.GetUsername()),
-                                                serverSteamId != 0 ? null : ConnectEndpoint,
-                                                serverSteamId,
-                                                string.IsNullOrWhiteSpace(ConnectName) ? ConnectEndpoint : ConnectName);
-                        ConnectLobby = 0;
-                        ConnectEndpoint = null;
-                        ConnectName = null;
+                        else if (connectCommand.EndpointOrLobby.TryGet(out ConnectCommand.NameAndEndpoint nameAndEndpoint)
+                                 && nameAndEndpoint is { ServerName: var serverName, Endpoint: var endpoint })
+                        {
+                            Client = new GameClient(MultiplayerPreferences.Instance.PlayerName.FallbackNullOrEmpty(SteamManager.GetUsername()),
+                                endpoint,
+                                string.IsNullOrWhiteSpace(serverName) ? endpoint.StringRepresentation : serverName,
+                                Option<int>.None());
+                        }
+                        
+                        ConnectCommand = Option<ConnectCommand>.None();
                     }
 
                     SoundPlayer.Update((float)Timing.Step);
@@ -814,7 +795,7 @@ namespace Barotrauma
                         else if ((Character.Controlled == null || !itemHudActive())
                             && CharacterHealth.OpenHealthWindow == null
                             && !CrewManager.IsCommandInterfaceOpen
-                            && !(Screen.Selected is SubEditorScreen editor && !editor.WiringMode && Character.Controlled?.SelectedConstruction != null))
+                            && !(Screen.Selected is SubEditorScreen editor && !editor.WiringMode && Character.Controlled?.SelectedItem != null))
                         {
                             // Otherwise toggle pausing, unless another window/interface is open.
                             GUI.TogglePauseMenu();
@@ -822,9 +803,9 @@ namespace Barotrauma
 
                         static bool itemHudActive()
                         {
-                            if (Character.Controlled?.SelectedConstruction == null) { return false; }
+                            if (Character.Controlled?.SelectedItem == null) { return false; }
                             return
-                                Character.Controlled.SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null) ||
+                                Character.Controlled.SelectedItem.ActiveHUDs.Any(ic => ic.GuiFrame != null) ||
                                 ((Character.Controlled.ViewTarget as Item)?.Prefab?.FocusOnSelected ?? false);
                         }
                     }
@@ -893,7 +874,7 @@ namespace Barotrauma
                         }
                     }
 
-                    NetworkMember?.Update((float)Timing.Step);
+                    Client?.Update((float)Timing.Step);
 
                     GUI.Update((float)Timing.Step);
 
@@ -919,7 +900,7 @@ namespace Barotrauma
 #endif
                 }
 
-                CoroutineManager.Update((float)Timing.Step, Paused ? 0.0f : (float)Timing.Step);
+                CoroutineManager.Update(Paused, (float)Timing.Step);
 
                 SteamManager.Update((float)Timing.Step);
 
@@ -1082,7 +1063,7 @@ namespace Barotrauma
 
             if (Client != null)
             {
-                Client.Disconnect();
+                Client.Quit();
                 Client = null;
             }
 
@@ -1098,7 +1079,7 @@ namespace Barotrauma
                 GameAnalyticsManager.AddDesignEvent(eventId + "EventManager:CurrentIntensity", GameSession.EventManager.CurrentIntensity);
                 foreach (var activeEvent in GameSession.EventManager.ActiveEvents)
                 {
-                    GameAnalyticsManager.AddDesignEvent(eventId + "EventManager:ActiveEvents:" + activeEvent.ToString());
+                    GameAnalyticsManager.AddDesignEvent(eventId + "EventManager:ActiveEvents:" + activeEvent.Prefab.Identifier);
                 }
                 GameSession.LogEndRoundStats(eventId);
                 if (GameSession.GameMode is TutorialMode tutorialMode)
@@ -1162,7 +1143,7 @@ namespace Barotrauma
                 UserData = "https://steamcommunity.com/app/602960/discussions/1/",
                 OnClicked = (btn, userdata) =>
                 {
-                    if (!SteamManager.OverlayCustomURL(userdata as string))
+                    if (!SteamManager.OverlayCustomUrl(userdata as string))
                     {
                         ShowOpenUrlInWebBrowserPrompt(userdata as string);
                     }
@@ -1200,7 +1181,7 @@ namespace Barotrauma
         {
             exiting = true;
             DebugConsole.NewMessage("Exiting...");
-            NetworkMember?.Disconnect();
+            Client?.Quit();
             SteamManager.ShutDown();
 
             try
