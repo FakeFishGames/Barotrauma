@@ -224,7 +224,7 @@ namespace Steamworks.Ugc
 			}
 		}
 
-		private ItemState State => (ItemState) SteamUGC.Internal.GetItemState( Id );
+		private ItemState State => (ItemState)(SteamUGC.Internal?.GetItemState( Id ) ?? 0);
 
 		public static async Task<Item?> GetAsync( PublishedFileId id, int maxageseconds = 60 * 30 )
 		{

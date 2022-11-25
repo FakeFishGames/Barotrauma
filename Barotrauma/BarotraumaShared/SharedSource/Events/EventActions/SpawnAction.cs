@@ -159,7 +159,7 @@ namespace Barotrauma
                             newCharacter.HumanPrefab = humanPrefab;
                             newCharacter.TeamID = TeamID;
                             newCharacter.EnableDespawn = false;
-                            humanPrefab.GiveItems(newCharacter, newCharacter.Submarine);
+                            humanPrefab.GiveItems(newCharacter, newCharacter.Submarine, spawnPos as WayPoint);
                             if (LootingIsStealing)
                             {
                                 foreach (Item item in newCharacter.Inventory.FindAllItems(recursive: true))

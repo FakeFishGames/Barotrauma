@@ -16,6 +16,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -465,10 +466,11 @@ namespace Barotrauma
 
             LegacySteamUgcTransition.Prepare();
             var contentPackageLoadRoutine = ContentPackageManager.Init();
-            foreach (var progress in contentPackageLoadRoutine)
+            foreach (var progress in contentPackageLoadRoutine
+                         .Select(p => p.Result).Successes())
             {
                 const float min = 1f, max = 70f;
-                TitleScreen.LoadState = MathHelper.Lerp(min, max, progress.Value);
+                TitleScreen.LoadState = MathHelper.Lerp(min, max, progress);
                 yield return CoroutineStatus.Running;
             }
 
@@ -1078,10 +1080,9 @@ namespace Barotrauma
 
             if (GameSession != null)
             {
-                double roundDuration = Timing.TotalTime - GameSession.RoundStartTime;
                 GameAnalyticsManager.AddProgressionEvent(GameAnalyticsManager.ProgressionStatus.Fail,
                     GameSession.GameMode?.Preset.Identifier.Value ?? "none",
-                    roundDuration);
+                    GameSession.RoundDuration);
                 string eventId = "QuitRound:" + (GameSession.GameMode?.Preset.Identifier.Value ?? "none") + ":";
                 GameAnalyticsManager.AddDesignEvent(eventId + "EventManager:CurrentIntensity", GameSession.EventManager.CurrentIntensity);
                 foreach (var activeEvent in GameSession.EventManager.ActiveEvents)

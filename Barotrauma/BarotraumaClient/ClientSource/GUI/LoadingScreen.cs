@@ -11,9 +11,9 @@ namespace Barotrauma
 {
     class LoadingScreen
     {
-        private readonly Texture2D defaultBackgroundTexture, overlay;
+        private readonly Sprite defaultBackgroundTexture, overlay;
         private readonly SpriteSheet decorativeGraph, decorativeMap;
-        private Texture2D currentBackgroundTexture;
+        private Sprite currentBackgroundTexture;
         private readonly Sprite noiseSprite;
 
         private string randText = "";
@@ -23,6 +23,8 @@ namespace Barotrauma
 
         private Video currSplashScreen;
         private DateTime videoStartTime;
+
+        private bool mirrorBackground;
 
         public struct PendingSplashScreen
         {
@@ -112,12 +114,12 @@ namespace Barotrauma
 
         public LoadingScreen(GraphicsDevice graphics)
         {
-            defaultBackgroundTexture = TextureLoader.FromFile("Content/Map/LocationPortraits/AlienRuins.png");
+            defaultBackgroundTexture = new Sprite("Content/Map/LocationPortraits/MainMenu1.png", Vector2.Zero);
 
             decorativeMap = new SpriteSheet("Content/Map/MapHUD.png", 6, 5, Vector2.Zero, sourceRect: new Rectangle(0, 0, 2048, 640));
             decorativeGraph = new SpriteSheet("Content/Map/MapHUD.png", 4, 10, Vector2.Zero, sourceRect: new Rectangle(1025, 1259, 1024, 732));
 
-            overlay = TextureLoader.FromFile("Content/UI/MainMenuVignette.png");
+            overlay = new Sprite("Content/UI/MainMenuVignette.png", Vector2.Zero);
             noiseSprite = new Sprite("Content/UI/noise.png", Vector2.Zero);
             DrawLoadingText = true;
             SetSelectedTip(TextManager.Get("LoadingScreenTip"));
@@ -143,24 +145,19 @@ namespace Barotrauma
 
             currentBackgroundTexture ??= defaultBackgroundTexture;
 
+            float overlayScale = Math.Min(GameMain.GraphicsWidth / overlay.size.X, GameMain.GraphicsHeight / overlay.size.Y);
+
+            Rectangle drawArea = new Rectangle(
+                (int)(overlay.size.X * overlayScale / 2), 0, 
+                (int)(GameMain.GraphicsWidth - overlay.size.X * overlayScale / 2), GameMain.GraphicsHeight);
+
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, samplerState: GUI.SamplerState);
-            float scale = Math.Max(
-                (float)GameMain.GraphicsWidth / currentBackgroundTexture.Width,
-                (float)GameMain.GraphicsHeight / currentBackgroundTexture.Height) * 1.2f;
-            float paddingX = currentBackgroundTexture.Width * scale - GameMain.GraphicsWidth;
-            float paddingY = currentBackgroundTexture.Height * scale - GameMain.GraphicsHeight;
 
-            double noiseT = (Timing.TotalTime * 0.02f);
-            Vector2 pos = new Vector2((float)PerlinNoise.CalculatePerlin(noiseT, noiseT, 0) - 0.5f, (float)PerlinNoise.CalculatePerlin(noiseT, noiseT, 0.5f) - 0.5f);
-            pos = new Vector2(pos.X * paddingX, pos.Y * paddingY);
+            GUI.DrawBackgroundSprite(spriteBatch, currentBackgroundTexture, Color.White, drawArea, 
+                spriteEffects: mirrorBackground ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
+            overlay.Draw(spriteBatch, Vector2.Zero, scale: overlayScale);
 
-            spriteBatch.Draw(currentBackgroundTexture,
-                new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) / 2 + pos,
-                null, Color.White, 0.0f, new Vector2(currentBackgroundTexture.Width / 2, currentBackgroundTexture.Height / 2),
-                scale, SpriteEffects.None, 0.0f);
-
-            spriteBatch.Draw(overlay, Vector2.Zero, null, Color.White, 0.0f, Vector2.Zero, Math.Min(GameMain.GraphicsWidth / (float)overlay.Width, GameMain.GraphicsHeight / (float)overlay.Height), SpriteEffects.None, 0.0f);
-
+            double noiseT = Timing.TotalTime * 0.02f;
             float noiseStrength = (float)PerlinNoise.CalculatePerlin(noiseT, noiseT, 0);
             float noiseScale = (float)PerlinNoise.CalculatePerlin(noiseT * 5.0f, noiseT * 2.0f, 0) * 4.0f;
             noiseSprite.DrawTiled(spriteBatch, Vector2.Zero, new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight),
@@ -430,7 +427,12 @@ namespace Barotrauma
             drawn = false;
             LoadState = null;
             SetSelectedTip(TextManager.Get("LoadingScreenTip"));
-            currentBackgroundTexture = LocationType.Prefabs.Where(p => p.UsePortraitInRandomLoadingScreens).GetRandomUnsynced()?.GetPortrait(Rand.Int(int.MaxValue))?.Texture;
+            currentBackgroundTexture = LocationType.Prefabs.Where(p => p.UsePortraitInRandomLoadingScreens).GetRandomUnsynced()?.GetPortrait(Rand.Int(int.MaxValue));
+            if (GameMain.GameSession?.GameMode?.Missions is { } missions && missions.Any(m => m.Prefab.HasPortraits))
+            {
+                currentBackgroundTexture = missions.Where(m => m.Prefab.HasPortraits).First().Prefab.GetPortrait(Rand.Int(int.MaxValue));
+            }
+            mirrorBackground = Rand.Range(0.0f, 1.0f) < 0.5f;
 
             while (!drawn)
             {

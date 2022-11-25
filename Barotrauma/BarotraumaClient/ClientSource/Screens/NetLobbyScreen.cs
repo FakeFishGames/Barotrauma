@@ -2740,6 +2740,7 @@ namespace Barotrauma
         }
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
+            if (backgroundSprite?.Texture == null) { return; }
             graphics.Clear(Color.Black);
             spriteBatch.Begin(SpriteSortMode.Deferred, samplerState: GUI.SamplerState, rasterizerState: GameMain.ScissorTestEnable);
             GUI.DrawBackgroundSprite(spriteBatch, backgroundSprite, Color.White);

@@ -165,6 +165,10 @@ namespace Barotrauma.Steam
                 .Select(c => c.UserData as RegularPackage).OfType<RegularPackage>().ToArray());
             PopulateInstalledModLists(forceRefreshEnabled: true, refreshDisabled: true);
             ContentPackageManager.LogEnabledRegularPackageErrors();
+            enabledCoreDropdown.ButtonTextColor =
+                EnabledCorePackage.HasAnyErrors
+                    ? GUIStyle.Red
+                    : GUIStyle.TextColorNormal;
         }
     }
 }

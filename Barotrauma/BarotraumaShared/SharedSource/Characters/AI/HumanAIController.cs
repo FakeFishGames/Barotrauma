@@ -1625,7 +1625,7 @@ namespace Barotrauma
                 float accumulatedDamage = Math.Max(otherHumanAI.structureDamageAccumulator[character], maxAccumulatedDamage);
                 maxAccumulatedDamage = Math.Max(accumulatedDamage, maxAccumulatedDamage);
 
-                if (GameMain.GameSession?.Campaign?.Map?.CurrentLocation?.Reputation != null)
+                if (GameMain.GameSession?.Campaign?.Map?.CurrentLocation?.Reputation != null && character.IsPlayer)
                 {
                     var reputationLoss = damageAmount * Reputation.ReputationLossPerWallDamage;
                     GameMain.GameSession.Campaign.Map.CurrentLocation.Reputation.AddReputation(-reputationLoss);

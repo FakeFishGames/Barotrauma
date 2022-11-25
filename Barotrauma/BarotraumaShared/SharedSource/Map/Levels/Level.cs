@@ -4397,7 +4397,7 @@ namespace Barotrauma
                     corpse.AnimController.FindHull(worldPos, setSubmarine: true);
                     corpse.TeamID = CharacterTeamType.None;
                     corpse.EnableDespawn = false;
-                    selectedPrefab.GiveItems(corpse, wreck);
+                    selectedPrefab.GiveItems(corpse, wreck, sp);
                     corpse.Kill(CauseOfDeathType.Unknown, causeOfDeathAffliction: null, log: false);
                     corpse.CharacterHealth.ApplyAffliction(corpse.AnimController.MainLimb, AfflictionPrefab.OxygenLow.Instantiate(200));
                     bool applyBurns = Rand.Value() < 0.1f;
@@ -4428,7 +4428,6 @@ namespace Barotrauma
                         }
                     }
                     corpse.CharacterHealth.ForceUpdateVisuals();
-                    corpse.GiveIdCardTags(sp);
 
                     bool isServerOrSingleplayer = GameMain.IsSingleplayer || GameMain.NetworkMember is { IsServer: true };
                     if (isServerOrSingleplayer && selectedPrefab.MinMoney >= 0 && selectedPrefab.MaxMoney > 0)

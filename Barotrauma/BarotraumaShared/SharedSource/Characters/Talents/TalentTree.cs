@@ -141,23 +141,13 @@ namespace Barotrauma
                 {
                     if (talentOptionStage.TalentIdentifiers.Contains(talentIdentifier))
                     {
-                        return TalentTreeMeetsRequirements(talentTree, subTree, selectedTalents);
+                        return !talentOptionStage.HasMaxTalents(selectedTalents) && TalentTreeMeetsRequirements(talentTree, subTree, selectedTalents);
                     }
                     bool optionStageCompleted = talentOptionStage.HasEnoughTalents(selectedTalents);
                     if (!optionStageCompleted)
                     {
                         break;
                     }
-
-                    /*bool hasTalentInThisTier = talentOptionStage.HasMaxTalents(selectedTalents);
-                    if (!hasTalentInThisTier)
-                    {
-                        if (talentOptionStage.TalentIdentifiers.Contains(talentIdentifier))
-                        {
-                            return TalentTreeMeetsRequirements(talentTree, subTree, selectedTalents);
-                        }
-                        break;
-                    }*/
                 }
             }
 

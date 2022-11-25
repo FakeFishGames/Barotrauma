@@ -65,7 +65,7 @@ namespace Barotrauma
                 float reputationGainMultiplier = 1f;
                 foreach (Character character in GameSession.GetSessionCrewCharacters(CharacterType.Both))
                 {
-                    reputationGainMultiplier *= 1f + character.GetStatValue(StatTypes.ReputationGainMultiplier);
+                    reputationGainMultiplier *= 1f + character.GetStatValue(StatTypes.ReputationGainMultiplier, includeSaved: false);
                     reputationGainMultiplier *= 1f + character.Info?.GetSavedStatValue(StatTypes.ReputationGainMultiplier, Identifier) ?? 0;
                 }
                 reputationChange *= reputationGainMultiplier;
@@ -75,7 +75,7 @@ namespace Barotrauma
                 float reputationLossMultiplier = 1f;
                 foreach (Character character in GameSession.GetSessionCrewCharacters(CharacterType.Both))
                 {
-                    reputationLossMultiplier *= 1f + character.GetStatValue(StatTypes.ReputationLossMultiplier);
+                    reputationLossMultiplier *= 1f + character.GetStatValue(StatTypes.ReputationLossMultiplier, includeSaved: false);
                     reputationLossMultiplier *= 1f + character.Info?.GetSavedStatValue(StatTypes.ReputationLossMultiplier, Identifier) ?? 0;
                 }
                 reputationChange *= reputationLossMultiplier;

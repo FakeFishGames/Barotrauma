@@ -407,7 +407,7 @@ namespace Barotrauma
             {
                 var experienceGainMultiplierIndividual = new AbilityMissionExperienceGainMultiplier(this, 1f);
                 info?.Character?.CheckTalents(AbilityEffectType.OnGainMissionExperience, experienceGainMultiplierIndividual);
-                info?.GiveExperience((int)(experienceGain * experienceGainMultiplier.Value), isMissionExperience: true);
+                info?.GiveExperience((int)(experienceGain * experienceGainMultiplier.Value));
             }
 
             // apply money gains afterwards to prevent them from affecting XP gains
@@ -561,8 +561,7 @@ namespace Barotrauma
             Character spawnedCharacter = Character.Create(characterInfo.SpeciesName, positionToStayIn.WorldPosition, ToolBox.RandomSeed(8), characterInfo, createNetworkEvent: false);
             spawnedCharacter.HumanPrefab = humanPrefab;
             humanPrefab.InitializeCharacter(spawnedCharacter, positionToStayIn);
-            humanPrefab.GiveItems(spawnedCharacter, submarine, Rand.RandSync.ServerAndClient, createNetworkEvents: false);
-
+            humanPrefab.GiveItems(spawnedCharacter, submarine, positionToStayIn as WayPoint, Rand.RandSync.ServerAndClient, createNetworkEvents: false);
             characters.Add(spawnedCharacter);
             characterItems.Add(spawnedCharacter, spawnedCharacter.Inventory.FindAllItems(recursive: true));
 

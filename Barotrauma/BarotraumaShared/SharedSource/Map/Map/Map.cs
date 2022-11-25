@@ -622,7 +622,8 @@ namespace Barotrauma
                     {
                         leftMostLocation.ChangeType(
                             campaign,
-                            LocationType.Prefabs.OrderBy(lt => lt.Identifier).First(lt => lt.HasOutpost && lt.Identifier != "abandoned"));
+                            LocationType.Prefabs.OrderBy(lt => lt.Identifier).First(lt => lt.HasOutpost && lt.Identifier != "abandoned"),
+                            createStores: false);
                     }
                     leftMostLocation.IsGateBetweenBiomes = true;
                     Connections[i].Locked = true;
@@ -706,6 +707,7 @@ namespace Barotrauma
                     location.Faction ??= campaign.GetRandomFaction(Rand.RandSync.ServerAndClient);
                     location.SecondaryFaction ??= campaign.GetRandomSecondaryFaction(Rand.RandSync.ServerAndClient);
                 }
+                location.CreateStores(force: true);
             }
 
             foreach (LocationConnection connection in Connections) 
@@ -837,7 +839,7 @@ namespace Barotrauma
 
             if (LocationType.Prefabs.TryGet("none", out LocationType locationType))
             {
-                previousToEndLocation.ChangeType(campaign, locationType);
+                previousToEndLocation.ChangeType(campaign, locationType, createStores: false);
             }
 
             //remove all locations from the end biome except the end location

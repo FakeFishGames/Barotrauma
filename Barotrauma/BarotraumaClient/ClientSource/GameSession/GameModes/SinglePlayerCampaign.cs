@@ -432,7 +432,7 @@ namespace Barotrauma
                     break;
             }
 
-            Map.ProgressWorld(this, transitionType, (float)(Timing.TotalTime - GameMain.GameSession.RoundStartTime));
+            Map.ProgressWorld(this, transitionType, GameMain.GameSession.RoundDuration);
 
             GUI.ClearMessages();
 

@@ -12,6 +12,7 @@ namespace Barotrauma
 
         partial void OnStateChangedProjSpecific()
         {
+            SoundPlayer.ForceMusicUpdate();
             if (Phase == MissionPhase.NoItemsDestroyed)
             {
                 CoroutineManager.Invoke(() =>
@@ -31,6 +32,10 @@ namespace Barotrauma
             }
             else if (Phase == MissionPhase.BossKilled)
             {
+                if (!string.IsNullOrEmpty(endCinematicSound))
+                {
+                    SoundPlayer.PlaySound(endCinematicSound);
+                }
                 CoroutineManager.Invoke(() =>
                 {
                     new CameraTransition(boss, GameMain.GameScreen.Cam, null, Alignment.Center, panDuration: 3, fadeOut: false, endZoom: 0.1f * GUI.yScale)
@@ -60,7 +65,7 @@ namespace Barotrauma
                         if (limb.LightSource is Lights.LightSource light)
                         {
                             light.Enabled = true;
-                        }                        
+                        }
                     }
                 }
             }

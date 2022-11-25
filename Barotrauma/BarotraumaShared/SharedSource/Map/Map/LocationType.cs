@@ -13,8 +13,8 @@ namespace Barotrauma
     {
         public static readonly PrefabCollection<LocationType> Prefabs = new PrefabCollection<LocationType>();
 
-        private readonly List<string> names;
-        private readonly List<Sprite> portraits = new List<Sprite>();
+        private readonly ImmutableArray<string> names;
+        private readonly ImmutableArray<Sprite> portraits;
 
         //<name, commonness>
         private readonly ImmutableArray<(Identifier Name, float Commonness)> hireableJobs;
@@ -40,12 +40,6 @@ namespace Barotrauma
         public readonly List<string> HideEntitySubcategories = new List<string>();
 
         public bool IsEnterable { get; private set; }
-
-        public bool UsePortraitInMainMenu
-        {
-            get;
-            private set;
-        }
 
         public bool UsePortraitInRandomLoadingScreens
         {
@@ -118,7 +112,6 @@ namespace Barotrauma
 
             BeaconStationChance = element.GetAttributeFloat("beaconstationchance", 0.0f);
 
-            UsePortraitInMainMenu = element.GetAttributeBool(nameof(UsePortraitInMainMenu), element.GetAttributeBool("useinmainmenu", false));
             UsePortraitInRandomLoadingScreens = element.GetAttributeBool(nameof(UsePortraitInRandomLoadingScreens), true);
             HasOutpost = element.GetAttributeBool("hasoutpost", true);
             IsEnterable = element.GetAttributeBool("isenterable", HasOutpost);
@@ -146,7 +139,7 @@ namespace Barotrauma
             else
             {
                 string[] rawNamePaths = element.GetAttributeStringArray("namefile", new string[] { "Content/Map/locationNames.txt" });
-                names = new List<string>();
+                var names = new List<string>();
                 foreach (string rawPath in rawNamePaths)
                 {
                     try
@@ -163,6 +156,7 @@ namespace Barotrauma
                 {
                     names.Add("ERROR: No names found");
                 }
+                this.names = names.ToImmutableArray();
             }
 
             string[] commonnessPerZoneStrs = element.GetAttributeStringArray("commonnessperzone", Array.Empty<string>());
@@ -192,7 +186,7 @@ namespace Barotrauma
                 }
                 MinCountPerZone[zoneIndex] = minCount;
             }
-
+            var portraits = new List<Sprite>();
             var hireableJobs = new List<(Identifier, float)>();
             foreach (var subElement in element.Elements())
             {
@@ -233,6 +227,7 @@ namespace Barotrauma
                         break;
                 }
             }
+            this.portraits = portraits.ToImmutableArray();
             this.hireableJobs = hireableJobs.ToImmutableArray();
         }
 
@@ -249,10 +244,10 @@ namespace Barotrauma
             return null;
         }
 
-        public Sprite GetPortrait(int portraitId)
+        public Sprite GetPortrait(int randomSeed)
         {
-            if (portraits.Count == 0) { return null; }
-            return portraits[Math.Abs(portraitId) % portraits.Count];
+            if (portraits.Length == 0) { return null; }
+            return portraits[Math.Abs(randomSeed) % portraits.Length];
         }
 
         public string GetRandomName(Random rand, IEnumerable<Location> existingLocations)
@@ -265,7 +260,7 @@ namespace Barotrauma
                     return unusedNames[rand.Next() % unusedNames.Count];
                 }
             }
-            return names[rand.Next() % names.Count];
+            return names[rand.Next() % names.Length];
         }
 
         public static LocationType Random(Random rand, int? zone = null, bool requireOutpost = false)

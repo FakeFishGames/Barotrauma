@@ -56,6 +56,8 @@ namespace Barotrauma
         //dimensions of the wall sections' physics bodies (only used for debug rendering)
         private readonly List<Vector2> bodyDebugDimensions = new List<Vector2>();
 
+        private static Explosion explosionOnBroken;
+
 #if DEBUG
         [Serialize(false, IsPropertySaveable.Yes), Editable]
 #else
@@ -1083,7 +1085,7 @@ namespace Barotrauma
             return new AttackResult(damageAmount, null);
         }
 
-        public void SetDamage(int sectionIndex, float damage, Character attacker = null, bool createNetworkEvent = true)
+        public void SetDamage(int sectionIndex, float damage, Character attacker = null, bool createNetworkEvent = true, bool createExplosionEffect = true)
         {
             if (Submarine != null && Submarine.GodMode || Indestructible) { return; }
             if (!Prefab.Body) { return; }
@@ -1128,6 +1130,7 @@ namespace Barotrauma
             }
             else
             {
+                float prevGapOpenState = Sections[sectionIndex].gap?.Open ?? 0.0f;
                 if (Sections[sectionIndex].gap == null)
                 {
                     Rectangle gapRect = Sections[sectionIndex].rect;
@@ -1204,8 +1207,15 @@ namespace Barotrauma
 #endif
                 }
 
+                var gap = Sections[sectionIndex].gap;
                 float gapOpen = MaxHealth <= 0.0f ? 0.0f : (damage / MaxHealth - LeakThreshold) * (1.0f / (1.0f - LeakThreshold));
-                Sections[sectionIndex].gap.Open = gapOpen;
+                gap.Open = gapOpen;
+
+                //gap appeared or became much larger -> explosion effect
+                if (gapOpen - prevGapOpenState > 0.25f && createExplosionEffect && !gap.IsRoomToRoom)
+                {
+                    CreateWallDamageExplosion(gap, attacker);
+                }
             }
 
             float damageDiff = damage - Sections[sectionIndex].damage;
@@ -1232,6 +1242,59 @@ namespace Barotrauma
             if (hadHole == hasHole) { return; }
 
             UpdateSections();
+        }
+
+        private void CreateWallDamageExplosion(Gap gap, Character attacker)
+        {
+            const float explosionRange = 750.0f;
+            float explosionStrength = gap.Open;
+
+            var linkedHull = gap.linkedTo.FirstOrDefault() as Hull;
+            if (linkedHull != null)
+            {
+                //existing, nearby gaps leading to the same hull reduce the strength of the explosion
+                // -> the first breached section does most (or all) of the damage, making it more consistent
+                //    (otherwise the damage would depend on how many structures and sections happen to be breached)
+                foreach (var otherGap in linkedHull.ConnectedGaps)
+                {
+                    if (otherGap == gap || otherGap.IsRoomToRoom || otherGap.Open < 0.25f) { continue; }
+                    explosionStrength -= Math.Max(0, explosionRange - Vector2.Distance(otherGap.WorldPosition, gap.WorldPosition)) / explosionRange;
+                    if (explosionStrength <= 0.0f) { return; }
+                }
+            }
+
+            if (explosionOnBroken == null)
+            {
+                explosionOnBroken = new Explosion(explosionRange * gap.Open, force: 10.0f, damage: 0.0f, structureDamage: 0.0f, itemDamage: 0.0f);
+                if (AfflictionPrefab.Prefabs.TryGet("lacerations".ToIdentifier(), out AfflictionPrefab lacerations))
+                {
+                    explosionOnBroken.Attack.Afflictions.Add(lacerations.Instantiate(50.0f), null);
+                }
+                else
+                {
+                    explosionOnBroken.Attack.Afflictions.Add(AfflictionPrefab.InternalDamage.Instantiate(5.0f), null);
+                }
+                explosionOnBroken.OnlyInside = true;
+                explosionOnBroken.DisableParticles();
+            }
+
+            explosionOnBroken.Attack.DamageMultiplier = explosionStrength;
+            explosionOnBroken?.Explode(gap.WorldPosition, damageSource: null, attacker: attacker);
+#if CLIENT
+            if (linkedHull != null)
+            {
+                for (int i = 0; i <= 50; i++)
+                {
+                    Vector2 particlePos = new Vector2(Rand.Range(gap.WorldRect.X, gap.WorldRect.Right), Rand.Range(gap.WorldRect.Y - gap.WorldRect.Height, gap.WorldRect.Y));
+                    var velocity = gap.IsHorizontal ?
+                        gap.linkedTo[0].WorldPosition.X < gap.WorldPosition.X ? -Vector2.UnitX : Vector2.UnitX :
+                        gap.linkedTo[0].WorldPosition.Y < gap.WorldPosition.Y ? -Vector2.UnitY : Vector2.UnitY;
+                    velocity = new Vector2(velocity.X + Rand.Range(-0.2f, 0.2f), velocity.Y + Rand.Range(-0.2f, 0.2f));
+                    var particle = GameMain.ParticleManager.CreateParticle("shrapnel", particlePos, velocity * Rand.Range(100.0f, 3000.0f), collisionIgnoreTimer: 0.1f);
+                    if (particle == null) { break; }
+                }
+            }
+#endif
         }
 
         partial void OnHealthChangedProjSpecific(Character attacker, float damageAmount);
@@ -1570,7 +1633,7 @@ namespace Barotrauma
         {
             for (int i = 0; i < Sections.Length; i++)
             {
-                SetDamage(i, Sections[i].damage, createNetworkEvent: false);
+                SetDamage(i, Sections[i].damage, createNetworkEvent: false, createExplosionEffect: false);
             }
         }
 

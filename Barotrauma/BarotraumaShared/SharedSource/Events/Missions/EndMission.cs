@@ -25,6 +25,8 @@ namespace Barotrauma
         private readonly Identifier spawnPointTag;
         private readonly Identifier destructibleItemTag;
 
+        private readonly string endCinematicSound;
+
         private ImmutableArray<Character> minions;
         private readonly int minionCount;
         private readonly float minionScatter;
@@ -134,7 +136,7 @@ namespace Barotrauma
 
             spawnPointTag = prefab.ConfigElement.GetAttributeIdentifier(nameof(spawnPointTag), Identifier.Empty);
             destructibleItemTag = prefab.ConfigElement.GetAttributeIdentifier(nameof(destructibleItemTag), Identifier.Empty);
-
+            endCinematicSound = prefab.ConfigElement.GetAttributeString(nameof(endCinematicSound), string.Empty);
             startCinematicDistance = prefab.ConfigElement.GetAttributeFloat(nameof(startCinematicDistance), 0);
         }
 

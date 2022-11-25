@@ -115,6 +115,11 @@ namespace Barotrauma
             };
         }
 
+        public Identifier GetOverrideMusicType()
+        {
+            return Prefab.GetOverrideMusicType(State);
+        }
+
         public virtual void ClientRead(IReadMessage msg)
         {
             State = msg.ReadInt16();

@@ -517,6 +517,11 @@ namespace Barotrauma
             
             if (musicDisposed) { Thread.Sleep(60); }
         }
+
+        public static void ForceMusicUpdate()
+        {
+            updateMusicTimer = 0.0f;
+        }
         
         private static void UpdateMusic(float deltaTime)
         {
@@ -544,7 +549,7 @@ namespace Barotrauma
 
                 IEnumerable<BackgroundMusic> suitableMusic = GetSuitableMusicClips(currentMusicType, currentIntensity);
                 int mainTrackIndex = 0;
-                if (suitableMusic.Count() == 0)
+                if (suitableMusic.None())
                 {
                     targetMusic[mainTrackIndex] = null;
                 }
@@ -611,10 +616,17 @@ namespace Barotrauma
                     targetMusic[typeAmbienceTrackIndex] = suitableTypeAmbiences.GetRandomUnsynced();
                 }
 
+                IEnumerable<BackgroundMusic> suitableIntensityMusic = Enumerable.Empty<BackgroundMusic>();
+                if (targetMusic[mainTrackIndex] is { MuteIntensityTracks: false } mainTrack && Screen.Selected == GameMain.GameScreen)
+                {
+                    float intensity = currentIntensity;
+                    if (mainTrack?.ForceIntensityTrack != null)
+                    {
+                        intensity = mainTrack.ForceIntensityTrack.Value;
+                    }
+                    suitableIntensityMusic = GetSuitableMusicClips("intensity".ToIdentifier(), intensity);
+                }
                 //get the appropriate intensity layers for current situation
-                IEnumerable<BackgroundMusic> suitableIntensityMusic = Screen.Selected == GameMain.GameScreen ?
-                    GetSuitableMusicClips("intensity".ToIdentifier(), currentIntensity) :
-                    Enumerable.Empty<BackgroundMusic>();
                 int intensityTrackStartIndex = 3;
                 for (int i = intensityTrackStartIndex; i < MaxMusicChannels; i++)
                 {
@@ -744,6 +756,14 @@ namespace Barotrauma
 
             firstTimeInMainMenu = false;
 
+            if (GameMain.GameSession != null)
+            {
+                foreach (var mission in GameMain.GameSession.Missions)
+                {
+                    var missionMusic = mission.GetOverrideMusicType();
+                    if (!missionMusic.IsEmpty) { return missionMusic; }
+                }
+            }
 
             if (Character.Controlled != null)
             {
@@ -833,7 +853,7 @@ namespace Barotrauma
                 {
                     return "levelend".ToIdentifier();
                 }
-                if (Timing.TotalTime < GameMain.GameSession.RoundStartTime + 120.0 && 
+                if (GameMain.GameSession.RoundDuration > 120.0 && 
                     Level.Loaded?.Type == LevelData.LevelType.LocationConnection)
                 {
                     return "start".ToIdentifier();

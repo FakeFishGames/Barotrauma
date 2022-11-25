@@ -540,7 +540,7 @@ namespace Barotrauma
         private Color speechBubbleColor;
         private float speechBubbleTimer;
 
-        public bool ResetInteract;
+        public bool DisableInteract { get; set; }
 
         //text displayed when the character is highlighted if custom interact is set
         public LocalizedString CustomInteractHUDText { get; private set; }
@@ -809,6 +809,7 @@ namespace Barotrauma
         public float MaxHealth => MaxVitality;
         public AIState AIState => AIController is EnemyAIController enemyAI ? enemyAI.State : AIState.Idle;
         public bool IsLatched => AIController is EnemyAIController enemyAI && enemyAI.LatchOntoAI != null && enemyAI.LatchOntoAI.IsAttached;
+        public float EmpVulnerability => Params.Health.EmpVulnerability;
 
         public float Bloodloss
         {
@@ -851,6 +852,12 @@ namespace Barotrauma
         }
 
         public float DisableImpactDamageTimer
+        {
+            get;
+            set;
+        }
+
+        public bool IgnoreMeleeWeapons
         {
             get;
             set;
@@ -905,6 +912,10 @@ namespace Barotrauma
                 if (_selectedItem != null && (prevSelectedItem == null || prevSelectedItem != _selectedItem))
                 {
                     itemSelectedTime = Timing.TotalTime;
+                }
+                if (prevSelectedItem != _selectedItem && prevSelectedItem?.OnDeselect != null)
+                {
+                    prevSelectedItem.OnDeselect(this);
                 }
             }
         }
@@ -1592,7 +1603,7 @@ namespace Barotrauma
                 {
                     DebugConsole.ThrowError($"Failed to give job items for the character \"{Name}\" - could not find human prefab with the id \"{info.HumanPrefabIds.NpcIdentifier}\" from \"{info.HumanPrefabIds.NpcSetIdentifier}\".");
                 }
-                else if (humanPrefab.GiveItems(this, Submarine))
+                else if (humanPrefab.GiveItems(this, Submarine, spawnPoint))
                 {
                     return;
                 }
@@ -2681,9 +2692,9 @@ namespace Barotrauma
                 return;
             }
 
-            if (ResetInteract)
+            if (DisableInteract)
             {
-                ResetInteract = false;
+                DisableInteract = false;
                 return;
             }
 
@@ -2704,25 +2715,31 @@ namespace Barotrauma
             {
                 if (!IsMouseOnUI && (ViewTarget == null || ViewTarget == this))
                 {
-                    if ((findFocusedTimer <= 0.0f || Screen.Selected == GameMain.SubEditorScreen) && (!PlayerInput.PrimaryMouseButtonHeld() || Barotrauma.Inventory.DraggingItemToWorld))
+                    if (findFocusedTimer <= 0.0f || Screen.Selected == GameMain.SubEditorScreen)
                     {
-                        FocusedCharacter = CanInteract || CanEat ? FindCharacterAtPosition(mouseSimPos) : null;
-                        if (FocusedCharacter != null && !CanSeeCharacter(FocusedCharacter)) { FocusedCharacter = null; }
-                        float aimAssist = GameSettings.CurrentConfig.AimAssistAmount * (AnimController.InWater ? 1.5f : 1.0f);
-                        if (HeldItems.Any(it => it?.GetComponent<Wire>()?.IsActive ?? false))
+                        if (!PlayerInput.PrimaryMouseButtonHeld() || Barotrauma.Inventory.DraggingItemToWorld)
                         {
-                            //disable aim assist when rewiring to make it harder to accidentally select items when adding wire nodes
-                            aimAssist = 0.0f;
-                        }
+                            FocusedCharacter = CanInteract || CanEat ? FindCharacterAtPosition(mouseSimPos) : null;
+                            if (FocusedCharacter != null && !CanSeeCharacter(FocusedCharacter)) { FocusedCharacter = null; }
+                            float aimAssist = GameSettings.CurrentConfig.AimAssistAmount * (AnimController.InWater ? 1.5f : 1.0f);
+                            if (HeldItems.Any(it => it?.GetComponent<Wire>()?.IsActive ?? false))
+                            {
+                                //disable aim assist when rewiring to make it harder to accidentally select items when adding wire nodes
+                                aimAssist = 0.0f;
+                            }
 
-                        var item = FindItemAtPosition(mouseSimPos, aimAssist);
-                        
-                        focusedItem = CanInteract ? item : null;
-                        if (focusedItem != null && focusedItem.CampaignInteractionType != CampaignMode.InteractionType.None)
-                        {
-                            FocusedCharacter = null;
+                            focusedItem = CanInteract ? FindItemAtPosition(mouseSimPos, aimAssist) : null;
+                            if (focusedItem != null && focusedItem.CampaignInteractionType != CampaignMode.InteractionType.None)
+                            {
+                                FocusedCharacter = null;
+                            }
+                            findFocusedTimer = 0.05f;
                         }
-                        findFocusedTimer = 0.05f;
+                        else
+                        {
+                            if (focusedItem != null && !CanInteractWith(focusedItem)) { focusedItem = null; }
+                            if (FocusedCharacter != null && !CanInteractWith(FocusedCharacter)) { FocusedCharacter = null; }
+                        }
                     }
                 }
                 else
@@ -2953,6 +2970,15 @@ namespace Barotrauma
         {
             UpdateProjSpecific(deltaTime, cam);
 
+            if (InvisibleTimer > 0.0f)
+            {
+                if (Controlled == null || Controlled == this || (Controlled.CharacterHealth.GetAffliction("psychosis")?.Strength ?? 0.0f) <= 0.0f)
+                {
+                    InvisibleTimer = Math.Min(InvisibleTimer, 1.0f);
+                }
+                InvisibleTimer -= deltaTime;
+            }
+
             KnockbackCooldownTimer -= deltaTime;
 
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && this == Controlled && !isSynced) { return; }
@@ -2992,6 +3018,7 @@ namespace Barotrauma
             }
 
             HideFace = false;
+            IgnoreMeleeWeapons = false;
 
             UpdateSightRange(deltaTime);
             UpdateSoundRange(deltaTime);
@@ -4096,7 +4123,13 @@ namespace Barotrauma
         {
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && !isNetworkMessage) { return; }
             if (Screen.Selected != GameMain.GameScreen) { return; }
-            if (newStun > 0 && Params.Health.StunImmunity) { return; }
+            if (newStun > 0 && Params.Health.StunImmunity)
+            {
+                if (EmpVulnerability <= 0 || CharacterHealth.GetAfflictionStrength("emp", allowLimbAfflictions: false) <= 0)
+                {
+                    return;
+                }
+            }
             if ((newStun <= Stun && !allowStunDecrease) || !MathUtils.IsValid(newStun)) { return; }
             if (Math.Sign(newStun) != Math.Sign(Stun))
             {
@@ -4345,6 +4378,9 @@ namespace Barotrauma
             {
                 foreach (Item heldItem in HeldItems.ToList())
                 {
+                    //if the item is both wearable and holdable, and currently worn, don't drop the item
+                    var wearable = heldItem.GetComponent<Wearable>();
+                    if (wearable is { IsActive: true }) { continue; }
                     heldItem.Drop(this);
                 }
             }

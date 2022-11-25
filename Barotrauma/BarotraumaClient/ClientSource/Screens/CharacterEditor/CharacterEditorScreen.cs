@@ -1766,9 +1766,15 @@ namespace Barotrauma.CharacterEditor
             var modProject = new ModProject(contentPackage);
             var newFile = ModProject.File.FromPath<CharacterFile>(configFilePath);
             modProject.AddFile(newFile);
-
             modProject.Save(contentPackage.Path);
-            contentPackage = ContentPackageManager.ReloadContentPackage(contentPackage);
+
+            var reloadResult = ContentPackageManager.ReloadContentPackage(contentPackage);
+            if (!reloadResult.TryUnwrapSuccess(out var newPackage))
+            {
+                throw new Exception($"Failed to reload package",
+                    reloadResult.TryUnwrapFailure(out var exception) ? exception : null);
+            }
+            contentPackage = newPackage;
 
             DebugConsole.NewMessage(GetCharacterEditorTranslation("ContentPackageSaved").Replace("[path]", contentPackage.Path));      
 

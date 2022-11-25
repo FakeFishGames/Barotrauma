@@ -165,6 +165,7 @@ namespace Barotrauma
 
             void DrawOverlay(Sprite sprite, Color color)
             {
+                if (sprite.Texture == null) { return; }
                 GUI.DrawBackgroundSprite(spriteBatch, sprite, color);
             }
         }

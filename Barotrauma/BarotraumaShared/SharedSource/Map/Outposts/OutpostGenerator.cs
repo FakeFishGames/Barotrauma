@@ -1691,13 +1691,12 @@ namespace Barotrauma
                 {
                     npc.CharacterHealth.Unkillable = true;
                 }
-                humanPrefab.GiveItems(npc, outpost, Rand.RandSync.ServerAndClient);
+                humanPrefab.GiveItems(npc, outpost, gotoTarget as WayPoint, Rand.RandSync.ServerAndClient);
                 foreach (Item item in npc.Inventory.FindAllItems(it => it != null, recursive: true))
                 {
                     item.AllowStealing = outpost.Info.OutpostGenerationParams.AllowStealing;
                     item.SpawnedInCurrentOutpost = true;
                 }
-                npc.GiveIdCardTags(gotoTarget as WayPoint);
                 humanPrefab.InitializeCharacter(npc, gotoTarget);
             }
         }

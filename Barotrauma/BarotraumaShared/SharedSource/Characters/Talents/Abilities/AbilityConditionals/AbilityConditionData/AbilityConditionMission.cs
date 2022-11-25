@@ -39,8 +39,18 @@ namespace Barotrauma.Abilities
             {
                 if (factions.Any())
                 {
-                    // FIXME there's probably a better way to check the faction affiliated with the mission later
-                    return mission.ReputationRewards.Keys.Any(factionIdentifier => factions.Contains(factionIdentifier));
+                    if (GameMain.GameSession?.Campaign?.Factions is not { } factions) { return false; }
+
+                    foreach (var (factionIdentifier, amount) in mission.ReputationRewards)
+                    {
+                        if (amount <= 0) { continue; }
+                        if (factions.FirstOrDefault(faction => factionIdentifier == faction.Prefab.Identifier) is Faction faction &&
+                            Faction.GetPlayerAffiliationStatus(faction) is FactionAffiliation.Positive)
+                        {
+                            return true;
+                        }
+                    }
+                    return false;
                 }
 
                 return missionType.Contains(mission.Prefab.Type);

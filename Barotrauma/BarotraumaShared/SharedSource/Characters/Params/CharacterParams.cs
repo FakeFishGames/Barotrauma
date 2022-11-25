@@ -504,6 +504,9 @@ namespace Barotrauma
             [Serialize(false, IsPropertySaveable.Yes), Editable]
             public bool PoisonImmunity { get; set; }
 
+            [Serialize(0f, IsPropertySaveable.Yes), Editable]
+            public float EmpVulnerability { get; set; }
+
             [Serialize(false, IsPropertySaveable.Yes, description: "Can afflictions affect the face/body tint of the character."), Editable]
             public bool ApplyAfflictionColors { get; private set; }
 

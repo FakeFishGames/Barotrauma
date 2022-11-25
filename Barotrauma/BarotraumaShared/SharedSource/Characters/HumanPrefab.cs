@@ -185,7 +185,7 @@ namespace Barotrauma
             }
         }
 
-        public bool GiveItems(Character character, Submarine submarine, Rand.RandSync randSync = Rand.RandSync.Unsynced, bool createNetworkEvents = true)
+        public bool GiveItems(Character character, Submarine submarine, WayPoint spawnPoint, Rand.RandSync randSync = Rand.RandSync.Unsynced, bool createNetworkEvents = true)
         {
             if (ItemSets == null || !ItemSets.Any()) { return false; }
             var spawnItems = ToolBox.SelectWeightedRandom(ItemSets, it => it.commonness, randSync).element;
@@ -196,7 +196,7 @@ namespace Barotrauma
                     int amount = itemElement.GetAttributeInt("amount", 1);
                     for (int i = 0; i < amount; i++)
                     {
-                        InitializeItem(character, itemElement, submarine, this, createNetworkEvents: createNetworkEvents);
+                        InitializeItem(character, itemElement, submarine, this, spawnPoint, createNetworkEvents: createNetworkEvents);
                     }
                 }
             }
@@ -234,7 +234,7 @@ namespace Barotrauma
             return characterInfo;
         }
 
-        public static void InitializeItem(Character character, XElement itemElement, Submarine submarine, HumanPrefab humanPrefab, Item parentItem = null, bool createNetworkEvents = true)
+        public static void InitializeItem(Character character, XElement itemElement, Submarine submarine, HumanPrefab humanPrefab, WayPoint spawnPoint = null, Item parentItem = null, bool createNetworkEvents = true)
         {
             ItemPrefab itemPrefab;
             string itemIdentifier = itemElement.GetAttributeString("identifier", "");
@@ -278,7 +278,7 @@ namespace Barotrauma
             IdCard idCardComponent = item.GetComponent<IdCard>();
             if (idCardComponent != null)
             {
-                idCardComponent.Initialize(null, character);
+                idCardComponent.Initialize(spawnPoint, character);
                 if (submarine != null && (submarine.Info.IsWreck || submarine.Info.IsOutpost))
                 {
                     idCardComponent.SubmarineSpecificID = submarine.SubmarineSpecificIDTag;
@@ -301,7 +301,7 @@ namespace Barotrauma
                 int amount = childItemElement.GetAttributeInt("amount", 1);
                 for (int i = 0; i < amount; i++)
                 {
-                    InitializeItem(character, childItemElement, submarine, humanPrefab, item, createNetworkEvents);
+                    InitializeItem(character, childItemElement, submarine, humanPrefab, spawnPoint, item, createNetworkEvents);
                 }
             }
         }

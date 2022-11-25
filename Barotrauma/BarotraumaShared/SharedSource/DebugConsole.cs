@@ -5,6 +5,7 @@ using Barotrauma.Steam;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -15,12 +16,12 @@ using Barotrauma.MapCreatures.Behavior;
 
 namespace Barotrauma
 {
-    struct ColoredText
+    readonly struct ColoredText
     {
-        public string Text;
-        public Color Color;
-		public bool IsCommand;
-        public bool IsError;
+        public readonly string Text;
+        public readonly Color Color;
+        public readonly bool IsCommand;
+        public readonly bool IsError;
 
         public readonly string Time;
 
@@ -31,7 +32,7 @@ namespace Barotrauma
 			this.IsCommand = isCommand;
             this.IsError = isError;
 
-            Time = DateTime.Now.ToString();
+            Time = DateTime.Now.ToString(CultureInfo.InvariantCulture);
         }
     }
 
@@ -91,13 +92,57 @@ namespace Barotrauma
             }
         }
 
-        private static readonly Queue<ColoredText> queuedMessages = new Queue<ColoredText>();
+        private static readonly ConcurrentQueue<ColoredText> queuedMessages
+            = new ConcurrentQueue<ColoredText>();
 
+        public static readonly NamedEvent<ColoredText> MessageHandler = new NamedEvent<ColoredText>();
+
+        public struct ErrorCatcher : IDisposable
+        {
+            private readonly List<ColoredText> errors;
+            private readonly bool wasConsoleOpen;
+            private Identifier handlerId;
+            public IReadOnlyList<ColoredText> Errors => errors;
+
+            private ErrorCatcher(Identifier handlerId)
+            {
+                this.handlerId = handlerId;
+#if CLIENT
+                this.wasConsoleOpen = IsOpen;
+#else
+                this.wasConsoleOpen = false;
+#endif
+                this.errors = new List<ColoredText>();
+
+                //create a local variable that can be captured by lambdas
+                var errs = this.errors;
+                
+                MessageHandler.Register(handlerId, msg =>
+                {
+                    if (!msg.IsError) { return; }
+                    errs.Add(msg);
+                });
+            }
+            
+            public static ErrorCatcher Create()
+                => new ErrorCatcher(ToolBox.RandomSeed(25).ToIdentifier());
+
+            public void Dispose()
+            {
+                if (handlerId.IsEmpty) { return; }
+                MessageHandler.Deregister(handlerId);
+                handlerId = Identifier.Empty;
+#if CLIENT
+                DebugConsole.IsOpen = wasConsoleOpen;
+#endif
+            }
+        }
+        
         static partial void ShowHelpMessage(Command command);
         
         const int MaxMessages = 300;
 
-        public static List<ColoredText> Messages = new List<ColoredText>();
+        public static readonly List<ColoredText> Messages = new List<ColoredText>();
 
         public delegate void QuestionCallback(string answer);
         private static QuestionCallback activeQuestionCallback;
@@ -2290,11 +2335,10 @@ namespace Barotrauma
         private static void NewMessage(string msg, Color color, bool isCommand, bool isError)
         {
             if (string.IsNullOrEmpty(msg)) { return; }
-            
-            lock (queuedMessages)
-            {
-                queuedMessages.Enqueue(new ColoredText(msg, color, isCommand, isError));
-            }
+
+            var newMsg = new ColoredText(msg, color, isCommand, isError);
+            queuedMessages.Enqueue(newMsg);
+            MessageHandler.Invoke(newMsg);
         }
 
         public static void ShowQuestionPrompt(string question, QuestionCallback onAnswered, string[] args = null, int argCount = -1)

@@ -212,7 +212,7 @@ namespace Barotrauma
         public float Stun { get; private set; }
 
         [Serialize(false, IsPropertySaveable.Yes, description: "Can damage only Humans."), Editable]
-        public bool OnlyHumans { get; private set; }
+        public bool OnlyHumans { get; set; }
 
         [Serialize("", IsPropertySaveable.Yes), Editable]
         public string ApplyForceOnLimbs
@@ -328,7 +328,7 @@ namespace Barotrauma
             List<Affliction> multipliedAfflictions = new List<Affliction>();
             foreach (Affliction affliction in Afflictions.Keys)
             {
-                multipliedAfflictions.Add(affliction.CreateMultiplied(multiplier, affliction.Probability));
+                multipliedAfflictions.Add(affliction.CreateMultiplied(multiplier, affliction));
             }
             return multipliedAfflictions;
         }

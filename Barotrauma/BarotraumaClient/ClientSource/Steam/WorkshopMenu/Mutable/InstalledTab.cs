@@ -49,21 +49,10 @@ namespace Barotrauma.Steam
                     SteamManager.Workshop.DownloadModThenEnqueueInstall(item);
                 }
             }
-
-            TaskPool.Add("RemoveUnsubscribedItems", SteamManager.Workshop.GetPublishedItems(), t =>
+            
+            SteamManager.Workshop.DeleteUnsubscribedMods(removedPackages =>
             {
-                if (!t.TryGetResult(out ISet<Steamworks.Ugc.Item> publishedItems)) { return; }
-
-                var allRequiredInstalled = subscribedIds.Union(publishedItems.Select(it => it.Id)).ToHashSet();
-                bool needsRefresh = false;
-                foreach (var id in installedIds.Where(id2 => !allRequiredInstalled.Contains(id2)))
-                {
-                    Steamworks.Ugc.Item item = new Steamworks.Ugc.Item(id);
-                    SteamManager.Workshop.Uninstall(item);
-                    needsRefresh = true;
-                }
-
-                if (needsRefresh)
+                if (removedPackages.Any())
                 {
                     PopulateInstalledModLists();
                 }
@@ -487,8 +476,9 @@ namespace Barotrauma.Steam
         {
             string str = modsListFilter.Text;
             enabledRegularModsList.Content.Children.Concat(disabledRegularModsList.Content.Children)
-                .ForEach(c => c.Visible = c.UserData is not ContentPackage p
-                                          || ModNameMatches(p, str) && ModMatchesTickboxes(p, c));
+                .ForEach(c
+                    => c.Visible = c.UserData is not ContentPackage p
+                        || ModNameMatches(p, str) && ModMatchesTickboxes(p, c));
         }
 
         private bool ModMatchesTickboxes(ContentPackage p, GUIComponent guiItem)
@@ -550,7 +540,20 @@ namespace Barotrauma.Steam
                 (p) => p.Name,
                 ContentPackageManager.CorePackages.ToArray(),
                 ContentPackageManager.EnabledPackages.Core!,
-                (p) => { });
+                (p) =>
+                {
+                    enabledCoreDropdown.ButtonTextColor =
+                        p.HasAnyErrors
+                            ? GUIStyle.Red
+                            : GUIStyle.TextColorNormal;
+                });
+            enabledCoreDropdown.ListBox.Content.Children
+                .OfType<GUITextBlock>()
+                .ForEach(tb =>
+                    CreateModErrorInfo(
+                        (tb.UserData as ContentPackage)!,
+                        tb,
+                        tb));
             
             void addRegularModToList(RegularPackage mod, GUIListBox list)
             {
@@ -658,10 +661,7 @@ namespace Barotrauma.Steam
                 {
                     CanBeFocused = false
                 };
-                if (mod.Errors.Any())
-                {
-                    CreateModErrorInfo(mod, modFrame, modName);
-                }
+                CreateModErrorInfo(mod, modFrame, modName);
                 if (ContentPackageManager.LocalPackages.Contains(mod))
                 {
                     var editButton = new GUIButton(new RectTransform(Vector2.One, frameContent.RectTransform, scaleBasis: ScaleBasis.Smallest), "",

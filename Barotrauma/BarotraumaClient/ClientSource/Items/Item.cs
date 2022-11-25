@@ -1287,7 +1287,8 @@ namespace Barotrauma
         {
             foreach (ItemComponent ic in activeHUDs)
             {
-                if (ic.GuiFrame == null || !ic.CanBeSelected) { continue; }
+                if (ic.GuiFrame == null) { continue; }
+                if (!ic.CanBeSelected && !ic.DrawHudWhenEquipped) { continue; }
                 ic.GuiFrame.RectTransform.ScreenSpaceOffset = Point.Zero;
                 if (ic.UseAlternativeLayout)
                 {

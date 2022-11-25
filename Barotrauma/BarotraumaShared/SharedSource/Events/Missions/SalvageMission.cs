@@ -15,11 +15,17 @@ namespace Barotrauma
         {
             public Item Item;
 
+            /// <summary>
+            /// Note that the integer values matter here: the state of the target can't go back to a smaller value,
+            /// and a larger or equal value than the <see href="RequiredRetrievalState">RequiredRetrievalState</see> means the item counts as retrieved
+            /// (if the item needs to be picked up to be considered retrieved, it's also considered retrieved if it's in the sub)
+            /// </summary>
             public enum RetrievalState
-            {
+            {                
                 None = 0,
-                PickedUp = 1,
-                RetrievedToSub = 2
+                Interact = 1,
+                PickedUp = 2,
+                RetrievedToSub = 3
             }
 
             public readonly ItemPrefab ItemPrefab;
@@ -41,10 +47,19 @@ namespace Barotrauma
 
             public readonly bool HideLabelAfterRetrieved;
 
-            public bool Retrieved =>
-                RequiredRetrievalState == RetrievalState.RetrievedToSub ?
-                State == RetrievalState.RetrievedToSub :
-                State != RetrievalState.None;
+            public bool Retrieved
+            {
+                get
+                {
+                    return RequiredRetrievalState switch
+                    {
+                        RetrievalState.None => true,
+                        RetrievalState.Interact or RetrievalState.PickedUp => State >= RequiredRetrievalState,
+                        RetrievalState.RetrievedToSub => State == RetrievalState.RetrievedToSub,
+                        _ => throw new NotImplementedException(),
+                    };
+                }
+            }
 
             private RetrievalState state;
             public RetrievalState State
@@ -59,6 +74,8 @@ namespace Barotrauma
 #endif
                 }
             }
+
+            public bool Interacted;
 
             private readonly SalvageMission mission;
 
@@ -268,6 +285,13 @@ namespace Barotrauma
                         target.Item.body.SetTransformIgnoreContacts(target.Item.body.SimPosition, target.Item.body.Rotation);
                         target.Item.body.FarseerBody.BodyType = BodyType.Kinematic;
                     }
+                    else if (target.RequiredRetrievalState == Target.RetrievalState.Interact)
+                    {
+                        target.Item.OnInteract += () =>
+                        {
+                            target.Interacted = true;
+                        };
+                    }
                     for (int i = 0; i < target.StatusEffects.Count; i++)
                     {
                         List<StatusEffect> effectList = target.StatusEffects[i];
@@ -352,21 +376,32 @@ namespace Barotrauma
                 switch (target.State)
                 {
                     case Target.RetrievalState.None:
+                        if (target.Interacted)
+                        {
+                            TrySetRetrievalState(Target.RetrievalState.Interact);
+                        }
                         var root = target.Item?.GetRootContainer() ?? target.Item;
                         if (root.ParentInventory?.Owner is Character character && character.TeamID == CharacterTeamType.Team1)
                         {
-                            target.State = Target.RetrievalState.PickedUp;
-                            if (target.Retrieved) { State = i + 1 ; }
+                            TrySetRetrievalState(Target.RetrievalState.PickedUp);
                         }
                         break;
                     case Target.RetrievalState.PickedUp:
                         Submarine parentSub = target.Item.CurrentHull?.Submarine ?? target.Item.GetRootInventoryOwner()?.Submarine;
                         if (parentSub != null && parentSub.Info.Type == SubmarineType.Player)
                         {
-                            target.State = Target.RetrievalState.RetrievedToSub;
-                            if (target.Retrieved) { State = i + 1; }
+                            TrySetRetrievalState(Target.RetrievalState.RetrievedToSub);
                         }
                         break;
+                }
+
+                void TrySetRetrievalState(Target.RetrievalState retrievalState)
+                {
+                    if (retrievalState < target.State) { return; }
+                    bool wasRetrieved = false;
+                    target.State = retrievalState;
+                    //increment the mission state if the target became retrieved
+                    if (!wasRetrieved && target.Retrieved) { State = i + 1; }
                 }
             }
             if (targets.All(t => t.Retrieved))
@@ -383,7 +418,7 @@ namespace Barotrauma
         protected override void EndMissionSpecific(bool completed)
         {
             //consider failed (can't attempt again) if we picked up any of the items but failed to bring them out of the level
-            failed = !completed && targets.Any(t => t.State != Target.RetrievalState.None);
+            failed = !completed && targets.Any(t => t.State >= Target.RetrievalState.PickedUp);
             foreach (var target in targets)
             {
                 if (target.RemoveItem)

@@ -1,4 +1,22 @@
 ---------------------------------------------------------------------------------------------------------
+v100.6.0.0
+---------------------------------------------------------------------------------------------------------
+
+- Some new music and sounds for the final levels.
+- Some new loading screen portraits and improvements to the existing ones.
+- Visual improvements to the final levels.
+- Visual improvements to the location info overlays on the campaign map.
+- The "exit" sonar marker doesn't appear in the end levels until you've pressed the switch that opens the exit, and once you do, the switch marker disappears.
+- Fixed reputation loss when a character other than the player (e.g. crawlers in the 'crawleroutbreak' event) damages the outpost walls.
+- Made some talent items purchaseable with high faction rep.
+- Adjustments to outpost events' reputation rewards.
+- Adjustments to the reputation thresholds at which some husk cult events can trigger. Previously you needed at least 15 rep to start the main event chain, which was very hard to reach because there's so few ways to gain cultist rep outside the event chain.
+- Gave Captain Hognose some experience points.
+- Ritual lanterns heal all afflictions of the type "damage", not just organ damage and burns.
+- Fixed cultist robes hiding iron helmet.
+- Fixed FB3000 being set to autoinject, making it use up the fuel rod when below 50% health.
+
+---------------------------------------------------------------------------------------------------------
 v100.5.0.0
 ---------------------------------------------------------------------------------------------------------
 
@@ -66,6 +84,68 @@ Test version of the faction overhaul:
 - Improvements to the campaign map.
 
 ---------------------------------------------------------------------------------------------------------
+v0.20.8.0
+---------------------------------------------------------------------------------------------------------
+
+Changes and additions:
+- Added various new loot items to different creatures.
+- Large monsters (Abyss monsters, Moloch, Watcher) drop items upon death.
+- Husk eggs now come in two forms: Husk eggs with actual egg-like appearance and the syringe version.
+- Breaches through the submarine's outer hull throws shrapnels that can cause minor damage to nearby characters, making monsters that can't get inside more of a threat to the crew (as opposed to just the submarine itself).
+- Emp damage now stuns and damages electrical characters (Fractalguardian and Defensebot). Modders: implemented as an affliction, so it's not tied to the "empstrength" attribute defined for explosions.
+- Addressed "overactive hammerheads" (#10072) by increasing the perception ranges of the monster mission variants.
+- Added a new honking scary random event to beacon stations.
+- Added a reactor infographic designed to help new players better understand the reactor interface. It's accessible through a help button on the top right corner of the interface.
+- Added some particle, sound and light effects to water-sensitive materials and made them explode when they've been in water for 3 seconds, not immediately.
+
+Unstable only:
+- Fixed status effects with OnUse not always working in the multiplayer mode. Fixes the sounds not playing when the medical items were used on the health interface.
+- Fixed mutually exclusive talents being both selectable.
+- Fixed "Medical Expertise" not boosting bandages, but applying heals to the entire body instead.
+- Fixed "Graduation Ceremony" granting extra talent points.
+- Fixed skillbooks triggering talent effects, allowing enormous XP gains when combined with certain captain talents.
+- Don't allow laying in beds when wearing an exosuit.
+- Added sounds for Petraptor and Defensebot.
+- Added sounds for the new weapons.
+- Adjusted Shotgun and Scrap Cannon spread.
+- Fixed interacting with a wrecked periscope doing nothing.
+- Fixed double-clicking on a stack of ammo not reloading the equipped weapon.
+- Fixed fabricator pulling materials from the previous user's inventory even if the character is no longer at the fabricator.
+- Adjusted item editing hud position to prevent it from overlapping with the affliction icons.
+- Fixed active tutorial child objectives not being re-added to the list after resolution change.
+- Fixed wiring interfaces becoming blank after changing resolution.
+- Fixed changing the selected location on the campaign map changing what outpost you are currently at according to the tab menu.
+- Fixed players who've been inside a clown crate becoming impossible to grab/heal for the rest of the round.
+- Fixed medical syringes (or other melee weapons) hitting characters inside a clown crate.
+- Fixed some inconsistencies with turret loader box positions.
+- Fixed items that should only be available in stores past a certain difficulty not being available at all.
+- Fixed dedicated server not using the "ispublic" setting configured in serversettings.xml.
+
+Modding:
+- Implemented the status effect type "OnSuccess" where "OnUse" was used instead. Changed "OnUse" to be neutral: always triggers, regardless of the (skill) requirements. You may need to switch using "OnSuccess" instead of "OnUse", if it's intended for the status effect to trigger only when the requirements are matched.
+- Status effects of type "OnUse" on projectiles now trigger when the projectile is launched. Previously it launched when the projectile hit the target. Use OnImpact (or OnSuccess/OnFailure) when you want something to happen when the projectile hits the target.
+- Added an option to multiply the damage by max vitality (relative damage) per affliction definition, in addition to the "multiplyAfflictionsByMaxVitality" attribute defined for the status effects. If you want to define it for an affliction separately, leave the status effect level definition off, because it'd override the affliction specific value.
+
+Bugfixes:
+- Attempt to fix occasional "mission equality to check failed" errors + added some extra data to the error message to help diagnose it if it still occurs.
+- Fixed focus staying on the highlighted item/character indefinitely if you keep holding LMB, even if you're outside interaction range.
+- Fixed "no core packages in the list of mods the server has enabled" error when trying to join a server that's using a different version of the core package you have enabled.
+- Prevented spawning of genetic materials outside creature inventories when the inventory size was too small, by increasing inventory sizes.
+- Removed most of the debug console error spam seen when launching the game or opening the settings menu when faulty mods are installed.
+- Fixed mods failing to show up in the mods list at all when they have certain kinds of errors.
+- Mods with errors can no longer be enabled.
+- Fixed character portrait and health bar buttons being clickable (despite being hidden) when the health interface is open.
+- Attempt to fix occasional crashes due to location store being null when teleporting from location to another with console commands.
+- Fixes to impact-sensitive items exploding at the start of the round (e.g. at the start of explosive transport missions or when purchasing explosives).
+- Attempt to fix bots occasionally being unable to operate turrets when starting a new round until they're re-ordered to man the turret.
+- The "respawnnow" console command forces a respawn even if there's less than the minimum amount of players waiting for a respawn.
+- Fixed water level sometimes "flickering" up and down when water is leaking to a room from the left or right.
+- Fixed resetting UI position doing nothing to equipped items' UIs (e.g. handheld status monitor).
+- Fixed items equipped in the health interface slot being sellable.
+- Fixed inconsistent view ranges of large turrets.
+- Fixed SMG magazine shape being inconsistent with the shape of the mag well on the SMG sprite.
+
+---------------------------------------------------------------------------------------------------------
 v0.20.7.0
 ---------------------------------------------------------------------------------------------------------
 
@@ -104,11 +184,12 @@ Bugfixes:
 - Fixed certain genetic effects (such as regeneration from Hammerhead Matriarch genes) not working properly when multiple characters have the same effect.
 - Adjusted railgun, coilgun and double coilgun firing offsets to make the projectile spawn closer to the end of the barrel.
 - Fixed incorrect tags in the vending machine in EngineeringModule_01_Colony, causing engineering gear to spawn in the output slot.
+- Fixed hair being visible under hats where it shouldn't be. Only happened after loading a saved game (#10396).
 
 Modding:
 - Made it possible to check if some value is null or not with PropertyConditionals (e.g. CurrentHull="eq null").
 - Added UseEnvironment.None to Propulsion component.
->>>>>>> feature/wip
+- Fixed the debug console command "head" causing the character to disappear. The command can be used for changing the appearance of the character at runtime.
 
 ---------------------------------------------------------------------------------------------------------
 v0.20.6.0
@@ -225,6 +306,9 @@ Balance:
 
 Bugfixes:
 - Fixed a rounding error that caused Health Scanner HUD to display every level of bleeding below 100% as "minor".
+- Fixed speech impediment from the husk infection making the bots unable to register any new targets autonomously (= without orders).
+- Fix bots having unintentionally long reaction times on reporting the issues, causing them to ignore any new enemies when they first envounter them.
+- Fixed the default aim assist being 50% instead of 5%. Fixed aim assist not resetting when the reset button is pressed on the settings window.
 
 Modding:
 - Allow 'launchimpulse' on RangedWeapon to affect projectile's speed (sum of launch impulses).
@@ -253,9 +337,15 @@ Unstable only:
 - Add missing recipe unlocks: Ceremonial Sword, Handcannon.
 - Moved "Steady Tune" to tier 2, added a new "Trickle Down" talent to the 3rd tier.
 
+Bugfixes:
+- Fixed status effects targeting "NearbyCharacters" or "NearbyItems" being applied twice. Modders: if you used this, double the effects (e.g. damage) to get the same results as previously.
+
 ---------------------------------------------------------------------------------------------------------
 v0.20.1.0
 ---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Flashlight can now be attached on all the ranged weapons held with two hands.
 
 Tutorial improvements:
 - A new campaign-integrated tutorial that teaches the basics of the campaign mode in the first outpost. 1st version: feedback and issue reports are much appreciated!
@@ -474,7 +564,7 @@ Changes and additions:
 - Added a warning if a new keybind overlaps with any of the player's existing binds.
 - Overvoltage makes devices perform better, increasing the output of engines, making fabricators, deconstructors and pumps operate faster, electrical discharge coils do more damage, batteries recharge faster and oxygen generators generate more oxygen. Encourages operating the reactor manually and hopefully makes it a little more engaging.
 - Added more randomness to junction box overvoltage damage, and made partially damaged boxes take more damage from overvoltage. Prevents all boxes from breaking at the same time, making overvoltage less of a pain to deal with and intentionally overvolting devices more worthwhile.
-- Added manual temperature adjustment buttons which immediately increase/decrease the temperature of the reactor for a brief amount of time on manual control (bumps the gauge up/down by a fifth, and the boost fades out in 20 seconds). Allows reacting to load fluctuations very quickly, and conserving fuel by operating the reactor at a lower fission rate – a new benefit to operating reactors manually.
+- Added manual temperature adjustment buttons which immediately increase/decrease the temperature of the reactor for a brief amount of time on manual control (bumps the gauge up/down by a fifth, and the boost fades out in 20 seconds). Allows reacting to load fluctuations very quickly, and conserving fuel by operating the reactor at a lower fission rate ï¿½ a new benefit to operating reactors manually.
 - Signals no longer set the fission and turbine rates of the reactor instantaneously, making automated reactor circuits less overpowered. They are still viable, but especially now with the addition of the extra incentives for operating the reactor manually, they're no longer as clearly the best and most efficient way to operate the reactor, making manual operation more worthwhile.
 - Made the "distort" camera effect a little less obtrusive and glitchy-looking (smoother texture + less heavy effect).
 - Made water-sensitive materials (lithium, potassium, sodium) spawn in waterproof chemical crates.

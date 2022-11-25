@@ -63,5 +63,21 @@ namespace Barotrauma
             => !(a == b);
 
         public abstract override string ToString();
+        
+        public static implicit operator Option<T>(Option.UnspecifiedNone _)
+            => None();
+    }
+
+    public static class Option
+    {
+        public sealed class UnspecifiedNone
+        {
+            private UnspecifiedNone() { }
+            internal static readonly UnspecifiedNone Instance = new();
+        }
+        
+        public static UnspecifiedNone None => UnspecifiedNone.Instance;
+        
+        public static Option<T> Some<T>(T value) => Option<T>.Some(value);
     }
 }

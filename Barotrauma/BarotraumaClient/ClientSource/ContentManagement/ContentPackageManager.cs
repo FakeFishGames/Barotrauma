@@ -51,11 +51,10 @@ namespace Barotrauma
                            && p.InstallTime.TryUnwrap(out var installTime)
                            && item.LatestUpdateTime <= installTime))
                 .ToArray();
-            if (needInstalling.Any())
-            {
-                await Task.WhenAll(
-                    needInstalling.Select(SteamManager.Workshop.DownloadModThenEnqueueInstall));
-            }
+            if (!needInstalling.Any()) { return Enumerable.Empty<Steamworks.Ugc.Item>(); }
+            
+            await Task.WhenAll(
+                needInstalling.Select(SteamManager.Workshop.DownloadModThenEnqueueInstall));
 
             return needInstalling;
         }

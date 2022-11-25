@@ -296,7 +296,7 @@ static class ObjectiveManager
         };
         for (int i = 0; i < activeObjectives.Count; i++)
         {
-            AddToObjectiveList(activeObjectives[i]);
+            AddToObjectiveList(activeObjectives[i], useExistingIndex: true);
         }
         screenSettings = new ScreenSettings(new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight), GUI.Scale, GameSettings.CurrentConfig.Graphics.DisplayMode);
     }
@@ -318,7 +318,7 @@ static class ObjectiveManager
     /// <summary>
     /// Adds the segment to the objective list
     /// </summary>
-    private static void AddToObjectiveList(Segment segment, bool connectExisting = false)
+    private static void AddToObjectiveList(Segment segment, bool connectExisting = false, bool useExistingIndex = false)
     {
         if (connectExisting)
         {
@@ -338,8 +338,8 @@ static class ObjectiveManager
         if (parentSegment is not null)
         {
             // Add this child as the last child in case there are other existing children already
-            int totalChildren = activeObjectives.Count(s => s.ParentId == segment.ParentId);
-            int childIndex = activeObjectives.IndexOf(parentSegment) + totalChildren;
+            int childIndex = useExistingIndex ? activeObjectives.IndexOf(segment) :
+                activeObjectives.IndexOf(parentSegment) + activeObjectives.Count(s => s.ParentId == segment.ParentId);
             if (objectiveGroup.RectTransform.GetChildIndex(frameRt) != childIndex)
             {
                 frameRt.RepositionChildInHierarchy(childIndex);

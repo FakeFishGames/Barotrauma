@@ -29,7 +29,10 @@ namespace Barotrauma
         private Location[]? dummyLocations;
         public CrewManager? CrewManager;
 
-        public double RoundStartTime;
+        public float RoundDuration
+        {
+            get; private set;
+        }
 
         public double TimeSpentCleaning, TimeSpentPainting;
 
@@ -392,6 +395,7 @@ namespace Barotrauma
 #if DEBUG
             DateTime startTime = DateTime.Now;
 #endif
+            RoundDuration = 0.0f;
             AfflictionPrefab.LoadAllEffects();
 
             MirrorLevel = mirrorLevel;
@@ -543,7 +547,7 @@ namespace Barotrauma
 
             RoundSummary = new RoundSummary(GameMode, Missions, StartLocation, EndLocation);
 
-            if (!(GameMode is TutorialMode) && !(GameMode is TestGameMode))
+            if (GameMode is not TutorialMode && GameMode is not TestGameMode)
             {
                 GUI.AddMessage("", Color.Transparent, 3.0f, playSound: false);
                 if (EndLocation != null && levelData != null)
@@ -610,9 +614,9 @@ namespace Barotrauma
                 GameMode.Start();
                 foreach (Mission mission in missions)
                 {
-                    int prevEntityCount = Entity.GetEntities().Count();
+                    int prevEntityCount = Entity.GetEntities().Count;
                     mission.Start(Level.Loaded);
-                    if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && Entity.GetEntities().Count() != prevEntityCount)
+                    if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && Entity.GetEntities().Count != prevEntityCount)
                     {
                         DebugConsole.ThrowError(
                             $"Entity count has changed after starting a mission ({mission.Prefab.Identifier}) as a client. " +
@@ -651,7 +655,7 @@ namespace Barotrauma
             CreatureMetrics.Instance.RecentlyEncountered.Clear();
 
             GameMain.GameScreen.Cam.Position = Character.Controlled?.WorldPosition ?? Submarine.MainSub.WorldPosition;
-            RoundStartTime = Timing.TotalTime;
+            RoundDuration = 0.0f;
             GameMain.ResetFrameTime();
             IsRunning = true;
         }
@@ -762,6 +766,7 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
+            RoundDuration += deltaTime;
             EventManager?.Update(deltaTime);
             GameMode?.Update(deltaTime);
             //backwards for loop because the missions may get completed and removed from the list in Update()
@@ -914,17 +919,16 @@ namespace Barotrauma
 #else
                 bool success = GameMain.Server.ConnectedClients.Any(c => c.InGame && c.Character != null && !c.Character.IsDead);
 #endif
-                double roundDuration = Timing.TotalTime - RoundStartTime;
                 GameAnalyticsManager.AddProgressionEvent(
                     success ? GameAnalyticsManager.ProgressionStatus.Complete : GameAnalyticsManager.ProgressionStatus.Fail,
                     GameMode?.Preset.Identifier.Value ?? "none",
-                    roundDuration);
+                    RoundDuration);
                 string eventId = "EndRound:" + (GameMode?.Preset?.Identifier.Value ?? "none") + ":";
                 LogEndRoundStats(eventId);
                 if (GameMode is CampaignMode campaignMode)
                 {
                     GameAnalyticsManager.AddDesignEvent(eventId + "MoneyEarned", GetAmountOfMoney(crewCharacters) - prevMoney);
-                    campaignMode.TotalPlayTime += roundDuration;
+                    campaignMode.TotalPlayTime += RoundDuration;
                 }
 #if CLIENT
                 HintManager.OnRoundEnded();
@@ -950,21 +954,20 @@ namespace Barotrauma
 
         public void LogEndRoundStats(string eventId)
         {
-            double roundDuration = Timing.TotalTime - RoundStartTime;
-            GameAnalyticsManager.AddDesignEvent(eventId + "Submarine:" + (Submarine.MainSub?.Info?.Name ?? "none"), roundDuration);
-            GameAnalyticsManager.AddDesignEvent(eventId + "GameMode:" + (GameMode?.Name.Value ?? "none"), roundDuration);
-            GameAnalyticsManager.AddDesignEvent(eventId + "CrewSize:" + (CrewManager?.CharacterInfos?.Count() ?? 0), roundDuration);
+            GameAnalyticsManager.AddDesignEvent(eventId + "Submarine:" + (Submarine.MainSub?.Info?.Name ?? "none"), RoundDuration);
+            GameAnalyticsManager.AddDesignEvent(eventId + "GameMode:" + (GameMode?.Name.Value ?? "none"), RoundDuration);
+            GameAnalyticsManager.AddDesignEvent(eventId + "CrewSize:" + (CrewManager?.CharacterInfos?.Count() ?? 0), RoundDuration);
             foreach (Mission mission in missions)
             {
-                GameAnalyticsManager.AddDesignEvent(eventId + "MissionType:" + (mission.Prefab.Type.ToString() ?? "none") + ":" + mission.Prefab.Identifier + ":" + (mission.Completed ? "Completed" : "Failed"), roundDuration);
+                GameAnalyticsManager.AddDesignEvent(eventId + "MissionType:" + (mission.Prefab.Type.ToString() ?? "none") + ":" + mission.Prefab.Identifier + ":" + (mission.Completed ? "Completed" : "Failed"), RoundDuration);
             }
             if (Level.Loaded != null)
             {
                 Identifier levelId = (Level.Loaded.Type == LevelData.LevelType.Outpost ?
                     Level.Loaded.StartOutpost?.Info?.OutpostGenerationParams?.Identifier :
                     Level.Loaded.GenerationParams?.Identifier) ?? "null".ToIdentifier();
-                GameAnalyticsManager.AddDesignEvent(eventId + "LevelType:" + (Level.Loaded?.Type.ToString() ?? "none" + ":" + levelId), roundDuration);
-                GameAnalyticsManager.AddDesignEvent(eventId + "Biome:" + (Level.Loaded?.LevelData?.Biome?.Identifier.Value ?? "none"), roundDuration);
+                GameAnalyticsManager.AddDesignEvent(eventId + "LevelType:" + (Level.Loaded?.Type.ToString() ?? "none" + ":" + levelId), RoundDuration);
+                GameAnalyticsManager.AddDesignEvent(eventId + "Biome:" + (Level.Loaded?.LevelData?.Biome?.Identifier.Value ?? "none"), RoundDuration);
             }
 
             if (Submarine.MainSub != null)

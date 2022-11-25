@@ -316,5 +316,17 @@ namespace Barotrauma.Extensions
             => source
                 .OfType<Some<T>>()
                 .Select(some => some.Value);
+
+        public static IEnumerable<TSuccess> Successes<TSuccess, TFailure>(
+            this IEnumerable<Result<TSuccess, TFailure>> source)
+            => source
+                .OfType<Success<TSuccess, TFailure>>()
+                .Select(s => s.Value);
+        
+        public static IEnumerable<TFailure> Failures<TSuccess, TFailure>(
+            this IEnumerable<Result<TSuccess, TFailure>> source)
+            => source
+                .OfType<Failure<TSuccess, TFailure>>()
+                .Select(f => f.Error);
     }
 }

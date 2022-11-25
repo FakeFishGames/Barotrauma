@@ -809,7 +809,14 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    hasRequiredItems = itemList.Any(Predicate);
+                    if (itemList.Any(Predicate))
+                    {
+                        hasRequiredItems = !relatedItem.RequireEmpty;
+                    }
+                    else
+                    {
+                        hasRequiredItems = relatedItem.MatchOnEmpty || relatedItem.RequireEmpty;
+                    }
                     if (!hasRequiredItems)
                     {
                         shouldBreak = true;

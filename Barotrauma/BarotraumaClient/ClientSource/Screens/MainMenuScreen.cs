@@ -956,16 +956,21 @@ namespace Barotrauma
                 backgroundSprite = new Sprite("Content/UnstableBackground.png", sourceRectangle: null);
             }
 
-            if (backgroundSprite != null)
+            var vignette = GUIStyle.GetComponentStyle("mainmenuvignette")?.GetDefaultSprite();
+            float vignetteScale = Math.Min(GameMain.GraphicsWidth / vignette.size.X, GameMain.GraphicsHeight / vignette.size.Y);
+
+            Rectangle drawArea = new Rectangle(
+                (int)(vignette.size.X * vignetteScale / 2), 0,
+                (int)(GameMain.GraphicsWidth - vignette.size.X * vignetteScale / 2), GameMain.GraphicsHeight);
+
+            if (backgroundSprite?.Texture != null)
             {
-                GUI.DrawBackgroundSprite(spriteBatch, backgroundSprite, Color.White);
+                GUI.DrawBackgroundSprite(spriteBatch, backgroundSprite, Color.White, drawArea);
             }
 
-            var vignette = GUIStyle.GetComponentStyle("mainmenuvignette")?.GetDefaultSprite();
             if (vignette != null)
             {
-                vignette.Draw(spriteBatch, Vector2.Zero, Color.White, Vector2.Zero, 0.0f, 
-                    new Vector2(Math.Min(GameMain.GraphicsWidth / vignette.size.X, GameMain.GraphicsHeight / vignette.size.Y)));
+                vignette.Draw(spriteBatch, Vector2.Zero, Color.White, Vector2.Zero, 0.0f, vignetteScale);
             }
         }
 

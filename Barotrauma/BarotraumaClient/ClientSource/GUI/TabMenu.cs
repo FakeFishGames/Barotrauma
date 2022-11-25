@@ -1491,7 +1491,11 @@ namespace Barotrauma
             GUIFrame missionFrame = new GUIFrame(new RectTransform(Vector2.One, infoFrame.RectTransform, Anchor.TopCenter), style: "GUIFrameListBox");
             int padding = (int)(0.0245f * missionFrame.Rect.Height);
             GUIFrame missionFrameContent = new GUIFrame(new RectTransform(new Point(missionFrame.Rect.Width - padding * 2, missionFrame.Rect.Height - padding * 2), infoFrame.RectTransform, Anchor.Center), style: null);
-            Location location = GameMain.GameSession.EndLocation ?? GameMain.GameSession.StartLocation;
+            Location location = GameMain.GameSession.StartLocation;
+            if (Level.Loaded.Type == LevelData.LevelType.LocationConnection)
+            {
+                location ??= GameMain.GameSession.EndLocation;
+            }
 
             GUILayoutGroup locationInfoContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.3f), missionFrameContent.RectTransform))
             {

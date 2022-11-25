@@ -59,5 +59,14 @@ namespace Barotrauma
 
             return derivedTypes.Select(parseOfType).FirstOrDefault(t => t.IsSome()) ?? none();
         }
+
+        public static string NameWithGenerics(this Type t)
+        {
+            if (!t.IsGenericType) { return t.Name; }
+            
+            string result = t.Name[..t.Name.IndexOf('`')];
+            result += $"<{string.Join(", ", t.GetGenericArguments().Select(NameWithGenerics))}>";
+            return result;
+        }
     }
 }

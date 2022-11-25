@@ -79,7 +79,7 @@ namespace Barotrauma
 
         public bool DisableEvents
         {
-            get { return IsFirstRound && Timing.TotalTime < GameMain.GameSession.RoundStartTime + FirstRoundEventDelay; }
+            get { return IsFirstRound && GameMain.GameSession.RoundDuration > FirstRoundEventDelay; }
         }
 
         public bool CheatsEnabled;
@@ -248,7 +248,7 @@ namespace Barotrauma
                     {
                         for (int i = 0; i < wall.SectionCount; i++)
                         {
-                            wall.SetDamage(i, 0, createNetworkEvent: false);
+                            wall.SetDamage(i, 0, createNetworkEvent: false, createExplosionEffect: false);
                         }
                     }
                 }
@@ -1260,6 +1260,7 @@ namespace Barotrauma
                     if (item.Components.None(c => c is Pickable)) { continue; }
                     if (item.Components.Any(c => c is Pickable p && p.IsAttached)) { continue; }
                     if (item.Components.Any(c => c is Wire w && w.Connections.Any(c => c != null))) { continue; }
+                    if (item.Container?.GetComponent<ItemContainer>() is { DrawInventory: false }) { continue; }
                     itemsToTransfer.Add((item, item.Container));
                     item.Submarine = null;
                 }

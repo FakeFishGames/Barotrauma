@@ -175,11 +175,11 @@ namespace Barotrauma
             position += amount;
         }
 
-        public void ClientWrite(IWriteMessage msg)
+        public void ClientWrite(in SegmentTableWriter<ClientNetSegment> segmentTableWriter, IWriteMessage msg)
         {
             if (Character.Controlled != null && !Character.Controlled.IsDead) { return; }
 
-            msg.WriteByte((byte)ClientNetObject.SPECTATING_POS);
+            segmentTableWriter.StartNewSegment(ClientNetSegment.SpectatingPos);
             msg.WriteSingle(position.X);
             msg.WriteSingle(position.Y);
         }

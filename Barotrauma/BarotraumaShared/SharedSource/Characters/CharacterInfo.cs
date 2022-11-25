@@ -1241,7 +1241,7 @@ namespace Barotrauma
 
         partial void OnSkillChanged(Identifier skillIdentifier, float prevLevel, float newLevel);
 
-        public void GiveExperience(int amount, bool isMissionExperience = false)
+        public void GiveExperience(int amount)
         {
             int prevAmount = ExperiencePoints;
 
@@ -1295,6 +1295,18 @@ namespace Barotrauma
             return experienceRequired + ExperienceRequiredPerLevel(level);
         }
 
+        public int GetExperienceRequiredForLevel(int level)
+        {
+            int currentLevel = GetCurrentLevel(out int experienceRequired);
+            if (currentLevel >= level) { return 0; }
+            int required = experienceRequired;
+            for (int i = currentLevel + 1; i <= level; i++)
+            {
+                required += ExperienceRequiredPerLevel(i);
+            }
+            return required;
+        }
+
         public int GetCurrentLevel()
         {
             return GetCurrentLevel(out _);
@@ -1312,7 +1324,7 @@ namespace Barotrauma
             return level;
         }
 
-        private int ExperienceRequiredPerLevel(int level)
+        private static int ExperienceRequiredPerLevel(int level)
         {
             return BaseExperienceRequired + AddedExperienceRequiredPerLevel * level;
         }

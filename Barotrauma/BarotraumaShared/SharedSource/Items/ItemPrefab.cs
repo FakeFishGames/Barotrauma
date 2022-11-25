@@ -1156,10 +1156,10 @@ namespace Barotrauma
         public bool CanBeBoughtFrom(Location.StoreInfo store, out PriceInfo priceInfo)
         {
             priceInfo = GetPriceInfo(store);
-            return 
-                priceInfo is { CanBeBought: true } && 
-                (store.Location?.LevelData?.Difficulty ?? 0) >= priceInfo.MinLevelDifficulty &&
-                (!priceInfo.MinReputation.Any() || priceInfo.MinReputation.Any(p => store.Location?.Faction?.Prefab.Identifier == p.Key || store.Location?.SecondaryFaction?.Prefab.Identifier == p.Key));
+            return
+                priceInfo is { CanBeBought: true } &&
+                (store?.Location.LevelData?.Difficulty ?? 0) >= priceInfo.MinLevelDifficulty &&
+                (!priceInfo.MinReputation.Any() || priceInfo.MinReputation.Any(p => store?.Location.Faction?.Prefab.Identifier == p.Key || store?.Location.SecondaryFaction?.Prefab.Identifier == p.Key));
         }
 
         public bool CanBeBoughtFrom(Location location)
@@ -1170,17 +1170,17 @@ namespace Barotrauma
                 var priceInfo = GetPriceInfo(store.Value);
                 if (priceInfo == null) { continue; }
                 if (!priceInfo.CanBeBought) { continue; }
-                if ((location.LevelData?.Difficulty ?? 0) < priceInfo.MinLevelDifficulty) { continue; }
+                if (location.LevelData.Difficulty < priceInfo.MinLevelDifficulty) { continue; }
                 if (priceInfo.MinReputation.Any())
                 {
-                     if (!priceInfo.MinReputation.Any(p => 
-                         location?.Faction?.Prefab.Identifier == p.Key || 
-                         location?.SecondaryFaction?.Prefab.Identifier == p.Key))
+                    if (!priceInfo.MinReputation.Any(p =>
+                        location?.Faction?.Prefab.Identifier == p.Key ||
+                        location?.SecondaryFaction?.Prefab.Identifier == p.Key))
                     {
                         continue;
-                    }                   
+                    }
                 }
-                    return true;
+                return true;
             }
             return false;
         }

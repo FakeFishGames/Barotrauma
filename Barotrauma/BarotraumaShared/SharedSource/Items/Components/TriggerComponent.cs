@@ -65,14 +65,7 @@ namespace Barotrauma.Items.Components
         {
             get
             {
-                if (GameMain.GameSession != null)
-                {
-                    return (float)(Timing.TotalTime - GameMain.GameSession.RoundStartTime);
-                }
-                else
-                {
-                    return 0.0f;
-                }
+                return GameMain.GameSession?.RoundDuration ?? 0.0f;
             }
         }
 

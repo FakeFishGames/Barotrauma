@@ -335,7 +335,7 @@ namespace Barotrauma
                     DrawString(spriteBatch, new Vector2(10, y),
                         "FPS: " + Math.Round(GameMain.PerformanceCounter.AverageFramesPerSecond),
                         Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                    if (GameMain.GameSession != null && Timing.TotalTime > GameMain.GameSession.RoundStartTime + 1.0)
+                    if (GameMain.GameSession != null && GameMain.GameSession.RoundDuration > 1.0)
                     {
                         y += yStep;
                         DrawString(spriteBatch, new Vector2(10, y),
@@ -695,22 +695,24 @@ namespace Barotrauma
             }
         }
 
-        public static void DrawBackgroundSprite(SpriteBatch spriteBatch, Sprite backgroundSprite, Color color)
+        public static void DrawBackgroundSprite(SpriteBatch spriteBatch, Sprite backgroundSprite, Color color, Rectangle? drawArea = null, SpriteEffects spriteEffects = SpriteEffects.None)
         {
-            float scale = Math.Max(
-                (float)GameMain.GraphicsWidth / backgroundSprite.SourceRect.Width,
-                (float)GameMain.GraphicsHeight / backgroundSprite.SourceRect.Height) * 1.1f;
-            float paddingX = backgroundSprite.SourceRect.Width * scale - GameMain.GraphicsWidth;
-            float paddingY = backgroundSprite.SourceRect.Height * scale - GameMain.GraphicsHeight;
+            Rectangle area = drawArea ?? new Rectangle(0, 0, GameMain.GraphicsWidth, GameMain.GraphicsHeight);
 
-            double noiseT = (Timing.TotalTime * 0.02f);
+            float scale = Math.Max(
+                (float)area.Width / backgroundSprite.SourceRect.Width,
+                (float)area.Height / backgroundSprite.SourceRect.Height) * 1.1f;
+            float paddingX = backgroundSprite.SourceRect.Width * scale - area.Width;
+            float paddingY = backgroundSprite.SourceRect.Height * scale - area.Height;
+
+            double noiseT = Timing.TotalTime * 0.02f;
             Vector2 pos = new Vector2((float)PerlinNoise.CalculatePerlin(noiseT, noiseT, 0) - 0.5f, (float)PerlinNoise.CalculatePerlin(noiseT, noiseT, 0.5f) - 0.5f);
             pos = new Vector2(pos.X * paddingX, pos.Y * paddingY);
 
             spriteBatch.Draw(backgroundSprite.Texture,
-                new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) / 2 + pos,
+                area.Center.ToVector2() + pos,
                 null, color, 0.0f, backgroundSprite.size / 2,
-                scale, SpriteEffects.None, 0.0f);
+                scale, spriteEffects, 0.0f);
         }
 
         #region Update list

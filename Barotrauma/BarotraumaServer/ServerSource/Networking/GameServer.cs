@@ -1028,12 +1028,11 @@ namespace Barotrauma.Networking
                 return;
             }
 
-            ClientNetObject objHeader;
-            while ((objHeader = (ClientNetObject)inc.ReadByte()) != ClientNetObject.END_OF_MESSAGE)
+            SegmentTableReader<ClientNetSegment>.Read(inc, (segment, inc) =>
             {
-                switch (objHeader)
+                switch (segment)
                 {
-                    case ClientNetObject.SYNC_IDS:
+                    case ClientNetSegment.SyncIds:
                         //TODO: might want to use a clever class for this
                         c.LastRecvLobbyUpdate = NetIdUtils.Clamp(inc.ReadUInt16(), c.LastRecvLobbyUpdate, GameMain.NetLobbyScreen.LastUpdateID);
                         if (c.HasPermission(ClientPermissions.ManageSettings) &&
@@ -1072,19 +1071,21 @@ namespace Barotrauma.Networking
                             }
                         }
                         break;
-                    case ClientNetObject.CHAT_MESSAGE:
+                    case ClientNetSegment.ChatMessage:
                         ChatMessage.ServerRead(inc, c);
                         break;
-                    case ClientNetObject.VOTE:
+                    case ClientNetSegment.Vote:
                         Voting.ServerRead(inc, c);
                         break;
                     default:
-                        return;
+                        return SegmentTableReader<ClientNetSegment>.BreakSegmentReading.Yes;
                 }
 
                 //don't read further messages if the client has been disconnected (kicked due to spam for example)
-                if (!connectedClients.Contains(c)) break;
-            }
+                return connectedClients.Contains(c)
+                    ? SegmentTableReader<ClientNetSegment>.BreakSegmentReading.No
+                    : SegmentTableReader<ClientNetSegment>.BreakSegmentReading.Yes;
+            });
         }
 
         private void ClientReadIngame(IReadMessage inc)
@@ -1109,13 +1110,12 @@ namespace Barotrauma.Networking
                 }
             }
 
-            ClientNetObject objHeader;
-            while ((objHeader = (ClientNetObject)inc.ReadByte()) != ClientNetObject.END_OF_MESSAGE)
+            SegmentTableReader<ClientNetSegment>.Read(inc, (segment, inc) =>
             {
-                switch (objHeader)
+                switch (segment)
                 {
-                    case ClientNetObject.SYNC_IDS:
-                        //TODO: might want to use a clever class for this
+                    case ClientNetSegment.SyncIds:
+                        //TODO: switch this to INetSerializableStruct
 
                         UInt16 lastRecvChatMsgID = inc.ReadUInt16();
                         UInt16 lastRecvEntityEventID = inc.ReadUInt16();
@@ -1218,10 +1218,10 @@ namespace Barotrauma.Networking
                         }
 
                         break;
-                    case ClientNetObject.CHAT_MESSAGE:
+                    case ClientNetSegment.ChatMessage:
                         ChatMessage.ServerRead(inc, c);
                         break;
-                    case ClientNetObject.CHARACTER_INPUT:
+                    case ClientNetSegment.CharacterInput:
                         if (c.Character != null)
                         {
                             c.Character.ServerReadInput(inc, c);
@@ -1231,22 +1231,24 @@ namespace Barotrauma.Networking
                             DebugConsole.AddWarning($"Received character inputs from a client who's not controlling a character ({c.Name}).");
                         }
                         break;
-                    case ClientNetObject.ENTITY_STATE:
+                    case ClientNetSegment.EntityState:
                         entityEventManager.Read(inc, c);
                         break;
-                    case ClientNetObject.VOTE:
+                    case ClientNetSegment.Vote:
                         Voting.ServerRead(inc, c);
                         break;
-                    case ClientNetObject.SPECTATING_POS:
+                    case ClientNetSegment.SpectatingPos:
                         c.SpectatePos = new Vector2(inc.ReadSingle(), inc.ReadSingle());
                         break;
                     default:
-                        return;
+                        return SegmentTableReader<ClientNetSegment>.BreakSegmentReading.Yes;
                 }
 
                 //don't read further messages if the client has been disconnected (kicked due to spam for example)
-                if (!connectedClients.Contains(c)) { break; }
-            }
+                return connectedClients.Contains(c)
+                    ? SegmentTableReader<ClientNetSegment>.BreakSegmentReading.No
+                    : SegmentTableReader<ClientNetSegment>.BreakSegmentReading.Yes;
+            });
         }
 
         private void ReadCrewMessage(IReadMessage inc, Client sender)
@@ -1701,78 +1703,78 @@ namespace Barotrauma.Networking
 
             IWriteMessage outmsg = new WriteOnlyMessage();
             outmsg.WriteByte((byte)ServerPacketHeader.UPDATE_INGAME);
-
             outmsg.WriteSingle((float)NetTime.Now);
 
-            outmsg.WriteByte((byte)ServerNetObject.SYNC_IDS);
-            outmsg.WriteUInt16(c.LastSentChatMsgID); //send this to client so they know which chat messages weren't received by the server
-            outmsg.WriteUInt16(c.LastSentEntityEventID);
-
-            if (GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign && campaign.Preset == GameMain.NetLobbyScreen.SelectedMode)
+            using (var segmentTable = SegmentTableWriter<ServerNetSegment>.StartWriting(outmsg))
             {
-                outmsg.WriteBoolean(true);
-                outmsg.WritePadBits();
-                campaign.ServerWrite(outmsg, c);
-            }
-            else
-            {
-                outmsg.WriteBoolean(false);
-                outmsg.WritePadBits();
-            }
+                segmentTable.StartNewSegment(ServerNetSegment.SyncIds);
+                outmsg.WriteUInt16(c.LastSentChatMsgID); //send this to client so they know which chat messages weren't received by the server
+                outmsg.WriteUInt16(c.LastSentEntityEventID);
 
-            int clientListBytes = outmsg.LengthBytes;
-            WriteClientList(c, outmsg);
-            clientListBytes = outmsg.LengthBytes - clientListBytes;
-
-            int chatMessageBytes = outmsg.LengthBytes;
-            WriteChatMessages(outmsg, c);
-            chatMessageBytes = outmsg.LengthBytes - chatMessageBytes;
-
-            //write as many position updates as the message can fit (only after midround syncing is done)
-            int positionUpdateBytes = outmsg.LengthBytes;
-            while (!c.NeedsMidRoundSync && c.PendingPositionUpdates.Count > 0)
-            {
-                var entity = c.PendingPositionUpdates.Peek();
-                if (!(entity is IServerPositionSync entityPositionSync) ||
-                    entity.Removed ||
-                    (entity is Item item && float.IsInfinity(item.PositionUpdateInterval)))
+                if (GameMain.GameSession?.GameMode is MultiPlayerCampaign campaign && campaign.Preset == GameMain.NetLobbyScreen.SelectedMode)
                 {
+                    outmsg.WriteBoolean(true);
+                    outmsg.WritePadBits();
+                    campaign.ServerWrite(outmsg, c);
+                }
+                else
+                {
+                    outmsg.WriteBoolean(false);
+                    outmsg.WritePadBits();
+                }
+
+                int clientListBytes = outmsg.LengthBytes;
+                WriteClientList(segmentTable, c, outmsg);
+                clientListBytes = outmsg.LengthBytes - clientListBytes;
+
+                int chatMessageBytes = outmsg.LengthBytes;
+                WriteChatMessages(segmentTable, outmsg, c);
+                chatMessageBytes = outmsg.LengthBytes - chatMessageBytes;
+
+                //write as many position updates as the message can fit (only after midround syncing is done)
+                int positionUpdateBytes = outmsg.LengthBytes;
+                while (!c.NeedsMidRoundSync && c.PendingPositionUpdates.Count > 0)
+                {
+                    var entity = c.PendingPositionUpdates.Peek();
+                    if (!(entity is IServerPositionSync entityPositionSync) ||
+                        entity.Removed ||
+                        (entity is Item item && float.IsInfinity(item.PositionUpdateInterval)))
+                    {
+                        c.PendingPositionUpdates.Dequeue();
+                        continue;
+                    }
+
+                    IWriteMessage tempBuffer = new ReadWriteMessage();
+                    tempBuffer.WriteBoolean(entity is Item); tempBuffer.WritePadBits();
+                    tempBuffer.WriteUInt32(entity is MapEntity me ? me.Prefab.UintIdentifier : (UInt32)0);
+                    entityPositionSync.ServerWritePosition(tempBuffer, c);
+
+                    //no more room in this packet
+                    if (outmsg.LengthBytes + tempBuffer.LengthBytes > MsgConstants.MTU - 100)
+                    {
+                        break;
+                    }
+
+                    segmentTable.StartNewSegment(ServerNetSegment.EntityPosition);
+                    outmsg.WritePadBits(); //padding is required here to make sure any padding bits within tempBuffer are read correctly
+                    outmsg.WriteBytes(tempBuffer.Buffer, 0, tempBuffer.LengthBytes);
+                    outmsg.WritePadBits();
+
+                    c.PositionUpdateLastSent[entity] = (float)NetTime.Now;
                     c.PendingPositionUpdates.Dequeue();
-                    continue;
                 }
+                positionUpdateBytes = outmsg.LengthBytes - positionUpdateBytes;
 
-                IWriteMessage tempBuffer = new ReadWriteMessage();
-                tempBuffer.WriteBoolean(entity is Item); tempBuffer.WritePadBits();
-                tempBuffer.WriteUInt32(entity is MapEntity me ? me.Prefab.UintIdentifier : (UInt32)0);
-                entityPositionSync.ServerWritePosition(tempBuffer, c);
-
-                //no more room in this packet
-                if (outmsg.LengthBytes + tempBuffer.LengthBytes > MsgConstants.MTU - 100)
+                if (outmsg.LengthBytes > MsgConstants.MTU)
                 {
-                    break;
+                    string errorMsg = "Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + MsgConstants.MTU + ")\n";
+                    errorMsg +=
+                        "  Client list size: " + clientListBytes + " bytes\n" +
+                        "  Chat message size: " + chatMessageBytes + " bytes\n" +
+                        "  Position update size: " + positionUpdateBytes + " bytes\n\n";
+                    DebugConsole.ThrowError(errorMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("GameServer.ClientWriteIngame1:PacketSizeExceeded" + outmsg.LengthBytes, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                 }
-
-                outmsg.WriteByte((byte)ServerNetObject.ENTITY_POSITION);
-                outmsg.WritePadBits(); //padding is required here to make sure any padding bits within tempBuffer are read correctly
-                outmsg.WriteBytes(tempBuffer.Buffer, 0, tempBuffer.LengthBytes);
-                outmsg.WritePadBits();
-
-                c.PositionUpdateLastSent[entity] = (float)NetTime.Now;
-                c.PendingPositionUpdates.Dequeue();
-            }
-            positionUpdateBytes = outmsg.LengthBytes - positionUpdateBytes;
-
-            outmsg.WriteByte((byte)ServerNetObject.END_OF_MESSAGE);
-
-            if (outmsg.LengthBytes > MsgConstants.MTU)
-            {
-                string errorMsg = "Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + MsgConstants.MTU + ")\n";
-                errorMsg +=
-                    "  Client list size: " + clientListBytes + " bytes\n" +
-                    "  Chat message size: " + chatMessageBytes + " bytes\n" +
-                    "  Position update size: " + positionUpdateBytes + " bytes\n\n";
-                DebugConsole.ThrowError(errorMsg);
-                GameAnalyticsManager.AddErrorEventOnce("GameServer.ClientWriteIngame1:PacketSizeExceeded" + outmsg.LengthBytes, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
             }
 
             serverPeer.Send(outmsg, c.Connection, DeliveryMethod.Unreliable);
@@ -1785,46 +1787,50 @@ namespace Barotrauma.Networking
                 outmsg.WriteByte((byte)ServerPacketHeader.UPDATE_INGAME);
                 outmsg.WriteSingle((float)Lidgren.Network.NetTime.Now);
 
-                int eventManagerBytes = outmsg.LengthBytes;
-                entityEventManager.Write(c, outmsg, out List<NetEntityEvent> sentEvents);
-                eventManagerBytes = outmsg.LengthBytes - eventManagerBytes;
-
-                if (sentEvents.Count == 0)
+                using (var segmentTable = SegmentTableWriter<ServerNetSegment>.StartWriting(outmsg))
                 {
-                    break;
-                }
+                    int eventManagerBytes = outmsg.LengthBytes;
+                    entityEventManager.Write(segmentTable, c, outmsg, out List<NetEntityEvent> sentEvents);
+                    eventManagerBytes = outmsg.LengthBytes - eventManagerBytes;
 
-                outmsg.WriteByte((byte)ServerNetObject.END_OF_MESSAGE);
-
-                if (outmsg.LengthBytes > MsgConstants.MTU)
-                {
-                    string errorMsg = "Maximum packet size exceeded (" + outmsg.LengthBytes + " > " + MsgConstants.MTU + ")\n";
-                    errorMsg +=
-                        "  Event size: " + eventManagerBytes + " bytes\n";
-
-                    if (sentEvents != null && sentEvents.Count > 0)
+                    if (sentEvents.Count == 0)
                     {
-                        errorMsg += "Sent events: \n";
-                        foreach (var entityEvent in sentEvents)
-                        {
-                            errorMsg += "  - " + (entityEvent.Entity?.ToString() ?? "null") + "\n";
-                        }
+                        break;
                     }
 
-                    DebugConsole.ThrowError(errorMsg);
-                    GameAnalyticsManager.AddErrorEventOnce("GameServer.ClientWriteIngame2:PacketSizeExceeded" + outmsg.LengthBytes, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                    if (outmsg.LengthBytes > MsgConstants.MTU)
+                    {
+                        string errorMsg = "Maximum packet size exceeded (" + outmsg.LengthBytes + " > " +
+                                          MsgConstants.MTU + ")\n";
+                        errorMsg +=
+                            "  Event size: " + eventManagerBytes + " bytes\n";
+
+                        if (sentEvents != null && sentEvents.Count > 0)
+                        {
+                            errorMsg += "Sent events: \n";
+                            foreach (var entityEvent in sentEvents)
+                            {
+                                errorMsg += "  - " + (entityEvent.Entity?.ToString() ?? "null") + "\n";
+                            }
+                        }
+
+                        DebugConsole.ThrowError(errorMsg);
+                        GameAnalyticsManager.AddErrorEventOnce(
+                            "GameServer.ClientWriteIngame2:PacketSizeExceeded" + outmsg.LengthBytes,
+                            GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                    }
                 }
 
                 serverPeer.Send(outmsg, c.Connection, DeliveryMethod.Unreliable);
             }
         }
 
-        private void WriteClientList(Client c, IWriteMessage outmsg)
+        private void WriteClientList(in SegmentTableWriter<ServerNetSegment> segmentTable, Client c, IWriteMessage outmsg)
         {
             bool hasChanged = NetIdUtils.IdMoreRecent(LastClientListUpdateID, c.LastRecvClientListUpdate);
             if (!hasChanged) { return; }
 
-            outmsg.WriteByte((byte)ServerNetObject.CLIENT_LIST);
+            segmentTable.StartNewSegment(ServerNetSegment.ClientList);
             outmsg.WriteUInt16(LastClientListUpdateID);
 
             outmsg.WriteByte((byte)connectedClients.Count);
@@ -1861,133 +1867,135 @@ namespace Barotrauma.Networking
             IWriteMessage outmsg = new WriteOnlyMessage();
             outmsg.WriteByte((byte)ServerPacketHeader.UPDATE_LOBBY);
 
-            outmsg.WriteByte((byte)ServerNetObject.SYNC_IDS);
-
-            int settingsBytes = outmsg.LengthBytes;
-            int initialUpdateBytes = 0;
-
-            if (ServerSettings.UnsentFlags() != ServerSettings.NetFlags.None)
+            bool messageTooLarge;
+            using (var segmentTable = SegmentTableWriter<ServerNetSegment>.StartWriting(outmsg))
             {
-                GameMain.NetLobbyScreen.LastUpdateID++;
-            }
-            
-            IWriteMessage settingsBuf = null;
-            if (NetIdUtils.IdMoreRecent(GameMain.NetLobbyScreen.LastUpdateID, c.LastRecvLobbyUpdate))
-            {
-                outmsg.WriteBoolean(true);
-                outmsg.WritePadBits();
+                segmentTable.StartNewSegment(ServerNetSegment.SyncIds);
 
-                outmsg.WriteUInt16(GameMain.NetLobbyScreen.LastUpdateID);
+                int settingsBytes = outmsg.LengthBytes;
+                int initialUpdateBytes = 0;
 
-                settingsBuf = new ReadWriteMessage();
-                ServerSettings.ServerWrite(settingsBuf, c);
-                outmsg.WriteUInt16((UInt16)settingsBuf.LengthBytes);
-                outmsg.WriteBytes(settingsBuf.Buffer, 0, settingsBuf.LengthBytes);
-
-                outmsg.WriteBoolean(c.LastRecvLobbyUpdate < 1);
-                if (c.LastRecvLobbyUpdate < 1)
+                if (ServerSettings.UnsentFlags() != ServerSettings.NetFlags.None)
                 {
-                    isInitialUpdate = true;
-                    initialUpdateBytes = outmsg.LengthBytes;
-                    ClientWriteInitial(c, outmsg);
-                    initialUpdateBytes = outmsg.LengthBytes - initialUpdateBytes;
+                    GameMain.NetLobbyScreen.LastUpdateID++;
                 }
-                outmsg.WriteString(GameMain.NetLobbyScreen.SelectedSub.Name);
-                outmsg.WriteString(GameMain.NetLobbyScreen.SelectedSub.MD5Hash.ToString());
-                outmsg.WriteBoolean(IsUsingRespawnShuttle());
-                var selectedShuttle = GameStarted && RespawnManager != null && RespawnManager.UsingShuttle ? 
-                    RespawnManager.RespawnShuttle.Info : 
-                    GameMain.NetLobbyScreen.SelectedShuttle;
-                outmsg.WriteString(selectedShuttle.Name);
-                outmsg.WriteString(selectedShuttle.MD5Hash.ToString());
 
-                outmsg.WriteBoolean(ServerSettings.AllowSubVoting);
-                outmsg.WriteBoolean(ServerSettings.AllowModeVoting);
-
-                outmsg.WriteBoolean(ServerSettings.VoiceChatEnabled);
-
-                outmsg.WriteBoolean(ServerSettings.AllowSpectating);
-
-                outmsg.WriteRangedInteger((int)ServerSettings.TraitorsEnabled, 0, 2);
-
-                outmsg.WriteRangedInteger((int)GameMain.NetLobbyScreen.MissionType, 0, (int)MissionType.All);
-
-                outmsg.WriteByte((byte)GameMain.NetLobbyScreen.SelectedModeIndex);
-                outmsg.WriteString(GameMain.NetLobbyScreen.LevelSeed);
-                outmsg.WriteSingle(ServerSettings.SelectedLevelDifficulty);
-
-                outmsg.WriteByte((byte)ServerSettings.BotCount);
-                outmsg.WriteBoolean(ServerSettings.BotSpawnMode == BotSpawnMode.Fill);
-
-                outmsg.WriteBoolean(ServerSettings.AutoRestart);
-                if (ServerSettings.AutoRestart)
+                IWriteMessage settingsBuf = null;
+                if (NetIdUtils.IdMoreRecent(GameMain.NetLobbyScreen.LastUpdateID, c.LastRecvLobbyUpdate))
                 {
-                    outmsg.WriteSingle(autoRestartTimerRunning ? ServerSettings.AutoRestartTimer : 0.0f);
+                    outmsg.WriteBoolean(true);
+                    outmsg.WritePadBits();
+
+                    outmsg.WriteUInt16(GameMain.NetLobbyScreen.LastUpdateID);
+
+                    settingsBuf = new ReadWriteMessage();
+                    ServerSettings.ServerWrite(settingsBuf, c);
+                    outmsg.WriteUInt16((UInt16)settingsBuf.LengthBytes);
+                    outmsg.WriteBytes(settingsBuf.Buffer, 0, settingsBuf.LengthBytes);
+
+                    outmsg.WriteBoolean(c.LastRecvLobbyUpdate < 1);
+                    if (c.LastRecvLobbyUpdate < 1)
+                    {
+                        isInitialUpdate = true;
+                        initialUpdateBytes = outmsg.LengthBytes;
+                        ClientWriteInitial(c, outmsg);
+                        initialUpdateBytes = outmsg.LengthBytes - initialUpdateBytes;
+                    }
+                    outmsg.WriteString(GameMain.NetLobbyScreen.SelectedSub.Name);
+                    outmsg.WriteString(GameMain.NetLobbyScreen.SelectedSub.MD5Hash.ToString());
+                    outmsg.WriteBoolean(IsUsingRespawnShuttle());
+                    var selectedShuttle = GameStarted && RespawnManager != null && RespawnManager.UsingShuttle ? 
+                        RespawnManager.RespawnShuttle.Info : 
+                        GameMain.NetLobbyScreen.SelectedShuttle;
+                    outmsg.WriteString(selectedShuttle.Name);
+                    outmsg.WriteString(selectedShuttle.MD5Hash.ToString());
+
+                    outmsg.WriteBoolean(ServerSettings.AllowSubVoting);
+                    outmsg.WriteBoolean(ServerSettings.AllowModeVoting);
+
+                    outmsg.WriteBoolean(ServerSettings.VoiceChatEnabled);
+
+                    outmsg.WriteBoolean(ServerSettings.AllowSpectating);
+
+                    outmsg.WriteRangedInteger((int)ServerSettings.TraitorsEnabled, 0, 2);
+
+                    outmsg.WriteRangedInteger((int)GameMain.NetLobbyScreen.MissionType, 0, (int)MissionType.All);
+
+                    outmsg.WriteByte((byte)GameMain.NetLobbyScreen.SelectedModeIndex);
+                    outmsg.WriteString(GameMain.NetLobbyScreen.LevelSeed);
+                    outmsg.WriteSingle(ServerSettings.SelectedLevelDifficulty);
+
+                    outmsg.WriteByte((byte)ServerSettings.BotCount);
+                    outmsg.WriteBoolean(ServerSettings.BotSpawnMode == BotSpawnMode.Fill);
+
+                    outmsg.WriteBoolean(ServerSettings.AutoRestart);
+                    if (ServerSettings.AutoRestart)
+                    {
+                        outmsg.WriteSingle(autoRestartTimerRunning ? ServerSettings.AutoRestartTimer : 0.0f);
+                    }
                 }
-            }
-            else
-            {
-                outmsg.WriteBoolean(false);
-                outmsg.WritePadBits();
-            }
-            settingsBytes = outmsg.LengthBytes - settingsBytes;
-
-            int campaignBytes = outmsg.LengthBytes;
-            var campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
-            if (outmsg.LengthBytes < MsgConstants.MTU - 500 &&
-                campaign != null && campaign.Preset == GameMain.NetLobbyScreen.SelectedMode)
-            {
-                outmsg.WriteBoolean(true);
-                outmsg.WritePadBits();
-                campaign.ServerWrite(outmsg, c);
-            }
-            else
-            {
-                outmsg.WriteBoolean(false);
-                outmsg.WritePadBits();
-            }
-            campaignBytes = outmsg.LengthBytes - campaignBytes;
-
-            outmsg.WriteUInt16(c.LastSentChatMsgID); //send this to client so they know which chat messages weren't received by the server
-
-            int clientListBytes = outmsg.LengthBytes;
-            if (outmsg.LengthBytes < MsgConstants.MTU - 500)
-            {
-                WriteClientList(c, outmsg);
-            }
-            clientListBytes = outmsg.LengthBytes - clientListBytes;
-
-            int chatMessageBytes = outmsg.LengthBytes;
-            WriteChatMessages(outmsg, c);
-            chatMessageBytes = outmsg.LengthBytes - chatMessageBytes;
-
-            outmsg.WriteByte((byte)ServerNetObject.END_OF_MESSAGE);
-            
-            bool messageTooLarge = outmsg.LengthBytes > MsgConstants.MTU;
-            if (messageTooLarge && !isInitialUpdate)
-            {
-                string warningMsg = "Maximum packet size exceeded, will send using reliable mode (" + outmsg.LengthBytes + " > " + MsgConstants.MTU + ")\n";
-                warningMsg +=
-                    "  Client list size: " + clientListBytes + " bytes\n" +
-                    "  Chat message size: " + chatMessageBytes + " bytes\n" +
-                    "  Campaign size: " + campaignBytes + " bytes\n" +
-                    "  Settings size: " + settingsBytes + " bytes\n";
-                if (initialUpdateBytes > 0)
+                else
                 {
+                    outmsg.WriteBoolean(false);
+                    outmsg.WritePadBits();
+                }
+                settingsBytes = outmsg.LengthBytes - settingsBytes;
+
+                int campaignBytes = outmsg.LengthBytes;
+                var campaign = GameMain.GameSession?.GameMode as MultiPlayerCampaign;
+                if (outmsg.LengthBytes < MsgConstants.MTU - 500 &&
+                    campaign != null && campaign.Preset == GameMain.NetLobbyScreen.SelectedMode)
+                {
+                    outmsg.WriteBoolean(true);
+                    outmsg.WritePadBits();
+                    campaign.ServerWrite(outmsg, c);
+                }
+                else
+                {
+                    outmsg.WriteBoolean(false);
+                    outmsg.WritePadBits();
+                }
+                campaignBytes = outmsg.LengthBytes - campaignBytes;
+
+                outmsg.WriteUInt16(c.LastSentChatMsgID); //send this to client so they know which chat messages weren't received by the server
+
+                int clientListBytes = outmsg.LengthBytes;
+                if (outmsg.LengthBytes < MsgConstants.MTU - 500)
+                {
+                    WriteClientList(segmentTable, c, outmsg);
+                }
+                clientListBytes = outmsg.LengthBytes - clientListBytes;
+
+                int chatMessageBytes = outmsg.LengthBytes;
+                WriteChatMessages(segmentTable, outmsg, c);
+                chatMessageBytes = outmsg.LengthBytes - chatMessageBytes;
+
+                messageTooLarge = outmsg.LengthBytes > MsgConstants.MTU;
+                if (messageTooLarge && !isInitialUpdate)
+                {
+                    string warningMsg = "Maximum packet size exceeded, will send using reliable mode (" + outmsg.LengthBytes + " > " + MsgConstants.MTU + ")\n";
                     warningMsg +=
-                        "    Initial update size: " + settingsBuf.LengthBytes + " bytes\n";
-                }
-                if (settingsBuf != null)
-                {
-                    warningMsg +=
-                        "    Settings buffer size: " + settingsBuf.LengthBytes + " bytes\n";
-                }
+                        "  Client list size: " + clientListBytes + " bytes\n" +
+                        "  Chat message size: " + chatMessageBytes + " bytes\n" +
+                        "  Campaign size: " + campaignBytes + " bytes\n" +
+                        "  Settings size: " + settingsBytes + " bytes\n";
+                    if (initialUpdateBytes > 0)
+                    {
+                        warningMsg +=
+                            "    Initial update size: " + initialUpdateBytes + " bytes\n";
+                    }
+                    if (settingsBuf != null)
+                    {
+                        warningMsg +=
+                            "    Settings buffer size: " + settingsBuf.LengthBytes + " bytes\n";
+                    }
 #if DEBUG || UNSTABLE
-                DebugConsole.ThrowError(warningMsg);
+                    DebugConsole.ThrowError(warningMsg);
 #else
-                if (GameSettings.CurrentConfig.VerboseLogging) { DebugConsole.AddWarning(warningMsg); }                
+                    if (GameSettings.CurrentConfig.VerboseLogging) { DebugConsole.AddWarning(warningMsg); }                
 #endif
-                GameAnalyticsManager.AddErrorEventOnce("GameServer.ClientWriteIngame1:ClientWriteLobby" + outmsg.LengthBytes, GameAnalyticsManager.ErrorSeverity.Warning, warningMsg);
+                    GameAnalyticsManager.AddErrorEventOnce("GameServer.ClientWriteIngame1:ClientWriteLobby" + outmsg.LengthBytes, GameAnalyticsManager.ErrorSeverity.Warning, warningMsg);
+                }
             }
             
             if (isInitialUpdate || messageTooLarge)
@@ -2014,7 +2022,7 @@ namespace Barotrauma.Networking
             }
         }
 
-        private void WriteChatMessages(IWriteMessage outmsg, Client c)
+        private void WriteChatMessages(in SegmentTableWriter<ServerNetSegment> segmentTable, IWriteMessage outmsg, Client c)
         {
             c.ChatMsgQueue.RemoveAll(cMsg => !NetIdUtils.IdMoreRecent(cMsg.NetStateID, c.LastRecvChatMsgID));
             for (int i = 0; i < c.ChatMsgQueue.Count && i < ChatMessage.MaxMessagesPerPacket; i++)
@@ -2024,7 +2032,7 @@ namespace Barotrauma.Networking
                     //not enough room in this packet
                     return;
                 }
-                c.ChatMsgQueue[i].ServerWrite(outmsg, c);
+                c.ChatMsgQueue[i].ServerWrite(segmentTable, outmsg, c);
             }
         }
 
@@ -2417,7 +2425,6 @@ namespace Barotrauma.Networking
                     spawnedCharacter.Info.InventoryData = new XElement("inventory");
                     spawnedCharacter.Info.StartItemsGiven = true;
                     spawnedCharacter.SaveInventory();
-                    // talents are only avilable for players in online sessions, but modders or someone else might want to have them loaded anyway
                     spawnedCharacter.LoadTalents();
                 }
             }
@@ -3327,9 +3334,11 @@ namespace Barotrauma.Networking
 
             IWriteMessage msg = new WriteOnlyMessage();
             msg.WriteByte((byte)ServerPacketHeader.UPDATE_LOBBY);
-            msg.WriteByte((byte)ServerNetObject.VOTE);
-            Voting.ServerWrite(msg);
-            msg.WriteByte((byte)ServerNetObject.END_OF_MESSAGE);
+            using (var segmentTable = SegmentTableWriter<ServerNetSegment>.StartWriting(msg))
+            {
+                segmentTable.StartNewSegment(ServerNetSegment.Vote);
+                Voting.ServerWrite(msg);
+            }
 
             foreach (var c in recipients)
             {
