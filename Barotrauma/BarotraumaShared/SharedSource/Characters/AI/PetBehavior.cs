@@ -435,7 +435,7 @@ namespace Barotrauma
                     spawnPoint ??= WayPoint.WayPointList.Where(wp => wp.SpawnType == SpawnType.Human && wp.Submarine?.Info.Type == SubmarineType.Player).GetRandomUnsynced();
                     spawnPos = spawnPoint?.WorldPosition ?? Submarine.MainSub.WorldPosition;
                 }
-                var pet = Character.Create(speciesName, spawnPos, seed);
+                var pet = Character.Create(speciesName, spawnPos, seed, spawnInitialItems: false);
                 var petBehavior = (pet?.AIController as EnemyAIController)?.PetBehavior;
                 if (petBehavior != null)
                 {

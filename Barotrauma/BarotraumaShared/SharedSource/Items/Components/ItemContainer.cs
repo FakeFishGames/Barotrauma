@@ -47,6 +47,13 @@ namespace Barotrauma.Items.Components
             {
                 return ContainableItems == null || ContainableItems.Count == 0 || ContainableItems.Any(c => c.MatchesItem(itemPrefab));
             }
+
+            public bool MatchesItem(Identifier identifierOrTag)
+            {
+                return 
+                    ContainableItems == null || ContainableItems.Count == 0 || 
+                    ContainableItems.Any(c => c.Identifiers.Contains(identifierOrTag) && !c.ExcludedIdentifiers.Contains(identifierOrTag));
+            }
         }
 
         public readonly NamedEvent<ItemContainer> OnContainedItemsChanged = new NamedEvent<ItemContainer>();
@@ -374,7 +381,7 @@ namespace Barotrauma.Items.Components
                 // Set the contained items active if there's an item inserted inside the container. Enables e.g. the rifle flashlight when it's attached to the rifle (put inside of it).
                 SetContainedActive(true);
             }
-
+            CharacterHUD.RecreateHudTextsIfFocused(item, containedItem);
             OnContainedItemsChanged.Invoke(this);
         }
 
@@ -386,9 +393,9 @@ namespace Barotrauma.Items.Components
         public void OnItemRemoved(Item containedItem)
         {
             activeContainedItems.RemoveAll(i => i.Item == containedItem);
-
             //deactivate if the inventory is empty
             IsActive = activeContainedItems.Count > 0 || Inventory.AllItems.Any(it => it.body != null);
+            CharacterHUD.RecreateHudTextsIfFocused(item, containedItem);
             OnContainedItemsChanged.Invoke(this);
         }
 
@@ -662,6 +669,18 @@ namespace Barotrauma.Items.Components
                 relatedItem = AllSubContainableItems.FirstOrDefault(ci => ci.MatchesItem(item));
             }
             return relatedItem;
+        }
+
+        /// <summary>
+        /// Returns the index of the first slot whose restrictions match the specified tag or identifier
+        /// </summary>
+        public int? FindSuitableSubContainerIndex(Identifier itemTagOrIdentifier)
+        {
+            for (int i = 0; i < slotRestrictions.Length; i++)
+            {
+                if (slotRestrictions[i].MatchesItem(itemTagOrIdentifier)) { return i; }
+            }
+            return null;
         }
 
         public override void ReceiveSignal(Signal signal, Connection connection)

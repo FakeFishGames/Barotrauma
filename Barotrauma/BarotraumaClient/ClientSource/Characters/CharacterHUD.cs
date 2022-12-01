@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class CharacterHUD
+    partial class CharacterHUD
     {        
         const float BossHealthBarDuration = 120.0f;
 
@@ -147,8 +147,8 @@ namespace Barotrauma
             }
         }
 
-        public static bool ShouldRecreateHudTexts { get; set; } = true;
-        private static bool heldDownShiftWhenGotHudTexts;
+        public static bool RecreateHudTexts { get; set; } = true;
+        private static bool lastHudTextsContextual;
         private static float timeHealthWindowClosed;
 
         public static bool IsCampaignInterfaceOpen =>
@@ -266,7 +266,7 @@ namespace Barotrauma
                     if (focusedItemOverlayTimer <= 0.0f)
                     {
                         focusedItem = null;
-                        ShouldRecreateHudTexts = true;
+                        RecreateHudTexts = true;
                     }
                 }
             }
@@ -388,7 +388,7 @@ namespace Barotrauma
                     if (focusedItem != character.FocusedItem)
                     {
                         focusedItemOverlayTimer = Math.Min(1.0f, focusedItemOverlayTimer);
-                        ShouldRecreateHudTexts = true;
+                        RecreateHudTexts = true;
                     }
                     focusedItem = character.FocusedItem;
                 }
@@ -412,14 +412,14 @@ namespace Barotrauma
 
                     if (!GUI.DisableItemHighlights && !Inventory.DraggingItemToWorld)
                     {
-                        bool shiftDown = PlayerInput.IsShiftDown();
-                        if (ShouldRecreateHudTexts || heldDownShiftWhenGotHudTexts != shiftDown)
+                        bool hudTextsContextual = PlayerInput.IsShiftDown();
+                        if (RecreateHudTexts || lastHudTextsContextual != hudTextsContextual)
                         {
-                            ShouldRecreateHudTexts = true;
-                            heldDownShiftWhenGotHudTexts = shiftDown;
+                            RecreateHudTexts = true;
+                            lastHudTextsContextual = hudTextsContextual;
                         }
-                        var hudTexts = focusedItem.GetHUDTexts(character, ShouldRecreateHudTexts);
-                        ShouldRecreateHudTexts = false;
+                        var hudTexts = focusedItem.GetHUDTexts(character, RecreateHudTexts);
+                        RecreateHudTexts = false;
 
                         int dir = Math.Sign(focusedItem.WorldPosition.X - character.WorldPosition.X);
 
@@ -863,6 +863,26 @@ namespace Barotrauma
 
             Vector2 drawPos = objectiveEntity.Entity.WorldPosition;// + Vector2.UnitX * objectiveEntity.Sprite.size.X * 1.5f;
             GUI.DrawIndicator(spriteBatch, drawPos, cam, 100.0f, objectiveEntity.Sprite, objectiveEntity.Color * iconAlpha);
+        }
+
+        static partial void RecreateHudTextsIfControllingProjSpecific(Character character)
+        {
+            if (character == Character.Controlled)
+            {
+                RecreateHudTexts = true;
+            }
+        }
+
+        static partial void RecreateHudTextsIfFocusedProjSpecific(params Item[] items)
+        {
+            foreach (var item in items)
+            {
+                if (item == Character.Controlled?.FocusedItem)
+                {
+                    RecreateHudTexts = true;
+                    break;
+                }
+            }
         }
     }
 }

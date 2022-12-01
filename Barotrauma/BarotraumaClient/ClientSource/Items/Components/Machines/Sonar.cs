@@ -62,6 +62,7 @@ namespace Barotrauma.Items.Components
         private float displayBorderSize;
 
         private List<SonarBlip> sonarBlips;
+        private readonly HashSet<SonarBlip> prevBlips = new HashSet<SonarBlip>();
 
         private float prevPassivePingRadius;
 
@@ -817,23 +818,32 @@ namespace Barotrauma.Items.Components
                     if (distSqr > t.SoundRange * t.SoundRange * 2) { continue; }
 
                     float dist = (float)Math.Sqrt(distSqr);
-                    if (dist > prevPassivePingRadius * Range && dist <= passivePingRadius * Range && Rand.Int(sonarBlips.Count) < 500 && t.IsWithinSector(transducerCenter))
+                    if (dist > prevPassivePingRadius * Range && dist <= passivePingRadius * Range && Rand.Int(sonarBlips.Count) < 500)
                     {
-                        int prevBlipCount = sonarBlips.Count;
+                        prevBlips.Clear();
+                        foreach (var blip in sonarBlips)
+                        {
+                            prevBlips.Add(blip);
+                        }
+
                         Ping(t.WorldPosition, transducerCenter,
-                            Math.Min(t.SoundRange, range * 0.5f) * displayScale, 0, displayScale, Math.Min(t.SoundRange, range * 0.5f),
+                            t.SoundRange * displayScale, 0, displayScale, range,
                             passive: true, pingStrength: 0.5f);
-                        sonarBlips.Add(new SonarBlip(t.WorldPosition, 1.0f, 1.0f));
                         //remove blips that weren't in the AITarget's sector
                         if (t.HasSector())
                         {
-                            for (int i = sonarBlips.Count - 1; i >= prevBlipCount; i--)
+                            for (int i = sonarBlips.Count - 1; i >= 0; i--)
                             {
+                                if (prevBlips.Contains(sonarBlips[i])) { continue; }
                                 if (!t.IsWithinSector(sonarBlips[i].Position))
                                 {
                                     sonarBlips.RemoveAt(i);
                                 }
                             }
+                        }
+                        if (t.IsWithinSector(transducerCenter))
+                        {
+                            sonarBlips.Add(new SonarBlip(t.WorldPosition, fadeTimer: 1.0f, scale: MathHelper.Clamp(t.SoundRange / 2000, 1.0f, 5.0f)));
                         }
                     }
                 }

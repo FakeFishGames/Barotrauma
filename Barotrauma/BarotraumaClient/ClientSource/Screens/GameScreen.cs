@@ -11,8 +11,6 @@ namespace Barotrauma
 {
     partial class GameScreen : Screen
     {
-        public override bool IsEditor => GameMain.GameSession?.GameMode is TestGameMode;
-
         private RenderTarget2D renderTargetBackground;
         private RenderTarget2D renderTarget;
         private RenderTarget2D renderTargetWater;

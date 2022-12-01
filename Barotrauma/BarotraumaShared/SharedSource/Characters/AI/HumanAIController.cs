@@ -1907,8 +1907,8 @@ namespace Barotrauma
                 visibleHulls = VisibleHulls;
             }
             bool ignoreFire = objectiveManager.CurrentOrder is AIObjectiveExtinguishFires extinguishOrder && extinguishOrder.Priority > 0 || objectiveManager.HasActiveObjective<AIObjectiveExtinguishFire>();
-            bool ignoreWater = HasDivingSuit(character);
-            bool ignoreOxygen = ignoreWater || HasDivingMask(character);
+            bool ignoreWater = character.IsProtectedFromPressure();
+            bool ignoreOxygen = HasDivingGear(character);
             bool ignoreEnemies = ObjectiveManager.IsCurrentOrder<AIObjectiveFightIntruders>() || ObjectiveManager.IsCurrentObjective<AIObjectiveFightIntruders>();
             float safety = CalculateHullSafety(hull, visibleHulls, character, ignoreWater, ignoreOxygen, ignoreFire, ignoreEnemies);
             if (isCurrentHull)

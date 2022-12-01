@@ -332,10 +332,27 @@ namespace Barotrauma.Networking
             };
         }
 
+        public void CreateServerCrashMessage()
+        {
+            // Close any message boxes that say "The server has crashed."
+            var basicServerCrashMsg = TextManager.Get($"{nameof(DisconnectReason)}.{nameof(DisconnectReason.ServerCrashed)}");
+            GUIMessageBox.MessageBoxes
+                .OfType<GUIMessageBox>()
+                .Where(mb => mb.Text?.Text == basicServerCrashMsg)
+                .ToArray()
+                .ForEach(mb => mb.Close());
+
+            // Open a new message box with the crash report path
+            if (GUIMessageBox.MessageBoxes.All(
+                    mb => (mb as GUIMessageBox)?.Text?.Text != ChildServerRelay.CrashMessage))
+            {
+                var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), ChildServerRelay.CrashMessage);
+                msgBox.Buttons[0].OnClicked += ReturnToPreviousMenu;
+            }
+        }
+
         private bool ReturnToPreviousMenu(GUIButton button, object obj)
         {
-            Quit();
-
             Submarine.Unload();
             GameMain.Client = null;
             GameMain.GameSession = null;
@@ -531,14 +548,10 @@ namespace Barotrauma.Networking
             {
                 if (GameMain.WindowActive)
                 {
-                    if (ChildServerRelay.Process?.HasExited ?? true)
+                    if (!ChildServerRelay.IsProcessAlive)
                     {
                         Quit();
-                        if (!GUIMessageBox.MessageBoxes.Any(mb => (mb as GUIMessageBox)?.Text?.Text == ChildServerRelay.CrashMessage))
-                        {
-                            var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), ChildServerRelay.CrashMessage);
-                            msgBox.Buttons[0].OnClicked += ReturnToPreviousMenu;
-                        }
+                        CreateServerCrashMessage();
                     }
                 }
             }
@@ -942,13 +955,6 @@ namespace Barotrauma.Networking
 
             GUI.ClearCursorWait();
 
-            ChildServerRelay.ShutDown();
-            
-            if (SteamManager.IsInitialized)
-            {
-                Steamworks.SteamFriends.ClearRichPresence();
-            }
-
             if (disconnectPacket.ShouldCreateAnalyticsEvent)
             {
                 GameAnalyticsManager.AddErrorEventOnce(
@@ -974,11 +980,43 @@ namespace Barotrauma.Networking
             }
             else
             {
-                ReturnToPreviousMenu(null, null);
-                new GUIMessageBox(TextManager.Get(wasConnected ? "ConnectionLost" : "CouldNotConnectToServer"), disconnectPacket.PopupMessage)
+                if (ClientPeer is SteamP2PClientPeer or SteamP2POwnerPeer)
                 {
-                    DisplayInLoadingScreens = true
-                };
+                    SteamManager.LeaveLobby();
+                }
+
+                GameMain.ModDownloadScreen.Reset();
+                ContentPackageManager.EnabledPackages.Restore();
+
+                CampaignMode.StartRoundCancellationToken?.Cancel();
+
+                if (SteamManager.IsInitialized)
+                {
+                    Steamworks.SteamFriends.ClearRichPresence();
+                }
+                foreach (var fileTransfer in FileReceiver.ActiveTransfers.ToArray())
+                {
+                    FileReceiver.StopTransfer(fileTransfer, deleteFile: true);
+                }
+
+                ChildServerRelay.AttemptGracefulShutDown();
+                GUIMessageBox.MessageBoxes.RemoveAll(c => c?.UserData is RoundSummary);
+
+                characterInfo?.Remove();
+
+                VoipClient?.Dispose();
+                VoipClient = null;
+                GameMain.Client = null;
+                GameMain.GameSession = null;
+
+                ReturnToPreviousMenu(null, null);
+                if (disconnectPacket.DisconnectReason != DisconnectReason.Disconnected)
+                {
+                    new GUIMessageBox(TextManager.Get(wasConnected ? "ConnectionLost" : "CouldNotConnectToServer"), disconnectPacket.PopupMessage)
+                    {
+                        DisplayInLoadingScreens = true
+                    };
+                }
             }
         }
 
@@ -2538,46 +2576,9 @@ namespace Barotrauma.Networking
 
         public void Quit()
         {
-            if (ClientPeer is SteamP2PClientPeer || ClientPeer is SteamP2POwnerPeer)
-            {
-                SteamManager.LeaveLobby();
-            }
-
-            GameMain.ModDownloadScreen.Reset();
-            ContentPackageManager.EnabledPackages.Restore();
-
-            CampaignMode.StartRoundCancellationToken?.Cancel();
-
             ClientPeer?.Close(PeerDisconnectPacket.WithReason(DisconnectReason.Disconnected));
-            ClientPeer = null;
-
-            foreach (var fileTransfer in FileReceiver.ActiveTransfers.ToArray())
-            {
-                FileReceiver.StopTransfer(fileTransfer, deleteFile: true);
-            }
-
-            if (ChildServerRelay.Process != null)
-            {
-                int checks = 0;
-                while (ChildServerRelay.Process is { HasExited: false })
-                {
-                    if (checks > 10)
-                    {
-                        ChildServerRelay.ShutDown();
-                    }
-                    Thread.Sleep(100);
-                    checks++;
-                }
-            }
-            ChildServerRelay.ShutDown();
+            
             GUIMessageBox.MessageBoxes.RemoveAll(c => c?.UserData is RoundSummary);
-
-            characterInfo?.Remove();
-
-            VoipClient?.Dispose();
-            VoipClient = null;
-            GameMain.Client = null;
-            GameMain.GameSession = null;
         }
 
         public void SendCharacterInfo(string newName = null)

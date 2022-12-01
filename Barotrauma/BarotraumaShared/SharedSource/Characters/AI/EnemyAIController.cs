@@ -1908,7 +1908,7 @@ namespace Barotrauma
                     {
                         if (selectedTargetingParams.AttackPattern == AttackPattern.Straight && AttackLimb is Limb attackLimb && attackLimb.attack.Ranged)
                         {
-                            bool advance = !canAttack && Character.InWater || distance > attackLimb.attack.Range * 0.9f;
+                            bool advance = !canAttack && Character.CurrentHull == null || distance > attackLimb.attack.Range * 0.9f;
                             bool fallBack = canAttack && distance < Math.Min(250, attackLimb.attack.Range * 0.25f);
                             if (fallBack)
                             {
@@ -1926,10 +1926,18 @@ namespace Barotrauma
                                     SteeringManager.SteeringSeek(steerPos, 10);
                                 }
                             }
-                            else if (!Character.InWater)
+                            else
                             {
-                                SteeringManager.Reset();
-                                FaceTarget(SelectedAiTarget.Entity);
+                                if (Character.CurrentHull == null && !canAttack)
+                                {
+                                    SteeringManager.SteeringWander();
+                                    SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 5);
+                                }
+                                else
+                                {
+                                    SteeringManager.Reset();
+                                    FaceTarget(SelectedAiTarget.Entity);
+                                }
                             }
                         }
                         else if (!canAttack || distance > Math.Min(AttackLimb.attack.Range * 0.9f, 100))
@@ -1954,7 +1962,7 @@ namespace Barotrauma
                 }
             }
             Entity targetEntity = wallTarget?.Structure ?? SelectedAiTarget?.Entity;
-            if (AttackLimb?.attack is Attack { Ranged: true } attack && targetEntity != null)
+            if (AttackLimb?.attack is Attack { Ranged: true } attack)
             {
                 AimRangedAttack(attack, targetEntity);
             }
@@ -1981,7 +1989,7 @@ namespace Barotrauma
 
         public void AimRangedAttack(Attack attack, Entity targetEntity)
         {
-            if (attack == null || attack.Ranged == false || targetEntity == null) { return; }
+            if (attack is not { Ranged: true } || targetEntity is not { Removed: false }) { return; }
             Character.SetInput(InputType.Aim, false, true);
             if (attack.AimRotationTorque <= 0) { return; }
             Limb limb = GetLimbToRotate(attack);

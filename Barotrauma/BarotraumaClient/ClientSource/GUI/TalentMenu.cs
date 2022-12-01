@@ -269,6 +269,8 @@ namespace Barotrauma
 
             selectedTalents = info.GetUnlockedTalentsInTree().ToHashSet();
 
+            var specializationCount = tree.TalentSubTrees.Count(t => t.Type == TalentTreeType.Specialization);
+
             List<GUITextBlock> subTreeNames = new List<GUITextBlock>();
             foreach (var subTree in tree.TalentSubTrees)
             {
@@ -310,7 +312,7 @@ namespace Barotrauma
                 for (int i = 0; i < optionAmount; i++)
                 {
                     TalentOption option = subTree.TalentOptionStages[i];
-                    CreateTalentOption(subTreeLayoutGroup, subTree, i, option, info);
+                    CreateTalentOption(subTreeLayoutGroup, subTree, i, option, info, specializationCount);
                 }
                 subTreeLayoutGroup.RectTransform.Resize(new Point(subTreeLayoutGroup.Rect.Width,
                     subTreeLayoutGroup.Children.Sum(c => c.Rect.Height + subTreeLayoutGroup.AbsoluteSpacing)));
@@ -327,7 +329,12 @@ namespace Barotrauma
             var specializationList = GetSpecializationList();
             //resize (scale up) children if there's less than 3 of them to make them cover the whole width of the menu
             specializationList.Content.RectTransform.Resize(new Point(specializationList.Content.Children.Sum(static c => c.Rect.Width), specializationList.Rect.Height), 
-                resizeChildren: specializationList.Content.Children.Count() < 3);
+                resizeChildren: specializationCount < 3);
+            //make room for scrollbar if there's more than the default amount of specializations
+            if (specializationCount > 3)
+            {
+                specializationList.RectTransform.MinSize = new Point(specializationList.Rect.Width, specializationList.Content.Rect.Height + (int)(specializationList.ScrollBar.Rect.Height * 0.9f));
+            }
 
             GUITextBlock.AutoScaleAndNormalize(subTreeNames);
 
@@ -337,17 +344,17 @@ namespace Barotrauma
                 {
                     return specList;
                 }
-
                 GUIListBox newSpecializationList = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.5f), mainList.Content.RectTransform, Anchor.TopCenter), isHorizontal: true, style: null);
                 return newSpecializationList;
             }
         }
 
-        private void CreateTalentOption(GUIComponent parent, TalentSubTree subTree, int index, TalentOption talentOption, CharacterInfo info)
+        private void CreateTalentOption(GUIComponent parent, TalentSubTree subTree, int index, TalentOption talentOption, CharacterInfo info, int specializationCount)
         {
             int elementPadding = GUI.IntScale(8);
+            int height = GUI.IntScale((GameMain.GameSession?.Campaign == null ? 65 : 60) * (specializationCount > 3 ? 0.97f : 1.0f));
             GUIFrame talentOptionFrame = new GUIFrame(new RectTransform(new Vector2(1f, 0.01f), parent.RectTransform, anchor: Anchor.TopCenter) 
-                { MinSize = new Point(0, GUI.IntScale(65)) }, style: null);
+                { MinSize = new Point(0, height) }, style: null);
 
             Point talentFrameSize = talentOptionFrame.RectTransform.NonScaledSize;
 

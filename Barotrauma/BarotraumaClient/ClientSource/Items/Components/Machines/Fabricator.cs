@@ -327,15 +327,18 @@ namespace Barotrauma.Items.Components
                 var item1 = c1.GUIComponent.UserData as FabricationRecipe;
                 var item2 = c2.GUIComponent.UserData as FabricationRecipe;
 
-                int itemPlacement1 = FabricationDegreeOfSuccess(character, item1.RequiredSkills) >= 0.5f ? 0 : -1;
-                int itemPlacement2 = FabricationDegreeOfSuccess(character, item2.RequiredSkills) >= 0.5f ? 0 : -1;
-
-                itemPlacement1 += item1.RequiresRecipe && !character.HasRecipeForItem(item1.TargetItem.Identifier) ? -2 : 0;
-                itemPlacement2 += item2.RequiresRecipe && !character.HasRecipeForItem(item2.TargetItem.Identifier) ? -2 : 0;
-
+                int itemPlacement1 = calculatePlacement(item1);
+                int itemPlacement2 = calculatePlacement(item2);
                 if (itemPlacement1 != itemPlacement2)
                 {
                     return itemPlacement1 > itemPlacement2 ? -1 : 1;
+                }
+
+                int calculatePlacement(FabricationRecipe recipe)
+                {
+                    int placement = FabricationDegreeOfSuccess(character, recipe.RequiredSkills) >= 0.5f ? 0 : -1;
+                    placement += recipe.RequiresRecipe && !AnyOneHasRecipeForItem(character, recipe.TargetItem) ? -2 : 0;
+                    return placement;
                 }
 
                 return string.Compare(item1.DisplayName.Value, item2.DisplayName.Value);
@@ -372,7 +375,9 @@ namespace Barotrauma.Items.Components
                 AutoScaleHorizontal = true,
                 CanBeFocused = false
             };
-            var firstRequiresRecipe = itemList.Content.Children.FirstOrDefault(c => c.UserData is FabricationRecipe fabricableItem && (fabricableItem.RequiresRecipe && !character.HasRecipeForItem(fabricableItem.TargetItem.Identifier)));
+            var firstRequiresRecipe = itemList.Content.Children.FirstOrDefault(c => 
+                c.UserData is FabricationRecipe fabricableItem && 
+                fabricableItem.RequiresRecipe && !AnyOneHasRecipeForItem(character, fabricableItem.TargetItem));
             if (firstRequiresRecipe != null)
             {
                 requiresRecipeText.RectTransform.RepositionChildInHierarchy(itemList.Content.RectTransform.GetChildIndex(firstRequiresRecipe.RectTransform));

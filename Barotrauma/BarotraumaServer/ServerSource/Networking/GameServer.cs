@@ -335,9 +335,9 @@ namespace Barotrauma.Networking
 #endif
             if (!started) { return; }
 
-            if (OwnerConnection != null && ChildServerRelay.HasShutDown)
+            if (ChildServerRelay.HasShutDown)
             {
-                Quit();
+                GameMain.Instance.CloseServer();
                 return;
             }
 
@@ -3938,6 +3938,7 @@ namespace Barotrauma.Networking
 
         public void Quit()
         {
+            
             if (started)
             {
                 started = false;

@@ -540,7 +540,16 @@ namespace Barotrauma
         private Color speechBubbleColor;
         private float speechBubbleTimer;
 
+        /// <summary>
+        /// Prevents the character from interacting with items or characters
+        /// </summary>
         public bool DisableInteract { get; set; }
+
+        /// <summary>
+        /// Prevents the character from highlighting items or characters with the cursor, 
+        /// meaning it can't interact with anything but the things it has currently selected/equipped
+        /// </summary>
+        public bool DisableFocusingOnEntities { get; set; }
 
         //text displayed when the character is highlighted if custom interact is set
         public LocalizedString CustomInteractHUDText { get; private set; }
@@ -1099,9 +1108,9 @@ namespace Barotrauma
         /// <param name="isRemotePlayer">Is the character controlled by a remote player.</param>
         /// <param name="hasAi">Is the character controlled by AI.</param>
         /// <param name="ragdoll">Ragdoll configuration file. If null, will select the default.</param>
-        public static Character Create(CharacterInfo characterInfo, Vector2 position, string seed, ushort id = Entity.NullEntityID, bool isRemotePlayer = false, bool hasAi = true, RagdollParams ragdoll = null)
+        public static Character Create(CharacterInfo characterInfo, Vector2 position, string seed, ushort id = Entity.NullEntityID, bool isRemotePlayer = false, bool hasAi = true, RagdollParams ragdoll = null, bool spawnInitialItems = true)
         {
-            return Create(characterInfo.SpeciesName, position, seed, characterInfo, id, isRemotePlayer, hasAi, true, ragdoll);
+            return Create(characterInfo.SpeciesName, position, seed, characterInfo, id, isRemotePlayer, hasAi, createNetworkEvent: true, ragdoll, spawnInitialItems);
         }
 
         /// <summary>
@@ -1116,16 +1125,16 @@ namespace Barotrauma
         /// <param name="hasAi">Is the character controlled by AI.</param>
         /// <param name="createNetworkEvent">Should clients receive a network event about the creation of this character?</param>
         /// <param name="ragdoll">Ragdoll configuration file. If null, will select the default.</param>
-        public static Character Create(string speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, ushort id = Entity.NullEntityID, bool isRemotePlayer = false, bool hasAi = true, bool createNetworkEvent = true, RagdollParams ragdoll = null, bool throwErrorIfNotFound = true)
+        public static Character Create(string speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, ushort id = Entity.NullEntityID, bool isRemotePlayer = false, bool hasAi = true, bool createNetworkEvent = true, RagdollParams ragdoll = null, bool throwErrorIfNotFound = true, bool spawnInitialItems = true)
         {
             if (speciesName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
             {
                 speciesName = Path.GetFileNameWithoutExtension(speciesName);
             }
-            return Create(speciesName.ToIdentifier(), position, seed, characterInfo, id, isRemotePlayer, hasAi, createNetworkEvent, ragdoll, throwErrorIfNotFound);
+            return Create(speciesName.ToIdentifier(), position, seed, characterInfo, id, isRemotePlayer, hasAi, createNetworkEvent, ragdoll, throwErrorIfNotFound, spawnInitialItems);
         }
 
-        public static Character Create(Identifier speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, ushort id = Entity.NullEntityID, bool isRemotePlayer = false, bool hasAi = true, bool createNetworkEvent = true, RagdollParams ragdoll = null, bool throwErrorIfNotFound = true)
+        public static Character Create(Identifier speciesName, Vector2 position, string seed, CharacterInfo characterInfo = null, ushort id = Entity.NullEntityID, bool isRemotePlayer = false, bool hasAi = true, bool createNetworkEvent = true, RagdollParams ragdoll = null, bool throwErrorIfNotFound = true, bool spawnInitialItems = true)
         {
             var prefab = CharacterPrefab.FindBySpeciesName(speciesName);
             if (prefab == null)
@@ -1142,29 +1151,29 @@ namespace Barotrauma
 
                 return null;
             }
-            return Create(prefab, position, seed, characterInfo, id, isRemotePlayer, hasAi, createNetworkEvent, ragdoll);
+            return Create(prefab, position, seed, characterInfo, id, isRemotePlayer, hasAi, createNetworkEvent, ragdoll, spawnInitialItems);
         }
 
-        public static Character Create(CharacterPrefab prefab, Vector2 position, string seed, CharacterInfo characterInfo = null, ushort id = Entity.NullEntityID, bool isRemotePlayer = false, bool hasAi = true, bool createNetworkEvent = true, RagdollParams ragdoll = null)
+        public static Character Create(CharacterPrefab prefab, Vector2 position, string seed, CharacterInfo characterInfo = null, ushort id = Entity.NullEntityID, bool isRemotePlayer = false, bool hasAi = true, bool createNetworkEvent = true, RagdollParams ragdoll = null, bool spawnInitialItems = true)
         {
             Character newCharacter = null;
             if (prefab.Identifier != CharacterPrefab.HumanSpeciesName)
             {
-                var aiCharacter = new AICharacter(prefab, position, seed, characterInfo, id, isRemotePlayer, ragdoll);
+                var aiCharacter = new AICharacter(prefab, position, seed, characterInfo, id, isRemotePlayer, ragdoll, spawnInitialItems);
                 var ai = new EnemyAIController(aiCharacter, seed);
                 aiCharacter.SetAI(ai);
                 newCharacter = aiCharacter;
             }
             else if (hasAi)
             {
-                var aiCharacter = new AICharacter(prefab, position, seed, characterInfo, id, isRemotePlayer, ragdoll);
+                var aiCharacter = new AICharacter(prefab, position, seed, characterInfo, id, isRemotePlayer, ragdoll, spawnInitialItems);
                 var ai = new HumanAIController(aiCharacter);
                 aiCharacter.SetAI(ai);
                 newCharacter = aiCharacter;
             }
             else
             {
-                newCharacter = new Character(prefab, position, seed, characterInfo, id, isRemotePlayer, ragdoll);
+                newCharacter = new Character(prefab, position, seed, characterInfo, id, isRemotePlayer, ragdoll, spawnInitialItems);
             }
 
 #if SERVER
@@ -1181,7 +1190,7 @@ namespace Barotrauma
             wallet = new Wallet(Option<Character>.Some(this));
         }
 
-        protected Character(CharacterPrefab prefab, Vector2 position, string seed, CharacterInfo characterInfo = null, ushort id = Entity.NullEntityID, bool isRemotePlayer = false, RagdollParams ragdollParams = null)
+        protected Character(CharacterPrefab prefab, Vector2 position, string seed, CharacterInfo characterInfo = null, ushort id = Entity.NullEntityID, bool isRemotePlayer = false, RagdollParams ragdollParams = null, bool spawnInitialItems = true)
             : this(null, id)
         {
             this.Seed = seed;
@@ -1291,7 +1300,8 @@ namespace Barotrauma
             {
                 Inventory = new CharacterInventory(
                     inventoryElements.Count == 1 ? inventoryElements[0] : ToolBox.SelectWeightedRandom(inventoryElements, inventoryCommonness, random),
-                    this);
+                    this,
+                    spawnInitialItems);
             }
             if (healthElements.Count == 0)
             {
@@ -2713,7 +2723,7 @@ namespace Barotrauma
 #if CLIENT
             if (isLocalPlayer)
             {
-                if (!IsMouseOnUI && (ViewTarget == null || ViewTarget == this))
+                if (!IsMouseOnUI && (ViewTarget == null || ViewTarget == this) && !DisableFocusingOnEntities)
                 {
                     if (findFocusedTimer <= 0.0f || Screen.Selected == GameMain.SubEditorScreen)
                     {
@@ -2748,6 +2758,7 @@ namespace Barotrauma
                     focusedItem = null;
                 }
                 findFocusedTimer -= deltaTime;
+                DisableFocusingOnEntities = false;
             }
 #endif
             var head = AnimController.GetLimb(LimbType.Head);
@@ -4243,11 +4254,14 @@ namespace Barotrauma
 
             if (!isNetworkMessage)
             {
-                if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
+                if (GameMain.NetworkMember is { IsClient: true }) { return; }
             }
 
             CharacterHealth.ApplyAffliction(null, new Affliction(AfflictionPrefab.Pressure, AfflictionPrefab.Pressure.MaxStrength));
-            if (isNetworkMessage && GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient && Vitality <= CharacterHealth.MinVitality) { Kill(CauseOfDeathType.Pressure, null, isNetworkMessage: true); }
+            if (GameMain.NetworkMember is not { IsClient: true } || isNetworkMessage)
+            {
+                Kill(CauseOfDeathType.Pressure, null, isNetworkMessage: true);
+            }
             if (IsDead)
             {
                 BreakJoints();
@@ -4927,7 +4941,7 @@ namespace Barotrauma
                 {
                     foreach (TalentOption talentOption in talentSubTree.TalentOptionStages)
                     {
-                        if (talentOption.TalentIdentifiers.None(HasTalent))
+                        if (!talentOption.HasMaxTalents(info.UnlockedTalents))
                         {
                             return false;
                         }

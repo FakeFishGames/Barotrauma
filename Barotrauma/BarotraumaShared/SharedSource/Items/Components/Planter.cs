@@ -248,6 +248,7 @@ namespace Barotrauma.Items.Components
 
             if (container?.Inventory == null) { return; }
 
+            bool recreateHudTexts = false;
             for (var i = 0; i < container.Inventory.Capacity; i++)
             {
                 if (i < 0 || GrowableSeeds.Length <= i) { continue; }
@@ -257,6 +258,7 @@ namespace Barotrauma.Items.Components
 
                 if (growable != null)
                 {
+                    recreateHudTexts |= GrowableSeeds[i] != growable;
                     GrowableSeeds[i] = growable;
                     growable.IsActive = true;
                 }
@@ -267,11 +269,14 @@ namespace Barotrauma.Items.Components
                         // Kill the plant if it's somehow removed
                         oldGrowable.Decayed = true;
                         oldGrowable.IsActive = false;
+                        recreateHudTexts = true;
                     }
-
                     GrowableSeeds[i] = null;
                 }
             }
+#if CLIENT
+            CharacterHUD.RecreateHudTexts |= recreateHudTexts;
+#endif
 
             // server handles this
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }

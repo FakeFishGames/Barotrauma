@@ -1,4 +1,16 @@
 ---------------------------------------------------------------------------------------------------------
+v100.8.0.0
+---------------------------------------------------------------------------------------------------------
+
+- Fixed vanilla package failing to load due to a duplicate music clip in sounds.xml, leading to a crash on startup.
+
+---------------------------------------------------------------------------------------------------------
+v100.7.0.0
+---------------------------------------------------------------------------------------------------------
+
+No changes aside from the fixes in v0.20.9.0.
+
+---------------------------------------------------------------------------------------------------------
 v100.6.0.0
 ---------------------------------------------------------------------------------------------------------
 
@@ -82,6 +94,65 @@ Test version of the faction overhaul:
 - If your Coalition/Separatist reputation is low enough, you may get attacked by their vessel during missions.
 - There's now always two paths from biome to another, one controlled by the Coalition and one by Separatists.
 - Improvements to the campaign map.
+
+---------------------------------------------------------------------------------------------------------
+v0.20.9.0
+---------------------------------------------------------------------------------------------------------
+
+Changes and additions:
+- Added a button to the main menu that can be used to update all installed mods when there's updates available.
+- Optimized the server lobby: there was an issue in the logic that updates the microphone icon that caused the game to check available audio devices every frame.
+- Optimized status monitors: previously some parts of their UI were always updated regardless if anyone is viewing the UI.
+- Made flak cannons a bit more quiet (so they don't drown out all other sounds).
+
+Unstable only:
+- Don't allow placing most of the new creature loot in cabinets/containers.
+- Fixed some more vanilla subs' reactors having 1000 condition instead of 100.
+- Adjustments to Harpoon Coil-Rifle sounds.
+- Two new music tracks (one "default" one for missions and another for colonies).
+- Fixed no events triggering in the first campaign outpost.
+- Fixed crashing when firing a turret that doesn't use ammo boxes + ammo boxes getting used twice when firing.
+- Fixed water-reactant items emitting particles when submerged even when inside a waterproof container + optimized the effects a bit.
+- Allow recycling ammo boxes that are below 10% full.
+- Fixed autoshotgun's ammunition indicator showing 1 item less than it should when there's no flashlight in the flashlight slot.
+- Fixed "censorship" event (in which a clown asks you to retrieve a confiscated crate) being impossible to complete.
+- Fixed crash when opening the fabricator UI in the sub editor.
+- Improvements to the new beacon station clown event.
+- Fixed passive sonar still revealing more than it should when there's directional pings active.
+- Fixed inventory being visible when using a periscope in the sub editor test mode.
+- Fixed inability to get out of the clown crate in multiplayer.
+- Fixed "Lab Contacts" increasing the medical fabrication speed instead of reducing it.
+- Fixed "All talents unlocked" showing before you had unlocked all talents.
+- Fixed "Tinkerer" not working at all.
+- Fixed "Quickfixer" not doubling the repair speed.
+- Fixed exosuit draining the battery when not worn.
+- Fixed exosuit consuming all contained tanks when there's a battery in it.
+- Fixed bots failing to swap tanks in the exosuit.
+- Removed the flashlight slot from the machine pistol.
+- Fixed Defensebot's movement outside of the submarine.
+- Petraptors poop.
+- Fix a console error after a loaded game when a defense bot is present. Happened because we tried to spawn the initial items in the inventory, which was full.
+- Fixed softlock if you get killed by barotrauma when under the effect of Miracle Worker.
+- Fixed fabricator displaying items that can be crafted using a bot's talents as requiring a recipe to craft.
+- Fixed fabricating nuclear shells and nuclear depth charges with the cheaper recipe unlocked by "Nuclear Option" not fully using up the fuel rods.
+
+Bugfixes:
+- Fixed occasional crashes when shutting down a server (for example with the error messages "pipe is broken" or "ChildServerRelay readTask did not run to completion")
+- Fixed junction boxes not getting damaged by water since the power rework.
+- Fixed opiate withdrawal only reducing down to 20%, but never fully healing by itself.
+- Fixed engines reverting back to the non-damaged sprite when they're damaged badly enough that the sprite starts shaking.
+- Fixed walls being set up incorrectly in vertical abandoned outpost hallway modules, causing them to stick out into the connected modules.
+- Attempt to fix items sometimes ending up rotated inside a container (e.g. diving suit sprite appearing rotated on a diving suit locker).
+- Fixed "man and his raptor" outpost event giving 1000 marks in an incorrect branch of the dialog (the one where you immediately accept the NPC on board, instead of the one where the NPC says they'll pay you 1000 mk).
+- Fixed cases of interaction texts for focused item (most notoriously, the planter) not being updated correctly.
+- Fixed "snap to grid" causing door gaps to get misaligned.
+- Fixed weird equipping behavior on fruit and paints, causing them to be equipped in both hands when trying to unequip.
+- Yet another fix to cave tunnels sometimes being too narrow to pass through.
+- Fixed minerals sometimes being placed outside the level in mineral missions.
+- Fixed reactor temperature boost not working in multiplayer.
+
+Modding:
+- Fixed item's OnSpawn effects being applied twice.
 
 ---------------------------------------------------------------------------------------------------------
 v0.20.8.0

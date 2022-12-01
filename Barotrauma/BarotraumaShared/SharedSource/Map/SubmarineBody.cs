@@ -738,7 +738,7 @@ namespace Barotrauma
 
         private void HandleLevelCollision(Impact impact, VoronoiCell cell = null)
         {
-            if (GameMain.GameSession != null && GameMain.GameSession.RoundDuration > 10)
+            if (GameMain.GameSession != null && GameMain.GameSession.RoundDuration < 10)
             {
                 //ignore level collisions for the first 10 seconds of the round in case the sub spawns in a way that causes it to hit a wall 
                 //(e.g. level without outposts to dock to and an incorrectly configured ballast that makes the sub go up)

@@ -72,7 +72,7 @@ namespace Barotrauma
 
                 bool allowCheats = false;
 #if CLIENT
-                allowCheats = GameMain.NetworkMember == null && (GameMain.GameSession?.GameMode is TestGameMode || Screen.Selected is EditorScreen);
+                allowCheats = GameMain.NetworkMember == null && (GameMain.GameSession?.GameMode is TestGameMode || Screen.Selected is { IsEditor: true });
 #endif
                 if (!allowCheats && !CheatsEnabled && IsCheat)
                 {
