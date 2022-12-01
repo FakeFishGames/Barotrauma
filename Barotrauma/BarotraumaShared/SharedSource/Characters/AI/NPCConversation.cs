@@ -77,11 +77,11 @@ namespace Barotrauma
             {
                 if (Level.Loaded.Type == LevelData.LevelType.LocationConnection)
                 {
-                    if (GameMain.GameSession.RoundDuration > 30.0f) { currentFlags.Add("Initial".ToIdentifier()); }
+                    if (GameMain.GameSession.RoundDuration < 30.0f) { currentFlags.Add("Initial".ToIdentifier()); }
                 }
                 else if (Level.Loaded.Type == LevelData.LevelType.Outpost)
                 {
-                    if (GameMain.GameSession.RoundDuration > 120.0f && 
+                    if (GameMain.GameSession.RoundDuration < 120.0f && 
                         speaker?.CurrentHull != null && 
                         (speaker.TeamID == CharacterTeamType.FriendlyNPC || speaker.TeamID == CharacterTeamType.None) && 
                         Character.CharacterList.Any(c => c.TeamID != speaker.TeamID && c.CurrentHull == speaker.CurrentHull)) 

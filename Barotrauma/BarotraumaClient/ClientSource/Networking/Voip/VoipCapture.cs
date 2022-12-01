@@ -17,9 +17,7 @@ namespace Barotrauma.Networking
             get;
             private set;
         }
-
-        public static IReadOnlyList<string> CaptureDeviceNames =>
-            Alc.GetStringList(IntPtr.Zero, OpenAL.Alc.CaptureDeviceSpecifier);
+                  
 
         private readonly IntPtr captureDevice;
 
@@ -167,6 +165,11 @@ namespace Barotrauma.Networking
             UInt16 storedBufferID = Instance.LatestBufferID;
             Instance.Dispose();
             Create(GameSettings.CurrentConfig.Audio.VoiceCaptureDevice, storedBufferID);
+        }
+
+        public static IReadOnlyList<string> GetCaptureDeviceNames()
+        {
+            return Alc.GetStringList(IntPtr.Zero, OpenAL.Alc.CaptureDeviceSpecifier); 
         }
 
         IntPtr nativeBuffer;

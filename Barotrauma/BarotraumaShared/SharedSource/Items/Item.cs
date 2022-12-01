@@ -1092,6 +1092,12 @@ namespace Barotrauma
                 }
             }
 
+            var holdables = components.Where(c => c is Holdable);
+            if (holdables.Count() > 1)
+            {
+                DebugConsole.AddWarning($"Item {Prefab.Identifier} has multiple {nameof(Holdable)} components ({string.Join(", ", holdables.Select(h => h.GetType().Name))}).");
+            }
+
             InsertToList();
             ItemList.Add(this);
             if (Prefab.IsDangerous) { dangerousItems.Add(this); }
@@ -1104,7 +1110,6 @@ namespace Barotrauma
             if (HasTag("logic")) { isLogic = true; }
 
             ApplyStatusEffects(ActionType.OnSpawn, 1.0f);
-            Components.ForEach(c => c.ApplyStatusEffects(ActionType.OnSpawn, 1.0f));
             RecalculateConditionValues();
 #if CLIENT
             Submarine.ForceVisibilityRecheck();
@@ -2881,11 +2886,14 @@ namespace Barotrauma
             }
 
             foreach (ItemComponent ic in components) { ic.Equip(character); }
+
+            CharacterHUD.RecreateHudTextsIfControlling(character);
         }
 
         public void Unequip(Character character)
         {
             foreach (ItemComponent ic in components) { ic.Unequip(character); }
+            CharacterHUD.RecreateHudTextsIfControlling(character);
         }
 
         public List<(object obj, SerializableProperty property)> GetProperties<T>()
@@ -3427,12 +3435,15 @@ namespace Barotrauma
                 //if the item was in full condition considering the unmodified health
                 //(not taking possible HealthMultipliers added by mods into account),
                 //make sure it stays in full condition
-                bool wasFullCondition = prevCondition >= item.Prefab.Health;
-                if (wasFullCondition)
+                if (item.condition > 0)
                 {
-                    item.condition = item.MaxCondition;
+                    bool wasFullCondition = prevCondition >= item.Prefab.Health;
+                    if (wasFullCondition)
+                    {
+                        item.condition = item.MaxCondition;
+                    }
+                    item.condition = MathHelper.Clamp(item.condition, 0, item.MaxCondition);
                 }
-                item.condition = MathHelper.Clamp(item.condition, 0, item.MaxCondition);
             }
             item.lastSentCondition = item.condition;
             item.RecalculateConditionValues();

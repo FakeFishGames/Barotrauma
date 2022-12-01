@@ -11,7 +11,7 @@ namespace Barotrauma.Items.Components
     {
         const float NetworkUpdateIntervalHigh = 0.5f;
 
-        const float TemperatureBoostAmount = 20;
+        const float TemperatureBoostAmount = 25;
 
         //the rate at which the reactor is being run on (higher rate -> higher temperature)
         private float fissionRate;
@@ -25,10 +25,6 @@ namespace Barotrauma.Items.Components
         //(adjusts the fission rate and turbine output automatically to keep the
         //amount of power generated balanced with the load)
         private bool autoTemp;
-        
-        //automatical adjustment to the power output when 
-        //turbine output and temperature are in the optimal range
-        private float autoAdjustAmount;
         
         private float fuelConsumptionRate;
 
@@ -52,6 +48,8 @@ namespace Barotrauma.Items.Components
         private double lastReceivedFissionRateSignalTime, lastReceivedTurbineOutputSignalTime;
 
         private float temperatureBoost;
+
+        public bool AllowTemperatureBoost => Math.Abs(temperatureBoost) < TemperatureBoostAmount * 0.9f;
 
         private bool _powerOn;
 
@@ -314,7 +312,7 @@ namespace Barotrauma.Items.Components
             Temperature += MathHelper.Clamp(Math.Sign(temperatureDiff) * 10.0f * deltaTime, -Math.Abs(temperatureDiff), Math.Abs(temperatureDiff));
             temperatureBoost = adjustValueWithoutOverShooting(temperatureBoost, 0.0f, deltaTime);
 #if CLIENT
-            temperatureBoostUpButton.Enabled = temperatureBoostDownButton.Enabled = Math.Abs(temperatureBoost) < TemperatureBoostAmount * 0.9f;
+            temperatureBoostUpButton.Enabled = temperatureBoostDownButton.Enabled = AllowTemperatureBoost;
 #endif
 
             FissionRate = MathHelper.Lerp(fissionRate, Math.Min(TargetFissionRate, AvailableFuel), deltaTime);

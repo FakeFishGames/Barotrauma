@@ -80,7 +80,7 @@ namespace Barotrauma
 
         public bool DisableEvents
         {
-            get { return IsFirstRound && GameMain.GameSession.RoundDuration > FirstRoundEventDelay; }
+            get { return IsFirstRound && GameMain.GameSession.RoundDuration < FirstRoundEventDelay; }
         }
 
         public bool CheatsEnabled;

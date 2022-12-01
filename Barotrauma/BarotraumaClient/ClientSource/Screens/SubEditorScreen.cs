@@ -354,9 +354,24 @@ namespace Barotrauma
                 ToolTip = RichString.Rich(TextManager.Get("SaveSubButton") + "‖color:125,125,125‖\nCtrl + S‖color:end‖"),
                 OnClicked = (btn, data) =>
                 {
+#if DEBUG
+                    if (ContentPackageManager.EnabledPackages.All.Any(cp => cp != ContentPackageManager.VanillaCorePackage && cp.Files.Any(f => f is not BaseSubFile)))
+                    {
+                        var msgBox = new GUIMessageBox("DEBUG-ONLY WARNING", "You currently have some mods enabled. Are you sure you want to save the submarine? If the mods override any vanilla content, saving the submarine may cause unintended changes.",
+                            new LocalizedString[] { "Yes, I know what I'm doing", "Cancel" });
+                        msgBox.Buttons[0].OnClicked = (btn, data) => 
+                        {
+                            msgBox.Close();
+                            loadFrame = null;
+                            CreateSaveScreen();
+                            return true;
+                        };
+                        msgBox.Buttons[1].OnClicked += msgBox.Close;
+                        return false;
+                    }
+#endif
                     loadFrame = null;
                     CreateSaveScreen();
-
                     return true;
                 }
             };
@@ -3096,7 +3111,7 @@ namespace Barotrauma
             return false;
         }
 
-        private void SnapToGrid()
+        private static void SnapToGrid()
         {
             // First move components
             foreach (MapEntity e in MapEntity.SelectedList)
@@ -3109,6 +3124,10 @@ namespace Barotrauma
                     var wire = item.GetComponent<Wire>();
                     if (wire != null) { continue; }
                     item.Move(offset);
+                    if (item.GetComponent<Door>()?.LinkedGap is Gap linkedGap)
+                    {
+                        linkedGap.Move(item.Position - linkedGap.Position);
+                    }
                 }
                 else if (e is Structure structure)
                 {
@@ -3133,7 +3152,7 @@ namespace Barotrauma
             }
         }
 
-        private IEnumerable<SubmarineInfo> GetLoadableSubs()
+        private static IEnumerable<SubmarineInfo> GetLoadableSubs()
         {
             string downloadFolder = Path.GetFullPath(SaveUtil.SubmarineDownloadFolder);
             return SubmarineInfo.SavedSubmarines.Where(s
@@ -3520,9 +3539,18 @@ namespace Barotrauma
         public void LoadSub(SubmarineInfo info)
         {
             Submarine.Unload();
-            var selectedSub = new Submarine(info);
-            MainSub = selectedSub;
-            MainSub.UpdateTransform(interpolate: false);
+            Submarine selectedSub = null;
+            try
+            {
+                selectedSub = new Submarine(info);
+                MainSub = selectedSub;
+                MainSub.UpdateTransform(interpolate: false);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Failed to load the submarine. The submarine file might be corrupted.", e);
+                return;
+            }
             ClearUndoBuffer();
             CreateDummyCharacter();
 

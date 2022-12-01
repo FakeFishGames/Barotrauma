@@ -603,6 +603,13 @@ namespace Barotrauma.Items.Components
         }
 
         partial void UpdateRequiredTimeProjSpecific();
+
+        private static bool AnyOneHasRecipeForItem(Character user, ItemPrefab item)
+        {
+            return 
+                (user != null && user.HasRecipeForItem(item.Identifier)) ||
+                GameSession.GetSessionCrewCharacters(CharacterType.Bot).Any(c => c.HasRecipeForItem(item.Identifier));
+        }
         
         private bool CanBeFabricated(FabricationRecipe fabricableItem, IReadOnlyDictionary<Identifier, List<Item>> availableIngredients, Character character)
         {
@@ -610,8 +617,7 @@ namespace Barotrauma.Items.Components
             if (fabricableItem.RequiresRecipe) 
             {
                 if (character == null) { return false; }
-                if (!character.HasRecipeForItem(fabricableItem.TargetItem.Identifier) &&
-                    GameSession.GetSessionCrewCharacters(CharacterType.Bot).None(c => c.HasRecipeForItem(fabricableItem.TargetItem.Identifier)))
+                if (!AnyOneHasRecipeForItem(character, fabricableItem.TargetItem))
                 {
                     return false; 
                 }
@@ -678,9 +684,10 @@ namespace Barotrauma.Items.Components
             //fabricating takes 100 times longer if degree of success is close to 0
             //characters with a higher skill than required can fabricate up to 100% faster
             float time = fabricableItem.RequiredTime / item.StatManager.GetAdjustedValue(ItemTalentStats.FabricationSpeed, FabricationSpeed) / MathHelper.Clamp(t, 0.01f, 2.0f);
-            if (user is not null && fabricableItem.TargetItem is { } it && it.Tags.Contains("medical"))
+
+            if (user?.Info is { } info && fabricableItem.TargetItem is { } it)
             {
-                time *= 1f + user.GetStatValue(StatTypes.FabricateMedicineSpeedMultiplier);
+                time /= 1f + it.Tags.Sum(tag => info.GetSavedStatValue(StatTypes.FabricationSpeed, tag));
             }
             return time;
         }

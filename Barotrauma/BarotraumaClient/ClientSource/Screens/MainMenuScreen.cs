@@ -47,7 +47,14 @@ namespace Barotrauma
         private GUITextBox serverNameBox, passwordBox, maxPlayersBox;
         private GUITickBox isPublicBox, wrongPasswordBanBox, karmaBox;
         private GUIDropDown serverExecutableDropdown;
-        private readonly GUIButton joinServerButton, hostServerButton, steamWorkshopButton;
+        private readonly GUIButton joinServerButton, hostServerButton;
+
+        private readonly GUIFrame modsButtonContainer;
+        private readonly GUIButton modsButton, modUpdatesButton;
+        private Task<IReadOnlyList<Steamworks.Ugc.Item>> modUpdateTask;
+        private float modUpdateTimer = 0.0f;
+        private const float ModUpdateInterval = 60.0f;
+        
         private readonly GameMain game;
 
         private GUIImage playstyleBanner;
@@ -268,15 +275,29 @@ namespace Barotrauma
                 RelativeSpacing = 0.035f
             };
 
-#if USE_STEAM
-            steamWorkshopButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("settingstab.mods"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            modsButtonContainer = new GUIFrame(new RectTransform(Vector2.One, customizeList.RectTransform),
+                style: null);
+            
+            modsButton = new GUIButton(new RectTransform(Vector2.One, modsButtonContainer.RectTransform),
+                TextManager.Get("settingstab.mods"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 ForceUpperCase = ForceUpperCase.Yes,
                 Enabled = true,
                 UserData = Tab.SteamWorkshop,
                 OnClicked = SelectTab
             };
-#endif
+
+            modUpdatesButton = new GUIButton(new RectTransform(Vector2.One * 0.95f, modsButtonContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight),
+                style: "GUIUpdateButton")
+            {
+                ToolTip = TextManager.Get("ModUpdatesAvailable"),
+                OnClicked = (_, _) =>
+                {
+                    BulkDownloader.PrepareUpdates();
+                    return false;
+                },
+                Visible = false
+            };
             
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SubEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
@@ -525,6 +546,8 @@ namespace Barotrauma
         #region Selection
         public override void Select()
         {
+            ResetModUpdateButton();
+            
             if (WorkshopItemsToUpdate.Any())
             {
                 while (WorkshopItemsToUpdate.TryDequeue(out ulong workshopId))
@@ -710,6 +733,13 @@ namespace Barotrauma
             }
         }
 #endregion
+
+        public void ResetModUpdateButton()
+        {
+            modUpdateTask = null;
+            modUpdateTimer = 0;
+            modUpdatesButton.Visible = false;
+        }
 
         public void QuickStart(bool fixedSeed = false, Identifier sub = default, float difficulty = 50, LevelGenerationParams levelGenerationParams = null)
         {
@@ -930,15 +960,32 @@ namespace Barotrauma
 
         public override void Update(double deltaTime)
         {
-#if !DEBUG && USE_STEAM
+            modUpdateTimer -= (float)deltaTime;
+            if (modUpdateTimer <= 0.0f && modUpdateTask is not { IsCompleted: false })
+            {
+                modUpdateTask = BulkDownloader.GetItemsThatNeedUpdating();
+                modUpdateTimer = ModUpdateInterval;
+            }
+            
             if (GameSettings.CurrentConfig.UseSteamMatchmaking)
             {
                 hostServerButton.Enabled = Steam.SteamManager.IsInitialized;
             }
-            steamWorkshopButton.Enabled = Steam.SteamManager.IsInitialized;
-#elif USE_STEAM
-            steamWorkshopButton.Enabled = true;
-#endif
+
+            if (modUpdateTask is { IsCompletedSuccessfully: true })
+            {
+                modUpdatesButton.Visible = modUpdateTask.Result.Count > 0;
+            }
+
+            if (modUpdatesButton.Visible)
+            {
+                var modButtonLabelSize =
+                    modsButton.Font.MeasureString(modsButton.Text).ToPoint()
+                    + new Point(GUI.IntScale(25));
+                modUpdatesButton.RectTransform.AbsoluteOffset =
+                    (modButtonLabelSize.X, modsButton.Rect.Height / 2 - modUpdatesButton.Rect.Height / 2);
+            }
+            
             switch (selectedTab)
             {
                 case Tab.NewGame:

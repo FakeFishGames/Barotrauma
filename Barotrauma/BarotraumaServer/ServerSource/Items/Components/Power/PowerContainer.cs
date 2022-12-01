@@ -24,7 +24,7 @@ namespace Barotrauma.Items.Components
         {
             msg.WriteRangedInteger((int)(rechargeSpeed / MaxRechargeSpeed * 10), 0, 10);
 
-            float chargeRatio = MathHelper.Clamp(charge / capacity, 0.0f, 1.0f);
+            float chargeRatio = MathHelper.Clamp(charge / adjustedCapacity, 0.0f, 1.0f);
             msg.WriteRangedSingle(chargeRatio, 0.0f, 1.0f, 8);
         }
     }

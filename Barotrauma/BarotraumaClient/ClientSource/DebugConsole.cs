@@ -30,7 +30,7 @@ namespace Barotrauma
 
             public void ClientExecute(string[] args)
             {
-                bool allowCheats = GameMain.NetworkMember == null && (GameMain.GameSession?.GameMode is TestGameMode || Screen.Selected is EditorScreen);
+                bool allowCheats = GameMain.NetworkMember == null && (GameMain.GameSession?.GameMode is TestGameMode || Screen.Selected is { IsEditor: true });
                 if (!allowCheats && !CheatsEnabled && IsCheat)
                 {
                     NewMessage("You need to enable cheats using the command \"enablecheats\" before you can use the command \"" + names[0] + "\".", Color.Red);

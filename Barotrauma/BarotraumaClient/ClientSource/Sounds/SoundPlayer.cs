@@ -716,8 +716,7 @@ namespace Barotrauma
 
             if (Screen.Selected == null) { return "menu".ToIdentifier(); }
 
-            if ((Screen.Selected?.IsEditor ?? false)
-                || (Screen.Selected == GameMain.NetLobbyScreen))
+            if (Screen.Selected is { IsEditor: true } || GameMain.GameSession?.GameMode is TestGameMode || Screen.Selected == GameMain.NetLobbyScreen)
             {
                 return "editor".ToIdentifier();
             }
@@ -814,7 +813,7 @@ namespace Barotrauma
                 {
                     return "levelend".ToIdentifier();
                 }
-                if (GameMain.GameSession.RoundDuration > 120.0 && 
+                if (GameMain.GameSession.RoundDuration < 120.0 && 
                     Level.Loaded?.Type == LevelData.LevelType.LocationConnection)
                 {
                     return "start".ToIdentifier();

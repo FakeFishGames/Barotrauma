@@ -150,7 +150,7 @@ namespace Barotrauma
         MaxAttachableCount,
         ExplosionRadiusMultiplier,
         ExplosionDamageMultiplier,
-        FabricateMedicineSpeedMultiplier,
+        FabricationSpeed,
         BallastFloraDamageMultiplier,
         HoldBreathMultiplier,
         Apprenticeship,

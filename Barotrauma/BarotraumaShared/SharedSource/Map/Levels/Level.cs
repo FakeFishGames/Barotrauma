@@ -709,7 +709,7 @@ namespace Barotrauma
                         if (Rand.Range(0, 10, Rand.RandSync.ServerAndClient) != 0) { continue; }
                     }
 
-                    if (!TooClose(siteX, siteY))
+                    if (!TooCloseToOtherSites(siteX, siteY))
                     {
                         siteCoordsX.Add(siteX);
                         siteCoordsY.Add(siteY);
@@ -717,14 +717,14 @@ namespace Barotrauma
 
                     if (closeToCave)
                     {
-                        for (int x2 = x; x2 < x + siteInterval.X; x2 += caveSiteInterval)
+                        for (int x2 = x - siteInterval.X; x2 < x + siteInterval.X; x2 += caveSiteInterval)
                         {
-                            for (int y2 = y; y2 < y + siteInterval.Y; y2 += caveSiteInterval)
+                            for (int y2 = y - siteInterval.Y; y2 < y + siteInterval.Y; y2 += caveSiteInterval)
                             {
                                 int caveSiteX = x2 + Rand.Int(caveSiteInterval / 2, Rand.RandSync.ServerAndClient);
                                 int caveSiteY = y2 + Rand.Int(caveSiteInterval / 2, Rand.RandSync.ServerAndClient);
 
-                                if (!TooClose(caveSiteX, caveSiteY))
+                                if (!TooCloseToOtherSites(caveSiteX, caveSiteY, caveSiteInterval))
                                 {
                                     siteCoordsX.Add(caveSiteX);
                                     siteCoordsY.Add(caveSiteY);
@@ -735,11 +735,12 @@ namespace Barotrauma
                 }
             }
 
-            bool TooClose(double siteX, double siteY)
+            bool TooCloseToOtherSites(double siteX, double siteY, float minDistance = 10.0f)
             {
+                float minDistanceSqr = minDistance * minDistance;
                 for (int i = 0; i < siteCoordsX.Count; i++)
                 {
-                    if (MathUtils.DistanceSquared(siteCoordsX[i], siteCoordsY[i], siteX, siteY) < 10.0f * 10.0f)
+                    if (MathUtils.DistanceSquared(siteCoordsX[i], siteCoordsY[i], siteX, siteY) < minDistanceSqr)
                     {
                         return true;
                     }

@@ -91,15 +91,11 @@ namespace Barotrauma.Networking
             ToolBox.ThrowIfNull(netClient);
             ToolBox.ThrowIfNull(incomingLidgrenMessages);
 
-            if (isOwner && !(ChildServerRelay.Process is { HasExited: false }))
+            if (isOwner && !ChildServerRelay.IsProcessAlive)
             {
+                var gameClient = GameMain.Client;
                 Close(PeerDisconnectPacket.WithReason(DisconnectReason.ServerCrashed));
-                var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), ChildServerRelay.CrashMessage);
-                msgBox.Buttons[0].OnClicked += (btn, obj) =>
-                {
-                    GameMain.MainMenuScreen.Select();
-                    return false;
-                };
+                gameClient?.CreateServerCrashMessage();
                 return;
             }
 

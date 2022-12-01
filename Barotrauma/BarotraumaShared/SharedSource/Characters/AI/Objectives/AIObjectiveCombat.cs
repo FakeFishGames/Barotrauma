@@ -876,7 +876,20 @@ namespace Barotrauma
                     TargetName = Enemy.DisplayName,
                     AlwaysUseEuclideanDistance = false
                 },
-                onAbandon: () => Abandon = true);
+                onAbandon: () =>
+                {
+                    if (Enemy != null && HumanAIController.VisibleHulls.Contains(Enemy.CurrentHull))
+                    {
+                        // If in the same room with an enemy -> don't try to escape because we'd want to fight it
+                        SteeringManager.Reset();
+                        RemoveSubObjective(ref followTargetObjective);
+                    }
+                    else
+                    {
+                        // else abandon and fall back to find safety mode
+                        Abandon = true;
+                    }
+                });
             if (followTargetObjective == null) { return; }
             if (Mode == CombatMode.Arrest && Enemy.IsKnockedDown)
             {

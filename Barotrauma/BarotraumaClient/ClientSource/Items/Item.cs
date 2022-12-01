@@ -1251,11 +1251,9 @@ namespace Barotrauma
             {
                 foreach (ItemComponent ic in components)
                 {
-                    if (ic.DisplayMsg.IsNullOrEmpty()) { continue; }
                     if (!ic.CanBePicked && !ic.CanBeSelected) { continue; }
                     if (ic is Holdable holdable && !holdable.CanBeDeattached()) { continue; }
                     if (ic is ConnectionPanel connectionPanel && !connectionPanel.CanRewire()) { continue; }
-
                     Color color = Color.Gray;
                     if (ic.HasRequiredItems(character, false))
                     {
@@ -1268,6 +1266,7 @@ namespace Barotrauma
                             color = Color.Cyan;
                         }
                     }
+                    if (ic.DisplayMsg.IsNullOrEmpty()) { continue; }
                     texts.Add(new ColoredText(ic.DisplayMsg.Value, color, false, false));
                 }
             }

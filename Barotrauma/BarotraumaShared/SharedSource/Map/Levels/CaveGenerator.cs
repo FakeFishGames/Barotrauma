@@ -228,6 +228,9 @@ namespace Barotrauma
                     continue;
                 }
 
+                Vector2 edgeDiff = edge.Point2 - edge.Point1;
+                Vector2 edgeDir = Vector2.Normalize(edgeDiff);
+
                 //If the edge is next to an empty cell and there's another solid cell at the other side of the empty one,
                 //don't touch this edge. Otherwise we may end up closing off small passages between cells.
                 var adjacentEmptyCell = edge.AdjacentCell(cell);
@@ -238,8 +241,10 @@ namespace Barotrauma
                     //find the edge at the opposite side of the adjacent cell
                     foreach (GraphEdge otherEdge in adjacentEmptyCell.Edges)
                     {
-                        if (Vector2.Dot(adjacentEmptyCell.Center - edge.Center, adjacentEmptyCell.Center - otherEdge.Center) > 0 &&
-                            otherEdge.AdjacentCell(adjacentEmptyCell)?.CellType != CellType.Solid)
+                        if (otherEdge == edge || otherEdge.AdjacentCell(adjacentEmptyCell)?.CellType != CellType.Solid) { continue; }
+                        Vector2 otherEdgeDir = Vector2.Normalize(otherEdge.Point2 - otherEdge.Point1);
+                        //dot product is > 0.7 if the edges are roughly parallel
+                        if (Math.Abs(Vector2.Dot(otherEdgeDir, edgeDir)) > 0.7f)
                         {
                             adjacentEdge = otherEdge;
                             break;
@@ -251,13 +256,11 @@ namespace Barotrauma
                         continue;
                     }
                 }
-
                 List<Vector2> edgePoints = new List<Vector2>();
                 Vector2 edgeNormal = edge.GetNormal(cell);
 
                 float edgeLength = Vector2.Distance(edge.Point1, edge.Point2);
                 int pointCount = (int)Math.Max(Math.Ceiling(edgeLength / minEdgeLength), 1);
-                Vector2 edgeDir = edge.Point2 - edge.Point1;
                 for (int i = 0; i <= pointCount; i++)
                 {
                     if (i == 0)
@@ -275,7 +278,7 @@ namespace Barotrauma
                         float randomVariance = Rand.Range(0, irregularity, Rand.RandSync.ServerAndClient);
                         Vector2 extrudedPoint = 
                             edge.Point1 +
-                            edgeDir * (i / (float)pointCount) +
+                            edgeDiff * (i / (float)pointCount) +
                             edgeNormal * edgeLength * (roundingAmount + randomVariance) * centerF;
 
                         var nearbyCells = Level.Loaded.GetCells(extrudedPoint, searchDepth: 2);

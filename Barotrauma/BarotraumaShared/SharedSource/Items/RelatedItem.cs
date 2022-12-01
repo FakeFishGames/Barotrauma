@@ -27,7 +27,7 @@ namespace Barotrauma
 
         public bool IgnoreInEditor { get; set; }
 
-        private ImmutableHashSet<Identifier> excludedIdentifiers;
+        public ImmutableHashSet<Identifier> ExcludedIdentifiers { get; private set; }
 
         private RelationType type;
 
@@ -87,20 +87,20 @@ namespace Barotrauma
 
         public string JoinedExcludedIdentifiers
         {
-            get { return string.Join(",", excludedIdentifiers); }
+            get { return string.Join(",", ExcludedIdentifiers); }
             set
             {
                 if (value == null) return;
 
-                excludedIdentifiers = value.Split(',').Select(s => s.Trim()).ToIdentifiers().ToImmutableHashSet();
+                ExcludedIdentifiers = value.Split(',').Select(s => s.Trim()).ToIdentifiers().ToImmutableHashSet();
             }
         }
 
         public bool MatchesItem(Item item)
         {
             if (item == null) { return false; }
-            if (excludedIdentifiers.Contains(item.Prefab.Identifier)) { return false; }
-            foreach (var excludedIdentifier in excludedIdentifiers)
+            if (ExcludedIdentifiers.Contains(item.Prefab.Identifier)) { return false; }
+            foreach (var excludedIdentifier in ExcludedIdentifiers)
             {
                 if (item.HasTag(excludedIdentifier)) { return false; }
             }
@@ -118,8 +118,8 @@ namespace Barotrauma
         public bool MatchesItem(ItemPrefab itemPrefab)
         {
             if (itemPrefab == null) { return false; }
-            if (excludedIdentifiers.Contains(itemPrefab.Identifier)) { return false; }
-            foreach (var excludedIdentifier in excludedIdentifiers)
+            if (ExcludedIdentifiers.Contains(itemPrefab.Identifier)) { return false; }
+            foreach (var excludedIdentifier in ExcludedIdentifiers)
             {
                 if (itemPrefab.Tags.Contains(excludedIdentifier)) { return false; }
             }
@@ -138,7 +138,7 @@ namespace Barotrauma
         public RelatedItem(Identifier[] identifiers, Identifier[] excludedIdentifiers)
         {
             this.Identifiers = identifiers.Select(id => id.Value.Trim().ToIdentifier()).ToImmutableHashSet();
-            this.excludedIdentifiers = excludedIdentifiers.Select(id => id.Value.Trim().ToIdentifier()).ToImmutableHashSet();
+            this.ExcludedIdentifiers = excludedIdentifiers.Select(id => id.Value.Trim().ToIdentifier()).ToImmutableHashSet();
 
             statusEffects = new List<StatusEffect>();
         }
@@ -230,7 +230,7 @@ namespace Barotrauma
                 element.Add(new XAttribute(nameof(ItemPos), ItemPos.Value));
             }
 
-            if (excludedIdentifiers.Count > 0)
+            if (ExcludedIdentifiers.Count > 0)
             {
                 element.Add(new XAttribute("excludedidentifiers", JoinedExcludedIdentifiers));
             }

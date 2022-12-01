@@ -396,7 +396,9 @@ namespace Barotrauma.Items.Components
                 ToolTip = TextManager.Get("reactor.temperatureboostup"),
                 OnClicked = (_, __) =>
                 {
-                    applyTemperatureBoost(TemperatureBoostAmount, temperatureBoostSoundUp);
+                    unsentChanges = true;
+                    sendUpdateTimer = 0.0f;
+                    ApplyTemperatureBoost(TemperatureBoostAmount);
                     return true;
                 }
             };
@@ -407,24 +409,12 @@ namespace Barotrauma.Items.Components
                 ToolTip = TextManager.Get("reactor.temperatureboostdown"),
                 OnClicked = (_, __) =>
                 {
-                    applyTemperatureBoost(-TemperatureBoostAmount, temperatureBoostSoundDown);                    
+                    unsentChanges = true;
+                    sendUpdateTimer = 0.0f;
+                    ApplyTemperatureBoost(-TemperatureBoostAmount);
                     return true;
                 }
             };
-
-            void applyTemperatureBoost(float amount, RoundSound sound)
-            {
-                temperatureBoost = amount;
-                if (sound != null)
-                {
-                    SoundPlayer.PlaySound(
-                        sound.Sound,
-                        item.WorldPosition,
-                        sound.Volume,
-                        sound.Range,
-                        hullGuess: item.CurrentHull);
-                }
-            }
 
             var graphArea = new GUILayoutGroup(new RectTransform(new Vector2(0.9f, 1.0f), bottomRightArea.RectTransform))
             {
@@ -470,6 +460,24 @@ namespace Barotrauma.Items.Components
                     return true;
                 } 
             };
+        }
+        private void ApplyTemperatureBoost(float amount)
+        {
+            if (Math.Abs(temperatureBoost) <= TemperatureBoostAmount * 0.9f &&
+                Math.Abs(amount) > TemperatureBoostAmount * 0.9f)
+            {
+                var sound = amount > 0 ? temperatureBoostSoundUp : temperatureBoostSoundDown;
+                if (sound != null)
+                {
+                    SoundPlayer.PlaySound(
+                        sound.Sound,
+                        item.WorldPosition,
+                        sound.Volume,
+                        sound.Range,
+                        hullGuess: item.CurrentHull);
+                }
+            }
+            temperatureBoost = amount;
         }
 
         private void InitInventoryUI()
@@ -895,6 +903,7 @@ namespace Barotrauma.Items.Components
             msg.WriteBoolean(PowerOn);
             msg.WriteRangedSingle(TargetFissionRate, 0.0f, 100.0f, 8);
             msg.WriteRangedSingle(TargetTurbineOutput, 0.0f, 100.0f, 8);
+            msg.WriteRangedSingle(temperatureBoost, -TemperatureBoostAmount, TemperatureBoostAmount, 8);
 
             correctionTimer = CorrectionDelay;
         }
@@ -903,7 +912,7 @@ namespace Barotrauma.Items.Components
         {
             if (correctionTimer > 0.0f)
             {
-                StartDelayedCorrection(msg.ExtractBits(1 + 1 + 8 + 8 + 8 + 8), sendingTime);
+                StartDelayedCorrection(msg.ExtractBits(1 + 1 + 8 + 8 + 8 + 8 + 8), sendingTime);
                 return;
             }
 
@@ -913,6 +922,7 @@ namespace Barotrauma.Items.Components
             TargetFissionRate = msg.ReadRangedSingle(0.0f, 100.0f, 8);
             TargetTurbineOutput = msg.ReadRangedSingle(0.0f, 100.0f, 8);
             degreeOfSuccess = msg.ReadRangedSingle(0.0f, 1.0f, 8);
+            ApplyTemperatureBoost(msg.ReadRangedSingle(-TemperatureBoostAmount, TemperatureBoostAmount, 8));
 
             if (Math.Abs(FissionRateScrollBar.BarScroll - TargetFissionRate / 100.0f) > 0.01f)
             {

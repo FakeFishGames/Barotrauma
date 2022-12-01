@@ -576,11 +576,13 @@ namespace Barotrauma
                 if (selectedSlot?.Inventory == this) { selectedSlot.ForceTooltipRefresh = true; }
             }
 #endif
+            CharacterHUD.RecreateHudTextsIfControlling(user);
 
             if (item.body != null)
             {
                 item.body.Enabled = false;
                 item.body.BodyType = FarseerPhysics.BodyType.Dynamic;
+                item.SetTransform(item.SimPosition, rotation: 0.0f, findNewHull: false);
             }
             
 #if SERVER
@@ -924,6 +926,7 @@ namespace Barotrauma
                     if (selectedSlot?.Inventory == this) { selectedSlot.ForceTooltipRefresh = true; }
                 }
 #endif
+                CharacterHUD.RecreateHudTextsIfFocused(item);
             }
         }
 

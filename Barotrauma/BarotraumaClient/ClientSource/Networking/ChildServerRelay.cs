@@ -1,12 +1,15 @@
 ﻿using System.Diagnostics;
 using System.IO.Pipes;
 using System.Linq;
+using System.Threading;
 
 namespace Barotrauma.Networking
 {
     static partial class ChildServerRelay
     {
         public static Process Process;
+        public static bool IsProcessAlive => Process is { HasExited: false };
+
         private static bool localHandlesDisposed;
         private static AnonymousPipeServerStream writePipe;
         private static AnonymousPipeServerStream readPipe;
@@ -44,18 +47,27 @@ namespace Barotrauma.Networking
             localHandlesDisposed = true;
         }
 
-        public static void ClosePipes()
+        public static void AttemptGracefulShutDown(int maxAttempts = 20)
         {
-            writePipe?.Dispose(); writePipe = null;
-            readPipe?.Dispose(); readPipe = null;
-            shutDown = true;
+            status = StatusEnum.RequestedShutDown;
+            writeManualResetEvent?.Set();
+            int checks = 0;
+            while (Process is { HasExited: false })
+            {
+                if (checks >= maxAttempts)
+                {
+                    DebugConsole.AddWarning("Server could not be shut down gracefully");
+                    break;
+                }
+                Thread.Sleep(100);
+                checks++;
+            }
+            ForceShutDown();
         }
-
-        public static void ShutDown()
+        
+        public static void ForceShutDown()
         {
             Process?.Kill(); Process = null;
-            writePipe = null; readPipe = null;
-
             PrivateShutDown();
         }
 

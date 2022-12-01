@@ -1608,28 +1608,79 @@ namespace Barotrauma
                         {
                             containedState = item.Condition / item.MaxCondition;
                         }
-                        else if (itemContainer.ShowTotalStackCapacityInContainedStateIndicator)
-                        {
-                            int ignoredItems = itemContainer.AllSubContainableItems == null ? 0 : itemContainer.AllSubContainableItems.Count;
-                            int itemCount = itemContainer.Inventory.AllItems.Count() - ignoredItems;
-                            containedState = itemCount / (float)(itemContainer.GetMaxStackSize(0) * itemContainer.MainContainerCapacity);
-                        }
                         else
                         {
-
                             int targetSlot = Math.Max(itemContainer.ContainedStateIndicatorSlot, 0);
-                            var containedItem = itemContainer.Inventory.slots[targetSlot].FirstOrDefault();
-
-                            containedState = itemContainer.Inventory.Capacity == 1 || itemContainer.ContainedStateIndicatorSlot > -1 ?
-                                (containedItem == null ? 0.0f : containedItem.Condition / containedItem.MaxCondition) :
-                                itemContainer.Inventory.slots.Count(i => !i.Empty()) / (float)itemContainer.Inventory.capacity;
-
-                            if (containedItem != null && (itemContainer.Inventory.Capacity == 1 || itemContainer.HasSubContainers))
+                            ItemSlot containedItemSlot = null;
+                            if (targetSlot < itemContainer.Inventory.slots.Length)
                             {
-                                int maxStackSize = Math.Min(containedItem.Prefab.MaxStackSize, itemContainer.GetMaxStackSize(targetSlot));
-                                if (maxStackSize > 1 || containedItem.Prefab.HideConditionBar)
+                                containedItemSlot = itemContainer.Inventory.slots[targetSlot];
+                            }
+                            if (containedItemSlot != null)
+                            {
+                                Item containedItem = containedItemSlot.FirstOrDefault();
+                                if (itemContainer.ShowTotalStackCapacityInContainedStateIndicator)
                                 {
-                                    containedState = itemContainer.Inventory.slots[targetSlot].Items.Count / (float)maxStackSize;
+                                    if (containedItem == null)
+                                    {
+                                        // No item on the defined slot, check if the items on other slots can be used.
+                                        containedItem = containedItemSlot.FirstOrDefault() ?? itemContainer.Inventory.AllItems.FirstOrDefault(it => itemContainer.CanBeContained(it, targetSlot));
+                                    }
+                                    if (containedItem != null)
+                                    {
+                                        int ignoredItemCount = 0;
+                                        var subContainableItems = itemContainer.AllSubContainableItems;
+                                        float capacity = itemContainer.GetMaxStackSize(targetSlot);
+                                        if (subContainableItems != null)
+                                        {
+                                            bool useMainContainerCapacity = true;
+                                            foreach (Item it in itemContainer.Inventory.AllItems)
+                                            {
+                                                // Ignore all items in the sub containers.
+                                                foreach (RelatedItem ri in subContainableItems)
+                                                {
+                                                    if (ri.MatchesItem(containedItem))
+                                                    {
+                                                        // The target item is in a subcontainer -> inverse the logic.
+                                                        useMainContainerCapacity = false;
+                                                        break;
+                                                    }
+                                                    if (ri.MatchesItem(it))
+                                                    {
+                                                        ignoredItemCount++;
+                                                    }
+                                                }
+                                                if (!useMainContainerCapacity) { break; }
+                                            }
+                                            if (useMainContainerCapacity)
+                                            {
+                                                capacity *= itemContainer.MainContainerCapacity;
+                                            }
+                                            else
+                                            {
+                                                // Ignore all items in the main container.
+                                                ignoredItemCount = itemContainer.Inventory.AllItems.Count(it => subContainableItems.Any(ri => !ri.MatchesItem(it)));
+                                                capacity *= itemContainer.Capacity - itemContainer.MainContainerCapacity;
+                                            }
+                                        }
+                                        int itemCount = itemContainer.Inventory.AllItems.Count() - ignoredItemCount;
+                                        containedState = Math.Min(itemCount / Math.Max(capacity, 1), 1);
+                                    }
+                                }
+                                else
+                                {
+                                    containedState = itemContainer.Inventory.Capacity == 1 || itemContainer.ContainedStateIndicatorSlot > -1 ?
+                                        (containedItem == null ? 0.0f : containedItem.Condition / containedItem.MaxCondition) :
+                                        itemContainer.Inventory.slots.Count(i => !i.Empty()) / (float)itemContainer.Inventory.capacity;
+
+                                    if (containedItem != null && (itemContainer.Inventory.Capacity == 1 || itemContainer.HasSubContainers))
+                                    {
+                                        int maxStackSize = Math.Min(containedItem.Prefab.MaxStackSize, itemContainer.GetMaxStackSize(targetSlot));
+                                        if (maxStackSize > 1 || containedItem.Prefab.HideConditionBar)
+                                        {
+                                            containedState = containedItemSlot.Items.Count / (float)maxStackSize;
+                                        }
+                                    }
                                 }
                             }
                         }

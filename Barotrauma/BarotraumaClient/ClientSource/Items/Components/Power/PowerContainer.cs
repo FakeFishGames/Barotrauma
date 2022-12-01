@@ -97,7 +97,7 @@ namespace Barotrauma.Items.Components
             var chargeText = new GUITextBlock(new RectTransform(new Vector2(0.6f, 1), chargeTextContainer.RectTransform, Anchor.CenterRight), 
                 "", textColor: GUIStyle.TextColorNormal, font: GUIStyle.Font, textAlignment: Alignment.CenterRight)
             {
-                TextGetter = () => $"{(int)MathF.Round(charge)}/{(int)capacity} {kWmin} ({(int)MathF.Round(MathUtils.Percentage(charge, capacity))} %)"
+                TextGetter = () => $"{(int)MathF.Round(charge)}/{(int)adjustedCapacity} {kWmin} ({(int)MathF.Round(MathUtils.Percentage(charge, adjustedCapacity))} %)"
             };
             if (chargeText.TextSize.X > chargeText.Rect.Width) { chargeText.Font = GUIStyle.SmallFont; }
 
@@ -108,7 +108,7 @@ namespace Barotrauma.Items.Components
             {
                 ProgressGetter = () =>
                 {
-                    return capacity <= 0.0f ? 1.0f : charge / capacity;
+                    return adjustedCapacity <= 0.0f ? 1.0f : charge / adjustedCapacity;
                 }
             };
         }
@@ -126,7 +126,7 @@ namespace Barotrauma.Items.Components
         {
             if (chargeIndicator != null)
             {
-                float chargeRatio = charge / capacity;
+                float chargeRatio = charge / adjustedCapacity;
                 chargeIndicator.Color = ToolBox.GradientLerp(chargeRatio, Color.Red, Color.Orange, Color.Green);
             }
         }
@@ -144,9 +144,9 @@ namespace Barotrauma.Items.Components
             Matrix rotate = Matrix.CreateRotationZ(item.RotationRad);
             Vector2 center = Vector2.Transform((indicatorPos + (scaledIndicatorSize * 0.5f)) * flip, rotate) + itemPosition;
 
-            if (charge > 0 && capacity > 0)
+            if (charge > 0 && adjustedCapacity > 0)
             {
-                float chargeRatio = MathHelper.Clamp(charge / capacity, 0.0f, 1.0f);
+                float chargeRatio = MathHelper.Clamp(charge / adjustedCapacity, 0.0f, 1.0f);
                 Color indicatorColor = ToolBox.GradientLerp(chargeRatio, Color.Red, Color.Orange, Color.Green);
                 Vector2 indicatorCenter = (indicatorPos + (scaledIndicatorSize * 0.5f)) * flip;
                 Vector2 indicatorSize;
@@ -193,7 +193,7 @@ namespace Barotrauma.Items.Components
                 rechargeSpeedSlider.BarScroll = rechargeRate;
             }
 #endif
-            Charge = msg.ReadRangedSingle(0.0f, 1.0f, 8) * capacity;
+            Charge = msg.ReadRangedSingle(0.0f, 1.0f, 8) * adjustedCapacity;
         }
     }
 }

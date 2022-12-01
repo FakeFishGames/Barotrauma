@@ -51,7 +51,7 @@ namespace Barotrauma
             return slotString == null ? Array.Empty<string>() : slotString.Split(',');
         }
 
-        public CharacterInventory(XElement element, Character character)
+        public CharacterInventory(XElement element, Character character, bool spawnInitialItems)
             : base(character, ParseSlotTypes(element).Length)
         {
             this.character = character;
@@ -84,6 +84,8 @@ namespace Barotrauma
             
             InitProjSpecific(element);
 
+            if (!spawnInitialItems) { return; }
+
 #if CLIENT
             //clients don't create items until the server says so
             if (GameMain.Client != null) { return; }
@@ -94,7 +96,7 @@ namespace Barotrauma
                 if (!subElement.Name.ToString().Equals("item", StringComparison.OrdinalIgnoreCase)) { continue; }
                 
                 string itemIdentifier = subElement.GetAttributeString("identifier", "");
-                if (!(MapEntityPrefab.Find(null, itemIdentifier) is ItemPrefab itemPrefab))
+                if (!ItemPrefab.Prefabs.TryGet(itemIdentifier, out var itemPrefab))
                 {
                     DebugConsole.ThrowError("Error in character inventory \"" + character.SpeciesName + "\" - item \"" + itemIdentifier + "\" not found.");
                     continue;
@@ -200,6 +202,7 @@ namespace Barotrauma
 #if CLIENT
             CreateSlots();
 #endif
+            CharacterHUD.RecreateHudTextsIfControlling(character);
             //if the item was equipped and there are more items in the same stack, equip one of those items
             if (tryEquipFromSameStack && wasEquipped)
             {
@@ -498,6 +501,7 @@ namespace Barotrauma
                 HintManager.OnObtainedItem(character, item);
             }
 #endif
+            CharacterHUD.RecreateHudTextsIfControlling(character);
             if (item.CampaignInteractionType == CampaignMode.InteractionType.Cargo)
             {
                 item.CampaignInteractionType = CampaignMode.InteractionType.None;
