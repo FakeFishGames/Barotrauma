@@ -75,6 +75,8 @@ internal static class Sdl
         TextEditing = 0x302,
         TextInput = 0x303,
 
+        TextEditingExt = 0x305,
+
         MouseMotion = 0x400,
         MouseButtonDown = 0x401,
         MouseButtonup = 0x402,
@@ -138,6 +140,8 @@ internal static class Sdl
         public Mouse.MotionEvent Motion;
         [FieldOffset(0)]
         public Keyboard.TextEditingEvent Edit;
+        [FieldOffset(0)]
+        public Keyboard.TextEditingExtEvent EditExt;
         [FieldOffset(0)]
         public Keyboard.TextInputEvent Text;
         [FieldOffset(0)]
@@ -241,8 +245,8 @@ internal static class Sdl
     }
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate bool d_sdl_istextinputactive();
-    public static d_sdl_istextinputactive SDL_IsTextInputActive = FuncLoader.LoadFunction<d_sdl_istextinputactive>(NativeLibrary, "SDL_IsTextInputActive");
+    public delegate bool d_sdl_istextinputshown();
+    public static d_sdl_istextinputshown SDL_IsTextInputShown = FuncLoader.LoadFunction<d_sdl_istextinputshown>(NativeLibrary, "SDL_IsTextInputShown");
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate void d_sdl_starttextinput();
@@ -837,6 +841,17 @@ internal static class Sdl
             public uint Timestamp;
             public uint WindowId;
             public fixed byte Text[32];
+            public int Start;
+            public int Length;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public unsafe struct TextEditingExtEvent
+        {
+            public EventType Type;
+            public uint Timestamp;
+            public uint WindowId;
+            public byte* Text;
             public int Start;
             public int Length;
         }

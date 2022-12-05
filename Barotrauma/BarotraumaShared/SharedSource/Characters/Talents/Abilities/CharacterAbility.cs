@@ -34,7 +34,7 @@ namespace Barotrauma.Abilities
 
         public bool IsViable()
         {
-            if (!AllowClientSimulation && GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return false; }
+            if (!AllowClientSimulation && GameMain.NetworkMember is { IsClient: true }) { return false; }
             if (RequiresAlive && Character.IsDead) { return false; }
             return true;
         }

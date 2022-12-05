@@ -1248,10 +1248,6 @@ namespace Barotrauma
                 UpdateMessages(deltaTime);
                 UpdateSavingIndicator(deltaTime);
             }
-
-#if WINDOWS
-            GUITextBox.UpdateIME();
-#endif
         }
 
         public static void UpdateGUIMessageBoxesOnly(float deltaTime)

@@ -4,6 +4,11 @@ namespace Microsoft.Xna.Framework
 {
     public static class TextInput
     {
+        public static bool IsTextInputShown()
+        {
+            return Sdl.SDL_IsTextInputShown();
+        }
+
         public static void StartTextInput()
         {
             Sdl.SDL_StartTextInput();

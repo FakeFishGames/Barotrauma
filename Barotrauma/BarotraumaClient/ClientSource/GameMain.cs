@@ -377,6 +377,7 @@ namespace Barotrauma
             Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Hull));
 
             performanceCounterTimer = Stopwatch.StartNew();
+            ResetIMEWorkaround();
         }
 
         /// <summary>
@@ -1238,6 +1239,21 @@ namespace Barotrauma
                 return true;
             };
             msgBox.Buttons[1].OnClicked = msgBox.Close;
+        }
+
+        /*
+         * On some systems, IME input is enabled by default, and being able to set the game to a state
+         * where it doesn't accept IME input on game launch seems very inconsistent.
+         * This function quickly cycles through IME input states and is called from couple different places
+         * to ensure that IME input is disabled properly when it's not needed.
+         */
+        public static void ResetIMEWorkaround()
+        {
+            Rectangle rect = new Rectangle(0, 0, GraphicsWidth, GraphicsHeight);
+            TextInput.SetTextInputRect(rect);
+            TextInput.StartTextInput();
+            TextInput.SetTextInputRect(rect);
+            TextInput.StopTextInput();
         }
     }
 }

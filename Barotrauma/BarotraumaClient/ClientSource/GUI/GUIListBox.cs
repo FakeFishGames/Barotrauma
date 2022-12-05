@@ -1347,10 +1347,7 @@ namespace Barotrauma
         }
         public void ReceiveTextInput(string text) { }
         public void ReceiveCommandInput(char command) { }
-
-#if !WINDOWS
-        public void ReceiveEditingInput(string text, int start) {  }
-#endif
+        public void ReceiveEditingInput(string text, int start, int length) {  }
 
         public void ReceiveSpecialInput(Keys key)
         {
@@ -1368,9 +1365,7 @@ namespace Barotrauma
                 case Keys.Right:
                     if (isHorizontal && AllowArrowKeyScroll) { SelectNext(playSelectSound: PlaySelectSound.Yes); }
                     break;
-                case Keys.Enter:
-                case Keys.Space:
-                case Keys.Escape:
+                default:
                     GUI.KeyboardDispatcher.Subscriber = null;
                     break;
             }

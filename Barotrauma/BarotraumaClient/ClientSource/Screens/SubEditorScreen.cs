@@ -999,6 +999,7 @@ namespace Barotrauma
 
             foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
             {
+                if (category == MapEntityCategory.None) { continue; }
                 entityCategoryButtons.Add(new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), entityMenuTop.RectTransform, scaleBasis: ScaleBasis.BothHeight),
                     "", style: "CategoryButton." + category.ToString())
                 {
@@ -1085,6 +1086,7 @@ namespace Barotrauma
 
             foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
             {
+                if (category == MapEntityCategory.None) { continue; }
                 LocalizedString categoryName = TextManager.Get("MapEntityCategory." + category);
                 maxTextWidth = (int)Math.Max(maxTextWidth, GUIStyle.SubHeadingFont.MeasureString(categoryName.Replace(" ", "\n")).X + GUI.IntScale(50));
                 foreach (MapEntityPrefab ep in MapEntityPrefab.List)
