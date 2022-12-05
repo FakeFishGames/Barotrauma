@@ -43,8 +43,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WindowsTest", "Barotrauma\B
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeployAll", "Deploy\DeployAll\DeployAll.csproj", "{C98FE0D0-BC7D-4806-B592-734B53016FD8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImeSharp", "Libraries\ImeSharp\ImeSharp.csproj", "{D42D8E48-A687-445D-AAF1-9E7E6EBF1DE6}"
-EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Libraries\GameAnalytics\GA-SDK-MONO-SHARED\GA-SDK-MONO-SHARED.projitems*{95c4d59d-9be4-4278-b4f8-46c0ba1a3916}*SharedItemsImports = 5

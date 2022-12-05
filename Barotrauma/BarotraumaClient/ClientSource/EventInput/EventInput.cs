@@ -1,72 +1,18 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using System;
-using System.Runtime.InteropServices;
-using System.Text;
 
 namespace EventInput
 {
-    public class CharacterEventArgs : EventArgs
+    public readonly record struct CharacterEventArgs(char Character, long Param)
     {
-        private readonly char character;
-        private readonly long lParam;
-
-        public CharacterEventArgs(char character, long lParam)
-        {
-            this.character = character;
-            this.lParam = lParam;
-        }
-
-        public char Character
-        {
-            get { return character; }
-        }
-
-        public long Param
-        {
-            get { return lParam; }
-        }
-
-        public long RepeatCount
-        {
-            get { return lParam & 0xffff; }
-        }
-
-        public bool ExtendedKey
-        {
-            get { return (lParam & (1 << 24)) > 0; }
-        }
-
-        public bool AltPressed
-        {
-            get { return (lParam & (1 << 29)) > 0; }
-        }
-
-        public bool PreviousState
-        {
-            get { return (lParam & (1 << 30)) > 0; }
-        }
-
-        public bool TransitionState
-        {
-            get { return (lParam & (1 << 31)) > 0; }
-        }
+        public long RepeatCount => Param & 0xffff;
+        public bool ExtendedKey => (Param & (1 << 24)) > 0;
+        public bool AltPressed => (Param & (1 << 29)) > 0;
+        public bool PreviousState => (Param & (1 << 30)) > 0;
+        public bool TransitionState => (Param & (1 << 31)) > 0;
     }
 
-    public class KeyEventArgs : EventArgs
-    {
-        private Keys keyCode;
-
-        public KeyEventArgs(Keys keyCode)
-        {
-            this.keyCode = keyCode;
-        }
-
-        public Keys KeyCode
-        {
-            get { return keyCode; }
-        }
-    }
+    public readonly record struct KeyEventArgs(Keys KeyCode, char Character);
 
     public delegate void CharEnteredHandler(object sender, CharacterEventArgs e);
     public delegate void KeyEventHandler(object sender, KeyEventArgs e);
@@ -89,14 +35,11 @@ namespace EventInput
         /// </summary>
         public static event KeyEventHandler KeyUp;
 
-
-#if !WINDOWS
         /// <summary>
         /// Raised when the user is editing text and IME is in progress. 
-        /// Windows build uses ImeSharp instead because SDL2's IME implementation is broken on Windows (https://github.com/libsdl-org/SDL/issues/2243)
         /// </summary>
         public static event EditingTextHandler EditingText;
-#endif
+
 
         static bool initialized;
 
@@ -110,11 +53,10 @@ namespace EventInput
             {
                 return;
             }
-            
+
             window.TextInput += ReceiveInput;
-#if !WINDOWS
+            window.KeyDown += ReceiveKeyDown;
             window.TextEditing += ReceiveTextEditing;
-#endif
 
             initialized = true;
         }
@@ -122,15 +64,17 @@ namespace EventInput
         private static void ReceiveInput(object sender, TextInputEventArgs e)
         {
             OnCharEntered(e.Character);
-            KeyDown?.Invoke(sender, new KeyEventArgs(e.Key));
         }
 
-#if !WINDOWS
+        private static void ReceiveKeyDown(object sender, TextInputEventArgs e)
+        {
+            KeyDown?.Invoke(sender, new KeyEventArgs(e.Key, e.Character));
+        }
+
         private static void ReceiveTextEditing(object sender, TextEditingEventArgs e)
         {
             EditingText?.Invoke(sender, e);
         }
-#endif
 
         public static void OnCharEntered(char character)
         {

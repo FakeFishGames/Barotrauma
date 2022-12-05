@@ -147,14 +147,7 @@ namespace Microsoft.Xna.Framework
                         character = '\0';
                     }
 
-                    if (char.IsControl(character) ||
-                        key == Keys.Left ||
-                        key == Keys.Right ||
-                        key == Keys.Up ||
-                        key == Keys.Down)
-                    {
-                        _view.CallTextInput(character, key);
-                    }
+                    _view.CallKeyDown(character, key);
                 }
                 else if (ev.Type == Sdl.EventType.KeyUp)
                 {
@@ -164,9 +157,23 @@ namespace Microsoft.Xna.Framework
                 else if (ev.Type == Sdl.EventType.TextEditing)
                 {
                     string text;
-                    unsafe { text = ReadString(ev.Text.Text); }
+                    unsafe
+                    {
+                        text = ReadString(ev.Edit.Text);
+                    }
 
                     _view.CallTextEditing(text, ev.Edit.Start, ev.Edit.Length);
+                }
+                else if (ev.Type == Sdl.EventType.TextEditingExt)
+                {
+                    string text;
+                    unsafe
+                    {
+                        text = ReadString(ev.EditExt.Text);
+                        Sdl.Free((IntPtr)ev.EditExt.Text);
+                    }
+
+                    _view.CallTextEditing(text, ev.EditExt.Start, ev.EditExt.Length);
                 }
                 else if (ev.Type == Sdl.EventType.TextInput)
                 {

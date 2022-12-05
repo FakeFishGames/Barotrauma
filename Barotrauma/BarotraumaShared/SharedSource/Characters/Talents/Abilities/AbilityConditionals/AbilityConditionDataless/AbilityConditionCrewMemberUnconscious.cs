@@ -10,7 +10,7 @@ namespace Barotrauma.Abilities
         {
             foreach (Character c in GameSession.GetSessionCrewCharacters(CharacterType.Both))
             {
-                if (c.IsUnconscious)
+                if (!c.IsDead && c.IsUnconscious)
                 {
                     return true;
                 }

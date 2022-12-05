@@ -8,6 +8,8 @@ namespace Barotrauma.Abilities
 {
     internal sealed class CharacterAbilityUnlockApprenticeshipTalentTree : CharacterAbility
     {
+        public override bool AllowClientSimulation => false;
+
         public CharacterAbilityUnlockApprenticeshipTalentTree(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement) { }
 
         public override void InitializeAbility(bool addingFirstTime)

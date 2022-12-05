@@ -256,6 +256,8 @@ namespace Barotrauma
 
         private readonly IMEPreviewTextHandler imePreviewTextHandler;
 
+        public bool IsIMEActive => imePreviewTextHandler is { HasText: true };
+
         public GUITextBox(RectTransform rectT, string text = "", Color? textColor = null, GUIFont font = null,
                           Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null, bool createClearButton = false, bool createPenIcon = true)
             : base(style, rectT)
@@ -574,6 +576,7 @@ namespace Barotrauma
             {
                 CaretIndex = Math.Min(Text.Length, CaretIndex + input.Length);
                 OnTextChanged?.Invoke(this, Text);
+                imePreviewTextHandler?.Reset();
             }
         }
 
@@ -602,10 +605,12 @@ namespace Barotrauma
 
         public void ReceiveCommandInput(char command)
         {
-            if (Text == null) Text = "";
+            if (IsIMEActive) { return; }
+
+            if (Text == null) { Text = ""; }
 
             // Prevent alt gr from triggering any of these as that combination is often needed for special characters
-            if (PlayerInput.IsAltDown()) return;
+            if (PlayerInput.IsAltDown()) { return; }
 
             switch (command)
             {
@@ -678,21 +683,22 @@ namespace Barotrauma
                     break;
             }
         }
-#if !WINDOWS
-        public void ReceiveEditingInput(string text, int start)
+
+        public void ReceiveEditingInput(string text, int start, int length)
         {
             if (string.IsNullOrEmpty(text))
             {
-                if (start is 0) { imePreviewTextHandler.Reset(); }
+                imePreviewTextHandler.Reset();
                 return;
             }
 
-            imePreviewTextHandler.UpdateText(text, start);
+            imePreviewTextHandler.UpdateText(text, start, length);
         }
-#endif
 
         public void ReceiveSpecialInput(Keys key)
         {
+            if (IsIMEActive) { return; }
+
             switch (key)
             {
                 case Keys.Left:
@@ -883,20 +889,7 @@ namespace Barotrauma
 
         public void DrawIMEPreview(SpriteBatch spriteBatch)
         {
-            if (!imePreviewTextHandler.HasText) { return; }
-
-            Vector2 imePosition = CaretScreenPos;
-            int inflate = GUI.IntScale(3);
-
-            RectangleF rect = new RectangleF(imePosition, imePreviewTextHandler.TextSize);
-            rect.Inflate(inflate, inflate);
-
-            RectangleF borderRect = rect;
-            borderRect.Inflate(1, 1);
-
-            GUI.DrawFilledRectangle(spriteBatch, borderRect, Color.White, depth: 0.02f);
-            GUI.DrawFilledRectangle(spriteBatch, rect, Color.Black, depth: 0.01f);
-            Font.DrawString(spriteBatch, imePreviewTextHandler.PreviewText, imePosition, GUIStyle.Orange, 0.0f, Vector2.Zero, 1f, SpriteEffects.None, 0, alignment: textBlock.TextAlignment, forceUpperCase: textBlock.ForceUpperCase);
+            imePreviewTextHandler.DrawIMEPreview(spriteBatch, CaretScreenPos, textBlock);
         }
 
         private void CalculateSelection()

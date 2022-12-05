@@ -417,14 +417,7 @@ namespace Barotrauma.Items.Components
             
             item.body.FarseerBody.OnCollision += OnProjectileCollision;
             item.body.FarseerBody.IsBullet = true;
-
-            item.body.CollisionCategories = Physics.CollisionProjectile;
-            item.body.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking;
-            if (item.Prefab.DamagedByProjectiles && !IgnoreProjectilesWhileActive)
-            {
-                item.body.CollidesWith |= Physics.CollisionProjectile;
-            }
-
+            EnableProjectileCollisions();
             IsActive = true;
 
             if (stickJoint == null) { return; }
@@ -549,11 +542,10 @@ namespace Barotrauma.Items.Components
                 }
                 else if (fixture?.Body == null || fixture.IsSensor) 
                 { 
-                    //ignore sensors and items
+                    //ignore sensors
                     return true; 
                 }
                 if (fixture.Body.UserData is VineTile) { return true; }
-                if (fixture.Body.UserData is Item item && (item.GetComponent<Door>() == null && !item.Prefab.DamagedByProjectiles || item.Condition <= 0)) { return true; }
                 if (fixture.Body.UserData as string == "ruinroom" || fixture.Body.UserData is Hull || fixture.UserData is Hull) { return true; }
 
                 //if doing the raycast in a submarine's coordinate space, ignore anything that's not in that sub
@@ -563,12 +555,27 @@ namespace Barotrauma.Items.Components
                     if (fixture.Body.UserData is Entity entity && entity.Submarine != submarine) { return true; }
                 }
 
-                //ignore everything else than characters, sub walls and level walls
-                if (!fixture.CollisionCategories.HasFlag(Physics.CollisionCharacter) &&
-                    !fixture.CollisionCategories.HasFlag(Physics.CollisionWall) &&
-                    !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel)) { return true; }
-
                 if (fixture.Body.UserData is VoronoiCell && (this.item.Submarine != null || submarine != null)) { return true; }
+
+                if (fixture.Body.UserData is Item item)
+                {
+                    if (item == Item) { return true; }
+                    if (item.Condition <= 0) { return true; }
+                    if (!item.Prefab.DamagedByProjectiles && item.GetComponent<Door>() == null) { return true; }
+                }
+                else if (fixture.Body.UserData is Holdable { CanPush: false })
+                {
+                    // Ignore holdables that can't push -> shouldn't block
+                    return true;
+                }
+                else
+                {
+                    // TODO: This might make us ignore something we don't want to ignore?
+                    // Not item -> ignore everything else than characters, sub walls and level walls
+                    if (!fixture.CollisionCategories.HasFlag(Physics.CollisionCharacter) &&
+                        !fixture.CollisionCategories.HasFlag(Physics.CollisionWall) &&
+                        !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel)) { return true; }
+                }
 
                 fixture.Body.GetTransform(out FarseerPhysics.Common.Transform transform);
                 if (!fixture.Shape.TestPoint(ref transform, ref rayStart)) { return true; }
@@ -586,20 +593,16 @@ namespace Barotrauma.Items.Components
                 }
                 else if (fixture?.Body == null || fixture.IsSensor)
                 {
-                    //ignore sensors and items
+                    //ignore sensors
                     return -1;
                 }
                 if (fixture.Body.UserData is VineTile) { return -1; }
-
-                if (fixture.Body.UserData is Item item && (item.GetComponent<Door>() == null && !item.Prefab.DamagedByProjectiles || item.Condition <= 0)) { return -1; }
-                if (fixture.Body.UserData as string == "ruinroom" || fixture.Body?.UserData is Hull || fixture.UserData is Hull) { return -1; }
-                if (!(fixture.Body.UserData is Holdable holdable && holdable.CanPush)) 
+                if (fixture.Body.UserData is Item item)
                 {
-                    //ignore everything else than characters, sub walls and level walls
-                    if (!fixture.CollisionCategories.HasFlag(Physics.CollisionCharacter) &&
-                        !fixture.CollisionCategories.HasFlag(Physics.CollisionWall) &&
-                        !fixture.CollisionCategories.HasFlag(Physics.CollisionLevel)) { return -1; }
+                    if (item.Condition <= 0) { return -1; }
+                    if (!item.Prefab.DamagedByProjectiles && item.GetComponent<Door>() == null) { return -1; }
                 }
+                if (fixture.Body.UserData as string == "ruinroom" || fixture.Body?.UserData is Hull || fixture.UserData is Hull) { return -1; }
 
                 //if doing the raycast in a submarine's coordinate space, ignore anything that's not in that sub
                 if (submarine != null)
@@ -607,6 +610,12 @@ namespace Barotrauma.Items.Components
                     if (fixture.Body.UserData is VoronoiCell) { return -1; }
                     if (fixture.Body.UserData is Entity entity && entity.Submarine != submarine) { return -1; }
                     if (fixture.Body.UserData is Limb limb && limb.character?.Submarine != submarine) { return -1; }
+                }
+
+                // Ignore holdables that can't push -> shouldn't block
+                if (fixture.Body.UserData is Holdable { CanPush: false })
+                {
+                    return -1;
                 }
 
                 //ignore level cells if the item and the point of impact are inside a sub
@@ -639,7 +648,7 @@ namespace Barotrauma.Items.Components
                 hits.Add(new HitscanResult(fixture, point, normal, fraction));
 
                 return 1;
-            }, rayStart, rayEnd, Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking);
+            }, rayStart, rayEnd, Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking | Physics.CollisionProjectile);
 
             return hits;
         }
@@ -759,6 +768,12 @@ namespace Barotrauma.Items.Components
             else if (target.Body.UserData is Item item)
             {
                 if (item.Condition <= 0.0f) { return false; }
+                if (!item.Prefab.DamagedByProjectiles) { return false; }
+            }
+            else if (target.Body.UserData is Holdable { CanPush: false })
+            {
+                // Ignore holdables that can't push -> shouldn't block
+                return false;
             }
 
             //ignore character colliders (the projectile only hits limbs)
@@ -774,7 +789,7 @@ namespace Barotrauma.Items.Components
             {
                 item.body.FarseerBody.ResetDynamics();
             }
-            if (hits.Count() >= MaxTargetsToHit || target.Body.UserData is VoronoiCell)
+            if (hits.Count >= MaxTargetsToHit || target.Body.UserData is VoronoiCell)
             {
                 DisableProjectileCollisions();
                 return true;
@@ -1045,6 +1060,16 @@ namespace Barotrauma.Items.Components
             }
 
             return true;
+        }
+
+        private void EnableProjectileCollisions()
+        {
+            item.body.CollisionCategories = Physics.CollisionProjectile;
+            item.body.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionLevel | Physics.CollisionItemBlocking;
+            if (!IgnoreProjectilesWhileActive)
+            {
+                item.body.CollidesWith |= Physics.CollisionProjectile;
+            }
         }
 
         private void DisableProjectileCollisions()

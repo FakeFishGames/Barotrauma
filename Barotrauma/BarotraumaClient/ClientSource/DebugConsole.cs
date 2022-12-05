@@ -174,9 +174,9 @@ namespace Barotrauma
 
                 Character.DisableControls = true;
 
-                if (PlayerInput.KeyHit(Keys.Tab))
+                if (PlayerInput.KeyHit(Keys.Tab) && !textBox.IsIMEActive)
                 {
-                     textBox.Text = AutoComplete(textBox.Text, increment: string.IsNullOrEmpty(currentAutoCompletedCommand) ? 0 : 1 );
+                    textBox.Text = AutoComplete(textBox.Text, increment: string.IsNullOrEmpty(currentAutoCompletedCommand) ? 0 : 1 );
                 }
 
                 if (PlayerInput.KeyDown(Keys.LeftControl) || PlayerInput.KeyDown(Keys.RightControl))

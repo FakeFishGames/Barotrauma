@@ -1,4 +1,29 @@
 ---------------------------------------------------------------------------------------------------------
+v0.20.10.0
+---------------------------------------------------------------------------------------------------------
+
+Input Method Editor (Chinese/Japanese input) fixes:
+- Fixed inputs sometimes not working. Happened because listboxes stole keyboard focus, for example when rearranging bot orders or interacting with a chatbox.
+- Fixed moving the input position with arrow keys in the candidate box moving the caret in the textbox too. 
+- Fixed current composition text disappearing when you browse through the options with arrow keys.
+- Fixed candidate box not being hidden when there's no input (= when you've just selected the textbox or committed the input).
+
+Fixes/improvements to depth charges:
+- Fixed projectile-on-projectile collisions not working properly.
+- Reduced the health of the depth charges (100 -> 10) to make them easier to detonate with turrets.
+- Made decoys self-destruct instead of just becoming disabled after 45 seconds, turning them into time bombs.
+- Fixed depth charges disappearing with a delay (after the explosion particles had gone away, making it easy to see them vanish).
+- Fixed regular depth charges being destructible before launching.
+
+Misc fixes:
+- Fixed "Graduation Ceremony" talent unlocking 2 talent trees instead of one.
+- Fixed Scrap Cannon's firing sound being barely audibly.
+- Fixed "Better Than New" allowing you to repair any device past the maximum condition, not just electrical devices.
+- Adjustments to Harpoon Coil-rifle sounds.
+- Fixed some sprite bleed issues in the new talent icons.
+- Fixed Kastrull's reactor having 1000 condition instead of 100.
+
+---------------------------------------------------------------------------------------------------------
 v0.20.9.0
 ---------------------------------------------------------------------------------------------------------
 

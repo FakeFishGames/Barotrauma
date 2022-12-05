@@ -30,8 +30,7 @@ namespace Barotrauma.Abilities
             NotSelf = 3,
             Alive = 4,
             Monster = 5,
-            InFriendlySubmarine = 6,
-            Large = 7,
+            InFriendlySubmarine = 6
         };
 
         protected List<TargetType> ParseTargetTypes(string[] targetTypeStrings)
@@ -80,9 +79,6 @@ namespace Barotrauma.Abilities
                     return !targetCharacter.IsHuman;
                 case TargetType.InFriendlySubmarine:
                     return targetCharacter.Submarine != null && targetCharacter.Submarine.TeamID == character.TeamID;
-                case TargetType.Large:
-                    // mass of mudraptor is ~48
-                    return targetCharacter.AnimController is { Mass: > 50.0f };
                 default:
                     return true;
             }
