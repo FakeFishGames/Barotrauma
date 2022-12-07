@@ -476,6 +476,7 @@ namespace Barotrauma
             };
 
             List<MapEntityCategory> itemCategories = Enum.GetValues(typeof(MapEntityCategory)).Cast<MapEntityCategory>().ToList();
+            itemCategories.Remove(MapEntityCategory.None);
             //don't show categories with no buyable items
             itemCategories.RemoveAll(c => !ItemPrefab.Prefabs.Any(ep => ep.Category.HasFlag(c) && ep.CanBeBought));
             itemCategoryButtons.Clear();
@@ -508,6 +509,7 @@ namespace Barotrauma
             {
                 btn.RectTransform.SizeChanged += () =>
                 {
+                    if (btn.Frame.sprites == null) { return; }
                     var sprite = btn.Frame.sprites[GUIComponent.ComponentState.None].First();
                     btn.RectTransform.NonScaledSize = new Point(btn.Rect.Width, (int)(btn.Rect.Width * ((float)sprite.Sprite.SourceRect.Height / sprite.Sprite.SourceRect.Width)));
                 };
