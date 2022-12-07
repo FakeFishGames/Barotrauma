@@ -966,11 +966,15 @@ namespace Barotrauma
                 modUpdateTask = BulkDownloader.GetItemsThatNeedUpdating();
                 modUpdateTimer = ModUpdateInterval;
             }
-            
+
+#if DEBUG
+            hostServerButton.Enabled = true;
+#else
             if (GameSettings.CurrentConfig.UseSteamMatchmaking)
             {
-                hostServerButton.Enabled = Steam.SteamManager.IsInitialized;
+                hostServerButton.Enabled = SteamManager.IsInitialized;
             }
+#endif
 
             if (modUpdateTask is { IsCompletedSuccessfully: true })
             {

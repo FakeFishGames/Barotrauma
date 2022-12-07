@@ -115,6 +115,8 @@ namespace Barotrauma
                         {
                             objective.TargetSlot = container.FindSuitableSubContainerIndex(OXYGEN_SOURCE);
                         }
+                        // Only remove the oxygen source being replaced
+                        objective.RemoveExistingPredicate = i => objective.IsInTargetSlot(i);
                         return objective;
                     },
                     onAbandon: () =>

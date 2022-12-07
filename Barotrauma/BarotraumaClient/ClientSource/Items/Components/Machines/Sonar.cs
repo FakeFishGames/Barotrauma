@@ -61,7 +61,6 @@ namespace Barotrauma.Items.Components
         private float displayBorderSize;
 
         private List<SonarBlip> sonarBlips;
-        private readonly HashSet<SonarBlip> prevBlips = new HashSet<SonarBlip>();
 
         private float prevPassivePingRadius;
 
@@ -815,27 +814,9 @@ namespace Barotrauma.Items.Components
                     float dist = (float)Math.Sqrt(distSqr);
                     if (dist > prevPassivePingRadius * Range && dist <= passivePingRadius * Range && Rand.Int(sonarBlips.Count) < 500)
                     {
-                        prevBlips.Clear();
-                        foreach (var blip in sonarBlips)
-                        {
-                            prevBlips.Add(blip);
-                        }
-
                         Ping(t.WorldPosition, transducerCenter,
                             t.SoundRange * displayScale, 0, displayScale, range,
-                            passive: true, pingStrength: 0.5f);
-                        //remove blips that weren't in the AITarget's sector
-                        if (t.HasSector())
-                        {
-                            for (int i = sonarBlips.Count - 1; i >= 0; i--)
-                            {
-                                if (prevBlips.Contains(sonarBlips[i])) { continue; }
-                                if (!t.IsWithinSector(sonarBlips[i].Position))
-                                {
-                                    sonarBlips.RemoveAt(i);
-                                }
-                            }
-                        }
+                            passive: true, pingStrength: 0.5f, needsToBeInSector: t);
                         if (t.IsWithinSector(transducerCenter))
                         {
                             sonarBlips.Add(new SonarBlip(t.WorldPosition, fadeTimer: 1.0f, scale: MathHelper.Clamp(t.SoundRange / 2000, 1.0f, 5.0f)));
@@ -1368,7 +1349,7 @@ namespace Barotrauma.Items.Components
         }
 
         private void Ping(Vector2 pingSource, Vector2 transducerPos, float pingRadius, float prevPingRadius, float displayScale, float range, bool passive,
-            float pingStrength = 1.0f)
+            float pingStrength = 1.0f, AITarget needsToBeInSector = null)
         {
             float prevPingRadiusSqr = prevPingRadius * prevPingRadius;
             float pingRadiusSqr = pingRadius * pingRadius;
@@ -1380,25 +1361,25 @@ namespace Barotrauma.Items.Components
                     new Vector2(item.CurrentHull.WorldRect.X, item.CurrentHull.WorldRect.Y), 
                     new Vector2(item.CurrentHull.WorldRect.Right, item.CurrentHull.WorldRect.Y), 
                     pingSource, transducerPos,
-                    pingRadius, prevPingRadius, 50.0f, 5.0f, range, 2.0f, passive);
+                    pingRadius, prevPingRadius, 50.0f, 5.0f, range, 2.0f, passive, needsToBeInSector: needsToBeInSector);
 
                 CreateBlipsForLine(
                     new Vector2(item.CurrentHull.WorldRect.X, item.CurrentHull.WorldRect.Y - item.CurrentHull.Rect.Height),
                     new Vector2(item.CurrentHull.WorldRect.Right, item.CurrentHull.WorldRect.Y - item.CurrentHull.Rect.Height),
                     pingSource, transducerPos,
-                    pingRadius, prevPingRadius, 50.0f, 5.0f, range, 2.0f, passive);
+                    pingRadius, prevPingRadius, 50.0f, 5.0f, range, 2.0f, passive, needsToBeInSector: needsToBeInSector);
 
                 CreateBlipsForLine(
                     new Vector2(item.CurrentHull.WorldRect.X, item.CurrentHull.WorldRect.Y),
                     new Vector2(item.CurrentHull.WorldRect.X, item.CurrentHull.WorldRect.Y - item.CurrentHull.Rect.Height),
                     pingSource, transducerPos,
-                    pingRadius, prevPingRadius, 50.0f, 5.0f, range, 2.0f, passive);
+                    pingRadius, prevPingRadius, 50.0f, 5.0f, range, 2.0f, passive, needsToBeInSector: needsToBeInSector);
 
                 CreateBlipsForLine(
                     new Vector2(item.CurrentHull.WorldRect.Right, item.CurrentHull.WorldRect.Y),
                     new Vector2(item.CurrentHull.WorldRect.Right, item.CurrentHull.WorldRect.Y - item.CurrentHull.Rect.Height),
                     pingSource, transducerPos,
-                    pingRadius, prevPingRadius, 50.0f, 5.0f, range, 2.0f, passive);
+                    pingRadius, prevPingRadius, 50.0f, 5.0f, range, 2.0f, passive, needsToBeInSector: needsToBeInSector);
 
                 return;
             }
@@ -1427,7 +1408,8 @@ namespace Barotrauma.Items.Components
                         end + submarine.WorldPosition,
                         pingSource, transducerPos,
                         pingRadius, prevPingRadius,
-                        200.0f, 2.0f, range, 1.0f, passive);
+                        200.0f, 2.0f, range, 1.0f, passive, 
+                        needsToBeInSector: needsToBeInSector);
                 }
             }
 
@@ -1440,7 +1422,8 @@ namespace Barotrauma.Items.Components
                         new Vector2(pingSource.X + range, Level.Loaded.Size.Y),
                         pingSource, transducerPos,
                         pingRadius, prevPingRadius,
-                        250.0f, 150.0f, range, pingStrength, passive);
+                        250.0f, 150.0f, range, pingStrength, passive, 
+                        needsToBeInSector: needsToBeInSector);
                 }
                 if (pingSource.Y - Level.Loaded.BottomPos < range)
                 {
@@ -1449,7 +1432,8 @@ namespace Barotrauma.Items.Components
                         new Vector2(pingSource.X + range, Level.Loaded.BottomPos),
                         pingSource, transducerPos,
                         pingRadius, prevPingRadius,
-                        250.0f, 150.0f, range, pingStrength, passive);
+                        250.0f, 150.0f, range, pingStrength, passive, 
+                        needsToBeInSector: needsToBeInSector);
                 }
 
                 List<Voronoi2.VoronoiCell> cells = Level.Loaded.GetCells(pingSource, 7);
@@ -1471,7 +1455,8 @@ namespace Barotrauma.Items.Components
                             pingSource, transducerPos,
                             pingRadius, prevPingRadius,
                             350.0f, 3.0f * (Math.Abs(facingDot) + 1.0f), range, pingStrength, passive,
-                            blipType : cell.IsDestructible ? BlipType.Destructible : BlipType.Default);
+                            blipType : cell.IsDestructible ? BlipType.Destructible : BlipType.Default,
+                            needsToBeInSector: needsToBeInSector);
                     }
                 }
             }
@@ -1481,14 +1466,13 @@ namespace Barotrauma.Items.Components
                 if (item.CurrentHull == null && item.Prefab.SonarSize > 0.0f)
                 {
                     float pointDist = ((item.WorldPosition - pingSource) * displayScale).LengthSquared();
-
                     if (pointDist > prevPingRadiusSqr && pointDist < pingRadiusSqr)
                     {
                         var blip = new SonarBlip(
                             item.WorldPosition + Rand.Vector(item.Prefab.SonarSize),
                             MathHelper.Clamp(item.Prefab.SonarSize, 0.1f, pingStrength),
                             MathHelper.Clamp(item.Prefab.SonarSize * 0.1f, 0.1f, 10.0f));
-                        if (!passive && !CheckBlipVisibility(blip, transducerPos)) continue;
+                        if (!IsVisible(blip)) { continue; }
                         sonarBlips.Add(blip);
                     }
                 }
@@ -1511,7 +1495,7 @@ namespace Barotrauma.Items.Components
                             c.WorldPosition,
                             MathHelper.Clamp(c.Mass, 0.1f, pingStrength),
                             MathHelper.Clamp(c.Mass * 0.03f, 0.1f, 2.0f));
-                        if (!passive && !CheckBlipVisibility(blip, transducerPos)) { continue; }
+                        if (!IsVisible(blip)) { continue; }
                         sonarBlips.Add(blip);
                         HintManager.OnSonarSpottedCharacter(Item, c);
                     }
@@ -1528,19 +1512,29 @@ namespace Barotrauma.Items.Components
                     if (pointDist > prevPingRadiusSqr && pointDist < pingRadiusSqr)
                     {
                         var blip = new SonarBlip(
-                            limb.WorldPosition + Rand.Vector(limb.Mass / 10.0f), 
-                            MathHelper.Clamp(limb.Mass, 0.1f, pingStrength), 
+                            limb.WorldPosition + Rand.Vector(limb.Mass / 10.0f),
+                            MathHelper.Clamp(limb.Mass, 0.1f, pingStrength),
                             MathHelper.Clamp(limb.Mass * 0.1f, 0.1f, 2.0f));
-                        if (!passive && !CheckBlipVisibility(blip, transducerPos)) { continue; }
+                        if (!IsVisible(blip)) { continue; }
                         sonarBlips.Add(blip);
                         HintManager.OnSonarSpottedCharacter(Item, c);
                     }
                 }
             }
+
+            bool IsVisible(SonarBlip blip)
+            {
+                if (!passive && !CheckBlipVisibility(blip, transducerPos)) { return false; }
+                if (needsToBeInSector != null)
+                {
+                    if (!needsToBeInSector.IsWithinSector(blip.Position)) { return false; }
+                }
+                return true;
+            }
         }
-        
+
         private void CreateBlipsForLine(Vector2 point1, Vector2 point2, Vector2 pingSource, Vector2 transducerPos, float pingRadius, float prevPingRadius,
-            float lineStep, float zStep, float range, float pingStrength, bool passive, BlipType blipType = BlipType.Default)
+            float lineStep, float zStep, float range, float pingStrength, bool passive, BlipType blipType = BlipType.Default, AITarget needsToBeInSector = null)
         {
             lineStep /= zoom;
             zStep /= zoom;
@@ -1586,11 +1580,16 @@ namespace Barotrauma.Items.Components
                     Vector2 pos = point + Rand.Vector(150.0f / zoom) + pingDirection * z / displayScale;
                     float fadeTimer = alpha * (1.0f - displayPointDist / range);
 
-                    int minDist = (int)(200 / zoom);
-                    sonarBlips.RemoveAll(b => b.FadeTimer < fadeTimer && Math.Abs(pos.X - b.Position.X) < minDist && Math.Abs(pos.Y - b.Position.Y) < minDist);
+                    if (needsToBeInSector != null)
+                    {
+                        if (!needsToBeInSector.IsWithinSector(pos)) { continue; }
+                    }
 
                     var blip = new SonarBlip(pos, fadeTimer, 1.0f + ((displayPointDist + z) / DisplayRadius), blipType);
                     if (!passive && !CheckBlipVisibility(blip, transducerPos)) { continue; }
+
+                    int minDist = (int)(200 / zoom);
+                    sonarBlips.RemoveAll(b => b.FadeTimer < fadeTimer && Math.Abs(pos.X - b.Position.X) < minDist && Math.Abs(pos.Y - b.Position.Y) < minDist);
 
                     sonarBlips.Add(blip);
                     zStep += 0.5f / zoom;

@@ -474,6 +474,7 @@ namespace Barotrauma.Items.Components
                         item.WorldPosition,
                         sound.Volume,
                         sound.Range,
+                        freqMult: sound.GetRandomFrequencyMultiplier(),
                         hullGuess: item.CurrentHull);
                 }
             }
