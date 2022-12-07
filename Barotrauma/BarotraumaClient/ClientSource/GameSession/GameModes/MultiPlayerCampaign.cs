@@ -652,8 +652,18 @@ namespace Barotrauma
 
                 if (ShouldApply(NetFlags.SubList, id, requireUpToDateSave: false))
                 {
-                    foreach (int ownedSubIndex in ownedSubIndices)
+                    foreach (ushort ownedSubIndex in ownedSubIndices)
                     {
+                        if (ownedSubIndex >= GameMain.Client.ServerSubmarines.Count)
+                        {
+                            string errorMsg = $"Error in {nameof(MultiPlayerCampaign.ClientRead)}. Owned submarine index was out of bounds. Index: {ownedSubIndex}, submarines: {string.Join(", ", GameMain.Client.ServerSubmarines.Select(s => s.Name))}";
+                            DebugConsole.ThrowError(errorMsg);
+                            GameAnalyticsManager.AddErrorEventOnce(
+                                "MultiPlayerCampaign.ClientRead.OwnerSubIndexOutOfBounds" + ownedSubIndex,
+                                GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                            continue;
+                        }
+
                         SubmarineInfo sub = GameMain.Client.ServerSubmarines[ownedSubIndex];
                         if (GameMain.NetLobbyScreen.CheckIfCampaignSubMatches(sub, NetLobbyScreen.SubmarineDeliveryData.Owned))
                         {

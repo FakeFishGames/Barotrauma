@@ -953,6 +953,12 @@ namespace Barotrauma
             slots[index].RemoveItem(item);
         }
 
+        public bool IsInSlot(Item item, int index)
+        {
+            if (index < 0 || index >= slots.Length) { return false; }
+            return slots[index].Contains(item);
+        }
+
         public void SharedRead(IReadMessage msg, out List<ushort>[] newItemIds)
         {
             byte slotCount = msg.ReadByte();

@@ -692,7 +692,7 @@ namespace Barotrauma
                             //if the attacker has the same targeting tag as the character we're protecting, we can't change the TargetState
                             //otherwise e.g. a pet that's set to follow humans would start attacking all humans (and other pets, since they're considered part of the same group) when a hostile human attacks it
                             //TODO: a way for pets to differentiate hostile and friendly humans?
-                            if (attacker?.AiTarget != null && targetCharacter.SpeciesName != GetTargetingTag(attacker.AiTarget))
+                            if (attacker?.AiTarget != null && targetCharacter.SpeciesName != GetTargetingTag(attacker.AiTarget) && !attacker.IsFriendly(targetCharacter))
                             {
                                 // Attack the character that attacked the target we are protecting
                                 ChangeTargetState(attacker, AIState.Attack, selectedTargetingParams.Priority * 2);
@@ -3729,7 +3729,7 @@ namespace Barotrauma
                 // When the monsters attack the player sub, they wall hack so that they can be more aggressive.
                 // Pets should always check the visibility, unless the pet and the target are both outside the submarine -> shouldn't target when they can't perceive (= no wall hack)
                 checkVisibility = 
-                    Character.IsPet && (Character.Submarine == null) != (target.Entity.Submarine == null) || 
+                    Character.IsPet && (Character.Submarine != null || target.Entity.Submarine != null) || 
                     target.Entity.Submarine != null && target.Entity.Submarine == Character.Submarine && target.Entity.Submarine.TeamID == CharacterTeamType.None;
             }
             if (dist > 0)

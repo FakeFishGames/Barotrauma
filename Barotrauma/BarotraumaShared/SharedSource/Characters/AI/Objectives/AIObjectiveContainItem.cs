@@ -238,6 +238,15 @@ namespace Barotrauma
             }
         }
 
+        public bool IsInTargetSlot(Item item)
+        {
+            if (container?.Inventory is ItemInventory inventory && TargetSlot is not null)
+            {
+                return inventory.IsInSlot(item, (int)TargetSlot);
+            }
+            return false;
+        }
+
         public override void Reset()
         {
             base.Reset();

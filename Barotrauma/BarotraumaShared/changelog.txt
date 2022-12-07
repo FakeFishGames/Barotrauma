@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------------
+v100.10.0.0
+---------------------------------------------------------------------------------------------------------
+
+- Fixes included in v0.20.11.0.
+
+---------------------------------------------------------------------------------------------------------
 v100.9.0.1
 ---------------------------------------------------------------------------------------------------------
 
@@ -107,6 +113,25 @@ Test version of the faction overhaul:
 - If your Coalition/Separatist reputation is low enough, you may get attacked by their vessel during missions.
 - There's now always two paths from biome to another, one controlled by the Coalition and one by Separatists.
 - Improvements to the campaign map.
+
+---------------------------------------------------------------------------------------------------------
+v0.20.11.0
+---------------------------------------------------------------------------------------------------------
+
+Unstable only:
+- Yet another passive sonar fix: fixed blips "flickering" when there's multiple sound sources, some of which directional, visible on the sonar.
+- Fixed bots walking against the admin module's door in the campaign tutorial outpost.
+- Fixed Sulphuric Acid and Europabrew not being categorized as "Medical" in the sub editor.
+- Fixed arc emitter being in the "Machine" category.
+- Fixed water-reactant items flashing on and off constantly.
+- Fixed Defensebot attacking players.
+- Fixed Defensebot still wall hacking.
+
+Bugfixes:
+- Fixed bots being unable to fix Typhon 2's top docking hatch or the wall right next to it.
+- Fixed crashing when applying upgrades to linked subs, and there's more than one linked sub.
+- Fixed Research Station being in the "Outpost" subcategory in the sub editor.
+- Fixed bots dropping medicine from PUCS when changing its oxygen tank.
 
 ---------------------------------------------------------------------------------------------------------
 v0.20.10.1

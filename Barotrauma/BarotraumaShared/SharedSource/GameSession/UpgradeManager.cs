@@ -574,6 +574,7 @@ namespace Barotrauma
             }
         }
 
+        private readonly static HashSet<Submarine> upgradedSubs = new HashSet<Submarine>();
         /// <summary>
         /// Applies an upgrade on the submarine, should be called by <see cref="ApplyUpgrades"/> when the round starts.
         /// </summary>
@@ -584,6 +585,12 @@ namespace Barotrauma
         /// <returns>New level that was applied, -1 if no upgrades were applied.</returns>
         private static int BuyUpgrade(UpgradePrefab prefab, UpgradeCategory category, Submarine submarine, int level = 1, Submarine? parentSub = null)
         {
+            if (parentSub == null)
+            {
+                upgradedSubs.Clear();
+            }
+            upgradedSubs.Add(submarine);
+
             int? newLevel = null;
             if (category.IsWallUpgrade)
             {
@@ -619,9 +626,12 @@ namespace Barotrauma
                 }
             }
 
-            foreach (Submarine loadedSub in Submarine.Loaded.Where(sub => sub != submarine))
+            foreach (Submarine loadedSub in Submarine.Loaded)
             {
-                if (loadedSub == parentSub) { continue; }
+                if (loadedSub == parentSub || loadedSub == submarine) { continue; }
+                if (loadedSub.Info?.Type != SubmarineType.Player) { continue; }
+                if (upgradedSubs.Contains(loadedSub)) { continue; }
+
                 XElement? root = loadedSub.Info?.SubmarineElement;
                 if (root == null) { continue; }
 
@@ -630,8 +640,8 @@ namespace Barotrauma
                     if (root.Attribute("location") == null) { continue; }
 
                     // Check if this is our linked submarine
-                    ushort dockingPortID = (ushort) root.GetAttributeInt("originallinkedto", 0);
-                    if (dockingPortID > 0 && submarine.GetItems(true).Any(item => item.ID == dockingPortID))
+                    ushort dockingPortID = (ushort)root.GetAttributeInt("originallinkedto", 0);
+                    if (dockingPortID > 0 && submarine.GetItems(alsoFromConnectedSubs: true).Any(item => item.ID == dockingPortID))
                     {
                         BuyUpgrade(prefab, category, loadedSub, level, submarine);
                     }

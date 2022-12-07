@@ -1399,7 +1399,8 @@ namespace Barotrauma.Networking
                                 if (mpCampaign != null && Level.IsLoadedFriendlyOutpost && save)
                                 {
                                     mpCampaign.SavePlayers();
-                                    GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);                              
+                                    GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);
+                                    mpCampaign.UpdateStoreStock();
                                     SaveUtil.SaveGame(GameMain.GameSession.SavePath);                                
                                 }
                                 else

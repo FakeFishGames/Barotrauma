@@ -324,9 +324,18 @@ namespace Barotrauma
 
         public override void AddExtraMissions(LevelData levelData)
         {
+            if (levelData == null)
+            {
+                throw new ArgumentException("Current location was null.");
+            }
+
             extraMissions.Clear();
 
             var currentLocation = Map.CurrentLocation;
+            if (currentLocation == null)
+            {
+                throw new InvalidOperationException("Current location was null.");
+            }
             if (levelData.Type == LevelData.LevelType.Outpost)
             {
                 //if there's an available mission that takes place in the outpost, select it
@@ -765,9 +774,10 @@ namespace Barotrauma
             if (map != null && CargoManager != null)
             {
                 map.CurrentLocation.RegisterTakenItems(takenItems);
-                map.CurrentLocation.AddStock(CargoManager.SoldItems);
-                CargoManager.ClearSoldItemsProjSpecific();
-                map.CurrentLocation.RemoveStock(CargoManager.PurchasedItems);
+                if (transitionType != TransitionType.None)
+                {
+                    UpdateStoreStock();
+                }
             }
             if (GameMain.NetworkMember == null)
             {
@@ -828,6 +838,16 @@ namespace Barotrauma
                     port.Door.IsOpen = false;
                 }
             }
+        }
+
+        /// <summary>
+        /// Updates store stock before saving the game
+        /// </summary>
+        public void UpdateStoreStock()
+        {
+            Map?.CurrentLocation?.AddStock(CargoManager.SoldItems);
+            CargoManager?.ClearSoldItemsProjSpecific();
+            Map?.CurrentLocation?.RemoveStock(CargoManager.PurchasedItems);
         }
 
         public void EndCampaign()
