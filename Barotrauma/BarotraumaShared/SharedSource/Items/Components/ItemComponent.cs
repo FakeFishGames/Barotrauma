@@ -260,6 +260,8 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public readonly bool InheritStatusEffects;
+
         public ItemComponent(Item item, ContentXElement element)
         {
             this.item = item;
@@ -320,6 +322,7 @@ namespace Barotrauma.Items.Components
             string inheritStatusEffectsFrom = element.GetAttributeString("inheritstatuseffectsfrom", "");
             if (!string.IsNullOrEmpty(inheritStatusEffectsFrom))
             {
+                InheritStatusEffects = true;
                 var component = item.Components.Find(ic => ic.Name.Equals(inheritStatusEffectsFrom, StringComparison.OrdinalIgnoreCase));
                 if (component == null)
                 {

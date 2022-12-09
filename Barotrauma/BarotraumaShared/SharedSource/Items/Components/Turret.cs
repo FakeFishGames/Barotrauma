@@ -639,16 +639,7 @@ namespace Barotrauma.Items.Components
                     ItemContainer projectileContainer = projectiles.First().Item.Container?.GetComponent<ItemContainer>();
                     if (projectileContainer != null && projectileContainer.Item != item)
                     {
-                        //Use root container (e.g. loader) too in case it needs to react to firing somehow
-                        var rootContainer = projectileContainer.Item.GetRootContainer();
-                        if (rootContainer != null && rootContainer != projectileContainer.Item)
-                        {
-                            rootContainer.Use(deltaTime, null);
-                        }
-                        else
-                        {
-                            projectileContainer.Item.Use(deltaTime, null);
-                        }
+                        projectileContainer?.Item.Use(deltaTime, null);
                     }
                 }
                 else

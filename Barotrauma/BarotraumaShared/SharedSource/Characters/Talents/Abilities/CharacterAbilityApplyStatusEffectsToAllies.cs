@@ -10,12 +10,15 @@ namespace Barotrauma.Abilities
         private readonly bool inSameRoom;
         private readonly ImmutableHashSet<Identifier> jobIdentifiers;
 
+        public override bool AllowClientSimulation { get; }
+
         public CharacterAbilityApplyStatusEffectsToAllies(CharacterAbilityGroup characterAbilityGroup, ContentXElement abilityElement) : base(characterAbilityGroup, abilityElement)
         {
             allowSelf = abilityElement.GetAttributeBool("allowself", true);
             maxDistance = abilityElement.GetAttributeFloat("maxdistance", float.MaxValue);
             inSameRoom = abilityElement.GetAttributeBool("insameroom", false);
             jobIdentifiers = abilityElement.GetAttributeIdentifierImmutableHashSet("jobs", ImmutableHashSet<Identifier>.Empty);
+            AllowClientSimulation = abilityElement.GetAttributeBool("allowclientsimulation", true);
         }
 
 

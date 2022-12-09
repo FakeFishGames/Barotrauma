@@ -224,8 +224,7 @@ namespace Barotrauma.Items.Components
             if (character == null) { return false; }
             if (character == Character.Controlled)
             {
-                if (targetSections.Count == 0) { return false; }
-                Spray(character, deltaTime, applyColors: true);
+                Spray(character, deltaTime, applyColors: targetSections.Count > 0);
                 return true;
             }
             else

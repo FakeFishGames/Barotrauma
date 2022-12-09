@@ -1020,11 +1020,14 @@ namespace Barotrauma
                 }
 
                 if (ic.statusEffectLists == null) { continue; }
-
-                if (statusEffectLists == null)
+                if (ic.InheritStatusEffects)
                 {
-                    statusEffectLists = new Dictionary<ActionType, List<StatusEffect>>();
+                    // Inherited status effects are added when the ItemComponent is initialized at ItemComponent.cs:332.
+                    // Don't create duplicate effects here.
+                    continue;
                 }
+
+                statusEffectLists ??= new Dictionary<ActionType, List<StatusEffect>>();
 
                 //go through all the status effects of the component 
                 //and add them to the corresponding statuseffect list
