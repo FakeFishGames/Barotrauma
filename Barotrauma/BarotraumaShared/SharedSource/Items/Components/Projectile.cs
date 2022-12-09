@@ -266,37 +266,43 @@ namespace Barotrauma.Items.Components
                 if (!subElement.Name.ToString().Equals("attack", StringComparison.OrdinalIgnoreCase)) { continue; }
                 Attack = new Attack(subElement, item.Name + ", Projectile", item);
             }
+
+            if (item.body == null)
+            {
+                DebugConsole.ThrowError($"Error in projectile definition ({item.Name}): No body defined!");
+                return;
+            }
+
             InitProjSpecific(element);
         }
         partial void InitProjSpecific(ContentXElement element);
 
         public override void OnItemLoaded()
         {
-            if (item.body != null)
+            if (item.body == null) { return; }
+            if (Attack != null && Attack.DamageRange <= 0.0f)
             {
-                if (Attack != null && Attack.DamageRange <= 0.0f)
+                switch (item.body.BodyShape)
                 {
-                    switch (item.body.BodyShape)
-                    {
-                        case PhysicsBody.Shape.Circle:
-                            Attack.DamageRange = item.body.Radius;
-                            break;
-                        case PhysicsBody.Shape.Capsule:
-                            Attack.DamageRange = item.body.Height / 2 + item.body.Radius;
-                            break;
-                        case PhysicsBody.Shape.Rectangle:
-                            Attack.DamageRange = new Vector2(item.body.Width / 2.0f, item.body.Height / 2.0f).Length();
-                            break;
-                    }
-                    Attack.DamageRange = ConvertUnits.ToDisplayUnits(Attack.DamageRange);
+                    case PhysicsBody.Shape.Circle:
+                        Attack.DamageRange = item.body.Radius;
+                        break;
+                    case PhysicsBody.Shape.Capsule:
+                        Attack.DamageRange = item.body.Height / 2 + item.body.Radius;
+                        break;
+                    case PhysicsBody.Shape.Rectangle:
+                        Attack.DamageRange = new Vector2(item.body.Width / 2.0f, item.body.Height / 2.0f).Length();
+                        break;
                 }
-                originalCollisionCategories = item.body.CollisionCategories;
-                originalCollisionTargets = item.body.CollidesWith;
+                Attack.DamageRange = ConvertUnits.ToDisplayUnits(Attack.DamageRange);
             }
+            originalCollisionCategories = item.body.CollisionCategories;
+            originalCollisionTargets = item.body.CollidesWith;
         }
 
         private void Launch(Character user, Vector2 simPosition, float rotation, float damageMultiplier = 1f, float launchImpulseModifier = 0f)
         {
+            if (Item.body == null) { return; }
             Item.body.ResetDynamics();
             Item.SetTransform(simPosition, rotation);
             if (Attack != null)
@@ -354,6 +360,7 @@ namespace Barotrauma.Items.Components
         public bool Use(Character character = null, float launchImpulseModifier = 0f)
         {
             if (character != null && !characterUsable) { return false; }
+            if (item.body == null) { return false; }
 
             for (int i = 0; i < HitScanCount; i++)
             {
@@ -1099,6 +1106,7 @@ namespace Barotrauma.Items.Components
 
         private void DisableProjectileCollisions()
         {
+            if (item?.body?.FarseerBody == null) { return; }
             item.body.FarseerBody.OnCollision -= OnProjectileCollision;
             if (originalCollisionCategories != Category.None && originalCollisionTargets != Category.None)
             {

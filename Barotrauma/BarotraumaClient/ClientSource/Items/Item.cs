@@ -242,6 +242,11 @@ namespace Barotrauma
                 return false;
             }
 
+            if (parentInventory?.Owner is Character character && character.InvisibleTimer > 0.0f)
+            {
+                return false;
+            }
+
             Rectangle extents;
             if (cachedVisibleExtents.HasValue)
             {

@@ -1356,7 +1356,7 @@ namespace Barotrauma
         {
             var characters = GameSession.GetSessionCrewCharacters(CharacterType.Both);
             if (!characters.Any()) { return 0; }
-            return characters.Sum(c => (int)c.GetStatValue(StatTypes.ExtraSpecialSalesCount));
+            return characters.Max(static c => (int)c.GetStatValue(StatTypes.ExtraSpecialSalesCount));
         }
 
         public bool CanHaveSubsForSale()

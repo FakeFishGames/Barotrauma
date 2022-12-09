@@ -240,6 +240,7 @@ namespace Barotrauma
 
         public bool CanCharacterBuy()
         {
+            if (DefaultPrice == null) { return false; }
             if (!DefaultPrice.RequiresUnlock) { return true; }
             return Character.Controlled is not null && Character.Controlled.HasStoreAccessForItem(this);
         }

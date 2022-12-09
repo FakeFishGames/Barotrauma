@@ -326,7 +326,7 @@ namespace Barotrauma
         {
             if (levelData == null)
             {
-                throw new ArgumentException("Current location was null.");
+                throw new ArgumentException("Level data was null.");
             }
 
             extraMissions.Clear();

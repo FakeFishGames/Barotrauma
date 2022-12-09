@@ -917,7 +917,7 @@ namespace Barotrauma
             else
             {
                 // Wander around outside or swimming
-                steeringManager.SteeringWander();
+                steeringManager.SteeringWander(avoidWanderingOutsideLevel: true);
                 if (Character.AnimController.InWater)
                 {
                     SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 5);
@@ -1930,7 +1930,7 @@ namespace Barotrauma
                             {
                                 if (Character.CurrentHull == null && !canAttack)
                                 {
-                                    SteeringManager.SteeringWander();
+                                    SteeringManager.SteeringWander(avoidWanderingOutsideLevel: true);
                                     SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 5);
                                 }
                                 else
@@ -3946,7 +3946,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    SteeringManager.SteeringWander();
+                    SteeringManager.SteeringWander(avoidWanderingOutsideLevel: Character.CurrentHull == null);
                     if (Character.CurrentHull == null)
                     {
                         SteeringManager.SteeringAvoid(deltaTime, lookAheadDistance: avoidLookAheadDistance, weight: 5);

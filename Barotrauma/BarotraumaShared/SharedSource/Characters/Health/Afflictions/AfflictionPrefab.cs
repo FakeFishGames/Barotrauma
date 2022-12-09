@@ -375,6 +375,7 @@ namespace Barotrauma
         public readonly bool HealableInMedicalClinic;
         public readonly float HealCostMultiplier;
         public readonly int BaseHealCost;
+        public readonly bool ShowBarInHealthMenu;
 
         public readonly LocalizedString CauseOfDeathDescription, SelfCauseOfDeathDescription;
 
@@ -472,6 +473,8 @@ namespace Barotrauma
             }
             IsBuff = element.GetAttributeBool(nameof(IsBuff), false);
             AffectMachines = element.GetAttributeBool(nameof(AffectMachines), true);
+
+            ShowBarInHealthMenu = element.GetAttributeBool("showbarinhealthmenu", true);
 
             HealableInMedicalClinic = element.GetAttributeBool("healableinmedicalclinic", 
                 !IsBuff && 

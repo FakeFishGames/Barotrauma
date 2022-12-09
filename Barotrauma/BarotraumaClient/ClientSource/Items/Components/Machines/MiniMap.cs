@@ -987,11 +987,8 @@ namespace Barotrauma.Items.Components
                     component.Color = borderComponent.OutlineColor = NoPowerColor;
                 }
 
-                if (Voltage < MinVoltage) { continue; }
-
                 if (!component.Visible) { continue; }
-                if (!(entity is Hull hull)) { continue; }
-
+                if (entity is not Hull hull) { continue; }
                 if (!submarineContainer.Rect.Contains(component.Rect))
                 {
                     if (hull.Submarine.Info.Type != SubmarineType.Player)
@@ -1000,6 +997,8 @@ namespace Barotrauma.Items.Components
                         continue;
                     }
                 }
+
+                if (Voltage < MinVoltage) { continue; }
 
                 hullDatas.TryGetValue(hull, out HullData? hullData);
                 if (hullData is null)

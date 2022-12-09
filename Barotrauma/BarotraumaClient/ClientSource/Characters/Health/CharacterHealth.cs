@@ -1619,6 +1619,11 @@ namespace Barotrauma
                     }
                 }
 
+                if (!affliction.Prefab.ShowBarInHealthMenu)
+                {
+                    afflictionStrengthBar.BarSize = 1f;
+                }
+
                 if (afflictionTooltip != null && afflictionTooltip.UserData == affliction)
                 {
                     UpdateAfflictionInfo(afflictionTooltip.Content, affliction);
