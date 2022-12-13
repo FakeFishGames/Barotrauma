@@ -53,7 +53,7 @@ body:
       description: Which version of the game did the bug happen in? You can see the current version number in the bottom left corner of your screen in the main menu.
       options:      
         - 0.19.14.0
-        - 0.20.9.0 (Unstable)
+        - 0.20.14.0 (Unstable)
         - Faction/endgame test branch
         - Other
     validations:
