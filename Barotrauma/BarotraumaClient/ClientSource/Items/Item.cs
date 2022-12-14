@@ -242,6 +242,11 @@ namespace Barotrauma
                 return false;
             }
 
+            if (parentInventory?.Owner is Character character && character.InvisibleTimer > 0.0f)
+            {
+                return false;
+            }
+
             Rectangle extents;
             if (cachedVisibleExtents.HasValue)
             {
@@ -1251,11 +1256,9 @@ namespace Barotrauma
             {
                 foreach (ItemComponent ic in components)
                 {
-                    if (ic.DisplayMsg.IsNullOrEmpty()) { continue; }
                     if (!ic.CanBePicked && !ic.CanBeSelected) { continue; }
                     if (ic is Holdable holdable && !holdable.CanBeDeattached()) { continue; }
                     if (ic is ConnectionPanel connectionPanel && !connectionPanel.CanRewire()) { continue; }
-
                     Color color = Color.Gray;
                     if (ic.HasRequiredItems(character, false))
                     {
@@ -1268,6 +1271,7 @@ namespace Barotrauma
                             color = Color.Cyan;
                         }
                     }
+                    if (ic.DisplayMsg.IsNullOrEmpty()) { continue; }
                     texts.Add(new ColoredText(ic.DisplayMsg.Value, color, false, false));
                 }
             }
@@ -1282,7 +1286,8 @@ namespace Barotrauma
         {
             foreach (ItemComponent ic in activeHUDs)
             {
-                if (ic.GuiFrame == null || !ic.CanBeSelected) { continue; }
+                if (ic.GuiFrame == null) { continue; }
+                if (!ic.CanBeSelected && !ic.DrawHudWhenEquipped) { continue; }
                 ic.GuiFrame.RectTransform.ScreenSpaceOffset = Point.Zero;
                 if (ic.UseAlternativeLayout)
                 {
@@ -1414,6 +1419,15 @@ namespace Barotrauma
                     break;
                 case EventType.ChangeProperty:
                     ReadPropertyChange(msg, false);
+                    break;
+                case EventType.ItemStat:
+                    byte length = msg.ReadByte();
+                    for (int i = 0; i < length; i++)
+                    {
+                        var statIdentifier = INetSerializableStruct.Read<ItemStatManager.TalentStatIdentifier>(msg);
+                        var statValue = msg.ReadSingle();
+                        StatManager.ApplyStat(statIdentifier, statValue);
+                    }
                     break;
                 case EventType.Upgrade:
                     Identifier identifier = msg.ReadIdentifier();

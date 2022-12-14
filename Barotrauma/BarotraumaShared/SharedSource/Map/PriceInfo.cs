@@ -27,6 +27,8 @@ namespace Barotrauma
         public bool DisplayNonEmpty { get; } = false;
         public Identifier StoreIdentifier { get; }
 
+        public bool RequiresUnlock { get; }
+
         /// <summary>
         /// Used when both <see cref="MinAvailableAmount"/> and <see cref="MaxAvailableAmount"/> are set to 0.
         /// </summary>
@@ -48,11 +50,12 @@ namespace Barotrauma
             int maxAmount = GetMaxAmount(element);
             maxAmount = Math.Min(maxAmount, CargoManager.MaxQuantity);
             MaxAvailableAmount = Math.Max(maxAmount, MinAvailableAmount);
+            RequiresUnlock = element.GetAttributeBool("requiresunlock", false);
         }
 
         public PriceInfo(int price, bool canBeBought,
             int minAmount = 0, int maxAmount = 0, bool canBeSpecial = true, int minLevelDifficulty = 0, float buyingPriceMultiplier = 1f,
-            bool displayNonEmpty = false, string storeIdentifier = null)
+            bool displayNonEmpty = false, bool requiresUnlock = false, string storeIdentifier = null)
         {
             Price = price;
             CanBeBought = canBeBought;
@@ -64,6 +67,7 @@ namespace Barotrauma
             CanBeSpecial = canBeSpecial;
             DisplayNonEmpty = displayNonEmpty;
             StoreIdentifier = new Identifier(storeIdentifier);
+            RequiresUnlock = requiresUnlock;
         }
 
         public static List<PriceInfo> CreatePriceInfos(XElement element, out PriceInfo defaultPrice)
@@ -78,6 +82,7 @@ namespace Barotrauma
             float buyingPriceMultiplier = element.GetAttributeFloat("buyingpricemultiplier", 1f);
             bool displayNonEmpty = element.GetAttributeBool("displaynonempty", false);
             bool soldByDefault = element.GetAttributeBool("sold", element.GetAttributeBool("soldbydefault", true));
+            bool requiresUnlock = element.GetAttributeBool("requiresunlock", false);
             foreach (XElement childElement in element.GetChildElements("price"))
             {
                 float priceMultiplier = childElement.GetAttributeFloat("multiplier", 1.0f);
@@ -91,26 +96,28 @@ namespace Barotrauma
                 }
                 string storeIdentifier = childElement.GetAttributeString("storeidentifier", backwardsCompatibleIdentifier);
                 // TODO: Add some error messages if we have defined the min or max amount while the item is not sold
-                var priceInfo = new PriceInfo((int)(priceMultiplier * basePrice),
-                    sold,
-                    sold ? GetMinAmount(childElement, minAmount) : 0,
-                    sold ? GetMaxAmount(childElement, maxAmount) : 0,
-                    canBeSpecial,
-                    storeMinLevelDifficulty,
-                    storeBuyingMultiplier,
-                    displayNonEmpty,
-                    storeIdentifier);
+                var priceInfo = new PriceInfo(price: (int)(priceMultiplier * basePrice),
+                    canBeBought: sold,
+                    minAmount: sold ? GetMinAmount(childElement, minAmount) : 0,
+                    maxAmount: sold ? GetMaxAmount(childElement, maxAmount) : 0,
+                    canBeSpecial: canBeSpecial,
+                    minLevelDifficulty: storeMinLevelDifficulty,
+                    buyingPriceMultiplier: storeBuyingMultiplier,
+                    displayNonEmpty: displayNonEmpty,
+                    requiresUnlock: requiresUnlock,
+                    storeIdentifier: storeIdentifier);
                 priceInfos.Add(priceInfo);
             }
             bool soldElsewhere = soldByDefault && element.GetAttributeBool("soldelsewhere", element.GetAttributeBool("soldeverywhere", false));
-            defaultPrice = new PriceInfo(basePrice,
-                soldElsewhere,
-                soldElsewhere ? minAmount : 0,
-                soldElsewhere ? maxAmount : 0,
-                canBeSpecial,
-                minLevelDifficulty,
-                buyingPriceMultiplier,
-                displayNonEmpty);
+            defaultPrice = new PriceInfo(price: basePrice,
+                canBeBought: soldElsewhere,
+                minAmount: soldElsewhere ? minAmount : 0,
+                maxAmount: soldElsewhere ? maxAmount : 0,
+                canBeSpecial: canBeSpecial,
+                minLevelDifficulty: minLevelDifficulty,
+                buyingPriceMultiplier: buyingPriceMultiplier,
+                displayNonEmpty: displayNonEmpty,
+            requiresUnlock: requiresUnlock);
             return priceInfos;
         }
 

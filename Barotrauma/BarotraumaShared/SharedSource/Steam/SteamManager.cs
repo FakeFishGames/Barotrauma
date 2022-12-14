@@ -89,7 +89,7 @@ namespace Barotrauma.Steam
         {
             if (!IsInitialized || !Steamworks.SteamClient.IsValid)
             {
-                return new PublishedFileId[0];
+                return Array.Empty<PublishedFileId>();
             }
             return Steamworks.SteamUGC.GetSubscribedItems();
         }

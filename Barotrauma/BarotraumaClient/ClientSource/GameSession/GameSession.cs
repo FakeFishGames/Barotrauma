@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Tutorials;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma
@@ -128,8 +129,9 @@ namespace Barotrauma
             if (GUI.DisableHUD) { return; }
             GameMode?.AddToGUIUpdateList();
             tabMenu?.AddToGUIUpdateList();
+            ObjectiveManager.AddToGUIUpdateList();
 
-            if ((!(GameMode is CampaignMode campaign) || (!campaign.ForceMapUI && !campaign.ShowCampaignUI)) &&
+            if ((GameMode is not CampaignMode campaign || (!campaign.ForceMapUI && !campaign.ShowCampaignUI)) &&
                 !CoroutineManager.IsCoroutineRunning("LevelTransition") && !CoroutineManager.IsCoroutineRunning("SubmarineTransition"))
             {
                 if (topLeftButtonGroup == null)
@@ -223,6 +225,7 @@ namespace Barotrauma
             }
 
             HintManager.Update();
+            ObjectiveManager.VideoPlayer.Update();
         }
 
         public void SetRespawnInfo(bool visible, string text, Color textColor, bool buttonsVisible, bool waitForNextRoundRespawn)

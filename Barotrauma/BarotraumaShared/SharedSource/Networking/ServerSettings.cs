@@ -382,11 +382,16 @@ namespace Barotrauma.Networking
 
         private bool autoRestart;
 
-        public bool IsPublic;
-
         private int maxPlayers;
 
         public List<SavedClientPermission> ClientPermissions { get; private set; } = new List<SavedClientPermission>();
+
+        [Serialize(true, IsPropertySaveable.Yes)]
+        public bool IsPublic
+        {
+            get;
+            set;
+        }
 
         private int tickRate = 20;
         [Serialize(20, IsPropertySaveable.Yes)]
@@ -518,8 +523,15 @@ namespace Barotrauma.Networking
             }
         }
 
-        [Serialize(Barotrauma.LosMode.Opaque, IsPropertySaveable.Yes)]
+        [Serialize(LosMode.Opaque, IsPropertySaveable.Yes)]
         public LosMode LosMode
+        {
+            get;
+            set;
+        }
+
+        [Serialize(EnemyHealthBarMode.ShowAll, IsPropertySaveable.Yes)]
+        public EnemyHealthBarMode ShowEnemyHealthBars
         {
             get;
             set;

@@ -104,6 +104,7 @@ namespace Barotrauma
 
         public struct CampaignSettingElements
         {
+            public SettingValue<bool> TutorialEnabled;
             public SettingValue<bool> RadiationEnabled;
             public SettingValue<int> MaxMissionCount;
             public SettingValue<StartingBalanceAmount> StartingFunds;
@@ -114,6 +115,7 @@ namespace Barotrauma
             {
                 return new CampaignSettings(element: null)
                 {
+                    TutorialEnabled = TutorialEnabled.GetValue(),
                     RadiationEnabled = RadiationEnabled.GetValue(),
                     MaxMissionCount = MaxMissionCount.GetValue(),
                     StartingBalanceAmount = StartingFunds.GetValue(),
@@ -159,7 +161,7 @@ namespace Barotrauma
             }
         }
 
-        protected static CampaignSettingElements CreateCampaignSettingList(GUIComponent parent, CampaignSettings prevSettings)
+        protected static CampaignSettingElements CreateCampaignSettingList(GUIComponent parent, CampaignSettings prevSettings, bool isSinglePlayer)
         {
             const float verticalSize = 0.14f;
 
@@ -180,6 +182,9 @@ namespace Barotrauma
                 Spacing = GUI.IntScale(5)
             };
 
+            SettingValue<bool> tutorialEnabled = isSinglePlayer ?
+                CreateTickbox(settingsList.Content, TextManager.Get("CampaignOption.EnableTutorial"), TextManager.Get("campaignoption.enabletutorial.tooltip"), prevSettings.TutorialEnabled, verticalSize) :
+                new SettingValue<bool>(() => false, b => { });
             SettingValue<bool> radiationEnabled = CreateTickbox(settingsList.Content, TextManager.Get("CampaignOption.EnableRadiation"), TextManager.Get("campaignoption.enableradiation.tooltip"), prevSettings.RadiationEnabled, verticalSize);
 
             ImmutableArray<SettingCarouselElement<Identifier>> startingSetOptions = StartItemSet.Sets.OrderBy(s => s.Order).Select(set => new SettingCarouselElement<Identifier>(set.Identifier, $"startitemset.{set.Identifier}")).ToImmutableArray();
@@ -214,6 +219,7 @@ namespace Barotrauma
             {
                 if (o is CampaignSettings settings)
                 {
+                    tutorialEnabled.SetValue(isSinglePlayer && settings.TutorialEnabled);
                     radiationEnabled.SetValue(settings.RadiationEnabled);
                     maxMissionCountInput.SetValue(settings.MaxMissionCount);
                     startingFundsInput.SetValue(settings.StartingBalanceAmount);
@@ -226,6 +232,7 @@ namespace Barotrauma
 
             return new CampaignSettingElements
             {
+                TutorialEnabled = tutorialEnabled,
                 RadiationEnabled = radiationEnabled,
                 MaxMissionCount = maxMissionCountInput,
                 StartingFunds = startingFundsInput,

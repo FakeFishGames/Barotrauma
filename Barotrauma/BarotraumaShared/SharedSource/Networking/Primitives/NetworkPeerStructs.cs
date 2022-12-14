@@ -272,6 +272,9 @@ namespace Barotrauma.Networking
         [NetworkSerialize]
         public bool IsMandatory;
 
+        [NetworkSerialize]
+        public bool IsVanilla;
+
         private Md5Hash? cachedHash;
         private DateTime? cachedDateTime;
 
@@ -305,6 +308,7 @@ namespace Barotrauma.Networking
                 ? ugcId.StringRepresentation
                 : "";
             IsMandatory = !contentPackage.Files.All(f => f is SubmarineFile);
+            IsVanilla = contentPackage == ContentPackageManager.VanillaCorePackage;
             InstallTimeDiffInSeconds =
                 contentPackage.InstallTime.TryUnwrap(out var installTime)
                     ? (uint)(installTime - referenceTime).TotalSeconds

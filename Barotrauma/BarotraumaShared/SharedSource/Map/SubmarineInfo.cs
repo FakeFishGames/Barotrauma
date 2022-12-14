@@ -314,6 +314,7 @@ namespace Barotrauma
             Tier = original.Tier;
             IsManuallyOutfitted = original.IsManuallyOutfitted;
             Tags = original.Tags;
+            OutpostGenerationParams = original.OutpostGenerationParams;
             if (original.OutpostModuleInfo != null)
             {
                 OutpostModuleInfo = new OutpostModuleInfo(original.OutpostModuleInfo);
@@ -747,6 +748,8 @@ namespace Barotrauma
             return doc;
         }
 
-        public static int GetDefaultTier(int price) => price > 20000 ? 3 : price > 10000 ? 2 : 1;
+        public static int GetDefaultTier(int price) => price > 20000 ? HighestTier : price > 10000 ? 2 : 1;
+
+        public const int HighestTier = 3;
     }
 }

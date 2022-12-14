@@ -287,6 +287,13 @@ namespace Barotrauma
             private set;
         }
 
+        [Serialize("1.0,1.0,1.0,1.0", IsPropertySaveable.Yes), Editable]
+        public Color SpriteColor
+        {
+            get;
+            private set;
+        }
+
         public string Name => Identifier.Value;
 
         public List<ChildObject> ChildObjects

@@ -413,28 +413,10 @@ namespace Barotrauma
                 }
             }
         }
-
+         
         private void ApplyTreatment(Affliction affliction, Item item)
         {
-            var targetLimb = targetCharacter.CharacterHealth.GetAfflictionLimb(affliction);
-            bool remove = false;
-            foreach (ItemComponent ic in item.Components)
-            {
-                if (!ic.HasRequiredContainedItems(user: character, addMessage: false)) { continue; }
-#if CLIENT
-                ic.PlaySound(ActionType.OnUse, character);
-#endif
-                ic.WasUsed = true;
-                ic.ApplyStatusEffects(ActionType.OnUse, 1.0f, targetCharacter, targetLimb, user: character);
-                if (ic.DeleteOnUse)
-                {
-                    remove = true;
-                }
-            }
-            if (remove)
-            {
-                Entity.Spawner?.AddItemToRemoveQueue(item);
-            }
+            item.ApplyTreatment(character, targetCharacter, targetCharacter.CharacterHealth.GetAfflictionLimb(affliction));
         }
 
         protected override bool CheckObjectiveSpecific()
@@ -502,10 +484,12 @@ namespace Barotrauma
 
         public static IEnumerable<Affliction> GetTreatableAfflictions(Character character)
         {
-            foreach (Affliction affliction in character.CharacterHealth.GetAllAfflictions())
+            var allAfflictions = character.CharacterHealth.GetAllAfflictions();
+            foreach (Affliction affliction in allAfflictions)
             {
                 if (affliction.Prefab.IsBuff || affliction.Strength < affliction.Prefab.TreatmentThreshold) { continue; }
                 if (!affliction.Prefab.TreatmentSuitability.Any(kvp => kvp.Value > 0)) { continue; }
+                if (allAfflictions.Any(otherAffliction => affliction.Prefab.IgnoreTreatmentIfAfflictedBy.Contains(otherAffliction.Identifier))) { continue; }
                 yield return affliction;
             }
         }

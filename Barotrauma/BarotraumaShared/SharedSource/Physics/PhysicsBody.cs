@@ -97,7 +97,6 @@ namespace Barotrauma
             get { return list; }
         }
 
-
         protected Vector2 prevPosition;
         protected float prevRotation;
 
@@ -343,6 +342,22 @@ namespace Barotrauma
                 return _collidesWith;
             }
         }
+
+        /// <summary>
+        /// Ignore rotation calls for the rest of this and the next update. Automatically disabled after that. Used for temporarily suppressing the SmoothRotate calls to prevent conflicting or unitentionally amplified rotations.
+        /// </summary>
+        public bool SuppressSmoothRotationCalls
+        {
+            get => _suppressSmoothRotationCalls;
+            set
+            {
+                _suppressSmoothRotationCalls = value;
+                smoothRotationSuppressionCounter = 0;
+            }
+        }
+
+        private bool _suppressSmoothRotationCalls;
+        private int smoothRotationSuppressionCounter;
 
         public PhysicsBody(XElement element, float scale = 1.0f, bool findNewContacts = true) : this(element, Vector2.Zero, scale, findNewContacts: findNewContacts) { }
         public PhysicsBody(ColliderParams cParams, bool findNewContacts = true) : this(cParams, Vector2.Zero, findNewContacts) { }
@@ -831,6 +846,17 @@ namespace Barotrauma
             }
             drawOffset = NetConfig.InterpolateSimPositionError(drawOffset, PositionSmoothingFactor);
             rotationOffset = NetConfig.InterpolateRotationError(rotationOffset);
+            if (SuppressSmoothRotationCalls)
+            {
+                if (smoothRotationSuppressionCounter > 0)
+                {
+                    SuppressSmoothRotationCalls = false;
+                }
+                else
+                {
+                    smoothRotationSuppressionCounter++;
+                }
+            }
         }
 
         public void UpdateDrawPosition()
@@ -873,6 +899,7 @@ namespace Barotrauma
         /// <param name="wrapAngle">Should the angles be wrapped. Set to false if it makes a difference whether the angle of the body is 0.0f or 360.0f.</param>
         public void SmoothRotate(float targetRotation, float force = 10.0f, bool wrapAngle = true)
         {
+            if (SuppressSmoothRotationCalls) { return; }
             float nextAngle = FarseerBody.Rotation + FarseerBody.AngularVelocity * (float)Timing.Step;
             float angle = wrapAngle ? 
                 MathUtils.GetShortestAngle(nextAngle, targetRotation) : 
@@ -881,7 +908,7 @@ namespace Barotrauma
 
             if (FarseerBody.BodyType == BodyType.Kinematic)
             {
-                if (!IsValidValue(torque, "torque")) return;
+                if (!IsValidValue(torque, "torque")) { return; }
                 FarseerBody.AngularVelocity = torque;
             }
             else

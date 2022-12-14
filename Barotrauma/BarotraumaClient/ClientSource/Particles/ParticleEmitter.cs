@@ -82,6 +82,9 @@ namespace Barotrauma.Particles
         [Editable, Serialize(false, IsPropertySaveable.Yes)]
         public bool CopyEntityAngle { get; set; }
 
+        [Editable, Serialize(true, IsPropertySaveable.Yes, description: "Should the entity heading direction be applied to the particle rotation? Only affects after flipping the texture and when CopyEntityAngle is true.")]
+        public bool CopyEntityDir { get; set; }
+
         [Editable, Serialize("1,1,1,1", IsPropertySaveable.Yes)]
         public Color ColorMultiplier { get; set; }
 

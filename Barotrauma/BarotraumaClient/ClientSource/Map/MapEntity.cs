@@ -1042,19 +1042,11 @@ namespace Barotrauma
 
         protected static void PositionEditingHUD()
         {
-            int maxHeight = 100;
-            if (Screen.Selected == GameMain.SubEditorScreen)
-            {
-                editingHUD.RectTransform.SetPosition(Anchor.TopRight);
-                editingHUD.RectTransform.AbsoluteOffset = new Point(0, GameMain.SubEditorScreen.TopPanel.Rect.Bottom);
-                maxHeight = (GameMain.GraphicsHeight - GameMain.SubEditorScreen.EntityMenu.Rect.Height) - GameMain.SubEditorScreen.TopPanel.Rect.Bottom * 2 - 20;
-            }
-            else
-            {
-                editingHUD.RectTransform.SetPosition(Anchor.TopRight);
-                editingHUD.RectTransform.RelativeOffset = new Vector2(0.0f, (HUDLayoutSettings.CrewArea.Bottom + 10.0f) / (editingHUD.RectTransform.Parent ?? GUI.Canvas).Rect.Height);
-                maxHeight = HUDLayoutSettings.InventoryAreaLower.Y - HUDLayoutSettings.CrewArea.Bottom - 10;
-            }
+            int maxHeight = 
+                Screen.Selected == GameMain.SubEditorScreen ?
+                    GameMain.GraphicsHeight - GameMain.SubEditorScreen.EntityMenu.Rect.Height - GameMain.SubEditorScreen.TopPanel.Rect.Bottom * 2 - 20 :
+                    HUDLayoutSettings.InventoryAreaLower.Y - HUDLayoutSettings.CrewArea.Bottom - 10;
+
 
             var listBox = editingHUD.GetChild<GUIListBox>();
             if (listBox != null)
@@ -1073,6 +1065,17 @@ namespace Barotrauma
                         editingHUD.RectTransform.NonScaledSize.X,
                         MathHelper.Clamp(contentHeight + padding * 2, 50, maxHeight)), resizeChildren: false);
                 listBox.RectTransform.Resize(new Point(listBox.RectTransform.NonScaledSize.X, editingHUD.RectTransform.NonScaledSize.Y - padding * 2), resizeChildren: false);
+            }
+            editingHUD.RectTransform.SetPosition(Anchor.TopRight);
+            if (Screen.Selected == GameMain.SubEditorScreen)
+            {
+                editingHUD.RectTransform.AbsoluteOffset = new Point(0, GameMain.SubEditorScreen.TopPanel.Rect.Bottom);
+            }
+            else
+            {
+                editingHUD.RectTransform.AbsoluteOffset = new Point(
+                    0, 
+                    HUDLayoutSettings.HealthBarAfflictionArea.Y - editingHUD.Rect.Height - GUI.IntScale(10));
             }
         }
 

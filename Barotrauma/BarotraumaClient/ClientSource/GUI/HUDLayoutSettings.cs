@@ -65,7 +65,7 @@ namespace Barotrauma
             get; private set;
         }
 
-        public static Rectangle AfflictionAreaLeft
+        public static Rectangle HealthBarAfflictionArea
         {
             get; private set;
         }
@@ -143,7 +143,7 @@ namespace Barotrauma
             }
             int healthBarHeight = (int)(50f * GUI.Scale);
             HealthBarArea = new Rectangle(BottomRightInfoArea.Right - healthBarWidth + (int)Math.Floor(1 / GUI.Scale), BottomRightInfoArea.Y - healthBarHeight + GUI.IntScale(10), healthBarWidth, healthBarHeight);
-            AfflictionAreaLeft = new Rectangle(HealthBarArea.X, HealthBarArea.Y - Padding - afflictionAreaHeight, HealthBarArea.Width, afflictionAreaHeight);            
+            HealthBarAfflictionArea = new Rectangle(HealthBarArea.X, HealthBarArea.Y - Padding - afflictionAreaHeight, HealthBarArea.Width, afflictionAreaHeight);            
 
 
             int messageAreaWidth = GameMain.GraphicsWidth / 3;
@@ -173,7 +173,7 @@ namespace Barotrauma
 
             int objectiveListAreaX = HealthWindowAreaLeft.Right + Padding;
             int objectiveListAreaY = ButtonAreaTop.Bottom + Padding;
-            TutorialObjectiveListArea = new Rectangle(objectiveListAreaX, objectiveListAreaY, (GameMain.GraphicsWidth - Padding) - objectiveListAreaX, (AfflictionAreaLeft.Top - Padding) - objectiveListAreaY);
+            TutorialObjectiveListArea = new Rectangle(objectiveListAreaX, objectiveListAreaY, (GameMain.GraphicsWidth - Padding) - objectiveListAreaX, (HealthBarAfflictionArea.Top - Padding) - objectiveListAreaY);
 
             int votingAreaWidth = (int)(400 * GUI.Scale);
             int votingAreaX = GameMain.GraphicsWidth - Padding - votingAreaWidth;
@@ -193,7 +193,7 @@ namespace Barotrauma
             DrawRectangle(CrewArea, Color.Blue * 0.5f);
             DrawRectangle(ChatBoxArea, Color.Cyan * 0.5f);
             DrawRectangle(HealthBarArea, Color.Red * 0.5f);
-            DrawRectangle(AfflictionAreaLeft, Color.Red * 0.5f);
+            DrawRectangle(HealthBarAfflictionArea, Color.Red * 0.5f);
             DrawRectangle(InventoryAreaLower, Color.Yellow * 0.5f);
             DrawRectangle(HealthWindowAreaLeft, Color.Red * 0.5f);
             DrawRectangle(BottomRightInfoArea, Color.Green * 0.5f);

@@ -49,21 +49,10 @@ namespace Barotrauma.Steam
                     SteamManager.Workshop.DownloadModThenEnqueueInstall(item);
                 }
             }
-
-            TaskPool.Add("RemoveUnsubscribedItems", SteamManager.Workshop.GetPublishedItems(), t =>
+            
+            SteamManager.Workshop.DeleteUnsubscribedMods(removedPackages =>
             {
-                if (!t.TryGetResult(out ISet<Steamworks.Ugc.Item> publishedItems)) { return; }
-
-                var allRequiredInstalled = subscribedIds.Union(publishedItems.Select(it => it.Id)).ToHashSet();
-                bool needsRefresh = false;
-                foreach (var id in installedIds.Where(id2 => !allRequiredInstalled.Contains(id2)))
-                {
-                    Steamworks.Ugc.Item item = new Steamworks.Ugc.Item(id);
-                    SteamManager.Workshop.Uninstall(item);
-                    needsRefresh = true;
-                }
-
-                if (needsRefresh)
+                if (removedPackages.Any())
                 {
                     PopulateInstalledModLists();
                 }
@@ -93,7 +82,7 @@ namespace Barotrauma.Steam
             return (left, center, right);
         }
 
-        private void HandleDraggingAcrossModLists(GUIListBox from, GUIListBox to)
+        private static void HandleDraggingAcrossModLists(GUIListBox from, GUIListBox to)
         {
             if (to.Rect.Contains(PlayerInput.MousePosition) && from.DraggedElement != null)
             {
@@ -197,7 +186,11 @@ namespace Barotrauma.Steam
                 out onInstalledInfoButtonHit, out var deselect);
 
             GUILayoutGroup mainLayout =
-                new GUILayoutGroup(new RectTransform(Vector2.One, outerContainer.Content.RectTransform), childAnchor: Anchor.TopCenter);
+                new GUILayoutGroup(new RectTransform(Vector2.One, outerContainer.Content.RectTransform), childAnchor: Anchor.TopCenter)
+                {
+                    Stretch = true,
+                    AbsoluteSpacing = GUI.IntScale(5)
+                };
             mainLayout.RectTransform.SetAsFirstChild();
 
             var (topLeft, _, topRight) = CreateSidebars(mainLayout, centerWidth: 0.05f, leftWidth: 0.475f, rightWidth: 0.475f, height: 0.13f);
@@ -257,7 +250,12 @@ namespace Barotrauma.Steam
             right.ChildAnchor = Anchor.TopRight;
 
             //enabled mods
-            Label(left, TextManager.Get("enabledregular"), GUIStyle.SubHeadingFont);
+            var label = Label(left, TextManager.Get("enabledregular"), GUIStyle.SubHeadingFont);
+            new GUIImage(new RectTransform(new Point(label.Rect.Height), label.RectTransform, Anchor.CenterRight), style: "GUIButtonInfo")
+            {
+                ToolTip = TextManager.Get("ModLoadOrderExplanation")
+            };
+
             var enabledModsList = new GUIListBox(new RectTransform((1.0f, 0.93f), left.RectTransform))
             {
                 CurrentDragMode = GUIListBox.DragMode.DragOutsideBox,
@@ -478,8 +476,9 @@ namespace Barotrauma.Steam
         {
             string str = modsListFilter.Text;
             enabledRegularModsList.Content.Children.Concat(disabledRegularModsList.Content.Children)
-                .ForEach(c => c.Visible = !(c.UserData is ContentPackage p)
-                                          || ModNameMatches(p, str) && ModMatchesTickboxes(p, c));
+                .ForEach(c
+                    => c.Visible = c.UserData is not ContentPackage p
+                        || ModNameMatches(p, str) && ModMatchesTickboxes(p, c));
         }
 
         private bool ModMatchesTickboxes(ContentPackage p, GUIComponent guiItem)
@@ -504,12 +503,12 @@ namespace Barotrauma.Steam
                 //are enabled, and all files match either of them so show this mod
             }
             else if (modsListFilterTickboxes[Filter.ShowOnlySubs].Selected
-                && p.Files.Any(f => !(f is BaseSubFile)))
+                && p.Files.Any(f => f is not BaseSubFile))
             {
                 matches = false;
             }
             else if (modsListFilterTickboxes[Filter.ShowOnlyItemAssemblies].Selected
-                && p.Files.Any(f => !(f is ItemAssemblyFile)))
+                && p.Files.Any(f => f is not ItemAssemblyFile))
             {
                 matches = false;
             }
@@ -520,7 +519,7 @@ namespace Barotrauma.Steam
         private void PrepareToShowModInfo(ContentPackage mod)
         {
             if (!mod.UgcId.TryUnwrap(out var ugcId)
-                || !(ugcId is SteamWorkshopId workshopId)) { return; }
+                || ugcId is not SteamWorkshopId workshopId) { return; }
             TaskPool.Add($"PrepareToShow{mod.UgcId}Info", SteamManager.Workshop.GetItem(workshopId.Value),
                 t =>
                 {
@@ -541,7 +540,20 @@ namespace Barotrauma.Steam
                 (p) => p.Name,
                 ContentPackageManager.CorePackages.ToArray(),
                 ContentPackageManager.EnabledPackages.Core!,
-                (p) => { });
+                (p) =>
+                {
+                    enabledCoreDropdown.ButtonTextColor =
+                        p.HasAnyErrors
+                            ? GUIStyle.Red
+                            : GUIStyle.TextColorNormal;
+                });
+            enabledCoreDropdown.ListBox.Content.Children
+                .OfType<GUITextBlock>()
+                .ForEach(tb =>
+                    CreateModErrorInfo(
+                        (tb.UserData as ContentPackage)!,
+                        tb,
+                        tb));
             
             void addRegularModToList(RegularPackage mod, GUIListBox list)
             {
@@ -649,10 +661,7 @@ namespace Barotrauma.Steam
                 {
                     CanBeFocused = false
                 };
-                if (mod.Errors.Any())
-                {
-                    CreateModErrorInfo(mod, modFrame, modName);
-                }
+                CreateModErrorInfo(mod, modFrame, modName);
                 if (ContentPackageManager.LocalPackages.Contains(mod))
                 {
                     var editButton = new GUIButton(new RectTransform(Vector2.One, frameContent.RectTransform, scaleBasis: ScaleBasis.Smallest), "",

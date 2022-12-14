@@ -133,19 +133,28 @@ namespace Barotrauma.Steam
             return searchBox;
         }
 
-        protected void CreateModErrorInfo(ContentPackage mod, GUIComponent uiElement, GUITextBlock nameText)
+        protected static void CreateModErrorInfo(ContentPackage mod, GUIComponent uiElement, GUITextBlock nameText)
         {
-            if (mod.Errors.Any())
+            uiElement.ToolTip = "";
+            if (mod.FatalLoadErrors.Any())
             {
                 const int maxErrorsToShow = 5;
                 nameText.TextColor = GUIStyle.Red;
                 uiElement.ToolTip =
-                    TextManager.GetWithVariable("contentpackagehaserrors", "[packagename]", mod.Name)
-                    + '\n' + string.Join('\n', mod.Errors.Take(maxErrorsToShow).Select(e => e.Message));
-                if (mod.Errors.Count() > maxErrorsToShow)
+                    TextManager.GetWithVariable("ContentPackageHasFatalErrors", "[packagename]", mod.Name)
+                    + '\n' + string.Join('\n', mod.FatalLoadErrors.Take(maxErrorsToShow).Select(e => e.Message));
+                if (mod.FatalLoadErrors.Length > maxErrorsToShow)
                 {
-                    uiElement.ToolTip += '\n' + TextManager.GetWithVariable("workshopitemdownloadprompttruncated", "[number]", (mod.Errors.Count() - maxErrorsToShow).ToString());
+                    uiElement.ToolTip += '\n' + TextManager.GetWithVariable("workshopitemdownloadprompttruncated", "[number]", (mod.FatalLoadErrors.Count() - maxErrorsToShow).ToString());
                 }
+            }
+
+            if (mod.EnableError.IsSome())
+            {
+                nameText.TextColor = GUIStyle.Red;
+                if (!uiElement.ToolTip.IsNullOrWhiteSpace()) { uiElement.ToolTip += "\n"; }
+                uiElement.ToolTip += TextManager.GetWithVariable(
+                    "ContentPackageEnableError", "[packagename]", mod.Name);
             }
         }
     }

@@ -113,7 +113,10 @@ namespace Barotrauma
         public readonly bool PerRuin, PerCave, PerWreck;
         public readonly bool DisableInHuntingGrounds;
 
-        public readonly bool OncePerOutpost;
+        /// <summary>
+        /// If true, events from this set can only occur once in the level.
+        /// </summary>
+        public readonly bool OncePerLevel;
 
         public readonly bool DelayWhenCrewAway;
 
@@ -125,6 +128,18 @@ namespace Barotrauma
         public readonly ImmutableDictionary<Identifier, float> OverrideCommonness;
 
         public readonly float ResetTime;
+
+        /// <summary>
+        /// Used to force an event set based on how many other locations have been discovered before this. (Used for campaign tutorial event sets.)
+        /// </summary>
+        public readonly int ForceAtDiscoveredNr;
+
+        /// <summary>
+        /// Used to force an event set based on how many other outposts have been visited before this. (Used for campaign tutorial event sets.)
+        /// </summary>
+        public readonly int ForceAtVisitedNr;
+
+        public readonly bool CampaignTutorialOnly;
 
         public readonly struct SubEventPrefab
         {
@@ -268,10 +283,18 @@ namespace Barotrauma
             DisableInHuntingGrounds = element.GetAttributeBool("disableinhuntinggrounds", false);
             IgnoreCoolDown = element.GetAttributeBool("ignorecooldown", parentSet?.IgnoreCoolDown ?? (PerRuin || PerCave || PerWreck));
             DelayWhenCrewAway = element.GetAttributeBool("delaywhencrewaway", !PerRuin && !PerCave && !PerWreck);
-            OncePerOutpost = element.GetAttributeBool("onceperoutpost", false);
+            OncePerLevel = element.GetAttributeBool("onceperlevel", element.GetAttributeBool("onceperoutpost", false));
             TriggerEventCooldown = element.GetAttributeBool("triggereventcooldown", true);
             IsCampaignSet = element.GetAttributeBool("campaign", LevelType == LevelData.LevelType.Outpost || (parentSet?.IsCampaignSet ?? false));
             ResetTime = element.GetAttributeFloat("resettime", 0);
+            CampaignTutorialOnly = element.GetAttributeBool(nameof(CampaignTutorialOnly), false);
+
+            ForceAtDiscoveredNr = element.GetAttributeInt(nameof(ForceAtDiscoveredNr), -1);
+            ForceAtVisitedNr = element.GetAttributeInt(nameof(ForceAtVisitedNr), -1);
+            if (ForceAtDiscoveredNr >= 0 && ForceAtVisitedNr >= 0)
+            {
+                DebugConsole.ThrowError($"Error with event set \"{Identifier}\" - both ForceAtDiscoveredNr and ForceAtVisitedNr are defined, this could lead to unexpected behavior");
+            }
 
             DefaultCommonness = element.GetAttributeFloat("commonness", 1.0f);
             foreach (var subElement in element.Elements())
@@ -487,6 +510,11 @@ namespace Barotrauma
                     return string.Join(", ", stats.Select(mc => mc.Key + " x " + mc.Value));
                 }      
             }
+        }
+
+        public override string ToString()
+        {
+            return $"{base.ToString()} ({Identifier.Value})";
         }
 
         public override void Dispose() { }

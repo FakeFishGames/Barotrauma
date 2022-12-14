@@ -43,6 +43,9 @@ partial class UIHighlightAction : EventAction
     [Serialize(true, IsPropertySaveable.Yes)]
     public bool Bounce { get; set; }
 
+    [Serialize(false, IsPropertySaveable.Yes)]
+    public bool HighlightMultiple { get; set; }
+
     private bool isFinished;
 
     public UIHighlightAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }

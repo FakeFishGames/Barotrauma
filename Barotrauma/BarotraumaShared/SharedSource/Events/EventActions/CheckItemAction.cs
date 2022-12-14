@@ -1,3 +1,4 @@
+using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,6 +26,9 @@ namespace Barotrauma
         [Serialize(false, IsPropertySaveable.Yes)]
         public bool RequireEquipped { get; set; }
 
+        [Serialize(true, IsPropertySaveable.Yes)]
+        public bool Recursive { get; set; }
+
         [Serialize(-1, IsPropertySaveable.Yes)]
         public int ItemContainerIndex { get; set; }
 
@@ -50,6 +54,11 @@ namespace Barotrauma
                 break;
             }
             conditionals = conditionalList;
+
+            if (itemTags.None() && ItemIdentifiers.None())
+            {
+                DebugConsole.ThrowError($"Error in event \"{ParentEvent.Prefab.Identifier}\". {nameof(CheckItemAction)} does't define either tags or identifiers of the item to check.");
+            }
         }
 
         protected override bool? DetermineSuccess()
@@ -97,7 +106,22 @@ namespace Barotrauma
         {
             if (inventory == null) { return false; }
             int count = 0;
-            foreach (Item item in inventory.FindAllItems(it => itemTags.Any(it.HasTag) || itemIdentifierSplit.Contains(it.Prefab.Identifier)))
+            HashSet<Item> eventTargets = new HashSet<Item>();
+            foreach (Identifier tag in itemTags)
+            {
+                foreach (var target in ParentEvent.GetTargets(tag))
+                {
+                    if (target is Item item)
+                    {
+                        eventTargets.Add(item);
+                    }
+                }
+            }
+            foreach (Item item in inventory.FindAllItems(it => 
+                    itemTags.Any(it.HasTag) || 
+                    itemIdentifierSplit.Contains(it.Prefab.Identifier) || 
+                    eventTargets.Contains(it), 
+                recursive: Recursive))
             {
                 if (!ConditionalsMatch(item, character)) { continue; }
                 count++;

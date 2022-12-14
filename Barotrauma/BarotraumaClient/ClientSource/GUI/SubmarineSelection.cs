@@ -472,7 +472,7 @@ namespace Barotrauma
             if (transferService)
             {
                 subsToShow.AddRange(GameMain.GameSession.OwnedSubmarines);
-                subsToShow.Sort((x, y) => x.SubmarineClass.CompareTo(y.SubmarineClass));
+                subsToShow.Sort(ComparePrice);
                 string currentSubName = CurrentOrPendingSubmarine().Name;
                 int currentIndex = subsToShow.FindIndex(s => s.Name == currentSubName);
                 if (currentIndex != -1)
@@ -484,7 +484,11 @@ namespace Barotrauma
             {
                 subsToShow.AddRange((GameMain.Client is null ? SubmarineInfo.SavedSubmarines : MultiPlayerCampaign.GetCampaignSubs())
                     .Where(s => s.IsCampaignCompatible && !GameMain.GameSession.OwnedSubmarines.Any(os => os.Name == s.Name)));
-                subsToShow.Sort((x, y) => x.SubmarineClass.CompareTo(y.SubmarineClass));
+                if (GameMain.GameSession.Campaign?.Map?.CurrentLocation is Location currentLocation)
+                {
+                    subsToShow.RemoveAll(sub => !currentLocation.IsSubmarineAvailable(sub));
+                }
+                subsToShow.Sort(ComparePrice);
             }
 
             if (transferService)
@@ -492,10 +496,14 @@ namespace Barotrauma
                 SetConfirmButtonState(selectedSubmarine != null && selectedSubmarine.Name != CurrentOrPendingSubmarine().Name);
             }
 
-            subsToShow.Sort((x, y) => x.SubmarineClass.CompareTo(y.SubmarineClass));
             pageCount = Math.Max(1, (int)Math.Ceiling(subsToShow.Count / (float)submarinesPerPage));
             UpdatePaging();
             ContentRefreshRequired = false;
+
+            static int ComparePrice(SubmarineInfo x, SubmarineInfo y)
+            {
+                return x.Price.CompareTo(y.Price) * 100 + x.Name.CompareTo(y.Name);
+            }
         }
 
         private SubmarineInfo GetSubToDisplay(int index)
@@ -673,7 +681,7 @@ namespace Barotrauma
         {
             if (GameMain.GameSession?.Campaign?.PendingSubmarineSwitch == null)
             {
-                return Submarine.MainSub.Info;
+                return Submarine.MainSub?.Info;
             }
             else
             {

@@ -272,7 +272,6 @@ namespace Barotrauma.Networking
             XDocument doc = new XDocument(new XElement("serversettings"));
 
             doc.Root.SetAttributeValue("name", ServerName);
-            doc.Root.SetAttributeValue("public", IsPublic);
             doc.Root.SetAttributeValue("port", Port);
 #if USE_STEAM
             doc.Root.SetAttributeValue("queryport", QueryPort);

@@ -104,6 +104,8 @@ namespace Barotrauma
                 (float)Math.Floor(value / div) * div;
         }
 
+        public static int RoundToInt(float v) => (int)MathF.Round(v);
+
         public static float RoundTowardsClosest(float value, float div)
         {
             return (float)Math.Round(value / div) * div;
@@ -560,35 +562,45 @@ namespace Barotrauma
 
         public static double LineSegmentToPointDistanceSquared(Point lineA, Point lineB, Point point)
         {
-            double xDiff = lineB.X - lineA.X;
-            double yDiff = lineB.Y - lineA.Y;
+            return LineSegmentToPointDistanceSquared(lineA.X, lineA.Y, lineB.X, lineB.Y, point.X, point.Y);
+        }
+
+        public static float LineSegmentToPointDistanceSquared(Vector2 lineA, Vector2 lineB, Vector2 point)
+        {
+            return (float)LineSegmentToPointDistanceSquared(lineA.X, lineA.Y, lineB.X, lineB.Y, point.X, point.Y);
+        }
+
+        private static double LineSegmentToPointDistanceSquared(double line1X, double line1Y, double line2X, double line2Y, double pointX, double pointY)
+        {
+            double xDiff = line2X - line1X;
+            double yDiff = line2Y - line1Y;
 
             if (xDiff == 0 && yDiff == 0)
             {
-                double v1 = lineA.X - point.X;
-                double v2 = lineA.Y - point.Y;
+                double v1 = line1X - pointX;
+                double v2 = line1Y - pointY;
                 return (v1 * v1) + (v2 * v2);
             }
 
             // Calculate the t that minimizes the distance.
-            double t = ((point.X - lineA.X) * xDiff + (point.Y - lineA.Y) * yDiff) / (xDiff * xDiff + yDiff * yDiff);
+            double t = ((pointX - line1X) * xDiff + (pointY - line1Y) * yDiff) / (xDiff * xDiff + yDiff * yDiff);
 
             // See if this represents one of the segment's
             // end points or a point in the middle.
             if (t < 0)
             {
-                xDiff = point.X - lineA.X;
-                yDiff = point.Y - lineA.Y;
+                xDiff = pointX - line1X;
+                yDiff = pointY - line1Y;
             }
             else if (t > 1)
             {
-                xDiff = point.X - lineB.X;
-                yDiff = point.Y - lineB.Y;
+                xDiff = pointX - line2X;
+                yDiff = pointY - line2Y;
             }
             else
             {
-                xDiff = point.X - (lineA.X + t * xDiff);
-                yDiff = point.Y - (lineA.Y + t * yDiff);
+                xDiff = pointX - (line1X + t * xDiff);
+                yDiff = pointY - (line1Y + t * yDiff);
             }
 
             return xDiff * xDiff + yDiff * yDiff;

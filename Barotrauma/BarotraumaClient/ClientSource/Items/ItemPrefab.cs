@@ -1,5 +1,5 @@
-﻿using Barotrauma.IO;
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -73,6 +72,9 @@ namespace Barotrauma
 
         public float UpgradePreviewScale = 1.0f;
 
+        private IReadOnlyList<DamageModifier> wearableDamageModifiers;
+        private IReadOnlyDictionary<Identifier, float> wearableSkillModifiers;
+
         //only used to display correct color in the sub editor, item instances have their own property that can be edited on a per-item basis
         [Serialize("1.0,1.0,1.0,1.0", IsPropertySaveable.No)]
         public Color InventoryIconColor { get; protected set; }
@@ -100,6 +102,9 @@ namespace Barotrauma
             var decorativeSprites = new List<DecorativeSprite>();
             var containedSprites = new List<ContainedItemSprite>();
             var decorativeSpriteGroups = new Dictionary<int, List<DecorativeSprite>>();
+
+            var wearableDamageModifiers = new List<DamageModifier>();
+            var wearableSkillModifiers = new Dictionary<Identifier, float>();
 
             foreach (var subElement in element.Elements())
             {
@@ -198,14 +203,59 @@ namespace Barotrauma
                             containedSprites.Add(containedSprite);
                         }
                         break;
+                    case "wearable":
+                        foreach (ContentXElement wearableSubElement in subElement.Elements())
+                        {
+                            switch (wearableSubElement.Name.LocalName.ToLowerInvariant())
+                            {
+                                case "damagemodifier":
+                                    wearableDamageModifiers.Add(new DamageModifier(wearableSubElement, Name.Value + ", Wearable", checkErrors: false));
+                                    break;
+                                case "skillmodifier":
+                                    Identifier skillIdentifier = wearableSubElement.GetAttributeIdentifier("skillidentifier", Identifier.Empty);
+                                    float skillValue = wearableSubElement.GetAttributeFloat("skillvalue", 0f);
+                                    if (wearableSkillModifiers.ContainsKey(skillIdentifier))
+                                    {
+                                        wearableSkillModifiers[skillIdentifier] += skillValue;
+                                    }
+                                    else
+                                    {
+                                        wearableSkillModifiers.TryAdd(skillIdentifier, skillValue);
+                                    }
+                                    break;
+                            }
+                        }
+                        break;
                 }
             }
+            this.wearableDamageModifiers = wearableDamageModifiers.ToImmutableList();
+            this.wearableSkillModifiers = wearableSkillModifiers.ToImmutableDictionary();
 
             UpgradeOverrideSprites = upgradeOverrideSprites.Select(kvp => (kvp.Key, kvp.Value.ToImmutableArray())).ToImmutableDictionary();
             BrokenSprites = brokenSprites.ToImmutableArray();
             DecorativeSprites = decorativeSprites.ToImmutableArray();
             ContainedSprites = containedSprites.ToImmutableArray();
             DecorativeSpriteGroups = decorativeSpriteGroups.Select(kvp => (kvp.Key, kvp.Value.ToImmutableArray())).ToImmutableDictionary();
+        }
+
+        public bool CanCharacterBuy()
+        {
+            if (DefaultPrice == null) { return false; }
+            if (!DefaultPrice.RequiresUnlock) { return true; }
+            return Character.Controlled is not null && Character.Controlled.HasStoreAccessForItem(this);
+        }
+        public LocalizedString GetTooltip()
+        {
+            LocalizedString tooltip = $"‖color:{XMLExtensions.ToStringHex(GUIStyle.TextColorBright)}‖{Name}‖color:end‖";
+            if (!Description.IsNullOrEmpty())
+            {
+                tooltip += $"\n{Description}";
+            }
+            if (wearableDamageModifiers.Any() || wearableSkillModifiers.Any())
+            {
+                Wearable.AddTooltipInfo(wearableDamageModifiers, wearableSkillModifiers, ref tooltip);
+            }
+            return tooltip;
         }
 
         public override void UpdatePlacing(Camera cam)
@@ -313,15 +363,7 @@ namespace Barotrauma
             }
             else
             {
-                Vector2 position = Submarine.MouseToWorldGrid(Screen.Selected.Cam, Submarine.MainSub);
-                Vector2 placeSize = Size * Scale;
-                if (placePosition != Vector2.Zero)
-                {
-                    if (ResizeHorizontal) { placeSize.X = Math.Max(position.X - placePosition.X, placeSize.X); }
-                    if (ResizeVertical) { placeSize.Y = Math.Max(placePosition.Y - position.Y, placeSize.Y); }
-                    position = placePosition;
-                }
-                Sprite?.DrawTiled(spriteBatch, new Vector2(position.X, -position.Y), placeSize, color: SpriteColor);
+                Sprite.DrawTiled(spriteBatch, new Vector2(placeRect.X, -placeRect.Y), placeRect.Size.ToVector2(), SpriteColor * 0.8f);
             }
         }
     }

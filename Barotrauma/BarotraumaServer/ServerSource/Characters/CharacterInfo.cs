@@ -70,7 +70,7 @@ namespace Barotrauma
                 msg.WriteByte((byte)Job.Variant);
                 foreach (SkillPrefab skillPrefab in Job.Prefab.Skills.OrderBy(s => s.Identifier))
                 {
-                    msg.WriteSingle(Job.GetSkill(skillPrefab.Identifier).Level);
+                    msg.WriteSingle(Job.GetSkill(skillPrefab.Identifier)?.Level ?? 0.0f);
                 }
             }
             else

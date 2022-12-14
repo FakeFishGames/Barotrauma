@@ -1,5 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using System.Xml.Linq;
 
 namespace Barotrauma.Abilities
 {

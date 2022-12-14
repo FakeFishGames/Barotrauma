@@ -27,7 +27,8 @@ namespace Barotrauma.Networking
         SellSubItems = 0x4000,
         ManageMap = 0x8000,
         ManageHires = 0x10000,
-        All = 0x1FFFF
+        ManageBotTalents = 0x20000,
+        All = 0x3FFFF
     }
 
     class PermissionPreset

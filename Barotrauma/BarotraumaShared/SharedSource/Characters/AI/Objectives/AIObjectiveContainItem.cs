@@ -25,6 +25,8 @@ namespace Barotrauma
         private readonly Item item;
         public Item ItemToContain { get; private set; }
 
+        public int? TargetSlot;
+
         private AIObjectiveGetItem getItemObjective;
         private AIObjectiveGoTo goToObjective;
 
@@ -116,7 +118,11 @@ namespace Barotrauma
                 Abandon = true;
                 return;
             }
-            ItemToContain = item ?? character.Inventory.FindItem(i => CheckItem(i) && i.Container != container.Item, recursive: true);
+            ItemToContain = item ?? character.Inventory.FindItem(it => 
+                CheckItem(it) && 
+                //ignore items already in the container, unless we're trying to place to a specific slot, and the item's not in it
+                (it.Container != container.Item || (TargetSlot.HasValue && it.Container.OwnInventory.FindIndex(it) != TargetSlot)), 
+                recursive: true);
             if (ItemToContain != null)
             {
                 if (!character.CanInteractWith(ItemToContain, checkLinked: false))
@@ -126,7 +132,19 @@ namespace Barotrauma
                 }
                 if (character.CanInteractWith(container.Item, checkLinked: false))
                 {
-                    if (RemoveExisting || (RemoveExistingWhenNecessary && !container.Inventory.CanBePut(ItemToContain)))
+                    static bool CanBePut(Inventory inventory, int? targetSlot, Item itemToContain)
+                    {
+                        if (targetSlot.HasValue)
+                        {
+                            return inventory.CanBePutInSlot(itemToContain, targetSlot.Value);
+                        }
+                        else
+                        {
+                            return inventory.CanBePut(itemToContain);
+                        }
+                    }
+
+                    if (RemoveExisting || (RemoveExistingWhenNecessary && !CanBePut(container.Inventory, TargetSlot, ItemToContain)))
                     {
                         HumanAIController.UnequipContainedItems(container.Item, predicate: RemoveExistingPredicate, unequipMax: RemoveMax);
                     }
@@ -136,7 +154,20 @@ namespace Barotrauma
                     }
                     Inventory originalInventory = ItemToContain.ParentInventory;
                     var slots = originalInventory?.FindIndices(ItemToContain);
-                    if (container.Inventory.TryPutItem(ItemToContain, null))
+                    
+                    static bool TryPutItem(Inventory inventory, int? targetSlot, Item itemToContain)
+                    {
+                        if (targetSlot.HasValue)
+                        {
+                            return inventory.TryPutItem(itemToContain, targetSlot.Value, allowSwapping: false, allowCombine: false, user: null);
+                        }
+                        else
+                        {
+                            return inventory.TryPutItem(itemToContain, user: null);
+                        }
+                    }
+
+                    if (TryPutItem(container.Inventory, TargetSlot, ItemToContain))
                     {
                         if (MoveWholeStack && slots != null)
                         {
@@ -144,7 +175,7 @@ namespace Barotrauma
                             {
                                 foreach (Item item in originalInventory.GetItemsAt(slot).ToList())
                                 {
-                                    container.Inventory.TryPutItem(item, null);
+                                    TryPutItem(container.Inventory, TargetSlot, item);
                                 }
                             }
                         }
@@ -209,6 +240,15 @@ namespace Barotrauma
                         });
                 }
             }
+        }
+
+        public bool IsInTargetSlot(Item item)
+        {
+            if (container?.Inventory is ItemInventory inventory && TargetSlot is not null)
+            {
+                return inventory.IsInSlot(item, (int)TargetSlot);
+            }
+            return false;
         }
 
         public override void Reset()

@@ -447,7 +447,7 @@ namespace Barotrauma
 
         private Level(LevelData levelData) : base(null, 0)
         {
-            this.LevelData = levelData;
+            LevelData = levelData;
             borders = new Rectangle(Point.Zero, levelData.Size);
         }
 
@@ -709,7 +709,7 @@ namespace Barotrauma
                         if (Rand.Range(0, 10, Rand.RandSync.ServerAndClient) != 0) { continue; }
                     }
 
-                    if (!TooClose(siteX, siteY))
+                    if (!TooCloseToOtherSites(siteX, siteY))
                     {
                         siteCoordsX.Add(siteX);
                         siteCoordsY.Add(siteY);
@@ -717,14 +717,14 @@ namespace Barotrauma
 
                     if (closeToCave)
                     {
-                        for (int x2 = x; x2 < x + siteInterval.X; x2 += caveSiteInterval)
+                        for (int x2 = x - siteInterval.X; x2 < x + siteInterval.X; x2 += caveSiteInterval)
                         {
-                            for (int y2 = y; y2 < y + siteInterval.Y; y2 += caveSiteInterval)
+                            for (int y2 = y - siteInterval.Y; y2 < y + siteInterval.Y; y2 += caveSiteInterval)
                             {
                                 int caveSiteX = x2 + Rand.Int(caveSiteInterval / 2, Rand.RandSync.ServerAndClient);
                                 int caveSiteY = y2 + Rand.Int(caveSiteInterval / 2, Rand.RandSync.ServerAndClient);
 
-                                if (!TooClose(caveSiteX, caveSiteY))
+                                if (!TooCloseToOtherSites(caveSiteX, caveSiteY, caveSiteInterval))
                                 {
                                     siteCoordsX.Add(caveSiteX);
                                     siteCoordsY.Add(caveSiteY);
@@ -735,11 +735,12 @@ namespace Barotrauma
                 }
             }
 
-            bool TooClose(double siteX, double siteY)
+            bool TooCloseToOtherSites(double siteX, double siteY, float minDistance = 10.0f)
             {
+                float minDistanceSqr = minDistance * minDistance;
                 for (int i = 0; i < siteCoordsX.Count; i++)
                 {
-                    if (MathUtils.DistanceSquared(siteCoordsX[i], siteCoordsY[i], siteX, siteY) < 10.0f * 10.0f)
+                    if (MathUtils.DistanceSquared(siteCoordsX[i], siteCoordsY[i], siteX, siteY) < minDistanceSqr)
                     {
                         return true;
                     }
@@ -2539,7 +2540,8 @@ namespace Barotrauma
                     levelResources.Add((itemPrefab, commonnessInfo));
                 }
                 else if (itemPrefab.LevelQuantity.TryGetValue(GenerationParams.Identifier, out var fixedQuantityResourceInfo) ||
-                         itemPrefab.LevelQuantity.TryGetValue(Identifier.Empty, out fixedQuantityResourceInfo))
+                        itemPrefab.LevelQuantity.TryGetValue(LevelData.Biome.Identifier, out fixedQuantityResourceInfo) ||
+                        itemPrefab.LevelQuantity.TryGetValue(Identifier.Empty, out fixedQuantityResourceInfo))
                 {
                     fixedResources.Add((itemPrefab, fixedQuantityResourceInfo));
                 }
@@ -3939,34 +3941,14 @@ namespace Barotrauma
                 }
 
                 SubmarineInfo outpostInfo;
-                Submarine outpost;
+                Submarine outpost = null;
                 if (i == 0 && preSelectedStartOutpost == null || i == 1 && preSelectedEndOutpost == null)
                 {
-                    if (OutpostGenerationParams.OutpostParams.Any() || LevelData.ForceOutpostGenerationParams != null)
+                    if (LevelData.OutpostGenerationParamsExist)
                     {
                         Location location = i == 0 ? StartLocation : EndLocation;
-
-                        OutpostGenerationParams outpostGenerationParams = null;
-                        if (LevelData.ForceOutpostGenerationParams != null)
-                        {
-                            outpostGenerationParams = LevelData.ForceOutpostGenerationParams;
-                        }
-                        else
-                        {
-                            var suitableParams = OutpostGenerationParams.OutpostParams.Where(p => location == null || p.AllowedLocationTypes.Contains(location.Type.Identifier));
-                            if (!suitableParams.Any())
-                            {
-                                suitableParams = OutpostGenerationParams.OutpostParams.Where(p => location == null || !p.AllowedLocationTypes.Any());
-                                if (!suitableParams.Any())
-                                {
-                                    DebugConsole.ThrowError($"No suitable outpost generation parameters found for the location type \"{location.Type.Identifier}\". Selecting random parameters.");
-                                    suitableParams = OutpostGenerationParams.OutpostParams;
-                                }
-                            }
-
-                            outpostGenerationParams = suitableParams.GetRandom(Rand.RandSync.ServerAndClient);
-                        }
-
+                        OutpostGenerationParams outpostGenerationParams = LevelData.ForceOutpostGenerationParams ??
+                            LevelData.GetSuitableOutpostGenerationParams(location).GetRandom(Rand.RandSync.ServerAndClient);
                         LocationType locationType = location?.Type;
                         if (locationType == null)
                         {
@@ -4324,6 +4306,10 @@ namespace Barotrauma
                             sp = corpsePoints.FirstOrDefault(sp => sp.AssignedJob == null) ?? pathPoints.FirstOrDefault(sp => sp.AssignedJob == null);
                             // Deduce the job from the selected prefab
                             selectedPrefab = GetCorpsePrefab(usedJobs);
+                            if (selectedPrefab != null)
+                            {
+                                job = selectedPrefab.GetJobPrefab();
+                            }
                         }
                     }
                     if (selectedPrefab == null) { continue; }

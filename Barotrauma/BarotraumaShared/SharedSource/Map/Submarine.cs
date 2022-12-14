@@ -1114,7 +1114,8 @@ namespace Barotrauma
             {
                 if (item.Submarine != this) { continue; }
                 var pump = item.GetComponent<Pump>();
-                if (pump == null || !item.HasTag("ballast") || item.CurrentHull == null) { continue; }
+                if (pump == null || item.CurrentHull == null) { continue; }
+                if (!item.HasTag("ballast") && !item.CurrentHull.RoomName.Contains("ballast", StringComparison.OrdinalIgnoreCase)) { continue; }
                 pump.FlowPercentage = 0.0f;
                 ballastHulls.Add(item.CurrentHull);
             }

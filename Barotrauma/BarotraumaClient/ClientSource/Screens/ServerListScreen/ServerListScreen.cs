@@ -1352,6 +1352,10 @@ namespace Barotrauma
 
         private void AddToServerList(ServerInfo serverInfo, bool skipPing = false)
         {
+            if (serverInfo.PlayerCount > serverInfo.MaxPlayers) { return; }
+            if (serverInfo.PlayerCount < 0) { return; }
+            if (serverInfo.MaxPlayers <= 0) { return; }
+
             RemoveMsgFromServerList(MsgUserData.RefreshingServerList);
             RemoveMsgFromServerList(MsgUserData.NoServers);
             var serverFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.06f), serverList.Content.RectTransform) { MinSize = new Point(0, 35) },

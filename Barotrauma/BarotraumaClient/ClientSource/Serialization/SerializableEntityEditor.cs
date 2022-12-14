@@ -1332,16 +1332,18 @@ namespace Barotrauma
             }
         }
         
-        private void TrySendNetworkUpdate(ISerializableEntity entity, SerializableProperty property)
+        private static void TrySendNetworkUpdate(ISerializableEntity entity, SerializableProperty property)
         {
-            if (entity is ItemComponent e)
+            if (GameMain.Client != null)
             {
-                entity = e.Item;
-            }
-
-            if (GameMain.Client != null && entity is Item item)
-            {
-                GameMain.Client.CreateEntityEvent(item, new Item.ChangePropertyEventData(property));
+                if (entity is Item item)
+                {
+                    GameMain.Client.CreateEntityEvent(item, new Item.ChangePropertyEventData(property, item));
+                }
+                else if (entity is ItemComponent ic)
+                {
+                    GameMain.Client.CreateEntityEvent(ic.Item, new Item.ChangePropertyEventData(property, ic));
+                }
             }
         }
 
