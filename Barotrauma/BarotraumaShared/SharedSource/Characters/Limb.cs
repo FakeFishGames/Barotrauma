@@ -757,6 +757,10 @@ namespace Barotrauma
                 }
                 if (!foundMatchingModifier && random > affliction.Probability) { continue; }
                 float finalDamageModifier = damageMultiplier;
+                if (affliction.Prefab.AfflictionType == "emp" && character.EmpVulnerability > 0)
+                {
+                    finalDamageModifier *= character.EmpVulnerability;
+                }
                 foreach (DamageModifier damageModifier in tempModifiers)
                 {
                     float damageModifierValue = damageModifier.DamageMultiplier;
@@ -766,9 +770,13 @@ namespace Barotrauma
                     }
                     finalDamageModifier *= damageModifierValue;
                 }
+                if (affliction.MultiplyByMaxVitality)
+                {
+                    finalDamageModifier *= character.MaxVitality / 100f;
+                }
                 if (!MathUtils.NearlyEqual(finalDamageModifier, 1.0f))
                 {
-                    newAffliction = affliction.CreateMultiplied(finalDamageModifier, affliction.Probability);
+                    newAffliction = affliction.CreateMultiplied(finalDamageModifier, affliction);
                 }
                 else
                 {
@@ -778,6 +786,7 @@ namespace Barotrauma
                 {
                     var abilityAfflictionCharacter = new AbilityAfflictionCharacter(newAffliction, character);
                     attacker.CheckTalents(AbilityEffectType.OnAddDamageAffliction, abilityAfflictionCharacter);
+                    newAffliction = abilityAfflictionCharacter.Affliction;
                 }
                 if (applyAffliction)
                 {
@@ -896,6 +905,12 @@ namespace Barotrauma
             {
                 reEnableTimer = duration;
             }
+#if CLIENT
+            if (Hidden && LightSource != null)
+            {
+                LightSource.Enabled = false;
+            }
+#endif
         }
 
         public void ReEnable()
@@ -1189,12 +1204,30 @@ namespace Barotrauma
                     statusEffect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                 {
                     targets.Clear();
-                    targets.AddRange(statusEffect.GetNearbyTargets(WorldPosition, targets));
+                    statusEffect.AddNearbyTargets(WorldPosition, targets);
                     statusEffect.Apply(actionType, deltaTime, character, targets);
                 }
                 else
                 {
-                    if (statusEffect.HasTargetType(StatusEffect.TargetType.Character))
+
+                    if (statusEffect.HasTargetType(StatusEffect.TargetType.Contained) && character.Inventory is { } inventory)
+                    {
+                        foreach (Item item in inventory.AllItems)
+                        {
+                            if (statusEffect.TargetIdentifiers != null &&
+                                !statusEffect.TargetIdentifiers.Contains(item.Prefab.Identifier) &&
+                                statusEffect.TargetIdentifiers.None(id => item.HasTag(id)))
+                            {
+                                continue;
+                            }
+                            if (statusEffect.TargetSlot > -1)
+                            {
+                                if (inventory.FindIndex(item) != statusEffect.TargetSlot) { continue; }
+                            }
+                            targets.Add(item);
+                        }
+                    }
+                    else if (statusEffect.HasTargetType(StatusEffect.TargetType.Character))
                     {
                         statusEffect.Apply(actionType, deltaTime, character, character, WorldPosition);
                     }

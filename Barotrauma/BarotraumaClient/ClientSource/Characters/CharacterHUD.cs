@@ -1,6 +1,5 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
-using Barotrauma.Tutorials;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -10,7 +9,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class CharacterHUD
+    partial class CharacterHUD
     {        
         const float BossHealthBarDuration = 120.0f;
 
@@ -100,8 +99,9 @@ namespace Barotrauma
             }
         }
 
-        public static bool ShouldRecreateHudTexts { get; set; } = true;
-        private static bool heldDownShiftWhenGotHudTexts;
+        public static bool RecreateHudTexts { get; set; } = true;
+        private static bool lastHudTextsContextual;
+        private static float timeHealthWindowClosed;
 
         public static bool IsCampaignInterfaceOpen =>
             GameMain.GameSession?.Campaign != null && 
@@ -114,7 +114,7 @@ namespace Barotrauma
             return 
                 character?.Inventory != null && 
                 !character.Removed && !character.IsKnockedDown &&
-                (controller?.User != character || !controller.HideHUD) &&
+                (controller?.User != character || !controller.HideHUD || Screen.Selected.IsEditor) &&
                 !IsCampaignInterfaceOpen &&
                 !ConversationAction.FadeScreenToBlack;
         }
@@ -175,7 +175,8 @@ namespace Barotrauma
                 if (character.Info != null && !character.ShouldLockHud() && character.SelectedCharacter == null && Screen.Selected != GameMain.SubEditorScreen)
                 {
                     bool mouseOnPortrait = MouseOnCharacterPortrait() && GUI.MouseOn == null;
-                    if (mouseOnPortrait && PlayerInput.PrimaryMouseButtonClicked() && Inventory.DraggingItems.None())
+                    bool healthWindowOpen = CharacterHealth.OpenHealthWindow != null || timeHealthWindowClosed < 0.2f;
+                    if (mouseOnPortrait && !healthWindowOpen && PlayerInput.PrimaryMouseButtonClicked() && Inventory.DraggingItems.None())
                     {
                         CharacterHealth.OpenHealthWindow = character.CharacterHealth;
                     }
@@ -217,7 +218,7 @@ namespace Barotrauma
                     if (focusedItemOverlayTimer <= 0.0f)
                     {
                         focusedItem = null;
-                        ShouldRecreateHudTexts = true;
+                        RecreateHudTexts = true;
                     }
                 }
             }
@@ -242,6 +243,15 @@ namespace Barotrauma
                         brokenItems.Add(item); 
                     }                   
                 }
+            }
+
+            if (CharacterHealth.OpenHealthWindow != null)
+            {
+                timeHealthWindowClosed = 0.0f;
+            }
+            else
+            {
+                timeHealthWindowClosed += deltaTime;
             }
         }
         
@@ -307,7 +317,7 @@ namespace Barotrauma
             {
                 if (!brokenItem.IsInteractable(character)) { continue; }
                 float alpha = GetDistanceBasedIconAlpha(brokenItem);
-                if (alpha <= 0.0f) continue;
+                if (alpha <= 0.0f) { continue; }
                 GUI.DrawIndicator(spriteBatch, brokenItem.DrawPosition, cam, 100.0f, GUIStyle.BrokenIcon.Value.Sprite, 
                     Color.Lerp(GUIStyle.Red, GUIStyle.Orange * 0.5f, brokenItem.Condition / brokenItem.MaxCondition) * alpha);
             }
@@ -330,7 +340,7 @@ namespace Barotrauma
                     if (focusedItem != character.FocusedItem)
                     {
                         focusedItemOverlayTimer = Math.Min(1.0f, focusedItemOverlayTimer);
-                        ShouldRecreateHudTexts = true;
+                        RecreateHudTexts = true;
                     }
                     focusedItem = character.FocusedItem;
                 }
@@ -354,14 +364,14 @@ namespace Barotrauma
 
                     if (!GUI.DisableItemHighlights && !Inventory.DraggingItemToWorld)
                     {
-                        bool shiftDown = PlayerInput.IsShiftDown();
-                        if (ShouldRecreateHudTexts || heldDownShiftWhenGotHudTexts != shiftDown)
+                        bool hudTextsContextual = PlayerInput.IsShiftDown();
+                        if (RecreateHudTexts || lastHudTextsContextual != hudTextsContextual)
                         {
-                            ShouldRecreateHudTexts = true;
-                            heldDownShiftWhenGotHudTexts = shiftDown;
+                            RecreateHudTexts = true;
+                            lastHudTextsContextual = hudTextsContextual;
                         }
-                        var hudTexts = focusedItem.GetHUDTexts(character, ShouldRecreateHudTexts);
-                        ShouldRecreateHudTexts = false;
+                        var hudTexts = focusedItem.GetHUDTexts(character, RecreateHudTexts);
+                        RecreateHudTexts = false;
 
                         int dir = Math.Sign(focusedItem.WorldPosition.X - character.WorldPosition.X);
 
@@ -492,7 +502,17 @@ namespace Barotrauma
                 {
                     var item = character.Inventory.GetItemAt(i);
                     if (item == null || character.Inventory.SlotTypes[i] == InvSlotType.Any) { continue; }
-
+                    //if the item is also equipped in another slot we already went through, don't draw the hud again
+                    bool duplicateFound = false;
+                    for (int j = 0; j < i; j++)
+                    {
+                        if (character.Inventory.SlotTypes[j] != InvSlotType.Any && character.Inventory.GetItemAt(j) == item)
+                        {
+                            duplicateFound = true;
+                            break;
+                        }
+                    }
+                    if (duplicateFound) { continue; }
                     foreach (ItemComponent ic in item.Components)
                     {
                         if (ic.DrawHudWhenEquipped) { ic.DrawHUD(spriteBatch, character); }
@@ -548,7 +568,7 @@ namespace Barotrauma
                     if (CharacterHealth.OpenHealthWindow == character.SelectedCharacter.CharacterHealth)
                     {
                         character.SelectedCharacter.CharacterHealth.Alignment = Alignment.Left;
-                        character.SelectedCharacter.CharacterHealth.DrawStatusHUD(spriteBatch);
+                        //character.SelectedCharacter.CharacterHealth.DrawStatusHUD(spriteBatch);
                     }
                 }
                 else if (character.Inventory != null)
@@ -644,6 +664,12 @@ namespace Barotrauma
         {
             if (character == null || character.IsDead || character.Removed) { return; }
 
+            var healthBarMode = GameMain.NetworkMember?.ServerSettings.ShowEnemyHealthBars ?? GameSettings.CurrentConfig.ShowEnemyHealthBars;
+            if (healthBarMode == EnemyHealthBarMode.HideAll)
+            {
+                return;
+            }
+
             var existingBar = bossHealthBars.Find(b => b.Character == character);
             if (existingBar != null)
             {
@@ -669,6 +695,8 @@ namespace Barotrauma
 
         public static void UpdateBossHealthBars(float deltaTime)
         {
+            var healthBarMode = GameMain.NetworkMember?.ServerSettings.ShowEnemyHealthBars ?? GameSettings.CurrentConfig.ShowEnemyHealthBars;
+
             for (int i = 0; i < bossHealthBars.Count; i++)
             {
                 var bossHealthBar = bossHealthBars[i];
@@ -710,7 +738,7 @@ namespace Barotrauma
             for (int i = bossHealthBars.Count - 1; i >= 0 ; i--)
             {
                 var bossHealthBar = bossHealthBars[i];
-                if (bossHealthBar.FadeTimer <= 0)
+                if (bossHealthBar.FadeTimer <= 0 || healthBarMode == EnemyHealthBarMode.HideAll)
                 {
                     bossHealthBar.SideContainer.Parent?.RemoveChild(bossHealthBar.SideContainer);
                     bossHealthBar.TopContainer.Parent?.RemoveChild(bossHealthBar.TopContainer);
@@ -761,6 +789,26 @@ namespace Barotrauma
 
             Vector2 drawPos = objectiveEntity.Entity.WorldPosition;// + Vector2.UnitX * objectiveEntity.Sprite.size.X * 1.5f;
             GUI.DrawIndicator(spriteBatch, drawPos, cam, 100.0f, objectiveEntity.Sprite, objectiveEntity.Color * iconAlpha);
+        }
+
+        static partial void RecreateHudTextsIfControllingProjSpecific(Character character)
+        {
+            if (character == Character.Controlled)
+            {
+                RecreateHudTexts = true;
+            }
+        }
+
+        static partial void RecreateHudTextsIfFocusedProjSpecific(params Item[] items)
+        {
+            foreach (var item in items)
+            {
+                if (item == Character.Controlled?.FocusedItem)
+                {
+                    RecreateHudTexts = true;
+                    break;
+                }
+            }
         }
     }
 }

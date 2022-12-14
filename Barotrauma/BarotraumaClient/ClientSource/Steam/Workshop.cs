@@ -177,7 +177,13 @@ namespace Barotrauma.Steam
                 await CopyDirectory(contentPackage.Dir, contentPackage.Name, Path.GetDirectoryName(contentPackage.Path)!, PublishStagingDir, ShouldCorrectPaths.No);
 
                 var stagingFileListPath = Path.Combine(PublishStagingDir, ContentPackage.FileListFileName);
-                ContentPackage tempPkg = ContentPackage.TryLoad(stagingFileListPath) ?? throw new Exception("Staging copy could not be loaded");
+
+                var result = ContentPackage.TryLoad(stagingFileListPath);
+                if (!result.TryUnwrapSuccess(out var tempPkg))
+                {
+                    throw new Exception("Staging copy could not be loaded",
+                        result.TryUnwrapFailure(out var exception) ? exception : null);
+                }
                 
                 //Load filelist.xml and write the hash into it so anyone downloading this mod knows what it should be
                 ModProject modProject = new ModProject(tempPkg)

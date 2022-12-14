@@ -636,11 +636,14 @@ namespace Barotrauma.Items.Components
                     float addedDetachTime = deltaTime * (1f + user.GetStatValue(StatTypes.RepairToolDeattachTimeMultiplier)) * (1f + item.GetQualityModifier(Quality.StatType.RepairToolDeattachTimeMultiplier));
                     levelResource.DeattachTimer += addedDetachTime;
 #if CLIENT
-                    Character.Controlled?.UpdateHUDProgressBar(
-                        this,
-                        targetItem.WorldPosition,
-                        levelResource.DeattachTimer / levelResource.DeattachDuration,
-                        GUIStyle.Red, GUIStyle.Green, "progressbar.deattaching");
+                    if (targetItem.Prefab.ShowHealthBar)
+                    {
+                        Character.Controlled?.UpdateHUDProgressBar(
+                            this,
+                            targetItem.WorldPosition,
+                            levelResource.DeattachTimer / levelResource.DeattachDuration,
+                            GUIStyle.Red, GUIStyle.Green, "progressbar.deattaching");
+                    }
 #endif
                     FixItemProjSpecific(user, deltaTime, targetItem, showProgressBar: false);
                     return true;

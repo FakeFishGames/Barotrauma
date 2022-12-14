@@ -61,6 +61,12 @@ namespace Barotrauma.Steam
                     if (set.Count == prevSize) { break; }
                     prevSize = set.Count;
                 }
+                
+                // Remove items that do not have the correct consumer app ID,
+                // which can happen on items that are not visible to the currently
+                // logged in player (i.e. private & friends-only items)
+                set.RemoveWhere(it => it.ConsumerApp != AppID);
+                
                 return set;
             }
 
@@ -276,6 +282,62 @@ namespace Barotrauma.Steam
                     }
                 }
             }
+
+            public static ISet<ulong> GetInstalledItems()
+                => ContentPackageManager.WorkshopPackages
+                    .Select(p => p.UgcId)
+                    .NotNone()
+                    .OfType<SteamWorkshopId>()
+                    .Select(id => id.Value)
+                    .ToHashSet();
+            
+            public static async Task<ISet<Steamworks.Ugc.Item>> GetPublishedAndSubscribedItems()
+            {
+                var allItems = (await GetAllSubscribedItems()).ToHashSet();
+                allItems.UnionWith(await GetPublishedItems());
+
+                // This is a hack that eliminates subscribed mods that have been
+                // made private. Players cannot download updates for these, so
+                // we treat them as if they were deleted.
+                allItems = (await Task.WhenAll(allItems.Select(it => GetItem(it.Id.Value))))
+                    .NotNull()
+                    .Where(it => it.ConsumerApp == AppID)
+                    .ToHashSet();
+
+                return allItems;
+            }
+            
+            public static void DeleteUnsubscribedMods(Action<ContentPackage[]>? callback = null)
+            {
+#if SERVER
+                // Servers do not run this because they can't subscribe to anything
+                return;
+#endif
+                //If Steamworks isn't initialized then we can't know what the user has unsubscribed from
+                if (!IsInitialized) { return; }
+                if (!Steamworks.SteamClient.IsValid) { return; }
+                if (!Steamworks.SteamClient.IsLoggedOn) { return; }
+                
+                TaskPool.Add("DeleteUnsubscribedMods", GetPublishedAndSubscribedItems().WaitForLoadingScreen(), t =>
+                {
+                    if (!t.TryGetResult(out ISet<Steamworks.Ugc.Item> items)) { return; }
+                    var ids = items.Select(it => it.Id.Value).ToHashSet();
+                    var toUninstall = ContentPackageManager.WorkshopPackages
+                        .Where(pkg
+                            => !pkg.UgcId.TryUnwrap(out SteamWorkshopId workshopId)
+                               || !ids.Contains(workshopId.Value))
+                        .ToArray();
+                    if (toUninstall.Any())
+                    {
+                        foreach (var pkg in toUninstall)
+                        {
+                            Directory.TryDelete(pkg.Dir, recursive: true);
+                        }
+                        ContentPackageManager.UpdateContentPackageList();
+                    }
+                    callback?.Invoke(toUninstall);
+                });
+            }
             
             public static bool IsInstallingToPath(string path)
                 => File.Exists(Path.Combine(Path.GetDirectoryName(path)!, ContentPackageManager.CopyIndicatorFileName));
@@ -310,7 +372,7 @@ namespace Barotrauma.Steam
                     + "unexpected deletion of your hard work.\n"
                     + "Instead, modify a copy of your mod in LocalMods.\n";
 
-                string workshopModDirReadmeLocation = Path.Combine(SaveUtil.SaveFolder, "WorkshopMods", "README.txt");
+                string workshopModDirReadmeLocation = Path.Combine(SaveUtil.DefaultSaveFolder, "WorkshopMods", "README.txt");
                 if (!File.Exists(workshopModDirReadmeLocation))
                 {
                     Directory.CreateDirectory(Path.GetDirectoryName(workshopModDirReadmeLocation)!);
@@ -457,7 +519,7 @@ namespace Barotrauma.Steam
                     }
                     catch (Exception e)
                     {
-                        DebugConsole.ThrowError(
+                        DebugConsole.AddWarning(
                             $"An exception was thrown when attempting to copy \"{from}\" to \"{to}\": {e.Message}\n{e.StackTrace}");
                     }
                 }

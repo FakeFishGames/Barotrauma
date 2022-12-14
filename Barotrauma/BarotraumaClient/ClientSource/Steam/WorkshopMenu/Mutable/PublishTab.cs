@@ -294,10 +294,11 @@ namespace Barotrauma.Steam
                     {
                         //Reload the package to force hash recalculation
                         string packageName = localPackage.Name;
-                        localPackage = ContentPackageManager.ReloadContentPackage(localPackage);
-                        if (localPackage is null)
+                        var result = ContentPackageManager.ReloadContentPackage(localPackage);
+                        if (!result.TryUnwrapSuccess(out localPackage))
                         {
-                            throw new Exception($"\"{packageName}\" was removed upon reload");
+                            throw new Exception($"\"{packageName}\" was removed upon reload",
+                                result.TryUnwrapFailure(out var exception) ? exception : null);
                         }
 
                         //Set up the Ugc.Editor object that we'll need to publish

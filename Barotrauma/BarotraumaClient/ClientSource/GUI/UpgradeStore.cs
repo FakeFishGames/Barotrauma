@@ -278,10 +278,13 @@ namespace Barotrauma
              * |    upgrades    |    maintenance    | <- 1/3rd                  empty space                        |
              * |---------------------------------------------------------------------------------------------------|
              */
-            GUILayoutGroup leftLayout = new GUILayoutGroup(rectT(0.5f, 1, topHeaderLayout)) { RelativeSpacing = 0.05f };
+            GUILayoutGroup leftLayout = new GUILayoutGroup(rectT(0.4f, 1, topHeaderLayout)) { RelativeSpacing = 0.05f };
                 GUILayoutGroup locationLayout = new GUILayoutGroup(rectT(1, 0.5f, leftLayout), isHorizontal: true);
                     GUIImage submarineIcon = new GUIImage(rectT(new Point(locationLayout.Rect.Height, locationLayout.Rect.Height), locationLayout), style: "SubmarineIcon", scaleToFit: true);
-                    new GUITextBlock(rectT(1.0f - submarineIcon.RectTransform.RelativeSize.X, 1, locationLayout), TextManager.Get("UpgradeUI.Title"), font: GUIStyle.LargeFont);
+                    var header = new GUITextBlock(rectT(1.0f - submarineIcon.RectTransform.RelativeSize.X, 1, locationLayout), TextManager.Get("UpgradeUI.Title"), font: GUIStyle.LargeFont);
+                    header.RectTransform.MaxSize = new Point((int)(header.TextSize.X + header.Padding.X + header.Padding.Z), int.MaxValue);
+                    new GUITextBlock(rectT(1.0f, 1, locationLayout), TextManager.Get("UpgradeUI.AllSubmarinesInfo"), font: GUIStyle.SmallFont, wrap: true);                
+            
                 categoryButtonLayout = new GUILayoutGroup(rectT(0.4f, 0.3f, leftLayout), isHorizontal: true) { Stretch = true };
                     GUIButton upgradeButton = new GUIButton(rectT(1, 1f, categoryButtonLayout), TextManager.Get("UICategory.Upgrades"), style: "GUITabButton") { UserData = UpgradeTab.Upgrade, Selected = selectedUpgradeTab == UpgradeTab.Upgrade };
                     GUIButton repairButton = new GUIButton(rectT(1, 1f, categoryButtonLayout), TextManager.Get("UICategory.Maintenance"), style: "GUITabButton") { UserData = UpgradeTab.Repairs, Selected = selectedUpgradeTab == UpgradeTab.Repairs };
@@ -433,8 +436,8 @@ namespace Barotrauma
 
             Location location = Campaign.Map.CurrentLocation;
 
-            int hullRepairCost = Campaign.GetHullRepairCost();
-            int itemRepairCost = Campaign.GetItemRepairCost();
+            int hullRepairCost = CampaignMode.GetHullRepairCost();
+            int itemRepairCost = CampaignMode.GetItemRepairCost();
             int shuttleRetrieveCost = CampaignMode.ShuttleReplaceCost;
             if (location != null)
             {

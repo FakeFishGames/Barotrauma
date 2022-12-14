@@ -7,18 +7,21 @@
   </CampaignSettingDefinitions>
   <CampaignSettings
     presetname="Easy"
+    TutorialEnabled="true"
     RadiationEnabled="false"
     StartingBalanceAmount="High"
     StartItemSet="easy"
     Difficulty="Easy"/>
   <CampaignSettings
     presetname="Normal"
+    TutorialEnabled="true"
     RadiationEnabled="false"
     StartingBalanceAmount="Medium"
     StartItemSet="normal"
     Difficulty="Medium"/>
   <CampaignSettings
     presetname="Hard"
+    TutorialEnabled="false"
     RadiationEnabled="true"
     StartingBalanceAmount="Low"
     StartItemSet="hard"

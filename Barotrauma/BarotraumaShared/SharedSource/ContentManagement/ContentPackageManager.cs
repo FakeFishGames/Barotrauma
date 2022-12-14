@@ -47,18 +47,19 @@ namespace Barotrauma
             {
                 var oldCore = Core;
                 if (newCore == oldCore) { yield break; }
-                Core?.UnloadPackage();
+                if (newCore.FatalLoadErrors.Any()) { yield break; }
+                Core?.UnloadContent();
                 Core = newCore;
-                foreach (var p in newCore.LoadPackageEnumerable()) { yield return p; }
+                foreach (var p in newCore.LoadContentEnumerable()) { yield return p; }
                 SortContent();
-                yield return new LoadProgress(1.0f);
+                yield return LoadProgress.Progress(1.0f);
             }
 
             public static void ReloadCore()
             {
                 if (Core == null) { return; }
-                Core.UnloadPackage();
-                Core.LoadPackage();
+                Core.UnloadContent();
+                Core.LoadContent();
                 SortContent();
             }
 
@@ -79,10 +80,14 @@ namespace Barotrauma
                 if (ReferenceEquals(inNewRegular, regular)) { yield break; }
                 if (inNewRegular.SequenceEqual(regular)) { yield break; }
                 ThrowIfDuplicates(inNewRegular);
-                var newRegular = inNewRegular.ToList();
+                var newRegular = inNewRegular
+                    // Refuse to enable packages with load errors
+                    // so people are forced away from broken mods
+                    .Where(r => !r.FatalLoadErrors.Any())
+                    .ToList();
                 IEnumerable<RegularPackage> toUnload = regular.Where(r => !newRegular.Contains(r));
                 RegularPackage[] toLoad = newRegular.Where(r => !regular.Contains(r)).ToArray();
-                toUnload.ForEach(r => r.UnloadPackage());
+                toUnload.ForEach(r => r.UnloadContent());
 
                 Range<float> loadingRange = new Range<float>(0.0f, 1.0f);
                 
@@ -90,9 +95,9 @@ namespace Barotrauma
                 {
                     var package = toLoad[i];
                     loadingRange = new Range<float>(i / (float)toLoad.Length, (i + 1) / (float)toLoad.Length);
-                    foreach (var progress in package.LoadPackageEnumerable())
+                    foreach (var progress in package.LoadContentEnumerable())
                     {
-                        if (progress.Exception != null)
+                        if (progress.Result.IsFailure)
                         {
                             //If an exception was thrown while loading this package, refuse to add it to the list of enabled packages
                             newRegular.Remove(package);
@@ -103,7 +108,7 @@ namespace Barotrauma
                 }
                 regular.Clear(); regular.AddRange(newRegular);
                 SortContent();
-                yield return new LoadProgress(1.0f);
+                yield return LoadProgress.Progress(1.0f);
             }
 
             public static void ThrowIfDuplicates(IEnumerable<ContentPackage> pkgs)
@@ -231,10 +236,12 @@ namespace Barotrauma
         public sealed partial class PackageSource : ICollection<ContentPackage>
         {
             private readonly Predicate<string>? skipPredicate;
+            private readonly Action<string, Exception>? onLoadFail;
             
-            public PackageSource(string dir, Predicate<string>? skipPredicate)
+            public PackageSource(string dir, Predicate<string>? skipPredicate, Action<string, Exception>? onLoadFail)
             {
                 this.skipPredicate = skipPredicate;
+                this.onLoadFail = onLoadFail;
                 directory = dir;
                 Directory.CreateDirectory(directory);
             }
@@ -278,25 +285,30 @@ namespace Barotrauma
                 {
                     var fileListPath = Path.Combine(subDir, ContentPackage.FileListFileName).CleanUpPathCrossPlatform();
                     if (this.Any(p => p.Path.Equals(fileListPath, StringComparison.OrdinalIgnoreCase))) { continue; }
-                    if (File.Exists(fileListPath))
-                    {
-                        if (skipPredicate?.Invoke(fileListPath) is true) { continue; }
-                        
-                        ContentPackage? newPackage = ContentPackage.TryLoad(fileListPath);
-                        if (newPackage is CorePackage corePackage)
-                        {
-                            corePackages.Add(corePackage);
-                        }
-                        else if (newPackage is RegularPackage regularPackage)
-                        {
-                            regularPackages.Add(regularPackage);
-                        }
 
-                        if (!(newPackage is null))
-                        {
-                            Debug.WriteLine($"Loaded \"{newPackage.Name}\"");
-                        }
+                    if (!File.Exists(fileListPath)) { continue; }
+                    if (skipPredicate?.Invoke(fileListPath) is true) { continue; }
+
+                    var result = ContentPackage.TryLoad(fileListPath);
+                    if (!result.TryUnwrapSuccess(out var newPackage))
+                    {
+                        onLoadFail?.Invoke(
+                            fileListPath,
+                            result.TryUnwrapFailure(out var exception) ? exception : throw new Exception("unreachable"));
+                        continue;
                     }
+                    
+                    switch (newPackage)
+                    {
+                        case CorePackage corePackage:
+                            corePackages.Add(corePackage);
+                            break;
+                        case RegularPackage regularPackage:
+                            regularPackages.Add(regularPackage);
+                            break;
+                    }
+
+                    Debug.WriteLine($"Loaded \"{newPackage.Name}\"");
                 }
             }
 
@@ -348,8 +360,20 @@ namespace Barotrauma
             public bool IsReadOnly => true;
         }
 
-        public static readonly PackageSource LocalPackages = new PackageSource(ContentPackage.LocalModsDir, skipPredicate: null);
-        public static readonly PackageSource WorkshopPackages = new PackageSource(ContentPackage.WorkshopModsDir, skipPredicate: SteamManager.Workshop.IsInstallingToPath);
+        public static readonly PackageSource LocalPackages
+            = new PackageSource(
+                ContentPackage.LocalModsDir,
+                skipPredicate: null,
+                onLoadFail: null);
+        public static readonly PackageSource WorkshopPackages = new PackageSource(
+            ContentPackage.WorkshopModsDir,
+            skipPredicate: SteamManager.Workshop.IsInstallingToPath,
+            onLoadFail: (fileListPath, exception) =>
+            {
+                // Delete Workshop mods that fail to load to
+                // force a reinstall on next launch if necessary
+                Directory.TryDelete(Path.GetDirectoryName(fileListPath)!);
+            });
 
         public static CorePackage? VanillaCorePackage { get; private set; } = null;
         
@@ -373,63 +397,77 @@ namespace Barotrauma
             EnabledPackages.DisableRemovedMods();
         }
 
-        public static ContentPackage? ReloadContentPackage(ContentPackage p)
+        public static Result<ContentPackage, Exception> ReloadContentPackage(ContentPackage p)
         {
-            ContentPackage? newPackage = ContentPackage.TryLoad(p.Path);
-            if (newPackage is CorePackage core)
-            {
-                if (EnabledPackages.Core == p) { EnabledPackages.SetCore(core); }
-            }
-            else if (newPackage is RegularPackage regular)
-            {
-                int index = EnabledPackages.Regular.IndexOf(p);
-                if (index >= 0)
-                {
-                    var newRegular = EnabledPackages.Regular.ToArray();
-                    newRegular[index] = regular;
-                    EnabledPackages.SetRegular(newRegular);
-                }
-            }
+            var result = ContentPackage.TryLoad(p.Path);
 
-            if (newPackage != null)
+            if (result.TryUnwrapSuccess(out var newPackage))
             {
+                switch (newPackage)
+                {
+                    case CorePackage core:
+                    {
+                        if (EnabledPackages.Core == p) { EnabledPackages.SetCore(core); }
+
+                        break;
+                    }
+                    case RegularPackage regular:
+                    {
+                        int index = EnabledPackages.Regular.IndexOf(p);
+                        if (index >= 0)
+                        {
+                            var newRegular = EnabledPackages.Regular.ToArray();
+                            newRegular[index] = regular;
+                            EnabledPackages.SetRegular(newRegular);
+                        }
+
+                        break;
+                    }
+                }
+
                 LocalPackages.SwapPackage(p, newPackage);
                 WorkshopPackages.SwapPackage(p, newPackage);
             }
             EnabledPackages.DisableRemovedMods();
-            return newPackage;
+            return result;
         }
 
-        public readonly struct LoadProgress
+        public readonly record struct LoadProgress(Result<float, LoadProgress.Error> Result)
         {
-            public readonly float Value;
-            public readonly Exception? Exception;
-
-            public LoadProgress(float value)
+            public readonly record struct Error(
+                Error.Reason ErrorReason,
+                Option<Exception> Exception)
             {
-                Value = value;
-                Exception = null;
-            }
+                public enum Reason { Exception, ConsoleErrorsThrown }
 
-            private LoadProgress(Exception exception)
-            {
-                Value = -1f;
-                Exception = exception;
+                public Error(Reason reason) : this(reason, Option.None) { }
+                public Error(Exception exception) : this(Reason.Exception, Option.Some(exception)) { }
             }
 
             public static LoadProgress Failure(Exception exception)
-                => new LoadProgress(exception);
+                => new LoadProgress(
+                    Result<float, Error>.Failure(new Error(exception)));
+
+            public static LoadProgress Failure(Error.Reason reason)
+                => new LoadProgress(
+                    Result<float, Error>.Failure(new Error(reason)));
+
+            public static LoadProgress Progress(float value)
+                => new LoadProgress(
+                    Result<float, Error>.Success(value));
 
             public LoadProgress Transform(Range<float> range)
-                => Exception != null
-                    ? this
-                    : new LoadProgress(MathHelper.Lerp(range.Start, range.End, Value));
+                => Result.TryUnwrapSuccess(out var value)
+                    ? new LoadProgress(
+                        Result<float, Error>.Success(
+                            MathHelper.Lerp(range.Start, range.End, value)))
+                    : this;
         }
 
         public static void LoadVanillaFileList()
         {
             VanillaCorePackage = new CorePackage(XDocument.Load(VanillaFileList), VanillaFileList);
-            foreach (ContentFile.LoadError error in VanillaCorePackage.Errors)
+            foreach (ContentPackage.LoadError error in VanillaCorePackage.FatalLoadErrors)
             {
                 DebugConsole.ThrowError(error.ToString());
             }
@@ -443,6 +481,8 @@ namespace Barotrauma
             UpdateContentPackageList();
 
             if (VanillaCorePackage is null) { LoadVanillaFileList(); }
+
+            SteamManager.Workshop.DeleteUnsubscribedMods();
 
             CorePackage enabledCorePackage = VanillaCorePackage!;
             List<RegularPackage> enabledRegularPackages = new List<RegularPackage>();
@@ -512,7 +552,7 @@ namespace Barotrauma
                 yield return p.Transform(loadingRange);
             }
 
-            yield return new LoadProgress(1.0f);
+            yield return LoadProgress.Progress(1.0f);
         }
 
         public static void LogEnabledRegularPackageErrors()

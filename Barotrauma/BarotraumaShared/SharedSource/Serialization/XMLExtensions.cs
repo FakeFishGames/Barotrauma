@@ -226,11 +226,18 @@ namespace Barotrauma
             return splitValue;
         }
 
+
         public static Identifier[] GetAttributeIdentifierArray(this XElement element, string name, Identifier[] defaultValue, bool trim = true)
         {
             return element.GetAttributeStringArray(name, null, trim: trim, convertToLowerInvariant: false)
                     ?.ToIdentifiers()
                 ?? defaultValue;
+        }
+
+        public static ImmutableHashSet<Identifier> GetAttributeIdentifierImmutableHashSet(this XElement element, string key, ImmutableHashSet<Identifier> defaultValue, bool trim = true)
+        {
+            return element.GetAttributeIdentifierArray(key, null, trim)?.ToImmutableHashSet()
+                   ?? defaultValue;
         }
 
         public static float GetAttributeFloat(this XElement element, float defaultValue, params string[] matchingAttributeName)

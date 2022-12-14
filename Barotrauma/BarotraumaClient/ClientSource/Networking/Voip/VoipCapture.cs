@@ -17,9 +17,7 @@ namespace Barotrauma.Networking
             get;
             private set;
         }
-
-        public static IReadOnlyList<string> CaptureDeviceNames =>
-            Alc.GetStringList(IntPtr.Zero, OpenAL.Alc.CaptureDeviceSpecifier);
+                  
 
         private readonly IntPtr captureDevice;
 
@@ -169,6 +167,11 @@ namespace Barotrauma.Networking
             Create(GameSettings.CurrentConfig.Audio.VoiceCaptureDevice, storedBufferID);
         }
 
+        public static IReadOnlyList<string> GetCaptureDeviceNames()
+        {
+            return Alc.GetStringList(IntPtr.Zero, OpenAL.Alc.CaptureDeviceSpecifier); 
+        }
+
         IntPtr nativeBuffer;
         readonly short[] uncompressedBuffer = new short[VoipConfig.BUFFER_SIZE];
         readonly short[] prevUncompressedBuffer = new short[VoipConfig.BUFFER_SIZE];
@@ -260,6 +263,13 @@ namespace Barotrauma.Networking
                             }
                         }
                     }
+
+                    if (Screen.Selected is ModDownloadScreen)
+                    {
+                        allowEnqueue = false;
+                        captureTimer = 0;
+                    }
+
                     if (allowEnqueue || captureTimer > 0)
                     {
                         LastEnqueueAudio = DateTime.Now;

@@ -151,15 +151,7 @@ namespace Barotrauma.Items.Components
             set
             {
                 bool changed = currentMode != value;
-
                 currentMode = value;
-                if (value == Mode.Passive)
-                {
-                    if (item.AiTarget != null)
-                    {
-                        item.AiTarget.SectorDegrees = 360.0f;
-                    }
-                }
 #if CLIENT
                 if (changed) { prevPassivePingRadius = float.MaxValue; }
                 UpdateGUIElements();
@@ -206,13 +198,6 @@ namespace Barotrauma.Items.Components
                         var activePing = activePings[currentPingIndex];
                         if (activePing.State > 1.0f)
                         {
-                            if (item.AiTarget != null)
-                            {
-                                float range = MathUtils.InverseLerp(item.AiTarget.MinSoundRange, item.AiTarget.MaxSoundRange, Range * activePing.State / zoom);
-                                item.AiTarget.SoundRange = MathHelper.Lerp(item.AiTarget.MinSoundRange, item.AiTarget.MaxSoundRange, range);
-                                item.AiTarget.SectorDegrees = activePing.IsDirectional ? DirectionalPingSector : 360.0f;
-                                item.AiTarget.SectorDir = new Vector2(pingDirection.X, -pingDirection.Y);
-                            }
                             aiPingCheckPending = true;
                             currentPingIndex = -1;
                         }
@@ -228,21 +213,27 @@ namespace Barotrauma.Items.Components
                         activePings[currentPingIndex].Direction = pingDirection;
                         activePings[currentPingIndex].State = 0.0f;
                         activePings[currentPingIndex].PrevPingRadius = 0.0f;
+                        if (item.AiTarget != null)
+                        {
+                            item.AiTarget.SectorDegrees = useDirectionalPing ? DirectionalPingSector : 360.0f;
+                            item.AiTarget.SectorDir = new Vector2(pingDirection.X, -pingDirection.Y);
+                        }
                         item.Use(deltaTime);
                     }
                 }
                 else
                 {
-                    if (item.AiTarget != null)
-                    {
-                        item.AiTarget.SectorDegrees = 360.0f;
-                    }
                     aiPingCheckPending = false;
                 }
             }
 
             for (var pingIndex = 0; pingIndex < activePingsCount;)
             {
+                if (item.AiTarget != null)
+                {
+                    float range = MathUtils.InverseLerp(item.AiTarget.MinSoundRange, item.AiTarget.MaxSoundRange, Range * activePings[pingIndex].State / zoom);
+                    item.AiTarget.SoundRange = Math.Max(item.AiTarget.SoundRange, MathHelper.Lerp(item.AiTarget.MinSoundRange, item.AiTarget.MaxSoundRange, range));
+                }
                 if (activePings[pingIndex].State > 1.0f)
                 {
                     var lastIndex = --activePingsCount;

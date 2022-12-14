@@ -5,6 +5,7 @@ using Barotrauma.Steam;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -18,12 +19,12 @@ using System.Data;
 
 namespace Barotrauma
 {
-    struct ColoredText
+    readonly struct ColoredText
     {
-        public string Text;
-        public Color Color;
-		public bool IsCommand;
-        public bool IsError;
+        public readonly string Text;
+        public readonly Color Color;
+        public readonly bool IsCommand;
+        public readonly bool IsError;
 
         public readonly string Time;
 
@@ -34,7 +35,7 @@ namespace Barotrauma
 			this.IsCommand = isCommand;
             this.IsError = isError;
 
-            Time = DateTime.Now.ToString();
+            Time = DateTime.Now.ToString(CultureInfo.InvariantCulture);
         }
     }
 
@@ -74,7 +75,7 @@ namespace Barotrauma
 
                 bool allowCheats = false;
 #if CLIENT
-                allowCheats = GameMain.NetworkMember == null && (GameMain.GameSession?.GameMode is TestGameMode || Screen.Selected is EditorScreen);
+                allowCheats = GameMain.NetworkMember == null && (GameMain.GameSession?.GameMode is TestGameMode || Screen.Selected is { IsEditor: true });
 #endif
                 if (!allowCheats && !CheatsEnabled && IsCheat)
                 {
@@ -94,13 +95,57 @@ namespace Barotrauma
             }
         }
 
-        private static readonly Queue<ColoredText> queuedMessages = new Queue<ColoredText>();
+        private static readonly ConcurrentQueue<ColoredText> queuedMessages
+            = new ConcurrentQueue<ColoredText>();
 
+        public static readonly NamedEvent<ColoredText> MessageHandler = new NamedEvent<ColoredText>();
+
+        public struct ErrorCatcher : IDisposable
+        {
+            private readonly List<ColoredText> errors;
+            private readonly bool wasConsoleOpen;
+            private Identifier handlerId;
+            public IReadOnlyList<ColoredText> Errors => errors;
+
+            private ErrorCatcher(Identifier handlerId)
+            {
+                this.handlerId = handlerId;
+#if CLIENT
+                this.wasConsoleOpen = IsOpen;
+#else
+                this.wasConsoleOpen = false;
+#endif
+                this.errors = new List<ColoredText>();
+
+                //create a local variable that can be captured by lambdas
+                var errs = this.errors;
+                
+                MessageHandler.Register(handlerId, msg =>
+                {
+                    if (!msg.IsError) { return; }
+                    errs.Add(msg);
+                });
+            }
+            
+            public static ErrorCatcher Create()
+                => new ErrorCatcher(ToolBox.RandomSeed(25).ToIdentifier());
+
+            public void Dispose()
+            {
+                if (handlerId.IsEmpty) { return; }
+                MessageHandler.Deregister(handlerId);
+                handlerId = Identifier.Empty;
+#if CLIENT
+                DebugConsole.IsOpen = wasConsoleOpen;
+#endif
+            }
+        }
+        
         static partial void ShowHelpMessage(Command command);
         
         const int MaxMessages = 300;
 
-        public static List<ColoredText> Messages = new List<ColoredText>();
+        public static readonly List<ColoredText> Messages = new List<ColoredText>();
 
         public delegate void QuestionCallback(string answer);
         private static QuestionCallback activeQuestionCallback;
@@ -1753,6 +1798,17 @@ namespace Barotrauma
                 NewMessage("Set minimum loading time to " + time + " seconds.", Color.White);
             }));
 
+
+            commands.Add(new Command("resetcharacternetstate", "resetcharacternetstate [character name]: A debug-only command that resets a character's network state, intended for diagnosing character syncing issues.", null,
+            () =>
+            {
+                if (GameMain.NetworkMember == null) { return null; }
+                return new string[][]
+                {
+                    Character.CharacterList.Select(c => c.Name).Distinct().OrderBy(n => n).ToArray()
+                };
+            }));
+
             commands.Add(new Command("storeinfo", "", (string[] args) =>
             {
                 if (GameMain.GameSession?.Map?.CurrentLocation is Location location)
@@ -1806,6 +1862,7 @@ namespace Barotrauma
             commands.Add(new Command("lighting|lights", "Toggle lighting on/off (client-only).", null, isCheat: true));
             commands.Add(new Command("ambientlight", "ambientlight [color]: Change the color of the ambient light in the level.", null, isCheat: true));
             commands.Add(new Command("debugdraw", "Toggle the debug drawing mode on/off (client-only).", null, isCheat: true));
+            commands.Add(new Command("debugdrawlocalization", "Toggle the localization debug drawing mode on/off (client-only). Colors all text that hasn't been fetched from a localization file magenta, making it easier to spot hard-coded or missing texts.", null, isCheat: false));
             commands.Add(new Command("togglevoicechatfilters", "Toggle the radio/muffle filters in the voice chat (client-only).", null, isCheat: false));
             commands.Add(new Command("togglehud|hud", "Toggle the character HUD (inventories, icons, buttons, etc) on/off (client-only).", null));
             commands.Add(new Command("toggleupperhud", "Toggle the upper part of the ingame HUD (chatbox, crewmanager) on/off (client-only).", null));
@@ -2222,7 +2279,7 @@ namespace Barotrauma
                         //Dont do a thing, random is basically Human points anyways - its in the help description.
                         break;
                     default:
-                        var matchingCharacter = FindMatchingCharacter(args.Skip(1).ToArray());
+                        var matchingCharacter = FindMatchingCharacter(args.Skip(1).Take(1).ToArray());
                         if (matchingCharacter != null){ spawnInventory = matchingCharacter.Inventory; }
                         break;
                 }
@@ -2310,11 +2367,10 @@ namespace Barotrauma
         private static void NewMessage(string msg, Color color, bool isCommand, bool isError)
         {
             if (string.IsNullOrEmpty(msg)) { return; }
-            
-            lock (queuedMessages)
-            {
-                queuedMessages.Enqueue(new ColoredText(msg, color, isCommand, isError));
-            }
+
+            var newMsg = new ColoredText(msg, color, isCommand, isError);
+            queuedMessages.Enqueue(newMsg);
+            MessageHandler.Invoke(newMsg);
         }
 
         public static void ShowQuestionPrompt(string question, QuestionCallback onAnswered, string[] args = null, int argCount = -1)

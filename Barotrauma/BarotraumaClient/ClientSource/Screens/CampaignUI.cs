@@ -472,7 +472,12 @@ namespace Barotrauma
             {
                 TextGetter = () =>
                 {
-                    return TextManager.AddPunctuation(':', TextManager.Get("Missions"), $"{Campaign.NumberOfMissionsAtLocation(destination)}/{Campaign.Settings.TotalMaxMissionCount}");
+                    int missionCount = 0;
+                    if (GameMain.GameSession != null && Campaign.Map?.CurrentLocation?.SelectedMissions != null)
+                    {
+                        missionCount = Campaign.Map.CurrentLocation.SelectedMissions.Count(m => m.Locations.Contains(location) && !GameMain.GameSession.Missions.Contains(m));
+                    }
+                    return TextManager.AddPunctuation(':', TextManager.Get("Missions"), $"{missionCount}/{Campaign.Settings.TotalMaxMissionCount}");
                 }
             };
 

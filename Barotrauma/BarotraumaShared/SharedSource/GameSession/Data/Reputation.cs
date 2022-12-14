@@ -70,6 +70,15 @@ namespace Barotrauma
                 }
                 reputationChange *= reputationGainMultiplier;
             }
+            else if (reputationChange < 0f)
+            {
+                float reputationLossMultiplier = 1f;
+                foreach (Character character in GameSession.GetSessionCrewCharacters(CharacterType.Both))
+                {
+                    reputationLossMultiplier += character.GetStatValue(StatTypes.ReputationLossMultiplier);
+                }
+                reputationChange *= reputationLossMultiplier;
+            }
             Value += reputationChange;
         }
 

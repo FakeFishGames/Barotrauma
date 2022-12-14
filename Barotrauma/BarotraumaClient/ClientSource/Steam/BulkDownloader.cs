@@ -64,7 +64,7 @@ namespace Barotrauma.Steam
                 });
         }
 
-        private static async Task<IReadOnlyList<Steamworks.Ugc.Item>> GetItemsThatNeedUpdating()
+        public static async Task<IReadOnlyList<Steamworks.Ugc.Item>> GetItemsThatNeedUpdating()
         {
             var determiningTasks = ContentPackageManager.WorkshopPackages.Select(async p => (p, await p.IsUpToDate()));
             (ContentPackage Package, bool IsUpToDate)[] outOfDatePackages = await Task.WhenAll(determiningTasks);
@@ -126,6 +126,7 @@ namespace Barotrauma.Steam
                 {
                     mutableWorkshopMenu.PopulateInstalledModLists(forceRefreshEnabled: true);
                 }
+                GameMain.MainMenuScreen.ResetModUpdateButton();
             });
         }
 

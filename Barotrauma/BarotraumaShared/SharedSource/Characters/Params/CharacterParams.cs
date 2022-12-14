@@ -50,6 +50,9 @@ namespace Barotrauma
         [Serialize(false, IsPropertySaveable.Yes, description: "Can the creature live without water or does it die on dry land?"), Editable]
         public bool NeedsWater { get; set; }
 
+        [Serialize(false, IsPropertySaveable.Yes, description: "Is this creature an artificial creature, like robot or machine that shouldn't be affected by afflictions that affect only organic creatures? Overrides DoesBleed."), Editable]
+        public bool IsMachine { get; set; }
+
         [Serialize(false, IsPropertySaveable.No), Editable]
         public bool CanSpeak { get; set; }
 
@@ -501,6 +504,9 @@ namespace Barotrauma
             [Serialize(false, IsPropertySaveable.Yes), Editable]
             public bool PoisonImmunity { get; set; }
 
+            [Serialize(0f, IsPropertySaveable.Yes), Editable]
+            public float EmpVulnerability { get; set; }
+
             [Serialize(false, IsPropertySaveable.Yes, description: "Can afflictions affect the face/body tint of the character."), Editable]
             public bool ApplyAfflictionColors { get; private set; }
 
@@ -652,7 +658,7 @@ namespace Barotrauma
                 if (HasTag(tag))
                 {
                     target = null;
-                    DebugConsole.ThrowError($"Multiple targets with the same tag ('{tag}') defined! Only the first will be used!");
+                    DebugConsole.AddWarning($"Trying to add multiple targets with the same tag ('{tag}') defined! Only the first will be used!");
                     return false;
                 }
                 else

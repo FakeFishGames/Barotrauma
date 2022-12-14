@@ -155,6 +155,16 @@ namespace Barotrauma
             this.campaign = campaign;
         }
 
+        public static bool HasUnlockedStoreItem(ItemPrefab prefab)
+        {
+            foreach (Character character in GameSession.GetSessionCrewCharacters(CharacterType.Both))
+            {
+                if (character.HasStoreAccessForItem(prefab)) { return true; }
+            }
+
+            return false;
+        }
+
         private List<T> GetItems<T>(Identifier identifier, Dictionary<Identifier, List<T>> items, bool create = false)
         {
             if (items.TryGetValue(identifier, out var storeSpecificItems) && storeSpecificItems != null)

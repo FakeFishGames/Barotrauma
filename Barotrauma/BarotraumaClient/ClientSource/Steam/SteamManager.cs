@@ -73,7 +73,13 @@ namespace Barotrauma.Steam
                 
                 //This callback seems to take place when the item has been downloaded recently and an update
                 //or a redownload has taken place
-                Steamworks.SteamUGC.OnDownloadItemResult += (result, id) => Workshop.OnItemDownloadComplete(id);
+                Steamworks.SteamUGC.OnDownloadItemResult += (result, id) =>
+                {
+                    if (result == Steamworks.Result.OK)
+                    {
+                        Workshop.OnItemDownloadComplete(id);
+                    }
+                };
                 
                 //Maybe I'm completely wrong! All I know is that we need to handle both!
             }

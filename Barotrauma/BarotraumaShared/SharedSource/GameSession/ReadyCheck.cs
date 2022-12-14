@@ -56,6 +56,10 @@ namespace Barotrauma
             }
 
             EndReadyCheck();
+
+#if CLIENT
+            msgBox?.Close();
+#endif
         }
     }
 }

@@ -9,6 +9,7 @@ namespace Barotrauma.Items.Components
     {
         //[power/min]        
         private float capacity;
+        private float adjustedCapacity;
 
         private float charge, prevCharge;
 
@@ -65,8 +66,12 @@ namespace Barotrauma.Items.Components
         [Editable, Serialize(10.0f, IsPropertySaveable.Yes, description: "The maximum capacity of the device (kW * min). For example, a value of 1000 means the device can output 100 kilowatts of power for 10 minutes, or 1000 kilowatts for 1 minute.")]
         public float Capacity
         {
-            get { return capacity; }
-            set { capacity = Math.Max(value, 1.0f); }
+            get => capacity;
+            set
+            {
+                capacity = Math.Max(value, 1.0f);
+                adjustedCapacity = GetCapacity();
+            }
         }
 
         [Editable, Serialize(0.0f, IsPropertySaveable.Yes, description: "The current charge of the device.")]
@@ -76,10 +81,10 @@ namespace Barotrauma.Items.Components
             set 
             {
                 if (!MathUtils.IsValid(value)) return;
-                charge = MathHelper.Clamp(value, 0.0f, capacity); 
+                charge = MathHelper.Clamp(value, 0.0f, adjustedCapacity); 
 
                 //send a network event if the charge has changed by more than 5%
-                if (Math.Abs(charge - lastSentCharge) / capacity > 0.05f)
+                if (Math.Abs(charge - lastSentCharge) / adjustedCapacity > 0.05f)
                 {
 #if SERVER
                     if (GameMain.Server != null && (!item.Submarine?.Loading ?? true)) { item.CreateServerEvent(this); }
@@ -89,7 +94,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        public float ChargePercentage => MathUtils.Percentage(Charge, Capacity);
+        public float ChargePercentage => MathUtils.Percentage(Charge, adjustedCapacity);
         
         [Editable, Serialize(10.0f, IsPropertySaveable.Yes, description: "How fast the device can be recharged. For example, a recharge speed of 100 kW and a capacity of 1000 kW*min would mean it takes 10 minutes to fully charge the device.")]
         public float MaxRechargeSpeed
@@ -125,10 +130,19 @@ namespace Barotrauma.Items.Components
             set { efficiency = MathHelper.Clamp(value, 0.0f, 1.0f); }
         }
 
+        private bool flipIndicator;
+        [Editable, Serialize(false, IsPropertySaveable.Yes, description: "Should the progress bar indicating the charge be flipped to fill from the other side.")]
+        public bool FlipIndicator
+        {
+            get { return flipIndicator; }
+            set { flipIndicator = value; }
+        }
+
         public float RechargeRatio => RechargeSpeed / MaxRechargeSpeed;
 
         public const float aiRechargeTargetRatio = 0.5f;
         private bool isRunning;
+
         public bool HasBeenTuned { get; private set; }
 
         public PowerContainer(Item item, ContentXElement element)
@@ -146,8 +160,9 @@ namespace Barotrauma.Items.Components
             return picker != null;
         }
 
-        public override void Update(float deltaTime, Camera cam) 
+        public override void Update(float deltaTime, Camera cam)
         {
+            adjustedCapacity = GetCapacity();
             if (item.Connections == null) 
             {
                 IsActive = false;
@@ -155,7 +170,7 @@ namespace Barotrauma.Items.Components
             }
 
             isRunning = true;
-            float chargeRatio = charge / capacity;
+            float chargeRatio = charge / adjustedCapacity;
             
             if (chargeRatio > 0.0f)
             {
@@ -171,7 +186,7 @@ namespace Barotrauma.Items.Components
             item.SendSignal(((int)Math.Round(CurrPowerOutput)).ToString(), "power_value_out");
             item.SendSignal(((int)Math.Round(loadReading)).ToString(), "load_value_out");
             item.SendSignal(((int)Math.Round(Charge)).ToString(), "charge");
-            item.SendSignal(((int)Math.Round(Charge / capacity * 100)).ToString(), "charge_%");
+            item.SendSignal(((int)Math.Round(Charge / adjustedCapacity * 100)).ToString(), "charge_%");
             item.SendSignal(((int)Math.Round(RechargeSpeed / maxRechargeSpeed * 100)).ToString(), "charge_rate");
         }
 
@@ -184,16 +199,16 @@ namespace Barotrauma.Items.Components
             if (connection == powerIn)
             {
                 //Don't draw power if fully charged
-                if (charge >= capacity)
+                if (charge >= adjustedCapacity)
                 {
-                    charge = capacity;
+                    charge = adjustedCapacity;
                     return 0;
                 }
                 else
                 {
                     if (item.Condition <= 0.0f) { return 0.0f; }
 
-                    float missingCharge = capacity - charge;
+                    float missingCharge = adjustedCapacity - charge;
                     float targetRechargeSpeed = rechargeSpeed;
 
                     if (ExponentialRechargeSpeed)
@@ -230,7 +245,7 @@ namespace Barotrauma.Items.Components
             if (connection == powerOut)
             {
                 float maxOutput;
-                float chargeRatio = prevCharge / capacity;
+                float chargeRatio = prevCharge / adjustedCapacity;
                 if (chargeRatio < 0.1f)
                 {
                     maxOutput = Math.Max(chargeRatio * 10.0f, 0.0f) * MaxOutPut;
@@ -283,7 +298,7 @@ namespace Barotrauma.Items.Components
             else
             {
                 //Decrease charge based on how much power is leaving the device
-                Charge = Math.Clamp(Charge - CurrPowerOutput / 60 * UpdateInterval, 0, Capacity);
+                Charge = Math.Clamp(Charge - CurrPowerOutput / 60 * UpdateInterval, 0, adjustedCapacity);
                 prevCharge = Charge;
             }
         }
@@ -370,5 +385,7 @@ namespace Barotrauma.Items.Components
                 }
             }
         }
+
+        public float GetCapacity() => item.StatManager.GetAdjustedValue(ItemTalentStats.BatteryCapacity, Capacity);
     }
 }

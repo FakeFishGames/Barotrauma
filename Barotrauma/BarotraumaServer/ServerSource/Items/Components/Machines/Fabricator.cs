@@ -9,11 +9,12 @@ namespace Barotrauma.Items.Components
         public void ServerEventRead(IReadMessage msg, Client c)
         {
             uint recipeHash = msg.ReadUInt32();
-
+            int amountToFabricate = msg.ReadRangedInteger(1, MaxAmountToFabricate);
             item.CreateServerEvent(this);
 
             if (!item.CanClientAccess(c)) { return; }
 
+            AmountToFabricate = amountToFabricate;
             if (recipeHash == 0)
             {
                 CancelFabricating(c.Character);
@@ -23,6 +24,8 @@ namespace Barotrauma.Items.Components
                 //if already fabricating the selected item, return
                 if (fabricatedItem != null && fabricatedItem.RecipeHash == recipeHash) { return; }
                 if (recipeHash == 0) { return; }
+
+                amountRemaining = AmountToFabricate;
 
                 StartFabricating(fabricationRecipes[recipeHash], c.Character);
             }
@@ -56,6 +59,8 @@ namespace Barotrauma.Items.Components
         {
             var componentData = ExtractEventData<EventData>(extraData);
             msg.WriteByte((byte)componentData.State);
+            msg.WriteRangedInteger(AmountToFabricate, 0, MaxAmountToFabricate);
+            msg.WriteRangedInteger(amountRemaining, 0, MaxAmountToFabricate);
             msg.WriteSingle(timeUntilReady);
             uint recipeHash = fabricatedItem?.RecipeHash ?? 0;
             msg.WriteUInt32(recipeHash);

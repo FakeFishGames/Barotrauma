@@ -265,8 +265,8 @@ namespace Barotrauma
 
         private IEnumerable<CoroutineStatus> DoLoadInitialLevel(LevelData level, bool mirror)
         {
-            GameMain.GameSession.StartRound(level,
-                mirrorLevel: mirror);
+            
+            GameMain.GameSession.StartRound(level, mirrorLevel: mirror, startOutpost: GetPredefinedStartOutpost());
             GameMain.GameScreen.Select();
 
             CoroutineManager.StartCoroutine(DoInitialCameraTransition(), "SinglePlayerCampaign.DoInitialCameraTransition");
@@ -407,6 +407,11 @@ namespace Barotrauma
             GUI.SetSavingIndicatorState(success);
             crewDead = false;
 
+            if (success)
+            {
+                // Event history must be registered before ending the round or it will be cleared
+                GameMain.GameSession.EventManager.RegisterEventHistory();
+            }
             GameMain.GameSession.EndRound("", traitorResults, transitionType);
             var continueButton = GameMain.GameSession.RoundSummary?.ContinueButton;
             RoundSummary roundSummary = null;
@@ -439,7 +444,7 @@ namespace Barotrauma
                     break;
             }
 
-            Map.ProgressWorld(transitionType, (float)(Timing.TotalTime - GameMain.GameSession.RoundStartTime));
+            Map.ProgressWorld(transitionType, GameMain.GameSession.RoundDuration);
 
             var endTransition = new CameraTransition(Submarine.MainSub, GameMain.GameScreen.Cam, null,
                 transitionType == TransitionType.LeaveLocation ? Alignment.BottomCenter : Alignment.Center,
@@ -466,7 +471,6 @@ namespace Barotrauma
             if (success)
             {
                 GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);
-                GameMain.GameSession.EventManager.RegisterEventHistory();
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
             else

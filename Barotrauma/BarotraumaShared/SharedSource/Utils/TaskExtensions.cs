@@ -14,5 +14,17 @@ namespace Barotrauma
             result = default;
             return false;
         }
+
+        public static async Task<T> WaitForLoadingScreen<T>(this Task<T> task)
+        {
+            var result = await task;
+#if CLIENT
+            while (GameMain.Instance.LoadingScreenOpen)
+            {
+                await Task.Delay((int)(1000 * Timing.Step));
+            }
+#endif
+            return result;
+        }
     }
 }

@@ -10,6 +10,7 @@ namespace Barotrauma
     [Flags]
     enum MapEntityCategory
     {
+        None = 0,
         Structure = 1, 
         Decorative = 2,
         Machine = 4,

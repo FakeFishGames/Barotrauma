@@ -1,9 +1,5 @@
-﻿using System;
-using Barotrauma.Items.Components;
-using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
+using System;
 
 namespace Barotrauma.Abilities
 {
@@ -22,7 +18,7 @@ namespace Barotrauma.Abilities
         {
             if (tags.None())
             {
-                return character.GetEquippedItem(null) is Item;
+                return character.GetEquippedItem(null) != null;
             }
 
             if (requireAll)

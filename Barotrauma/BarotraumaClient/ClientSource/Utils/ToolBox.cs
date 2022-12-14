@@ -512,5 +512,34 @@ namespace Barotrauma
 
             return new Vector2(paddingX, paddingY);
         }
+
+        public static string ColorSectionOfString(string text, int start, int length, Color color)
+        {
+            int end = start + length;
+
+            if (start < 0 || length < 0 || end > text.Length)
+            {
+                throw new ArgumentOutOfRangeException($"Invalid start ({start}) or length ({length}) for text \"{text}\".");
+            }
+
+            string stichedString = string.Empty;
+
+            if (start > 0)
+            {
+                stichedString += text[..start];
+            }
+
+            // this is the highlighted part
+            stichedString += ColorString(text[start..end], color);
+
+            if (end < text.Length)
+            {
+                stichedString += text[end..];
+            }
+
+            return stichedString;
+
+            static string ColorString(string text, Color color) => $"‖color:{color.ToStringHex()}‖{text}‖end‖";
+        }
     }
 }

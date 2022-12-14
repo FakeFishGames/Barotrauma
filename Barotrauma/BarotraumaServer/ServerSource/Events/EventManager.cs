@@ -31,7 +31,7 @@ namespace Barotrauma
                     if (convAction.SelectedOption > -1)
                     {
                         //someone else already chose an option for this conversation: interrupt for this client
-                        convAction.ServerWrite(convAction.speaker, sender, interrupt: true);
+                        convAction.ServerWrite(convAction.Speaker, sender, interrupt: true);
                     }
                     else
                     {

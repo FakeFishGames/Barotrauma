@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Barotrauma.IO;
 using System.Linq;
-using System.Xml.Linq;
 using Barotrauma.CharacterEditor;
 using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
@@ -50,6 +49,14 @@ namespace Barotrauma
 
     static class GUI
     {
+        // Controls where a line is drawn for given coords.
+        public enum OutlinePosition
+        {
+            Default = 0, // Thickness is inside of top left and outside of bottom right coord
+            Inside = 1, // Thickness is subtracted from the inside
+            Centered = 2, // Thickness is centered on given coords
+            Outside = 3, // Tickness is added to the outside
+        }
         public static GUICanvas Canvas => GUICanvas.Instance;
         public static CursorState MouseCursor = CursorState.Default;
 
@@ -248,7 +255,17 @@ namespace Barotrauma
                     ScreenChanged = false;
                 }
 
-                updateList.ForEach(c => c.DrawAuto(spriteBatch));
+                foreach (GUIComponent c in updateList)
+                {
+                    c.DrawAuto(spriteBatch);
+                }
+
+                // always draw IME preview on top of everything else
+                foreach (GUIComponent c in updateList)
+                {
+                    if (c is not GUITextBox box) { continue; }
+                    box.DrawIMEPreview(spriteBatch);
+                }
 
                 if (ScreenOverlayColor.A > 0.0f)
                 {
@@ -310,7 +327,7 @@ namespace Barotrauma
                     DrawString(spriteBatch, new Vector2(10, y),
                         "FPS: " + Math.Round(GameMain.PerformanceCounter.AverageFramesPerSecond),
                         Color.White, Color.Black * 0.5f, 0, GUIStyle.SmallFont);
-                    if (GameMain.GameSession != null && Timing.TotalTime > GameMain.GameSession.RoundStartTime + 1.0)
+                    if (GameMain.GameSession != null && GameMain.GameSession.RoundDuration > 1.0)
                     {
                         y += yStep;
                         DrawString(spriteBatch, new Vector2(10, y),
@@ -1350,7 +1367,7 @@ namespace Barotrauma
             }
         }
 
-        #region Element drawing
+#region Element drawing
 
         private static readonly List<float> usedIndicatorAngles = new List<float>();
 
@@ -1605,6 +1622,54 @@ namespace Barotrauma
             }
         }
 
+        public static void DrawRectangle(SpriteBatch sb, Vector2 position, Vector2 size, Vector2 origin, float rotation, Color clr, float depth = 0.0f, float thickness = 1, OutlinePosition outlinePos = OutlinePosition.Centered)
+        {
+            Vector2 topLeft = new Vector2(-origin.X, -origin.Y);
+            Vector2 topRight = new Vector2(-origin.X + size.X, -origin.Y);
+            Vector2 bottomLeft = new Vector2(-origin.X, -origin.Y + size.Y);
+            Vector2 actualSize = size;
+
+            switch(outlinePos)
+            {
+                case OutlinePosition.Default:
+                    actualSize += new Vector2(thickness);
+                    break;
+                case OutlinePosition.Centered:
+                    topLeft -= new Vector2(thickness * 0.5f);
+                    topRight -= new Vector2(thickness * 0.5f);
+                    bottomLeft -= new Vector2(thickness * 0.5f);
+                    actualSize += new Vector2(thickness);
+                    break;
+                case OutlinePosition.Inside:
+                    topRight -= new Vector2(thickness, 0.0f);
+                    bottomLeft -= new Vector2(0.0f, thickness);
+                    break;
+                case OutlinePosition.Outside:
+                    topLeft -= new Vector2(thickness);
+                    topRight -= new Vector2(0.0f, thickness);
+                    bottomLeft -= new Vector2(thickness, 0.0f);
+                    actualSize += new Vector2(thickness * 2.0f);
+                    break;
+            }
+
+            Matrix rotate = Matrix.CreateRotationZ(rotation);
+            topLeft = Vector2.Transform(topLeft, rotate) + position;
+            topRight = Vector2.Transform(topRight, rotate) + position;
+            bottomLeft = Vector2.Transform(bottomLeft, rotate) + position;
+
+            Rectangle srcRect = new Rectangle(0, 0, 1, 1);
+            sb.Draw(solidWhiteTexture, topLeft, srcRect, clr, rotation, Vector2.Zero, new Vector2(thickness, actualSize.Y), SpriteEffects.None, depth);
+            sb.Draw(solidWhiteTexture, topLeft, srcRect, clr, rotation, Vector2.Zero, new Vector2(actualSize.X, thickness), SpriteEffects.None, depth);
+            sb.Draw(solidWhiteTexture, topRight, srcRect, clr, rotation, Vector2.Zero, new Vector2(thickness, actualSize.Y), SpriteEffects.None, depth);
+            sb.Draw(solidWhiteTexture, bottomLeft, srcRect, clr, rotation, Vector2.Zero, new Vector2(actualSize.X, thickness), SpriteEffects.None, depth);
+        }
+
+        public static void DrawFilledRectangle(SpriteBatch sb, Vector2 position, Vector2 size, Vector2 pivot, float rotation, Color clr, float depth = 0.0f)
+        {
+            Rectangle srcRect = new Rectangle(0, 0, 1, 1);
+            sb.Draw(solidWhiteTexture, position, srcRect, clr, rotation, (pivot/size), size, SpriteEffects.None, depth);
+        }
+
         public static void DrawFilledRectangle(SpriteBatch sb, RectangleF rect, Color clr, float depth = 0.0f)
         {
             DrawFilledRectangle(sb, rect.Location, rect.Size, clr, depth);
@@ -1788,9 +1853,9 @@ namespace Barotrauma
             Vector2 pos = new Vector2(GameMain.GraphicsWidth, GameMain.GraphicsHeight) - new Vector2(HUDLayoutSettings.Padding) - 2 * Scale * sheet.FrameSize.ToVector2();
             sheet.Draw(spriteBatch, (int)Math.Floor(savingIndicatorSpriteIndex), pos, savingIndicatorColor, origin: Vector2.Zero, rotate: 0.0f, scale: new Vector2(Scale));
         }
-        #endregion
+#endregion
 
-        #region Element creation
+#region Element creation
 
         public static Texture2D CreateCircle(int radius, bool filled = false)
         {
@@ -2162,9 +2227,9 @@ namespace Barotrauma
             return msgBox;
         }
 
-        #endregion
+#endregion
 
-        #region Element positioning
+#region Element positioning
         private static List<T> CreateElements<T>(int count, RectTransform parent, Func<RectTransform, T> constructor,
             Vector2? relativeSize = null, Point? absoluteSize = null,
             Anchor anchor = Anchor.TopLeft, Pivot? pivot = null, Point? minSize = null, Point? maxSize = null,
@@ -2363,9 +2428,9 @@ namespace Barotrauma
             }
         }
 
-        #endregion
+#endregion
 
-        #region Misc
+#region Misc
         public static void TogglePauseMenu()
         {
             if (Screen.Selected == GameMain.MainMenuScreen) { return; }
@@ -2603,6 +2668,6 @@ namespace Barotrauma
             if (!isSavingIndicatorEnabled) { return; }
             timeUntilSavingIndicatorDisabled = delay;
         }
-        #endregion
+#endregion
     }
 }
