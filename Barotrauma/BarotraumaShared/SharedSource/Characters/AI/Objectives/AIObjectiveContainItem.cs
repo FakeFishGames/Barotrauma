@@ -118,7 +118,11 @@ namespace Barotrauma
                 Abandon = true;
                 return;
             }
-            ItemToContain = item ?? character.Inventory.FindItem(i => CheckItem(i) && i.Container != container.Item, recursive: true);
+            ItemToContain = item ?? character.Inventory.FindItem(it => 
+                CheckItem(it) && 
+                //ignore items already in the container, unless we're trying to place to a specific slot, and the item's not in it
+                (it.Container != container.Item || (TargetSlot.HasValue && it.Container.OwnInventory.FindIndex(it) != TargetSlot)), 
+                recursive: true);
             if (ItemToContain != null)
             {
                 if (!character.CanInteractWith(ItemToContain, checkLinked: false))
