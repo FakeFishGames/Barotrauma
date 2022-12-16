@@ -4,6 +4,7 @@ using Barotrauma.Networking;
 using Barotrauma.Particles;
 using Barotrauma.Steam;
 using Barotrauma.Transition;
+using Barotrauma.Tutorials;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
@@ -15,6 +16,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -313,7 +315,7 @@ namespace Barotrauma
             GraphicsDeviceManager.SynchronizeWithVerticalRetrace = GameSettings.CurrentConfig.Graphics.VSync;
             SetWindowMode(GameSettings.CurrentConfig.Graphics.DisplayMode);
 
-            defaultViewport = GraphicsDevice.Viewport;
+            defaultViewport = new Viewport(0, 0, GraphicsWidth, GraphicsHeight);
 
             if (recalculateFontsAndStyles)
             {
@@ -352,6 +354,7 @@ namespace Barotrauma
         public void ResetViewPort()
         {
             GraphicsDevice.Viewport = defaultViewport;
+            GraphicsDevice.ScissorRectangle = defaultViewport.Bounds;
         }
 
         /// <summary>
@@ -374,6 +377,7 @@ namespace Barotrauma
             Hyper.ComponentModel.HyperTypeDescriptionProvider.Add(typeof(Hull));
 
             performanceCounterTimer = Stopwatch.StartNew();
+            ResetIMEWorkaround();
         }
 
         /// <summary>
@@ -463,10 +467,11 @@ namespace Barotrauma
 
             LegacySteamUgcTransition.Prepare();
             var contentPackageLoadRoutine = ContentPackageManager.Init();
-            foreach (var progress in contentPackageLoadRoutine)
+            foreach (var progress in contentPackageLoadRoutine
+                         .Select(p => p.Result).Successes())
             {
                 const float min = 1f, max = 70f;
-                TitleScreen.LoadState = MathHelper.Lerp(min, max, progress.Value);
+                TitleScreen.LoadState = MathHelper.Lerp(min, max, progress);
                 yield return CoroutineStatus.Running;
             }
 
@@ -774,9 +779,9 @@ namespace Barotrauma
                         {
                             GUIMessageBox.MessageBoxes.Remove(GUIMessageBox.VisibleBox);
                         }
-                        else if (GameSession?.GameMode is TutorialMode tutorialMode && tutorialMode.Tutorial.ContentRunning)
+                        else if (ObjectiveManager.ContentRunning)
                         {
-                            tutorialMode.Tutorial.CloseActiveContentGUI();
+                            ObjectiveManager.CloseActiveContentGUI();
                         }
                         else if (GameSession.IsTabMenuOpen)
                         {
@@ -790,6 +795,10 @@ namespace Barotrauma
                         else if (GUI.PauseMenuOpen)
                         {
                             GUI.TogglePauseMenu();
+                        }
+                        else if (GameSession?.Campaign is { ShowCampaignUI: true, ForceMapUI: false })
+                        {
+                            GameSession.Campaign.ShowCampaignUI = false;
                         }
                         //open the pause menu if not controlling a character OR if the character has no UIs active that can be closed with ESC
                         else if ((Character.Controlled == null || !itemHudActive())
@@ -824,7 +833,7 @@ namespace Barotrauma
                     Paused =
                         (DebugConsole.IsOpen || DebugConsole.Paused ||
                             GUI.PauseMenuOpen || GUI.SettingsMenuOpen ||
-                            (GameSession?.GameMode is TutorialMode tutoMode && tutoMode.Tutorial.ContentRunning)) &&
+                            (GameSession?.GameMode is TutorialMode && ObjectiveManager.ContentRunning)) &&
                         (NetworkMember == null || !NetworkMember.GameStarted);
                     if (GameSession?.GameMode != null && GameSession.GameMode.Paused)
                     {
@@ -858,8 +867,9 @@ namespace Barotrauma
                     {
                         Screen.Selected.Update(Timing.Step);
                     }
-                    else if (GameSession?.GameMode is TutorialMode tutorialMode && tutorialMode.Tutorial.ContentRunning)
+                    else if (ObjectiveManager.ContentRunning && GameSession?.GameMode is TutorialMode tutorialMode)
                     {
+                        ObjectiveManager.VideoPlayer.Update();
                         tutorialMode.Update((float)Timing.Step);
                     }
                     else
@@ -1051,11 +1061,9 @@ namespace Barotrauma
                 }
 
                 // Update store stock when saving and quitting in an outpost (normally updated when CampaignMode.End() is called)
-                if (GameSession?.Campaign is SinglePlayerCampaign spCampaign && Level.IsLoadedFriendlyOutpost && spCampaign.Map?.CurrentLocation != null && spCampaign.CargoManager != null)
+                if (GameSession?.Campaign is SinglePlayerCampaign spCampaign && Level.IsLoadedFriendlyOutpost)
                 {
-                    spCampaign.Map.CurrentLocation.AddStock(spCampaign.CargoManager.SoldItems);
-                    spCampaign.CargoManager.ClearSoldItemsProjSpecific();
-                    spCampaign.Map.CurrentLocation.RemoveStock(spCampaign.CargoManager.PurchasedItems);
+                    spCampaign.UpdateStoreStock();
                 }
 
                 SaveUtil.SaveGame(GameSession.SavePath);
@@ -1071,10 +1079,9 @@ namespace Barotrauma
 
             if (GameSession != null)
             {
-                double roundDuration = Timing.TotalTime - GameSession.RoundStartTime;
                 GameAnalyticsManager.AddProgressionEvent(GameAnalyticsManager.ProgressionStatus.Fail,
                     GameSession.GameMode?.Preset.Identifier.Value ?? "none",
-                    roundDuration);
+                    GameSession.RoundDuration);
                 string eventId = "QuitRound:" + (GameSession.GameMode?.Preset.Identifier.Value ?? "none") + ":";
                 GameAnalyticsManager.AddDesignEvent(eventId + "EventManager:CurrentIntensity", GameSession.EventManager.CurrentIntensity);
                 foreach (var activeEvent in GameSession.EventManager.ActiveEvents)
@@ -1200,7 +1207,7 @@ namespace Barotrauma
             base.OnExiting(sender, args);
         }
 
-        public void ShowOpenUrlInWebBrowserPrompt(string url, string promptExtensionTag = null)
+        public static void ShowOpenUrlInWebBrowserPrompt(string url, string promptExtensionTag = null)
         {
             if (string.IsNullOrEmpty(url)) { return; }
             if (GUIMessageBox.VisibleBox?.UserData as string == "verificationprompt") { return; }
@@ -1218,11 +1225,33 @@ namespace Barotrauma
             };
             msgBox.Buttons[0].OnClicked = (btn, userdata) =>
             {
-                ToolBox.OpenFileWithShell(url);
+                try
+                {
+                    ToolBox.OpenFileWithShell(url);
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError($"Failed to open the url {url}", e);
+                }
                 msgBox.Close();
                 return true;
             };
             msgBox.Buttons[1].OnClicked = msgBox.Close;
+        }
+
+        /*
+         * On some systems, IME input is enabled by default, and being able to set the game to a state
+         * where it doesn't accept IME input on game launch seems very inconsistent.
+         * This function quickly cycles through IME input states and is called from couple different places
+         * to ensure that IME input is disabled properly when it's not needed.
+         */
+        public static void ResetIMEWorkaround()
+        {
+            Rectangle rect = new Rectangle(0, 0, GraphicsWidth, GraphicsHeight);
+            TextInput.SetTextInputRect(rect);
+            TextInput.StartTextInput();
+            TextInput.SetTextInputRect(rect);
+            TextInput.StopTextInput();
         }
     }
 }

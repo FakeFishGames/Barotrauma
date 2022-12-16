@@ -208,7 +208,7 @@ namespace Barotrauma
 
         private GUIFrame wiringToolPanel;
 
-        private DateTime editorSelectedTime;
+        private Option<DateTime> editorSelectedTime;
 
         private GUIImage previewImage;
         private GUILayoutGroup previewImageButtonHolder;
@@ -354,9 +354,24 @@ namespace Barotrauma
                 ToolTip = RichString.Rich(TextManager.Get("SaveSubButton") + "‖color:125,125,125‖\nCtrl + S‖color:end‖"),
                 OnClicked = (btn, data) =>
                 {
+#if DEBUG
+                    if (ContentPackageManager.EnabledPackages.All.Any(cp => cp != ContentPackageManager.VanillaCorePackage && cp.Files.Any(f => f is not BaseSubFile)))
+                    {
+                        var msgBox = new GUIMessageBox("DEBUG-ONLY WARNING", "You currently have some mods enabled. Are you sure you want to save the submarine? If the mods override any vanilla content, saving the submarine may cause unintended changes.",
+                            new LocalizedString[] { "Yes, I know what I'm doing", "Cancel" });
+                        msgBox.Buttons[0].OnClicked = (btn, data) => 
+                        {
+                            msgBox.Close();
+                            loadFrame = null;
+                            CreateSaveScreen();
+                            return true;
+                        };
+                        msgBox.Buttons[1].OnClicked += msgBox.Close;
+                        return false;
+                    }
+#endif
                     loadFrame = null;
                     CreateSaveScreen();
-
                     return true;
                 }
             };
@@ -984,6 +999,7 @@ namespace Barotrauma
 
             foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
             {
+                if (category == MapEntityCategory.None) { continue; }
                 entityCategoryButtons.Add(new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), entityMenuTop.RectTransform, scaleBasis: ScaleBasis.BothHeight),
                     "", style: "CategoryButton." + category.ToString())
                 {
@@ -1070,6 +1086,7 @@ namespace Barotrauma
 
             foreach (MapEntityCategory category in Enum.GetValues(typeof(MapEntityCategory)))
             {
+                if (category == MapEntityCategory.None) { continue; }
                 LocalizedString categoryName = TextManager.Get("MapEntityCategory." + category);
                 maxTextWidth = (int)Math.Max(maxTextWidth, GUIStyle.SubHeadingFont.MeasureString(categoryName.Replace(" ", "\n")).X + GUI.IntScale(50));
                 foreach (MapEntityPrefab ep in MapEntityPrefab.List)
@@ -1391,7 +1408,7 @@ namespace Barotrauma
             if (backedUpSubInfo != null) { name = backedUpSubInfo.Name; }
             subNameLabel.Text = ToolBox.LimitString(name, subNameLabel.Font, subNameLabel.Rect.Width);
 
-            editorSelectedTime = DateTime.Now;
+            editorSelectedTime = Option<DateTime>.Some(DateTime.Now);
 
             GUI.ForceMouseOn(null);
             SetMode(Mode.Default);
@@ -1540,9 +1557,13 @@ namespace Barotrauma
             autoSaveLabel?.Parent?.RemoveChild(autoSaveLabel);
             autoSaveLabel = null;
 
-            TimeSpan timeInEditor = DateTime.Now - editorSelectedTime;
 #if USE_STEAM
-            SteamAchievementManager.IncrementStat("hoursineditor".ToIdentifier(), (float)timeInEditor.TotalHours);
+            if (editorSelectedTime.TryUnwrap(out DateTime selectedTime))
+            {
+                TimeSpan timeInEditor = DateTime.Now - selectedTime;
+                SteamAchievementManager.IncrementStat("hoursineditor".ToIdentifier(), (float)timeInEditor.TotalHours);
+                editorSelectedTime = Option<DateTime>.None();
+            }
 #endif
 
             GUI.ForceMouseOn(null);
@@ -2487,7 +2508,7 @@ namespace Barotrauma
             {
                 IntValue = MainSub.Info.Tier,
                 MinValueInt = 1,
-                MaxValueInt = 3,
+                MaxValueInt = SubmarineInfo.HighestTier,
                 OnValueChanged = (numberInput) =>
                 {
                     MainSub.Info.Tier = numberInput.IntValue;
@@ -2495,7 +2516,7 @@ namespace Barotrauma
             };
             if (MainSub?.Info != null)
             {
-                MainSub.Info.Tier = Math.Clamp(MainSub.Info.Tier, 1, 3);
+                MainSub.Info.Tier = Math.Clamp(MainSub.Info.Tier, 1, SubmarineInfo.HighestTier);
             }
 
             var crewSizeArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), subSettingsContainer.RectTransform), isHorizontal: true)
@@ -3071,11 +3092,17 @@ namespace Barotrauma
                 
                 XDocument doc = new XDocument(ItemAssemblyPrefab.Save(MapEntity.SelectedList.ToList(), nameBox.Text, descriptionBox.Text, hideInMenus));
                 doc.SaveSafe(filePath);
-                
-                var resultPackage = ContentPackageManager.ReloadContentPackage(existingContentPackage) as RegularPackage;
-                if (!ContentPackageManager.EnabledPackages.Regular.Contains(resultPackage))
+
+                var result = ContentPackageManager.ReloadContentPackage(existingContentPackage);
+                if (!result.TryUnwrapSuccess(out var resultPackage))
                 {
-                    ContentPackageManager.EnabledPackages.EnableRegular(resultPackage);
+                    throw new Exception($"Failed to reload content package \"{existingContentPackage.Name}\"",
+                        result.TryUnwrapFailure(out var exception) ? exception : null);
+                }
+                if (resultPackage is RegularPackage regularPackage
+                    && !ContentPackageManager.EnabledPackages.Regular.Contains(regularPackage))
+                {
+                    ContentPackageManager.EnabledPackages.EnableRegular(regularPackage);
                     GameSettings.SaveCurrentConfig();
                 }
 
@@ -3086,7 +3113,7 @@ namespace Barotrauma
             return false;
         }
 
-        private void SnapToGrid()
+        private static void SnapToGrid()
         {
             // First move components
             foreach (MapEntity e in MapEntity.SelectedList)
@@ -3099,6 +3126,10 @@ namespace Barotrauma
                     var wire = item.GetComponent<Wire>();
                     if (wire != null) { continue; }
                     item.Move(offset);
+                    if (item.GetComponent<Door>()?.LinkedGap is Gap linkedGap)
+                    {
+                        linkedGap.Move(item.Position - linkedGap.Position);
+                    }
                 }
                 else if (e is Structure structure)
                 {
@@ -3123,7 +3154,7 @@ namespace Barotrauma
             }
         }
 
-        private IEnumerable<SubmarineInfo> GetLoadableSubs()
+        private static IEnumerable<SubmarineInfo> GetLoadableSubs()
         {
             string downloadFolder = Path.GetFullPath(SaveUtil.SubmarineDownloadFolder);
             return SubmarineInfo.SavedSubmarines.Where(s
@@ -3228,7 +3259,7 @@ namespace Barotrauma
                 }
 
                 string pathWithoutUserName = Path.GetFullPath(sub.FilePath);
-                string saveFolder = Path.GetFullPath(SaveUtil.SaveFolder);
+                string saveFolder = Path.GetFullPath(SaveUtil.DefaultSaveFolder);
                 if (pathWithoutUserName.StartsWith(saveFolder))
                 {
                     pathWithoutUserName = "..." + pathWithoutUserName[saveFolder.Length..];
@@ -3510,9 +3541,18 @@ namespace Barotrauma
         public void LoadSub(SubmarineInfo info)
         {
             Submarine.Unload();
-            var selectedSub = new Submarine(info);
-            MainSub = selectedSub;
-            MainSub.UpdateTransform(interpolate: false);
+            Submarine selectedSub = null;
+            try
+            {
+                selectedSub = new Submarine(info);
+                MainSub = selectedSub;
+                MainSub.UpdateTransform(interpolate: false);
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError("Failed to load the submarine. The submarine file might be corrupted.", e);
+                return;
+            }
             ClearUndoBuffer();
             CreateDummyCharacter();
 
@@ -4217,7 +4257,8 @@ namespace Barotrauma
             GUIListBox listBox = new GUIListBox(new RectTransform(new Vector2(0.9f, 0.9f), frame.RectTransform, Anchor.Center))
             {
                 PlaySoundOnSelect = true,
-                OnSelected = SelectWire
+                OnSelected = SelectWire,
+                CanTakeKeyBoardFocus = false
             };
 
             List<ItemPrefab> wirePrefabs = new List<ItemPrefab>();
@@ -5866,7 +5907,7 @@ namespace Barotrauma
                 decimal realWorldDistance = decimal.Round((decimal) (Vector2.Distance(startPos, mouseWorldPos) * Physics.DisplayToRealWorldRatio), 2);
 
                 Vector2 offset = new Vector2(GUI.IntScale(24));
-                GUI.DrawString(spriteBatch, PlayerInput.MousePosition + offset, $"{realWorldDistance}m", GUIStyle.TextColorNormal, font: GUIStyle.SubHeadingFont, backgroundColor: Color.Black, backgroundPadding: 4);
+                GUI.DrawString(spriteBatch, PlayerInput.MousePosition + offset, $"{realWorldDistance} m", GUIStyle.TextColorNormal, font: GUIStyle.Font, backgroundColor: Color.Black, backgroundPadding: 4);
             }
 
             spriteBatch.End();

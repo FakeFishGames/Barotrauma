@@ -442,8 +442,7 @@ namespace Barotrauma
         {
             foreach (Limb limb in Limbs)
             {
-                if (limb == null || limb.IsSevered || limb.ActiveSprite == null) { continue; }
-
+                if (limb == null || limb.IsSevered || limb.ActiveSprite == null || !limb.DoesFlip) { continue; }
                 Vector2 spriteOrigin = limb.ActiveSprite.Origin;
                 spriteOrigin.X = limb.ActiveSprite.SourceRect.Width - spriteOrigin.X;
                 limb.ActiveSprite.Origin = spriteOrigin;                
@@ -468,7 +467,10 @@ namespace Barotrauma
             {
                 var damageSound = character.GetSound(s => s.Type == CharacterSound.SoundType.Damage);
                 float range = damageSound != null ? damageSound.Range * 2 : ConvertUnits.ToDisplayUnits(character.AnimController.Collider.GetSize().Length() * 10);
-                SoundPlayer.PlayDamageSound(limbJoint.Params.BreakSound, 1.0f, limbJoint.LimbA.body.DrawPosition, range: range);
+                if (!limbJoint.Params.BreakSound.IsNullOrEmpty() && !limbJoint.Params.BreakSound.Equals("none", StringComparison.OrdinalIgnoreCase))
+                {
+                    SoundPlayer.PlayDamageSound(limbJoint.Params.BreakSound, 1.0f, limbJoint.LimbA.body.DrawPosition, range: range);
+                }
             }
         }
 

@@ -47,7 +47,14 @@ namespace Barotrauma
         private GUITextBox serverNameBox, passwordBox, maxPlayersBox;
         private GUITickBox isPublicBox, wrongPasswordBanBox, karmaBox;
         private GUIDropDown serverExecutableDropdown;
-        private readonly GUIButton joinServerButton, hostServerButton, steamWorkshopButton;
+        private readonly GUIButton joinServerButton, hostServerButton;
+
+        private readonly GUIFrame modsButtonContainer;
+        private readonly GUIButton modsButton, modUpdatesButton;
+        private Task<IReadOnlyList<Steamworks.Ugc.Item>> modUpdateTask;
+        private float modUpdateTimer = 0.0f;
+        private const float ModUpdateInterval = 60.0f;
+        
         private readonly GameMain game;
 
         private GUIImage playstyleBanner;
@@ -268,15 +275,29 @@ namespace Barotrauma
                 RelativeSpacing = 0.035f
             };
 
-#if USE_STEAM
-            steamWorkshopButton = new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SteamWorkshopButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
+            modsButtonContainer = new GUIFrame(new RectTransform(Vector2.One, customizeList.RectTransform),
+                style: null);
+            
+            modsButton = new GUIButton(new RectTransform(Vector2.One, modsButtonContainer.RectTransform),
+                TextManager.Get("settingstab.mods"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
                 ForceUpperCase = ForceUpperCase.Yes,
                 Enabled = true,
                 UserData = Tab.SteamWorkshop,
                 OnClicked = SelectTab
             };
-#endif
+
+            modUpdatesButton = new GUIButton(new RectTransform(Vector2.One * 0.95f, modsButtonContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight),
+                style: "GUIUpdateButton")
+            {
+                ToolTip = TextManager.Get("ModUpdatesAvailable"),
+                OnClicked = (_, _) =>
+                {
+                    BulkDownloader.PrepareUpdates();
+                    return false;
+                },
+                Visible = false
+            };
             
             new GUIButton(new RectTransform(new Vector2(1.0f, 1.0f), customizeList.RectTransform), TextManager.Get("SubEditorButton"), textAlignment: Alignment.Left, style: "MainMenuGUIButton")
             {
@@ -334,7 +355,7 @@ namespace Barotrauma
                 OnClicked = (button, userData) =>
                 {
                     string url = TextManager.Get("EditorDisclaimerWikiUrl").Fallback("https://barotraumagame.com/wiki").Value;
-                    GameMain.Instance.ShowOpenUrlInWebBrowserPrompt(url, promptExtensionTag: "wikinotice");
+                    GameMain.ShowOpenUrlInWebBrowserPrompt(url, promptExtensionTag: "wikinotice");
                     return true;
                 }
             };
@@ -463,13 +484,17 @@ namespace Barotrauma
                 }
             };
             var tutorialPreview = new GUILayoutGroup(new RectTransform(new Vector2(0.6f, 1.0f), tutorialContent.RectTransform)) { RelativeSpacing = 0.05f, Stretch = true };
-            var imageContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.6f), tutorialPreview.RectTransform), style: "InnerFrame");
+            var imageContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), tutorialPreview.RectTransform), style: "InnerFrame");
             tutorialBanner = new GUIImage(new RectTransform(Vector2.One, imageContainer.RectTransform), style: null, scaleToFit: true);
 
-            var infoContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.4f), tutorialPreview.RectTransform), style: "GUIFrameListBox");
-            var infoContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), infoContainer.RectTransform, Anchor.Center), childAnchor: Anchor.TopCenter);
+            var infoContainer = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.5f), tutorialPreview.RectTransform), style: "GUIFrameListBox");
+            var infoContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), infoContainer.RectTransform, Anchor.Center), childAnchor: Anchor.TopLeft)
+            {
+                AbsoluteSpacing = GUI.IntScale(10)
+            };
 
-            tutorialHeader = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.75f), infoContent.RectTransform), string.Empty, font: GUIStyle.SubHeadingFont, textAlignment: Alignment.Center);
+            tutorialHeader = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), string.Empty, font: GUIStyle.SubHeadingFont);
+            tutorialDescription = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), infoContent.RectTransform), string.Empty, wrap: true);
 
             var startButton = new GUIButton(new RectTransform(new Vector2(0.5f, 0.0f), infoContent.RectTransform, Anchor.BottomRight), text: TextManager.Get("startgamebutton")) 
             { 
@@ -500,6 +525,10 @@ namespace Barotrauma
         private void SelectTutorial(Tutorial tutorial)
         {
             tutorialHeader.Text = tutorial.DisplayName;
+            tutorialHeader.CalculateHeightFromText();
+            tutorialDescription.Text = tutorial.Description;
+            tutorialDescription.CalculateHeightFromText();
+            (tutorialDescription.Parent as GUILayoutGroup)?.Recalculate();
             tutorial.TutorialPrefab.Banner?.EnsureLazyLoaded();
             tutorialBanner.Sprite = tutorial.TutorialPrefab.Banner;
             tutorialBanner.Color = tutorial.TutorialPrefab.Banner == null ? Color.Black : Color.White;
@@ -517,6 +546,8 @@ namespace Barotrauma
         #region Selection
         public override void Select()
         {
+            ResetModUpdateButton();
+            
             if (WorkshopItemsToUpdate.Any())
             {
                 while (WorkshopItemsToUpdate.TryDequeue(out ulong workshopId))
@@ -702,6 +733,13 @@ namespace Barotrauma
             }
         }
 #endregion
+
+        public void ResetModUpdateButton()
+        {
+            modUpdateTask = null;
+            modUpdateTimer = 0;
+            modUpdatesButton.Visible = false;
+        }
 
         public void QuickStart(bool fixedSeed = false, Identifier sub = default, float difficulty = 50, LevelGenerationParams levelGenerationParams = null)
         {
@@ -922,15 +960,36 @@ namespace Barotrauma
 
         public override void Update(double deltaTime)
         {
-#if !DEBUG && USE_STEAM
+            modUpdateTimer -= (float)deltaTime;
+            if (modUpdateTimer <= 0.0f && modUpdateTask is not { IsCompleted: false })
+            {
+                modUpdateTask = BulkDownloader.GetItemsThatNeedUpdating();
+                modUpdateTimer = ModUpdateInterval;
+            }
+
+#if DEBUG
+            hostServerButton.Enabled = true;
+#else
             if (GameSettings.CurrentConfig.UseSteamMatchmaking)
             {
-                hostServerButton.Enabled = Steam.SteamManager.IsInitialized;
+                hostServerButton.Enabled = SteamManager.IsInitialized;
             }
-            steamWorkshopButton.Enabled = Steam.SteamManager.IsInitialized;
-#elif USE_STEAM
-            steamWorkshopButton.Enabled = true;
 #endif
+
+            if (modUpdateTask is { IsCompletedSuccessfully: true })
+            {
+                modUpdatesButton.Visible = modUpdateTask.Result.Count > 0;
+            }
+
+            if (modUpdatesButton.Visible)
+            {
+                var modButtonLabelSize =
+                    modsButton.Font.MeasureString(modsButton.Text).ToPoint()
+                    + new Point(GUI.IntScale(25));
+                modUpdatesButton.RectTransform.AbsoluteOffset =
+                    (modButtonLabelSize.X, modsButton.Rect.Height / 2 - modUpdatesButton.Rect.Height / 2);
+            }
+            
             switch (selectedTab)
             {
                 case Tab.NewGame:
@@ -1011,7 +1070,7 @@ namespace Barotrauma
                         GUI.DrawLine(spriteBatch, textPos, textPos - Vector2.UnitX * textSize.X, mouseOn ? Color.White : Color.White * 0.7f);
                         if (mouseOn && PlayerInput.PrimaryMouseButtonClicked())
                         {
-                            GameMain.Instance.ShowOpenUrlInWebBrowserPrompt("http://privacypolicy.daedalic.com");
+                            GameMain.ShowOpenUrlInWebBrowserPrompt("http://privacypolicy.daedalic.com");
                         }
                     }
                     textPos.Y -= textSize.Y;

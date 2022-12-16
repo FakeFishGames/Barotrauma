@@ -187,15 +187,11 @@ namespace Barotrauma.Networking
         {
             if (!isActive) { return; }
 
-            if (ChildServerRelay.HasShutDown || !(ChildServerRelay.Process is { HasExited: false }))
+            if (ChildServerRelay.HasShutDown || !ChildServerRelay.IsProcessAlive)
             {
+                var gameClient = GameMain.Client;
                 Close(PeerDisconnectPacket.WithReason(DisconnectReason.ServerCrashed));
-                var msgBox = new GUIMessageBox(TextManager.Get("ConnectionLost"), ChildServerRelay.CrashMessage);
-                msgBox.Buttons[0].OnClicked += (btn, obj) =>
-                {
-                    GameMain.MainMenuScreen.Select();
-                    return false;
-                };
+                gameClient?.CreateServerCrashMessage();
                 return;
             }
 
@@ -400,8 +396,6 @@ namespace Barotrauma.Networking
             {
                 ClosePeerSession(remotePeers[i]);
             }
-
-            ChildServerRelay.ClosePipes();
 
             callbacks.OnDisconnect.Invoke(peerDisconnectPacket);
 

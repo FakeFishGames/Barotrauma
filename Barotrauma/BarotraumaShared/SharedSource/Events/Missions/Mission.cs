@@ -378,7 +378,7 @@ namespace Barotrauma
             IEnumerable<Character> crewCharacters = GameSession.GetSessionCrewCharacters(CharacterType.Both);
 
             // use multipliers here so that we can easily add them together without introducing multiplicative XP stacking
-            var experienceGainMultiplier = new AbilityExperienceGainMultiplier(1f);
+            var experienceGainMultiplier = new AbilityMissionExperienceGainMultiplier(this, 1f);
             crewCharacters.ForEach(c => c.CheckTalents(AbilityEffectType.OnAllyGainMissionExperience, experienceGainMultiplier));
             crewCharacters.ForEach(c => experienceGainMultiplier.Value += c.GetStatValue(StatTypes.MissionExperienceGainMultiplier));
 
@@ -386,15 +386,26 @@ namespace Barotrauma
 #if CLIENT
             foreach (Character character in crewCharacters)
             {
-                character.Info?.GiveExperience(experienceGain, isMissionExperience: true);
+                GiveMissionExperience(character.Info);
             }
 #else
             foreach (Barotrauma.Networking.Client c in GameMain.Server.ConnectedClients)
             {
                 //give the experience to the stored characterinfo if the client isn't currently controlling a character
-                (c.Character?.Info ?? c.CharacterInfo)?.GiveExperience(experienceGain, isMissionExperience: true);
+                GiveMissionExperience(c.Character?.Info ?? c.CharacterInfo);
+            }
+            foreach (Character bot in GameSession.GetSessionCrewCharacters(CharacterType.Bot))
+            {
+                GiveMissionExperience(bot.Info);
             }
 #endif
+
+            void GiveMissionExperience(CharacterInfo info)
+            {
+                var experienceGainMultiplierIndividual = new AbilityMissionExperienceGainMultiplier(this, 1f);
+                info?.Character?.CheckTalents(AbilityEffectType.OnGainMissionExperience, experienceGainMultiplierIndividual);
+                info?.GiveExperience((int)(experienceGain * experienceGainMultiplier.Value));
+            }
 
             // apply money gains afterwards to prevent them from affecting XP gains
             var missionMoneyGainMultiplier = new AbilityMissionMoneyGainMultiplier(this, 1f);
@@ -615,6 +626,18 @@ namespace Barotrauma
             Value = moneyGainMultiplier;
             Mission = mission;
         }
+        public float Value { get; set; }
+        public Mission Mission { get; set; }
+    }
+
+    class AbilityMissionExperienceGainMultiplier : AbilityObject, IAbilityValue, IAbilityMission
+    {
+        public AbilityMissionExperienceGainMultiplier(Mission mission, float missionExperienceGainMultiplier)
+        {
+            Value = missionExperienceGainMultiplier;
+            Mission = mission;
+        }
+
         public float Value { get; set; }
         public Mission Mission { get; set; }
     }

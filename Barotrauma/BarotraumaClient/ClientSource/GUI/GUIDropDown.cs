@@ -111,6 +111,7 @@ namespace Barotrauma
         }
         public void ReceiveTextInput(string text) { }
         public void ReceiveCommandInput(char command) { }
+        public void ReceiveEditingInput(string text, int start, int length) {  }
 
         public void ReceiveSpecialInput(Keys key)
         {
@@ -121,9 +122,7 @@ namespace Barotrauma
                     listBox.ReceiveSpecialInput(key);
                     GUI.KeyboardDispatcher.Subscriber = this;
                     break;
-                case Keys.Enter:
-                case Keys.Space:
-                case Keys.Escape:
+                default:
                     GUI.KeyboardDispatcher.Subscriber = null;
                     break;
             }

@@ -250,7 +250,9 @@ namespace Barotrauma.Networking
                     structToSend = new ServerPeerContentPackageOrderPacket
                     {
                         ServerName = GameMain.Server.ServerName,
-                        ContentPackages = ContentPackageManager.EnabledPackages.All.Where(cp => cp.HasMultiplayerSyncedContent || cp.Files.All(f => f is SubmarineFile))
+                        ContentPackages = ContentPackageManager.EnabledPackages.All
+                            .Where(cp => cp.Files.Any())
+                            .Where(cp => cp.HasMultiplayerSyncedContent || cp.Files.All(f => f is SubmarineFile))
                             .Select(contentPackage => new ServerContentPackage(contentPackage, timeNow))
                             .ToImmutableArray()
                     };

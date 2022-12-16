@@ -109,6 +109,22 @@ namespace Barotrauma
             set => grainStrength = Math.Max(0, value);
         }
 
+        /// <summary>
+        /// Can be used to set camera shake from status effects
+        /// </summary>
+        public float CameraShake
+        {
+            get { return Screen.Selected?.Cam?.Shake ?? 0.0f; }
+            set
+            {
+                if (!MathUtils.IsValid(value)) { return; }
+                if (Screen.Selected?.Cam != null)
+                {
+                    Screen.Selected.Cam.Shake = value;
+                }
+            }
+        }
+
         private readonly List<ParticleEmitter> bloodEmitters = new List<ParticleEmitter>();
         public IEnumerable<ParticleEmitter> BloodEmitters
         {
@@ -637,18 +653,6 @@ namespace Barotrauma
 
         partial void UpdateProjSpecific(float deltaTime, Camera cam)
         {
-            if (InvisibleTimer > 0.0f)
-            {
-                if (Controlled == null || Controlled == this || (Controlled.CharacterHealth.GetAffliction("psychosis")?.Strength ?? 0.0f) <= 0.0f)
-                {
-                    InvisibleTimer = 0.0f;
-                }
-                else
-                {
-                    InvisibleTimer -= deltaTime;
-                }
-            }
-
             foreach (GUIMessage message in guiMessages)
             {
                 bool wasPending = message.Timer < 0.0f;
@@ -965,7 +969,24 @@ namespace Barotrauma
             }
 
             if (IsDead) { return; }
-            
+
+            var healthBarMode = GameMain.NetworkMember?.ServerSettings.ShowEnemyHealthBars ?? GameSettings.CurrentConfig.ShowEnemyHealthBars;
+            if (healthBarMode != EnemyHealthBarMode.ShowAll)
+            {
+                if (Controlled == null)
+                {
+                    if (!IsOnPlayerTeam) { return; }
+                }
+                else
+                {
+                    if (!HumanAIController.IsFriendly(Controlled, this) || 
+                        (AIController is HumanAIController humanAi && humanAi.ObjectiveManager.CurrentObjective is AIObjectiveCombat combatObjective && HumanAIController.IsFriendly(Controlled, combatObjective.Enemy))) 
+                    { 
+                        return; 
+                    }
+                }
+            }
+
             if (CharacterHealth.DisplayedVitality < MaxVitality * 0.98f && hudInfoVisible)
             {
                 hudInfoAlpha = Math.Max(hudInfoAlpha, Math.Min(CharacterHealth.DamageOverlayTimer, 1.0f));

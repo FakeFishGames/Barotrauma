@@ -2,6 +2,7 @@
 
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma
@@ -16,6 +17,9 @@ namespace Barotrauma
 
         [Serialize("", IsPropertySaveable.Yes)]
         public string PresetName { get; set; } = string.Empty;
+
+        [Serialize(true, IsPropertySaveable.Yes)]
+        public bool TutorialEnabled { get; set; }
 
         [Serialize(false, IsPropertySaveable.Yes), NetworkSerialize]
         public bool RadiationEnabled { get; set; }
@@ -103,12 +107,9 @@ namespace Barotrauma
 
         private static int GetAddedMissionCount()
         {
-            int count = 0;
-            foreach (Character character in GameSession.GetSessionCrewCharacters(CharacterType.Both))
-            {
-                count += (int)character.GetStatValue(StatTypes.ExtraMissionCount);
-            }
-            return count;
+            var characters = GameSession.GetSessionCrewCharacters(CharacterType.Both);
+            if (!characters.Any()) { return 0; }
+            return characters.Max(static character => (int)character.GetStatValue(StatTypes.ExtraMissionCount));
         }
     }
 }

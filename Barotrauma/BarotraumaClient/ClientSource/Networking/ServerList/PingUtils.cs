@@ -14,7 +14,7 @@ namespace Barotrauma.Networking
 {
     static class PingUtils
     {
-        private static readonly Dictionary<IPAddress, int> activePings = new Dictionary<IPAddress, int>();
+        private static readonly Dictionary<IPEndPoint, int> activePings = new Dictionary<IPEndPoint, int>();
 
         private static bool steamPingInfoReady;
 
@@ -36,9 +36,9 @@ namespace Barotrauma.Networking
 
             switch (serverInfo.Endpoint)
             {
-                case LidgrenEndpoint { NetEndpoint: { Address: var address } }:
+                case LidgrenEndpoint { NetEndpoint: var endPoint }:
 
-                    GetIPAddressPing(serverInfo, address, onPingDiscovered);
+                    GetIPAddressPing(serverInfo, endPoint, onPingDiscovered);
                     break;
                 case SteamP2PEndpoint steamP2PEndpoint:
                     TaskPool.Add($"EstimateSteamLobbyPing ({steamP2PEndpoint.StringRepresentation})",
@@ -131,9 +131,9 @@ namespace Barotrauma.Networking
             }
         }
 
-        private static void GetIPAddressPing(ServerInfo serverInfo, IPAddress address, Action<ServerInfo> onPingDiscovered)
+        private static void GetIPAddressPing(ServerInfo serverInfo, IPEndPoint endPoint, Action<ServerInfo> onPingDiscovered)
         {
-            if (IPAddress.IsLoopback(address))
+            if (IPAddress.IsLoopback(endPoint.Address))
             {
                 serverInfo.Ping = Option<int>.Some(0);
                 onPingDiscovered(serverInfo);
@@ -142,24 +142,24 @@ namespace Barotrauma.Networking
             {
                 lock (activePings)
                 {
-                    if (activePings.ContainsKey(address)) { return; }
-                    activePings.Add(address, activePings.Any() ? activePings.Values.Max() + 1 : 0);
+                    if (activePings.ContainsKey(endPoint)) { return; }
+                    activePings.Add(endPoint, activePings.Any() ? activePings.Values.Max() + 1 : 0);
                 }
                 serverInfo.Ping = Option<int>.None();
-                TaskPool.Add($"PingServerAsync ({address})", PingServerAsync(address, 1000),
+                TaskPool.Add($"PingServerAsync ({endPoint})", PingServerAsync(endPoint, 1000),
                     rtt =>
                     {
                         if (!rtt.TryGetResult(out serverInfo.Ping)) { serverInfo.Ping = Option<int>.None(); }
                         onPingDiscovered(serverInfo);
                         lock (activePings)
                         {
-                            activePings.Remove(address);
+                            activePings.Remove(endPoint);
                         }
                     });
             }
         }
 
-        private static async Task<Option<int>> PingServerAsync(IPAddress ipAddress, int timeOut)
+        private static async Task<Option<int>> PingServerAsync(IPEndPoint endPoint, int timeOut)
         {
             await Task.Yield();
             bool shouldGo = false;
@@ -167,21 +167,21 @@ namespace Barotrauma.Networking
             {
                 lock (activePings)
                 {
-                    shouldGo = activePings.Count(kvp => kvp.Value < activePings[ipAddress]) < 25;
+                    shouldGo = activePings.Count(kvp => kvp.Value < activePings[endPoint]) < 25;
                 }
                 await Task.Delay(25);
             }
 
-            if (ipAddress == null) { return Option<int>.None(); }
+            if (endPoint?.Address == null) { return Option<int>.None(); }
             
             //don't attempt to ping if the address is IPv6 and it's not supported
-            if (ipAddress.AddressFamily == AddressFamily.InterNetworkV6 && !Socket.OSSupportsIPv6) { return Option<int>.None(); }
+            if (endPoint.Address.AddressFamily == AddressFamily.InterNetworkV6 && !Socket.OSSupportsIPv6) { return Option<int>.None(); }
             
             Ping ping = new Ping();
             byte[] buffer = new byte[32];
             try
             {
-                PingReply pingReply = await ping.SendPingAsync(ipAddress, timeOut, buffer, new PingOptions(128, true));
+                PingReply pingReply = await ping.SendPingAsync(endPoint.Address, timeOut, buffer, new PingOptions(128, true));
 
                 return pingReply.Status switch
                 {
@@ -191,9 +191,9 @@ namespace Barotrauma.Networking
             }
             catch (Exception ex)
             {
-                GameAnalyticsManager.AddErrorEventOnce("ServerListScreen.PingServer:PingException" + ipAddress, GameAnalyticsManager.ErrorSeverity.Warning, "Failed to ping a server - " + (ex?.InnerException?.Message ?? ex.Message));
+                GameAnalyticsManager.AddErrorEventOnce("ServerListScreen.PingServer:PingException" + endPoint.Address, GameAnalyticsManager.ErrorSeverity.Warning, "Failed to ping a server - " + (ex?.InnerException?.Message ?? ex.Message));
 #if DEBUG
-                DebugConsole.NewMessage("Failed to ping a server (" + ipAddress + ") - " + (ex?.InnerException?.Message ?? ex.Message), Color.Red);
+                DebugConsole.NewMessage("Failed to ping a server (" + endPoint.Address + ") - " + (ex?.InnerException?.Message ?? ex.Message), Color.Red);
 #endif
 
                 return Option<int>.None();

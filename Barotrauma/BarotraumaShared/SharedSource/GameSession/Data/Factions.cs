@@ -4,6 +4,12 @@ using System;
 
 namespace Barotrauma
 {
+    public enum FactionAffiliation
+    {
+        Affiliated,
+        Neutral
+    }
+
     class Faction
     {
         public Reputation Reputation { get; }
@@ -13,6 +19,27 @@ namespace Barotrauma
         {
             Prefab = prefab;
             Reputation = new Reputation(metadata, this, prefab.MinReputation, prefab.MaxReputation, prefab.InitialReputation);
+        }
+
+        /// <summary>
+        /// Get what kind of affiliation this faction has towards the player depending on who they chose to side with via talents
+        /// </summary>
+        /// <returns></returns>
+        public FactionAffiliation GetPlayerAffiliationStatus()
+        {
+            float affiliation = 1f;
+            foreach (Character character in GameSession.GetSessionCrewCharacters(CharacterType.Both))
+            {
+                if (character.Info is not { } info) { continue; }
+
+                affiliation *= 1f + info.GetSavedStatValue(StatTypes.Affiliation, Prefab.Identifier);
+            }
+
+            return affiliation switch
+            {
+                >= 1f => FactionAffiliation.Affiliated,
+                _ => FactionAffiliation.Neutral
+            };
         }
     }
 

@@ -769,7 +769,7 @@ namespace Barotrauma
             if (Character.Controlled != null && ChatMessage.CanUseRadio(Character.Controlled, out WifiComponent radio))
             {
                 radio.Channel = channel;
-                GameMain.Client?.CreateEntityEvent(radio.Item, new Item.ChangePropertyEventData(radio.SerializableProperties["channel".ToIdentifier()]));
+                GameMain.Client?.CreateEntityEvent(radio.Item, new Item.ChangePropertyEventData(radio.SerializableProperties["channel".ToIdentifier()], radio));
 
                 if (setText)
                 {

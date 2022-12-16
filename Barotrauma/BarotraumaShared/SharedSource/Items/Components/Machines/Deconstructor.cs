@@ -104,12 +104,14 @@ namespace Barotrauma.Items.Components
             // doesn't quite work properly, remaining time changes if tinkering stops
             float deconstructionSpeedModifier = userDeconstructorSpeedMultiplier * (1f + tinkeringStrength * TinkeringSpeedIncrease);
 
+            float deconstructionSpeed = item.StatManager.GetAdjustedValue(ItemTalentStats.DeconstructorSpeed, DeconstructionSpeed);
+
             if (DeconstructItemsSimultaneously)
             {
                 float deconstructTime = 0.0f;
                 foreach (Item targetItem in inputContainer.Inventory.AllItems)
                 {
-                    deconstructTime += targetItem.Prefab.DeconstructTime / (DeconstructionSpeed * deconstructionSpeedModifier);
+                    deconstructTime += targetItem.Prefab.DeconstructTime / (deconstructionSpeed * deconstructionSpeedModifier);
                 }
 
                 progressState = Math.Min(progressTimer / deconstructTime, 1.0f);
@@ -139,7 +141,7 @@ namespace Barotrauma.Items.Components
                 if (targetItem == null) { return; }
 
                 var validDeconstructItems = targetItem.Prefab.DeconstructItems.Where(it => it.IsValidDeconstructor(item)).ToList();
-                float deconstructTime = validDeconstructItems.Any() ? targetItem.Prefab.DeconstructTime / (DeconstructionSpeed * deconstructionSpeedModifier) : 1.0f;
+                float deconstructTime = validDeconstructItems.Any() ? targetItem.Prefab.DeconstructTime / (deconstructionSpeed * deconstructionSpeedModifier) : 1.0f;
 
                 progressState = Math.Min(progressTimer / deconstructTime, 1.0f);
                 if (progressTimer > deconstructTime)
@@ -218,7 +220,7 @@ namespace Barotrauma.Items.Components
 
                 if (percentageHealth < deconstructProduct.MinCondition || percentageHealth > deconstructProduct.MaxCondition) { return; }
 
-                if (!(MapEntityPrefab.Find(null, deconstructProduct.ItemIdentifier) is ItemPrefab itemPrefab))
+                if (MapEntityPrefab.FindByIdentifier(deconstructProduct.ItemIdentifier) is not ItemPrefab itemPrefab)
                 {
                     DebugConsole.ThrowError("Tried to deconstruct item \"" + targetItem.Name + "\" but couldn't find item prefab \"" + deconstructProduct.ItemIdentifier + "\"!");
                     return;
@@ -457,6 +459,12 @@ namespace Barotrauma.Items.Components
                 progressTimer = 0.0f;
                 progressState = 0.0f;
             }
+#if CLIENT
+            else
+            {
+                HintManager.OnStartDeconstructing(user, this);
+            }
+#endif
 
             inputContainer.Inventory.Locked = IsActive;
         }

@@ -873,7 +873,7 @@ namespace Barotrauma
 
             foreach (Limb limb in Limbs)
             {
-                if (limb == null || limb.IsSevered) { continue; }
+                if (limb == null || limb.IsSevered || !limb.DoesFlip) { continue; }
                 limb.Dir = Dir;
                 limb.MouthPos = new Vector2(-limb.MouthPos.X, limb.MouthPos.Y);
                 limb.MirrorPullJoint();

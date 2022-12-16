@@ -1,4 +1,5 @@
 using Barotrauma.Networking;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -21,7 +22,14 @@ namespace Barotrauma
 
         private bool isFinished = false;
 
-        public NPCChangeTeamAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
+        public NPCChangeTeamAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) 
+        {
+            var enums = Enum.GetValues(typeof(CharacterTeamType)).Cast<CharacterTeamType>();
+            if (!enums.Contains(TeamTag))
+            {
+                DebugConsole.ThrowError($"Error in {nameof(NPCChangeTeamAction)} in the event {ParentEvent.Prefab.Identifier}. \"{TeamTag}\" is not a valid Team ID. Valid values are {string.Join(',', Enum.GetNames(typeof(CharacterTeamType)))}.");
+            }
+        }
 
         private List<Character> affectedNpcs = null;
 
@@ -59,7 +67,7 @@ namespace Barotrauma
 
                 void ChangeItemTeam(Submarine sub, bool allowStealing)
                 {
-                    foreach (Item item in npc.Inventory.AllItems)
+                    foreach (Item item in npc.Inventory.FindAllItems(recursive: true))
                     {
                         item.AllowStealing = allowStealing;
                         if (item.GetComponent<Items.Components.WifiComponent>() is { } wifiComponent)

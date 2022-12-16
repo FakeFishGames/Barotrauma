@@ -506,7 +506,7 @@ namespace Barotrauma
 
         private LocalizedString GetHeaderText(bool gameOver, CampaignMode.TransitionType transitionType)
         {
-            string locationName = Submarine.MainSub.AtEndExit ? endLocation?.Name : startLocation?.Name;
+            string locationName = Submarine.MainSub is { AtEndExit: true } ? endLocation?.Name : startLocation?.Name;
 
             string textTag;
             if (gameOver)

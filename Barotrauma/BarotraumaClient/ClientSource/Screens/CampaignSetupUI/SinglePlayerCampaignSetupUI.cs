@@ -370,7 +370,7 @@ namespace Barotrauma
             GUILayoutGroup campaignSettingContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.8f), CampaignCustomizeSettings.Content.RectTransform, Anchor.TopCenter));
 
 
-            CampaignSettingElements elements = CreateCampaignSettingList(campaignSettingContent, prevSettings);
+            CampaignSettingElements elements = CreateCampaignSettingList(campaignSettingContent, prevSettings, true);
             CampaignCustomizeSettings.Buttons[0].OnClicked += (button, o) =>
             {
 
@@ -608,15 +608,16 @@ namespace Barotrauma
             {
                 OnClicked = (btn, userdata) =>
                 {
+                    var saveFolder = SaveUtil.GetSaveFolder(SaveUtil.SaveType.Singleplayer);
                     try
                     {
-                        ToolBox.OpenFileWithShell(SaveUtil.SaveFolder);
+                        ToolBox.OpenFileWithShell(saveFolder);
                     }
                     catch (Exception e)
                     {
                         new GUIMessageBox(
-                            TextManager.Get("error"), 
-                            TextManager.GetWithVariables("showinfoldererror", ("[folder]", SaveUtil.SaveFolder), ("[errormessage]", e.Message)));
+                            TextManager.Get("error"),
+                            TextManager.GetWithVariables("showinfoldererror", ("[folder]", saveFolder), ("[errormessage]", e.Message)));
                     }
                     return true;
                 }

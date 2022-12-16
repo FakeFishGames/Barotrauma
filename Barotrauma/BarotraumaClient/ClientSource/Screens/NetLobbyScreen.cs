@@ -103,6 +103,10 @@ namespace Barotrauma
         public GUIFrame JobPreferenceContainer;
         public GUIListBox JobList;
 
+        private Identifier micIconStyle;
+        private float micCheckTimer;
+        const float MicCheckInterval = 1.0f;
+
         private float autoRestartTimer;
 
         //persistent characterinfo provided by the server
@@ -2656,27 +2660,9 @@ namespace Barotrauma
 
         public override void Update(double deltaTime)
         {
-            base.Update(deltaTime);
-
             if (GameMain.Client == null) { return; }
 
-            Identifier currMicStyle = micIcon.Style.Element.NameAsIdentifier();
-
-            Identifier targetMicStyle = "GUIMicrophoneEnabled".ToIdentifier();
-            var voipCaptureDeviceNames = VoipCapture.CaptureDeviceNames;
-            if (voipCaptureDeviceNames.Count == 0)
-            {
-                targetMicStyle = "GUIMicrophoneUnavailable".ToIdentifier();
-            }
-            else if (GameSettings.CurrentConfig.Audio.VoiceSetting == VoiceMode.Disabled)
-            {
-                targetMicStyle = "GUIMicrophoneDisabled".ToIdentifier();
-            }
-
-            if (targetMicStyle != currMicStyle)
-            {
-                GUIStyle.Apply(micIcon, targetMicStyle);
-            }
+            UpdateMicIcon((float)deltaTime);
 
             foreach (GUIComponent child in PlayerList.Content.Children)
             {
@@ -2738,6 +2724,35 @@ namespace Barotrauma
                 if (!mouseRect.Contains(PlayerInput.MousePosition)) { jobVariantTooltip = null; }
             }
         }
+        
+        private void UpdateMicIcon(float deltaTime)
+        {
+            micCheckTimer -= deltaTime;
+            if (micCheckTimer > 0.0f) { return; }
+
+            Identifier newMicIconStyle = "GUIMicrophoneEnabled".ToIdentifier();
+            if (GameSettings.CurrentConfig.Audio.VoiceSetting == VoiceMode.Disabled)
+            {
+                newMicIconStyle = "GUIMicrophoneDisabled".ToIdentifier();
+            }
+            else
+            {
+                var voipCaptureDeviceNames = VoipCapture.GetCaptureDeviceNames();
+                if (voipCaptureDeviceNames.Count == 0)
+                {
+                    newMicIconStyle = "GUIMicrophoneUnavailable".ToIdentifier();
+                }
+            }
+
+            if (newMicIconStyle != micIconStyle)
+            {
+                micIconStyle = newMicIconStyle;
+                GUIStyle.Apply(micIcon, newMicIconStyle);
+            }
+
+            micCheckTimer = MicCheckInterval;
+        }
+
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
             graphics.Clear(Color.Black);

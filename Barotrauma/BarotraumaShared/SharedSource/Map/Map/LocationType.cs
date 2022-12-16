@@ -24,6 +24,7 @@ namespace Barotrauma
         public readonly Dictionary<int, int> MinCountPerZone = new Dictionary<int, int>();
 
         public readonly LocalizedString Name;
+        public readonly LocalizedString Description;
 
         public readonly float BeaconStationChance;
 
@@ -70,6 +71,13 @@ namespace Barotrauma
         public Sprite Sprite { get; private set; }
         public Sprite RadiationSprite { get; }
 
+        private readonly Identifier forceOutpostGenerationParamsIdentifier;
+
+        /// <summary>
+        /// If set to true, only event sets that explicitly define this location type in <see cref="EventSet.LocationTypeIdentifiers"/> can be selected at this location. Defaults to false.
+        /// </summary>
+        public bool IgnoreGenericEvents { get; }
+
         public Color SpriteColor
         {
             get;
@@ -77,9 +85,9 @@ namespace Barotrauma
         }
 
         public float StoreMaxReputationModifier { get; } = 0.1f;
-        public float StoreSellPriceModifier { get; } = 0.8f;
+        public float StoreSellPriceModifier { get; } = 0.3f;
         public float DailySpecialPriceModifier { get; } = 0.5f;
-        public float RequestGoodPriceModifier { get; } = 1.5f;
+        public float RequestGoodPriceModifier { get; } = 2f;
         public int StoreInitialBalance { get; } = 5000;
         /// <summary>
         /// In percentages
@@ -96,6 +104,7 @@ namespace Barotrauma
         public LocationType(ContentXElement element, LocationTypesFile file) : base(file, element.GetAttributeIdentifier("identifier", element.Name.LocalName))
         {
             Name = TextManager.Get("LocationName." + Identifier, "unknown");
+            Description = TextManager.Get("LocationDescription." + Identifier, "");
 
             BeaconStationChance = element.GetAttributeFloat("beaconstationchance", 0.0f);
 
@@ -109,6 +118,10 @@ namespace Barotrauma
             HideEntitySubcategories = element.GetAttributeStringArray("hideentitysubcategories", Array.Empty<string>()).ToList();
 
             ReplaceInRadiation = element.GetAttributeIdentifier(nameof(ReplaceInRadiation), Identifier.Empty);
+
+            forceOutpostGenerationParamsIdentifier = element.GetAttributeIdentifier("forceoutpostgenerationparams", Identifier.Empty);
+
+            IgnoreGenericEvents = element.GetAttributeBool(nameof(IgnoreGenericEvents), false);
 
             string teamStr = element.GetAttributeString("outpostteam", "FriendlyNPC");
             Enum.TryParse(teamStr, out OutpostTeam);
@@ -259,6 +272,15 @@ namespace Barotrauma
             {
                 return allowedLocationTypes[rand.Next() % allowedLocationTypes.Length];
             }
+        }
+
+        public OutpostGenerationParams GetForcedOutpostGenerationParams()
+        {
+            if (OutpostGenerationParams.OutpostParams.TryGet(forceOutpostGenerationParamsIdentifier, out var parameters))
+            {
+                return parameters;
+            }
+            return null;
         }
 
         public override void Dispose() { }
