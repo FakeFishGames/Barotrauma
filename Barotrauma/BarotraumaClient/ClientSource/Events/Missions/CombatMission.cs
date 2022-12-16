@@ -1,6 +1,4 @@
-﻿using Barotrauma.Networking;
-
-namespace Barotrauma
+﻿namespace Barotrauma
 {
     partial class CombatMission : Mission
     {
@@ -8,7 +6,7 @@ namespace Barotrauma
         {
             get
             {
-                if (descriptions == null) return "";
+                if (descriptions == null) { return ""; }
 
                 if (GameMain.Client?.Character == null)
                 {

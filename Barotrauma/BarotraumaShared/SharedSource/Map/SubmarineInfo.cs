@@ -24,7 +24,7 @@ namespace Barotrauma
     }
 
     public enum SubmarineType { Player, Outpost, OutpostModule, Wreck, BeaconStation, EnemySubmarine, Ruin }
-    public enum SubmarineClass { Undefined, Scout, Attack, Transport, DeepDiver }
+    public enum SubmarineClass { Undefined, Scout, Attack, Transport }
 
     partial class SubmarineInfo : IDisposable
     {
@@ -48,6 +48,12 @@ namespace Barotrauma
             CrewExperienceHigh
         }
         public CrewExperienceLevel RecommendedCrewExperience;
+
+        public int Tier
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// A random int that gets assigned when saving the sub. Used in mp campaign to verify that sub files match
@@ -86,6 +92,21 @@ namespace Barotrauma
             set;
         }
 
+        public bool NoItems
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Note: Refreshed for loaded submarines when they are saved, when they are loaded, and on round end. If you need to refresh it, please use Submarine.CheckFuel() method!
+        /// </summary>
+        public bool LowFuel
+        {
+            get;
+            set;
+        }
+
         public Version GameVersion
         {
             get;
@@ -93,6 +114,8 @@ namespace Barotrauma
         }
 
         public SubmarineType Type { get; set; }
+
+        public bool IsManuallyOutfitted { get; set; }
 
         public SubmarineClass SubmarineClass;
 
@@ -272,6 +295,8 @@ namespace Barotrauma
             Description = original.Description;
             Price = original.Price;
             InitialSuppliesSpawned = original.InitialSuppliesSpawned;
+            NoItems = original.NoItems;
+            LowFuel = original.LowFuel;
             GameVersion = original.GameVersion;
             Type = original.Type;
             SubmarineClass = original.SubmarineClass;
@@ -286,7 +311,10 @@ namespace Barotrauma
             RecommendedCrewExperience = original.RecommendedCrewExperience;
             RecommendedCrewSizeMin = original.RecommendedCrewSizeMin;
             RecommendedCrewSizeMax = original.RecommendedCrewSizeMax;
+            Tier = original.Tier;
+            IsManuallyOutfitted = original.IsManuallyOutfitted;
             Tags = original.Tags;
+            OutpostGenerationParams = original.OutpostGenerationParams;
             if (original.OutpostModuleInfo != null)
             {
                 OutpostModuleInfo = new OutpostModuleInfo(original.OutpostModuleInfo);
@@ -335,6 +363,9 @@ namespace Barotrauma
             Price = SubmarineElement.GetAttributeInt("price", 1000);
 
             InitialSuppliesSpawned = SubmarineElement.GetAttributeBool("initialsuppliesspawned", false);
+            NoItems = SubmarineElement.GetAttributeBool("noitems", false);
+            LowFuel = SubmarineElement.GetAttributeBool("lowfuel", false);
+            IsManuallyOutfitted = SubmarineElement.GetAttributeBool("ismanuallyoutfitted", false);
 
             GameVersion = new Version(SubmarineElement.GetAttributeString("gameversion", "0.0.0.0"));
             if (Enum.TryParse(SubmarineElement.GetAttributeString("tags", ""), out SubmarineTag tags))
@@ -363,6 +394,7 @@ namespace Barotrauma
             {
                 Enum.TryParse(recommendedCrewExperience.Value, ignoreCase: true, out RecommendedCrewExperience);
             }
+            Tier = SubmarineElement.GetAttributeInt("tier", GetDefaultTier(Price));
 
             if (SubmarineElement?.Attribute("type") != null)
             {
@@ -384,7 +416,13 @@ namespace Barotrauma
             {
                 if (SubmarineElement?.Attribute("class") != null)
                 {
-                    if (Enum.TryParse(SubmarineElement.GetAttributeString("class", "Undefined"), out SubmarineClass submarineClass))
+                    string classStr = SubmarineElement.GetAttributeString("class", "Undefined");
+                    if (classStr == "DeepDiver")
+                    {
+                        //backwards compatibility
+                        SubmarineClass = SubmarineClass.Scout;
+                    }
+                    else if (Enum.TryParse(classStr, out SubmarineClass submarineClass))
                     {
                         SubmarineClass = submarineClass;
                     }
@@ -515,23 +553,7 @@ namespace Barotrauma
             {
                 realWorldCrushDepth = Level.DefaultRealWorldCrushDepth;
             }
-            realWorldCrushDepth *= GetRealWorldCrushDepthMultiplier();
             return realWorldCrushDepth;
-        }
-
-        /// <summary>
-        /// Based on <see cref="SubmarineClass"/>
-        /// </summary>
-        public float GetRealWorldCrushDepthMultiplier()
-        {
-            if (SubmarineClass == SubmarineClass.DeepDiver)
-            {
-                return 1.2f;
-            }
-            else
-            {
-                return 1.0f;
-            }
         }
 
         //saving/loading ----------------------------------------------------
@@ -668,7 +690,7 @@ namespace Barotrauma
                 System.IO.Stream stream;
                 try
                 {
-                    stream = SaveUtil.DecompressFiletoStream(file);
+                    stream = SaveUtil.DecompressFileToStream(file);
                 }
                 catch (System.IO.FileNotFoundException e)
                 {
@@ -725,5 +747,9 @@ namespace Barotrauma
 
             return doc;
         }
+
+        public static int GetDefaultTier(int price) => price > 20000 ? HighestTier : price > 10000 ? 2 : 1;
+
+        public const int HighestTier = 3;
     }
 }

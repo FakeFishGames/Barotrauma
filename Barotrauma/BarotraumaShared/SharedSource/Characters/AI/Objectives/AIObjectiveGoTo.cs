@@ -196,9 +196,10 @@ namespace Barotrauma
                 character.AIController.SteeringManager.Reset();
                 return;
             }
-            if (!character.IsClimbing)
+            character.SelectedItem = null;
+            if (character.SelectedSecondaryItem != null && !character.SelectedSecondaryItem.IsLadder)
             {
-                character.SelectedConstruction = null;
+                character.SelectedSecondaryItem = null;
             }
             if (Target is Entity e)
             {
@@ -261,7 +262,7 @@ namespace Barotrauma
                 {
                     Character followTarget = Target as Character;
                     bool needsDivingSuit = (!isInside || hasOutdoorNodes) && character.NeedsAir && !character.HasAbilityFlag(AbilityFlags.ImmuneToPressure);
-                    bool needsDivingGear = (needsDivingSuit || HumanAIController.NeedsDivingGear(targetHull, out needsDivingSuit));
+                    bool needsDivingGear = needsDivingSuit || HumanAIController.NeedsDivingGear(targetHull, out needsDivingSuit);
                     if (Mimic)
                     {
                         if (HumanAIController.HasDivingSuit(followTarget))
@@ -594,6 +595,10 @@ namespace Barotrauma
             {
                 return c.CurrentHull;
             }
+            else if (target is Structure structure)
+            {
+                return Hull.FindHull(structure.Position, useWorldCoordinates: false);
+            }
             else if (target is Gap g)
             {
                 return g.FlowTargetHull;
@@ -647,7 +652,7 @@ namespace Barotrauma
             {
                 if (character.IsClimbing)
                 {
-                    if (SteeringManager == PathSteering && PathSteering.CurrentPath != null && !PathSteering.CurrentPath.Finished && PathSteering.IsCurrentNodeLadder)
+                    if (SteeringManager == PathSteering && PathSteering.CurrentPath != null && !PathSteering.CurrentPath.Finished && PathSteering.IsCurrentNodeLadder && !PathSteering.CurrentPath.IsAtEndNode)
                     {
                         if (Target.WorldPosition.Y > character.WorldPosition.Y)
                         {
@@ -694,7 +699,7 @@ namespace Barotrauma
                     {
                         if (Target is Item item)
                         {
-                            if (!character.IsClimbing && character.CanInteractWith(item, out _, checkLinked: false)) { IsCompleted = true; }
+                            if (character.CanInteractWith(item, out _, checkLinked: false)) { IsCompleted = true; }
                         }
                         else if (Target is Character targetCharacter)
                         {

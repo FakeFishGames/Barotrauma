@@ -80,6 +80,10 @@ namespace Barotrauma
 
             LocalizedString header = messageIndex < Headers.Length ? Headers[messageIndex] : "";
             LocalizedString message = messageIndex < Messages.Length ? Messages[messageIndex] : "";
+            if (!message.IsNullOrEmpty())
+            {
+                message = ModifyMessage(message);
+            }
 
             CoroutineManager.StartCoroutine(ShowMessageBoxAfterRoundSummary(header, message));
         }

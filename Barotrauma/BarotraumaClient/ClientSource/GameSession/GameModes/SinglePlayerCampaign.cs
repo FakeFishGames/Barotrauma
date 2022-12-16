@@ -1,12 +1,8 @@
-﻿using Barotrauma.Extensions;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Xml.Linq;
-using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -48,6 +44,31 @@ namespace Barotrauma
         private Character lastControlledCharacter;
 
         private bool showCampaignResetText;
+
+        public override bool PurchasedHullRepairs
+        {
+            get { return PurchasedHullRepairsInLatestSave; }
+            set
+            {
+                PurchasedHullRepairsInLatestSave = value;
+            }
+        }
+        public override bool PurchasedLostShuttles
+        {
+            get { return PurchasedLostShuttlesInLatestSave; }
+            set
+            {
+                PurchasedLostShuttlesInLatestSave = value;
+            }
+        }
+        public override bool PurchasedItemRepairs
+        {
+            get { return PurchasedItemRepairsInLatestSave; }
+            set
+            {
+                PurchasedItemRepairsInLatestSave = value;
+            }
+        }
 
         #region Constructors/initialization
 
@@ -132,9 +153,9 @@ namespace Barotrauma
                 };
             }
 
-            PurchasedLostShuttles = element.GetAttributeBool("purchasedlostshuttles", false);
-            PurchasedHullRepairs = element.GetAttributeBool("purchasedhullrepairs", false);
-            PurchasedItemRepairs = element.GetAttributeBool("purchaseditemrepairs", false);
+            PurchasedLostShuttlesInLatestSave = element.GetAttributeBool("purchasedlostshuttles", false);
+            PurchasedHullRepairsInLatestSave = element.GetAttributeBool("purchasedhullrepairs", false);
+            PurchasedItemRepairsInLatestSave = element.GetAttributeBool("purchaseditemrepairs", false);
             CheatsEnabled = element.GetAttributeBool("cheatsenabled", false);
             if (CheatsEnabled)
             {
@@ -170,9 +191,19 @@ namespace Barotrauma
 
         private void InitUI()
         {
+            CreateEndRoundButton();
+
+            campaignUIContainer = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: "InnerGlow", color: Color.Black);
+            CampaignUI = new CampaignUI(this, campaignUIContainer)
+            {
+                StartRound = () => { TryEndRound(); }
+            };
+        }
+
+        private void CreateEndRoundButton()
+        {
             int buttonHeight = (int)(GUI.Scale * 40);
             int buttonWidth = GUI.IntScale(450);
-
             endRoundButton = new GUIButton(HUDLayoutSettings.ToRectTransform(new Rectangle((GameMain.GraphicsWidth / 2) - (buttonWidth / 2), HUDLayoutSettings.ButtonAreaTop.Center.Y - (buttonHeight / 2), buttonWidth, buttonHeight), GUI.Canvas),
                 TextManager.Get("EndRound"), textAlignment: Alignment.Center, style: "EndRoundButton")
             {
@@ -184,33 +215,17 @@ namespace Barotrauma
                 },
                 OnClicked = (btn, userdata) =>
                 {
-                    var availableTransition = GetAvailableTransition(out _, out _);
-                    if (Character.Controlled != null &&
-                        availableTransition == TransitionType.ReturnToPreviousLocation &&
-                        Character.Controlled?.Submarine == Level.Loaded?.StartOutpost)
-                    {
-                        TryEndRound();
-                    }
-                    else if (Character.Controlled != null &&
-                        availableTransition == TransitionType.ProgressToNextLocation &&
-                        Character.Controlled?.Submarine == Level.Loaded?.EndOutpost)
-                    {
-                        TryEndRound();
-                    }
-                    else
-                    {
-                        ShowCampaignUI = true;
-                        CampaignUI.SelectTab(InteractionType.Map);
-                    }
+                    TryEndRoundWithFuelCheck(
+                        onConfirm: () => TryEndRound(),
+                        onReturnToMapScreen: () => { ShowCampaignUI = true; CampaignUI.SelectTab(InteractionType.Map); });
                     return true;
                 }
             };
+        }
 
-            campaignUIContainer = new GUIFrame(new RectTransform(Vector2.One, GUI.Canvas, Anchor.Center), style: "InnerGlow", color: Color.Black);
-            CampaignUI = new CampaignUI(this, campaignUIContainer)
-            {
-                StartRound = () => { TryEndRound(); }
-            };
+        public override void HUDScaleChanged()
+        {
+            CreateEndRoundButton();
         }
 
         #endregion
@@ -220,7 +235,7 @@ namespace Barotrauma
             base.Start();
             CargoManager.CreatePurchasedItems();
             UpgradeManager.ApplyUpgrades();
-            UpgradeManager.SanityCheckUpgrades(Submarine.MainSub);
+            UpgradeManager.SanityCheckUpgrades();
 
             if (!savedOnStart)
             {
@@ -250,8 +265,8 @@ namespace Barotrauma
 
         private IEnumerable<CoroutineStatus> DoLoadInitialLevel(LevelData level, bool mirror)
         {
-            GameMain.GameSession.StartRound(level,
-                mirrorLevel: mirror);
+            
+            GameMain.GameSession.StartRound(level, mirrorLevel: mirror, startOutpost: GetPredefinedStartOutpost());
             GameMain.GameScreen.Select();
 
             CoroutineManager.StartCoroutine(DoInitialCameraTransition(), "SinglePlayerCampaign.DoInitialCameraTransition");
@@ -307,7 +322,7 @@ namespace Barotrauma
                         yield return CoroutineStatus.Success;
                     }
                     overlayTextColor = Color.Lerp(Color.Transparent, Color.White, (timer - 1.0f) / fadeInDuration);
-                    timer = Math.Min(timer + CoroutineManager.UnscaledDeltaTime, textDuration);
+                    timer = Math.Min(timer + CoroutineManager.DeltaTime, textDuration);
                     yield return CoroutineStatus.Running;
                 }
                 var outpost = GameMain.GameSession.Level.StartOutpost;
@@ -335,7 +350,7 @@ namespace Barotrauma
                 while (timer < fadeInDuration)
                 {
                     overlayColor = Color.Lerp(Color.LightGray, Color.Transparent, timer / fadeInDuration);
-                    timer += CoroutineManager.UnscaledDeltaTime;
+                    timer += CoroutineManager.DeltaTime;
                     yield return CoroutineStatus.Running;
                 }
                 overlayColor = Color.Transparent;
@@ -368,7 +383,7 @@ namespace Barotrauma
 
             if (prevControlled != null)
             {
-                prevControlled.SelectedConstruction = null;
+                prevControlled.SelectedItem = prevControlled.SelectedSecondaryItem = null;
                 if (prevControlled.AIController != null)
                 {
                     prevControlled.AIController.Enabled = true;
@@ -392,6 +407,11 @@ namespace Barotrauma
             GUI.SetSavingIndicatorState(success);
             crewDead = false;
 
+            if (success)
+            {
+                // Event history must be registered before ending the round or it will be cleared
+                GameMain.GameSession.EventManager.RegisterEventHistory();
+            }
             GameMain.GameSession.EndRound("", traitorResults, transitionType);
             var continueButton = GameMain.GameSession.RoundSummary?.ContinueButton;
             RoundSummary roundSummary = null;
@@ -424,7 +444,7 @@ namespace Barotrauma
                     break;
             }
 
-            Map.ProgressWorld(transitionType, (float)(Timing.TotalTime - GameMain.GameSession.RoundStartTime));
+            Map.ProgressWorld(transitionType, GameMain.GameSession.RoundDuration);
 
             var endTransition = new CameraTransition(Submarine.MainSub, GameMain.GameScreen.Cam, null,
                 transitionType == TransitionType.LeaveLocation ? Alignment.BottomCenter : Alignment.Center,
@@ -439,7 +459,7 @@ namespace Barotrauma
             float t = 0.0f;
             while (t < fadeOutDuration || endTransition.Running)
             {
-                t += CoroutineManager.UnscaledDeltaTime;
+                t += CoroutineManager.DeltaTime;
                 overlayColor = Color.Lerp(Color.Transparent, Color.White, t / fadeOutDuration);
                 yield return CoroutineStatus.Running;
             }

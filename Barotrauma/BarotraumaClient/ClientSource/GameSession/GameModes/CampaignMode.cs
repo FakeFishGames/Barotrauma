@@ -4,6 +4,7 @@ using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -86,10 +87,12 @@ namespace Barotrauma
             }
         }
 
+        private static bool IsOwner(Client client) => client != null && client.IsOwner;
+
         /// <summary>
         /// There is a server-side implementation of the method in <see cref="MultiPlayerCampaign"/>
         /// </summary>
-        public bool AllowedToManageCampaign(ClientPermissions permissions)
+        public static bool AllowedToManageCampaign(ClientPermissions permissions)
         {
             //allow managing the round if the client has permissions, is the owner, the only client in the server,
             //or if no-one has management permissions
@@ -97,9 +100,8 @@ namespace Barotrauma
             return
                 GameMain.Client.HasPermission(permissions) ||
                 GameMain.Client.HasPermission(ClientPermissions.ManageCampaign) ||
-                GameMain.Client.ConnectedClients.Count == 1 ||
                 GameMain.Client.IsServerOwner ||
-                GameMain.Client.ConnectedClients.None(c => c.InGame && (c.IsOwner || c.HasPermission(permissions)));
+                AnyOneAllowedToManageCampaign(permissions);
         }
 
         public static bool AllowedToManageWallets()
@@ -202,6 +204,10 @@ namespace Barotrauma
                     }
                     break;
             }
+            if (Level.IsLoadedOutpost && !ObjectiveManager.AllActiveObjectivesCompleted())
+            {
+                endRoundButton.Visible = false;
+            }
 
             if (ReadyCheckButton != null) { ReadyCheckButton.Visible = endRoundButton.Visible; }
 
@@ -265,7 +271,7 @@ namespace Barotrauma
                 Rand.ThreadId = Thread.CurrentThread.ManagedThreadId;
                 try
                 {
-                    GameMain.GameSession.StartRound(newLevel, mirrorLevel: mirror);
+                    GameMain.GameSession.StartRound(newLevel, mirrorLevel: mirror, startOutpost: GetPredefinedStartOutpost());
                 }
                 catch (Exception e)
                 {
@@ -280,6 +286,18 @@ namespace Barotrauma
             });
 
             return loadTask;
+        }
+
+        protected SubmarineInfo GetPredefinedStartOutpost()
+        {
+            if (Map?.CurrentLocation?.Type?.GetForcedOutpostGenerationParams() is OutpostGenerationParams parameters && !parameters.OutpostFilePath.IsNullOrEmpty())
+            {
+                return new SubmarineInfo(parameters.OutpostFilePath.Value)
+                {
+                    OutpostGenerationParams = parameters
+                };
+            }
+            return null;
         }
 
         partial void NPCInteractProjSpecific(Character npc, Character interactor)
@@ -324,6 +342,48 @@ namespace Barotrauma
             CrewManager.AddToGUIUpdateList();
             endRoundButton.AddToGUIUpdateList();
             ReadyCheckButton?.AddToGUIUpdateList();
+        }
+
+        protected void TryEndRoundWithFuelCheck(Action onConfirm, Action onReturnToMapScreen)
+        {
+            Submarine.MainSub.CheckFuel();
+            SubmarineInfo nextSub = PendingSubmarineSwitch ?? Submarine.MainSub.Info;
+            bool lowFuel = nextSub.Name == Submarine.MainSub.Info.Name ? Submarine.MainSub.Info.LowFuel : nextSub.LowFuel;
+            if (Level.IsLoadedFriendlyOutpost && lowFuel && CargoManager.PurchasedItems.None(i => i.Value.Any(pi => pi.ItemPrefab.Tags.Contains("reactorfuel"))))
+            {
+                var extraConfirmationBox =
+                    new GUIMessageBox(TextManager.Get("lowfuelheader"),
+                    TextManager.Get("lowfuelwarning"),
+                    new LocalizedString[2] { TextManager.Get("ok"), TextManager.Get("cancel") });
+                extraConfirmationBox.Buttons[0].OnClicked = (b, o) => { Confirm(); return true; };
+                extraConfirmationBox.Buttons[0].OnClicked += extraConfirmationBox.Close;
+                extraConfirmationBox.Buttons[1].OnClicked = extraConfirmationBox.Close;
+            }
+            else
+            {
+                Confirm();
+            }
+
+            void Confirm()
+            {
+                var availableTransition = GetAvailableTransition(out _, out _);
+                if (Character.Controlled != null &&
+                    availableTransition == TransitionType.ReturnToPreviousLocation &&
+                    Character.Controlled?.Submarine == Level.Loaded?.StartOutpost)
+                {
+                    onConfirm();
+                }
+                else if (Character.Controlled != null &&
+                    availableTransition == TransitionType.ProgressToNextLocation &&
+                    Character.Controlled?.Submarine == Level.Loaded?.EndOutpost)
+                {
+                    onConfirm();
+                }
+                else
+                {
+                    onReturnToMapScreen();
+                }
+            }
         }
 
         public override void Update(float deltaTime)

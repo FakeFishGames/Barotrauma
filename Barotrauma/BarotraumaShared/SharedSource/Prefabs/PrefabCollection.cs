@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Security.Cryptography;
 
@@ -35,6 +36,14 @@ namespace Barotrauma
             OnSort = onSort;
             OnAddOverrideFile = onAddOverrideFile;
             OnRemoveOverrideFile = onRemoveOverrideFile;
+        }
+
+        /// <summary>
+        /// Constructor with only the OnSort callback provided.
+        /// </summary>
+        public PrefabCollection(Action? onSort) : this()
+        {
+            OnSort = onSort;
         }
 
         /// <summary>
@@ -248,7 +257,7 @@ namespace Barotrauma
         /// <param name="identifier">Prefab identifier</param>
         /// <param name="result">The matching prefab (if one is found)</param>
         /// <returns>Whether a prefab with the identifier exists or not</returns>
-        public bool TryGet(Identifier identifier, out T? result)
+        public bool TryGet(Identifier identifier, [NotNullWhen(true)] out T? result)
         {
             Prefab.DisallowCallFromConstructor();
             if (prefabs.TryGetValue(identifier, out PrefabSelector<T>? selector))

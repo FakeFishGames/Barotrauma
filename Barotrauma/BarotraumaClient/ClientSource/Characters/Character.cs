@@ -9,7 +9,6 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 using Barotrauma.Extensions;
 
 namespace Barotrauma
@@ -108,6 +107,22 @@ namespace Barotrauma
         {
             get => grainStrength;
             set => grainStrength = Math.Max(0, value);
+        }
+
+        /// <summary>
+        /// Can be used to set camera shake from status effects
+        /// </summary>
+        public float CameraShake
+        {
+            get { return Screen.Selected?.Cam?.Shake ?? 0.0f; }
+            set
+            {
+                if (!MathUtils.IsValid(value)) { return; }
+                if (Screen.Selected?.Cam != null)
+                {
+                    Screen.Selected.Cam.Shake = value;
+                }
+            }
         }
 
         private readonly List<ParticleEmitter> bloodEmitters = new List<ParticleEmitter>();
@@ -323,8 +338,8 @@ namespace Barotrauma
                 {
                     cam.OffsetAmount = targetOffsetAmount = item.Prefab.OffsetOnSelected * item.OffsetOnSelectedMultiplier;
                 }
-                else if (SelectedConstruction != null && ViewTarget == null &&
-                    SelectedConstruction.Components.Any(ic => ic?.GuiFrame != null && ic.ShouldDrawHUD(this)))
+                else if (SelectedItem != null && ViewTarget == null &&
+                    SelectedItem.Components.Any(ic => ic?.GuiFrame != null && ic.ShouldDrawHUD(this)))
                 {
                     cam.OffsetAmount = targetOffsetAmount = 0.0f;
                     cursorPosition =
@@ -368,21 +383,20 @@ namespace Barotrauma
 
             if (!GUI.InputBlockingMenuOpen)
             {
-                if (SelectedConstruction != null &&
-                    (SelectedConstruction.ActiveHUDs.Any(ic => ic.GuiFrame != null && HUD.CloseHUD(ic.GuiFrame.Rect)) ||
+                if (SelectedItem != null &&
+                    (SelectedItem.ActiveHUDs.Any(ic => ic.GuiFrame != null && HUD.CloseHUD(ic.GuiFrame.Rect)) ||
                     ((ViewTarget as Item)?.Prefab.FocusOnSelected ?? false) && PlayerInput.KeyHit(Microsoft.Xna.Framework.Input.Keys.Escape)))
                 {
                     if (GameMain.Client != null)
                     {
-                        //emulate a Select input to get the character to deselect the item server-side
-                        //keys[(int)InputType.Select].Hit = true;
-                        keys[(int)InputType.Deselect].Hit = true;
+                        //emulate a Deselect input to get the character to deselect the item server-side
+                        EmulateInput(InputType.Deselect);
                     }
                     //reset focus to prevent us from accidentally interacting with another entity
                     focusedItem = null;
                     FocusedCharacter = null;
                     findFocusedTimer = 0.2f;
-                    SelectedConstruction = null;
+                    SelectedItem = null;
                 }
             }
 
@@ -424,6 +438,11 @@ namespace Barotrauma
                     progressBarRemovals.Clear();
                 }
             }
+        }
+
+        public void EmulateInput(InputType input)
+        {
+            keys[(int)input].Hit = true;
         }
         
         partial void OnAttackedProjSpecific(Character attacker, AttackResult attackResult, float stun)
@@ -518,7 +537,7 @@ namespace Barotrauma
             //reduce the amount of aim assist if an item has been selected 
             //= can't switch selection to another item without deselecting the current one first UNLESS the cursor is directly on the item
             //otherwise it would be too easy to accidentally switch the selected item when rewiring items
-            float aimAssistAmount = SelectedConstruction == null ? 100.0f * aimAssistModifier : 1.0f;
+            float aimAssistAmount = SelectedItem == null ? 100.0f * aimAssistModifier : 1.0f;
 
             Vector2 displayPosition = ConvertUnits.ToDisplayUnits(simPosition);
 
@@ -623,29 +642,17 @@ namespace Barotrauma
         {
             if (this != controlled) { return false; }
             if (GameMain.GameSession?.Campaign != null && GameMain.GameSession.Campaign.ShowCampaignUI) { return true; }
-            var controller = SelectedConstruction?.GetComponent<Controller>();
+            var controller = SelectedItem?.GetComponent<Controller>();
             //lock if using a controller, except if we're also using a connection panel in the same item
             return
-                SelectedConstruction != null &&
+                SelectedItem != null &&
                 controller?.User == this && controller.HideHUD &&
-                SelectedConstruction?.GetComponent<ConnectionPanel>()?.User != this;
+                SelectedItem?.GetComponent<ConnectionPanel>()?.User != this;
         }
 
 
         partial void UpdateProjSpecific(float deltaTime, Camera cam)
         {
-            if (InvisibleTimer > 0.0f)
-            {
-                if (Controlled == null || Controlled == this || (Controlled.CharacterHealth.GetAffliction("psychosis")?.Strength ?? 0.0f) <= 0.0f)
-                {
-                    InvisibleTimer = 0.0f;
-                }
-                else
-                {
-                    InvisibleTimer -= deltaTime;
-                }
-            }
-
             foreach (GUIMessage message in guiMessages)
             {
                 bool wasPending = message.Timer < 0.0f;
@@ -900,7 +907,14 @@ namespace Barotrauma
                 if (info != null)
                 {
                     LocalizedString name = Info.DisplayName;
-                    if (controlled == null && name != Info.Name) { name += " " + TextManager.Get("Disguised"); }
+                    if (controlled == null && name != Info.Name) 
+                    { 
+                        name += " " + TextManager.Get("Disguised"); 
+                    }
+                    else if (Info.Title != null)
+                    {
+                        name += '\n' + Info.Title;
+                    }
 
                     Vector2 nameSize = GUIStyle.Font.MeasureString(name);
                     Vector2 namePos = new Vector2(pos.X, pos.Y - 10.0f - (5.0f / cam.Zoom)) - nameSize * 0.5f / cam.Zoom;
@@ -955,7 +969,24 @@ namespace Barotrauma
             }
 
             if (IsDead) { return; }
-            
+
+            var healthBarMode = GameMain.NetworkMember?.ServerSettings.ShowEnemyHealthBars ?? GameSettings.CurrentConfig.ShowEnemyHealthBars;
+            if (healthBarMode != EnemyHealthBarMode.ShowAll)
+            {
+                if (Controlled == null)
+                {
+                    if (!IsOnPlayerTeam) { return; }
+                }
+                else
+                {
+                    if (!HumanAIController.IsFriendly(Controlled, this) || 
+                        (AIController is HumanAIController humanAi && humanAi.ObjectiveManager.CurrentObjective is AIObjectiveCombat combatObjective && HumanAIController.IsFriendly(Controlled, combatObjective.Enemy))) 
+                    { 
+                        return; 
+                    }
+                }
+            }
+
             if (CharacterHealth.DisplayedVitality < MaxVitality * 0.98f && hudInfoVisible)
             {
                 hudInfoAlpha = Math.Max(hudInfoAlpha, Math.Min(CharacterHealth.DamageOverlayTimer, 1.0f));

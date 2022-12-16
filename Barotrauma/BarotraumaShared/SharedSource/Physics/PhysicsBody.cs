@@ -97,7 +97,6 @@ namespace Barotrauma
             get { return list; }
         }
 
-
         protected Vector2 prevPosition;
         protected float prevRotation;
 
@@ -344,6 +343,22 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Ignore rotation calls for the rest of this and the next update. Automatically disabled after that. Used for temporarily suppressing the SmoothRotate calls to prevent conflicting or unitentionally amplified rotations.
+        /// </summary>
+        public bool SuppressSmoothRotationCalls
+        {
+            get => _suppressSmoothRotationCalls;
+            set
+            {
+                _suppressSmoothRotationCalls = value;
+                smoothRotationSuppressionCounter = 0;
+            }
+        }
+
+        private bool _suppressSmoothRotationCalls;
+        private int smoothRotationSuppressionCounter;
+
         public PhysicsBody(XElement element, float scale = 1.0f, bool findNewContacts = true) : this(element, Vector2.Zero, scale, findNewContacts: findNewContacts) { }
         public PhysicsBody(ColliderParams cParams, bool findNewContacts = true) : this(cParams, Vector2.Zero, findNewContacts) { }
         public PhysicsBody(LimbParams lParams, bool findNewContacts = true) : this(lParams, Vector2.Zero, findNewContacts) { }
@@ -369,7 +384,7 @@ namespace Barotrauma
             float radius = ConvertUnits.ToSimUnits(colliderParams.Radius) * colliderParams.Ragdoll.LimbScale;
             float height = ConvertUnits.ToSimUnits(colliderParams.Height) * colliderParams.Ragdoll.LimbScale;
             float width = ConvertUnits.ToSimUnits(colliderParams.Width) * colliderParams.Ragdoll.LimbScale;
-            density = 10;
+            density = Physics.NeutralDensity;
             CreateBody(width, height, radius, density, BodyType.Dynamic,
                 Physics.CollisionCharacter,
                 Physics.CollisionWall | Physics.CollisionLevel, 
@@ -405,6 +420,8 @@ namespace Barotrauma
             FarseerBody.Restitution = limbParams.Restitution;
             FarseerBody.AngularDamping = limbParams.AngularDamping;
             FarseerBody.UserData = this;
+            _collisionCategories = collisionCategory;
+            _collidesWith = collidesWith;
             SetTransformIgnoreContacts(position, 0.0f);
             LastSentPosition = position;
             list.Add(this);
@@ -415,9 +432,11 @@ namespace Barotrauma
             float radius = ConvertUnits.ToSimUnits(element.GetAttributeFloat("radius", 0.0f)) * scale;
             float height = ConvertUnits.ToSimUnits(element.GetAttributeFloat("height", 0.0f)) * scale;
             float width = ConvertUnits.ToSimUnits(element.GetAttributeFloat("width", 0.0f)) * scale;
-            density = Math.Max(forceDensity ?? element.GetAttributeFloat("density", 10.0f), MinDensity);
+            density = Math.Max(forceDensity ?? element.GetAttributeFloat("density", Physics.NeutralDensity), MinDensity);
             Enum.TryParse(element.GetAttributeString("bodytype", "Dynamic"), out BodyType bodyType);
             CreateBody(width, height, radius, density, bodyType, collisionCategory, collidesWith, findNewContacts);
+            _collisionCategories = collisionCategory;
+            _collidesWith = collidesWith;
             FarseerBody.Friction = element.GetAttributeFloat("friction", 0.5f);
             FarseerBody.Restitution = element.GetAttributeFloat("restitution", 0.05f);                    
             FarseerBody.UserData = this;
@@ -456,6 +475,8 @@ namespace Barotrauma
             this.width = width;
             this.height = height;
             this.radius = radius;
+            _collisionCategories = collisionCategory;
+            _collidesWith = collidesWith;
         }
 
         /// <summary>
@@ -825,6 +846,17 @@ namespace Barotrauma
             }
             drawOffset = NetConfig.InterpolateSimPositionError(drawOffset, PositionSmoothingFactor);
             rotationOffset = NetConfig.InterpolateRotationError(rotationOffset);
+            if (SuppressSmoothRotationCalls)
+            {
+                if (smoothRotationSuppressionCounter > 0)
+                {
+                    SuppressSmoothRotationCalls = false;
+                }
+                else
+                {
+                    smoothRotationSuppressionCounter++;
+                }
+            }
         }
 
         public void UpdateDrawPosition()
@@ -867,6 +899,7 @@ namespace Barotrauma
         /// <param name="wrapAngle">Should the angles be wrapped. Set to false if it makes a difference whether the angle of the body is 0.0f or 360.0f.</param>
         public void SmoothRotate(float targetRotation, float force = 10.0f, bool wrapAngle = true)
         {
+            if (SuppressSmoothRotationCalls) { return; }
             float nextAngle = FarseerBody.Rotation + FarseerBody.AngularVelocity * (float)Timing.Step;
             float angle = wrapAngle ? 
                 MathUtils.GetShortestAngle(nextAngle, targetRotation) : 
@@ -875,7 +908,7 @@ namespace Barotrauma
 
             if (FarseerBody.BodyType == BodyType.Kinematic)
             {
-                if (!IsValidValue(torque, "torque")) return;
+                if (!IsValidValue(torque, "torque")) { return; }
                 FarseerBody.AngularVelocity = torque;
             }
             else

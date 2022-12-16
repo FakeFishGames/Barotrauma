@@ -80,7 +80,7 @@ namespace Barotrauma
         {
             if (ID != Entity.NullEntityID)
             {
-                DebugConsole.ShowError("Error setting SoldItem.ID: ID has already been set and should not be changed.");
+                DebugConsole.LogError("Error setting SoldItem.ID: ID has already been set and should not be changed.");
                 return;
             }
             ID = id;
@@ -128,7 +128,7 @@ namespace Barotrauma
             {
                 if (Item != null)
                 {
-                    DebugConsole.ShowError($"Trying to set SoldEntity.Item, but it's already set!\n{Environment.StackTrace.CleanupStackTrace()}");
+                    DebugConsole.LogError($"Trying to set SoldEntity.Item, but it's already set!\n{Environment.StackTrace.CleanupStackTrace()}");
                     return;
                 }
                 Item = item;
@@ -147,15 +147,25 @@ namespace Barotrauma
 
         private Location Location => campaign?.Map?.CurrentLocation;
 
-        public Action OnItemsInBuyCrateChanged;
-        public Action OnItemsInSellCrateChanged;
-        public Action OnItemsInSellFromSubCrateChanged;
-        public Action OnPurchasedItemsChanged;
-        public Action OnSoldItemsChanged;
-        
+        public readonly NamedEvent<CargoManager> OnItemsInBuyCrateChanged = new NamedEvent<CargoManager>();
+        public readonly NamedEvent<CargoManager> OnItemsInSellCrateChanged = new NamedEvent<CargoManager>();
+        public readonly NamedEvent<CargoManager> OnItemsInSellFromSubCrateChanged = new NamedEvent<CargoManager>();
+        public readonly NamedEvent<CargoManager> OnPurchasedItemsChanged = new NamedEvent<CargoManager>();
+        public readonly NamedEvent<CargoManager> OnSoldItemsChanged = new NamedEvent<CargoManager>();
+
         public CargoManager(CampaignMode campaign)
         {
             this.campaign = campaign;
+        }
+
+        public static bool HasUnlockedStoreItem(ItemPrefab prefab)
+        {
+            foreach (Character character in GameSession.GetSessionCrewCharacters(CharacterType.Both))
+            {
+                if (character.HasStoreAccessForItem(prefab)) { return true; }
+            }
+
+            return false;
         }
 
         private List<T> GetItems<T>(Identifier identifier, Dictionary<Identifier, List<T>> items, bool create = false)
@@ -215,19 +225,19 @@ namespace Barotrauma
         public void ClearItemsInBuyCrate()
         {
             ItemsInBuyCrate.Clear();
-            OnItemsInBuyCrateChanged?.Invoke();
+            OnItemsInBuyCrateChanged?.Invoke(this);
         }
 
         public void ClearItemsInSellCrate()
         {
             ItemsInSellCrate.Clear();
-            OnItemsInSellCrateChanged?.Invoke();
+            OnItemsInSellCrateChanged?.Invoke(this);
         }
 
         public void ClearItemsInSellFromSubCrate()
         {
             ItemsInSellFromSubCrate.Clear();
-            OnItemsInSellFromSubCrateChanged?.Invoke();
+            OnItemsInSellFromSubCrateChanged?.Invoke(this);
         }
 
         public void SetPurchasedItems(Dictionary<Identifier, List<PurchasedItem>> purchasedItems)
@@ -238,7 +248,7 @@ namespace Barotrauma
             {
                 PurchasedItems.Add(entry.Key, entry.Value);
             }
-            OnPurchasedItemsChanged?.Invoke();
+            OnPurchasedItemsChanged?.Invoke(this);
         }
 
         public void ModifyItemQuantityInBuyCrate(Identifier storeIdentifier, ItemPrefab itemPrefab, int changeInQuantity, Client client = null)
@@ -255,7 +265,7 @@ namespace Barotrauma
             {
                 GetBuyCrateItems(storeIdentifier, create: true).Add(new PurchasedItem(itemPrefab, changeInQuantity, client));
             }
-            OnItemsInBuyCrateChanged?.Invoke();
+            OnItemsInBuyCrateChanged?.Invoke(this);
         }
 
         public void ModifyItemQuantityInSubSellCrate(Identifier storeIdentifier, ItemPrefab itemPrefab, int changeInQuantity, Client client = null)
@@ -272,7 +282,7 @@ namespace Barotrauma
             {
                 GetSubCrateItems(storeIdentifier, create: true).Add(new PurchasedItem(itemPrefab, changeInQuantity, client));
             }
-            OnItemsInSellFromSubCrateChanged?.Invoke();
+            OnItemsInSellFromSubCrateChanged?.Invoke(this);
         }
 
 #if SERVER
@@ -302,6 +312,10 @@ namespace Barotrauma
             var itemsInStoreCrate = GetBuyCrateItems(storeIdentifier, create: true);
             foreach (PurchasedItem item in itemsToPurchase)
             {
+                // Exchange money
+                int itemValue = item.Quantity * buyValues[item.ItemPrefab];
+                if (!campaign.TryPurchase(client, itemValue)) { continue; }
+
                 // Add to the purchased items
                 var purchasedItem = itemsPurchasedFromStore.Find(pi => pi.ItemPrefab == item.ItemPrefab);
                 if (purchasedItem != null)
@@ -313,9 +327,6 @@ namespace Barotrauma
                     purchasedItem = new PurchasedItem(item.ItemPrefab, item.Quantity, client);
                     itemsPurchasedFromStore.Add(purchasedItem);
                 }
-                // Exchange money
-                int itemValue = item.Quantity * buyValues[item.ItemPrefab];
-                campaign.TryPurchase(client, itemValue);
                 if (GameMain.IsSingleplayer)
                 {
                     GameAnalyticsManager.AddMoneySpentEvent(itemValue, GameAnalyticsManager.MoneySink.Store, item.ItemPrefab.Identifier.Value);
@@ -331,7 +342,7 @@ namespace Barotrauma
                     }
                 }
             }
-            OnPurchasedItemsChanged?.Invoke();
+            OnPurchasedItemsChanged?.Invoke(this);
         }
 
         public Dictionary<ItemPrefab, int> GetBuyValuesAtCurrentLocation(Identifier storeIdentifier, IEnumerable<ItemPrefab> items)
@@ -378,7 +389,7 @@ namespace Barotrauma
             }
             CreateItems(items, Submarine.MainSub, this);
             PurchasedItems.Clear();
-            OnPurchasedItemsChanged?.Invoke();
+            OnPurchasedItemsChanged?.Invoke(this);
         }
 
         private Dictionary<ItemPrefab, int> UndeterminedSoldEntities { get; } = new Dictionary<ItemPrefab, int>();

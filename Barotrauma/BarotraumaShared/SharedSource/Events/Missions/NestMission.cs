@@ -305,20 +305,13 @@ namespace Barotrauma
             return true;
         }
 
-        public override void End()
+        protected override bool DetermineCompleted()
         {
-            if (AllItemsDestroyedOrRetrieved())
-            {
-                GiveReward();
-                completed = true;
-                if (completed)
-                {
-                    if (Prefab.LocationTypeChangeOnCompleted != null)
-                    {
-                        ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
-                    }
-                }
-            }
+            return AllItemsDestroyedOrRetrieved();
+        }
+
+        protected override void EndMissionSpecific(bool completed)
+        {
             foreach (Item item in items)
             {
                 if (item != null && !item.Removed)

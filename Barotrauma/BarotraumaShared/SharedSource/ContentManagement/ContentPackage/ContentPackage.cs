@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
@@ -14,11 +13,20 @@ namespace Barotrauma
 {
     public abstract class ContentPackage
     {
-        public static readonly Version MinimumHashCompatibleVersion = new Version(0, 18, 3, 0);
+        public readonly record struct LoadError(string Message, Exception? Exception)
+        {
+            public override string ToString()
+                => Message
+                   + (Exception is { StackTrace: var stackTrace }
+                       ? '\n' + stackTrace.CleanupStackTrace()
+                       : string.Empty);
+        }
+
+        public static readonly Version MinimumHashCompatibleVersion = new Version(0, 18, 13, 0);
         
         public const string LocalModsDir = "LocalMods";
         public static readonly string WorkshopModsDir = Barotrauma.IO.Path.Combine(
-            SaveUtil.SaveFolder,
+            SaveUtil.DefaultSaveFolder,
             "WorkshopMods",
             "Installed");
 
@@ -29,25 +37,43 @@ namespace Barotrauma
         public readonly ImmutableArray<string> AltNames;
         public readonly string Path;
         public string Dir => Barotrauma.IO.Path.GetDirectoryName(Path) ?? "";
-        public readonly UInt64 SteamWorkshopId;
+        public readonly Option<ContentPackageId> UgcId;
 
         public readonly Version GameVersion;
         public readonly string ModVersion;
         public Md5Hash Hash { get; private set; }
-        public readonly DateTime? InstallTime;
+        public readonly Option<DateTime> InstallTime;
 
         public ImmutableArray<ContentFile> Files { get; private set; }
-        public ImmutableArray<ContentFile.LoadError> Errors { get; private set; }
+        
+        /// <summary>
+        /// Errors that occurred when loading this content package.
+        /// Currently, all errors are considered fatal and the game
+        /// will refuse to load a content package that has any errors.
+        /// </summary>
+        public ImmutableArray<LoadError> FatalLoadErrors { get; private set; }
+
+        /// <summary>
+        /// An error that occurred when trying to enable this mod.
+        /// This field doesn't directly affect whether or not this mod
+        /// can be enabled, but if it's been set to anything other than
+        /// Option.None then the game has already refused to enable it
+        /// at least once.
+        /// </summary>
+        public Option<ContentPackageManager.LoadProgress.Error> EnableError { get; private set; }
+            = Option.None;
+        
+        public bool HasAnyErrors => FatalLoadErrors.Length > 0 || EnableError.IsSome();
 
         public async Task<bool> IsUpToDate()
         {
-            if (SteamWorkshopId != 0 && InstallTime.HasValue)
-            {
-                Steamworks.Ugc.Item? item = await SteamManager.Workshop.GetItem(SteamWorkshopId);
-                if (item is null) { return true; }
-                return item.Value.LatestUpdateTime <= InstallTime;
-            }
-            return true;
+            if (!UgcId.TryUnwrap(out var ugcId)) { return true; }
+            if (ugcId is not SteamWorkshopId steamWorkshopId) { return true; }
+            if (!InstallTime.TryUnwrap(out var installTime)) { return true; }
+            
+            Steamworks.Ugc.Item? item = await SteamManager.Workshop.GetItem(steamWorkshopId.Value);
+            if (item is null) { return true; }
+            return item.Value.LatestUpdateTime <= installTime;
         }
 
         public int Index => ContentPackageManager.EnabledPackages.IndexOf(this);
@@ -55,43 +81,49 @@ namespace Barotrauma
         /// <summary>
         /// Does the content package include some content that needs to match between all players in multiplayer. 
         /// </summary>
-        public bool HasMultiplayerSyncedContent { get; private set; }
+        public bool HasMultiplayerSyncedContent { get; }
 
         protected ContentPackage(XDocument doc, string path)
         {
+            using var errorCatcher = DebugConsole.ErrorCatcher.Create();
+            
             Path = path.CleanUpPathCrossPlatform();
             XElement rootElement = doc.Root ?? throw new NullReferenceException("XML document is invalid: root element is null.");
 
             Name = rootElement.GetAttributeString("name", "").Trim();
             AltNames = rootElement.GetAttributeStringArray("altnames", Array.Empty<string>())
                 .Select(n => n.Trim()).ToImmutableArray();
-            AssertCondition(!string.IsNullOrEmpty(Name), "Name is null or empty");
-            SteamWorkshopId = rootElement.GetAttributeUInt64("steamworkshopid", 0);
+            UInt64 steamWorkshopId = rootElement.GetAttributeUInt64("steamworkshopid", 0);
+
+            if (Name.IsNullOrWhiteSpace() && AltNames.Any())
+            {
+                Name = AltNames.First();
+            }
+
+            UgcId = steamWorkshopId != 0
+                ? Option<ContentPackageId>.Some(new SteamWorkshopId(steamWorkshopId))
+                : Option<ContentPackageId>.None();
 
             GameVersion = rootElement.GetAttributeVersion("gameversion", GameMain.Version);
             ModVersion = rootElement.GetAttributeString("modversion", DefaultModVersion);
-            if (rootElement.Attribute("installtime") != null)
-            {
-                InstallTime = ToolBox.Epoch.ToDateTime(rootElement.GetAttributeUInt("installtime", 0));
-            }
-            else
-            {
-                InstallTime = null;
-            }
+            UInt64 installTimeUnix = rootElement.GetAttributeUInt64("installtime", 0);
+            InstallTime = installTimeUnix != 0
+                ? Option<DateTime>.Some(ToolBox.Epoch.ToDateTime(installTimeUnix))
+                : Option<DateTime>.None();
 
             var fileResults = rootElement.Elements()
                 .Select(e => ContentFile.CreateFromXElement(this, e))
                 .ToArray();
 
             Files = fileResults
-                .OfType<Success<ContentFile, ContentFile.LoadError>>()
-                .Select(f => f.Value)
+                .Successes()
                 .ToImmutableArray();
 
-            Errors = fileResults
-                .OfType<Failure<ContentFile, ContentFile.LoadError>>()
-                .Select(f => f.Error)
+            FatalLoadErrors = fileResults
+                .Failures()
                 .ToImmutableArray();
+
+            AssertCondition(!string.IsNullOrEmpty(Name), $"{nameof(Name)} is null or empty");
 
             HasMultiplayerSyncedContent = Files.Any(f => !f.NotSyncedInMultiplayer);
 
@@ -99,8 +131,16 @@ namespace Barotrauma
             var expectedHash = rootElement.GetAttributeString("expectedhash", "");
             if (HashMismatches(expectedHash))
             {
-                DebugConsole.ThrowError($"Hash calculation for content package \"{Name}\" didn't match expected hash ({Hash.StringRepresentation} != {expectedHash})");
+                FatalLoadErrors = FatalLoadErrors.Add(
+                    new LoadError(
+                        Message: $"Hash calculation returned {Hash.StringRepresentation}, expected {expectedHash}",
+                        Exception: null
+                    ));
             }
+
+            FatalLoadErrors = FatalLoadErrors
+                .Concat(errorCatcher.Errors.Select(err => new LoadError(err.Text, null)))
+                .ToImmutableArray();
         }
 
         public bool HashMismatches(string expectedHash)
@@ -121,21 +161,21 @@ namespace Barotrauma
         public bool NameMatches(string name)
             => NameMatches(name.ToIdentifier());
         
-        public static ContentPackage? TryLoad(string path)
+        public static Result<ContentPackage, Exception> TryLoad(string path)
         {
+            var (success, failure) = Result<ContentPackage, Exception>.GetFactoryMethods();
+            
             XDocument doc = XMLExtensions.TryLoadXml(path);
 
             try
             {
-                return doc.Root.GetAttributeBool("corepackage", false)
-                    ? (ContentPackage)new CorePackage(doc, path)
-                    : new RegularPackage(doc, path);
+                return success(doc.Root.GetAttributeBool("corepackage", false)
+                    ? new CorePackage(doc, path)
+                    : new RegularPackage(doc, path));
             }
             catch (Exception e)
             {
-                e = e.GetInnermost();
-                DebugConsole.ThrowError($"{e.Message}: {e.StackTrace}");
-                return null;
+                return failure(e.GetInnermost());
             }
         }
 
@@ -180,7 +220,7 @@ namespace Barotrauma
         {
             if (!condition)
             {
-                throw new InvalidOperationException($"Failed to load \"{Name ?? Path}\": {errorMsg}");
+                FatalLoadErrors = FatalLoadErrors.Add(new LoadError(errorMsg, null));
             }
         }
 
@@ -200,17 +240,19 @@ namespace Barotrauma
             Failure
         }
 
-        public LoadResult LoadPackage()
+        public LoadResult LoadContent()
         {
-            foreach (var p in LoadPackageEnumerable())
+            foreach (var p in LoadContentEnumerable())
             {
-                if (p.Exception != null) { return LoadResult.Failure; }
+                if (p.Result.IsFailure) { return LoadResult.Failure; }
             }
             return LoadResult.Success;
         }
         
-        public IEnumerable<ContentPackageManager.LoadProgress> LoadPackageEnumerable()
+        public IEnumerable<ContentPackageManager.LoadProgress> LoadContentEnumerable()
         {
+            using var errorCatcher = DebugConsole.ErrorCatcher.Create();
+
             ContentFile[] getFilesToLoad(Predicate<ContentFile> predicate)
                 => Files.Where(predicate.Invoke).ToArray()
 #if DEBUG
@@ -226,6 +268,7 @@ namespace Barotrauma
                 for (int i = 0; i < filesToLoad.Length; i++)
                 {
                     Exception? exception = null;
+
                     try
                     {
                         //do not allow exceptions thrown here to crash the game
@@ -233,42 +276,53 @@ namespace Barotrauma
                     }
                     catch (Exception e)
                     {
+                        var innermost = e.GetInnermost();
+                        DebugConsole.LogError($"Failed to load \"{filesToLoad[i].Path}\": {innermost.Message}\n{innermost.StackTrace}");
                         exception = e;
                     }
                     if (exception != null)
                     {
                         yield return ContentPackageManager.LoadProgress.Failure(exception);
-                        break;
+                        yield break;
                     }
-                    yield return new ContentPackageManager.LoadProgress((i + indexOffset) / (float)Files.Length);
+
+                    if (errorCatcher.Errors.Any())
+                    {
+                        yield return ContentPackageManager.LoadProgress.Failure(
+                            ContentPackageManager.LoadProgress.Error
+                                .Reason.ConsoleErrorsThrown);
+                        yield break;
+                    }
+                    yield return ContentPackageManager.LoadProgress.Progress((i + indexOffset) / (float)Files.Length);
                 }
             }
 
             //Load the UI and text files first. This is to allow the game
             //to render the text in the loading screen as soon as possible.
-            var priorityFiles = getFilesToLoad(f => f is UIStyleFile || f is TextFile);
+            var priorityFiles = getFilesToLoad(f => f is UIStyleFile or TextFile);
 
             var remainder = getFilesToLoad(f => !priorityFiles.Contains(f));
 
             var loadEnumerable =
                 loadFiles(priorityFiles, 0)
                     .Concat(loadFiles(remainder, priorityFiles.Length));
-
+            
             foreach (var p in loadEnumerable)
             {
-                if (p.Exception != null)
+                if (p.Result.TryUnwrapFailure(out var failure))
                 {
-                    HandleLoadException(p.Exception);
+                    errorCatcher.Dispose();
+                    UnloadContent();
+                    EnableError = Option.Some(failure);
                     yield return p;
-                    break;
+                    yield break;
                 }
                 yield return p;
             }
+            errorCatcher.Dispose();
         }
 
-        protected abstract void HandleLoadException(Exception e);
-
-        public void UnloadPackage()
+        public void UnloadContent()
         {
             Files.ForEach(f => f.UnloadFile());
         }
@@ -283,21 +337,16 @@ namespace Barotrauma
                 .Select(e => ContentFile.CreateFromXElement(this, e))
                 .ToArray();
 
-            foreach (var result in fileResults)
+            foreach (var file in fileResults.Successes())
             {
-                switch (result)
+                if (file is BaseSubFile or ItemAssemblyFile)
                 {
-                    case Success<ContentFile, ContentFile.LoadError> { Value: var file }:
-                        if (file is BaseSubFile || file is ItemAssemblyFile)
-                        {
-                            newFileList.Add(file);
-                        }
-                        else
-                        {
-                            var existingFile = Files.FirstOrDefault(f => f.Path == file.Path);
-                            newFileList.Add(existingFile ?? file);
-                        }
-                        break;
+                    newFileList.Add(file);
+                }
+                else
+                {
+                    var existingFile = Files.FirstOrDefault(f => f.Path == file.Path);
+                    newFileList.Add(existingFile ?? file);
                 }
             }
 
@@ -330,16 +379,16 @@ namespace Barotrauma
 
         public void LogErrors()
         {
-            if (!Errors.Any())
+            if (!FatalLoadErrors.Any())
             {
                 return;
             }
 
             DebugConsole.AddWarning(
                 $"The following errors occurred while loading the content package \"{Name}\". The package might not work correctly.\n" +
-                string.Join('\n', Errors.Select(errorToStr)));
+                string.Join('\n', FatalLoadErrors.Select(errorToStr)));
 
-            static string errorToStr(ContentFile.LoadError error)
+            static string errorToStr(LoadError error)
                 => error.ToString();
         }
     }

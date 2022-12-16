@@ -106,11 +106,11 @@ namespace Barotrauma.Items.Components
             {
                 case "set_text":
                 case "signal_in":
+                    if (string.IsNullOrEmpty(signal.value)) { return; }
                     if (signal.value.Length > MaxMessageLength)
                     {
                         signal.value = signal.value.Substring(0, MaxMessageLength);
                     }
-
                     string inputSignal = signal.value.Replace("\\n", "\n");
                     ShowOnDisplay(inputSignal, addToHistory: true, TextColor);
                     break;

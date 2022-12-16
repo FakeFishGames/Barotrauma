@@ -208,7 +208,7 @@ namespace Barotrauma.Items.Components
 
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            msg.Write(user == null ? (ushort)0 : user.ID);
+            msg.WriteUInt16(user == null ? (ushort)0 : user.ID);
             ClientEventWrite(msg, extraData);
         }
     }

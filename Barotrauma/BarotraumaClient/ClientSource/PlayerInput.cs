@@ -59,6 +59,7 @@ namespace Barotrauma
             switch (MouseButton)
             {
                 case MouseButton.None:
+                    if (Key == Keys.None) { return false; }
                     return PlayerInput.KeyDown(Key);
                 case MouseButton.PrimaryMouse:
                     return PlayerInput.PrimaryMouseButtonHeld();
@@ -88,6 +89,7 @@ namespace Barotrauma
             switch (MouseButton)
             {
                 case MouseButton.None:
+                    if (Key == Keys.None) { return false; }
                     return PlayerInput.KeyHit(Key);
                 case MouseButton.PrimaryMouse:
                     return PlayerInput.PrimaryMouseButtonClicked();
@@ -132,11 +134,11 @@ namespace Barotrauma
             }
             else if (a.MouseButton != MouseButton.None)
             {
-                return a.MouseButton == b.MouseButton;
+                return !(b is null) && a.MouseButton == b.MouseButton;
             }
             else
             {
-                return a.Key.Equals(b.Key);
+                return !(b is null) && a.Key.Equals(b.Key);
             }
         }
 

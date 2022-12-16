@@ -34,7 +34,7 @@ namespace Barotrauma
         public double TotalPlayTime;
         public int TotalPassedLevels;
 
-        public enum InteractionType { None, Talk, Examine, Map, Crew, Store, Repair, Upgrade, PurchaseSub, MedicalClinic, Cargo }
+        public enum InteractionType { None, Talk, Examine, Map, Crew, Store, Upgrade, PurchaseSub, MedicalClinic, Cargo }
 
         public static bool BlocksInteraction(InteractionType interactionType)
         {
@@ -80,12 +80,14 @@ namespace Barotrauma
 
         public bool DisableEvents
         {
-            get { return IsFirstRound && Timing.TotalTime < GameMain.GameSession.RoundStartTime + FirstRoundEventDelay; }
+            get { return IsFirstRound && GameMain.GameSession.RoundDuration < FirstRoundEventDelay; }
         }
 
         public bool CheatsEnabled;
 
-        public const int HullRepairCost = 500, ItemRepairCost = 500, ShuttleReplaceCost = 1000;
+        public const float HullRepairCostPerDamage = 0.5f, ItemRepairCostPerRepairDuration = 1.0f;
+        public const int ShuttleReplaceCost = 1000;
+        public const int MaxHullRepairCost = 2000, MaxItemRepairCost = 2000;
 
         protected bool wasDocked;
 
@@ -131,9 +133,20 @@ namespace Barotrauma
             protected set;
         }
 
+        public bool PurchasedLostShuttlesInLatestSave, PurchasedHullRepairsInLatestSave, PurchasedItemRepairsInLatestSave;
+
         public virtual bool PurchasedHullRepairs { get; set; }
         public virtual bool PurchasedLostShuttles { get; set; }
         public virtual bool PurchasedItemRepairs { get; set; }
+
+        private static bool AnyOneAllowedToManageCampaign(ClientPermissions permissions)
+        {
+            if (GameMain.NetworkMember == null) { return true; }
+            //allow managing if no-one with permissions is alive
+            return 
+                GameMain.NetworkMember.ConnectedClients.Count == 1 ||
+                GameMain.NetworkMember.ConnectedClients.None(c => c.InGame && c.Character is { IsIncapacitated: false, IsDead: false } && (IsOwner(c) || c.HasPermission(permissions)));
+        }
 
         protected CampaignMode(GameModePreset preset, CampaignSettings settings)
             : base(preset)
@@ -152,8 +165,9 @@ namespace Barotrauma
             {
                 if (!(e.ChangedData.BalanceChanged is Some<int> { Value: var changed })) { return; }
 
-                bool isGain = changed > 0;
+                if (changed == 0) { return; }
 
+                bool isGain = changed > 0;
                 Color clr = isGain ? GUIStyle.Yellow : GUIStyle.Red;
 
                 switch (e.Owner)
@@ -206,7 +220,7 @@ namespace Barotrauma
             return Level.Loaded?.StartLocation ?? Map.CurrentLocation;
         }
 
-        public List<Submarine> GetSubsToLeaveBehind(Submarine leavingSub)
+        public static List<Submarine> GetSubsToLeaveBehind(Submarine leavingSub)
         {
             //leave subs behind if they're not docked to the leaving sub and not at the same exit
             return Submarine.Loaded.FindAll(sub =>
@@ -225,7 +239,8 @@ namespace Barotrauma
 #if CLIENT
             prevCampaignUIAutoOpenType = TransitionType.None;
 #endif
-            if (PurchasedHullRepairs)
+
+            if (PurchasedHullRepairsInLatestSave)
             {
                 foreach (Structure wall in Structure.WallList)
                 {
@@ -234,13 +249,13 @@ namespace Barotrauma
                     {
                         for (int i = 0; i < wall.SectionCount; i++)
                         {
-                            wall.SetDamage(i, 0, createNetworkEvent: false);
+                            wall.SetDamage(i, 0, createNetworkEvent: false, createExplosionEffect: false);
                         }
                     }
                 }
-                PurchasedHullRepairs = false;
+                PurchasedHullRepairsInLatestSave = PurchasedHullRepairs = false;
             }
-            if (PurchasedItemRepairs)
+            if (PurchasedItemRepairsInLatestSave)
             {
                 foreach (Item item in Item.ItemList)
                 {
@@ -253,11 +268,44 @@ namespace Barotrauma
                         }
                     }
                 }
-                PurchasedItemRepairs = false;
+                PurchasedItemRepairsInLatestSave = PurchasedItemRepairs = false;
             }
-            PurchasedLostShuttles = false;
+            PurchasedLostShuttlesInLatestSave = PurchasedLostShuttles = false;
             var connectedSubs = Submarine.MainSub.GetConnectedSubs();
             wasDocked = Level.Loaded.StartOutpost != null && connectedSubs.Contains(Level.Loaded.StartOutpost);
+        }
+
+        public static int GetHullRepairCost()
+        {
+            float totalDamage = 0;
+            foreach (Structure wall in Structure.WallList)
+            {
+                if (wall.Submarine == null || wall.Submarine.Info.Type != SubmarineType.Player) { continue; }
+                if (wall.Submarine == Submarine.MainSub || Submarine.MainSub.DockedTo.Contains(wall.Submarine))
+                {
+                    for (int i = 0; i < wall.SectionCount; i++)
+                    {
+                        totalDamage += wall.SectionDamage(i);
+                    }
+                }
+            }
+            return (int)Math.Min(totalDamage * HullRepairCostPerDamage, MaxHullRepairCost);
+        }
+
+        public static int GetItemRepairCost()
+        {
+            float totalRepairDuration = 0.0f;
+            foreach (Item item in Item.ItemList)
+            {
+                if (item.Submarine == null || item.Submarine.Info.Type != SubmarineType.Player) { continue; }
+                if (item.Submarine == Submarine.MainSub || Submarine.MainSub.DockedTo.Contains(item.Submarine))
+                {
+                    var repairable = item.GetComponent<Repairable>();
+                    if (repairable == null) { continue; }
+                    totalRepairDuration += repairable.FixDurationHighSkill * (1.0f - item.Condition / item.MaxCondition);
+                }
+            }
+            return (int)Math.Min(totalRepairDuration * ItemRepairCostPerRepairDuration, MaxItemRepairCost);
         }
 
         public void InitCampaignData()
@@ -277,9 +325,18 @@ namespace Barotrauma
 
         public override void AddExtraMissions(LevelData levelData)
         {
+            if (levelData == null)
+            {
+                throw new ArgumentException("Level data was null.");
+            }
+
             extraMissions.Clear();
 
             var currentLocation = Map.CurrentLocation;
+            if (currentLocation == null)
+            {
+                throw new InvalidOperationException("Current location was null.");
+            }
             if (levelData.Type == LevelData.LevelType.Outpost)
             {
                 //if there's an available mission that takes place in the outpost, select it
@@ -512,7 +569,7 @@ namespace Barotrauma
         /// <summary>
         /// Which submarine is at a position where it can leave the level and enter another one (if any).
         /// </summary>
-        private Submarine GetLeavingSub()
+        private static Submarine GetLeavingSub()
         {
             if (Level.IsLoadedOutpost)
             {
@@ -613,9 +670,10 @@ namespace Barotrauma
             if (map != null && CargoManager != null)
             {
                 map.CurrentLocation.RegisterTakenItems(takenItems);
-                map.CurrentLocation.AddStock(CargoManager.SoldItems);
-                CargoManager.ClearSoldItemsProjSpecific();
-                map.CurrentLocation.RemoveStock(CargoManager.PurchasedItems);
+                if (transitionType != TransitionType.None)
+                {
+                    UpdateStoreStock();
+                }
             }
             if (GameMain.NetworkMember == null)
             {
@@ -678,6 +736,16 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Updates store stock before saving the game
+        /// </summary>
+        public void UpdateStoreStock()
+        {
+            Map?.CurrentLocation?.AddStock(CargoManager.SoldItems);
+            CargoManager?.ClearSoldItemsProjSpecific();
+            Map?.CurrentLocation?.RemoveStock(CargoManager.PurchasedItems);
+        }
+
         public void EndCampaign()
         {
             foreach (Character c in Character.CharacterList)
@@ -689,7 +757,7 @@ namespace Barotrauma
             }
             foreach (LocationConnection connection in Map.Connections)
             {
-                connection.Difficulty = connection.Biome.MaxDifficulty;
+                connection.Difficulty = connection.Biome.AdjustedMaxDifficulty;
                 connection.LevelData = new LevelData(connection)
                 {
                     IsBeaconActive = false
@@ -698,9 +766,10 @@ namespace Barotrauma
             }
             foreach (Location location in Map.Locations)
             {
-                location.LevelData = new LevelData(location, location.Biome.MaxDifficulty);
+                location.LevelData = new LevelData(location, location.Biome.AdjustedMaxDifficulty);
                 location.Reset();
             }
+            Map.ClearLocationHistory();
             Map.SetLocation(Map.Locations.IndexOf(Map.StartLocation));
             Map.SelectLocation(-1);
             if (Map.Radiation != null)
@@ -986,7 +1055,7 @@ namespace Barotrauma
             }
         }
 
-        protected void LeaveUnconnectedSubs(Submarine leavingSub)
+        protected static void LeaveUnconnectedSubs(Submarine leavingSub)
         {
             if (leavingSub != Submarine.MainSub && !leavingSub.DockedTo.Contains(Submarine.MainSub))
             {
@@ -1005,7 +1074,7 @@ namespace Barotrauma
             }
         }
 
-        public SubmarineInfo SwitchSubs()
+        public void SwitchSubs()
         {
             if (TransferItemsOnSubSwitch)
             {
@@ -1013,7 +1082,6 @@ namespace Barotrauma
             }
             RefreshOwnedSubmarines();
             PendingSubmarineSwitch = null;
-            return GameMain.GameSession.SubmarineInfo;
         }
 
         /// <summary>
@@ -1035,14 +1103,18 @@ namespace Barotrauma
                 foreach (Item item in Item.ItemList)
                 {
                     if (item.Removed) { continue; }
-                    if (item.NonInteractable) { continue; }
+                    if (item.NonInteractable || item.NonPlayerTeamInteractable) { continue; }
                     if (item.HiddenInGame) { continue; }
                     if (!connectedSubs.Contains(item.Submarine)) { continue; }
                     if (item.Prefab.DontTransferBetweenSubs) { continue; }
-                    if (item.GetRootInventoryOwner() is Character) { continue; }
-                    if (item.GetComponent<Holdable>() == null && item.GetComponent<Wearable>() == null && item.GetComponent<Projectile>() == null) { continue; }
-                    if (item.Components.Any(c => c is Holdable h && h.Attached)) { continue; }
+                    var rootOwner = item.GetRootInventoryOwner();
+                    if (rootOwner is Character) { continue; }
+                    if (rootOwner is Item ownerItem && (ownerItem.NonInteractable || item.NonPlayerTeamInteractable || ownerItem.HiddenInGame)) { continue; }
+                    if (item.GetComponent<Door>() != null) { continue; }
+                    if (item.Components.None(c => c is Pickable)) { continue; }
+                    if (item.Components.Any(c => c is Pickable p && p.IsAttached)) { continue; }
                     if (item.Components.Any(c => c is Wire w && w.Connections.Any(c => c != null))) { continue; }
+                    if (item.Container?.GetComponent<ItemContainer>() is { DrawInventory: false }) { continue; }
                     itemsToTransfer.Add((item, item.Container));
                     item.Submarine = null;
                 }
@@ -1054,6 +1126,7 @@ namespace Barotrauma
                         item.Drop(null, createNetworkEvent: false, setTransform: false);
                     }
                 }
+                currentSub.Info.NoItems = true;
             }
             // Serialize the current sub
             GameMain.GameSession.SubmarineInfo = new SubmarineInfo(currentSub);
@@ -1064,7 +1137,7 @@ namespace Barotrauma
                 var connectedSubs = newSub.GetConnectedSubs().Where(s => s.Info.Type == SubmarineType.Player).ToHashSet();
                 // Move the transferred items
                 List<ItemContainer> availableContainers = Item.ItemList
-                    .Where(it => connectedSubs.Contains(it.Submarine) && it.HasTag("crate") && !it.NonInteractable && !it.HiddenInGame && !it.Removed)
+                    .Where(it => connectedSubs.Contains(it.Submarine) && it.HasTag("crate") && !it.NonInteractable && !it.NonPlayerTeamInteractable && !it.HiddenInGame && !it.Removed)
                     .Select(it => it.GetComponent<ItemContainer>())
                     .Where(c => c != null)
                     .ToList();
@@ -1122,6 +1195,7 @@ namespace Barotrauma
                     DebugConsole.Log(msg);
 #endif
                 }
+                newSub.Info.NoItems = false;
                 // Serialize the new sub
                 PendingSubmarineSwitch = new SubmarineInfo(newSub);
             }

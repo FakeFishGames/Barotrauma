@@ -114,8 +114,8 @@ namespace Barotrauma.Items.Components
                     {
                         if (chargeSound != null)
                         {
-                            chargeSoundChannel = SoundPlayer.PlaySound(chargeSound.Sound, item.WorldPosition, chargeSound.Volume, chargeSound.Range, ignoreMuffling: chargeSound.IgnoreMuffling);
-                            if (chargeSoundChannel != null) chargeSoundChannel.Looping = true;
+                            chargeSoundChannel = SoundPlayer.PlaySound(chargeSound.Sound, item.WorldPosition, chargeSound.Volume, chargeSound.Range, ignoreMuffling: chargeSound.IgnoreMuffling, freqMult: chargeSound.GetRandomFrequencyMultiplier());
+                            if (chargeSoundChannel != null) { chargeSoundChannel.Looping = true; }
                         }
                     }
                     else if (chargeSoundChannel != null)
@@ -153,7 +153,7 @@ namespace Barotrauma.Items.Components
                 GUI.MouseOn == null && !Inventory.IsMouseOnInventory && !GameMain.Instance.Paused;
             if (GUI.HideCursor)
             {
-                crosshairSprite?.Draw(spriteBatch, crosshairPos, Color.White, 0, currentCrossHairScale);
+                crosshairSprite?.Draw(spriteBatch, crosshairPos, ReloadTimer <= 0.0f ? Color.White : Color.White * 0.2f, 0, currentCrossHairScale);
                 crosshairPointerSprite?.Draw(spriteBatch, crosshairPointerPos, 0, currentCrossHairPointerScale);
             }
 

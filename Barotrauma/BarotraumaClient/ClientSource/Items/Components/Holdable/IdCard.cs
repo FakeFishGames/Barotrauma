@@ -23,11 +23,10 @@ namespace Barotrauma.Items.Components
 
             public void ExtractJobPrefab(IReadOnlyDictionary<Identifier, string> tags)
             {
-                if (!tags.TryGetValue("jobid".ToIdentifier(), out string jobId)) { return; }
-                
+                if (!tags.TryGetValue("jobid".ToIdentifier(), out string jobId)) { return; }                
                 if (!jobId.IsNullOrEmpty())
                 {
-                    JobPrefab = JobPrefab.Get(jobId);
+                    JobPrefab = JobPrefab.Get(jobId.ToIdentifier());
                 }
             }
 

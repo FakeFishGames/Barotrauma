@@ -13,7 +13,8 @@ namespace Barotrauma
     abstract partial class Mission
     {
         public readonly MissionPrefab Prefab;
-        protected bool completed, failed;
+        private bool completed;
+        protected bool failed;
 
         protected Level level;
 
@@ -36,12 +37,14 @@ namespace Barotrauma
             }
         }
 
-        protected bool IsClient => GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
+        protected static bool IsClient => GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
+
+        private readonly CheckDataAction completeCheckDataAction;
 
         public readonly ImmutableArray<LocalizedString> Headers;
         public readonly ImmutableArray<LocalizedString> Messages;
 
-        public LocalizedString Name => Prefab.Name;
+        public virtual LocalizedString Name => Prefab.Name;
 
         private readonly LocalizedString successMessage;
         public virtual LocalizedString SuccessMessage
@@ -155,6 +158,12 @@ namespace Barotrauma
             var messages = prefab.Messages.ToArray();
 
             Locations = locations;
+
+            var endConditionElement = prefab.ConfigElement.GetChildElement(nameof(completeCheckDataAction));
+            if (endConditionElement != null)
+            {
+                completeCheckDataAction = new CheckDataAction(endConditionElement, $"Mission ({prefab.Identifier.ToString()})");
+            }
 
             for (int n = 0; n < 2; n++)
             {
@@ -276,6 +285,10 @@ namespace Barotrauma
 
         partial void ShowMessageProjSpecific(int missionState);
 
+        protected virtual LocalizedString ModifyMessage(LocalizedString message, bool color = true)
+        {
+            return message;
+        }
 
         private void TryTriggerEvents(int state)
         {
@@ -330,19 +343,31 @@ namespace Barotrauma
         /// <summary>
         /// End the mission and give a reward if it was completed successfully
         /// </summary>
-        public virtual void End()
+        public void End()
         {
-            completed = true;
-            if (Prefab.LocationTypeChangeOnCompleted != null)
+            completed = 
+                DetermineCompleted() && 
+                (completeCheckDataAction == null ||completeCheckDataAction.GetSuccess());
+            if (completed)
             {
-                ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
+                if (Prefab.LocationTypeChangeOnCompleted != null)
+                {
+                    ChangeLocationType(Prefab.LocationTypeChangeOnCompleted);
+                }
+                GiveReward();
             }
-            GiveReward();
+
+            EndMissionSpecific(completed);
         }
 
-        public void GiveReward()
+        protected abstract bool DetermineCompleted();
+
+        protected virtual void EndMissionSpecific(bool completed) { }
+
+
+        private void GiveReward()
         {
-            if (!(GameMain.GameSession.GameMode is CampaignMode campaign)) { return; }
+            if (GameMain.GameSession.GameMode is not CampaignMode campaign) { return; }
             int reward = GetReward(Submarine.MainSub);
 
             float baseExperienceGain = reward * 0.09f;
@@ -353,7 +378,7 @@ namespace Barotrauma
             IEnumerable<Character> crewCharacters = GameSession.GetSessionCrewCharacters(CharacterType.Both);
 
             // use multipliers here so that we can easily add them together without introducing multiplicative XP stacking
-            var experienceGainMultiplier = new AbilityExperienceGainMultiplier(1f);
+            var experienceGainMultiplier = new AbilityMissionExperienceGainMultiplier(this, 1f);
             crewCharacters.ForEach(c => c.CheckTalents(AbilityEffectType.OnAllyGainMissionExperience, experienceGainMultiplier));
             crewCharacters.ForEach(c => experienceGainMultiplier.Value += c.GetStatValue(StatTypes.MissionExperienceGainMultiplier));
 
@@ -361,15 +386,26 @@ namespace Barotrauma
 #if CLIENT
             foreach (Character character in crewCharacters)
             {
-                character.Info?.GiveExperience(experienceGain, isMissionExperience: true);
+                GiveMissionExperience(character.Info);
             }
 #else
             foreach (Barotrauma.Networking.Client c in GameMain.Server.ConnectedClients)
             {
                 //give the experience to the stored characterinfo if the client isn't currently controlling a character
-                (c.Character?.Info ?? c.CharacterInfo)?.GiveExperience(experienceGain, isMissionExperience: true);
+                GiveMissionExperience(c.Character?.Info ?? c.CharacterInfo);
+            }
+            foreach (Character bot in GameSession.GetSessionCrewCharacters(CharacterType.Bot))
+            {
+                GiveMissionExperience(bot.Info);
             }
 #endif
+
+            void GiveMissionExperience(CharacterInfo info)
+            {
+                var experienceGainMultiplierIndividual = new AbilityMissionExperienceGainMultiplier(this, 1f);
+                info?.Character?.CheckTalents(AbilityEffectType.OnGainMissionExperience, experienceGainMultiplierIndividual);
+                info?.GiveExperience((int)(experienceGain * experienceGainMultiplier.Value));
+            }
 
             // apply money gains afterwards to prevent them from affecting XP gains
             var missionMoneyGainMultiplier = new AbilityMissionMoneyGainMultiplier(this, 1f);
@@ -511,7 +547,7 @@ namespace Barotrauma
 
         protected Character CreateHuman(HumanPrefab humanPrefab, List<Character> characters, Dictionary<Character, List<Item>> characterItems, Submarine submarine, CharacterTeamType teamType, ISpatialEntity positionToStayIn = null, Rand.RandSync humanPrefabRandSync = Rand.RandSync.ServerAndClient, bool giveTags = true)
         {
-            var characterInfo = humanPrefab.GetCharacterInfo(Rand.RandSync.ServerAndClient) ?? new CharacterInfo(CharacterPrefab.HumanSpeciesName, npcIdentifier: humanPrefab.Identifier, jobOrJobPrefab: humanPrefab.GetJobPrefab(humanPrefabRandSync), randSync: humanPrefabRandSync);
+            var characterInfo = humanPrefab.CreateCharacterInfo(Rand.RandSync.ServerAndClient);
             characterInfo.TeamID = teamType;
 
             if (positionToStayIn == null) 
@@ -590,6 +626,18 @@ namespace Barotrauma
             Value = moneyGainMultiplier;
             Mission = mission;
         }
+        public float Value { get; set; }
+        public Mission Mission { get; set; }
+    }
+
+    class AbilityMissionExperienceGainMultiplier : AbilityObject, IAbilityValue, IAbilityMission
+    {
+        public AbilityMissionExperienceGainMultiplier(Mission mission, float missionExperienceGainMultiplier)
+        {
+            Value = missionExperienceGainMultiplier;
+            Mission = mission;
+        }
+
         public float Value { get; set; }
         public Mission Mission { get; set; }
     }

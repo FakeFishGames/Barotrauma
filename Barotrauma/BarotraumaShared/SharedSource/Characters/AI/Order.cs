@@ -3,9 +3,8 @@ using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Xml.Linq;
-using System.Linq;
 using System.Collections.Immutable;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -151,7 +150,7 @@ namespace Barotrauma
         public OrderPrefab(ContentXElement orderElement, OrdersFile file) : base(file, orderElement.GetAttributeIdentifier("identifier", ""))
         {
             Name = TextManager.Get($"OrderName.{Identifier}");
-            ContextualName = TextManager.Get($"OrderNameContextual.{Identifier}");
+            ContextualName = TextManager.Get($"OrderNameContextual.{Identifier}").Fallback(Name);
 
             string targetItemType = orderElement.GetAttributeString("targetitemtype", "");
             if (!string.IsNullOrWhiteSpace(targetItemType))
@@ -435,7 +434,7 @@ namespace Barotrauma
             }
             catch (NotImplementedException e)
             {
-                DebugConsole.ShowError($"Error creating a new Order instance: unexpected target type \"{targetType}\".\n{e.StackTrace.CleanupStackTrace()}");
+                DebugConsole.LogError($"Error creating a new Order instance: unexpected target type \"{targetType}\".\n{e.StackTrace.CleanupStackTrace()}");
                 return null;
             }
         }

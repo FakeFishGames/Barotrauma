@@ -27,16 +27,24 @@ namespace Barotrauma
 #endif
                         continue;
                     }
-                    
-                    if (selectedOption == byte.MaxValue)
+
+                    if (convAction.SelectedOption > -1)
                     {
-                        convAction.IgnoreClient(sender, 3f);
+                        //someone else already chose an option for this conversation: interrupt for this client
+                        convAction.ServerWrite(convAction.Speaker, sender, interrupt: true);
                     }
                     else
                     {
-                        convAction.SelectedOption = selectedOption;
+                        if (selectedOption == byte.MaxValue)
+                        {
+                            convAction.IgnoreClient(sender, 3f);
+                        }
+                        else
+                        {
+                            convAction.SelectedOption = selectedOption;
+                        }
                     }
-                    return;                    
+                    return;
                 }                
             }
         }

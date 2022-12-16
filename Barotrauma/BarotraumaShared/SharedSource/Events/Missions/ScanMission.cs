@@ -247,24 +247,9 @@ namespace Barotrauma
             }
         }
 
-        public override void End()
+        protected override bool DetermineCompleted()
         {
-            if (State == 2 && AllScannersReturned())
-            {
-                GiveReward();
-                completed = true;
-            }
-            foreach (var scanner in scanners)
-            {
-                if (scanner.Item != null && !scanner.Item.Removed)
-                {
-                    scanner.OnScanStarted -= OnScanStarted;
-                    scanner.OnScanCompleted -= OnScanCompleted;
-                    scanner.Item.Remove();
-                }
-            }
-            Reset();
-            failed = !completed && state > 0;
+            return State == 2 && AllScannersReturned();
 
             bool AllScannersReturned()
             {
@@ -284,6 +269,21 @@ namespace Barotrauma
                 }
                 return true;
             }
+        }
+
+        protected override void EndMissionSpecific(bool completed)
+        {
+            foreach (var scanner in scanners)
+            {
+                if (scanner.Item != null && !scanner.Item.Removed)
+                {
+                    scanner.OnScanStarted -= OnScanStarted;
+                    scanner.OnScanCompleted -= OnScanCompleted;
+                    scanner.Item.Remove();
+                }
+            }
+            Reset();
+            failed = !completed && state > 0;
         }
     }
 }

@@ -309,7 +309,7 @@ namespace Barotrauma.Items.Components
             if (nodes.Count == 0) { return; }
 
             Character user = item.ParentInventory?.Owner as Character;
-            editNodeDelay = (user?.SelectedConstruction == null) ? editNodeDelay - deltaTime : 0.5f;
+            editNodeDelay = (user?.SelectedItem == null) ? editNodeDelay - deltaTime : 0.5f;
 
             Submarine sub = item.Submarine;
             if (connections[0] != null && connections[0].Item.Submarine != null) { sub = connections[0].Item.Submarine; }
@@ -369,7 +369,7 @@ namespace Barotrauma.Items.Components
                         user.AnimController.Collider.ApplyForce(forceDir * user.Mass * 50.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity * 0.5f);
                         if (diff.LengthSquared() > 50.0f * 50.0f)
                         {
-                            user.AnimController.UpdateUseItem(true, user.WorldPosition + pullBackDir * Math.Min(150.0f, diff.Length()));
+                            user.AnimController.UpdateUseItem(!user.IsClimbing, user.WorldPosition + pullBackDir * Math.Min(150.0f, diff.Length()));
                         }
 
                         if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
@@ -428,7 +428,7 @@ namespace Barotrauma.Items.Components
         public override bool Use(float deltaTime, Character character = null)
         {
             if (character == null || character != Character.Controlled) { return false; }
-            if (character.SelectedConstruction != null) { return false; }
+            if (character.HasSelectedAnyItem) { return false; }
 #if CLIENT
             if (Screen.Selected == GameMain.SubEditorScreen && !PlayerInput.PrimaryMouseButtonClicked())
             {

@@ -58,6 +58,11 @@
   <ontryopenstuckdoor/>
   <onweldingdoor/>
   
+  <onobtaineditem.unidentifiedgeneticmaterial/>
+  <onobtaineditem.geneticmaterial/>
+  <geneticmaterial.useinstructions/>
+  <geneticmaterial.onrefiningorcombining/>
+  
   <reminder timebeforereminders="300" remindercooldown="120">
     <characterchange/>
     <commandinterface/>

@@ -90,7 +90,7 @@ namespace Barotrauma
             catch (NotImplementedException)
             {
 #if DEBUG
-                DebugConsole.ShowError($"Unexpected target condition \"{targetCondition}\" in AIObjectiveLoadItems.ItemMatchesTargetCondition");
+                DebugConsole.LogError($"Unexpected target condition \"{targetCondition}\" in AIObjectiveLoadItems.ItemMatchesTargetCondition");
 #endif
                 return false;
             }

@@ -11,7 +11,7 @@ namespace Barotrauma
 
     public delegate void TextBoxEvent(GUITextBox sender, Keys key);
 
-    public class GUITextBox : GUIComponent, IKeyboardSubscriber
+    public partial class GUITextBox : GUIComponent, IKeyboardSubscriber
     {        
         public event TextBoxEvent OnSelected;
         public event TextBoxEvent OnDeselected;
@@ -67,12 +67,12 @@ namespace Barotrauma
         private int selectionEndIndex;
         private bool IsLeftToRight => selectionStartIndex <= selectionEndIndex;
 
-        private GUICustomComponent caretAndSelectionRenderer;
+        private readonly GUICustomComponent caretAndSelectionRenderer;
 
         private bool mouseHeldInside;
 
         private readonly Memento<string> memento = new Memento<string>();
-        
+
         // Skip one update cycle, fixes Enter key instantly deselecting the chatbox
         private bool skipUpdate;
 
@@ -189,6 +189,7 @@ namespace Barotrauma
                 base.Font = value;
                 if (textBlock == null) { return; }
                 textBlock.Font = value;
+                imePreviewTextHandler.Font = Font;
             }
         }
 
@@ -253,6 +254,10 @@ namespace Barotrauma
 
         public override bool PlaySoundOnSelect { get; set; } = true;
 
+        private readonly IMEPreviewTextHandler imePreviewTextHandler;
+
+        public bool IsIMEActive => imePreviewTextHandler is { HasText: true };
+
         public GUITextBox(RectTransform rectT, string text = "", Color? textColor = null, GUIFont font = null,
                           Alignment textAlignment = Alignment.Left, bool wrap = false, string style = "", Color? color = null, bool createClearButton = false, bool createPenIcon = true)
             : base(style, rectT)
@@ -264,6 +269,7 @@ namespace Barotrauma
             frame = new GUIFrame(new RectTransform(Vector2.One, rectT, Anchor.Center), style, color);
             GUIStyle.Apply(frame, style == "" ? "GUITextBox" : style);
             textBlock = new GUITextBlock(new RectTransform(Vector2.One, frame.RectTransform, Anchor.CenterLeft), text ?? "", textColor, font, textAlignment, wrap);
+            imePreviewTextHandler = new IMEPreviewTextHandler(textBlock.Font);
             GUIStyle.Apply(textBlock, "", this);
             if (font != null) { textBlock.Font = font; }
             CaretEnabled = true;
@@ -295,18 +301,17 @@ namespace Barotrauma
                 textBlock.RectTransform.MaxSize = new Point(frame.Rect.Width - icon.Rect.Height - clearButtonWidth - icon.RectTransform.AbsoluteOffset.X * 2, int.MaxValue);
             }
             Font = textBlock.Font;
-            
             Enabled = true;
 
-            rectT.SizeChanged += () => 
+            rectT.SizeChanged += () =>
             {
                 if (icon != null) { textBlock.RectTransform.MaxSize = new Point(frame.Rect.Width - icon.Rect.Height - icon.RectTransform.AbsoluteOffset.X * 2, int.MaxValue); }
-                caretPosDirty = true; 
+                caretPosDirty = true;
             };
             rectT.ScaleChanged += () =>
             {
                 if (icon != null) { textBlock.RectTransform.MaxSize = new Point(frame.Rect.Width - icon.Rect.Height - icon.RectTransform.AbsoluteOffset.X * 2, int.MaxValue); }
-                caretPosDirty = true; 
+                caretPosDirty = true;
             };
         }
 
@@ -381,14 +386,16 @@ namespace Barotrauma
             {
                 GUI.KeyboardDispatcher.Subscriber = null;
             }
+
             OnDeselected?.Invoke(this, Keys.None);
+            imePreviewTextHandler.Reset();
         }
 
         public override void Flash(Color? color = null, float flashDuration = 1.5f, bool useRectangleFlash = false, bool useCircularFlash = false, Vector2? flashRectOffset = null)
         {
             frame.Flash(color, flashDuration, useRectangleFlash, useCircularFlash, flashRectOffset);
         }
-        
+
         protected override void Update(float deltaTime)
         {
             if (!Visible) return;
@@ -402,7 +409,8 @@ namespace Barotrauma
                 return;
             }
 
-            if (MouseRect.Contains(PlayerInput.MousePosition) && (GUI.MouseOn == null || (!(GUI.MouseOn is GUIButton) && GUI.IsMouseOn(this))))
+            bool isMouseOn = MouseRect.Contains(PlayerInput.MousePosition) && (GUI.MouseOn == null || (!(GUI.MouseOn is GUIButton) && GUI.IsMouseOn(this)));
+            if (isMouseOn || isSelecting)
             {
                 State = ComponentState.Hover;
                 if (PlayerInput.PrimaryMouseButtonDown())
@@ -437,10 +445,6 @@ namespace Barotrauma
                 }
                 isSelecting = false;
                 State = ComponentState.None;
-            }
-            if (!isSelecting)
-            {
-                isSelecting = PlayerInput.IsShiftDown();
             }
 
             if (mouseHeldInside && !PlayerInput.PrimaryMouseButtonHeld())
@@ -572,6 +576,7 @@ namespace Barotrauma
             {
                 CaretIndex = Math.Min(Text.Length, CaretIndex + input.Length);
                 OnTextChanged?.Invoke(this, Text);
+                imePreviewTextHandler?.Reset();
             }
         }
 
@@ -600,10 +605,12 @@ namespace Barotrauma
 
         public void ReceiveCommandInput(char command)
         {
-            if (Text == null) Text = "";
+            if (IsIMEActive) { return; }
+
+            if (Text == null) { Text = ""; }
 
             // Prevent alt gr from triggering any of these as that combination is often needed for special characters
-            if (PlayerInput.IsAltDown()) return;
+            if (PlayerInput.IsAltDown()) { return; }
 
             switch (command)
             {
@@ -677,8 +684,21 @@ namespace Barotrauma
             }
         }
 
+        public void ReceiveEditingInput(string text, int start, int length)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                imePreviewTextHandler.Reset();
+                return;
+            }
+
+            imePreviewTextHandler.UpdateText(text, start, length);
+        }
+
         public void ReceiveSpecialInput(Keys key)
         {
+            if (IsIMEActive) { return; }
+
             switch (key)
             {
                 case Keys.Left:
@@ -865,6 +885,11 @@ namespace Barotrauma
             {
                 selectionStartIndex = CaretIndex;
             }
+        }
+
+        public void DrawIMEPreview(SpriteBatch spriteBatch)
+        {
+            imePreviewTextHandler.DrawIMEPreview(spriteBatch, CaretScreenPos, textBlock);
         }
 
         private void CalculateSelection()

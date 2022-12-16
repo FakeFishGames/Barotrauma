@@ -235,13 +235,6 @@ namespace Barotrauma
                 }
             };
 
-            var disclaimerBtn = new GUIButton(new RectTransform(new Vector2(1.0f, 0.8f), rightColumn.RectTransform, Anchor.TopRight) { AbsoluteOffset = new Point(5) }, style: "GUINotificationButton")
-            {
-                IgnoreLayoutGroups = true,
-                OnClicked = (btn, userdata) => { GameMain.Instance.ShowCampaignDisclaimer(); return true; }
-            };
-            disclaimerBtn.RectTransform.MaxSize = new Point((int)(30 * GUI.Scale));
-
             columnContainer.Recalculate();
             leftColumn.Recalculate();
             rightColumn.Recalculate();
@@ -377,7 +370,7 @@ namespace Barotrauma
             GUILayoutGroup campaignSettingContent = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.8f), CampaignCustomizeSettings.Content.RectTransform, Anchor.TopCenter));
 
 
-            CampaignSettingElements elements = CreateCampaignSettingList(campaignSettingContent, prevSettings);
+            CampaignSettingElements elements = CreateCampaignSettingList(campaignSettingContent, prevSettings, true);
             CampaignCustomizeSettings.Buttons[0].OnClicked += (button, o) =>
             {
 
@@ -483,8 +476,7 @@ namespace Barotrauma
         {
             foreach (GUIComponent child in subList.Content.Children)
             {
-                SubmarineInfo sub = child.UserData as SubmarineInfo;
-                if (sub == null) { return; }
+                if (!(child.UserData is SubmarineInfo sub)) { return; }
                 child.Visible = string.IsNullOrEmpty(filter) || sub.DisplayName.Contains(filter.ToLower(), StringComparison.OrdinalIgnoreCase);
             }
         }
@@ -530,9 +522,11 @@ namespace Barotrauma
 
             subsToShow.Sort((s1, s2) =>
             {
-                int p1 = s1.Price > CurrentSettings.InitialMoney ? 10 : 0;
-                int p2 = s2.Price > CurrentSettings.InitialMoney ? 10 : 0;
-                return p1.CompareTo(p2) * 100 + s1.Name.CompareTo(s2.Name); 
+                int p1 = s1.Price;
+                if (!s1.IsCampaignCompatible) { p1 += 100000; }
+                int p2 = s2.Price;
+                if (!s2.IsCampaignCompatible) { p2 += 100000; }
+                return p1.CompareTo(p2) * 100 + s1.Name.CompareTo(s2.Name);
             });
 
             subList.ClearChildren();
@@ -540,7 +534,7 @@ namespace Barotrauma
             foreach (SubmarineInfo sub in subsToShow)
             {
                 var textBlock = new GUITextBlock(
-                    new RectTransform(new Vector2(1, 0.1f), subList.Content.RectTransform) { MinSize = new Point(0, 30) },
+                    new RectTransform(new Vector2(1, 0.15f), subList.Content.RectTransform) { MinSize = new Point(0, 30) },
                     ToolBox.LimitString(sub.DisplayName.Value, GUIStyle.Font, subList.Rect.Width - 65), style: "ListBoxElement")
                     {
                         ToolTip = sub.Description,
@@ -553,10 +547,17 @@ namespace Barotrauma
                     textBlock.ToolTip = TextManager.Get("ContentPackageMismatch") + "\n\n" + textBlock.ToolTip.SanitizedString;
                 }
 
-                var priceText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), textBlock.RectTransform, Anchor.CenterRight),
-                    TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", sub.Price)), textAlignment: Alignment.CenterRight, font: GUIStyle.SmallFont)
+                var infoContainer = new GUILayoutGroup(new RectTransform(new Vector2(0.5f, 1.0f), textBlock.RectTransform, Anchor.CenterRight), isHorizontal: false);
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), infoContainer.RectTransform),
+                    TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", sub.Price)), textAlignment: Alignment.BottomRight, font: GUIStyle.SmallFont)
                 {
                     TextColor = sub.Price > CurrentSettings.InitialMoney ? GUIStyle.Red : textBlock.TextColor * 0.8f,
+                    ToolTip = textBlock.ToolTip
+                };
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), infoContainer.RectTransform),
+                    TextManager.Get($"submarineclass.{sub.SubmarineClass}"), textAlignment: Alignment.TopRight, font: GUIStyle.SmallFont)
+                {
+                    TextColor = textBlock.TextColor * 0.8f,
                     ToolTip = textBlock.ToolTip
                 };
 #if !DEBUG
@@ -607,15 +608,16 @@ namespace Barotrauma
             {
                 OnClicked = (btn, userdata) =>
                 {
+                    var saveFolder = SaveUtil.GetSaveFolder(SaveUtil.SaveType.Singleplayer);
                     try
                     {
-                        ToolBox.OpenFileWithShell(SaveUtil.SaveFolder);
+                        ToolBox.OpenFileWithShell(saveFolder);
                     }
                     catch (Exception e)
                     {
                         new GUIMessageBox(
-                            TextManager.Get("error"), 
-                            TextManager.GetWithVariables("showinfoldererror", ("[folder]", SaveUtil.SaveFolder), ("[errormessage]", e.Message)));
+                            TextManager.Get("error"),
+                            TextManager.GetWithVariables("showinfoldererror", ("[folder]", saveFolder), ("[errormessage]", e.Message)));
                     }
                     return true;
                 }

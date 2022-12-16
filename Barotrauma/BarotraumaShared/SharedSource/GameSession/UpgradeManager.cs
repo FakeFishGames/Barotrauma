@@ -61,16 +61,6 @@ namespace Barotrauma
         public const bool UpgradeAlsoConnectedSubs = true;
 
         /// <summary>
-        /// Prevents the player from upgrading the submarine when we are switching to a new one.
-        /// </summary>
-        /// <remarks>
-        /// In singleplayer we check if CampaignMode.PendingSubmarineSwitch is not null indicating we are switching submarines
-        /// but in multiplayer that value is not synced so we use this variable instead by setting it to false in <see cref="UpgradeManager.ClientRead"/> 
-        /// and then set it back to true when the round ends in <see cref="MultiPlayerCampaign.End"/>
-        /// </remarks>
-        public bool CanUpgrade = true;
-
-        /// <summary>
         /// This is used by the client in multiplayer, acts like a secondary PendingUpgrades list
         /// but is not affected by server messages.
         /// </summary>
@@ -94,7 +84,7 @@ namespace Barotrauma
         private CampaignMetadata Metadata => Campaign.CampaignMetadata;
         private readonly CampaignMode Campaign;
 
-        public event Action? OnUpgradesChanged;
+        public readonly NamedEvent<UpgradeManager> OnUpgradesChanged = new NamedEvent<UpgradeManager>();
 
         public UpgradeManager(CampaignMode campaign)
         {
@@ -187,12 +177,13 @@ namespace Barotrauma
                 return;
             }
 
-            int price = prefab.Price.GetBuyprice(GetUpgradeLevel(prefab, category), Campaign.Map?.CurrentLocation);
+            int price = prefab.Price.GetBuyPrice(GetUpgradeLevel(prefab, category), Campaign.Map?.CurrentLocation);
             int currentLevel = GetUpgradeLevel(prefab, category);
 
-            if (currentLevel + 1 > prefab.MaxLevel)
+            int maxLevel = prefab.GetMaxLevelForCurrentSub();
+            if (currentLevel + 1 > maxLevel)
             {
-                DebugConsole.ThrowError($"Tried to purchase \"{prefab.Name}\" over the max level! ({currentLevel + 1} > {prefab.MaxLevel}). The transaction has been cancelled.");
+                DebugConsole.ThrowError($"Tried to purchase \"{prefab.Name}\" over the max level! ({currentLevel + 1} > {maxLevel}). The transaction has been cancelled.");
                 return;
             }
 
@@ -216,7 +207,7 @@ namespace Barotrauma
                 price = 0;
             }
 
-            if (Campaign.TryPurchase(client, price))
+            if (force || Campaign.TryPurchase(client, price))
             {
                 if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
                 {
@@ -248,7 +239,7 @@ namespace Barotrauma
                 // tell the server that this item is yet to be paid for server side
                 PurchasedUpgrades.Add(new PurchasedUpgrade(prefab, category));
 #endif
-                OnUpgradesChanged?.Invoke();
+                OnUpgradesChanged?.Invoke(this);
             }
             else
             {
@@ -349,7 +340,7 @@ namespace Barotrauma
                     }
                 }
 
-                OnUpgradesChanged?.Invoke();
+                OnUpgradesChanged?.Invoke(this);
             }
             else
             {
@@ -418,18 +409,18 @@ namespace Barotrauma
             }
 
 #if CLIENT
-            OnUpgradesChanged?.Invoke();
+            OnUpgradesChanged?.Invoke(this);
 #endif       
         }
 
-        public List<Item> GetLinkedItemsToSwap(Item item)
+        public static ICollection<Item> GetLinkedItemsToSwap(Item item)
         {
-            List<Item> linkedItems = new List<Item>() { item };
+            HashSet<Item> linkedItems = new HashSet<Item>() { item };
             foreach (MapEntity linkedEntity in item.linkedTo)
             {
                 foreach (MapEntity secondLinkedEntity in linkedEntity.linkedTo)
                 {
-                    if (!(secondLinkedEntity is Item linkedItem) || linkedItem == item) { continue; }
+                    if (secondLinkedEntity is not Item linkedItem || linkedItem == item) { continue; }
                     if (linkedItem.AllowSwapping &&
                         linkedItem.Prefab.SwappableItem != null && (linkedItem.Prefab.SwappableItem.CanBeBought || item.Prefab.SwappableItem.ReplacementOnUninstall == ((MapEntity)linkedItem).Prefab.Identifier) &&
                         linkedItem.Prefab.SwappableItem.SwapIdentifier.Equals(item.Prefab.SwappableItem.SwapIdentifier, StringComparison.OrdinalIgnoreCase))
@@ -482,7 +473,7 @@ namespace Barotrauma
             {
                 int newLevel = BuyUpgrade(prefab, category, Submarine.MainSub, level);
                 DebugConsole.Log($"    - {category.Identifier}.{prefab.Identifier} lvl. {level}, new: ({newLevel})");
-                SetUpgradeLevel(prefab, category, Math.Clamp(GetRealUpgradeLevel(prefab, category) + level, 0, prefab.MaxLevel));
+                SetUpgradeLevel(prefab, category, GetRealUpgradeLevel(prefab, category) + level);
             }
 
             PendingUpgrades.Clear();
@@ -522,8 +513,11 @@ namespace Barotrauma
         /// Should be called after every round start right after <see cref="ApplyUpgrades"/>
         /// </summary>
         /// <param name="submarine"></param>
-        public void SanityCheckUpgrades(Submarine submarine)
+        public void SanityCheckUpgrades()
         {
+            Submarine submarine = GameMain.GameSession?.Submarine ?? Submarine.MainSub;
+            if (submarine is null) { return; }
+
             // check walls
             foreach (Structure wall in submarine.GetWalls(UpgradeAlsoConnectedSubs))
             {
@@ -531,23 +525,8 @@ namespace Barotrauma
                 {
                     foreach (UpgradePrefab prefab in UpgradePrefab.Prefabs)
                     {
-                        int level = GetRealUpgradeLevel(prefab, category);
-                        if (level == 0 || !prefab.IsWallUpgrade) { continue; }
-
-                        Upgrade? upgrade = wall.GetUpgrade(prefab.Identifier);
-
-                        bool isOverMax = IsOverMaxLevel(level, prefab);
-                        if (isOverMax)
-                        {
-                            SetUpgradeLevel(prefab, category, prefab.MaxLevel);
-                            level = prefab.MaxLevel;
-                        }
-
-                        if (upgrade == null || upgrade.Level != level || isOverMax)
-                        {
-                            DebugLog($"{((MapEntity)wall).Prefab.Name} has incorrect \"{prefab.Name}\" level! Expected {level} but got {upgrade?.Level ?? 0}. Fixing...");
-                            FixUpgradeOnItem(wall, prefab, level);
-                        }
+                        if (!prefab.IsWallUpgrade) { continue; }
+                        TryFixUpgrade(wall, category, prefab);
                     }
                 }
             }
@@ -559,39 +538,43 @@ namespace Barotrauma
                 {
                     foreach (UpgradePrefab prefab in UpgradePrefab.Prefabs)
                     {
-                        if (!category.CanBeApplied(item, prefab)) { continue; }
-
-                        int level = GetRealUpgradeLevel(prefab, category);
-                        if (level == 0) { continue; }
-
-                        Upgrade? upgrade = item.GetUpgrade(prefab.Identifier);
-                        bool isOverMax = IsOverMaxLevel(level, prefab);
-                        if (isOverMax)
-                        {
-                            SetUpgradeLevel(prefab, category, prefab.MaxLevel);
-                            level = prefab.MaxLevel;
-                        }
-
-                        if (upgrade == null || upgrade.Level != level || isOverMax)
-                        {
-                            DebugLog($"{((MapEntity)item).Prefab.Name} has incorrect \"{prefab.Name}\" level! Expected {level} but got {upgrade?.Level ?? 0}{(isOverMax ? " (Over max level!)" : string.Empty)}. Fixing...");
-                            FixUpgradeOnItem(item, prefab, level);
-                        }
+                        TryFixUpgrade(item, category, prefab);
                     }
                 }
             }
 
-            static bool IsOverMaxLevel(int level, UpgradePrefab prefab) => level > prefab.MaxLevel;
+            void TryFixUpgrade(MapEntity entity, UpgradeCategory category, UpgradePrefab prefab)
+            {
+                if (!category.CanBeApplied(entity, prefab)) { return; }
+
+                int level = GetRealUpgradeLevel(prefab, category);
+                int maxLevel = submarine.Info is { } info ? prefab.GetMaxLevel(info) : prefab.MaxLevel;
+                if (maxLevel < level) { level = maxLevel; }
+
+                if (level == 0) { return; }
+
+                Upgrade? upgrade = entity.GetUpgrade(prefab.Identifier);
+
+                if (upgrade == null || upgrade.Level != level)
+                {
+                    DebugLog($"{entity.Prefab.Name} has incorrect \"{prefab.Name}\" level! Expected {level} but got {upgrade?.Level ?? 0}. Fixing...");
+                    FixUpgradeOnItem((ISerializableEntity)entity, prefab, level);
+                }
+            }
         }
 
         private static void FixUpgradeOnItem(ISerializableEntity target, UpgradePrefab prefab, int level)
         {
             if (target is MapEntity mapEntity)
             {
+                // do not fix what's not broken
+                if (level == 0) { return; }
+
                 mapEntity.SetUpgrade(new Upgrade(target, prefab, level), false);
             }
         }
 
+        private readonly static HashSet<Submarine> upgradedSubs = new HashSet<Submarine>();
         /// <summary>
         /// Applies an upgrade on the submarine, should be called by <see cref="ApplyUpgrades"/> when the round starts.
         /// </summary>
@@ -602,6 +585,12 @@ namespace Barotrauma
         /// <returns>New level that was applied, -1 if no upgrades were applied.</returns>
         private static int BuyUpgrade(UpgradePrefab prefab, UpgradeCategory category, Submarine submarine, int level = 1, Submarine? parentSub = null)
         {
+            if (parentSub == null)
+            {
+                upgradedSubs.Clear();
+            }
+            upgradedSubs.Add(submarine);
+
             int? newLevel = null;
             if (category.IsWallUpgrade)
             {
@@ -637,9 +626,12 @@ namespace Barotrauma
                 }
             }
 
-            foreach (Submarine loadedSub in Submarine.Loaded.Where(sub => sub != submarine))
+            foreach (Submarine loadedSub in Submarine.Loaded)
             {
-                if (loadedSub == parentSub) { continue; }
+                if (loadedSub == parentSub || loadedSub == submarine) { continue; }
+                if (loadedSub.Info?.Type != SubmarineType.Player) { continue; }
+                if (upgradedSubs.Contains(loadedSub)) { continue; }
+
                 XElement? root = loadedSub.Info?.SubmarineElement;
                 if (root == null) { continue; }
 
@@ -648,8 +640,8 @@ namespace Barotrauma
                     if (root.Attribute("location") == null) { continue; }
 
                     // Check if this is our linked submarine
-                    ushort dockingPortID = (ushort) root.GetAttributeInt("originallinkedto", 0);
-                    if (dockingPortID > 0 && submarine.GetItems(true).Any(item => item.ID == dockingPortID))
+                    ushort dockingPortID = (ushort)root.GetAttributeInt("originallinkedto", 0);
+                    if (dockingPortID > 0 && submarine.GetItems(alsoFromConnectedSubs: true).Any(item => item.ID == dockingPortID))
                     {
                         BuyUpgrade(prefab, category, loadedSub, level, submarine);
                     }
@@ -671,16 +663,13 @@ namespace Barotrauma
 
         /// <summary>
         /// Gets the progress that is shown on the store interface.
-        /// Includes values stored in the metadata and <see cref="PendingUpgrades"/>
+        /// Includes values stored in the metadata and <see cref="PendingUpgrades"/>, and takes submarine tier and class restrictions into account
         /// </summary>
-        /// <param name="prefab"></param>
-        /// <param name="category"></param>
-        /// <returns></returns>
         public int GetUpgradeLevel(UpgradePrefab prefab, UpgradeCategory category)
         {
             if (!Metadata.HasKey(FormatIdentifier(prefab, category))) { return GetPendingLevel(); }
 
-            return GetRealUpgradeLevel(prefab, category) + GetPendingLevel();
+            return Math.Min(GetRealUpgradeLevel(prefab, category) + GetPendingLevel(), prefab.GetMaxLevelForCurrentSub());
 
             int GetPendingLevel()
             {
@@ -690,11 +679,8 @@ namespace Barotrauma
         }
 
         /// <summary>
-        /// Gets the level of the upgrade that is stored in the metadata.
+        /// Gets the level of the upgrade that is stored in the metadata. May be higher than the apparent level on the current sub if the player has switched to a lower-tier sub
         /// </summary>
-        /// <param name="prefab"></param>
-        /// <param name="category"></param>
-        /// <returns></returns>
         public int GetRealUpgradeLevel(UpgradePrefab prefab, UpgradeCategory category)
         {
             return !Metadata.HasKey(FormatIdentifier(prefab, category)) ? 0 : Metadata.GetInt(FormatIdentifier(prefab, category), 0);
@@ -703,9 +689,6 @@ namespace Barotrauma
         /// <summary>
         /// Stores the target upgrade level in the campaign metadata.
         /// </summary>
-        /// <param name="prefab"></param>
-        /// <param name="category"></param>
-        /// <param name="level"></param>
         private void SetUpgradeLevel(UpgradePrefab prefab, UpgradeCategory category, int level)
         {
             Metadata.SetValue(FormatIdentifier(prefab, category), level);
@@ -713,9 +696,9 @@ namespace Barotrauma
 
         public bool CanUpgradeSub()
         {
-            if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return CanUpgrade; }
-
-            return Campaign.PendingSubmarineSwitch == null;
+            return 
+                Campaign.PendingSubmarineSwitch == null || 
+                Campaign.PendingSubmarineSwitch.Name == Submarine.MainSub.Info.Name;
         }
 
         public void Save(XElement? parent)
@@ -728,7 +711,7 @@ namespace Barotrauma
             SavePendingUpgrades(upgradeManagerElement, PendingUpgrades);
         }
 
-        private void SavePendingUpgrades(XElement? parent, List<PurchasedUpgrade> upgrades)
+        private static void SavePendingUpgrades(XElement? parent, List<PurchasedUpgrade> upgrades)
         {
             if (parent == null) { return; }
 
@@ -802,7 +785,7 @@ namespace Barotrauma
         {
             PendingUpgrades.Clear();
             PendingUpgrades.AddRange(upgrades);
-            OnUpgradesChanged?.Invoke();
+            OnUpgradesChanged?.Invoke(this);
         }
 
         public static void DebugLog(string msg, Color? color = null)

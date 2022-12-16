@@ -101,11 +101,11 @@ namespace Barotrauma.Items.Components
         {
             if (TryExtractEventData(extraData, out ServerEventData eventData))
             {
-                msg.Write(eventData.MsgToSend);
+                msg.WriteString(eventData.MsgToSend);
             }
             else
             {
-                msg.Write(OutputValue);
+                msg.WriteString(OutputValue);
             }
         }
     }

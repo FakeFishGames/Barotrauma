@@ -143,7 +143,7 @@ namespace Barotrauma
                 //select which module types the outpost should consist of
                 List<Identifier> pendingModuleFlags  =
                     onlyEntrance ? 
-                    generationParams.ModuleCounts.First().Identifier.ToEnumerable().ToList() :
+                    (generationParams.ModuleCounts.FirstOrDefault()?.Identifier.ToEnumerable() ?? Enumerable.Empty<Identifier>()).ToList() :
                     SelectModules(outpostModules, generationParams);
                 
                 foreach (Identifier flag in pendingModuleFlags)
@@ -246,6 +246,7 @@ namespace Barotrauma
 
             var outpostFiles = ContentPackageManager.EnabledPackages.All
                 .SelectMany(p => p.GetFiles<OutpostFile>())
+                .Where(f => !TutorialPrefab.Prefabs.Any(tp => tp.OutpostPath == f.Path))
                 .OrderBy(f => f.UintIdentifier).ToArray();
             if (!outpostFiles.Any())
             {
@@ -696,6 +697,14 @@ namespace Barotrauma
                 rect.Location += (module.Offset + module.MoveOffset).ToPoint();
                 rect.Y += module.Bounds.Height;
 
+                Vector2? selfGapPos1 = null; 
+                Vector2? selfGapPos2 = null;
+                if (module.PreviousModule != null)
+                {
+                    selfGapPos1 = module.Offset + module.ThisGap.Position + module.MoveOffset;
+                    selfGapPos2 = module.PreviousModule.Offset + module.PreviousGap.Position + module.PreviousModule.MoveOffset;
+                }
+
                 foreach (PlacedModule otherModule in modules)
                 {
                     if (otherModule == module || otherModule.PreviousModule == null || otherModule.PreviousModule == module) { continue; }
@@ -710,7 +719,17 @@ namespace Barotrauma
 
                         Vector2 gapPos1 = otherModule.Offset + otherModule.ThisGap.Position + gapEdgeOffset + otherModule.MoveOffset;
                         Vector2 gapPos2 = otherModule.PreviousModule.Offset + otherModule.PreviousGap.Position + gapEdgeOffset + otherModule.PreviousModule.MoveOffset;
-                        if (Submarine.RectContains(rect, gapPos1) || Submarine.RectContains(rect, gapPos2) || MathUtils.GetLineRectangleIntersection(gapPos1, gapPos2, rect, out _))
+                        if (Submarine.RectContains(rect, gapPos1) || 
+                            Submarine.RectContains(rect, gapPos2) || 
+                            MathUtils.GetLineRectangleIntersection(gapPos1, gapPos2, rect, out _))
+                        {
+                            return true;
+                        }
+
+                        //check if the connection overlaps with this module's connection
+                        if (selfGapPos1.HasValue && selfGapPos2.HasValue &&
+                            !gapPos1.NearlyEquals(gapPos2) && !selfGapPos1.Value.NearlyEquals(selfGapPos2.Value) &&
+                            MathUtils.LinesIntersect(gapPos1, gapPos2, selfGapPos1.Value, selfGapPos2.Value))
                         {
                             return true;
                         }
@@ -1426,7 +1445,7 @@ namespace Barotrauma
 
             static bool ShouldRemoveLinkedEntity(MapEntity e, bool doorInUse, PlacedModule module)
             {
-                if (e is Item it && it.GetComponent<Ladder>() != null)
+                if (e is Item it && it.IsLadder)
                 {
                     if (module.UsedGapPositions.HasFlag(OutpostModuleInfo.GapPosition.Top) || module.UsedGapPositions.HasFlag(OutpostModuleInfo.GapPosition.Bottom))
                     {
@@ -1568,7 +1587,7 @@ namespace Barotrauma
             foreach (HumanPrefab humanPrefab in humanPrefabs)
             {
                 if (humanPrefab is null) { continue; }
-                var characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: humanPrefab.GetJobPrefab(Rand.RandSync.ServerAndClient), randSync: Rand.RandSync.ServerAndClient);
+                var characterInfo = humanPrefab.CreateCharacterInfo(Rand.RandSync.ServerAndClient);
                 if (location != null && location.KilledCharacterIdentifiers.Contains(characterInfo.GetIdentifier())) 
                 {
                     killedCharacters.Add(humanPrefab);
@@ -1582,7 +1601,7 @@ namespace Barotrauma
             {
                 for (int tries = 0; tries < 100; tries++)
                 {
-                    var characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: killedCharacter.GetJobPrefab(Rand.RandSync.ServerAndClient), randSync: Rand.RandSync.ServerAndClient);
+                    var characterInfo = killedCharacter.CreateCharacterInfo(Rand.RandSync.ServerAndClient);
                     if (!location.KilledCharacterIdentifiers.Contains(characterInfo.GetIdentifier()))
                     {
                         selectedCharacters.Add((killedCharacter, characterInfo));

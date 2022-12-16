@@ -66,7 +66,7 @@ namespace Barotrauma.Networking
             events.Add(newEvent);
         }
 
-        public void Write(IWriteMessage msg, NetworkConnection serverConnection)
+        public void Write(in SegmentTableWriter<ClientNetSegment> segmentTable, IWriteMessage msg, NetworkConnection serverConnection)
         {
             if (events.Count == 0 || serverConnection == null) return;
 
@@ -103,7 +103,7 @@ namespace Barotrauma.Networking
                 eventLastSent[entityEvent.ID] = (float)Lidgren.Network.NetTime.Now;
             }
 
-            msg.Write((byte)ClientNetObject.ENTITY_STATE);
+            segmentTable.StartNewSegment(ClientNetSegment.EntityState);
             Write(msg, eventsToSync, out _);
         }
 
@@ -112,11 +112,11 @@ namespace Barotrauma.Networking
         /// <summary>
         /// Read the events from the message, ignoring ones we've already received. Returns false if reading the events fails.
         /// </summary>
-        public bool Read(ServerNetObject type, IReadMessage msg, float sendingTime, List<IServerSerializable> entities)
+        public bool Read(ServerNetSegment type, IReadMessage msg, float sendingTime, List<IServerSerializable> entities)
         {
             UInt16 unreceivedEntityEventCount = 0;
 
-            if (type == ServerNetObject.ENTITY_EVENT_INITIAL)
+            if (type == ServerNetSegment.EntityEventInitial)
             {
                 unreceivedEntityEventCount = msg.ReadUInt16();
                 firstNewID = msg.ReadUInt16();
@@ -203,7 +203,7 @@ namespace Barotrauma.Networking
                         DebugConsole.NewMessage(
                             "Received msg " + thisEventID + ", entity " + entityID + " not found",
                             GUIStyle.Red);
-                        GameMain.Client.ReportError(ClientNetError.MISSING_ENTITY, eventID: thisEventID, entityID: entityID);
+                        GameMain.Client.ReportError(ClientNetError.MISSING_ENTITY, eventId: thisEventID, entityId: entityID);
                         return false;
                     }
                     
@@ -218,43 +218,20 @@ namespace Barotrauma.Networking
                             Microsoft.Xna.Framework.Color.Green);
                     }
                     lastReceivedID++;
-                    try
+                    ReadEvent(msg, entity, sendingTime);
+                    msg.ReadPadBits();
+
+                    if (msg.BitPosition != msgPosition + msgLength * 8)
                     {
-                        ReadEvent(msg, entity, sendingTime);
-                        msg.ReadPadBits();
+                        var prevEntity = entities.Count >= 2 ? entities[entities.Count - 2] : null;
+                        ushort prevId = prevEntity is Entity p ? p.ID : (ushort)0;
+                        string errorMsg = $"Message byte position incorrect after reading an event for the entity \"{entity}\" (ID {(entity is Entity e ? e.ID : 0)}). "
+                            +$"The previous entity was \"{prevEntity}\" (ID {prevId}) "
+                            +$"Read {msg.BitPosition - msgPosition} bits, expected message length was {msgLength * 8} bits.";
 
-                        if (msg.BitPosition != msgPosition + msgLength * 8)
-                        {
-                            var prevEntity = entities.Count >= 2 ? entities[entities.Count - 2] : null;
-                            ushort prevId = prevEntity is Entity p ? p.ID : (ushort)0;
-                            string errorMsg = $"Message byte position incorrect after reading an event for the entity \"{entity}\" (ID {(entity is Entity e ? e.ID : 0)}). "
-                                +$"The previous entity was \"{prevEntity}\" (ID {prevId}) "
-                                +$"Read {msg.BitPosition - msgPosition} bits, expected message length was {msgLength * 8} bits.";
-
-                            DebugConsole.ThrowError(errorMsg);
-
-                            GameAnalyticsManager.AddErrorEventOnce("ClientEntityEventManager.Read:BitPosMismatch", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
-
-                            //TODO: force the BitPosition to correct place? Having some entity in a potentially incorrect state is not as bad as a desync kick
-                            //msg.BitPosition = (int)(msgPosition + msgLength * 8);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        string errorMsg = $"Failed to read event {thisEventID} for entity \"{entity}\"" +
-                                          $"{(entity is Entity { ID: var entityId } ? $", id {entityId}" : "")} ";
-                        DebugConsole.ThrowError(errorMsg, e);
-
-                        errorMsg += $"({e.Message})! (MidRoundSyncing: {thisClient.MidRoundSyncing})\n{e.StackTrace.CleanupStackTrace()}";
-                        errorMsg += "\nPrevious entities:";
-                        for (int j = entities.Count - 2; j >= 0; j--)
-                        {
-                            errorMsg += "\n" + (entities[j] == null ? "NULL" : entities[j].ToString());
-                        }
-
-                        GameAnalyticsManager.AddErrorEventOnce("ClientEntityEventManager.Read:ReadFailed" + entity.ToString(),
-                            GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
-                        msg.BitPosition = (int)(msgPosition + msgLength * 8);
+                        GameAnalyticsManager.AddErrorEventOnce("ClientEntityEventManager.Read:BitPosMismatch", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                        
+                        throw new Exception(errorMsg);
                     }
                 }
             }
@@ -277,16 +254,12 @@ namespace Barotrauma.Networking
 
         public void Clear()
         {
-            ID = 0;
-
             lastReceivedID = 0;
-
             firstNewID = null;
-
-            events.Clear();
             eventLastSent.Clear();
-
             MidRoundSyncingDone = false;
+
+            ClearSelf();
         }
 
         /// <summary>
@@ -297,6 +270,10 @@ namespace Barotrauma.Networking
         {
             ID = 0;
             events.Clear();
+            if (thisClient != null)
+            {
+                thisClient.LastSentEntityEventID = 0;
+            }
         }
     }
 }

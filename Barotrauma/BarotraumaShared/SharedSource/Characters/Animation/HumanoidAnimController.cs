@@ -237,13 +237,14 @@ namespace Barotrauma
 
         public override void UpdateAnim(float deltaTime)
         {
-            if (Frozen) return;
+            if (Frozen) { return; }
             if (MainLimb == null) { return; }
 
             levitatingCollider = !IsHanging;
             ColliderIndex = Crouching && !swimming ? 1 : 0;
-            if (character.SelectedConstruction?.GetComponent<Controller>()?.ControlCharacterPose ?? false ||
-                character.SelectedConstruction?.GetComponent<Ladder>() != null ||
+            if ((character.SelectedItem?.GetComponent<Controller>()?.ControlCharacterPose ?? false) ||
+                (character.SelectedSecondaryItem?.GetComponent<Controller>()?.ControlCharacterPose ?? false) ||
+                character.SelectedSecondaryItem?.GetComponent<Ladder>() != null ||
                 (ForceSelectAnimationType != AnimationType.Crouch && ForceSelectAnimationType != AnimationType.NotDefined))
             {
                 Crouching = false;
@@ -330,35 +331,41 @@ namespace Barotrauma
                     Collider.SetTransform(Collider.SimPosition, Collider.Rotation + angleDiff);
                 }
             }
-
-            if (character.LockHands)
-            {
-                var leftHand = GetLimb(LimbType.LeftHand);
-                var rightHand = GetLimb(LimbType.RightHand);
-
-                var waist = GetLimb(LimbType.Waist) ?? GetLimb(LimbType.Torso);
-
-                rightHand.Disabled = true;
-                leftHand.Disabled = true;
-
-                Vector2 midPos = waist.SimPosition;
-                Matrix torsoTransform = Matrix.CreateRotationZ(waist.Rotation);
-
-                midPos += Vector2.Transform(new Vector2(-0.3f * Dir, -0.2f), torsoTransform);
-
-                if (rightHand.PullJointEnabled) midPos = (midPos + rightHand.PullJointWorldAnchorB) / 2.0f;
-                HandIK(rightHand, midPos, CurrentAnimationParams.ArmIKStrength, CurrentAnimationParams.HandIKStrength);
-                HandIK(leftHand, midPos, CurrentAnimationParams.ArmIKStrength, CurrentAnimationParams.HandIKStrength);
-            }
-            else if (character.AnimController.AnimationTestPose)
+             
+            if (character.AnimController.AnimationTestPose)
             {
                 ApplyTestPose();
             }
-            else
+            else if (character.SelectedBy == null)
             {
-                if (Anim != Animation.UsingConstruction)
+                if (character.LockHands)
                 {
-                    ResetPullJoints();
+                    var leftHand = GetLimb(LimbType.LeftHand);
+                    var rightHand = GetLimb(LimbType.RightHand);
+
+                    var waist = GetLimb(LimbType.Waist) ?? GetLimb(LimbType.Torso);
+
+                    rightHand.Disabled = true;
+                    leftHand.Disabled = true;
+
+                    Vector2 midPos = waist.SimPosition;
+                    Matrix torsoTransform = Matrix.CreateRotationZ(waist.Rotation);
+
+                    midPos += Vector2.Transform(new Vector2(-0.3f * Dir, -0.2f), torsoTransform);
+                    if (rightHand.PullJointEnabled) midPos = (midPos + rightHand.PullJointWorldAnchorB) / 2.0f;
+                    HandIK(rightHand, midPos, CurrentAnimationParams.ArmIKStrength, CurrentAnimationParams.HandIKStrength);
+                    HandIK(leftHand, midPos, CurrentAnimationParams.ArmIKStrength, CurrentAnimationParams.HandIKStrength);
+                }
+                if (Anim != Animation.UsingItem)
+                {
+                    if (Anim != Animation.UsingItemWhileClimbing)
+                    {
+                        ResetPullJoints();
+                    }
+                    else
+                    {
+                        ResetPullJoints(l => l.IsLowerBody);
+                    }
                 }
             }
 
@@ -377,47 +384,51 @@ namespace Barotrauma
             switch (Anim)
             {
                 case Animation.Climbing:
+                case Animation.UsingItemWhileClimbing:
                     levitatingCollider = false;
                     UpdateClimbing();
+                    UpdateUseItemTimer();
                     break;
                 case Animation.CPR:
                     UpdateCPR(deltaTime);
                     break;
-                case Animation.UsingConstruction:
+                case Animation.UsingItem:
                 default:
-                    if (Anim == Animation.UsingConstruction)
-                    {
-                        useItemTimer -= deltaTime;
-                        if (useItemTimer <= 0.0f) Anim = Animation.None;
-                    }
-
+                    UpdateUseItemTimer();
                     swimmingStateLockTimer -= deltaTime;
-
                     if (forceStanding || character.AnimController.AnimationTestPose)
                     {
                         swimming = false;
                     }
-                    else
+                    else if (swimming != inWater && swimmingStateLockTimer <= 0.0f)
                     {
                         //0.5 second delay for switching between swimming and walking
                         //prevents rapid switches between swimming/walking if the water level is fluctuating around the minimum swimming depth
-                        if (swimming != inWater && swimmingStateLockTimer <= 0.0f)
-                        {
-                            swimming = inWater;
-                            swimmingStateLockTimer = 0.5f;
-                        }
+                        swimming = inWater;
+                        swimmingStateLockTimer = 0.5f;
                     }
-
                     if (swimming)
                     {
                         UpdateSwimming();
                     }
-                    else
+                    else if (character.SelectedItem == null || !(character.SelectedSecondaryItem?.GetComponent<Controller>() is { } controller) ||
+                             !controller.ControlCharacterPose || !controller.UserInCorrectPosition)
                     {
                         UpdateStanding();
                     }
-
                     break;
+            }
+
+            void UpdateUseItemTimer()
+            {
+                if (IsUsingItem)
+                {
+                    useItemTimer -= deltaTime;
+                    if (useItemTimer <= 0.0f)
+                    {
+                        StopUsingItem();
+                    }
+                }
             }
 
             if (Timing.TotalTime > LockFlippingUntil && TargetDir != dir && !IsStuck)
@@ -599,15 +610,18 @@ namespace Barotrauma
                 torsoAngle -= herpesStrength / 150.0f;
                 torso.body.SmoothRotate(torsoAngle * Dir, CurrentGroundedParams.TorsoTorque);
             }
-            if (!Aiming && CurrentGroundedParams.FixedHeadAngle && HeadAngle.HasValue)
+            if (!head.Disabled)
             {
-                float headAngle = HeadAngle.Value;
-                if (Crouching && !movingHorizontally) { headAngle -= HumanCrouchParams.ExtraHeadAngleWhenStationary; }
-                head.body.SmoothRotate(headAngle * Dir, CurrentGroundedParams.HeadTorque);
-            }
-            else
-            {
-                RotateHead(head);
+                if (!Aiming && CurrentGroundedParams.FixedHeadAngle && HeadAngle.HasValue)
+                {
+                    float headAngle = HeadAngle.Value;
+                    if (Crouching && !movingHorizontally) { headAngle -= HumanCrouchParams.ExtraHeadAngleWhenStationary; }
+                    head.body.SmoothRotate(headAngle * Dir, CurrentGroundedParams.HeadTorque);
+                }
+                else
+                {
+                    RotateHead(head);
+                }
             }
 
             if (!onGround)
@@ -841,7 +855,9 @@ namespace Barotrauma
             float targetSpeed = TargetMovement.Length();
             if (targetSpeed > 0.1f && !character.IsRemotelyControlled && !Aiming)
             {
-                if (Anim != Animation.UsingConstruction && !(character.SelectedConstruction?.GetComponent<Controller>()?.ControlCharacterPose ?? false))
+                if (!IsUsingItem &&
+                    !(character.SelectedItem?.GetComponent<Controller>()?.ControlCharacterPose ?? false) &&
+                    !(character.SelectedSecondaryItem?.GetComponent<Controller>()?.ControlCharacterPose ?? false))
                 {
                     if (rotation > 20 && rotation < 170)
                     {
@@ -1041,10 +1057,15 @@ namespace Barotrauma
 
         void UpdateClimbing()
         {
-            var ladder = character.SelectedConstruction?.GetComponent<Ladder>();
-            if (ladder == null || character.IsIncapacitated)
+            var ladder = character.SelectedSecondaryItem?.GetComponent<Ladder>();
+            if (character.IsIncapacitated)
             {
                 Anim = Animation.None;
+                return;
+            }
+            else if (ladder == null)
+            {
+                StopClimbing();
                 return;
             }
 
@@ -1209,15 +1230,21 @@ namespace Barotrauma
             {
                 RotateHead(head);
             }
+            else if (Anim == Animation.UsingItemWhileClimbing && character.SelectedItem is { } selectedItem)
+            {
+                Vector2 diff = (selectedItem.WorldPosition - head.WorldPosition) * Dir;
+                float targetRotation = MathHelper.WrapAngle(MathUtils.VectorToAngle(diff) - MathHelper.PiOver4 * Dir);
+                head.body.SmoothRotate(targetRotation, force: WalkParams.HeadTorque);
+            }
             else
             {
                 float movementMultiplier = targetMovement.Y < 0 ? 0 : 1;
-                head.body.SmoothRotate(MathHelper.PiOver4 * movementMultiplier * Dir, WalkParams.HeadTorque);
+                head.body.SmoothRotate(MathHelper.PiOver4 * movementMultiplier * Dir, force: WalkParams.HeadTorque);
             }
             
-            if (!ladder.Item.Prefab.Triggers.Any())
+            if (ladder.Item.Prefab.Triggers.None())
             {
-                character.SelectedConstruction = null;
+                character.SelectedSecondaryItem = null;
                 return;
             }
 
@@ -1247,8 +1274,7 @@ namespace Barotrauma
 
             if (!isClimbing)
             {
-                Anim = Animation.None;
-                character.SelectedConstruction = null;
+                character.StopClimbing();
                 IgnorePlatforms = false;
             }
 
@@ -1345,7 +1371,7 @@ namespace Barotrauma
 
             Limb head = GetLimb(LimbType.Head);
             Limb torso = GetLimb(LimbType.Torso);
-            
+
             Vector2 headDiff = targetHead == null ? diff : targetHead.SimPosition - character.SimPosition;
             targetMovement = new Vector2(diff.X, 0.0f);
             TargetDir = headDiff.X > 0.0f ? Direction.Right : Direction.Left;
@@ -1360,15 +1386,25 @@ namespace Barotrauma
 
             float prevVitality = target.Vitality;
             bool wasCritical = prevVitality < 0.0f;
-            
+
             if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient) //Serverside code
             {
                 target.Oxygen += deltaTime * 0.5f; //Stabilize them        
             }
 
-            bool powerfulCPR = character.HasAbilityFlag(AbilityFlags.PowerfulCPR);
-           
+            float cprBoost = character.GetStatValue(StatTypes.CPRBoost);
+
             int skill = (int)character.GetSkillLevel("medical");
+
+            if (GameMain.NetworkMember is not { IsClient: true })
+            {
+                if (cprBoost >= 1f)
+                {
+                    //prevent the patient from suffocating no matter how fast their oxygen level is dropping
+                    target.Oxygen = Math.Max(target.Oxygen, -10.0f);
+                }
+            }
+
             //pump for 15 seconds (cprAnimTimer 0-15), then do mouth-to-mouth for 2 seconds (cprAnimTimer 15-17)
             if (cprAnimTimer > 15.0f && targetHead != null && head != null)
             {
@@ -1379,23 +1415,15 @@ namespace Barotrauma
                 torso.PullJointEnabled = true;
 
                 //Serverside code
-                if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
+                if (GameMain.NetworkMember is not { IsClient: true })
                 {
                     if (target.Oxygen < -10.0f)
                     {
-                        if (powerfulCPR)
-                        {
-                            //prevent the patient from suffocating no matter how fast their oxygen level is dropping
-                            target.Oxygen = Math.Max(target.Oxygen, -10.0f);
-                        }
-                        else
-                        {
-                            //stabilize the oxygen level but don't allow it to go positive and revive the character yet
-                            float stabilizationAmount = skill * CPRSettings.Active.StabilizationPerSkill;
-                            stabilizationAmount = MathHelper.Clamp(stabilizationAmount, CPRSettings.Active.StabilizationMin, CPRSettings.Active.StabilizationMax);
-                            character.Oxygen -= 1.0f / stabilizationAmount * deltaTime; //Worse skill = more oxygen required
-                            if (character.Oxygen > 0.0f) { target.Oxygen += stabilizationAmount * deltaTime; } //we didn't suffocate yet did we
-                        }
+                        //stabilize the oxygen level but don't allow it to go positive and revive the character yet
+                        float stabilizationAmount = skill * CPRSettings.Active.StabilizationPerSkill;
+                        stabilizationAmount = MathHelper.Clamp(stabilizationAmount, CPRSettings.Active.StabilizationMin, CPRSettings.Active.StabilizationMax);
+                        character.Oxygen -= 1.0f / stabilizationAmount * deltaTime; //Worse skill = more oxygen required
+                        if (character.Oxygen > 0.0f) { target.Oxygen += stabilizationAmount * deltaTime; } //we didn't suffocate yet did we
                     }
                 }
             }
@@ -1430,7 +1458,7 @@ namespace Barotrauma
                         reviveChance = (float)Math.Pow(reviveChance, CPRSettings.Active.ReviveChanceExponent);
                         reviveChance = MathHelper.Clamp(reviveChance, CPRSettings.Active.ReviveChanceMin, CPRSettings.Active.ReviveChanceMax);
 
-                        if (powerfulCPR) { reviveChance *= 2.0f; }
+                        reviveChance *= 1f + cprBoost;
 
                         if (Rand.Range(0.0f, 1.0f, Rand.RandSync.ServerAndClient) <= reviveChance)
                         {
@@ -1468,17 +1496,17 @@ namespace Barotrauma
 
         public override void DragCharacter(Character target, float deltaTime)
         {
-            if (target == null) return;
+            if (target == null) { return; }
 
             Limb torso = GetLimb(LimbType.Torso);
             Limb leftHand = GetLimb(LimbType.LeftHand);
             Limb rightHand = GetLimb(LimbType.RightHand);
 
-            Limb targetLeftHand = target.AnimController.GetLimb(LimbType.LeftHand);
+            Limb targetLeftHand = target.AnimController.GetLimb(LimbType.LeftForearm);
             if (targetLeftHand == null) targetLeftHand = target.AnimController.GetLimb(LimbType.Torso);
             if (targetLeftHand == null) targetLeftHand = target.AnimController.MainLimb;
 
-            Limb targetRightHand = target.AnimController.GetLimb(LimbType.RightHand);
+            Limb targetRightHand = target.AnimController.GetLimb(LimbType.RightForearm);
             if (targetRightHand == null) targetRightHand = target.AnimController.GetLimb(LimbType.Torso);
             if (targetRightHand == null) targetRightHand = target.AnimController.MainLimb;
 
@@ -1487,7 +1515,7 @@ namespace Barotrauma
                 target.AnimController.ResetPullJoints();
             }
 
-            if (Anim == Animation.Climbing)
+            if (IsClimbing)
             {
                 //cannot drag up ladders if the character is conscious
                 if (target.AllowInput && (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient))
@@ -1607,7 +1635,7 @@ namespace Barotrauma
                     }
 
                     //only pull with one hand when swimming
-                    if (i > 0 && inWater) continue;
+                    if (i > 0 && inWater) { continue; }
                     
                     Vector2 diff = ConvertUnits.ToSimUnits(targetLimb.WorldPosition - pullLimb.WorldPosition);
 
@@ -1659,14 +1687,15 @@ namespace Barotrauma
                         targetForce = 5000.0f;
                     }
 
-                    if (!target.AllowInput)
-                    {
-                        targetLimb.PullJointEnabled = true;
-                        targetLimb.PullJointMaxForce = targetForce;
-                        targetLimb.PullJointWorldAnchorB = targetAnchor;
-                    }
+                    targetLimb.PullJointEnabled = true;
+                    targetLimb.PullJointMaxForce = targetForce;
+                    targetLimb.PullJointWorldAnchorB = targetAnchor;
+                    targetLimb.Disabled = true;                    
 
-                    target.AnimController.movement = -diff;
+                    if (diff.LengthSquared() > 0.1f)
+                    {
+                        target.AnimController.movement = -diff;
+                    }
                 }
 
                 float dist = ConvertUnits.ToSimUnits(Vector2.Distance(target.WorldPosition, WorldPosition));
@@ -1692,8 +1721,17 @@ namespace Barotrauma
                 }
                 else if (target is AICharacter && target != Character.Controlled)
                 {
-                    target.AnimController.TargetDir = WorldPosition.X > target.WorldPosition.X ? Direction.Right : Direction.Left;
-                    target.AnimController.TargetMovement = (character.SimPosition + Vector2.UnitX * Dir) - target.SimPosition;
+                    if (target.AnimController.Dir > 0 == WorldPosition.X > target.WorldPosition.X)
+                    {
+                        target.AnimController.LockFlippingUntil = (float)Timing.TotalTime + 0.5f;
+                    }
+                    else
+                    {
+                        target.AnimController.TargetDir = WorldPosition.X > target.WorldPosition.X ? Direction.Right : Direction.Left;
+                    }
+                    //make the target stand 0.5 meters away from this character, on the side they're currently at
+                    Vector2 movement = (character.SimPosition + Vector2.UnitX * 0.5f * Math.Sign(target.SimPosition.X - character.SimPosition.X)) - target.SimPosition;
+                    target.AnimController.TargetMovement = movement.LengthSquared() > 0.01f ? movement : Vector2.Zero;
                 }
             }
         }
@@ -1800,8 +1838,6 @@ namespace Barotrauma
                 {
                     heldItem.FlipX(relativeToSub: false);
                 }
-                // TODO: was this added by a mistake?
-                //heldItem.FlipX(relativeToSub: false);
             }
 
             foreach (Limb limb in Limbs)

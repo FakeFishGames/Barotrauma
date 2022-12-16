@@ -66,7 +66,7 @@ namespace Barotrauma
         {
             currentVoteType = type;
             CreateVotingGUI();
-            if (starter.ID == GameMain.Client.ID) { SetGUIToVotedState(2); }
+            if (starter.SessionId == GameMain.Client.SessionId) { SetGUIToVotedState(2); }
             VoteRunning = true;
         }
 

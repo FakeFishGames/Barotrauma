@@ -94,6 +94,11 @@ namespace Barotrauma.Items.Components
 
         protected Connection powerIn, powerOut;
 
+        /// <summary>
+        /// Maximum voltage factor when the device is being overvolted. I.e. how many times more effectively the device can function when it's being overvolted
+        /// </summary>
+        protected const float MaxOverVoltageFactor = 2.0f;
+
         protected virtual PowerPriority Priority { get { return PowerPriority.Default; } }
 
         [Editable, Serialize(0.5f, IsPropertySaveable.Yes, description: "The minimum voltage required for the device to function. " +
@@ -201,7 +206,7 @@ namespace Barotrauma.Items.Components
             {
                 if (!powerOnSoundPlayed && powerOnSound != null)
                 {
-                    SoundPlayer.PlaySound(powerOnSound.Sound, item.WorldPosition, powerOnSound.Volume, powerOnSound.Range, hullGuess: item.CurrentHull, ignoreMuffling: powerOnSound.IgnoreMuffling);                    
+                    SoundPlayer.PlaySound(powerOnSound.Sound, item.WorldPosition, powerOnSound.Volume, powerOnSound.Range, hullGuess: item.CurrentHull, ignoreMuffling: powerOnSound.IgnoreMuffling, freqMult: powerOnSound.GetRandomFrequencyMultiplier());                    
                     powerOnSoundPlayed = true;
                 }
             }
@@ -685,43 +690,21 @@ namespace Barotrauma.Items.Components
         }
 
         /// <summary>
-        /// Efficient method to retrieve the batteries connected to the device
+        /// Returns a list of batteries directly connected to the item
         /// </summary>
-        /// <returns>All connected PowerContainers</returns>
-        protected List<PowerContainer> GetConnectedBatteries(bool outputOnly = true)
+        protected List<PowerContainer> GetDirectlyConnectedBatteries()
         {
             List<PowerContainer> batteries = new List<PowerContainer>();
-            GridInfo supplyingGrid = null;
-
-            //Determine supplying grid, prefer PowerIn connection 
-            if (powerIn != null)
+            if (item.Connections == null || powerIn == null) { return batteries; }
+            foreach (Connection recipient in powerIn.Recipients)
             {
-                if (powerIn.Grid != null)
+                if (!recipient.IsPower || !recipient.IsOutput) { continue; }
+                var battery = recipient.Item?.GetComponent<PowerContainer>();
+                if (battery != null) 
                 {
-                    supplyingGrid = powerIn.Grid;
+                    batteries.Add(battery); 
                 }
             }
-            else if (powerOut != null)
-            {
-                if (powerOut.Grid != null)
-                {
-                    supplyingGrid = powerOut.Grid;
-                }
-            }
-
-            if (supplyingGrid != null)
-            {
-                //Iterate through all connections to fine powerContainers
-                foreach (Connection c in supplyingGrid.Connections)
-                {
-                    PowerContainer pc = c.Item.GetComponent<PowerContainer>();
-                    if (pc != null && (!outputOnly || pc.powerOut == c))
-                    {
-                        batteries.Add(pc);
-                    }
-                }
-            }
-
             return batteries;
         }
 

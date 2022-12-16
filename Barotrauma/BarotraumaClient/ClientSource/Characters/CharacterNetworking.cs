@@ -1,8 +1,8 @@
-﻿using Barotrauma.Extensions;
-using Barotrauma.Items.Components;
+﻿using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace Barotrauma
@@ -44,7 +44,8 @@ namespace Barotrauma
                         LastNetworkUpdateID,
                         AnimController.TargetDir,
                         SelectedCharacter,
-                        SelectedConstruction,
+                        SelectedItem,
+                        SelectedSecondaryItem,
                         AnimController.Anim);
 
                     memLocalState.Add(posInfo);
@@ -112,36 +113,36 @@ namespace Barotrauma
             }
         }
 
-        public void ClientWriteInput(IWriteMessage msg)
+        public void ClientWriteInput(in SegmentTableWriter<ClientNetSegment> segmentTableWriter, IWriteMessage msg)
         {
-            msg.Write((byte)ClientNetObject.CHARACTER_INPUT);
+            segmentTableWriter.StartNewSegment(ClientNetSegment.CharacterInput);
 
             if (memInput.Count > 60)
             {
                 memInput.RemoveRange(60, memInput.Count - 60);
             }
 
-            msg.Write(LastNetworkUpdateID);
+            msg.WriteUInt16(LastNetworkUpdateID);
             byte inputCount = Math.Min((byte)memInput.Count, (byte)60);
-            msg.Write(inputCount);
+            msg.WriteByte(inputCount);
             for (int i = 0; i < inputCount; i++)
             {
                 msg.WriteRangedInteger((int)memInput[i].states, 0, (int)InputNetFlags.MaxVal);
-                msg.Write(memInput[i].intAim);
+                msg.WriteUInt16(memInput[i].intAim);
                 if (memInput[i].states.HasFlag(InputNetFlags.Select) ||
                     memInput[i].states.HasFlag(InputNetFlags.Deselect) ||
                     memInput[i].states.HasFlag(InputNetFlags.Use) ||
                     memInput[i].states.HasFlag(InputNetFlags.Health) ||
                     memInput[i].states.HasFlag(InputNetFlags.Grab))
                 {
-                    msg.Write(memInput[i].interact);
+                    msg.WriteUInt16(memInput[i].interact);
                 }
             }
         }
         
         public virtual void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
-            if (!(extraData is IEventData eventData)) { throw new Exception($"Malformed character event: expected {nameof(Character)}.{nameof(IEventData)}"); }
+            if (extraData is not IEventData eventData) { throw new Exception($"Malformed character event: expected {nameof(Character)}.{nameof(IEventData)}"); }
             
             msg.WriteRangedInteger((int)eventData.EventType, (int)EventType.MinValue, (int)EventType.MaxValue);
             switch (eventData)
@@ -150,16 +151,16 @@ namespace Barotrauma
                     Inventory.ClientEventWrite(msg, inventoryStateEventData);
                     break;
                 case TreatmentEventData _:
-                    msg.Write(AnimController.Anim == AnimController.Animation.CPR);
+                    msg.WriteBoolean(AnimController.Anim == AnimController.Animation.CPR);
                     break;
                 case CharacterStatusEventData _:
                     //do nothing
                     break;
                 case UpdateTalentsEventData _:
-                    msg.Write((ushort)characterTalents.Count);
+                    msg.WriteUInt16((ushort)characterTalents.Count);
                     foreach (var unlockedTalent in characterTalents)
                     {
-                        msg.Write(unlockedTalent.Prefab.UintIdentifier);
+                        msg.WriteUInt32(unlockedTalent.Prefab.UintIdentifier);
                     }
                     break;
                 default:
@@ -175,6 +176,11 @@ namespace Barotrauma
 
             AnimController.Frozen = false;
             Enabled = true;
+            //if we start receiving position updates, it means the character's no longer disabled
+            if (DisabledByEvent && !Removed)
+            {
+                DisabledByEvent = false;
+            }
 
             UInt16 networkUpdateID = 0;
             if (msg.ReadBoolean())
@@ -219,15 +225,17 @@ namespace Barotrauma
 
             bool entitySelected = msg.ReadBoolean();
             Character selectedCharacter = null;
-            Item selectedItem = null;
+            Item selectedItem = null, selectedSecondaryItem = null;
 
             AnimController.Animation animation = AnimController.Animation.None;
             if (entitySelected)
             {
                 ushort characterID = msg.ReadUInt16();
                 ushort itemID = msg.ReadUInt16();
+                ushort secondaryItemID = msg.ReadUInt16();
                 selectedCharacter = FindEntityByID(characterID) as Character;
                 selectedItem = FindEntityByID(itemID) as Item;
+                selectedSecondaryItem = FindEntityByID(secondaryItemID) as Item;
                 if (characterID != NullEntityID)
                 {
                     bool doingCpr = msg.ReadBoolean();
@@ -274,7 +282,7 @@ namespace Barotrauma
                     pos, rotation,
                     networkUpdateID,
                     facingRight ? Direction.Right : Direction.Left,
-                    selectedCharacter, selectedItem, animation);
+                    selectedCharacter, selectedItem, selectedSecondaryItem, animation);
 
                 while (index < memState.Count && NetIdUtils.IdMoreRecent(posInfo.ID, memState[index].ID))
                     index++;
@@ -286,7 +294,7 @@ namespace Barotrauma
                     pos, rotation,
                     linearVelocity, angularVelocity,
                     sendingTime, facingRight ? Direction.Right : Direction.Left,
-                    selectedCharacter, selectedItem, animation);
+                    selectedCharacter, selectedItem, selectedSecondaryItem, animation);
 
                 while (index < memState.Count && posInfo.Timestamp > memState[index].Timestamp)
                     index++;
@@ -375,9 +383,15 @@ namespace Barotrauma
                     if (attackLimbIndex == 255 || Removed) { break; }
                     if (attackLimbIndex >= AnimController.Limbs.Length)
                     {
-                        string errorMsg = $"Received invalid {(eventType == EventType.SetAttackTarget ? "SetAttackTarget" : "ExecuteAttack")} message. Limb index out of bounds (character: {Name}, limb index: {attackLimbIndex}, limb count: {AnimController.Limbs.Length})";
-                        DebugConsole.ThrowError(errorMsg);
-                        GameAnalyticsManager.AddErrorEventOnce("Character.ClientEventRead:AttackLimbOutOfBounds", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                        //it's possible to get these errors when mid-round syncing, as the client may not
+                        //yet know about afflictions that have given the character extra limbs (e.g. spineling genes)
+                        //ignoring the error should be safe though, not executing the attack should not cause any further issues
+                        if (!GameMain.Client.MidRoundSyncing)
+                        {
+                            string errorMsg = $"Received invalid {(eventType == EventType.SetAttackTarget ? "SetAttackTarget" : "ExecuteAttack")} message. Limb index out of bounds (character: {Name}, limb index: {attackLimbIndex}, limb count: {AnimController.Limbs.Length})";
+                            DebugConsole.ThrowError(errorMsg);
+                            GameAnalyticsManager.AddErrorEventOnce("Character.ClientEventRead:AttackLimbOutOfBounds", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                        }
                         break;
                     }
                     Limb attackLimb = AnimController.Limbs[attackLimbIndex];
@@ -458,25 +472,11 @@ namespace Barotrauma
                     break;
                 case EventType.AddToCrew:
                     GameMain.GameSession.CrewManager.AddCharacter(this);
-                    CharacterTeamType teamID = (CharacterTeamType)msg.ReadByte();
-                    ushort itemCount = msg.ReadUInt16();
-                    for (int i = 0; i < itemCount; i++)
-                    {
-                        ushort itemID = msg.ReadUInt16();
-                        if (!(Entity.FindEntityByID(itemID) is Item item)) { continue; }
-                        item.AllowStealing = true;
-                        var wifiComponent = item.GetComponent<WifiComponent>();
-                        if (wifiComponent != null)
-                        {
-                            wifiComponent.TeamID = teamID;
-                        }
-                        var idCard = item.GetComponent<IdCard>();
-                        if (idCard != null)
-                        {
-                            idCard.TeamID = teamID;
-                            idCard.SubmarineSpecificID = 0;
-                        }
-                    }
+                    ReadItemTeamChange(msg, true);
+                    break;
+                case EventType.RemoveFromCrew:
+                    GameMain.GameSession.CrewManager.RemoveCharacter(this, removeInfo: true);
+                    ReadItemTeamChange(msg, false);
                     break;
                 case EventType.UpdateExperience:
                     int experienceAmount = msg.ReadInt32();
@@ -501,15 +501,33 @@ namespace Barotrauma
                     info?.ClearSavedStatValues(statType);                        
                     for (int i = 0; i < savedStatValueCount; i++)
                     {
-                        string statIdentifier = msg.ReadString();
+                        Identifier statIdentifier = msg.ReadIdentifier();
                         float statValue = msg.ReadSingle();
                         bool removeOnDeath = msg.ReadBoolean();
                         info?.ChangeSavedStatValue(statType, statValue, statIdentifier, removeOnDeath, setValue: true);
                     }
                     break;
-
             }
             msg.ReadPadBits();
+
+            static void ReadItemTeamChange(IReadMessage msg, bool allowStealing)
+            {
+                var itemTeamChange = INetSerializableStruct.Read<ItemTeamChange>(msg);
+                foreach (var itemID in itemTeamChange.ItemIds)
+                {
+                    if (FindEntityByID(itemID) is not Item item) { continue; }
+                    item.AllowStealing = allowStealing;
+                    if (item.GetComponent<WifiComponent>() is { } wifiComponent)
+                    {
+                        wifiComponent.TeamID = itemTeamChange.TeamId;
+                    }
+                    if (item.GetComponent<IdCard>() is { } idCard)
+                    {
+                        idCard.TeamID = itemTeamChange.TeamId;
+                        idCard.SubmarineSpecificID = 0;
+                    }
+                }
+            }
         }
 
         public static Character ReadSpawnData(IReadMessage inc)
@@ -526,6 +544,7 @@ namespace Barotrauma
             Vector2 position = new Vector2(inc.ReadSingle(), inc.ReadSingle());
 
             bool enabled = inc.ReadBoolean();
+            bool disabledByEvent = inc.ReadBoolean();
 
             DebugConsole.Log("Received spawn data for " + speciesName);
 
@@ -561,7 +580,7 @@ namespace Barotrauma
                 CharacterInfo info = CharacterInfo.ClientRead(infoSpeciesName, inc);
                 try
                 {
-                    character = Create(speciesName, position, seed, characterInfo: info, id: id, isRemotePlayer: ownerId > 0 && GameMain.Client.ID != ownerId, hasAi: hasAi);
+                    character = Create(speciesName, position, seed, characterInfo: info, id: id, isRemotePlayer: ownerId > 0 && GameMain.Client.SessionId != ownerId, hasAi: hasAi);
                 }
                 catch (Exception e)
                 {
@@ -642,7 +661,7 @@ namespace Barotrauma
                     GameMain.GameSession.CrewManager.AddCharacter(character);
                 }
 
-                if (GameMain.Client.ID == ownerId)
+                if (GameMain.Client.SessionId == ownerId)
                 {
                     GameMain.Client.HasSpawned = true;
                     GameMain.Client.Character = character;
@@ -659,7 +678,14 @@ namespace Barotrauma
                 }
             }
 
-            character.Enabled = Controlled == character || enabled;
+            if (disabledByEvent)
+            {
+                character.DisabledByEvent = true;
+            }
+            else
+            {
+                character.Enabled = Controlled == character || enabled;
+            }
 
             return character;
         }
@@ -673,18 +699,20 @@ namespace Barotrauma
                 AfflictionPrefab causeOfDeathAffliction = null;
                 if (causeOfDeathType == CauseOfDeathType.Affliction)
                 {
-                    string afflictionName = msg.ReadString();
-                    if (!AfflictionPrefab.Prefabs.ContainsKey(afflictionName))
+                    uint afflictionId = msg.ReadUInt32();
+                    AfflictionPrefab afflictionPrefab = AfflictionPrefab.Prefabs.Find(p => p.UintIdentifier == afflictionId);
+                    if (afflictionPrefab == null)
                     {
-                        string errorMsg = $"Error in CharacterNetworking.ReadStatus: affliction not found ({afflictionName})";
+                        string errorMsg = $"Error in CharacterNetworking.ReadStatus: affliction not found (id {afflictionId})";
                         causeOfDeathType = CauseOfDeathType.Unknown;
-                        GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ReadStatus:AfflictionIndexOutOfBounts", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                        GameAnalyticsManager.AddErrorEventOnce("CharacterNetworking.ReadStatus:AfflictionNotFound", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                     }
                     else
                     {
-                        causeOfDeathAffliction = AfflictionPrefab.Prefabs[afflictionName];
+                        causeOfDeathAffliction = afflictionPrefab;
                     }
                 }
+                bool containsAfflictionData = msg.ReadBoolean();
                 if (!IsDead)
                 {
                     if (causeOfDeathType == CauseOfDeathType.Pressure || causeOfDeathAffliction == AfflictionPrefab.Pressure)
@@ -695,6 +723,11 @@ namespace Barotrauma
                     {
                         Kill(causeOfDeathType, causeOfDeathAffliction?.Instantiate(1.0f), true);
                     }
+                }                
+                if (containsAfflictionData)
+                {
+                    CharacterHealth.ClientRead(msg);
+                    CharacterHealth.ForceUpdateVisuals();
                 }
             }
             else

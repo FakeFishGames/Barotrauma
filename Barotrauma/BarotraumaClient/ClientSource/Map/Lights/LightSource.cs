@@ -52,7 +52,7 @@ namespace Barotrauma.Lights
         [Serialize(0f, IsPropertySaveable.Yes), Editable(MinValueFloat = -360, MaxValueFloat = 360, ValueStep = 1, DecimalCount = 0)]
         public float Rotation { get; set; }
 
-        public Vector2 GetOffset() => Vector2.Transform(Offset, Matrix.CreateRotationZ(Rotation));
+        public Vector2 GetOffset() => Vector2.Transform(Offset, Matrix.CreateRotationZ(MathHelper.ToRadians(Rotation)));
 
         private float flicker;
         [Editable, Serialize(0.0f, IsPropertySaveable.No, description: "How heavily the light flickers. 0 = no flickering, 1 = the light will alternate between completely dark and full brightness.")]

@@ -61,7 +61,8 @@ namespace Barotrauma
                 UserData = saveInfo.FilePath
             };
 
-            var nameText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), saveFrame.RectTransform), Path.GetFileNameWithoutExtension(saveInfo.FilePath))
+            var nameText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), saveFrame.RectTransform), Path.GetFileNameWithoutExtension(saveInfo.FilePath), 
+                textColor: GUIStyle.TextColorBright)
             {
                 CanBeFocused = false
             };
@@ -85,7 +86,6 @@ namespace Barotrauma
                 UserData = saveInfo.FilePath
             };
 
-
             string saveTimeStr = string.Empty;
             if (saveInfo.SaveTime > 0)
             {
@@ -104,6 +104,7 @@ namespace Barotrauma
 
         public struct CampaignSettingElements
         {
+            public SettingValue<bool> TutorialEnabled;
             public SettingValue<bool> RadiationEnabled;
             public SettingValue<int> MaxMissionCount;
             public SettingValue<StartingBalanceAmount> StartingFunds;
@@ -114,6 +115,7 @@ namespace Barotrauma
             {
                 return new CampaignSettings(element: null)
                 {
+                    TutorialEnabled = TutorialEnabled.GetValue(),
                     RadiationEnabled = RadiationEnabled.GetValue(),
                     MaxMissionCount = MaxMissionCount.GetValue(),
                     StartingBalanceAmount = StartingFunds.GetValue(),
@@ -159,7 +161,7 @@ namespace Barotrauma
             }
         }
 
-        protected static CampaignSettingElements CreateCampaignSettingList(GUIComponent parent, CampaignSettings prevSettings)
+        protected static CampaignSettingElements CreateCampaignSettingList(GUIComponent parent, CampaignSettings prevSettings, bool isSinglePlayer)
         {
             const float verticalSize = 0.14f;
 
@@ -180,6 +182,9 @@ namespace Barotrauma
                 Spacing = GUI.IntScale(5)
             };
 
+            SettingValue<bool> tutorialEnabled = isSinglePlayer ?
+                CreateTickbox(settingsList.Content, TextManager.Get("CampaignOption.EnableTutorial"), TextManager.Get("campaignoption.enabletutorial.tooltip"), prevSettings.TutorialEnabled, verticalSize) :
+                new SettingValue<bool>(() => false, b => { });
             SettingValue<bool> radiationEnabled = CreateTickbox(settingsList.Content, TextManager.Get("CampaignOption.EnableRadiation"), TextManager.Get("campaignoption.enableradiation.tooltip"), prevSettings.RadiationEnabled, verticalSize);
 
             ImmutableArray<SettingCarouselElement<Identifier>> startingSetOptions = StartItemSet.Sets.OrderBy(s => s.Order).Select(set => new SettingCarouselElement<Identifier>(set.Identifier, $"startitemset.{set.Identifier}")).ToImmutableArray();
@@ -187,9 +192,9 @@ namespace Barotrauma
             SettingValue<Identifier> startingSetInput = CreateSelectionCarousel(settingsList.Content, TextManager.Get("startitemset"), TextManager.Get("startitemsettooltip"), prevStartingSet, verticalSize, startingSetOptions);
 
             ImmutableArray<SettingCarouselElement<StartingBalanceAmount>> fundOptions = ImmutableArray.Create(
-                new SettingCarouselElement<StartingBalanceAmount>(StartingBalanceAmount.High, "startingfunds.high"),
+                new SettingCarouselElement<StartingBalanceAmount>(StartingBalanceAmount.Low, "startingfunds.low"),
                 new SettingCarouselElement<StartingBalanceAmount>(StartingBalanceAmount.Medium, "startingfunds.medium"),
-                new SettingCarouselElement<StartingBalanceAmount>(StartingBalanceAmount.Low, "startingfunds.low")
+                new SettingCarouselElement<StartingBalanceAmount>(StartingBalanceAmount.High, "startingfunds.high")
             );
 
             SettingCarouselElement<StartingBalanceAmount> prevStartingFund = fundOptions.FirstOrNull(element => element.Value == prevSettings.StartingBalanceAmount) ?? fundOptions[1];
@@ -214,6 +219,7 @@ namespace Barotrauma
             {
                 if (o is CampaignSettings settings)
                 {
+                    tutorialEnabled.SetValue(isSinglePlayer && settings.TutorialEnabled);
                     radiationEnabled.SetValue(settings.RadiationEnabled);
                     maxMissionCountInput.SetValue(settings.MaxMissionCount);
                     startingFundsInput.SetValue(settings.StartingBalanceAmount);
@@ -226,6 +232,7 @@ namespace Barotrauma
 
             return new CampaignSettingElements
             {
+                TutorialEnabled = tutorialEnabled,
                 RadiationEnabled = radiationEnabled,
                 MaxMissionCount = maxMissionCountInput,
                 StartingFunds = startingFundsInput,
@@ -275,7 +282,7 @@ namespace Barotrauma
             {
                 GUILayoutGroup inputContainer = CreateSettingBase(parent, description, tooltip, horizontalSize: 0.55f, verticalSize: verticalSize);
 
-                GUIButton minusButton = new GUIButton(new RectTransform(Vector2.One, inputContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIMinusButton", textAlignment: Alignment.Center) { UserData = -1 };
+                GUIButton minusButton = new GUIButton(new RectTransform(Vector2.One, inputContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIButtonToggleLeft", textAlignment: Alignment.Center) { UserData = -1 };
                 GUIFrame inputFrame = new GUIFrame(new RectTransform(Vector2.One, inputContainer.RectTransform), style: null);
                 GUINumberInput numberInput = new GUINumberInput(new RectTransform(Vector2.One, inputFrame.RectTransform, Anchor.Center), NumberType.Int, textAlignment: Alignment.Center, style: "GUITextBox", hidePlusMinusButtons: true)
                 {
@@ -290,7 +297,7 @@ namespace Barotrauma
                     CanBeFocused = false
                 };
 
-                GUIButton plusButton = new GUIButton(new RectTransform(Vector2.One, inputContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIPlusButton", textAlignment: Alignment.Center) { UserData = 1 };
+                GUIButton plusButton = new GUIButton(new RectTransform(Vector2.One, inputContainer.RectTransform, scaleBasis: ScaleBasis.BothHeight), style: "GUIButtonToggleRight", textAlignment: Alignment.Center) { UserData = 1 };
 
                 minusButton.OnClicked = plusButton.OnClicked = ChangeValue;
 

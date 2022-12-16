@@ -218,6 +218,8 @@ namespace Barotrauma
                         
         public Vector2 StepOffset => ConvertUnits.ToSimUnits(Params.StepOffset) * ragdoll.RagdollParams.JointScale;
 
+        public Hull Hull;
+
         public bool InWater { get; set; }
 
         private FixedMouseJoint pullJoint;
@@ -302,6 +304,17 @@ namespace Barotrauma
         
         public Vector2 DebugTargetPos;
         public Vector2 DebugRefPos;
+
+        public bool IsLowerBody =>
+            type == LimbType.LeftLeg ||
+            type == LimbType.RightLeg ||
+            type == LimbType.LeftFoot ||
+            type == LimbType.RightFoot ||
+            type == LimbType.Tail ||
+            type == LimbType.Legs ||
+            type == LimbType.RightThigh ||
+            type == LimbType.LeftThigh ||
+            type == LimbType.Waist;
 
         public bool IsSevered
         {
@@ -710,11 +723,12 @@ namespace Barotrauma
                 tempModifiers.Clear();
                 var newAffliction = affliction;
                 float random = Rand.Value(Rand.RandSync.Unsynced);
-                if (random > affliction.Probability) { continue; }
+                bool foundMatchingModifier = false;
                 bool applyAffliction = true;
                 foreach (DamageModifier damageModifier in DamageModifiers)
                 {
                     if (!damageModifier.MatchesAffliction(affliction)) { continue; }
+                    foundMatchingModifier = true;
                     if (random > affliction.Probability * damageModifier.ProbabilityMultiplier)
                     {
                         applyAffliction = false;
@@ -730,6 +744,7 @@ namespace Barotrauma
                     foreach (DamageModifier damageModifier in wearable.WearableComponent.DamageModifiers)
                     {
                         if (!damageModifier.MatchesAffliction(affliction)) { continue; }
+                        foundMatchingModifier = true;
                         if (random > affliction.Probability * damageModifier.ProbabilityMultiplier)
                         {
                             applyAffliction = false;
@@ -741,7 +756,12 @@ namespace Barotrauma
                         }
                     }
                 }
+                if (!foundMatchingModifier && random > affliction.Probability) { continue; }
                 float finalDamageModifier = damageMultiplier;
+                if (affliction.Prefab.AfflictionType == "emp" && character.EmpVulnerability > 0)
+                {
+                    finalDamageModifier *= character.EmpVulnerability;
+                }
                 foreach (DamageModifier damageModifier in tempModifiers)
                 {
                     float damageModifierValue = damageModifier.DamageMultiplier;
@@ -751,9 +771,13 @@ namespace Barotrauma
                     }
                     finalDamageModifier *= damageModifierValue;
                 }
+                if (affliction.MultiplyByMaxVitality)
+                {
+                    finalDamageModifier *= character.MaxVitality / 100f;
+                }
                 if (!MathUtils.NearlyEqual(finalDamageModifier, 1.0f))
                 {
-                    newAffliction = affliction.CreateMultiplied(finalDamageModifier);
+                    newAffliction = affliction.CreateMultiplied(finalDamageModifier, affliction);
                 }
                 else
                 {
@@ -763,6 +787,7 @@ namespace Barotrauma
                 {
                     var abilityAfflictionCharacter = new AbilityAfflictionCharacter(newAffliction, character);
                     attacker.CheckTalents(AbilityEffectType.OnAddDamageAffliction, abilityAfflictionCharacter);
+                    newAffliction = abilityAfflictionCharacter.Affliction;
                 }
                 if (applyAffliction)
                 {
@@ -883,6 +908,12 @@ namespace Barotrauma
             {
                 reEnableTimer = duration;
             }
+#if CLIENT
+            if (Hidden && LightSource != null)
+            {
+                LightSource.Enabled = false;
+            }
+#endif
         }
 
         public void ReEnable()
@@ -1176,12 +1207,30 @@ namespace Barotrauma
                     statusEffect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                 {
                     targets.Clear();
-                    targets.AddRange(statusEffect.GetNearbyTargets(WorldPosition, targets));
+                    statusEffect.AddNearbyTargets(WorldPosition, targets);
                     statusEffect.Apply(actionType, deltaTime, character, targets);
                 }
                 else
                 {
-                    if (statusEffect.HasTargetType(StatusEffect.TargetType.Character))
+
+                    if (statusEffect.HasTargetType(StatusEffect.TargetType.Contained) && character.Inventory is { } inventory)
+                    {
+                        foreach (Item item in inventory.AllItems)
+                        {
+                            if (statusEffect.TargetIdentifiers != null &&
+                                !statusEffect.TargetIdentifiers.Contains(item.Prefab.Identifier) &&
+                                statusEffect.TargetIdentifiers.None(id => item.HasTag(id)))
+                            {
+                                continue;
+                            }
+                            if (statusEffect.TargetSlot > -1)
+                            {
+                                if (inventory.FindIndex(item) != statusEffect.TargetSlot) { continue; }
+                            }
+                            targets.Add(item);
+                        }
+                    }
+                    else if (statusEffect.HasTargetType(StatusEffect.TargetType.Character))
                     {
                         statusEffect.Apply(actionType, deltaTime, character, character, WorldPosition);
                     }

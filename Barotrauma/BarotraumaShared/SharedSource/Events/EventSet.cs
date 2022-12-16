@@ -24,7 +24,7 @@ namespace Barotrauma
     }
 #endif
 
-    class EventSet : Prefab
+    sealed class EventSet : Prefab
     {
         internal class EventDebugStats
         {
@@ -92,7 +92,13 @@ namespace Barotrauma
         
         public readonly bool ChooseRandom;
 
-        public readonly int EventCount = 1;
+        private readonly int eventCount = 1;
+        private readonly Dictionary<Identifier, int> overrideEventCount = new Dictionary<Identifier, int>();
+
+        /// <summary>
+        /// 'Exhaustible' sets won't appear in the same level until after one world step (~10 min, see Map.ProgressWorld) has passed.
+        /// </summary>
+        public readonly bool Exhaustible;
 
         public readonly float MinDistanceTraveled;
         public readonly float MinMissionTime;
@@ -107,7 +113,10 @@ namespace Barotrauma
         public readonly bool PerRuin, PerCave, PerWreck;
         public readonly bool DisableInHuntingGrounds;
 
-        public readonly bool OncePerOutpost;
+        /// <summary>
+        /// If true, events from this set can only occur once in the level.
+        /// </summary>
+        public readonly bool OncePerLevel;
 
         public readonly bool DelayWhenCrewAway;
 
@@ -119,6 +128,18 @@ namespace Barotrauma
         public readonly ImmutableDictionary<Identifier, float> OverrideCommonness;
 
         public readonly float ResetTime;
+
+        /// <summary>
+        /// Used to force an event set based on how many other locations have been discovered before this. (Used for campaign tutorial event sets.)
+        /// </summary>
+        public readonly int ForceAtDiscoveredNr;
+
+        /// <summary>
+        /// Used to force an event set based on how many other outposts have been visited before this. (Used for campaign tutorial event sets.)
+        /// </summary>
+        public readonly int ForceAtVisitedNr;
+
+        public readonly bool CampaignTutorialOnly;
 
         public readonly struct SubEventPrefab
         {
@@ -250,7 +271,8 @@ namespace Barotrauma
             MaxIntensity = Math.Max(element.GetAttributeFloat("maxintensity", 100.0f), MinIntensity);
 
             ChooseRandom = element.GetAttributeBool("chooserandom", false);
-            EventCount = element.GetAttributeInt("eventcount", 1);
+            eventCount = element.GetAttributeInt("eventcount", 1);
+            Exhaustible = element.GetAttributeBool("exhaustible", false);
             MinDistanceTraveled = element.GetAttributeFloat("mindistancetraveled", 0.0f);
             MinMissionTime = element.GetAttributeFloat("minmissiontime", 0.0f);
 
@@ -261,18 +283,26 @@ namespace Barotrauma
             DisableInHuntingGrounds = element.GetAttributeBool("disableinhuntinggrounds", false);
             IgnoreCoolDown = element.GetAttributeBool("ignorecooldown", parentSet?.IgnoreCoolDown ?? (PerRuin || PerCave || PerWreck));
             DelayWhenCrewAway = element.GetAttributeBool("delaywhencrewaway", !PerRuin && !PerCave && !PerWreck);
-            OncePerOutpost = element.GetAttributeBool("onceperoutpost", false);
+            OncePerLevel = element.GetAttributeBool("onceperlevel", element.GetAttributeBool("onceperoutpost", false));
             TriggerEventCooldown = element.GetAttributeBool("triggereventcooldown", true);
             IsCampaignSet = element.GetAttributeBool("campaign", LevelType == LevelData.LevelType.Outpost || (parentSet?.IsCampaignSet ?? false));
             ResetTime = element.GetAttributeFloat("resettime", 0);
+            CampaignTutorialOnly = element.GetAttributeBool(nameof(CampaignTutorialOnly), false);
 
-            DefaultCommonness = 1.0f;
+            ForceAtDiscoveredNr = element.GetAttributeInt(nameof(ForceAtDiscoveredNr), -1);
+            ForceAtVisitedNr = element.GetAttributeInt(nameof(ForceAtVisitedNr), -1);
+            if (ForceAtDiscoveredNr >= 0 && ForceAtVisitedNr >= 0)
+            {
+                DebugConsole.ThrowError($"Error with event set \"{Identifier}\" - both ForceAtDiscoveredNr and ForceAtVisitedNr are defined, this could lead to unexpected behavior");
+            }
+
+            DefaultCommonness = element.GetAttributeFloat("commonness", 1.0f);
             foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "commonness":
-                        DefaultCommonness = subElement.GetAttributeFloat("commonness", 0.0f);
+                        DefaultCommonness = subElement.GetAttributeFloat("commonness", DefaultCommonness);
                         foreach (XElement overrideElement in subElement.Elements())
                         {
                             if (overrideElement.NameAsIdentifier() == "override")
@@ -287,6 +317,13 @@ namespace Barotrauma
                         break;
                     case "eventset":
                         childSets.Add(new EventSet(subElement, file, this));
+                        break;
+                    case "overrideeventcount":
+                        Identifier locationType = subElement.GetAttributeIdentifier("locationtype", "");
+                        if (!overrideEventCount.ContainsKey(locationType))
+                        {
+                            overrideEventCount.Add(locationType, subElement.GetAttributeInt("eventcount", eventCount));
+                        }
                         break;
                     default:
                         //an element with just an identifier = reference to an event prefab
@@ -332,6 +369,12 @@ namespace Barotrauma
             return OverrideCommonness.ContainsKey(key) ? OverrideCommonness[key] : DefaultCommonness;
         }
 
+        public int GetEventCount(Level level)
+        {
+            if (level?.StartLocation == null || !overrideEventCount.TryGetValue(level.StartLocation.Type.Identifier, out int count)) { return eventCount; }
+            return count;
+        }
+
         public static List<string> GetDebugStatistics(int simulatedRoundCount = 100, Func<MonsterEvent, bool> filter = null, bool fullLog = false)
         {
             List<string> debugLines = new List<string>();
@@ -358,7 +401,7 @@ namespace Barotrauma
                     var unusedEvents = thisSet.EventPrefabs.ToList();
                     if (unusedEvents.Any())
                     {
-                        for (int i = 0; i < thisSet.EventCount; i++)
+                        for (int i = 0; i < thisSet.eventCount; i++)
                         {
                             var eventPrefab = ToolBox.SelectWeightedRandom(unusedEvents, unusedEvents.Select(e => e.Commonness).ToList(), Rand.RandSync.Unsynced);
                             if (eventPrefab.EventPrefabs.Any(p => p != null))
@@ -469,12 +512,11 @@ namespace Barotrauma
             }
         }
 
-        public override void Dispose()
+        public override string ToString()
         {
-            foreach (var childSet in ChildSets)
-            {
-                childSet.Dispose();
-            }
+            return $"{base.ToString()} ({Identifier.Value})";
         }
+
+        public override void Dispose() { }
     }
 }

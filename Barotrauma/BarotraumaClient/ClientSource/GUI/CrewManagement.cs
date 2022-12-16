@@ -25,7 +25,7 @@ namespace Barotrauma
         private PlayerBalanceElement? playerBalanceElement;
 
         private List<CharacterInfo> PendingHires => campaign.Map?.CurrentLocation?.HireManager?.PendingHires;
-        private bool HasPermission => campaignUI.Campaign.AllowedToManageCampaign(ClientPermissions.ManageHires);
+        private bool HasPermission => CampaignMode.AllowedToManageCampaign(ClientPermissions.ManageHires);
 
         private Point resolutionWhenCreated;
 
@@ -47,7 +47,9 @@ namespace Barotrauma
             CreateUI();
             UpdateLocationView(campaignUI.Campaign.Map.CurrentLocation, true);
 
-            campaignUI.Campaign.Map.OnLocationChanged += (prevLocation, newLocation) => UpdateLocationView(newLocation, true, prevLocation);
+            campaignUI.Campaign.Map.OnLocationChanged.RegisterOverwriteExisting(
+                "CrewManagement.UpdateLocationView".ToIdentifier(), 
+                (locationChangeInfo) => UpdateLocationView(locationChangeInfo.NewLocation, true, locationChangeInfo.PrevLocation));
         }
 
         public void RefreshPermissions()
@@ -126,10 +128,11 @@ namespace Barotrauma
 
             var sortGroup = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.04f), hireablesGroup.RectTransform), isHorizontal: true)
             {
-                RelativeSpacing = 0.015f
+                RelativeSpacing = 0.015f,
+                Stretch = true
             };
-            new GUITextBlock(new RectTransform(new Vector2(0.15f, 1.0f), sortGroup.RectTransform), text: TextManager.Get("campaignstore.sortby"));
-            sortingDropDown = new GUIDropDown(new RectTransform(new Vector2(0.4f, 1.0f), sortGroup.RectTransform), elementCount: 5)
+            new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), sortGroup.RectTransform), text: TextManager.Get("campaignstore.sortby"));
+            sortingDropDown = new GUIDropDown(new RectTransform(new Vector2(0.5f, 1.0f), sortGroup.RectTransform), elementCount: 5)
             {
                 OnSelected = (child, userData) =>
                 {
@@ -191,19 +194,20 @@ namespace Barotrauma
             {
                 RelativeSpacing = 0.01f
             };
-            validateHiresButton = new GUIButton(new RectTransform(new Vector2(1.0f / 3.0f, 1.0f), group.RectTransform), text: TextManager.Get("campaigncrew.validate"))
+            validateHiresButton = new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), group.RectTransform), text: TextManager.Get("campaigncrew.validate"))
             {
                 ClickSound = GUISoundType.ConfirmTransaction,
                 ForceUpperCase = ForceUpperCase.Yes,
                 OnClicked = (b, o) => ValidateHires(PendingHires, true)
             };
-            clearAllButton = new GUIButton(new RectTransform(new Vector2(1.0f / 3.0f, 1.0f), group.RectTransform), text: TextManager.Get("campaignstore.clearall"))
+            clearAllButton = new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), group.RectTransform), text: TextManager.Get("campaignstore.clearall"))
             {
                 ClickSound = GUISoundType.Cart,
                 ForceUpperCase = ForceUpperCase.Yes,
                 Enabled = HasPermission,
                 OnClicked = (b, o) => RemoveAllPendingHires()
             };
+            GUITextBlock.AutoScaleAndNormalize(validateHiresButton.TextBlock, clearAllButton.TextBlock);
 
             resolutionWhenCreated = new Point(GameMain.GraphicsWidth, GameMain.GraphicsHeight);
         }
@@ -526,7 +530,7 @@ namespace Barotrauma
             if (characterInfo.PersonalityTrait is NPCPersonalityTrait trait)
             {
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, blockHeight), infoLabelGroup.RectTransform), TextManager.Get("PersonalityTrait"));
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, blockHeight), infoValueGroup.RectTransform), TextManager.Get("personalitytrait." + trait.Name.Replace(" ".ToIdentifier(), Identifier.Empty)));
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, blockHeight), infoValueGroup.RectTransform), trait.DisplayName);
             }
             infoLabelGroup.Recalculate();
             infoValueGroup.Recalculate();
@@ -885,35 +889,35 @@ namespace Barotrauma
             if (campaign is MultiPlayerCampaign)
             {
                 IWriteMessage msg = new WriteOnlyMessage();
-                msg.Write((byte)ClientPacketHeader.CREW);
+                msg.WriteByte((byte)ClientPacketHeader.CREW);
                 
-                msg.Write(updatePending);
+                msg.WriteBoolean(updatePending);
                 if (updatePending)
                 {
-                    msg.Write((ushort)PendingHires.Count);
+                    msg.WriteUInt16((ushort)PendingHires.Count);
                     foreach (CharacterInfo pendingHire in PendingHires)
                     {
-                        msg.Write(pendingHire.GetIdentifierUsingOriginalName());
+                        msg.WriteInt32(pendingHire.GetIdentifierUsingOriginalName());
                     }
                 }
 
-                msg.Write(validateHires);
+                msg.WriteBoolean(validateHires);
 
                 bool validRenaming = renameCharacter.info != null && !string.IsNullOrEmpty(renameCharacter.newName);
-                msg.Write(validRenaming);
+                msg.WriteBoolean(validRenaming);
                 if (validRenaming)
                 {
                     int identifier = renameCharacter.info.GetIdentifierUsingOriginalName();
-                    msg.Write(identifier);
-                    msg.Write(renameCharacter.newName);
+                    msg.WriteInt32(identifier);
+                    msg.WriteString(renameCharacter.newName);
                     bool existingCrewMember = campaign.CrewManager?.GetCharacterInfos().Any(ci => ci.GetIdentifierUsingOriginalName() == identifier) ?? false;
-                    msg.Write(existingCrewMember);
+                    msg.WriteBoolean(existingCrewMember);
                 }
 
-                msg.Write(firedCharacter != null);
+                msg.WriteBoolean(firedCharacter != null);
                 if (firedCharacter != null)
                 {
-                    msg.Write(firedCharacter.GetIdentifier());
+                    msg.WriteInt32(firedCharacter.GetIdentifier());
                 }
 
                 GameMain.Client.ClientPeer?.Send(msg, DeliveryMethod.Reliable);

@@ -27,6 +27,14 @@ namespace Barotrauma
             get { return _strength; }
             set
             {
+                if (!MathUtils.IsValid(value))
+                {
+#if DEBUG
+                    DebugConsole.ThrowError($"Attempted to set an affliction to an invalid strength ({value})\n" + Environment.StackTrace.CleanupStackTrace());
+#endif
+                    return;
+                }
+
                 if (_nonClampedStrength < 0 && value > 0)
                 {
                     _nonClampedStrength = value;
@@ -50,6 +58,12 @@ namespace Barotrauma
         [Serialize(1.0f, IsPropertySaveable.Yes, description: "The probability for the affliction to be applied."), Editable(minValue: 0f, maxValue: 1f)]
         public float Probability { get; set; } = 1.0f;
 
+        [Serialize(true, IsPropertySaveable.Yes, description: "Explosion damage is applied per each affected limb. Should this affliction damage be divided by the count of affected limbs (1-15) or applied in full? Default: true. Only affects explosions."), Editable]
+        public bool DivideByLimbCount { get; set; }
+
+        [Serialize(false, IsPropertySaveable.Yes, description: "Is the damage relative to the max vitality (percentage) or absolute (normal)"), Editable]
+        public bool MultiplyByMaxVitality { get; private set; }
+
         public float DamagePerSecond;
         public float DamagePerSecondTimer;
         public float PreviousVitalityDecrease;
@@ -67,6 +81,13 @@ namespace Barotrauma
         /// Which character gave this affliction
         /// </summary>
         public Character Source;
+
+        private readonly static LocalizedString[] strengthTexts = new LocalizedString[]
+        {
+            TextManager.Get("AfflictionStrengthLow"),
+            TextManager.Get("AfflictionStrengthMedium"),
+            TextManager.Get("AfflictionStrengthHigh")
+        };
 
         public Affliction(AfflictionPrefab prefab, float strength)
         {
@@ -86,6 +107,16 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Copy properties here instead of using SerializableProperties (with reflection).
+        /// </summary>
+        public void CopyProperties(Affliction source)
+        {
+            Probability = source.Probability;
+            DivideByLimbCount = source.DivideByLimbCount;
+            MultiplyByMaxVitality = source.MultiplyByMaxVitality;
+        }
+
         public void Serialize(XElement element)
         {
             SerializableProperty.SerializeProperties(this, element);
@@ -96,12 +127,25 @@ namespace Barotrauma
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
         }
 
-        public Affliction CreateMultiplied(float multiplier)
+        public Affliction CreateMultiplied(float multiplier, Affliction affliction)
         {
-            return Prefab.Instantiate(NonClampedStrength * multiplier, Source);
+            var instance = Prefab.Instantiate(NonClampedStrength * multiplier, Source);
+            instance.CopyProperties(affliction);
+            return instance;
         }
 
         public override string ToString() => Prefab == null ? "Affliction (Invalid)" : $"Affliction ({Prefab.Name})";
+
+        public LocalizedString GetStrengthText()
+        {
+            return GetStrengthText(Strength, Prefab.MaxStrength);
+        }
+
+        public static LocalizedString GetStrengthText(float strength, float maxStrength)
+        {
+            return strengthTexts[
+                MathHelper.Clamp((int)Math.Floor(strength / maxStrength * strengthTexts.Length), 0, strengthTexts.Length - 1)];
+        }
 
         public AfflictionPrefab.Effect GetActiveEffect() => Prefab.GetActiveEffect(Strength);
 
@@ -416,15 +460,15 @@ namespace Barotrauma
             {
                 statusEffect.Apply(type, deltaTime, characterHealth.Character, targetLimb);
             }
-            if (targetLimb != null && statusEffect.HasTargetType(StatusEffect.TargetType.AllLimbs))
+            if (characterHealth?.Character?.AnimController?.Limbs != null && statusEffect.HasTargetType(StatusEffect.TargetType.AllLimbs))
             {
-                statusEffect.Apply(type, deltaTime, targetLimb.character, targets: targetLimb.character.AnimController.Limbs);
+                statusEffect.Apply(type, deltaTime, characterHealth.Character, targets: characterHealth.Character.AnimController.Limbs);
             }
             if (statusEffect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
                 statusEffect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
             {
                 targets.Clear();
-                targets.AddRange(statusEffect.GetNearbyTargets(characterHealth.Character.WorldPosition, targets));
+                statusEffect.AddNearbyTargets(characterHealth.Character.WorldPosition, targets);
                 statusEffect.Apply(type, deltaTime, characterHealth.Character, targets);
             }
         }

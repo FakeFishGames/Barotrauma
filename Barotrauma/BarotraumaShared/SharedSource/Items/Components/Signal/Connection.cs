@@ -23,6 +23,9 @@ namespace Barotrauma.Items.Components
         private readonly HashSet<Wire> wires;
         public IReadOnlyCollection<Wire> Wires => wires;
 
+        private bool enumeratingWires;
+        private readonly HashSet<Wire> removedWires = new HashSet<Wire>();
+
         private readonly Item item;
 
         public readonly bool IsOutput;
@@ -239,7 +242,14 @@ namespace Barotrauma.Items.Components
                 }
                 prevOtherConnection.recipientsDirty = true;
             }
-            wires.Remove(wire);
+            if (enumeratingWires)
+            {
+                removedWires.Add(wire);
+            }
+            else
+            {
+                wires.Remove(wire);
+            }
             recipientsDirty = true;
         }
         
@@ -278,6 +288,7 @@ namespace Barotrauma.Items.Components
 
         public void SendSignal(Signal signal)
         {
+            enumeratingWires = true;
             foreach (var wire in wires)
             {
                 Connection recipient = wire.OtherConnection(this);
@@ -301,6 +312,12 @@ namespace Barotrauma.Items.Components
                     }
                 }
             }
+            enumeratingWires = false;
+            foreach (var removedWire in removedWires)
+            {
+                wires.Remove(removedWire);
+            }
+            removedWires.Clear();
         }
         
         public void ClearConnections()
@@ -313,13 +330,23 @@ namespace Barotrauma.Items.Components
                     Powered.ChangedConnections.Add(c);
                 }
             }
-
             foreach (var wire in wires)
             {
                 wire.RemoveConnection(this);
                 recipientsDirty = true;
             }
-            wires.Clear();
+
+            if (enumeratingWires)
+            {
+                foreach (var wire in wires)
+                {
+                    removedWires.Add(wire);
+                }
+            }
+            else
+            {
+                wires.Clear();
+            }
         }
         
         public void InitializeFromLoaded()

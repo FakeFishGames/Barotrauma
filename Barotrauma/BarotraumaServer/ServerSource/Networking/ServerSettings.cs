@@ -18,20 +18,31 @@ namespace Barotrauma.Networking
             {
                 if (!PropEquals(lastSyncedValue, Value))
                 {
-                    LastUpdateID = (UInt16)(GameMain.NetLobbyScreen.LastUpdateID);
+                    LastUpdateID = GameMain.NetLobbyScreen.LastUpdateID;
                     lastSyncedValue = Value;
                 }
+            }
+            public void ForceUpdate()
+            {
+                LastUpdateID = GameMain.NetLobbyScreen.LastUpdateID++;
             }
         }
         
         public static readonly string ClientPermissionsFile = "Data" + Path.DirectorySeparatorChar + "clientpermissions.xml";
         public static readonly char SubmarineSeparatorChar = '|';
 
-        public readonly Dictionary<NetFlags, UInt16> LastUpdateIdForFlag = new Dictionary<NetFlags, UInt16>();
-        public UInt16 LastPropertyUpdateId { get; private set; } = 1;
-        
+        public readonly Dictionary<NetFlags, UInt16> LastUpdateIdForFlag
+            = ((NetFlags[])Enum.GetValues(typeof(NetFlags)))
+                .Select(f => (f, (ushort)1))
+                .ToDictionary();
+
         public void UpdateFlag(NetFlags flag)
             => LastUpdateIdForFlag[flag] = (UInt16)(GameMain.NetLobbyScreen.LastUpdateID + 1);
+
+        public NetFlags UnsentFlags()
+            => LastUpdateIdForFlag.Keys
+                .Where(k => NetIdUtils.IdMoreRecent(LastUpdateIdForFlag[k], GameMain.NetLobbyScreen.LastUpdateID))
+                .Aggregate(NetFlags.None, (f1, f2) => f1 | f2);
 
         private bool IsFlagRequired(Client c, NetFlags flag)
             => NetIdUtils.IdMoreRecent(LastUpdateIdForFlag[flag], c.LastRecvLobbyUpdate);
@@ -39,13 +50,21 @@ namespace Barotrauma.Networking
         public NetFlags GetRequiredFlags(Client c)
             => LastUpdateIdForFlag.Keys
                 .Where(k => IsFlagRequired(c, k))
-                .Concat(NetFlags.None.ToEnumerable()) //prevents InvalidOperationException in Aggregate
-                .Aggregate((f1, f2) => f1 | f2);
+                .Aggregate(NetFlags.None, (f1, f2) => f1 | f2);
         
         partial void InitProjSpecific()
         {
             LoadSettings();
             LoadClientPermissions();
+        }
+
+        public void ForcePropertyUpdate()
+        {
+            UpdateFlag(NetFlags.Properties);
+            foreach (NetPropertyData property in netProperties.Values)
+            {
+                property.ForceUpdate();
+            }
         }
 
         private void WriteNetProperties(IWriteMessage outMsg, Client c)
@@ -56,40 +75,39 @@ namespace Barotrauma.Networking
                 property.SyncValue();
                 if (NetIdUtils.IdMoreRecent(property.LastUpdateID, c.LastRecvLobbyUpdate))
                 {
-                    outMsg.Write(key);
+                    outMsg.WriteUInt32(key);
                     netProperties[key].Write(outMsg);
                 }
             }
-            outMsg.Write((UInt32)0);
+            outMsg.WriteUInt32((UInt32)0);
         }
 
         public void ServerAdminWrite(IWriteMessage outMsg, Client c)
         {
-            c.LastSentServerSettingsUpdate = LastPropertyUpdateId;
+            c.LastSentServerSettingsUpdate = LastUpdateIdForFlag[NetFlags.Properties];
             WriteNetProperties(outMsg, c);
             WriteMonsterEnabled(outMsg);
             BanList.ServerAdminWrite(outMsg, c);
-            Whitelist.ServerAdminWrite(outMsg, c);
         }
 
         public void ServerWrite(IWriteMessage outMsg, Client c)
         {
             NetFlags requiredFlags = GetRequiredFlags(c);
-            outMsg.Write((byte)requiredFlags);
+            outMsg.WriteByte((byte)requiredFlags);
             if (requiredFlags.HasFlag(NetFlags.Name))
             {
-                outMsg.Write(ServerName);
+                outMsg.WriteString(ServerName);
             }
 
             if (requiredFlags.HasFlag(NetFlags.Message))
             {
-                outMsg.Write(ServerMessageText);
+                outMsg.WriteString(ServerMessageText);
             }
-            outMsg.Write((byte)PlayStyle);
-            outMsg.Write((byte)MaxPlayers);
-            outMsg.Write(HasPassword);
-            outMsg.Write(IsPublic);
-            outMsg.Write(AllowFileTransfers);
+            outMsg.WriteByte((byte)PlayStyle);
+            outMsg.WriteByte((byte)MaxPlayers);
+            outMsg.WriteBoolean(HasPassword);
+            outMsg.WriteBoolean(IsPublic);
+            outMsg.WriteBoolean(AllowFileTransfers);
             outMsg.WritePadBits();
             outMsg.WriteRangedInteger(TickRate, 1, 60);
 
@@ -104,16 +122,18 @@ namespace Barotrauma.Networking
             }
 
             if (c.HasPermission(Networking.ClientPermissions.ManageSettings)
-                && !NetIdUtils.IdMoreRecentOrMatches(c.LastRecvServerSettingsUpdate, LastPropertyUpdateId))
+                && NetIdUtils.IdMoreRecent(
+                    newID: LastUpdateIdForFlag[NetFlags.Properties],
+                    oldID: c.LastRecvServerSettingsUpdate))
             {
-                outMsg.Write(true);
+                outMsg.WriteBoolean(true);
                 outMsg.WritePadBits();
 
                 ServerAdminWrite(outMsg, c);
             }
             else
             {
-                outMsg.Write(false);
+                outMsg.WriteBoolean(false);
                 outMsg.WritePadBits();
             }
         }
@@ -171,12 +191,10 @@ namespace Barotrauma.Networking
                 propertiesChanged |= changedMonsterSettings;
                 if (changedMonsterSettings) { ReadMonsterEnabled(incMsg); }
                 propertiesChanged |= BanList.ServerAdminRead(incMsg, c);
-                propertiesChanged |= Whitelist.ServerAdminRead(incMsg, c);
 
                 if (propertiesChanged)
                 {
                     UpdateFlag(NetFlags.Properties);
-                    LastPropertyUpdateId = (UInt16)(GameMain.NetLobbyScreen.LastUpdateID + 1);
                 }
                 changed |= propertiesChanged;
             }
@@ -192,27 +210,32 @@ namespace Barotrauma.Networking
             {
                 int orBits = incMsg.ReadRangedInteger(0, (int)Barotrauma.MissionType.All) & (int)Barotrauma.MissionType.All;
                 int andBits = incMsg.ReadRangedInteger(0, (int)Barotrauma.MissionType.All) & (int)Barotrauma.MissionType.All;
-                GameMain.NetLobbyScreen.MissionType = (Barotrauma.MissionType)(((int)GameMain.NetLobbyScreen.MissionType | orBits) & andBits);
+                GameMain.NetLobbyScreen.MissionType = (MissionType)(((int)GameMain.NetLobbyScreen.MissionType | orBits) & andBits);
                 
                 int traitorSetting = (int)TraitorsEnabled + incMsg.ReadByte() - 1;
-                if (traitorSetting < 0) traitorSetting = 2;
-                if (traitorSetting > 2) traitorSetting = 0;
+                if (traitorSetting < 0) { traitorSetting = 2; }
+                if (traitorSetting > 2) { traitorSetting = 0; }
                 TraitorsEnabled = (YesNoMaybe)traitorSetting;
 
                 int botCount = BotCount + incMsg.ReadByte() - 1;
-                if (botCount < 0) botCount = MaxBotCount;
-                if (botCount > MaxBotCount) botCount = 0;
+                if (botCount < 0) { botCount = MaxBotCount; }
+                if (botCount > MaxBotCount) { botCount = 0; }
                 BotCount = botCount;
 
                 int botSpawnMode = (int)BotSpawnMode + incMsg.ReadByte() - 1;
-                if (botSpawnMode < 0) botSpawnMode = 1;
-                if (botSpawnMode > 1) botSpawnMode = 0;
+                if (botSpawnMode < 0) { botSpawnMode = 1; }
+                if (botSpawnMode > 1) { botSpawnMode = 0; }
                 BotSpawnMode = (BotSpawnMode)botSpawnMode;
 
                 float levelDifficulty = incMsg.ReadSingle();
-                if (levelDifficulty >= 0.0f) SelectedLevelDifficulty = levelDifficulty;
+                if (levelDifficulty >= 0.0f) { SelectedLevelDifficulty = levelDifficulty; }
 
-                UseRespawnShuttle = incMsg.ReadBoolean();
+                bool changedUseRespawnShuttle = incMsg.ReadBoolean();
+                bool useRespawnShuttle = incMsg.ReadBoolean();
+                if (changedUseRespawnShuttle)
+                {
+                    UseRespawnShuttle = useRespawnShuttle;
+                }
 
                 bool changedAutoRestart = incMsg.ReadBoolean();
                 bool autoRestart = incMsg.ReadBoolean();
@@ -249,7 +272,6 @@ namespace Barotrauma.Networking
             XDocument doc = new XDocument(new XElement("serversettings"));
 
             doc.Root.SetAttributeValue("name", ServerName);
-            doc.Root.SetAttributeValue("public", IsPublic);
             doc.Root.SetAttributeValue("port", Port);
 #if USE_STEAM
             doc.Root.SetAttributeValue("queryport", QueryPort);
@@ -444,31 +466,27 @@ namespace Barotrauma.Networking
         {
             ClientPermissions.Clear();
 
-            if (!File.Exists(ClientPermissionsFile))
-            {
-                if (File.Exists("Data/clientpermissions.txt"))
-                {
-                    LoadClientPermissionsOld("Data/clientpermissions.txt");
-                }
-                return;
-            }
+            if (!File.Exists(ClientPermissionsFile)) { return; }
 
             XDocument doc = XMLExtensions.TryLoadXml(ClientPermissionsFile);
             if (doc == null) { return; }
             foreach (XElement clientElement in doc.Root.Elements())
             {
                 string clientName = clientElement.GetAttributeString("name", "");
-                string clientEndPoint = clientElement.GetAttributeString("endpoint", null) ?? clientElement.GetAttributeString("ip", "");
-                string steamIdStr = clientElement.GetAttributeString("steamid", "");
+                string addressStr = clientElement.GetAttributeString("address", null)
+                                    ?? clientElement.GetAttributeString("endpoint", null)
+                                    ?? clientElement.GetAttributeString("ip", "");
+                string accountIdStr = clientElement.GetAttributeString("accountid", null)
+                                   ?? clientElement.GetAttributeString("steamid", "");
 
                 if (string.IsNullOrWhiteSpace(clientName))
                 {
-                    DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - all clients must have a name and an IP address.");
+                    DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - all clients must have a name.");
                     continue;
                 }
-                if (string.IsNullOrWhiteSpace(clientEndPoint) && string.IsNullOrWhiteSpace(steamIdStr))
+                if (string.IsNullOrWhiteSpace(addressStr) && string.IsNullOrWhiteSpace(accountIdStr))
                 {
-                    DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - all clients must have an IP address or a Steam ID.");
+                    DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - all clients must have an endpoint or a Steam ID.");
                     continue;
                 }
 
@@ -525,69 +543,33 @@ namespace Barotrauma.Networking
                     }
                 }
 
-                if (!string.IsNullOrEmpty(steamIdStr))
+                if (!string.IsNullOrEmpty(accountIdStr))
                 {
-                    if (ulong.TryParse(steamIdStr, out ulong steamID))
+                    if (AccountId.Parse(accountIdStr).TryUnwrap(out var accountId))
                     {
-                        ClientPermissions.Add(new SavedClientPermission(clientName, steamID, permissions, permittedCommands));
+                        ClientPermissions.Add(new SavedClientPermission(clientName, accountId, permissions, permittedCommands));
                     }
                     else
                     {
-                        DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - \"" + steamIdStr + "\" is not a valid Steam ID.");
-                        continue;
+                        DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - \"" + accountIdStr + "\" is not a valid account ID.");
                     }
                 }
                 else
                 {
-                    ClientPermissions.Add(new SavedClientPermission(clientName, clientEndPoint, permissions, permittedCommands));
-                }
-            }
-        }
-
-        /// <summary>
-        /// Method for loading old .txt client permission files to provide backwards compatibility
-        /// </summary>
-        private void LoadClientPermissionsOld(string file)
-        {
-            if (!File.Exists(file)) return;
-
-            string[] lines;
-            try
-            {
-                lines = File.ReadAllLines(file);
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("Failed to open client permission file " + ClientPermissionsFile, e);
-                return;
-            }
-
-            ClientPermissions.Clear();
-
-            foreach (string line in lines)
-            {
-                string[] separatedLine = line.Split('|');
-                if (separatedLine.Length < 3) { continue; }
-
-                string name = string.Join("|", separatedLine.Take(separatedLine.Length - 2));
-                string ip = separatedLine[separatedLine.Length - 2];
-
-                ClientPermissions permissions;
-                if (Enum.TryParse(separatedLine.Last(), out permissions))
-                {
-                    ClientPermissions.Add(new SavedClientPermission(name, ip, permissions, new HashSet<DebugConsole.Command>()));
+                    if (Address.Parse(addressStr).TryUnwrap(out var address))
+                    {
+                        ClientPermissions.Add(new SavedClientPermission(clientName, address, permissions, permittedCommands));
+                    }
+                    else
+                    {
+                        DebugConsole.ThrowError("Error in " + ClientPermissionsFile + " - \"" + addressStr + "\" is not a valid endpoint.");
+                    }
                 }
             }
         }
 
         public void SaveClientPermissions()
         {
-            //delete old client permission file
-            if (File.Exists("Data/clientpermissions.txt"))
-            {
-                File.Delete("Data/clientpermissions.txt");
-            }
-            
             GameServer.Log("Saving client permissions", ServerLog.MessageType.ServerMessage);
 
             XDocument doc = new XDocument(new XElement("ClientPermissions"));
@@ -595,6 +577,7 @@ namespace Barotrauma.Networking
             foreach (SavedClientPermission clientPermission in ClientPermissions)
             {
                 var matchingPreset = PermissionPreset.List.Find(p => p.MatchesPermissions(clientPermission.Permissions, clientPermission.PermittedCommands));
+                #warning TODO: this is broken because of localization
                 if (matchingPreset != null && matchingPreset.Name == "None")
                 {
                     continue;
@@ -603,23 +586,14 @@ namespace Barotrauma.Networking
                 XElement clientElement = new XElement("Client",
                     new XAttribute("name", clientPermission.Name));
 
-                if (clientPermission.SteamID > 0)
-                {
-                    clientElement.Add(new XAttribute("steamid", clientPermission.SteamID));
-                }
-                else
-                {
-                    clientElement.Add(new XAttribute("endpoint", clientPermission.EndPoint));
-                }
+                clientElement.Add(clientPermission.AddressOrAccountId.TryGet(out AccountId accountId)
+                    ? new XAttribute("accountid", accountId.StringRepresentation)
+                    : new XAttribute("address", ((Address)clientPermission.AddressOrAccountId).StringRepresentation));
 
-                if (matchingPreset == null)
-                {
-                    clientElement.Add(new XAttribute("permissions", clientPermission.Permissions.ToString()));
-                }
-                else
-                {
-                    clientElement.Add(new XAttribute("preset", matchingPreset.Name));
-                }
+                clientElement.Add(matchingPreset == null
+                    ? new XAttribute("permissions", clientPermission.Permissions.ToString())
+                    : new XAttribute("preset", matchingPreset.Name));
+                
                 if (clientPermission.Permissions.HasFlag(Networking.ClientPermissions.ConsoleCommands))
                 {
                     foreach (DebugConsole.Command command in clientPermission.PermittedCommands)

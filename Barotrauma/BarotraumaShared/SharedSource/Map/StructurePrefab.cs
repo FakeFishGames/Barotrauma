@@ -142,8 +142,6 @@ namespace Barotrauma
             //only used if the item doesn't have a name/description defined in the currently selected language
             Identifier fallbackNameIdentifier = element.GetAttributeIdentifier("fallbacknameidentifier", "");
 
-            Identifier descriptionIdentifier = element.GetAttributeIdentifier("descriptionidentifier", "");
-
             Name = TextManager.Get(nameIdentifier.IsEmpty
                     ? $"EntityName.{Identifier}"
                     : $"EntityName.{nameIdentifier}",
@@ -271,21 +269,7 @@ namespace Barotrauma
                 tags.Add("wall".ToIdentifier());
             }
 
-            if (Description.IsNullOrEmpty())
-            {
-                if (!descriptionIdentifier.IsEmpty)
-                {
-                    Description = TextManager.Get($"EntityDescription.{descriptionIdentifier}");
-                }
-                else if (nameIdentifier.IsEmpty)
-                {
-                    Description = TextManager.Get($"EntityDescription.{Identifier}");
-                }
-                else
-                {
-                    Description = TextManager.Get($"EntityDescription.{nameIdentifier}");
-                }
-            }
+            LoadDescription(element);
 
             //backwards compatibility
             if (element.GetAttribute("size") == null)
@@ -334,12 +318,6 @@ namespace Barotrauma
             throw new NotImplementedException();
         }
 
-        private bool disposed = false;
-        public override void Dispose()
-        {
-            if (disposed) { return; }
-            disposed = true;
-            Prefabs.Remove(this);
-        }
+        public override void Dispose() { }
     }
 }

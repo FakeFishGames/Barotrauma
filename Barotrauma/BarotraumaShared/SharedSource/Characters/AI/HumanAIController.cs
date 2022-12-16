@@ -395,6 +395,10 @@ namespace Barotrauma
             }
             objectiveManager.UpdateObjectives(deltaTime);
 
+            if (reportProblemsTimer > 0)
+            {
+                reportProblemsTimer -= deltaTime;
+            }
             if (reactTimer > 0.0f)
             {
                 reactTimer -= deltaTime;
@@ -407,7 +411,6 @@ namespace Barotrauma
             else
             {
                 Character.UpdateTeam();
-
                 if (Character.CurrentHull != null)
                 {
                     if (Character.IsOnPlayerTeam)
@@ -425,19 +428,15 @@ namespace Barotrauma
                         }
                     }
                 }
-                if (Character.SpeechImpediment < 100.0f)
+                if (reportProblemsTimer <= 0.0f)
                 {
-                    reportProblemsTimer -= deltaTime;
-                    if (reportProblemsTimer <= 0.0f)
+                    if (Character.Submarine != null && (Character.Submarine.TeamID == Character.TeamID || Character.IsEscorted) && !Character.Submarine.Info.IsWreck)
                     {
-                        if (Character.Submarine != null && (Character.Submarine.TeamID == Character.TeamID || Character.IsEscorted) && !Character.Submarine.Info.IsWreck)
-                        {
-                            ReportProblems();
-                        }
-                        reportProblemsTimer = reportProblemsInterval;
+                        ReportProblems();
                     }
-                    UpdateSpeaking();
+                    reportProblemsTimer = reportProblemsInterval;
                 }
+                UpdateSpeaking();
                 UnequipUnnecessaryItems();
                 reactTimer = GetReactionTime();
             }
@@ -466,7 +465,12 @@ namespace Barotrauma
                     }
                 }
             }
-            steeringManager.Update(Character.AnimController.GetCurrentSpeed(run && Character.CanRun));
+
+            //if someone is grabbing the bot and the bot isn't trying to run anywhere, let them keep dragging and "control" the bot
+            if (Character.SelectedBy == null || run)
+            {
+                steeringManager.Update(Character.AnimController.GetCurrentSpeed(run && Character.CanRun));
+            }
 
             bool ignorePlatforms = Character.AnimController.TargetMovement.Y < -0.5f && (-Character.AnimController.TargetMovement.Y > Math.Abs(Character.AnimController.TargetMovement.X));
             if (steeringManager == insideSteering)
@@ -511,9 +515,9 @@ namespace Barotrauma
                     {
                         newDir = Direction.Left;
                     }
-                    if (Character.SelectedConstruction != null)
+                    if (Character.SelectedItem != null)
                     {
-                        Character.SelectedConstruction.SecondaryUse(deltaTime, Character);
+                        Character.SelectedItem.SecondaryUse(deltaTime, Character);
                     }
                 }
                 else if (AutoFaceMovement && Math.Abs(Character.AnimController.TargetMovement.X) > 0.1f && !Character.AnimController.InWater)
@@ -907,7 +911,7 @@ namespace Barotrauma
         {
             Order newOrder = null;
             Hull targetHull = null;
-            bool speak = true;
+            bool speak = Character.SpeechImpediment < 100;
             if (Character.CurrentHull != null)
             {
                 bool isFighting = ObjectiveManager.HasActiveObjective<AIObjectiveCombat>();
@@ -1058,17 +1062,15 @@ namespace Barotrauma
         private void UpdateSpeaking()
         {
             if (!Character.IsOnPlayerTeam) { return; }
-
+            if (Character.SpeechImpediment >= 100) { return; }
             if (Character.Oxygen < 20.0f)
             {
                 Character.Speak(TextManager.Get("DialogLowOxygen").Value, null, Rand.Range(0.5f, 5.0f), "lowoxygen".ToIdentifier(), 30.0f);
             }
-
             if (Character.Bleeding > 2.0f)
             {
                 Character.Speak(TextManager.Get("DialogBleeding").Value, null, Rand.Range(0.5f, 5.0f), "bleeding".ToIdentifier(), 30.0f);
             }
-
             if (Character.PressureTimer > 50.0f && Character.CurrentHull?.DisplayName != null)
             {
                 Character.Speak(TextManager.GetWithVariable("DialogPressure", "[roomname]", Character.CurrentHull.DisplayName, FormatCapitals.Yes).Value, null, Rand.Range(0.5f, 5.0f), "pressure".ToIdentifier(), 30.0f);
@@ -1297,6 +1299,7 @@ namespace Barotrauma
 
             AIObjectiveCombat.CombatMode DetermineCombatMode(Character c, float cumulativeDamage = 0, bool isWitnessing = false)
             {
+                if (!(c.AIController is HumanAIController humanAI)) { return AIObjectiveCombat.CombatMode.None; }
                 if (!IsFriendly(attacker))
                 {
                     if (c.Submarine == null)
@@ -1306,12 +1309,15 @@ namespace Barotrauma
                     }
                     if (!c.Submarine.GetConnectedSubs().Contains(attacker.Submarine))
                     {
-                        // Attacked from an unconnected submarine.
-                        return c.SelectedConstruction?.GetComponent<Turret>() != null ? AIObjectiveCombat.CombatMode.None : AIObjectiveCombat.CombatMode.Retreat;
+                        // Attacked from an unconnected submarine (pirate/pvp)
+                        return 
+                            humanAI.ObjectiveManager.CurrentOrder is AIObjectiveOperateItem operateOrder && operateOrder.GetTarget() is Controller ? 
+                                AIObjectiveCombat.CombatMode.None : AIObjectiveCombat.CombatMode.Retreat;
                     }
-                    return c.AIController is HumanAIController humanAI &&
-                        (humanAI.ObjectiveManager.IsCurrentOrder<AIObjectiveFightIntruders>() || humanAI.ObjectiveManager.Objectives.Any(o => o is AIObjectiveFightIntruders)) 
-                        ? AIObjectiveCombat.CombatMode.Offensive : AIObjectiveCombat.CombatMode.Defensive;
+                    return 
+                        humanAI.ObjectiveManager.IsCurrentOrder<AIObjectiveFightIntruders>() || 
+                        humanAI.ObjectiveManager.Objectives.Any(o => o is AIObjectiveFightIntruders) ? 
+                            AIObjectiveCombat.CombatMode.Offensive : AIObjectiveCombat.CombatMode.Defensive;
                 }
                 else
                 {
@@ -1362,7 +1368,7 @@ namespace Barotrauma
                     }
                     else
                     {
-                        if (c.AIController is HumanAIController humanAI && humanAI.ObjectiveManager.GetActiveObjective<AIObjectiveCombat>()?.Enemy == attacker)
+                        if (humanAI.ObjectiveManager.GetActiveObjective<AIObjectiveCombat>()?.Enemy == attacker)
                         {
                             // Already targeting the attacker -> treat as a more serious threat.
                             cumulativeDamage *= 2;
@@ -1851,6 +1857,7 @@ namespace Barotrauma
             bool targetAdded = false;
             DoForEachCrewMember(caller, humanAI =>
             {
+                if (caller != humanAI.Character && caller.SpeechImpediment >= 100) { return; }
                 var objective = humanAI.ObjectiveManager.GetObjective<T1>();
                 if (objective != null)
                 {
@@ -1900,8 +1907,8 @@ namespace Barotrauma
                 visibleHulls = VisibleHulls;
             }
             bool ignoreFire = objectiveManager.CurrentOrder is AIObjectiveExtinguishFires extinguishOrder && extinguishOrder.Priority > 0 || objectiveManager.HasActiveObjective<AIObjectiveExtinguishFire>();
-            bool ignoreWater = HasDivingSuit(character);
-            bool ignoreOxygen = ignoreWater || HasDivingMask(character);
+            bool ignoreWater = character.IsProtectedFromPressure();
+            bool ignoreOxygen = HasDivingGear(character);
             bool ignoreEnemies = ObjectiveManager.IsCurrentOrder<AIObjectiveFightIntruders>() || ObjectiveManager.IsCurrentObjective<AIObjectiveFightIntruders>();
             float safety = CalculateHullSafety(hull, visibleHulls, character, ignoreWater, ignoreOxygen, ignoreFire, ignoreEnemies);
             if (isCurrentHull)
@@ -2144,7 +2151,7 @@ namespace Barotrauma
                 if (c.Removed) { continue; }
                 if (c.TeamID != team) { continue; }
                 if (c.IsIncapacitated) { continue; }
-                if (c.SelectedConstruction == target.Item)
+                if (c.SelectedItem == target.Item)
                 {
                     operatingCharacter = c;
                     return true;
@@ -2181,7 +2188,7 @@ namespace Barotrauma
                 if (c.IsIncapacitated) { continue; }
                 if (c.IsPlayer)
                 {
-                    if (c.SelectedConstruction == target.Item)
+                    if (c.SelectedItem == target.Item)
                     {
                         // If the other character is player, don't try to operate
                         other = c;

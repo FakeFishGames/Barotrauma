@@ -218,6 +218,8 @@ namespace Barotrauma.Extensions
             return new Dictionary<TKey, TValue>(immutableDictionary);
         }
 
+        public static NetCollection<T> ToNetCollection<T>(this IEnumerable<T> enumerable) => new NetCollection<T>(enumerable.ToImmutableArray());
+
         /// <summary>
         /// Returns whether a given collection has at least a certain amount
         /// of elements for which the predicate returns true.
@@ -298,5 +300,27 @@ namespace Barotrauma.Extensions
 
             return null;
         }
+
+        public static IEnumerable<T> NotNull<T>(this IEnumerable<T?> source) where T : struct
+            => source
+                .Where(nullable => nullable.HasValue)
+                .Select(nullable => nullable.Value);
+        
+        public static IEnumerable<T> NotNone<T>(this IEnumerable<Option<T>> source)
+            => source
+                .OfType<Some<T>>()
+                .Select(some => some.Value);
+
+        public static IEnumerable<TSuccess> Successes<TSuccess, TFailure>(
+            this IEnumerable<Result<TSuccess, TFailure>> source)
+            => source
+                .OfType<Success<TSuccess, TFailure>>()
+                .Select(s => s.Value);
+        
+        public static IEnumerable<TFailure> Failures<TSuccess, TFailure>(
+            this IEnumerable<Result<TSuccess, TFailure>> source)
+            => source
+                .OfType<Failure<TSuccess, TFailure>>()
+                .Select(f => f.Error);
     }
 }

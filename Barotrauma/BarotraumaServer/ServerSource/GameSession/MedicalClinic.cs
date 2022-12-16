@@ -2,7 +2,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
+using Barotrauma.Extensions;
 using Barotrauma.Networking;
 
 namespace Barotrauma
@@ -30,6 +32,9 @@ namespace Barotrauma
 
             switch (header)
             {
+                case NetworkHeader.ADD_EVERYTHING_TO_PENDING:
+                    ProcessAddEverything(sender);
+                    break;
                 case NetworkHeader.REQUEST_AFFLICTIONS:
                     ProcessRequestedAfflictions(inc, sender);
                     break;
@@ -57,7 +62,14 @@ namespace Barotrauma
 
             NetCrewMember newCrewMember = INetSerializableStruct.Read<NetCrewMember>(inc);
             InsertPendingCrewMember(newCrewMember);
-            ServerSend(newCrewMember, NetworkHeader.ADD_PENDING, DeliveryMethod.Reliable, reponseClient: client);
+            ServerSend(new NetCollection<NetCrewMember>(newCrewMember), NetworkHeader.ADD_PENDING, DeliveryMethod.Reliable, reponseClient: client);
+        }
+
+        private void ProcessAddEverything(Client client)
+        {
+            if (CheckRateLimit(client) == RateLimitResult.LimitReached) { return; }
+            AddEverythingToPending();
+            ServerSend(PendingHeals.ToNetCollection(), NetworkHeader.ADD_PENDING, DeliveryMethod.Reliable, reponseClient: client);
         }
 
         private void ProcessNewRemoval(IReadMessage inc, Client client)
@@ -73,12 +85,7 @@ namespace Barotrauma
         {
             if (CheckRateLimit(client) == RateLimitResult.LimitReached) { return; }
 
-            INetSerializableStruct writeCrewMember = new NetPendingCrew
-            {
-                CrewMembers = PendingHeals.ToArray()
-            };
-
-            ServerSend(writeCrewMember, NetworkHeader.REQUEST_PENDING, DeliveryMethod.Reliable, targetClient: client);
+            ServerSend(PendingHeals.ToNetCollection(), NetworkHeader.REQUEST_PENDING, DeliveryMethod.Reliable, targetClient: client);
         }
 
         private void ProcessHealing(Client client)
@@ -107,10 +114,10 @@ namespace Barotrauma
 
             CharacterInfo? foundInfo = crewMember.FindCharacterInfo(GetCrewCharacters());
 
-            NetAffliction[] pendingAfflictions = Array.Empty<NetAffliction>();
+            ImmutableArray<NetAffliction> pendingAfflictions = ImmutableArray<NetAffliction>.Empty;
             int infoId = 0;
 
-            if (foundInfo is { Character: { CharacterHealth: { } health } })
+            if (foundInfo is { Character.CharacterHealth: { } health })
             {
                 pendingAfflictions = GetAllAfflictions(health);
                 infoId = foundInfo.GetIdentifierUsingOriginalName();
@@ -154,7 +161,7 @@ namespace Barotrauma
         private IWriteMessage StartSending()
         {
             IWriteMessage msg = new WriteOnlyMessage();
-            msg.Write((byte)ServerPacketHeader.MEDICAL);
+            msg.WriteByte((byte)ServerPacketHeader.MEDICAL);
             return msg;
         }
 
@@ -181,8 +188,8 @@ namespace Barotrauma
                 }
 
                 IWriteMessage msg = StartSending();
-                msg.Write((byte)header);
-                msg.Write((byte)flag);
+                msg.WriteByte((byte)header);
+                msg.WriteByte((byte)flag);
                 netStruct?.Write(msg);
                 GameMain.Server.ServerPeer.Send(msg, c.Connection, deliveryMethod);
             }

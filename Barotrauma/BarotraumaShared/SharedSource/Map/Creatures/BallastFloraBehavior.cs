@@ -308,6 +308,8 @@ namespace Barotrauma.MapCreatures.Behavior
         private BallastFloraBranch? root;
         private readonly List<Body> bodies = new List<Body>();
 
+        private bool isDead;
+
         public readonly BallastFloraStateMachine StateMachine;
 
         public int GrowthWarps;
@@ -403,13 +405,14 @@ namespace Barotrauma.MapCreatures.Behavior
                     new XAttribute("health", branch.Health.ToString("G", CultureInfo.InvariantCulture)),
                     new XAttribute("maxhealth", branch.MaxHealth.ToString("G", CultureInfo.InvariantCulture)),
                     new XAttribute("sides", (int)branch.Sides),
-                    new XAttribute("blockedsides", (int)branch.BlockedSides));
+                    new XAttribute("blockedsides", (int)branch.BlockedSides),
+                    new XAttribute("tile", (int)branch.Type));
 
                 if (branch.ClaimedItem != null)
                 {
                     be.Add(new XAttribute("claimed", (int)(branch.ClaimedItem?.ID ?? -1)));
                 }
-                if (branch.ParentBranch != null)
+                if (branch.ParentBranch != null && !branch.ParentBranch.Removed)
                 {
                     be.Add(new XAttribute("parentbranch", (int)(branch.ParentBranch?.ID ?? -1)));
                 }
@@ -495,14 +498,15 @@ namespace Barotrauma.MapCreatures.Behavior
                 int blockedSides = getInt("blockedsides");
                 int claimedId = branchElement.GetAttributeInt("claimed", -1);
                 int parentBranchId = branchElement.GetAttributeInt("parentbranch", -1);
+                VineTileType type = (VineTileType)branchElement.GetAttributeInt("tile", 0);
 
-                BallastFloraBranch newBranch = new BallastFloraBranch(this, null, pos, VineTileType.CrossJunction, FoliageConfig.Deserialize(flowerConfig), FoliageConfig.Deserialize(leafconfig))
+                BallastFloraBranch newBranch = new BallastFloraBranch(this, null, pos, type, FoliageConfig.Deserialize(flowerConfig), FoliageConfig.Deserialize(leafconfig))
                 {
                     ID = id,
                     Health = health,
                     MaxHealth = maxhealth,
-                    Sides = (TileSide) sides,
-                    BlockedSides = (TileSide) blockedSides,
+                    Sides = (TileSide)sides,
+                    BlockedSides = (TileSide)blockedSides,
                     IsRoot = isRoot,
                     IsRootGrowth = isRootGrowth
                 };
@@ -683,7 +687,6 @@ namespace Barotrauma.MapCreatures.Behavior
                     if (branch.ClaimedItem != null)
                     {
                         RemoveClaim(branch.ClaimedItem);
-                        branch.ClaimedItem = null;
                     }
 
                     branch.RemoveTimer -= deltaTime;
@@ -1023,7 +1026,7 @@ namespace Barotrauma.MapCreatures.Behavior
                 branch.DamageVisualizationTimer = 1.0f;
             }
 
-            if (branch.IsRootGrowth && root != null && root.Health > 0.0f) { return; }
+            if (branch.IsRootGrowth && root is { Health: > 0.0f }) { return; }
 
             if (type != AttackType.Other && type != AttackType.CutFromRoot)
             {
@@ -1032,7 +1035,7 @@ namespace Barotrauma.MapCreatures.Behavior
             }
 
             if (GameMain.NetworkMember != null)
-            { 
+            {
                 // damage is handled server side
                 if (GameMain.NetworkMember.IsClient)
                 {
@@ -1056,6 +1059,11 @@ namespace Barotrauma.MapCreatures.Behavior
 
             if (type == AttackType.Fire)
             {
+                if (attacker is not null)
+                {
+                    damage *= 1f + attacker.GetStatValue(StatTypes.BallastFloraDamageMultiplier);
+                }
+
                 if (IsInWater(branch))
                 {
                     damage *= 1f - SubmergedWaterResistance;
@@ -1063,7 +1071,7 @@ namespace Barotrauma.MapCreatures.Behavior
 
                 if (defenseCooldown <= 0)
                 {
-                    if (!(StateMachine.State is DefendWithPumpState))
+                    if (StateMachine.State is not DefendWithPumpState)
                     {
                         StateMachine.EnterState(new DefendWithPumpState(branch, ClaimedTargets, attacker));
                         defenseCooldown = 180f;
@@ -1196,6 +1204,14 @@ namespace Barotrauma.MapCreatures.Behavior
             ClaimedTargets.Remove(item);
             item.Infector = null;
 
+            foreach (var branch in Branches)
+            {
+                if (branch.ClaimedItem == item)
+                {
+                    branch.ClaimedItem = null;
+                }
+            }
+
             ClaimedJunctionBoxes.ForEachMod(jb =>
             {
                 if (jb.Item == item)
@@ -1221,15 +1237,21 @@ namespace Barotrauma.MapCreatures.Behavior
 
         public void Kill()
         {
+            isDead = true;
+
             foreach (var branch in Branches)
             {
                 branch.DisconnectedFromRoot = true;
             }
 
-            foreach (Item target in ClaimedTargets)
+            foreach (Item target in ClaimedTargets.ToList())
             {
+                RemoveClaim(target);
                 target.Infector = null;
             }
+            Debug.Assert(ClaimedTargets.Count == 0);
+            Debug.Assert(ClaimedJunctionBoxes.Count == 0);
+            Debug.Assert(ClaimedBatteries.Count == 0);
 
             StateMachine?.State?.Exit();
 #if SERVER

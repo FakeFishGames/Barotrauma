@@ -1,6 +1,7 @@
 ﻿using Barotrauma.Abilities;
 using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
+using Barotrauma.Networking;
 using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
@@ -8,7 +9,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -158,11 +158,11 @@ namespace Barotrauma
             /// </summary>
             public readonly bool SpawnIfCantBeContained;
             public readonly float Impulse;
-            public readonly float Rotation;
+            public readonly float RotationRad;
             public readonly int Count;
             public readonly float Spread;
             public readonly SpawnRotationType RotationType;
-            public readonly float AimSpread;
+            public readonly float AimSpreadRad;
             public readonly bool Equip;
 
             public readonly float Condition;
@@ -198,14 +198,14 @@ namespace Barotrauma
 
                 SpawnIfInventoryFull = element.GetAttributeBool("spawnifinventoryfull", false);
                 SpawnIfCantBeContained = element.GetAttributeBool("spawnifcantbecontained", true);
-                Impulse = element.GetAttributeFloat("impulse", element.GetAttributeFloat("speed", 0.0f));
+                Impulse = element.GetAttributeFloat("impulse", element.GetAttributeFloat("launchimpulse", element.GetAttributeFloat("speed", 0.0f)));
 
                 Condition = MathHelper.Clamp(element.GetAttributeFloat("condition", 1.0f), 0.0f, 1.0f);
 
-                Rotation = element.GetAttributeFloat("rotation", 0.0f);
+                RotationRad = MathHelper.ToRadians(element.GetAttributeFloat("rotation", 0.0f));
                 Count = element.GetAttributeInt("count", 1);
                 Spread = element.GetAttributeFloat("spread", 0f);
-                AimSpread = element.GetAttributeFloat("aimspread", 0f);
+                AimSpreadRad = MathHelper.ToRadians(element.GetAttributeFloat("aimspread", 0f));
                 Equip = element.GetAttributeBool("equip", false);
 
                 string spawnTypeStr = element.GetAttributeString("spawnposition", "This");
@@ -213,7 +213,7 @@ namespace Barotrauma
                 {
                     DebugConsole.ThrowError("Error in StatusEffect config - \"" + spawnTypeStr + "\" is not a valid spawn position.");
                 }
-                string rotationTypeStr = element.GetAttributeString("rotationtype", Rotation != 0 ? "Fixed" : "Target");
+                string rotationTypeStr = element.GetAttributeString("rotationtype", RotationRad != 0 ? "Fixed" : "Target");
                 if (!Enum.TryParse(rotationTypeStr, ignoreCase: true, out RotationType))
                 {
                     DebugConsole.ThrowError("Error in StatusEffect config - \"" + rotationTypeStr + "\" is not a valid rotation type.");
@@ -246,11 +246,13 @@ namespace Barotrauma
         {
             public readonly Identifier SkillIdentifier;
             public readonly float Amount;
+            public readonly bool TriggerTalents;
 
             public GiveSkill(XElement element, string parentDebugName)
             {
-                SkillIdentifier = element.GetAttributeIdentifier("skillidentifier", Identifier.Empty);
-                Amount = element.GetAttributeFloat("amount", 0);
+                SkillIdentifier = element.GetAttributeIdentifier(nameof(SkillIdentifier), Identifier.Empty);
+                Amount = element.GetAttributeFloat(nameof(Amount), 0);
+                TriggerTalents = element.GetAttributeBool(nameof(TriggerTalents), true);
 
                 if (SkillIdentifier == Identifier.Empty)
                 {
@@ -264,11 +266,42 @@ namespace Barotrauma
             public string Name => $"Character Spawn Info ({SpeciesName})";
             public Dictionary<Identifier, SerializableProperty> SerializableProperties { get; set; }
 
+            [Serialize(false, IsPropertySaveable.No)]
+            public bool TransferBuffs { get; private set; }
+
+            [Serialize(false, IsPropertySaveable.No)]
+            public bool TransferAfflictions { get; private set; }
+
+            [Serialize(false, IsPropertySaveable.No)]
+            public bool TransferInventory { get; private set; }
+
             [Serialize("", IsPropertySaveable.No)]
             public Identifier SpeciesName { get; private set; }
 
             [Serialize(1, IsPropertySaveable.No)]
             public int Count { get; private set; }
+
+            /// <summary>
+            /// The maximum amount of creatures of the same species in the same team that are allowed to be spawned via this status effect. 
+            /// Also the creatures spawned by other means are counted in the check.
+            /// </summary>
+            [Serialize(0, IsPropertySaveable.No)]
+            public int TotalMaxCount { get; private set; }
+
+            [Serialize(0, IsPropertySaveable.No)]
+            public int Stun { get; private set; }
+
+            [Serialize("", IsPropertySaveable.No)]
+            public Identifier AfflictionOnSpawn { get; private set; }
+
+            [Serialize(1, IsPropertySaveable.No)]
+            public int AfflictionStrength { get; private set; }
+
+            [Serialize(false, IsPropertySaveable.No)]
+            public bool TransferControl { get; private set; }
+
+            [Serialize(false, IsPropertySaveable.No)]
+            public bool RemovePreviousCharacter { get; private set; }
 
             [Serialize(0f, IsPropertySaveable.No)]
             public float Spread { get; private set; }
@@ -312,7 +345,7 @@ namespace Barotrauma
         private readonly float lifeTime;
         private float lifeTimer;
 
-        public float intervalTimer;
+        public Dictionary<Entity, float> intervalTimers = new Dictionary<Entity, float>();
 
         public static readonly List<DurationListElement> DurationList = new List<DurationListElement>();
 
@@ -339,7 +372,7 @@ namespace Barotrauma
 
         private readonly int useItemCount;
 
-        private readonly bool removeItem, dropContainedItems, removeCharacter, breakLimb, hideLimb;
+        private readonly bool removeItem, dropContainedItems, dropItem, removeCharacter, breakLimb, hideLimb;
         private readonly float hideLimbTimer;
 
         public readonly ActionType type = ActionType.OnActive;
@@ -393,7 +426,7 @@ namespace Barotrauma
             private set;
         }
 
-        private readonly bool multiplyAfflictionsByMaxVitality;
+        private readonly bool? multiplyAfflictionsByMaxVitality;
 
         public IEnumerable<CharacterSpawnInfo> SpawnCharacters
         {
@@ -459,7 +492,11 @@ namespace Barotrauma
             talentTriggers = new List<Identifier>();
             giveExperiences = new List<int>();
             giveSkills = new List<GiveSkill>();
-            multiplyAfflictionsByMaxVitality = element.GetAttributeBool("multiplyafflictionsbymaxvitality", false);
+            var multiplyAfflictionsElement = element.GetAttribute(nameof(multiplyAfflictionsByMaxVitality));
+            if (multiplyAfflictionsElement != null)
+            {
+                multiplyAfflictionsByMaxVitality = multiplyAfflictionsElement.GetAttributeBool(false);
+            }
 
             tags = new HashSet<string>(element.GetAttributeString("tags", "").Split(','));
             OnlyInside = element.GetAttributeBool("onlyinside", false);
@@ -632,6 +669,9 @@ namespace Barotrauma
                         break;
                     case "dropcontaineditems":
                         dropContainedItems = true;
+                        break;
+                    case "dropitem":
+                        dropItem = true;
                         break;
                     case "removecharacter":
                         removeCharacter = true;
@@ -843,10 +883,9 @@ namespace Barotrauma
             return true;
         }
 
-        public IReadOnlyList<ISerializableEntity> GetNearbyTargets(Vector2 worldPosition, List<ISerializableEntity> targets = null)
+        public void AddNearbyTargets(Vector2 worldPosition, List<ISerializableEntity> targets)
         {
-            targets ??= new List<ISerializableEntity>();
-            if (Range <= 0.0f) { return targets; }
+            if (Range <= 0.0f) { return; }
             if (HasTargetType(TargetType.NearbyCharacters))
             {
                 foreach (Character c in Character.CharacterList)
@@ -883,7 +922,6 @@ namespace Barotrauma
                     }
                 }
             }
-            return targets;
 
             bool CheckDistance(ISpatialEntity e)
             {
@@ -1088,6 +1126,26 @@ namespace Barotrauma
             }
         }
 
+        private static readonly List<Entity> intervalsToRemove = new List<Entity>();
+        public bool ShouldWaitForInterval(Entity entity, float deltaTime)
+        {
+            if (Interval > 0.0f && entity != null)
+            {
+                if (intervalTimers.ContainsKey(entity))
+                {
+                    intervalTimers[entity] -= deltaTime;
+                    if (intervalTimers[entity] > 0.0f) { return true; }
+                }
+                intervalsToRemove.Clear();
+                intervalsToRemove.AddRange(intervalTimers.Keys.Where(e => e.Removed));
+                foreach (var toRemove in intervalsToRemove)
+                {
+                    intervalTimers.Remove(toRemove);
+                }
+            }
+            return false;
+        }
+
         public virtual void Apply(ActionType type, float deltaTime, Entity entity, ISerializableEntity target, Vector2? worldPosition = null)
         {
             if (this.type != type || !HasRequiredItems(entity)) { return; }
@@ -1115,12 +1173,7 @@ namespace Barotrauma
         public virtual void Apply(ActionType type, float deltaTime, Entity entity, IReadOnlyList<ISerializableEntity> targets, Vector2? worldPosition = null)
         {
             if (this.type != type) { return; }
-
-            if (intervalTimer > 0.0f)
-            {
-                intervalTimer -= deltaTime;
-                return;
-            }
+            if (ShouldWaitForInterval(entity, deltaTime)) { return; }
 
             currentTargets.Clear();
             foreach (ISerializableEntity target in targets)
@@ -1223,11 +1276,8 @@ namespace Barotrauma
                 lifeTimer -= deltaTime;
                 if (lifeTimer <= 0) { return; }
             }
-            if (intervalTimer > 0.0f)
-            {
-                intervalTimer -= deltaTime;
-                return;
-            }
+            if (ShouldWaitForInterval(entity, deltaTime)) { return; }
+
             Hull hull = GetHull(entity);
             Vector2 position = GetPosition(entity, targets, worldPosition);
             if (useItemCount > 0)
@@ -1250,7 +1300,7 @@ namespace Barotrauma
                 }
                 for (int i = 0; i < targets.Count; i++)
                 {
-                    if (!(targets[i] is Item item)) { continue; }                
+                    if (targets[i] is not Item item) { continue; }                
                     for (int j = 0; j < useItemCount; j++)
                     {
                         if (item.Removed) { continue; }
@@ -1259,6 +1309,16 @@ namespace Barotrauma
                 }
             }
 
+            if (dropItem)
+            {
+                for (int i = 0; i < targets.Count; i++)
+                {
+                    if (targets[i] is Item item)
+                    {
+                        item.Drop(dropper: null);
+                    }
+                }
+            }
             if (dropContainedItems)
             {
                 for (int i = 0; i < targets.Count; i++)
@@ -1271,6 +1331,13 @@ namespace Barotrauma
                             {
                                 containedItem.Drop(dropper: null);
                             }
+                        }
+                    }
+                    else if (targets[i] is Character character && character.Inventory != null)
+                    {
+                        foreach (var containedItem in character.Inventory.AllItemsMod)
+                        {
+                            containedItem.Drop(dropper: null);
                         }
                     }
                 }
@@ -1310,17 +1377,20 @@ namespace Barotrauma
                             if (limb.body == sourceBody)
                             {
                                 targetLimb = limb;
-                                if (breakLimb)
-                                {
-                                    character.TrySeverLimbJoints(limb, severLimbsProbability: 100, damage: 100, allowBeheading: true, attacker: user);
-                                }
                                 break;
                             }
                         }
                     }
-                    if (hideLimb)
+                    if (targetLimb != null)
                     {
-                        targetLimb?.HideAndDisable(hideLimbTimer);
+                        if (breakLimb)
+                        {
+                            targetLimb.character.TrySeverLimbJoints(targetLimb, severLimbsProbability: 1, damage: -1, allowBeheading: true, ignoreSeveranceProbabilityModifier: true, attacker: user);
+                        }
+                        if (hideLimb)
+                        {
+                            targetLimb.HideAndDisable(hideLimbTimer);
+                        }
                     }
                 }
             }
@@ -1452,6 +1522,9 @@ namespace Barotrauma
                             targetCharacter = targetLimb.character;
                         }
                     }
+
+                    Character entityCharacter = entity as Character;
+                    targetCharacter ??= entityCharacter;
                     if (targetCharacter != null && !targetCharacter.Removed && !targetCharacter.IsPlayer)
                     {
                         if (targetCharacter.AIController is EnemyAIController enemyAI)
@@ -1459,7 +1532,13 @@ namespace Barotrauma
                             foreach (AITrigger trigger in aiTriggers)
                             {
                                 if (Rand.Value(Rand.RandSync.Unsynced) > trigger.Probability) { continue; }
-                                if (target is Limb targetLimb && targetCharacter.LastDamage.HitLimb != targetLimb) { continue; }
+                                if (entityCharacter != targetCharacter)
+                                {
+                                    if (target is Limb targetLimb && targetCharacter.LastDamage.HitLimb is Limb hitLimb)
+                                    {
+                                        if (hitLimb != targetLimb) { continue; }
+                                    }
+                                }
                                 if (targetCharacter.LastDamage.Damage < trigger.MinDamage) { continue; }
                                 enemyAI.LaunchTrigger(trigger);
                                 break;
@@ -1500,9 +1579,7 @@ namespace Barotrauma
                             if (targetCharacter != null && !targetCharacter.Removed)
                             {
                                 Identifier skillIdentifier = giveSkill.SkillIdentifier == "randomskill" ? GetRandomSkill() : giveSkill.SkillIdentifier;
-
-                                targetCharacter.Info?.IncreaseSkillLevel(skillIdentifier, giveSkill.Amount);
-
+                                targetCharacter.Info?.IncreaseSkillLevel(skillIdentifier, giveSkill.Amount, !giveSkill.TriggerTalents);
                                 Identifier GetRandomSkill()
                                 {
                                     return targetCharacter.Info?.Job?.GetSkills().GetRandomUnsynced()?.Identifier ?? Identifier.Empty;
@@ -1515,24 +1592,23 @@ namespace Barotrauma
                     {
                         Character targetCharacter = CharacterFromTarget(target);
                         if (targetCharacter?.Info == null) { continue; }
-                        if (!TalentTree.JobTalentTrees.TryGet(targetCharacter.Info.Job.Prefab.Identifier, out TalentTree talentTree)) { continue; }
-                        // for the sake of technical simplicity, for now do not allow talents to be given if the character could unlock them in their talent tree as well
-                        IEnumerable<Identifier> disallowedTalents = talentTree.TalentSubTrees.SelectMany(s => s.TalentOptionStages.SelectMany(o => o.Talents.Select(t => t.Identifier)));
+                        if (!TalentTree.JobTalentTrees.TryGet(targetCharacter.Info.Job.Prefab.Identifier, out TalentTree characterTalentTree)) { continue; }
 
                         foreach (GiveTalentInfo giveTalentInfo in giveTalentInfos)
                         {
-                            IEnumerable<Identifier> viableTalents = giveTalentInfo.TalentIdentifiers.Where(s => !targetCharacter.Info.UnlockedTalents.Contains(s) && !disallowedTalents.Contains(s));
-                            if (viableTalents.None()) { continue; }
-
                             if (giveTalentInfo.GiveRandom)
-                            {
+                            {                        
+                                // for the sake of technical simplicity, for now do not allow talents to be given if the character could unlock them in their talent tree as well
+                                IEnumerable<Identifier> viableTalents = giveTalentInfo.TalentIdentifiers.Where(id => !targetCharacter.Info.UnlockedTalents.Contains(id) && !characterTalentTree.AllTalentIdentifiers.Contains(id));
+                                if (viableTalents.None()) { continue; }
                                 targetCharacter.GiveTalent(viableTalents.GetRandomUnsynced(), true);
                             }
                             else
                             {
-                                foreach (Identifier talent in viableTalents)
+                                foreach (Identifier id in giveTalentInfo.TalentIdentifiers)
                                 {
-                                    targetCharacter.GiveTalent(talent, true);
+                                    if (targetCharacter.Info.UnlockedTalents.Contains(id) || characterTalentTree.AllTalentIdentifiers.Contains(id)) { continue; }
+                                    targetCharacter.GiveTalent(id, true);
                                 }
                             }
                         }
@@ -1584,6 +1660,14 @@ namespace Barotrauma
                         Entity.Spawner.AddCharacterToSpawnQueue(characterSpawnInfo.SpeciesName, position + Rand.Vector(characterSpawnInfo.Spread, Rand.RandSync.Unsynced) + characterSpawnInfo.Offset,
                             onSpawn: newCharacter =>
                             {
+                                if (characterSpawnInfo.TotalMaxCount > 0)
+                                {
+                                    if (Character.CharacterList.Count(c => c.SpeciesName == characterSpawnInfo.SpeciesName && c.TeamID == newCharacter.TeamID) > characterSpawnInfo.TotalMaxCount)
+                                    {
+                                        Entity.Spawner?.AddEntityToRemoveQueue(newCharacter);
+                                        return;
+                                    }
+                                }
                                 if (newCharacter.AIController is EnemyAIController enemyAi &&
                                     enemyAi.PetBehavior != null &&
                                     entity is Item item &&
@@ -1595,6 +1679,64 @@ namespace Barotrauma
                                 if (characters.Count == characterSpawnInfo.Count)
                                 {
                                     SwarmBehavior.CreateSwarm(characters.Cast<AICharacter>());
+                                }
+                                if (!characterSpawnInfo.AfflictionOnSpawn.IsEmpty)
+                                {
+                                    if (!AfflictionPrefab.Prefabs.TryGet(characterSpawnInfo.AfflictionOnSpawn, out AfflictionPrefab afflictionPrefab))
+                                    {
+                                        DebugConsole.NewMessage($"Could not apply an affliction to the spawned character(s). No affliction with the identifier \"{characterSpawnInfo.AfflictionOnSpawn}\" found.", Color.Red);
+                                        return;
+                                    }
+                                    newCharacter.CharacterHealth.ApplyAffliction(newCharacter.AnimController.MainLimb, afflictionPrefab.Instantiate(characterSpawnInfo.AfflictionStrength));
+                                }
+                                if (characterSpawnInfo.Stun > 0)
+                                {
+                                    newCharacter.SetStun(characterSpawnInfo.Stun);
+                                }
+                                foreach (var target in targets)
+                                {
+                                    if (!(target is Character character)) { continue; }
+                                    if (characterSpawnInfo.TransferInventory && character.Inventory != null && newCharacter.Inventory != null)
+                                    {
+                                        if (character.Inventory.Capacity != newCharacter.Inventory.Capacity) { return; }
+                                        for (int i = 0; i < character.Inventory.Capacity && i < newCharacter.Inventory.Capacity; i++)
+                                        {
+                                            character.Inventory.GetItemsAt(i).ForEachMod(item => newCharacter.Inventory.TryPutItem(item, i, allowSwapping: true, allowCombine: false, user: null));
+                                        }
+                                    }
+                                    if (characterSpawnInfo.TransferBuffs || characterSpawnInfo.TransferAfflictions)
+                                    {
+                                        foreach (Affliction affliction in character.CharacterHealth.GetAllAfflictions())
+                                        {
+                                            if (!characterSpawnInfo.TransferAfflictions && characterSpawnInfo.TransferBuffs && affliction.Prefab.IsBuff)
+                                            {
+                                                newCharacter.CharacterHealth.ApplyAffliction(newCharacter.AnimController.MainLimb, affliction.Prefab.Instantiate(affliction.Strength));
+                                            }
+                                            if (characterSpawnInfo.TransferAfflictions)
+                                            {
+                                                newCharacter.CharacterHealth.ApplyAffliction(newCharacter.AnimController.MainLimb, affliction.Prefab.Instantiate(affliction.Strength));
+                                            }
+                                        }
+                                    }
+                                    if (i == characterSpawnInfo.Count) // Only perform the below actions if this is the last character being spawned.
+                                    {
+                                        if (characterSpawnInfo.TransferControl)
+                                        {
+#if CLIENT
+                                            if (Character.Controlled == target)
+                                            {
+                                                Character.Controlled = newCharacter;
+                                            }
+#elif SERVER
+                                            foreach (Client c in GameMain.Server.ConnectedClients)
+                                            {
+                                                if (c.Character != target) { continue; }                                                
+                                                GameMain.Server.SetClientCharacter(c, newCharacter);                                                
+                                            }
+#endif
+                                        }
+                                        if (characterSpawnInfo.RemovePreviousCharacter) { Entity.Spawner?.AddEntityToRemoveQueue(character); }
+                                    }                                    
                                 }
                             });
                     }
@@ -1623,92 +1765,107 @@ namespace Barotrauma
                         case ItemSpawnInfo.SpawnPositionType.This:
                             Entity.Spawner.AddItemToSpawnQueue(chosenItemSpawnInfo.ItemPrefab, position + Rand.Vector(chosenItemSpawnInfo.Spread, Rand.RandSync.Unsynced), onSpawned: newItem =>
                             {
+                                Item parentItem = entity as Item;
                                 Projectile projectile = newItem.GetComponent<Projectile>();
-                                if (projectile != null && user != null && sourceBody != null && entity != null)
+                                if (entity != null)
                                 {
                                     var rope = newItem.GetComponent<Rope>();
-                                    if (rope != null && sourceBody.UserData is Limb sourceLimb)
+                                    if (rope != null && sourceBody != null && sourceBody.UserData is Limb sourceLimb)
                                     {
                                         rope.Attach(sourceLimb, newItem);
 #if SERVER
                                         newItem.CreateServerEvent(rope);
 #endif
                                     }
-                                    float spread = MathHelper.ToRadians(Rand.Range(-chosenItemSpawnInfo.AimSpread, chosenItemSpawnInfo.AimSpread));
-                                    var worldPos = sourceBody.Position;
-                                    float rotation = 0;
-                                    if (user.Submarine != null)
+                                    float spread = Rand.Range(-chosenItemSpawnInfo.AimSpreadRad, chosenItemSpawnInfo.AimSpreadRad);
+                                    float rotation = chosenItemSpawnInfo.RotationRad;
+                                    Vector2 worldPos;
+                                    if (sourceBody != null)
                                     {
-                                        worldPos += user.Submarine.Position;
+                                        worldPos = sourceBody.Position;
+                                        if (user?.Submarine != null)
+                                        {
+                                            worldPos += user.Submarine.Position;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        worldPos = entity.WorldPosition;
                                     }
                                     switch (chosenItemSpawnInfo.RotationType)
                                     {
                                         case ItemSpawnInfo.SpawnRotationType.Fixed:
-                                            rotation = sourceBody.TransformRotation(chosenItemSpawnInfo.Rotation);
+                                            if (sourceBody != null)
+                                            {
+                                                rotation = sourceBody.TransformRotation(chosenItemSpawnInfo.RotationRad);
+                                            }
+                                            else if (parentItem?.body != null)
+                                            {
+                                                rotation = parentItem.body.TransformRotation(chosenItemSpawnInfo.RotationRad);
+                                            }
                                             break;
                                         case ItemSpawnInfo.SpawnRotationType.Target:
                                             rotation = MathUtils.VectorToAngle(entity.WorldPosition - worldPos);
                                             break;
                                         case ItemSpawnInfo.SpawnRotationType.Limb:
-                                            rotation = sourceBody.TransformedRotation;
+                                            if (sourceBody != null)
+                                            {
+                                                rotation = sourceBody.TransformedRotation;
+                                            }
                                             break;
                                         case ItemSpawnInfo.SpawnRotationType.Collider:
-                                            rotation = user.AnimController.Collider.Rotation + MathHelper.PiOver2;
+                                            if (parentItem?.body != null)
+                                            {
+                                                rotation = parentItem.body.Rotation;
+                                            }
+                                            else if (user != null)
+                                            {
+                                                rotation = user.AnimController.Collider.Rotation + MathHelper.PiOver2;
+                                            }
                                             break;
                                         case ItemSpawnInfo.SpawnRotationType.MainLimb:
-                                            rotation = user.AnimController.MainLimb.body.TransformedRotation;
+                                            if (user != null)
+                                            {
+                                                rotation = user.AnimController.MainLimb.body.TransformedRotation;
+                                            }
                                             break;
                                         case ItemSpawnInfo.SpawnRotationType.Random:
-                                            DebugConsole.ShowError("Random rotation is not supported for Projectiles.");
+                                            if (projectile != null)
+                                            {
+                                                DebugConsole.LogError("Random rotation is not supported for Projectiles.");
+                                            }
+                                            else
+                                            {
+                                                rotation = Rand.Range(0f, MathHelper.TwoPi, Rand.RandSync.Unsynced);
+                                            }
                                             break;
                                         default:
-                                            throw new NotImplementedException("Projectile spawn rotation type not implemented: " + chosenItemSpawnInfo.RotationType);
+                                            throw new NotImplementedException("Item spawn rotation type not implemented: " + chosenItemSpawnInfo.RotationType);
                                     }
-                                    rotation += MathHelper.ToRadians(chosenItemSpawnInfo.Rotation * user.AnimController.Dir);
-                                    projectile.Shoot(user, ConvertUnits.ToSimUnits(worldPos), ConvertUnits.ToSimUnits(worldPos), rotation + spread, ignoredBodies: user.AnimController.Limbs.Where(l => !l.IsSevered).Select(l => l.body.FarseerBody).ToList(), createNetworkEvent: true);
-                                }
-                                else
-                                {
-                                    var body = newItem.body;
-                                    if (body != null)
+                                    if (user != null)
                                     {
-                                        float rotation = MathHelper.ToRadians(chosenItemSpawnInfo.Rotation);
-                                        switch (chosenItemSpawnInfo.RotationType)
+                                        rotation += chosenItemSpawnInfo.RotationRad * user.AnimController.Dir;
+                                    }
+                                    rotation += spread;
+                                    if (projectile != null)
+                                    {
+                                        Vector2 spawnPos;
+                                        if (projectile.Hitscan)
                                         {
-                                            case ItemSpawnInfo.SpawnRotationType.Fixed:
-                                                if (sourceBody != null)
-                                                {
-                                                    rotation = sourceBody.TransformRotation(chosenItemSpawnInfo.Rotation);
-                                                }
-                                                break;
-                                            case ItemSpawnInfo.SpawnRotationType.Limb:
-                                                if (sourceBody != null)
-                                                {
-                                                    rotation += sourceBody.Rotation;
-                                                }
-                                                break;
-                                            case ItemSpawnInfo.SpawnRotationType.Collider:
-                                                if (entity is Character character)
-                                                {
-                                                    rotation += character.AnimController.Collider.Rotation + MathHelper.PiOver2;
-                                                }
-                                                break;
-                                            case ItemSpawnInfo.SpawnRotationType.MainLimb:
-                                                if (entity is Character c)
-                                                {
-                                                    rotation = c.AnimController.MainLimb.body.TransformedRotation;
-                                                }
-                                                break;
-                                            case ItemSpawnInfo.SpawnRotationType.Random:
-                                                rotation = Rand.Range(0f, MathHelper.TwoPi, Rand.RandSync.Unsynced);
-                                                break;
-                                            case ItemSpawnInfo.SpawnRotationType.Target:
-                                                break;
-                                            default:
-                                                throw new NotImplementedException("Spawn rotation type not implemented: " + chosenItemSpawnInfo.RotationType);
+                                            spawnPos = sourceBody != null ? sourceBody.SimPosition : entity.SimPosition;
                                         }
-                                        body.SetTransform(newItem.SimPosition, rotation);
-                                        body.ApplyLinearImpulse(Rand.Vector(1) * chosenItemSpawnInfo.Impulse);
+                                        else
+                                        {
+                                            spawnPos = ConvertUnits.ToSimUnits(worldPos);
+                                        }
+                                        projectile.Shoot(user, spawnPos, spawnPos, rotation,
+                                            ignoredBodies: user?.AnimController.Limbs.Where(l => !l.IsSevered).Select(l => l.body.FarseerBody).ToList(), createNetworkEvent: true);
+                                    }
+                                    else if (newItem.body != null)
+                                    {
+                                        newItem.body.SetTransform(newItem.SimPosition, rotation);
+                                        Vector2 impulseDir = new Vector2(MathF.Cos(rotation), MathF.Sin(rotation));
+                                        newItem.body.ApplyLinearImpulse(impulseDir * chosenItemSpawnInfo.Impulse);
                                     }
                                 }
                                 newItem.Condition = newItem.MaxCondition * chosenItemSpawnInfo.Condition;
@@ -1808,7 +1965,10 @@ namespace Barotrauma
 
             ApplyProjSpecific(deltaTime, entity, targets, hull, position, playSound: true);
 
-            intervalTimer = Interval;
+            if (Interval > 0.0f && entity != null)
+            {
+                intervalTimers[entity] = Interval;
+            }
 
             static Character CharacterFromTarget(ISerializableEntity target)
             {
@@ -1897,7 +2057,7 @@ namespace Barotrauma
                         {
                             continue;
                         }
-                        element.Parent.ApplyToProperty(target, property, n, CoroutineManager.UnscaledDeltaTime);
+                        element.Parent.ApplyToProperty(target, property, n, CoroutineManager.DeltaTime);
                     }
 
                     foreach (Affliction affliction in element.Parent.Afflictions)
@@ -1981,26 +2141,39 @@ namespace Barotrauma
             if (entity is Item sourceItem && sourceItem.HasTag("medical"))
             {
                 multiplier *= 1 + targetCharacter.GetStatValue(StatTypes.MedicalItemEffectivenessMultiplier);
-                
-                if (user != null)
+
+                if (user is not null)
                 {
                     multiplier *= 1 + user.GetStatValue(StatTypes.MedicalItemApplyingMultiplier);
                 }
             }
+
             return multiplier * AfflictionMultiplier;
         }
 
-        private Affliction GetMultipliedAffliction(Affliction affliction, Entity entity, Character targetCharacter, float deltaTime, bool modifyByMaxVitality)
+        private Affliction GetMultipliedAffliction(Affliction affliction, Entity entity, Character targetCharacter, float deltaTime, bool? multiplyByMaxVitality)
         {
             float afflictionMultiplier = GetAfflictionMultiplier(entity, targetCharacter, deltaTime);
-            if (modifyByMaxVitality)
+            if (multiplyByMaxVitality ?? affliction.MultiplyByMaxVitality)
             {
                 afflictionMultiplier *= targetCharacter.MaxVitality / 100f;
             }
 
+            if (user is not null)
+            {
+                if (affliction.Prefab.IsBuff)
+                {
+                    afflictionMultiplier *= 1 + user.GetStatValue(StatTypes.MedicalItemDurationMultiplier);
+                }
+                else if (affliction.Prefab.AfflictionType == "poison")
+                {
+                    afflictionMultiplier *= 1 + user.GetStatValue(StatTypes.PoisonMultiplier);
+                }
+            }
+
             if (!MathUtils.NearlyEqual(afflictionMultiplier, 1.0f))
             {
-                return affliction.CreateMultiplied(afflictionMultiplier);
+                return affliction.CreateMultiplied(afflictionMultiplier, affliction);
             }
             return affliction;
         }
@@ -2014,7 +2187,7 @@ namespace Barotrauma
                     if (result.Afflictions != null && result.Afflictions.Any(a => a.Prefab == limbAffliction.Prefab) &&
                        (!affliction.Prefab.LimbSpecific || limb.character.CharacterHealth.GetAfflictionLimb(affliction) == limb))
                     {
-                        if (type == ActionType.OnUse)
+                        if (type == ActionType.OnUse || type == ActionType.OnSuccess)
                         {
                             limbAffliction.AppliedAsSuccessfulTreatmentTime = Timing.TotalTime;
                         }

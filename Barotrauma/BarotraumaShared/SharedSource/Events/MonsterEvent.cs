@@ -11,7 +11,7 @@ namespace Barotrauma
     {
         public readonly Identifier SpeciesName;
         public readonly int MinAmount, MaxAmount;
-        private List<Character> monsters;
+        private readonly List<Character> monsters = new List<Character>();
 
         private readonly float scatter;
         private readonly float offset;
@@ -30,7 +30,7 @@ namespace Barotrauma
 
         public readonly int MaxAmountPerLevel = int.MaxValue;
 
-        public List<Character> Monsters => monsters;
+        public IReadOnlyList<Character> Monsters => monsters;
         public Vector2? SpawnPos => spawnPos;
         public bool SpawnPending => spawnPending;
 
@@ -115,7 +115,7 @@ namespace Barotrauma
             }
         }
 
-        private Submarine GetReferenceSub()
+        private static Submarine GetReferenceSub()
         {
             return EventManager.GetRefEntity() as Submarine ?? Submarine.MainSub;
         }
@@ -145,6 +145,32 @@ namespace Barotrauma
             if (GameSettings.CurrentConfig.VerboseLogging)
             {
                 DebugConsole.NewMessage("Initialized MonsterEvent (" + SpeciesName + ")", Color.White);
+            }
+
+            monsters.Clear();
+
+            //+1 because Range returns an integer less than the max value
+            int amount = Rand.Range(MinAmount, MaxAmount + 1);
+            for (int i = 0; i < amount; i++)
+            {
+                string seed = Level.Loaded.Seed + i.ToString();
+                Character createdCharacter = Character.Create(SpeciesName, Vector2.Zero, seed, characterInfo: null, isRemotePlayer: false, hasAi: true, createNetworkEvent: true, throwErrorIfNotFound: false);
+                if (createdCharacter == null)
+                {
+                    DebugConsole.AddWarning($"Error in MonsterEvent: failed to spawn the character \"{SpeciesName}\". Content package: \"{prefab.ConfigElement?.ContentPackage?.Name ?? "unknown"}\".");
+                    disallowed = true;
+                    continue;
+                }
+                if (GameMain.GameSession.IsCurrentLocationRadiated())
+                {
+                    AfflictionPrefab radiationPrefab = AfflictionPrefab.RadiationSickness;
+                    Affliction affliction = new Affliction(radiationPrefab, radiationPrefab.MaxStrength);
+                    createdCharacter?.CharacterHealth.ApplyAffliction(null, affliction);
+                    // TODO test multiplayer
+                    createdCharacter?.Kill(CauseOfDeathType.Affliction, affliction, log: false);
+                }
+                createdCharacter.DisabledByEvent = true;
+                monsters.Add(createdCharacter);
             }
         }
 
@@ -486,9 +512,6 @@ namespace Barotrauma
 
                 spawnPending = false;
 
-                //+1 because Range returns an integer less than the max value
-                int amount = Rand.Range(MinAmount, MaxAmount + 1);
-                monsters = new List<Character>();
                 float scatterAmount = scatter;
                 if (SpawnPosType.HasFlag(Level.PositionType.SidePath))
                 {
@@ -507,9 +530,9 @@ namespace Barotrauma
                     scatterAmount = 0;
                 }
 
-                for (int i = 0; i < amount; i++)
+                int i = 0;
+                foreach (Character monster in monsters)
                 {
-                    string seed = Level.Loaded.Seed + i.ToString();
                     CoroutineManager.Invoke(() =>
                     {
                         //round ended before the coroutine finished
@@ -532,45 +555,33 @@ namespace Barotrauma
                             }
                         }
 
-                        Character createdCharacter = Character.Create(SpeciesName, pos, seed, characterInfo: null, isRemotePlayer: false, hasAi: true, createNetworkEvent: true, throwErrorIfNotFound: false);
-                        if (createdCharacter == null)
-                        {
-                            disallowed = true;
-                            return;
-                        }
-                        
+                        monster.Enabled = true;
+                        monster.DisabledByEvent = false;
+                        monster.AnimController.SetPosition(FarseerPhysics.ConvertUnits.ToSimUnits(pos));
+
                         var eventManager = GameMain.GameSession.EventManager;
                         if (eventManager != null)
                         {
                             if (SpawnPosType.HasFlag(Level.PositionType.MainPath) || SpawnPosType.HasFlag(Level.PositionType.SidePath))
                             {
-                                eventManager.CumulativeMonsterStrengthMain += createdCharacter.Params.AI.CombatStrength;
+                                eventManager.CumulativeMonsterStrengthMain += monster.Params.AI.CombatStrength;
                                 eventManager.AddTimeStamp(this);
                             }
                             else if (SpawnPosType.HasFlag(Level.PositionType.Ruin))
                             {
-                                eventManager.CumulativeMonsterStrengthRuins += createdCharacter.Params.AI.CombatStrength;
+                                eventManager.CumulativeMonsterStrengthRuins += monster.Params.AI.CombatStrength;
                             }
                             else if (SpawnPosType.HasFlag(Level.PositionType.Wreck))
                             {
-                                eventManager.CumulativeMonsterStrengthWrecks += createdCharacter.Params.AI.CombatStrength;
+                                eventManager.CumulativeMonsterStrengthWrecks += monster.Params.AI.CombatStrength;
                             }
                             else if (SpawnPosType.HasFlag(Level.PositionType.Cave))
                             {
-                                eventManager.CumulativeMonsterStrengthCaves += createdCharacter.Params.AI.CombatStrength;
+                                eventManager.CumulativeMonsterStrengthCaves += monster.Params.AI.CombatStrength;
                             }
                         }
-                        if (GameMain.GameSession.IsCurrentLocationRadiated())
-                        {
-                            AfflictionPrefab radiationPrefab = AfflictionPrefab.RadiationSickness;
-                            Affliction affliction = new Affliction(radiationPrefab, radiationPrefab.MaxStrength);
-                            createdCharacter?.CharacterHealth.ApplyAffliction(null, affliction);
-                            // TODO test multiplayer
-                            createdCharacter?.Kill(CauseOfDeathType.Affliction, affliction, log: false);
-                        }
-                        monsters.Add(createdCharacter);
 
-                        if (monsters.Count == amount)
+                        if (monster == monsters.Last())
                         {
                             spawnReady = true;
                             //this will do nothing if the monsters have no swarm behavior defined, 
@@ -583,9 +594,10 @@ namespace Barotrauma
                         {
                             GameAnalyticsManager.AddDesignEvent(
                                 $"MonsterSpawn:{GameMain.GameSession.GameMode?.Preset?.Identifier.Value ?? "none"}:{Level.Loaded?.LevelData?.Biome?.Identifier.Value ?? "none"}:{SpawnPosType}:{SpeciesName}",
-                                value: Timing.TotalTime - GameMain.GameSession.RoundStartTime);
+                                value: GameMain.GameSession.RoundDuration);
                         }
                     }, delayBetweenSpawns * i);
+                    i++;
                 }
             }
 

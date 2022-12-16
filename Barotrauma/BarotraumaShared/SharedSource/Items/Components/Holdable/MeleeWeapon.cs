@@ -1,12 +1,11 @@
-﻿using Barotrauma.Networking;
-using FarseerPhysics;
+﻿using FarseerPhysics;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -64,7 +63,7 @@ namespace Barotrauma.Items.Components
         /// <summary>
         /// Defines items that boost the weapon functionality, like battery cell for stun batons.
         /// </summary>
-        public readonly Identifier[] PreferredContainedItems;
+        public readonly ImmutableHashSet<Identifier> PreferredContainedItems;
 
         public MeleeWeapon(Item item, ContentXElement element)
             : base(item, element)
@@ -79,7 +78,7 @@ namespace Barotrauma.Items.Components
             }
             item.IsShootable = true;
             item.RequireAimToUse = element.Parent.GetAttributeBool("requireaimtouse", true);
-            PreferredContainedItems = element.GetAttributeIdentifierArray("preferredcontaineditems", Array.Empty<Identifier>());
+            PreferredContainedItems = element.GetAttributeIdentifierArray("preferredcontaineditems", Array.Empty<Identifier>()).ToImmutableHashSet();
         }
 
         public override void Equip(Character character)
@@ -113,7 +112,7 @@ namespace Barotrauma.Items.Components
             reloadTimer = reload;
             reloadTimer /= 1f + character.GetStatValue(StatTypes.MeleeAttackSpeed);
             reloadTimer /= 1f + item.GetQualityModifier(Quality.StatType.StrikingSpeedMultiplier);
-            character.AnimController.LockFlippingUntil = (float)Timing.TotalTime + reloadTimer;
+            character.AnimController.LockFlippingUntil = (float)Timing.TotalTime + reloadTimer * 0.9f;
 
             item.body.FarseerBody.CollisionCategories = Physics.CollisionProjectile;
             item.body.FarseerBody.CollidesWith = Physics.CollisionCharacter | Physics.CollisionWall | Physics.CollisionItemBlocking;
@@ -191,7 +190,7 @@ namespace Barotrauma.Items.Components
             while (impactQueue.Count > 0)
             {
                 var impact = impactQueue.Dequeue();
-                HandleImpact(impact.Body);
+                HandleImpact(impact);
             }
             //in case handling the impact does something to the picker
             if (picker == null) { return; }
@@ -215,8 +214,9 @@ namespace Barotrauma.Items.Components
                 bool aim = item.RequireAimToUse && picker.AllowInput && picker.IsKeyDown(InputType.Aim) && reloadTimer <= 0 && picker.CanAim;
                 if (aim)
                 {
+                    UpdateSwingPos(deltaTime, out Vector2 swingPos);
                     hitPos = MathUtils.WrapAnglePi(Math.Min(hitPos + deltaTime * 3f, MathHelper.PiOver4));
-                    ac.HoldItem(deltaTime, item, handlePos, aimPos, Vector2.Zero, aim: false, hitPos, holdAngle + hitPos, aimMelee: true);
+                    ac.HoldItem(deltaTime, item, handlePos, aimPos + swingPos, Vector2.Zero, aim: false, hitPos, holdAngle + hitPos, aimMelee: true);
                     if (ac.InWater)
                     {
                         ac.LockFlippingUntil = (float)Timing.TotalTime + Reload;
@@ -292,7 +292,6 @@ namespace Barotrauma.Items.Components
             item.body.PhysEnabled = false;
         }
 
-
         private bool OnCollision(Fixture f1, Fixture f2, Contact contact)
         {
             if (User == null || User.Removed)
@@ -316,6 +315,7 @@ namespace Barotrauma.Items.Components
             if (f2.Body.UserData is Limb targetLimb)
             {
                 if (targetLimb.IsSevered || targetLimb.character == null || targetLimb.character == User) { return false; }
+                if (targetLimb.character.IgnoreMeleeWeapons) { return false; }
                 var targetCharacter = targetLimb.character;
                 if (targetCharacter == picker) { return false; }
                 if (AllowHitMultiple)
@@ -331,6 +331,7 @@ namespace Barotrauma.Items.Components
             else if (f2.Body.UserData is Character targetCharacter)
             {
                 if (targetCharacter == picker || targetCharacter == User) { return false; }
+                if (targetCharacter.IgnoreMeleeWeapons) { return false; }
                 targetLimb = targetCharacter.AnimController.GetLimb(LimbType.Torso); //Otherwise armor can be bypassed in strange ways
                 if (AllowHitMultiple)
                 {
@@ -342,7 +343,7 @@ namespace Barotrauma.Items.Components
                 }
                 hitTargets.Add(targetCharacter);
             }
-            else if (f2.Body.UserData is Structure targetStructure)
+            else if ((f2.Body.UserData as Structure ?? f2.UserData as Structure) is Structure targetStructure)
             {
                 if (AllowHitMultiple)
                 {
@@ -380,8 +381,9 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        private void HandleImpact(Body target)
+        private void HandleImpact(Fixture targetFixture)
         {
+            var target = targetFixture.Body;
             if (User == null || User.Removed || target == null)
             {
                 RestoreCollision();
@@ -389,41 +391,55 @@ namespace Barotrauma.Items.Components
                 User = null;
                 return;
             }
-            
+
+            float damageMultiplier = 1 + User.GetStatValue(StatTypes.MeleeAttackMultiplier);
+            damageMultiplier *= 1.0f + item.GetQualityModifier(Quality.StatType.StrikingPowerMultiplier);
+
+            Character user = User;
             Limb targetLimb = target.UserData as Limb;
             Character targetCharacter = targetLimb?.character ?? target.UserData as Character;
             if (Attack != null)
             {
-                Attack.SetUser(User);
-                Attack.DamageMultiplier = 1 + User.GetStatValue(StatTypes.MeleeAttackMultiplier);
-                Attack.DamageMultiplier *= 1.0f + item.GetQualityModifier(Quality.StatType.StrikingPowerMultiplier);
+                Attack.SetUser(user);
+                Attack.DamageMultiplier = damageMultiplier;
 
                 if (targetLimb != null)
                 {
                     if (targetLimb.character.Removed) { return; }
                     targetLimb.character.LastDamageSource = item;
-                    Attack.DoDamageToLimb(User, targetLimb, item.WorldPosition, 1.0f);
+                    Attack.DoDamageToLimb(user, targetLimb, item.WorldPosition, 1.0f);
                 }
                 else if (targetCharacter != null)
                 {
                     if (targetCharacter.Removed) { return; }
                     targetCharacter.LastDamageSource = item;
-                    Attack.DoDamage(User, targetCharacter, item.WorldPosition, 1.0f);
+                    Attack.DoDamage(user, targetCharacter, item.WorldPosition, 1.0f);
                 }
-                else if (target.UserData is Structure targetStructure)
+                else if ((target.UserData as Structure ?? targetFixture.UserData as Structure) is Structure targetStructure)
                 {
                     if (targetStructure.Removed) { return; }
-                    Attack.DoDamage(User, targetStructure, item.WorldPosition, 1.0f);
+                    Attack.DoDamage(user, targetStructure, item.WorldPosition, 1.0f);
                 }
                 else if (target.UserData is Item targetItem && targetItem.Prefab.DamagedByMeleeWeapons && targetItem.Condition > 0)
                 {
                     if (targetItem.Removed) { return; }
-                    Attack.DoDamage(User, targetItem, item.WorldPosition, 1.0f);
+                    var attackResult = Attack.DoDamage(user, targetItem, item.WorldPosition, 1.0f);
+#if CLIENT
+                    if (attackResult.Damage > 0.0f && targetItem.Prefab.ShowHealthBar)
+                    {
+                        Character.Controlled?.UpdateHUDProgressBar(targetItem,
+                            targetItem.WorldPosition,
+                            targetItem.Condition / targetItem.MaxCondition,
+                            emptyColor: GUIStyle.HealthBarColorLow,
+                            fullColor: GUIStyle.HealthBarColorHigh,
+                            textTag: targetItem.Name);
+                    }
+#endif
                 }
                 else if (target.UserData is Holdable holdable && holdable.CanPush)
                 {
                     if (holdable.Item.Removed) { return; }
-                    Attack.DoDamage(User, holdable.Item, item.WorldPosition, 1.0f);
+                    Attack.DoDamage(user, holdable.Item, item.WorldPosition, 1.0f);
                     RestoreCollision();
                     hitting = false;
                     User = null;
@@ -436,29 +452,32 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) { return; }
 
-            bool success = Rand.Range(0.0f, 0.5f) < DegreeOfSuccess(User);
-
-#if SERVER
-            if (GameMain.Server != null && targetCharacter != null) //TODO: Log structure hits
+            ActionType conditionalActionType = ActionType.OnSuccess;
+            if (user != null && Rand.Range(0.0f, 0.5f) > DegreeOfSuccess(user))
             {
-                GameMain.Server.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(
-                    success ? ActionType.OnUse : ActionType.OnFailure,
-                    targetItemComponent: null,
-                    targetCharacter, targetLimb));
-
-                string logStr = picker?.LogName + " used " + item.Name;
-                if (item.ContainedItems != null && item.ContainedItems.Any())
-                {
-                    logStr += " (" + string.Join(", ", item.ContainedItems.Select(i => i?.Name)) + ")";
-                }
-                logStr += " on " + targetCharacter.LogName + ".";
-                Networking.GameServer.Log(logStr, Networking.ServerLog.MessageType.Attack);
+                conditionalActionType = ActionType.OnFailure;
             }
-#endif
-
+            if (GameMain.NetworkMember is { IsServer: true } server && targetCharacter != null)
+            {
+                server.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(conditionalActionType, targetItemComponent: null, targetCharacter, targetLimb));
+                server.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(ActionType.OnUse, targetItemComponent: null, targetCharacter, targetLimb));
+    #if SERVER
+                if (GameMain.Server != null) //TODO: Log structure hits
+                {
+                    string logStr = picker?.LogName + " used " + item.Name;
+                    if (item.ContainedItems != null && item.ContainedItems.Any())
+                    {
+                        logStr += " (" + string.Join(", ", item.ContainedItems.Select(i => i?.Name)) + ")";
+                    }
+                    logStr += " on " + targetCharacter.LogName + ".";
+                    Networking.GameServer.Log(logStr, Networking.ServerLog.MessageType.Attack);
+                }
+    #endif
+            }
             if (targetCharacter != null) //TODO: Allow OnUse to happen on structures too maybe??
             {
-                ApplyStatusEffects(success ? ActionType.OnUse : ActionType.OnFailure, 1.0f, targetCharacter, targetLimb, user: User);
+                ApplyStatusEffects(conditionalActionType, 1.0f, targetCharacter, targetLimb, user: user, afflictionMultiplier: damageMultiplier);
+                ApplyStatusEffects(ActionType.OnUse, 1.0f, targetCharacter, targetLimb, user: user, afflictionMultiplier: damageMultiplier);
             }
 
             if (DeleteOnUse)

@@ -6,23 +6,27 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
 using System.Xml.Linq;
+using Barotrauma.Threading;
 
 namespace Barotrauma
 {
     public class ScalableFont : IDisposable
     {
-        private static List<ScalableFont> FontList = new List<ScalableFont>();
+        private static readonly List<ScalableFont> FontList = new List<ScalableFont>();
         private static Library Lib = null;
-        private readonly object mutex = new object();
+        private static readonly object globalMutex = new object();
+        
+        private readonly ReaderWriterLockSlim rwl = new ReaderWriterLockSlim();
 
-        private string filename;
-        private Face face;
+        private readonly string filename;
+        private readonly Face face;
         private uint size;
         private int baseHeight;
-        private Dictionary<uint, GlyphData> texCoords;
-        private List<Texture2D> textures;
-        private GraphicsDevice graphicsDevice;
+        private readonly Dictionary<uint, GlyphData> texCoords;
+        private readonly List<Texture2D> textures;
+        private readonly GraphicsDevice graphicsDevice;
 
         private Vector2 currentDynamicAtlasCoords;
         private int currentDynamicAtlasNextY;
@@ -34,7 +38,7 @@ namespace Barotrauma
             private set;
         }
 
-        public bool IsCJK
+        public TextManager.SpeciallyHandledCharCategory SpeciallyHandledCharCategory
         {
             get;
             private set;
@@ -49,7 +53,7 @@ namespace Barotrauma
             set
             {
                 size = value;
-                if (graphicsDevice != null) RenderAtlas(graphicsDevice, charRanges, texDims, baseChar);
+                if (graphicsDevice != null) { RenderAtlas(graphicsDevice, charRanges, texDims, baseChar); }
             }
         }
 
@@ -81,23 +85,45 @@ namespace Barotrauma
             }
         }
 
+        public static TextManager.SpeciallyHandledCharCategory ExtractShccFromXElement(XElement element)
+            => TextManager.SpeciallyHandledCharCategories
+                .Where(category => element.GetAttributeBool($"is{category}", category switch {
+                    // CJK isn't supported by default
+                    TextManager.SpeciallyHandledCharCategory.CJK => false,
+                    
+                    // For backwards compatibility, we assume that Cyrillic is supported by default
+                    TextManager.SpeciallyHandledCharCategory.Cyrillic => true,
+                    
+                    _ => throw new Exception("unreachable")
+                }))
+                .Aggregate(TextManager.SpeciallyHandledCharCategory.None, (current, category) => current | category);
+
         public ScalableFont(ContentXElement element, GraphicsDevice gd = null)
             : this(
                 element.GetAttributeContentPath("file")?.Value,
                 (uint)element.GetAttributeInt("size", 14),
                 gd,
                 element.GetAttributeBool("dynamicloading", false),
-                element.GetAttributeBool("iscjk", false))
+                ExtractShccFromXElement(element))
         {
         }
 
-        public ScalableFont(string filename, uint size, GraphicsDevice gd = null, bool dynamicLoading = false, bool isCJK = false)
+        public ScalableFont(
+            string filename,
+            uint size,
+            GraphicsDevice gd = null,
+            bool dynamicLoading = false,
+            TextManager.SpeciallyHandledCharCategory speciallyHandledCharCategory = TextManager.SpeciallyHandledCharCategory.None)
         {
-            lock (mutex)
+            lock (globalMutex)
             {
-                if (Lib == null) Lib = new Library();
-                this.filename = filename;
-                this.face = null;
+                Lib ??= new Library();
+            }
+
+            this.filename = filename;
+            this.face = null;
+            using (new ReadLock(rwl))
+            {
                 foreach (ScalableFont font in FontList)
                 {
                     if (font.filename == filename)
@@ -106,19 +132,23 @@ namespace Barotrauma
                         break;
                     }
                 }
-                this.face ??= new Face(Lib, filename);
-                this.size = size;
-                this.textures = new List<Texture2D>();
-                this.texCoords = new Dictionary<uint, GlyphData>();
-                this.DynamicLoading = dynamicLoading;
-                this.IsCJK = isCJK;
-                this.graphicsDevice = gd;
+            }
 
-                if (gd != null && !dynamicLoading)
-                {
-                    RenderAtlas(gd);
-                }
+            this.face ??= new Face(Lib, filename);
+            this.size = size;
+            this.textures = new List<Texture2D>();
+            this.texCoords = new Dictionary<uint, GlyphData>();
+            this.DynamicLoading = dynamicLoading;
+            this.SpeciallyHandledCharCategory = speciallyHandledCharCategory;
+            this.graphicsDevice = gd;
 
+            if (gd != null && !dynamicLoading)
+            {
+                RenderAtlas(gd);
+            }
+
+            lock (globalMutex)
+            {
                 FontList.Add(this);
             }
         }
@@ -162,7 +192,7 @@ namespace Barotrauma
             Vector2 currentCoords = Vector2.Zero;
             int nextY = 0;
 
-            lock (mutex)
+            using (new WriteLock(rwl))
             {
                 face.SetPixelSizes(0, size);
                 face.LoadGlyph(face.GetCharIndex(baseChar), LoadFlags.Default, LoadTarget.Normal);
@@ -175,19 +205,22 @@ namespace Barotrauma
                     for (uint j = start; j <= end; j++)
                     {
                         uint glyphIndex = face.GetCharIndex(j);
-                        if (glyphIndex == 0) continue;
+                        if (glyphIndex == 0)
+                        {
+                            texCoords.Add(j, new GlyphData(
+                                advance: 0,
+                                texIndex: -1));
+                            continue;
+                        }
                         face.LoadGlyph(glyphIndex, LoadFlags.Default, LoadTarget.Normal);
                         if (face.Glyph.Metrics.Width == 0 || face.Glyph.Metrics.Height == 0)
                         {
-                            if (face.Glyph.Metrics.HorizontalAdvance > 0)
-                            {
-                                //glyph is empty, but char still applies advance
-                                GlyphData blankData = new GlyphData(
-                                    advance: (float)face.Glyph.Metrics.HorizontalAdvance,
-                                    texIndex: -1); //indicates no texture because the glyph is empty
+                            //glyph is empty, but char might still apply advance
+                            GlyphData blankData = new GlyphData(
+                                advance: Math.Max((float)face.Glyph.Metrics.HorizontalAdvance, 0f),
+                                texIndex: -1); //indicates no texture because the glyph is empty
 
-                                texCoords.Add(j, blankData);
-                            }
+                            texCoords.Add(j, blankData);
                             continue;
                         }
                         //stacktrace doesn't really work that well when RenderGlyph throws an exception
@@ -257,7 +290,7 @@ namespace Barotrauma
         private void DynamicRenderAtlas(GraphicsDevice gd, uint character, int texDims = 1024, uint baseChar = 0x54)
         {
             bool missingCharacterFound = false;
-            lock (mutex)
+            using (new ReadLock(rwl))
             {
                 missingCharacterFound = !texCoords.ContainsKey(character);
             }
@@ -268,10 +301,9 @@ namespace Barotrauma
         private void DynamicRenderAtlas(GraphicsDevice gd, string str, int texDims = 1024, uint baseChar = 0x54)
         {
             bool missingCharacterFound = false;
-            var distinctChrs = str.Distinct().Select(c => (uint)c).ToArray();
-            lock (mutex)
+            using (new ReadLock(rwl))
             {
-                foreach (var character in distinctChrs)
+                foreach (var character in str)
                 {
                     if (texCoords.ContainsKey(character)) { continue; }
 
@@ -280,7 +312,7 @@ namespace Barotrauma
                 }
             }
             if (!missingCharacterFound) { return; }
-            DynamicRenderAtlas(gd, distinctChrs, texDims, baseChar);
+            DynamicRenderAtlas(gd, str.Select(c => (uint)c), texDims, baseChar);
         }
 
         private void DynamicRenderAtlas(GraphicsDevice gd, IEnumerable<uint> characters, int texDims = 1024, uint baseChar = 0x54)
@@ -299,7 +331,7 @@ namespace Barotrauma
             Fixed26Dot6 horizontalAdvance;
             Vector2 drawOffset;
 
-            lock (mutex)
+            using (new WriteLock(rwl))
             {
                 if (textures.Count == 0)
                 {
@@ -318,20 +350,23 @@ namespace Barotrauma
                     if (texCoords.ContainsKey(character)) { continue; }
 
                     uint glyphIndex = face.GetCharIndex(character);
-                    if (glyphIndex == 0) { continue; }
+                    if (glyphIndex == 0)
+                    {
+                        texCoords.Add(character, new GlyphData(
+                            advance: 0,
+                            texIndex: -1));
+                        continue;
+                    }
 
                     face.SetPixelSizes(0, size);
                     face.LoadGlyph(glyphIndex, LoadFlags.Default, LoadTarget.Normal);
                     if (face.Glyph.Metrics.Width == 0 || face.Glyph.Metrics.Height == 0)
                     {
-                        if (face.Glyph.Metrics.HorizontalAdvance > 0)
-                        {
-                            //glyph is empty, but char still applies advance
-                            GlyphData blankData = new GlyphData(
-                                advance: (float)face.Glyph.Metrics.HorizontalAdvance,
-                                texIndex: -1); //indicates no texture because the glyph is empty
-                            texCoords.Add(character, blankData);
-                        }
+                        //glyph is empty, but char might still apply advance
+                        GlyphData blankData = new GlyphData(
+                            advance: Math.Max((float)face.Glyph.Metrics.HorizontalAdvance, 0f),
+                            texIndex: -1); //indicates no texture because the glyph is empty
+                        texCoords.Add(character, blankData);
                         continue;
                     }
 

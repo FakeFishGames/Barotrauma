@@ -3,7 +3,10 @@
 Welcome to Barotrauma's GitHub repository! If you're here to report an issue or to contribute to the development, please read the instructions below before you do.
 
 ## I have a question!
-Please check [our FAQ](https://barotraumagame.com/faq/) in case the question has already been answered. If not, you can post the question on the [Barotrauma discussion forum](https://undertowgames.com/forum/viewforum.php?f=17) or stop by at our [Discord Server](https://discord.gg/undertow).
+Please check [our FAQ](https://barotraumagame.com/faq/) in case the question has already been answered. If not, you can post the question on the [GitHub discussions](https://github.com/Regalis11/Barotrauma/discussions) or stop by at our [Discord Server](https://discord.gg/undertow).
+
+## I have an idea or feature request!
+This GitHub issue tracker is only intended for bug reports. Ideas, development suggestions and feature requests should be posted in the [GitHub discussions](https://github.com/Regalis11/Barotrauma/discussions).
 
 ## Reporting a bug
 If you've encountered a bug, you can report it in the [issue tracker](https://github.com/Regalis11/Barotrauma/issues). Please follow the instructions in the issue template to make it easier for us to diagnose and fix the issue.
@@ -13,12 +16,12 @@ Before you start doing modifications to the code or submitting pull requests to 
 
 ### Getting started
 #### Windows and macOS
-You need a version of Visual Studio that supports C# 8.0 to compile game. If you don't have a compatible version of Visual Studio installed, you can get the latest version of Visual Studio from the following link: https://visualstudio.microsoft.com/
+You need a version of Visual Studio that supports C# 10 to compile game. If you don't have a compatible version of Visual Studio installed, you can get the latest version of Visual Studio from the following link: https://visualstudio.microsoft.com/
 
 When installing on Windows, make sure you select ".NET desktop development" during the install process to make sure you have the required features to work with Barotrauma.
 
 #### Linux
-You will need to install the .NET Core 3.0 SDK according to the instructions laid out on Microsoft's docs: https://docs.microsoft.com/en-us/dotnet/core/install/linux-package-manager-ubuntu-1904
+You will need to install the .NET 6 SDK according to the instructions laid out on Microsoft's docs: https://docs.microsoft.com/en-us/dotnet/core/install/linux
 
 To edit the source code, we recommend using [Visual Studio Code](https://code.visualstudio.com/) with [Microsoft's C# extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.csharp).
 
@@ -35,7 +38,7 @@ To develop from Visual Studio, open the solution that corresponds to the platfor
 
 You can also use your favorite source editor and build through the command line by navigating to the projects you wish to build and running the following command: `dotnet build [project].csproj -c [Debug/Release] /p:Platform=x64`
 
-To deploy for release, run the scripts in the `Deploy` directory; the resulting binaries you'll want to redistribute should be found at `Barotrauma/bin/Release[Windows/Mac/Linux]/netcoreapp3.0/[win-x64/osx-x64/linux-x64]/publish`
+To build for release, run one of the scripts found in the `Deploy` directory. The resulting binaries should be found at `Barotrauma/Deploy/bin/content`.
 
 The `BarotraumaShared/Content` folder, which contains Barotrauma's art, item XMLs, sounds, and other assets, is not included in the GitHub repository. If you have a legal copy of the game, you can copy the `Content` folder from the game's files to `BarotraumaShared/Content`.
 

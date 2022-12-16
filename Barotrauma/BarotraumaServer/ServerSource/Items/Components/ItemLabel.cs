@@ -78,7 +78,7 @@ namespace Barotrauma.Items.Components
 
         public void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
         {
-            msg.Write(Text);
+            msg.WriteString(Text);
             lastSentText = Text;
         }
     }

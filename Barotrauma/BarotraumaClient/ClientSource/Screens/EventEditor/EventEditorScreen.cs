@@ -179,7 +179,7 @@ namespace Barotrauma
                     // Ok button
                     msgBox.Buttons[1].OnClicked = delegate
                     {
-                        foreach (var illegalChar in Path.GetInvalidFileNameChars())
+                        foreach (var illegalChar in Path.GetInvalidFileNameCharsCrossPlatform())
                         {
                             if (!nameInput.Text.Contains(illegalChar)) { continue; }
 
@@ -274,7 +274,7 @@ namespace Barotrauma
             // Ok button
             msgBox.Buttons[1].OnClicked = delegate
             {
-                foreach (var illegalChar in Path.GetInvalidFileNameChars())
+                foreach (var illegalChar in Path.GetInvalidFileNameCharsCrossPlatform())
                 {
                     if (!nameInput.Text.Contains(illegalChar)) { continue; }
 

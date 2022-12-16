@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Linq;
 using Barotrauma.Extensions;
 using FarseerPhysics.Dynamics;
+using System.Collections.Immutable;
 
 namespace Barotrauma.Items.Components
 {
@@ -21,11 +22,14 @@ namespace Barotrauma.Items.Components
         
         private float rotation, targetRotation;
 
-        private float reload, reloadTime;
+        private float reload, reloadTime, delayBetweenBurst;
+        private int shotsPerBurst, shotCounter;
 
         private float minRotation, maxRotation;
 
         private float launchImpulse;
+
+        private float damageMultiplier;
 
         private Camera cam;
 
@@ -94,6 +98,16 @@ namespace Barotrauma.Items.Components
             get;
             set;
         }
+
+        public bool flipFiringOffset;
+
+        [Serialize(false, IsPropertySaveable.No, description: "If enabled, the firing offset will alternate from left to right (i.e. flipping the x-component of the offset each shot.)")]
+        public bool AlternatingFiringOffset
+        {
+            get;
+            set;
+        }
+
         public Vector2 TransformedBarrelPos
         {
             get
@@ -116,6 +130,20 @@ namespace Barotrauma.Items.Components
             set { reloadTime = value; }
         }
 
+        [Editable(1, 100), Serialize(1, IsPropertySaveable.No, description: "How many projectiles needs to be shot before we add an extra break? Think of the double coilgun.")]
+        public int ShotsPerBurst
+        {
+            get { return shotsPerBurst; }
+            set { shotsPerBurst = value; }
+        }
+
+        [Editable(0.0f, 1000.0f, decimals: 3), Serialize(0.0f, IsPropertySaveable.No, description: "An extra delay between the bursts. Added to the reload.")]
+        public float DelayBetweenBursts
+        {
+            get { return delayBetweenBurst; }
+            set { delayBetweenBurst = value; }
+        }
+
         [Editable(0.1f, 10f), Serialize(1.0f, IsPropertySaveable.No, description: "Modifies the duration of retraction of the barrell after recoil to get back to the original position after shooting. Reload time affects this too.")]
         public float RetractionDurationMultiplier
         {
@@ -135,6 +163,13 @@ namespace Barotrauma.Items.Components
         {
             get;
             set;
+        }
+
+        [Serialize(1.0f, IsPropertySaveable.No, description: "Multiplies the damage the turret deals by this amount.")]
+        public float DamageMultiplier
+        {
+            get { return damageMultiplier; }
+            set { damageMultiplier = value; }
         }
 
         [Serialize(1, IsPropertySaveable.No, description: "How many projectiles the weapon launches when fired once.")]
@@ -525,7 +560,7 @@ namespace Barotrauma.Items.Components
             UpdateLightComponents();
         }
 
-        private void UpdateLightComponents()
+        public void UpdateLightComponents()
         {
             if (lightComponents != null)
             {
@@ -602,9 +637,9 @@ namespace Barotrauma.Items.Components
                 if (projectiles.Any())
                 {
                     ItemContainer projectileContainer = projectiles.First().Item.Container?.GetComponent<ItemContainer>();
-                    if (projectileContainer != null && projectileContainer.Item != item) 
-                    { 
-                        projectileContainer?.Item.Use(deltaTime, null); 
+                    if (projectileContainer != null && projectileContainer.Item != item)
+                    {
+                        projectileContainer?.Item.Use(deltaTime, null);
                     }
                 }
                 else
@@ -614,7 +649,7 @@ namespace Barotrauma.Items.Components
                         var e = item.linkedTo[(j + currentLoaderIndex) % item.linkedTo.Count];
                         //use linked projectile containers in case they have to react to the turret being launched somehow
                         //(play a sound, spawn more projectiles)
-                        if (!(e is Item linkedItem)) { continue; }
+                        if (e is not Item linkedItem) { continue; }
                         if (!item.Prefab.IsLinkAllowed(e.Prefab)) { continue; }
                         if (linkedItem.Condition <= 0.0f)
                         {
@@ -657,7 +692,7 @@ namespace Barotrauma.Items.Components
 
                 foreach (MapEntity e in item.linkedTo)
                 {
-                    if (!(e is Item linkedItem)) { continue; }
+                    if (e is not Item linkedItem) { continue; }
                     if (!((MapEntity)item).Prefab.IsLinkAllowed(e.Prefab)) { continue; }
                     if (linkedItem.GetComponent<Repairable>() is Repairable repairable && repairable.IsTinkering && linkedItem.HasTag("turretammosource"))
                     {
@@ -667,7 +702,7 @@ namespace Barotrauma.Items.Components
 
                 if (!ignorePower)
                 {
-                    List<PowerContainer> batteries = GetConnectedBatteries();
+                    List<PowerContainer> batteries = GetDirectlyConnectedBatteries();
                     float neededPower = GetPowerRequiredToShoot();
 
                     // tinkering is currently not factored into the common method as it is checked only when shooting
@@ -764,6 +799,15 @@ namespace Barotrauma.Items.Components
         private void Launch(Item projectile, Character user = null, float? launchRotation = null, float tinkeringStrength = 0f)
         {
             reload = reloadTime;
+            if (ShotsPerBurst > 1)
+            {
+                shotCounter++;
+                if (shotCounter >= ShotsPerBurst)
+                {
+                    reload += DelayBetweenBursts;
+                    shotCounter = 0;
+                }
+            }
             reload /= 1f + (tinkeringStrength * TinkeringReloadDecrease);
 
             if (user != null)
@@ -773,6 +817,10 @@ namespace Barotrauma.Items.Components
 
             if (projectile != null)
             {
+                if (AlternatingFiringOffset)
+                {
+                    flipFiringOffset = !flipFiringOffset;
+                }
                 activeProjectiles.Add(projectile);
                 projectile.Drop(null, setTransform: false);
                 if (projectile.body != null) 
@@ -796,9 +844,9 @@ namespace Barotrauma.Items.Components
                     projectileComponent.Attacker = projectileComponent.User = user;
                     if (projectileComponent.Attack != null)
                     {
-                        projectileComponent.Attack.DamageMultiplier = 1f + (TinkeringDamageIncrease * tinkeringStrength);
+                        projectileComponent.Attack.DamageMultiplier = (1f * DamageMultiplier) + (TinkeringDamageIncrease * tinkeringStrength);
                     }
-                    projectileComponent.Use();
+                    projectileComponent.Use(null, LaunchImpulse);
                     projectile.GetComponent<Rope>()?.Attach(item, projectile);
                     projectileComponent.User = user;
 
@@ -824,7 +872,7 @@ namespace Barotrauma.Items.Components
 
         partial void LaunchProjSpecific();
 
-        private void ShiftItemsInProjectileContainer(ItemContainer container)
+        private static void ShiftItemsInProjectileContainer(ItemContainer container)
         {
             if (container == null) { return; }
             bool moved;
@@ -1015,10 +1063,10 @@ namespace Barotrauma.Items.Components
                 character.AIController.SelectTarget(null);
             }
 
-            bool canShoot = true;
-            if (!HasPowerToShoot())
+            bool canShoot = HasPowerToShoot();
+            if (!canShoot)
             {
-                List<PowerContainer> batteries = GetConnectedBatteries();
+                List<PowerContainer> batteries = GetDirectlyConnectedBatteries();
                 float lowestCharge = 0.0f;
                 PowerContainer batteryToLoad = null;
                 foreach (PowerContainer battery in batteries)
@@ -1041,7 +1089,6 @@ namespace Barotrauma.Items.Components
                             character.Speak(TextManager.Get("DialogSupercapacitorIsBroken").Value,
                                 identifier: "supercapacitorisbroken".ToIdentifier(),
                                 minDurationBetweenSimilar: 30.0f);
-                            canShoot = false;
                         }
                     }
                 }
@@ -1056,7 +1103,6 @@ namespace Barotrauma.Items.Components
                     character.Speak(TextManager.Get("DialogTurretHasNoPower").Value,
                         identifier: "turrethasnopower".ToIdentifier(),
                         minDurationBetweenSimilar: 30.0f);
-                    canShoot = false;
                 }
             }
 
@@ -1104,7 +1150,7 @@ namespace Barotrauma.Items.Components
                 if (objective.SubObjectives.None())
                 {
                     var loadItemsObjective = AIContainItems<Turret>(container, character, objective, usableProjectileCount + 1, equip: true, removeEmpty: true, dropItemOnDeselected: true);
-                    loadItemsObjective.ignoredContainerIdentifiers = new Identifier[] { ((MapEntity)containerItem).Prefab.Identifier };
+                    loadItemsObjective.ignoredContainerIdentifiers = ((MapEntity)containerItem).Prefab.Identifier.ToEnumerable().ToImmutableHashSet();
                     if (character.IsOnPlayerTeam)
                     {
                         character.Speak(TextManager.GetWithVariable("DialogLoadTurret", "[itemname]", item.Name, formatCapitals: FormatCapitals.Yes).Value,
@@ -1235,7 +1281,7 @@ namespace Barotrauma.Items.Components
                 closestDistance = shootDistance;
                 foreach (var wall in Level.Loaded.ExtraWalls)
                 {
-                    if (!(wall is DestructibleLevelWall destructibleWall) || destructibleWall.Destroyed) { continue; }
+                    if (wall is not DestructibleLevelWall destructibleWall || destructibleWall.Destroyed) { continue; }
                     foreach (var cell in wall.Cells)
                     {
                         if (cell.DoesDamage)
@@ -1260,9 +1306,13 @@ namespace Barotrauma.Items.Components
                                     }
                                 }
                                 float dist = Vector2.Distance(closestPoint, item.WorldPosition);
+
+                                //add one px to make sure the visibility raycast doesn't miss the cell due to the end position being right at the edge of the cell
+                                closestPoint += (closestPoint - item.WorldPosition) / Math.Max(dist, 1);
+
                                 if (dist > AIRange + 1000) { continue; }
                                 float dot = 0;
-                                if (item.Submarine.Velocity != Vector2.Zero)
+                                if (!MathUtils.NearlyEqual(item.Submarine.Velocity, Vector2.Zero))
                                 {
                                     dot = Vector2.Dot(Vector2.Normalize(item.Submarine.Velocity), Vector2.Normalize(closestPoint - item.Submarine.WorldPosition));
                                 }
@@ -1293,7 +1343,7 @@ namespace Barotrauma.Items.Components
                 {
                     if (character.AIController.SelectedAiTarget == null && !hadCurrentTarget)
                     {
-                        if (CreatureMetrics.Instance.RecentlyEncountered.Contains(closestEnemy.SpeciesName))
+                        if (CreatureMetrics.Instance.RecentlyEncountered.Contains(closestEnemy.SpeciesName) || closestEnemy.IsHuman)
                         {
                             character.Speak(TextManager.Get("DialogNewTargetSpotted").Value,
                                 identifier: "newtargetspotted".ToIdentifier(),
@@ -1353,19 +1403,18 @@ namespace Barotrauma.Items.Components
                 Vector2 end = ConvertUnits.ToSimUnits(targetPos.Value);
                 // Check that there's not other entities that shouldn't be targeted (like a friendly sub) between us and the target.
                 Body worldTarget = CheckLineOfSight(start, end);
-                bool shoot;
                 if (closestEnemy != null && closestEnemy.Submarine != null)
                 {
                     start -= closestEnemy.Submarine.SimPosition;
                     end -= closestEnemy.Submarine.SimPosition;
                     Body transformedTarget = CheckLineOfSight(start, end);
-                    shoot = CanShoot(transformedTarget, character) && (worldTarget == null || CanShoot(worldTarget, character));
+                    canShoot = CanShoot(transformedTarget, character) && (worldTarget == null || CanShoot(worldTarget, character));
                 }
                 else
                 {
-                    shoot = CanShoot(worldTarget, character);
+                    canShoot = CanShoot(worldTarget, character);
                 }
-                if (!shoot) { return false; }
+                if (!canShoot) { return false; }
                 if (character.IsOnPlayerTeam)
                 {
                     character.Speak(TextManager.Get("DialogFireTurret").Value,
@@ -1419,6 +1468,7 @@ namespace Barotrauma.Items.Components
             {
                 if (targetBody.UserData is ISpatialEntity e)
                 {
+                    if (e is Structure s && s.Indestructible) { return false; }
                     Submarine sub = e.Submarine ?? e as Submarine;
                     if (!targetSubmarines && e is Submarine) { return false; }
                     if (sub == null) { return false; }
@@ -1452,7 +1502,9 @@ namespace Barotrauma.Items.Components
             Vector2 transformedFiringOffset = Vector2.Zero;
             if (useOffset)
             {
-                transformedFiringOffset = MathUtils.RotatePoint(new Vector2(-FiringOffset.Y, -FiringOffset.X) * item.Scale, -rotation);
+                Vector2 currOffSet = FiringOffset;
+                if (flipFiringOffset) { currOffSet.X = -currOffSet.X; }
+                transformedFiringOffset = MathUtils.RotatePoint(new Vector2(-currOffSet.Y, -currOffSet.X) * item.Scale, -rotation);
             }
             return new Vector2(item.WorldRect.X + transformedBarrelPos.X + transformedFiringOffset.X, item.WorldRect.Y - transformedBarrelPos.Y + transformedFiringOffset.Y);
         }
@@ -1505,7 +1557,7 @@ namespace Barotrauma.Items.Components
             return projectiles;
         }
 
-        private void CheckProjectileContainer(Item projectileContainer, List<Projectile> projectiles, out bool stopSearching)
+        private static void CheckProjectileContainer(Item projectileContainer, List<Projectile> projectiles, out bool stopSearching)
         {
             stopSearching = false;
             if (projectileContainer.Condition <= 0.0f) { return; }
@@ -1562,6 +1614,7 @@ namespace Barotrauma.Items.Components
             targetRotation = rotation = (minRotation + maxRotation) / 2;
 
             UpdateTransformedBarrelPos();
+            UpdateLightComponents();
         }
 
         public override void FlipY(bool relativeToSub)
@@ -1583,6 +1636,7 @@ namespace Barotrauma.Items.Components
             targetRotation = rotation = (minRotation + maxRotation) / 2;
 
             UpdateTransformedBarrelPos();
+            UpdateLightComponents();
         }
 
         public override void ReceiveSignal(Signal signal, Connection connection)
@@ -1665,12 +1719,12 @@ namespace Barotrauma.Items.Components
         {
             if (TryExtractEventData(extraData, out EventData eventData))
             {
-                msg.Write(eventData.Projectile.ID);
+                msg.WriteUInt16(eventData.Projectile.ID);
                 msg.WriteRangedSingle(MathHelper.Clamp(rotation, minRotation, maxRotation), minRotation, maxRotation, 16);
             }
             else
             {
-                msg.Write((ushort)0);
+                msg.WriteUInt16((ushort)0);
                 float wrappedTargetRotation = targetRotation;
                 while (wrappedTargetRotation < minRotation && MathUtils.IsValid(wrappedTargetRotation))
                 {

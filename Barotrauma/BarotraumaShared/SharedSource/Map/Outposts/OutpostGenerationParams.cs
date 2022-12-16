@@ -96,6 +96,8 @@ namespace Barotrauma
         [Serialize("", IsPropertySaveable.Yes), Editable]
         public string ReplaceInRadiation { get; set; }
 
+        public ContentPath OutpostFilePath { get; set; }
+
         public class ModuleCount
         {
             public Identifier Identifier;
@@ -182,6 +184,7 @@ namespace Barotrauma
             Name = element.GetAttributeString("name", Identifier.Value);
             allowedLocationTypes = element.GetAttributeIdentifierArray("allowedlocationtypes", Array.Empty<Identifier>()).ToHashSet();
             SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
+            OutpostFilePath = element.GetAttributeContentPath(nameof(OutpostFilePath));
             
             var humanPrefabCollections = new List<IReadOnlyList<HumanPrefab>>();
             foreach (var subElement in element.Elements())
@@ -203,7 +206,7 @@ namespace Barotrauma
                             }
                             else
                             {
-                                newCollection.Add(new HumanPrefab(npcElement, file));
+                                newCollection.Add(new HumanPrefab(npcElement, file, npcSetIdentifier: from));
                             }
                         }
                         humanPrefabCollections.Add(newCollection);
@@ -255,6 +258,21 @@ namespace Barotrauma
         {
             if (!humanPrefabCollections.Any()) { return Array.Empty<HumanPrefab>(); }
             return humanPrefabCollections.GetRandom(randSync);
+        }
+
+        public bool CanHaveCampaignInteraction(CampaignMode.InteractionType interactionType)
+        {
+            foreach (var collection in humanPrefabCollections)
+            {
+                foreach (var prefab in collection)
+                {
+                    if (prefab.CampaignInteractionType == interactionType)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         public ImmutableHashSet<Identifier> GetStoreIdentifiers()

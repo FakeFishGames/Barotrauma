@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Barotrauma.Items.Components;
 using Barotrauma.Extensions;
+using System.Diagnostics;
 
 namespace Barotrauma
 {
@@ -379,12 +380,16 @@ namespace Barotrauma
             }
 
             LocalizedString toolTip = TextManager.Get($"sp.{propertyTag}.description");
+            if (toolTip.IsNullOrEmpty() && entity.GetType() != property.PropertyInfo.DeclaringType)
+            {
+                Identifier propertyTagForDerivedClass = $"{entity.GetType().Name}.{property.PropertyInfo.Name}".ToIdentifier();
+                toolTip = TextManager.Get($"{propertyTagForDerivedClass}.description", $"sp.{propertyTagForDerivedClass}.description");
+            }
             if (toolTip.IsNullOrEmpty())
             {
-                toolTip =  TextManager.Get($"{propertyTag}.description", $"sp.{fallbackTag}.description");
+                toolTip = TextManager.Get($"{propertyTag}.description", $"sp.{fallbackTag}.description");
             }
-
-            if (toolTip == null)
+            if (toolTip.IsNullOrEmpty())
             {
                 toolTip = property.GetAttribute<Serialize>().Description;
             }
@@ -629,16 +634,18 @@ namespace Barotrauma
 
             bool isFlagsAttribute = value.GetType().IsDefined(typeof(FlagsAttribute), false);
 
+            bool hasNoneOption = false;
             foreach (object enumValue in Enum.GetValues(value.GetType()))
             {
                 if (isFlagsAttribute && !MathHelper.IsPowerOfTwo((int)enumValue)) { continue; }
-
+                hasNoneOption |= (int)enumValue == 0;
                 enumDropDown.AddItem(enumValue.ToString(), enumValue);
                 if (((int)enumValue != 0 || (int)value == 0) && ((Enum)value).HasFlag((Enum)enumValue))
                 {
                     enumDropDown.SelectItem(enumValue);
                 }
             }
+            enumDropDown.MustSelectAtLeastOne = !hasNoneOption;
             enumDropDown.OnSelected += (selected, val) =>
             {
                 if (SetPropertyValue(property, entity, string.Join(", ", enumDropDown.SelectedDataMultiple.Select(d => d.ToString()))))
@@ -697,9 +704,12 @@ namespace Barotrauma
                 List<MapEntity> prevSelected = MapEntity.SelectedList.ToList();
                 //reselect the entities that were selected during editing
                 //otherwise multi-editing won't work when we deselect the entities with unapplied changes in the textbox
-                foreach (var entity in editedEntities)
-                { 
-                    MapEntity.SelectedList.Add(entity);
+                if (editedEntities.Count > 1)
+                {
+                    foreach (var entity in editedEntities)
+                    { 
+                        MapEntity.SelectedList.Add(entity);
+                    }
                 }
                 if (SetPropertyValue(property, entity, textBox.Text))
                 {
@@ -1322,16 +1332,18 @@ namespace Barotrauma
             }
         }
         
-        private void TrySendNetworkUpdate(ISerializableEntity entity, SerializableProperty property)
+        private static void TrySendNetworkUpdate(ISerializableEntity entity, SerializableProperty property)
         {
-            if (entity is ItemComponent e)
+            if (GameMain.Client != null)
             {
-                entity = e.Item;
-            }
-
-            if (GameMain.Client != null && entity is Item item)
-            {
-                GameMain.Client.CreateEntityEvent(item, new Item.ChangePropertyEventData(property));
+                if (entity is Item item)
+                {
+                    GameMain.Client.CreateEntityEvent(item, new Item.ChangePropertyEventData(property, item));
+                }
+                else if (entity is ItemComponent ic)
+                {
+                    GameMain.Client.CreateEntityEvent(ic.Item, new Item.ChangePropertyEventData(property, ic));
+                }
             }
         }
 
@@ -1435,14 +1447,33 @@ namespace Barotrauma
                             }
                         }
                         break;
-                    case ItemComponent _ when entity is Item item:
-                        foreach (var component in item.Components)
+                    case ItemComponent parentComponent when entity is Item otherItem:
+                        if (otherItem == parentComponent.Item) { continue; }                        
+                        int componentIndex = parentComponent.Item.Components.FindAll(c => c.GetType() == parentComponent.GetType()).IndexOf(parentComponent);
+                        //find the component of the same type and same index from the other item
+                        var otherComponents = otherItem.Components.FindAll(c => c.GetType() == parentComponent.GetType());
+                        if (componentIndex >= 0 && componentIndex < otherComponents.Count)
                         {
-                            if (component.GetType() == parentObject.GetType() && component != parentObject)
+                            var component = otherComponents[componentIndex];
+                            Debug.Assert(component.GetType() == parentObject.GetType());                            
+                            SafeAdd(component, property);
+                            if (value is string stringValue && 
+                                property.PropertyType.IsEnum &&
+                                Enum.TryParse(property.PropertyType, stringValue, out var enumValue))
                             {
-                                SafeAdd(component, property);
-                                property.PropertyInfo.SetValue(component, value);
+                                property.PropertyInfo.SetValue(component, enumValue);
                             }
+                            else
+                            {
+                                try
+                                {
+                                    property.PropertyInfo.SetValue(component, value);
+                                }
+                                catch (ArgumentException e)
+                                {
+                                    DebugConsole.ThrowError($"Failed to set the value of the property \"{property.Name}\" to {value?.ToString() ?? "null"}", e);
+                                }
+                            }                            
                         }
                         break;
                 }

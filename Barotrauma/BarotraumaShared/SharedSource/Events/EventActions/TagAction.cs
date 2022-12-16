@@ -1,10 +1,7 @@
 using Barotrauma.Extensions;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma
 {
@@ -35,10 +32,13 @@ namespace Barotrauma
                 ("bot", v => TagBots(playerCrewOnly: false)),
                 ("crew", v => TagCrew()),
                 ("humanprefabidentifier", TagHumansByIdentifier),
+                ("jobidentifier", TagHumansByJobIdentifier),
                 ("structureidentifier", TagStructuresByIdentifier),
+                ("structurespecialtag", TagStructuresBySpecialTag),
                 ("itemidentifier", TagItemsByIdentifier),
                 ("itemtag", TagItemsByTag),
-                ("hullname", TagHullsByName)
+                ("hullname", TagHullsByName),
+                ("submarine", TagSubmarinesByType),
             }.Select(t => (t.k.ToIdentifier(), t.v)).ToImmutableDictionary();
         }
 
@@ -95,9 +95,26 @@ namespace Barotrauma
                 }
             }
         }
+
+        private void TagHumansByJobIdentifier(Identifier jobIdentifier)
+        {
+            foreach (Character c in Character.CharacterList)
+            {
+                if (c.HasJob(jobIdentifier))
+                {
+                    ParentEvent.AddTarget(Tag, c);
+                }
+            }
+        }
+
         private void TagStructuresByIdentifier(Identifier identifier)
         {
             ParentEvent.AddTargetPredicate(Tag, e => e is Structure s && SubmarineTypeMatches(s.Submarine) && s.Prefab.Identifier == identifier);
+        }
+
+        private void TagStructuresBySpecialTag(Identifier tag)
+        {
+            ParentEvent.AddTargetPredicate(Tag, e => e is Structure s && SubmarineTypeMatches(s.Submarine) && s.SpecialTag.ToIdentifier() == tag);
         }
 
         private void TagItemsByIdentifier(Identifier identifier)
@@ -113,6 +130,11 @@ namespace Barotrauma
         private void TagHullsByName(Identifier name)
         {
             ParentEvent.AddTargetPredicate(Tag, e => e is Hull h && SubmarineTypeMatches(h.Submarine) && h.RoomName.Contains(name.Value, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private void TagSubmarinesByType(Identifier type)
+        {
+            ParentEvent.AddTargetPredicate(Tag, e => e is Submarine s && SubmarineTypeMatches(s) && (type.IsEmpty || type == s.Info?.Type.ToIdentifier()));
         }
 
         private bool SubmarineTypeMatches(Submarine sub)

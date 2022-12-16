@@ -1,8 +1,6 @@
 ﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
-using Barotrauma.Networking;
 using FarseerPhysics;
-using FarseerPhysics.Collision;
 using FarseerPhysics.Common;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Contacts;
@@ -345,14 +343,12 @@ namespace Barotrauma
                         Math.Max(Body.LinearVelocity.Y, ConvertUnits.ToSimUnits(Level.Loaded.BottomPos - (worldBorders.Y - worldBorders.Height))));
                 }
 
-                //hard limit for how far outside the level the sub can go
-                float maxDist = 200000.0f;
-                //the force of the current starts to increase exponentially after this point
-                float exponentialForceIncreaseDist = 150000.0f;
-                float distance = Position.X < 0 ? Math.Abs(Position.X) : Position.X - Level.Loaded.Size.X;
+                float distance = Position.X < -Level.OutsideBoundsCurrentMargin ? 
+                    Math.Abs(Position.X + Level.OutsideBoundsCurrentMargin) : 
+                    Position.X - (Level.Loaded.Size.X + Level.OutsideBoundsCurrentMargin);
                 if (distance > 0)
                 {
-                    if (distance > maxDist)
+                    if (distance > Level.OutsideBoundsCurrentHardLimit)
                     {
                         if (Position.X < 0)
                         {
@@ -363,9 +359,9 @@ namespace Barotrauma
                             Body.LinearVelocity = new Vector2(Math.Min(0, Body.LinearVelocity.X), Body.LinearVelocity.Y);
                         }
                     }
-                    if (distance > exponentialForceIncreaseDist)
+                    if (distance > Level.OutsideBoundsCurrentMarginExponential)
                     {
-                        distance += (float)Math.Pow((distance - exponentialForceIncreaseDist) * 0.01f, 2.0f);
+                        distance += (float)Math.Pow((distance - Level.OutsideBoundsCurrentMarginExponential) * 0.01f, 2.0f);
                     }
                     float force = distance * 0.5f;
                     totalForce += (Position.X < 0 ? Vector2.UnitX : -Vector2.UnitX) * force;
@@ -451,11 +447,13 @@ namespace Barotrauma
 
         private Vector2 CalculateBuoyancy()
         {
+            if (Submarine.LockY) { return Vector2.Zero; }
+
             float waterVolume = 0.0f;
             float volume = 0.0f;
             foreach (Hull hull in Hull.HullList)
             {
-                if (hull.Submarine != submarine) continue;
+                if (hull.Submarine != submarine) { continue; }
 
                 waterVolume += hull.WaterVolume;
                 volume += hull.Volume;
@@ -509,7 +507,6 @@ namespace Barotrauma
                 if (wall.Submarine != submarine) { continue; }
 
                 float wallCrushDepth = wall.CrushDepth;
-                if (submarine.Info.SubmarineClass == SubmarineClass.DeepDiver) { wallCrushDepth *= 1.2f; }
                 float pastCrushDepth = submarine.RealWorldDepth - wallCrushDepth;
                 if (pastCrushDepth > 0)
                 {
@@ -591,14 +588,23 @@ namespace Barotrauma
                 newHull = Hull.FindHull(targetPos, null);
             }
 
-            var gaps = newHull?.ConnectedGaps ?? Gap.GapList.Where(g => g.Submarine == submarine);
-            Gap adjacentGap = Gap.FindAdjacent(gaps, ConvertUnits.ToDisplayUnits(points[0]), 200.0f);
-            if (adjacentGap == null) { return true; }
+            //if all the bodies of a wall have been disabled, we don't need to care about gaps (can always pass through)
+            if (!(contact.FixtureA.UserData is Structure wall) || !wall.AllSectionBodiesDisabled())
+            {
+                var gaps = newHull?.ConnectedGaps ?? Gap.GapList.Where(g => g.Submarine == submarine);
+                Gap adjacentGap = Gap.FindAdjacent(gaps, ConvertUnits.ToDisplayUnits(points[0]), 200.0f);
+                if (adjacentGap == null) { return true; }
+            }
 
             if (newHull != null)
             {
                 CoroutineManager.Invoke(() =>
-                    character.AnimController.FindHull(newHull.WorldPosition, setSubmarine: true));
+                {
+                    if (character != null && !character.Removed)
+                    {
+                        character.AnimController.FindHull(newHull.WorldPosition, setSubmarine: true);
+                    }
+                });
             }
 
             return false;
@@ -714,7 +720,7 @@ namespace Barotrauma
 
         private void HandleLevelCollision(Impact impact, VoronoiCell cell = null)
         {
-            if (GameMain.GameSession != null && Timing.TotalTime < GameMain.GameSession.RoundStartTime + 10)
+            if (GameMain.GameSession != null && GameMain.GameSession.RoundDuration < 10)
             {
                 //ignore level collisions for the first 10 seconds of the round in case the sub spawns in a way that causes it to hit a wall 
                 //(e.g. level without outposts to dock to and an incorrectly configured ballast that makes the sub go up)
@@ -893,13 +899,15 @@ namespace Barotrauma
                 }
 
                 bool holdingOntoSomething = false;
-                if (c.SelectedConstruction != null)
+                if (c.SelectedSecondaryItem != null)
                 {
-                    holdingOntoSomething =
-                        c.SelectedConstruction.GetComponent<Ladder>() != null ||
-                        (c.SelectedConstruction.GetComponent<Controller>()?.LimbPositions.Any() ?? false);
+                    holdingOntoSomething = c.SelectedSecondaryItem.IsLadder ||
+                        (c.SelectedSecondaryItem.GetComponent<Controller>()?.LimbPositions.Any() ?? false);
                 }
-
+                if (!holdingOntoSomething && c.SelectedItem != null)
+                {
+                    holdingOntoSomething = c.SelectedItem.GetComponent<Controller>()?.LimbPositions.Any() ?? false;
+                }
                 if (!holdingOntoSomething)
                 {
                     c.AnimController.Collider.ApplyLinearImpulse(c.AnimController.Collider.Mass * impulse, 10.0f);

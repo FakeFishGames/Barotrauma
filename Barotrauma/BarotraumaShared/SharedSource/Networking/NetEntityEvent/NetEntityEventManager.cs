@@ -37,7 +37,7 @@ namespace Barotrauma.Networking
                     //write an empty event to avoid messing up IDs
                     //(otherwise the clients might read the next event in the message and think its ID 
                     //is consecutive to the previous one, even though we skipped over this broken event)
-                    tempBuffer.Write(Entity.NullEntityID);
+                    tempBuffer.WriteUInt16(Entity.NullEntityID);
                     eventCount++;
                     continue;
                 }
@@ -49,9 +49,9 @@ namespace Barotrauma.Networking
                     break;
                 }
 
-                tempBuffer.Write(e.EntityID);
+                tempBuffer.WriteUInt16(e.EntityID);
                 tempBuffer.WriteVariableUInt32((uint)tempEventBuffer.LengthBytes);
-                tempBuffer.Write(tempEventBuffer.Buffer, 0, tempEventBuffer.LengthBytes);
+                tempBuffer.WriteBytes(tempEventBuffer.Buffer, 0, tempEventBuffer.LengthBytes);
                 sentEvents.Add(e);
 
                 eventCount++;
@@ -60,9 +60,9 @@ namespace Barotrauma.Networking
             if (eventCount > 0)
             {
                 msg.WritePadBits();
-                msg.Write(eventsToSync[0].ID);
-                msg.Write((byte)eventCount);
-                msg.Write(tempBuffer.Buffer, 0, tempBuffer.LengthBytes);
+                msg.WriteUInt16(eventsToSync[0].ID);
+                msg.WriteByte((byte)eventCount);
+                msg.WriteBytes(tempBuffer.Buffer, 0, tempBuffer.LengthBytes);
             }
         }
 

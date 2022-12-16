@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
@@ -8,14 +9,6 @@ namespace Barotrauma.Items.Components
     partial class Quality : ItemComponent
     {
         public const int MaxQuality = 3;
-
-        public static readonly float[] QualityCommonnesses = new float[]
-        {
-            0.8f,
-            0.15f,
-            0.045f,
-            0.005f,
-        };
 
         public enum StatType
         {
@@ -29,25 +22,14 @@ namespace Barotrauma.Items.Components
             FirepowerMultiplier,
             StrikingPowerMultiplier,
             StrikingSpeedMultiplier,
-            FiringRateMultiplier,
-            // unused as of now
-            AttackMultiplier,
-            // unused as of now
-            AttackSpeedMultiplier,
-            ForceDoorsOpenSpeedMultiplier,
-            RangedSpreadReduction,
-            ChargeSpeedMultiplier,
-            MovementSpeedMultiplier,
-            EffectivenessMultiplier,
-            PowerOutputMultiplier,
-            ConsumptionReductionMultiplier,
+            FiringRateMultiplier
         }
 
         private readonly Dictionary<StatType, float> statValues = new Dictionary<StatType, float>();
 
         private int qualityLevel;
 
-        [Editable, Serialize(0, IsPropertySaveable.Yes)]
+        [Editable(MinValueInt = 0, MaxValueInt = MaxQuality), Serialize(0, IsPropertySaveable.Yes)]
         public int QualityLevel
         {
             get { return qualityLevel; }
@@ -91,6 +73,30 @@ namespace Barotrauma.Items.Components
         {
             if (!statValues.ContainsKey(statType)) { return 0.0f; }
             return statValues[statType] * qualityLevel;
+        }
+
+        /// <summary>
+        /// Get a random quality for an item spawning in some sub, taking into account the type of the submarine and the difficulty of the current level 
+        /// (high-quality items become more common as difficulty increases)
+        /// </summary>
+        public static int GetSpawnedItemQuality(Submarine submarine, Level level, Rand.RandSync randSync = Rand.RandSync.ServerAndClient)
+        {               
+            if (submarine?.Info == null || level == null || submarine.Info.Type == SubmarineType.Player) { return 0; }
+
+            float difficultyFactor = MathHelper.Clamp(level.Difficulty, 0.0f, 1.0f);
+            return ToolBox.SelectWeightedRandom(Enumerable.Range(0, MaxQuality + 1), q => GetCommonness(q, difficultyFactor), randSync);
+
+            static float GetCommonness(int quality, float difficultyFactor)
+            {
+                return quality switch
+                {
+                    0 => 1,
+                    1 => MathHelper.Lerp(0.0f, 1f, difficultyFactor),
+                    2 => MathHelper.Lerp(0.0f, 1f, Math.Max(difficultyFactor-0.15f, 0f)), //15 difficulty transition to next biome - unlock Excellent loot
+                    3 => MathHelper.Lerp(0.0f, 1f, Math.Max(difficultyFactor-0.35f, 0f)), //35 difficulty transition to next biome - unlock Masterwork loot
+                    _ => 0.0f,
+                };
+            }
         }
     }
 }

@@ -6,7 +6,7 @@ using System;
 
 namespace Barotrauma
 {
-    public class Camera : IDisposable
+    class Camera : IDisposable
     {
         public static bool FollowSub = true;
 
@@ -175,13 +175,13 @@ namespace Barotrauma
             position += amount;
         }
 
-        public void ClientWrite(IWriteMessage msg)
+        public void ClientWrite(in SegmentTableWriter<ClientNetSegment> segmentTableWriter, IWriteMessage msg)
         {
             if (Character.Controlled != null && !Character.Controlled.IsDead) { return; }
 
-            msg.Write((byte)ClientNetObject.SPECTATING_POS);
-            msg.Write(position.X);
-            msg.Write(position.Y);
+            segmentTableWriter.StartNewSegment(ClientNetSegment.SpectatingPos);
+            msg.WriteSingle(position.X);
+            msg.WriteSingle(position.Y);
         }
 
         private void CreateMatrices()

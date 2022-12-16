@@ -8,7 +8,7 @@ namespace Barotrauma
 {
     partial class Character
     {
-        public string OwnerClientEndPoint;
+        public Address OwnerClientAddress;
         public string OwnerClientName;
         public bool ClientDisconnected;
         public float KillDisconnectedTimer;
@@ -219,9 +219,9 @@ namespace Barotrauma
             else if (NetIdUtils.Difference(networkUpdateID, LastNetworkUpdateID) > 500)
             {
 #if DEBUG || UNSTABLE
-                DebugConsole.AddWarning($"Large disrepancy between a client character's network update ID server-side and client-side (client: {networkUpdateID}, server: {LastNetworkUpdateID}). Resetting the ID.");
+                DebugConsole.AddWarning($"Large discrepancy between a client character's network update ID server-side and client-side (client: {networkUpdateID}, server: {LastNetworkUpdateID}). Resetting the ID.");
 #endif
-                LastNetworkUpdateID = networkUpdateID;
+                LastNetworkUpdateID = LastProcessedID = networkUpdateID;
             }
             if (memInput.Count > 60)
             {
@@ -269,10 +269,13 @@ namespace Barotrauma
                 case EventType.UpdateTalents:
                     if (c.Character != this)
                     {
+                        if (!IsBot || !c.HasPermission(ClientPermissions.ManageBotTalents))
+                        {
 #if DEBUG
-                        DebugConsole.Log("Received a character update message from a client who's not controlling the character");
+                            DebugConsole.Log("Received a character update message from a client who's not controlling the character");
 #endif
-                        return;
+                            return;
+                        }
                     }
 
                     // get the full list of talents from the player, only give the ones
@@ -301,25 +304,25 @@ namespace Barotrauma
 
         public void ServerWritePosition(IWriteMessage msg, Client c)
         {
-            msg.Write(ID);
+            msg.WriteUInt16(ID);
 
             IWriteMessage tempBuffer = new WriteOnlyMessage();
 
             if (this == c.Character)
             {
-                tempBuffer.Write(true);
+                tempBuffer.WriteBoolean(true);
                 if (LastNetworkUpdateID < memInput.Count + 1)
                 {
-                    tempBuffer.Write((UInt16)0);
+                    tempBuffer.WriteUInt16((UInt16)0);
                 }
                 else
                 {
-                    tempBuffer.Write((UInt16)(LastNetworkUpdateID - memInput.Count - 1));
+                    tempBuffer.WriteUInt16((UInt16)(LastNetworkUpdateID - memInput.Count - 1));
                 }
             }
             else
             {
-                tempBuffer.Write(false);
+                tempBuffer.WriteBoolean(false);
 
                 bool aiming = false;
                 bool use = false;
@@ -342,40 +345,41 @@ namespace Barotrauma
                     networkUpdateSent = true;
                 }
 
-                tempBuffer.Write(aiming);
-                tempBuffer.Write(shoot);
-                tempBuffer.Write(use);
+                tempBuffer.WriteBoolean(aiming);
+                tempBuffer.WriteBoolean(shoot);
+                tempBuffer.WriteBoolean(use);
                 if (AnimController is HumanoidAnimController)
                 {
-                    tempBuffer.Write(((HumanoidAnimController)AnimController).Crouching);
+                    tempBuffer.WriteBoolean(((HumanoidAnimController)AnimController).Crouching);
                 }
-                tempBuffer.Write(attack);
+                tempBuffer.WriteBoolean(attack);
 
                 Vector2 relativeCursorPos = cursorPosition - AimRefPosition;
-                tempBuffer.Write((UInt16)(65535.0 * Math.Atan2(relativeCursorPos.Y, relativeCursorPos.X) / (2.0 * Math.PI)));
+                tempBuffer.WriteUInt16((UInt16)(65535.0 * Math.Atan2(relativeCursorPos.Y, relativeCursorPos.X) / (2.0 * Math.PI)));
 
-                tempBuffer.Write(IsRagdolled || Stun > 0.0f || IsDead || IsIncapacitated);
+                tempBuffer.WriteBoolean(IsRagdolled || Stun > 0.0f || IsDead || IsIncapacitated);
 
-                tempBuffer.Write(AnimController.Dir > 0.0f);
+                tempBuffer.WriteBoolean(AnimController.Dir > 0.0f);
             }
 
-            if (SelectedCharacter != null || SelectedConstruction != null)
+            if (SelectedCharacter != null || HasSelectedAnyItem)
             {
-                tempBuffer.Write(true);
-                tempBuffer.Write(SelectedCharacter != null ? SelectedCharacter.ID : NullEntityID);
-                tempBuffer.Write(SelectedConstruction != null ? SelectedConstruction.ID : NullEntityID);
+                tempBuffer.WriteBoolean(true);
+                tempBuffer.WriteUInt16(SelectedCharacter != null ? SelectedCharacter.ID : NullEntityID);
+                tempBuffer.WriteUInt16(SelectedItem != null ? SelectedItem.ID : NullEntityID);
+                tempBuffer.WriteUInt16(SelectedSecondaryItem != null ? SelectedSecondaryItem.ID : NullEntityID);
                 if (SelectedCharacter != null)
                 {
-                    tempBuffer.Write(AnimController.Anim == AnimController.Animation.CPR);
+                    tempBuffer.WriteBoolean(AnimController.Anim == AnimController.Animation.CPR);
                 }
             }
             else
             {
-                tempBuffer.Write(false);
+                tempBuffer.WriteBoolean(false);
             }
 
-            tempBuffer.Write(SimPosition.X);
-            tempBuffer.Write(SimPosition.Y);
+            tempBuffer.WriteSingle(SimPosition.X);
+            tempBuffer.WriteSingle(SimPosition.Y);
             float MaxVel = NetConfig.MaxPhysicsBodyVelocity;
             AnimController.Collider.LinearVelocity = new Vector2(
                 MathHelper.Clamp(AnimController.Collider.LinearVelocity.X, -MaxVel, MaxVel),
@@ -384,17 +388,17 @@ namespace Barotrauma
             tempBuffer.WriteRangedSingle(AnimController.Collider.LinearVelocity.Y, -MaxVel, MaxVel, 12);
 
             bool fixedRotation = AnimController.Collider.FarseerBody.FixedRotation || !AnimController.Collider.PhysEnabled;
-            tempBuffer.Write(fixedRotation);
+            tempBuffer.WriteBoolean(fixedRotation);
             if (!fixedRotation)
             {
-                tempBuffer.Write(AnimController.Collider.Rotation);
+                tempBuffer.WriteSingle(AnimController.Collider.Rotation);
                 float MaxAngularVel = NetConfig.MaxPhysicsBodyAngularVelocity;
                 AnimController.Collider.AngularVelocity = NetConfig.Quantize(AnimController.Collider.AngularVelocity, -MaxAngularVel, MaxAngularVel, 8);
                 tempBuffer.WriteRangedSingle(MathHelper.Clamp(AnimController.Collider.AngularVelocity, -MaxAngularVel, MaxAngularVel), -MaxAngularVel, MaxAngularVel, 8);
             }
 
             bool writeStatus = healthUpdateTimer <= 0.0f;
-            tempBuffer.Write(writeStatus);
+            tempBuffer.WriteBoolean(writeStatus);
             if (writeStatus)
             {
                 WriteStatus(tempBuffer);
@@ -405,7 +409,7 @@ namespace Barotrauma
             tempBuffer.WritePadBits();
 
             msg.WriteVariableUInt32((uint)tempBuffer.LengthBytes);
-            msg.Write(tempBuffer.Buffer, 0, tempBuffer.LengthBytes);
+            msg.WriteBytes(tempBuffer.Buffer, 0, tempBuffer.LengthBytes);
         }
 
         public virtual void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)
@@ -416,30 +420,30 @@ namespace Barotrauma
             switch (eventData)
             {
                 case InventoryStateEventData _:
-                    msg.Write(GameMain.Server.EntityEventManager.Events.Last()?.ID ?? (ushort)0);
+                    msg.WriteUInt16(GameMain.Server.EntityEventManager.Events.Last()?.ID ?? (ushort)0);
                     Inventory.ServerEventWrite(msg, c);
                     break;
                 case ControlEventData controlEventData:
                     Client owner = controlEventData.Owner;
-                    msg.Write(owner == c && owner.Character == this);
-                    msg.Write(owner != null && owner.Character == this && GameMain.Server.ConnectedClients.Contains(owner) ? owner.ID : (byte)0);
+                    msg.WriteBoolean(owner == c && owner.Character == this);
+                    msg.WriteByte(owner != null && owner.Character == this && GameMain.Server.ConnectedClients.Contains(owner) ? owner.SessionId : (byte)0);
                     break;
-                case CharacterStatusEventData _:
-                    WriteStatus(msg);
+                case CharacterStatusEventData statusEventData:
+                    WriteStatus(msg, statusEventData.ForceAfflictionData);
                     break;
                 case UpdateSkillsEventData _:
                     if (Info?.Job == null)
                     {
-                        msg.Write((byte)0);
+                        msg.WriteByte((byte)0);
                     }
                     else
                     {
                         var skills = Info.Job.GetSkills();
-                        msg.Write((byte)skills.Count());
+                        msg.WriteByte((byte)skills.Count());
                         foreach (Skill skill in skills)
                         {
-                            msg.Write(skill.Identifier);
-                            msg.Write(skill.Level);
+                            msg.WriteIdentifier(skill.Identifier);
+                            msg.WriteSingle(skill.Level);
                         }
                     }
                     break;
@@ -456,33 +460,33 @@ namespace Barotrauma
                                 targetLimbIndex = targetLimbsArray.IndexOf(attackEventData.TargetLimb);
                             }
                         }
-                        msg.Write((byte)(attackLimbIndex < 0 ? 255 : attackLimbIndex));
-                        msg.Write((ushort)targetEntityId);
-                        msg.Write((byte)(targetLimbIndex < 0 ? 255 : targetLimbIndex));
-                        msg.Write(attackEventData.TargetSimPos.X);
-                        msg.Write(attackEventData.TargetSimPos.Y);
+                        msg.WriteByte((byte)(attackLimbIndex < 0 ? 255 : attackLimbIndex));
+                        msg.WriteUInt16((ushort)targetEntityId);
+                        msg.WriteByte((byte)(targetLimbIndex < 0 ? 255 : targetLimbIndex));
+                        msg.WriteSingle(attackEventData.TargetSimPos.X);
+                        msg.WriteSingle(attackEventData.TargetSimPos.Y);
                     }
                     break;
                 case AssignCampaignInteractionEventData _:
-                    msg.Write((byte)CampaignInteractionType);
-                    msg.Write(RequireConsciousnessForCustomInteract);
+                    msg.WriteByte((byte)CampaignInteractionType);
+                    msg.WriteBoolean(RequireConsciousnessForCustomInteract);
                     break;
                 case ObjectiveManagerStateEventData objectiveManagerStateEventData:
                     AIObjectiveManager.ObjectiveType type = objectiveManagerStateEventData.ObjectiveType;
                     msg.WriteRangedInteger((int)type, (int)AIObjectiveManager.ObjectiveType.MinValue, (int)AIObjectiveManager.ObjectiveType.MaxValue);
                     if (!(AIController is HumanAIController controller))
                     {
-                        msg.Write(false);
+                        msg.WriteBoolean(false);
                         break;
                     }
                     if (type == AIObjectiveManager.ObjectiveType.Order)
                     {
                         var currentOrderInfo = controller.ObjectiveManager.GetCurrentOrderInfo();
                         bool validOrder = currentOrderInfo != null;
-                        msg.Write(validOrder);
+                        msg.WriteBoolean(validOrder);
                         if (!validOrder) { break; }
                         var orderPrefab = currentOrderInfo.Prefab;
-                        msg.Write(orderPrefab.UintIdentifier);
+                        msg.WriteUInt32(orderPrefab.UintIdentifier);
                         if (!orderPrefab.HasOptions) { break; }
                         int optionIndex = orderPrefab.AllOptions.IndexOf(currentOrderInfo.Option);
                         if (optionIndex == -1)
@@ -495,65 +499,62 @@ namespace Barotrauma
                     {
                         var objective = controller.ObjectiveManager.CurrentObjective;
                         bool validObjective = objective?.Identifier is { IsEmpty: false };
-                        msg.Write(validObjective);
+                        msg.WriteBoolean(validObjective);
                         if (!validObjective) { break; }
-                        msg.Write(objective.Identifier);
-                        msg.Write(objective.Option);
+                        msg.WriteIdentifier(objective.Identifier);
+                        msg.WriteIdentifier(objective.Option);
                         UInt16 targetEntityId = 0;
                         if (objective is AIObjectiveOperateItem operateObjective && operateObjective.OperateTarget != null)
                         {
                             targetEntityId = operateObjective.OperateTarget.ID;
                         }
-                        msg.Write(targetEntityId);
+                        msg.WriteUInt16(targetEntityId);
                     }
                     break;
                 case TeamChangeEventData _:
-                    msg.Write((byte)TeamID);
+                    msg.WriteByte((byte)TeamID);
                     break;
                 case AddToCrewEventData addToCrewEventData:
-                    msg.Write((byte)addToCrewEventData.TeamType); // team id
-                    ushort[] inventoryItemIDs = addToCrewEventData.InventoryItems.Select(item => item.ID).ToArray();
-                    msg.Write((ushort)inventoryItemIDs.Length);
-                    for (int i = 0; i < inventoryItemIDs.Length; i++)
-                    {
-                        msg.Write(inventoryItemIDs[i]);
-                    }
+                    msg.WriteNetSerializableStruct(addToCrewEventData.ItemTeamChange);
+                    break;
+                case RemoveFromCrewEventData removeFromCrewEventData:
+                    msg.WriteNetSerializableStruct(removeFromCrewEventData.ItemTeamChange);
                     break;
                 case UpdateExperienceEventData _:
-                    msg.Write(Info.ExperiencePoints);
+                    msg.WriteInt32(Info.ExperiencePoints);
                     break;
                 case UpdateTalentsEventData _:
-                    msg.Write((ushort)characterTalents.Count);
+                    msg.WriteUInt16((ushort)characterTalents.Count);
                     foreach (var unlockedTalent in characterTalents)
                     {
-                        msg.Write(unlockedTalent.AddedThisRound);
-                        msg.Write(unlockedTalent.Prefab.UintIdentifier);
+                        msg.WriteBoolean(unlockedTalent.AddedThisRound);
+                        msg.WriteUInt32(unlockedTalent.Prefab.UintIdentifier);
                     }
                     break;
                 case UpdateMoneyEventData _:
-                    msg.Write(GameMain.GameSession.Campaign.GetWallet(c).Balance);
+                    msg.WriteInt32(GameMain.GameSession.Campaign.GetWallet(c).Balance);
                     break;
                 case UpdatePermanentStatsEventData updatePermanentStatsEventData:
                     StatTypes statType = updatePermanentStatsEventData.StatType;
                     if (Info == null)
                     {
-                        msg.Write((byte)0);
-                        msg.Write((byte)0);
+                        msg.WriteByte((byte)0);
+                        msg.WriteByte((byte)0);
                     }
                     else if (!Info.SavedStatValues.ContainsKey(statType))
                     {
-                        msg.Write((byte)0);
-                        msg.Write((byte)statType);
+                        msg.WriteByte((byte)0);
+                        msg.WriteByte((byte)statType);
                     }
                     else
                     {
-                        msg.Write((byte)Info.SavedStatValues[statType].Count);
-                        msg.Write((byte)statType);
+                        msg.WriteByte((byte)Info.SavedStatValues[statType].Count);
+                        msg.WriteByte((byte)statType);
                         foreach (var savedStatValue in Info.SavedStatValues[statType])
                         {
-                            msg.Write(savedStatValue.StatIdentifier);
-                            msg.Write(savedStatValue.StatValue);
-                            msg.Write(savedStatValue.RemoveOnDeath);
+                            msg.WriteIdentifier(savedStatValue.StatIdentifier);
+                            msg.WriteSingle(savedStatValue.StatValue);
+                            msg.WriteBoolean(savedStatValue.RemoveOnDeath);
                         }
                     }
                     break;
@@ -562,16 +563,23 @@ namespace Barotrauma
             }
         }
 
-        private List<int> severedJointIndices = new List<int>();
-        private void WriteStatus(IWriteMessage msg)
+        private readonly List<int> severedJointIndices = new List<int>();
+
+        /// <param name="forceAfflictionData">Normally full affliction data is not written for dead characters, this can be used to force them to be written</param>
+        private void WriteStatus(IWriteMessage msg, bool forceAfflictionData = false)
         {
-            msg.Write(IsDead);
+            msg.WriteBoolean(IsDead);
             if (IsDead)
             {
                 msg.WriteRangedInteger((int)CauseOfDeath.Type, 0, Enum.GetValues(typeof(CauseOfDeathType)).Length - 1);
                 if (CauseOfDeath.Type == CauseOfDeathType.Affliction)
                 {
-                    msg.Write(CauseOfDeath.Affliction.Identifier);
+                    msg.WriteUInt32(CauseOfDeath.Affliction.UintIdentifier);
+                }
+                msg.WriteBoolean(forceAfflictionData);
+                if (forceAfflictionData)
+                {
+                    CharacterHealth.ServerWrite(msg);
                 }
             }
             else
@@ -581,7 +589,7 @@ namespace Barotrauma
             if (AnimController?.LimbJoints == null)
             {
                 //0 limbs severed
-                msg.Write((byte)0);
+                msg.WriteByte((byte)0);
             }
             else
             {
@@ -593,10 +601,10 @@ namespace Barotrauma
                         severedJointIndices.Add(i);
                     }
                 }
-                msg.Write((byte)severedJointIndices.Count);
+                msg.WriteByte((byte)severedJointIndices.Count);
                 foreach (int jointIndex in severedJointIndices)
                 {
-                    msg.Write((byte)jointIndex);
+                    msg.WriteByte((byte)jointIndex);
                 }
             }
         }
@@ -607,23 +615,24 @@ namespace Barotrauma
             
             int initialMsgLength = msg.LengthBytes;
 
-            msg.Write(Info == null);
-            msg.Write(entityId);
-            msg.Write(SpeciesName);
-            msg.Write(Seed);
+            msg.WriteBoolean(Info == null);
+            msg.WriteUInt16(entityId);
+            msg.WriteIdentifier(SpeciesName);
+            msg.WriteString(Seed);
 
             if (Removed)
             {
-                msg.Write(0.0f);
-                msg.Write(0.0f);
+                msg.WriteSingle(0.0f);
+                msg.WriteSingle(0.0f);
             }
             else
             {
-                msg.Write(WorldPosition.X);
-                msg.Write(WorldPosition.Y);
+                msg.WriteSingle(WorldPosition.X);
+                msg.WriteSingle(WorldPosition.Y);
             }
 
-            msg.Write(Enabled);
+            msg.WriteBoolean(Enabled);
+            msg.WriteBoolean(DisabledByEvent);
 
             //character with no characterinfo (e.g. some monster)
             if (Info == null)
@@ -635,61 +644,61 @@ namespace Barotrauma
             Client ownerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == this);
             if (ownerClient != null)
             {
-                msg.Write(true);
-                msg.Write(ownerClient.ID);
+                msg.WriteBoolean(true);
+                msg.WriteByte(ownerClient.SessionId);
             }
             else if (GameMain.Server.Character == this)
             {
-                msg.Write(true);
-                msg.Write((byte)0);
+                msg.WriteBoolean(true);
+                msg.WriteByte((byte)0);
             }
             else
             {
-                msg.Write(false);
+                msg.WriteBoolean(false);
             }
-            msg.Write(HumanPrefabHealthMultiplier);
-            msg.Write(Wallet.Balance);
+            msg.WriteSingle(HumanPrefabHealthMultiplier);
+            msg.WriteInt32(Wallet.Balance);
             msg.WriteRangedInteger(Wallet.RewardDistribution, 0, 100);
-            msg.Write((byte)TeamID);
-            msg.Write(this is AICharacter);
-            msg.Write(info.SpeciesName);
+            msg.WriteByte((byte)TeamID);
+            msg.WriteBoolean(this is AICharacter);
+            msg.WriteIdentifier(info.SpeciesName);
             int msgLengthBeforeInfo = msg.LengthBytes;
             info.ServerWrite(msg);
             int infoLength = msg.LengthBytes - msgLengthBeforeInfo;
 
-            msg.Write((byte)CampaignInteractionType);
+            msg.WriteByte((byte)CampaignInteractionType);
             if (CampaignInteractionType == CampaignMode.InteractionType.Store)
             {
-                msg.Write(MerchantIdentifier);
+                msg.WriteIdentifier(MerchantIdentifier);
             }
 
             int msgLengthBeforeOrders = msg.LengthBytes;
             // Current orders
-            msg.Write((byte)info.CurrentOrders.Count(o => o != null));
+            msg.WriteByte((byte)info.CurrentOrders.Count(o => o != null));
             foreach (var orderInfo in info.CurrentOrders)
             {
                 if (orderInfo == null) { continue; }
-                msg.Write(orderInfo.Prefab.UintIdentifier);
-                msg.Write(orderInfo.TargetEntity == null ? (UInt16)0 : orderInfo.TargetEntity.ID);
+                msg.WriteUInt32(orderInfo.Prefab.UintIdentifier);
+                msg.WriteUInt16(orderInfo.TargetEntity == null ? (UInt16)0 : orderInfo.TargetEntity.ID);
                 var hasOrderGiver = orderInfo.OrderGiver != null;
-                msg.Write(hasOrderGiver);
-                if (hasOrderGiver) { msg.Write(orderInfo.OrderGiver.ID); }
-                msg.Write((byte)(orderInfo.Option == Identifier.Empty ? 0 : orderInfo.Prefab.Options.IndexOf(orderInfo.Option)));
-                msg.Write((byte)orderInfo.ManualPriority);
+                msg.WriteBoolean(hasOrderGiver);
+                if (hasOrderGiver) { msg.WriteUInt16(orderInfo.OrderGiver.ID); }
+                msg.WriteByte((byte)(orderInfo.Option == Identifier.Empty ? 0 : orderInfo.Prefab.Options.IndexOf(orderInfo.Option)));
+                msg.WriteByte((byte)orderInfo.ManualPriority);
                 var hasTargetPosition = orderInfo.TargetPosition != null;
-                msg.Write(hasTargetPosition);
+                msg.WriteBoolean(hasTargetPosition);
                 if (hasTargetPosition)
                 {
-                    msg.Write(orderInfo.TargetPosition.Position.X);
-                    msg.Write(orderInfo.TargetPosition.Position.Y);
-                    msg.Write(orderInfo.TargetPosition.Hull == null ? (UInt16)0 : orderInfo.TargetPosition.Hull.ID);
+                    msg.WriteSingle(orderInfo.TargetPosition.Position.X);
+                    msg.WriteSingle(orderInfo.TargetPosition.Position.Y);
+                    msg.WriteUInt16(orderInfo.TargetPosition.Hull == null ? (UInt16)0 : orderInfo.TargetPosition.Hull.ID);
                 }
             }
             int ordersLength = msg.LengthBytes - msgLengthBeforeOrders;
 
             if (msg.LengthBytes - initialMsgLength >= 255 && restrictMessageSize)
             {
-                string errorMsg = $"Error when writing character spawn data: data exceeded 255 bytes (info: {infoLength}, orders: {ordersLength}, total: {msg.LengthBytes - initialMsgLength})";
+                string errorMsg = $"Error when writing character spawn data for  \"{Name}\": data exceeded 255 bytes (info: {infoLength}, orders: {ordersLength}, total: {msg.LengthBytes - initialMsgLength})";
                 DebugConsole.ThrowError(errorMsg);
                 GameAnalyticsManager.AddErrorEventOnce("Character.WriteSpawnData:TooMuchData", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
             }
@@ -701,21 +710,21 @@ namespace Barotrauma
                 int msgLengthBeforeStatus = msg.LengthBytes - initialMsgLength;
 
                 var tempBuffer = new ReadWriteMessage();
-                WriteStatus(tempBuffer);
+                WriteStatus(tempBuffer, forceAfflictionData: true);
                 if (msgLengthBeforeStatus + tempBuffer.LengthBytes >= 255 && restrictMessageSize)
                 { 
-                    msg.Write(false);
+                    msg.WriteBoolean(false);
                     if (msgLengthBeforeStatus < 255)
                     {
-                        string errorMsg = $"Error when writing character spawn data: status data caused the length of the message to exceed 255 bytes ({msgLengthBeforeStatus} + {tempBuffer.LengthBytes})";
+                        string errorMsg = $"Error when writing character spawn data for \"{Name}\": status data caused the length of the message to exceed 255 bytes ({msgLengthBeforeStatus} + {tempBuffer.LengthBytes})";
                         DebugConsole.ThrowError(errorMsg);
                         GameAnalyticsManager.AddErrorEventOnce("Character.WriteSpawnData:TooMuchDataForStatus", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                     }
                 }
                 else
                 {
-                    msg.Write(true);
-                    WriteStatus(msg);
+                    msg.WriteBoolean(true);
+                    WriteStatus(msg, forceAfflictionData: true);
                 }
             }
 

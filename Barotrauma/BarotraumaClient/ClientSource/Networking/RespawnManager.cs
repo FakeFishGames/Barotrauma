@@ -44,14 +44,19 @@ namespace Barotrauma.Networking
             if (!UseRespawnPrompt) { return; }
             if (CoroutineManager.IsCoroutineRunning(respawnPromptCoroutine) || GUIMessageBox.MessageBoxes.Any(mb => mb.UserData as string == "respawnquestionprompt")) 
             { 
-                return; 
+                return;
             }
 
             respawnPromptCoroutine = CoroutineManager.Invoke(() =>
             {
                 if (Character.Controlled != null || (!(GameMain.GameSession?.IsRunning ?? false))) { return; }
+
+                LocalizedString text =
+                    TextManager.GetWithVariable("respawnskillpenalty", "[percentage]", ((int)(SkillReductionOnDeath * 100)).ToString())
+                    + "\n\n" + TextManager.Get("respawnquestionprompt");
+
                 var respawnPrompt = new GUIMessageBox(
-                    TextManager.Get("tutorial.tryagainheader"), TextManager.Get("respawnquestionprompt"),
+                    TextManager.Get("tutorial.tryagainheader"), text,
                     new LocalizedString[] { TextManager.Get("respawnquestionpromptrespawn"), TextManager.Get("respawnquestionpromptwait") })
                 {
                     UserData = "respawnquestionprompt"

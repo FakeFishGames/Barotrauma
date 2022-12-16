@@ -20,7 +20,7 @@ namespace Barotrauma
         private RectTransform currentHighestParent;
         private List<RectTransform> parentHierarchy = new List<RectTransform>();
 
-        private bool selectMultiple;
+        private readonly bool selectMultiple;
 
         public bool Dropped { get; set; }
         
@@ -111,6 +111,7 @@ namespace Barotrauma
         }
         public void ReceiveTextInput(string text) { }
         public void ReceiveCommandInput(char command) { }
+        public void ReceiveEditingInput(string text, int start, int length) {  }
 
         public void ReceiveSpecialInput(Keys key)
         {
@@ -121,25 +122,25 @@ namespace Barotrauma
                     listBox.ReceiveSpecialInput(key);
                     GUI.KeyboardDispatcher.Subscriber = this;
                     break;
-                case Keys.Enter:
-                case Keys.Space:
-                case Keys.Escape:
+                default:
                     GUI.KeyboardDispatcher.Subscriber = null;
                     break;
             }
         }
 
-        private List<object> selectedDataMultiple = new List<object>();
+        private readonly List<object> selectedDataMultiple = new List<object>();
         public IEnumerable<object> SelectedDataMultiple
         {
             get { return selectedDataMultiple; }
         }
 
-        private List<int> selectedIndexMultiple = new List<int>();
+        private readonly List<int> selectedIndexMultiple = new List<int>();
         public IEnumerable<int> SelectedIndexMultiple
         {
             get { return selectedIndexMultiple; }
         }
+
+        public bool MustSelectAtLeastOne;
 
         public LocalizedString Text
         {
@@ -202,15 +203,7 @@ namespace Barotrauma
 
             currentHighestParent = FindHighestParent();
             currentHighestParent.GUIComponent.OnAddedToGUIUpdateList += AddListBoxToGUIUpdateList;
-            rectT.ParentChanged += (RectTransform newParent) =>
-            {
-                currentHighestParent.GUIComponent.OnAddedToGUIUpdateList -= AddListBoxToGUIUpdateList;
-                if (newParent != null)
-                {
-                    currentHighestParent = FindHighestParent();
-                    currentHighestParent.GUIComponent.OnAddedToGUIUpdateList += AddListBoxToGUIUpdateList;
-                }
-            };
+            rectT.ParentChanged += _ => RefreshListBoxParent();
         }
 
 
@@ -269,6 +262,12 @@ namespace Barotrauma
                     ToolTip = toolTip,
                     OnSelected = (GUITickBox tb) =>
                     {
+                        if (MustSelectAtLeastOne && selectedIndexMultiple.Count <= 1 && !tb.Selected)
+                        {
+                            tb.Selected = true;
+                            return false;
+                        }
+
                         List<LocalizedString> texts = new List<LocalizedString>();
                         selectedDataMultiple.Clear();
                         selectedIndexMultiple.Clear();
@@ -388,6 +387,15 @@ namespace Barotrauma
             return true;
         }
 
+        public void RefreshListBoxParent()
+        {
+            currentHighestParent.GUIComponent.OnAddedToGUIUpdateList -= AddListBoxToGUIUpdateList;
+            if (RectTransform.Parent == null) { return; }
+
+            currentHighestParent = FindHighestParent();
+            currentHighestParent.GUIComponent.OnAddedToGUIUpdateList += AddListBoxToGUIUpdateList;
+        }
+        
         private void AddListBoxToGUIUpdateList(GUIComponent parent)
         {
             //the parent is not our parent anymore :(
@@ -395,11 +403,13 @@ namespace Barotrauma
             //and somewhere between this component and the higher parent a component was removed
             for (int i = 1; i < parentHierarchy.Count; i++)
             {
-                if (!parentHierarchy[i].IsParentOf(parentHierarchy[i - 1], recursive: false))
+                if (parentHierarchy[i].IsParentOf(parentHierarchy[i - 1], recursive: false))
                 {
-                    parent.OnAddedToGUIUpdateList -= AddListBoxToGUIUpdateList;
-                    return;
+                    continue;
                 }
+
+                parent.OnAddedToGUIUpdateList -= AddListBoxToGUIUpdateList;
+                return;
             }
 
             if (Dropped)

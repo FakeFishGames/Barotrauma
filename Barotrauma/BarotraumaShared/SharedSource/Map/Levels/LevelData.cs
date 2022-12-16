@@ -47,6 +47,9 @@ namespace Barotrauma
 
         public readonly Point Size;
 
+        /// <summary>
+        /// The depth at which the level starts at, in in-game coordinates. E.g. if this was set to 100 000 (= 1000 m), the nav terminal would display the depth as 1000 meters at the top of the level.
+        /// </summary>
         public readonly int InitialDepth;
 
         /// <summary>
@@ -54,9 +57,24 @@ namespace Barotrauma
         /// </summary>
         public int? MinMainPathWidth;
 
+        /// <summary>
+        /// Events that have previously triggered in this level. Used for making events the player hasn't seen yet more likely to trigger when re-entering the level. Has a maximum size of <see cref="EventManager.MaxEventHistory"/>.
+        /// </summary>
         public readonly List<EventPrefab> EventHistory = new List<EventPrefab>();
+
+        /// <summary>
+        /// Events that have already triggered in this level and can never trigger again. <see cref="EventSet.OncePerLevel"/>.
+        /// </summary>
         public readonly List<EventPrefab> NonRepeatableEvents = new List<EventPrefab>();
 
+        /// <summary>
+        /// 'Exhaustible' sets won't appear in the same level until after one world step (~10 min, see Map.ProgressWorld) has passed. <see cref="EventSet.Exhaustible"/>.
+        /// </summary>
+        public bool EventsExhausted { get; set; }
+
+        /// <summary>
+        /// The crush depth of a non-upgraded submarine in in-game coordinates. Note that this can be above the top of the level!
+        /// </summary>
         public float CrushDepth
         {
             get
@@ -64,6 +82,10 @@ namespace Barotrauma
                 return Math.Max(Size.Y, Level.DefaultRealWorldCrushDepth / Physics.DisplayToRealWorldRatio) - InitialDepth;
             }
         }
+
+        /// <summary>
+        /// The crush depth of a non-upgraded submarine in "real world units" (meters from the surface of Europa). Note that this can be above the top of the level!
+        /// </summary>
         public float RealWorldCrushDepth
         {
             get
@@ -130,8 +152,9 @@ namespace Barotrauma
 
             string[] nonRepeatablePrefabNames = element.GetAttributeStringArray("nonrepeatableevents", new string[] { });
             NonRepeatableEvents.AddRange(EventPrefab.Prefabs.Where(p => nonRepeatablePrefabNames.Any(n => p.Identifier == n)));
-        }
 
+            EventsExhausted = element.GetAttributeBool(nameof(EventsExhausted).ToLower(), false);
+        }
 
         /// <summary>
         /// Instantiates level data using the properties of the connection (seed, size, difficulty)
@@ -229,6 +252,23 @@ namespace Barotrauma
             return levelData;
         }
 
+        public bool OutpostGenerationParamsExist => ForceOutpostGenerationParams != null || OutpostGenerationParams.OutpostParams.Any();
+
+        public static IEnumerable<OutpostGenerationParams> GetSuitableOutpostGenerationParams(Location location)
+        {
+            var suitableParams = OutpostGenerationParams.OutpostParams.Where(p => location == null || p.AllowedLocationTypes.Contains(location.Type.Identifier));
+            if (!suitableParams.Any())
+            {
+                suitableParams = OutpostGenerationParams.OutpostParams.Where(p => location == null || !p.AllowedLocationTypes.Any());
+                if (!suitableParams.Any())
+                {
+                    DebugConsole.ThrowError($"No suitable outpost generation parameters found for the location type \"{location.Type.Identifier}\". Selecting random parameters.");
+                    suitableParams = OutpostGenerationParams.OutpostParams;
+                }
+            }
+            return suitableParams;
+        }
+
         public void Save(XElement parentElement)
         {
             var newElement = new XElement("Level",
@@ -238,7 +278,8 @@ namespace Barotrauma
                     new XAttribute("difficulty", Difficulty.ToString("G", CultureInfo.InvariantCulture)),
                     new XAttribute("size", XMLExtensions.PointToString(Size)),
                     new XAttribute("generationparams", GenerationParams.Identifier),
-                    new XAttribute("initialdepth", InitialDepth));
+                    new XAttribute("initialdepth", InitialDepth),
+                    new XAttribute(nameof(EventsExhausted).ToLower(), EventsExhausted));
 
             if (HasBeaconStation)
             {
@@ -269,6 +310,7 @@ namespace Barotrauma
                     newElement.Add(new XAttribute("nonrepeatableevents", string.Join(',', NonRepeatableEvents.Select(p => p.Identifier))));
                 }
             }
+
             parentElement.Add(newElement);
         }
     }

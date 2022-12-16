@@ -6,7 +6,7 @@ using System.Xml.Linq;
 
 namespace Barotrauma.Sounds
 {
-    public abstract class Sound : IDisposable
+    abstract class Sound : IDisposable
     {
         protected bool disposed;
         public bool Disposed
@@ -24,11 +24,12 @@ namespace Barotrauma.Sounds
 
         public readonly bool StreamsReliably;
 
+        private readonly SoundManager.SourcePoolIndex sourcePoolIndex = SoundManager.SourcePoolIndex.Default;
         public virtual SoundManager.SourcePoolIndex SourcePoolIndex
         {
             get
             {
-                return SoundManager.SourcePoolIndex.Default;
+                return sourcePoolIndex;
             }
         }
 
@@ -59,13 +60,14 @@ namespace Barotrauma.Sounds
         public float BaseNear;
         public float BaseFar;
 
-        public Sound(SoundManager owner, string filename, bool stream, bool streamsReliably, XElement xElement=null, bool getFullPath=true)
+        public Sound(SoundManager owner, string filename, bool stream, bool streamsReliably, XElement xElement = null, bool getFullPath = true)
         {
             Owner = owner;
             Filename = getFullPath ? Path.GetFullPath(filename.CleanUpPath()).CleanUpPath() : filename;
             Stream = stream;
             StreamsReliably = streamsReliably;
             XElement = xElement;
+            sourcePoolIndex = XElement.GetAttributeEnum("sourcepool", SoundManager.SourcePoolIndex.Default);
 
             BaseGain = 1.0f;
             BaseNear = 100.0f;

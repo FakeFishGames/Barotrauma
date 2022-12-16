@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Barotrauma.Steam;
 
 namespace Barotrauma
 {
@@ -45,21 +46,26 @@ namespace Barotrauma
 
         class SavedExperiencePoints
         {
-            public readonly ulong SteamID;
-            public readonly string EndPoint;
+            public readonly Option<AccountId> AccountId;
+            public readonly Address Address;
             public readonly int ExperiencePoints;
 
             public SavedExperiencePoints(Client client)
             {
-                SteamID = client.SteamID;
-                EndPoint = client.Connection.EndPointString;
+                AccountId = client.AccountId;
+                Address = client.Connection.Endpoint.Address;
                 ExperiencePoints = client.Character?.Info?.ExperiencePoints ?? 0;
             }
 
             public SavedExperiencePoints(XElement element)
             {
-                SteamID = element.GetAttributeUInt64("steamid", 0);
-                EndPoint = element.GetAttributeString("endpoint", string.Empty);
+                AccountId = Networking.AccountId.Parse(
+                    element.GetAttributeString("accountid", null)
+                    ?? element.GetAttributeString("steamid", ""));
+                Address = Address.Parse(
+                        element.GetAttributeString("address", null)
+                        ?? element.GetAttributeString("endpoint", ""))
+                    .Fallback(new UnknownAddress());
                 ExperiencePoints = element.GetAttributeInt("points", 0);
             }
         }
@@ -202,11 +208,11 @@ namespace Barotrauma
         }
         public int GetSavedExperiencePoints(Client client)
         {
-            return savedExperiencePoints.Find(s => s.SteamID != 0 && client.SteamID == s.SteamID || client.EndpointMatches(s.EndPoint))?.ExperiencePoints ?? 0;
+            return savedExperiencePoints.Find(s => client.AccountId == s.AccountId || client.Connection.Endpoint.Address == s.Address)?.ExperiencePoints ?? 0;
         }
         public void ClearSavedExperiencePoints(Client client)
         {
-            savedExperiencePoints.RemoveAll(s => s.SteamID != 0 && client.SteamID == s.SteamID || client.EndpointMatches(s.EndPoint));
+            savedExperiencePoints.RemoveAll(s => client.AccountId == s.AccountId || client.Connection.Endpoint.Address == s.Address);
         }
 
         public void SavePlayers()
@@ -329,7 +335,7 @@ namespace Barotrauma
                     break;
             }
 
-            Map.ProgressWorld(transitionType, (float)(Timing.TotalTime - GameMain.GameSession.RoundStartTime));
+            Map.ProgressWorld(transitionType, GameMain.GameSession.RoundDuration);
 
             bool success = GameMain.Server.ConnectedClients.Any(c => c.InGame && c.Character != null && !c.Character.IsDead);
             if (success)
@@ -341,6 +347,8 @@ namespace Barotrauma
                         (GameMain.GameSession?.GameMode as MultiPlayerCampaign)?.SaveExperiencePoints(c);
                     }
                 }
+                // Event history must be registered before ending the round or it will be cleared
+                GameMain.GameSession.EventManager.RegisterEventHistory();
             }
 
             GameMain.GameSession.EndRound("", traitorResults, transitionType);
@@ -393,14 +401,17 @@ namespace Barotrauma
         }
 
         partial void InitProjSpecific()
-        {            
-            CargoManager.OnItemsInBuyCrateChanged += () => { IncrementLastUpdateIdForFlag(NetFlags.ItemsInBuyCrate); };
-            CargoManager.OnPurchasedItemsChanged += () => { IncrementLastUpdateIdForFlag(NetFlags.PurchasedItems); };
-            CargoManager.OnSoldItemsChanged += () => { IncrementLastUpdateIdForFlag(NetFlags.SoldItems); };
-            UpgradeManager.OnUpgradesChanged += () => { IncrementLastUpdateIdForFlag(NetFlags.UpgradeManager); };
-            Map.OnLocationSelected += (loc, connection) => { IncrementLastUpdateIdForFlag(NetFlags.MapAndMissions); };
-            Map.OnMissionsSelected += (loc, mission) => { IncrementLastUpdateIdForFlag(NetFlags.MapAndMissions); };
-            Reputation.OnAnyReputationValueChanged += () => { IncrementLastUpdateIdForFlag(NetFlags.Reputation); };
+        {
+            Identifier eventId = nameof(MultiPlayerCampaign).ToIdentifier();
+            CargoManager.OnItemsInBuyCrateChanged.RegisterOverwriteExisting(eventId, _ =>  IncrementLastUpdateIdForFlag(NetFlags.ItemsInBuyCrate));
+            CargoManager.OnPurchasedItemsChanged.RegisterOverwriteExisting(eventId, _ =>  IncrementLastUpdateIdForFlag(NetFlags.PurchasedItems));
+            CargoManager.OnSoldItemsChanged.RegisterOverwriteExisting(eventId, _ =>  IncrementLastUpdateIdForFlag(NetFlags.SoldItems));
+            UpgradeManager.OnUpgradesChanged.RegisterOverwriteExisting(eventId, _ =>  IncrementLastUpdateIdForFlag(NetFlags.UpgradeManager));
+
+            Reputation.OnAnyReputationValueChanged.RegisterOverwriteExisting(eventId, _ => IncrementLastUpdateIdForFlag(NetFlags.Reputation));
+
+            Map.OnLocationSelected = (loc, connection) => IncrementLastUpdateIdForFlag(NetFlags.MapAndMissions);
+            Map.OnMissionsSelected = (loc, mission) => IncrementLastUpdateIdForFlag(NetFlags.MapAndMissions);
 
             //increment save ID so clients know they're lacking the most up-to-date save file
             LastSaveID++;
@@ -527,8 +538,9 @@ namespace Barotrauma
                 if (wallet.HasTransactions())
                 {
                     NetWalletTransaction transaction = wallet.DequeueAndMergeTransactions(id);
-                    if (transaction.ChangedData.BalanceChanged.IsNone() && transaction.ChangedData.RewardDistributionChanged.IsNone()) { continue; }
+                    if (!wallet.ShouldForceUpdate && transaction.ChangedData.BalanceChanged.IsNone() && transaction.ChangedData.RewardDistributionChanged.IsNone()) { continue; }
                     transactions.Add(transaction);
+                    wallet.ShouldForceUpdate = false;
                 }
             }
 
@@ -564,57 +576,57 @@ namespace Barotrauma
 
             NetFlags requiredFlags = lastUpdateID.Keys.Where(k => IsFlagRequired(c, k)).Aggregate((NetFlags)0, (f1, f2) => f1 | f2);
 
-            msg.Write((UInt16)requiredFlags);
+            msg.WriteUInt16((UInt16)requiredFlags);
 
-            msg.Write(IsFirstRound);
-            msg.Write(CampaignID);
-            msg.Write(lastSaveID);
-            msg.Write(map.Seed);
+            msg.WriteBoolean(IsFirstRound);
+            msg.WriteByte(CampaignID);
+            msg.WriteUInt16(lastSaveID);
+            msg.WriteString(map.Seed);
 
             if (requiredFlags.HasFlag(NetFlags.Misc))
             {
-                msg.Write(GetLastUpdateIdForFlag(NetFlags.Misc));
-                msg.Write(PurchasedHullRepairs);
-                msg.Write(PurchasedItemRepairs);
-                msg.Write(PurchasedLostShuttles);
+                msg.WriteUInt16(GetLastUpdateIdForFlag(NetFlags.Misc));
+                msg.WriteBoolean(PurchasedHullRepairs);
+                msg.WriteBoolean(PurchasedItemRepairs);
+                msg.WriteBoolean(PurchasedLostShuttles);
             }
 
             if (requiredFlags.HasFlag(NetFlags.MapAndMissions))
             {
-                msg.Write(GetLastUpdateIdForFlag(NetFlags.MapAndMissions));
-                msg.Write(ForceMapUI);
-                msg.Write(map.AllowDebugTeleport);
-                msg.Write(map.CurrentLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.CurrentLocationIndex);
-                msg.Write(map.SelectedLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.SelectedLocationIndex);
+                msg.WriteUInt16(GetLastUpdateIdForFlag(NetFlags.MapAndMissions));
+                msg.WriteBoolean(ForceMapUI);
+                msg.WriteBoolean(map.AllowDebugTeleport);
+                msg.WriteUInt16(map.CurrentLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.CurrentLocationIndex);
+                msg.WriteUInt16(map.SelectedLocationIndex == -1 ? UInt16.MaxValue : (UInt16)map.SelectedLocationIndex);
 
                 if (map.CurrentLocation != null)
                 {
-                    msg.Write((byte)map.CurrentLocation.AvailableMissions.Count());
+                    msg.WriteByte((byte)map.CurrentLocation.AvailableMissions.Count());
                     foreach (Mission mission in map.CurrentLocation.AvailableMissions)
                     {
-                        msg.Write(mission.Prefab.Identifier);
+                        msg.WriteIdentifier(mission.Prefab.Identifier);
                         if (mission.Locations[0] == mission.Locations[1])
                         {
-                            msg.Write((byte)255);
+                            msg.WriteByte((byte)255);
                         }
                         else
                         {
                             Location missionDestination = mission.Locations[0] == map.CurrentLocation ? mission.Locations[1] : mission.Locations[0];
                             LocationConnection connection = map.CurrentLocation.Connections.Find(c => c.OtherLocation(map.CurrentLocation) == missionDestination);
-                            msg.Write((byte)map.CurrentLocation.Connections.IndexOf(connection));
+                            msg.WriteByte((byte)map.CurrentLocation.Connections.IndexOf(connection));
                         }
                     }
                 }
                 else
                 {
-                    msg.Write((byte)0);
+                    msg.WriteByte((byte)0);
                 }
 
                 var selectedMissionIndices = map.GetSelectedMissionIndices();
-                msg.Write((byte)selectedMissionIndices.Count());
+                msg.WriteByte((byte)selectedMissionIndices.Count());
                 foreach (int selectedMissionIndex in selectedMissionIndices)
                 {
-                    msg.Write((byte)selectedMissionIndex);
+                    msg.WriteByte((byte)selectedMissionIndex);
                 }
 
                 WriteStores(msg);
@@ -622,7 +634,7 @@ namespace Barotrauma
 
             if (requiredFlags.HasFlag(NetFlags.SubList))
             {
-                msg.Write(GetLastUpdateIdForFlag(NetFlags.SubList));
+                msg.WriteUInt16(GetLastUpdateIdForFlag(NetFlags.SubList));
                 var subList = GameMain.NetLobbyScreen.GetSubList();
                 List<int> ownedSubmarineIndices = new List<int>();
                 for (int i = 0; i < subList.Count; i++)
@@ -632,83 +644,83 @@ namespace Barotrauma
                         ownedSubmarineIndices.Add(i);
                     }
                 }
-                msg.Write((ushort)ownedSubmarineIndices.Count);
+                msg.WriteUInt16((ushort)ownedSubmarineIndices.Count);
                 foreach (int index in ownedSubmarineIndices)
                 {
-                    msg.Write((ushort)index);
+                    msg.WriteUInt16((ushort)index);
                 }
             }
             if (requiredFlags.HasFlag(NetFlags.UpgradeManager))
             {
-                msg.Write(GetLastUpdateIdForFlag(NetFlags.UpgradeManager));
-                msg.Write((ushort)UpgradeManager.PendingUpgrades.Count);
+                msg.WriteUInt16(GetLastUpdateIdForFlag(NetFlags.UpgradeManager));
+                msg.WriteUInt16((ushort)UpgradeManager.PendingUpgrades.Count);
                 foreach (var (prefab, category, level) in UpgradeManager.PendingUpgrades)
                 {
-                    msg.Write(prefab.Identifier);
-                    msg.Write(category.Identifier);
-                    msg.Write((byte)level);
+                    msg.WriteIdentifier(prefab.Identifier);
+                    msg.WriteIdentifier(category.Identifier);
+                    msg.WriteByte((byte)level);
                 }
-                msg.Write((ushort)UpgradeManager.PurchasedItemSwaps.Count);
+                msg.WriteUInt16((ushort)UpgradeManager.PurchasedItemSwaps.Count);
                 foreach (var itemSwap in UpgradeManager.PurchasedItemSwaps)
                 {
-                    msg.Write(itemSwap.ItemToRemove.ID);
-                    msg.Write(itemSwap.ItemToInstall?.Identifier ?? Identifier.Empty);
+                    msg.WriteUInt16(itemSwap.ItemToRemove.ID);
+                    msg.WriteIdentifier(itemSwap.ItemToInstall?.Identifier ?? Identifier.Empty);
                 }
             }
 
             if (requiredFlags.HasFlag(NetFlags.ItemsInBuyCrate))
             {
-                msg.Write(GetLastUpdateIdForFlag(NetFlags.ItemsInBuyCrate));
+                msg.WriteUInt16(GetLastUpdateIdForFlag(NetFlags.ItemsInBuyCrate));
                 WriteItems(msg, CargoManager.ItemsInBuyCrate);
                 WriteStores(msg);
             }
 
             if (requiredFlags.HasFlag(NetFlags.ItemsInSellFromSubCrate))
             {
-                msg.Write(GetLastUpdateIdForFlag(NetFlags.ItemsInSellFromSubCrate));
+                msg.WriteUInt16(GetLastUpdateIdForFlag(NetFlags.ItemsInSellFromSubCrate));
                 WriteItems(msg, CargoManager.ItemsInSellFromSubCrate);
                 WriteStores(msg);
             }
 
             if (requiredFlags.HasFlag(NetFlags.PurchasedItems))
             {
-                msg.Write(GetLastUpdateIdForFlag(NetFlags.PurchasedItems));
+                msg.WriteUInt16(GetLastUpdateIdForFlag(NetFlags.PurchasedItems));
                 WriteItems(msg, CargoManager.PurchasedItems);
                 WriteStores(msg);
 
             }
             if (requiredFlags.HasFlag(NetFlags.SoldItems))
             {
-                msg.Write(GetLastUpdateIdForFlag(NetFlags.SoldItems));
+                msg.WriteUInt16(GetLastUpdateIdForFlag(NetFlags.SoldItems));
                 WriteItems(msg, CargoManager.SoldItems);
                 WriteStores(msg);
             }
             if (requiredFlags.HasFlag(NetFlags.Reputation))
             {
-                msg.Write(GetLastUpdateIdForFlag(NetFlags.Reputation));
+                msg.WriteUInt16(GetLastUpdateIdForFlag(NetFlags.Reputation));
                 Reputation reputation = Map?.CurrentLocation?.Reputation;
-                msg.Write(reputation != null);
-                if (reputation != null) { msg.Write(reputation.Value); }
+                msg.WriteBoolean(reputation != null);
+                if (reputation != null) { msg.WriteSingle(reputation.Value); }
 
                 // hopefully we'll never have more than 128 factions
-                msg.Write((byte)Factions.Count);
+                msg.WriteByte((byte)Factions.Count);
                 foreach (Faction faction in Factions)
                 {
-                    msg.Write(faction.Prefab.Identifier);
-                    msg.Write(faction.Reputation.Value);
+                    msg.WriteIdentifier(faction.Prefab.Identifier);
+                    msg.WriteSingle(faction.Reputation.Value);
                 }
             }
             if (requiredFlags.HasFlag(NetFlags.CharacterInfo))
             {
-                msg.Write(GetLastUpdateIdForFlag(NetFlags.CharacterInfo));
+                msg.WriteUInt16(GetLastUpdateIdForFlag(NetFlags.CharacterInfo));
                 var characterData = GetClientCharacterData(c);
                 if (characterData?.CharacterInfo == null)
                 {
-                    msg.Write(false);
+                    msg.WriteBoolean(false);
                 }
                 else
                 {
-                    msg.Write(true);
+                    msg.WriteBoolean(true);
                     characterData.CharacterInfo.ServerWrite(msg);
                 }
             }
@@ -719,22 +731,22 @@ namespace Barotrauma
                 {
                     // Store balance
                     bool hasStores = map.CurrentLocation.Stores != null && map.CurrentLocation.Stores.Any();
-                    msg.Write(hasStores);
+                    msg.WriteBoolean(hasStores);
                     if (hasStores)
                     {
-                        msg.Write((byte)map.CurrentLocation.Stores.Count);
+                        msg.WriteByte((byte)map.CurrentLocation.Stores.Count);
                         foreach (var store in map.CurrentLocation.Stores.Values)
                         {
-                            msg.Write(store.Identifier);
-                            msg.Write((UInt16)store.Balance);
+                            msg.WriteIdentifier(store.Identifier);
+                            msg.WriteUInt16((UInt16)store.Balance);
                         }
                     }
                 }
                 else
                 {
-                    msg.Write((byte)0);
+                    msg.WriteByte((byte)0);
                     // Store balance
-                    msg.Write(false);
+                    msg.WriteBoolean(false);
                 }
             }
         }
@@ -787,11 +799,23 @@ namespace Barotrauma
                 purchasedItemSwaps.Add(new PurchasedItemSwap(itemToRemove, itemToInstall));
             }
 
+            int hullRepairCost = GetHullRepairCost();
+            int itemRepairCost = GetItemRepairCost();
+            int shuttleRetrieveCost = CampaignMode.ShuttleReplaceCost;
             Location location = Map.CurrentLocation;
-            int hullRepairCost = location?.GetAdjustedMechanicalCost(HullRepairCost) ?? HullRepairCost;
-            int itemRepairCost = location?.GetAdjustedMechanicalCost(ItemRepairCost) ?? ItemRepairCost;
-            int shuttleRetrieveCost = location?.GetAdjustedMechanicalCost(ShuttleReplaceCost) ?? ShuttleReplaceCost;
+            if (location != null)
+            {
+                hullRepairCost = location.GetAdjustedMechanicalCost(hullRepairCost);
+                itemRepairCost = location.GetAdjustedMechanicalCost(itemRepairCost);
+                shuttleRetrieveCost = location.GetAdjustedMechanicalCost(shuttleRetrieveCost);
+            }
+
             Wallet personalWallet = GetWallet(sender);
+            personalWallet?.ForceUpdate();
+            if (AllowedToManageWallets(sender))
+            {
+                Bank.ForceUpdate();
+            }
 
             if (purchasedHullRepairs != PurchasedHullRepairs)
             {
@@ -872,6 +896,12 @@ namespace Barotrauma
             {
                 foreach (var item in store.Value.ToList())
                 {
+                    if (map?.CurrentLocation?.Stores == null || !map.CurrentLocation.Stores.ContainsKey(store.Key)) { continue; }
+                    int availableQuantity = map.CurrentLocation.Stores[store.Key].Stock.Find(s => s.ItemPrefab == item.ItemPrefab)?.Quantity ?? 0;
+                    int alreadyPurchasedQuantity = 
+                        CargoManager.GetBuyCrateItem(store.Key, item.ItemPrefab)?.Quantity ?? 0 +
+                        CargoManager.GetPurchasedItem(store.Key, item.ItemPrefab)?.Quantity ?? 0;
+                    item.Quantity = MathHelper.Clamp(item.Quantity, 0, availableQuantity - alreadyPurchasedQuantity);
                     CargoManager.ModifyItemQuantityInBuyCrate(store.Key, item.ItemPrefab, item.Quantity, sender);
                 }
             }
@@ -881,13 +911,21 @@ namespace Barotrauma
             {
                 prevPurchasedItems.Add(kvp.Key, new List<PurchasedItem>(kvp.Value));
             }
-            foreach (var store in prevPurchasedItems)
+            foreach (var kvp in prevPurchasedItems)
             {
-                CargoManager.SellBackPurchasedItems(store.Key, store.Value, sender);
+                CargoManager.SellBackPurchasedItems(kvp.Key, kvp.Value, sender);
             }
-            foreach (var store in purchasedItems)
+
+            foreach (var kvp in purchasedItems)
             {
-                CargoManager.PurchaseItems(store.Key, store.Value, false, sender);
+                var storeId = kvp.Key;
+                var purchasedItemList = kvp.Value;
+                foreach (var purchasedItem in purchasedItemList)
+                {
+                    int availableQuantity = map.CurrentLocation.Stores[storeId].Stock.Find(s => s.ItemPrefab == purchasedItem.ItemPrefab)?.Quantity ?? 0;
+                    purchasedItem.Quantity = Math.Min(purchasedItem.Quantity, availableQuantity);
+                }                
+                CargoManager.PurchaseItems(storeId, purchasedItemList, false, sender);
             }
 
             foreach (var (storeIdentifier, items) in CargoManager.PurchasedItems)
@@ -982,7 +1020,7 @@ namespace Barotrauma
                 UpgradeManager.PurchaseUpgrade(prefab, category, client: sender);
 
                 // unstable logging
-                int price = prefab.Price.GetBuyprice(UpgradeManager.GetUpgradeLevel(prefab, category), Map?.CurrentLocation);
+                int price = prefab.Price.GetBuyPrice(UpgradeManager.GetUpgradeLevel(prefab, category), Map?.CurrentLocation);
                 int level = UpgradeManager.GetUpgradeLevel(prefab, category);
                 GameServer.Log($"SERVER: Purchased level {level} {category.Identifier}.{prefab.Identifier} for {price}", ServerLog.MessageType.ServerMessage);
             }
@@ -1236,41 +1274,41 @@ namespace Barotrauma
             foreach (Client client in GameMain.Server.ConnectedClients)
             {
                 IWriteMessage msg = new WriteOnlyMessage();
-                msg.Write((byte)ServerPacketHeader.CREW);
+                msg.WriteByte((byte)ServerPacketHeader.CREW);
 
-                msg.Write((ushort)availableHires.Count);
+                msg.WriteUInt16((ushort)availableHires.Count);
                 foreach (CharacterInfo hire in availableHires)
                 {
                     hire.ServerWrite(msg);
-                    msg.Write(hire.Salary);
+                    msg.WriteInt32(hire.Salary);
                 }
             
-                msg.Write((ushort)pendingHires.Count);
+                msg.WriteUInt16((ushort)pendingHires.Count);
                 foreach (CharacterInfo pendingHire in pendingHires)
                 {
-                    msg.Write(pendingHire.GetIdentifierUsingOriginalName());
+                    msg.WriteInt32(pendingHire.GetIdentifierUsingOriginalName());
                 }
 
-                msg.Write((ushort)(hiredCharacters?.Count ?? 0));
+                msg.WriteUInt16((ushort)(hiredCharacters?.Count ?? 0));
                 if(hiredCharacters != null)
                 {
                     foreach (CharacterInfo info in hiredCharacters)
                     {
                         info.ServerWrite(msg);
-                        msg.Write(info.Salary);
+                        msg.WriteInt32(info.Salary);
                     }
                 }
 
                 bool validRenaming = renamedCrewMember.id > -1 && !string.IsNullOrEmpty(renamedCrewMember.newName);
-                msg.Write(validRenaming);
+                msg.WriteBoolean(validRenaming);
                 if (validRenaming)
                 {
-                    msg.Write(renamedCrewMember.id);
-                    msg.Write(renamedCrewMember.newName);
+                    msg.WriteInt32(renamedCrewMember.id);
+                    msg.WriteString(renamedCrewMember.newName);
                 }
 
-                msg.Write(firedCharacter != null);
-                if (firedCharacter != null) { msg.Write(firedCharacter.GetIdentifier()); }
+                msg.WriteBoolean(firedCharacter != null);
+                if (firedCharacter != null) { msg.WriteInt32(firedCharacter.GetIdentifier()); }
 
                 GameMain.Server.ServerPeer.Send(msg, client.Connection, DeliveryMethod.Reliable);
             }
@@ -1348,8 +1386,8 @@ namespace Barotrauma
             foreach (var savedExperiencePoint in savedExperiencePoints)
             {
                 savedExperiencePointsElement.Add(new XElement("Point",
-                    new XAttribute("steamid", savedExperiencePoint.SteamID),
-                    new XAttribute("endpoint", savedExperiencePoint?.EndPoint ?? string.Empty),
+                    new XAttribute("accountid", savedExperiencePoint.AccountId.TryUnwrap(out var accountId) ? accountId.StringRepresentation : ""),
+                    new XAttribute("address", savedExperiencePoint.Address.StringRepresentation),
                     new XAttribute("points", savedExperiencePoint.ExperiencePoints)));
             }
 

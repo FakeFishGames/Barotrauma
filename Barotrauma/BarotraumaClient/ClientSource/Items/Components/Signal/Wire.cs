@@ -311,7 +311,7 @@ namespace Barotrauma.Items.Components
             Wire equippedWire = Character.Controlled.HeldItems.FirstOrDefault(it => it.GetComponent<Wire>() != null)?.GetComponent<Wire>();
             if (equippedWire != null && GUI.MouseOn == null)
             {
-                if (PlayerInput.PrimaryMouseButtonClicked() && Character.Controlled.SelectedConstruction == null)
+                if (PlayerInput.PrimaryMouseButtonClicked() && Character.Controlled.SelectedItem == null)
                 {
                     equippedWire.Use(1.0f, Character.Controlled);
                 }
@@ -324,7 +324,7 @@ namespace Barotrauma.Items.Components
                 if (Character.Controlled != null)
                 {
                     Character.Controlled.FocusedItem = null;
-                    Character.Controlled.ResetInteract = true;
+                    Character.Controlled.DisableInteract = true;
                     Character.Controlled.ClearInputs();
                 }
                 //cancel dragging
@@ -401,7 +401,7 @@ namespace Barotrauma.Items.Components
                         {
                             if (Character.Controlled != null)
                             {
-                                Character.Controlled.ResetInteract = true;
+                                Character.Controlled.DisableInteract = true;
                                 Character.Controlled.ClearInputs();
                             }
                             int closestSectionIndex = selectedWire.GetClosestSectionIndex(mousePos, sectionSelectDist, out _);
@@ -431,7 +431,7 @@ namespace Barotrauma.Items.Components
                             {
                                 if (Character.Controlled != null)
                                 {
-                                    Character.Controlled.ResetInteract = true;
+                                    Character.Controlled.DisableInteract = true;
                                     Character.Controlled.ClearInputs();
                                 }
                                 draggingWire = selectedWire;
@@ -603,11 +603,11 @@ namespace Barotrauma.Items.Components
         {
             var eventData = ExtractEventData<ClientEventData>(extraData);
             int nodeCount = eventData.NodeCount;
-            msg.Write((byte)nodeCount);
+            msg.WriteByte((byte)nodeCount);
             if (nodeCount > 0)
             {
-                msg.Write(nodes.Last().X);
-                msg.Write(nodes.Last().Y);
+                msg.WriteSingle(nodes.Last().X);
+                msg.WriteSingle(nodes.Last().Y);
             }
         }
     }

@@ -62,6 +62,7 @@ namespace Barotrauma
             if (!data.ContainsKey(identifier))
             {
                 data.Add(identifier, value);
+                SteamAchievementManager.OnCampaignMetadataSet(identifier, value);
                 return;
             }
 
@@ -96,20 +97,17 @@ namespace Barotrauma
         private object GetTypeOrDefault(Identifier identifier, Type type, object defaultValue)
         {
             object? value = GetValue(identifier);
-
-            if (value == null)
+            if (value != null)
             {
-                SetValue(identifier, defaultValue);
+                if (value.GetType() == type)
+                {
+                    return value;
+                }
+                else
+                {
+                    DebugConsole.ThrowError($"Attempted to get value \"{identifier}\" as a {type} but the value is {value.GetType()}.");
+                }
             }
-            else if (value.GetType() == type)
-            {
-                return value;
-            }
-            else
-            {
-                DebugConsole.ThrowError($"Attempted to get value \"{identifier}\" as a {type} but the value is {value.GetType()}.");
-            }
-
             return defaultValue;
         }
 

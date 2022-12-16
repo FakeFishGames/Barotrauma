@@ -126,7 +126,7 @@ namespace Barotrauma.Steam
             {
                 OnClicked = (button, o) =>
                 {
-                    SteamManager.OverlayCustomURL(workshopItem.Url);
+                    SteamManager.OverlayCustomUrl(workshopItem.Url);
                     return false;
                 }
             };
@@ -226,7 +226,7 @@ namespace Barotrauma.Steam
             (Steamworks.Ugc.Item WorkshopItem, ContentPackage? LocalPackage)[] publishedItems = workshopItems
                 .Select(item => (item,
                     (ContentPackage?)ContentPackageManager.LocalPackages.FirstOrDefault(p
-                        => p.SteamWorkshopId != 0 && p.SteamWorkshopId == item.Id)))
+                        => p.TryExtractSteamWorkshopId(out var workshopId) && workshopId.Value == item.Id)))
                 //Sort the pairs by last local edit time if available
                 .OrderBy(t => t.Item2 == null)
                 .ThenByDescending(t => t.Item2 is { } p ? getEditTime(p) : t.Item1.LatestUpdateTime)
@@ -234,14 +234,16 @@ namespace Barotrauma.Steam
 
             int indexOfUserDataInPublishedItemsArray(object userData)
                 => publishedItems.IndexOf(t
-                    => t.WorkshopItem.Id == ((Steamworks.Ugc.Item)(userData as ItemOrPackage)).Id);
+                    => t.WorkshopItem.Id == ((Steamworks.Ugc.Item)(userData as ItemOrPackage)!).Id);
 
             //Take the existing GUI items that are in the list and sort to match the order of publishedItems
             var publishedGuiComponents = selfModsList.Content.Children.OrderBy(c => indexOfUserDataInPublishedItemsArray(c.UserData)).ToArray();
 
             //Get mods that haven't been published and add them to the list
             var unpublishedMods = ContentPackageManager.LocalPackages
-                .Where(p => p.SteamWorkshopId == 0 || !publishedItems.Any(item => item.WorkshopItem.Id == p.SteamWorkshopId))
+                .Where(p =>
+                    !p.TryExtractSteamWorkshopId(out var workshopId)
+                    || !publishedItems.Any(item => item.WorkshopItem.Id == workshopId.Value))
                 .OrderByDescending(getEditTime).ToArray();
 
             if (unpublishedMods.Any())
@@ -283,6 +285,7 @@ namespace Barotrauma.Steam
                     {
                         CanBeFocused = false
                     };
+                unpublishedLayout.Recalculate();
             }
 
             if (publishedGuiComponents.Any())
@@ -456,6 +459,7 @@ namespace Barotrauma.Steam
                         {
                             CreateSubscribeButton(workshopItem, new RectTransform(Vector2.One, itemLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight), spriteScale: 0.4f);
                         }
+                        itemLayout.Recalculate();
                     }
                     onFill?.Invoke(workshopItems);
                 });
@@ -550,10 +554,13 @@ namespace Barotrauma.Steam
         
         private void PopulateFrameWithItemInfo(Steamworks.Ugc.Item workshopItem, GUIFrame parentFrame)
         {
+            ViewingItemDetails = true;
             taskCancelSrc = taskCancelSrc.IsCancellationRequested ? new CancellationTokenSource() : taskCancelSrc;
 
             var contentPackage
-                = ContentPackageManager.WorkshopPackages.FirstOrDefault(p => p.SteamWorkshopId == workshopItem.Id);
+                = ContentPackageManager.WorkshopPackages.FirstOrDefault(p =>
+                    p.TryExtractSteamWorkshopId(out var workshopId)
+                    && workshopId.Value == workshopItem.Id);
             
             var verticalLayout = new GUILayoutGroup(new RectTransform(Vector2.One, parentFrame.RectTransform));
 
@@ -579,7 +586,7 @@ namespace Barotrauma.Steam
                 SelectedTextColor = GUIStyle.TextColorNormal,
                 OnClicked = (button, o) =>
                 {
-                    SteamManager.OverlayCustomURL(
+                    SteamManager.OverlayCustomUrl(
                         $"https://steamcommunity.com/profiles/{author.Id}/myworkshopfiles/?appid={SteamManager.AppID}");
                     return false;
                 }
@@ -591,13 +598,14 @@ namespace Barotrauma.Steam
 
             bool reinstallAction(GUIButton button, object o)
             {
+                SettingsMenu.Instance?.ApplyInstalledModChanges();
                 int prevIndex = ContentPackageManager.EnabledPackages.Regular.IndexOf(contentPackage);
                 TaskPool.AddIfNotFound($"Reinstall{workshopItem.Id}", 
                     SteamManager.Workshop.Reinstall(workshopItem), t =>
                 {
                     ContentPackageManager.WorkshopPackages.Refresh();
                     ContentPackageManager.EnabledPackages.RefreshUpdatedMods();
-                    if (SettingsMenu.Instance?.WorkshopMenu is MutableWorkshopMenu mutableWorkshopMenu)
+                    if (SettingsMenu.Instance?.WorkshopMenu is MutableWorkshopMenu mutableWorkshopMenu && !mutableWorkshopMenu.ViewingItemDetails)
                     {
                         mutableWorkshopMenu.PopulateInstalledModLists(forceRefreshEnabled: true);
                     }
@@ -616,7 +624,7 @@ namespace Barotrauma.Steam
             if (contentPackage != null)
             {
                 TaskPool.AddIfNotFound(
-                    $"DetermineUpdateRequired{contentPackage.SteamWorkshopId}",
+                    $"DetermineUpdateRequired{contentPackage.UgcId}",
                     contentPackage.IsUpToDate(),
                     t =>
                     {
@@ -636,9 +644,10 @@ namespace Barotrauma.Steam
                 new RectTransform(Vector2.Zero, reinstallButton.RectTransform),
                 onUpdate: (f, component) =>
                 {
-                    reinstallButton.Visible = workshopItem.IsSubscribed || workshopItem.Owner.Id == SteamManager.GetSteamID();
-                    reinstallButton.Enabled = !workshopItem.IsDownloading && !workshopItem.IsDownloadPending &&
-                                              !SteamManager.Workshop.IsInstalling(workshopItem);
+                    reinstallButton.Visible = workshopItem.IsSubscribed
+                                              || workshopItem.Owner.Id == SteamManager.GetSteamId().Select(steamId => steamId.Value).Fallback(0);
+                    reinstallButton.Enabled = !workshopItem.IsDownloading && !workshopItem.IsDownloadPending
+                                              && !SteamManager.Workshop.IsInstalling(workshopItem);
 
                     reinstallSprite.Color = reinstallButton.Enabled
                         ? reinstallSprite.Style.Color
@@ -648,7 +657,9 @@ namespace Barotrauma.Steam
 
                     if (contentPackage != null
                         && !ContentPackageManager.WorkshopPackages.Contains(contentPackage)
-                        && ContentPackageManager.WorkshopPackages.Any(p => p.SteamWorkshopId == workshopItem.Id))
+                        && ContentPackageManager.WorkshopPackages.Any(p =>
+                            p.TryExtractSteamWorkshopId(out var workshopId)
+                            && workshopId.Value == workshopItem.Id))
                     {
                         updateButton.Visible = false;
                     }

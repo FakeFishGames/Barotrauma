@@ -1,6 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Xml.Linq;
+﻿#if CLIENT
+using Microsoft.Xna.Framework;
+#endif
 
 namespace Barotrauma
 {
@@ -13,6 +13,10 @@ namespace Barotrauma
         public LocalizedString Description { get; private set; }
 
         public readonly Sprite Icon;
+
+#if CLIENT
+        public readonly Option<Color> ColorOverride;
+#endif
 
         public static readonly PrefabCollection<TalentPrefab> TalentPrefabs = new PrefabCollection<TalentPrefab>();
 
@@ -28,8 +32,22 @@ namespace Barotrauma
 
             DisplayName = TextManager.Get($"talentname.{Identifier}").Fallback(Identifier.Value);
 
-            Description = "";
-            
+            Identifier nameIdentifier = element.GetAttributeIdentifier("nameidentifier", Identifier.Empty);
+            if (!nameIdentifier.IsEmpty)
+            {
+                DisplayName = TextManager.Get(nameIdentifier).Fallback(Identifier.Value);
+            }
+
+            Description = string.Empty;
+
+#if CLIENT
+            Color colorOverride = element.GetAttributeColor("coloroverride", Color.TransparentBlack);
+
+            ColorOverride = colorOverride != Color.TransparentBlack
+                ? Option<Color>.Some(colorOverride)
+                : Option<Color>.None();
+#endif
+
             foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -56,11 +74,6 @@ namespace Barotrauma
             }
         }
 
-        private bool disposed = false;
-        public override void Dispose()
-        {
-            if (disposed) { return; }
-            disposed = true;
-        }
+        public override void Dispose() { }
     }
 }

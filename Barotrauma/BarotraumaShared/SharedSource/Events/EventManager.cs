@@ -71,6 +71,11 @@ namespace Barotrauma
 
         private readonly List<Event> activeEvents = new List<Event>();
 
+        private readonly HashSet<Event> finishedEvents = new HashSet<Event>();
+        private readonly HashSet<EventPrefab> nonRepeatableEvents = new HashSet<EventPrefab>();
+        private readonly HashSet<EventSet> usedUniqueSets = new HashSet<EventSet>();
+
+
 #if DEBUG && SERVER
         private DateTime nextIntensityLogTime;
 #endif
@@ -151,12 +156,19 @@ namespace Barotrauma
             }
             rand = new MTRandom(seed);
 
-            EventSet initialEventSet = SelectRandomEvents(EventSet.Prefabs.ToList(), requireCampaignSet: GameMain.GameSession?.GameMode is CampaignMode, rand);
+            bool playingCampaign = GameMain.GameSession?.GameMode is CampaignMode;
+            EventSet initialEventSet = SelectRandomEvents(
+                EventSet.Prefabs.ToList(),
+                requireCampaignSet: playingCampaign,
+                random: rand);
             EventSet additiveSet = null;
             if (initialEventSet != null && initialEventSet.Additive)
             {
                 additiveSet = initialEventSet;
-                initialEventSet = SelectRandomEvents(EventSet.Prefabs.Where(e => !e.Additive).ToList(), requireCampaignSet: GameMain.GameSession?.GameMode is CampaignMode, rand);
+                initialEventSet = SelectRandomEvents(
+                    EventSet.Prefabs.Where(e => !e.Additive).ToList(),
+                    requireCampaignSet: playingCampaign,
+                    random: rand);
             }
             if (initialEventSet != null)
             {
@@ -169,61 +181,55 @@ namespace Barotrauma
                 CreateEvents(additiveSet);
             }
 
-            if (level?.LevelData?.Type == LevelData.LevelType.Outpost)
+            if (level?.LevelData != null)
             {
-                //if the outpost is connected to a locked connection, create an event to unlock it
-                if (level.StartLocation?.Connections.Any(c => c.Locked && level.StartLocation.MapPosition.X < c.OtherLocation(level.StartLocation).MapPosition.X) ?? false)
+                if (level.LevelData.Type == LevelData.LevelType.Outpost)
                 {
-                    var unlockPathPrefabs = EventPrefab.Prefabs.Where(e => e.UnlockPathEvent);
-                    var unlockPathPrefabsForBiome = unlockPathPrefabs.Where(e => 
-                        e.BiomeIdentifier.IsEmpty || 
-                        e.BiomeIdentifier == level.LevelData.Biome.Identifier);
+                    //if the outpost is connected to a locked connection, create an event to unlock it
+                    if (level.StartLocation?.Connections.Any(c => c.Locked && level.StartLocation.MapPosition.X < c.OtherLocation(level.StartLocation).MapPosition.X) ?? false)
+                    {
+                        var unlockPathPrefabs = EventPrefab.Prefabs.Where(e => e.UnlockPathEvent);
+                        var unlockPathPrefabsForBiome = unlockPathPrefabs.Where(e =>
+                            e.BiomeIdentifier.IsEmpty ||
+                            e.BiomeIdentifier == level.LevelData.Biome.Identifier);
 
-                    var unlockPathEventPrefab = unlockPathPrefabsForBiome.Any() ?
-                        ToolBox.SelectWeightedRandom(unlockPathPrefabsForBiome, b => b.Commonness, rand) :
-                        ToolBox.SelectWeightedRandom(unlockPathPrefabs, b => b.Commonness, rand);
-                    if (unlockPathEventPrefab != null)
-                    {
-                        var newEvent = unlockPathEventPrefab.CreateInstance();
-                        newEvent.Init();
-                        ActiveEvents.Add(newEvent);
-                    }
-                    else
-                    {
-                        //if no event that unlocks the path can be found, unlock it automatically
-                        level.StartLocation.Connections.ForEach(c => c.Locked = false);
+                        var unlockPathEventPrefab = unlockPathPrefabsForBiome.Any() ?
+                            ToolBox.SelectWeightedRandom(unlockPathPrefabsForBiome, b => b.Commonness, rand) :
+                            ToolBox.SelectWeightedRandom(unlockPathPrefabs, b => b.Commonness, rand);
+                        if (unlockPathEventPrefab != null)
+                        {
+                            var newEvent = unlockPathEventPrefab.CreateInstance();
+                            ActiveEvents.Add(newEvent);
+                        }
+                        else
+                        {
+                            //if no event that unlocks the path can be found, unlock it automatically
+                            level.StartLocation.Connections.ForEach(c => c.Locked = false);
+                        }
                     }
                 }
-
-                level.LevelData.EventHistory.AddRange(selectedEvents.Values.SelectMany(v => v).Select(e => e.Prefab).Where(e => !level.LevelData.EventHistory.Contains(e)));
-                if (level.LevelData.EventHistory.Count > MaxEventHistory)
-                {
-                    level.LevelData.EventHistory.RemoveRange(0, level.LevelData.EventHistory.Count - MaxEventHistory);
-                }
-                AddChildEvents(initialEventSet);                
-                void AddChildEvents(EventSet eventSet)
+                RegisterNonRepeatableChildEvents(initialEventSet);
+                void RegisterNonRepeatableChildEvents(EventSet eventSet)
                 {
                     if (eventSet == null) { return; }
-                    if (eventSet.OncePerOutpost)
+                    if (eventSet.OncePerLevel)
                     {
                         foreach (EventPrefab ep in eventSet.EventPrefabs.SelectMany(e => e.EventPrefabs))
                         {
-                            if (!level.LevelData.NonRepeatableEvents.Contains(ep)) 
-                            {
-                                level.LevelData.NonRepeatableEvents.Add(ep);
-                            }
+                            nonRepeatableEvents.Add(ep);                                
                         }
                     }
                     foreach (EventSet childSet in eventSet.ChildSets)
                     {
-                        AddChildEvents(childSet);
+                        RegisterNonRepeatableChildEvents(childSet);
                     }
-                }
+                }                
             }
 
             PreloadContent(GetFilesToPreload());
 
             roundDuration = 0.0f;
+            eventsInitialized = false;
             isCrewAway = false;
             crewAwayDuration = 0.0f;
             crewAwayResetTimer = 0.0f;
@@ -350,11 +356,34 @@ namespace Barotrauma
             selectedEvents.Clear();
             activeEvents.Clear();
             QueuedEvents.Clear();
+            finishedEvents.Clear();
+            nonRepeatableEvents.Clear();
+            usedUniqueSets.Clear();
 
             preloadedSprites.ForEach(s => s.Remove());
             preloadedSprites.Clear();
 
+
             pathFinder = null;
+        }
+
+        /// <summary>
+        /// Registers the exhaustible events in the level as exhausted, and adds the current events to the event history
+        /// </summary>
+        public void RegisterEventHistory()
+        {
+            if (level?.LevelData == null) { return; }
+
+            level.LevelData.EventsExhausted = true;
+            if (level.LevelData.Type == LevelData.LevelType.Outpost)
+            {
+                level.LevelData.EventHistory.AddRange(selectedEvents.Values.SelectMany(v => v).Select(e => e.Prefab).Where(e => !level.LevelData.EventHistory.Contains(e)));
+                if (level.LevelData.EventHistory.Count > MaxEventHistory)
+                {
+                    level.LevelData.EventHistory.RemoveRange(0, level.LevelData.EventHistory.Count - MaxEventHistory);
+                }
+            }
+            level.LevelData.NonRepeatableEvents.AddRange(nonRepeatableEvents.Where(e => !level.LevelData.NonRepeatableEvents.Contains(e)));
         }
 
         public void SkipEventCooldown()
@@ -375,13 +404,15 @@ namespace Barotrauma
             selectedEvents.Remove(eventSet);
             if (level == null) { return; }
             if (level.LevelData.HasHuntingGrounds && eventSet.DisableInHuntingGrounds) { return; }
+            if (eventSet.Exhaustible && level.LevelData.EventsExhausted) { return; }
+
             DebugConsole.NewMessage($"Loading event set {eventSet.Identifier}", Color.LightBlue, debugOnly: true);
 
             int applyCount = 1;
             List<Func<Level.InterestingPosition, bool>> spawnPosFilter = new List<Func<Level.InterestingPosition, bool>>();
             if (eventSet.PerRuin)
             {
-                applyCount = level.Ruins.Count();
+                applyCount = level.Ruins.Count;
                 foreach (var ruin in level.Ruins)
                 {
                     spawnPosFilter.Add(pos => pos.Ruin == ruin);
@@ -389,7 +420,7 @@ namespace Barotrauma
             }
             else if (eventSet.PerCave)
             {
-                applyCount = level.Caves.Count();
+                applyCount = level.Caves.Count;
                 foreach (var cave in level.Caves)
                 {
                     spawnPosFilter.Add(pos => pos.Cave == cave);
@@ -406,8 +437,8 @@ namespace Barotrauma
             }
 
             bool isPrefabSuitable(EventPrefab e)
-                => e.BiomeIdentifier.IsEmpty ||
-                   e.BiomeIdentifier == level.LevelData?.Biome?.Identifier;
+                => (e.BiomeIdentifier.IsEmpty || e.BiomeIdentifier == level.LevelData?.Biome?.Identifier) &&
+                    !level.LevelData.NonRepeatableEvents.Contains(e);
 
             foreach (var subEventPrefab in eventSet.EventPrefabs)
             {
@@ -427,7 +458,8 @@ namespace Barotrauma
                     if (suitablePrefabSubsets.Any())
                     {
                         var unusedEvents = suitablePrefabSubsets.ToList();
-                        for (int j = 0; j < eventSet.EventCount; j++)
+                        int eventCount = eventSet.GetEventCount(level);
+                        for (int j = 0; j < eventCount; j++)
                         {
                             if (unusedEvents.All(e => e.EventPrefabs.All(p => CalculateCommonness(p, e.Commonness) <= 0.0f))) { break; }
                             EventSet.SubEventPrefab subEventPrefab = ToolBox.SelectWeightedRandom(unusedEvents, e => e.EventPrefabs.Max(p => CalculateCommonness(p, e.Commonness)), rand);
@@ -438,7 +470,6 @@ namespace Barotrauma
 
                                 var newEvent = eventPrefab.CreateInstance();
                                 if (newEvent == null) { continue; }
-                                newEvent.Init(eventSet);
                                 if (i < spawnPosFilter.Count) { newEvent.SpawnPosFilter = spawnPosFilter[i]; }
                                 DebugConsole.NewMessage($"Initialized event {newEvent}", debugOnly: true);
                                 if (!selectedEvents.ContainsKey(eventSet))
@@ -468,8 +499,6 @@ namespace Barotrauma
                         var eventPrefab = ToolBox.SelectWeightedRandom(eventPrefabs.Where(isPrefabSuitable), e => e.Commonness, rand);
                         var newEvent = eventPrefab.CreateInstance();
                         if (newEvent == null) { continue; }
-                        newEvent.Init(eventSet);
-                        DebugConsole.NewMessage($"Initialized event {newEvent}", debugOnly: true);
                         if (!selectedEvents.ContainsKey(eventSet))
                         {
                             selectedEvents.Add(eventSet, new List<Event>());
@@ -477,12 +506,12 @@ namespace Barotrauma
                         selectedEvents[eventSet].Add(newEvent);
                     }
 
-                    Location location = (GameMain.GameSession?.GameMode as CampaignMode)?.Map?.CurrentLocation ?? level?.StartLocation;
+                    var location = GetEventLocation();
                     foreach (EventSet childEventSet in eventSet.ChildSets)
                     {
                         if (!IsValidForLevel(childEventSet, level)) { continue; }
-                        if (location != null && !IsValidForLocation(childEventSet, location)) { continue; }
-                        CreateEvents(childEventSet);                        
+                        if (!IsValidForLocation(childEventSet, location)) { continue; }
+                        CreateEvents(childEventSet);
                     }
                 }
             }
@@ -517,10 +546,32 @@ namespace Barotrauma
                 }
             }
 
-            Location location = (GameMain.GameSession?.GameMode as CampaignMode)?.Map?.CurrentLocation ?? level?.StartLocation;
-            if (location != null)
+            var location = GetEventLocation();
+            allowedEventSets = allowedEventSets.Where(set => IsValidForLocation(set, location));
+
+            allowedEventSets = allowedEventSets.Where(set => !set.CampaignTutorialOnly ||
+                (GameMain.IsSingleplayer && GameMain.GameSession?.Campaign?.Settings is { TutorialEnabled: true }));
+
+            int? discoveryIndex = GameMain.GameSession?.Map?.GetDiscoveryIndex(location);
+            int? visitIndex = GameMain.GameSession?.Map?.GetVisitIndex(location);
+            if (discoveryIndex is not null && discoveryIndex >= 0 && allowedEventSets.Any(set => set.ForceAtDiscoveredNr == discoveryIndex))
             {
-                allowedEventSets = allowedEventSets.Where(set => IsValidForLocation(set, location));
+                allowedEventSets = allowedEventSets.Where(set => set.ForceAtDiscoveredNr == discoveryIndex);
+            }
+            else if (visitIndex is not null && visitIndex >= 0 && allowedEventSets.Any(set => set.ForceAtVisitedNr == visitIndex))
+            {
+                allowedEventSets = allowedEventSets.Where(set => set.ForceAtVisitedNr == visitIndex);
+            }
+            else
+            {
+                // When there are no forced sets, only allow sets that aren't forced at any specific location
+                allowedEventSets = allowedEventSets.Where(set => set.ForceAtDiscoveredNr < 0 && set.ForceAtVisitedNr < 0);
+            }
+
+            if (allowedEventSets.Count() == 1)
+            {
+                // When there's only a single set available, just select it directly
+                return allowedEventSets.First();
             }
 
             float totalCommonness = allowedEventSets.Sum(e => e.GetCommonness(level));
@@ -539,7 +590,7 @@ namespace Barotrauma
             return null;
         }
 
-        private bool IsValidForLevel(EventSet eventSet, Level level)
+        private static bool IsValidForLevel(EventSet eventSet, Level level)
         {
             return
                 level.Difficulty >= eventSet.MinLevelDifficulty && level.Difficulty <= eventSet.MaxLevelDifficulty &&
@@ -549,8 +600,16 @@ namespace Barotrauma
 
         private bool IsValidForLocation(EventSet eventSet, Location location)
         {
-            return eventSet.LocationTypeIdentifiers == null ||
-                    eventSet.LocationTypeIdentifiers.Any(identifier => identifier == location.GetLocationType().Identifier);
+            if (location is null) { return true; }
+            var locationType = location.GetLocationType();
+            bool includeGenericEvents = level.Type == LevelData.LevelType.LocationConnection || !locationType.IgnoreGenericEvents;
+            if (includeGenericEvents && eventSet.LocationTypeIdentifiers == null) { return true; }
+            return eventSet.LocationTypeIdentifiers != null && eventSet.LocationTypeIdentifiers.Any(identifier => identifier == locationType.Identifier);
+        }
+
+        private Location GetEventLocation()
+        {
+            return GameMain.GameSession?.Campaign?.Map?.CurrentLocation ?? level?.StartLocation;
         }
 
         private bool CanStartEventSet(EventSet eventSet)
@@ -592,11 +651,24 @@ namespace Barotrauma
             return true;
         }
 
+        private bool eventsInitialized;
         
         public void Update(float deltaTime)
         {
             if (!Enabled || level == null) { return; }
             if (GameMain.GameSession.Campaign?.DisableEvents ?? false) { return; }
+
+            if (!eventsInitialized)
+            {
+                foreach (var eventSet in selectedEvents.Keys)
+                {
+                    foreach (var ev in selectedEvents[eventSet])
+                    {
+                        ev.Init(eventSet);
+                    }
+                }
+                eventsInitialized = true;
+            }
 
             //clients only calculate the intensity but don't create any events
             //(the intensity is used for controlling the background music)
@@ -706,7 +778,18 @@ namespace Barotrauma
 
             foreach (Event ev in activeEvents)
             {
-                if (!ev.IsFinished) { ev.Update(deltaTime); }                             
+                if (!ev.IsFinished) 
+                { 
+                    ev.Update(deltaTime); 
+                }
+                else if (!finishedEvents.Contains(ev))
+                {
+                    if (level?.LevelData != null && level.LevelData.Type == LevelData.LevelType.Outpost)
+                    {
+                        if (!level.LevelData.EventHistory.Contains(ev.Prefab)) { level.LevelData.EventHistory.Add(ev.Prefab); }
+                    }
+                    finishedEvents.Add(ev);
+                }
             }
 
             if (QueuedEvents.Count > 0)

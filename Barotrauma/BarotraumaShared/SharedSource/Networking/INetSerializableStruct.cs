@@ -3,10 +3,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Runtime.Serialization;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 
@@ -35,7 +35,7 @@ namespace Barotrauma
     /// Using the attribute on the struct will make all fields and properties serialized
     /// </remarks>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Struct | AttributeTargets.Property)]
-    public class NetworkSerialize : Attribute
+    public sealed class NetworkSerialize : Attribute
     {
         public int MaxValueInt = int.MaxValue;
         public int MinValueInt = int.MinValue;
@@ -56,21 +56,37 @@ namespace Barotrauma
     /// <summary>
     /// Static class that contains serialize and deserialize functions for different types used in <see cref="INetSerializableStruct"/>
     /// </summary>
-    public static class NetSerializableProperties
+    [SuppressMessage("ReSharper", "RedundantTypeArgumentsOfMethod")]
+    static class NetSerializableProperties
     {
-        public readonly struct ReadWriteBehavior
+        public interface IReadWriteBehavior
         {
-            public delegate dynamic? ReadDelegate(IReadMessage inc, Type type, NetworkSerialize attribute);
+            public delegate object? ReadDelegate(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField);
 
-            public delegate void WriteDelegate(dynamic? obj, NetworkSerialize attribute, IWriteMessage msg);
+            public delegate void WriteDelegate(object? obj, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField);
 
-            public readonly ReadDelegate ReadAction;
-            public readonly WriteDelegate WriteAction;
+            public ReadDelegate ReadAction { get; }
+            public WriteDelegate WriteAction { get; }
+        }
+
+        public readonly struct ReadWriteBehavior<T> : IReadWriteBehavior
+        {
+            public delegate T ReadDelegate(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField);
+
+            public delegate void WriteDelegate(T obj, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField);
+
+            public IReadWriteBehavior.ReadDelegate ReadAction { get; }
+            public IReadWriteBehavior.WriteDelegate WriteAction { get; }
+
+            public ReadDelegate ReadActionDirect { get; }
+            public WriteDelegate WriteActionDirect { get; }
 
             public ReadWriteBehavior(ReadDelegate readAction, WriteDelegate writeAction)
             {
-                ReadAction = readAction;
-                WriteAction = writeAction;
+                ReadAction = (inc, attribute, bitField) => readAction(inc, attribute, bitField);
+                WriteAction = (o, attribute, msg, bitField) => writeAction((T)o!, attribute, msg, bitField);
+                ReadActionDirect = readAction;
+                WriteActionDirect = writeAction;
             }
         }
 
@@ -80,17 +96,18 @@ namespace Barotrauma
 
             public delegate void SetValueDelegate(object? obj, object? value);
 
+            public readonly string Name;
             public readonly Type Type;
-            public readonly ReadWriteBehavior Behavior;
+            public readonly IReadWriteBehavior Behavior;
             public readonly NetworkSerialize Attribute;
             public readonly SetValueDelegate SetValue;
             public readonly GetValueDelegate GetValue;
             public readonly bool HasOwnAttribute;
 
-            public CachedReflectedVariable(MemberInfo info, ReadWriteBehavior behavior, Type baseClassType)
+            public CachedReflectedVariable(MemberInfo info, IReadWriteBehavior behavior, Type baseClassType)
             {
                 Behavior = behavior;
-
+                Name = info.Name;
                 switch (info)
                 {
                     case PropertyInfo pi:
@@ -126,343 +143,373 @@ namespace Barotrauma
 
         private static readonly Dictionary<Type, ImmutableArray<CachedReflectedVariable>> CachedVariables = new Dictionary<Type, ImmutableArray<CachedReflectedVariable>>();
 
-        private static readonly ImmutableDictionary<Type, ReadWriteBehavior> TypeBehaviors = new Dictionary<Type, ReadWriteBehavior>
-        {
-            { typeof(Boolean), new ReadWriteBehavior(ReadBoolean, WriteDynamic) },
-            { typeof(Byte), new ReadWriteBehavior(ReadByte, WriteDynamic) },
-            { typeof(UInt16), new ReadWriteBehavior(ReadUInt16, WriteDynamic) },
-            { typeof(Int16), new ReadWriteBehavior(ReadInt16, WriteDynamic) },
-            { typeof(UInt32), new ReadWriteBehavior(ReadUInt32, WriteDynamic) },
-            { typeof(Int32), new ReadWriteBehavior(ReadInt32, WriteInt32) },
-            { typeof(UInt64), new ReadWriteBehavior(ReadUInt64, WriteDynamic) },
-            { typeof(Int64), new ReadWriteBehavior(ReadInt64, WriteDynamic) },
-            { typeof(Single), new ReadWriteBehavior(ReadSingle, WriteSingle) },
-            { typeof(Double), new ReadWriteBehavior(ReadDouble, WriteDynamic) },
-            { typeof(String), new ReadWriteBehavior(ReadString, WriteDynamic) },
-            { typeof(Identifier), new ReadWriteBehavior(ReadIdentifier, WriteDynamic) },
-            { typeof(Color), new ReadWriteBehavior(ReadColor, WriteColor) },
-            { typeof(Vector2), new ReadWriteBehavior(ReadVector2, WriteVector2) }
-        }.ToImmutableDictionary();
+        private static readonly Dictionary<Type, IReadWriteBehavior> TypeBehaviors
+            = new Dictionary<Type, IReadWriteBehavior>
+            {
+                { typeof(Boolean), new ReadWriteBehavior<Boolean>(ReadBoolean, WriteBoolean) },
+                { typeof(Byte), new ReadWriteBehavior<Byte>(ReadByte, WriteByte) },
+                { typeof(UInt16), new ReadWriteBehavior<UInt16>(ReadUInt16, WriteUInt16) },
+                { typeof(Int16), new ReadWriteBehavior<Int16>(ReadInt16, WriteInt16) },
+                { typeof(UInt32), new ReadWriteBehavior<UInt32>(ReadUInt32, WriteUInt32) },
+                { typeof(Int32), new ReadWriteBehavior<Int32>(ReadInt32, WriteInt32) },
+                { typeof(UInt64), new ReadWriteBehavior<UInt64>(ReadUInt64, WriteUInt64) },
+                { typeof(Int64), new ReadWriteBehavior<Int64>(ReadInt64, WriteInt64) },
+                { typeof(Single), new ReadWriteBehavior<Single>(ReadSingle, WriteSingle) },
+                { typeof(Double), new ReadWriteBehavior<Double>(ReadDouble, WriteDouble) },
+                { typeof(String), new ReadWriteBehavior<String>(ReadString, WriteString) },
+                { typeof(Identifier), new ReadWriteBehavior<Identifier>(ReadIdentifier, WriteIdentifier) },
+                { typeof(AccountId), new ReadWriteBehavior<AccountId>(ReadAccountId, WriteAccountId) },
+                { typeof(Color), new ReadWriteBehavior<Color>(ReadColor, WriteColor) },
+                { typeof(Vector2), new ReadWriteBehavior<Vector2>(ReadVector2, WriteVector2) }
+            };
 
-        private static readonly ImmutableDictionary<Predicate<Type>, ReadWriteBehavior> TypePredicates = new Dictionary<Predicate<Type>, ReadWriteBehavior>
+        private static readonly ImmutableDictionary<Predicate<Type>, Func<Type, IReadWriteBehavior>> BehaviorFactories = new Dictionary<Predicate<Type>, Func<Type, IReadWriteBehavior>>
         {
             // Arrays
-            { type => typeof(Array).IsAssignableFrom(type.BaseType), new ReadWriteBehavior(ReadArray, WriteArray) },
+            { type => type.IsArray, CreateArrayBehavior },
 
             // Nested INetSerializableStructs
-            { type => typeof(INetSerializableStruct).IsAssignableFrom(type), new ReadWriteBehavior(ReadINetSerializableStruct, WriteINetSerializableStruct) },
+            { type => typeof(INetSerializableStruct).IsAssignableFrom(type), CreateINetSerializableStructBehavior },
 
             // Enums
-            { type => type.IsEnum, new ReadWriteBehavior(ReadEnum, WriteEnum) },
+            { type => type.IsEnum, CreateEnumBehavior },
 
             // Nullable
-            { type => Nullable.GetUnderlyingType(type) != null, new ReadWriteBehavior(ReadNullable, WriteNullable) },
+            { type => Nullable.GetUnderlyingType(type) != null, CreateNullableStructBehavior },
+
+            // ImmutableArray
+            { type => IsOfGenericType(type, typeof(ImmutableArray<>)), CreateImmutableArrayBehavior },
 
             // Option
-            { type => type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Option<>), new ReadWriteBehavior(ReadOption, WriteOption) }
+            { type => IsOfGenericType(type, typeof(Option<>)), CreateOptionBehavior }
         }.ToImmutableDictionary();
 
-        private static readonly ReadWriteBehavior InvalidReadWriteBehavior = new ReadWriteBehavior(ReadInvalid, WriteInvalid);
-
-        private static readonly Dictionary<Type, MethodInfo> cachedSomeCreateMethods = new Dictionary<Type, MethodInfo>();
-        private static readonly Dictionary<Type, MethodInfo> cachedNoneCreateMethod = new Dictionary<Type, MethodInfo>();
-
-        private static void WriteInvalid(dynamic? obj, NetworkSerialize attribute, IWriteMessage msg) =>
-            throw new SerializationException($"Type {obj?.GetType()} cannot be serialized. Did you forget to implement {nameof(INetSerializableStruct)}?");
-
-        private static dynamic ReadInvalid(IReadMessage inc, Type type, NetworkSerialize attribute) => throw new SerializationException($"Type {type} cannot be deserialized. Did you forget to implement {nameof(INetSerializableStruct)}?");
-
-        private static void WriteOption(dynamic? obj, NetworkSerialize attribute, IWriteMessage msg)
+        /// <param name="behaviorGenericParam">The type that the behavior handles</param>
+        /// <param name="funcGenericParam">The type that will be used as the generic parameter for the read/write methods</param>
+        /// <param name="readFunc">The read method.
+        /// It must have a generic parameter.
+        /// The return type must be such that if the generic parameter is replaced with funcGenericParam, you get behaviorGenericParam.</param>
+        /// <param name="writeFunc">The write method. The first parameter's type must be the same as readFunc's return type.</param>
+        /// <typeparam name="TDelegateBase">Ideally the least specific type possible, because it's replaced by behaviorGenericParam</typeparam>
+        /// <returns>A ReadWriteBehavior&lt;behaviorGenericParam&gt;</returns>
+        private static IReadWriteBehavior CreateBehavior<TDelegateBase>(Type behaviorGenericParam,
+                                                                        Type funcGenericParam,
+                                                                        ReadWriteBehavior<TDelegateBase>.ReadDelegate readFunc,
+                                                                        ReadWriteBehavior<TDelegateBase>.WriteDelegate writeFunc)
         {
-            if (obj is null) { throw new ArgumentNullException(nameof(obj), "Tried to write 'null' into a non-nullable type"); }
+            var behaviorType = typeof(ReadWriteBehavior<>).MakeGenericType(behaviorGenericParam);
 
-            Type type = obj.GetType();
-            Type optionType = type.GetGenericTypeDefinition();
-            Type underlyingType = type.GetGenericArguments()[0];
+            var readDelegateType = typeof(ReadWriteBehavior<>.ReadDelegate).MakeGenericType(behaviorGenericParam);
+            var writeDelegateType = typeof(ReadWriteBehavior<>.WriteDelegate).MakeGenericType(behaviorGenericParam);
 
-            if (optionType == typeof(None<>))
+            var constructor = behaviorType.GetConstructor(new[]
             {
-                msg.Write(false);
+                readDelegateType, writeDelegateType
+            });
+
+            return (constructor!.Invoke(new object[]
+            {
+                readFunc.Method.GetGenericMethodDefinition().MakeGenericMethod(funcGenericParam).CreateDelegate(readDelegateType),
+                writeFunc.Method.GetGenericMethodDefinition().MakeGenericMethod(funcGenericParam).CreateDelegate(writeDelegateType)
+            }) as IReadWriteBehavior)!;
+        }
+
+        private static IReadWriteBehavior CreateArrayBehavior(Type arrayType) =>
+            CreateBehavior(
+                arrayType,
+                arrayType.GetElementType()!,
+                ReadArray<object>,
+                WriteArray<object>);
+
+        private static IReadWriteBehavior CreateINetSerializableStructBehavior(Type structType) =>
+            CreateBehavior(
+                structType,
+                structType,
+                ReadINetSerializableStruct<INetSerializableStruct>,
+                WriteINetSerializableStruct<INetSerializableStruct>);
+
+        private static IReadWriteBehavior CreateEnumBehavior(Type enumType) =>
+            CreateBehavior(
+                enumType,
+                enumType,
+                ReadEnum<Enum>,
+                WriteEnum<Enum>);
+
+        private static IReadWriteBehavior CreateNullableStructBehavior(Type nullableType) =>
+            CreateBehavior(
+                nullableType,
+                Nullable.GetUnderlyingType(nullableType)!,
+                ReadNullable<int>,
+                WriteNullable<int>);
+
+        private static IReadWriteBehavior CreateOptionBehavior(Type optionType) =>
+            CreateBehavior(
+                optionType,
+                optionType.GetGenericArguments()[0],
+                ReadOption<object>,
+                WriteOption<object>);
+
+        private static IReadWriteBehavior CreateImmutableArrayBehavior(Type arrayType) =>
+            CreateBehavior(
+                arrayType,
+                arrayType.GetGenericArguments()[0],
+                ReadImmutableArray<object>,
+                WriteImmutableArray<object>);
+
+        private static ImmutableArray<T> ReadImmutableArray<T>(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField) where T : notnull
+        {
+            return ReadArray<T>(inc, attribute, bitField).ToImmutableArray();
+        }
+
+        private static void WriteImmutableArray<T>(ImmutableArray<T> array, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField) where T : notnull
+        {
+            ToolBox.ThrowIfNull(array);
+            WriteIReadOnlyCollection<T>(array, attribute, msg, bitField);
+        }
+
+        private static T[] ReadArray<T>(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField) where T : notnull
+        {
+            int length = bitField.ReadInteger(0, attribute.ArrayMaxSize);
+
+            T[] array = new T[length];
+
+            if (!TryFindBehavior(out ReadWriteBehavior<T> behavior))
+            {
+                throw new InvalidOperationException($"Could not find suitable behavior for type {typeof(T)} in {nameof(ReadArray)}");
             }
-            else if (optionType == typeof(Some<>))
+
+            for (int i = 0; i < length; i++)
             {
-                msg.Write(true);
-                if (TryFindBehavior(underlyingType, out ReadWriteBehavior behavior))
-                {
-                    behavior.WriteAction(obj.Value, attribute, msg);
-                }
+                array[i] = behavior.ReadActionDirect(inc, attribute, bitField);
             }
-            else
+
+            return array;
+        }
+
+        private static void WriteArray<T>(T[] array, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField) where T : notnull
+        {
+            ToolBox.ThrowIfNull(array);
+            WriteIReadOnlyCollection(array, attribute, msg, bitField);
+        }
+
+        private static void WriteIReadOnlyCollection<T>(IReadOnlyCollection<T> array, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField) where T : notnull
+        {
+            bitField.WriteInteger(array.Count, 0, attribute.ArrayMaxSize);
+
+            if (!TryFindBehavior(out ReadWriteBehavior<T> behavior))
             {
-                throw new ArgumentOutOfRangeException(nameof(obj), "Option type was neither None or Some");
+                throw new InvalidOperationException($"Could not find suitable behavior for type {typeof(T)} in {nameof(WriteArray)}");
+            }
+
+            foreach (T o in array)
+            {
+                behavior.WriteActionDirect(o, attribute, msg, bitField);
             }
         }
 
-        private static dynamic? ReadOption(IReadMessage inc, Type type, NetworkSerialize attribute)
+        private static T ReadINetSerializableStruct<T>(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField) where T : INetSerializableStruct
         {
-            Type underlyingType = type.GetGenericArguments()[0];
-            bool hasValue = inc.ReadBoolean();
-            if (!hasValue)
-            {
-                return GetCreateMethod(typeof(None<>), underlyingType, cachedNoneCreateMethod).Invoke(null, null);
-            }
-
-            if (TryFindBehavior(underlyingType, out ReadWriteBehavior behavior))
-            {
-                dynamic? value = behavior.ReadAction(inc, underlyingType, attribute);
-                return GetCreateMethod(typeof(Some<>), underlyingType, cachedSomeCreateMethods).Invoke(null, new[] { value });
-            }
-
-            throw new InvalidOperationException($"Could not find suitable behavior for type {underlyingType} in {nameof(ReadOption)}");
-
-            static MethodInfo GetCreateMethod(Type optionType, Type type, Dictionary<Type, MethodInfo> cache)
-            {
-                if (cache.TryGetValue(type, out MethodInfo? foundInfo))
-                {
-                    return foundInfo;
-                }
-
-                Type genericType = optionType.MakeGenericType(type);
-                MethodInfo info = genericType.GetMethod("Create", BindingFlags.Static | BindingFlags.Public)!;
-                cache.Add(type, info);
-                return info;
-            }
+            return INetSerializableStruct.ReadInternal<T>(inc, bitField);
         }
 
-        private static void WriteNullable(dynamic? obj, NetworkSerialize attribute, IWriteMessage msg)
+        private static void WriteINetSerializableStruct<T>(T serializableStruct, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField) where T : INetSerializableStruct
         {
-            if (obj is { } notNull)
-            {
-                msg.Write(true);
-
-                if (TryFindBehavior(notNull.GetType(), out ReadWriteBehavior behavior))
-                {
-                    // uh oh, something terrible has happened!
-                    if (behavior.WriteAction == WriteNullable) { behavior = InvalidReadWriteBehavior; }
-
-                    behavior.WriteAction(notNull, attribute, msg);
-                    return;
-                }
-            }
-
-            msg.Write(false);
+            ToolBox.ThrowIfNull(serializableStruct);
+            serializableStruct.WriteInternal(msg, bitField);
         }
 
-        private static dynamic? ReadNullable(IReadMessage inc, Type type, NetworkSerialize attribute)
+        private static T ReadEnum<T>(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField) where T : Enum
         {
-            if (!inc.ReadBoolean()) { return null; }
+            var type = typeof(T);
 
-            Type? underlyingType = Nullable.GetUnderlyingType(type);
-            if (underlyingType is null) { throw new InvalidOperationException($"Could not get the underlying type of {type} in {nameof(ReadNullable)}"); }
-
-            if (TryFindBehavior(underlyingType, out ReadWriteBehavior behavior))
-            {
-                // uh oh, something terrible has happened!
-                if (behavior.ReadAction == ReadNullable) { behavior = InvalidReadWriteBehavior; }
-
-                return behavior.ReadAction(inc, underlyingType, attribute);
-            }
-
-            throw new InvalidOperationException($"Could not find suitable behavior for type {underlyingType} in {nameof(ReadNullable)}");
-        }
-
-        private static void WriteEnum(dynamic? obj, NetworkSerialize attribute, IWriteMessage msg)
-        {
-            if (obj is null) { throw new ArgumentNullException(nameof(obj), "Tried to write 'null' into a non-nullable type"); }
-
-            Range<int> range = GetEnumRange(obj.GetType());
-            msg.WriteRangedInteger(Convert.ChangeType(obj, obj.GetTypeCode()), range.Start, range.End);
-        }
-
-        private static dynamic ReadEnum(IReadMessage inc, Type type, NetworkSerialize attribute)
-        {
             Range<int> range = GetEnumRange(type);
-            int enumIndex = inc.ReadRangedInteger(range.Start, range.End);
+            int enumIndex = bitField.ReadInteger(range.Start, range.End);
 
-            foreach (dynamic? e in Enum.GetValues(type))
+            if (typeof(T).GetCustomAttribute<FlagsAttribute>() != null)
             {
-                if (Convert.ChangeType(e, e!.GetTypeCode()) == enumIndex) { return e; }
+                return (T)(object)enumIndex;
+            }
+            
+            foreach (T e in (T[])Enum.GetValues(type))
+            {
+                if (((int)(object)e) == enumIndex) { return e; }
             }
 
             throw new InvalidOperationException($"An enum {type} with value {enumIndex} could not be found in {nameof(ReadEnum)}");
         }
 
-        private static void WriteINetSerializableStruct(dynamic? obj, NetworkSerialize attribute, IWriteMessage msg)
+        private static void WriteEnum<T>(T value, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField) where T : Enum
         {
-            if (obj is null) { throw new ArgumentNullException(nameof(obj), "Tried to write 'null' into a non-nullable type"); }
+            ToolBox.ThrowIfNull(value);
 
-            if (!(obj is INetSerializableStruct serializableStruct)) { throw new InvalidOperationException($"Object in {nameof(WriteINetSerializableStruct)} was {obj.GetType()} but expected {nameof(INetSerializableStruct)}"); }
-
-            serializableStruct.Write(msg);
+            Range<int> range = GetEnumRange(typeof(T));
+            bitField.WriteInteger((int)Convert.ChangeType(value, value.GetTypeCode()), range.Start, range.End);
         }
 
-        private static dynamic ReadINetSerializableStruct(IReadMessage inc, Type type, NetworkSerialize attribute)
-        {
-            return INetSerializableStruct.ReadDynamic(type, inc);
-        }
-
-        private static void WriteDynamic(dynamic? obj, NetworkSerialize attribute, IWriteMessage msg)
-        {
-            if (obj is null) { throw new ArgumentNullException(nameof(obj), "Tried to write 'null' into a non-nullable type"); }
-
-            msg.Write(obj);
-        }
-
-        private static dynamic ReadArray(IReadMessage inc, Type type, NetworkSerialize attribute)
-        {
-            Type? elementType = type.GetElementType();
-            if (elementType is null) { throw new InvalidOperationException($"Could not get the element type of {type} in {nameof(ReadArray)}"); }
-
-            int length = inc.ReadRangedInteger(0, attribute.ArrayMaxSize);
-
-            Array list = Array.CreateInstance(elementType, length);
-
-            for (int i = 0; i < length; i++)
+        private static T? ReadNullable<T>(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField) where T : struct =>
+            ReadOption<T>(inc, attribute, bitField) switch
             {
-                if (TryFindBehavior(elementType, out ReadWriteBehavior behavior))
-                {
-                    list.SetValue(behavior.ReadAction(inc, elementType, attribute), i);
-                }
-                else
-                {
-                    throw new InvalidOperationException($"Could not find suitable behavior for type {elementType} in {nameof(ReadArray)}");
-                }
+                Some<T> { Value: var value } => value,
+                None<T> _ => null,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+        private static void WriteNullable<T>(T? value, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField) where T : struct =>
+            WriteOption<T>(value.HasValue ? Option<T>.Some(value.Value) : Option<T>.None(), attribute, msg, bitField);
+
+        private static Option<T> ReadOption<T>(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField) where T : notnull
+        {
+            bool hasValue = bitField.ReadBoolean();
+            if (!hasValue)
+            {
+                return Option<T>.None();
             }
 
-            return list;
+            if (TryFindBehavior(out ReadWriteBehavior<T> behavior))
+            {
+                return Option<T>.Some(behavior.ReadActionDirect(inc, attribute, bitField));
+            }
+
+            throw new InvalidOperationException($"Could not find suitable behavior for type {typeof(T)} in {nameof(ReadOption)}");
         }
 
-        private static void WriteArray(dynamic? obj, NetworkSerialize attribute, IWriteMessage msg)
+        private static void WriteOption<T>(Option<T> option, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField) where T : notnull
         {
-            if (obj is null) { throw new ArgumentNullException(nameof(obj), "Tried to write 'null' into a non-nullable type"); }
+            ToolBox.ThrowIfNull(option);
 
-            if (!(obj is Array array)) { throw new InvalidOperationException($"Object in {nameof(WriteArray)} was {obj.GetType()} but expected {nameof(Array)}"); }
-
-            msg.WriteRangedInteger(array.Length, 0, attribute.ArrayMaxSize);
-
-            foreach (dynamic? o in array)
+            if (option.TryUnwrap(out T value))
             {
-                if (TryFindBehavior(o!.GetType(), out ReadWriteBehavior behavior))
+                bitField.WriteBoolean(true);
+                if (TryFindBehavior(out ReadWriteBehavior<T> behavior))
                 {
-                    behavior.WriteAction(o, attribute, msg);
+                    behavior.WriteActionDirect(value, attribute, msg, bitField);
                 }
+            }
+            else
+            {
+                bitField.WriteBoolean(false);
             }
         }
 
-        private static dynamic ReadBoolean(IReadMessage inc, Type type, NetworkSerialize attribute) => inc.ReadBoolean();
+        private static bool ReadBoolean(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField) => bitField.ReadBoolean();
+        private static void WriteBoolean(bool b, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField) { bitField.WriteBoolean(b); }
+        
+        private static byte ReadByte(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField) => inc.ReadByte();
+        private static void WriteByte(byte b, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField) { msg.WriteByte(b); }
 
-        private static dynamic ReadByte(IReadMessage inc, Type type, NetworkSerialize attribute) => inc.ReadByte();
+        private static ushort ReadUInt16(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField) => inc.ReadUInt16();
+        private static void WriteUInt16(ushort b, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField) { msg.WriteUInt16(b); }
 
-        private static dynamic ReadUInt16(IReadMessage inc, Type type, NetworkSerialize attribute) => inc.ReadUInt16();
+        private static short ReadInt16(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField) => inc.ReadInt16();
+        private static void WriteInt16(short b, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField) { msg.WriteInt16(b); }
 
-        private static dynamic ReadInt16(IReadMessage inc, Type type, NetworkSerialize attribute) => inc.ReadInt16();
+        private static uint ReadUInt32(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField) => inc.ReadUInt32();
+        private static void WriteUInt32(uint b, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField) { msg.WriteUInt32(b); }
 
-        private static dynamic ReadUInt32(IReadMessage inc, Type type, NetworkSerialize attribute) => inc.ReadUInt32();
-
-        private static dynamic ReadInt32(IReadMessage inc, Type type, NetworkSerialize attribute)
+        private static int ReadInt32(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField)
         {
             if (IsRanged(attribute.MinValueInt, attribute.MaxValueInt))
             {
-                return inc.ReadRangedInteger(attribute.MinValueInt, attribute.MaxValueInt);
+                return bitField.ReadInteger(attribute.MinValueInt, attribute.MaxValueInt);
             }
 
             return inc.ReadInt32();
         }
 
-        private static void WriteInt32(dynamic? obj, NetworkSerialize attribute, IWriteMessage msg)
+        private static void WriteInt32(int i, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField)
         {
-            if (obj is null) { throw new ArgumentNullException(nameof(obj), "Tried to write 'null' into a non-nullable type"); }
+            ToolBox.ThrowIfNull(i);
 
             if (IsRanged(attribute.MinValueInt, attribute.MaxValueInt))
             {
-                msg.WriteRangedInteger(obj, attribute.MinValueInt, attribute.MaxValueInt);
+                bitField.WriteInteger(i, attribute.MinValueInt, attribute.MaxValueInt);
                 return;
             }
 
-            msg.Write(obj);
+            msg.WriteInt32(i);
         }
 
-        private static dynamic ReadUInt64(IReadMessage inc, Type type, NetworkSerialize attribute) => inc.ReadUInt64();
+        private static ulong ReadUInt64(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField) => inc.ReadUInt64();
+        private static void WriteUInt64(ulong b, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField) { msg.WriteUInt64(b); }
 
-        private static dynamic ReadInt64(IReadMessage inc, Type type, NetworkSerialize attribute) => inc.ReadInt64();
+        private static long ReadInt64(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField) => inc.ReadInt64();
+        private static void WriteInt64(long b, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField) { msg.WriteInt64(b); }
 
-        private static dynamic ReadSingle(IReadMessage inc, Type type, NetworkSerialize attribute)
+        private static float ReadSingle(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField)
         {
             if (IsRanged(attribute.MinValueFloat, attribute.MaxValueFloat))
             {
-                return inc.ReadRangedSingle(attribute.MinValueFloat, attribute.MaxValueFloat, attribute.NumberOfBits);
+                return bitField.ReadFloat(attribute.MinValueFloat, attribute.MaxValueFloat, attribute.NumberOfBits);
             }
 
             return inc.ReadSingle();
         }
 
-        private static void WriteSingle(dynamic? obj, NetworkSerialize attribute, IWriteMessage msg)
+        private static void WriteSingle(float f, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField)
         {
-            if (obj is null) { throw new ArgumentNullException(nameof(obj), "Tried to write 'null' into a non-nullable type"); }
+            ToolBox.ThrowIfNull(f);
 
             if (IsRanged(attribute.MinValueFloat, attribute.MaxValueFloat))
             {
-                msg.WriteRangedSingle(obj, attribute.MinValueFloat, attribute.MaxValueFloat, attribute.NumberOfBits);
+                bitField.WriteFloat(f, attribute.MinValueFloat, attribute.MaxValueFloat, attribute.NumberOfBits);
                 return;
             }
 
-            msg.Write(obj);
+            msg.WriteSingle(f);
         }
 
-        private static dynamic ReadDouble(IReadMessage inc, Type type, NetworkSerialize attribute) => inc.ReadDouble();
+        private static double ReadDouble(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField) => inc.ReadDouble();
+        private static void WriteDouble(double b, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField) { msg.WriteDouble(b); }
 
-        private static dynamic ReadString(IReadMessage inc, Type type, NetworkSerialize attribute) => inc.ReadString();
+        private static string ReadString(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField) => inc.ReadString();
+        private static void WriteString(string b, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField) { msg.WriteString(b); }
 
-        private static dynamic ReadIdentifier(IReadMessage inc, Type type, NetworkSerialize attribute) => inc.ReadIdentifier();
+        private static Identifier ReadIdentifier(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField) => inc.ReadIdentifier();
+        private static void WriteIdentifier(Identifier b, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField) { msg.WriteIdentifier(b); }
 
-        private static dynamic ReadColor(IReadMessage inc, Type type, NetworkSerialize attribute) => attribute.IncludeColorAlpha ? inc.ReadColorR8G8B8A8() : inc.ReadColorR8G8B8();
-
-        private static void WriteColor(dynamic? obj, NetworkSerialize attribute, IWriteMessage msg)
+        private static AccountId ReadAccountId(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField)
         {
-            if (obj is null) { throw new ArgumentNullException(nameof(obj), "Tried to write 'null' into a non-nullable type"); }
+            string str = inc.ReadString();
+            return AccountId.Parse(str).TryUnwrap(out var accountId)
+                ? accountId
+                : throw new InvalidCastException($"Could not parse \"{str}\" as an {nameof(AccountId)}");
+        }
+
+        private static void WriteAccountId(AccountId accountId, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField)
+        {
+            msg.WriteString(accountId.StringRepresentation);
+        }
+
+        private static Color ReadColor(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField) => attribute.IncludeColorAlpha ? inc.ReadColorR8G8B8A8() : inc.ReadColorR8G8B8();
+
+        private static void WriteColor(Color color, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField)
+        {
+            ToolBox.ThrowIfNull(color);
 
             if (attribute.IncludeColorAlpha)
             {
-                msg.WriteColorR8G8B8A8(obj);
+                msg.WriteColorR8G8B8A8(color);
                 return;
             }
 
-            msg.WriteColorR8G8B8(obj);
+            msg.WriteColorR8G8B8(color);
         }
 
-        private static dynamic ReadVector2(IReadMessage inc, Type type, NetworkSerialize attribute)
+        private static Vector2 ReadVector2(IReadMessage inc, NetworkSerialize attribute, ReadOnlyBitField bitField)
         {
-            float x;
-            float y;
-
-            if (IsRanged(attribute.MinValueFloat, attribute.MaxValueFloat))
-            {
-                x = inc.ReadRangedSingle(attribute.MinValueFloat, attribute.MaxValueFloat, attribute.NumberOfBits);
-                y = inc.ReadRangedSingle(attribute.MinValueFloat, attribute.MaxValueFloat, attribute.NumberOfBits);
-            }
-            else
-            {
-                x = inc.ReadSingle();
-                y = inc.ReadSingle();
-            }
+            float x = ReadSingle(inc, attribute, bitField);
+            float y = ReadSingle(inc, attribute, bitField);
 
             return new Vector2(x, y);
         }
 
-        private static void WriteVector2(dynamic? obj, NetworkSerialize attribute, IWriteMessage msg)
+        private static void WriteVector2(Vector2 vector2, NetworkSerialize attribute, IWriteMessage msg, WriteOnlyBitField bitField)
         {
-            if (obj is null) { throw new ArgumentNullException(nameof(obj), "Tried to write 'null' into a non-nullable type"); }
+            ToolBox.ThrowIfNull(vector2);
 
-            var (x, y) = (Vector2)obj;
-            if (IsRanged(attribute.MinValueFloat, attribute.MaxValueFloat))
-            {
-                msg.WriteRangedSingle(x, attribute.MinValueFloat, attribute.MaxValueFloat, attribute.NumberOfBits);
-                msg.WriteRangedSingle(y, attribute.MinValueFloat, attribute.MaxValueFloat, attribute.NumberOfBits);
-                return;
-            }
-
-            msg.Write(x);
-            msg.Write(y);
+            var (x, y) = vector2;
+            WriteSingle(x, attribute, msg, bitField);
+            WriteSingle(y, attribute, msg, bitField);
         }
 
         private static bool IsRanged(float minValue, float maxValue) => minValue > float.MinValue || maxValue < float.MaxValue;
@@ -474,53 +521,71 @@ namespace Barotrauma
             return new Range<int>(values.Min(), values.Max());
         }
 
-        private static bool TryFindBehavior(Type type, out ReadWriteBehavior behavior)
+        private static bool TryFindBehavior<T>(out ReadWriteBehavior<T> behavior) where T : notnull
         {
-            if (TypeBehaviors.TryGetValue(type, out behavior)) { return true; }
+            bool found = TryFindBehavior(typeof(T), out var bhvr);
+            behavior = found ? (ReadWriteBehavior<T>)bhvr : default;
+            return found;
+        }
 
-            foreach (var (predicate, behavior2) in TypePredicates)
+        private static bool TryFindBehavior(Type type, out IReadWriteBehavior behavior)
+        {
+            if (TypeBehaviors.TryGetValue(type, out var outBehavior))
             {
-                if (predicate(type))
-                {
-                    behavior = behavior2;
-                    return true;
-                }
+                behavior = outBehavior;
+                return true;
             }
 
-            behavior = InvalidReadWriteBehavior;
+            foreach (var (predicate, factory) in BehaviorFactories)
+            {
+                if (!predicate(type)) { continue; }
+
+                behavior = factory(type);
+                TypeBehaviors.Add(type, behavior);
+                return true;
+            }
+
+            behavior = default!;
             return false;
         }
 
-        public static ImmutableArray<CachedReflectedVariable> GetPropertiesAndFields(Type type, Type baseClassType)
+        public static ImmutableArray<CachedReflectedVariable> GetPropertiesAndFields(Type type)
         {
             if (CachedVariables.TryGetValue(type, out var cached)) { return cached; }
 
             List<CachedReflectedVariable> variables = new List<CachedReflectedVariable>();
 
-            IEnumerable<PropertyInfo> propertyInfos = type.GetProperties().Where(HasAttribute);
-            IEnumerable<FieldInfo>  fieldInfos = type.GetFields().Where(HasAttribute);
+            IEnumerable<PropertyInfo> propertyInfos = type.GetProperties().Where(HasAttribute).Where(NotStatic);
+            IEnumerable<FieldInfo> fieldInfos = type.GetFields().Where(HasAttribute).Where(NotStatic);
 
             foreach (PropertyInfo info in propertyInfos)
             {
-                if (TryFindBehavior(info.PropertyType, out ReadWriteBehavior behavior))
+                if (info.SetMethod is null)
                 {
-                    variables.Add(new CachedReflectedVariable(info, behavior, baseClassType));
+                    //skip get-only properties, because it's
+                    //useful to have them but their value
+                    //cannot be set when reading a struct
+                    continue;
+                }
+                if (TryFindBehavior(info.PropertyType, out IReadWriteBehavior behavior))
+                {
+                    variables.Add(new CachedReflectedVariable(info, behavior, type));
                 }
                 else
                 {
-                    throw new SerializationException($"Unable to serialize type \"{type}\".");
+                    throw new Exception($"Unable to serialize type \"{type}\".");
                 }
             }
 
             foreach (FieldInfo info in fieldInfos)
             {
-                if (TryFindBehavior(info.FieldType, out ReadWriteBehavior behavior))
+                if (TryFindBehavior(info.FieldType, out IReadWriteBehavior behavior))
                 {
-                    variables.Add(new CachedReflectedVariable(info, behavior, baseClassType));
+                    variables.Add(new CachedReflectedVariable(info, behavior, type));
                 }
                 else
                 {
-                    throw new SerializationException($"Unable to serialize type \"{type}\".");
+                    throw new Exception($"Unable to serialize type \"{type}\".");
                 }
             }
 
@@ -528,7 +593,20 @@ namespace Barotrauma
             CachedVariables.Add(type, array);
             return array;
 
-            bool HasAttribute(MemberInfo info) => (info.GetCustomAttribute<NetworkSerialize>() ?? baseClassType.GetCustomAttribute<NetworkSerialize>()) != null;
+            bool HasAttribute(MemberInfo info) => (info.GetCustomAttribute<NetworkSerialize>() ?? type.GetCustomAttribute<NetworkSerialize>()) != null;
+
+            static bool NotStatic(MemberInfo info)
+                => info switch
+                {
+                    PropertyInfo property => property.GetGetMethod() is { IsStatic: false },
+                    FieldInfo field => !field.IsStatic,
+                    _ => false
+                };
+        }
+
+        private static bool IsOfGenericType(Type type, Type comparedTo)
+        {
+            return type.IsGenericType && type.GetGenericTypeDefinition() == comparedTo;
         }
     }
 
@@ -575,13 +653,15 @@ namespace Barotrauma
     /// <see cref="Single">float</see><br/>
     /// <see cref="Double">double</see><br/>
     /// <see cref="String">string</see><br/>
+    /// <see cref="Barotrauma.Networking.AccountId"/><br/>
+    /// <see cref="System.Collections.Immutable.ImmutableArray{T}"></see><br/>
     /// <see cref="Microsoft.Xna.Framework.Color"/><br/>
     /// <see cref="Microsoft.Xna.Framework.Vector2"/><br/>
     /// In addition arrays, enums, <see cref="Nullable{T}"/> and <see cref="Option{T}"/> are supported.<br/>
     /// Using <see cref="Nullable{T}"/> or <see cref="Option{T}"/> will make the field or property optional.
     /// </remarks>
     /// <seealso cref="NetworkSerialize"/>
-    public interface INetSerializableStruct
+    internal interface INetSerializableStruct
     {
         /// <summary>
         /// Deserializes a network message into a struct.
@@ -608,21 +688,34 @@ namespace Barotrauma
         /// <param name="inc">Incoming network message</param>
         /// <typeparam name="T">Type of the struct that implements <see cref="INetSerializableStruct"/></typeparam>
         /// <returns>A new struct of type T with fields and properties deserialized</returns>
-        public static T Read<T>(IReadMessage inc) where T : INetSerializableStruct => (T)ReadDynamic(typeof(T), inc);
-
-        public static dynamic ReadDynamic(Type type, IReadMessage inc)
+        public static T Read<T>(IReadMessage inc) where T : INetSerializableStruct
         {
-            object? newObject = Activator.CreateInstance(type);
+            ReadOnlyBitField bitField = new ReadOnlyBitField(inc);
+            return ReadInternal<T>(inc, bitField);
+        }
+
+        public static T ReadInternal<T>(IReadMessage inc, ReadOnlyBitField bitField) where T : INetSerializableStruct
+        {
+            object? newObject = Activator.CreateInstance(typeof(T));
             if (newObject is null) { return default!; }
 
-            var properties = NetSerializableProperties.GetPropertiesAndFields(type, type);
+            var properties = NetSerializableProperties.GetPropertiesAndFields(typeof(T));
             foreach (NetSerializableProperties.CachedReflectedVariable property in properties)
             {
-                NetworkSerialize attribute = property.Attribute;
-                property.SetValue(newObject, property.Behavior.ReadAction(inc, property.Type, attribute));
+                object? value = property.Behavior.ReadAction(inc, property.Attribute, bitField);
+                try
+                {
+                    property.SetValue(newObject, value);
+                }
+                catch (Exception exception)
+                {
+                    throw new Exception($"Failed to assign" +
+                                        $" {value ?? "[NULL]"} ({value?.GetType().Name ?? "[NULL]"})" +
+                                        $" to {typeof(T).Name}.{property.Name} ({property.Type.Name})", exception);
+                }
             }
 
-            return newObject;
+            return (T)newObject;
         }
 
         /// <summary>
@@ -651,34 +744,22 @@ namespace Barotrauma
         /// <param name="msg">Outgoing network message</param>
         public void Write(IWriteMessage msg)
         {
-            Type type = GetType();
-            var properties = NetSerializableProperties.GetPropertiesAndFields(type, type);
+            WriteOnlyBitField bitField = new WriteOnlyBitField();
+            IWriteMessage structWriteMsg = new WriteOnlyMessage();
+            WriteInternal(structWriteMsg, bitField);
+            bitField.WriteToMessage(msg);
+            msg.WriteBytes(structWriteMsg.Buffer, 0, structWriteMsg.LengthBytes);
+        }
+
+        public void WriteInternal(IWriteMessage msg, WriteOnlyBitField bitField)
+        {
+            var properties = NetSerializableProperties.GetPropertiesAndFields(GetType());
+
             foreach (NetSerializableProperties.CachedReflectedVariable property in properties)
             {
-                NetworkSerialize attribute = property.Attribute;
-                property.Behavior.WriteAction(property.GetValue(this), attribute, msg);
+                object? value = property.GetValue(this);
+                property.Behavior.WriteAction(value!, property.Attribute, msg, bitField);
             }
-        }
-    }
-
-    public static class WriteOnlyMessageExtensions
-    {
-#if CLIENT
-        public static IWriteMessage WithHeader(this IWriteMessage msg, ClientPacketHeader header)
-        {
-            msg.Write((byte)header);
-            return msg;
-        }
-#elif SERVER
-        public static IWriteMessage WithHeader(this IWriteMessage msg, ServerPacketHeader header)
-        {
-            msg.Write((byte)header);
-            return msg;
-        }
-#endif
-        public static void Write(this IWriteMessage msg, INetSerializableStruct serializableStruct)
-        {
-            serializableStruct.Write(msg);
         }
     }
 }

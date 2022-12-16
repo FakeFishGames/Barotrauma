@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Barotrauma.Items.Components;
 using Barotrauma.Particles;
 using Barotrauma.Sounds;
 using Microsoft.Xna.Framework;
-using System.Xml.Linq;
-using Barotrauma.Items.Components;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Barotrauma
@@ -23,6 +21,13 @@ namespace Barotrauma
         private Entity soundEmitter;
         private double loopStartTime;
         private bool loopSound;
+        /// <summary>
+        /// Each new sound overrides the existing sounds that were launched with this status effect, meaning the old sound will be faded out and disposed and the new sound will be played instead of the old.
+        /// Normally the call to play the sound is ignored if there's an existing sound playing when the effect triggers.
+        /// Used for example for ensuring that rapid playing sounds restart playing even when the previous clip(s) have not yet stopped.
+        /// Use with caution.
+        /// </summary>
+        private bool forcePlaySounds;
 
         partial void InitProjSpecific(ContentXElement element, string parentDebugName)
         {
@@ -52,6 +57,7 @@ namespace Barotrauma
                         break;
                 }
             }
+            forcePlaySounds = element.GetAttributeBool(nameof(forcePlaySounds), false);
         }
 
         partial void ApplyProjSpecific(float deltaTime, Entity entity, IReadOnlyList<ISerializableEntity> targets, Hull hull, Vector2 worldPosition, bool playSound)
@@ -73,7 +79,7 @@ namespace Barotrauma
                     {
                         angle = item.body.Rotation + ((item.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
                         particleRotation = -item.body.Rotation;
-                        if (item.body.Dir < 0.0f)
+                        if (emitter.Prefab.Properties.CopyEntityDir && item.body.Dir < 0.0f)
                         {
                             particleRotation += MathHelper.Pi;
                             mirrorAngle = true;
@@ -98,7 +104,9 @@ namespace Barotrauma
                     {
                         angle = targetLimb.body.Rotation + ((targetLimb.body.Dir > 0.0f) ? 0.0f : MathHelper.Pi);
                         particleRotation = -targetLimb.body.Rotation;
-                        if (targetLimb.body.Dir < 0.0f)
+                        float offset = targetLimb.Params.GetSpriteOrientation() - MathHelper.PiOver2;
+                        particleRotation += offset;
+                        if (emitter.Prefab.Properties.CopyEntityDir && targetLimb.body.Dir < 0.0f)
                         {
                             particleRotation += MathHelper.Pi;
                             mirrorAngle = true;
@@ -114,10 +122,14 @@ namespace Barotrauma
 
         private void PlaySound(Entity entity, Hull hull, Vector2 worldPosition)
         {
-            if (sounds.Count == 0) return;
+            if (sounds.Count == 0) { return; }
 
-            if (soundChannel == null || !soundChannel.IsPlaying)
+            if (soundChannel == null || !soundChannel.IsPlaying || forcePlaySounds)
             {
+                if (soundChannel != null && soundChannel.IsPlaying)
+                {
+                    soundChannel.FadeOutAndDispose();
+                }
                 if (soundSelectionMode == SoundSelectionMode.All)
                 {
                     foreach (RoundSound sound in sounds)
@@ -128,7 +140,7 @@ namespace Barotrauma
                             GameAnalyticsManager.AddErrorEventOnce("StatusEffect.ApplyProjSpecific:SoundNull1" + Environment.StackTrace.CleanupStackTrace(), GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                             return;
                         }
-                        soundChannel = SoundPlayer.PlaySound(sound.Sound, worldPosition, sound.Volume, sound.Range, hullGuess: hull, ignoreMuffling: sound.IgnoreMuffling);
+                        soundChannel = SoundPlayer.PlaySound(sound.Sound, worldPosition, sound.Volume, sound.Range, hullGuess: hull, ignoreMuffling: sound.IgnoreMuffling, freqMult: sound.GetRandomFrequencyMultiplier());
                         ignoreMuffling = sound.IgnoreMuffling;
                         if (soundChannel != null) { soundChannel.Looping = loopSound; }
                     }
@@ -155,7 +167,7 @@ namespace Barotrauma
                         GameAnalyticsManager.AddErrorEventOnce("StatusEffect.ApplyProjSpecific:SoundNull2" + Environment.StackTrace.CleanupStackTrace(), GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
                         return;
                     }
-                    soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, worldPosition, selectedSound.Volume, selectedSound.Range, hullGuess: hull, ignoreMuffling: selectedSound.IgnoreMuffling);
+                    soundChannel = SoundPlayer.PlaySound(selectedSound.Sound, worldPosition, selectedSound.Volume, selectedSound.Range, hullGuess: hull, ignoreMuffling: selectedSound.IgnoreMuffling, freqMult: selectedSound.GetRandomFrequencyMultiplier());
                     ignoreMuffling = selectedSound.IgnoreMuffling;
                     if (soundChannel != null) { soundChannel.Looping = loopSound; }
                 }

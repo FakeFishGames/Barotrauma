@@ -118,7 +118,7 @@ namespace Barotrauma
             return GetDrawDepth(SpriteDepth + DrawDepthOffset, Sprite);
         }
 
-        public Color GetSpriteColor()
+        public Color GetSpriteColor(bool withHighlight = false)
         {
             Color color = spriteColor;
             if (Prefab.UseContainedSpriteColor && ownInventory != null)
@@ -127,6 +127,17 @@ namespace Barotrauma
                 {
                     color = item.ContainerColor;
                     break;
+                }
+            }
+            if (withHighlight)
+            {
+                if (IsHighlighted && !GUI.DisableItemHighlights && Screen.Selected != GameMain.GameScreen)
+                {
+                    color = GUIStyle.Orange * Math.Max(GetSpriteColor().A / (float)byte.MaxValue, 0.1f);
+                }
+                else if (IsHighlighted && HighlightColor.HasValue)
+                {
+                    color = Color.Lerp(color, HighlightColor.Value, (MathF.Sin((float)Timing.TotalTime * 3.0f) + 1.0f) / 2.0f);
                 }
             }
             return color;
@@ -231,6 +242,11 @@ namespace Barotrauma
                 return false;
             }
 
+            if (parentInventory?.Owner is Character character && character.InvisibleTimer > 0.0f)
+            {
+                return false;
+            }
+
             Rectangle extents;
             if (cachedVisibleExtents.HasValue)
             {
@@ -281,9 +297,7 @@ namespace Barotrauma
                 else if (!ShowItems) { return; }
             }
 
-            Color color = IsIncludedInSelection && editing ? GUIStyle.Blue : IsHighlighted && !GUI.DisableItemHighlights && Screen.Selected != GameMain.GameScreen ? GUIStyle.Orange * Math.Max(GetSpriteColor().A / (float) byte.MaxValue, 0.1f) : GetSpriteColor();
-
-            //if (IsSelected && editing) color = Color.Lerp(color, Color.Gold, 0.5f);
+            Color color = IsIncludedInSelection && editing ?  GUIStyle.Blue : GetSpriteColor(withHighlight: true);
 
             bool isWiringMode = editing && SubEditorScreen.TransparentWiringMode && SubEditorScreen.IsWiringMode() && !isWire && parentInventory == null;
             bool renderTransparent = isWiringMode && GetComponent<ConnectionPanel>() == null;
@@ -569,6 +583,39 @@ namespace Barotrauma
             }
         }
 
+        partial void Splash()
+        {
+            if (body == null || CurrentHull == null) { return; }
+            //create a splash particle
+            float massFactor = MathHelper.Clamp(body.Mass, 0.5f, 20.0f);
+            for (int i = 0; i < MathHelper.Clamp(Math.Abs(body.LinearVelocity.Y), 1.0f, 10.0f); i++)
+            {
+                var splash = GameMain.ParticleManager.CreateParticle("watersplash",
+                    new Vector2(WorldPosition.X, CurrentHull.WorldSurface),
+                    new Vector2(0.0f, Math.Abs(-body.LinearVelocity.Y * massFactor)) + Rand.Vector(Math.Abs(body.LinearVelocity.Y * 10)),
+                    Rand.Range(0.0f, MathHelper.TwoPi), CurrentHull);
+                if (splash != null)
+                {
+                    splash.Size *= MathHelper.Clamp(Math.Abs(body.LinearVelocity.Y) * 0.1f * massFactor, 1.0f, 4.0f);
+                }
+            }
+            GameMain.ParticleManager.CreateParticle("bubbles",
+                new Vector2(WorldPosition.X, CurrentHull.WorldSurface),
+                body.LinearVelocity * massFactor,
+                0.0f, CurrentHull);
+
+            //create a wave
+            if (body.LinearVelocity.Y < 0.0f)
+            {
+                int n = (int)((Position.X - CurrentHull.Rect.X) / Hull.WaveWidth);
+                if (n >= 0 && n < currentHull.WaveVel.Length)
+                {
+                    CurrentHull.WaveVel[n] += MathHelper.Clamp(body.LinearVelocity.Y * massFactor, -5.0f, 5.0f);
+                }
+            }
+            SoundPlayer.PlaySplashSound(WorldPosition, Math.Abs(body.LinearVelocity.Y) + Rand.Range(-10.0f, -5.0f));
+        }
+
         public void CheckNeedsSoundUpdate(ItemComponent ic)
         {
             if (ic.NeedsSoundUpdate())
@@ -790,7 +837,7 @@ namespace Barotrauma
                     reloadTextureButton.OnClicked += (button, data) =>
                     {
                         Sprite.ReloadXML();
-                        Sprite.ReloadTexture(updateAllSprites: true);
+                        Sprite.ReloadTexture();
                         return true;
                     };
                 }
@@ -976,13 +1023,13 @@ namespace Barotrauma
         /// <summary>
         /// Reposition currently active item interfaces to make sure they don't overlap with each other
         /// </summary>
-        private void SetHUDLayout()
+        private void SetHUDLayout(bool ignoreLocking = false)
         {
             //reset positions first
             List<GUIComponent> elementsToMove = new List<GUIComponent>();
 
             if (editingHUD != null && editingHUD.UserData == this &&
-                ((HasInGameEditableProperties && Character.Controlled?.SelectedConstruction == this) || Screen.Selected == GameMain.SubEditorScreen))
+                ((HasInGameEditableProperties && Character.Controlled?.SelectedItem == this) || Screen.Selected == GameMain.SubEditorScreen))
             {
                 elementsToMove.Add(editingHUD);
             }
@@ -991,6 +1038,7 @@ namespace Barotrauma
             foreach (ItemComponent ic in activeHUDs)
             {
                 if (ic.GuiFrame == null || ic.AllowUIOverlap || ic.GetLinkUIToComponent() != null) { continue; }
+                if (!ignoreLocking && ic.LockGuiFramePosition) { continue; }
                 //if the frame covers nearly all of the screen, don't trying to prevent overlaps because it'd fail anyway
                 if (ic.GuiFrame.Rect.Width >= GameMain.GraphicsWidth * 0.9f && ic.GuiFrame.Rect.Height >= GameMain.GraphicsHeight * 0.9f) { continue; }
                 ic.GuiFrame.RectTransform.ScreenSpaceOffset = Point.Zero;
@@ -1015,11 +1063,7 @@ namespace Barotrauma
                 disallowedAreas.Add(editor.ToggleEntityMenuButton.Rect);
             }
 
-            GUI.PreventElementOverlap(elementsToMove, disallowedAreas,
-                new Rectangle(
-                    0, 20,
-                    GameMain.GraphicsWidth,
-                    HUDLayoutSettings.InventoryTopY > 0 ? HUDLayoutSettings.InventoryTopY - 40 : GameMain.GraphicsHeight - 80));
+            GUI.PreventElementOverlap(elementsToMove, disallowedAreas, clampArea: HUDLayoutSettings.ItemHUDArea);
 
             //System.Diagnostics.Debug.WriteLine("after: " + elementsToMove[0].Rect.ToString() + "   " + elementsToMove[1].Rect.ToString());
             foreach (ItemComponent ic in activeHUDs)
@@ -1042,7 +1086,7 @@ namespace Barotrauma
         public void UpdateHUD(Camera cam, Character character, float deltaTime)
         {
             bool editingHUDCreated = false;
-            if ((HasInGameEditableProperties && (character.SelectedConstruction == this || EditableWhenEquipped)) ||
+            if ((HasInGameEditableProperties && (character.SelectedItem == this || EditableWhenEquipped)) ||
                 Screen.Selected == GameMain.SubEditorScreen)
             {
                 GUIComponent prevEditingHUD = editingHUD;
@@ -1126,7 +1170,7 @@ namespace Barotrauma
                 foreach (Character otherCharacter in Character.CharacterList)
                 {
                     if (otherCharacter != character &&
-                        otherCharacter.SelectedConstruction == this)
+                        otherCharacter.SelectedItem == this)
                     {
                         ItemInUseWarning.Visible = true;
                         if (mergedHUDRect.Width > GameMain.GraphicsWidth / 2) { mergedHUDRect.Inflate(-GameMain.GraphicsWidth / 4, 0); }
@@ -1145,7 +1189,7 @@ namespace Barotrauma
 
         public void DrawHUD(SpriteBatch spriteBatch, Camera cam, Character character)
         {
-            if (HasInGameEditableProperties && (character.SelectedConstruction == this || EditableWhenEquipped))
+            if (HasInGameEditableProperties && (character.SelectedItem == this || EditableWhenEquipped))
             {
                 DrawEditing(spriteBatch, cam);
             }
@@ -1212,10 +1256,9 @@ namespace Barotrauma
             {
                 foreach (ItemComponent ic in components)
                 {
-                    if (ic.DisplayMsg.IsNullOrEmpty()) { continue; }
                     if (!ic.CanBePicked && !ic.CanBeSelected) { continue; }
                     if (ic is Holdable holdable && !holdable.CanBeDeattached()) { continue; }
-
+                    if (ic is ConnectionPanel connectionPanel && !connectionPanel.CanRewire()) { continue; }
                     Color color = Color.Gray;
                     if (ic.HasRequiredItems(character, false))
                     {
@@ -1228,6 +1271,7 @@ namespace Barotrauma
                             color = Color.Cyan;
                         }
                     }
+                    if (ic.DisplayMsg.IsNullOrEmpty()) { continue; }
                     texts.Add(new ColoredText(ic.DisplayMsg.Value, color, false, false));
                 }
             }
@@ -1238,6 +1282,25 @@ namespace Barotrauma
             return texts;
         }
 
+        public void ForceHUDLayoutUpdate(bool ignoreLocking = false)
+        {
+            foreach (ItemComponent ic in activeHUDs)
+            {
+                if (ic.GuiFrame == null) { continue; }
+                if (!ic.CanBeSelected && !ic.DrawHudWhenEquipped) { continue; }
+                ic.GuiFrame.RectTransform.ScreenSpaceOffset = Point.Zero;
+                if (ic.UseAlternativeLayout)
+                {
+                    ic.AlternativeLayout?.ApplyTo(ic.GuiFrame.RectTransform);
+                }
+                else
+                {
+                    ic.DefaultLayout?.ApplyTo(ic.GuiFrame.RectTransform);
+                }
+            }
+            SetHUDLayout(ignoreLocking);
+        }
+
         public override void AddToGUIUpdateList(int order = 0)
         {
             if (Screen.Selected is SubEditorScreen)
@@ -1246,15 +1309,15 @@ namespace Barotrauma
             }
             else
             {
-                if (HasInGameEditableProperties && Character.Controlled != null && (Character.Controlled.SelectedConstruction == this || EditableWhenEquipped))
+                if (HasInGameEditableProperties && Character.Controlled != null && (Character.Controlled.SelectedItem == this || EditableWhenEquipped))
                 {
                     if (editingHUD != null && editingHUD.UserData == this) { editingHUD.AddToGUIUpdateList(); }
                 }
             }
 
-            if (Character.Controlled != null && Character.Controlled.SelectedConstruction != this && GetComponent<RemoteController>() == null)
+            if (Character.Controlled != null && Character.Controlled.SelectedItem != this && GetComponent<RemoteController>() == null)
             {
-                if (Character.Controlled.SelectedConstruction?.GetComponent<RemoteController>()?.TargetItem != this &&
+                if (Character.Controlled.SelectedItem?.GetComponent<RemoteController>()?.TargetItem != this &&
                     !Character.Controlled.HeldItems.Any(it => it.GetComponent<RemoteController>()?.TargetItem == this))
                 {
                     return;
@@ -1357,6 +1420,15 @@ namespace Barotrauma
                 case EventType.ChangeProperty:
                     ReadPropertyChange(msg, false);
                     break;
+                case EventType.ItemStat:
+                    byte length = msg.ReadByte();
+                    for (int i = 0; i < length; i++)
+                    {
+                        var statIdentifier = INetSerializableStruct.Read<ItemStatManager.TalentStatIdentifier>(msg);
+                        var statValue = msg.ReadSingle();
+                        StatManager.ApplyStat(statIdentifier, statValue);
+                    }
+                    break;
                 case EventType.Upgrade:
                     Identifier identifier = msg.ReadIdentifier();
                     byte level = msg.ReadByte();
@@ -1423,8 +1495,8 @@ namespace Barotrauma
                 case TreatmentEventData treatmentEventData:
                     Character targetCharacter = treatmentEventData.TargetCharacter;
 
-                    msg.Write(targetCharacter.ID);
-                    msg.Write(treatmentEventData.LimbIndex);
+                    msg.WriteUInt16(targetCharacter.ID);
+                    msg.WriteByte(treatmentEventData.LimbIndex);
                     break;
                 case ChangePropertyEventData changePropertyEventData:
                     WritePropertyChange(msg, changePropertyEventData, inGameEditableOnly: true);
@@ -1432,7 +1504,7 @@ namespace Barotrauma
                     break;
                 case CombineEventData combineEventData:
                     Item combineTarget = combineEventData.CombineTarget;
-                    msg.Write(combineTarget.ID);
+                    msg.WriteUInt16(combineTarget.ID);
                     break;
                 default:
                     throw error($"Unsupported event type {eventData.GetType().Name}");

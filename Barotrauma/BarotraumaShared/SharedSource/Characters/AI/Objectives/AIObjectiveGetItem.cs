@@ -21,10 +21,10 @@ namespace Barotrauma
         public float TargetCondition { get; set; } = 1;
         public bool AllowDangerousPressure { get; set; }
 
-        public readonly ImmutableArray<Identifier> IdentifiersOrTags;
+        public readonly ImmutableHashSet<Identifier> IdentifiersOrTags;
 
         //if the item can't be found, spawn it in the character's inventory (used by outpost NPCs)
-        private bool spawnItemIfNotFound = false;
+        private readonly bool spawnItemIfNotFound = false;
 
         private Item targetItem;
         private readonly Item originalTarget;
@@ -32,8 +32,8 @@ namespace Barotrauma
         private bool isDoneSeeking;
         public Item TargetItem => targetItem;
         private int currSearchIndex;
-        public Identifier[] ignoredContainerIdentifiers;
-        public Identifier[] ignoredIdentifiersOrTags;
+        public ImmutableHashSet<Identifier> ignoredContainerIdentifiers;
+        public ImmutableHashSet<Identifier> ignoredIdentifiersOrTags;
         private AIObjectiveGoTo goToObjective;
         private float currItemPriority;
         private readonly bool checkInventory;
@@ -93,8 +93,8 @@ namespace Barotrauma
             Equip = equip;
             this.spawnItemIfNotFound = spawnItemIfNotFound;
             this.checkInventory = checkInventory;
-            IdentifiersOrTags = ParseGearTags(identifiersOrTags).ToImmutableArray();
-            ignoredIdentifiersOrTags = ParseIgnoredTags(identifiersOrTags).ToArray();
+            IdentifiersOrTags = ParseGearTags(identifiersOrTags).ToImmutableHashSet();
+            ignoredIdentifiersOrTags = ParseIgnoredTags(identifiersOrTags).ToImmutableHashSet();
         }
 
         public static IEnumerable<Identifier> ParseGearTags(IEnumerable<Identifier> identifiersOrTags)
@@ -558,11 +558,11 @@ namespace Barotrauma
         {
             if (!item.HasAccess(character)) { return false; }
             if (ignoredItems.Contains(item)) { return false; };
-            if (ignoredIdentifiersOrTags != null && ignoredIdentifiersOrTags.Any(id => item.Prefab.Identifier == id || item.HasTag(id))) { return false; }
+            if (ignoredIdentifiersOrTags != null && CheckItemIdentifiersOrTags(item, ignoredIdentifiersOrTags)) { return false; }
             if (item.Condition < TargetCondition) { return false; }
             if (ItemFilter != null && !ItemFilter(item)) { return false; }
             if (RequireLoaded && item.Components.Any(i => !i.IsLoaded(character))) { return false; }
-            return IdentifiersOrTags.Any(id => id == item.Prefab.Identifier || item.HasTag(id) || (AllowVariants && !item.Prefab.VariantOf.IsEmpty && item.Prefab.VariantOf == id));
+            return CheckItemIdentifiersOrTags(item, IdentifiersOrTags) || (AllowVariants && !item.Prefab.VariantOf.IsEmpty && IdentifiersOrTags.Contains(item.Prefab.VariantOf));
         }
 
         public override void Reset()

@@ -18,6 +18,7 @@ namespace Barotrauma.Items.Components
         };
 
         private readonly HashSet<Identifier> fixableEntities;
+        private readonly HashSet<Identifier> nonFixableEntities;
         private Vector2 pickedPosition;
         private float activeTimer;
 
@@ -135,6 +136,7 @@ namespace Barotrauma.Items.Components
             }
 
             fixableEntities = new HashSet<Identifier>();
+            nonFixableEntities = new HashSet<Identifier>();
             foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
@@ -147,7 +149,16 @@ namespace Barotrauma.Items.Components
                         }
                         else
                         {
-                            fixableEntities.Add(subElement.GetAttributeIdentifier("identifier", ""));
+                            foreach (Identifier id in subElement.GetAttributeIdentifierArray("identifier", Array.Empty<Identifier>()))
+                            {
+                                fixableEntities.Add(id);
+                            }
+                        }
+                        break;
+                    case "nonfixable":
+                        foreach (Identifier id in subElement.GetAttributeIdentifierArray("identifier", Array.Empty<Identifier>()))
+                        {
+                            nonFixableEntities.Add(id);
                         }
                         break;
                 }
@@ -503,7 +514,7 @@ namespace Barotrauma.Items.Components
 
             if (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer)
             {
-                if (Rand.Range(0.0f, 1.0f) < FireProbability * deltaTime)
+                if (Rand.Range(0.0f, 1.0f) < FireProbability * deltaTime && item.CurrentHull != null)
                 {
                     Vector2 displayPos = ConvertUnits.ToDisplayUnits(rayStart + (rayEnd - rayStart) * lastPickedFraction * 0.9f);
                     if (item.CurrentHull.Submarine != null) { displayPos += item.CurrentHull.Submarine.Position; }
@@ -523,6 +534,7 @@ namespace Barotrauma.Items.Components
                 if (sectionIndex < 0) { return false; }
 
                 if (!fixableEntities.Contains("structure") && !fixableEntities.Contains(targetStructure.Prefab.Identifier)) { return true; }
+                if (nonFixableEntities.Contains(targetStructure.Prefab.Identifier) || nonFixableEntities.Any(t => targetStructure.Tags.Contains(t))) { return false; }
 
                 ApplyStatusEffectsOnTarget(user, deltaTime, ActionType.OnUse, structure: targetStructure);
                 FixStructureProjSpecific(user, deltaTime, targetStructure, sectionIndex);
@@ -624,11 +636,14 @@ namespace Barotrauma.Items.Components
                     float addedDetachTime = deltaTime * (1f + user.GetStatValue(StatTypes.RepairToolDeattachTimeMultiplier)) * (1f + item.GetQualityModifier(Quality.StatType.RepairToolDeattachTimeMultiplier));
                     levelResource.DeattachTimer += addedDetachTime;
 #if CLIENT
-                    Character.Controlled?.UpdateHUDProgressBar(
-                        this,
-                        targetItem.WorldPosition,
-                        levelResource.DeattachTimer / levelResource.DeattachDuration,
-                        GUIStyle.Red, GUIStyle.Green, "progressbar.deattaching");
+                    if (targetItem.Prefab.ShowHealthBar)
+                    {
+                        Character.Controlled?.UpdateHUDProgressBar(
+                            this,
+                            targetItem.WorldPosition,
+                            levelResource.DeattachTimer / levelResource.DeattachDuration,
+                            GUIStyle.Red, GUIStyle.Green, "progressbar.deattaching");
+                    }
 #endif
                     FixItemProjSpecific(user, deltaTime, targetItem, showProgressBar: false);
                     return true;

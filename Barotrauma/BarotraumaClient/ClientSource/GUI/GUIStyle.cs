@@ -141,11 +141,32 @@ namespace Barotrauma
         public readonly static GUIColor HealthBarColorMedium = new GUIColor("HealthBarColorMedium");
         public readonly static GUIColor HealthBarColorHigh = new GUIColor("HealthBarColorHigh");
 
-        public static Point ItemFrameMargin => new Point(50, 56).Multiply(GUI.SlicedSpriteScale);
+        public static Point ItemFrameMargin 
+        {
+            get 
+            { 
+                Point size = new Point(50, 56).Multiply(GUI.SlicedSpriteScale);
+
+                var style = GetComponentStyle("ItemUI"); 
+                var sprite = style?.Sprites[GUIComponent.ComponentState.None].First();
+                if (sprite != null)
+                {
+                    size.X = Math.Min(sprite.Slices[0].Width + sprite.Slices[2].Width, size.X);
+                    size.Y = Math.Min(sprite.Slices[0].Height + sprite.Slices[6].Height, size.Y);
+                }
+                return size;
+            } 
+        }
+
         public static Point ItemFrameOffset => new Point(0, 3).Multiply(GUI.SlicedSpriteScale);
 
-        public static GUIComponentStyle GetComponentStyle(string name)
-            => ComponentStyles.ContainsKey(name) ? ComponentStyles[name] : null;
+        public static GUIComponentStyle GetComponentStyle(string styleName)
+        {
+            return GetComponentStyle(styleName.ToIdentifier());
+        }
+
+        public static GUIComponentStyle GetComponentStyle(Identifier identifier)
+            => ComponentStyles.TryGet(identifier, out var style) ? style : null;
 
         public static void Apply(GUIComponent targetComponent, string styleName = "", GUIComponent parent = null)
         {

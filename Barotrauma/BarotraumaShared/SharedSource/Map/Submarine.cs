@@ -52,7 +52,9 @@ namespace Barotrauma
             get { return MainSubs[0]; }
             set { MainSubs[0] = value; }
         }
-        private static List<Submarine> loaded = new List<Submarine>();
+        private static readonly List<Submarine> loaded = new List<Submarine>();
+
+        private readonly Identifier upgradeEventIdentifier;
 
         private static List<MapEntity> visibleEntities;
         public static IEnumerable<MapEntity> VisibleEntities
@@ -185,7 +187,6 @@ namespace Barotrauma
                         if (structure.Submarine != this || !structure.HasBody || structure.Indestructible) { continue; }
                         realWorldCrushDepth = Math.Min(structure.CrushDepth, realWorldCrushDepth.Value);
                     }
-                    realWorldCrushDepth *= Info.GetRealWorldCrushDepthMultiplier();
                 }
                 return realWorldCrushDepth.Value;
             }
@@ -450,10 +451,27 @@ namespace Barotrauma
                 verticalMoveDir = Math.Sign(verticalMoveDir);
                 //do a raycast towards the top/bottom of the level depending on direction
                 Vector2 potentialPos = new Vector2(spawnPos.X, verticalMoveDir > 0 ? Level.Loaded.Size.Y : 0);
-                if (PickBody(ConvertUnits.ToSimUnits(spawnPos), ConvertUnits.ToSimUnits(potentialPos), collisionCategory: Physics.CollisionLevel | Physics.CollisionWall) != null)
+
+                //3 raycasts (left, middle and right side of the sub, so we don't accidentally raycast up a passage too narrow for the sub)
+                for (int x = -1; x <= 1; x++)
                 {
-                    //if the raycast hit a wall, attempt to place the spawnpos there
-                    potentialPos.Y = ConvertUnits.ToDisplayUnits(LastPickedPosition.Y) - 10;
+                    Vector2 xOffset = Vector2.UnitX * minWidth / 2 * x;
+                    if (PickBody(
+                        ConvertUnits.ToSimUnits(spawnPos + xOffset),
+                        ConvertUnits.ToSimUnits(potentialPos + xOffset),
+                        collisionCategory: Physics.CollisionLevel | Physics.CollisionWall) != null)
+                    {
+                        int offsetFromWall = 10 * -verticalMoveDir;
+                        //if the raycast hit a wall, attempt to place the spawnpos there
+                        if (verticalMoveDir > 0)
+                        {
+                            potentialPos.Y = Math.Min(potentialPos.Y, ConvertUnits.ToDisplayUnits(LastPickedPosition.Y) + offsetFromWall);
+                        }
+                        else
+                        {
+                            potentialPos.Y = Math.Max(potentialPos.Y, ConvertUnits.ToDisplayUnits(LastPickedPosition.Y) + offsetFromWall);
+                        }
+                    }
                 }
 
                 //step away from the top/bottom of the level, or from whatever wall the raycast hit,
@@ -984,14 +1002,6 @@ namespace Barotrauma
                 subBody.Body.ResetDynamics();
                 subBody.Body.Enabled = false;
 
-                foreach (MapEntity e in MapEntity.mapEntityList)
-                {
-                    if (e.Submarine == this)
-                    {
-                        Spawner.AddEntityToRemoveQueue(e);
-                    }
-                }
-
                 foreach (Character c in Character.CharacterList)
                 {
                     if (c.Submarine == this)
@@ -1104,7 +1114,8 @@ namespace Barotrauma
             {
                 if (item.Submarine != this) { continue; }
                 var pump = item.GetComponent<Pump>();
-                if (pump == null || !item.HasTag("ballast") || item.CurrentHull == null) { continue; }
+                if (pump == null || item.CurrentHull == null) { continue; }
+                if (!item.HasTag("ballast") && !item.CurrentHull.RoomName.Contains("ballast", StringComparison.OrdinalIgnoreCase)) { continue; }
                 pump.FlowPercentage = 0.0f;
                 ballastHulls.Add(item.CurrentHull);
             }
@@ -1224,7 +1235,7 @@ namespace Barotrauma
         public List<(ItemContainer container, int freeSlots)> GetCargoContainers()
         {
             List<(ItemContainer container, int freeSlots)> containers = new List<(ItemContainer container, int freeSlots)>();
-            var connectedSubs = GetConnectedSubs();
+            var connectedSubs = GetConnectedSubs().Where(sub => sub.Info?.Type == Info.Type);
             foreach (Item item in Item.ItemList.ToList())
             {
                 if (!connectedSubs.Contains(item.Submarine)) { continue; }
@@ -1301,6 +1312,7 @@ namespace Barotrauma
 
         public Submarine(SubmarineInfo info, bool showWarningMessages = true, Func<Submarine, List<MapEntity>> loadEntities = null, IdRemap linkedRemap = null) : base(null, Entity.NullEntityID)
         {
+            upgradeEventIdentifier = new Identifier($"Submarine{ID}");
             Loading = true;
             GameMain.World.Enabled = false;
             try
@@ -1462,10 +1474,7 @@ namespace Barotrauma
                     }
                 }
 
-                if (GameMain.GameSession?.Campaign?.UpgradeManager != null)
-                {
-                    GameMain.GameSession.Campaign.UpgradeManager.OnUpgradesChanged += ResetCrushDepth;
-                }
+                GameMain.GameSession?.Campaign?.UpgradeManager?.OnUpgradesChanged.Register(upgradeEventIdentifier, _ => ResetCrushDepth());
 
 #if CLIENT
                 GameMain.LightManager.OnMapLoaded();
@@ -1527,14 +1536,25 @@ namespace Barotrauma
             }
         }
 
+        public bool CheckFuel()
+        {
+            float fuel = GetItems(true).Where(i => i.HasTag("reactorfuel")).Sum(i => i.Condition);
+            Info.LowFuel = fuel < 200;
+            return !Info.LowFuel;
+        }
+
         public void SaveToXElement(XElement element)
         {
             element.Add(new XAttribute("name", Info.Name));
             element.Add(new XAttribute("description", Info.Description ?? ""));
             element.Add(new XAttribute("checkval", Rand.Int(int.MaxValue)));
             element.Add(new XAttribute("price", Info.Price));
+            element.Add(new XAttribute("tier", Info.Tier));
             element.Add(new XAttribute("initialsuppliesspawned", Info.InitialSuppliesSpawned));
+            element.Add(new XAttribute("noitems", Info.NoItems));
+            element.Add(new XAttribute("lowfuel", !CheckFuel()));
             element.Add(new XAttribute("type", Info.Type.ToString()));
+            element.Add(new XAttribute("ismanuallyoutfitted", Info.IsManuallyOutfitted));
             if (Info.IsPlayer && !Info.HasTag(SubmarineTag.Shuttle))
             {
                 element.Add(new XAttribute("class", Info.SubmarineClass.ToString()));
@@ -1623,7 +1643,6 @@ namespace Barotrauma
 
                 e.Save(element);
             }
-
             Info.CheckSubsLeftBehind(element);
         }
 
@@ -1727,10 +1746,7 @@ namespace Barotrauma
             outdoorNodes?.Clear();
             outdoorNodes = null;
 
-            if (GameMain.GameSession?.Campaign?.UpgradeManager != null)
-            {
-                GameMain.GameSession.Campaign.UpgradeManager.OnUpgradesChanged -= ResetCrushDepth;
-            }
+            GameMain.GameSession?.Campaign?.UpgradeManager?.OnUpgradesChanged?.TryDeregister(upgradeEventIdentifier);
 
             if (entityGrid != null)
             {

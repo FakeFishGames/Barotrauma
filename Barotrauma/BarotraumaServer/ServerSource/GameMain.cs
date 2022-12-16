@@ -151,25 +151,25 @@ namespace Barotrauma
             string password = "";
             bool enableUpnp = false;
 
-            int maxPlayers = 10;
-            int? ownerKey = null;
-            UInt64 steamId = 0;
+            int maxPlayers = 10; 
+            Option<int> ownerKey = Option<int>.None();
+            Option<SteamId> steamId = Option<SteamId>.None();
 
             XDocument doc = XMLExtensions.TryLoadXml(ServerSettings.SettingsFile);
             if (doc?.Root == null)
             {
-                DebugConsole.ThrowError("File \"" + ServerSettings.SettingsFile + "\" not found. Starting the server with default settings.");
+                DebugConsole.AddWarning("File \"" + ServerSettings.SettingsFile + "\" not found. Starting the server with default settings.");
             }
             else
             {
-                name = doc.Root.GetAttributeString("name", "Server");
-                port = doc.Root.GetAttributeInt("port", NetConfig.DefaultPort);
-                queryPort = doc.Root.GetAttributeInt("queryport", NetConfig.DefaultQueryPort);
-                publiclyVisible = doc.Root.GetAttributeBool("public", false);
+                name = doc.Root.GetAttributeString(nameof(ServerSettings.Name), "Server");
+                port = doc.Root.GetAttributeInt(nameof(ServerSettings.Port), NetConfig.DefaultPort);
+                queryPort = doc.Root.GetAttributeInt(nameof(ServerSettings.QueryPort), NetConfig.DefaultQueryPort);
+                publiclyVisible = doc.Root.GetAttributeBool(nameof(ServerSettings.IsPublic), false);
+                enableUpnp = doc.Root.GetAttributeBool(nameof(ServerSettings.EnableUPnP), false);
+                maxPlayers = doc.Root.GetAttributeInt(nameof(ServerSettings.MaxPlayers), 10);
                 password = doc.Root.GetAttributeString("password", "");
-                enableUpnp = doc.Root.GetAttributeBool("enableupnp", false);
-                maxPlayers = doc.Root.GetAttributeInt("maxplayers", 10);
-                ownerKey = null;
+                ownerKey = Option<int>.None();
             }
             
 #if DEBUG
@@ -218,12 +218,12 @@ namespace Barotrauma
                     case "-ownerkey":
                         if (int.TryParse(CommandLineArgs[i + 1], out int key))
                         {
-                            ownerKey = key;
+                            ownerKey = Option<int>.Some(key);
                         }
                         i++;
                         break;
                     case "-steamid":
-                        UInt64.TryParse(CommandLineArgs[i + 1], out steamId);
+                        steamId = SteamId.Parse(CommandLineArgs[i + 1]);
                         i++;
                         break;
                     case "-pipes":
@@ -243,6 +243,7 @@ namespace Barotrauma
                 maxPlayers,
                 ownerKey,
                 steamId);
+            Server.StartServer();
 
             for (int i = 0; i < CommandLineArgs.Length; i++)
             {
@@ -274,7 +275,7 @@ namespace Barotrauma
 
         public void CloseServer()
         {
-            Server?.Disconnect();
+            Server?.Quit();
             ShouldRun = false;
             Server = null;
         }
@@ -329,7 +330,7 @@ namespace Barotrauma
                     if (Server == null) { break; }
                     SteamManager.Update((float)Timing.Step);
                     TaskPool.Update();
-                    CoroutineManager.Update((float)Timing.Step, (float)Timing.Step);
+                    CoroutineManager.Update(paused: false, (float)Timing.Step);
 
                     Timing.Accumulator -= Timing.Step;
                     updateCount++;
@@ -360,7 +361,7 @@ namespace Barotrauma
                     if (prevUpdateRates.Count >= 10)
                     {
                         int avgUpdateRate = (int)prevUpdateRates.Average();
-                        if (avgUpdateRate < Timing.FixedUpdateRate * 0.98 && GameSession != null && Timing.TotalTime > GameSession.RoundStartTime + 1.0)
+                        if (avgUpdateRate < Timing.FixedUpdateRate * 0.98 && GameSession != null && GameSession.RoundDuration > 1.0)
                         {
                             DebugConsole.AddWarning($"Running slowly ({avgUpdateRate} updates/s)!");
                             if (Server != null)

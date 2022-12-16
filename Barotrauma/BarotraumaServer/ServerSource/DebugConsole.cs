@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using Barotrauma.Steam;
 
 namespace Barotrauma
 {
@@ -81,53 +82,49 @@ namespace Barotrauma
             }
 
             //dequeue messages
-            lock (queuedMessages)
+            if (queuedMessages.Count > 0)
             {
-                if (queuedMessages.Count > 0)
+
+                if (!Console.IsOutputRedirected)
                 {
-
-                    if (!Console.IsOutputRedirected)
+                    Console.CursorLeft = 0;
+                }
+                while (queuedMessages.TryDequeue(out var msg))
+                {
+                    Messages.Add(msg);
+                    if (GameSettings.CurrentConfig.SaveDebugConsoleLogs || GameSettings.CurrentConfig.VerboseLogging)
                     {
-                        Console.CursorLeft = 0;
-                    }
-                    while (queuedMessages.Count > 0)
-                    {
-                        ColoredText msg = queuedMessages.Dequeue();
-                        Messages.Add(msg);
-                        if (GameSettings.CurrentConfig.SaveDebugConsoleLogs || GameSettings.CurrentConfig.VerboseLogging)
+                        unsavedMessages.Add(msg);
+                        if (unsavedMessages.Count >= messagesPerFile)
                         {
-                            unsavedMessages.Add(msg);
-                            if (unsavedMessages.Count >= messagesPerFile)
-                            {
-                                SaveLogs();
-                                unsavedMessages.Clear();
-                            }
+                            SaveLogs();
+                            unsavedMessages.Clear();
                         }
-
-                        string msgTxt = msg.Text;
-
-                        if (msg.IsCommand) commandMemory.Add(msgTxt);
-
-                        if(!Console.IsOutputRedirected)
-                        {
-                            int paddingLen = consoleWidth - (msg.Text.Length % consoleWidth) - 1;
-                            msgTxt += new string(' ', paddingLen > 0 ? paddingLen : 0);
-
-                            Console.ForegroundColor = XnaToConsoleColor.Convert(msg.Color);
-                        }
-                        Console.WriteLine(msgTxt);
-
-                        if (sw.ElapsedMilliseconds >= maxTime) { break; }
                     }
+
+                    string msgTxt = msg.Text;
+
+                    if (msg.IsCommand) commandMemory.Add(msgTxt);
+
                     if(!Console.IsOutputRedirected)
                     {
-                        RewriteInputToCommandLine(input);
+                        int paddingLen = consoleWidth - (msg.Text.Length % consoleWidth) - 1;
+                        msgTxt += new string(' ', paddingLen > 0 ? paddingLen : 0);
+
+                        Console.ForegroundColor = XnaToConsoleColor.Convert(msg.Color);
                     }
+                    Console.WriteLine(msgTxt);
+
+                    if (sw.ElapsedMilliseconds >= maxTime) { break; }
                 }
-                if (Messages.Count > MaxMessages)
+                if (!Console.IsOutputRedirected)
                 {
-                    Messages.RemoveRange(0, Messages.Count - MaxMessages);
+                    RewriteInputToCommandLine(input);
                 }
+            }
+            if (Messages.Count > MaxMessages)
+            {
+                Messages.RemoveRange(0, Messages.Count - MaxMessages);
             }
 
             // No good way to display input when console output is redirected, and can't read from redirected input using KeyAvailable.
@@ -271,26 +268,22 @@ namespace Barotrauma
 
         public static void Clear()
         {
-            lock (queuedMessages)
+            while (queuedMessages.TryDequeue(out var msg))
             {
-                while (queuedMessages.Count > 0)
+                Messages.Add(msg);
+                if (GameSettings.CurrentConfig.SaveDebugConsoleLogs || GameSettings.CurrentConfig.VerboseLogging)
                 {
-                    var msg = queuedMessages.Dequeue();
-                    Messages.Add(msg);
-                    if (GameSettings.CurrentConfig.SaveDebugConsoleLogs || GameSettings.CurrentConfig.VerboseLogging)
+                    unsavedMessages.Add(msg);
+                    if (unsavedMessages.Count >= messagesPerFile)
                     {
-                        unsavedMessages.Add(msg);
-                        if (unsavedMessages.Count >= messagesPerFile)
-                        {
-                            SaveLogs();
-                            unsavedMessages.Clear();
-                        }
+                        SaveLogs();
+                        unsavedMessages.Clear();
                     }
                 }
-                if (Messages.Count > MaxMessages)
-                {
-                    Messages.RemoveRange(0, Messages.Count - MaxMessages);
-                }
+            }
+            if (Messages.Count > MaxMessages)
+            {
+                Messages.RemoveRange(0, Messages.Count - MaxMessages);
             }
         }
         
@@ -299,10 +292,16 @@ namespace Barotrauma
             Client client = GameMain.Server.ConnectedClients.Find(c => Homoglyphs.Compare(c.Name, arg));
             if (int.TryParse(arg, out int id))
             {
-                client ??= GameMain.Server.ConnectedClients.Find(c => c.ID == id);
+                client ??= GameMain.Server.ConnectedClients.Find(c => c.SessionId == id);
             }
-            client ??= GameMain.Server.ConnectedClients.Find(c => c.EndpointMatches(arg));
-            client ??= GameMain.Server.ConnectedClients.Find(c => c.SteamID == Steam.SteamManager.SteamIDStringToUInt64(arg));
+            if (Address.Parse(arg).TryUnwrap(out var address))
+            {
+                client ??= GameMain.Server.ConnectedClients.Find(c => c.AddressMatches(address));
+            }
+            if (AccountId.Parse(arg).TryUnwrap(out var argAccountId))
+            {
+                client ??= GameMain.Server.ConnectedClients.Find(c => c.AccountId.ValueEquals(argAccountId));
+            }
             return client;
         }
 
@@ -872,7 +871,7 @@ namespace Barotrauma
                 NewMessage("***************", Color.Cyan);
                 foreach (Client c in GameMain.Server.ConnectedClients)
                 {
-                    NewMessage("- " + c.ID.ToString() + ": " + c.Name + (c.Character != null ? " playing " + c.Character.LogName : "") + ", " + c.Karma, Color.Cyan);
+                    NewMessage("- " + c.SessionId.ToString() + ": " + c.Name + (c.Character != null ? " playing " + c.Character.LogName : "") + ", " + c.Karma, Color.Cyan);
                 }
                 NewMessage("***************", Color.Cyan);
             });
@@ -881,7 +880,7 @@ namespace Barotrauma
                 GameMain.Server.SendConsoleMessage("***************", client);
                 foreach (Client c in GameMain.Server.ConnectedClients)
                 {
-                    GameMain.Server.SendConsoleMessage("- " + c.ID.ToString() + ": " + c.Name + (c.Character != null ? " playing " + c.Character.LogName : "") + ", " + c.Karma, client);
+                    GameMain.Server.SendConsoleMessage("- " + c.SessionId.ToString() + ": " + c.Name + (c.Character != null ? " playing " + c.Character.LogName : "") + ", " + c.Karma, client);
                 }
                 GameMain.Server.SendConsoleMessage("***************", client);
             });
@@ -904,10 +903,12 @@ namespace Barotrauma
                     client);
             });
 
-            AssignOnExecute("banendpoint", (string[] args) =>
+            AssignOnExecute("banaddress", (string[] args) =>
             {
                 if (GameMain.Server == null || args.Length == 0) return;
 
+                if (!(Address.Parse(args[0]).TryUnwrap(out var address))) { return; }
+                
                 ShowQuestionPrompt("Reason for banning the endpoint \"" + args[0] + "\"? (c to cancel)", (reason) =>
                 {
                     if (reason == "c" || reason == "C") { return; }
@@ -925,16 +926,16 @@ namespace Barotrauma
                             banDuration = parsedBanDuration;
                         }
 
-                        var clients = GameMain.Server.ConnectedClients.FindAll(c => c.EndpointMatches(args[0]));
+                        var clients = GameMain.Server.ConnectedClients.Where(c => c.AddressMatches(address)).ToList();
                         if (clients.Count == 0)
                         {
-                            GameMain.Server.ServerSettings.BanList.BanPlayer("Unnamed", args[0], reason, banDuration);
+                            GameMain.Server.ServerSettings.BanList.BanPlayer("Unnamed", address, reason, banDuration);
                         }
                         else
                         {
                             foreach (Client cl in clients)
                             {
-                                GameMain.Server.BanClient(cl, reason, false, banDuration);
+                                GameMain.Server.BanClient(cl, reason, banDuration);
                             }
                         }
                     });
@@ -1036,7 +1037,8 @@ namespace Barotrauma
                 NewMessage("***************", Color.Cyan);
                 foreach (Client c in GameMain.Server.ConnectedClients)
                 {
-                    NewMessage("- " + c.ID.ToString() + ": " + c.Name + (c.Character != null ? " playing " + c.Character.LogName : "") + ", " + c.Connection.EndPointString + $", ping {c.Ping} ms", Color.Cyan);
+                    NewMessage(
+                        $"- {c.SessionId}: {c.Name}{(c.Character != null ? " playing " + c.Character.LogName : "")}, {c.Connection.Endpoint.StringRepresentation}, {c.Connection.AccountInfo.AccountId}, ping {c.Ping} ms", Color.Cyan);
                 }
                 NewMessage("***************", Color.Cyan);
             }));
@@ -1045,7 +1047,7 @@ namespace Barotrauma
                 GameMain.Server.SendConsoleMessage("***************", client, Color.Cyan);
                 foreach (Client c in GameMain.Server.ConnectedClients)
                 {
-                    GameMain.Server.SendConsoleMessage("- " + c.ID.ToString() + ": " + c.Name + ", " + c.Connection.EndPointString + $", ping {c.Ping} ms", client, Color.Cyan);
+                    GameMain.Server.SendConsoleMessage("- " + c.SessionId.ToString() + ": " + c.Name + ", " + c.Connection.Endpoint.StringRepresentation + $", ping {c.Ping} ms", client, Color.Cyan);
                 }
                 GameMain.Server.SendConsoleMessage("***************", client, Color.Cyan);
             });
@@ -1367,6 +1369,11 @@ namespace Barotrauma
                 }
                 else
                 {
+                    if (GameMain.NetLobbyScreen.SelectedMode == GameModePreset.MultiPlayerCampaign)
+                    {
+                        MultiPlayerCampaign.StartCampaignSetup();
+                        return;
+                    }
                     if (!GameMain.Server.StartGame()) { NewMessage("Failed to start a new round", Color.Yellow); }
                 }
             }));
@@ -1392,6 +1399,21 @@ namespace Barotrauma
             {
                 GameMain.Server.PrintSenderTransters();
             }));
+
+
+            AssignOnExecute("resetcharacternetstate", (string[] args) =>
+            {
+                if (GameMain.Server == null) { return; }
+
+                if (args.Length < 1)
+                {
+                    ThrowError("Invalid parameters. The command should be formatted as \"resetcharacternetstate [character]\". If the names consist of multiple words, you should surround them with quotation marks.");
+                    return;
+                }
+
+                var character = FindMatchingCharacter(args.Skip(1).ToArray(), false);
+                character?.ResetNetState();
+            });
 
             commands.Add(new Command("eventdata", "", (string[] args) =>
             {
@@ -1491,11 +1513,12 @@ namespace Barotrauma
             );
 
             AssignOnClientRequestExecute(
-                "banendpoint|banip",
+                "banaddress|banip",
                 (Client client, Vector2 cursorPos, string[] args) =>
                 {
-                    if (args.Length < 1) return;
-                    var clients = GameMain.Server.ConnectedClients.FindAll(c => c.EndpointMatches(args[0]));
+                    if (args.Length < 1) { return; }
+                    if (!(Address.Parse(args[0]).TryUnwrap(out var address))) { return; }
+                    var clients = GameMain.Server.ConnectedClients.Where(c => c.AddressMatches(address)).ToList();
                     TimeSpan? duration = null;
                     if (args.Length > 1)
                     {
@@ -1514,13 +1537,13 @@ namespace Barotrauma
 
                     if (clients.Count == 0)
                     {
-                        GameMain.Server.ServerSettings.BanList.BanPlayer("Unnamed", args[0], reason, duration);
+                        GameMain.Server.ServerSettings.BanList.BanPlayer("Unnamed", address, reason, duration);
                     }
                     else
                     {
                         foreach (Client cl in clients)
                         {
-                            GameMain.Server.BanClient(cl, reason, false, duration);
+                            GameMain.Server.BanClient(cl, reason, duration);
                         }
                     }
                 }
@@ -1530,7 +1553,7 @@ namespace Barotrauma
             {
                 if (GameMain.Server == null || args.Length == 0) return;
                 string clientName = string.Join(" ", args);
-                GameMain.Server.UnbanPlayer(clientName, "");
+                GameMain.Server.UnbanPlayer(clientName);
             },
             () =>
             {
@@ -1541,17 +1564,20 @@ namespace Barotrauma
                 };
             }));
 
-            commands.Add(new Command("unbanip", "unbanip [ip]: Unban a specific IP.", (string[] args) =>
+            commands.Add(new Command("unbanaddress", "unbanaddress [endpoint]: Unban a specific endpoint.", (string[] args) =>
             {
                 if (GameMain.Server == null || args.Length == 0) return;
-                GameMain.Server.UnbanPlayer("", args[0]);
+                if (Endpoint.Parse(args[0]).TryUnwrap(out var endpoint))
+                {
+                    GameMain.Server.UnbanPlayer(endpoint);
+                }
             },
             () =>
             {
                 if (GameMain.Server == null) return null;
                 return new string[][]
                 {
-                    GameMain.Server.ServerSettings.BanList.BannedEndPoints.ToArray()
+                    GameMain.Server.ServerSettings.BanList.BannedAddresses.Select(ep => ep.ToString()).ToArray()
                 };
             }));
 
@@ -1847,20 +1873,17 @@ namespace Barotrauma
                     }
 
                     foreach (var talentTree in talentTrees)
-                    {
-                        foreach (var subTree in talentTree.TalentSubTrees)
+                    {          
+                        foreach (var talentId in talentTree.AllTalentIdentifiers)
                         {
-                            foreach (var option in subTree.TalentOptionStages)
+                            if (TalentPrefab.TalentPrefabs.TryGet(talentId, out TalentPrefab talentPrefab))
                             {
-                                foreach (var talent in option.Talents)
-                                {
-                                    targetCharacter.GiveTalent(talent);
-                                    NewMessage($"Talent \"{talent.DisplayName}\" given to \"{targetCharacter.Name}\" by \"{client.Name}\".");
-                                    GameMain.Server.SendConsoleMessage($"Gave talent \"{talent.DisplayName}\" to \"{targetCharacter.Name}\".", client);
-                                    NewMessage($"Unlocked talent \"{talent.DisplayName}\".");
-                                }
+                                targetCharacter.GiveTalent(talentPrefab);
+                                NewMessage($"Talent \"{talentPrefab.DisplayName}\" given to \"{targetCharacter.Name}\" by \"{client.Name}\".");
+                                GameMain.Server.SendConsoleMessage($"Gave talent \"{talentPrefab.DisplayName}\" to \"{targetCharacter.Name}\".", client);
+                                NewMessage($"Unlocked talent \"{talentPrefab.DisplayName}\".");
                             }
-                        }
+                        }              
                     }
                 }
             );

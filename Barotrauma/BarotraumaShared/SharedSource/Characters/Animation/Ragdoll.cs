@@ -873,7 +873,7 @@ namespace Barotrauma
 
             foreach (Limb limb in Limbs)
             {
-                if (limb == null || limb.IsSevered) { continue; }
+                if (limb == null || limb.IsSevered || !limb.DoesFlip) { continue; }
                 limb.Dir = Dir;
                 limb.MouthPos = new Vector2(-limb.MouthPos.X, limb.MouthPos.Y);
                 limb.MirrorPullJoint();
@@ -922,12 +922,13 @@ namespace Barotrauma
         {
             limb.MoveToPos(pos, amount, pullFromCenter);
         }
-                
-        public void ResetPullJoints()
+
+        public void ResetPullJoints(Func<Limb, bool> condition = null)
         {
             for (int i = 0; i < Limbs.Length; i++)
             {
                 if (Limbs[i] == null) { continue; }
+                if (condition != null && !condition(Limbs[i])) { continue; }
                 Limbs[i].PullJointEnabled = false;
             }
         }
@@ -1233,7 +1234,7 @@ namespace Barotrauma
             {
                 //find the room which the limb is in
                 //the room where the ragdoll is in is used as the "guess", meaning that it's checked first                
-                Hull limbHull = currentHull == null ? null : Hull.FindHull(limb.WorldPosition, currentHull);
+                Hull newHull = currentHull == null ? null : Hull.FindHull(limb.WorldPosition, currentHull);
 
                 bool prevInWater = limb.InWater;
                 limb.InWater = false;
@@ -1242,38 +1243,37 @@ namespace Barotrauma
                 {
                     limb.InWater = false;
                 }
-                else if (limbHull == null)
+                else if (newHull == null)
                 {
                     //limb isn't in any room -> it's in the water
                     limb.InWater = true;
-                    if (limb.type == LimbType.Head) headInWater = true;
+                    if (limb.type == LimbType.Head) { headInWater = true; }
                 }
-                else if (limbHull.WaterVolume > 0.0f && Submarine.RectContains(limbHull.Rect, limb.Position))
+                else if (newHull.WaterVolume > 0.0f && Submarine.RectContains(newHull.Rect, limb.Position))
                 {
-                    if (limb.Position.Y < limbHull.Surface)
+                    if (limb.Position.Y < newHull.Surface)
                     {
                         limb.InWater = true;
-                        surfaceY = limbHull.Surface;
+                        surfaceY = newHull.Surface;
                         if (limb.type == LimbType.Head)
                         {
                             headInWater = true;
                         }
                     }
                     //the limb has gone through the surface of the water
-                    if (Math.Abs(limb.LinearVelocity.Y) > 5.0f && limb.InWater != prevInWater)
+                    if (Math.Abs(limb.LinearVelocity.Y) > 5.0f && limb.InWater != prevInWater && newHull == limb.Hull)
                     {
-                        Splash(limb, limbHull);
-
+                        Splash(limb, newHull);
                         //if the Character dropped into water, create a wave
                         if (limb.LinearVelocity.Y < 0.0f)
                         {
                             Vector2 impulse = limb.LinearVelocity * limb.Mass;
-                            int n = (int)((limb.Position.X - limbHull.Rect.X) / Hull.WaveWidth);
-                            limbHull.WaveVel[n] += MathHelper.Clamp(impulse.Y, -5.0f, 5.0f);
+                            int n = (int)((limb.Position.X - newHull.Rect.X) / Hull.WaveWidth);
+                            newHull.WaveVel[n] += MathHelper.Clamp(impulse.Y, -5.0f, 5.0f);
                         }
                     }
                 }
-
+                limb.Hull = newHull;
                 limb.Update(deltaTime);
             }
 
@@ -1337,7 +1337,7 @@ namespace Barotrauma
             bool limbsValid = true;
             foreach (Limb limb in limbs)
             {
-                if (limb.body == null || !limb.body.Enabled) { continue; }
+                if (limb?.body == null || !limb.body.Enabled) { continue; }
                 if (!CheckValidity(limb.body))
                 {
                     limbsValid = false;
@@ -1491,12 +1491,12 @@ namespace Barotrauma
             }
 
             if (flowForce.LengthSquared() > 0.001f)
-            {
-                Collider.ApplyForce(flowForce);
+            {                
+                Collider.ApplyForce(flowForce * (Collider.Mass / Mass));
                 foreach (Limb limb in limbs)
                 {
                     if (!limb.InWater) { continue; }
-                    limb.body.ApplyForce(flowForce);
+                    limb.body.ApplyForce(flowForce * (limb.Mass / Mass * limbs.Length));
                 }
             }
         }
@@ -1959,7 +1959,7 @@ namespace Barotrauma
             {
                 foreach (Limb l in Limbs)
                 {
-                    l.Remove();
+                    l?.Remove();
                 }
                 limbs = null;
             }
@@ -1968,7 +1968,7 @@ namespace Barotrauma
             {
                 foreach (PhysicsBody b in collider)
                 {
-                    b.Remove();
+                    b?.Remove();
                 }
                 collider = null;
             }
@@ -1977,7 +1977,7 @@ namespace Barotrauma
             {
                 foreach (var joint in LimbJoints)
                 {
-                    var j = joint.Joint;
+                    var j = joint?.Joint;
                     if (GameMain.World.JointList.Contains(j))
                     {
                         GameMain.World.Remove(j);

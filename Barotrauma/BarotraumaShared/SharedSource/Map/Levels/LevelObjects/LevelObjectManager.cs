@@ -542,38 +542,41 @@ namespace Barotrauma
                 GlobalForceDecreaseTimer = 0.0f;
             }
 
-            foreach (LevelObject obj in updateableObjects)
+            if (updateableObjects is not null)
             {
-                if (GameMain.NetworkMember is { IsServer: true })
+                foreach (LevelObject obj in updateableObjects)
                 {
-                    obj.NetworkUpdateTimer -= deltaTime;
-                    if (obj.NeedsNetworkSyncing && obj.NetworkUpdateTimer <= 0.0f)
+                    if (GameMain.NetworkMember is { IsServer: true })
                     {
-                        GameMain.NetworkMember.CreateEntityEvent(this, new EventData(obj));
-                        obj.NeedsNetworkSyncing = false;
-                        obj.NetworkUpdateTimer = NetConfig.LevelObjectUpdateInterval;
-                    }
-                }
-                if (obj.Prefab.HideWhenBroken && obj.Health <= 0.0f) { continue; }
-
-                if (obj.Triggers != null)
-                {
-                    obj.ActivePrefab = obj.Prefab;
-                    for (int i = 0; i < obj.Triggers.Count; i++)
-                    {
-                        obj.Triggers[i].Update(deltaTime);
-                        if (obj.Triggers[i].IsTriggered && obj.Prefab.OverrideProperties[i] != null)
+                        obj.NetworkUpdateTimer -= deltaTime;
+                        if (obj.NeedsNetworkSyncing && obj.NetworkUpdateTimer <= 0.0f)
                         {
-                            obj.ActivePrefab = obj.Prefab.OverrideProperties[i];
+                            GameMain.NetworkMember.CreateEntityEvent(this, new EventData(obj));
+                            obj.NeedsNetworkSyncing = false;
+                            obj.NetworkUpdateTimer = NetConfig.LevelObjectUpdateInterval;
                         }
                     }
-                }
+                    if (obj.Prefab.HideWhenBroken && obj.Health <= 0.0f) { continue; }
 
-                if (obj.PhysicsBody != null)
-                {
-                    if (obj.Prefab.PhysicsBodyTriggerIndex > -1) { obj.PhysicsBody.Enabled = obj.Triggers[obj.Prefab.PhysicsBodyTriggerIndex].IsTriggered; }
-                    /*obj.Position = new Vector3(obj.PhysicsBody.Position, obj.Position.Z);
-                    obj.Rotation = -obj.PhysicsBody.Rotation;*/
+                    if (obj.Triggers != null)
+                    {
+                        obj.ActivePrefab = obj.Prefab;
+                        for (int i = 0; i < obj.Triggers.Count; i++)
+                        {
+                            obj.Triggers[i].Update(deltaTime);
+                            if (obj.Triggers[i].IsTriggered && obj.Prefab.OverrideProperties[i] != null)
+                            {
+                                obj.ActivePrefab = obj.Prefab.OverrideProperties[i];
+                            }
+                        }
+                    }
+
+                    if (obj.PhysicsBody != null)
+                    {
+                        if (obj.Prefab.PhysicsBodyTriggerIndex > -1) { obj.PhysicsBody.Enabled = obj.Triggers[obj.Prefab.PhysicsBodyTriggerIndex].IsTriggered; }
+                        /*obj.Position = new Vector3(obj.PhysicsBody.Position, obj.Position.Z);
+                        obj.Rotation = -obj.PhysicsBody.Rotation;*/
+                    }
                 }
             }
 

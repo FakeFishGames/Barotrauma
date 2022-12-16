@@ -1,75 +1,61 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Collections.Immutable;
 using System.Linq;
-using System.Text;
+using Barotrauma.Extensions;
 
 namespace Barotrauma.Networking
 {
-    abstract class ServerPeer
+    internal abstract class ServerPeer
     {
-        public delegate void MessageCallback(NetworkConnection connection, IReadMessage message);
-        public delegate void DisconnectCallback(NetworkConnection connection, string reason);
-        public delegate void InitializationCompleteCallback(NetworkConnection connection);
-        public delegate void ShutdownCallback();
-        public delegate void OwnerDeterminedCallback(NetworkConnection connection);
+        public readonly record struct Callbacks(
+            Callbacks.MessageCallback OnMessageReceived,
+            Callbacks.DisconnectCallback OnDisconnect,
+            Callbacks.InitializationCompleteCallback OnInitializationComplete,
+            Callbacks.ShutdownCallback OnShutdown,
+            Callbacks.OwnerDeterminedCallback OnOwnerDetermined)
+        {
+            public delegate void MessageCallback(NetworkConnection connection, IReadMessage message);
+            public delegate void DisconnectCallback(NetworkConnection connection, PeerDisconnectPacket peerDisconnectPacket);
+            public delegate void InitializationCompleteCallback(NetworkConnection connection, string? clientName);
+            public delegate void ShutdownCallback();
+            public delegate void OwnerDeterminedCallback(NetworkConnection connection);
+        }
 
-        public MessageCallback OnMessageReceived;
-        public DisconnectCallback OnDisconnect;
-        public InitializationCompleteCallback OnInitializationComplete;
-        public ShutdownCallback OnShutdown;
-        public OwnerDeterminedCallback OnOwnerDetermined;
+        protected readonly Callbacks callbacks;
 
-        protected int? ownerKey;
-
-        public NetworkConnection OwnerConnection { get; protected set; }
-
+        protected ServerPeer(Callbacks callbacks)
+        {
+            this.callbacks = callbacks;
+        }
+        
         public abstract void InitializeSteamServerCallbacks();
 
         public abstract void Start();
-        public abstract void Close(string msg = null);
+        public abstract void Close();
         public abstract void Update(float deltaTime);
 
-        protected class PendingClient
+        protected sealed class PendingClient
         {
-            public string Name;
-            public int OwnerKey;
-            public NetworkConnection Connection;
+            public string? Name;
+            public Option<int> OwnerKey;
+            public readonly NetworkConnection Connection;
             public ConnectionInitialization InitializationStep;
             public double UpdateTime;
             public double TimeOut;
             public int Retries;
-            private UInt64? steamId;
-            public UInt64? SteamID
-            {
-                get { return steamId; }
-                set
-                {
-                    steamId = value;
-                    Connection.SetSteamIDIfUnknown(value ?? 0);
-                }
-            }
-            private UInt64? ownerSteamId;
-            public UInt64? OwnerSteamID
-            {
-                get { return ownerSteamId; }
-                set
-                {
-                    ownerSteamId = value;
-                    Connection.SetOwnerSteamIDIfUnknown(value ?? 0);
-                }
-            }
             public Int32? PasswordSalt;
             public bool AuthSessionStarted;
+            
+            public AccountInfo AccountInfo => Connection.AccountInfo;
 
             public PendingClient(NetworkConnection conn)
             {
-                OwnerKey = 0;
+                OwnerKey = Option<int>.None();
                 Connection = conn;
                 InitializationStep = ConnectionInitialization.SteamTicketAndVersion;
                 Retries = 0;
-                SteamID = null;
-                OwnerSteamID = null;
                 PasswordSalt = null;
                 UpdateTime = Timing.TotalTime + Timing.Step * 3.0;
                 TimeOut = NetworkConnection.TimeoutThreshold;
@@ -81,73 +67,70 @@ namespace Barotrauma.Networking
                 TimeOut = NetworkConnection.TimeoutThreshold;
             }
         }
-        protected List<NetworkConnection> connectedClients;
-        protected List<PendingClient> pendingClients;
 
-        protected ServerSettings serverSettings;
+        protected List<NetworkConnection> connectedClients = null!;
+        protected List<PendingClient> pendingClients = null!;
+        protected ServerSettings serverSettings = null!;
+        protected Option<int> ownerKey = null!;
+        protected NetworkConnection? OwnerConnection;
 
-        protected void ReadConnectionInitializationStep(PendingClient pendingClient, IReadMessage inc)
+        protected void ReadConnectionInitializationStep(PendingClient pendingClient, IReadMessage inc, ConnectionInitialization initializationStep)
         {
             pendingClient.TimeOut = NetworkConnection.TimeoutThreshold;
 
-            ConnectionInitialization initializationStep = (ConnectionInitialization)inc.ReadByte();
-
-            if (pendingClient.InitializationStep != initializationStep) return;
+            if (pendingClient.InitializationStep != initializationStep) { return; }
 
             pendingClient.UpdateTime = Timing.TotalTime + Timing.Step;
 
             switch (initializationStep)
             {
                 case ConnectionInitialization.SteamTicketAndVersion:
-                    string name = Client.SanitizeName(inc.ReadString());
-                    int ownerKey = inc.ReadInt32();
-                    UInt64 steamId = inc.ReadUInt64();
-                    UInt16 ticketLength = inc.ReadUInt16();
-                    byte[] ticketBytes = inc.ReadBytes(ticketLength);
+                    var authPacket = INetSerializableStruct.Read<ClientSteamTicketAndVersionPacket>(inc);
 
-                    if (!Client.IsValidName(name, serverSettings))
+                    if (!Client.IsValidName(authPacket.Name, serverSettings))
                     {
-                        RemovePendingClient(pendingClient, DisconnectReason.InvalidName, "");
+                        RemovePendingClient(pendingClient, PeerDisconnectPacket.WithReason(DisconnectReason.InvalidName));
                         return;
                     }
 
-                    string version = inc.ReadString();
-                    bool isCompatibleVersion = NetworkMember.IsCompatible(version, GameMain.Version.ToString()) ?? false;
+                    bool isCompatibleVersion =
+                        Version.TryParse(authPacket.GameVersion, out var remoteVersion)
+                        && NetworkMember.IsCompatible(remoteVersion, GameMain.Version);
                     if (!isCompatibleVersion)
                     {
-                        RemovePendingClient(pendingClient, DisconnectReason.InvalidVersion,
-                                    $"DisconnectMessage.InvalidVersion~[version]={GameMain.Version}~[clientversion]={version}");
+                        RemovePendingClient(pendingClient, PeerDisconnectPacket.InvalidVersion());
 
-                        GameServer.Log($"{name} ({steamId}) couldn't join the server (incompatible game version)", ServerLog.MessageType.Error);
-                        DebugConsole.NewMessage($"{name} ({steamId}) couldn't join the server (incompatible game version)", Microsoft.Xna.Framework.Color.Red);
+                        GameServer.Log($"{authPacket.Name} ({authPacket.SteamId}) couldn't join the server (incompatible game version)", ServerLog.MessageType.Error);
+                        DebugConsole.NewMessage($"{authPacket.Name} ({authPacket.SteamId}) couldn't join the server (incompatible game version)", Microsoft.Xna.Framework.Color.Red);
                         return;
                     }
 
-                    LanguageIdentifier language = inc.ReadIdentifier().ToLanguageIdentifier();
-                    pendingClient.Connection.Language = language;
+                    pendingClient.Connection.Language = authPacket.Language.ToLanguageIdentifier();
 
-                    Client nameTaken = GameMain.Server.ConnectedClients.Find(c => Homoglyphs.Compare(c.Name.ToLower(), name.ToLower()));
+                    Client nameTaken = GameMain.Server.ConnectedClients.Find(c => Homoglyphs.Compare(c.Name.ToLower(), authPacket.Name.ToLower()));
                     if (nameTaken != null)
                     {
-                        RemovePendingClient(pendingClient, DisconnectReason.NameTaken, "");
-                        GameServer.Log($"{name} ({steamId}) couldn't join the server (name too similar to the name of the client \"" + nameTaken.Name + "\").", ServerLog.MessageType.Error);
+                        RemovePendingClient(pendingClient, PeerDisconnectPacket.WithReason(DisconnectReason.NameTaken));
+                        GameServer.Log($"{authPacket.Name} ({authPacket.SteamId}) couldn't join the server (name too similar to the name of the client \"" + nameTaken.Name + "\").", ServerLog.MessageType.Error);
                         return;
                     }
 
                     if (!pendingClient.AuthSessionStarted)
                     {
-                        ProcessAuthTicket(name, ownerKey, steamId, pendingClient, ticketBytes);
+                        ProcessAuthTicket(authPacket, pendingClient);
                     }
+
                     break;
                 case ConnectionInitialization.Password:
-                    int pwLength = inc.ReadByte();
-                    byte[] incPassword = inc.ReadBytes(pwLength);
-                    if (pendingClient.PasswordSalt == null)
+                    var passwordPacket = INetSerializableStruct.Read<ClientPeerPasswordPacket>(inc);
+
+                    if (pendingClient.PasswordSalt is null)
                     {
                         DebugConsole.ThrowError("Received password message from client without salt");
                         return;
                     }
-                    if (serverSettings.IsPasswordCorrect(incPassword, pendingClient.PasswordSalt.Value))
+
+                    if (serverSettings.IsPasswordCorrect(passwordPacket.Password, pendingClient.PasswordSalt.Value))
                     {
                         pendingClient.InitializationStep = ConnectionInitialization.ContentPackageOrder;
                     }
@@ -156,13 +139,13 @@ namespace Barotrauma.Networking
                         pendingClient.Retries++;
                         if (serverSettings.BanAfterWrongPassword && pendingClient.Retries > serverSettings.MaxPasswordRetriesBeforeBan)
                         {
-                            string banMsg = "Failed to enter correct password too many times";
+                            const string banMsg = "Failed to enter correct password too many times";
                             BanPendingClient(pendingClient, banMsg, null);
-
-                            RemovePendingClient(pendingClient, DisconnectReason.Banned, banMsg);
+                            RemovePendingClient(pendingClient, PeerDisconnectPacket.Banned(banMsg));
                             return;
                         }
                     }
+
                     pendingClient.UpdateTime = Timing.TotalTime;
                     break;
                 case ConnectionInitialization.ContentPackageOrder:
@@ -172,49 +155,61 @@ namespace Barotrauma.Networking
             }
         }
 
-        protected abstract void ProcessAuthTicket(string name, int ownKey, ulong steamId, PendingClient pendingClient, byte[] ticket);
+        protected abstract void ProcessAuthTicket(ClientSteamTicketAndVersionPacket packet, PendingClient pendingClient);
 
         protected void BanPendingClient(PendingClient pendingClient, string banReason, TimeSpan? duration)
         {
-            if (pendingClient.Connection is LidgrenConnection l)
+            void banAccountId(AccountId accountId)
             {
-                serverSettings.BanList.BanPlayer(pendingClient.Name, l.NetConnection.RemoteEndPoint.Address, banReason, duration);
+                serverSettings.BanList.BanPlayer(pendingClient.Name ?? "Player", accountId, banReason, duration);
             }
-            else if (pendingClient.Connection is SteamP2PConnection s)
+
+            if (pendingClient.AccountInfo.AccountId.TryUnwrap(out var id)) { banAccountId(id); }
+
+            pendingClient.AccountInfo.OtherMatchingIds.ForEach(banAccountId);
+            if (pendingClient.AccountInfo.AccountId.TryUnwrap(out var accountId))
             {
-                serverSettings.BanList.BanPlayer(pendingClient.Name, s.SteamID, banReason, duration);
-                serverSettings.BanList.BanPlayer(pendingClient.Name, s.OwnerSteamID, banReason, duration);
+                serverSettings.BanList.BanPlayer(pendingClient.Name ?? "Player", accountId, banReason, duration);
+            }
+            else
+            {
+                serverSettings.BanList.BanPlayer(pendingClient.Name ?? "Player", pendingClient.Connection.Endpoint, banReason, duration);
             }
         }
 
-        protected bool IsPendingClientBanned(PendingClient pendingClient, out string banReason)
+        protected bool IsPendingClientBanned(PendingClient pendingClient, out string? banReason)
         {
-            if (pendingClient.Connection is LidgrenConnection l)
+            bool isAccountIdBanned(AccountId accountId, out string? banReason)
             {
-                return serverSettings.BanList.IsBanned(l.NetConnection.RemoteEndPoint.Address, out banReason);
+                return serverSettings.BanList.IsBanned(accountId, out banReason);
             }
-            else if (pendingClient.Connection is SteamP2PConnection s)
+
+            banReason = default;
+            bool isBanned = pendingClient.AccountInfo.AccountId.TryUnwrap(out var id)
+                            && isAccountIdBanned(id, out banReason);
+            foreach (var otherId in pendingClient.AccountInfo.OtherMatchingIds)
             {
-                return serverSettings.BanList.IsBanned(s.SteamID, out banReason) ||
-                       serverSettings.BanList.IsBanned(s.OwnerSteamID, out banReason);
+                if (isBanned) { break; }
+
+                isBanned |= isAccountIdBanned(otherId, out banReason);
             }
-            banReason = null;
-            return false;
+
+            return isBanned;
         }
 
-        protected abstract void SendMsgInternal(NetworkConnection conn, DeliveryMethod deliveryMethod, IWriteMessage msg);
+        protected abstract void SendMsgInternal(NetworkConnection conn, PeerPacketHeaders headers, INetSerializableStruct? body);
 
         protected void UpdatePendingClient(PendingClient pendingClient)
         {
-            if (IsPendingClientBanned(pendingClient, out string banReason))
+            if (IsPendingClientBanned(pendingClient, out string? banReason))
             {
-                RemovePendingClient(pendingClient, DisconnectReason.Banned, banReason);
+                RemovePendingClient(pendingClient, PeerDisconnectPacket.Banned(banReason));
                 return;
             }
 
             if (connectedClients.Count >= serverSettings.MaxPlayers)
             {
-                RemovePendingClient(pendingClient, DisconnectReason.ServerFull, "");
+                RemovePendingClient(pendingClient, PeerDisconnectPacket.WithReason(DisconnectReason.ServerFull));
             }
 
             if (pendingClient.InitializationStep == ConnectionInitialization.Success)
@@ -223,80 +218,88 @@ namespace Barotrauma.Networking
                 connectedClients.Add(newConnection);
                 pendingClients.Remove(pendingClient);
 
-                CheckOwnership(pendingClient);
+                callbacks.OnInitializationComplete.Invoke(newConnection, pendingClient.Name);
 
-                OnInitializationComplete?.Invoke(newConnection);
+                CheckOwnership(pendingClient);
             }
 
             pendingClient.TimeOut -= Timing.Step;
             if (pendingClient.TimeOut < 0.0)
             {
-                RemovePendingClient(pendingClient, DisconnectReason.Unknown, Lidgren.Network.NetConnection.NoResponseMessage);
+                RemovePendingClient(pendingClient, PeerDisconnectPacket.WithReason(DisconnectReason.Timeout));
             }
 
             if (Timing.TotalTime < pendingClient.UpdateTime) { return; }
+
             pendingClient.UpdateTime = Timing.TotalTime + 1.0;
 
-            IWriteMessage outMsg = new WriteOnlyMessage();
-            outMsg.Write((byte)(PacketHeader.IsConnectionInitializationStep |
-                                PacketHeader.IsServerMessage));
-            outMsg.Write((byte)pendingClient.InitializationStep);
+            PeerPacketHeaders headers = new PeerPacketHeaders
+            {
+                DeliveryMethod = DeliveryMethod.Reliable,
+                PacketHeader = PacketHeader.IsConnectionInitializationStep | PacketHeader.IsServerMessage,
+                Initialization = pendingClient.InitializationStep
+            };
+
+            INetSerializableStruct? structToSend = null;
+
             switch (pendingClient.InitializationStep)
             {
                 case ConnectionInitialization.ContentPackageOrder:
-                    outMsg.Write(GameMain.Server.ServerName);
 
-                    var mpContentPackages = ContentPackageManager.EnabledPackages.All.Where(cp => cp.HasMultiplayerSyncedContent).ToList();
-                    outMsg.WriteVariableUInt32((UInt32)mpContentPackages.Count);
-                    for (int i = 0; i < mpContentPackages.Count; i++)
+                    DateTime timeNow = DateTime.UtcNow;
+                    structToSend = new ServerPeerContentPackageOrderPacket
                     {
-                        outMsg.Write(mpContentPackages[i].Name);
-                        byte[] hashBytes = mpContentPackages[i].Hash.ByteRepresentation;
-                        outMsg.WriteVariableUInt32((UInt32)hashBytes.Length);
-                        outMsg.Write(hashBytes, 0, hashBytes.Length);
-                        outMsg.Write(mpContentPackages[i].SteamWorkshopId);
-                        UInt32 installTimeDiffSeconds = (UInt32)((mpContentPackages[i].InstallTime ?? DateTime.UtcNow) - DateTime.UtcNow).TotalSeconds;
-                        outMsg.Write(installTimeDiffSeconds);
-                    }
+                        ServerName = GameMain.Server.ServerName,
+                        ContentPackages = ContentPackageManager.EnabledPackages.All
+                            .Where(cp => cp.Files.Any())
+                            .Where(cp => cp.HasMultiplayerSyncedContent || cp.Files.All(f => f is SubmarineFile))
+                            .Select(contentPackage => new ServerContentPackage(contentPackage, timeNow))
+                            .ToImmutableArray()
+                    };
+
                     break;
                 case ConnectionInitialization.Password:
-                    outMsg.Write(pendingClient.PasswordSalt == null); outMsg.WritePadBits();
-                    if (pendingClient.PasswordSalt == null)
+                    structToSend = new ServerPeerPasswordPacket
                     {
-                        pendingClient.PasswordSalt = Lidgren.Network.CryptoRandom.Instance.Next();
-                        outMsg.Write(pendingClient.PasswordSalt.Value);
-                    }
-                    else
+                        Salt = GetSalt(pendingClient),
+                        RetriesLeft = Option<int>.Some(pendingClient.Retries)
+                    };
+
+                    static Option<int> GetSalt(PendingClient client)
                     {
-                        outMsg.Write(pendingClient.Retries);
+                        if (client.PasswordSalt is { } salt) { return Option<int>.Some(salt); }
+
+                        salt = Lidgren.Network.CryptoRandom.Instance.Next();
+                        client.PasswordSalt = salt;
+                        return Option<int>.Some(salt);
                     }
+
                     break;
             }
 
-            SendMsgInternal(pendingClient.Connection, DeliveryMethod.Reliable, outMsg);
+            SendMsgInternal(pendingClient.Connection, headers, structToSend);
         }
 
         protected virtual void CheckOwnership(PendingClient pendingClient) { }
 
-        protected void RemovePendingClient(PendingClient pendingClient, DisconnectReason reason, string msg)
+        protected void RemovePendingClient(PendingClient pendingClient, PeerDisconnectPacket peerDisconnectPacket)
         {
             if (pendingClients.Contains(pendingClient))
             {
-                Disconnect(pendingClient.Connection, reason + "/" + msg);
+                Disconnect(pendingClient.Connection, peerDisconnectPacket);
 
                 pendingClients.Remove(pendingClient);
 
-                if (pendingClient.AuthSessionStarted)
+                if (pendingClient.AuthSessionStarted && pendingClient.AccountInfo.AccountId is Some<AccountId> { Value: SteamId steamId })
                 {
-                    Steam.SteamManager.StopAuthSession(pendingClient.SteamID.Value);
-                    pendingClient.SteamID = null;
-                    pendingClient.OwnerSteamID = null;
+                    Steam.SteamManager.StopAuthSession(steamId);
+                    pendingClient.Connection.SetAccountInfo(AccountInfo.None);
                     pendingClient.AuthSessionStarted = false;
                 }
             }
         }
 
         public abstract void Send(IWriteMessage msg, NetworkConnection conn, DeliveryMethod deliveryMethod, bool compressPastThreshold = true);
-        public abstract void Disconnect(NetworkConnection conn, string msg = null);
+        public abstract void Disconnect(NetworkConnection conn, PeerDisconnectPacket peerDisconnectPacket);
     }
 }

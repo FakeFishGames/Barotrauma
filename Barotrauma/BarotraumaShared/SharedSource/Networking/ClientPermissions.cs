@@ -27,13 +27,14 @@ namespace Barotrauma.Networking
         SellSubItems = 0x4000,
         ManageMap = 0x8000,
         ManageHires = 0x10000,
-        All = 0x1FFFF
+        ManageBotTalents = 0x20000,
+        All = 0x3FFFF
     }
 
     class PermissionPreset
     {
-        public static List<PermissionPreset> List = new List<PermissionPreset>();
-           
+        public static readonly List<PermissionPreset> List = new List<PermissionPreset>();
+        
         public readonly LocalizedString Name;
         public readonly LocalizedString Description;
         public readonly ClientPermissions Permissions;
@@ -87,9 +88,11 @@ namespace Barotrauma.Networking
             }
         }
 
-        public bool MatchesPermissions(ClientPermissions permissions, HashSet<DebugConsole.Command> permittedConsoleCommands)
+        public bool MatchesPermissions(ClientPermissions permissions, ISet<DebugConsole.Command> permittedConsoleCommands)
         {
-            return permissions == this.Permissions && PermittedCommands.SequenceEqual(permittedConsoleCommands);
+            return permissions == Permissions
+                   && PermittedCommands.All(permittedConsoleCommands.Contains)
+                   && permittedConsoleCommands.All(PermittedCommands.Contains);
         }
     }
 }

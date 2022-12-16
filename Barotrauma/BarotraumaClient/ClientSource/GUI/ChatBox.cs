@@ -325,6 +325,12 @@ namespace Barotrauma
             ToggleOpen = PreferChatBoxOpen = GameSettings.CurrentConfig.ChatOpen;
         }
 
+        public void Toggle()
+        {
+            ToggleOpen = !ToggleOpen;
+            CloseAfterMessageSent = false;
+        }
+
         public bool TypingChatMessage(GUITextBox textBox, string text)
         {
             string command = ChatMessage.GetChatMessageCommand(text, out _);
@@ -605,22 +611,29 @@ namespace Barotrauma
                 showNewMessagesButton.Visible = false;
             }
 
-            if (PlayerInput.KeyHit(InputType.ToggleChatMode) && GUI.KeyboardDispatcher.Subscriber == null && Screen.Selected == GameMain.GameScreen)
+            if (Screen.Selected == GameMain.GameScreen && GUI.KeyboardDispatcher.Subscriber == null)
             {
-                try
+                if (PlayerInput.KeyHit(InputType.ToggleChatMode))
                 {
-                    var mode = GameMain.ActiveChatMode switch
+                    try
                     {
-                        ChatMode.Local => ChatMode.Radio,
-                        ChatMode.Radio => ChatMode.Local,
-                        _ => throw new NotImplementedException()
-                    };
-                    ChatModeDropDown.SelectItem(mode);
-                    // TODO: Play a sound?
+                        var mode = GameMain.ActiveChatMode switch
+                        {
+                            ChatMode.Local => ChatMode.Radio,
+                            ChatMode.Radio => ChatMode.Local,
+                            _ => throw new NotImplementedException()
+                        };
+                        ChatModeDropDown.SelectItem(mode);
+                        // TODO: Play a sound?
+                    }
+                    catch (NotImplementedException)
+                    {
+                        DebugConsole.ThrowError($"Error toggling chat mode: not implemented for current mode \"{GameMain.ActiveChatMode}\"");
+                    }
                 }
-                catch (NotImplementedException)
+                else if (PlayerInput.KeyHit(InputType.ChatBox))
                 {
-                    DebugConsole.ThrowError($"Error toggling chat mode: not implemented for current mode \"{GameMain.ActiveChatMode}\"");
+                    Toggle();
                 }
             }
 
@@ -756,7 +769,7 @@ namespace Barotrauma
             if (Character.Controlled != null && ChatMessage.CanUseRadio(Character.Controlled, out WifiComponent radio))
             {
                 radio.Channel = channel;
-                GameMain.Client?.CreateEntityEvent(radio.Item, new Item.ChangePropertyEventData(radio.SerializableProperties["channel".ToIdentifier()]));
+                GameMain.Client?.CreateEntityEvent(radio.Item, new Item.ChangePropertyEventData(radio.SerializableProperties["channel".ToIdentifier()], radio));
 
                 if (setText)
                 {

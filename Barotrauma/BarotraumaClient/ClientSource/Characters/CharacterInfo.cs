@@ -78,7 +78,7 @@ namespace Barotrauma
             Color? nameColor = null;
             if (Job != null) { nameColor = Job.Prefab.UIColor; }
 
-            GUITextBlock characterNameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), headerTextArea.RectTransform), ToolBox.LimitString(Name, GUIStyle.Font, headerTextArea.Rect.Width), textColor: nameColor, font: GUIStyle.Font)
+            GUITextBlock characterNameBlock = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), headerTextArea.RectTransform), ToolBox.LimitString(Name, GUIStyle.Font, headerTextArea.Rect.Width), textColor: nameColor, font: GUIStyle.Font)
             {
                 ForceUpperCase = ForceUpperCase.Yes,
                 Padding = Vector4.Zero
@@ -92,8 +92,8 @@ namespace Barotrauma
             }
 
             if (Job != null)
-            {   
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), headerTextArea.RectTransform), Job.Name, textColor: Job.Prefab.UIColor, font: font)
+            {
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), headerTextArea.RectTransform), Job.Name, textColor: Job.Prefab.UIColor, font: font)
                 {
                     Padding = Vector4.Zero
                 };
@@ -101,15 +101,31 @@ namespace Barotrauma
 
             if (PersonalityTrait != null)
             {
-                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), headerTextArea.RectTransform),
-                    TextManager.AddPunctuation(':', TextManager.Get("PersonalityTrait"), TextManager.Get("personalitytrait." + PersonalityTrait.Name.Replace(" ".ToIdentifier(), "".ToIdentifier()))),
+                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.25f), headerTextArea.RectTransform),
+                    TextManager.AddPunctuation(':', TextManager.Get("PersonalityTrait"), PersonalityTrait.DisplayName),
                     font: font)
                 {
                     Padding = Vector4.Zero
                 };
             }
 
-            if (Job != null && (Character == null || !Character.IsDead))
+            GUIButton manageTalentButton = new GUIButton(new RectTransform(new Vector2(1.0f, 0.25f), headerTextArea.RectTransform),
+                text: TextManager.Get("ClientPermission.ManageBotTalents"), style: "GUIButtonSmall")
+            {
+                Enabled = false,
+                UserData = TalentMenu.ManageBotTalentsButtonUserData,
+                TextBlock =
+                {
+                    AutoScaleHorizontal = true
+                }
+            };
+
+            if (TalentMenu.CanManageTalents(this))
+            {
+                manageTalentButton.Enabled = true;
+            }
+
+            if (Job != null && Character is not { IsDead: true })
             {
                 var skillsArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.63f), paddedFrame.RectTransform, Anchor.BottomCenter, Pivot.BottomCenter))
                 {
@@ -120,7 +136,7 @@ namespace Barotrauma
                 skills.Sort((s1, s2) => -s1.Level.CompareTo(s2.Level));
 
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillsArea.RectTransform), TextManager.AddPunctuation(':', TextManager.Get("skills"), string.Empty), font: font) { Padding = Vector4.Zero };
-                
+
                 foreach (Skill skill in skills)
                 {
                     Color textColor = Color.White * (0.5f + skill.Level / 200.0f);
@@ -144,7 +160,7 @@ namespace Barotrauma
                     }
                 }
             }
-            else if (Character != null && Character.IsDead)
+            else if (Character is { IsDead: true })
             {
                 var deadArea = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.63f), paddedFrame.RectTransform, Anchor.BottomCenter, Pivot.BottomCenter))
                 {
@@ -521,29 +537,28 @@ namespace Barotrauma
             Color skinColor = inc.ReadColorR8G8B8();
             Color hairColor = inc.ReadColorR8G8B8();
             Color facialHairColor = inc.ReadColorR8G8B8();
-            string ragdollFile = inc.ReadString();
 
-            string jobIdentifier = inc.ReadString();
+            string ragdollFile = inc.ReadString();
+            Identifier npcId = inc.ReadIdentifier();
+            uint jobIdentifier = inc.ReadUInt32();
             int variant = inc.ReadByte();
 
             JobPrefab jobPrefab = null;
             Dictionary<Identifier, float> skillLevels = new Dictionary<Identifier, float>();
-            if (!string.IsNullOrEmpty(jobIdentifier))
-            {
-                jobPrefab = JobPrefab.Get(jobIdentifier);
-                byte skillCount = inc.ReadByte();
-                for (int i = 0; i < skillCount; i++)
+            if (jobIdentifier > 0)
+            { 
+                jobPrefab = JobPrefab.Prefabs.Find(jp => jp.UintIdentifier == jobIdentifier);
+                foreach (SkillPrefab skillPrefab in jobPrefab.Skills.OrderBy(s => s.Identifier))
                 {
-                    Identifier skillIdentifier = inc.ReadIdentifier();
                     float skillLevel = inc.ReadSingle();
-                    skillLevels.Add(skillIdentifier, skillLevel);
-                }
-            }
+                    skillLevels.Add(skillPrefab.Identifier, skillLevel);
+                }         
+            }            
 
             // TODO: animations
-            CharacterInfo ch = new CharacterInfo(speciesName, newName, originalName, jobPrefab, ragdollFile, variant)
+            CharacterInfo ch = new CharacterInfo(speciesName, newName, originalName, jobPrefab, ragdollFile, variant, npcIdentifier: npcId)
             {
-                ID = infoID,
+                ID = infoID
             };
             ch.RecreateHead(tagSet.ToImmutableHashSet(), hairIndex, beardIndex, moustacheIndex, faceAttachmentIndex);
             ch.Head.SkinColor = skinColor;
@@ -777,7 +792,21 @@ namespace Barotrauma
                 
                 createColorSelector($"Customization.{nameof(info.Head.SkinColor)}".ToIdentifier(), info.SkinColors, () => info.Head.SkinColor,
                     (color) => info.Head.SkinColor = color);
-
+#if DEBUG
+                new GUIButton(new RectTransform(Vector2.One * 0.12f,
+                        parentComponent.RectTransform,
+                        anchor: Anchor.BottomRight, scaleBasis: ScaleBasis.Smallest)
+                { RelativeOffset = new Vector2(0.01f, 0.005f) }, style: "SaveButton", color: Color.Magenta)
+                {
+                    ToolTip = "DEBUG ONLY: copy the character info XML to clipboard",
+                    OnClicked = (button, o) =>
+                    {
+                        XElement element = info.Save(null);
+                        Clipboard.SetText(element.ToString());
+                        return false;
+                    }
+                };
+#endif
                 RandomizeButton = new GUIButton(new RectTransform(Vector2.One * 0.12f,
                         parentComponent.RectTransform,
                         anchor: Anchor.BottomRight, scaleBasis: ScaleBasis.Smallest)

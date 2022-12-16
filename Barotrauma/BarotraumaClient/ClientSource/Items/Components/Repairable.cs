@@ -22,6 +22,8 @@ namespace Barotrauma.Items.Components
 
         private GUILayoutGroup extraButtonContainer;
 
+        private GUIComponent skillTextContainer;
+
         private readonly List<ParticleEmitter> particleEmitters = new List<ParticleEmitter>();
         //the corresponding particle emitter is active when the condition is within this range
         private readonly List<Vector2> particleEmitterConditionRanges = new List<Vector2>();
@@ -59,7 +61,7 @@ namespace Barotrauma.Items.Components
         public override bool ShouldDrawHUD(Character character)
         {
             if (item.HiddenInGame) { return false; }
-            if (!HasRequiredItems(character, false) || character.SelectedConstruction != item) { return false; }
+            if (!HasRequiredItems(character, false) || character.SelectedItem != item) { return false; }
             if (character.IsTraitor && item.ConditionPercentage > MinSabotageCondition) { return true; }
 
             float defaultMaxCondition = item.MaxCondition / item.MaxRepairConditionMultiplier;
@@ -110,6 +112,7 @@ namespace Barotrauma.Items.Components
             if (GuiFrame != null)
             {
                 GuiFrame.ClearChildren();
+                TryCreateDragHandle();
                 CreateGUI();
             }
         }
@@ -131,9 +134,10 @@ namespace Barotrauma.Items.Components
 
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
                 TextManager.Get("RequiredRepairSkills"), font: GUIStyle.SubHeadingFont);
+            skillTextContainer = paddedFrame;
             for (int i = 0; i < requiredSkills.Count; i++)
             {
-                var skillText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedFrame.RectTransform),
+                var skillText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), skillTextContainer.RectTransform),
                     "   - " + TextManager.AddPunctuation(':', TextManager.Get("SkillName." + requiredSkills[i].Identifier), ((int) Math.Round(requiredSkills[i].Level * SkillRequirementMultiplier)).ToString()),
                     font: GUIStyle.SmallFont)
                 {
@@ -161,6 +165,7 @@ namespace Barotrauma.Items.Components
             repairingText = TextManager.Get("Repairing");
             RepairButton = new GUIButton(new RectTransform(new Vector2(0.4f, 1.0f), progressBarHolder.RectTransform, Anchor.TopCenter), repairButtonText)
             {
+                UserData = UIHighlightAction.ElementId.RepairButton,
                 OnClicked = (btn, obj) =>
                 {
                     requestStartFixAction = FixActions.Repair;
@@ -265,7 +270,7 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (CurrentFixer != null && CurrentFixer.SelectedConstruction == item)
+            if (CurrentFixer != null && CurrentFixer.SelectedItem == item)
             {
                 if (repairSoundChannel == null || !repairSoundChannel.IsPlaying)
                 {
@@ -353,24 +358,16 @@ namespace Barotrauma.Items.Components
                 tinkerButtonText :
                 tinkeringText + new string('.', ((int)(Timing.TotalTime * 2.0f) % 3) + 1);
 
-            System.Diagnostics.Debug.Assert(GuiFrame.GetChild(0) is GUILayoutGroup, "Repair UI hierarchy has changed, could not find skill texts");
+            //System.Diagnostics.Debug.Assert(GuiFrame.GetChild(0) is GUILayoutGroup, "Repair UI hierarchy has changed, could not find skill texts");
 
             extraButtonContainer.Visible = SabotageButton.Visible || TinkerButton.Visible;
             extraButtonContainer.IgnoreLayoutGroups = !extraButtonContainer.Visible;
 
-            foreach (GUIComponent c in GuiFrame.GetChild(0).Children)
+            foreach (GUIComponent c in skillTextContainer.Children)
             {
-                if (!(c.UserData is Skill skill)) continue;
-
+                if (c.UserData is not Skill skill) { continue; }
                 GUITextBlock textBlock = (GUITextBlock)c;
-                if (character.GetSkillLevel(skill.Identifier) < (skill.Level * SkillRequirementMultiplier))
-                {
-                    textBlock.TextColor = GUIStyle.Red;
-                }
-                else
-                {
-                    textBlock.TextColor = Color.White;
-                }
+                textBlock.TextColor = character.GetSkillLevel(skill.Identifier) < (skill.Level * SkillRequirementMultiplier) ? GUIStyle.Red : GUIStyle.TextColorNormal;
             }
         }
 
@@ -450,7 +447,7 @@ namespace Barotrauma.Items.Components
         public void ClientEventWrite(IWriteMessage msg, NetEntityEvent.IData extraData = null)
         {
             msg.WriteRangedInteger((int)requestStartFixAction, 0, 2);
-            msg.Write(qteSuccess);
+            msg.WriteBoolean(qteSuccess);
         }
     }
 }

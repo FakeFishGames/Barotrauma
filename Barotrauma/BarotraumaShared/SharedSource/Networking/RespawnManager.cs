@@ -11,6 +11,11 @@ namespace Barotrauma.Networking
 {
     partial class RespawnManager : Entity, IServerSerializable
     {
+        /// <summary>
+        /// How much skills drop towards the job's default skill levels when dying
+        /// </summary>
+        const float SkillReductionOnDeath = 0.75f;
+
         public enum State
         {
             Waiting,
@@ -60,7 +65,7 @@ namespace Barotrauma.Networking
 
         public State CurrentState { get; private set; }
 
-        public bool UseRespawnPrompt
+        public static bool UseRespawnPrompt
         {
             get
             {
@@ -186,6 +191,7 @@ namespace Barotrauma.Networking
         public void ForceRespawn()
         {
             ResetShuttle();
+            RespawnCountdownStarted = true;
             RespawnTime = DateTime.Now;
             CurrentState = State.Waiting;
         }
@@ -253,7 +259,7 @@ namespace Barotrauma.Networking
                 var powerContainer = item.GetComponent<PowerContainer>();
                 if (powerContainer != null)
                 {
-                    powerContainer.Charge = powerContainer.Capacity;
+                    powerContainer.Charge = powerContainer.GetCapacity();
                 }
 
                 var door = item.GetComponent<Door>();
@@ -269,6 +275,7 @@ namespace Barotrauma.Networking
 #endif
                 }
             }
+            respawnItems.Clear();
 
             foreach (Structure wall in Structure.WallList)
             {
@@ -284,7 +291,7 @@ namespace Barotrauma.Networking
                 if (hull.Submarine != RespawnShuttle) { continue; }
                 hull.OxygenPercentage = 100.0f;
                 hull.WaterVolume = 0.0f;
-                hull.BallastFlora?.Kill();
+                hull.BallastFlora?.Remove();
             }
 
             Dictionary<Character, Vector2> characterPositions = new Dictionary<Character, Vector2>();
@@ -327,10 +334,14 @@ namespace Barotrauma.Networking
             RespawnCharactersProjSpecific(shuttlePos);
         }
 
+        public static AfflictionPrefab GetRespawnPenaltyAfflictionPrefab()
+        {
+            return AfflictionPrefab.Prefabs.First(a => a.AfflictionType == "respawnpenalty");
+        }
+
         public static Affliction GetRespawnPenaltyAffliction()
         {
-            var respawnPenaltyAffliction = AfflictionPrefab.Prefabs.First(a => a.AfflictionType == "respawnpenalty");
-            return respawnPenaltyAffliction?.Instantiate(10.0f);
+            return GetRespawnPenaltyAfflictionPrefab()?.Instantiate(10.0f);
         }
 
         public static void GiveRespawnPenaltyAffliction(Character character)

@@ -45,6 +45,8 @@ namespace Barotrauma.Items.Components
             private set;
         }
 
+        public override bool RecreateGUIOnResolutionChange => true;
+
         /// <summary>
         /// Depth at which the contained sprites are drawn. If not set, the original depth of the item sprites is used.
         /// </summary>
@@ -189,7 +191,7 @@ namespace Barotrauma.Items.Components
                 onDraw: (SpriteBatch spriteBatch, GUICustomComponent component) => { Inventory.Draw(spriteBatch); },
                 onUpdate: null)
             {
-                CanBeFocused = false
+                CanBeFocused = true
             };
 
             // Expand the frame vertically if it's too small to fit the text
@@ -307,21 +309,55 @@ namespace Barotrauma.Items.Components
 
             Vector2 currentItemPos = transformedItemPos;
 
-            SpriteEffects spriteEffects = SpriteEffects.None;
-            if ((item.body != null && item.body.Dir == -1) || item.FlippedX) 
-            { 
-                spriteEffects |= MathUtils.NearlyEqual(ItemRotation % 180, 90.0f) ? SpriteEffects.FlipVertically : SpriteEffects.FlipHorizontally;
-            }
-            if (item.FlippedY)
-            {
-                spriteEffects |= MathUtils.NearlyEqual(ItemRotation % 180, 90.0f) ? SpriteEffects.FlipHorizontally : SpriteEffects.FlipVertically;
-            }
-
             bool isWiringMode = SubEditorScreen.TransparentWiringMode && SubEditorScreen.IsWiringMode();
 
             int i = 0;
             foreach (Item containedItem in Inventory.AllItems)
             {
+                Vector2 itemPos = currentItemPos;
+                var relatedItem = FindContainableItem(containedItem);
+                if (relatedItem != null)
+                {
+                    if (relatedItem.Hide.HasValue && relatedItem.Hide.Value) { continue; }
+                    if (relatedItem.ItemPos.HasValue)
+                    {
+                        Vector2 pos = relatedItem.ItemPos.Value;
+                        if (item.body != null)
+                        {
+                            Matrix transform = Matrix.CreateRotationZ(item.body.DrawRotation);
+                            pos.X *= item.body.Dir;
+                            itemPos = Vector2.Transform(pos, transform) + item.body.DrawPosition;
+                        }
+                        else
+                        {
+                            itemPos = pos;
+                            // This code is aped based on above. Not tested.
+                            if (item.FlippedX)
+                            {
+                                itemPos.X = -itemPos.X;
+                                itemPos.X += item.Rect.Width;
+                            }
+                            if (item.FlippedY)
+                            {
+                                itemPos.Y = -itemPos.Y;
+                                itemPos.Y -= item.Rect.Height;
+                            }
+                            itemPos += new Vector2(item.Rect.X, item.Rect.Y);
+                            if (item.Submarine != null)
+                            {
+                                itemPos += item.Submarine.DrawPosition;
+                            }
+                            if (Math.Abs(item.RotationRad) > 0.01f)
+                            {
+                                Matrix transform = Matrix.CreateRotationZ(-item.RotationRad);
+                                itemPos = Vector2.Transform(itemPos - item.DrawPosition, transform) + item.DrawPosition;
+                            }
+                        }
+                    }
+                }
+
+                if (containedItem?.Sprite == null) { continue; }
+
                 if (AutoInteractWithContained)
                 {
                     containedItem.IsHighlighted = item.IsHighlighted;
@@ -339,19 +375,34 @@ namespace Barotrauma.Items.Components
                 }
                 containedSpriteDepth = itemDepth + (containedSpriteDepth - (item.Sprite?.Depth ?? item.SpriteDepth)) / 10000.0f;
 
+                SpriteEffects spriteEffects = SpriteEffects.None;
+                float spriteRotation = ItemRotation;
+                if (relatedItem != null && relatedItem.Rotation != 0)
+                {
+                    spriteRotation = relatedItem.Rotation;
+                }
+                if ((item.body != null && item.body.Dir == -1) || item.FlippedX)
+                {
+                    spriteEffects |= MathUtils.NearlyEqual(spriteRotation % 180, 90.0f) ? SpriteEffects.FlipVertically : SpriteEffects.FlipHorizontally;
+                }
+                if (item.FlippedY)
+                {
+                    spriteEffects |= MathUtils.NearlyEqual(spriteRotation % 180, 90.0f) ? SpriteEffects.FlipHorizontally : SpriteEffects.FlipVertically;
+                }
+
                 containedItem.Sprite.Draw(
                     spriteBatch,
-                    new Vector2(currentItemPos.X, -currentItemPos.Y),
-                    isWiringMode ? containedItem.GetSpriteColor() * 0.15f : containedItem.GetSpriteColor(),
+                    new Vector2(itemPos.X, -itemPos.Y),
+                    isWiringMode ? containedItem.GetSpriteColor(withHighlight: true) * 0.15f : containedItem.GetSpriteColor(withHighlight: true),
                     origin,
-                    -(containedItem.body == null ? 0.0f : containedItem.body.DrawRotation ),
+                    -(containedItem.body == null ? 0.0f : containedItem.body.DrawRotation),
                     containedItem.Scale,
                     spriteEffects,
                     depth: containedSpriteDepth);
 
                 foreach (ItemContainer ic in containedItem.GetComponents<ItemContainer>())
                 {
-                    if (ic.hideItems) continue;
+                    if (ic.hideItems) { continue; }
                     ic.DrawContainedItems(spriteBatch, containedSpriteDepth);
                 }
 
@@ -381,10 +432,15 @@ namespace Barotrauma.Items.Components
                 guiCustomComponent.RectTransform.Parent = Inventory.RectTransform;
             }
 
+            if (item.ParentInventory?.Owner == character && character.SelectedItem == item)
+            {
+                character.SelectedItem = null;
+            }
+
             //if the item is in the character's inventory, no need to update the item's inventory 
-            //because the player can see it by hovering the cursor over the item
-            guiCustomComponent.Visible = item.ParentInventory?.Owner != character && DrawInventory;
-            if (!guiCustomComponent.Visible) { return; }
+            //because the player can see it by hovering the cursor over the item        
+            guiCustomComponent.Visible = DrawInventory && item.ParentInventory?.Owner != character;
+            if (!guiCustomComponent.Visible) { return; }           
 
             Inventory.Update(deltaTime, cam);
         }

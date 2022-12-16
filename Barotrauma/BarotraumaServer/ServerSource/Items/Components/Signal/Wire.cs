@@ -41,8 +41,8 @@ namespace Barotrauma.Items.Components
             msg.WriteRangedInteger(nodeCount, 0, MaxNodesPerNetworkEvent);
             for (int i = nodeStartIndex; i < nodeStartIndex + nodeCount; i++)
             {
-                msg.Write(nodes[i].X);
-                msg.Write(nodes[i].Y);
+                msg.WriteSingle(nodes[i].X);
+                msg.WriteSingle(nodes[i].Y);
             }
         }
 

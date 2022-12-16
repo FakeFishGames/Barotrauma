@@ -58,7 +58,7 @@ namespace Barotrauma
             Reset();
         }
 
-        private bool IsBlockedByAnotherConversation(IEnumerable<Entity> targets)
+        private bool IsBlockedByAnotherConversation(IEnumerable<Entity> targets, float duration)
         {
             foreach (Entity e in targets)
             {
@@ -68,7 +68,7 @@ namespace Barotrauma
                 {
                     if (lastActiveAction.ContainsKey(targetClient) && 
                         lastActiveAction[targetClient].ParentEvent != ParentEvent && 
-                        Timing.TotalTime < lastActiveAction[targetClient].lastActiveTime + BlockOtherConversationsDuration)
+                        Timing.TotalTime < lastActiveAction[targetClient].lastActiveTime + duration)
                     {
                         return true;
                     }
@@ -91,7 +91,7 @@ namespace Barotrauma
                     {
                         targetClients.Add(targetClient);
                         lastActiveAction[targetClient] = this;
-                        ServerWrite(speaker, targetClient); 
+                        ServerWrite(speaker, targetClient, interrupt); 
                     }
                 }
             }
@@ -105,46 +105,46 @@ namespace Barotrauma
                         {
                             targetClients.Add(c);
                             lastActiveAction[c] = this;
-                            ServerWrite(speaker, c);
+                            ServerWrite(speaker, c, interrupt);
                         }
                     }
                 }
             }
         }
 
-        private void ServerWrite(Character speaker, Client client)
+        public void ServerWrite(Character speaker, Client client, bool interrupt)
         {
             IWriteMessage outmsg = new WriteOnlyMessage();
-            outmsg.Write((byte)ServerPacketHeader.EVENTACTION);
-            outmsg.Write((byte)EventManager.NetworkEventType.CONVERSATION);
-            outmsg.Write(Identifier);
-            outmsg.Write(EventSprite);
-            outmsg.Write((byte)DialogType);
-            outmsg.Write(ContinueConversation);
+            outmsg.WriteByte((byte)ServerPacketHeader.EVENTACTION);
+            outmsg.WriteByte((byte)EventManager.NetworkEventType.CONVERSATION);
+            outmsg.WriteUInt16(Identifier);
+            outmsg.WriteString(EventSprite);
+            outmsg.WriteByte((byte)DialogType);
+            outmsg.WriteBoolean(ContinueConversation);
             if (interrupt)
             {
-                outmsg.Write(speaker?.ID ?? Entity.NullEntityID);
-                outmsg.Write(string.Empty);
-                outmsg.Write(false);
-                outmsg.Write((byte)0);
-                outmsg.Write((byte)0);
+                outmsg.WriteUInt16(speaker?.ID ?? Entity.NullEntityID);
+                outmsg.WriteString(string.Empty);
+                outmsg.WriteBoolean(false);
+                outmsg.WriteByte((byte)0);
+                outmsg.WriteByte((byte)0);
             }
             else
             {
-                outmsg.Write(speaker?.ID ?? Entity.NullEntityID);
-                outmsg.Write(Text ?? string.Empty);
-                outmsg.Write(FadeToBlack);
-                outmsg.Write((byte)Options.Count);
+                outmsg.WriteUInt16(speaker?.ID ?? Entity.NullEntityID);
+                outmsg.WriteString(Text ?? string.Empty);
+                outmsg.WriteBoolean(FadeToBlack);
+                outmsg.WriteByte((byte)Options.Count);
                 for (int i = 0; i < Options.Count; i++)
                 {
-                    outmsg.Write(Options[i].Text);
+                    outmsg.WriteString(Options[i].Text);
                 }
 
                 int[] endings = GetEndingOptions();
-                outmsg.Write((byte)endings.Length);
+                outmsg.WriteByte((byte)endings.Length);
                 foreach (var end in endings)
                 {
-                    outmsg.Write((byte)end);
+                    outmsg.WriteByte((byte)end);
                 }
             }
             GameMain.Server?.ServerPeer?.Send(outmsg, client.Connection, DeliveryMethod.Reliable);

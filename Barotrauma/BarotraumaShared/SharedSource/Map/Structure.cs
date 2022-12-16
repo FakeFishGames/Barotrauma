@@ -56,6 +56,8 @@ namespace Barotrauma
         //dimensions of the wall sections' physics bodies (only used for debug rendering)
         private readonly List<Vector2> bodyDebugDimensions = new List<Vector2>();
 
+        private static Explosion explosionOnBroken;
+
 #if DEBUG
         [Serialize(false, IsPropertySaveable.Yes), Editable]
 #else
@@ -167,6 +169,17 @@ namespace Barotrauma
         public new StructurePrefab Prefab => base.Prefab as StructurePrefab;
 
         public ImmutableHashSet<Identifier> Tags => Prefab.Tags;
+
+#if DEBUG
+        [Editable, Serialize("", IsPropertySaveable.Yes)]
+#else
+        [Serialize("", IsPropertySaveable.Yes)]
+#endif
+        public string SpecialTag
+        {
+            get;
+            set;
+        }
 
         protected Color spriteColor;
         [Editable, Serialize("1.0,1.0,1.0,1.0", IsPropertySaveable.Yes)]
@@ -574,6 +587,11 @@ namespace Barotrauma
             int xsections = 1, ysections = 1;
             int width = rect.Width, height = rect.Height;
 
+            WallSection[] prevSections = null;
+            if (Sections != null)
+            {
+                prevSections = Sections.ToArray();
+            }
             if (!HasBody)
             {
                 if (FlippedX && IsHorizontal)
@@ -655,6 +673,14 @@ namespace Barotrauma
 
                         Sections[x + y] = new WallSection(sectionRect, this);
                     }
+                }
+            }
+
+            if (prevSections != null && Sections.Length == prevSections.Length)
+            {
+                for (int i = 0; i < Sections.Length; i++)
+                {
+                    Sections[i].damage = prevSections[i].damage;
                 }
             }
         }
@@ -829,17 +855,24 @@ namespace Barotrauma
 
         public WallSection GetSection(int sectionIndex)
         {
-            if (sectionIndex < 0 || sectionIndex >= Sections.Length) return null;
-
+            if (sectionIndex < 0 || sectionIndex >= Sections.Length) { return null; }
             return Sections[sectionIndex];
 
         }
 
         public bool SectionBodyDisabled(int sectionIndex)
         {
-            if (sectionIndex < 0 || sectionIndex >= Sections.Length) return false;
-
+            if (sectionIndex < 0 || sectionIndex >= Sections.Length) { return false; }
             return (Sections[sectionIndex].damage >= MaxHealth);
+        }
+
+        public bool AllSectionBodiesDisabled()
+        {
+            for (int i = 0; i < Sections.Length; i++)
+            {
+                if (Sections[i].damage < MaxHealth) { return false; }
+            }
+            return true;
         }
 
         /// <summary>
@@ -847,9 +880,8 @@ namespace Barotrauma
         /// </summary>
         public bool SectionIsLeaking(int sectionIndex)
         {
-            if (sectionIndex < 0 || sectionIndex >= Sections.Length) return false;
-
-            return (Sections[sectionIndex].damage >= MaxHealth * LeakThreshold);
+            if (sectionIndex < 0 || sectionIndex >= Sections.Length) { return false; }
+            return Sections[sectionIndex].damage >= MaxHealth * LeakThreshold;
         }
 
         public int SectionLength(int sectionIndex)
@@ -1053,7 +1085,7 @@ namespace Barotrauma
             return new AttackResult(damageAmount, null);
         }
 
-        public void SetDamage(int sectionIndex, float damage, Character attacker = null, bool createNetworkEvent = true)
+        public void SetDamage(int sectionIndex, float damage, Character attacker = null, bool createNetworkEvent = true, bool createExplosionEffect = true)
         {
             if (Submarine != null && Submarine.GodMode || Indestructible) { return; }
             if (!Prefab.Body) { return; }
@@ -1098,6 +1130,7 @@ namespace Barotrauma
             }
             else
             {
+                float prevGapOpenState = Sections[sectionIndex].gap?.Open ?? 0.0f;
                 if (Sections[sectionIndex].gap == null)
                 {
                     Rectangle gapRect = Sections[sectionIndex].rect;
@@ -1139,21 +1172,22 @@ namespace Barotrauma
                     gapRect.Height += 20;
 
                     bool horizontalGap = !IsHorizontal;
+                    bool diagonalGap = false;
                     if (Prefab.BodyRotation != 0.0f)
                     {
                         //rotation within a 90 deg sector (e.g. 100 -> 10, 190 -> 10, -10 -> 80)
                         float sectorizedRotation = MathUtils.WrapAngleTwoPi(BodyRotation) % MathHelper.PiOver2;
                         //diagonal if 30 < angle < 60
-                        bool diagonal = sectorizedRotation > MathHelper.Pi / 6 && sectorizedRotation < MathHelper.Pi / 3;
+                        diagonalGap = sectorizedRotation > MathHelper.Pi / 6 && sectorizedRotation < MathHelper.Pi / 3;
                         //gaps on the lower half of a diagonal wall are horizontal, ones on the upper half are vertical
-                        if (diagonal)
+                        if (diagonalGap)
                         {
                             horizontalGap = gapRect.Y - gapRect.Height / 2 < Position.Y;
                             if (FlippedY) { horizontalGap = !horizontalGap; }
                         }
                     }
 
-                    Sections[sectionIndex].gap = new Gap(gapRect, horizontalGap, Submarine);
+                    Sections[sectionIndex].gap = new Gap(gapRect, horizontalGap, Submarine, isDiagonal: diagonalGap);
 
                     //free the ID, because if we give gaps IDs we have to make sure they always match between the clients and the server and
                     //that clients create them in the correct order along with every other entity created/removed during the round
@@ -1173,8 +1207,15 @@ namespace Barotrauma
 #endif
                 }
 
+                var gap = Sections[sectionIndex].gap;
                 float gapOpen = MaxHealth <= 0.0f ? 0.0f : (damage / MaxHealth - LeakThreshold) * (1.0f / (1.0f - LeakThreshold));
-                Sections[sectionIndex].gap.Open = gapOpen;
+                gap.Open = gapOpen;
+
+                //gap appeared or became much larger -> explosion effect
+                if (gapOpen - prevGapOpenState > 0.25f && createExplosionEffect && !gap.IsRoomToRoom)
+                {
+                    CreateWallDamageExplosion(gap, attacker);
+                }
             }
 
             float damageDiff = damage - Sections[sectionIndex].damage;
@@ -1201,6 +1242,59 @@ namespace Barotrauma
             if (hadHole == hasHole) { return; }
 
             UpdateSections();
+        }
+
+        private void CreateWallDamageExplosion(Gap gap, Character attacker)
+        {
+            const float explosionRange = 750.0f;
+            float explosionStrength = gap.Open;
+
+            var linkedHull = gap.linkedTo.FirstOrDefault() as Hull;
+            if (linkedHull != null)
+            {
+                //existing, nearby gaps leading to the same hull reduce the strength of the explosion
+                // -> the first breached section does most (or all) of the damage, making it more consistent
+                //    (otherwise the damage would depend on how many structures and sections happen to be breached)
+                foreach (var otherGap in linkedHull.ConnectedGaps)
+                {
+                    if (otherGap == gap || otherGap.IsRoomToRoom || otherGap.Open < 0.25f) { continue; }
+                    explosionStrength -= Math.Max(0, explosionRange - Vector2.Distance(otherGap.WorldPosition, gap.WorldPosition)) / explosionRange;
+                    if (explosionStrength <= 0.0f) { return; }
+                }
+            }
+
+            if (explosionOnBroken == null)
+            {
+                explosionOnBroken = new Explosion(explosionRange * gap.Open, force: 10.0f, damage: 0.0f, structureDamage: 0.0f, itemDamage: 0.0f);
+                if (AfflictionPrefab.Prefabs.TryGet("lacerations".ToIdentifier(), out AfflictionPrefab lacerations))
+                {
+                    explosionOnBroken.Attack.Afflictions.Add(lacerations.Instantiate(50.0f), null);
+                }
+                else
+                {
+                    explosionOnBroken.Attack.Afflictions.Add(AfflictionPrefab.InternalDamage.Instantiate(5.0f), null);
+                }
+                explosionOnBroken.OnlyInside = true;
+                explosionOnBroken.DisableParticles();
+            }
+
+            explosionOnBroken.Attack.DamageMultiplier = explosionStrength;
+            explosionOnBroken?.Explode(gap.WorldPosition, damageSource: null, attacker: attacker);
+#if CLIENT
+            if (linkedHull != null)
+            {
+                for (int i = 0; i <= 50; i++)
+                {
+                    Vector2 particlePos = new Vector2(Rand.Range(gap.WorldRect.X, gap.WorldRect.Right), Rand.Range(gap.WorldRect.Y - gap.WorldRect.Height, gap.WorldRect.Y));
+                    var velocity = gap.IsHorizontal ?
+                        gap.linkedTo[0].WorldPosition.X < gap.WorldPosition.X ? -Vector2.UnitX : Vector2.UnitX :
+                        gap.linkedTo[0].WorldPosition.Y < gap.WorldPosition.Y ? -Vector2.UnitY : Vector2.UnitY;
+                    velocity = new Vector2(velocity.X + Rand.Range(-0.2f, 0.2f), velocity.Y + Rand.Range(-0.2f, 0.2f));
+                    var particle = GameMain.ParticleManager.CreateParticle("shrapnel", particlePos, velocity * Rand.Range(100.0f, 3000.0f), collisionIgnoreTimer: 0.1f);
+                    if (particle == null) { break; }
+                }
+            }
+#endif
         }
 
         partial void OnHealthChangedProjSpecific(Character attacker, float damageAmount);
@@ -1402,6 +1496,13 @@ namespace Barotrauma
             if (submarine?.Info.GameVersion != null)
             {
                 SerializableProperty.UpgradeGameVersion(s, s.Prefab.ConfigElement, submarine.Info.GameVersion);
+                //tier-based upgrade restrictions were added in 0.19.10.0, potentially soft-locking campaigns if you're
+                //far enough on the map on a submarine that can no longer have as many levels of hull upgrades.
+                // -> let's ensure that won't happen
+                if (submarine.Info.GameVersion < new Version(0, 19, 10) && GameMain.GameSession?.LevelData != null)
+                {
+                    s.CrushDepth = Math.Max(s.CrushDepth, GameMain.GameSession.LevelData.InitialDepth * Physics.DisplayToRealWorldRatio + 500);
+                }
             }
 
             bool hasDamage = false;
@@ -1532,7 +1633,7 @@ namespace Barotrauma
         {
             for (int i = 0; i < Sections.Length; i++)
             {
-                SetDamage(i, Sections[i].damage, createNetworkEvent: false);
+                SetDamage(i, Sections[i].damage, createNetworkEvent: false, createExplosionEffect: false);
             }
         }
 

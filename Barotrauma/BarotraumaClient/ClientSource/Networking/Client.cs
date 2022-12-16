@@ -14,6 +14,16 @@ namespace Barotrauma.Networking
             set;
         }
 
+        private SoundChannel radioNoiseChannel;
+        private float radioNoise;
+
+        public float RadioNoise
+        {
+            get { return radioNoise; }
+            set { radioNoise = MathHelper.Clamp(value, 0.0f, 1.0f); }
+        }
+
+
         private bool mutedLocally;
         public bool MutedLocally
         {
@@ -31,49 +41,83 @@ namespace Barotrauma.Networking
 
         public bool IsOwner;
 
-        public bool AllowKicking;
 
         public bool IsDownloading;
 
         public float Karma;
 
-        public void UpdateSoundPosition()
+        public bool AllowKicking =>
+            !IsOwner &&
+            !HasPermission(ClientPermissions.Ban) &&
+            !HasPermission(ClientPermissions.Kick) &&
+            !HasPermission(ClientPermissions.Unban);
+
+        public void UpdateVoipSound()
         {
-            if (VoipSound == null) { return; }
-            
-            if (!VoipSound.IsPlaying)
+            if (VoipSound == null || !VoipSound.IsPlaying)
             {
-                DebugConsole.Log("Destroying voipsound");
-                VoipSound.Dispose();
+                radioNoiseChannel?.Dispose();
+                radioNoiseChannel = null;
+                if (VoipSound != null)
+                {
+                    DebugConsole.Log("Destroying voipsound");
+                    VoipSound.Dispose();
+                }
                 VoipSound = null;
-                return;
+                return; 
             }
 
+            if (Screen.Selected is ModDownloadScreen)
+            {
+                VoipSound.Gain = 0.0f;
+            }
+            
+            float gain = 1.0f;
+            float noiseGain = 0.0f;
+            Vector3? position = null;
             if (character != null)
             {
                 if (GameSettings.CurrentConfig.Audio.UseDirectionalVoiceChat)
                 {
-                    VoipSound.SetPosition(new Vector3(character.WorldPosition.X, character.WorldPosition.Y, 0.0f));
+                    position = new Vector3(character.WorldPosition.X, character.WorldPosition.Y, 0.0f);
                 }
                 else
                 {
-                    VoipSound.SetPosition(null);
                     float dist = Vector3.Distance(new Vector3(character.WorldPosition, 0.0f), GameMain.SoundManager.ListenerPosition);
-                    VoipSound.Gain = 1.0f - MathUtils.InverseLerp(VoipSound.Near, VoipSound.Far, dist);
+                    gain = 1.0f - MathUtils.InverseLerp(VoipSound.Near, VoipSound.Far, dist);
+                }
+                if (RadioNoise > 0.0f)
+                {
+                    noiseGain = gain * RadioNoise;
+                    gain *= 1.0f - RadioNoise;
                 }
             }
-            else
+            VoipSound.SetPosition(position);
+            VoipSound.Gain = gain;
+            if (noiseGain > 0.0f)
             {
-                VoipSound.SetPosition(null);
-                VoipSound.Gain = 1.0f;
+                if (radioNoiseChannel == null || !radioNoiseChannel.IsPlaying)
+                {
+                    radioNoiseChannel = SoundPlayer.PlaySound("radiostatic");
+                    radioNoiseChannel.Category = "voip";
+                    radioNoiseChannel.Looping = true;
+                }
+                radioNoiseChannel.Near = VoipSound.Near;
+                radioNoiseChannel.Far = VoipSound.Far;
+                radioNoiseChannel.Position = position;
+                radioNoiseChannel.Gain = noiseGain;
+            }
+            else if (radioNoiseChannel != null)
+            {
+                radioNoiseChannel.Gain = 0.0f;
             }
         }
 
         partial void InitProjSpecific()
         {
             VoipQueue = null; VoipSound = null;
-            if (ID == GameMain.Client.ID) return;
-            VoipQueue = new VoipQueue(ID, false, true);
+            if (SessionId == GameMain.Client.SessionId) { return; }
+            VoipQueue = new VoipQueue(SessionId, canSend: false, canReceive: true);
             GameMain.Client?.VoipClient?.RegisterQueue(VoipQueue);
             VoipSound = null;
         }
@@ -134,6 +178,14 @@ namespace Barotrauma.Networking
             return Permissions.HasFlag(permission);
         }
 
+        public void ResetVotes()
+        {
+            for (int i = 0; i < votes.Length; i++)
+            {
+                votes[i] = null;
+            }
+        }
+
         partial void DisposeProjSpecific()
         {
             if (VoipQueue != null)
@@ -144,6 +196,11 @@ namespace Barotrauma.Networking
             {
                 VoipSound.Dispose();
                 VoipSound = null;
+            }
+            if (radioNoiseChannel != null)
+            {
+                radioNoiseChannel.Dispose();
+                radioNoiseChannel = null;
             }
         }
     }

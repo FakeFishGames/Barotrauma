@@ -38,13 +38,13 @@ namespace Barotrauma.Items.Components
             bool forcedOpen = TryExtractEventData<EventData>(extraData, out var eventData) && eventData.ForcedOpen;
             base.ServerEventWrite(msg, c, extraData);
 
-            msg.Write(isOpen);
-            msg.Write(isBroken);
-            msg.Write(forcedOpen); //forced open
-            msg.Write(isStuck);
-            msg.Write(isJammed);
+            msg.WriteBoolean(isOpen);
+            msg.WriteBoolean(isBroken);
+            msg.WriteBoolean(forcedOpen); //forced open
+            msg.WriteBoolean(isStuck);
+            msg.WriteBoolean(isJammed);
             msg.WriteRangedSingle(stuck, 0.0f, 100.0f, 8);
-            msg.Write(lastUser == null ? (UInt16)0 : lastUser.ID);
+            msg.WriteUInt16(lastUser == null ? (UInt16)0 : lastUser.ID);
         }
     }
 }
