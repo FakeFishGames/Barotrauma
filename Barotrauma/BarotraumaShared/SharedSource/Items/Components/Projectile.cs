@@ -775,7 +775,13 @@ namespace Barotrauma.Items.Components
             else if (target.Body.UserData is Item item)
             {
                 if (item.Condition <= 0.0f) { return false; }
-                if (!item.Prefab.DamagedByProjectiles) { return false; }
+                if (!item.Prefab.DamagedByProjectiles)
+                {
+                    if (item.GetComponent<Door>() == null)
+                    {
+                        return false;
+                    }
+                }
             }
             else if (target.Body.UserData is Holdable { CanPush: false })
             {

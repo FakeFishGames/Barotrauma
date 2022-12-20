@@ -28,7 +28,7 @@ namespace Barotrauma.Items.Components
             msg.WriteBoolean(launch);
             if (launch)
             {
-                msg.WriteUInt16(User.ID);
+                msg.WriteUInt16(User?.ID ?? Entity.NullEntityID);
                 msg.WriteSingle(launchPos.X);
                 msg.WriteSingle(launchPos.Y);
                 msg.WriteSingle(launchRot);

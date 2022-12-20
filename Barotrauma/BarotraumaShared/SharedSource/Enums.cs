@@ -168,7 +168,7 @@ namespace Barotrauma
         PumpSpeed,
         PumpMaxFlow,
         ReactorMaxOutput,
-        ReactorFuelEfficiency,
+        ReactorFuelConsumption,
         DeconstructorSpeed,
         FabricationSpeed
     }
