@@ -779,6 +779,8 @@ namespace Barotrauma
             workshopMenu = Screen.Selected is MainMenuScreen
                 ? (WorkshopMenu)new MutableWorkshopMenu(content)
                 : (WorkshopMenu)new ImmutableWorkshopMenu(content);
+
+            GameMain.MainMenuScreen.ResetModUpdateButton();
         }
 
         private void CreateBottomButtons()

@@ -11,10 +11,10 @@ namespace Barotrauma
         public abstract bool IsSuccess { get; }
         public bool IsFailure => !IsSuccess;
 
-        public static Success<T, TError> Success(T value)
+        public static Result<T, TError> Success(T value)
             => new Success<T, TError>(value);
         
-        public static Failure<T, TError> Failure(TError error)
+        public static Result<T, TError> Failure(TError error)
             => new Failure<T, TError>(error);
 
         public abstract bool TryUnwrapSuccess([MaybeNullWhen(returnValue: false)] out T value);

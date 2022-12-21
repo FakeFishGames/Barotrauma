@@ -1,53 +1,20 @@
-
 ---------------------------------------------------------------------------------------------------------
-v0.19.14.0
----------------------------------------------------------------------------------------------------------
-
-- Fixed submarine upgrades getting clamped to the maximum of that upgrade between rounds, disregarding class/tier bonuses.
-
----------------------------------------------------------------------------------------------------------
-v0.19.13.0
+v0.20.16.1
 ---------------------------------------------------------------------------------------------------------
 
-- Fixed "failed to find the end of the bit field after 100 reads" error when trying to join a server that has a large number of mods enabled.
-- Fixed "Tandem Fire" talent causing a crash due to the changes in the previous version.
+- Fixed console errors when firing a Flak Cannon using spreader ammo in multiplayer.
 
 ---------------------------------------------------------------------------------------------------------
-v0.19.12.0
+v0.20.16.0
 ---------------------------------------------------------------------------------------------------------
 
-- Fixed submarine upgrades getting lost if you switch to a lower-tier sub that can't have as many levels of upgrades as the current sub, and then back again.
-- Fixed some monster events not being as common/uncommon as intended. In more technical terms (which may be of interest to modders): the commonness defined as an attribute of an EventSet did nothing, making the event default to a commonness of 1. The commonnesses defined for specific level types worked correctly.
-- Fixed clients getting stuck in a non-functional lobby if they happen to disconnect or get kicked back to the lobby at a specific point when loading a new round.
-- Fixed large turret hardpoint origin being off, causing turrets installed on a large hardpoint to be misaligned.
-- Attempt to fix crashing when disconnecting from the server you're hosting.
-- Fixed Ctrl+Shift+S shortcut (quicksave) not working in the sub editor.
-- Fixed toolbelts and storage containers in old subs going inside toolbelts.
-- Fixed submarine tier resetting to default when reopening the sub editor's save dialog.
-- Fixed sub editor not taking filename case into account when saving an existing sub: if you'd try to save the file with a different filename case, it'd ask about overwriting the existing sub, but save it as a new file even if you opt to overwrite.
-- Fixes to Herja room names (use Engineering, Gunnery compartment, etc. labels), add camera to the front, with a periscope for the captain.
-- Fixed non-purchaseable talent items not being available as extra cargo.
-- Sorted extra cargo alphabetically + added a filter box.
-- Fixed taking items that spawned inside another item (e.g. tanks in a diving mask) from NPCs spawned by an event not counting as stealing.
-- Fixed characters falling off ladders when using aimable tools.
-- Fixed money gain/lose popups no longer showing in the campaign.
-- Fixed inability to manage the campaign if there's no-one with permissions alive. Previously we allowed anyone to manage the campaign if there's no-one with permissions present in the server, but that's not enough, because the players with permissions can't end the round if they're dead. Now if there's no-one with permissions alive, anyone is allowed to manage the campaign.
-- If Select and Deselect have been bound to the same key, the deselect input is ignored when interacting with another item than the selected one. Prevents e.g. falling off ladders when trying to open a hatch when both Select and Deselect have been bound to E. 
-- Made it possible to enter a hostname (e.g. someserver.com) in the direct join prompt.
-- Adjusted the size of the submarine list elements in the server lobby to reduce the amount of empty space on large resolutions.
-- Fixed event texts for the "scan ruin" mission being in an incorrect language.
-- Attachable items cannot be attached inside walls.
-- Fixed distance at which you can attach items being slightly longer than the interact distance, making it possible to attach items out of reach.
-- Fixed inability to turn when you're dual wielding melee weapons and attacking continuously.
-- Fixed inability to cancel deconstruction if there's non-deconstructible items in the queue.
-- Fixed local copy of a mod you're publishing not using the version number you've entered in the publish menu.
-- Fixed crashing when trying to open the tab menu's character tab with a character who has no personality trait (may happen e.g. if you use a mod that adds custom personality traits and try to play that save without the mod).
-- Fixed sourcerect issue in alien generator + decorative sprite not disappearing when the fuel rod is taken out.
-- Fixed corrupted mods causing a nullref exception when autodetecting required mods in the sub editor.
-- Fixed minerals not disappearing from mineral scanner if they get detached by something else than a character picking them up (e.g. by the destructible ice wall they're on breaking).
-- Fixed event-specific metal crate deconstructing to steel.
-- Fixed inability to join servers that have enabled multiple mods with identical content.
-- Fixed tandem fire not working if there's a character between you and the other character on a periscope.
+- Fixed non-hitscan projectiles going through doors.
+- Fixed electrical discharge coils hitting characters very unreliably, unless the character happens to be right next to a wall.
+- Fixed makeshift shelves being containable in crates and cabinets, allowing for infinite recursive storage space.
+- Fixed the effects of the "Grid Maintainer" and "Egghead" talents.
+- Fixed incorrect "I Am That Guy" description (it gives a flat 20 skill bonus, not 20%).
+- Fixed "Cruisin'" talent increasing fuel consumption by 10% instead of decreasing it by 20%. 
+- Optimized Steam Workshop queries done by the game (less bandwidth usage and stress on Steam's servers).
 
 ---------------------------------------------------------------------------------------------------------
 v0.20.15.0

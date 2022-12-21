@@ -51,9 +51,8 @@ namespace Barotrauma
 
         private readonly GUIFrame modsButtonContainer;
         private readonly GUIButton modsButton, modUpdatesButton;
-        private Task<IReadOnlyList<Steamworks.Ugc.Item>> modUpdateTask;
-        private float modUpdateTimer = 0.0f;
-        private const float ModUpdateInterval = 60.0f;
+        private (DateTime WhenToRefresh, int Count) modUpdateStatus = (DateTime.Now, 0);
+        private static readonly TimeSpan ModUpdateInterval = TimeSpan.FromSeconds(60.0f);
         
         private readonly GameMain game;
 
@@ -736,8 +735,7 @@ namespace Barotrauma
 
         public void ResetModUpdateButton()
         {
-            modUpdateTask = null;
-            modUpdateTimer = 0;
+            modUpdateStatus = (DateTime.Now, 0);
             modUpdatesButton.Visible = false;
         }
 
@@ -958,15 +956,42 @@ namespace Barotrauma
             }
         }
 
+        private void UpdateOutOfDateWorkshopItemCount()
+        {
+            if (DateTime.Now < modUpdateStatus.WhenToRefresh) { return; }
+            if (!SteamManager.IsInitialized) { return; }
+
+            var installedPackages = ContentPackageManager.WorkshopPackages;
+
+            var ids = SteamManager.Workshop.GetSubscribedItemIds()
+                .Select(id => id.Value)
+                .Union(installedPackages
+                    .Select(pkg => pkg.UgcId)
+                    .NotNone()
+                    .OfType<SteamWorkshopId>()
+                    .Select(id => id.Value));
+            var count = ids
+                // Deliberately construct Steamworks.Ugc.Item directly
+                // to not immediately generate a Workshop data request
+                .Select(id => new Steamworks.Ugc.Item(id))
+                .Count(item =>
+                    installedPackages.FirstOrDefault(p
+                        => p.UgcId.TryUnwrap(out SteamWorkshopId id) && id.Value == item.Id)
+                        is { } pkg
+                    // Checking that this item is downloading, waiting to be downloaded
+                    // or is newer than the currently installed copy should be good enough,
+                    // and should still not make a Workshop data request
+                    && (item.IsDownloading
+                        || item.IsDownloadPending
+                        || (item.InstallTime.TryGetValue(out var workshopInstallTime)
+                            && pkg.InstallTime.TryUnwrap(out var localInstallTime)
+                            && localInstallTime < workshopInstallTime)));
+
+            modUpdateStatus = (DateTime.Now + ModUpdateInterval, count);
+        }
+
         public override void Update(double deltaTime)
         {
-            modUpdateTimer -= (float)deltaTime;
-            if (modUpdateTimer <= 0.0f && modUpdateTask is not { IsCompleted: false })
-            {
-                modUpdateTask = BulkDownloader.GetItemsThatNeedUpdating();
-                modUpdateTimer = ModUpdateInterval;
-            }
-
 #if DEBUG
             hostServerButton.Enabled = true;
 #else
@@ -976,10 +1001,8 @@ namespace Barotrauma
             }
 #endif
 
-            if (modUpdateTask is { IsCompletedSuccessfully: true })
-            {
-                modUpdatesButton.Visible = modUpdateTask.Result.Count > 0;
-            }
+            UpdateOutOfDateWorkshopItemCount();
+            modUpdatesButton.Visible = modUpdateStatus.Count > 0;
 
             if (modUpdatesButton.Visible)
             {

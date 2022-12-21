@@ -34,7 +34,7 @@ namespace Barotrauma.Steam
             if (numSubscribedMods == memSubscribedModCount) { return; }
             memSubscribedModCount = numSubscribedMods;
 
-            var subscribedIds = SteamManager.GetSubscribedItems().ToHashSet();
+            var subscribedIds = SteamManager.Workshop.GetSubscribedItemIds();
             var installedIds = ContentPackageManager.WorkshopPackages
                 .Select(p => p.UgcId)
                 .NotNone()
