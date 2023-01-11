@@ -431,7 +431,7 @@ namespace Barotrauma
                 }
             }
 
-            if (Timing.TotalTime > LockFlippingUntil && TargetDir != dir && !IsStuck)
+            if (Timing.TotalTime > FlipLockTime && TargetDir != dir && !IsStuck)
             {
                 Flip();
             }
@@ -1723,7 +1723,7 @@ namespace Barotrauma
                 {
                     if (target.AnimController.Dir > 0 == WorldPosition.X > target.WorldPosition.X)
                     {
-                        target.AnimController.LockFlippingUntil = (float)Timing.TotalTime + 0.5f;
+                        target.AnimController.LockFlipping(0.5f);
                     }
                     else
                     {
@@ -1822,16 +1822,22 @@ namespace Barotrauma
 
         public override void Flip()
         {
+            if (Character == null || Character.Removed)
+            {
+                LogAccessedRemovedCharacterError();
+                return;
+            }
+
             base.Flip();
 
             WalkPos = -WalkPos;
 
             Limb torso = GetLimb(LimbType.Torso);
-
-            Vector2 difference;
+            if (torso == null) { return; }
 
             Matrix torsoTransform = Matrix.CreateRotationZ(torso.Rotation);
 
+            Vector2 difference;
             foreach (Item heldItem in character.HeldItems)
             {
                 if (heldItem?.body != null && !heldItem.Removed && heldItem.GetComponent<Holdable>() != null)

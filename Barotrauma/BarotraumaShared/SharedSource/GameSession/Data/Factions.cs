@@ -27,7 +27,7 @@ namespace Barotrauma
         /// Get what kind of affiliation this faction has towards the player depending on who they chose to side with via talents
         /// </summary>
         /// <returns></returns>
-        public static FactionAffiliation GetPlayerAffiliationStatus(Identifier identifier, ImmutableHashSet<Character>? characterList = null)
+        public static FactionAffiliation GetPlayerAffiliationStatus(Faction faction, ImmutableHashSet<Character>? characterList = null)
         {
             if (GameMain.GameSession?.Campaign?.Factions is not { } factions) { return FactionAffiliation.Neutral; }
 
@@ -37,22 +37,19 @@ namespace Barotrauma
             {
                 if (character.Info is not { } info) { continue; }
 
-                foreach (Faction faction in factions)
+                foreach (Faction otherFaction in factions)
                 {
-                    Identifier factionIdentifier = faction.Prefab.Identifier;
+                    Identifier factionIdentifier = otherFaction.Prefab.Identifier;
                     if (info.GetSavedStatValue(StatTypes.Affiliation, factionIdentifier) > 0f)
                     {
-                        return factionIdentifier == identifier
+                        return factionIdentifier == faction.Prefab.Identifier
                             ? FactionAffiliation.Positive
                             : FactionAffiliation.Negative;
                     }
                 }
             }
-
             return FactionAffiliation.Neutral;
         }
-
-        public static FactionAffiliation GetPlayerAffiliationStatus(Faction faction, ImmutableHashSet<Character>? characterList = null) => GetPlayerAffiliationStatus(faction.Prefab.Identifier, characterList);
 
         public override string ToString()
         {

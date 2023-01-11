@@ -229,9 +229,8 @@ namespace Barotrauma
             }
 
             bool requiresRescue = element.GetAttributeBool("requirerescue", false);
-
             var teamId = element.GetAttributeEnum("teamid", requiresRescue ? CharacterTeamType.FriendlyNPC : CharacterTeamType.None);
-            Character spawnedCharacter = CreateHuman(humanPrefab, characters, characterItems, submarine, teamId, spawnPos, giveTags: true);
+            Character spawnedCharacter = CreateHuman(humanPrefab, characters, characterItems, submarine, teamId, spawnPos);
             if (Level.Loaded?.StartOutpost?.Info is { } outPostInfo)
             {
                 outPostInfo.AddOutpostNPCIdentifierOrTag(spawnedCharacter, humanPrefab.Identifier);
@@ -240,6 +239,7 @@ namespace Barotrauma
                     outPostInfo.AddOutpostNPCIdentifierOrTag(spawnedCharacter, tag);
                 }
             }
+
             if (spawnPos is WayPoint wp)
             {
                 spawnedCharacter.GiveIdCardTags(wp);

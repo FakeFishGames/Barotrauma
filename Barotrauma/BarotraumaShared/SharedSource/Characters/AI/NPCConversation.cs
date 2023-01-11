@@ -83,6 +83,7 @@ namespace Barotrauma
                 {
                     if (GameMain.GameSession.RoundDuration < 120.0f && 
                         speaker?.CurrentHull != null && 
+                        GameMain.GameSession.Map?.CurrentLocation?.Reputation?.Value >= 0.0f &&
                         (speaker.TeamID == CharacterTeamType.FriendlyNPC || speaker.TeamID == CharacterTeamType.None) && 
                         Character.CharacterList.Any(c => c.TeamID != speaker.TeamID && c.CurrentHull == speaker.CurrentHull)) 
                     {

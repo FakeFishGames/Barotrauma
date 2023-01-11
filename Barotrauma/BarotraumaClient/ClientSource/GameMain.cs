@@ -735,8 +735,8 @@ namespace Barotrauma
                         {
                             Client.Quit();
                             Client = null;
-                            MainMenuScreen.Select();
                         }
+                        MainMenuScreen.Select();
 
                         if (connectCommand.EndpointOrLobby.TryGet(out ulong lobbyId))
                         {
@@ -1097,37 +1097,6 @@ namespace Barotrauma
             GUIMessageBox.CloseAll();
             MainMenuScreen.Select();
             GameSession = null;
-        }
-
-        public void ShowEditorDisclaimer()
-        {
-            var msgBox = new GUIMessageBox(TextManager.Get("EditorDisclaimerTitle"), TextManager.Get("EditorDisclaimerText"));
-            var linkHolder = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.25f), msgBox.Content.RectTransform)) { Stretch = true, RelativeSpacing = 0.025f };
-            linkHolder.RectTransform.MaxSize = new Point(int.MaxValue, linkHolder.Rect.Height);
-            List<(LocalizedString Caption, string Url)> links = new List<(LocalizedString, string)>()
-            {
-                (TextManager.Get("EditorDisclaimerWikiLink"), TextManager.Get("EditorDisclaimerWikiUrl").Fallback("https://barotraumagame.com/wiki").Value),
-                (TextManager.Get("EditorDisclaimerDiscordLink"), TextManager.Get("EditorDisclaimerDiscordUrl").Fallback("https://discordapp.com/invite/undertow").Value),
-            };
-            foreach (var link in links)
-            {
-                new GUIButton(new RectTransform(new Vector2(1.0f, 0.2f), linkHolder.RectTransform), link.Caption, style: "MainMenuGUIButton", textAlignment: Alignment.Left)
-                {
-                    UserData = link.Url,
-                    OnClicked = (btn, userdata) =>
-                    {
-                        ShowOpenUrlInWebBrowserPrompt(userdata as string);
-                        return true;
-                    }
-                };
-            }
-
-            msgBox.InnerFrame.RectTransform.MinSize = new Point(0,
-                msgBox.InnerFrame.Rect.Height + linkHolder.Rect.Height + msgBox.Content.AbsoluteSpacing * 2 + 10);
-            var config = GameSettings.CurrentConfig;
-            config.EditorDisclaimerShown = true;
-            GameSettings.SetCurrentConfig(config);
-            GameSettings.SaveCurrentConfig();
         }
 
         public void ShowBugReporter()

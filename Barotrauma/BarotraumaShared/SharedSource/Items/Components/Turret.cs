@@ -478,7 +478,9 @@ namespace Barotrauma.Items.Components
             {
                 // single charged shot guns will decharge after firing
                 // for cosmetic reasons, this is done by lerping in half the reload time
-                currentChargeTime = Math.Max(0f, MaxChargeTime * (reload / reloadTime - 0.5f));
+                currentChargeTime = reloadTime > 0.0f ? 
+                    Math.Max(0f, MaxChargeTime * (reload / reloadTime - 0.5f)) : 
+                    0.0f;
             }
             else
             {

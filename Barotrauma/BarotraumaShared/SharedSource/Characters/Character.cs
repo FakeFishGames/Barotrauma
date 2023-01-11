@@ -365,9 +365,15 @@ namespace Barotrauma
         public readonly CharacterPrefab Prefab;
 
         public readonly CharacterParams Params;
+
         public Identifier SpeciesName => Params?.SpeciesName ?? "null".ToIdentifier();
+
         public Identifier Group => HumanPrefab is HumanPrefab humanPrefab && !humanPrefab.Group.IsEmpty ? humanPrefab.Group : Params.Group;
+
         public bool IsHumanoid => Params.Humanoid;
+
+        public bool IsMachine => Params.IsMachine;
+
         public bool IsHusk => Params.Husk;
 
         public bool IsMale => info?.IsMale ?? false;
@@ -1613,7 +1619,7 @@ namespace Barotrauma
                 {
                     DebugConsole.ThrowError($"Failed to give job items for the character \"{Name}\" - could not find human prefab with the id \"{info.HumanPrefabIds.NpcIdentifier}\" from \"{info.HumanPrefabIds.NpcSetIdentifier}\".");
                 }
-                else if (humanPrefab.GiveItems(this, Submarine, spawnPoint))
+                else if (humanPrefab.GiveItems(this, spawnPoint?.Submarine ?? Submarine, spawnPoint))
                 {
                     return;
                 }
@@ -1752,7 +1758,7 @@ namespace Barotrauma
             float maxSpeed = ApplyTemporarySpeedLimits(currentSpeed);
             targetMovement.X = MathHelper.Clamp(targetMovement.X, -maxSpeed, maxSpeed);
             targetMovement.Y = MathHelper.Clamp(targetMovement.Y, -maxSpeed, maxSpeed);
-            SpeedMultiplier = greatestPositiveSpeedMultiplier - (1f - greatestNegativeSpeedMultiplier);
+            SpeedMultiplier = Math.Max(0.0f, greatestPositiveSpeedMultiplier - (1f - greatestNegativeSpeedMultiplier));
             targetMovement *= SpeedMultiplier;
             // Reset, status effects will set the value before the next update
             ResetSpeedMultiplier();
@@ -3881,8 +3887,8 @@ namespace Barotrauma
                 {
                     foreach (Affliction affliction in attackResult.Afflictions)
                     {
-                        if (affliction.Strength == 0.0f) continue;
-                        sb.Append($" {affliction.Prefab.Name}: {affliction.Strength}");
+                        if (Math.Abs(affliction.Strength) <= 0.1f) { continue;}
+                        sb.Append($" {affliction.Prefab.Name}: {affliction.Strength.ToString("0.0")}");
                     }
                 }
                 GameServer.Log(sb.ToString(), ServerLog.MessageType.Attack);            
@@ -4481,7 +4487,10 @@ namespace Barotrauma
 
 #if CLIENT
             //ensure we apply any pending inventory updates to drop any items that need to be dropped when the character despawns
-            Inventory?.ApplyReceivedState();
+            if (GameMain.Client?.ClientPeer is { IsActive: true })
+            {
+                Inventory?.ApplyReceivedState();
+            }
 #endif
 
             base.Remove();
@@ -5197,15 +5206,13 @@ namespace Barotrauma
 
         public void RemoveAbilityResistance(TalentResistanceIdentifier identifier) => abilityResistances.Remove(identifier);
 
-        /// <summary>
-        /// Compares just the species name and the group, ignores teams. There's a more complex version found in HumanAIController.cs
-        /// </summary>
         public bool IsFriendly(Character other) => IsFriendly(this, other);
 
-        /// <summary>
-        /// Compares just the species name and the group, ignores teams. There's a more complex version found in HumanAIController.cs
-        /// </summary>
-        public static bool IsFriendly(Character me, Character other) => other.SpeciesName == me.SpeciesName || CharacterParams.CompareGroup(me.Group, other.Group);
+        public static bool IsFriendly(Character me, Character other) => AIController.IsOnFriendlyTeam(me, other) && IsSameSpeciesOrGroup(me, other);
+
+        public bool IsSameSpeciesOrGroup(Character other) => IsSameSpeciesOrGroup(this, other);
+
+        public static bool IsSameSpeciesOrGroup(Character me, Character other) => other.SpeciesName == me.SpeciesName || CharacterParams.CompareGroup(me.Group, other.Group);
 
         public void StopClimbing()
         {

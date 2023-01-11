@@ -946,7 +946,7 @@ namespace Barotrauma
                 var headPreset = obj as HeadPreset;
                 if (info.Head.Preset != headPreset)
                 {
-                    info.Head = new HeadInfo(info, headPreset)
+                    info.Head = new HeadInfo(info, headPreset, info.Head.HairIndex, info.Head.BeardIndex, info.Head.MoustacheIndex, info.Head.FaceAttachmentIndex)
                     {
                         SkinColor = info.Head.SkinColor,
                         HairColor = info.Head.HairColor,

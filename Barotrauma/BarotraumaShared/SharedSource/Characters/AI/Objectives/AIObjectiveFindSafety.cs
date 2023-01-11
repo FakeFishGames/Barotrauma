@@ -71,7 +71,7 @@ namespace Barotrauma
                     Priority = 100;
                 }
                 else if ((objectiveManager.IsCurrentOrder<AIObjectiveGoTo>() || objectiveManager.IsCurrentOrder<AIObjectiveReturn>()) &&
-                         character.Submarine != null && !HumanAIController.IsOnFriendlyTeam(character.TeamID, character.Submarine.TeamID))
+                         character.Submarine != null && !AIController.IsOnFriendlyTeam(character.TeamID, character.Submarine.TeamID))
                 {
                     // Ordered to follow, hold position, or return back to main sub inside a hostile sub
                     // -> ignore find safety unless we need to find a diving gear

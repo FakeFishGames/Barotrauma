@@ -1563,7 +1563,7 @@ namespace Barotrauma
                         descriptionText += "\n\n" + missionMessage;
                     }
                     RichString rewardText = mission.GetMissionRewardText(Submarine.MainSub);
-                    RichString reputationText = mission.GetReputationRewardText(mission.Locations[0]);
+                    RichString reputationText = mission.GetReputationRewardText();
 
                     Func<string, string> wrapMissionText(GUIFont font)
                     {
@@ -1773,7 +1773,7 @@ namespace Barotrauma
                     {
                         foreach (UpgradePrefab prefab in categoryData.Prefabs)
                         {
-                            var frame = UpgradeStore.CreateUpgradeFrame(prefab, categoryData.Category, campaign, new RectTransform(new Vector2(1f, 0.3f), upgradePanel.Content.RectTransform), addBuyButton: false);
+                            var frame = UpgradeStore.CreateUpgradeFrame(prefab, categoryData.Category, campaign, new RectTransform(new Vector2(1f, 0.3f), upgradePanel.Content.RectTransform), addBuyButton: false).Frame;
                             UpgradeStore.UpdateUpgradeEntry(frame, prefab, categoryData.Category, campaign);
                         }
                     }

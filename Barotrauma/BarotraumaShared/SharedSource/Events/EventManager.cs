@@ -12,6 +12,7 @@ namespace Barotrauma
         public enum NetworkEventType
         {
             CONVERSATION,
+            CONVERSATION_SELECTED_OPTION,
             STATUSEFFECT,
             MISSION,
             UNLOCKPATH

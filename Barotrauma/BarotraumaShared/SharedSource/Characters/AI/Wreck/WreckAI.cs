@@ -412,7 +412,8 @@ namespace Barotrauma
         private int CalculateCellCount(int minValue, int maxValue)
         {
             if (maxValue == 0) { return 0; }
-            float t = MathUtils.InverseLerp(0, 100, Level.Loaded.Difficulty * Config.AgentSpawnCountDifficultyMultiplier);
+            float difficulty = Level.Loaded?.Difficulty ?? 0.0f;
+            float t = MathUtils.InverseLerp(0, 100, difficulty * Config.AgentSpawnCountDifficultyMultiplier);
             return (int)Math.Round(MathHelper.Lerp(minValue, maxValue, t));
         }
 
@@ -422,7 +423,8 @@ namespace Barotrauma
             float delay = Config.AgentSpawnDelay;
             float min = delay;
             float max = delay * 6;
-            float t = Level.Loaded.Difficulty * Config.AgentSpawnDelayDifficultyMultiplier * Rand.Range(1 - randomFactor, 1 + randomFactor);
+            float difficulty = Level.Loaded?.Difficulty ?? 0.0f;
+            float t = difficulty * Config.AgentSpawnDelayDifficultyMultiplier * Rand.Range(1 - randomFactor, 1 + randomFactor);
             return MathHelper.Lerp(max, min, MathUtils.InverseLerp(0, 100, t));
         }
 

@@ -543,13 +543,6 @@ namespace Barotrauma
                 }
             };
 
-            var disclaimerBtn = new GUIButton(new RectTransform(new Vector2(0.1f, 1.0f), paddedTopPanel.RectTransform, Anchor.CenterRight), style: "GUINotificationButton")
-            {
-                IgnoreLayoutGroups = true,
-                OnClicked = (btn, userdata) => { GameMain.Instance.ShowEditorDisclaimer(); return true; }
-            };
-            disclaimerBtn.RectTransform.MaxSize = new Point(disclaimerBtn.Rect.Height);
-
             TopPanel.RectTransform.MinSize = new Point(0, (int)(paddedTopPanel.RectTransform.Children.Max(c => c.MinSize.Y) / paddedTopPanel.RectTransform.RelativeSize.Y));
             paddedTopPanel.Recalculate();
 
@@ -1425,7 +1418,7 @@ namespace Barotrauma
             else if (MainSub == null)
             {
                 var subInfo = new SubmarineInfo();
-                MainSub = new Submarine(subInfo);
+                MainSub = new Submarine(subInfo, showErrorMessages: false);
             }
 
             MainSub.UpdateTransform(interpolate: false);
@@ -1462,11 +1455,6 @@ namespace Barotrauma
 
             ImageManager.OnEditorSelected();
             ReconstructLayers();
-
-            if (!GameSettings.CurrentConfig.EditorDisclaimerShown)
-            {
-                GameMain.Instance.ShowEditorDisclaimer();
-            }
         }
 
         public override void OnFileDropped(string filePath, string extension)
@@ -5646,8 +5634,7 @@ namespace Barotrauma
                 MouseDragStart = Vector2.Zero;
             }
 
-            if (!saveAssemblyFrame.Rect.Contains(PlayerInput.MousePosition)
-                && !snapToGridFrame.Rect.Contains(PlayerInput.MousePosition)
+            if ((GUI.MouseOn == null || !GUI.MouseOn.IsChildOf(TopPanel))
                 && dummyCharacter?.SelectedItem == null && !WiringMode
                 && (GUI.MouseOn == null || MapEntity.SelectedAny || MapEntity.SelectionPos != Vector2.Zero))
             {

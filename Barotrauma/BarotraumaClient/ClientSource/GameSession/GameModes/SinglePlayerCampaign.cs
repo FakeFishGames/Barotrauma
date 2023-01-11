@@ -85,7 +85,6 @@ namespace Barotrauma
         /// </summary>
         private SinglePlayerCampaign(string mapSeed, CampaignSettings settings) : base(GameModePreset.SinglePlayerCampaign, settings)
         {
-            CampaignMetadata = new CampaignMetadata();
             UpgradeManager = new UpgradeManager(this);
             Settings = settings;
             InitFactions();
@@ -107,18 +106,16 @@ namespace Barotrauma
         private SinglePlayerCampaign(XElement element) : base(GameModePreset.SinglePlayerCampaign, CampaignSettings.Empty)
         {
             IsFirstRound = false;
-
             foreach (var subElement in element.Elements())
             {
                 switch (subElement.Name.ToString().ToLowerInvariant())
                 {
                     case "metadata":
-                        CampaignMetadata = new CampaignMetadata(subElement);
+                        CampaignMetadata.Load(subElement);
                         break;
                 }
             }
 
-            CampaignMetadata ??= new CampaignMetadata();
             InitFactions();
 
             foreach (var subElement in element.Elements())

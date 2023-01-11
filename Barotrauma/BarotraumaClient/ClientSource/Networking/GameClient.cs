@@ -1102,17 +1102,17 @@ namespace Barotrauma.Networking
             VoipClient = new VoipClient(this, ClientPeer);
 
             //if we're still in the game, roundsummary or lobby screen, we don't need to redownload the mods
-            if (!(Screen.Selected is GameScreen) && !(Screen.Selected is RoundSummaryScreen) && !(Screen.Selected is NetLobbyScreen))
-            {
-                GameMain.ModDownloadScreen.Select();
-            }
-            else
+            if (Screen.Selected is GameScreen or RoundSummaryScreen or NetLobbyScreen)
             {
                 EntityEventManager.ClearSelf();
                 foreach (Character c in Character.CharacterList)
                 {
                     c.ResetNetState();
                 }
+            }
+            else
+            {
+                GameMain.ModDownloadScreen.Select();
             }
 
             chatBox.InputBox.Enabled = true;
@@ -1535,8 +1535,9 @@ namespace Barotrauma.Networking
 
             roundInitStatus = RoundInitStatus.WaitingForStartGameFinalize;
 
-            DateTime? timeOut = null;
+            //wait for up to 30 seconds for the server to send the STARTGAMEFINALIZE message
             TimeSpan timeOutDuration = new TimeSpan(0, 0, seconds: 30);
+            DateTime timeOut = DateTime.Now + timeOutDuration;
             DateTime requestFinalizeTime = DateTime.Now;
             TimeSpan requestFinalizeInterval = new TimeSpan(0, 0, 2);
             IWriteMessage msg = new WriteOnlyMessage();
@@ -1545,11 +1546,15 @@ namespace Barotrauma.Networking
 
             GUIMessageBox interruptPrompt = null;
 
-            while (true)
+            if (includesFinalize)
             {
-                try
+                ReadStartGameFinalize(inc);
+            }
+            else
+            {
+                while (true)
                 {
-                    if (timeOut.HasValue)
+                    try
                     {
                         if (DateTime.Now > requestFinalizeTime)
                         {
@@ -1583,41 +1588,30 @@ namespace Barotrauma.Networking
                                 return true;
                             };
                         }
-                    }
-                    else
-                    {
-                        if (includesFinalize)
+
+                        if (!connected)
                         {
-                            ReadStartGameFinalize(inc);
+                            roundInitStatus = RoundInitStatus.Interrupted;
                             break;
                         }
 
-                        //wait for up to 30 seconds for the server to send the STARTGAMEFINALIZE message
-                        timeOut = DateTime.Now + timeOutDuration;
+                        if (roundInitStatus != RoundInitStatus.WaitingForStartGameFinalize) { break; }
                     }
-
-                    if (!connected)
+                    catch (Exception e)
                     {
-                        roundInitStatus = RoundInitStatus.Interrupted;
+                        DebugConsole.ThrowError("There was an error initializing the round.", e, true);
+                        roundInitStatus = RoundInitStatus.Error;
                         break;
                     }
 
-                    if (roundInitStatus != RoundInitStatus.WaitingForStartGameFinalize) { break; }
+                    //waiting for a STARTGAMEFINALIZE message
+                    yield return CoroutineStatus.Running;
                 }
-                catch (Exception e)
-                {
-                    DebugConsole.ThrowError("There was an error initializing the round.", e, true);
-                    roundInitStatus = RoundInitStatus.Error;
-                    break;
-                }
-
-                //waiting for a STARTGAMEFINALIZE message
-                yield return CoroutineStatus.Running;
             }
 
             interruptPrompt?.Close();
             interruptPrompt = null;
-
+            
             if (roundInitStatus != RoundInitStatus.Started)
             {
                 if (roundInitStatus != RoundInitStatus.Interrupted)
@@ -2101,13 +2095,12 @@ namespace Barotrauma.Networking
                     case ServerNetSegment.EntityPosition:
                         inc.ReadPadBits(); //padding is required here to make sure any padding bits within tempBuffer are read correctly
                         
-                        bool isItem = inc.ReadBoolean(); inc.ReadPadBits();
-                        UInt32 incomingUintIdentifier = inc.ReadUInt32();
-                        UInt16 id = inc.ReadUInt16();
                         uint msgLength = inc.ReadVariableUInt32();
                         int msgEndPos = (int)(inc.BitPosition + msgLength * 8);
-
-                        var entity = Entity.FindEntityByID(id) as IServerPositionSync;
+                        
+                        var header = INetSerializableStruct.Read<EntityPositionHeader>(inc);
+                        
+                        var entity = Entity.FindEntityByID(header.EntityId) as IServerPositionSync;
                         if (msgEndPos > inc.LengthBits)
                         {
                             DebugConsole.ThrowError($"Error while reading a position update for the entity \"({entity?.ToString() ?? "null"})\". Message length exceeds the size of the buffer.");
@@ -2117,15 +2110,15 @@ namespace Barotrauma.Networking
                         debugEntityList.Add(entity);
                         if (entity != null)
                         {
-                            if (entity is Item != isItem)
+                            if (entity is Item != header.IsItem)
                             {
-                                DebugConsole.AddWarning($"Received a potentially invalid ENTITY_POSITION message. Entity type does not match (server entity is {(isItem ? "an item" : "not an item")}, client entity is {(entity?.GetType().ToString() ?? "null")}). Ignoring the message...");
+                                DebugConsole.AddWarning($"Received a potentially invalid ENTITY_POSITION message. Entity type does not match (server entity is {(header.IsItem ? "an item" : "not an item")}, client entity is {(entity?.GetType().ToString() ?? "null")}). Ignoring the message...");
                             }
-                            else if (entity is MapEntity { Prefab: { UintIdentifier: { } uintIdentifier } } me &&
-                                     uintIdentifier != incomingUintIdentifier)
+                            else if (entity is MapEntity { Prefab.UintIdentifier: var uintIdentifier } me &&
+                                     uintIdentifier != header.PrefabUintIdentifier)
                             {
                                 DebugConsole.AddWarning($"Received a potentially invalid ENTITY_POSITION message."
-                                                        +$"Entity identifier does not match (server entity is {MapEntityPrefab.List.FirstOrDefault(p => p.UintIdentifier == incomingUintIdentifier)?.Identifier.Value ?? "[not found]"}, "
+                                                        +$"Entity identifier does not match (server entity is {MapEntityPrefab.List.FirstOrDefault(p => p.UintIdentifier == header.PrefabUintIdentifier)?.Identifier.Value ?? "[not found]"}, "
                                                         +$"client entity is {me.Prefab.Identifier}). Ignoring the message...");
                             }
                             else
@@ -2133,7 +2126,6 @@ namespace Barotrauma.Networking
                                 entity.ClientReadPosition(inc, sendingTime);
                             }
                         }
-
                         //force to the correct position in case the entity doesn't exist
                         //or the message wasn't read correctly for whatever reason
                         inc.BitPosition = msgEndPos;
@@ -2144,7 +2136,7 @@ namespace Barotrauma.Networking
                         break;
                     case ServerNetSegment.EntityEvent:
                     case ServerNetSegment.EntityEventInitial:
-                        if (!EntityEventManager.Read(segment, inc, sendingTime, debugEntityList))
+                        if (!EntityEventManager.Read(segment, inc, sendingTime))
                         {
                             return SegmentTableReader<ServerNetSegment>.BreakSegmentReading.Yes;
                         }

@@ -904,17 +904,18 @@ namespace Barotrauma
 
         public static void PlayDamageSound(string damageType, float damage, Vector2 position, float range = 2000.0f, IEnumerable<Identifier> tags = null)
         {
+            var suitableSounds = damageSounds.Where(s =>
+                s.DamageType == damageType &&
+                (s.RequiredTag.IsEmpty || (tags == null ? s.RequiredTag.IsEmpty : tags.Contains(s.RequiredTag))));
+
             //if the damage is too low for any sound, don't play anything
-            if (damageSounds.All(d => damage < d.DamageRange.X)) { return; }
+            if (suitableSounds.All(d => damage < d.DamageRange.X)) { return; }
 
             //allow the damage to differ by 10 from the configured damage range,
             //so the same amount of damage doesn't always play the same sound
             float randomizedDamage = MathHelper.Clamp(damage + Rand.Range(-10.0f, 10.0f), 0.0f, 100.0f);
-
-            var suitableSounds = damageSounds.Where(s => 
-                s.DamageType == damageType &&
-                (s.DamageRange == Vector2.Zero || (randomizedDamage >= s.DamageRange.X && randomizedDamage <= s.DamageRange.Y)) &&
-                (s.RequiredTag.IsEmpty || (tags == null ? s.RequiredTag.IsEmpty : tags.Contains(s.RequiredTag))));
+            suitableSounds = suitableSounds.Where(s => 
+                s.DamageRange == Vector2.Zero || (randomizedDamage >= s.DamageRange.X && randomizedDamage <= s.DamageRange.Y));
 
             var damageSound = suitableSounds.GetRandomUnsynced();
             damageSound?.Sound?.Play(1.0f, range, position, muffle: !damageSound.IgnoreMuffling && ShouldMuffleSound(Character.Controlled, position, range, null));

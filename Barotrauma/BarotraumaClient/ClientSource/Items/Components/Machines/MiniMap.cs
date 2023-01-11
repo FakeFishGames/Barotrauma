@@ -519,7 +519,10 @@ namespace Barotrauma.Items.Components
                             Color color = !hasPower ? NoPowerColor : turret.ActiveUser is null ? Color.DimGray : GUIStyle.Green;
                             weaponSprite.Draw(batch, center, color, origin, rotation, scale, SpriteEffects.None);
                         }
-                    });
+                    })
+                    {
+                        CanBeFocused = false
+                    };
 
                     weaponChilds.Add(component, frame);
                 }

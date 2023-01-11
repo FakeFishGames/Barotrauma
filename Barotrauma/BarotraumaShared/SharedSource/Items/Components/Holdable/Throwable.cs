@@ -210,7 +210,7 @@ namespace Barotrauma.Items.Components
                     if (!(GameMain.NetworkMember is { IsClient: true }))
                     {
                         //Stun grenades, flares, etc. all have their throw-related things handled in "onSecondaryUse"
-                        ApplyStatusEffects(ActionType.OnSecondaryUse, deltaTime, CurrentThrower, user: CurrentThrower);
+                        ApplyStatusEffects(ActionType.OnSecondaryUse, deltaTime, CurrentThrower, useTarget: CurrentThrower, user: CurrentThrower);
                     }
                     throwState = ThrowState.None;
                 }

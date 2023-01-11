@@ -124,9 +124,18 @@ namespace Barotrauma
                     int eventCount = GameMain.Server.EntityEventManager.Events.Count();
                     int uniqueEventCount = GameMain.Server.EntityEventManager.UniqueEvents.Count();
 #endif
-                    List<MapEntity> entities = MapEntity.mapEntityList.FindAll(e => e.Submarine == sub);
+                    HashSet<Submarine> connectedSubs = new HashSet<Submarine>() { sub };
+                    foreach (Submarine otherSub in Submarine.Loaded)
+                    {
+                        //remove linked subs too
+                        if (otherSub.Submarine == sub) { connectedSubs.Add(otherSub); }
+                    }
+                    List<MapEntity> entities = MapEntity.mapEntityList.FindAll(e => connectedSubs.Contains(e.Submarine));
                     entities.ForEach(e => e.Remove());
-                    sub.Remove();
+                    foreach (Submarine otherSub in connectedSubs)
+                    {
+                        otherSub.Remove();
+                    }
 #if SERVER
                     //remove any events created during the removal of the entities
                     GameMain.Server.EntityEventManager.Events.RemoveRange(eventCount, GameMain.Server.EntityEventManager.Events.Count - eventCount);
@@ -543,12 +552,8 @@ namespace Barotrauma
                 foreach (OutpostModuleInfo.GapPosition gapPosition in GapPositions.Randomize(Rand.RandSync.ServerAndClient))
                 {
                     if (currentModule.UsedGapPositions.HasFlag(gapPosition)) { continue; }
-                    if (!allowExtendBelowInitialModule)
-                    {
-                        //don't continue downwards if it'd extend below the airlock
-                        if (gapPosition == OutpostModuleInfo.GapPosition.Bottom && currentModule.Offset.Y <= 1) { continue; }
-                    }
-                    
+                    if (DisallowBelowAirlock(allowExtendBelowInitialModule, gapPosition, currentModule)) { continue; }
+
                     PlacedModule newModule = null;
                     //try appending to the current module if possible
                     if (currentModule.Info.OutpostModuleInfo.GapPositions.HasFlag(gapPosition))
@@ -569,6 +574,7 @@ namespace Barotrauma
                             foreach (OutpostModuleInfo.GapPosition otherGapPosition in 
                                 GapPositions.Where(g => !otherModule.UsedGapPositions.HasFlag(g) && otherModule.Info.OutpostModuleInfo.GapPositions.HasFlag(g)))
                             {
+                                if (DisallowBelowAirlock(allowExtendBelowInitialModule, otherGapPosition, otherModule)) { continue; }
                                 newModule = AppendModule(otherModule, GetOpposingGapPosition(otherGapPosition), availableModules, pendingModuleFlags, selectedModules, locationType, allowDifferentLocationType);
                                 if (newModule != null)
                                 {
@@ -616,6 +622,16 @@ namespace Barotrauma
             void assertAllPreviousModulesPresent()
             {
                 System.Diagnostics.Debug.Assert(selectedModules.All(m => m.PreviousModule == null || selectedModules.Contains(m.PreviousModule)));
+            }
+
+            static bool DisallowBelowAirlock(bool allowExtendBelowInitialModule, OutpostModuleInfo.GapPosition gapPosition, PlacedModule currentModule)
+            {
+                if (!allowExtendBelowInitialModule)
+                {
+                    //don't continue downwards if it'd extend below the airlock
+                    if (gapPosition == OutpostModuleInfo.GapPosition.Bottom && currentModule.Offset.Y <= 1) { return true; }
+                }
+                return false;
             }
         }
 

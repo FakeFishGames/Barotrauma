@@ -171,6 +171,8 @@ namespace Barotrauma.Networking
         public bool ShouldCreateAnalyticsEvent
             => DisconnectReason is not (
                    DisconnectReason.Disconnected
+                   or DisconnectReason.ServerShutdown
+                   or DisconnectReason.ServerFull
                    or DisconnectReason.Banned
                    or DisconnectReason.Kicked
                    or DisconnectReason.TooManyFailedLogins

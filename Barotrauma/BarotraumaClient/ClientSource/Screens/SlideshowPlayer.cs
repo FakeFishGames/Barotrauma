@@ -106,7 +106,7 @@ namespace Barotrauma
         {
             var slide = slideshowPrefab.Slides[Math.Min(state, slideshowPrefab.Slides.Length - 1)];
             currentText = slide.Text
-                .Replace("[submarine]", Submarine.MainSub?.Info.Name ?? "Unknown")
+                .Replace("[submarine]", Submarine.MainSub?.Info.Name ?? GameMain.GameSession?.SubmarineInfo?.Name ?? "Unknown")
                 .Replace("[location]", Level.Loaded?.StartOutpost?.Info.Name ?? "Unknown");
         }
 

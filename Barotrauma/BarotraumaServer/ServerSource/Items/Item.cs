@@ -349,15 +349,9 @@ namespace Barotrauma
             }
         }
 
-        public void ServerWritePosition(IWriteMessage msg, Client c)
+        public void ServerWritePosition(ReadWriteMessage tempBuffer, Client c)
         {
-            msg.WriteUInt16(ID);
-
-            IWriteMessage tempBuffer = new WriteOnlyMessage();
             body.ServerWrite(tempBuffer);
-            msg.WriteVariableUInt32((uint)tempBuffer.LengthBytes);
-            msg.WriteBytes(tempBuffer.Buffer, 0, tempBuffer.LengthBytes);
-            msg.WritePadBits();
         }
 
         public void CreateServerEvent<T>(T ic) where T : ItemComponent, IServerSerializable
@@ -379,7 +373,7 @@ namespace Barotrauma
             if (!components.Contains(ic)) { return; }
 
             var eventData = new ComponentStateEventData(ic, extraData);
-            if (!ic.ValidateEventData(eventData)) { throw new Exception($"Component event creation failed: {typeof(T).Name}.{nameof(ItemComponent.ValidateEventData)} returned false"); }
+            if (!ic.ValidateEventData(eventData)) { throw new Exception($"Component event creation for the item \"{Prefab.Identifier}\" failed: {typeof(T).Name}.{nameof(ItemComponent.ValidateEventData)} returned false."); }
             GameMain.Server.CreateEntityEvent(this, eventData);
         }
 

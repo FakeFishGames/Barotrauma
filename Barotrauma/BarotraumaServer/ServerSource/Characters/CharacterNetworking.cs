@@ -302,12 +302,8 @@ namespace Barotrauma
             }
         }
 
-        public void ServerWritePosition(IWriteMessage msg, Client c)
+        public void ServerWritePosition(ReadWriteMessage tempBuffer, Client c)
         {
-            msg.WriteUInt16(ID);
-
-            IWriteMessage tempBuffer = new WriteOnlyMessage();
-
             if (this == c.Character)
             {
                 tempBuffer.WriteBoolean(true);
@@ -405,11 +401,6 @@ namespace Barotrauma
                 AIController?.ServerWrite(tempBuffer);
                 HealthUpdatePending = false;
             }
-
-            tempBuffer.WritePadBits();
-
-            msg.WriteVariableUInt32((uint)tempBuffer.LengthBytes);
-            msg.WriteBytes(tempBuffer.Buffer, 0, tempBuffer.LengthBytes);
         }
 
         public virtual void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)

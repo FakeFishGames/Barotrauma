@@ -608,47 +608,56 @@ namespace Barotrauma
                     }
                     break;
                 case NetworkEventType.CONVERSATION:
-                    UInt16 identifier = msg.ReadUInt16();
-                    string eventSprite = msg.ReadString();
-                    byte dialogType = msg.ReadByte();
-                    bool continueConversation = msg.ReadBoolean();
-                    UInt16 speakerId = msg.ReadUInt16();
-                    string text = msg.ReadString();
-                    bool fadeToBlack = msg.ReadBoolean();
-                    byte optionCount = msg.ReadByte();
-                    List<string> options = new List<string>();
-                    for (int i = 0; i < optionCount; i++)
                     {
-                        options.Add(msg.ReadString());
-                    }
-
-                    byte endCount = msg.ReadByte();
-                    int[] endings = new int[endCount];
-                    for (int i = 0; i < endCount; i++)
-                    {
-                        endings[i] = msg.ReadByte();
-                    }
-
-                    if (string.IsNullOrEmpty(text) && optionCount == 0)
-                    {
-                        GUIMessageBox.MessageBoxes.ForEachMod(mb =>
+                        UInt16 identifier = msg.ReadUInt16();
+                        string eventSprite = msg.ReadString();
+                        byte dialogType = msg.ReadByte();
+                        bool continueConversation = msg.ReadBoolean();
+                        UInt16 speakerId = msg.ReadUInt16();
+                        string text = msg.ReadString();
+                        bool fadeToBlack = msg.ReadBoolean();
+                        byte optionCount = msg.ReadByte();
+                        List<string> options = new List<string>();
+                        for (int i = 0; i < optionCount; i++)
                         {
-                            if (mb.UserData is Pair<string, UInt16> pair && pair.First == "ConversationAction" && pair.Second == identifier)
+                            options.Add(msg.ReadString());
+                        }
+
+                        byte endCount = msg.ReadByte();
+                        int[] endings = new int[endCount];
+                        for (int i = 0; i < endCount; i++)
+                        {
+                            endings[i] = msg.ReadByte();
+                        }
+
+                        if (string.IsNullOrEmpty(text) && optionCount == 0)
+                        {
+                            GUIMessageBox.MessageBoxes.ForEachMod(mb =>
                             {
-                                (mb as GUIMessageBox)?.Close();
-                            }
-                        });
+                                if (mb.UserData is Pair<string, UInt16> pair && pair.First == "ConversationAction" && pair.Second == identifier)
+                                {
+                                    (mb as GUIMessageBox)?.Close();
+                                }
+                            });
+                        }
+                        else
+                        {
+                            ConversationAction.CreateDialog(text, Entity.FindEntityByID(speakerId) as Character, options, endings, eventSprite, identifier, fadeToBlack, (ConversationAction.DialogTypes)dialogType, continueConversation);
+                        }
+                        if (Entity.FindEntityByID(speakerId) is Character speaker)
+                        {
+                            speaker.CampaignInteractionType = CampaignMode.InteractionType.None;
+                            speaker.SetCustomInteract(null, null);
+                        }
+                        break;
                     }
-                    else
+                case NetworkEventType.CONVERSATION_SELECTED_OPTION:
                     {
-                        ConversationAction.CreateDialog(text, Entity.FindEntityByID(speakerId) as Character, options, endings, eventSprite, identifier, fadeToBlack, (ConversationAction.DialogTypes)dialogType, continueConversation);
+                        UInt16 identifier = msg.ReadUInt16();
+                        int selectedOption = msg.ReadByte() - 1;
+                        ConversationAction.SelectOption(identifier, selectedOption);
+                        break;
                     }
-                    if (Entity.FindEntityByID(speakerId) is Character speaker)
-                    {
-                        speaker.CampaignInteractionType = CampaignMode.InteractionType.None;
-                        speaker.SetCustomInteract(null, null);
-                    }
-                    break;
                 case NetworkEventType.MISSION:
                     Identifier missionIdentifier = msg.ReadIdentifier();
                     int locationIndex = msg.ReadInt32();

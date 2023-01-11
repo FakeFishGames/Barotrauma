@@ -68,7 +68,7 @@ namespace Barotrauma
                     var emptyLocation = FindUnlockLocation(Math.Max(MinLocationDistance, 3), unlockFurtherOnMap: true, "none".ToIdentifier().ToEnumerable());
                     if (emptyLocation != null)
                     {
-                        emptyLocation.ChangeType(campaign, Barotrauma.LocationType.Prefabs[LocationTypes[0]]);
+                        emptyLocation.ChangeType(campaign, LocationType.Prefabs[LocationTypes[0]]);
                         unlockLocation = emptyLocation;
                     }
                 }
@@ -77,7 +77,7 @@ namespace Barotrauma
                 {
                     if (!MissionIdentifier.IsEmpty)
                     {
-                        unlockedMission = unlockLocation.UnlockMissionByIdentifier(MissionIdentifier);                    
+                        unlockedMission = unlockLocation.UnlockMissionByIdentifier(MissionIdentifier);
                     }
                     else if (!MissionTag.IsEmpty)
                     {
@@ -89,8 +89,9 @@ namespace Barotrauma
                     }
                     if (unlockedMission != null)
                     {
+                        unlockedMission.OriginLocation = campaign.Map.CurrentLocation;
                         campaign.Map.Discover(unlockLocation, checkTalents: false);
-                        if (unlockedMission.Locations[0] == unlockedMission.Locations[1] || unlockedMission.Locations[1] ==null)
+                        if (unlockedMission.Locations[0] == unlockedMission.Locations[1] || unlockedMission.Locations[1] == null)
                         {
                             DebugConsole.NewMessage($"Unlocked mission \"{unlockedMission.Name}\" in the location \"{unlockLocation.Name}\".");
                         }

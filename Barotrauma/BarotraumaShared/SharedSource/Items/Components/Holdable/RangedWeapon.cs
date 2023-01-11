@@ -215,6 +215,8 @@ namespace Barotrauma.Items.Components
                 baseReloadTime = MathHelper.Lerp(reload, ReloadNoSkill, reloadFailure);
             }
             ReloadTimer = baseReloadTime / (1 + character?.GetStatValue(StatTypes.RangedAttackSpeed) ?? 0f);
+            ReloadTimer /= 1f + item.GetQualityModifier(Quality.StatType.FiringRateMultiplier);
+
             currentChargeTime = 0f;
 
             if (character != null)

@@ -1,4 +1,5 @@
-﻿using Barotrauma.IO;
+﻿using Barotrauma.Extensions;
+using Barotrauma.IO;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
@@ -53,7 +54,7 @@ namespace Barotrauma
             }
         }
 
-        private bool ValidateFlag(NetFlags flag)
+        private static bool ValidateFlag(NetFlags flag)
         {
             if (MathHelper.IsPowerOfTwo((int)flag)) { return true; }
 #if DEBUG
@@ -105,7 +106,6 @@ namespace Barotrauma
 #endif
             }
             CampaignID = currentCampaignID;
-            CampaignMetadata = new CampaignMetadata();
             UpgradeManager = new UpgradeManager(this);
             InitFactions();
         }
@@ -194,7 +194,7 @@ namespace Barotrauma
                         }
                         break;
                     case "metadata":
-                        CampaignMetadata = new CampaignMetadata(subElement);
+                        CampaignMetadata.Load(subElement);
                         break;
                     case "upgrademanager":
                     case "pendingupgrades":
@@ -237,10 +237,8 @@ namespace Barotrauma
                 };
             }
 
-            CampaignMetadata ??= new CampaignMetadata();
             UpgradeManager ??= new UpgradeManager(this);
 
-            InitFactions();
 #if SERVER
             characterData.Clear();
             string characterDataPath = GetCharacterDataSavePath();

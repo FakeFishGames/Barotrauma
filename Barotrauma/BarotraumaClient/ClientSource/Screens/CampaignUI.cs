@@ -474,7 +474,7 @@ namespace Barotrauma
                         };
                         missionRewardTexts.Add(rewardText);
 
-                        LocalizedString reputationText = mission.GetReputationRewardText(mission.Locations[0]);
+                        LocalizedString reputationText = mission.GetReputationRewardText();
                         if (!reputationText.IsNullOrEmpty())
                         {
                             new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), RichString.Rich(reputationText), wrap: true);

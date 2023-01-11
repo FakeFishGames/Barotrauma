@@ -965,7 +965,7 @@ namespace Barotrauma
                     break;
                 case QuickUseAction.PutToEquippedItem:
                     //order by the condition of the contained item to prefer putting into the item with the emptiest ammo/battery/tank
-                    foreach (Item heldItem in character.HeldItems.OrderBy(it => it.ContainedItems.FirstOrDefault()?.Condition ?? 0.0f))
+                    foreach (Item heldItem in character.HeldItems.OrderBy(it => it.GetComponent<ItemContainer>()?.GetContainedIndicatorState() ?? 0.0f))
                     {
                         if (heldItem.OwnInventory == null) { continue; }
                         //don't allow swapping if we're moving items into an item with 1 slot holding a stack of items

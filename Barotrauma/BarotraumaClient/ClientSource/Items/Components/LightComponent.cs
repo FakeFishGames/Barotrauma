@@ -14,8 +14,6 @@ namespace Barotrauma.Items.Components
         private CoroutineHandle resetPredictionCoroutine;
         private float resetPredictionTimer;
 
-        private float currentBrightness;
-
         public Vector2 DrawSize
         {
             get { return new Vector2(Light.Range * 2, Light.Range * 2); }
@@ -29,14 +27,21 @@ namespace Barotrauma.Items.Components
             Light.Position = ParentBody != null ? ParentBody.Position : item.Position;
         }
 
-        partial void SetLightSourceState(bool enabled, float brightness)
+        partial void SetLightSourceState(bool enabled, float? brightness)
         {
             if (Light == null) { return; }
             Light.Enabled = enabled;
-            currentBrightness = brightness;
+            if (brightness.HasValue)
+            {
+                lightBrightness = brightness.Value;
+            }
+            else
+            {
+                lightBrightness = enabled ? 1.0f : 0.0f;
+            }
             if (enabled)
             {
-                Light.Color = LightColor.Multiply(brightness);
+                Light.Color = LightColor.Multiply(lightBrightness);
             }
         }
 

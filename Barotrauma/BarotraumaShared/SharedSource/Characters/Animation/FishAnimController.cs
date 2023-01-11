@@ -1023,7 +1023,7 @@ namespace Barotrauma
             foreach (Limb l in Limbs)
             {
                 if (l.IsSevered) { continue; }
-                if (!l.DoesFlip) { continue; }         
+                if (!l.DoesFlip) { continue; }
                 if (RagdollParams.IsSpritesheetOrientationHorizontal)
                 {
                     //horizontally aligned limbs need to be flipped 180 degrees
@@ -1043,7 +1043,7 @@ namespace Barotrauma
                 if (l.IsSevered) { continue; }
 
                 float rotation = l.body.Rotation;
-                if (l.DoesFlip)
+                if (l.DoesMirror)
                 {
                     if (RagdollParams.IsSpritesheetOrientationHorizontal)
                     {

@@ -34,6 +34,7 @@ namespace Barotrauma.Networking
             catch
             {
                 DebugConsole.ThrowError($"Failed to start ChildServerRelay Process. File: {processInfo.FileName}, arguments: {processInfo.Arguments}");
+                ForceShutDown();
                 throw;
             }
 

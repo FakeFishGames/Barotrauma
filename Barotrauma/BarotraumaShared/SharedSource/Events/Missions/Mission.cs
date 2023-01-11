@@ -125,6 +125,12 @@ namespace Barotrauma
 
         public Identifier SonarIconIdentifier => Prefab.SonarIconIdentifier;
 
+        /// <summary>
+        /// Where was this mission received from? Affects which faction we give reputation for if the mission is configured to give reputation for the faction that gave the mission.
+        /// Defaults to Locations[0]
+        /// </summary>
+        public Location OriginLocation;
+
         public readonly Location[] Locations;
 
         public int? Difficulty
@@ -144,7 +150,7 @@ namespace Barotrauma
             }
         }
 
-        private List<DelayedTriggerEvent> delayedTriggerEvents = new List<DelayedTriggerEvent>();
+        private readonly List<DelayedTriggerEvent> delayedTriggerEvents = new List<DelayedTriggerEvent>();
 
         public Action<Mission> OnMissionStateChanged;
 
@@ -160,12 +166,13 @@ namespace Barotrauma
             Headers = prefab.Headers;
             var messages = prefab.Messages.ToArray();
 
+            OriginLocation = locations[0];
             Locations = locations;
 
             var endConditionElement = prefab.ConfigElement.GetChildElement(nameof(completeCheckDataAction));
             if (endConditionElement != null)
             {
-                completeCheckDataAction = new CheckDataAction(endConditionElement, $"Mission ({prefab.Identifier.ToString()})");
+                completeCheckDataAction = new CheckDataAction(endConditionElement, $"Mission ({prefab.Identifier})");
             }
 
             for (int n = 0; n < 2; n++)
@@ -407,7 +414,7 @@ namespace Barotrauma
             {
                 var experienceGainMultiplierIndividual = new AbilityMissionExperienceGainMultiplier(this, 1f);
                 info?.Character?.CheckTalents(AbilityEffectType.OnGainMissionExperience, experienceGainMultiplierIndividual);
-                info?.GiveExperience((int)(experienceGain * experienceGainMultiplier.Value));
+                info?.GiveExperience((int)((experienceGain * experienceGainMultiplier.Value) * experienceGainMultiplierIndividual.Value));
             }
 
             // apply money gains afterwards to prevent them from affecting XP gains
@@ -436,7 +443,7 @@ namespace Barotrauma
             {
                 if (reputationReward.Key == "location")
                 {
-                    Locations[0].Reputation?.AddReputation(reputationReward.Value);
+                    OriginLocation.Reputation?.AddReputation(reputationReward.Value);
                 }
                 else
                 {
@@ -546,17 +553,14 @@ namespace Barotrauma
             return humanPrefab;
         }
 
-        protected Character CreateHuman(HumanPrefab humanPrefab, List<Character> characters, Dictionary<Character, List<Item>> characterItems, Submarine submarine, CharacterTeamType teamType, ISpatialEntity positionToStayIn = null, Rand.RandSync humanPrefabRandSync = Rand.RandSync.ServerAndClient, bool giveTags = true)
+        protected static Character CreateHuman(HumanPrefab humanPrefab, List<Character> characters, Dictionary<Character, List<Item>> characterItems, Submarine submarine, CharacterTeamType teamType, ISpatialEntity positionToStayIn = null, Rand.RandSync humanPrefabRandSync = Rand.RandSync.ServerAndClient)
         {
             var characterInfo = humanPrefab.CreateCharacterInfo(Rand.RandSync.ServerAndClient);
             characterInfo.TeamID = teamType;
 
-            if (positionToStayIn == null) 
-            {
-                positionToStayIn = 
+            positionToStayIn ??= 
                     WayPoint.GetRandom(SpawnType.Human, characterInfo.Job?.Prefab, submarine) ??
                     WayPoint.GetRandom(SpawnType.Human, null, submarine);
-            }
 
             Character spawnedCharacter = Character.Create(characterInfo.SpeciesName, positionToStayIn.WorldPosition, ToolBox.RandomSeed(8), characterInfo, createNetworkEvent: false);
             spawnedCharacter.HumanPrefab = humanPrefab;

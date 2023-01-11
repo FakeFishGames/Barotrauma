@@ -167,7 +167,7 @@ namespace Barotrauma
             }
 
             int startLocationindex = element.GetAttributeInt("startlocation", -1);
-            if (startLocationindex > 0 && startLocationindex < Locations.Count)
+            if (startLocationindex >= 0 && startLocationindex < Locations.Count)
             {
                 StartLocation = Locations[startLocationindex];
             }
@@ -188,10 +188,9 @@ namespace Barotrauma
             {
                 //backwards compatibility
                 int endLocationIndex = element.GetAttributeInt("endlocation", -1);
-                if (endLocationIndex > 0 && endLocationIndex < Locations.Count)
+                if (endLocationIndex >= 0 && endLocationIndex < Locations.Count)
                 {
                     endLocations.Add(Locations[endLocationIndex]);
-                    Locations[endLocationIndex].LevelData.ReassignGenerationParams(Seed);
                 }
                 else
                 {
@@ -203,7 +202,7 @@ namespace Barotrauma
                 int[] endLocationindices = element.GetAttributeIntArray("endlocations", Array.Empty<int>());
                 foreach (int endLocationIndex in endLocationindices)
                 {
-                    if (endLocationIndex > 0 && endLocationIndex < Locations.Count)
+                    if (endLocationIndex >= 0 && endLocationIndex < Locations.Count)
                     {
                         endLocations.Add(Locations[endLocationIndex]);
                     }
@@ -245,7 +244,7 @@ namespace Barotrauma
                 {
                     Biome = endLocations.First().Biome
                 };
-                newEndLocation.LevelData = new LevelData(newEndLocation, difficulty: 100.0f);
+                newEndLocation.LevelData = new LevelData(newEndLocation, this, difficulty: 100.0f);
                 Locations.Add(newEndLocation);
                 endLocations.Add(newEndLocation);
             }
@@ -339,7 +338,7 @@ namespace Barotrauma
             {
                 if (StartLocation != null)
                 {
-                    StartLocation.LevelData = new LevelData(StartLocation, 0);
+                    StartLocation.LevelData = new LevelData(StartLocation, this, 0);
                 }
 
                 //ensure all paths from the starting location have 0 difficulty to make the 1st campaign round very easy
@@ -701,7 +700,7 @@ namespace Barotrauma
 
             foreach (Location location in Locations)
             {
-                location.LevelData = new LevelData(location, CalculateDifficulty(location.MapPosition.X, location.Biome));
+                location.LevelData = new LevelData(location, this, CalculateDifficulty(location.MapPosition.X, location.Biome));
                 if (location.Type.HasOutpost && campaign != null && location.Type.OutpostTeam == CharacterTeamType.FriendlyNPC)
                 {
                     location.Faction ??= campaign.GetRandomFaction(Rand.RandSync.ServerAndClient);
@@ -902,6 +901,7 @@ namespace Barotrauma
         {
             for (int i = 0; i < endLocations.Count; i++)
             {
+                endLocations[i].LevelData.ReassignGenerationParams(Seed);
                 var outpostParams = OutpostGenerationParams.OutpostParams.FirstOrDefault(p => p.ForceToEndLocationIndex == i);
                 if (outpostParams != null)
                 {

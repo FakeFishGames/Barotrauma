@@ -21,7 +21,7 @@ namespace Barotrauma
 
         private readonly GameMode gameMode;
 
-        private readonly Dictionary<Faction, float> initialFactionReputations = new Dictionary<Faction, float>();
+        private readonly Dictionary<Identifier, float> initialFactionReputations = new Dictionary<Identifier, float>();
 
         public GUILayoutGroup ButtonArea { get; private set; }
 
@@ -39,7 +39,7 @@ namespace Barotrauma
             {
                 foreach (Faction faction in campaignMode.Factions)
                 {
-                    initialFactionReputations.Add(faction, faction.Reputation.Value);
+                    initialFactionReputations.Add(faction.Prefab.Identifier, faction.Reputation.Value);
                 }
             }
         }
@@ -312,17 +312,26 @@ namespace Barotrauma
                 var missionDescription = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform),
                     RichString.Rich(missionMessage), wrap: true);
                 int reward = displayedMission.GetReward(Submarine.MainSub);
-                if (selectedMissions.Contains(displayedMission) && displayedMission.Completed && reward > 0)
+                if (selectedMissions.Contains(displayedMission) && displayedMission.Completed)
                 {
-                    new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), RichString.Rich(displayedMission.GetMissionRewardText(Submarine.MainSub)));
-                    if (GameMain.IsMultiplayer && Character.Controlled is { } controlled)
+                    RichString reputationText = displayedMission.GetReputationRewardText();
+                    if (!reputationText.IsNullOrEmpty())
                     {
-                        var (share, percentage, _) = Mission.GetRewardShare(controlled.Wallet.RewardDistribution, GameSession.GetSessionCrewCharacters(CharacterType.Player).Where(c => c != controlled), Option<int>.Some(reward));
-                        if (share > 0)
+                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), reputationText);
+                    }
+
+                    if (reward > 0)
+                    {
+                        new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), RichString.Rich(displayedMission.GetMissionRewardText(Submarine.MainSub)));
+                        if (GameMain.IsMultiplayer && Character.Controlled is { } controlled)
                         {
-                            string shareFormatted = string.Format(CultureInfo.InvariantCulture, "{0:N0}", share);
-                            RichString yourShareString = RichString.Rich(TextManager.GetWithVariables("crewwallet.missionreward.get", ("[money]", $"{shareFormatted}"), ("[share]", $"{percentage}")));
-                            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), yourShareString);
+                            var (share, percentage, _) = Mission.GetRewardShare(controlled.Wallet.RewardDistribution, GameSession.GetSessionCrewCharacters(CharacterType.Player).Where(c => c != controlled), Option<int>.Some(reward));
+                            if (share > 0)
+                            {
+                                string shareFormatted = string.Format(CultureInfo.InvariantCulture, "{0:N0}", share);
+                                RichString yourShareString = RichString.Rich(TextManager.GetWithVariables("crewwallet.missionreward.get", ("[money]", $"{shareFormatted}"), ("[share]", $"{percentage}")));
+                                new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), yourShareString);
+                            }
                         }
                     }
                 }
@@ -400,26 +409,10 @@ namespace Barotrauma
             };
             reputationList.ContentBackground.Color = Color.Transparent;
 
-            /*if (startLocation.Type.HasOutpost && startLocation.Reputation != null)
-            {
-                var iconStyle = GUIStyle.GetComponentStyle("LocationReputationIcon");
-                var locationFrame = CreateReputationElement(
-                    reputationList.Content,
-                    startLocation.Name,
-                    startLocation.Reputation.Value, startLocation.Reputation.NormalizedValue, initialLocationReputation,
-                    startLocation.Type.Name, "",
-                    iconStyle?.GetDefaultSprite(), startLocation.Type.GetPortrait(0), iconStyle?.Color ?? Color.White);
-                CreatePathUnlockElement(locationFrame, null, startLocation);
-            }*/
-
             foreach (Faction faction in campaignMode.Factions.OrderBy(f => f.Prefab.MenuOrder).ThenBy(f => f.Prefab.Name))
             {
                 float initialReputation = faction.Reputation.Value;
-                if (initialFactionReputations.ContainsKey(faction))
-                {
-                    initialReputation = initialFactionReputations[faction];
-                }
-                else
+                if (!initialFactionReputations.TryGetValue(faction.Prefab.Identifier, out initialReputation))
                 {
                     DebugConsole.AddWarning($"Could not determine reputation change for faction \"{faction.Prefab.Name}\" (faction was not present at the start of the round).");
                 }
@@ -454,50 +447,60 @@ namespace Barotrauma
 
             void CreatePathUnlockElement(GUIComponent reputationFrame, Faction faction, Location location)
             {
-                if (GameMain.GameSession?.Campaign?.Map != null)
+                if (GameMain.GameSession?.Campaign?.Map == null) { return; }
+
+                IEnumerable<LocationConnection> connectionsBetweenBiomes = 
+                    GameMain.GameSession.Campaign.Map.Connections.Where(c => c.Locations[0].Biome != c.Locations[1].Biome);
+                
+                foreach (LocationConnection connection in connectionsBetweenBiomes)
                 {
-                    foreach (LocationConnection connection in GameMain.GameSession.Campaign.Map.Connections)
+                    if (!connection.Locked || (!connection.Locations[0].Discovered && !connection.Locations[1].Discovered)) { continue; }
+
+                    //don't show the "reputation required to unlock" text if another connection between the biomes has already been unlocked
+                    if (connectionsBetweenBiomes.Where(c => !c.Locked).Any(c => 
+                        (c.Locations[0].Biome == connection.Locations[0].Biome && c.Locations[1].Biome == connection.Locations[1].Biome) ||
+                        (c.Locations[1].Biome == connection.Locations[0].Biome && c.Locations[0].Biome == connection.Locations[1].Biome)))
                     {
-                        if (!connection.Locked || (!connection.Locations[0].Discovered && !connection.Locations[1].Discovered)) { continue; }
+                        continue;
+                    }
 
-                        var gateLocation = connection.Locations[0].IsGateBetweenBiomes ? connection.Locations[0] : connection.Locations[1];
-                        var unlockEvent = EventPrefab.GetUnlockPathEvent(gateLocation.LevelData.Biome.Identifier, gateLocation.Faction);
+                    var gateLocation = connection.Locations[0].IsGateBetweenBiomes ? connection.Locations[0] : connection.Locations[1];
+                    var unlockEvent = EventPrefab.GetUnlockPathEvent(gateLocation.LevelData.Biome.Identifier, gateLocation.Faction);
 
-                        if (unlockEvent == null) { continue; }
-                        if (unlockEvent.Faction.IsEmpty)
+                    if (unlockEvent == null) { continue; }
+                    if (unlockEvent.Faction.IsEmpty)
+                    {
+                        if (location == null || gateLocation != location) { continue; }
+                    }
+                    else
+                    {
+                        if (faction == null || faction.Prefab.Identifier != unlockEvent.Faction) { continue; }
+                    }
+
+                    if (unlockEvent != null)
+                    {
+                        Reputation unlockReputation = gateLocation.Reputation;
+                        Faction unlockFaction = null;
+                        if (!unlockEvent.Faction.IsEmpty)
                         {
-                            if (location == null || gateLocation != location) { continue; }
+                            unlockFaction = GameMain.GameSession.Campaign.Factions.Find(f => f.Prefab.Identifier == unlockEvent.Faction);
+                            unlockReputation = unlockFaction?.Reputation;
                         }
-                        else
+                        float normalizedUnlockReputation = MathUtils.InverseLerp(unlockReputation.MinReputation, unlockReputation.MaxReputation, unlockEvent.UnlockPathReputation);
+                        RichString unlockText = RichString.Rich(TextManager.GetWithVariables(
+                            "lockedpathreputationrequirement",
+                            ("[reputation]", Reputation.GetFormattedReputationText(normalizedUnlockReputation, unlockEvent.UnlockPathReputation, addColorTags: true)),
+                            ("[biomename]", $"‖color:gui.orange‖{connection.LevelData.Biome.DisplayName}‖end‖")));
+                        var unlockInfoPanel = new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.0f), reputationFrame.RectTransform, Anchor.BottomCenter) { MinSize = new Point(0, GUI.IntScale(30)), AbsoluteOffset = new Point(0, GUI.IntScale(3)) },
+                            unlockText, style: "GUIButtonRound", textAlignment: Alignment.Center, textColor: GUIStyle.TextColorNormal);
+                        unlockInfoPanel.Color = Color.Lerp(unlockInfoPanel.Color, Color.Black, 0.8f);
+                        unlockInfoPanel.UserData = "unlockinfo";
+                        if (unlockInfoPanel.TextSize.X > unlockInfoPanel.Rect.Width * 0.7f)
                         {
-                            if (faction == null || faction.Prefab.Identifier != unlockEvent.Faction) { continue; }
-                        }
-
-                        if (unlockEvent != null)
-                        {
-                            Reputation unlockReputation = gateLocation.Reputation;
-                            Faction unlockFaction = null;
-                            if (!unlockEvent.Faction.IsEmpty)
-                            {
-                                unlockFaction = GameMain.GameSession.Campaign.Factions.Find(f => f.Prefab.Identifier == unlockEvent.Faction);
-                                unlockReputation = unlockFaction?.Reputation;
-                            }
-                            float normalizedUnlockReputation = MathUtils.InverseLerp(unlockReputation.MinReputation, unlockReputation.MaxReputation, unlockEvent.UnlockPathReputation);
-                            RichString unlockText = RichString.Rich(TextManager.GetWithVariables(
-                                "lockedpathreputationrequirement",
-                                ("[reputation]", Reputation.GetFormattedReputationText(normalizedUnlockReputation, unlockEvent.UnlockPathReputation, addColorTags: true)),
-                                ("[biomename]", $"‖color:gui.orange‖{connection.LevelData.Biome.DisplayName}‖end‖")));
-                            var unlockInfoPanel = new GUITextBlock(new RectTransform(new Vector2(0.8f, 0.0f), reputationFrame.RectTransform, Anchor.BottomCenter) { MinSize = new Point(0, GUI.IntScale(30)), AbsoluteOffset = new Point(0, GUI.IntScale(3)) },
-                                unlockText, style: "GUIButtonRound", textAlignment: Alignment.Center, textColor: GUIStyle.TextColorNormal);
-                            unlockInfoPanel.Color = Color.Lerp(unlockInfoPanel.Color, Color.Black, 0.8f);
-                            unlockInfoPanel.UserData = "unlockinfo";
-                            if (unlockInfoPanel.TextSize.X > unlockInfoPanel.Rect.Width * 0.7f)
-                            {
-                                unlockInfoPanel.Font = GUIStyle.SmallFont;
-                            }
+                            unlockInfoPanel.Font = GUIStyle.SmallFont;
                         }
                     }
-                }
+                }                
             }
         }
 

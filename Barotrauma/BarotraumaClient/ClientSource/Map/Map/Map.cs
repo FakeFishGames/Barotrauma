@@ -544,9 +544,6 @@ namespace Barotrauma
             
             Vector2 rectCenter = new Vector2(rect.Center.X, rect.Center.Y);
             Vector2 viewOffset = DrawOffset + drawOffsetNoise;
-
-
-            bool cursorOnOverlay = false;
             if (HighlightedLocation != null)
             {
                 Vector2 highlightedLocationDrawPos = rectCenter + (HighlightedLocation.MapPosition + viewOffset) * zoom;
@@ -574,52 +571,41 @@ namespace Barotrauma
                 {
                     locationInfoRt.Pivot = locationInfoRt.Pivot == Pivot.TopLeft ? Pivot.TopRight : Pivot.BottomRight;
                 }
-
-                Rectangle highlightedLocationRect = new Rectangle(highlightedLocationDrawPos.ToPoint(), new Point(GUI.IntScale(25)));
-                Rectangle overlayRect = Rectangle.Union(highlightedLocationRect, locationInfoRt.Rect);
-                if (overlayRect.Contains(PlayerInput.MousePosition))
-                {
-                    cursorOnOverlay = true;
-                }
                 locationInfoOverlay?.AddToGUIUpdateList(order: 1);
             }
 
-            if (!cursorOnOverlay)
+            float closestDist = 0.0f;
+            HighlightedLocation = null;
+            if ((GUI.MouseOn == null || GUI.MouseOn == mapContainer))
             {
-                float closestDist = 0.0f;
-                HighlightedLocation = null;
-                if ((GUI.MouseOn == null || GUI.MouseOn == mapContainer))
+                for (int i = 0; i < Locations.Count; i++)
                 {
-                    for (int i = 0; i < Locations.Count; i++)
+                    Location location = Locations[i];
+                    if (IsInFogOfWar(location) && !(currentDisplayLocation?.Connections.Any(c => c.Locations.Contains(location)) ?? false) && !GameMain.DebugDraw) { continue; }
+
+                    Vector2 pos = rectCenter + (location.MapPosition + viewOffset) * zoom;
+                    if (!rect.Contains(pos)) { continue; }
+
+                    Sprite locationSprite = location.IsCriticallyRadiated() ? location.Type.RadiationSprite ?? location.Type.Sprite : location.Type.Sprite;
+                    float iconScale = generationParams.LocationIconSize / locationSprite.size.X;
+                    if (location == currentDisplayLocation) { iconScale *= 1.2f; }
+
+                    Rectangle drawRect = locationSprite.SourceRect;
+                    drawRect.Width = (int)(drawRect.Width * iconScale * zoom * 1.4f);
+                    drawRect.Height = (int)(drawRect.Height * iconScale * zoom * 1.4f);
+                    drawRect.X = (int)pos.X - drawRect.Width / 2;
+                    drawRect.Y = (int)pos.Y - drawRect.Width / 2;
+
+                    if (!drawRect.Contains(PlayerInput.MousePosition)) { continue; }
+
+                    float dist = Vector2.Distance(PlayerInput.MousePosition, pos);
+                    if (HighlightedLocation == null || dist < closestDist)
                     {
-                        Location location = Locations[i];
-                        if (IsInFogOfWar(location) && !(currentDisplayLocation?.Connections.Any(c => c.Locations.Contains(location)) ?? false) && !GameMain.DebugDraw) { continue; }
-
-                        Vector2 pos = rectCenter + (location.MapPosition + viewOffset) * zoom;
-                        if (!rect.Contains(pos)) { continue; }
-
-                        Sprite locationSprite = location.IsCriticallyRadiated() ? location.Type.RadiationSprite ?? location.Type.Sprite : location.Type.Sprite;
-                        float iconScale = generationParams.LocationIconSize / locationSprite.size.X;
-                        if (location == currentDisplayLocation) { iconScale *= 1.2f; }
-
-                        Rectangle drawRect = locationSprite.SourceRect;
-                        drawRect.Width = (int)(drawRect.Width * iconScale * zoom * 1.4f);
-                        drawRect.Height = (int)(drawRect.Height * iconScale * zoom * 1.4f);
-                        drawRect.X = (int)pos.X - drawRect.Width / 2;
-                        drawRect.Y = (int)pos.Y - drawRect.Width / 2;
-
-                        if (!drawRect.Contains(PlayerInput.MousePosition)) { continue; }
-
-                        float dist = Vector2.Distance(PlayerInput.MousePosition, pos);
-                        if (HighlightedLocation == null || dist < closestDist)
-                        {
-                            closestDist = dist;
-                            HighlightedLocation = location; 
-                        }
+                        closestDist = dist;
+                        HighlightedLocation = location; 
                     }
                 }
             }
-           
 
             if (SelectedConnection != null)
             {

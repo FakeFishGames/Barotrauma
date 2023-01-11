@@ -781,7 +781,7 @@ namespace Barotrauma.Items.Components
                     limb.body?.ApplyLinearImpulse(item.body.LinearVelocity * item.body.Mass * 0.1f, item.SimPosition);
                     return false;
                 }
-                if (!FriendlyFire && User != null && limb.character.IsFriendly(User) && HumanAIController.IsOnFriendlyTeam(limb.character, User))
+                if (!FriendlyFire && User != null && limb.character.IsFriendly(User))
                 {
                     return false;
                 }
@@ -789,7 +789,13 @@ namespace Barotrauma.Items.Components
             else if (target.Body.UserData is Item item)
             {
                 if (item.Condition <= 0.0f) { return false; }
-                if (!item.Prefab.DamagedByProjectiles) { return false; }
+                if (!item.Prefab.DamagedByProjectiles)
+                {
+                    if (item.GetComponent<Door>() == null)
+                    {
+                        return false;
+                    }
+                }
             }
             else if (target.Body.UserData is Holdable { CanPush: false })
             {
@@ -903,7 +909,7 @@ namespace Barotrauma.Items.Components
             }
             else if (target.Body.UserData is Limb limb)
             {
-                if (!FriendlyFire && User != null && limb.character.IsFriendly(User) && HumanAIController.IsOnFriendlyTeam(limb.character, User))
+                if (!FriendlyFire && User != null && limb.character.IsFriendly(User))
                 {
                     return false;
                 }
@@ -922,6 +928,8 @@ namespace Barotrauma.Items.Components
             else if ((target.Body.UserData as Item ?? (target.Body.UserData as ItemComponent)?.Item ?? target.UserData as Item) is Item targetItem)
             {
                 if (targetItem.Removed) { return false; }
+                //hit the external collider of an item (turret?) of the same sub -> ignore
+                if (target.UserData is Item && targetItem.Submarine != null && targetItem.Submarine == Launcher?.Submarine) { return false; }
                 if (Attack != null && (targetItem.Prefab.DamagedByProjectiles || DamageDoors && targetItem.GetComponent<Door>() != null) && targetItem.Condition > 0) 
                 {
                     attackResult = Attack.DoDamage(User ?? Attacker, targetItem, item.WorldPosition, 1.0f);
@@ -974,8 +982,8 @@ namespace Barotrauma.Items.Components
             {
                 if (target.Body.UserData is Limb targetLimb)
                 {
-                    ApplyStatusEffects(conditionalActionType, 1.0f, character, targetLimb, user: User);
-                    ApplyStatusEffects(ActionType.OnImpact, 1.0f, character, targetLimb, user: User);
+                    ApplyStatusEffects(conditionalActionType, 1.0f, character, targetLimb, useTarget: character, user: User);
+                    ApplyStatusEffects(ActionType.OnImpact, 1.0f, character, targetLimb, useTarget: character, user: User);
                     var attack = targetLimb.attack;
                     if (attack != null)
                     {
@@ -986,14 +994,22 @@ namespace Barotrauma.Items.Components
                             {
                                 if (effect.HasTargetType(StatusEffect.TargetType.This))
                                 {
-                                    effect.Apply(effect.type, 1.0f, targetLimb.character, targetLimb.character, targetLimb.WorldPosition);
+                                    effect.Apply(effect.type, 1.0f, User, User);
+                                }
+                                if (effect.HasTargetType(StatusEffect.TargetType.Character) || effect.HasTargetType(StatusEffect.TargetType.UseTarget))
+                                {
+                                    effect.Apply(effect.type, 1.0f, targetLimb.character, targetLimb.character);
+                                }
+                                if (effect.HasTargetType(StatusEffect.TargetType.Limb))
+                                {
+                                    effect.Apply(effect.type, 1.0f, targetLimb.character, targetLimb);
                                 }
                                 if (effect.HasTargetType(StatusEffect.TargetType.NearbyItems) ||
                                     effect.HasTargetType(StatusEffect.TargetType.NearbyCharacters))
                                 {
                                     targets.Clear();
                                     effect.AddNearbyTargets(targetLimb.WorldPosition, targets);
-                                    effect.Apply(ActionType.OnActive, 1.0f, targetLimb.character, targets);
+                                    effect.Apply(effect.type, 1.0f, targetLimb.character, targets);
                                 }
                             }
                         }

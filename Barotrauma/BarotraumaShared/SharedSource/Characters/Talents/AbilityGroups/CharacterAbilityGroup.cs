@@ -49,6 +49,16 @@ namespace Barotrauma.Abilities
                         break;
                 }
             }
+
+            switch (abilityEffectType)
+            {
+                case AbilityEffectType.OnDieToCharacter:
+                    if (characterAbilities.Any(a => a.RequiresAlive))
+                    {
+                        DebugConsole.AddWarning($"Potential error in talent {characterTalent}: an ability group has the type {AbilityEffectType.OnDieToCharacter}, but includes abilities that require the character to be alive, meaning they will never execute.");
+                    }
+                    break;
+            }
         }
 
         public void ActivateAbilityGroup(bool addingFirstTime)

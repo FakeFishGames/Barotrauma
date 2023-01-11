@@ -116,7 +116,7 @@ namespace Barotrauma
             get { return submarine; }
         }
 
-        public SubmarineBody(Submarine sub, bool showWarningMessages = true)
+        public SubmarineBody(Submarine sub, bool showErrorMessages = true)
         {
             this.submarine = sub;
 
@@ -126,9 +126,9 @@ namespace Barotrauma
             if (!Hull.HullList.Any(h => h.Submarine == sub))
             {
                 farseerBody = GameMain.World.CreateRectangle(1.0f, 1.0f, 1.0f);
-                if (showWarningMessages)
+                if (showErrorMessages)
                 {
-                    DebugConsole.ThrowError("WARNING: no hulls found, generating a physics body for the submarine failed.");
+                    DebugConsole.ThrowError($"No hulls found in the submarine \"{sub.Info.Name}\". Generating a physics body for the submarine failed.");
                 }
             }
             else

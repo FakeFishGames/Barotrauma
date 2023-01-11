@@ -1263,6 +1263,22 @@ namespace Barotrauma
             }
 #endif
 
+            commands.Add(new Command("showreputation", "showreputation: List the current reputation values.", (string[] args) =>
+            {
+                if (GameMain.GameSession?.GameMode is CampaignMode campaign)
+                {
+                    NewMessage("Reputation:");
+                    foreach (var faction in campaign.Factions)
+                    {
+                        NewMessage($" - {faction.Prefab.Name}: {faction.Reputation.Value}");
+                    }
+                }
+                else
+                {
+                    ThrowError("Could not show reputation (no active campaign).");
+                }
+            }, null));
+
             commands.Add(new Command("setlocationreputation", "setlocationreputation [value]: Set the reputation in the current location to the specified value.", (string[] args) =>
             {
                 if (GameMain.GameSession?.GameMode is CampaignMode campaign)
@@ -1315,10 +1331,10 @@ namespace Barotrauma
                 }
             }, () =>
             {
-                return new[] 
-                { 
-                    FactionPrefab.Prefabs.Select(f => f.Identifier.Value).ToArray(), 
-                    GameMain.GameSession?.Campaign.Factions.Select(f => f.Prefab.Identifier.ToString()).ToArray() ?? Array.Empty<string>()
+                return new[]
+                {
+                    FactionPrefab.Prefabs.Select(static f => f.Identifier.Value).ToArray(),
+                    GameMain.GameSession?.Campaign?.Factions.Select(static f => f.Prefab.Identifier.ToString()).ToArray() ?? Array.Empty<string>()
                 };
             }, true));
 

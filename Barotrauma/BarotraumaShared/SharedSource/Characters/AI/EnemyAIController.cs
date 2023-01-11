@@ -354,6 +354,10 @@ namespace Barotrauma
                 { 
                     targetingTag = "owner";
                 }
+                else if (targetCharacter.AIController is HumanAIController && !IsOnFriendlyTeam(Character, targetCharacter))
+                {
+                    targetingTag = "hostile";
+                }
                 else if (AIParams.TryGetTarget(targetCharacter, out CharacterParams.TargetParams tP))
                 {
                     targetingTag = tP.Tag;
@@ -364,7 +368,7 @@ namespace Barotrauma
                     {
                         targetingTag = "husk";
                     }
-                    else if (!Character.IsFriendly(targetCharacter))
+                    else if (!Character.IsSameSpeciesOrGroup(targetCharacter))
                     {
                         if (enemy.CombatStrength > CombatStrength)
                         {
@@ -689,12 +693,9 @@ namespace Barotrauma
                                 return a.Damage >= selectedTargetingParams.Threshold;
                             }
                             Character attacker = targetCharacter.LastAttackers.LastOrDefault(IsValid)?.Character;
-                            //if the attacker has the same targeting tag as the character we're protecting, we can't change the TargetState
-                            //otherwise e.g. a pet that's set to follow humans would start attacking all humans (and other pets, since they're considered part of the same group) when a hostile human attacks it
-                            //TODO: a way for pets to differentiate hostile and friendly humans?
-                            if (attacker?.AiTarget != null && targetCharacter.SpeciesName != GetTargetingTag(attacker.AiTarget) && !attacker.IsFriendly(targetCharacter))
+                            if (attacker?.AiTarget != null && !Character.IsSameSpeciesOrGroup(attacker) && !targetCharacter.IsSameSpeciesOrGroup(attacker))
                             {
-                                // Attack the character that attacked the target we are protecting
+                                // Can't retaliate on characters of same species or group because that would make us hostile to all friendly characters in the same group.
                                 ChangeTargetState(attacker, AIState.Attack, selectedTargetingParams.Priority * 2);
                                 SelectTarget(attacker.AiTarget);
                                 State = AIState.Attack;

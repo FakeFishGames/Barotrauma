@@ -365,7 +365,8 @@ namespace Barotrauma.Items.Components
             {
                 lastBrokenTime = Timing.TotalTime;
                 //the door has to be restored to 50% health before collision detection on the body is re-enabled
-                if (item.ConditionPercentage > 50.0f && (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer))
+                if (item.ConditionPercentage / Math.Max(item.MaxRepairConditionMultiplier, 1.0f) > 50.0f && 
+                    (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer))
                 {
                     IsBroken = false;
                 }
@@ -480,11 +481,16 @@ namespace Barotrauma.Items.Components
                     ce = ce.Next;
                 }
             }
+
             if (OutsideSubmarineFixture != null)
             {
                 OutsideSubmarineFixture.CollidesWith = Category.None;
             }
-            linkedGap.Open = 1.0f;
+            if (linkedGap != null)
+            {
+                linkedGap.Open = 1.0f;
+            }
+
             IsOpen = false;
 #if CLIENT
             if (convexHull != null) { convexHull.Enabled = false; }

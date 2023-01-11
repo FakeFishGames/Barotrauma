@@ -193,6 +193,22 @@ namespace Steamworks.Ugc
 		}
 
 		/// <summary>
+		/// If installed, the time and date of installation
+		/// </summary>
+		public DateTime? InstallTime
+		{
+			get
+			{
+				ulong size = 0;
+				uint ts = 0;
+				if ( !SteamUGC.Internal.GetItemInstallInfo( Id, ref size, out _, ref ts ) )
+					return null;
+
+				return Epoch.ToDateTime(ts);
+			}
+		}
+
+		/// <summary>
 		/// File size as returned by Steamworks,
 		/// no download/install required
 		/// </summary>

@@ -457,12 +457,14 @@ namespace Barotrauma
         private struct LoadedMission
         {
             public MissionPrefab MissionPrefab { get; }
+            public int OriginLocationIndex { get; }
             public int DestinationIndex { get; }
             public bool SelectedMission { get; }
 
-            public LoadedMission(MissionPrefab prefab, int destinationIndex, bool selectedMission)
+            public LoadedMission(MissionPrefab prefab, int originLocationIndex, int destinationIndex, bool selectedMission)
             {
                 MissionPrefab = prefab;
+                OriginLocationIndex = originLocationIndex;
                 DestinationIndex = destinationIndex;
                 SelectedMission = selectedMission;
             }
@@ -663,9 +665,10 @@ namespace Barotrauma
                     if (string.IsNullOrWhiteSpace(id)) { continue; }
                     var prefab = MissionPrefab.Prefabs.Find(p => p.Identifier == id);
                     if (prefab == null) { continue; }
+                    var origin = childElement.GetAttributeInt("origin", -1);
                     var destination = childElement.GetAttributeInt("destinationindex", -1);
                     var selected = childElement.GetAttributeBool("selected", false);
-                    loadedMissions.Add(new LoadedMission(prefab, destination, selected));
+                    loadedMissions.Add(new LoadedMission(prefab, origin, destination, selected));
                 }
             }
         }
@@ -926,6 +929,10 @@ namespace Barotrauma
                         destination = Connections.First().OtherLocation(this);
                     }
                     var mission = loadedMission.MissionPrefab.Instantiate(new Location[] { this, destination }, Submarine.MainSub);
+                    if (loadedMission.OriginLocationIndex >= 0 && loadedMission.OriginLocationIndex < map.Locations.Count)
+                    {
+                        mission.OriginLocation = map.Locations[loadedMission.OriginLocationIndex];
+                    }
                     availableMissions.Add(mission);
                     if (loadedMission.SelectedMission) { selectedMissions.Add(mission); }
                 }
@@ -1520,10 +1527,12 @@ namespace Barotrauma
                 foreach (Mission mission in missions)
                 {
                     var location = mission.Locations.All(l => l == this) ? this : mission.Locations.FirstOrDefault(l => l != this);
-                    var i = map.Locations.IndexOf(location);
+                    var destinationIndex = map.Locations.IndexOf(location);
+                    var originIndex = map.Locations.IndexOf(mission.OriginLocation);
                     missionsElement.Add(new XElement("mission",
                         new XAttribute("prefabid", mission.Prefab.Identifier),
-                        new XAttribute("destinationindex", i),
+                        new XAttribute("destinationindex", destinationIndex),
+                        new XAttribute("origin", originIndex),
                         new XAttribute("selected", selectedMissions.Contains(mission))));
                 }
                 locationElement.Add(missionsElement);

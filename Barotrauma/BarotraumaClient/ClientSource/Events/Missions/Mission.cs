@@ -38,7 +38,7 @@ namespace Barotrauma
             return RichString.Rich(TextManager.GetWithVariable("missionreward", "[reward]", "‖color:gui.orange‖"+rewardText+"‖end‖"));
         }
 
-        public RichString GetReputationRewardText(Location currLocation)
+        public RichString GetReputationRewardText()
         {
             List<LocalizedString> reputationRewardTexts = new List<LocalizedString>();
             foreach (var reputationReward in ReputationRewards)
@@ -46,7 +46,7 @@ namespace Barotrauma
                 FactionPrefab targetFaction;
                 if (reputationReward.Key == "location" )
                 {
-                    targetFaction = currLocation.Faction?.Prefab;
+                    targetFaction = OriginLocation.Faction?.Prefab;
                 }
                 else
                 {

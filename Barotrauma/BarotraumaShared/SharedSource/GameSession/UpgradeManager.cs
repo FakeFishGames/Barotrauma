@@ -179,12 +179,39 @@ namespace Barotrauma
 
             int price = prefab.Price.GetBuyPrice(GetUpgradeLevel(prefab, category), Campaign.Map?.CurrentLocation);
             int currentLevel = GetUpgradeLevel(prefab, category);
+            int newLevel = currentLevel + 1;
 
             int maxLevel = prefab.GetMaxLevelForCurrentSub();
             if (currentLevel + 1 > maxLevel)
             {
-                DebugConsole.ThrowError($"Tried to purchase \"{prefab.Name}\" over the max level! ({currentLevel + 1} > {maxLevel}). The transaction has been cancelled.");
+                DebugConsole.ThrowError($"Tried to purchase \"{prefab.Name}\" over the max level! ({newLevel} > {maxLevel}). The transaction has been cancelled.");
                 return;
+            }
+
+            bool TryTakeResources(Character character)
+            {
+                bool result = prefab.TryTakeResources(character, newLevel);
+                if (!result)
+                {
+                    DebugConsole.ThrowError($"Tried to purchase \"{prefab.Name}\" but the player does not have the required resources.");
+                }
+                return result;
+            }
+
+            switch (GameMain.NetworkMember)
+            {
+                case null when Character.Controlled is { } controlled: // singleplayer
+                    if (!TryTakeResources(controlled)) { return; }
+                    break;
+                case { IsClient: true }:
+                    if (!prefab.HasResourcesToUpgrade(Character.Controlled, newLevel)) { return; }
+                    break;
+                case { IsServer: true } when client?.Character is { } character:
+                    if (!TryTakeResources(character)) { return; }
+                    break;
+                default:
+                    DebugConsole.ThrowError($"Tried to purchase \"{prefab.Name}\" without a player.");
+                    return;
             }
 
             if (price < 0)

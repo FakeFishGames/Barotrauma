@@ -646,7 +646,7 @@ namespace Barotrauma
             }
         }
 
-        public static LevelGenerationParams GetRandom(string seed, LevelData.LevelType type, float difficulty, Identifier biome = default)
+        public static LevelGenerationParams GetRandom(string seed, LevelData.LevelType type, float difficulty, Identifier biomeId = default)
         {
             Rand.SetSyncedSeed(ToolBox.StringToInt(seed));
 
@@ -661,14 +661,29 @@ namespace Barotrauma
                 lp.Type == type &&
                 (lp.AnyBiomeAllowed || lp.AllowedBiomeIdentifiers.Any()) &&
                 !lp.AllowedBiomeIdentifiers.Contains("None".ToIdentifier()));
-            matchingLevelParams = biome.IsEmpty
-                ? matchingLevelParams.Where(lp => lp.AnyBiomeAllowed || !lp.AllowedBiomeIdentifiers.All(b => Biome.Prefabs[b].IsEndBiome))
-                : matchingLevelParams.Where(lp => lp.AnyBiomeAllowed || lp.AllowedBiomeIdentifiers.Contains(biome));
+            if (biomeId.IsEmpty)
+            {
+                //we don't want end levels when generating a completely random level (e.g. in mission mode)
+                matchingLevelParams = matchingLevelParams.Where(lp => lp.AnyBiomeAllowed || !lp.AllowedBiomeIdentifiers.All(b => Biome.Prefabs[b].IsEndBiome));
+            }
+            else
+            {
+                bool isEndBiome = Biome.Prefabs.TryGet(biomeId, out Biome biome) && biome.IsEndBiome;
+                if (isEndBiome && matchingLevelParams.Any(lp => lp.AllowedBiomeIdentifiers.Contains(biomeId)))
+                {
+                    //in the end biome, we must choose level parameters meant specifically for the end levels
+                    matchingLevelParams = matchingLevelParams.Where(lp => lp.AllowedBiomeIdentifiers.Contains(biomeId));
+                }
+                else
+                {
+                    matchingLevelParams = matchingLevelParams.Where(lp => lp.AnyBiomeAllowed || lp.AllowedBiomeIdentifiers.Contains(biomeId));
+                }
+            }
             
             if (!matchingLevelParams.Any())
             {
-                DebugConsole.ThrowError($"Suitable level generation presets not found (biome \"{biome.IfEmpty("null".ToIdentifier())}\", type: \"{type}\")");
-                if (!biome.IsEmpty)
+                DebugConsole.ThrowError($"Suitable level generation presets not found (biome \"{biomeId.IfEmpty("null".ToIdentifier())}\", type: \"{type}\")");
+                if (!biomeId.IsEmpty)
                 {
                     //try to find params that at least have a suitable type
                     matchingLevelParams = levelParamsOrdered.Where(lp => lp.Type == type);
@@ -682,7 +697,7 @@ namespace Barotrauma
 
             if (!matchingLevelParams.Any(lp => difficulty >= lp.MinLevelDifficulty && difficulty <= lp.MaxLevelDifficulty))
             {
-                DebugConsole.ThrowError($"Suitable level generation presets not found (biome \"{biome.IfEmpty("null".ToIdentifier())}\", type: \"{type}\", difficulty: {difficulty})");
+                DebugConsole.ThrowError($"Suitable level generation presets not found (biome \"{biomeId.IfEmpty("null".ToIdentifier())}\", type: \"{type}\", difficulty: {difficulty})");
             }
             else
             {

@@ -290,6 +290,16 @@ namespace Barotrauma
                     else if (!character.Info.StartItemsGiven)
                     {
                         character.GiveJobItems(mainSubWaypoints[i]);
+                        foreach (Item item in character.Inventory.AllItems)
+                        {
+                            //if the character is loaded from a human prefab with preconfigured items, its ID card gets assigned to the sub it spawns in
+                            //we don't want that in this case, the crew's cards shouldn't be submarine-specific
+                            var idCard = item.GetComponent<Items.Components.IdCard>();
+                            if (idCard != null)
+                            {
+                                idCard.SubmarineSpecificID = 0;
+                            }
+                        }
                     }
                     if (character.Info.HealthData != null)
                     {
@@ -298,6 +308,7 @@ namespace Barotrauma
 
                     character.LoadTalents();
 
+                    character.GiveIdCardTags(mainSubWaypoints[i]);
                     character.GiveIdCardTags(spawnWaypoints[i]);
                     character.Info.StartItemsGiven = true;
                     if (character.Info.OrderData != null)

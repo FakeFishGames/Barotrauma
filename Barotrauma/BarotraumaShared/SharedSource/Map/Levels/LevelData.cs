@@ -161,7 +161,7 @@ namespace Barotrauma
         /// </summary>
         public LevelData(LocationConnection locationConnection)
         {
-            Seed = locationConnection.Locations[0].BaseName + locationConnection.Locations[1].BaseName;
+            Seed = locationConnection.Locations[0].LevelData.Seed + locationConnection.Locations[1].LevelData.Seed;
             Biome = locationConnection.Biome;
             Type = LevelType.LocationConnection;
             Difficulty = locationConnection.Difficulty;
@@ -194,9 +194,9 @@ namespace Barotrauma
         /// <summary>
         /// Instantiates level data using the properties of the location
         /// </summary>
-        public LevelData(Location location, float difficulty)
+        public LevelData(Location location, Map map, float difficulty)
         {
-            Seed = location.BaseName;
+            Seed = location.BaseName + map.Locations.IndexOf(location);
             Biome = location.Biome;
             Type = LevelType.Outpost;
             Difficulty = difficulty;

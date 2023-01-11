@@ -762,7 +762,6 @@ namespace Barotrauma.Items.Components
                 var relatedItem = FindContainableItem(contained);
                 if (relatedItem != null)
                 {
-                    if (relatedItem.Hide.HasValue && relatedItem.Hide.Value) { continue; }
                     if (relatedItem.ItemPos.HasValue)
                     {
                         Vector2 pos = relatedItem.ItemPos.Value;

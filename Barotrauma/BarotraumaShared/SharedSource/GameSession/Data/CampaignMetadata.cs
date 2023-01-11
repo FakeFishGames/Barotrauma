@@ -14,8 +14,9 @@ namespace Barotrauma
         {
         }
 
-        public CampaignMetadata(XElement element)
+        public void Load(XElement element)
         {
+            data.Clear();
             foreach (var subElement in element.Elements())
             {
                 if (string.Equals(subElement.Name.ToString(), "data", StringComparison.InvariantCultureIgnoreCase))

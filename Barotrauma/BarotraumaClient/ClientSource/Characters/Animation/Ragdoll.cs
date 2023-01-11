@@ -444,10 +444,20 @@ namespace Barotrauma
         {
             foreach (Limb limb in Limbs)
             {
-                if (limb == null || limb.IsSevered || limb.ActiveSprite == null || !limb.DoesFlip) { continue; }
-                Vector2 spriteOrigin = limb.ActiveSprite.Origin;
-                spriteOrigin.X = limb.ActiveSprite.SourceRect.Width - spriteOrigin.X;
-                limb.ActiveSprite.Origin = spriteOrigin;                
+                if (limb == null || limb.IsSevered || !limb.DoesMirror) { continue; }
+
+                FlipSprite(limb.DeformSprite?.Sprite ?? limb.Sprite);
+                foreach (var conditionalSprite in limb.ConditionalSprites)
+                {
+                    FlipSprite(conditionalSprite.DeformableSprite?.Sprite ?? conditionalSprite.Sprite);
+                }
+            }
+            static void FlipSprite(Sprite sprite)
+            {
+                if (sprite == null) { return; }
+                Vector2 spriteOrigin = sprite.Origin;
+                spriteOrigin.X = sprite.SourceRect.Width - spriteOrigin.X;
+                sprite.Origin = spriteOrigin;
             }
         }
 

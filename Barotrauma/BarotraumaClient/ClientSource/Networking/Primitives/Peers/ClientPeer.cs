@@ -30,6 +30,8 @@ namespace Barotrauma.Networking
         protected readonly bool isOwner;
         protected readonly Option<int> ownerKey;
 
+        public bool IsActive => isActive;
+
         protected bool isActive;
 
         public ClientPeer(Endpoint serverEndpoint, Callbacks callbacks, Option<int> ownerKey)

@@ -867,6 +867,7 @@ namespace Barotrauma
                     (endPath != null && GetDistToTunnel(cell.Center, endPath) < minMainPathWidth) ||
                     (endHole != null && GetDistToTunnel(cell.Center, endHole) < minMainPathWidth)) { continue; }
                 if (cell.Edges.Any(e => e.AdjacentCell(cell)?.CellType != CellType.Path || e.NextToCave)) { continue; }
+                if (PositionsOfInterest.Any(p => cell.IsPointInside(p.Position.ToVector2()))) { continue; }
                 potentialIslands.Add(cell);
             }
             for (int i = 0; i < GenerationParams.IslandCount; i++)
@@ -1112,6 +1113,7 @@ namespace Barotrauma
                 caveCells.AddRange(cave.Tunnels.SelectMany(t => t.Cells));
                 foreach (var caveCell in caveCells)
                 {
+                    if (PositionsOfInterest.Any(p => caveCell.IsPointInside(p.Position.ToVector2()))) { continue; }
                     if (Rand.Range(0.0f, 1.0f, Rand.RandSync.ServerAndClient) < destructibleWallRatio * cave.CaveGenerationParams.DestructibleWallRatio)
                     {
                         var chunk = CreateIceChunk(caveCell.Edges, caveCell.Center, health: 50.0f);
@@ -3189,7 +3191,7 @@ namespace Barotrauma
                 TryGetInterestingPosition(true, spawnPosType, minDistFromSubs, out Vector2 startPos, filter);
 
                 Vector2 offset = Rand.Vector(Rand.Range(0.0f, randomSpread, Rand.RandSync.ServerAndClient), Rand.RandSync.ServerAndClient);
-                if (!cells.Any(c => c.IsPointInside(startPos + offset)))
+                if (!IsPositionInsideWall(startPos + offset))
                 {
                     startPos += offset;
                 }
@@ -3245,10 +3247,9 @@ namespace Barotrauma
             {
                 suitablePositions.RemoveAll(p => !filter(p));
             }
-            //avoid floating ice chunks on the main path
             if (positionType.HasFlag(PositionType.MainPath) || positionType.HasFlag(PositionType.SidePath))
             {
-                suitablePositions.RemoveAll(p => ExtraWalls.Any(w => w.Cells.Any(c => c.IsPointInside(p.Position.ToVector2()))));
+                suitablePositions.RemoveAll(p => IsPositionInsideWall(p.Position.ToVector2()));
             }
             if (!suitablePositions.Any())
             {
@@ -3301,8 +3302,14 @@ namespace Barotrauma
                 return false;
             }
 
-            position = farEnoughPositions[Rand.Int(farEnoughPositions.Count, (useSyncedRand ? Rand.RandSync.ServerAndClient : Rand.RandSync.Unsynced))].Position;
+            position = farEnoughPositions[Rand.Int(farEnoughPositions.Count, useSyncedRand ? Rand.RandSync.ServerAndClient : Rand.RandSync.Unsynced)].Position;
             return true;
+        }
+
+        public bool IsPositionInsideWall(Vector2 worldPosition)
+        {
+            var closestCell = GetClosestCell(worldPosition);
+            return closestCell != null && closestCell.IsPointInside(worldPosition);
         }
 
         public void Update(float deltaTime, Camera cam)
@@ -3347,14 +3354,13 @@ namespace Barotrauma
 
         public Vector2 GetBottomPosition(float xPosition)
         {
-            int index = (int)Math.Floor(xPosition / Size.X * (bottomPositions.Count - 1));
+            float interval = Size.X / (bottomPositions.Count - 1);
+
+            int index = (int)Math.Floor(xPosition / interval);
             if (index < 0 || index >= bottomPositions.Count - 1) { return new Vector2(xPosition, BottomPos); }
 
-            float t = (xPosition - bottomPositions[index].X) / (bottomPositions[index + 1].X - bottomPositions[index].X);
-            //t can go slightly outside the 0-1 due to rounding, safe to ignore
-            Debug.Assert(t <= 1.001f && t >= -0.001f);
+            float t = (xPosition - bottomPositions[index].X) / interval;
             t = MathHelper.Clamp(t, 0.0f, 1.0f);
-
             float yPos = MathHelper.Lerp(bottomPositions[index].Y, bottomPositions[index + 1].Y, t);
 
             return new Vector2(xPosition, yPos);

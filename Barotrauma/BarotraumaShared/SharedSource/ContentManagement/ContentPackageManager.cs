@@ -23,6 +23,8 @@ namespace Barotrauma
         public const string RegularPackagesElementName = "regularpackages";
         public const string RegularPackagesSubElementName = "package";
 
+        public static bool ModsEnabled => GameMain.VanillaContent == null || EnabledPackages.All.Any(p => p.HasMultiplayerSyncedContent && p != GameMain.VanillaContent);
+
         public static class EnabledPackages
         {
             public static CorePackage? Core { get; private set; } = null;

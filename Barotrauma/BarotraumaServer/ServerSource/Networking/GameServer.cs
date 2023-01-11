@@ -1745,9 +1745,9 @@ namespace Barotrauma.Networking
                         continue;
                     }
 
-                    IWriteMessage tempBuffer = new ReadWriteMessage();
-                    tempBuffer.WriteBoolean(entity is Item); tempBuffer.WritePadBits();
-                    tempBuffer.WriteUInt32(entity is MapEntity me ? me.Prefab.UintIdentifier : (UInt32)0);
+                    var tempBuffer = new ReadWriteMessage();
+                    var entityPositionHeader = EntityPositionHeader.FromEntity(entity);
+                    tempBuffer.WriteNetSerializableStruct(entityPositionHeader);
                     entityPositionSync.ServerWritePosition(tempBuffer, c);
 
                     //no more room in this packet
@@ -1758,6 +1758,7 @@ namespace Barotrauma.Networking
 
                     segmentTable.StartNewSegment(ServerNetSegment.EntityPosition);
                     outmsg.WritePadBits(); //padding is required here to make sure any padding bits within tempBuffer are read correctly
+                    outmsg.WriteVariableUInt32((uint)tempBuffer.LengthBytes);
                     outmsg.WriteBytes(tempBuffer.Buffer, 0, tempBuffer.LengthBytes);
                     outmsg.WritePadBits();
 

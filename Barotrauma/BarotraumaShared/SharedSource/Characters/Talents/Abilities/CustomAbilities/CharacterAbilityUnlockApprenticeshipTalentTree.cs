@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using Barotrauma.Extensions;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -16,6 +17,9 @@ namespace Barotrauma.Abilities
         public override void InitializeAbility(bool addingFirstTime)
         {
             if (!addingFirstTime) { return; }
+
+            // do not run client-side in multiplayer
+            if (GameMain.NetworkMember is { IsClient: true }) { return; }
 
             JobPrefab? apprentice = CharacterAbilityApplyStatusEffectsToApprenticeship.GetApprenticeJob(Character, JobPrefab.Prefabs.ToImmutableHashSet());
             if (apprentice is null)
