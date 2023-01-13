@@ -288,9 +288,7 @@ namespace Barotrauma
 
                     if (errorCatcher.Errors.Any())
                     {
-                        yield return ContentPackageManager.LoadProgress.Failure(
-                            ContentPackageManager.LoadProgress.Error
-                                .Reason.ConsoleErrorsThrown);
+                        yield return ContentPackageManager.LoadProgress.Failure(errorCatcher.Errors.Select(e => e.Text));
                         yield break;
                     }
                     yield return ContentPackageManager.LoadProgress.Progress((i + indexOffset) / (float)Files.Length);

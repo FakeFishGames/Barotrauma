@@ -200,7 +200,7 @@ namespace Barotrauma
             }
         }
     }
-    
+
     partial class Limb : ISerializableEntity, ISpatialEntity
     {
         //how long it takes for severed limbs to fade out
@@ -215,7 +215,7 @@ namespace Barotrauma
 
         //the physics body of the limb
         public PhysicsBody body;
-                        
+
         public Vector2 StepOffset => ConvertUnits.ToSimUnits(Params.StepOffset) * ragdoll.RagdollParams.JointScale;
 
         public Hull Hull;
@@ -249,7 +249,7 @@ namespace Barotrauma
                 }
             }
         }
-        
+
         private bool isSevered;
         private float severedFadeOutTimer;
 
@@ -269,7 +269,7 @@ namespace Barotrauma
                 mouthPos = value;
             }
         }
-        
+
         public readonly Attack attack;
         public List<DamageModifier> DamageModifiers { get; private set; } = new List<DamageModifier>();
 
@@ -282,21 +282,25 @@ namespace Barotrauma
         {
             get
             {
-                if (character.AnimController.CurrentAnimationParams is GroundedMovementParams)
+                if (character?.AnimController.CurrentAnimationParams is GroundedMovementParams && IsLeg)
                 {
-                    switch (type)
-                    {
-                        case LimbType.LeftFoot:
-                        case LimbType.LeftLeg:
-                        case LimbType.LeftThigh:
-                        case LimbType.RightFoot:
-                        case LimbType.RightLeg:
-                        case LimbType.RightThigh:
-                            // Legs always has to flip
-                            return true;
-                    }
+                    // Legs always has to flip when not swimming
+                    return true;
                 }
                 return Params.Flip;
+            }
+        }
+
+        public bool DoesMirror
+        {
+            get
+            {
+                if (IsLeg)
+                {
+                    // Legs always has to mirror
+                    return true;
+                }
+                return DoesFlip;
             }
         }
 
@@ -305,16 +309,46 @@ namespace Barotrauma
         public Vector2 DebugTargetPos;
         public Vector2 DebugRefPos;
 
-        public bool IsLowerBody =>
-            type == LimbType.LeftLeg ||
-            type == LimbType.RightLeg ||
-            type == LimbType.LeftFoot ||
-            type == LimbType.RightFoot ||
-            type == LimbType.Tail ||
-            type == LimbType.Legs ||
-            type == LimbType.RightThigh ||
-            type == LimbType.LeftThigh ||
-            type == LimbType.Waist;
+        public bool IsLowerBody
+        {
+            get
+            {
+                switch (type)
+                {
+                    case LimbType.LeftLeg:
+                    case LimbType.RightLeg:
+                    case LimbType.LeftFoot:
+                    case LimbType.RightFoot:
+                    case LimbType.Tail:
+                    case LimbType.Legs:
+                    case LimbType.LeftThigh:
+                    case LimbType.RightThigh:
+                    case LimbType.Waist:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+        }
+
+        public bool IsLeg
+        {
+            get
+            {
+                switch (type)
+                {
+                    case LimbType.LeftFoot:
+                    case LimbType.LeftLeg:
+                    case LimbType.LeftThigh:
+                    case LimbType.RightFoot:
+                    case LimbType.RightLeg:
+                    case LimbType.RightThigh:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+        }
 
         public bool IsSevered
         {

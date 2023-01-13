@@ -49,7 +49,6 @@ namespace Barotrauma
         OnUseRangedWeapon,
         OnReduceAffliction,
         OnAddDamageAffliction,
-        OnSelfRagdoll,
         OnRagdoll,
         OnRoundEnd,
         OnLootCharacter,
@@ -168,7 +167,7 @@ namespace Barotrauma
         PumpSpeed,
         PumpMaxFlow,
         ReactorMaxOutput,
-        ReactorFuelEfficiency,
+        ReactorFuelConsumption,
         DeconstructorSpeed,
         FabricationSpeed
     }

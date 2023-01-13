@@ -107,7 +107,7 @@ namespace Barotrauma
                     Collider.AngularVelocity = newAngularVelocity;
 
                     float distSqrd = Vector2.DistanceSquared(newPosition, Collider.SimPosition);
-                    float errorTolerance = character.CanMove ? 0.01f : 0.2f;
+                    float errorTolerance = character.CanMove && !character.IsRagdolled ? 0.01f : 0.2f;
                     if (distSqrd > errorTolerance)
                     {
                         if (distSqrd > 10.0f || !character.CanMove)
@@ -145,6 +145,7 @@ namespace Barotrauma
                         {
                             MainLimb.PullJointWorldAnchorB = Collider.SimPosition;
                             MainLimb.PullJointEnabled = true;
+                            MainLimb.body.LinearVelocity = newVelocity;
                         }
                     }
                 }
@@ -442,10 +443,20 @@ namespace Barotrauma
         {
             foreach (Limb limb in Limbs)
             {
-                if (limb == null || limb.IsSevered || limb.ActiveSprite == null || !limb.DoesFlip) { continue; }
-                Vector2 spriteOrigin = limb.ActiveSprite.Origin;
-                spriteOrigin.X = limb.ActiveSprite.SourceRect.Width - spriteOrigin.X;
-                limb.ActiveSprite.Origin = spriteOrigin;                
+                if (limb == null || limb.IsSevered || !limb.DoesMirror) { continue; }
+
+                FlipSprite(limb.DeformSprite?.Sprite ?? limb.Sprite);
+                foreach (var conditionalSprite in limb.ConditionalSprites)
+                {
+                    FlipSprite(conditionalSprite.DeformableSprite?.Sprite ?? conditionalSprite.Sprite);
+                }
+            }
+            static void FlipSprite(Sprite sprite)
+            {
+                if (sprite == null) { return; }
+                Vector2 spriteOrigin = sprite.Origin;
+                spriteOrigin.X = sprite.SourceRect.Width - spriteOrigin.X;
+                sprite.Origin = spriteOrigin;
             }
         }
 

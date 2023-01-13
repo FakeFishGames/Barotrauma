@@ -24,7 +24,7 @@ namespace Barotrauma
         public bool IsAiming => wasAiming;
         public bool IsAimingMelee => wasAimingMelee;
 
-        protected bool Aiming => aiming || aimingMelee || LockFlippingUntil > Timing.TotalTime && character.IsKeyDown(InputType.Aim);
+        protected bool Aiming => aiming || aimingMelee || FlipLockTime > Timing.TotalTime && character.IsKeyDown(InputType.Aim);
 
         public float ArmLength => upperArmLength + forearmLength;
 
@@ -278,7 +278,11 @@ namespace Barotrauma
         // We need some margin, because if a hatch has closed, it's possible that the height from floor is slightly negative.
         public bool IsAboveFloor => GetHeightFromFloor() > -0.1f;
 
-        public float LockFlippingUntil;
+        public float FlipLockTime { get; private set; }
+        public void LockFlipping(float time = 0.2f)
+        {
+            FlipLockTime = (float)Timing.TotalTime + time;
+        }
 
         public void UpdateUseItem(bool allowMovement, Vector2 handWorldPos)
         {

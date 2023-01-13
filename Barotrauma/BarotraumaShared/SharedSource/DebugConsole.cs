@@ -1312,10 +1312,10 @@ namespace Barotrauma
                 }
             }, () =>
             {
-                return new[] 
-                { 
-                    FactionPrefab.Prefabs.Select(f => f.Identifier.Value).ToArray(), 
-                    GameMain.GameSession?.Campaign.Factions.Select(f => f.Prefab.Identifier.ToString()).ToArray() ?? Array.Empty<string>()
+                return new[]
+                {
+                    FactionPrefab.Prefabs.Select(static f => f.Identifier.Value).ToArray(),
+                    GameMain.GameSession?.Campaign?.Factions.Select(static f => f.Prefab.Identifier.ToString()).ToArray() ?? Array.Empty<string>()
                 };
             }, true));
 

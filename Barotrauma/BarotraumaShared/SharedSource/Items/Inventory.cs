@@ -268,6 +268,8 @@ namespace Barotrauma
             get { return capacity; }
         }
 
+        public int EmptySlotCount => slots.Count(i => !i.Empty());
+
         public bool AllowSwappingContainedItems = true;
 
         public Inventory(Entity owner, int capacity, int slotsPerRow = 5)
@@ -887,10 +889,7 @@ namespace Barotrauma
                 }
                 if (recursive)
                 {
-                    if (item.OwnInventory != null)
-                    {
-                        item.OwnInventory.FindAllItems(predicate, recursive: true, list);
-                    }
+                    item.OwnInventory?.FindAllItems(predicate, recursive: true, list);
                 }
             }
             return list;

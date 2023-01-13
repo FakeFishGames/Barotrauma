@@ -621,6 +621,15 @@ namespace Barotrauma
             return stringValue.Split(';').Select(s => ParseTuple<T1, T2>(s, default)).ToArray();
         }
 
+        public static Range<int> GetAttributeRange(this XElement element, string name, Range<int> defaultValue)
+        {
+            var attribute = element?.GetAttribute(name);
+            if (attribute is null) { return defaultValue; }
+
+            string stringValue = attribute.Value;
+            return string.IsNullOrEmpty(stringValue) ? defaultValue : ParseRange(stringValue);
+        }
+
         public static string ElementInnerText(this XElement el)
         {
             StringBuilder str = new StringBuilder();
@@ -893,6 +902,37 @@ namespace Barotrauma
             }
 
             return floatArray;
+        }
+
+        // parse a range string, e.g "1-3" or "3"
+        public static Range<int> ParseRange(string rangeString)
+        {
+            if (string.IsNullOrWhiteSpace(rangeString)) { return GetDefault(rangeString); }
+
+            string[] split = rangeString.Split('-');
+            return split.Length switch
+            {
+                1 when TryParseInt(split[0], out int value) => new Range<int>(value, value),
+                2 when TryParseInt(split[0], out int min) && TryParseInt(split[1], out int max) && min < max => new Range<int>(min, max),
+                _ => GetDefault(rangeString)
+            };
+
+            static bool TryParseInt(string value, out int result)
+            {
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    return int.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out result);
+                }
+
+                result = default;
+                return false;
+            }
+
+            static Range<int> GetDefault(string rangeString)
+            {
+                DebugConsole.ThrowError($"Error parsing range: \"{rangeString}\" (using default value 0-99)");
+                return new Range<int>(0, 99);
+            }
         }
 
         public static Identifier VariantOf(this XElement element) =>

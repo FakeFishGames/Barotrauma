@@ -413,7 +413,7 @@ namespace Barotrauma
                 }
             }
         }
-         
+
         private void ApplyTreatment(Affliction affliction, Item item)
         {
             item.ApplyTreatment(character, targetCharacter, targetCharacter.CharacterHealth.GetAfflictionLimb(affliction));

@@ -212,8 +212,13 @@ namespace Barotrauma
             return false;
         }
 
+        public override int GetHashCode()
+        {
+            return ShortRepresentation.GetHashCode(StringComparison.OrdinalIgnoreCase);
+        }
+
         public static bool operator ==(Md5Hash? a, Md5Hash? b)
-            => (a is null == b is null) && (a?.Equals(b) ?? true);
+            => Equals(a, b);
 
         public static bool operator !=(Md5Hash? a, Md5Hash? b) => !(a == b);
     }

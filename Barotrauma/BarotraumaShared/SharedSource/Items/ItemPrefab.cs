@@ -568,9 +568,11 @@ namespace Barotrauma
 
         public ImmutableDictionary<Identifier, FixedQuantityResourceInfo> LevelQuantity { get; private set; }
 
-        public bool CanSpriteFlipX { get; private set; }
+        private bool canSpriteFlipX;
+        public override bool CanSpriteFlipX => canSpriteFlipX;
 
-        public bool CanSpriteFlipY { get; private set; }
+        private bool canSpriteFlipY;
+        public override bool CanSpriteFlipY => canSpriteFlipY;
 
         /// <summary>
         /// Can the item be chosen as extra cargo in multiplayer. If not set, the item is available if it can be bought from outposts in the campaign.
@@ -884,8 +886,8 @@ namespace Barotrauma
                     case "sprite":
                         string spriteFolder = GetTexturePath(subElement, variantOf);
 
-                        CanSpriteFlipX = subElement.GetAttributeBool("canflipx", true);
-                        CanSpriteFlipY = subElement.GetAttributeBool("canflipy", true);
+                        canSpriteFlipX = subElement.GetAttributeBool("canflipx", true);
+                        canSpriteFlipY = subElement.GetAttributeBool("canflipy", true);
 
                         sprite = new Sprite(subElement, spriteFolder, lazyLoad: true);
                         if (subElement.GetAttribute("sourcerect") == null &&

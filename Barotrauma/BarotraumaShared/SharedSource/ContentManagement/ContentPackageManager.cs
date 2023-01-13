@@ -23,6 +23,8 @@ namespace Barotrauma
         public const string RegularPackagesElementName = "regularpackages";
         public const string RegularPackagesSubElementName = "package";
 
+        public static bool ModsEnabled => GameMain.VanillaContent == null || EnabledPackages.All.Any(p => p.HasMultiplayerSyncedContent && p != GameMain.VanillaContent);
+
         public static class EnabledPackages
         {
             public static CorePackage? Core { get; private set; } = null;
@@ -435,22 +437,19 @@ namespace Barotrauma
         public readonly record struct LoadProgress(Result<float, LoadProgress.Error> Result)
         {
             public readonly record struct Error(
-                Error.Reason ErrorReason,
-                Option<Exception> Exception)
+                Either<ImmutableArray<string>, Exception> ErrorsOrException)
             {
-                public enum Reason { Exception, ConsoleErrorsThrown }
-
-                public Error(Reason reason) : this(reason, Option.None) { }
-                public Error(Exception exception) : this(Reason.Exception, Option.Some(exception)) { }
+                public Error(IEnumerable<string> errorMessages) : this(ErrorsOrException: errorMessages.ToImmutableArray()) { }
+                public Error(Exception exception) : this(ErrorsOrException: exception) { }
             }
 
             public static LoadProgress Failure(Exception exception)
                 => new LoadProgress(
                     Result<float, Error>.Failure(new Error(exception)));
 
-            public static LoadProgress Failure(Error.Reason reason)
+            public static LoadProgress Failure(IEnumerable<string> errorMessages)
                 => new LoadProgress(
-                    Result<float, Error>.Failure(new Error(reason)));
+                    Result<float, Error>.Failure(new Error(errorMessages)));
 
             public static LoadProgress Progress(float value)
                 => new LoadProgress(

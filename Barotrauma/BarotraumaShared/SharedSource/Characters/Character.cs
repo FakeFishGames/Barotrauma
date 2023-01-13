@@ -31,6 +31,9 @@ namespace Barotrauma
     {
         public readonly static List<Character> CharacterList = new List<Character>();
 
+        public const float MaxHighlightDistance = 150.0f;
+        public const float MaxDragDistance = 200.0f;
+
         partial void UpdateLimbLightSource(Limb limb);
 
         private bool enabled = true;
@@ -354,9 +357,15 @@ namespace Barotrauma
         public readonly CharacterPrefab Prefab;
 
         public readonly CharacterParams Params;
+
         public Identifier SpeciesName => Params?.SpeciesName ?? "null".ToIdentifier();
+
         public Identifier Group => Params.Group;
+
         public bool IsHumanoid => Params.Humanoid;
+
+        public bool IsMachine => Params.IsMachine;
+
         public bool IsHusk => Params.Husk;
 
         public bool IsMale => info?.IsMale ?? false;
@@ -805,6 +814,11 @@ namespace Barotrauma
         public float HealthPercentage => CharacterHealth.HealthPercentage;
         public float MaxVitality => CharacterHealth.MaxVitality;
         public float MaxHealth => MaxVitality;
+
+        /// <summary>
+        /// Was the character in full health at the beginning of the frame?
+        /// </summary>
+        public bool WasFullHealth => CharacterHealth.WasInFullHealth;
         public AIState AIState => AIController is EnemyAIController enemyAI ? enemyAI.State : AIState.Idle;
         public bool IsLatched => AIController is EnemyAIController enemyAI && enemyAI.LatchOntoAI != null && enemyAI.LatchOntoAI.IsAttached;
         public float EmpVulnerability => Params.Health.EmpVulnerability;
@@ -1741,7 +1755,7 @@ namespace Barotrauma
             float maxSpeed = ApplyTemporarySpeedLimits(currentSpeed);
             targetMovement.X = MathHelper.Clamp(targetMovement.X, -maxSpeed, maxSpeed);
             targetMovement.Y = MathHelper.Clamp(targetMovement.Y, -maxSpeed, maxSpeed);
-            SpeedMultiplier = greatestPositiveSpeedMultiplier - (1f - greatestNegativeSpeedMultiplier);
+            SpeedMultiplier = Math.Max(0.0f, greatestPositiveSpeedMultiplier - (1f - greatestNegativeSpeedMultiplier));
             targetMovement *= SpeedMultiplier;
             // Reset, status effects will set the value before the next update
             ResetSpeedMultiplier();
@@ -2201,7 +2215,9 @@ namespace Barotrauma
 
             if (SelectedCharacter != null)
             {
-                if (Vector2.DistanceSquared(SelectedCharacter.WorldPosition, WorldPosition) > 90000.0f || !SelectedCharacter.CanBeSelected)
+                if (!SelectedCharacter.CanBeSelected ||
+                    (Vector2.DistanceSquared(SelectedCharacter.WorldPosition, WorldPosition) > MaxDragDistance * MaxDragDistance &&
+                    SelectedCharacter.GetDistanceToClosestLimb(SimPosition) > ConvertUnits.ToSimUnits(MaxDragDistance)))
                 {
                     DeselectCharacter();
                 }
@@ -2494,8 +2510,12 @@ namespace Barotrauma
 
             if (!skipDistanceCheck)
             {
-                maxDist = ConvertUnits.ToSimUnits(maxDist);
-                if (Vector2.DistanceSquared(SimPosition, c.SimPosition) > maxDist * maxDist) { return false; }
+                maxDist = Math.Max(ConvertUnits.ToSimUnits(maxDist), c.AnimController.Collider.GetMaxExtent());
+                if (Vector2.DistanceSquared(SimPosition, c.SimPosition) > maxDist * maxDist &&
+                    Vector2.DistanceSquared(SimPosition, c.AnimController.MainLimb.SimPosition) > maxDist * maxDist) 
+                { 
+                    return false; 
+                }
             }
 
             return checkVisibility ? CanSeeCharacter(c) : true;
@@ -3138,56 +3158,57 @@ namespace Barotrauma
 
             UpdateAIChatMessages(deltaTime);
 
-            //Do ragdoll shenanigans before Stun because it's still technically a stun, innit? Less network updates for us!
-            bool allowRagdoll = GameMain.NetworkMember?.ServerSettings?.AllowRagdollButton ?? true;
-            bool tooFastToUnragdoll = AnimController.Collider.LinearVelocity.LengthSquared() > 8.0f * 8.0f;
-            bool wasRagdolled = false;
-            bool selfRagdolled = false;
-
-            if (IsForceRagdolled)
+            if (GameMain.NetworkMember?.ServerSettings?.AllowRagdollButton ?? true)
             {
-                IsRagdolled = IsForceRagdolled;
-            }
-            else if (this != Controlled)
-            {
-                wasRagdolled = IsRagdolled;
-                IsRagdolled = selfRagdolled = IsKeyDown(InputType.Ragdoll);
-            }
-            //Keep us ragdolled if we were forced or we're too speedy to unragdoll
-            else if (allowRagdoll && (!IsRagdolled || !tooFastToUnragdoll))
-            {
-                if (ragdollingLockTimer > 0.0f)
+                bool wasRagdolled = IsRagdolled;
+                if (IsForceRagdolled)
                 {
-                    SetInput(InputType.Ragdoll, false, true);
-                    ragdollingLockTimer -= deltaTime;
+                    IsRagdolled = IsForceRagdolled;
+                }
+                else if (this != Controlled)
+                {
+                    wasRagdolled = IsRagdolled;
+                    IsRagdolled = IsKeyDown(InputType.Ragdoll);
                 }
                 else
                 {
-                    wasRagdolled = IsRagdolled;
-                    IsRagdolled = selfRagdolled = IsKeyDown(InputType.Ragdoll); //Handle this here instead of Control because we can stop being ragdolled ourselves
-                    if (wasRagdolled != IsRagdolled) { ragdollingLockTimer = 0.5f; }
+                    bool tooFastToUnragdoll = bodyMovingTooFast(AnimController.Collider) || bodyMovingTooFast(AnimController.MainLimb.body);
+                    bool bodyMovingTooFast(PhysicsBody body)
+                    {
+                        return
+                            body.LinearVelocity.LengthSquared() > 8.0f * 8.0f ||
+                            //falling down counts as going too fast
+                            (!InWater && body.LinearVelocity.Y < -5.0f);
+                    }
+                    if (ragdollingLockTimer > 0.0f)
+                    {
+                        ragdollingLockTimer -= deltaTime;
+                    }
+                    else if (!tooFastToUnragdoll)
+                    {
+                        IsRagdolled = IsKeyDown(InputType.Ragdoll); //Handle this here instead of Control because we can stop being ragdolled ourselves
+                        if (wasRagdolled != IsRagdolled) { ragdollingLockTimer = 0.2f; }
+                    }
+                    if (IsRagdolled)
+                    {
+                        SetInput(InputType.Ragdoll, false, true);
+                    }
                 }
-            }
-
-            if (!wasRagdolled && IsRagdolled)
-            {
-                if (selfRagdolled)
+                if (!wasRagdolled && IsRagdolled)
                 {
-                    CheckTalents(AbilityEffectType.OnSelfRagdoll);
+                    CheckTalents(AbilityEffectType.OnRagdoll);
                 }
-                // currently does not work when you are stunned, like it should
-                CheckTalents(AbilityEffectType.OnRagdoll);
             }
 
             lowPassMultiplier = MathHelper.Lerp(lowPassMultiplier, 1.0f, 0.1f);
 
-            //ragdoll button
             if (IsRagdolled || !CanMove)
             {
                 if (AnimController is HumanoidAnimController humanAnimController) 
                 { 
                     humanAnimController.Crouching = false; 
                 }
+                if (IsRagdolled) { AnimController.IgnorePlatforms = true; }
                 AnimController.ResetPullJoints();
                 SelectedItem = SelectedSecondaryItem = null;
                 return;
@@ -3363,6 +3384,20 @@ namespace Barotrauma
             distSqr = Math.Min(distSqr, Vector2.DistanceSquared(GameMain.GameScreen.Cam.Position, WorldPosition));
 #endif
             return distSqr;
+        }
+
+        public float GetDistanceToClosestLimb(Vector2 simPos)
+        {
+            float closestDist = float.MaxValue;
+            foreach (Limb limb in AnimController.Limbs)
+            {
+                if (limb.IsSevered) { continue; }
+                float dist = Vector2.Distance(simPos, limb.SimPosition);
+                dist -= limb.body.GetMaxExtent();
+                closestDist = Math.Min(closestDist, dist);
+                if (closestDist <= 0.0f) { return 0.0f; }
+            }
+            return closestDist;
         }
 
         private float despawnTimer;
@@ -3885,8 +3920,8 @@ namespace Barotrauma
                 {
                     foreach (Affliction affliction in attackResult.Afflictions)
                     {
-                        if (affliction.Strength == 0.0f) continue;
-                        sb.Append($" {affliction.Prefab.Name}: {affliction.Strength}");
+                        if (Math.Abs(affliction.Strength) <= 0.1f) { continue;}
+                        sb.Append($" {affliction.Prefab.Name}: {affliction.Strength.ToString("0.0")}");
                     }
                 }
                 GameServer.Log(sb.ToString(), ServerLog.MessageType.Attack);            
@@ -4484,7 +4519,10 @@ namespace Barotrauma
 
 #if CLIENT
             //ensure we apply any pending inventory updates to drop any items that need to be dropped when the character despawns
-            Inventory?.ApplyReceivedState();
+            if (GameMain.Client?.ClientPeer is { IsActive: true })
+            {
+                Inventory?.ApplyReceivedState();
+            }
 #endif
 
             base.Remove();
@@ -5200,15 +5238,13 @@ namespace Barotrauma
 
         public void RemoveAbilityResistance(TalentResistanceIdentifier identifier) => abilityResistances.Remove(identifier);
 
-        /// <summary>
-        /// Compares just the species name and the group, ignores teams. There's a more complex version found in HumanAIController.cs
-        /// </summary>
         public bool IsFriendly(Character other) => IsFriendly(this, other);
 
-        /// <summary>
-        /// Compares just the species name and the group, ignores teams. There's a more complex version found in HumanAIController.cs
-        /// </summary>
-        public static bool IsFriendly(Character me, Character other) => other.SpeciesName == me.SpeciesName || other.Params.CompareGroup(me.Params.Group);
+        public static bool IsFriendly(Character me, Character other) => AIController.IsOnFriendlyTeam(me, other) && IsSameSpeciesOrGroup(me, other);
+
+        public bool IsSameSpeciesOrGroup(Character other) => IsSameSpeciesOrGroup(this, other);
+
+        public static bool IsSameSpeciesOrGroup(Character me, Character other) => other.SpeciesName == me.SpeciesName || other.Params.CompareGroup(me.Params.Group);
 
         public void StopClimbing()
         {

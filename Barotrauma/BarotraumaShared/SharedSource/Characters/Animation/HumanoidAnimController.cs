@@ -150,8 +150,10 @@ namespace Barotrauma
 
         private readonly float movementLerp;
 
-        private float cprAnimTimer;
-        private float cprPump;
+        private float cprAnimTimer,cprPump;
+
+        private float fallingProneAnimTimer;
+        const float FallingProneAnimDuration = 1.0f;
 
         private bool swimming;
         //time until the character can switch from walking to swimming or vice versa
@@ -268,7 +270,8 @@ namespace Barotrauma
                 if (deathAnimTimer < deathAnimDuration)
                 {
                     deathAnimTimer += deltaTime;
-                    UpdateDying(deltaTime);
+                    //the force/torque used to move the limbs goes from 1 to 0 during the death anim duration
+                    UpdateFallingProne(1.0f - deathAnimTimer / deathAnimDuration);
                 }
             }
             else
@@ -278,6 +281,11 @@ namespace Barotrauma
 
             if (!character.CanMove)
             {
+                if (fallingProneAnimTimer < FallingProneAnimDuration)
+                {
+                    fallingProneAnimTimer += deltaTime;
+                    UpdateFallingProne(1.0f);
+                }
                 levitatingCollider = false;
                 Collider.FarseerBody.FixedRotation = false;
                 if (GameMain.NetworkMember == null || !GameMain.NetworkMember.IsClient)
@@ -291,18 +299,20 @@ namespace Barotrauma
                 }
                 return;
             }
+            fallingProneAnimTimer = 0.0f;
 
             //re-enable collider
             if (!Collider.Enabled)
             {
                 var lowestLimb = FindLowestLimb();
-                
+
                 Collider.SetTransform(new Vector2(
                     Collider.SimPosition.X,
                     Math.Max(lowestLimb.SimPosition.Y + (Collider.radius + Collider.height / 2), Collider.SimPosition.Y)),
                     Collider.Rotation);
                 
                 Collider.FarseerBody.ResetDynamics();
+                Collider.FarseerBody.LinearVelocity = MainLimb.LinearVelocity;
                 Collider.Enabled = true;
             }            
 
@@ -431,7 +441,7 @@ namespace Barotrauma
                 }
             }
 
-            if (Timing.TotalTime > LockFlippingUntil && TargetDir != dir && !IsStuck)
+            if (Timing.TotalTime > FlipLockTime && TargetDir != dir && !IsStuck)
             {
                 Flip();
             }
@@ -1292,10 +1302,9 @@ namespace Barotrauma
             }
         }
 
-        void UpdateDying(float deltaTime)
+        void UpdateFallingProne(float strength)
         {
-            //the force/torque used to move the limbs goes from 1 to 0 during the death anim duration
-            float strength = 1.0f - deathAnimTimer / deathAnimDuration;
+            if (strength <= 0.0f) { return; }
 
             Limb head = GetLimb(LimbType.Head);
             Limb torso = GetLimb(LimbType.Torso);
@@ -1319,6 +1328,19 @@ namespace Barotrauma
             }
 
             if (torso == null) { return; }
+
+            //make the torso tip over
+            //otherwise it tends to just drop straight down, pinning the characters legs in a weird pose
+            if (!InWater)
+            {
+                //prefer tipping over in the same direction the torso is rotating
+                //or moving
+                //or lastly, in the direction it's facing if it's not moving/rotating
+                float fallDirection = Math.Sign(torso.body.AngularVelocity - torso.body.LinearVelocity.X - Dir * 0.01f);
+                float torque = MathF.Cos(torso.Rotation) * fallDirection * 5.0f * strength;
+                torso.body.ApplyTorque(torque * torso.body.Mass);
+            }
+
             //attempt to make legs stay in a straight line with the torso to prevent the character from doing a split
             for (int i = 0; i < 2; i++)
             {
@@ -1503,12 +1525,12 @@ namespace Barotrauma
             Limb rightHand = GetLimb(LimbType.RightHand);
 
             Limb targetLeftHand = target.AnimController.GetLimb(LimbType.LeftForearm);
-            if (targetLeftHand == null) targetLeftHand = target.AnimController.GetLimb(LimbType.Torso);
-            if (targetLeftHand == null) targetLeftHand = target.AnimController.MainLimb;
+            if (targetLeftHand == null) { targetLeftHand = target.AnimController.GetLimb(LimbType.Torso); }
+            if (targetLeftHand == null) { targetLeftHand = target.AnimController.MainLimb; }
 
             Limb targetRightHand = target.AnimController.GetLimb(LimbType.RightForearm);
-            if (targetRightHand == null) targetRightHand = target.AnimController.GetLimb(LimbType.Torso);
-            if (targetRightHand == null) targetRightHand = target.AnimController.MainLimb;
+            if (targetRightHand == null) { targetRightHand = target.AnimController.GetLimb(LimbType.Torso); }
+            if (targetRightHand == null) { targetRightHand = target.AnimController.MainLimb; }
 
             if (!target.AllowInput)
             {
@@ -1644,18 +1666,24 @@ namespace Barotrauma
                     pullLimb.PullJointEnabled = true;
                     if (targetLimb.type == LimbType.Torso || targetLimb == target.AnimController.MainLimb)
                     {
-                        Vector2 pullLimbAnchor = targetLimb.SimPosition;
                         pullLimb.PullJointMaxForce = 5000.0f;
                         if (!character.HasAbilityFlag(AbilityFlags.MoveNormallyWhileDragging))
                         {
                             targetMovement *= MathHelper.Clamp(Mass / target.Mass, 0.5f, 1.0f);
                         }
-                            
-                        Vector2 shoulderPos = rightShoulder.WorldAnchorA;
-                        Vector2 dragDir = inWater ? Vector2.Normalize(targetLimb.SimPosition - shoulderPos) : Vector2.UnitY;
-                        if (!MathUtils.IsValid(dragDir)) { dragDir = Vector2.UnitY; }
 
-                        targetAnchor = shoulderPos - dragDir * ConvertUnits.ToSimUnits(upperArmLength + forearmLength);
+                        Vector2 shoulderPos = rightShoulder.WorldAnchorA;
+                        float targetDist = Vector2.Distance(targetLimb.SimPosition, shoulderPos);
+                        Vector2 dragDir = (targetLimb.SimPosition - shoulderPos) / targetDist;
+                        if (!MathUtils.IsValid(dragDir)) { dragDir = -Vector2.UnitY; }
+                        if (!InWater) 
+                        { 
+                            //lerp the arm downwards when not swimming
+                            dragDir = Vector2.Lerp(dragDir, -Vector2.UnitY, 0.5f); 
+                        }
+
+                        Vector2 pullLimbAnchor = shoulderPos + dragDir * Math.Min(targetDist, (upperArmLength + forearmLength) * 2);
+                        targetAnchor = shoulderPos + dragDir * (upperArmLength + forearmLength);
                         targetForce = 200.0f;
                         if (target.Submarine != character.Submarine)
                         {
@@ -1723,7 +1751,7 @@ namespace Barotrauma
                 {
                     if (target.AnimController.Dir > 0 == WorldPosition.X > target.WorldPosition.X)
                     {
-                        target.AnimController.LockFlippingUntil = (float)Timing.TotalTime + 0.5f;
+                        target.AnimController.LockFlipping(0.5f);
                     }
                     else
                     {
@@ -1822,16 +1850,22 @@ namespace Barotrauma
 
         public override void Flip()
         {
+            if (Character == null || Character.Removed)
+            {
+                LogAccessedRemovedCharacterError();
+                return;
+            }
+
             base.Flip();
 
             WalkPos = -WalkPos;
 
             Limb torso = GetLimb(LimbType.Torso);
-
-            Vector2 difference;
+            if (torso == null) { return; }
 
             Matrix torsoTransform = Matrix.CreateRotationZ(torso.Rotation);
 
+            Vector2 difference;
             foreach (Item heldItem in character.HeldItems)
             {
                 if (heldItem?.body != null && !heldItem.Removed && heldItem.GetComponent<Holdable>() != null)

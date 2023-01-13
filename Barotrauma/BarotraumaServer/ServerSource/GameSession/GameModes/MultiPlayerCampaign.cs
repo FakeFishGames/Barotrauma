@@ -146,7 +146,7 @@ namespace Barotrauma
         {
             NextLevel = map.SelectedConnection?.LevelData ?? map.CurrentLocation.LevelData;
             MirrorLevel = false;
-            GameMain.Server.StartGame();
+            GameMain.Server.TryStartGame();
         }
 
         public static void StartCampaignSetup()
@@ -395,7 +395,7 @@ namespace Barotrauma
                 yield return new WaitForSeconds(EndTransitionDuration * 0.5f);
             }
 
-            GameMain.Server.StartGame();
+            GameMain.Server.TryStartGame();
 
             yield return CoroutineStatus.Success;
         }

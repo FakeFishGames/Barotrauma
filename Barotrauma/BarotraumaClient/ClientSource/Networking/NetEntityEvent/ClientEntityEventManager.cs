@@ -109,16 +109,15 @@ namespace Barotrauma.Networking
 
         private UInt16? firstNewID;
 
+        private readonly List<IServerSerializable> tempEntityList = new List<IServerSerializable>();
         /// <summary>
         /// Read the events from the message, ignoring ones we've already received. Returns false if reading the events fails.
         /// </summary>
-        public bool Read(ServerNetSegment type, IReadMessage msg, float sendingTime, List<IServerSerializable> entities)
+        public bool Read(ServerNetSegment type, IReadMessage msg, float sendingTime)
         {
-            UInt16 unreceivedEntityEventCount = 0;
-
             if (type == ServerNetSegment.EntityEventInitial)
             {
-                unreceivedEntityEventCount = msg.ReadUInt16();
+                UInt16 unreceivedEntityEventCount = msg.ReadUInt16();
                 firstNewID = msg.ReadUInt16();
 
                 if (GameSettings.CurrentConfig.VerboseLogging)
@@ -143,7 +142,7 @@ namespace Barotrauma.Networking
                 }
             }
 
-            entities.Clear();
+            tempEntityList.Clear();
 
             msg.ReadPadBits();
             UInt16 firstEventID = msg.ReadUInt16();
@@ -156,9 +155,9 @@ namespace Barotrauma.Networking
                 {
                     string errorMsg = $"Error while reading a message from the server. Entity event data exceeds the size of the buffer (current position: {msg.BitPosition}, length: {msg.LengthBits}).";
                     errorMsg += "\nPrevious entities:";
-                    for (int j = entities.Count - 1; j >= 0; j--)
+                    for (int j = tempEntityList.Count - 1; j >= 0; j--)
                     {
-                        errorMsg += "\n" + (entities[j] == null ? "NULL" : entities[j].ToString());
+                        errorMsg += "\n" + (tempEntityList[j] == null ? "NULL" : tempEntityList[j].ToString());
                     }
                     DebugConsole.ThrowError(errorMsg);
                     return false;
@@ -174,7 +173,7 @@ namespace Barotrauma.Networking
                         DebugConsole.NewMessage("received msg " + thisEventID + " (null entity)",
                             Microsoft.Xna.Framework.Color.Orange);
                     }
-                    entities.Add(null);
+                    tempEntityList.Add(null);
                     if (thisEventID == (UInt16)(lastReceivedID + 1)) { lastReceivedID++; }
                     continue;
                 }
@@ -182,7 +181,7 @@ namespace Barotrauma.Networking
                 int msgLength = (int)msg.ReadVariableUInt32();
                 
                 IServerSerializable entity = Entity.FindEntityByID(entityID) as IServerSerializable;
-                entities.Add(entity);
+                tempEntityList.Add(entity);
                 
                 //skip the event if we've already received it or if the entity isn't found
                 if (thisEventID != (UInt16)(lastReceivedID + 1) || entity == null)
@@ -223,7 +222,7 @@ namespace Barotrauma.Networking
 
                     if (msg.BitPosition != msgPosition + msgLength * 8)
                     {
-                        var prevEntity = entities.Count >= 2 ? entities[entities.Count - 2] : null;
+                        var prevEntity = tempEntityList.Count >= 2 ? tempEntityList[tempEntityList.Count - 2] : null;
                         ushort prevId = prevEntity is Entity p ? p.ID : (ushort)0;
                         string errorMsg = $"Message byte position incorrect after reading an event for the entity \"{entity}\" (ID {(entity is Entity e ? e.ID : 0)}). "
                             +$"The previous entity was \"{prevEntity}\" (ID {prevId}) "

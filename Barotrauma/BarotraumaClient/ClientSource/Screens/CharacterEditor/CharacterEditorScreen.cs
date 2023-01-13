@@ -125,7 +125,7 @@ namespace Barotrauma.CharacterEditor
             {
                 ResetVariables();
                 var subInfo = new SubmarineInfo("Content/AnimEditor.sub");
-                Submarine.MainSub = new Submarine(subInfo);
+                Submarine.MainSub = new Submarine(subInfo, showErrorMessages: false);
                 if (Submarine.MainSub.PhysicsBody != null)
                 {
                     Submarine.MainSub.PhysicsBody.Enabled = false;
@@ -162,11 +162,6 @@ namespace Barotrauma.CharacterEditor
             OpenDoors();
             GameMain.Instance.ResolutionChanged += OnResolutionChanged;
             Instance = this;
-
-            if (!GameSettings.CurrentConfig.EditorDisclaimerShown)
-            {
-                GameMain.Instance.ShowEditorDisclaimer();
-            }
         }
 
         private void ResetVariables()
@@ -2688,10 +2683,6 @@ namespace Barotrauma.CharacterEditor
 
             // Character selection
             var characterLabel = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), content.RectTransform), GetCharacterEditorTranslation("CharacterPanel"), font: GUIStyle.LargeFont);
-            var disclaimerBtn = new GUIButton(new RectTransform(new Vector2(0.2f, 0.7f), characterLabel.RectTransform, Anchor.CenterRight), style: "GUINotificationButton")
-            {
-                OnClicked = (btn, userdata) => { GameMain.Instance.ShowEditorDisclaimer(); return true; }
-            };
 
             var characterDropDown = new GUIDropDown(new RectTransform(new Vector2(1, 0.2f), content.RectTransform)
             {

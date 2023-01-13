@@ -99,6 +99,19 @@ namespace Barotrauma.Networking
         EntityEventInitial
     }
 
+    [NetworkSerialize]
+    readonly record struct EntityPositionHeader(
+        bool IsItem,
+        UInt32 PrefabUintIdentifier,
+        UInt16 EntityId) : INetSerializableStruct
+    {
+        public static EntityPositionHeader FromEntity(Entity entity)
+            => new (
+                IsItem: entity is Item,
+                PrefabUintIdentifier: entity is MapEntity me ? me.Prefab.UintIdentifier : 0,
+                EntityId: entity.ID);
+    }
+
     enum TraitorMessageType
     {
         Server,

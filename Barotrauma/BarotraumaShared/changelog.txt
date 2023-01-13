@@ -1,4 +1,105 @@
 ---------------------------------------------------------------------------------------------------------
+v0.21.1.0 (unstable)
+---------------------------------------------------------------------------------------------------------
+
+Changes:
+- Added translations for the submarine and character editors.
+- Some submarine upgrades cost materials in addition to money.
+- Miscellaneous fixes to all translations.
+- The "max missions" campaign setting is restricted to a maximum of 3.
+- Minor improvements to ragdoll animation when falling prone due to stun/unconsciousness/ragdolling.
+- Revisited the skill requirements and the OnFailure conditions on welding tool, plasma cutter, flamer, and steam gun. Flamer and steam gun now apply burns on the user only when they don't have enough skills to use the item. All these items are now less efficient when used with low skills.
+- Changed Alarm Buzzer sound to differentiate it from the diving suit warning beep.
+- Depth charge tweaks: require UEX, increase non-contained item explosion radius and damage, allow quality to affect explosion, increase pricing.
+- Reduceed Flak Cannon effectiveness (in particular Spreader Ammo and Explosive Ammo), against large enemies in particular.
+- Lights flicker when hit by EMP.
+- Large monsters no longer drop the loot when they die. This was implemented as a workaround to it being difficult to grab large monsters, but now they're much easier to grab - you can grab them anywhere near their main limb, instead of having to find the "origin" somewhere at the center of the monster.
+
+Talents:
+- Fixed "Down With the Ship" sometimes having an incorrect description.
+- Fixed "Bounty Hunter" and "Logistics Expert" not giving 15% experience bonus.
+- Pet raptor eggs can be fabricated from raptor eggs of any size.
+- Fixed Flamer being craftable by anyone, even though it should only be possible with the "Pyromaniac" talent.
+- Fixed ability to move in an unpowered exosuit when you've got any speed buff.
+- Fixed "True Potential" and "Chonky Honks" not requiring clown power to work.
+- Reduced the chance of finding genetic materials with the "Gene Harvester" talent, fixed genetic materials sometimes being found on defense bots.
+- Fixed "Spec Ops" not working properly with shotguns and other weapons that fire multiple projectiles per shot. Only the first projectile that hit did double damage.
+- Fixed some parts of Hemulen and Venture not flooding properly.
+- "Mass production" talent only applies to items in the "material" category. Fixes e.g. recycle recipes sometimes allowing you to keep the original item. 
+- Fixed "Lone Wolf" not giving any damage/stun resistance.
+- Fixed "Scrap Savant" having a 80% chance of finding scrap instead of 20%.
+- Fixed "Steady Tune" not doing what the description says (giving a constantly diminishing 7.5% resistance instead of 60%), made the talent give 100% immunity instead.
+- Fixed "Multifunctional" talent not giving a boost to crowbar damage.
+- Fixed inaccurate "Unstoppable Curiosity" and "Ph.D in Nuclear Physics" descriptions.
+
+Multiplayer:
+- Better support for playing the MP campaign without a host or someone with campaign management permissions on the server: 
+	- You can vote to end the round in the campaign too.
+	- Automatic restart works in the campaign mode too.
+	- Anyone can manage salaries if there's no-one allowed to do it.
+	- If there's no host or anyone with permissions in the server, anyone is able to setup a new campaign.
+	- Campaign can be voted for when game mode voting is enabled.
+- Made ragdoll syncing more robust: reduces cases of teleportation/desync when manually ragdolling the character in multiplayer. 
+- Fixed rejoining clients not regaining control of their character even if the character is still alive, if the client's IP address has changed. A respawn would also not trigger. 
+- Fixed "failed to write a network message, too much data is being stored in SegmentTable" errors that could occur in various situations: for example when the host has a large ban list, lots of submarines, and when rewiring a device with lots of connections.
+- Fixed "Create new character" button not appearing in the tab menu when dead or spectating.
+- Fixed clients not entering the server lobby if they accept a server invite during a single player round or tutorial.
+- Fixed inability to join IPv4 servers when IPv6 is disabled.
+- Fixed hidden submarine list sometimes desyncing if you have specific custom submarines.
+
+Bugfixes:
+- Fixed high-quality items spawning earlier in the campaign when playing with a higher campaign difficulty setting. 
+- Fixed attacking with a melee weapon making you unable to turn (flip) for a while.
+- Fixed ragdolling affecting the character's velocity, allowing it to be used as a way to avoid fall damage.
+- Hull fixes to vanilla subs and wrecks.
+- Fixed alien flares practically never spawning in ruins.
+- Fixed status effects defined inside an attack definition still using the old OnUse/OnFailure logic instead of OnSuccess/OnFailure.
+- Fixed "save as item assembly" and "snap to grid" buttons taking cursor focus in the sub editor even when they're not visible.
+- Fixed inability to launch custom dedicated server executables from the main menu on mac and linux.
+- Fixed inability to drag and drop items from the entity list to small containers (such as battery charging docks) in the sub editor.
+- Fixed item condition not decreasing client-side if the condition decreases very slowly: for example when using a thorium rod with the "Cruisin'" talent.
+- Fixed flares still emitting light after running out.
+- Fixed Electrical Discharge Coil preview not working in the sub editor.
+- Fixed alien flares not activating when clicking LMB.
+- Fixed crawler's arms getting broken when the character flips in water.
+- Fixed the recycle recipe of flak explosive ammo.
+- Fixed misaligned shells in wrecked railgun shell rack.
+- Fixed misaligned light component light sprite.
+- Fixed crashing if the select audio device is disconnected while in the initial loading screen.
+- Fixed inability to sell genetic materials that aren't 100% refined.
+- Fixed liquid oxygenite exploding too easily.
+
+Modding:
+- Addressed various inconsistencies, issues and limitations in how status effects are used in certain cases:
+	- Status effects defined for attacks with the type "UseTarget" now correctly target the use target, instead of the attacker like they used to.
+	- Changed the status effects of type "Character" to "UseTarget" for MeleeWeapon and Projectile components. The motivation behind this change is that previously we couldn't target the attacker at all within these item components, which might be desirable for some melee weapons.
+	- MODDERS, PLEASE NOTE: Effects that target "Character" in the previously mentioned components now affect the user - if that's not the intention, the target should be changed to "UseTarget".
+	- The use target can now be a character, an item, or a structure, depending on the context. This allows effects that weren't previously possible, but due to it we'll now need to introduce some restrictions in the definitions in some cases. For example, we might want to use a conditional to check whether the target is of the right type, before triggering the status effect (<Conditional entitytype="eq Character"/>).
+	- Added a new attribute for the MeleeWeapon component, "HitOnlyCharacters", which can be used for ignoring the hits to walls and items entirely.
+	- Due to the changes, some status effects that previously worked, might now need the "AllowWhenBroken" set to true in the definition to keep them working as they used to. So e.g. the "OnImpact" doesn't work anymore on your custom explosive, try that.
+- Fixed crashing when trying to place a wreck with no hulls in a level.
+- Fixed mod descriptions getting truncated to 255 characters when selecting an already-published item in the Mods menu.
+- Fixed HMG's requiring hmgmagazine instead of any item with the type "hmgammo", making the use of modded ammo impossible without overriding the gun too.
+
+---------------------------------------------------------------------------------------------------------
+v0.20.16.1
+---------------------------------------------------------------------------------------------------------
+
+- Fixed console errors when firing a Flak Cannon using spreader ammo in multiplayer.
+
+---------------------------------------------------------------------------------------------------------
+v0.20.16.0
+---------------------------------------------------------------------------------------------------------
+
+- Fixed non-hitscan projectiles going through doors.
+- Fixed electrical discharge coils hitting characters very unreliably, unless the character happens to be right next to a wall.
+- Fixed makeshift shelves being containable in crates and cabinets, allowing for infinite recursive storage space.
+- Fixed the effects of the "Grid Maintainer" and "Egghead" talents.
+- Fixed incorrect "I Am That Guy" description (it gives a flat 20 skill bonus, not 20%).
+- Fixed "Cruisin'" talent increasing fuel consumption by 10% instead of decreasing it by 20%. 
+- Optimized Steam Workshop queries done by the game (less bandwidth usage and stress on Steam's servers).
+
+---------------------------------------------------------------------------------------------------------
 v0.20.15.0
 ---------------------------------------------------------------------------------------------------------
 

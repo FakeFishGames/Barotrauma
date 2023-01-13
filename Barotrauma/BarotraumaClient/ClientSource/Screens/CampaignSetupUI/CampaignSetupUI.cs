@@ -303,7 +303,7 @@ namespace Barotrauma
 
                 bool ChangeValue(GUIButton btn, object userData)
                 {
-                    if (!(userData is int change)) { return false; }
+                    if (userData is not int change) { return false; }
 
                     int hiddenOptions = 0;
 

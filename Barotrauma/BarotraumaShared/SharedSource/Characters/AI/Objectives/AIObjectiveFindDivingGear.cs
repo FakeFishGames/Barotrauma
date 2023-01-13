@@ -1,5 +1,5 @@
-﻿using Barotrauma.Items.Components;
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -18,6 +18,7 @@ namespace Barotrauma
         private AIObjectiveGetItem getDivingGear;
         private AIObjectiveContainItem getOxygen;
         private Item targetItem;
+        private int? oxygenSourceSlotIndex;
 
         public const float MIN_OXYGEN = 10;
 
@@ -43,12 +44,15 @@ namespace Barotrauma
                 Abandon = true;
                 return;
             }
-            targetItem = character.Inventory.FindItemByTag(gearTag, true);
+
+            TrySetTargetItem(character.Inventory.FindItemByTag(gearTag, true));
             if (targetItem == null && gearTag == LIGHT_DIVING_GEAR)
             {
-                targetItem = character.Inventory.FindItemByTag(HEAVY_DIVING_GEAR, true);
+                TrySetTargetItem(character.Inventory.FindItemByTag(HEAVY_DIVING_GEAR, true));
             }
-            if (targetItem == null || !character.HasEquippedItem(targetItem, slotType: InvSlotType.OuterClothes | InvSlotType.Head | InvSlotType.InnerClothes) && targetItem.ContainedItems.Any(i => i.HasTag(OXYGEN_SOURCE) && i.Condition > 0))
+            if (targetItem == null || 
+                !character.HasEquippedItem(targetItem, slotType: InvSlotType.OuterClothes | InvSlotType.Head | InvSlotType.InnerClothes) && 
+                targetItem.ContainedItems.Any(it => IsSuitableContainedOxygenSource(it)))
             {
                 TryAddSubObjective(ref getDivingGear, () =>
                 {
@@ -84,7 +88,7 @@ namespace Barotrauma
             else
             {
                 float min = GetMinOxygen(character);
-                if (targetItem.OwnInventory != null && targetItem.OwnInventory.AllItems.None(it => it != null && it.HasTag(OXYGEN_SOURCE) && it.Condition > min))
+                if (targetItem.OwnInventory != null && targetItem.OwnInventory.AllItems.None(it => IsSuitableContainedOxygenSource(it)))
                 {
                     TryAddSubObjective(ref getOxygen, () =>
                     {
@@ -93,7 +97,7 @@ namespace Barotrauma
                             if (HumanAIController.HasItem(character, OXYGEN_SOURCE, out _, conditionPercentage: min))
                             {
                                 character.Speak(TextManager.Get("dialogswappingoxygentank").Value, null, 0, "swappingoxygentank".ToIdentifier(), 30.0f);
-                                if (character.Inventory.FindAllItems(i => i.HasTag(OXYGEN_SOURCE) && i.Condition > min).Count == 1)
+                                if (character.Inventory.FindAllItems(i => i.HasTag(OXYGEN_SOURCE) && i.Condition > min, recursive: true).Count == 1)
                                 {
                                     character.Speak(TextManager.Get("dialoglastoxygentank").Value, null, 0.0f, "dialoglastoxygentank".ToIdentifier(), 30.0f);
                                 }
@@ -109,7 +113,8 @@ namespace Barotrauma
                             AllowToFindDivingGear = false,
                             AllowDangerousPressure = true,
                             ConditionLevel = MIN_OXYGEN,
-                            RemoveExistingWhenNecessary = true
+                            RemoveExistingWhenNecessary = true,
+                            TargetSlot = oxygenSourceSlotIndex
                         };
                         if (container.HasSubContainers)
                         {
@@ -167,12 +172,36 @@ namespace Barotrauma
             }
         }
 
+        private bool IsSuitableContainedOxygenSource(Item item)
+        {
+            return 
+                item != null &&
+                item.HasTag(OXYGEN_SOURCE) && 
+                item.Condition > 0 && 
+                (oxygenSourceSlotIndex == null || item.ParentInventory.IsInSlot(item, oxygenSourceSlotIndex.Value));
+        }
+
+        private void TrySetTargetItem(Item item)
+        {
+            if (targetItem == item) { return; }
+            targetItem = item;
+            if (targetItem != null)
+            {
+                oxygenSourceSlotIndex = targetItem.GetComponent<ItemContainer>()?.FindSuitableSubContainerIndex(OXYGEN_SOURCE);
+            }
+            else
+            {
+                oxygenSourceSlotIndex = null;
+            }
+        }
+
         public override void Reset()
         {
             base.Reset();
             getDivingGear = null;
             getOxygen = null;
             targetItem = null;
+            oxygenSourceSlotIndex = null;
         }
 
         public static float GetMinOxygen(Character character)

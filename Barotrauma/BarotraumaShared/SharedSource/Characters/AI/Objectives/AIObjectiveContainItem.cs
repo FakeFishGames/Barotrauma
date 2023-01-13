@@ -98,7 +98,7 @@ namespace Barotrauma
             int containedItemCount = 0;
             foreach (Item it in container.Inventory.AllItems)
             {
-                if (CheckItem(it))
+                if (CheckItem(it) && IsInTargetSlot(it))
                 {
                     containedItemCount++;
                 }

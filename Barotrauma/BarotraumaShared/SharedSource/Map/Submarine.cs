@@ -1310,7 +1310,7 @@ namespace Barotrauma
             return new Rectangle((int)bounds.X, (int)bounds.Y, (int)(bounds.Z - bounds.X), (int)(bounds.Y - bounds.W));
         }
 
-        public Submarine(SubmarineInfo info, bool showWarningMessages = true, Func<Submarine, List<MapEntity>> loadEntities = null, IdRemap linkedRemap = null) : base(null, Entity.NullEntityID)
+        public Submarine(SubmarineInfo info, bool showErrorMessages = true, Func<Submarine, List<MapEntity>> loadEntities = null, IdRemap linkedRemap = null) : base(null, Entity.NullEntityID)
         {
             upgradeEventIdentifier = new Identifier($"Submarine{ID}");
             Loading = true;
@@ -1381,65 +1381,65 @@ namespace Barotrauma
                     center.Y -= center.Y % GridSize.Y;
 
                     RepositionEntities(-center, MapEntity.mapEntityList.Where(me => me.Submarine == this));
+                }
 
-                    subBody = new SubmarineBody(this, showWarningMessages);
-                    Vector2 pos = ConvertUnits.ToSimUnits(HiddenSubPosition);
-                    subBody.Body.FarseerBody.SetTransformIgnoreContacts(ref pos, 0.0f);
+                subBody = new SubmarineBody(this, showErrorMessages);
+                Vector2 pos = ConvertUnits.ToSimUnits(HiddenSubPosition);
+                subBody.Body.FarseerBody.SetTransformIgnoreContacts(ref pos, 0.0f);
 
-                    if (info.IsOutpost)
+                if (info.IsOutpost)
+                {
+                    ShowSonarMarker = false;
+                    PhysicsBody.FarseerBody.BodyType = BodyType.Static;
+                    TeamID = CharacterTeamType.FriendlyNPC;
+
+                    bool indestructible =
+                        GameMain.NetworkMember != null &&
+                        !GameMain.NetworkMember.ServerSettings.DestructibleOutposts &&
+                        !(info.OutpostGenerationParams?.AlwaysDestructible ?? false);
+
+                    foreach (MapEntity me in MapEntity.mapEntityList)
                     {
-                        ShowSonarMarker = false;
-                        PhysicsBody.FarseerBody.BodyType = BodyType.Static;
-                        TeamID = CharacterTeamType.FriendlyNPC;
-
-                        bool indestructible =
-                            GameMain.NetworkMember != null &&
-                            !GameMain.NetworkMember.ServerSettings.DestructibleOutposts &&
-                            !(info.OutpostGenerationParams?.AlwaysDestructible ?? false);
-
-                        foreach (MapEntity me in MapEntity.mapEntityList)
+                        if (me.Submarine != this) { continue; }
+                        if (me is Item item)
                         {
-                            if (me.Submarine != this) { continue; }
-                            if (me is Item item)
+                            item.SpawnedInCurrentOutpost = info.OutpostGenerationParams != null;
+                            item.AllowStealing = info.OutpostGenerationParams?.AllowStealing ?? true;
+                            if (item.GetComponent<Repairable>() != null && indestructible)
                             {
-                                item.SpawnedInCurrentOutpost = info.OutpostGenerationParams != null;
-                                item.AllowStealing = info.OutpostGenerationParams?.AllowStealing ?? true;
-                                if (item.GetComponent<Repairable>() != null && indestructible)
+                                item.Indestructible = true;
+                            }
+                            foreach (ItemComponent ic in item.Components)
+                            {
+                                if (ic is ConnectionPanel connectionPanel)
                                 {
-                                    item.Indestructible = true;
-                                }
-                                foreach (ItemComponent ic in item.Components)
-                                {
-                                    if (ic is ConnectionPanel connectionPanel)
+                                    //prevent rewiring
+                                    if (info.OutpostGenerationParams != null && !info.OutpostGenerationParams.AlwaysRewireable)
                                     {
-                                        //prevent rewiring
-                                        if (info.OutpostGenerationParams != null && !info.OutpostGenerationParams.AlwaysRewireable)
-                                        {
-                                            connectionPanel.Locked = true;
-                                        }
+                                        connectionPanel.Locked = true;
                                     }
-                                    else if (ic is Holdable holdable && holdable.Attached && item.GetComponent<LevelResource>() == null)
-                                    {
-                                        //prevent deattaching items from walls
+                                }
+                                else if (ic is Holdable holdable && holdable.Attached && item.GetComponent<LevelResource>() == null)
+                                {
+                                    //prevent deattaching items from walls
 #if CLIENT
                                         if (GameMain.GameSession?.GameMode is TutorialMode) { continue; }
 #endif
-                                        holdable.CanBePicked = false;
-                                        holdable.CanBeSelected = false;
-                                    }
+                                    holdable.CanBePicked = false;
+                                    holdable.CanBeSelected = false;
                                 }
                             }
-                            else if (me is Structure structure && structure.Prefab.IndestructibleInOutposts && indestructible)
-                            {
-                                structure.Indestructible = true;
-                            }
+                        }
+                        else if (me is Structure structure && structure.Prefab.IndestructibleInOutposts && indestructible)
+                        {
+                            structure.Indestructible = true;
                         }
                     }
-                    else if (info.IsRuin)
-                    {
-                        ShowSonarMarker = false;
-                        PhysicsBody.FarseerBody.BodyType = BodyType.Static;
-                    }
+                }
+                else if (info.IsRuin)
+                {
+                    ShowSonarMarker = false;
+                    PhysicsBody.FarseerBody.BodyType = BodyType.Static;
                 }
 
                 if (entityGrid != null)
@@ -1481,7 +1481,7 @@ namespace Barotrauma
 #endif
                 //if the sub was made using an older version, 
                 //halve the brightness of the lights to make them look (almost) right on the new lighting formula
-                if (showWarningMessages &&
+                if (showErrorMessages &&
                     !string.IsNullOrEmpty(Info.FilePath) &&
                     Screen.Selected != GameMain.SubEditorScreen &&
                     (Info.GameVersion == null || Info.GameVersion < new Version("0.8.9.0")))

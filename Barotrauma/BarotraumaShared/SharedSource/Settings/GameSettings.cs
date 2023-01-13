@@ -64,7 +64,6 @@ namespace Barotrauma
                     EnableMouseLook = true,
                     ChatOpen = true,
                     CrewMenuOpen = true,
-                    EditorDisclaimerShown = false,
                     ShowOffensiveServerPrompt = true,
                     TutorialSkipWarning = true,
                     CorpseDespawnDelay = 600,
@@ -132,7 +131,6 @@ namespace Barotrauma
             public EnemyHealthBarMode ShowEnemyHealthBars;
             public bool ChatOpen;
             public bool CrewMenuOpen;
-            public bool EditorDisclaimerShown;
             public bool ShowOffensiveServerPrompt;
             public bool TutorialSkipWarning;
             public int CorpseDespawnDelay;

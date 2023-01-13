@@ -75,13 +75,14 @@ namespace Barotrauma.Abilities
                         if (wt == WeaponType.Any || !weapontype.HasFlag(wt)) { continue; }
                         switch (wt)
                         {
-                            // it is possible that an item that has both a melee and a projectile component will return true
-                            // even when not used as a melee/ranged weapon respectively
-                            // attackdata should contain data regarding whether the attack is melee or not
                             case WeaponType.Melee:
+                                //if the item has an active projectile component (has been fired), don't consider it a melee weapon
+                                if (item?.GetComponent<Projectile>() is { IsActive: true }) { continue; }
                                 if (item?.GetComponent<MeleeWeapon>() != null) { return true; }
                                 break;
                             case WeaponType.Ranged:
+                                //if the item has a melee weapon component that's being used now, don't consider it a projectile
+                                if (item?.GetComponent<MeleeWeapon>() is { Hitting: true }) { continue; }
                                 if (item?.GetComponent<Projectile>() != null) { return true; }
                                 break;
                             case WeaponType.HandheldRanged:

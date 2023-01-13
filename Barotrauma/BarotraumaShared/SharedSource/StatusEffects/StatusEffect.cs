@@ -1760,12 +1760,17 @@ namespace Barotrauma
 
                 void SpawnItem(ItemSpawnInfo chosenItemSpawnInfo)
                 {
+                    Item parentItem = entity as Item;
+                    if (user == null && parentItem != null)
+                    {
+                        // Set the user for projectiles spawned from status effects (e.g. flak shrapnels)
+                        SetUser(parentItem.GetComponent<Projectile>()?.User);
+                    }
                     switch (chosenItemSpawnInfo.SpawnPosition)
                     {
                         case ItemSpawnInfo.SpawnPositionType.This:
                             Entity.Spawner.AddItemToSpawnQueue(chosenItemSpawnInfo.ItemPrefab, position + Rand.Vector(chosenItemSpawnInfo.Spread, Rand.RandSync.Unsynced), onSpawned: newItem =>
                             {
-                                Item parentItem = entity as Item;
                                 Projectile projectile = newItem.GetComponent<Projectile>();
                                 if (entity != null)
                                 {

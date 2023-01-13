@@ -1514,9 +1514,18 @@ namespace Barotrauma
             startPos.X += MathHelper.Clamp(Character.AnimController.TargetMovement.X, -1.0f, 1.0f);
 
             //do a raycast upwards to find any walls
-            float minCeilingDist = Character.AnimController.Collider.height / 2 + Character.AnimController.Collider.radius + 0.1f;
+            if (!Character.AnimController.TryGetCollider(0, out PhysicsBody mainCollider))
+            {
+                mainCollider = Character.AnimController.Collider;
+            }
+            float margin = 0.1f;
+            if (shouldCrouch)
+            {
+                margin *= 2;
+            }
+            float minCeilingDist = mainCollider.height / 2 + mainCollider.radius + margin;
 
-            shouldCrouch = Submarine.PickBody(startPos, startPos + Vector2.UnitY * minCeilingDist, null, Physics.CollisionWall, customPredicate: (fixture) => { return !(fixture.Body.UserData is Submarine); }) != null;
+            shouldCrouch = Submarine.PickBody(startPos, startPos + Vector2.UnitY * minCeilingDist, null, Physics.CollisionWall, customPredicate: (fixture) => { return fixture.Body.UserData is not Submarine; }) != null;
         }
 
         public bool AllowCampaignInteraction()
@@ -1589,7 +1598,27 @@ namespace Barotrauma
                 (!requireEquipped || character.HasEquippedItem(i)) &&
                 (predicate == null || predicate(i)), recursive, matchingItems);
             items = matchingItems;
-            return matchingItems.Any(i => i != null && (containedTag.IsEmpty || i.OwnInventory == null || i.ContainedItems.Any(it => it.HasTag(containedTag) && it.ConditionPercentage > conditionPercentage)));
+            foreach (var item in matchingItems)
+            {
+                if (item == null) { continue; }
+
+                if (containedTag.IsEmpty || item.OwnInventory == null)
+                {
+                    //no contained items required, this item's ok
+                    return true;
+                }
+                var suitableSlot = item.GetComponent<ItemContainer>().FindSuitableSubContainerIndex(containedTag);
+                if (suitableSlot == null)
+                {
+                    //no restrictions on the suitable slot
+                    return item.ContainedItems.Any(it => it.HasTag(containedTag) && it.ConditionPercentage > conditionPercentage);
+                }
+                else
+                {
+                    return item.ContainedItems.Any(it => it.HasTag(containedTag) && it.ConditionPercentage > conditionPercentage && it.ParentInventory.IsInSlot(it, suitableSlot.Value));
+                }
+            }
+            return false;
         }
 
         public static void StructureDamaged(Structure structure, float damageAmount, Character character)
@@ -2016,11 +2045,9 @@ namespace Barotrauma
         public static bool IsFriendly(Character me, Character other, bool onlySameTeam = false)
         {
             bool sameTeam = me.TeamID == other.TeamID;
-            bool friendlyTeam = IsOnFriendlyTeam(me, other);
-            bool teamGood = sameTeam || friendlyTeam && !onlySameTeam;
+            bool teamGood = sameTeam || !onlySameTeam && IsOnFriendlyTeam(me, other);
             if (!teamGood) { return false; }
-            bool speciesGood = other.SpeciesName == me.SpeciesName || other.Params.CompareGroup(me.Params.Group);
-            if (!speciesGood) { return false; }
+            if (!me.IsSameSpeciesOrGroup(other)) { return false; }
             if (me.TeamID == CharacterTeamType.FriendlyNPC && other.TeamID == CharacterTeamType.Team1 && GameMain.GameSession?.GameMode is CampaignMode campaign)
             {
                 var reputation = campaign.Map?.CurrentLocation?.Reputation;
@@ -2029,29 +2056,13 @@ namespace Barotrauma
                     return false;
                 }
             }
+            if (!sameTeam && me.TeamID == CharacterTeamType.None && other.IsPet)
+            {
+                // Hostile NPCs are hostile to all pets, unless they are in the same team.
+                return false;
+            }
             return true;
         }
-
-        public static bool IsOnFriendlyTeam(CharacterTeamType myTeam, CharacterTeamType otherTeam)
-        {
-            if (myTeam == otherTeam) { return true; }
-
-            switch (myTeam)
-            {
-                case CharacterTeamType.None:
-                case CharacterTeamType.Team1:
-                case CharacterTeamType.Team2:
-                    // Only friendly to the same team and friendly NPCs
-                    return otherTeam == CharacterTeamType.FriendlyNPC;
-                case CharacterTeamType.FriendlyNPC:
-                    // Friendly NPCs are friendly to both teams
-                    return otherTeam == CharacterTeamType.Team1 || otherTeam == CharacterTeamType.Team2;
-                default:
-                    return true;
-            }
-        }
-
-        public static bool IsOnFriendlyTeam(Character me, Character other) => IsOnFriendlyTeam(me.TeamID, other.TeamID);
 
         public static bool IsActive(Character other) => other != null && !other.Removed && !other.IsDead && !other.IsUnconscious;
 

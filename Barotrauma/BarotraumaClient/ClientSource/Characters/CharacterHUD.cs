@@ -608,7 +608,8 @@ namespace Barotrauma
                 }
             }
 
-            Vector2 startPos = character.DrawPosition + (character.FocusedCharacter.DrawPosition - character.DrawPosition) * 0.7f;
+            float dist = Vector2.Distance(character.FocusedCharacter.DrawPosition, character.DrawPosition);
+            Vector2 startPos = character.DrawPosition + (character.FocusedCharacter.DrawPosition - character.DrawPosition) / dist * Math.Min(dist, Character.MaxDragDistance);
             startPos = cam.WorldToScreen(startPos);
 
             string focusName = character.FocusedCharacter.Info == null ? character.FocusedCharacter.DisplayName : character.FocusedCharacter.Info.DisplayName;

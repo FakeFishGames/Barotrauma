@@ -159,9 +159,11 @@ namespace Barotrauma.Items.Components
 
         public override void Update(float deltaTime, Camera cam)
         {
+            var user = item.GetComponent<Projectile>()?.User;
             if (source == null || target == null || target.Removed ||
                 (source is Entity sourceEntity && sourceEntity.Removed) ||
-                (source is Limb limb && limb.Removed))
+                (source is Limb limb && limb.Removed) ||
+                (user != null && user.Removed))
             {
                 ResetSource();
                 target = null;
@@ -293,7 +295,6 @@ namespace Barotrauma.Items.Components
                 {
                     targetMass = float.MaxValue;
                 }
-                var user = item.GetComponent<Projectile>()?.User;
                 if (targetMass > TargetMinMass)
                 {
                     if (Math.Abs(SourcePullForce) > 0.001f)
@@ -302,7 +303,7 @@ namespace Barotrauma.Items.Components
                         if (sourceBody != null)
                         {
                             var targetBody = GetBodyToPull(target);
-                            if (targetBody != null && !(targetBody.UserData is Character))
+                            if (targetBody != null && targetBody.UserData is not Character)
                             {
                                 sourceBody.ApplyForce(targetBody.LinearVelocity * sourceBody.Mass);
                             }

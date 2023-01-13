@@ -602,6 +602,18 @@ namespace Barotrauma
                         break;
                 }
             }
+            for (int i = 0; i < effects.Count; i++)
+            {
+                for (int j = i + 1; j < effects.Count; j++)
+                {
+                    var a = effects[i];
+                    var b = effects[j];
+                    if (a.MinStrength < b.MaxStrength && b.MinStrength < a.MaxStrength)
+                    {
+                        DebugConsole.AddWarning($"Affliction \"{Identifier}\" contains effects with overlapping strength ranges. Only one effect can be active at a time, meaning one of the effects won't work.");
+                    }
+                }
+            }
         }
 
         public void ClearEffects()

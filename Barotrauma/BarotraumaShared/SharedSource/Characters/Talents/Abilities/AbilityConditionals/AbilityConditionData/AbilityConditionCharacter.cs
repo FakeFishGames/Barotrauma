@@ -28,7 +28,6 @@ namespace Barotrauma.Abilities
                             conditionals.Add(new PropertyConditional(attribute));
                         }
                     }
-                    break;
                 }
             }
 
