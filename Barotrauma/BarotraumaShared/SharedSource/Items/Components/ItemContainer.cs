@@ -372,10 +372,8 @@ namespace Barotrauma.Items.Components
                 GameAnalyticsManager.AddDesignEvent("MicroInteraction:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "null") + ":GardeningPlanted:" + containedItem.Prefab.Identifier);
             }
 
-            //no need to Update() if this item has no statuseffects and no physics body
-            IsActive = activeContainedItems.Count > 0 || Inventory.AllItems.Any(it => it.body != null);
-
-            if (IsActive && item.GetRootInventoryOwner() is Character owner && 
+            IsActive = true;
+            if (item.GetRootInventoryOwner() is Character owner && 
                 owner.HasEquippedItem(item, predicate: slot => slot.HasFlag(InvSlotType.LeftHand) || slot.HasFlag(InvSlotType.RightHand)))
             {
                 // Set the contained items active if there's an item inserted inside the container. Enables e.g. the rifle flashlight when it's attached to the rifle (put inside of it).
@@ -394,7 +392,13 @@ namespace Barotrauma.Items.Components
         {
             activeContainedItems.RemoveAll(i => i.Item == containedItem);
             //deactivate if the inventory is empty
-            IsActive = activeContainedItems.Count > 0 || Inventory.AllItems.Any(it => it.body != null);
+            IsActive = Inventory.AllItems.Any();
+            if (!IsActive)
+            {
+                item.SendSignal("0", "contained_conditions");
+                item.SendSignal("0", "contained_condition_percentages");
+                item.SendSignal("0", "contained_items");
+            }
             CharacterHUD.RecreateHudTextsIfFocused(item, containedItem);
             OnContainedItemsChanged.Invoke(this);
         }
@@ -456,6 +460,22 @@ namespace Barotrauma.Items.Components
                 alwaysContainedItemsSpawned = true;
             }
 
+            float totalConditionValue = 0;
+            float totalConditionPercentage = 0;
+            int totalItems = 0;
+            foreach (var item in Inventory.AllItems)
+            {
+                if (item.Condition != 0)
+                {
+                    totalConditionValue += item.Condition;
+                    totalConditionPercentage += item.ConditionPercentage;
+                    totalItems++;
+                }
+            }
+            item.SendSignal(totalConditionValue.ToString(), "contained_conditions");
+            item.SendSignal(totalConditionPercentage.ToString(), "contained_condition_percentages");
+            item.SendSignal(totalItems.ToString(), "contained_items");
+
             if (item.ParentInventory is CharacterInventory ownerInventory)
             {
                 if (Vector2.DistanceSquared(prevContainedItemPositions, item.Position) > 10.0f)
@@ -495,8 +515,11 @@ namespace Barotrauma.Items.Components
             {
                 SetContainedItemPositions();
             }
-            else if (activeContainedItems.Count == 0)
+            else if (Inventory.AllItems.Count() == 0)
             {
+                item.SendSignal("0", "contained_conditions");
+                item.SendSignal("0", "contained_conditions_percentage");
+                item.SendSignal("0", "contained_items");
                 IsActive = false;
                 return;
             }
