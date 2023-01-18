@@ -515,7 +515,7 @@ namespace Barotrauma.Items.Components
             {
                 SetContainedItemPositions();
             }
-            else if (Inventory.AllItems.Count() == 0)
+            else if (!Inventory.AllItems.Any())
             {
                 item.SendSignal("0", "contained_conditions");
                 item.SendSignal("0", "contained_conditions_percentage");
