@@ -1,7 +1,15 @@
+using Barotrauma.Extensions;
+
 namespace Barotrauma
 {
     class CheckOrderAction : BinaryOptionAction
     {
+        public enum OrderPriority
+        {
+            Top,
+            Any
+        }
+
         [Serialize("", IsPropertySaveable.Yes)]
         public Identifier TargetTag { get; set; }
 
@@ -14,35 +22,58 @@ namespace Barotrauma
         [Serialize("", IsPropertySaveable.Yes)]
         public Identifier OrderTargetTag { get; set; }
 
+        [Serialize(OrderPriority.Any, IsPropertySaveable.Yes)]
+        public OrderPriority Priority { get; set; }
+
         public CheckOrderAction(ScriptedEvent parentEvent, ContentXElement element) : base(parentEvent, element) { }
 
         protected override bool? DetermineSuccess()
         {
-            Character targetCharacter = null;
-            if (!TargetTag.IsEmpty)
+            var targetCharacters = ParentEvent.GetTargets(TargetTag);
+            if (targetCharacters.None())
             {
-                foreach (var t in ParentEvent.GetTargets(TargetTag))
-                {
-                    if (t is Character c)
-                    {
-                        targetCharacter = c;
-                        break;
-                    }
-                }
-            }
-            if (targetCharacter == null)
-            {
-                DebugConsole.LogError($"CheckConditionalAction error: {GetEventName()} uses a CheckOrderAction but no valid target character was found for tag \"{TargetTag}\"! This will cause the check to automatically fail.");
+                DebugConsole.LogError($"CheckConditionalAction error: {GetEventName()} uses a CheckOrderAction but no valid target characters were found for tag \"{TargetTag}\"! This will cause the check to automatically fail.");
                 return false;
             }
-            var currentOrderInfo = targetCharacter.GetCurrentOrderWithTopPriority();
-            if (currentOrderInfo?.Identifier == OrderIdentifier)
+            foreach (var t in targetCharacters)
             {
-                if (!OrderTargetTag.IsEmpty)
+                if (t is not Character c)
                 {
-                    if (currentOrderInfo.TargetEntity is not Item targetItem || !targetItem.HasTag(OrderTargetTag)) { return false; }
+                    continue;
                 }
-                return OrderOption.IsEmpty || currentOrderInfo?.Option == OrderOption;                
+                if (Priority == OrderPriority.Top)
+                {
+                    if (c.GetCurrentOrderWithTopPriority() is Order topPrioOrder && IsMatch(topPrioOrder))
+                    {
+                        return true;
+                    }
+                }
+                else if (Priority == OrderPriority.Any)
+                {
+                    foreach (var order in c.CurrentOrders)
+                    {
+                        if (IsMatch(order))
+                        {
+                            return true;
+                        }
+                    }
+                }
+                
+                bool IsMatch(Order order)
+                {
+                    if (order?.Identifier == OrderIdentifier)
+                    {
+                        if (!OrderTargetTag.IsEmpty && (order.TargetEntity is not Item targetItem || !targetItem.HasTag(OrderTargetTag)))
+                        {
+                            return false;
+                        }
+                        if (OrderOption.IsEmpty || order?.Option == OrderOption)
+                        {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
             }
             return false;
         }

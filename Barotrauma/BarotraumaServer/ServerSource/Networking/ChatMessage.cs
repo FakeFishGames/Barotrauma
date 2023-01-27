@@ -200,9 +200,9 @@ namespace Barotrauma.Networking
             return length;
         }
 
-        public virtual void ServerWrite(IWriteMessage msg, Client c)
+        public virtual void ServerWrite(in SegmentTableWriter<ServerNetSegment> segmentTable, IWriteMessage msg, Client c)
         {
-            msg.WriteByte((byte)ServerNetObject.CHAT_MESSAGE);
+            segmentTable.StartNewSegment(ServerNetSegment.ChatMessage);
             msg.WriteUInt16(NetStateID);
             msg.WriteRangedInteger((int)Type, 0, Enum.GetValues(typeof(ChatMessageType)).Length - 1);
             msg.WriteByte((byte)ChangeType);

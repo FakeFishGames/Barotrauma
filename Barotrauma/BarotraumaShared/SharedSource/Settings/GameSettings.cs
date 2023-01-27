@@ -35,10 +35,19 @@ namespace Barotrauma
         Activity
     }
 
+    public enum EnemyHealthBarMode
+    {
+        ShowAll,
+        BossHealthBarsOnly,
+        HideAll
+    }
+
     public static class GameSettings
     {
         public struct Config
         {
+            public const float DefaultAimAssist = 0.05f;
+
             public static Config GetDefault()
             {
                 Config config = new Config
@@ -50,7 +59,8 @@ namespace Barotrauma
                     SubEditorBackground = new Color(13, 37, 69, 255),
                     EnableSplashScreen = true,
                     PauseOnFocusLost = true,
-                    AimAssistAmount = 0.5f,
+                    AimAssistAmount = DefaultAimAssist,
+                    ShowEnemyHealthBars = EnemyHealthBarMode.ShowAll,
                     EnableMouseLook = true,
                     ChatOpen = true,
                     CrewMenuOpen = true,
@@ -110,6 +120,7 @@ namespace Barotrauma
             public LanguageIdentifier Language;
             public bool VerboseLogging;
             public bool SaveDebugConsoleLogs;
+            public string SavePath;
             public int SubEditorUndoBuffer;
             public int MaxAutoSaves;
             public int AutoSaveIntervalSeconds;
@@ -118,6 +129,7 @@ namespace Barotrauma
             public bool PauseOnFocusLost;
             public float AimAssistAmount;
             public bool EnableMouseLook;
+            public EnemyHealthBarMode ShowEnemyHealthBars;
             public bool ChatOpen;
             public bool CrewMenuOpen;
             public bool EditorDisclaimerShown;

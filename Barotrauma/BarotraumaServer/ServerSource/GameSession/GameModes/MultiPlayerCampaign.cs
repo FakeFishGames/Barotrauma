@@ -335,7 +335,7 @@ namespace Barotrauma
                     break;
             }
 
-            Map.ProgressWorld(transitionType, (float)(Timing.TotalTime - GameMain.GameSession.RoundStartTime));
+            Map.ProgressWorld(transitionType, GameMain.GameSession.RoundDuration);
 
             bool success = GameMain.Server.ConnectedClients.Any(c => c.InGame && c.Character != null && !c.Character.IsDead);
             if (success)
@@ -347,6 +347,8 @@ namespace Barotrauma
                         (GameMain.GameSession?.GameMode as MultiPlayerCampaign)?.SaveExperiencePoints(c);
                     }
                 }
+                // Event history must be registered before ending the round or it will be cleared
+                GameMain.GameSession.EventManager.RegisterEventHistory();
             }
 
             GameMain.GameSession.EndRound("", traitorResults, transitionType);
@@ -360,7 +362,6 @@ namespace Barotrauma
                 LeaveUnconnectedSubs(leavingSub);
                 NextLevel = newLevel;
                 GameMain.GameSession.SubmarineInfo = new SubmarineInfo(GameMain.GameSession.Submarine);
-                GameMain.GameSession.EventManager.RegisterEventHistory();
                 SaveUtil.SaveGame(GameMain.GameSession.SavePath);
             }
             else

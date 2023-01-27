@@ -50,18 +50,23 @@ namespace Barotrauma.Steam
                     lobbyState = LobbyState.Owner;
                     lobbyID = (currentLobby?.Id).Value;
 
-                    if (serverSettings.IsPublic)
-                    {
-                        currentLobby?.SetPublic();
-                    }
-                    else
-                    {
-                        currentLobby?.SetFriendsOnly();
-                    }
+                    SetLobbyPublic(serverSettings.IsPublic);
                     currentLobby?.SetJoinable(true);
 
                     UpdateLobby(serverSettings);
                 });
+        }
+
+        public static void SetLobbyPublic(bool isPublic)
+        {
+            if (isPublic)
+            {
+                currentLobby?.SetPublic();
+            }
+            else
+            {
+                currentLobby?.SetFriendsOnly();
+            }
         }
 
         public static void UpdateLobby(ServerSettings serverSettings)

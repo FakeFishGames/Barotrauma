@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Barotrauma.Extensions;
 using Barotrauma.IO;
@@ -40,6 +41,13 @@ namespace Barotrauma
             }
         }
         
+        [DoesNotReturn]
+        private static void LogAndThrowException(string errorMsg, string analyticsId)
+        {
+            GameAnalyticsManager.AddErrorEventOnce(analyticsId, GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+            throw new InvalidOperationException(errorMsg);
+        }
+
         public override void Select()
         {
             base.Select();
@@ -74,20 +82,11 @@ namespace Barotrauma
                 }
             };
 
-            if (!GameMain.Client.IsServerOwner)
+            if (!GameMain.Client.IsServerOwner && GameMain.Client.ClientPeer.ServerContentPackages.Length == 0)
             {
-                if (GameMain.Client.ClientPeer.ServerContentPackages.Length == 0)
-                {
-                    string errorMsg = $"Error in ModDownloadScreen: the list of mods the server has enabled was empty. Content package list received: {GameMain.Client.ClientPeer.ContentPackageOrderReceived}";
-                    GameAnalyticsManager.AddErrorEventOnce("ModDownloadScreen.Select:NoContentPackages", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
-                    throw new InvalidOperationException(errorMsg);
-                }
-                if (GameMain.Client.ClientPeer.ServerContentPackages.None(p => p.CorePackage != null))
-                {
-                    string errorMsg = $"Error in ModDownloadScreen: no core packages in the list of mods the server has enabled. Content package list received: {GameMain.Client.ClientPeer.ContentPackageOrderReceived}";
-                    GameAnalyticsManager.AddErrorEventOnce("ModDownloadScreen.Select:NoCorePackage", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
-                    throw new InvalidOperationException(errorMsg);
-                }
+                LogAndThrowException("Error in ModDownloadScreen: the list of mods the server has enabled was empty. "
+                      +$"Content package list received: {GameMain.Client.ClientPeer.ContentPackageOrderReceived}",
+                    analyticsId: "ModDownloadScreen.Select:NoContentPackages");
             }
 
             var missingPackages = GameMain.Client.ClientPeer.ServerContentPackages
@@ -96,11 +95,18 @@ namespace Barotrauma
             {
                 if (!GameMain.Client.IsServerOwner)
                 {
+                    var corePackage = GameMain.Client.ClientPeer.ServerContentPackages
+                        .Select(p => p.CorePackage)
+                        .OfType<CorePackage>().FirstOrDefault();
+                    if (corePackage is null)
+                    {
+                        LogAndThrowException($"Error in ModDownloadScreen: no core packages in the list of mods the server has enabled. " +
+                                       $"Content package list received: {GameMain.Client.ClientPeer.ContentPackageOrderReceived}",
+                            analyticsId: "ModDownloadScreen.Select:NoCorePackage");
+                    }
+                    
                     ContentPackageManager.EnabledPackages.BackUp();
-                    ContentPackageManager.EnabledPackages.SetCore(
-                        GameMain.Client.ClientPeer.ServerContentPackages
-                            .Select(p => p.CorePackage)
-                            .OfType<CorePackage>().First());
+                    ContentPackageManager.EnabledPackages.SetCore(corePackage);
                     List<RegularPackage> regularPackages =
                         GameMain.Client.ClientPeer.ServerContentPackages
                             .Select(p => p.RegularPackage)
@@ -111,6 +117,15 @@ namespace Barotrauma
                 }
                 GameMain.NetLobbyScreen.Select();
                 return;
+            }
+
+            if (missingPackages.FirstOrDefault(p => p.IsVanilla) is { } mismatchedVanilla)
+            {
+                LogAndThrowException("Error in ModDownloadScreen: mismatched Vanilla package: "
+                                     +$"local hash is {ContentPackageManager.VanillaCorePackage?.Hash.StringRepresentation ?? "[NULL]"}, "
+                                     +$"remote hash is {mismatchedVanilla.Hash.StringRepresentation}. "
+                                     +$"Content package list received: {GameMain.Client.ClientPeer.ContentPackageOrderReceived}",
+                    analyticsId: "ModDownloadScreen.Select:MismatchedVanilla");
             }
 
             GUIMessageBox msgBox = new GUIMessageBox(
@@ -291,14 +306,23 @@ namespace Barotrauma
                     var serverPackages = GameMain.Client.ClientPeer.ServerContentPackages;
                     CorePackage corePackage
                         = downloadedPackages.FirstOrDefault(p => p is CorePackage) as CorePackage
-                          ?? serverPackages.FirstOrDefault(p => p.CorePackage != null)
-                              ?.CorePackage
+                          ?? serverPackages.FirstOrDefault(p => p.CorePackage != null)?.CorePackage
                           ?? throw new Exception($"Failed to find core package to enable");
 
                     List<RegularPackage> regularPackages = new List<RegularPackage>();
                     foreach (var p in serverPackages)
                     {
-                        if (p.CorePackage != null) { continue; }
+                        if (p.CorePackage != null)
+                        {
+                            // This package is one of our installed core packages
+                            continue;
+                        }
+
+                        if (corePackage.Hash.Equals(p.Hash))
+                        {
+                            // This package is the core package we downloaded from the server
+                            continue;
+                        }
                         RegularPackage? matchingPackage =
                             p.RegularPackage ?? downloadedPackages.FirstOrDefault(d => d is RegularPackage && d.Hash.Equals(p.Hash)) as RegularPackage;
                         if (matchingPackage is null)
@@ -355,9 +379,13 @@ namespace Barotrauma
             string dir = path.RemoveFromEnd(ModReceiver.Extension, StringComparison.OrdinalIgnoreCase);
             
             SaveUtil.DecompressToDirectory(path, dir, file => { });
-            ContentPackage newPackage
-                = ContentPackage.TryLoad($"{dir}/{ContentPackage.FileListFileName}")
-                ?? throw new Exception($"Failed to load downloaded mod \"{currentDownload.Name}\"");
+            var result = ContentPackage.TryLoad(Path.Combine(dir, ContentPackage.FileListFileName));
+
+            if (!result.TryUnwrapSuccess(out var newPackage))
+            {
+                throw new Exception($"Failed to load downloaded mod \"{currentDownload.Name}\"",
+                    result.TryUnwrapFailure(out var exception) ? exception : null);
+            }
             if (!currentDownload.Hash.Equals(newPackage.Hash))
             {
                 throw new Exception($"Hash mismatch for downloaded mod \"{currentDownload.Name}\" (expected {currentDownload.Hash}, got {newPackage.Hash})");

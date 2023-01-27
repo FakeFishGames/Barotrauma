@@ -65,7 +65,7 @@ namespace Barotrauma.Networking
 
         public State CurrentState { get; private set; }
 
-        public bool UseRespawnPrompt
+        public static bool UseRespawnPrompt
         {
             get
             {
@@ -191,6 +191,7 @@ namespace Barotrauma.Networking
         public void ForceRespawn()
         {
             ResetShuttle();
+            RespawnCountdownStarted = true;
             RespawnTime = DateTime.Now;
             CurrentState = State.Waiting;
         }
@@ -258,7 +259,7 @@ namespace Barotrauma.Networking
                 var powerContainer = item.GetComponent<PowerContainer>();
                 if (powerContainer != null)
                 {
-                    powerContainer.Charge = powerContainer.Capacity;
+                    powerContainer.Charge = powerContainer.GetCapacity();
                 }
 
                 var door = item.GetComponent<Door>();

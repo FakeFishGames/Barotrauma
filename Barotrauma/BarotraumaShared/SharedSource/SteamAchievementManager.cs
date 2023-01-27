@@ -6,7 +6,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Barotrauma
 {
@@ -44,8 +43,9 @@ namespace Barotrauma
             roundData = new RoundData();
             foreach (Item item in Item.ItemList)
             {
+                if (item.Submarine == null || item.Submarine.Info.Type != SubmarineType.Player) { continue; }
                 Reactor reactor = item.GetComponent<Reactor>();
-                if (reactor != null) { roundData.Reactors.Add(reactor); }
+                if (reactor != null && reactor.Item.Condition > 0.0f) { roundData.Reactors.Add(reactor); }
             }
             pathFinder = new PathFinder(WayPoint.WayPointList, false);
             cachedDistances.Clear();
@@ -73,7 +73,7 @@ namespace Barotrauma
                 {
                     if (c.IsDead) { continue; }
                     //achievement for descending below crush depth and coming back
-                    if (Timing.TotalTime > GameMain.GameSession.RoundStartTime + 30.0f)
+                    if (GameMain.GameSession.RoundDuration > 30.0f)
                     {
                         if (c.Submarine != null && c.Submarine.AtDamageDepth || Level.Loaded.GetRealWorldDepth(c.WorldPosition.Y) > Level.Loaded.RealWorldCrushDepth)
                         {
@@ -97,7 +97,7 @@ namespace Barotrauma
                             //get an achievement if they're still alive at the end of the round
                             foreach (Character c in Character.CharacterList)
                             {
-                                if (!c.IsDead && c.Submarine == sub) roundData.ReactorMeltdown.Add(c);
+                                if (!c.IsDead && c.Submarine == sub) { roundData.ReactorMeltdown.Add(c); }
                             }
                         }
                     }
@@ -113,7 +113,7 @@ namespace Barotrauma
 
                     //achievement for descending ridiculously deep
                     float realWorldDepth = sub.RealWorldDepth;
-                    if (realWorldDepth > 5000.0f && Timing.TotalTime > GameMain.GameSession.RoundStartTime + 30.0f)
+                    if (realWorldDepth > 5000.0f && GameMain.GameSession.RoundDuration > 30.0f)
                     {
                         //all conscious characters inside the sub get an achievement
                         UnlockAchievement("subdeep".ToIdentifier(), true, c => c != null && c.Submarine == sub && !c.IsDead && !c.IsUnconscious);
@@ -217,6 +217,12 @@ namespace Barotrauma
         public static void OnBiomeDiscovered(Biome biome)
         {
             UnlockAchievement($"discover{biome.Identifier.Value.Replace(" ", "")}".ToIdentifier());
+        }
+
+        public static void OnCampaignMetadataSet(Identifier identifier, object value)
+        {
+            if (identifier.IsEmpty || value is null) { return; }
+            UnlockAchievement($"campaignmetadata_{identifier}_{value}".ToIdentifier());
         }
 
         public static void OnItemRepaired(Item item, Character fixer)

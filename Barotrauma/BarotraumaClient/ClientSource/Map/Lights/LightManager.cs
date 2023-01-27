@@ -343,38 +343,31 @@ namespace Barotrauma.Lights
             {
                 SolidColorEffect.CurrentTechnique = SolidColorEffect.Techniques["SolidVertexColor"];
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, effect: SolidColorEffect, transformMatrix: spriteBatchTransform);
-                foreach (Character character in Character.CharacterList)
-                {
-                    if (character.CurrentHull == null || !character.Enabled || !character.IsVisible) { continue; }
-                    if (Character.Controlled?.FocusedCharacter == character) { continue; }
-                    Color lightColor = character.CurrentHull.AmbientLight == Color.TransparentBlack ?
-                        Color.Black :
-                        character.CurrentHull.AmbientLight.Multiply(character.CurrentHull.AmbientLight.A / 255.0f).Opaque();
-                    foreach (Limb limb in character.AnimController.Limbs)
-                    {
-                        if (limb.DeformSprite != null) { continue; }
-                        limb.Draw(spriteBatch, cam, lightColor);
-                    }
-                }
+                DrawCharacters(spriteBatch, cam, drawDeformSprites: false);
                 spriteBatch.End();
 
                 DeformableSprite.Effect.CurrentTechnique = DeformableSprite.Effect.Techniques["DeformShaderSolidVertexColor"];
                 DeformableSprite.Effect.CurrentTechnique.Passes[0].Apply();
                 spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, transformMatrix: spriteBatchTransform);
+                DrawCharacters(spriteBatch, cam, drawDeformSprites: true);
+                spriteBatch.End();
+            }
+
+            static void DrawCharacters(SpriteBatch spriteBatch, Camera cam, bool drawDeformSprites)
+            {
                 foreach (Character character in Character.CharacterList)
                 {
-                    if (character.CurrentHull == null || !character.Enabled || !character.IsVisible) { continue; }
+                    if (character.CurrentHull == null || !character.Enabled || !character.IsVisible || character.InvisibleTimer > 0.0f) { continue; }
                     if (Character.Controlled?.FocusedCharacter == character) { continue; }
                     Color lightColor = character.CurrentHull.AmbientLight == Color.TransparentBlack ?
                         Color.Black :
                         character.CurrentHull.AmbientLight.Multiply(character.CurrentHull.AmbientLight.A / 255.0f).Opaque();
                     foreach (Limb limb in character.AnimController.Limbs)
                     {
-                        if (limb.DeformSprite == null) { continue; }
+                        if (drawDeformSprites == (limb.DeformSprite == null)) { continue; }
                         limb.Draw(spriteBatch, cam, lightColor);
                     }
                 }
-                spriteBatch.End();
             }
 
             DeformableSprite.Effect.CurrentTechnique = DeformableSprite.Effect.Techniques["DeformShader"];

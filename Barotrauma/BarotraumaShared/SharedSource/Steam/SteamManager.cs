@@ -85,15 +85,6 @@ namespace Barotrauma.Steam
             return Steamworks.SteamUGC.NumSubscribedItems;
         }
 
-        public static PublishedFileId[] GetSubscribedItems()
-        {
-            if (!IsInitialized || !Steamworks.SteamClient.IsValid)
-            {
-                return new PublishedFileId[0];
-            }
-            return Steamworks.SteamUGC.GetSubscribedItems();
-        }
-
         public static bool UnlockAchievement(string achievementIdentifier) =>
             UnlockAchievement(achievementIdentifier.ToIdentifier());
 

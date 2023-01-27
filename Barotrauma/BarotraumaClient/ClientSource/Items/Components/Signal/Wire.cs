@@ -324,7 +324,7 @@ namespace Barotrauma.Items.Components
                 if (Character.Controlled != null)
                 {
                     Character.Controlled.FocusedItem = null;
-                    Character.Controlled.ResetInteract = true;
+                    Character.Controlled.DisableInteract = true;
                     Character.Controlled.ClearInputs();
                 }
                 //cancel dragging
@@ -401,7 +401,7 @@ namespace Barotrauma.Items.Components
                         {
                             if (Character.Controlled != null)
                             {
-                                Character.Controlled.ResetInteract = true;
+                                Character.Controlled.DisableInteract = true;
                                 Character.Controlled.ClearInputs();
                             }
                             int closestSectionIndex = selectedWire.GetClosestSectionIndex(mousePos, sectionSelectDist, out _);
@@ -431,7 +431,7 @@ namespace Barotrauma.Items.Components
                             {
                                 if (Character.Controlled != null)
                                 {
-                                    Character.Controlled.ResetInteract = true;
+                                    Character.Controlled.DisableInteract = true;
                                     Character.Controlled.ClearInputs();
                                 }
                                 draggingWire = selectedWire;

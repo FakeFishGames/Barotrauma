@@ -9,7 +9,7 @@ using Barotrauma.Networking;
 
 namespace Barotrauma
 {
-    internal partial class MedicalClinic
+    internal sealed partial class MedicalClinic
     {
         public enum NetworkHeader
         {
@@ -18,7 +18,8 @@ namespace Barotrauma
             ADD_PENDING,
             REMOVE_PENDING,
             CLEAR_PENDING,
-            HEAL_PENDING
+            HEAL_PENDING,
+            ADD_EVERYTHING_TO_PENDING
         }
 
         public enum AfflictionSeverity
@@ -43,23 +44,10 @@ namespace Barotrauma
         }
 
         [NetworkSerialize]
-        public struct NetHealRequest : INetSerializableStruct
-        {
-            public HealRequestResult Result;
-        }
+        public readonly record struct NetHealRequest(HealRequestResult Result) : INetSerializableStruct;
 
         [NetworkSerialize]
-        public struct NetRemovedAffliction : INetSerializableStruct
-        {
-            public NetCrewMember CrewMember;
-            public NetAffliction Affliction;
-        }
-
-        public struct NetPendingCrew : INetSerializableStruct
-        {
-            [NetworkSerialize(ArrayMaxSize = CrewManager.MaxCrewSize)]
-            public NetCrewMember[] CrewMembers;
-        }
+        public readonly record struct NetRemovedAffliction(NetCrewMember CrewMember, NetAffliction Affliction) : INetSerializableStruct;
 
         public struct NetAffliction : INetSerializableStruct
         {
@@ -70,41 +58,17 @@ namespace Barotrauma
             public ushort Strength;
 
             [NetworkSerialize]
+            public int VitalityDecrease;
+
+            [NetworkSerialize]
             public ushort Price;
 
-            public AfflictionSeverity AfflictionSeverity
+            public void SetAffliction(Affliction affliction, CharacterHealth characterHealth)
             {
-                get
-                {
-                    if (Prefab is null) { return AfflictionSeverity.Low; }
-
-                    float normalizedStrength = Strength / Prefab.MaxStrength;
-
-                    // lesser than 0.1
-                    if (normalizedStrength <= 0.1)
-                    {
-                        return AfflictionSeverity.Low;
-                    }
-
-                    // between 0.1 and 0.5
-                    if (normalizedStrength > 0.1f && normalizedStrength < 0.5f)
-                    {
-                        return AfflictionSeverity.Medium;
-                    }
-
-                    // greater than 0.5
-                    return AfflictionSeverity.High;
-                }
-            }
-
-            public Affliction Affliction
-            {
-                set
-                {
-                    Identifier = value.Identifier;
-                    Strength = (ushort)Math.Ceiling(value.Strength);
-                    Price = (ushort)(value.Prefab.BaseHealCost + Strength * value.Prefab.HealCostMultiplier);
-                }
+                Identifier = affliction.Identifier;
+                Strength = (ushort)Math.Ceiling(affliction.Strength);
+                Price = (ushort)(affliction.Prefab.BaseHealCost + Strength * affliction.Prefab.HealCostMultiplier);
+                VitalityDecrease = (int)affliction.GetVitalityDecrease(characterHealth);
             }
 
             private AfflictionPrefab? cachedPrefab;
@@ -146,17 +110,23 @@ namespace Barotrauma
             }
         }
 
-        public struct NetCrewMember : INetSerializableStruct
+        public record struct NetCrewMember : INetSerializableStruct
         {
             [NetworkSerialize]
             public int CharacterInfoID;
 
             [NetworkSerialize]
-            public NetAffliction[] Afflictions;
+            public ImmutableArray<NetAffliction> Afflictions;
 
-            public CharacterInfo CharacterInfo
+            public NetCrewMember(CharacterInfo info)
             {
-                set => CharacterInfoID = value.GetIdentifierUsingOriginalName();
+                CharacterInfoID = info.GetIdentifierUsingOriginalName();
+                Afflictions = ImmutableArray<NetAffliction>.Empty;
+            }
+
+            public NetCrewMember(CharacterInfo info, ImmutableArray<NetAffliction> afflictions): this(info)
+            {
+                Afflictions = afflictions;
             }
 
             public readonly CharacterInfo? FindCharacterInfo(ImmutableArray<CharacterInfo> crew)
@@ -194,11 +164,11 @@ namespace Barotrauma
 
         private static bool IsOutpostInCombat()
         {
-            if (!(Level.Loaded is { Type: LevelData.LevelType.Outpost })) { return false; }
+            if (Level.Loaded is not { Type: LevelData.LevelType.Outpost }) { return false; }
 
-            IEnumerable<Character> crew = GetCrewCharacters().Where(c => c.Character != null).Select(c => c.Character).ToImmutableHashSet();
+            IEnumerable<Character> crew = GetCrewCharacters().Where(static c => c.Character != null).Select(static c => c.Character).ToImmutableHashSet();
 
-            foreach (Character npc in Character.CharacterList.Where(c => c.TeamID == CharacterTeamType.FriendlyNPC))
+            foreach (Character npc in Character.CharacterList.Where(static c => c.TeamID == CharacterTeamType.FriendlyNPC))
             {
                 bool isInCombatWithCrew = !npc.IsInstigator && npc.AIController is HumanAIController { ObjectiveManager: { CurrentObjective: AIObjectiveCombat combatObjective } } && crew.Contains(combatObjective.Enemy);
                 if (isInCombatWithCrew) { return true; }
@@ -238,6 +208,20 @@ namespace Barotrauma
             PendingHeals.Clear();
         }
 
+        private void AddEverythingToPending()
+        {
+            foreach (CharacterInfo info in GetCrewCharacters())
+            {
+                if (info.Character?.CharacterHealth is not { } health) { continue; }
+
+                var afflictions = GetAllAfflictions(health);
+
+                if (afflictions.Length is 0) { continue; }
+
+                InsertPendingCrewMember(new NetCrewMember(info, afflictions));
+            }
+        }
+
         private void RemovePendingAffliction(NetCrewMember crewMember, NetAffliction affliction)
         {
             foreach (NetCrewMember listMember in PendingHeals.ToList())
@@ -255,7 +239,7 @@ namespace Barotrauma
                         newAfflictions.Add(pendingAffliction);
                     }
 
-                    pendingMember.Afflictions = newAfflictions.ToArray();
+                    pendingMember.Afflictions = newAfflictions.ToImmutableArray();
                 }
 
                 if (!pendingMember.Afflictions.Any()) { continue; }
@@ -280,9 +264,9 @@ namespace Barotrauma
             static float GetShowTreshold(Affliction affliction) => Math.Max(0, Math.Min(affliction.Prefab.ShowIconToOthersThreshold, affliction.Prefab.ShowInHealthScannerThreshold));
         }
 
-        private NetAffliction[] GetAllAfflictions(CharacterHealth health)
+        private ImmutableArray<NetAffliction> GetAllAfflictions(CharacterHealth health)
         {
-            IEnumerable<Affliction> rawAfflictions = health.GetAllAfflictions().Where(a => IsHealable(a));
+            IEnumerable<Affliction> rawAfflictions = health.GetAllAfflictions().Where(IsHealable);
 
             List<NetAffliction> afflictions = new List<NetAffliction>();
 
@@ -298,19 +282,20 @@ namespace Barotrauma
                 }
                 else
                 {
-                    newAffliction = new NetAffliction { Affliction = affliction };
+                    newAffliction = new NetAffliction();
+                    newAffliction.SetAffliction(affliction, health);
                     newAffliction.Price = (ushort)GetAdjustedPrice(newAffliction.Price);
                 }
 
                 afflictions.Add(newAffliction);
             }
 
-            return afflictions.ToArray();
+            return afflictions.ToImmutableArray();
 
             static int GetHealPrice(Affliction affliction) => (int)(affliction.Prefab.BaseHealCost + (affliction.Prefab.HealCostMultiplier * affliction.Strength));
         }
 
-        public int GetTotalCost() => PendingHeals.SelectMany(h => h.Afflictions).Aggregate(0, (current, affliction) => current + affliction.Price);
+        public int GetTotalCost() => PendingHeals.SelectMany(static h => h.Afflictions).Aggregate(0, static (current, affliction) => current + affliction.Price);
 
         private int GetAdjustedPrice(int price) => campaign?.Map?.CurrentLocation is { Type: { HasOutpost: true } } currentLocation ? currentLocation.GetAdjustedHealCost(price) : int.MaxValue;
 
@@ -325,7 +310,7 @@ namespace Barotrauma
             }
 #endif
 
-            return Character.CharacterList.Where(c => c.Info != null && c.TeamID == CharacterTeamType.Team1).Select(c => c.Info).ToImmutableArray();
+            return Character.CharacterList.Where(static c => c.Info != null && c.TeamID == CharacterTeamType.Team1).Select(static c => c.Info).ToImmutableArray();
         }
 
 #if DEBUG && CLIENT

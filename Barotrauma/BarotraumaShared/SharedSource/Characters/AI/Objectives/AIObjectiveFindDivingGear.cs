@@ -103,13 +103,21 @@ namespace Barotrauma
                                 character.Speak(TextManager.Get("DialogGetOxygenTank").Value, null, 0, "getoxygentank".ToIdentifier(), 30.0f);
                             }
                         }
-                        return new AIObjectiveContainItem(character, OXYGEN_SOURCE, targetItem.GetComponent<ItemContainer>(), objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
+                        var container = targetItem.GetComponent<ItemContainer>();                        
+                        var objective = new AIObjectiveContainItem(character, OXYGEN_SOURCE, container, objectiveManager, spawnItemIfNotFound: character.TeamID == CharacterTeamType.FriendlyNPC)
                         {
                             AllowToFindDivingGear = false,
                             AllowDangerousPressure = true,
                             ConditionLevel = MIN_OXYGEN,
                             RemoveExistingWhenNecessary = true
                         };
+                        if (container.HasSubContainers)
+                        {
+                            objective.TargetSlot = container.FindSuitableSubContainerIndex(OXYGEN_SOURCE);
+                        }
+                        // Only remove the oxygen source being replaced
+                        objective.RemoveExistingPredicate = i => objective.IsInTargetSlot(i);
+                        return objective;
                     },
                     onAbandon: () =>
                     {

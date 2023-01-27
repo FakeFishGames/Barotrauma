@@ -1,6 +1,4 @@
-﻿using System.Xml.Linq;
-
-namespace Barotrauma.Abilities
+﻿namespace Barotrauma.Abilities
 {
     class CharacterAbilityGiveMoney : CharacterAbility
     {
@@ -13,6 +11,11 @@ namespace Barotrauma.Abilities
         {
             amount = abilityElement.GetAttributeInt("amount", 0);
             scalingStatIdentifier = abilityElement.GetAttributeIdentifier("scalingstatidentifier", Identifier.Empty);
+
+            if (amount == 0)
+            {
+                DebugConsole.ThrowError($"Error in talent {CharacterTalent.DebugIdentifier}, CharacterAbilityGiveMoney - amount of money set to 0.");
+            }
         }
 
         private void ApplyEffectSpecific(Character targetCharacter)

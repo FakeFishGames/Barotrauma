@@ -36,9 +36,7 @@ namespace Barotrauma
         public EitherT(T value) { Value = value; }
 
         public override string? ToString()
-        {
-            return Value.ToString();
-        }
+            => $"Either<{typeof(T).NameWithGenerics()}, {typeof(U).NameWithGenerics()}>({Value}: {typeof(T).NameWithGenerics()})";
 
         public override bool TryGet(out T t) { t = Value; return true; }
         public override bool TryGet(out U u) { u = default!; return false; }
@@ -75,9 +73,7 @@ namespace Barotrauma
         public EitherU(U value) { Value = value; }
 
         public override string? ToString()
-        {
-            return Value.ToString();
-        }
+            => $"Either<{typeof(T).NameWithGenerics()}, {typeof(U).NameWithGenerics()}>({Value}: {typeof(U).NameWithGenerics()})";
 
         public override bool TryGet(out T t) { t = default!; return false; }
         public override bool TryGet(out U u) { u = Value; return true; }

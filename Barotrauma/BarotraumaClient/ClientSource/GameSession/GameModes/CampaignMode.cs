@@ -4,6 +4,7 @@ using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -86,6 +87,8 @@ namespace Barotrauma
             }
         }
 
+        private static bool IsOwner(Client client) => client != null && client.IsOwner;
+
         /// <summary>
         /// There is a server-side implementation of the method in <see cref="MultiPlayerCampaign"/>
         /// </summary>
@@ -97,10 +100,8 @@ namespace Barotrauma
             return
                 GameMain.Client.HasPermission(permissions) ||
                 GameMain.Client.HasPermission(ClientPermissions.ManageCampaign) ||
-                GameMain.Client.ConnectedClients.Count == 1 ||
                 GameMain.Client.IsServerOwner ||
-                //allow managing if no-one with permissions is alive
-                GameMain.Client.ConnectedClients.None(c => c.InGame && c.Character is { IsIncapacitated: false, IsDead: false } && (c.IsOwner || c.HasPermission(permissions)));
+                AnyOneAllowedToManageCampaign(permissions);
         }
 
         public static bool AllowedToManageWallets()
@@ -203,6 +204,10 @@ namespace Barotrauma
                     }
                     break;
             }
+            if (Level.IsLoadedOutpost && !ObjectiveManager.AllActiveObjectivesCompleted())
+            {
+                endRoundButton.Visible = false;
+            }
 
             if (ReadyCheckButton != null) { ReadyCheckButton.Visible = endRoundButton.Visible; }
 
@@ -266,7 +271,7 @@ namespace Barotrauma
                 Rand.ThreadId = Thread.CurrentThread.ManagedThreadId;
                 try
                 {
-                    GameMain.GameSession.StartRound(newLevel, mirrorLevel: mirror);
+                    GameMain.GameSession.StartRound(newLevel, mirrorLevel: mirror, startOutpost: GetPredefinedStartOutpost());
                 }
                 catch (Exception e)
                 {
@@ -281,6 +286,18 @@ namespace Barotrauma
             });
 
             return loadTask;
+        }
+
+        protected SubmarineInfo GetPredefinedStartOutpost()
+        {
+            if (Map?.CurrentLocation?.Type?.GetForcedOutpostGenerationParams() is OutpostGenerationParams parameters && !parameters.OutpostFilePath.IsNullOrEmpty())
+            {
+                return new SubmarineInfo(parameters.OutpostFilePath.Value)
+                {
+                    OutpostGenerationParams = parameters
+                };
+            }
+            return null;
         }
 
         partial void NPCInteractProjSpecific(Character npc, Character interactor)

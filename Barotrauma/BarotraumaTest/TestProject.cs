@@ -15,6 +15,12 @@ namespace TestProject
                                 select new Vector2(x, y));
             }
 
+            public static Arbitrary<Identifier> IdentifierGenerator()
+            {
+                return Arb.From(from string value in Arb.Generate<string>().Where(static s => s != null)
+                                select new Identifier(value));
+            }
+
             public static Arbitrary<Color> ColorGenerator()
             {
                 return Arb.From(from int r in Gen.Choose(0, 255)

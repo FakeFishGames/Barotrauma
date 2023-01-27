@@ -54,7 +54,7 @@ namespace Barotrauma.Items.Components
 
         private bool? swapDestinationOrder;
 
-        private GUIMessageBox enterOutpostPrompt;
+        private GUIMessageBox enterOutpostPrompt, exitOutpostPrompt;
 
         private bool levelStartSelected;
         public bool LevelStartSelected
@@ -382,15 +382,26 @@ namespace Barotrauma.Items.Components
                             DockingSources.Any(d => d.Docked && (d.DockingTarget?.Item.Submarine?.Info?.IsOutpost ?? false)))
                         {
                             // Undocking from an outpost
-                            campaign.ShowCampaignUI = true;
-                            campaign.CampaignUI.SelectTab(CampaignMode.InteractionType.Map); 
-                            return false;
+                            if (!ObjectiveManager.AllActiveObjectivesCompleted())
+                            {
+                                exitOutpostPrompt = new GUIMessageBox("",
+                                    TextManager.GetWithVariable("CampaignExitTutorialOutpostPrompt", "[locationname]", campaign.Map.CurrentLocation.Name),
+                                    new LocalizedString[] { TextManager.Get("yes"), TextManager.Get("no") });
+                                exitOutpostPrompt.Buttons[0].OnClicked += (_, _) =>
+                                {
+                                    exitOutpostPrompt.Close();
+                                    return OpenMap(campaign);
+                                };
+                                exitOutpostPrompt.Buttons[1].OnClicked += exitOutpostPrompt.Close;
+                                return false;
+                            }
+                            return OpenMap(campaign);
                         }
                         else if (!Level.IsLoadedOutpost && DockingModeEnabled && ActiveDockingSource != null &&
                                 !ActiveDockingSource.Docked && DockingTarget?.Item?.Submarine == Level.Loaded.StartOutpost && (DockingTarget?.Item?.Submarine?.Info.IsOutpost ?? false))
                         {
                             // Docking to an outpost
-                            var subsToLeaveBehind = campaign.GetSubsToLeaveBehind(Item.Submarine);
+                            var subsToLeaveBehind = CampaignMode.GetSubsToLeaveBehind(Item.Submarine);
                             if (subsToLeaveBehind.Any())
                             {
                                 enterOutpostPrompt = new GUIMessageBox(
@@ -419,6 +430,14 @@ namespace Barotrauma.Items.Components
                     return true;
                 }
             };
+
+            bool OpenMap(CampaignMode campaign)
+            {
+                campaign.ShowCampaignUI = true;
+                campaign.CampaignUI.SelectTab(CampaignMode.InteractionType.Map);
+                return false;
+            }
+
             void SendDockingSignal()
             {
                 if (GameMain.Client == null)
@@ -431,6 +450,7 @@ namespace Barotrauma.Items.Components
                     item.CreateClientEvent(this);
                 }
             }
+
             dockingButton.Font = GUIStyle.SubHeadingFont;
             dockingButton.TextBlock.RectTransform.MaxSize = new Point((int)(dockingButton.Rect.Width * 0.7f), int.MaxValue);
             dockingButton.TextBlock.AutoScaleHorizontal = true;
@@ -913,6 +933,7 @@ namespace Barotrauma.Items.Components
             maintainPosOriginIndicator?.Remove();
             steeringIndicator?.Remove();
             enterOutpostPrompt?.Close();
+            exitOutpostPrompt?.Close();
             pathFinder = null;
         }
 

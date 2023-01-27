@@ -1,4 +1,5 @@
-﻿using Barotrauma.Networking;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -178,7 +179,7 @@ namespace Barotrauma
                 activeSprite?.Draw(
                     spriteBatch,
                     new Vector2(obj.Position.X, -obj.Position.Y) - camDiff * obj.Position.Z / 10000.0f,
-                    Color.Lerp(Color.White, Level.Loaded.BackgroundTextureColor, obj.Position.Z / 3000.0f),
+                    Color.Lerp(obj.Prefab.SpriteColor, obj.Prefab.SpriteColor.Multiply(Level.Loaded.BackgroundTextureColor), obj.Position.Z / 3000.0f),
                     activeSprite.Origin,
                     obj.CurrentRotation,
                     obj.CurrentScale,
@@ -200,7 +201,7 @@ namespace Barotrauma
                         obj.ActivePrefab.DeformableSprite.Origin,
                         obj.CurrentRotation,
                         obj.CurrentScale,
-                        Color.Lerp(Color.White, Level.Loaded.BackgroundTextureColor, obj.Position.Z / 5000.0f));
+                        Color.Lerp(obj.Prefab.SpriteColor, obj.Prefab.SpriteColor.Multiply(Level.Loaded.BackgroundTextureColor), obj.Position.Z / 5000.0f));
                 }
 
                 

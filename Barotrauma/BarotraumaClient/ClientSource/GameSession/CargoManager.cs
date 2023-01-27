@@ -11,7 +11,15 @@ namespace Barotrauma
         private List<SoldEntity> SoldEntities { get; } = new List<SoldEntity>();
 
         // The bag slot is intentionally left out since we want to be able to sell items from there
-        private readonly List<InvSlotType> equipmentSlots = new List<InvSlotType>() { InvSlotType.Head, InvSlotType.InnerClothes, InvSlotType.OuterClothes, InvSlotType.Headset, InvSlotType.Card };
+        private static readonly HashSet<InvSlotType> equipmentSlots = new HashSet<InvSlotType>()
+        {
+            InvSlotType.Head,
+            InvSlotType.InnerClothes,
+            InvSlotType.OuterClothes,
+            InvSlotType.Headset,
+            InvSlotType.Card,
+            InvSlotType.HealthInterface
+        };
 
         public IEnumerable<Item> GetSellableItems(Character character)
         {

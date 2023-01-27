@@ -405,7 +405,7 @@ namespace Barotrauma
                     if (wall.Submarine != sub) { continue; }
                     for (int i = 0; i < wall.SectionCount; i++)
                     {
-                        wall.SetDamage(i, 0, createNetworkEvent: false);
+                        wall.SetDamage(i, 0, createNetworkEvent: false, createExplosionEffect: false);
                     }                    
                 }
                 foreach (Hull hull in Hull.HullList)

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Runtime.InteropServices;
+using System.Text;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -136,8 +137,7 @@ namespace Microsoft.Xna.Framework
                 {
                     var key = KeyboardUtil.ToXna(ev.Key.Keysym.Sym);
 
-                    if (!_keys.Contains(key))
-                        _keys.Add(key);
+                    if (!_keys.Contains(key)) _keys.Add(key);
 
                     //TODO: rethink all of this
                     char character = (char)KeyboardUtil.ApplyModifiers(ev.Key.Keysym.Sym, ev.Key.Keysym.Mod);
@@ -147,38 +147,44 @@ namespace Microsoft.Xna.Framework
                         character = '\0';
                     }
 
-                    if (char.IsControl(character) ||
-                        key == Keys.Left ||
-                        key == Keys.Right ||
-                        key == Keys.Up ||
-                        key == Keys.Down)
-                    {
-                        _view.CallTextInput(character, key);
-                    }
+                    _view.CallKeyDown(character, key);
                 }
                 else if (ev.Type == Sdl.EventType.KeyUp)
                 {
                     var key = KeyboardUtil.ToXna(ev.Key.Keysym.Sym);
                     _keys.Remove(key);
                 }
-                else if (ev.Type == Sdl.EventType.TextInput)
+                else if (ev.Type == Sdl.EventType.TextEditing)
                 {
-                    int len = 0;
-                    string text = String.Empty;
+                    string text;
                     unsafe
                     {
-                        while (Marshal.ReadByte ((IntPtr)ev.Text.Text, len) != 0) {
-                            len++;
-                        }
-                        var buffer = new byte [len];
-                        Marshal.Copy ((IntPtr)ev.Text.Text, buffer, 0, len);
-                        text = System.Text.Encoding.UTF8.GetString (buffer);
+                        text = ReadString(ev.Edit.Text);
                     }
-                    if (text.Length == 0)
-                        continue;
-                    foreach (var c in text)
+
+                    _view.CallTextEditing(text, ev.Edit.Start, ev.Edit.Length);
+                }
+                else if (ev.Type == Sdl.EventType.TextEditingExt)
+                {
+                    string text;
+                    unsafe
                     {
-                        var key = KeyboardUtil.ToXna((int)c);
+                        text = ReadString(ev.EditExt.Text);
+                        Sdl.Free((IntPtr)ev.EditExt.Text);
+                    }
+
+                    _view.CallTextEditing(text, ev.EditExt.Start, ev.EditExt.Length);
+                }
+                else if (ev.Type == Sdl.EventType.TextInput)
+                {
+                    string text;
+                    unsafe { text = ReadString(ev.Text.Text); }
+
+                    if (text.Length is 0) { continue; }
+
+                    foreach (char c in text)
+                    {
+                        var key = KeyboardUtil.ToXna(c);
                         _view.CallTextInput(c, key);
                     }
                 }
@@ -194,10 +200,21 @@ namespace Microsoft.Xna.Framework
                             IsActive = false;
                         else if (ev.Window.EventID == Sdl.Window.EventId.Moved)
                             _view.Moved();
-                        else if (ev.Window.EventID == Sdl.Window.EventId.Close)
-                            _isExiting++;
+                        else if (ev.Window.EventID == Sdl.Window.EventId.Close) _isExiting++;
                     }
                 }
+            }
+
+            static unsafe string ReadString(byte* ptr)
+            {
+                int len = 0;
+                while (Marshal.ReadByte((IntPtr)ptr, len) != 0)
+                {
+                    len++;
+                }
+                var buffer = new byte [len];
+                Marshal.Copy((IntPtr)ptr, buffer, 0, len);
+                return Encoding.UTF8.GetString(buffer);
             }
         }
 
