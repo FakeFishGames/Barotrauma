@@ -1165,7 +1165,7 @@ namespace Barotrauma
                 foreach (MapEntityPrefab ep in entityLists[categoryKey])
                 {
 #if !DEBUG
-                    if (ep.HideInMenus) { continue; }
+                    if (ep.HideInMenus && !GameMain.DebugDraw) { continue; }
 #endif
                     CreateEntityElement(ep, entitiesPerRow, entityListInner.Content);
                 }
@@ -1184,7 +1184,7 @@ namespace Barotrauma
             foreach (MapEntityPrefab ep in MapEntityPrefab.List)
             {
 #if !DEBUG
-                if (ep.HideInMenus) { continue; }
+                if (ep.HideInMenus && !GameMain.DebugDraw) { continue; }
 #endif
                 CreateEntityElement(ep, entitiesPerRow, allEntityList.Content);
             }
@@ -1313,7 +1313,6 @@ namespace Barotrauma
                                 try
                                 {
                                     assemblyPrefab.Delete();
-                                    UpdateEntityList();
                                     OpenEntityMenu(MapEntityCategory.ItemAssembly);
                                 }
                                 catch (Exception e)
@@ -3645,6 +3644,8 @@ namespace Barotrauma
 
         private void OpenEntityMenu(MapEntityCategory? entityCategory)
         {
+            UpdateEntityList();
+
             foreach (GUIButton categoryButton in entityCategoryButtons)
             {
                 categoryButton.Selected = entityCategory.HasValue ?
