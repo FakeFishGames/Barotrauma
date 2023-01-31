@@ -8,6 +8,7 @@ using System.Xml.Linq;
 using System.Text.RegularExpressions;
 using Barotrauma.IO;
 using Microsoft.Xna.Framework;
+using System.Collections.Immutable;
 
 namespace Barotrauma
 {
@@ -292,10 +293,11 @@ namespace Barotrauma
                 }
                 if (doc?.Root == null)
                 {
-                    saveInfos.Add(new CampaignMode.SaveInfo()
-                    {
-                        FilePath = file
-                    });
+                    saveInfos.Add(new CampaignMode.SaveInfo(
+                        FilePath: file,
+                        SaveTime: Option.None,
+                        SubmarineName: "",
+                        EnabledContentPackageNames: ImmutableArray<string>.Empty));
                 }
                 else
                 {
@@ -326,13 +328,11 @@ namespace Barotrauma
                         enabledContentPackageNames.Add(packageName.Replace(@"\|", "|"));                        
                     }
 
-                    saveInfos.Add(new CampaignMode.SaveInfo()
-                    {
-                        FilePath = file,
-                        SubmarineName = doc?.Root?.GetAttributeStringUnrestricted("submarine", ""),
-                        SaveTime = doc.Root.GetAttributeInt("savetime", 0),
-                        EnabledContentPackageNames = enabledContentPackageNames.ToArray(),
-                    });
+                    saveInfos.Add(new CampaignMode.SaveInfo(
+                        FilePath: file,
+                        SaveTime: doc.Root.GetAttributeDateTime("savetime"),
+                        SubmarineName: doc?.Root?.GetAttributeStringUnrestricted("submarine", ""),
+                        EnabledContentPackageNames: enabledContentPackageNames.ToImmutableArray()));
                 }
             }
             

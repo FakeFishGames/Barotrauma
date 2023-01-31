@@ -820,6 +820,15 @@ namespace Barotrauma
                     };
                     valueInput.Text = newValue?.ToString() ?? "<type here>";
                 }
+                else if (type == typeof(Identifier))
+                {
+                    GUITextBox valueInput = new GUITextBox(new RectTransform(Vector2.One, layout.RectTransform), newValue?.ToString() ?? string.Empty);
+                    valueInput.OnTextChanged += (component, o) =>
+                    {
+                        newValue = new Identifier(o);
+                        return true;
+                    };
+                }
                 else if (type == typeof(float) || type == typeof(int))
                 {
                     GUINumberInput valueInput = new GUINumberInput(new RectTransform(Vector2.One, layout.RectTransform), NumberType.Float) { FloatValue = (float) (newValue ?? 0.0f) };

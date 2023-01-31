@@ -21,7 +21,7 @@ namespace Barotrauma
         public Identifier SpeciesName { get; private set; }
 
         [Serialize("", IsPropertySaveable.Yes, description: "If the creature is a variant that needs to use a pre-existing translation."), Editable]
-        public string SpeciesTranslationOverride { get; private set; }
+        public Identifier SpeciesTranslationOverride { get; private set; }
 
         [Serialize("", IsPropertySaveable.Yes, description: "If the display name is not defined, the game first tries to find the translated name. If that is not found, the species name will be used."), Editable]
         public string DisplayName { get; private set; }
@@ -503,6 +503,9 @@ namespace Barotrauma
 
             [Serialize(false, IsPropertySaveable.Yes), Editable]
             public bool PoisonImmunity { get; set; }
+
+            [Serialize(1f, IsPropertySaveable.Yes, description: "1 = default, 0 = immune."), Editable(MinValueFloat = 0f, MaxValueFloat = 1000, DecimalCount = 1)]
+            public float PoisonVulnerability { get; set; }
 
             [Serialize(0f, IsPropertySaveable.Yes), Editable]
             public float EmpVulnerability { get; set; }

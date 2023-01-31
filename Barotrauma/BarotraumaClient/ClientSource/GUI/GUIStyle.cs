@@ -140,6 +140,7 @@ namespace Barotrauma
         public readonly static GUIColor HealthBarColorLow = new GUIColor("HealthBarColorLow");
         public readonly static GUIColor HealthBarColorMedium = new GUIColor("HealthBarColorMedium");
         public readonly static GUIColor HealthBarColorHigh = new GUIColor("HealthBarColorHigh");
+        public readonly static GUIColor HealthBarColorPoisoned = new GUIColor("HealthBarColorPoisoned");
 
         public static Point ItemFrameMargin 
         {

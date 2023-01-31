@@ -640,8 +640,7 @@ namespace Barotrauma
             else
             {
                 forceAfflictionContainerUpdate = true;
-                currentDisplayedAfflictions = GetAllAfflictions(mergeSameAfflictions: true)
-                    .FindAll(a => a.ShouldShowIcon(Character) && a.Prefab.Icon != null);
+                currentDisplayedAfflictions = GetAllAfflictions(mergeSameAfflictions: true, predicate: a => a.ShouldShowIcon(Character) && a.Prefab.Icon != null);
                 currentDisplayedAfflictions.Sort((a1, a2) =>
                 {
                     int dmgPerSecond = Math.Sign(a1.DamagePerSecond - a2.DamagePerSecond);
@@ -1275,7 +1274,7 @@ namespace Barotrauma
                 //displaying an affliction we no longer have -> dirty
                 foreach ((Affliction affliction, float strength) in displayedAfflictions)
                 {
-                    if (!afflictions.Any(a => a.Key == affliction)) { return true; }
+                    if (afflictions.None(a => a.Key == affliction && a.Key.ShouldShowIcon(Character))) { return true; }
                 }
                 return false;
             }
@@ -2072,6 +2071,8 @@ namespace Barotrauma
                 foreach (var periodicEffect in newPeriodicEffects)
                 {
                     if (!existingAffliction.Prefab.PeriodicEffects.Contains(periodicEffect.effect)) { continue; }
+                    if (existingAffliction.Strength < periodicEffect.effect.MinStrength) { continue; }
+                    if (periodicEffect.effect.MaxStrength > 0 && existingAffliction.Strength > periodicEffect.effect.MaxStrength) { continue; }
                     //timer has wrapped around, apply the effect
                     if (periodicEffect.timer - existingAffliction.PeriodicEffectTimers[periodicEffect.effect] > periodicEffect.effect.MinInterval / 2)
                     {

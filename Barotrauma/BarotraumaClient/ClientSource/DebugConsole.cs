@@ -1128,6 +1128,28 @@ namespace Barotrauma
             });
             AssignRelayToServer("debugdraw", false);
 
+            AssignOnExecute("devmode", (string[] args) =>
+            {
+                if (args.None() || !bool.TryParse(args[0], out bool state))
+                {
+                    state = !GameMain.DevMode;
+                }
+                GameMain.DevMode = state;
+                if (GameMain.DevMode)
+                {
+                    GameMain.LightManager.LightingEnabled = false;
+                    GameMain.LightManager.LosEnabled = false;
+                }
+                else
+                {
+                    GameMain.LightManager.LightingEnabled = true;
+                    GameMain.LightManager.LosEnabled = true;
+                    GameMain.LightManager.LosAlpha = 1f;
+                }
+                NewMessage("Dev mode " + (GameMain.DevMode ? "enabled" : "disabled"), Color.White);
+            });
+            AssignRelayToServer("devmode", false);
+
             AssignOnExecute("debugdrawlocalization", (string[] args) =>
             {
                 if (args.None() || !bool.TryParse(args[0], out bool state))
@@ -1229,12 +1251,14 @@ namespace Barotrauma
                 HumanAIController.debugai = !HumanAIController.debugai;
                 if (HumanAIController.debugai)
                 {
+                    GameMain.DevMode = true;
                     GameMain.DebugDraw = true;
                     GameMain.LightManager.LightingEnabled = false;
                     GameMain.LightManager.LosEnabled = false;
                 }
                 else
                 {
+                    GameMain.DevMode = false;
                     GameMain.DebugDraw = false;
                     GameMain.LightManager.LightingEnabled = true;
                     GameMain.LightManager.LosEnabled = true;

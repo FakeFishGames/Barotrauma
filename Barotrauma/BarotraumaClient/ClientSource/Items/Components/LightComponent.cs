@@ -14,8 +14,6 @@ namespace Barotrauma.Items.Components
         private CoroutineHandle resetPredictionCoroutine;
         private float resetPredictionTimer;
 
-        private float currentBrightness;
-
         public Vector2 DrawSize
         {
             get { return new Vector2(Light.Range * 2, Light.Range * 2); }
@@ -29,14 +27,21 @@ namespace Barotrauma.Items.Components
             Light.Position = ParentBody != null ? ParentBody.Position : item.Position;
         }
 
-        partial void SetLightSourceState(bool enabled, float brightness)
+        partial void SetLightSourceState(bool enabled, float? brightness)
         {
             if (Light == null) { return; }
             Light.Enabled = enabled;
-            currentBrightness = brightness;
+            if (brightness.HasValue)
+            {
+                lightBrightness = brightness.Value;
+            }
+            else
+            {
+                lightBrightness = enabled ? 1.0f : 0.0f;
+            }
             if (enabled)
             {
-                Light.Color = LightColor.Multiply(brightness);
+                Light.Color = LightColor.Multiply(lightBrightness);
             }
         }
 
@@ -73,14 +78,21 @@ namespace Barotrauma.Items.Components
 
         public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
         {
-            if (Light.LightSprite != null && (item.body == null || item.body.Enabled) && lightBrightness > 0.0f && IsOn && Light.Enabled)
+            if (Light?.LightSprite == null) { return; }
+            if ((item.body == null || item.body.Enabled) && lightBrightness > 0.0f && IsOn && Light.Enabled)
             {
                 Vector2 origin = Light.LightSprite.Origin;
                 if ((Light.LightSpriteEffect & SpriteEffects.FlipHorizontally) == SpriteEffects.FlipHorizontally) { origin.X = Light.LightSprite.SourceRect.Width - origin.X; }
                 if ((Light.LightSpriteEffect & SpriteEffects.FlipVertically) == SpriteEffects.FlipVertically) { origin.Y = Light.LightSprite.SourceRect.Height - origin.Y; }
 
                 Vector2 drawPos = item.body?.DrawPosition ?? item.DrawPosition;
-                Light.LightSprite.Draw(spriteBatch, new Vector2(drawPos.X, -drawPos.Y), lightColor * lightBrightness, origin, -Light.Rotation, item.Scale, Light.LightSpriteEffect, itemDepth - 0.0001f);
+
+                Color color = lightColor;
+                if (Light.OverrideLightSpriteAlpha.HasValue)
+                {
+                    color = new Color(lightColor, Light.OverrideLightSpriteAlpha.Value);
+                }
+                Light.LightSprite.Draw(spriteBatch, new Vector2(drawPos.X, -drawPos.Y), color * lightBrightness, origin, -Light.Rotation, item.Scale, Light.LightSpriteEffect, itemDepth - 0.0001f);
             }
         }
 

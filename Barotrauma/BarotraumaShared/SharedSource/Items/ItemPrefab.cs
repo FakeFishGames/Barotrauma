@@ -568,9 +568,11 @@ namespace Barotrauma
 
         public ImmutableDictionary<Identifier, FixedQuantityResourceInfo> LevelQuantity { get; private set; }
 
-        public bool CanSpriteFlipX { get; private set; }
+        private bool canSpriteFlipX;
+        public override bool CanSpriteFlipX => canSpriteFlipX;
 
-        public bool CanSpriteFlipY { get; private set; }
+        private bool canSpriteFlipY;
+        public override bool CanSpriteFlipY => canSpriteFlipY;
 
         /// <summary>
         /// Can the item be chosen as extra cargo in multiplayer. If not set, the item is available if it can be bought from outposts in the campaign.
@@ -767,6 +769,9 @@ namespace Barotrauma
         [Serialize(true, IsPropertySaveable.No)]
         public bool ShowHealthBar { get; private set; }
 
+        [Serialize(1f, IsPropertySaveable.No, description: "How much the bots prioritize this item when they seek for items. For example, bots prioritize less exosuit than the other diving suits. Defaults to 1. Note that there's also a specific CombatPriority for items that can be used as weapons.")]
+        public float BotPriority { get; private set; }
+
         protected override Identifier DetermineIdentifier(XElement element)
         {
             Identifier identifier = base.DetermineIdentifier(element);
@@ -882,8 +887,8 @@ namespace Barotrauma
                     case "sprite":
                         string spriteFolder = GetTexturePath(subElement, variantOf);
 
-                        CanSpriteFlipX = subElement.GetAttributeBool("canflipx", true);
-                        CanSpriteFlipY = subElement.GetAttributeBool("canflipy", true);
+                        canSpriteFlipX = subElement.GetAttributeBool("canflipx", true);
+                        canSpriteFlipY = subElement.GetAttributeBool("canflipy", true);
 
                         sprite = new Sprite(subElement, spriteFolder, lazyLoad: true);
                         if (subElement.GetAttribute("sourcerect") == null &&
@@ -934,14 +939,20 @@ namespace Barotrauma
                         AllowDeconstruct = true;
                         RandomDeconstructionOutput = subElement.GetAttributeBool("chooserandom", false);
                         RandomDeconstructionOutputAmount = subElement.GetAttributeInt("amount", 1);
-                        foreach (XElement deconstructItem in subElement.Elements())
+                        foreach (XElement itemElement in subElement.Elements())
                         {
-                            if (deconstructItem.Attribute("name") != null)
+                            if (itemElement.Attribute("name") != null)
                             {
                                 DebugConsole.ThrowError($"Error in item config \"{ToString()}\" - use item identifiers instead of names to configure the deconstruct items.");
                                 continue;
                             }
-                            deconstructItems.Add(new DeconstructItem(deconstructItem, Identifier));
+                            var deconstructItem = new DeconstructItem(itemElement, Identifier);
+                            if (deconstructItem.ItemIdentifier.IsEmpty)
+                            {
+                                DebugConsole.ThrowError($"Error in item config \"{ToString()}\" - deconstruction output contains an item with no identifier.");
+                                continue;
+                            }
+                            deconstructItems.Add(deconstructItem);
                         }
                         RandomDeconstructionOutputAmount = Math.Min(RandomDeconstructionOutputAmount, deconstructItems.Count);
                         break;

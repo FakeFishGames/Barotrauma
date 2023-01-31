@@ -154,9 +154,12 @@ namespace Barotrauma
                 }
                 if (LosFadeIn && clampedTimer / PanDuration > 0.8f)
                 {
-                    GameMain.LightManager.LosAlpha = ((clampedTimer / PanDuration) - 0.8f) * 5.0f;
+                    if (!GameMain.DevMode)
+                    {
+                        GameMain.LightManager.LosEnabled = true;
+                        GameMain.LightManager.LosAlpha = ((clampedTimer / PanDuration) - 0.8f) * 5.0f;
+                    }
                     Lights.LightManager.ViewTarget = prevControlled ?? (targetEntity as Entity);
-                    GameMain.LightManager.LosEnabled = true;
                 }
 #endif
                 timer += CoroutineManager.DeltaTime;
@@ -170,8 +173,11 @@ namespace Barotrauma
 
 #if CLIENT
             GUI.ScreenOverlayColor = Color.TransparentBlack;
-            GameMain.LightManager.LosEnabled = true;
-            GameMain.LightManager.LosAlpha = 1f;
+            if (!GameMain.DevMode)
+            {
+                GameMain.LightManager.LosEnabled = true;
+                GameMain.LightManager.LosAlpha = 1f;
+            }
 #endif
 
             if (prevControlled != null && !prevControlled.Removed)

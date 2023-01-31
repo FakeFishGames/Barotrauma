@@ -192,7 +192,7 @@ namespace Barotrauma
             yield return CoroutineStatus.Success;
         }
 
-        public void UpdateLoadMenu(IEnumerable<CampaignMode.SaveInfo> saveFiles = null)
+        public override void UpdateLoadMenu(IEnumerable<CampaignMode.SaveInfo> saveFiles = null)
         {
             prevSaveFiles?.Clear();
             prevSaveFiles = null;
@@ -220,37 +220,16 @@ namespace Barotrauma
                 CreateSaveElement(saveInfo);
             }
 
-            saveList.Content.RectTransform.SortChildren((c1, c2) =>
-            {
-                string file1 = c1.GUIComponent.UserData as string;
-                string file2 = c2.GUIComponent.UserData as string;
-                DateTime file1WriteTime = DateTime.MinValue;
-                DateTime file2WriteTime = DateTime.MinValue;
-                try
-                {
-                    file1WriteTime = File.GetLastWriteTime(file1);
-                }
-                catch
-                {
-                    //do nothing - DateTime.MinValue will be used and the element will get sorted at the bottom of the list 
-                };
-                try
-                {
-                    file2WriteTime = File.GetLastWriteTime(file2);
-                }
-                catch
-                {
-                    //do nothing - DateTime.MinValue will be used and the element will get sorted at the bottom of the list 
-                };
-                return file2WriteTime.CompareTo(file1WriteTime);
-            });
+            SortSaveList();
 
             loadGameButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.12f), loadGameContainer.RectTransform, Anchor.BottomRight), TextManager.Get("LoadButton"))
             {
                 OnClicked = (btn, obj) =>
                 {
-                    if (string.IsNullOrWhiteSpace(saveList.SelectedData as string)) { return false; }
-                    LoadGame?.Invoke(saveList.SelectedData as string);
+                    if (saveList.SelectedData is not CampaignMode.SaveInfo saveInfo) { return false; }
+                    if (string.IsNullOrWhiteSpace(saveInfo.FilePath)) { return false; }
+                    LoadGame?.Invoke(saveInfo.FilePath);
+                    
                     CoroutineManager.StartCoroutine(WaitForCampaignSetup(), "WaitForCampaignSetup");
                     return true;
                 },
@@ -264,36 +243,19 @@ namespace Barotrauma
             };
         }       
         
+        
         private bool SelectSaveFile(GUIComponent component, object obj)
         {
-            string fileName = (string)obj;
+            if (obj is not CampaignMode.SaveInfo saveInfo) { return true; }
+            string fileName = saveInfo.FilePath;
 
             loadGameButton.Enabled = true;
             deleteMpSaveButton.Visible = deleteMpSaveButton.Enabled = GameMain.Client.IsServerOwner;
             deleteMpSaveButton.Enabled = GameMain.GameSession?.SavePath != fileName;
             if (deleteMpSaveButton.Visible)
             {
-                deleteMpSaveButton.UserData = obj as string;
+                deleteMpSaveButton.UserData = saveInfo;
             }
-            return true;
-        }
-
-        private bool DeleteSave(GUIButton button, object obj)
-        {
-            string saveFile = obj as string;
-            if (obj == null) { return false; }
-
-            var header = TextManager.Get("deletedialoglabel");
-            var body = TextManager.GetWithVariable("deletedialogquestion", "[file]", Path.GetFileNameWithoutExtension(saveFile));
-
-            EventEditorScreen.AskForConfirmation(header, body, () =>
-            {
-                SaveUtil.DeleteSave(saveFile);
-                prevSaveFiles?.RemoveAll(s => s.FilePath == saveFile);
-                UpdateLoadMenu(prevSaveFiles.ToList());
-                return true;
-            });
-
             return true;
         }
     }

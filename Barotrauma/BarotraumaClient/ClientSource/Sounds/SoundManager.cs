@@ -648,6 +648,12 @@ namespace Barotrauma.Sounds
 
                 if (isConnected == 0)
                 {
+                    if (!GameMain.Instance.HasLoaded)
+                    {
+                        //wait for loading to finish so we don't start releasing and reloading sounds when they're being loaded,
+                        //or throw an error mid-loading that'd prevent the content package from being enabled
+                        return;
+                    }
                     DebugConsole.ThrowError("Playback device has been disconnected. You can select another available device in the settings.");
                     SetAudioOutputDevice("<disconnected>");
                     Disconnected = true;

@@ -49,7 +49,6 @@ namespace Barotrauma
         OnUseRangedWeapon,
         OnReduceAffliction,
         OnAddDamageAffliction,
-        OnSelfRagdoll,
         OnRagdoll,
         OnRoundEnd,
         OnLootCharacter,

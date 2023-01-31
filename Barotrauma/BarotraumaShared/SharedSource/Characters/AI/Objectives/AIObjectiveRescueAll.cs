@@ -26,7 +26,7 @@ namespace Barotrauma
                 // When targeting player characters, always treat them when ordered, else use the threshold so that minor/non-severe damage is ignored.
                 // If we ignore any damage when the player orders a bot to do healings, it's observed to cause confusion among the players.
                 // On the other hand, if the bots too eagerly heal characters when it's not necessary, it's inefficient and can feel frustrating, because it can't be controlled.
-                return character == target || manager.HasOrder<AIObjectiveRescueAll>() ? (target.IsPlayer ? 100 : vitalityThresholdForOrders) : vitalityThreshold;
+                return character == target || manager.HasOrder<AIObjectiveRescueAll>() ? (target.IsPlayer && target.HealthPercentage < 100 ? 100 : vitalityThresholdForOrders) : vitalityThreshold;
             }
         }
         
@@ -67,13 +67,32 @@ namespace Barotrauma
             float vitality = 100;
             vitality -= character.Bleeding * 2;
             vitality += Math.Min(character.Oxygen, 0);
-            vitality -= character.CharacterHealth.GetAfflictionStrength("paralysis");
-            foreach (Affliction affliction in AIObjectiveRescue.GetTreatableAfflictions(character))
+            foreach (Affliction affliction in GetTreatableAfflictions(character))
             {
                 float strength = character.CharacterHealth.GetPredictedStrength(affliction, predictFutureDuration: 10.0f);
                 vitality -= affliction.GetVitalityDecrease(character.CharacterHealth, strength) / character.MaxVitality * 100;
+                if (affliction.Prefab.AfflictionType == "paralysis")
+                {
+                    vitality -= affliction.Strength;
+                }
+                else if (affliction.Prefab.AfflictionType == "poison")
+                {
+                    vitality -= affliction.Strength;
+                }
             }
             return Math.Clamp(vitality, 0, 100);
+        }
+
+        public static IEnumerable<Affliction> GetTreatableAfflictions(Character character)
+        {
+            var allAfflictions = character.CharacterHealth.GetAllAfflictions();
+            foreach (Affliction affliction in allAfflictions)
+            {
+                if (affliction.Prefab.IsBuff || affliction.Strength < affliction.Prefab.TreatmentThreshold) { continue; }
+                if (affliction.Prefab.TreatmentSuitability.None(kvp => kvp.Value > 0)) { continue; }
+                if (allAfflictions.Any(otherAffliction => affliction.Prefab.IgnoreTreatmentIfAfflictedBy.Contains(otherAffliction.Identifier))) { continue; }
+                yield return affliction;
+            }
         }
 
         protected override AIObjective ObjectiveConstructor(Character target)

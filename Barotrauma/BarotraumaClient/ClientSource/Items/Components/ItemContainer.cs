@@ -1,7 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections;
 using System.Linq;
+using static Barotrauma.Inventory;
 
 namespace Barotrauma.Items.Components
 {
@@ -248,6 +250,83 @@ namespace Barotrauma.Items.Components
             }
 
             return true;
+        }
+
+
+        public float GetContainedIndicatorState()
+        {
+            if (ShowConditionInContainedStateIndicator)
+            {
+                return item.Condition / item.MaxCondition;
+            }
+
+            int targetSlot = Math.Max(ContainedStateIndicatorSlot, 0);
+            if (targetSlot >= Inventory.Capacity) { return 0.0f; }
+
+            var containedItems = Inventory.GetItemsAt(targetSlot);            
+            if (containedItems == null) { return 0.0f; }
+            
+            Item containedItem = containedItems.FirstOrDefault();
+            if (ShowTotalStackCapacityInContainedStateIndicator)
+            {
+                // No item on the defined slot, check if the items on other slots can be used.
+                containedItem ??= 
+                    containedItems.FirstOrDefault() ?? 
+                    Inventory.AllItems.FirstOrDefault(it => CanBeContained(it, targetSlot));
+                if (containedItem == null) { return 0.0f; }
+                
+                int ignoredItemCount = 0;
+                var subContainableItems = AllSubContainableItems;
+                float capacity = GetMaxStackSize(targetSlot);
+                if (subContainableItems != null)
+                {
+                    bool useMainContainerCapacity = true;
+                    foreach (Item it in Inventory.AllItems)
+                    {
+                        // Ignore all items in the sub containers.
+                        foreach (RelatedItem ri in subContainableItems)
+                        {
+                            if (ri.MatchesItem(containedItem))
+                            {
+                                // The target item is in a subcontainer -> inverse the logic.
+                                useMainContainerCapacity = false;
+                                break;
+                            }
+                            if (ri.MatchesItem(it))
+                            {
+                                ignoredItemCount++;
+                            }
+                        }
+                        if (!useMainContainerCapacity) { break; }
+                    }
+                    if (useMainContainerCapacity)
+                    {
+                        capacity *= MainContainerCapacity;
+                    }
+                    else
+                    {
+                        // Ignore all items in the main container.
+                        ignoredItemCount = Inventory.AllItems.Count(it => subContainableItems.Any(ri => !ri.MatchesItem(it)));
+                        capacity *= Capacity - MainContainerCapacity;
+                    }
+                }
+                int itemCount = Inventory.AllItems.Count() - ignoredItemCount;
+                return Math.Min(itemCount / Math.Max(capacity, 1), 1);                
+            }
+            else
+            {
+                if (containedItem != null && (Inventory.Capacity == 1 || HasSubContainers))
+                {
+                    int maxStackSize = Math.Min(containedItem.Prefab.MaxStackSize, GetMaxStackSize(targetSlot));
+                    if (maxStackSize > 1 || containedItem.Prefab.HideConditionBar)
+                    {
+                        return containedItems.Count() / (float)maxStackSize;
+                    }
+                }
+                return Inventory.Capacity == 1 || ContainedStateIndicatorSlot > -1 ?
+                    (containedItem == null ? 0.0f : containedItem.Condition / containedItem.MaxCondition) :
+                    Inventory.EmptySlotCount / (float)Inventory.Capacity;
+            }                  
         }
 
         public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)

@@ -188,16 +188,26 @@ namespace Barotrauma.Items.Components
 
         private DockingPort FindAdjacentPort()
         {
+            float closestDist = float.MaxValue;
+            DockingPort closestPort = null;
             foreach (DockingPort port in list)
             {
                 if (port == this || port.item.Submarine == item.Submarine || port.IsHorizontal != IsHorizontal) { continue; }
-                if (Math.Abs(port.item.WorldPosition.X - item.WorldPosition.X) > DistanceTolerance.X) { continue; }
-                if (Math.Abs(port.item.WorldPosition.Y - item.WorldPosition.Y) > DistanceTolerance.Y) { continue; }
+                float xDist = Math.Abs(port.item.WorldPosition.X - item.WorldPosition.X);
+                if (xDist > DistanceTolerance.X) { continue; }
+                float yDist = Math.Abs(port.item.WorldPosition.Y - item.WorldPosition.Y);
+                if (yDist > DistanceTolerance.Y) { continue; }
 
-                return port;
+                float dist = xDist + yDist;
+                //disfavor non-interactable ports
+                if (port.item.NonInteractable) { dist *= 2; }
+                if (dist < closestDist)
+                {
+                    closestPort = port;
+                    closestDist = dist;
+                }
             }
-
-            return null;
+            return closestPort;
         }
 
         private void AttemptDock()
@@ -279,7 +289,16 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (!(joint is WeldJoint))
+            if (joint == null)
+            {
+                string errorMsg = "Error while locking a docking port (joint between submarines doesn't exist)." +
+                    " Submarine: " + (item.Submarine?.Info.Name ?? "null") +
+                    ", target submarine: " + (DockingTarget.item.Submarine?.Info.Name ?? "null");
+                GameAnalyticsManager.AddErrorEventOnce("DockingPort.Lock:JointNotCreated", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                return;
+            }
+
+            if (joint is not WeldJoint)
             {
                 DockingDir = GetDir(DockingTarget);
                 DockingTarget.DockingDir = -DockingDir;

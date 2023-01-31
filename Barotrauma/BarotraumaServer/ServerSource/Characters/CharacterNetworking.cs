@@ -8,8 +8,9 @@ namespace Barotrauma
 {
     partial class Character
     {
-        public Address OwnerClientAddress;
-        public string OwnerClientName;
+        private Address ownerClientAddress;
+        private Option<AccountId> ownerClientAccountId;
+
         public bool ClientDisconnected;
         public float KillDisconnectedTimer;
 
@@ -18,6 +19,35 @@ namespace Barotrauma
         private double LastInputTime;
 
         public bool HealthUpdatePending;
+
+        public void SetOwnerClient(Client client)
+        {
+            if (client == null)
+            {
+                ownerClientAddress = null;
+                ownerClientAccountId = Option<AccountId>.None();
+                IsRemotePlayer = false;
+            }
+            else
+            {
+                ownerClientAddress = client.Connection.Endpoint.Address;
+                ownerClientAccountId = client.AccountId;
+                IsRemotePlayer = true;
+            }
+        }
+
+        public bool IsClientOwner(Client client)
+        {
+            if (ownerClientAccountId.TryUnwrap(out var accountId)
+                && client.AccountId.TryUnwrap(out var clientId))
+            {
+                return accountId == clientId;
+            }
+            else
+            {
+                return ownerClientAddress == client.Connection.Endpoint.Address;
+            }            
+        }
 
         public float GetPositionUpdateInterval(Client recipient)
         {
@@ -302,12 +332,8 @@ namespace Barotrauma
             }
         }
 
-        public void ServerWritePosition(IWriteMessage msg, Client c)
+        public void ServerWritePosition(ReadWriteMessage tempBuffer, Client c)
         {
-            msg.WriteUInt16(ID);
-
-            IWriteMessage tempBuffer = new WriteOnlyMessage();
-
             if (this == c.Character)
             {
                 tempBuffer.WriteBoolean(true);
@@ -405,11 +431,6 @@ namespace Barotrauma
                 AIController?.ServerWrite(tempBuffer);
                 HealthUpdatePending = false;
             }
-
-            tempBuffer.WritePadBits();
-
-            msg.WriteVariableUInt32((uint)tempBuffer.LengthBytes);
-            msg.WriteBytes(tempBuffer.Buffer, 0, tempBuffer.LengthBytes);
         }
 
         public virtual void ServerEventWrite(IWriteMessage msg, Client c, NetEntityEvent.IData extraData = null)

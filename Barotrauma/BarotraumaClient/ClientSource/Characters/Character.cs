@@ -616,7 +616,7 @@ namespace Barotrauma
             return closestItem;
         }
 
-        private Character FindCharacterAtPosition(Vector2 mouseSimPos, float maxDist = 150.0f)
+        private Character FindCharacterAtPosition(Vector2 mouseSimPos, float maxDist = MaxHighlightDistance)
         {
             Character closestCharacter = null;
 
@@ -626,7 +626,7 @@ namespace Barotrauma
             {
                 if (!CanInteractWith(c, checkVisibility: false) || (c.AnimController?.SimplePhysicsEnabled ?? true)) { continue; }
 
-                float dist = Vector2.DistanceSquared(mouseSimPos, c.SimPosition);
+                float dist = c.GetDistanceToClosestLimb(mouseSimPos);
                 if (dist < closestDist || 
                     (c.CampaignInteractionType != CampaignMode.InteractionType.None && closestCharacter?.CampaignInteractionType == CampaignMode.InteractionType.None && dist * 0.9f < closestDist))
                 {

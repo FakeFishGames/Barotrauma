@@ -778,9 +778,10 @@ namespace Barotrauma
                 FacialHairColors = CharacterConfigElement.GetAttributeTupleArray("facialhaircolors", new (Color, float)[] { (Color.WhiteSmoke, 100f) }).ToImmutableArray();
                 SkinColors = CharacterConfigElement.GetAttributeTupleArray("skincolors", new (Color, float)[] { (new Color(255, 215, 200, 255), 100f) }).ToImmutableArray();
                 
-                Head.SkinColor = infoElement.GetAttributeColor("skincolor", Color.White);
-                Head.HairColor = infoElement.GetAttributeColor("haircolor", Color.White);
-                Head.FacialHairColor = infoElement.GetAttributeColor("facialhaircolor", Color.White);
+                //default to transparent color, it's invalid and will be replaced with a random one in CheckColors
+                Head.SkinColor = infoElement.GetAttributeColor("skincolor", Color.Transparent);
+                Head.HairColor = infoElement.GetAttributeColor("haircolor", Color.Transparent);
+                Head.FacialHairColor = infoElement.GetAttributeColor("facialhaircolor", Color.Transparent);
                 CheckColors();
 
                 TryLoadNameAndTitle(npcIdentifier);

@@ -27,12 +27,9 @@ namespace Barotrauma
                 AnyOneAllowedToManageCampaign(permissions);
         }
 
-        public bool AllowedToManageWallets(Client client)
+        public static bool AllowedToManageWallets(Client client)
         {
-            return
-                client.HasPermission(ClientPermissions.ManageCampaign) ||
-                client.HasPermission(ClientPermissions.ManageMoney) ||
-                IsOwner(client);
+            return AllowedToManageCampaign(client, ClientPermissions.ManageMoney);
         }
 
         public override void ShowStartMessage()

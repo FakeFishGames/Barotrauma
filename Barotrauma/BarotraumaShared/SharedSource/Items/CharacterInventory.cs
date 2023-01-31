@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -307,6 +308,8 @@ namespace Barotrauma
                 return false;
 #endif
             }
+
+            if (item.GetComponent<Pickable>() == null || item.AllowedSlots.None()) { return false; }
 
             bool inSuitableSlot = false;
             bool inWrongSlot = false;

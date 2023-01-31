@@ -88,6 +88,7 @@ namespace Barotrauma
         public T GetAttributeEnum<T>(string key, in T def) where T : struct, Enum => Element.GetAttributeEnum(key, def);
         public (T1, T2) GetAttributeTuple<T1, T2>(string key, in (T1, T2) def) => Element.GetAttributeTuple(key, def);
         public (T1, T2)[] GetAttributeTupleArray<T1, T2>(string key, in (T1, T2)[] def) => Element.GetAttributeTupleArray(key, def);
+        public Range<int> GetAttributeRange(string key, in Range<int> def) => Element.GetAttributeRange(key, def);
 
         public PrefabInstance InheritParent() => Element.InheritParent();
         

@@ -546,9 +546,7 @@ namespace Barotrauma
             StatusEffect.StopAll();
 
 #if CLIENT
-#if !DEBUG
-            GameMain.LightManager.LosEnabled = GameMain.Client == null || GameMain.Client.CharacterInfo != null;
-#endif
+            GameMain.LightManager.LosEnabled = (GameMain.Client == null || GameMain.Client.CharacterInfo != null) && !GameMain.DevMode;
             if (GameMain.LightManager.LosEnabled) { GameMain.LightManager.LosAlpha = 1f; }
             if (GameMain.Client == null) { GameMain.LightManager.LosMode = GameSettings.CurrentConfig.Graphics.LosMode; }
 #endif
@@ -1074,7 +1072,10 @@ namespace Barotrauma
             XDocument doc = new XDocument(new XElement("Gamesession"));
             XElement rootElement = doc.Root ?? throw new NullReferenceException("Game session XML element is invalid: document is null.");
 
-            rootElement.Add(new XAttribute("savetime", ToolBox.Epoch.NowLocal));
+            rootElement.Add(new XAttribute("savetime", SerializableDateTime.UtcNow.ToUnixTime()));
+            #warning TODO: after this gets on main, replace savetime with the commented line
+            //rootElement.Add(new XAttribute("savetime", SerializableDateTime.LocalNow));
+
             rootElement.Add(new XAttribute("version", GameMain.Version));
             if (Submarine?.Info != null && !Submarine.Removed && Campaign != null)
             {

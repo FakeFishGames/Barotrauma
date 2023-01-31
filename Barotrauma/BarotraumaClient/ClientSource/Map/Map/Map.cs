@@ -68,7 +68,7 @@ namespace Barotrauma
 
         private (Rectangle targetArea, RichString tip)? tooltip;
 
-        private (SubmarineInfo pendingSub, float realWorldCrushDepth) pendingSubInfo;
+        private SubmarineInfo.PendingSubInfo pendingSubInfo;
 
         private RichString beaconStationActiveText, beaconStationInactiveText;
 
@@ -936,39 +936,8 @@ namespace Barotrauma
                 if (connection.LevelData.HasHuntingGrounds) { iconCount++; }
                 if (connection.Locked) { iconCount++; }
                 string tooltip = null;
-                float subCrushDepth = Level.DefaultRealWorldCrushDepth;
-                var currentOrPendingSub = SubmarineSelection.CurrentOrPendingSubmarine();
-                if (Submarine.MainSub != null && Submarine.MainSub.Info == currentOrPendingSub)
-                {
-                    subCrushDepth = Submarine.MainSub.RealWorldCrushDepth;
-                }
-                else if (currentOrPendingSub != null)
-                {
-                    if (pendingSubInfo.pendingSub != currentOrPendingSub)
-                    {
-                        // Store the real world crush depth for the pending sub so that we don't have to calculate it again every time
-                        pendingSubInfo = (currentOrPendingSub, currentOrPendingSub.GetRealWorldCrushDepth());
-                    }
-                    subCrushDepth = pendingSubInfo.realWorldCrushDepth;
-                }
-                if (GameMain.GameSession?.Campaign?.UpgradeManager != null)
-                {
-                    var hullUpgradePrefab =  UpgradePrefab.Find("increasewallhealth".ToIdentifier());
-                    if (hullUpgradePrefab != null)
-                    {
-                        int pendingLevel = GameMain.GameSession.Campaign.UpgradeManager.GetUpgradeLevel(hullUpgradePrefab, hullUpgradePrefab.UpgradeCategories.First());
-                        int currentLevel = GameMain.GameSession.Campaign.UpgradeManager.GetRealUpgradeLevel(hullUpgradePrefab, hullUpgradePrefab.UpgradeCategories.First());
-                        if (pendingLevel > currentLevel)
-                        {
-                            string updateValueStr = hullUpgradePrefab.SourceElement?.GetChildElement("Structure")?.GetAttributeString("crushdepth", null);
-                            if (!string.IsNullOrEmpty(updateValueStr))
-                            {
-                                subCrushDepth = PropertyReference.CalculateUpgrade(subCrushDepth, pendingLevel - currentLevel, updateValueStr);
-                            }
-                        }
-                    }
-                }
 
+                float subCrushDepth = SubmarineInfo.GetSubCrushDepth(SubmarineSelection.CurrentOrPendingSubmarine(), ref pendingSubInfo);
                 string crushDepthWarningIconStyle = null;
                 if (connection.LevelData.InitialDepth * Physics.DisplayToRealWorldRatio > subCrushDepth)
                 {
@@ -1123,6 +1092,14 @@ namespace Barotrauma
                 }
                 anim.Finished = true;
             }
+        }
+
+        /// <summary>
+        /// Resets <see cref="pendingSubInfo"/> and forces crush depth to be calculated again for icon displaying purposes
+        /// </summary>
+        public void ResetPendingSub()
+        {
+            pendingSubInfo = new SubmarineInfo.PendingSubInfo();
         }
 
         partial void RemoveProjSpecific()

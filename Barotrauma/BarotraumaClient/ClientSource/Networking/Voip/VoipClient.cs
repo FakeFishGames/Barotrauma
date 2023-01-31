@@ -120,6 +120,7 @@ namespace Barotrauma.Networking
                     client.Character.ShowSpeechBubble(1.25f, ChatMessage.MessageColor[(int)messageType]);
 
                     client.VoipSound.UseRadioFilter = messageType == ChatMessageType.Radio && !GameSettings.CurrentConfig.Audio.DisableVoiceChatFilters;
+                    client.RadioNoise = 0.0f;
                     if (messageType == ChatMessageType.Radio)
                     {
                         client.VoipSound.SetRange(radio.Range * RangeNear * speechImpedimentMultiplier * rangeMultiplier, radio.Range * speechImpedimentMultiplier * rangeMultiplier);
@@ -131,7 +132,6 @@ namespace Barotrauma.Networking
                     }
                     else
                     {
-
                         client.VoipSound.SetRange(ChatMessage.SpeakRange * RangeNear * speechImpedimentMultiplier * rangeMultiplier, ChatMessage.SpeakRange * speechImpedimentMultiplier * rangeMultiplier);
                     }
                     client.VoipSound.UseMuffleFilter = 

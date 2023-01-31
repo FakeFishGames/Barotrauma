@@ -404,7 +404,7 @@ namespace Barotrauma
             {
                 var experienceGainMultiplierIndividual = new AbilityMissionExperienceGainMultiplier(this, 1f);
                 info?.Character?.CheckTalents(AbilityEffectType.OnGainMissionExperience, experienceGainMultiplierIndividual);
-                info?.GiveExperience((int)(experienceGain * experienceGainMultiplier.Value));
+                info?.GiveExperience((int)((experienceGain * experienceGainMultiplier.Value) * experienceGainMultiplierIndividual.Value));
             }
 
             // apply money gains afterwards to prevent them from affecting XP gains
@@ -545,17 +545,14 @@ namespace Barotrauma
             return humanPrefab;
         }
 
-        protected Character CreateHuman(HumanPrefab humanPrefab, List<Character> characters, Dictionary<Character, List<Item>> characterItems, Submarine submarine, CharacterTeamType teamType, ISpatialEntity positionToStayIn = null, Rand.RandSync humanPrefabRandSync = Rand.RandSync.ServerAndClient, bool giveTags = true)
+        protected static Character CreateHuman(HumanPrefab humanPrefab, List<Character> characters, Dictionary<Character, List<Item>> characterItems, Submarine submarine, CharacterTeamType teamType, ISpatialEntity positionToStayIn = null, Rand.RandSync humanPrefabRandSync = Rand.RandSync.ServerAndClient)
         {
             var characterInfo = humanPrefab.CreateCharacterInfo(Rand.RandSync.ServerAndClient);
             characterInfo.TeamID = teamType;
 
-            if (positionToStayIn == null) 
-            {
-                positionToStayIn = 
+            positionToStayIn ??= 
                     WayPoint.GetRandom(SpawnType.Human, characterInfo.Job?.Prefab, submarine) ??
                     WayPoint.GetRandom(SpawnType.Human, null, submarine);
-            }
 
             Character spawnedCharacter = Character.Create(characterInfo.SpeciesName, positionToStayIn.WorldPosition, ToolBox.RandomSeed(8), characterInfo, createNetworkEvent: false);
             spawnedCharacter.HumanPrefab = humanPrefab;

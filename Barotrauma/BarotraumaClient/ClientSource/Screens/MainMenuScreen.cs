@@ -873,7 +873,25 @@ namespace Barotrauma
             GameMain.ResetNetLobbyScreen();
             try
             {
-                string exeName = serverExecutableDropdown.SelectedComponent?.UserData is ServerExecutableFile f ? f.Path.Value : "DedicatedServer";
+                string fileName;
+                if (serverExecutableDropdown.SelectedComponent?.UserData is ServerExecutableFile f && 
+                    f.ContentPackage != GameMain.VanillaContent)
+                {
+                    fileName = Path.Combine(
+                        Path.GetDirectoryName(f.Path.Value),
+                        Path.GetFileNameWithoutExtension(f.Path.Value));
+#if WINDOWS
+                    fileName += ".exe";
+#endif
+                }
+                else
+                {
+#if WINDOWS
+                    fileName = "DedicatedServer.exe";
+#else
+                    fileName = "./DedicatedServer";
+#endif
+                }
 
                 string arguments = "-name \"" + ToolBox.EscapeCharacters(name) + "\"" +
                                    " -public " + isPublicBox.Selected.ToString() +
@@ -897,19 +915,10 @@ namespace Barotrauma
                 }
                 int ownerKey = Math.Max(CryptoRandom.Instance.Next(), 1);
                 arguments += " -ownerkey " + ownerKey;
-
-                string filename = Path.Combine(
-                    Path.GetDirectoryName(exeName),
-                    Path.GetFileNameWithoutExtension(exeName));
-#if WINDOWS
-                filename += ".exe";
-#else
-                filename = "./" + exeName;
-#endif
-                
+                                
                 var processInfo = new ProcessStartInfo
                 {
-                    FileName = filename,
+                    FileName = fileName,
                     Arguments = arguments,
                     WorkingDirectory = Directory.GetCurrentDirectory(),
 #if !DEBUG
@@ -985,7 +994,7 @@ namespace Barotrauma
                         || item.IsDownloadPending
                         || (item.InstallTime.TryGetValue(out var workshopInstallTime)
                             && pkg.InstallTime.TryUnwrap(out var localInstallTime)
-                            && localInstallTime < workshopInstallTime)));
+                            && localInstallTime.ToUtcValue() < workshopInstallTime)));
 
             modUpdateStatus = (DateTime.Now + ModUpdateInterval, count);
         }

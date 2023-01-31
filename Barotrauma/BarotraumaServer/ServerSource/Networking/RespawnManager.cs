@@ -439,8 +439,7 @@ namespace Barotrauma.Networking
                     }
 
                     clients[i].Character = character;
-                    character.OwnerClientAddress = clients[i].Connection.Endpoint.Address;
-                    character.OwnerClientName = clients[i].Name;
+                    character.SetOwnerClient(clients[i]);
                     GameServer.Log(
                         $"Respawning {GameServer.ClientLogName(clients[i])} ({clients[i].Connection.Endpoint}) as {characterInfos[i].Job.Name}", ServerLog.MessageType.Spawning);
                 }

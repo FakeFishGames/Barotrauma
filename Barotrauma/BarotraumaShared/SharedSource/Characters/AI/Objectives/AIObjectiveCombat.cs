@@ -352,7 +352,7 @@ namespace Barotrauma
                         Weapon = null;
                         continue;
                     }
-                    if (WeaponComponent.IsLoaded(character))
+                    if (WeaponComponent.IsNotEmpty(character))
                     {
                         // All good, the weapon is loaded
                         break;
@@ -470,7 +470,7 @@ namespace Barotrauma
                     // Not in the inventory anymore or cannot find the weapon component
                     return false;
                 }
-                if (!WeaponComponent.IsLoaded(character))
+                if (!WeaponComponent.IsNotEmpty(character))
                 {
                     // Try reloading (and seek ammo)
                     if (!Reload(seekAmmo))
@@ -541,7 +541,7 @@ namespace Barotrauma
                         priority /= 2;
                     }
                 }
-                if (!weapon.IsLoaded(character))
+                if (!weapon.IsNotEmpty(character))
                 {
                     if (weapon is RangedWeapon && !isAllowedToSeekWeapons)
                     {
@@ -554,7 +554,15 @@ namespace Barotrauma
                         priority /= 2;
                     }
                 }
-                if (Enemy.IsKnockedDown)
+
+                if (Enemy.Params.Health.StunImmunity)
+                {
+                    if (weapon.Item.HasTag("stunner"))
+                    {
+                        priority /= 2;
+                    }
+                }
+                else if (Enemy.IsKnockedDown)
                 {
                     // Enemy is stunned, reduce the priority of stunner weapons.
                     Attack attack = GetAttackDefinition(weapon);

@@ -12,7 +12,7 @@ namespace Barotrauma.Networking
             string name,
             Either<Address, AccountId> addressOrAccountId,
             string reason,
-            DateTime? expiration)
+            Option<SerializableDateTime> expiration)
         {
             this.Name = name;
             this.AddressOrAccountId = addressOrAccountId;
@@ -66,9 +66,20 @@ namespace Barotrauma.Networking
                 };
 
                 var addressOrAccountId = bannedPlayer.AddressOrAccountId;
-                GUITextBlock textBlock = new GUITextBlock(
-                    new RectTransform(new Vector2(0.5f, 1.0f), topArea.RectTransform),
-                    bannedPlayer.Name + " (" + addressOrAccountId + ")") { CanBeFocused = true };
+
+                string nameText = bannedPlayer.Name;
+                if (addressOrAccountId.TryCast(out Address address))
+                {
+                    nameText += $" ({address.StringRepresentation})";
+                }
+                else if (addressOrAccountId.TryCast(out AccountId accountId))
+                {
+                    nameText += $" ({accountId.StringRepresentation})";
+                }
+                GUITextBlock textBlock = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), topArea.RectTransform), nameText) 
+                { 
+                    CanBeFocused = true 
+                };
                 textBlock.RectTransform.MinSize = new Point(
                     (int)textBlock.Font.MeasureString(textBlock.Text.SanitizedValue).X, 0);
 
@@ -83,8 +94,9 @@ namespace Barotrauma.Networking
                 topArea.ForceLayoutRecalculation();
 
                 new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), paddedPlayerFrame.RectTransform),
-                    bannedPlayer.ExpirationTime == null ? 
-                        TextManager.Get("BanPermanent") :  TextManager.GetWithVariable("BanExpires", "[time]", bannedPlayer.ExpirationTime.Value.ToString()),
+                    bannedPlayer.ExpirationTime.TryUnwrap(out var expirationTime)
+                        ? TextManager.GetWithVariable("BanExpires", "[time]", expirationTime.ToLocalUserString())
+                        : TextManager.Get("BanPermanent"),
                     font: GUIStyle.SmallFont);
 
                 LocalizedString reason = TextManager.GetServerMessage(bannedPlayer.Reason).Fallback(bannedPlayer.Reason);
@@ -106,7 +118,7 @@ namespace Barotrauma.Networking
 
         private bool RemoveBan(GUIButton button, object obj)
         {
-            if (!(obj is BannedPlayer banned)) { return false; }
+            if (obj is not BannedPlayer banned) { return false; }
 
             localRemovedBans.Add(banned.UniqueIdentifier);
             RecreateBanFrame();
@@ -138,11 +150,11 @@ namespace Barotrauma.Networking
                 bool includesExpiration = incMsg.ReadBoolean();
                 incMsg.ReadPadBits();
 
-                DateTime? expiration = null;
+                Option<SerializableDateTime> expiration = Option<SerializableDateTime>.None();
                 if (includesExpiration)
                 {
                     double hoursFromNow = incMsg.ReadDouble();
-                    expiration = DateTime.Now + TimeSpan.FromHours(hoursFromNow);
+                    expiration = Option<SerializableDateTime>.Some(SerializableDateTime.LocalNow + TimeSpan.FromHours(hoursFromNow));
                 }
 
                 string reason = incMsg.ReadString();

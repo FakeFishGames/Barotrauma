@@ -1,4 +1,170 @@
 ---------------------------------------------------------------------------------------------------------
+v0.21.6.0
+---------------------------------------------------------------------------------------------------------
+
+- Minor localization fixes.
+- Fixed some occasional crashes in the character editor.
+
+---------------------------------------------------------------------------------------------------------
+v0.21.5.0
+---------------------------------------------------------------------------------------------------------
+
+- Fixed delete save button not working in the singleplayer "load game" menu.
+- Fixed depleted fuel revolver round recipe requiring too many materials.
+- Reduced medical item cooldown to 0.5 seconds.
+- Minor fixes to Chinese localization.
+- Fix bugged sufforing poisoning when it reaches the full strength.
+- Fixed crashing when you save a sub that contains item variants with decorative sprites (most wrecks) as a new content package.
+
+---------------------------------------------------------------------------------------------------------
+v0.21.4.0
+---------------------------------------------------------------------------------------------------------
+
+Unstable only:
+- Fixed crashing when an item spawns after upgrades with material requirements have been purchased in the multiplayer campaign.
+- Fixed crashing if the submarine preview is closed before generating the preview finishes.
+
+Changes:
+- Some submarine upgrades cost materials in addition to money.
+- Crush depths are displayed on the submarine switch terminal.
+- Miscellaneous fixes to all translations.
+- The "max missions" campaign setting is restricted to a maximum of 3.
+- Minor improvements to ragdoll animation when falling prone due to stun/unconsciousness/ragdolling.
+- Revisited the skill requirements and the OnFailure conditions on welding tool, plasma cutter, flamer, and steam gun. Flamer and steam gun now apply burns on the user only when they don't have enough skills to use the item. All these items are now less efficient when used with low skills.
+- Changed Alarm Buzzer sound to differentiate it from the diving suit warning beep.
+- Depth charge tweaks: require UEX, increase non-contained item explosion radius and damage, allow quality to affect explosion, increase pricing.
+- Reduced Flak Cannon effectiveness (in particular Spreader Ammo and Explosive Ammo), against large enemies in particular.
+- Lights flicker when hit by EMP.
+- Large monsters no longer drop the loot when they die. This was implemented as a workaround to it being difficult to grab large monsters, but now they're much easier to grab - you can grab them anywhere near their main limb, instead of having to find the "origin" somewhere at the center of the monster.
+- Bots now prefer PUCS over the other diving suits and the other diving suits over exosuit.
+- Made drinks and other consumables work more consistently.
+- Adjusted the aim poses used while holding certain melee weapons.
+- Harpoons: Adjusted the damage on walls and the projectile launch forces. Spears can now stick to the walls. Inversed the reeling logic: ragdoll key = reel in.
+
+Poison overhaul:
+- Reworked most poison afflictions with the goal that a medic can now use them offensively on monsters and humans alike.
+- Sufforin, Morbusine, Cyanide, Paralyzant now work on most monsters. Bigger monsters are generally more resistant than the smaller.
+- Sufforin poisoning: Slowly makes the target fall sick. Eventually leads to death. Stronger monsters may recover.
+- Morbusine poisoning: Kills the target relatively quickly from gradual oxygen deprivation/organ damage. Stronger monsters may recover.
+- Cyanide poisoning: Doesn't do much at first, but progresses rapidly and kills the target suddenly. Lethal even to the strongest monsters.
+- Paralysis: Advances more quickly than previously. Effective even on larger monsters. (Leucocytes don't always apply enough paralysis for it to progress. They also use a version of the affliction that progresses using the old, slower speed.)
+- Poisons (and paralysis) now wear off when the affliction level is low.
+- Made medic AI react sooner to treat poisons.
+- Attempts to poison the target can now fail when the user has a low medical skill.
+- Added a short cooldown to applying medical items. Prevents being able to spam medicine (or poisons) at a nearly unlimited rate.
+- Adjusted the syringe and stun gun dart trajectories.
+- Reworked the weapons and the medical skill gains: instead of always increasing the weapons skill when a target takes damage, afflictions like poisons now increase the medical skill. Also applying the buffs now increases the medical skill. The skill increases are defined per affliction.
+- Fixed the skill gains on low levels (0-15) being ridiculously high.
+
+Talents:
+- Fixed "Down With the Ship" sometimes having an incorrect description.
+- Fixed "Bounty Hunter" and "Logistics Expert" not giving 15% experience bonus.
+- Pet raptor eggs can be fabricated from raptor eggs of any size.
+- Fixed Flamer being craftable by anyone, even though it should only be possible with the "Pyromaniac" talent.
+- Fixed ability to move in an unpowered exosuit when you've got any speed buff.
+- Fixed "True Potential" and "Chonky Honks" not requiring clown power to work.
+- Reduced the chance of finding genetic materials with the "Gene Harvester" talent, fixed genetic materials sometimes being found on defense bots.
+- Fixed "Spec Ops" not working properly with shotguns and other weapons that fire multiple projectiles per shot. Only the first projectile that hit did double damage.
+- Fixed some parts of Hemulen and Venture not flooding properly.
+- "Mass production" talent only applies to items in the "material" category. Fixes e.g. recycle recipes sometimes allowing you to keep the original item. 
+- Fixed "Lone Wolf" not giving any damage/stun resistance.
+- Fixed "Scrap Savant" having a 80% chance of finding scrap instead of 20%.
+- Fixed "Steady Tune" not doing what the description says (giving a constantly diminishing 7.5% resistance instead of 60%), made the talent give 100% immunity instead.
+- Fixed "Multifunctional" talent not giving a boost to crowbar damage.
+- Fixed inaccurate "Unstoppable Curiosity" and "Ph.D in Nuclear Physics" descriptions.
+- Fixed skill boost from "Journeyman" not matching the value in the description.
+- Fixed "Quickdraw" damage bonus.
+- Fixed inaccurate "Journeyman" description.
+- Fixed "Oiled Machinery" not increasing fabrication speed.
+- Fixed tinkered doors requiring a higher condition percentage to become repaired.
+- Fixed "Drunken Sailor" not protecting entirely from the negative effects of drunkness.
+
+Multiplayer:
+- Better support for playing the MP campaign without a host or someone with campaign management permissions on the server: 
+	- You can vote to end the round in the campaign as well.
+	- Automatic restart works in the campaign mode as well.
+	- Anyone can manage salaries if there's no-one allowed to do it.
+	- If there's no host or anyone with permissions in the server, anyone is able to setup a new campaign.
+	- Campaign can be voted for when game mode voting is enabled.
+- Made ragdoll syncing more robust: reduces cases of teleportation/desync when manually ragdolling the character in multiplayer. 
+- Fixed rejoining clients not regaining control of their character even if the character is still alive, if the client's IP address has changed. A respawn would also not trigger. 
+- Fixed "failed to write a network message, too much data is being stored in SegmentTable" errors that could occur in various situations: for example when the host has a large ban list, lots of submarines, and when rewiring a device with lots of connections.
+- Fixed "Create new character" button not appearing in the tab menu when dead or spectating.
+- Fixed clients not entering the server lobby if they accept a server invite during a single player round or tutorial.
+- Fixed inability to join IPv4 servers when IPv6 is disabled.
+- Fixed hidden submarine list sometimes desyncing if you have specific custom submarines.
+- Fixed characters spawning with their inventory, skills, etc intact if they die during a round and the round ends when the client is no longer in the server. Or, to put it another way, spawning as if they hadn't died at all.
+- Fixed an issue that prevented some dedicated servers from appearing in the server list.
+- Fixed chat-linked wifi components not receiving order and report messages.
+- Save the server settings after starting up the server to create the default settings file if it doesn't exist, instead of only when the server is shut down or the settings changed.
+- Fixed list of hidden submarines sometimes desyncing.
+- Fixed inability to start Linux dedicated server using LinuxGSM due to an incorrect EOL character in DedicatedServer.exe.
+
+Bugfixes:
+- Fixed high-quality items spawning earlier in the campaign when playing with a higher campaign difficulty setting. 
+- Fixed multiple issues in the tutorials: missing text, events not progressing when not following tutorial's steps, infographics usability issues.
+- Fixed attacking with a melee weapon making you unable to turn (flip) for a while.
+- Fixed ragdolling affecting the character's velocity, allowing it to be used as a way to avoid fall damage.
+- Hull fixes to vanilla subs and wrecks.
+- Fixed alien flares practically never spawning in ruins.
+- Fixed status effects defined inside an attack definition still using the old OnUse/OnFailure logic instead of OnSuccess/OnFailure.
+- Fixed "save as item assembly" and "snap to grid" buttons taking cursor focus in the sub editor even when they're not visible.
+- Fixed inability to launch custom dedicated server executables from the main menu on mac and linux.
+- Fixed inability to drag and drop items from the entity list to small containers (such as battery charging docks) in the sub editor.
+- Fixed item condition not decreasing client-side if the condition decreases very slowly: for example when using a thorium rod with the "Cruisin'" talent.
+- Fixed flares still emitting light after running out.
+- Fixed Electrical Discharge Coil preview not working in the sub editor.
+- Fixed alien flares not activating when clicking LMB.
+- Fixed crawler's arms getting broken when the character flips (turns) in water.
+- Fixed the recycle recipe of flak explosive ammo.
+- Fixed misaligned shells in wrecked railgun shell rack.
+- Fixed misaligned light component light sprite.
+- Fixed crashing if the select audio device is disconnected while in the initial loading screen.
+- Fixed inability to sell genetic materials that aren't 100% refined.
+- Fixed liquid oxygenite exploding too easily.
+- Fixed Hemulen's bottom airlock never fully draining.
+- Fixed incorrect damage values in "Genetic Material (Hunter)" tooltip.
+- Fixed exosuit not playing the warning beep when low or out of oxygen.
+- Fixed "taste test" event showing for everyone and not progressing past the 1st prompt.
+- Fixed "special training required" and "too many of this item" messages being shown to everyone when someone tries to place a portable pump.
+- Added a pump to RemoraDrone's engine room, otherwise it's impossible to drain.
+- Fixed some lighting sprites appearing dimmer than they should (most notably, junction boxes and supercapacitors).
+- Fixed submarine's crush depth being displayed incorrectly on the campaign map when a submarine switch is pending: the hull upgrades of the current sub weren't taken into account, even though they carry over to the new sub.
+- Fixed item assembly descriptions not showing up in the sub editor unless they're configured in a text file.
+- Fixed rapid fissile accelerator ammo causing an explosion when launched, instead of when it hits something.
+- Fixed bots sometimes trying to contain multiple ammo boxes when reloading turrets (also affected other items).
+- Fixed "Manually Outfitted" not doing anything when starting a campaign.
+- Fixed guardians trying to heal themselves in inactive pods (not destroyed pods, but ones deactivated via wiring).
+- Fixed bots having trouble with fixing Barsuk's top hatch and leaks around it.
+- Fixed sprite bleed in turret icons.
+- Fixed radio channel presets resetting between rounds.
+- Fixed some lines in the "shockjock" event being shown to everyone.
+- Fixed radio noise playing even if you don't have a headset.
+- Fixed hitscan projectiles going through subs when you're firing from inside another sub.
+- Fixed lights set to flicker/pulse eventually getting out of sync even if they're set to the same frequency.
+- Fixes to submarine preview: wires are now visible, scaled doors work correctly, camera is now correctly centered on the sub when opening the preview.
+- Fixed the affliction type of some afflictions (like drunk) being "poison", causing them to be treated as poisons. They are now "debuffs" instead.
+- Fixed defense bots not attacking pirates or bandits. Also fixed them not protecting the owner when attacked by the outpost guards.
+- Fixed bots not knowing how to handle diving suits that don't have an oxygen tank inside them. Now they should be able to use them and refill them with an oxygen tank.
+
+Modding:
+- Added a button for updating core mods into the Mods menu.
+- Addressed various inconsistencies, issues and limitations in how status effects are used in certain cases:
+	- Status effects defined for attacks with the type "UseTarget" now correctly target the use target, instead of the attacker like they used to.
+	- Changed the status effects of type "Character" to "UseTarget" for MeleeWeapon and Projectile components. The motivation behind this change is that previously we couldn't target the attacker at all within these item components, which might be desirable for some melee weapons.
+	- MODDERS, PLEASE NOTE: Effects that target "Character" in the previously mentioned components now affect the user - if that's not the intention, the target should be changed to "UseTarget".
+	- The use target can now be a character, an item, or a structure, depending on the context. This allows effects that weren't previously possible, but due to it we'll now need to introduce some restrictions in the definitions in some cases. For example, we might want to use a conditional to check whether the target is of the right type, before triggering the status effect (<Conditional entitytype="eq Character"/>).
+	- Added a new attribute for the MeleeWeapon component, "HitOnlyCharacters", which can be used for ignoring the hits to walls and items entirely.
+	- Due to the changes, some status effects that previously worked, might now need the "AllowWhenBroken" set to true in the definition to keep them working as they used to. So e.g. the "OnImpact" doesn't work anymore on your custom explosive, try that.
+- Fixed crashing when trying to place a wreck with no hulls in a level.
+- Fixed mod descriptions getting truncated to 255 characters when selecting an already-published item in the Mods menu.
+- Fixed HMG's requiring hmgmagazine instead of any item with the type "hmgammo", making the use of modded ammo impossible without overriding the gun too.
+- Fixed crashing when an upgrade tries to increase an integer value.
+- Changed the affliction type of some afflictions, which might have implications on mods if they targeted them by type.
+- Added AimAngle on Holdable item components. Can be used for defining a different hold angle for the aim and the rest poses. Note that on Holdables, the angles are mutually exclusive (defined separately), but on MeleeWeapons they are cumulative (added together). Therefore, no need to change the existing items!
+- Fixed <Use/> definitions not triggering the status effects that have the target type "UseTarget".
+
+---------------------------------------------------------------------------------------------------------
 v0.20.16.1
 ---------------------------------------------------------------------------------------------------------
 

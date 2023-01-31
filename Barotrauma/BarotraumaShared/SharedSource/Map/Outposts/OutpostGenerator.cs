@@ -124,9 +124,18 @@ namespace Barotrauma
                     int eventCount = GameMain.Server.EntityEventManager.Events.Count();
                     int uniqueEventCount = GameMain.Server.EntityEventManager.UniqueEvents.Count();
 #endif
-                    List<MapEntity> entities = MapEntity.mapEntityList.FindAll(e => e.Submarine == sub);
+                    HashSet<Submarine> connectedSubs = new HashSet<Submarine>() { sub };
+                    foreach (Submarine otherSub in Submarine.Loaded)
+                    {
+                        //remove linked subs too
+                        if (otherSub.Submarine == sub) { connectedSubs.Add(otherSub); }
+                    }
+                    List<MapEntity> entities = MapEntity.mapEntityList.FindAll(e => connectedSubs.Contains(e.Submarine));
                     entities.ForEach(e => e.Remove());
-                    sub.Remove();
+                    foreach (Submarine otherSub in connectedSubs)
+                    {
+                        otherSub.Remove();
+                    }
 #if SERVER
                     //remove any events created during the removal of the entities
                     GameMain.Server.EntityEventManager.Events.RemoveRange(eventCount, GameMain.Server.EntityEventManager.Events.Count - eventCount);
