@@ -83,7 +83,15 @@ namespace Barotrauma.Items.Components
         {               
             if (submarine?.Info == null || level == null || submarine.Info.Type == SubmarineType.Player) { return 0; }
 
-            float difficultyFactor = MathHelper.Clamp(level.Difficulty, 0.0f, 1.0f);
+            float difficultyFactor = MathHelper.Clamp(level.Difficulty, 0.0f, level.LevelData.Biome.ActualMaxDifficulty / 100.0f);
+
+            if (level.Type == LevelData.LevelType.Outpost && 
+                level.StartLocation?.Type?.OutpostTeam == CharacterTeamType.FriendlyNPC)
+            {
+                //no high-quality spawns in friendly outposts
+                difficultyFactor = 0.0f;
+            }
+
             return ToolBox.SelectWeightedRandom(Enumerable.Range(0, MaxQuality + 1), q => GetCommonness(q, difficultyFactor), randSync);
 
             static float GetCommonness(int quality, float difficultyFactor)

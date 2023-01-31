@@ -44,7 +44,16 @@ namespace Barotrauma
         }
         public LimbType Limb { get; private set; }
         public bool HideLimb { get; private set; }
-        public bool HideOtherWearables { get; private set; }
+
+        public enum ObscuringMode
+        {
+            None,
+            Hide,
+            AlphaClip
+        }
+        public ObscuringMode ObscureOtherWearables { get; private set; }
+        public bool HideOtherWearables => ObscureOtherWearables == ObscuringMode.Hide;
+        public bool AlphaClipOtherWearables => ObscureOtherWearables == ObscuringMode.AlphaClip;
         public bool CanBeHiddenByOtherWearables { get; private set; }
         public List<WearableType> HideWearablesOfType { get; private set; }
         public bool InheritLimbDepth { get; private set; }
@@ -130,7 +139,7 @@ namespace Barotrauma
                 case WearableType.Husk:
                 case WearableType.Herpes:
                     Limb = LimbType.Head;
-                    HideOtherWearables = false;
+                    ObscureOtherWearables = ObscuringMode.None;
                     InheritLimbDepth = true;
                     InheritScale = true;
                     InheritOrigin = true;
@@ -202,7 +211,16 @@ namespace Barotrauma
             Sprite = new Sprite(SourceElement, file: SpritePath);
             Limb = (LimbType)Enum.Parse(typeof(LimbType), SourceElement.GetAttributeString("limb", "Head"), true);
             HideLimb = SourceElement.GetAttributeBool("hidelimb", false);
-            HideOtherWearables = SourceElement.GetAttributeBool("hideotherwearables", false);
+
+            foreach (var mode in Enum.GetValues<ObscuringMode>())
+            {
+                if (mode == ObscuringMode.None) { continue; }
+                if (SourceElement.GetAttributeBool($"{mode}OtherWearables", false))
+                {
+                    ObscureOtherWearables = mode;
+                }
+            }
+
             CanBeHiddenByOtherWearables = SourceElement.GetAttributeBool("canbehiddenbyotherwearables", true);
             InheritLimbDepth = SourceElement.GetAttributeBool("inheritlimbdepth", true);
             var scale = SourceElement.GetAttribute("inheritscale");

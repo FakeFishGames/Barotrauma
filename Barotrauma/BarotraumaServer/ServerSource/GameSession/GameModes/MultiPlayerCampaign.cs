@@ -146,7 +146,7 @@ namespace Barotrauma
         {
             NextLevel = map.SelectedConnection?.LevelData ?? map.CurrentLocation.LevelData;
             MirrorLevel = false;
-            GameMain.Server.StartGame();
+            GameMain.Server.TryStartGame();
         }
 
         public static void StartCampaignSetup()
@@ -240,9 +240,7 @@ namespace Barotrauma
                 //reduce skills if the character has died
                 if (characterInfo.CauseOfDeath != null && characterInfo.CauseOfDeath.Type != CauseOfDeathType.Disconnected)
                 {
-                    RespawnManager.ReduceCharacterSkills(characterInfo);
-                    characterInfo.RemoveSavedStatValuesOnDeath();
-                    characterInfo.CauseOfDeath = null;
+                    characterInfo.ApplyDeathEffects();
                 }
                 c.CharacterInfo = characterInfo;
                 SetClientCharacterData(c);
@@ -254,12 +252,20 @@ namespace Barotrauma
             {
                 if (data.HasSpawned && !GameMain.Server.ConnectedClients.Any(c => data.MatchesClient(c)))
                 {
-                    var character = Character.CharacterList.Find(c => c.Info == data.CharacterInfo && !c.IsHusk);
-                    if (character != null && (!character.IsDead || character.CauseOfDeath?.Type == CauseOfDeathType.Disconnected))
+                    var character = Character.CharacterList.Find(c => c.Info == data.CharacterInfo && !c.IsHusk);          
+                    if (character != null &&
+                        (!character.IsDead || character.CauseOfDeath?.Type == CauseOfDeathType.Disconnected))
                     {
+                        //character still alive (or killed by Disconnect) -> save it as-is
                         characterData.RemoveAll(cd => cd.IsDuplicate(data));
                         data.Refresh(character);
                         characterData.Add(data);
+                    }
+                    else
+                    {
+                        //character dead or removed -> reduce skills, remove items, health data, etc
+                        data.CharacterInfo.ApplyDeathEffects();
+                        data.Reset();
                     }
                 }
             }
@@ -395,7 +401,7 @@ namespace Barotrauma
                 yield return new WaitForSeconds(EndTransitionDuration * 0.5f);
             }
 
-            GameMain.Server.StartGame();
+            GameMain.Server.TryStartGame();
 
             yield return CoroutineStatus.Success;
         }

@@ -59,6 +59,7 @@ namespace Barotrauma
             get { return GameModes[SelectedModeIndex].Identifier; }
             set
             {
+                if (SelectedModeIdentifier == value) { return; }
                 for (int i = 0; i < GameModes.Length; i++)
                 {
                     if (GameModes[i].Identifier == value)
@@ -127,9 +128,11 @@ namespace Barotrauma
         {
             LevelSeed = ToolBox.RandomSeed(8);
 
-            subs = SubmarineInfo.SavedSubmarines.Where(s => s.Type == SubmarineType.Player && !s.HasTag(SubmarineTag.HideInMenus)).ToList();
+            subs = SubmarineInfo.SavedSubmarines
+                .Where(s => s.Type == SubmarineType.Player && !s.HasTag(SubmarineTag.HideInMenus))
+                .ToList();
 
-            if (subs == null || subs.Count() == 0)
+            if (subs == null || subs.Count == 0)
             {
                 throw new Exception("No submarines are available.");
             }
@@ -156,7 +159,7 @@ namespace Barotrauma
             GameModes = GameModePreset.List.ToArray();
         }
         
-        private List<SubmarineInfo> subs;
+        private readonly List<SubmarineInfo> subs;
         public IReadOnlyList<SubmarineInfo> GetSubList() => subs;
 
         public string LevelSeed
@@ -192,7 +195,7 @@ namespace Barotrauma
         public override void Select()
         {
             base.Select();
-            GameMain.Server.Voting.ResetVotes(GameMain.Server.ConnectedClients, resetKickVotes: false);
+            Voting.ResetVotes(GameMain.Server.ConnectedClients, resetKickVotes: false);
             if (SelectedMode != GameModePreset.MultiPlayerCampaign && GameMain.GameSession?.GameMode is CampaignMode && Selected == this)
             {
                 GameMain.GameSession = null;

@@ -79,3 +79,8 @@
 /processorParam:DebugMode=Auto
 /build:blueprintshader.fx
 
+#begin wearableclip.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:wearableclip.fx

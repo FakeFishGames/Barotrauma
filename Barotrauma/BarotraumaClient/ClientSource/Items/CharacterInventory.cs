@@ -965,7 +965,7 @@ namespace Barotrauma
                     break;
                 case QuickUseAction.PutToEquippedItem:
                     //order by the condition of the contained item to prefer putting into the item with the emptiest ammo/battery/tank
-                    foreach (Item heldItem in character.HeldItems.OrderBy(it => it.ContainedItems.FirstOrDefault()?.Condition ?? 0.0f))
+                    foreach (Item heldItem in character.HeldItems.OrderByDescending(heldItem => GetContainPriority(item, heldItem)))
                     {
                         if (heldItem.OwnInventory == null) { continue; }
                         //don't allow swapping if we're moving items into an item with 1 slot holding a stack of items
@@ -986,6 +986,22 @@ namespace Barotrauma
                         }
                     }
                     break;
+
+                    static float GetContainPriority(Item item, Item containerItem)
+                    {
+                        var container = containerItem.GetComponent<ItemContainer>();
+                        if (container == null) { return 0.0f; }
+                        for (int i = 0; i < container.Inventory.Capacity; i++)
+                        {
+                            var containedItems = container.Inventory.GetItemsAt(i);
+                            if (containedItems.Any() && container.Inventory.CanBePutInSlot(item, i))
+                            {
+                                //if there's a stack in the contained item that we can add the item to, prefer that
+                                return 10.0f;
+                            }
+                        }
+                        return -container.GetContainedIndicatorState();
+                    }
             }
 
             if (success)

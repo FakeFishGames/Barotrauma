@@ -114,7 +114,7 @@ namespace Barotrauma.Items.Components
         [Serialize(100, IsPropertySaveable.No, description: "How many items are placed in a row before starting a new row.")]
         public int ItemsPerRow { get; set; }
 
-        [Serialize(true, IsPropertySaveable.No, description: "Should the contents in the item's inventory be visible? Disabled on items like magazines that spawn the contents as needed.")]
+        [Serialize(true, IsPropertySaveable.No, description: "Should the inventory of this item be visible when the item is selected.")]
         public bool DrawInventory
         {
             get;
@@ -141,6 +141,9 @@ namespace Barotrauma.Items.Components
             get;
             set;
         }
+
+        [Serialize(true, IsPropertySaveable.No)]
+        public bool AllowAccess { get; set; }
 
         [Serialize(false, IsPropertySaveable.No)]
         public bool AccessOnlyWhenBroken { get; set; }
@@ -534,12 +537,12 @@ namespace Barotrauma.Items.Components
 
         public override bool HasRequiredItems(Character character, bool addMessage, LocalizedString msg = null)
         {
-            return DrawInventory && (!AccessOnlyWhenBroken || Item.Condition <= 0) && base.HasRequiredItems(character, addMessage, msg);
+            return AllowAccess && (!AccessOnlyWhenBroken || Item.Condition <= 0) && base.HasRequiredItems(character, addMessage, msg);
         }
 
         public override bool Select(Character character)
         {
-            if (!DrawInventory) { return false; }
+            if (!AllowAccess) { return false; }
             if (item.Container != null) { return false; }
             if (AccessOnlyWhenBroken)
             {
@@ -575,7 +578,7 @@ namespace Barotrauma.Items.Components
 
         public override bool Pick(Character picker)
         {
-            if (!DrawInventory) { return false; }
+            if (!AllowAccess) { return false; }
             if (AccessOnlyWhenBroken)
             {
                 if (item.Condition > 0)

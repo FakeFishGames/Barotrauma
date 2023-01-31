@@ -57,17 +57,7 @@ namespace Barotrauma
             {
                 if (limbs == null)
                 {
-                    if (!accessRemovedCharacterErrorShown)
-                    {
-                        string errorMsg = "Attempted to access a potentially removed ragdoll. Character: " + character.Name + ", id: " + character.ID + ", removed: " + character.Removed + ", ragdoll removed: " + !list.Contains(this);
-                        errorMsg += '\n' + Environment.StackTrace.CleanupStackTrace();
-                        DebugConsole.ThrowError(errorMsg);
-                        GameAnalyticsManager.AddErrorEventOnce(
-                            "Ragdoll.Limbs:AccessRemoved",
-                            GameAnalyticsManager.ErrorSeverity.Error,
-                            "Attempted to access a potentially removed ragdoll. Character: " + character.SpeciesName + ", id: " + character.ID + ", removed: " + character.Removed + ", ragdoll removed: " + !list.Contains(this) + "\n" + Environment.StackTrace.CleanupStackTrace());
-                        accessRemovedCharacterErrorShown = true;
-                    }
+                    LogAccessedRemovedCharacterError();
                     return Array.Empty<Limb>();
                 }
                 return limbs;
@@ -155,6 +145,20 @@ namespace Barotrauma
             get
             {
                 return collider?[colliderIndex];
+            }
+        }
+
+        public bool TryGetCollider(int index, out PhysicsBody collider)
+        {
+            collider = null;
+            try
+            {
+                collider = this.collider?[index]; 
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
 
@@ -873,7 +877,7 @@ namespace Barotrauma
 
             foreach (Limb limb in Limbs)
             {
-                if (limb == null || limb.IsSevered || !limb.DoesFlip) { continue; }
+                if (limb == null || limb.IsSevered || !limb.DoesMirror) { continue; }
                 limb.Dir = Dir;
                 limb.MouthPos = new Vector2(-limb.MouthPos.X, limb.MouthPos.Y);
                 limb.MirrorPullJoint();
@@ -1426,6 +1430,21 @@ namespace Barotrauma
             }
 
             return true;
+        }
+
+        protected void LogAccessedRemovedCharacterError()
+        {
+            if (!accessRemovedCharacterErrorShown)
+            {
+                string errorMsg = "Attempted to access a potentially removed ragdoll. Character: " + character.Name + ", id: " + character.ID + ", removed: " + character.Removed + ", ragdoll removed: " + !list.Contains(this);
+                errorMsg += '\n' + Environment.StackTrace.CleanupStackTrace();
+                DebugConsole.ThrowError(errorMsg);
+                GameAnalyticsManager.AddErrorEventOnce(
+                    "Ragdoll:AccessRemoved",
+                    GameAnalyticsManager.ErrorSeverity.Error,
+                    "Attempted to access a potentially removed ragdoll. Character: " + character.SpeciesName + ", id: " + character.ID + ", removed: " + character.Removed + ", ragdoll removed: " + !list.Contains(this) + "\n" + Environment.StackTrace.CleanupStackTrace());
+                accessRemovedCharacterErrorShown = true;
+            }
         }
 
         partial void UpdateProjSpecific(float deltaTime, Camera cam);

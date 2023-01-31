@@ -1766,7 +1766,7 @@ namespace Barotrauma
                     {
                         foreach (UpgradePrefab prefab in categoryData.Prefabs)
                         {
-                            var frame = UpgradeStore.CreateUpgradeFrame(prefab, categoryData.Category, campaign, new RectTransform(new Vector2(1f, 0.3f), upgradePanel.Content.RectTransform), addBuyButton: false);
+                            var frame = UpgradeStore.CreateUpgradeFrame(prefab, categoryData.Category, campaign, new RectTransform(new Vector2(1f, 0.3f), upgradePanel.Content.RectTransform), addBuyButton: false).Frame;
                             UpgradeStore.UpdateUpgradeEntry(frame, prefab, categoryData.Category, campaign);
                         }
                     }
@@ -1779,7 +1779,10 @@ namespace Barotrauma
                 {
                     CurrentSelectMode = GUIListBox.SelectMode.None
                 };
-                sub.Info.CreateSpecsWindow(specsListBox, GUIStyle.Font, includeTitle: false, includeClass: false, includeDescription: true);
+                sub.Info.CreateSpecsWindow(specsListBox, GUIStyle.Font,
+                    includeTitle: false,
+                    includeClass: false,
+                    includeDescription: true);
             }
         }
 

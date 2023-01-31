@@ -23,36 +23,55 @@ namespace Barotrauma
 
         public static void ConvertMasterLocalizationKit(string outputTextsDirectory, string outputConversationsDirectory, bool convertConversations)
         {
-            string textFilePath = Path.Combine(infoTextPath, "Texts.csv");
-            string conversationFilePath = Path.Combine(infoTextPath, "NPCConversations.csv");
+            List<string> languages = new List<string>();
+            for (int i = 0; i < 2; i++)
+            {
+                string textFilePath;
+                string outputFileName;
+                switch (i)
+                {
+                    case 0:
+                        textFilePath = Path.Combine(infoTextPath, "Texts.csv");
+                        outputFileName = "Vanilla.xml";
+                        break;
+                    case 1:
+                        textFilePath = Path.Combine(infoTextPath, "EditorTexts.csv");
+                        outputFileName = "VanillaEditorTexts.xml";
+                        break;
+                    default:
+                        throw new NotImplementedException();
+                }
 
-            Dictionary<string, List<string>> xmlContent;
-            try
-            {
-                xmlContent = ConvertInfoTextToXML(File.ReadAllLines(textFilePath, Encoding.UTF8));
-            }
-            catch (Exception e)
-            {
-                DebugConsole.ThrowError("InfoText Localization .csv to .xml conversion failed for: " + textFilePath, e);
-                return;
-            }
-            if (xmlContent == null)
-            {
-                DebugConsole.ThrowError("InfoText Localization .csv to .xml conversion failed for: " + textFilePath);
-                return;
-            }
-            foreach (string language in xmlContent.Keys)
-            {
-                string languageNoWhitespace = language.Replace(" ", "");
-                string xmlFileFullPath = Path.Combine(outputTextsDirectory, $"{languageNoWhitespace}/{languageNoWhitespace}Vanilla.xml");
-                File.WriteAllLines(xmlFileFullPath, xmlContent[language], Encoding.UTF8);
-                DebugConsole.NewMessage("InfoText localization .xml file successfully created at: " + xmlFileFullPath);
+                Dictionary<string, List<string>> xmlContent;
+                try
+                {
+                    xmlContent = ConvertInfoTextToXML(File.ReadAllLines(textFilePath, Encoding.UTF8));
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError("InfoText Localization .csv to .xml conversion failed for: " + textFilePath, e);
+                    return;
+                }
+                if (xmlContent == null)
+                {
+                    DebugConsole.ThrowError("InfoText Localization .csv to .xml conversion failed for: " + textFilePath);
+                    return;
+                }
+                foreach (string language in xmlContent.Keys)
+                {
+                    languages.Add(language);
+                    string languageNoWhitespace = language.Replace(" ", "");
+                    string xmlFileFullPath = Path.Combine(outputTextsDirectory, $"{languageNoWhitespace}/{languageNoWhitespace}{outputFileName}");
+                    File.WriteAllLines(xmlFileFullPath, xmlContent[language], Encoding.UTF8);
+                    DebugConsole.NewMessage("InfoText localization .xml file successfully created at: " + xmlFileFullPath);
+                }
             }
 
             if (convertConversations)
             {
+                string conversationFilePath = Path.Combine(infoTextPath, "NPCConversations.csv");
                 var conversationLinesAll = File.ReadAllLines(conversationFilePath, Encoding.UTF8);
-                foreach (string language in xmlContent.Keys)
+                foreach (string language in languages)
                 {
                     List<string> convXmlContent = ConvertConversationsToXML(conversationLinesAll, language);
                     if (convXmlContent == null)
@@ -61,7 +80,7 @@ namespace Barotrauma
                         continue;
                     }
                     string languageNoWhitespace = language.Replace(" ", "");
-                    string xmlFileFullPath = Path.Combine(outputTextsDirectory, $"NpcConversations_{languageNoWhitespace}.xml");
+                    string xmlFileFullPath = Path.Combine(outputConversationsDirectory, languageNoWhitespace, $"NpcConversations_{languageNoWhitespace}.xml");
                     File.WriteAllLines(xmlFileFullPath, convXmlContent, Encoding.UTF8);
                     DebugConsole.NewMessage("Conversation localization .xml file successfully created at: " + xmlFileFullPath);
                 }
@@ -339,7 +358,8 @@ namespace Barotrauma
             string[] headerSplit = csvContent[0].Split(separator);
             for (int i = 0; i < headerSplit.Length; i++)
             {
-                if (headerSplit[i] == language)
+                if (headerSplit[i] == language || 
+                    (language == "English" && headerSplit[i]== "Line (Original)"))
                 {
                     languageColumn = i;
                     break;
@@ -348,6 +368,7 @@ namespace Barotrauma
 
             xmlContent.Add($"<Conversations identifier=\"vanillaconversations\" Language=\"{language}\" nowhitespace=\"{nowhitespace}\">");
 
+            conversationClosingIndent.Clear();
             int conversationStart = 1;
 
             xmlContent.Add(string.Empty);
@@ -399,9 +420,9 @@ namespace Barotrauma
                 {
                     string[] nextConversationElement = csvContent[i + 1].Split(separator);
 
-                    if (nextConversationElement[1] != string.Empty)
+                    if (nextConversationElement[3] != string.Empty)
                     {
-                        nextDepth = int.Parse(nextConversationElement[2]);
+                        nextDepth = int.Parse(nextConversationElement[3]);
                         nextIsSubConvo = nextDepth > depthIndex;
                     }
 
@@ -421,7 +442,12 @@ namespace Barotrauma
                 }
                 else
                 {
+                    //end of file, close remaining xml tags
                     xmlContent.Add(element.TrimEnd() + "/>");
+                    for (int j = depthIndex - 1; j >= 0; j--)
+                    {
+                        HandleClosingElements(xmlContent, j);
+                    }
                 }
             }
 
@@ -433,12 +459,12 @@ namespace Barotrauma
 
         private static void HandleClosingElements(List<string> xmlContent, int targetDepth)
         {
-            if (conversationClosingIndent.Count == 0) return;
+            if (conversationClosingIndent.Count == 0) { return; }
 
             for (int k = conversationClosingIndent.Count - 1; k >= 0; k--)
             {
                 int currentIndent = conversationClosingIndent[k];
-                if (currentIndent < targetDepth) break;
+                if (currentIndent < targetDepth) { break; }
                 xmlContent.Add($"{GetIndenting(currentIndent)}</Conversation>");
                 conversationClosingIndent.RemoveAt(k);
             }

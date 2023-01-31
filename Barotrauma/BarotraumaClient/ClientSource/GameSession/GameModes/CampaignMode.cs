@@ -106,12 +106,7 @@ namespace Barotrauma
 
         public static bool AllowedToManageWallets()
         {
-            if (GameMain.Client == null) { return true; }
-
-            return
-                GameMain.Client.HasPermission(ClientPermissions.ManageMoney) ||
-                GameMain.Client.HasPermission(ClientPermissions.ManageCampaign) ||
-                GameMain.Client.IsServerOwner;
+            return AllowedToManageCampaign(ClientPermissions.ManageMoney);
         }
 
         public override void Draw(SpriteBatch spriteBatch)

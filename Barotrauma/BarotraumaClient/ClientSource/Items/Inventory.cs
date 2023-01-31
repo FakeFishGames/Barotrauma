@@ -1603,88 +1603,7 @@ namespace Barotrauma
 
                     if (itemContainer != null && itemContainer.ShowContainedStateIndicator && itemContainer.Capacity > 0)
                     {
-                        float containedState = 0.0f;
-                        if (itemContainer.ShowConditionInContainedStateIndicator)
-                        {
-                            containedState = item.Condition / item.MaxCondition;
-                        }
-                        else
-                        {
-                            int targetSlot = Math.Max(itemContainer.ContainedStateIndicatorSlot, 0);
-                            ItemSlot containedItemSlot = null;
-                            if (targetSlot < itemContainer.Inventory.slots.Length)
-                            {
-                                containedItemSlot = itemContainer.Inventory.slots[targetSlot];
-                            }
-                            if (containedItemSlot != null)
-                            {
-                                Item containedItem = containedItemSlot.FirstOrDefault();
-                                if (itemContainer.ShowTotalStackCapacityInContainedStateIndicator)
-                                {
-                                    if (containedItem == null)
-                                    {
-                                        // No item on the defined slot, check if the items on other slots can be used.
-                                        containedItem = containedItemSlot.FirstOrDefault() ?? itemContainer.Inventory.AllItems.FirstOrDefault(it => itemContainer.CanBeContained(it, targetSlot));
-                                    }
-                                    if (containedItem != null)
-                                    {
-                                        int ignoredItemCount = 0;
-                                        var subContainableItems = itemContainer.AllSubContainableItems;
-                                        float capacity = itemContainer.GetMaxStackSize(targetSlot);
-                                        if (subContainableItems != null)
-                                        {
-                                            bool useMainContainerCapacity = true;
-                                            foreach (Item it in itemContainer.Inventory.AllItems)
-                                            {
-                                                // Ignore all items in the sub containers.
-                                                foreach (RelatedItem ri in subContainableItems)
-                                                {
-                                                    if (ri.MatchesItem(containedItem))
-                                                    {
-                                                        // The target item is in a subcontainer -> inverse the logic.
-                                                        useMainContainerCapacity = false;
-                                                        break;
-                                                    }
-                                                    if (ri.MatchesItem(it))
-                                                    {
-                                                        ignoredItemCount++;
-                                                    }
-                                                }
-                                                if (!useMainContainerCapacity) { break; }
-                                            }
-                                            if (useMainContainerCapacity)
-                                            {
-                                                capacity *= itemContainer.MainContainerCapacity;
-                                            }
-                                            else
-                                            {
-                                                // Ignore all items in the main container.
-                                                ignoredItemCount = itemContainer.Inventory.AllItems.Count(it => subContainableItems.Any(ri => !ri.MatchesItem(it)));
-                                                capacity *= itemContainer.Capacity - itemContainer.MainContainerCapacity;
-                                            }
-                                        }
-                                        int itemCount = itemContainer.Inventory.AllItems.Count() - ignoredItemCount;
-                                        containedState = Math.Min(itemCount / Math.Max(capacity, 1), 1);
-                                    }
-                                }
-                                else
-                                {
-                                    containedState = itemContainer.Inventory.Capacity == 1 || itemContainer.ContainedStateIndicatorSlot > -1 ?
-                                        (containedItem == null ? 0.0f : containedItem.Condition / containedItem.MaxCondition) :
-                                        itemContainer.Inventory.slots.Count(i => !i.Empty()) / (float)itemContainer.Inventory.capacity;
-
-                                    if (containedItem != null && (itemContainer.Inventory.Capacity == 1 || itemContainer.HasSubContainers))
-                                    {
-                                        int maxStackSize = Math.Min(containedItem.Prefab.MaxStackSize, itemContainer.GetMaxStackSize(targetSlot));
-                                        if (maxStackSize > 1 || containedItem.Prefab.HideConditionBar)
-                                        {
-                                            containedState = containedItemSlot.Items.Count / (float)maxStackSize;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
+                        float containedState = itemContainer.GetContainedIndicatorState();
                         int dir = slot.SubInventoryDir;
                         Rectangle containedIndicatorArea = new Rectangle(rect.X,
                             dir < 0 ? rect.Bottom + HUDLayoutSettings.Padding / 2 : rect.Y - HUDLayoutSettings.Padding / 2 - ContainedIndicatorHeight, rect.Width, ContainedIndicatorHeight);
@@ -1794,6 +1713,15 @@ namespace Barotrauma
                         GUIStyle.SmallFont.DrawString(spriteBatch, stackCountText, stackCountPos, Color.White);
                     }
                 }
+
+                if (HealingCooldown.IsOnCooldown && item.HasTag(HealingCooldown.MedicalItemTag))
+                {
+                    RectangleF cdRect = rect;
+                    // shrink the rect from top to bottom depending on HealingCooldown.NormalizedCooldown
+                    cdRect.Height *= HealingCooldown.NormalizedCooldown;
+                    cdRect.Y += rect.Height;
+                    GUI.DrawFilledRectangle(spriteBatch, cdRect, Color.White * 0.5f);
+                }
             }
 
             if (inventory != null &&
@@ -1806,6 +1734,7 @@ namespace Barotrauma
                 GUI.DrawString(spriteBatch, rect.Location.ToVector2() + new Vector2((int)(4.25f * UIScale), (int)Math.Ceiling(-1.5f * UIScale)), GameSettings.CurrentConfig.InventoryKeyMap.Bindings[slot.InventoryKeyIndex].Name, Color.Black, font: GUIStyle.HotkeyFont);
             }
         }
+
 
         private static void DrawItemStateIndicator(
             SpriteBatch spriteBatch, Inventory inventory, 

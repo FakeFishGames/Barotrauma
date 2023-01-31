@@ -1143,14 +1143,13 @@ namespace Barotrauma
             bool wrap = element.GetAttributeBool("wrap", true);
             Alignment alignment =
                 element.GetAttributeEnum("alignment", text.Contains('\n') ? Alignment.Left : Alignment.Center);
-            GUIFont font;
-            if (!GUIStyle.Fonts.TryGetValue(element.GetAttributeIdentifier("font", "Font"), out font))
+            if (!GUIStyle.Fonts.TryGetValue(element.GetAttributeIdentifier("font", "Font"), out GUIFont font))
             {
                 font = GUIStyle.Font;
             }
 
             var textBlock = new GUITextBlock(RectTransform.Load(element, parent),
-                text, color, font, alignment, wrap: wrap, style: style)
+                RichString.Rich(text), color, font, alignment, wrap: wrap, style: style)
             {
                 TextScale = scale
             };

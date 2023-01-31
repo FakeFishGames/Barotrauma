@@ -413,7 +413,7 @@ namespace Barotrauma.Items.Components
             var wire = it.GetComponent<Wire>();
             if (wire != null && wire.Connections.Any(c => c != null)) { return false; }
 
-            if (it.Container?.GetComponent<ItemContainer>() is { DrawInventory: false }) { return false; }
+            if (it.Container?.GetComponent<ItemContainer>() is { DrawInventory: false } or { AllowAccess: false }) { return false; }
 
             if (it.HasTag("traitormissionitem")) { return false; }
 
@@ -519,7 +519,10 @@ namespace Barotrauma.Items.Components
                             Color color = !hasPower ? NoPowerColor : turret.ActiveUser is null ? Color.DimGray : GUIStyle.Green;
                             weaponSprite.Draw(batch, center, color, origin, rotation, scale, SpriteEffects.None);
                         }
-                    });
+                    })
+                    {
+                        CanBeFocused = false
+                    };
 
                     weaponChilds.Add(component, frame);
                 }

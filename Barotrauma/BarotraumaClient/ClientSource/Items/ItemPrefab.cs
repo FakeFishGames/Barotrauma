@@ -236,6 +236,16 @@ namespace Barotrauma
             DecorativeSprites = decorativeSprites.ToImmutableArray();
             ContainedSprites = containedSprites.ToImmutableArray();
             DecorativeSpriteGroups = decorativeSpriteGroups.Select(kvp => (kvp.Key, kvp.Value.ToImmutableArray())).ToImmutableDictionary();
+
+#if CLIENT
+            foreach (Item item in Item.ItemList)
+            {
+                if (item.Prefab == this)
+                {
+                    item.InitSpriteStates();
+                }
+            }
+#endif
         }
 
         public bool CanCharacterBuy()
@@ -260,16 +270,16 @@ namespace Barotrauma
 
         public override void UpdatePlacing(Camera cam)
         {
-            Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
 
             if (PlayerInput.SecondaryMouseButtonClicked())
             {
                 Selected = null;
                 return;
             }
+            
+            var potentialContainer = MapEntity.GetPotentialContainer(cam.ScreenToWorld(PlayerInput.MousePosition));
 
-            var potentialContainer = MapEntity.GetPotentialContainer(position);
-
+            Vector2 position = Submarine.MouseToWorldGrid(cam, Submarine.MainSub);
             if (!ResizeHorizontal && !ResizeVertical)
             {
                 if (PlayerInput.PrimaryMouseButtonClicked() && GUI.MouseOn == null)

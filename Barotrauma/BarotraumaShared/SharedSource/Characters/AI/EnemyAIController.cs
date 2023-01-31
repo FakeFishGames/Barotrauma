@@ -206,13 +206,19 @@ namespace Barotrauma
             private set;
         } = new HashSet<Submarine>();
 
-        public bool IsTargetingPlayerTeam => IsTargetInPlayerTeam(SelectedAiTarget);
         public static bool IsTargetBeingChasedBy(Character target, Character character)
             => character?.AIController is EnemyAIController enemyAI && enemyAI.SelectedAiTarget?.Entity == target && (enemyAI.State == AIState.Attack || enemyAI.State == AIState.Aggressive);
         public bool IsBeingChasedBy(Character c) => IsTargetBeingChasedBy(Character, c);
         private bool IsBeingChased => IsBeingChasedBy(SelectedAiTarget?.Entity as Character);
 
-        private bool IsTargetInPlayerTeam(AITarget target) => target?.Entity?.Submarine != null && target.Entity.Submarine.Info.IsPlayer || target?.Entity is Character targetCharacter && targetCharacter.IsOnPlayerTeam;
+        private static bool IsTargetInPlayerTeam(AITarget target) => target?.Entity?.Submarine != null && target.Entity.Submarine.Info.IsPlayer || target?.Entity is Character targetCharacter && targetCharacter.IsOnPlayerTeam;
+
+        private bool IsAttackingOwner(Character other) =>
+            PetBehavior != null && PetBehavior.Owner != null &&
+            !other.IsUnconscious && !other.IsArrested &&
+            other.AIController is HumanAIController humanAI &&
+            humanAI.ObjectiveManager.CurrentObjective is AIObjectiveCombat combat &&
+            combat.Enemy != null && combat.Enemy == PetBehavior.Owner;
 
         private bool reverse;
         public bool Reverse 
@@ -355,6 +361,10 @@ namespace Barotrauma
                 { 
                     targetingTag = "owner";
                 }
+                else if (PetBehavior != null && (!Character.IsOnFriendlyTeam(targetCharacter) || IsAttackingOwner(targetCharacter)))
+                {
+                    targetingTag = "hostile";
+                }
                 else if (AIParams.TryGetTarget(targetCharacter, out CharacterParams.TargetParams tP))
                 {
                     targetingTag = tP.Tag;
@@ -365,7 +375,7 @@ namespace Barotrauma
                     {
                         targetingTag = "husk";
                     }
-                    else if (!Character.IsFriendly(targetCharacter))
+                    else if (!Character.IsSameSpeciesOrGroup(targetCharacter))
                     {
                         if (enemy.CombatStrength > CombatStrength)
                         {
@@ -677,22 +687,22 @@ namespace Barotrauma
                     {
                         if (SelectedAiTarget.Entity is Character targetCharacter)
                         {
-                            bool IsValid(Character.Attacker a)
+                            bool ShouldRetaliate(Character.Attacker a)
                             {
                                 Character c = a.Character;
-                                if (c.IsDead || c.Removed) { return false; }
-                                if (!Character.IsFriendly(c)) { return true; }
-                                if (!c.IsPlayer) { return false; }
-                                // Only apply the threshold to players
-                                return a.Damage >= selectedTargetingParams.Threshold;
+                                if (c == null || c.IsUnconscious || c.Removed) { return false; }
+                                // Can't target characters of same species/group because that would make us hostile to all friendly characters in the same species/group.
+                                if (Character.IsSameSpeciesOrGroup(c)) { return false; }
+                                if (targetCharacter.IsSameSpeciesOrGroup(c)) { return false; }
+                                if (c.IsPlayer || Character.IsOnFriendlyTeam(c))
+                                {
+                                    return a.Damage >= selectedTargetingParams.Threshold;
+                                }
+                                return true;
                             }
-                            Character attacker = targetCharacter.LastAttackers.LastOrDefault(IsValid)?.Character;
-                            //if the attacker has the same targeting tag as the character we're protecting, we can't change the TargetState
-                            //otherwise e.g. a pet that's set to follow humans would start attacking all humans (and other pets, since they're considered part of the same group) when a hostile human attacks it
-                            //TODO: a way for pets to differentiate hostile and friendly humans?
-                            if (attacker?.AiTarget != null && targetCharacter.SpeciesName != GetTargetingTag(attacker.AiTarget) && !attacker.IsFriendly(targetCharacter))
+                            Character attacker = targetCharacter.LastAttackers.LastOrDefault(ShouldRetaliate)?.Character;
+                            if (attacker?.AiTarget != null)
                             {
-                                // Attack the character that attacked the target we are protecting
                                 ChangeTargetState(attacker, AIState.Attack, selectedTargetingParams.Priority * 2);
                                 SelectTarget(attacker.AiTarget);
                                 State = AIState.Attack;
@@ -1501,7 +1511,7 @@ namespace Barotrauma
                                     {
                                         hitTarget = limb.character;
                                     }
-                                    if (hitTarget != null && !hitTarget.IsDead && Character.IsFriendly(hitTarget))
+                                    if (hitTarget != null && !hitTarget.IsDead && Character.IsFriendly(hitTarget) && !IsAttackingOwner(hitTarget))
                                     {
                                         return true;
                                     }
@@ -2315,7 +2325,7 @@ namespace Barotrauma
                     {
                         t = limb.character;
                     }
-                    if (t != null && (t == target || !Character.IsFriendly(t)))
+                    if (t != null && (t == target || (!Character.IsFriendly(t) || IsAttackingOwner(t))))
                     {
                         return true;
                     }

@@ -171,7 +171,7 @@ namespace Barotrauma
             }
 
             int startLocationindex = element.GetAttributeInt("startlocation", -1);
-            if (startLocationindex > 0 && startLocationindex < Locations.Count)
+            if (startLocationindex >= 0 && startLocationindex < Locations.Count)
             {
                 StartLocation = Locations[startLocationindex];
             }
@@ -188,7 +188,7 @@ namespace Barotrauma
                 }
             }
             int endLocationindex = element.GetAttributeInt("endlocation", -1);
-            if (endLocationindex > 0 && endLocationindex < Locations.Count)
+            if (endLocationindex >= 0 && endLocationindex < Locations.Count)
             {
                 EndLocation = Locations[endLocationindex];
             }

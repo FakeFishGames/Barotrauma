@@ -515,11 +515,11 @@ namespace Barotrauma
             Item targetContainer = null;
             bool isShiftDown = PlayerInput.IsShiftDown();
 
-            if (!isShiftDown) return null;
+            if (!isShiftDown) { return null; }
 
             foreach (MapEntity e in mapEntityList)
             {
-                if (!e.SelectableInEditor ||!(e is Item potentialContainer)) { continue; }
+                if (!e.SelectableInEditor || e is not Item potentialContainer) { continue; }
 
                 if (e.IsMouseOn(position))
                 {

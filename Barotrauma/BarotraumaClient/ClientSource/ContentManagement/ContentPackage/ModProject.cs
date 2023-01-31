@@ -92,7 +92,7 @@ namespace Barotrauma
 
         public Option<ContentPackageId> UgcId = Option<ContentPackageId>.None();
 
-        public Option<DateTime> InstallTime = Option<DateTime>.None();
+        public Option<SerializableDateTime> InstallTime = Option<SerializableDateTime>.None();
 
         public bool HasFile(File file)
             => Files.Any(f =>
@@ -120,7 +120,7 @@ namespace Barotrauma
         public void DiscardHashAndInstallTime()
         {
             ExpectedHash = null;
-            InstallTime = Option<DateTime>.None();
+            InstallTime = Option<SerializableDateTime>.None();
         }
         
         public static string IncrementModVersion(string modVersion)
@@ -159,8 +159,8 @@ namespace Barotrauma
             addRootAttribute("gameversion", GameMain.Version);
             if (AltNames.Any()) { addRootAttribute("altnames", string.Join(",", AltNames)); }
             if (ExpectedHash != null) { addRootAttribute("expectedhash", ExpectedHash.StringRepresentation); }
-            if (InstallTime.TryUnwrap(out var installTime)) { addRootAttribute("installtime", ToolBox.Epoch.FromDateTime(installTime)); }
-            
+            if (InstallTime.TryUnwrap(out var installTime)) { addRootAttribute("installtime", installTime); }
+
             files.ForEach(f => rootElement.Add(f.ToXElement()));
             
             doc.Add(rootElement);

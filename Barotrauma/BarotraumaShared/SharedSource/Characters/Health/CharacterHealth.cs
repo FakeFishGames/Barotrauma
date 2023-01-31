@@ -230,6 +230,11 @@ namespace Barotrauma
 
         public float StunTimer { get; private set; }
 
+        /// <summary>
+        /// Was the character in full health at the beginning of the frame?
+        /// </summary>
+        public bool WasInFullHealth { get; private set; }
+
         public Affliction PressureAffliction
         {
             get { return pressureAffliction; }
@@ -703,7 +708,7 @@ namespace Barotrauma
                     return;
                 }
             }
-            if (Character.Params.Health.PoisonImmunity && newAffliction.Prefab.AfflictionType == "poison") { return; }
+            if (Character.Params.Health.PoisonImmunity && (newAffliction.Prefab.AfflictionType == "poison" || newAffliction.Prefab.AfflictionType == "paralysis")) { return; }
             if (Character.EmpVulnerability <= 0 && newAffliction.Prefab.AfflictionType == "emp") { return; }
             if (newAffliction.Prefab is AfflictionPrefabHusk huskPrefab)
             {
@@ -772,6 +777,8 @@ namespace Barotrauma
 
         public void Update(float deltaTime)
         {
+            WasInFullHealth = vitality >= MaxVitality;
+
             UpdateOxygen(deltaTime);
 
             StunTimer = Stun > 0 ? StunTimer + deltaTime : 0;
@@ -878,7 +885,11 @@ namespace Barotrauma
 
         private void UpdateOxygen(float deltaTime)
         {
-            if (!Character.NeedsOxygen) { return; }
+            if (!Character.NeedsOxygen)
+            {
+                oxygenLowAffliction.Strength = 0.0f;
+                return; 
+            }
 
             float oxygenlowResistance = GetResistance(oxygenLowAffliction.Prefab);
             float prevOxygen = OxygenAmount;
@@ -980,6 +991,8 @@ namespace Barotrauma
             UpdateLimbAfflictionOverlays();
             UpdateSkinTint();
             Character.Kill(type, affliction);
+
+            WasInFullHealth = false;
 #if CLIENT
             DisplayVitalityDelay = 0.0f;
             DisplayedVitality = Vitality;
@@ -1024,17 +1037,18 @@ namespace Barotrauma
         }
 
         private readonly List<Affliction> allAfflictions = new List<Affliction>();
-        private List<Affliction> GetAllAfflictions(bool mergeSameAfflictions)
+        private List<Affliction> GetAllAfflictions(bool mergeSameAfflictions, Func<Affliction, bool> predicate = null)
         {
             allAfflictions.Clear();
             if (!mergeSameAfflictions)
             {
-                allAfflictions.AddRange(afflictions.Keys);
+                allAfflictions.AddRange(predicate  == null ? afflictions.Keys : afflictions.Keys.Where(predicate));
             }
             else
             {
                 foreach (Affliction affliction in afflictions.Keys)
                 {
+                    if (predicate != null && !predicate(affliction)) { continue; }
                     var existingAffliction = allAfflictions.Find(a => a.Prefab == affliction.Prefab);
                     if (existingAffliction == null)
                     {

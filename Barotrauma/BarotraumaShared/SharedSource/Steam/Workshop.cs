@@ -47,7 +47,7 @@ namespace Barotrauma.Steam
                 int prevSize = 0;
                 for (int i = 1; i <= (maxPages ?? int.MaxValue); i++)
                 {
-                    Steamworks.Ugc.ResultPage? page = await query.GetPageAsync(i);
+                    using Steamworks.Ugc.ResultPage? page = await query.GetPageAsync(i);
                     if (page is not { Entries: var entries }) { break; }
                     
                     // This queries the results on the i-th page and stores them,
@@ -495,7 +495,8 @@ namespace Barotrauma.Steam
                         new XAttribute("corepackage", isCorePackage),
                         new XAttribute("modversion", modVersion),
                         new XAttribute("gameversion", gameVersion),
-                        new XAttribute("installtime", ToolBox.Epoch.FromDateTime(updateTime)));
+                        #warning TODO: stop writing Unix time after this gets on main
+                        new XAttribute("installtime", new SerializableDateTime(updateTime).ToUnixTime()));
                     if ((modPathDirName ?? modName).ToIdentifier() != itemTitle)
                     {
                         root.Add(new XAttribute("altnames", modPathDirName ?? modName));

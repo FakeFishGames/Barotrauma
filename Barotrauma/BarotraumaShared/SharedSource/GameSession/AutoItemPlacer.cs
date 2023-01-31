@@ -21,7 +21,7 @@ namespace Barotrauma
                 for (int i = 0; i < Submarine.MainSubs.Length; i++)
                 {
                     var sub = Submarine.MainSubs[i];
-                    if (sub == null || sub.Info.InitialSuppliesSpawned || !sub.Info.IsPlayer) { continue; }
+                    if (sub == null || sub.Info.InitialSuppliesSpawned || sub.Info.IsManuallyOutfitted || !sub.Info.IsPlayer) { continue; }
                     //1st pass: items defined in the start item set, only spawned in the main sub (not drones/shuttles or other linked subs)
                     SpawnStartItems(sub, startItemSet);
                     //2nd pass: items defined using preferred containers, spawned in the main sub and all the linked subs (drones, shuttles etc)

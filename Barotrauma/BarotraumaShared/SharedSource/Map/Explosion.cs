@@ -188,6 +188,12 @@ namespace Barotrauma
                         item.Condition -= item.MaxCondition * EmpStrength * distFactor;
                     }
 
+                    var lightComponent = item.GetComponent<LightComponent>();
+                    if (lightComponent != null)
+                    {
+                        lightComponent.TemporaryFlickerTimer = Math.Min(EmpStrength * distFactor, 10.0f);
+                    }
+
                     //discharge batteries
                     var powerContainer = item.GetComponent<PowerContainer>();
                     if (powerContainer != null)

@@ -75,6 +75,7 @@ namespace Barotrauma
                 case "targetgrandparent":
                 case "targetcontaineditem":
                 case "skillrequirement":
+                case "targetslot":
                     return false;
                 default:
                     return true;

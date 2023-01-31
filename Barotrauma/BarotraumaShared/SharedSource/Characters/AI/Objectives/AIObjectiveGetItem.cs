@@ -54,7 +54,7 @@ namespace Barotrauma
         public bool AllowVariants { get; set; }
         public bool Equip { get; set; }
         public bool Wear { get; set; }
-        public bool RequireLoaded { get; set; }
+        public bool RequireNonEmpty { get; set; }
         public bool EvaluateCombatPriority { get; set; }
         public bool CheckPathForEachItem { get; set; }
         public bool SpeakIfFails { get; set; }
@@ -391,10 +391,10 @@ namespace Barotrauma
                 {
                     if (!itemInventory.Container.HasRequiredItems(character, addMessage: false)) { continue; }
                 }
-                float itemPriority = 1;
+                float itemPriority = item.Prefab.BotPriority;
                 if (GetItemPriority != null)
                 {
-                    itemPriority = GetItemPriority(item);
+                    itemPriority *= GetItemPriority(item);
                 }
                 Entity rootInventoryOwner = item.GetRootInventoryOwner();
                 if (rootInventoryOwner is Item ownerItem)
@@ -513,7 +513,7 @@ namespace Barotrauma
             float lowestCost = float.MaxValue;
             foreach (MapEntityPrefab prefab in MapEntityPrefab.List)
             {
-                if (!(prefab is ItemPrefab itemPrefab)) { continue; }
+                if (prefab is not ItemPrefab itemPrefab) { continue; }
                 if (IdentifiersOrTags.Any(id => id == prefab.Identifier || prefab.Tags.Contains(id)))
                 {
                     float cost = itemPrefab.DefaultPrice != null && itemPrefab.CanBeBought ?
@@ -561,7 +561,7 @@ namespace Barotrauma
             if (ignoredIdentifiersOrTags != null && CheckItemIdentifiersOrTags(item, ignoredIdentifiersOrTags)) { return false; }
             if (item.Condition < TargetCondition) { return false; }
             if (ItemFilter != null && !ItemFilter(item)) { return false; }
-            if (RequireLoaded && item.Components.Any(i => !i.IsLoaded(character))) { return false; }
+            if (RequireNonEmpty && item.Components.Any(i => !i.IsNotEmpty(character))) { return false; }
             return CheckItemIdentifiersOrTags(item, IdentifiersOrTags) || (AllowVariants && !item.Prefab.VariantOf.IsEmpty && IdentifiersOrTags.Contains(item.Prefab.VariantOf));
         }
 

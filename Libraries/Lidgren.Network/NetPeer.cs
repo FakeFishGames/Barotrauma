@@ -293,7 +293,7 @@ namespace Lidgren.Network
 			if (remoteEndPoint == null)
 				throw new ArgumentNullException("remoteEndPoint");
 
-            remoteEndPoint = NetUtility.MapToIPv6(remoteEndPoint);
+            remoteEndPoint = remoteEndPoint.MapToFamily(m_socket.AddressFamily);
 
             lock (m_connections)
 			{

@@ -5,6 +5,7 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -13,13 +14,11 @@ namespace Barotrauma
     abstract partial class CampaignMode : GameMode
     {
         [NetworkSerialize]
-        public struct SaveInfo : INetSerializableStruct
-        {
-            public string FilePath;
-            public int SaveTime;
-            public string SubmarineName;
-            public string[] EnabledContentPackageNames;
-        }
+        public readonly record struct SaveInfo(
+            string FilePath,
+            Option<SerializableDateTime> SaveTime,
+            string SubmarineName,
+            ImmutableArray<string> EnabledContentPackageNames) : INetSerializableStruct;
 
         public const int MaxMoney = int.MaxValue / 2; //about 1 billion
         public const int InitialMoney = 8500;
@@ -1114,7 +1113,6 @@ namespace Barotrauma
                     if (item.Components.None(c => c is Pickable)) { continue; }
                     if (item.Components.Any(c => c is Pickable p && p.IsAttached)) { continue; }
                     if (item.Components.Any(c => c is Wire w && w.Connections.Any(c => c != null))) { continue; }
-                    if (item.Container?.GetComponent<ItemContainer>() is { DrawInventory: false }) { continue; }
                     itemsToTransfer.Add((item, item.Container));
                     item.Submarine = null;
                 }

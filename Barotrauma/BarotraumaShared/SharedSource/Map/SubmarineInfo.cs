@@ -531,11 +531,15 @@ namespace Barotrauma
         /// <summary>
         /// Calculated from <see cref="SubmarineElement"/>. Can be used when the sub hasn't been loaded and we can't access <see cref="Submarine.RealWorldCrushDepth"/>.
         /// </summary>
-        public float GetRealWorldCrushDepth()
+        public bool IsCrushDepthDefinedInStructures(out float realWorldCrushDepth)
         {
-            if (SubmarineElement == null) { return Level.DefaultRealWorldCrushDepth; }
+            if (SubmarineElement == null)
+            {
+                realWorldCrushDepth = Level.DefaultRealWorldCrushDepth;
+                return false;
+            }
             bool structureCrushDepthsDefined = false;
-            float realWorldCrushDepth = float.PositiveInfinity;
+            realWorldCrushDepth = float.PositiveInfinity;
             foreach (var structureElement in SubmarineElement.GetChildElements("structure"))
             {
                 string name = structureElement.Attribute("name")?.Value ?? "";
@@ -553,7 +557,7 @@ namespace Barotrauma
             {
                 realWorldCrushDepth = Level.DefaultRealWorldCrushDepth;
             }
-            return realWorldCrushDepth;
+            return structureCrushDepthsDefined;
         }
 
         //saving/loading ----------------------------------------------------

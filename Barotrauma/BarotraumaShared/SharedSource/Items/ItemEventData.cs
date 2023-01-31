@@ -30,7 +30,7 @@ namespace Barotrauma
             public EventType EventType { get; }
         }
 
-        public struct ComponentStateEventData : IEventData
+        public readonly struct ComponentStateEventData : IEventData
         {
             public EventType EventType => EventType.ComponentState;
             public readonly ItemComponent Component;
