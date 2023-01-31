@@ -203,7 +203,7 @@ namespace Barotrauma
             }
         }
 
-        partial void InitProjSpecific()
+        public void InitSpriteStates()
         {
             Prefab.Sprite?.EnsureLazyLoaded();
             Prefab.InventoryIcon?.EnsureLazyLoaded();
@@ -211,7 +211,6 @@ namespace Barotrauma
             {
                 brokenSprite.Sprite.EnsureLazyLoaded();
             }
-
             foreach (var decorativeSprite in Prefab.DecorativeSprites)
             {
                 decorativeSprite.Sprite.EnsureLazyLoaded();
@@ -219,6 +218,11 @@ namespace Barotrauma
             }
             SetActiveSprite();
             UpdateSpriteStates(0.0f);
+        }
+
+        partial void InitProjSpecific()
+        {
+            InitSpriteStates();
         }
 
         private Rectangle? cachedVisibleExtents;
@@ -1409,7 +1413,7 @@ namespace Barotrauma
 
                         if (targetComponent == null)
                         {
-                            ApplyStatusEffects(actionType, 1.0f, targetCharacter, targetLimb, useTarget, true, worldPosition: worldPosition);
+                            ApplyStatusEffects(actionType, 1.0f, targetCharacter, targetLimb, useTarget, isNetworkEvent: true, worldPosition: worldPosition);
                         }
                         else
                         {

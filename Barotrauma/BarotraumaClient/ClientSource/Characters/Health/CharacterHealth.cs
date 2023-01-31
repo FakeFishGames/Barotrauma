@@ -2071,6 +2071,8 @@ namespace Barotrauma
                 foreach (var periodicEffect in newPeriodicEffects)
                 {
                     if (!existingAffliction.Prefab.PeriodicEffects.Contains(periodicEffect.effect)) { continue; }
+                    if (existingAffliction.Strength < periodicEffect.effect.MinStrength) { continue; }
+                    if (periodicEffect.effect.MaxStrength > 0 && existingAffliction.Strength > periodicEffect.effect.MaxStrength) { continue; }
                     //timer has wrapped around, apply the effect
                     if (periodicEffect.timer - existingAffliction.PeriodicEffectTimers[periodicEffect.effect] > periodicEffect.effect.MinInterval / 2)
                     {

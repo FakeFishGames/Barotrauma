@@ -9,7 +9,7 @@ namespace Barotrauma
 {
     sealed class SpriteRecorder : ISpriteBatch, IDisposable
     {
-        private readonly record struct Command(
+        public readonly record struct Command(
             Texture2D Texture,
             VertexPositionColorTexture VertexBL,
             VertexPositionColorTexture VertexBR,
@@ -346,7 +346,7 @@ namespace Barotrauma
             }
             recordedBuffers.Clear();
             commandList.Clear();
-            indexBuffer.Dispose(); indexBuffer = null;
+            indexBuffer?.Dispose(); indexBuffer = null;
             ReadyToRender = false;
         }
     }

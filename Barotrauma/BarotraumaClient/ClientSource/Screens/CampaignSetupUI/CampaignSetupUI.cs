@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using Barotrauma.IO;
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -58,7 +59,7 @@ namespace Barotrauma
 
             var saveFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), saveList.Content.RectTransform) { MinSize = new Point(0, 45) }, style: "ListBoxElement")
             {
-                UserData = saveInfo.FilePath
+                UserData = saveInfo
             };
 
             var nameText = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.5f), saveFrame.RectTransform), Path.GetFileNameWithoutExtension(saveInfo.FilePath), 
@@ -87,10 +88,9 @@ namespace Barotrauma
             };
 
             string saveTimeStr = string.Empty;
-            if (saveInfo.SaveTime > 0)
+            if (saveInfo.SaveTime.TryUnwrap(out var time))
             {
-                DateTime time = ToolBox.Epoch.ToDateTime(saveInfo.SaveTime);
-                saveTimeStr = time.ToString();
+                saveTimeStr = time.ToLocalUserString();
             }
             new GUITextBlock(new RectTransform(new Vector2(1.0f, 1.0f), saveFrame.RectTransform),
                 text: saveTimeStr, textAlignment: Alignment.Right, font: GUIStyle.SmallFont)
@@ -102,6 +102,26 @@ namespace Barotrauma
             return saveFrame;
         }
 
+        protected void SortSaveList()
+        {
+            saveList.Content.RectTransform.SortChildren((c1, c2) =>
+            {
+                if (c1.GUIComponent.UserData is not CampaignMode.SaveInfo file1
+                    || c2.GUIComponent.UserData is not CampaignMode.SaveInfo file2)
+                {
+                    return 0;
+                }
+
+                if (!file1.SaveTime.TryUnwrap(out var file1WriteTime)
+                    || !file2.SaveTime.TryUnwrap(out var file2WriteTime))
+                {
+                    return 0;
+                }
+                
+                return file2WriteTime.CompareTo(file1WriteTime);
+            });
+        }
+        
         public struct CampaignSettingElements
         {
             public SettingValue<bool> TutorialEnabled;
@@ -366,6 +386,26 @@ namespace Barotrauma
                 settingHolder.RectTransform.MinSize = new Point(0, (int)descriptionBlock.TextSize.Y);
                 return inputContainer;
             }
+        }
+
+        public abstract void UpdateLoadMenu(IEnumerable<CampaignMode.SaveInfo> saveFiles = null);
+
+        protected bool DeleteSave(GUIButton button, object obj)
+        {
+            if (obj is not CampaignMode.SaveInfo saveInfo) { return false; }
+
+            var header = TextManager.Get("deletedialoglabel");
+            var body = TextManager.GetWithVariable("deletedialogquestion", "[file]", Path.GetFileNameWithoutExtension(saveInfo.FilePath));
+
+            EventEditorScreen.AskForConfirmation(header, body, () =>
+            {
+                SaveUtil.DeleteSave(saveInfo.FilePath);
+                prevSaveFiles?.RemoveAll(s => s.FilePath == saveInfo.FilePath);
+                UpdateLoadMenu(prevSaveFiles.ToList());
+                return true;
+            });
+
+            return true;
         }
     }
 }

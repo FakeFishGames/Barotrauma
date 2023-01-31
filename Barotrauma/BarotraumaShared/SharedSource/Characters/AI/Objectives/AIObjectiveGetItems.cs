@@ -21,7 +21,7 @@ namespace Barotrauma
         public bool CheckInventory { get; set; }
         public bool EvaluateCombatPriority { get; set; }
         public bool CheckPathForEachItem { get; set; }
-        public bool RequireLoaded { get; set; }
+        public bool RequireNonEmpty { get; set; }
         public bool RequireAllItems { get; set; }
 
         private readonly ImmutableArray<Identifier> gearTags;
@@ -61,7 +61,7 @@ namespace Barotrauma
                             AllowStealing = AllowStealing,
                             ignoredIdentifiersOrTags = ignoredTags,
                             CheckPathForEachItem = CheckPathForEachItem,
-                            RequireLoaded = RequireLoaded,
+                            RequireNonEmpty = RequireNonEmpty,
                             ItemCount = count,
                             SpeakIfFails = RequireAllItems
                         },

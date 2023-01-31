@@ -1,12 +1,9 @@
 ﻿using Barotrauma.Networking;
 using FarseerPhysics;
-using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using Barotrauma.IO;
 using System.Linq;
-using System.Xml.Linq;
 #if CLIENT
 using Barotrauma.Lights;
 #endif
@@ -206,6 +203,8 @@ namespace Barotrauma.Items.Components
             IsHorizontal = element.GetAttributeBool("horizontal", false);
             canBePicked = element.GetAttributeBool("canbepicked", false);
             autoOrientGap = element.GetAttributeBool("autoorientgap", false);
+
+            allowedSlots.Clear();
             
             foreach (var subElement in element.Elements())
             {
@@ -359,7 +358,10 @@ namespace Barotrauma.Items.Components
             {
                 lastBrokenTime = Timing.TotalTime;
                 //the door has to be restored to 50% health before collision detection on the body is re-enabled
-                if (item.ConditionPercentage / Math.Max(item.MaxRepairConditionMultiplier, 1.0f) > 50.0f && 
+
+                //multiply by MaxRepairConditionMultiplier so the item gets repaired at 50% of the _default max condition_
+                //otherwise increasing the max condition is arguably harmful, as the door needs to be repaired further to re-enable the collider
+                if (item.ConditionPercentage * Math.Max(item.MaxRepairConditionMultiplier, 1.0f) > 50.0f && 
                     (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer))
                 {
                     IsBroken = false;

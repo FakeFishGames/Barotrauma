@@ -708,7 +708,7 @@ namespace Barotrauma
                     return;
                 }
             }
-            if (Character.Params.Health.PoisonImmunity && newAffliction.Prefab.AfflictionType == "poison") { return; }
+            if (Character.Params.Health.PoisonImmunity && (newAffliction.Prefab.AfflictionType == "poison" || newAffliction.Prefab.AfflictionType == "paralysis")) { return; }
             if (Character.EmpVulnerability <= 0 && newAffliction.Prefab.AfflictionType == "emp") { return; }
             if (newAffliction.Prefab is AfflictionPrefabHusk huskPrefab)
             {

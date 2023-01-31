@@ -581,7 +581,7 @@ namespace Barotrauma
             }
         }
 
-        public void UpdateLoadMenu(IEnumerable<CampaignMode.SaveInfo> saveFiles = null)
+        public override void UpdateLoadMenu(IEnumerable<CampaignMode.SaveInfo> saveFiles = null)
         {
             prevSaveFiles?.Clear();
             prevSaveFiles = null;
@@ -649,46 +649,27 @@ namespace Barotrauma
                 }
             }
 
-            saveList.Content.RectTransform.SortChildren((c1, c2) =>
-            {
-                string file1 = c1.GUIComponent.UserData as string;
-                string file2 = c2.GUIComponent.UserData as string;
-                DateTime file1WriteTime = DateTime.MinValue;
-                DateTime file2WriteTime = DateTime.MinValue;
-                try
-                {
-                    file1WriteTime = File.GetLastWriteTime(file1);
-                }
-                catch
-                { 
-                    //do nothing - DateTime.MinValue will be used and the element will get sorted at the bottom of the list 
-                };
-                try
-                {
-                    file2WriteTime = File.GetLastWriteTime(file2);
-                }
-                catch
-                {
-                    //do nothing - DateTime.MinValue will be used and the element will get sorted at the bottom of the list 
-                };
-                return file2WriteTime.CompareTo(file1WriteTime);
-            });
+            SortSaveList();
 
             loadGameButton = new GUIButton(new RectTransform(new Vector2(0.45f, 0.12f), loadGameContainer.RectTransform, Anchor.BottomRight), TextManager.Get("LoadButton"))
             {
                 OnClicked = (btn, obj) =>
                 {
-                    if (string.IsNullOrWhiteSpace(saveList.SelectedData as string)) { return false; }
-                    LoadGame?.Invoke(saveList.SelectedData as string);
+                    if (saveList.SelectedData is not CampaignMode.SaveInfo saveInfo) { return false; }
+                    if (string.IsNullOrWhiteSpace(saveInfo.FilePath)) { return false; }
+                    LoadGame?.Invoke(saveInfo.FilePath);
+                    
                     return true;
                 },
                 Enabled = false
             };
-        }       
-        
+        }
+
         private bool SelectSaveFile(GUIComponent component, object obj)
         {
-            string fileName = (string)obj;
+            if (obj is not CampaignMode.SaveInfo saveInfo) { return true; }
+
+            string fileName = saveInfo.FilePath;
 
             XDocument doc = SaveUtil.LoadGameSessionDoc(fileName);
             if (doc?.Root == null)
@@ -701,68 +682,51 @@ namespace Barotrauma
 
             RemoveSaveFrame();
 
-            string subName = doc.Root.GetAttributeString("submarine", "");
-            string saveTime = doc.Root.GetAttributeString("savetime", "unknown");
-            DateTime? time = null;
-            if (long.TryParse(saveTime, out long unixTime))
-            {
-                time = ToolBox.Epoch.ToDateTime(unixTime);
-                saveTime = time.ToString();
-            }
+            string subName = saveInfo.SubmarineName;
+            LocalizedString saveTime = saveInfo.SaveTime
+                .Select(t => (LocalizedString)t.ToLocalUserString())
+                .Fallback(TextManager.Get("Unknown"));
 
             string mapseed = doc.Root.GetAttributeString("mapseed", "unknown");
 
-            var saveFileFrame = new GUIFrame(new RectTransform(new Vector2(0.45f, 0.6f), loadGameContainer.RectTransform, Anchor.TopRight)
-            {
-                RelativeOffset = new Vector2(0.0f, 0.1f)
-            }, style: "InnerFrame")
+            var saveFileFrame = new GUIFrame(
+                new RectTransform(new Vector2(0.45f, 0.6f), loadGameContainer.RectTransform, Anchor.TopRight)
+                {
+                    RelativeOffset = new Vector2(0.0f, 0.1f)
+                }, style: "InnerFrame")
             {
                 UserData = "savefileframe"
             };
 
-            var titleText = new GUITextBlock(new RectTransform(new Vector2(0.9f, 0.2f), saveFileFrame.RectTransform, Anchor.TopCenter)
-            {
-                RelativeOffset = new Vector2(0, 0.05f)
-            },
+            var titleText = new GUITextBlock(
+                new RectTransform(new Vector2(0.9f, 0.2f), saveFileFrame.RectTransform, Anchor.TopCenter)
+                {
+                    RelativeOffset = new Vector2(0, 0.05f)
+                },
                 Path.GetFileNameWithoutExtension(fileName), font: GUIStyle.LargeFont, textAlignment: Alignment.Center);
             titleText.Text = ToolBox.LimitString(titleText.Text, titleText.Font, titleText.Rect.Width);
 
-            var layoutGroup = new GUILayoutGroup(new RectTransform(new Vector2(0.8f, 0.5f), saveFileFrame.RectTransform, Anchor.Center)
-            {
-                RelativeOffset = new Vector2(0, 0.1f)
-            });
+            var layoutGroup = new GUILayoutGroup(
+                new RectTransform(new Vector2(0.8f, 0.5f), saveFileFrame.RectTransform, Anchor.Center)
+                {
+                    RelativeOffset = new Vector2(0, 0.1f)
+                });
 
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform), $"{TextManager.Get("Submarine")} : {subName}", font: GUIStyle.SmallFont);
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform), $"{TextManager.Get("LastSaved")} : {saveTime}", font: GUIStyle.SmallFont);
-            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform), $"{TextManager.Get("MapSeed")} : {mapseed}", font: GUIStyle.SmallFont);
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform),
+                $"{TextManager.Get("Submarine")} : {subName}", font: GUIStyle.SmallFont);
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform),
+                $"{TextManager.Get("LastSaved")} : {saveTime}", font: GUIStyle.SmallFont);
+            new GUITextBlock(new RectTransform(new Vector2(1, 0), layoutGroup.RectTransform),
+                $"{TextManager.Get("MapSeed")} : {mapseed}", font: GUIStyle.SmallFont);
 
             new GUIButton(new RectTransform(new Vector2(0.4f, 0.15f), saveFileFrame.RectTransform, Anchor.BottomCenter)
             {
                 RelativeOffset = new Vector2(0, 0.1f)
             }, TextManager.Get("Delete"), style: "GUIButtonSmall")
             {
-                UserData = fileName,
+                UserData = saveInfo,
                 OnClicked = DeleteSave
             };
-
-            return true;
-        }
-
-        private bool DeleteSave(GUIButton button, object obj)
-        {
-            string saveFile = obj as string;
-            if (obj == null) { return false; }
-
-            LocalizedString header = TextManager.Get("deletedialoglabel");
-            LocalizedString body = TextManager.GetWithVariable("deletedialogquestion", "[file]", Path.GetFileNameWithoutExtension(saveFile));
-
-            EventEditorScreen.AskForConfirmation(header, body, () =>
-            {
-                SaveUtil.DeleteSave(saveFile);
-                prevSaveFiles?.RemoveAll(s => s.FilePath == saveFile);
-                UpdateLoadMenu(prevSaveFiles.ToList());
-                return true;
-            });
 
             return true;
         }

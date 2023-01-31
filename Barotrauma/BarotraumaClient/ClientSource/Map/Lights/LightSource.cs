@@ -200,8 +200,6 @@ namespace Barotrauma.Lights
 
         private static Texture2D lightTexture;
 
-        private float blinkTimer, flickerState, pulseState;
-
         private VertexPositionColorTexture[] vertices;
         private short[] indices;
 
@@ -486,12 +484,12 @@ namespace Barotrauma.Lights
             if (addLight) { GameMain.LightManager.AddLight(this); }
         }
 
-        public void Update(float deltaTime)
+        public void Update(float time)
         {
             float brightness = 1.0f;
             if (lightSourceParams.BlinkFrequency > 0.0f)
             {
-                blinkTimer = (blinkTimer + deltaTime * lightSourceParams.BlinkFrequency) % 1.0f;
+                float blinkTimer = (time * lightSourceParams.BlinkFrequency) % 1.0f;
                 if (blinkTimer > 0.5f)
                 {
                     CurrentBrightness = 0.0f;
@@ -500,14 +498,13 @@ namespace Barotrauma.Lights
             }
             if (lightSourceParams.PulseFrequency > 0.0f && lightSourceParams.PulseAmount > 0.0f)
             {
-                pulseState = (pulseState + deltaTime * lightSourceParams.PulseFrequency) % 1.0f;
+                float pulseState = (time * lightSourceParams.PulseFrequency) % 1.0f;
                 //oscillate between 0-1
                 brightness *= 1.0f - (float)(Math.Sin(pulseState * MathHelper.TwoPi) + 1.0f) / 2.0f * lightSourceParams.PulseAmount;
             }
-            if (lightSourceParams.Flicker > 0.0f)
+            if (lightSourceParams.Flicker > 0.0f && lightSourceParams.FlickerSpeed > 0.0f)
             {
-                flickerState += deltaTime * lightSourceParams.FlickerSpeed;
-                flickerState %= 255;
+                float flickerState = (time * lightSourceParams.FlickerSpeed) % 255;
                 brightness *= 1.0f - PerlinNoise.GetPerlin(flickerState, flickerState * 0.5f) * lightSourceParams.Flicker;
             }
             CurrentBrightness = brightness;

@@ -1171,7 +1171,7 @@ namespace Barotrauma
                 materialCostList.Visible = false;
                 materialCostList.UserData = UpgradeStoreUserData.MaterialCostList;
 
-                var priceText = new GUITextBlock(rectT(0.2f, 1f, buyButtonLayout), formattedPrice)
+                var priceText = new GUITextBlock(rectT(0.2f, 1f, buyButtonLayout), formattedPrice, textAlignment: Alignment.Right)
                 {
                     UserData = UpgradeStoreUserData.PriceLabel,
                     //prices on swappable items are always visible, upgrade prices are enabled in UpdateUpgradeEntry for purchasable upgrades

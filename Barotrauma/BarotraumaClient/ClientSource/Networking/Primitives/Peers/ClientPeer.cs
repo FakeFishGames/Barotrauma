@@ -82,6 +82,11 @@ namespace Barotrauma.Networking
                         Initialization = ConnectionInitialization.SteamTicketAndVersion
                     };
 
+                    if (steamAuthTicket is { Canceled: true })
+                    {
+                        throw new InvalidOperationException("ReadConnectionInitializationStep failed: Steam auth ticket has been cancelled.");
+                    }
+
                     ClientSteamTicketAndVersionPacket body = new ClientSteamTicketAndVersionPacket
                     {
                         Name = GameMain.Client.Name,

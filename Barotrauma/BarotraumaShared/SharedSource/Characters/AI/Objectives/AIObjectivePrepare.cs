@@ -27,6 +27,7 @@ namespace Barotrauma
         public bool FindAllItems { get; set; }
         public bool Equip { get; set; }
         public bool EvaluateCombatPriority { get; set; }
+        public bool RequireNonEmpty { get; set; }
 
         private AIObjective GetSubObjective()
         {
@@ -74,7 +75,7 @@ namespace Barotrauma
                     Abandon = true;
 
                 }
-                else if (items.Any(i => i.Components.Any(i => !i.IsLoaded(character))))
+                else if (items.Any(i => i.Components.Any(i => !i.IsNotEmpty(character))))
                 {
                     Reset();
                 }
@@ -106,7 +107,7 @@ namespace Barotrauma
                             CheckInventory = CheckInventory,
                             Equip = Equip,
                             EvaluateCombatPriority = EvaluateCombatPriority,
-                            RequireLoaded = true,
+                            RequireNonEmpty = RequireNonEmpty,
                             RequireAllItems = requireAll
                         },
                         onCompleted: () =>
@@ -157,7 +158,7 @@ namespace Barotrauma
                         {
                             EvaluateCombatPriority = EvaluateCombatPriority,
                             SpeakIfFails = true,
-                            RequireLoaded = true
+                            RequireNonEmpty = RequireNonEmpty
                         };
                     }
                     if (!TryAddSubObjective(ref getSingleItemObjective, getItemConstructor,

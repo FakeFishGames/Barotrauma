@@ -187,6 +187,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(false, IsPropertySaveable.No, description: "Should the light sprite be drawn on the item using alpha blending, in addition to being rendered in the light map? Can be used to make the light sprite stand out more.")]
+        public bool AlphaBlend
+        {
+            get;
+            set;
+        }
+
         public float TemporaryFlickerTimer;
 
         public override void Move(Vector2 amount, bool ignoreContacts = false)
@@ -241,6 +248,7 @@ namespace Barotrauma.Items.Components
             SetLightSourceState(IsActive);
             turret = item.GetComponent<Turret>();
 #if CLIENT
+            Drawable = AlphaBlend && Light.LightSprite != null;
             if (Screen.Selected.IsEditor)
             {
                 OnMapLoaded();

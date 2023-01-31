@@ -1713,6 +1713,15 @@ namespace Barotrauma
                         GUIStyle.SmallFont.DrawString(spriteBatch, stackCountText, stackCountPos, Color.White);
                     }
                 }
+
+                if (HealingCooldown.IsOnCooldown && item.HasTag(HealingCooldown.MedicalItemTag))
+                {
+                    RectangleF cdRect = rect;
+                    // shrink the rect from top to bottom depending on HealingCooldown.NormalizedCooldown
+                    cdRect.Height *= HealingCooldown.NormalizedCooldown;
+                    cdRect.Y += rect.Height;
+                    GUI.DrawFilledRectangle(spriteBatch, cdRect, Color.White * 0.5f);
+                }
             }
 
             if (inventory != null &&

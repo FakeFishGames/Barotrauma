@@ -788,7 +788,6 @@ namespace Barotrauma
                     {
                         return;
                     }
-
                     if (ws != null)
                     {
                         hull = Hull.FindHull(ws.WorldPosition);
@@ -802,7 +801,6 @@ namespace Barotrauma
                         hull = Hull.FindHull(se.WorldPosition);
                     }
                 }
-
                 if (IsSinglePlayer)
                 {
                     order.OrderGiver?.Speak(order.GetChatMessage("", hull?.DisplayName?.Value, givingOrderToSelf: character == order.OrderGiver, isNewOrder: isNewOrder), ChatMessageType.Order);
@@ -817,13 +815,13 @@ namespace Barotrauma
             {
                 //can't issue an order if no characters are available
                 if (character == null) { return; }
-
                 var orderGiver = order?.OrderGiver;
                 if (IsSinglePlayer)
                 {
-                    character.SetOrder(order, isNewOrder, speak: orderGiver != character);
-                    string message = order?.GetChatMessage(character.Name, orderGiver?.CurrentHull?.DisplayName?.Value, givingOrderToSelf: character == orderGiver, orderOption: order?.Option ?? Identifier.Empty, isNewOrder: isNewOrder);
-                    orderGiver?.Speak(message);
+                    bool isGivingOrderToSelf = orderGiver == character;
+                    character.SetOrder(order, isNewOrder, speak: !isGivingOrderToSelf);
+                        string message = order?.GetChatMessage(character.Name, orderGiver?.CurrentHull?.DisplayName?.Value, isGivingOrderToSelf, orderOption: order?.Option ?? Identifier.Empty, isNewOrder: isNewOrder);
+                        orderGiver?.Speak(message);
                 }
                 else if (orderGiver != null)
                 {

@@ -585,6 +585,8 @@ namespace Barotrauma
                 item.body.Enabled = false;
                 item.body.BodyType = FarseerPhysics.BodyType.Dynamic;
                 item.SetTransform(item.SimPosition, rotation: 0.0f, findNewHull: false);
+                //update to refresh the interpolated draw rotation and position (update doesn't run on disabled bodies)
+                item.body.Update();
             }
             
 #if SERVER

@@ -351,21 +351,6 @@ namespace Barotrauma
             }
         }
 
-        public static bool IsOnFriendlyTeam(CharacterTeamType myTeam, CharacterTeamType otherTeam)
-        {
-            if (myTeam == otherTeam) { return true; }
-            return myTeam switch
-            {
-                // NPCs are friendly to the same team and the friendly NPCs
-                CharacterTeamType.None or CharacterTeamType.Team1 or CharacterTeamType.Team2 => otherTeam == CharacterTeamType.FriendlyNPC,
-                // Friendly NPCs are friendly to both player teams
-                CharacterTeamType.FriendlyNPC => otherTeam == CharacterTeamType.Team1 || otherTeam == CharacterTeamType.Team2,
-                _ => true
-            };
-        }
-
-        public static bool IsOnFriendlyTeam(Character me, Character other) => IsOnFriendlyTeam(me.TeamID, other.TeamID);
-
         public void ReequipUnequipped()
         {
             foreach (var item in unequippedItems)

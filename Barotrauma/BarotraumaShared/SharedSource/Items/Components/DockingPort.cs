@@ -289,7 +289,16 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
-            if (!(joint is WeldJoint))
+            if (joint == null)
+            {
+                string errorMsg = "Error while locking a docking port (joint between submarines doesn't exist)." +
+                    " Submarine: " + (item.Submarine?.Info.Name ?? "null") +
+                    ", target submarine: " + (DockingTarget.item.Submarine?.Info.Name ?? "null");
+                GameAnalyticsManager.AddErrorEventOnce("DockingPort.Lock:JointNotCreated", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                return;
+            }
+
+            if (joint is not WeldJoint)
             {
                 DockingDir = GetDir(DockingTarget);
                 DockingTarget.DockingDir = -DockingDir;

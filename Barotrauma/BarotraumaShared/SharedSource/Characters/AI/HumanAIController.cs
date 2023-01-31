@@ -310,7 +310,7 @@ namespace Barotrauma
                 UseIndoorSteeringOutside = false;
             }
             
-            if (Character.Submarine == null || Character.IsOnPlayerTeam && !Character.IsEscorted && !IsOnFriendlyTeam(Character.TeamID, Character.Submarine.TeamID))
+            if (Character.Submarine == null || Character.IsOnPlayerTeam && !Character.IsEscorted && !Character.IsOnFriendlyTeam(Character.Submarine.TeamID))
             {
                 // Spot enemies while staying outside or inside an enemy ship.
                 // does not apply for escorted characters, such as prisoners or terrorists who have their own behavior
@@ -541,7 +541,7 @@ namespace Barotrauma
             if (Character.LockHands) { return; }
             if (ObjectiveManager.CurrentObjective == null) { return; }
             if (Character.CurrentHull == null) { return; }
-            bool oxygenLow = !Character.AnimController.HeadInWater && Character.OxygenAvailable < CharacterHealth.LowOxygenThreshold && Character.NeedsOxygen;
+            bool shouldActOnSuffocation = Character.IsLowInOxygen && !Character.AnimController.HeadInWater && HasDivingSuit(Character, requireOxygenTank: false) && !HasItem(Character, AIObjectiveFindDivingGear.OXYGEN_SOURCE, out _, conditionPercentage: 1);
             bool isCarrying = ObjectiveManager.HasActiveObjective<AIObjectiveContainItem>() || ObjectiveManager.HasActiveObjective<AIObjectiveDecontainItem>();
 
             bool NeedsDivingGearOnPath(AIObjectiveGoTo gotoObjective)
@@ -566,17 +566,17 @@ namespace Barotrauma
                         gotoObjective.Abandon = true;
                     }
                 }
-                if (!oxygenLow)
+                if (!shouldActOnSuffocation)
                 {
                     return;
                 }
             }
 
             // Diving gear
-            if (oxygenLow || findItemState != FindItemState.OtherItem)
+            if (shouldActOnSuffocation || findItemState != FindItemState.OtherItem)
             {
                 bool needsGear = NeedsDivingGear(Character.CurrentHull, out _);
-                if (!needsGear || oxygenLow)
+                if (!needsGear || shouldActOnSuffocation)
                 {
                     bool isCurrentObjectiveFindSafety = ObjectiveManager.IsCurrentObjective<AIObjectiveFindSafety>();
                     bool shouldKeepTheGearOn =
@@ -591,14 +591,14 @@ namespace Barotrauma
                         Character.CurrentHull.IsWetRoom;
                     bool IsOrderedToWait() => Character.IsOnPlayerTeam && ObjectiveManager.CurrentOrder is AIObjectiveGoTo goTo && goTo.Target == Character;
                     bool removeDivingSuit = !shouldKeepTheGearOn && !IsOrderedToWait();
-                    if (oxygenLow && Character.CurrentHull.Oxygen > 0 && (!isCurrentObjectiveFindSafety || Character.OxygenAvailable < 1))
+                    if (shouldActOnSuffocation && Character.CurrentHull.Oxygen > 0 && (!isCurrentObjectiveFindSafety || Character.OxygenAvailable < 1))
                     {
                         shouldKeepTheGearOn = false;
                         // Remove the suit before we pass out
                         removeDivingSuit = true;
                     }
                     bool takeMaskOff = !shouldKeepTheGearOn;
-                    if (!shouldKeepTheGearOn && !oxygenLow)
+                    if (!shouldKeepTheGearOn && !shouldActOnSuffocation)
                     {
                         if (ObjectiveManager.IsCurrentObjective<AIObjectiveIdle>())
                         {
@@ -647,7 +647,7 @@ namespace Barotrauma
                         var divingSuit = Character.Inventory.FindItemByTag(AIObjectiveFindDivingGear.HEAVY_DIVING_GEAR);
                         if (divingSuit != null && !divingSuit.HasTag(AIObjectiveFindDivingGear.DIVING_GEAR_WEARABLE_INDOORS))
                         {
-                            if (oxygenLow || Character.Submarine?.TeamID != Character.TeamID || ObjectiveManager.GetCurrentPriority() >= AIObjectiveManager.RunPriority)
+                            if (shouldActOnSuffocation || Character.Submarine?.TeamID != Character.TeamID || ObjectiveManager.GetCurrentPriority() >= AIObjectiveManager.RunPriority)
                             {
                                 divingSuit.Drop(Character);
                                 HandleRelocation(divingSuit);
@@ -982,7 +982,7 @@ namespace Barotrauma
                                 if (target.CurrentHull != hull) { continue; }
                                 if (AIObjectiveRescueAll.IsValidTarget(target, Character))
                                 {
-                                    if (AddTargets<AIObjectiveRescueAll, Character>(Character, target) && newOrder == null && !ObjectiveManager.HasActiveObjective<AIObjectiveRescue>())
+                                    if (AddTargets<AIObjectiveRescueAll, Character>(Character, target) && newOrder == null && (!Character.IsMedic || Character == target) && !ObjectiveManager.HasActiveObjective<AIObjectiveRescue>())
                                     {
                                         var orderPrefab = OrderPrefab.Prefabs["requestfirstaid"];
                                         newOrder = new Order(orderPrefab, hull, null, orderGiver: Character);
@@ -1161,7 +1161,7 @@ namespace Barotrauma
                     freezeAI = true;
                 }
             }
-            if (attacker == null || attacker.IsDead || attacker.Removed)
+            if (attacker == null || attacker.IsUnconscious || attacker.Removed)
             {
                 // Don't react to the damage if there's no attacker.
                 // We might consider launching the retreat combat objective in some cases, so that the bot does not just stand somewhere getting damaged and dying.
@@ -1199,7 +1199,7 @@ namespace Barotrauma
                     return;
                 }
                 float cumulativeDamage = realDamage + Character.GetDamageDoneByAttacker(attacker);
-                bool isAccidental = attacker.IsBot && !IsMentallyUnstable && !attacker.AIController.IsMentallyUnstable && Character.CombatAction == null;
+                bool isAccidental = attacker.IsBot && !IsMentallyUnstable && !attacker.AIController.IsMentallyUnstable && attacker.CombatAction == null;
                 if (isAccidental)
                 {
                     if (!Character.IsSecurity && cumulativeDamage > minorDamageThreshold)
@@ -1279,7 +1279,7 @@ namespace Barotrauma
                     if (otherCharacter.Submarine != attacker.Submarine) { continue; }
                     if (otherCharacter.Info?.Job == null || otherCharacter.IsInstigator) { continue; }
                     if (otherCharacter.IsPlayer) { continue; }
-                    if (!(otherCharacter.AIController is HumanAIController otherHumanAI)) { continue; }
+                    if (otherCharacter.AIController is not HumanAIController otherHumanAI) { continue; }
                     if (!otherHumanAI.IsFriendly(Character)) { continue; }
                     bool isWitnessing = otherHumanAI.VisibleHulls.Contains(Character.CurrentHull) || otherHumanAI.VisibleHulls.Contains(attacker.CurrentHull);
                     if (!isWitnessing) 
@@ -1299,7 +1299,7 @@ namespace Barotrauma
 
             AIObjectiveCombat.CombatMode DetermineCombatMode(Character c, float cumulativeDamage = 0, bool isWitnessing = false)
             {
-                if (!(c.AIController is HumanAIController humanAI)) { return AIObjectiveCombat.CombatMode.None; }
+                if (c.AIController is not HumanAIController humanAI) { return AIObjectiveCombat.CombatMode.None; }
                 if (!IsFriendly(attacker))
                 {
                     if (c.Submarine == null)
@@ -1327,7 +1327,7 @@ namespace Barotrauma
                     }
                     if (attacker.IsPlayer && c.TeamID == attacker.TeamID)
                     {
-                        if (GameMain.IsSingleplayer || Character.TeamID != attacker.TeamID)
+                        if (GameMain.IsSingleplayer || c.TeamID != attacker.TeamID)
                         {
                             // Bots in the player team never act aggressively in single player when attacked by the player
                             // In multiplayer, they react only to players attacking them or other crew members
@@ -1345,11 +1345,11 @@ namespace Barotrauma
                         isAttackerFightingEnemy = true;
                         return AIObjectiveCombat.CombatMode.None;
                     }
-                    if (isWitnessing && Character.CombatAction != null && !c.IsSecurity)
+                    if (isWitnessing && c.CombatAction != null && !c.IsSecurity)
                     {
-                        return Character.CombatAction.WitnessReaction;
+                        return c.CombatAction.WitnessReaction;
                     }
-                    if (attacker.IsPlayer && FindInstigator() is Character instigator)
+                    if (!attacker.IsInstigator && c.IsOnFriendlyTeam(attacker) && FindInstigator() is Character instigator)
                     {
                         // The guards don't react to player's aggressions when there's an instigator around
                         isAttackerFightingEnemy = true;
@@ -1359,11 +1359,11 @@ namespace Barotrauma
                     {
                         if (c.IsSecurity)
                         {
-                            return Character.CombatAction != null ? Character.CombatAction.GuardReaction : AIObjectiveCombat.CombatMode.None;
+                            return attacker.CombatAction != null ? attacker.CombatAction.GuardReaction : AIObjectiveCombat.CombatMode.Offensive;
                         }
                         else
                         {
-                            return Character.CombatAction != null ? Character.CombatAction.WitnessReaction : AIObjectiveCombat.CombatMode.None;
+                            return attacker.CombatAction != null ? attacker.CombatAction.WitnessReaction : AIObjectiveCombat.CombatMode.Retreat;
                         }
                     }
                     else
@@ -1567,20 +1567,20 @@ namespace Barotrauma
             return false;
         }
 
-        public static bool HasDivingGear(Character character, float conditionPercentage = 0) => HasDivingSuit(character, conditionPercentage) || HasDivingMask(character, conditionPercentage);
+        public static bool HasDivingGear(Character character, float conditionPercentage = 0, bool requireOxygenTank = true) => HasDivingSuit(character, conditionPercentage, requireOxygenTank) || HasDivingMask(character, conditionPercentage, requireOxygenTank);
 
         /// <summary>
         /// Check whether the character has a diving suit in usable condition plus some oxygen.
         /// </summary>
-        public static bool HasDivingSuit(Character character, float conditionPercentage = 0) 
-            => HasItem(character, AIObjectiveFindDivingGear.HEAVY_DIVING_GEAR, out _, AIObjectiveFindDivingGear.OXYGEN_SOURCE, conditionPercentage, requireEquipped: true,
+        public static bool HasDivingSuit(Character character, float conditionPercentage = 0, bool requireOxygenTank = true) 
+            => HasItem(character, AIObjectiveFindDivingGear.HEAVY_DIVING_GEAR, out _, requireOxygenTank ? AIObjectiveFindDivingGear.OXYGEN_SOURCE : Identifier.Empty, conditionPercentage, requireEquipped: true,
                 predicate: (Item item) => character.HasEquippedItem(item, InvSlotType.OuterClothes));
 
         /// <summary>
         /// Check whether the character has a diving mask in usable condition plus some oxygen.
         /// </summary>
-        public static bool HasDivingMask(Character character, float conditionPercentage = 0) 
-            => HasItem(character, AIObjectiveFindDivingGear.LIGHT_DIVING_GEAR, out _, AIObjectiveFindDivingGear.OXYGEN_SOURCE, conditionPercentage, requireEquipped: true);
+        public static bool HasDivingMask(Character character, float conditionPercentage = 0, bool requireOxygenTank = true) 
+            => HasItem(character, AIObjectiveFindDivingGear.LIGHT_DIVING_GEAR, out _, requireOxygenTank ? AIObjectiveFindDivingGear.OXYGEN_SOURCE : Identifier.Empty, conditionPercentage, requireEquipped: true);
 
         private static List<Item> matchingItems = new List<Item>();
 
@@ -2045,7 +2045,7 @@ namespace Barotrauma
         public static bool IsFriendly(Character me, Character other, bool onlySameTeam = false)
         {
             bool sameTeam = me.TeamID == other.TeamID;
-            bool teamGood = sameTeam || !onlySameTeam && IsOnFriendlyTeam(me, other);
+            bool teamGood = sameTeam || !onlySameTeam && me.IsOnFriendlyTeam(other);
             if (!teamGood) { return false; }
             if (!me.IsSameSpeciesOrGroup(other)) { return false; }
             if (me.TeamID == CharacterTeamType.FriendlyNPC && other.TeamID == CharacterTeamType.Team1 && GameMain.GameSession?.GameMode is CampaignMode campaign)

@@ -23,9 +23,13 @@ namespace Barotrauma
 {
     class GameMain : Game
     {
-        public static bool ShowFPS = false;
-        public static bool ShowPerf = false;
+        public static bool ShowFPS;
+        public static bool ShowPerf;
         public static bool DebugDraw;
+        /// <summary>
+        /// Doesn't automatically enable los or bot AI or do anything like that. Probably not fully implemented.
+        /// </summary>
+        public static bool DevMode;
         public static bool IsSingleplayer => NetworkMember == null;
         public static bool IsMultiplayer => NetworkMember != null;
 
@@ -398,7 +402,7 @@ namespace Barotrauma
             TextureLoader.Init(GraphicsDevice);
 
             //do this here because we need it for the loading screen
-            WaterRenderer.Instance = new WaterRenderer(base.GraphicsDevice, Content);
+            WaterRenderer.Instance = new WaterRenderer(base.GraphicsDevice);
 
             Quad.Init(GraphicsDevice);
 
@@ -512,10 +516,10 @@ namespace Barotrauma
             TitleScreen.LoadState = 75.0f;
         yield return CoroutineStatus.Running;
 
-            GameScreen = new GameScreen(GraphicsDeviceManager.GraphicsDevice, Content);
+            GameScreen = new GameScreen(GraphicsDeviceManager.GraphicsDevice);
 
             ParticleManager = new ParticleManager(GameScreen.Cam);
-            LightManager = new Lights.LightManager(base.GraphicsDevice, Content);
+            LightManager = new Lights.LightManager(base.GraphicsDevice);
             
             TitleScreen.LoadState = 80.0f;
         yield return CoroutineStatus.Running;

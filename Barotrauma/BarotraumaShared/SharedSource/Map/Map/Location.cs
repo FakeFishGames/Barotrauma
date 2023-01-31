@@ -559,12 +559,9 @@ namespace Barotrauma
             killedCharacterIdentifiers = element.GetAttributeIntArray("killedcharacters", Array.Empty<int>()).ToHashSet();
 
             System.Diagnostics.Debug.Assert(Type != null, $"Could not find the location type \"{locationTypeId}\"!");
-            if (Type == null)
-            {
-                Type = LocationType.Prefabs.First();
-            }
+            Type ??= LocationType.Prefabs.First();
 
-            LevelData = new LevelData(element.Element("Level"));
+            LevelData = new LevelData(element.Element("Level"), clampDifficultyToBiome: true);
 
             PortraitId = ToolBox.StringToInt(Name);
 

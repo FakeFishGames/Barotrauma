@@ -45,7 +45,7 @@ namespace Barotrauma
             }
         }
 
-        private struct Door
+        private readonly struct Door
         {
             public readonly Rectangle Rect;
 
@@ -153,7 +153,9 @@ namespace Barotrauma
                 ScrollBarVisible = false,
                 Spacing = GUI.IntScale(5)
             };
-            subInfo.CreateSpecsWindow(specsContainer, GUIStyle.Font, includeTitle: false, includeDescription: true);
+            subInfo.CreateSpecsWindow(specsContainer, GUIStyle.Font,
+                includeTitle: false,
+                includeDescription: true);
             int width = specsContainer.Rect.Width;
             void recalculateSpecsContainerHeight()
             {
@@ -191,6 +193,7 @@ namespace Barotrauma
 
             TaskPool.Add(nameof(GeneratePreviewMeshes), GeneratePreviewMeshes(), _ =>
             {
+                if (isDisposed) { return; }
                 // Reset the camera's position on the main thread,
                 // because the Camera class is not thread-safe and
                 // it's possible for its state to not get updated

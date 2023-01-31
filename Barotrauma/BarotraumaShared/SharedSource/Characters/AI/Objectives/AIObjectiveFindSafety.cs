@@ -63,15 +63,16 @@ namespace Barotrauma
             }
             else
             {
-                if (HumanAIController.NeedsDivingGear(character.CurrentHull, out bool needsSuit) && 
+                if ((character.IsLowInOxygen && !character.AnimController.HeadInWater && HumanAIController.HasDivingSuit(character, requireOxygenTank: false)) ||
+                    (HumanAIController.NeedsDivingGear(character.CurrentHull, out bool needsSuit) && 
                     (needsSuit ? 
                     !HumanAIController.HasDivingSuit(character, conditionPercentage: AIObjectiveFindDivingGear.GetMinOxygen(character)) : 
-                    !HumanAIController.HasDivingGear(character, conditionPercentage: AIObjectiveFindDivingGear.GetMinOxygen(character))))
+                    !HumanAIController.HasDivingGear(character, conditionPercentage: AIObjectiveFindDivingGear.GetMinOxygen(character)))))
                 {
                     Priority = 100;
                 }
                 else if ((objectiveManager.IsCurrentOrder<AIObjectiveGoTo>() || objectiveManager.IsCurrentOrder<AIObjectiveReturn>()) &&
-                         character.Submarine != null && !AIController.IsOnFriendlyTeam(character.TeamID, character.Submarine.TeamID))
+                         character.Submarine != null && !character.IsOnFriendlyTeam(character.Submarine.TeamID))
                 {
                     // Ordered to follow, hold position, or return back to main sub inside a hostile sub
                     // -> ignore find safety unless we need to find a diving gear
@@ -137,12 +138,14 @@ namespace Barotrauma
         private float retryTimer;
         protected override void Act(float deltaTime)
         {
+            if (resetPriority) { return; }
             var currentHull = character.CurrentHull;
+            bool shouldActOnSuffocation = character.IsLowInOxygen && !character.AnimController.HeadInWater && HumanAIController.HasDivingSuit(character, requireOxygenTank: false);
             bool dangerousPressure = currentHull == null || currentHull.LethalPressure > 0 && character.PressureProtection <= 0;
-            if (!character.LockHands && (!dangerousPressure || cannotFindSafeHull))
+            if (!character.LockHands && (!dangerousPressure || shouldActOnSuffocation || cannotFindSafeHull))
             {
                 bool needsDivingGear = HumanAIController.NeedsDivingGear(currentHull, out bool needsDivingSuit);
-                bool needsEquipment = false;
+                bool needsEquipment = shouldActOnSuffocation;
                 if (needsDivingSuit)
                 {
                     needsEquipment = !HumanAIController.HasDivingSuit(character, AIObjectiveFindDivingGear.GetMinOxygen(character));

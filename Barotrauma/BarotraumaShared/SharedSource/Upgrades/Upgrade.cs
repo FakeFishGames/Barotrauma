@@ -46,7 +46,7 @@ namespace Barotrauma
                 case int _:
                 case double _:
                 {
-                    var value = (float) OriginalValue;
+                    var value = Convert.ToSingle(OriginalValue);
                     return level == 0 ? value : CalculateUpgrade(value, level, Multiplier);
                 }
                 case bool _ when bool.TryParse(Multiplier, out bool result):

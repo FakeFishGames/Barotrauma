@@ -19,6 +19,9 @@ namespace Barotrauma
 
     static class MathUtils
     {
+        public static Vector2 DiscardZ(this Vector3 vector)
+            => new Vector2(vector.X, vector.Y);
+
         public static float Percentage(float portion, float total)
         {
             return portion / total * 100;

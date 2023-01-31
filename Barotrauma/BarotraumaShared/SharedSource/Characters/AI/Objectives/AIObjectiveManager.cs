@@ -364,8 +364,7 @@ namespace Barotrauma
                     CurrentOrders.RemoveAt(i);
                     continue;
                 }
-                var currentOrderInfo = character.GetCurrentOrder(currentOrder);
-                if (currentOrderInfo is Order)
+                if (character.GetCurrentOrder(currentOrder) is Order currentOrderInfo)
                 {
                     int currentPriority = currentOrderInfo.ManualPriority;
                     if (currentOrder.ManualPriority != currentPriority)
@@ -539,7 +538,8 @@ namespace Barotrauma
                         KeepActiveWhenReady = true,
                         CheckInventory = true,
                         Equip = false,
-                        FindAllItems = true
+                        FindAllItems = true,
+                        RequireNonEmpty = false
                     };
                     break;
                 case "findweapon":
@@ -555,7 +555,8 @@ namespace Barotrauma
                             KeepActiveWhenReady = false,
                             CheckInventory = false,
                             EvaluateCombatPriority = true,
-                            FindAllItems = false
+                            FindAllItems = false,
+                            RequireNonEmpty = true
                         };
                     }
                     prepareObjective.KeepActiveWhenReady = false;
@@ -600,9 +601,9 @@ namespace Barotrauma
 
             Order dismissOrder = currentOrder.GetDismissal();
 #if CLIENT
-            if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.IsSinglePlayer)
+            if (GameMain.GameSession?.CrewManager is CrewManager cm && cm.IsSinglePlayer)
             {
-                GameMain.GameSession.CrewManager.SetCharacterOrder(character, dismissOrder);
+                character.SetOrder(dismissOrder, isNewOrder: true, speak: false);
             }
 #else
             GameMain.Server?.SendOrderChatMessage(new OrderChatMessage(dismissOrder, character, character));

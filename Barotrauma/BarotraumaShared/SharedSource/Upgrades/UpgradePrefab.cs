@@ -546,7 +546,7 @@ namespace Barotrauma
 
             foreach (Item item in itemsToRemove)
             {
-                item.Remove();
+                Entity.Spawner.AddItemToRemoveQueue(item);
             }
 
             if (GameMain.IsMultiplayer) { character.Inventory.CreateNetworkEvent(); }

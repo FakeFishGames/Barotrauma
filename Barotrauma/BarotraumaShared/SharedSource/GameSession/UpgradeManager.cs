@@ -692,11 +692,13 @@ namespace Barotrauma
         /// Gets the progress that is shown on the store interface.
         /// Includes values stored in the metadata and <see cref="PendingUpgrades"/>, and takes submarine tier and class restrictions into account
         /// </summary>
-        public int GetUpgradeLevel(UpgradePrefab prefab, UpgradeCategory category)
+        /// <param name="info">Submarine used to determine the upgrade limit. If not defined, will default to the current sub.</param>
+        public int GetUpgradeLevel(UpgradePrefab prefab, UpgradeCategory category, SubmarineInfo? info = null)
         {
             if (!Metadata.HasKey(FormatIdentifier(prefab, category))) { return GetPendingLevel(); }
 
-            return Math.Min(GetRealUpgradeLevel(prefab, category) + GetPendingLevel(), prefab.GetMaxLevelForCurrentSub());
+            int maxLevel = info is null ? prefab.GetMaxLevelForCurrentSub() : prefab.GetMaxLevel(info);
+            return Math.Min(GetRealUpgradeLevel(prefab, category) + GetPendingLevel(), maxLevel);
 
             int GetPendingLevel()
             {
@@ -711,6 +713,14 @@ namespace Barotrauma
         public int GetRealUpgradeLevel(UpgradePrefab prefab, UpgradeCategory category)
         {
             return !Metadata.HasKey(FormatIdentifier(prefab, category)) ? 0 : Metadata.GetInt(FormatIdentifier(prefab, category), 0);
+        }
+
+        /// <summary>
+        /// Gets the level of the upgrade that is stored in the metadata. Takes into account the limits of the provided submarine.
+        /// </summary>
+        public int GetRealUpgradeLevelForSub(UpgradePrefab prefab, UpgradeCategory category, SubmarineInfo info)
+        {
+            return Math.Min(GetRealUpgradeLevel(prefab, category), prefab.GetMaxLevel(info));
         }
 
         /// <summary>

@@ -25,14 +25,11 @@ namespace Barotrauma.CharacterEditor
         {
             get
             {
-                if (cam == null)
+                cam ??= new Camera()
                 {
-                    cam = new Camera()
-                    {
-                        MinZoom = 0.1f,
-                        MaxZoom = 5.0f
-                    };
-                }
+                    MinZoom = 0.1f,
+                    MaxZoom = 5.0f
+                };
                 return cam;
             }
         }
@@ -262,7 +259,10 @@ namespace Barotrauma.CharacterEditor
 #endif
             }
             GameMain.Instance.ResolutionChanged -= OnResolutionChanged;
-            GameMain.LightManager.LightingEnabled = true;
+            if (!GameMain.DevMode)
+            {
+                GameMain.LightManager.LightingEnabled = true;
+            }
             ClearWidgets();
             ClearSelection();
         }
@@ -280,6 +280,7 @@ namespace Barotrauma.CharacterEditor
 #region Main methods
         public override void AddToGUIUpdateList()
         {
+            if (rightArea == null || leftArea == null) { return; }
             rightArea.AddToGUIUpdateList();
             leftArea.AddToGUIUpdateList();
 
@@ -778,7 +779,7 @@ namespace Barotrauma.CharacterEditor
             scaledMouseSpeed = PlayerInput.MouseSpeedPerSecond * (float)deltaTime;
             Cam.UpdateTransform(true);
             Submarine.CullEntities(Cam);
-            Submarine.MainSub.UpdateTransform();
+            Submarine.MainSub?.UpdateTransform();
 
             // Lightmaps
             if (GameMain.LightManager.LightingEnabled)
@@ -1570,10 +1571,7 @@ namespace Barotrauma.CharacterEditor
             {
                 wayPoint = WayPoint.GetRandom(spawnType: SpawnType.Human, sub: Submarine.MainSub);
             }
-            if (wayPoint == null)
-            {
-                wayPoint = WayPoint.GetRandom(sub: Submarine.MainSub);
-            }
+            wayPoint ??= WayPoint.GetRandom(sub: Submarine.MainSub);
             spawnPosition = wayPoint.WorldPosition;
         }
 
@@ -3998,7 +3996,7 @@ namespace Barotrauma.CharacterEditor
                             };
                         }).Draw(spriteBatch, deltaTime);
                     }
-                    else
+                    else if (groundedParams != null)
                     {
                         GetAnimationWidget("HeadPosition", color, Color.Black, initMethod: w =>
                         {
@@ -4107,7 +4105,7 @@ namespace Barotrauma.CharacterEditor
                             };
                         }).Draw(spriteBatch, deltaTime);
                     }
-                    else
+                    else if (groundedParams != null)
                     {
                         GetAnimationWidget("TorsoPosition", color, Color.Black, initMethod: w =>
                         {

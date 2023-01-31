@@ -321,6 +321,7 @@ namespace Barotrauma
         {
             public readonly List<StatusEffect> StatusEffects = new List<StatusEffect>();
             public readonly float MinInterval, MaxInterval;
+            public readonly float MinStrength, MaxStrength;
 
             public PeriodicEffect(ContentXElement element, string parentDebugName)
             {
@@ -335,8 +336,10 @@ namespace Barotrauma
                 }
                 else
                 {
-                    MinInterval = Math.Max(element.GetAttributeFloat("mininterval", 1.0f), 1.0f);
-                    MaxInterval = Math.Max(element.GetAttributeFloat("maxinterval", 1.0f), MinInterval);
+                    MinInterval = Math.Max(element.GetAttributeFloat(nameof(MinInterval), 1.0f), 1.0f);
+                    MaxInterval = Math.Max(element.GetAttributeFloat(nameof(MaxInterval), 1.0f), MinInterval);
+                    MinStrength = Math.Max(element.GetAttributeFloat(nameof(MinStrength), 0f), 0f);
+                    MaxStrength = Math.Max(element.GetAttributeFloat(nameof(MaxStrength), MinStrength), MinStrength);
                 }
             }
         }
@@ -415,8 +418,8 @@ namespace Barotrauma
         //how much karma changes when a player applies this affliction to someone (per strength of the affliction)
         public float KarmaChangeOnApplied;
 
-        public float BurnOverlayAlpha;
-        public float DamageOverlayAlpha;
+        public readonly float BurnOverlayAlpha;
+        public readonly float DamageOverlayAlpha;
 
         //steam achievement given when the affliction is removed from the controlled character
         public readonly Identifier AchievementOnRemoved;
@@ -426,6 +429,20 @@ namespace Barotrauma
 
         public readonly Sprite AfflictionOverlay;
         public readonly bool AfflictionOverlayAlphaIsLinear;
+
+        public readonly bool DamageParticles;
+
+        /// <summary>
+        /// An arbitrary modifier that affects how much medical skill is increased when you apply the affliction on a target. 
+        /// If the affliction causes damage or is of type poison or paralysis, the skill is increased only when the target is hostile. 
+        /// If the affliction is of type buff, the skill is increased only when the target is friendly.
+        /// </summary>
+        public readonly float MedicalSkillGain;
+        /// <summary>
+        /// An arbitrary modifier that affects how much weapons skill is increased when you apply the affliction on a target. 
+        /// The skill is increased only when the target is hostile. 
+        /// </summary>
+        public readonly float WeaponsSkillGain;
 
         private readonly List<Effect> effects = new List<Effect>();
         private readonly List<PeriodicEffect> periodicEffects = new List<PeriodicEffect>();
@@ -527,6 +544,10 @@ namespace Barotrauma
             AchievementOnRemoved = element.GetAttributeIdentifier(nameof(AchievementOnRemoved), "");
 
             ResetBetweenRounds = element.GetAttributeBool("resetbetweenrounds", false);
+
+            DamageParticles = element.GetAttributeBool(nameof(DamageParticles), true);
+            WeaponsSkillGain = element.GetAttributeFloat(nameof(WeaponsSkillGain), 0.0f);
+            MedicalSkillGain = element.GetAttributeFloat(nameof(MedicalSkillGain), 0.0f);
 
             List<Description> descriptions = new List<Description>();
             foreach (var subElement in element.Elements())

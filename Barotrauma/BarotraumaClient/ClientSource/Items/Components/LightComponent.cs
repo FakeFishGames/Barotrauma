@@ -78,14 +78,21 @@ namespace Barotrauma.Items.Components
 
         public void Draw(SpriteBatch spriteBatch, bool editing = false, float itemDepth = -1)
         {
-            if (Light.LightSprite != null && (item.body == null || item.body.Enabled) && lightBrightness > 0.0f && IsOn && Light.Enabled)
+            if (Light?.LightSprite == null) { return; }
+            if ((item.body == null || item.body.Enabled) && lightBrightness > 0.0f && IsOn && Light.Enabled)
             {
                 Vector2 origin = Light.LightSprite.Origin;
                 if ((Light.LightSpriteEffect & SpriteEffects.FlipHorizontally) == SpriteEffects.FlipHorizontally) { origin.X = Light.LightSprite.SourceRect.Width - origin.X; }
                 if ((Light.LightSpriteEffect & SpriteEffects.FlipVertically) == SpriteEffects.FlipVertically) { origin.Y = Light.LightSprite.SourceRect.Height - origin.Y; }
 
                 Vector2 drawPos = item.body?.DrawPosition ?? item.DrawPosition;
-                Light.LightSprite.Draw(spriteBatch, new Vector2(drawPos.X, -drawPos.Y), lightColor * lightBrightness, origin, -Light.Rotation, item.Scale, Light.LightSpriteEffect, itemDepth - 0.0001f);
+
+                Color color = lightColor;
+                if (Light.OverrideLightSpriteAlpha.HasValue)
+                {
+                    color = new Color(lightColor, Light.OverrideLightSpriteAlpha.Value);
+                }
+                Light.LightSprite.Draw(spriteBatch, new Vector2(drawPos.X, -drawPos.Y), color * lightBrightness, origin, -Light.Rotation, item.Scale, Light.LightSpriteEffect, itemDepth - 0.0001f);
             }
         }
 

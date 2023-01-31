@@ -454,7 +454,7 @@ namespace Barotrauma
             aiming = false;
             wasAimingMelee = aimingMelee;
             aimingMelee = false;
-            IsHanging = false;
+            IsHanging = IsHanging && character.IsRagdolled;
         }
 
         void UpdateStanding()

@@ -551,6 +551,7 @@ namespace Barotrauma
                     submarineSelection.RefreshSubmarineDisplay(true, setTransferOptionToTrue: true);
                     break;
                 case CampaignMode.InteractionType.Map:
+                    GameMain.GameSession?.Map?.ResetPendingSub();
                     //refresh mission rewards (may have been changed by e.g. a pending submarine switch)
                     foreach (GUITextBlock rewardText in missionRewardTexts)
                     {

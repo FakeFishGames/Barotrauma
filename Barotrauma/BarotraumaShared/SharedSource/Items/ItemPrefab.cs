@@ -769,6 +769,9 @@ namespace Barotrauma
         [Serialize(true, IsPropertySaveable.No)]
         public bool ShowHealthBar { get; private set; }
 
+        [Serialize(1f, IsPropertySaveable.No, description: "How much the bots prioritize this item when they seek for items. For example, bots prioritize less exosuit than the other diving suits. Defaults to 1. Note that there's also a specific CombatPriority for items that can be used as weapons.")]
+        public float BotPriority { get; private set; }
+
         protected override Identifier DetermineIdentifier(XElement element)
         {
             Identifier identifier = base.DetermineIdentifier(element);
@@ -938,14 +941,20 @@ namespace Barotrauma
                         AllowDeconstruct = true;
                         RandomDeconstructionOutput = subElement.GetAttributeBool("chooserandom", false);
                         RandomDeconstructionOutputAmount = subElement.GetAttributeInt("amount", 1);
-                        foreach (XElement deconstructItem in subElement.Elements())
+                        foreach (XElement itemElement in subElement.Elements())
                         {
-                            if (deconstructItem.Attribute("name") != null)
+                            if (itemElement.Attribute("name") != null)
                             {
                                 DebugConsole.ThrowError($"Error in item config \"{ToString()}\" - use item identifiers instead of names to configure the deconstruct items.");
                                 continue;
                             }
-                            deconstructItems.Add(new DeconstructItem(deconstructItem, Identifier));
+                            var deconstructItem = new DeconstructItem(itemElement, Identifier);
+                            if (deconstructItem.ItemIdentifier.IsEmpty)
+                            {
+                                DebugConsole.ThrowError($"Error in item config \"{ToString()}\" - deconstruction output contains an item with no identifier.");
+                                continue;
+                            }
+                            deconstructItems.Add(deconstructItem);
                         }
                         RandomDeconstructionOutputAmount = Math.Min(RandomDeconstructionOutputAmount, deconstructItems.Count);
                         break;

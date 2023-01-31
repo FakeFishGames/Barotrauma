@@ -1779,7 +1779,10 @@ namespace Barotrauma
                 {
                     CurrentSelectMode = GUIListBox.SelectMode.None
                 };
-                sub.Info.CreateSpecsWindow(specsListBox, GUIStyle.Font, includeTitle: false, includeClass: false, includeDescription: true);
+                sub.Info.CreateSpecsWindow(specsListBox, GUIStyle.Font,
+                    includeTitle: false,
+                    includeClass: false,
+                    includeDescription: true);
             }
         }
 

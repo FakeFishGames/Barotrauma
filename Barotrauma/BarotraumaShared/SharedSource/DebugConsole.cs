@@ -1868,6 +1868,7 @@ namespace Barotrauma
             commands.Add(new Command("followsub", "Toggle whether the camera should follow the nearest submarine (client-only).", null));
             commands.Add(new Command("toggleaitargets|aitargets", "Toggle the visibility of AI targets (= targets that enemies can detect and attack/escape from) (client-only).", null, isCheat: true));
             commands.Add(new Command("debugai", "Toggle the ai debug mode on/off (works properly only in single player).", null, isCheat: true));
+            commands.Add(new Command("devmode", "Toggle the dev mode on/off (client-only).", null, isCheat: true));
 
             InitProjectSpecific();
 

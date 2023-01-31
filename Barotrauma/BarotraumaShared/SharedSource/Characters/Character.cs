@@ -489,7 +489,7 @@ namespace Barotrauma
                 LocalizedString displayName = Params.DisplayName;
                 if (displayName.IsNullOrWhiteSpace())
                 {
-                    if (string.IsNullOrWhiteSpace(Params.SpeciesTranslationOverride))
+                    if (Params.SpeciesTranslationOverride.IsEmpty)
                     {
                         displayName = TextManager.Get($"Character.{SpeciesName}");
                     }
@@ -752,7 +752,7 @@ namespace Barotrauma
             get
             {
                 if (IsUnconscious) { return true; }
-                return CharacterHealth.GetAllAfflictions().Any(a => a.Prefab.AfflictionType == "paralysis" && a.Strength >= a.Prefab.MaxStrength);
+                return CharacterHealth.GetAllAfflictions().Any(a => a.Prefab.Identifier == "paralysis" && a.Strength >= a.Prefab.MaxStrength);
             }
         }
 
@@ -822,6 +822,7 @@ namespace Barotrauma
         public AIState AIState => AIController is EnemyAIController enemyAI ? enemyAI.State : AIState.Idle;
         public bool IsLatched => AIController is EnemyAIController enemyAI && enemyAI.LatchOntoAI != null && enemyAI.LatchOntoAI.IsAttached;
         public float EmpVulnerability => Params.Health.EmpVulnerability;
+        public float PoisonVulnerability => Params.Health.PoisonVulnerability;
 
         public float Bloodloss
         {
@@ -1039,6 +1040,8 @@ namespace Barotrauma
         }
 
         public bool InWater => AnimController is AnimController { InWater: true };
+
+        public bool IsLowInOxygen => NeedsOxygen && OxygenAvailable < CharacterHealth.LowOxygenThreshold;
 
         public bool GodMode = false;
 
@@ -2871,6 +2874,23 @@ namespace Barotrauma
                 }
                 else
                 {
+#if CLIENT
+                    if (Controlled == this)
+                    {
+                        HealingCooldown.PutOnCooldown();
+                    }
+#elif SERVER
+                    if (GameMain.Server?.ConnectedClients is { } clients)
+                    {
+                        foreach (Client c in clients)
+                        {
+                            if (c.Character != this) { continue; }
+
+                            HealingCooldown.SetCooldown(c);
+                            break;
+                        }
+                    }
+#endif
                     SelectCharacter(FocusedCharacter);
 #if CLIENT
                     if (Controlled == this)
@@ -3791,9 +3811,10 @@ namespace Barotrauma
                 message.SendDelay -= deltaTime;
                 if (message.SendDelay > 0.0f) { continue; }
 
+                bool canUseRadio = ChatMessage.CanUseRadio(this, out WifiComponent radio);
                 if (message.MessageType == null)
                 {
-                    message.MessageType = ChatMessage.CanUseRadio(this) ? ChatMessageType.Radio : ChatMessageType.Default;
+                    message.MessageType = canUseRadio ? ChatMessageType.Radio : ChatMessageType.Default;
                 }
 #if CLIENT
                 if (GameMain.GameSession?.CrewManager != null && GameMain.GameSession.CrewManager.IsSinglePlayer)
@@ -3802,6 +3823,11 @@ namespace Barotrauma
                     if (!string.IsNullOrEmpty(modifiedMessage))
                     {
                         GameMain.GameSession.CrewManager.AddSinglePlayerChatMessage(Name, modifiedMessage, message.MessageType.Value, this);
+                    }
+                    if (canUseRadio)
+                    {
+                        Signal s = new Signal(modifiedMessage, sender: this, source: radio.Item);
+                        radio.TransmitSignal(s, sentFromChat: true);
                     }
                 }
 #endif
@@ -4122,13 +4148,13 @@ namespace Barotrauma
                 OnAttackedProjSpecific(attacker, attackResult, stun);
                 if (!wasDead)
                 {
-                    TryAdjustAttackerSkill(attacker, CharacterHealth.Vitality - prevVitality);
+                    TryAdjustAttackerSkill(attacker, attackResult);
                 }
-            };
+            }
             if (attackResult.Damage > 0)
             {
                 LastDamage = attackResult;
-                if (attacker != null)
+                if (attacker != null && attacker != this && !attacker.Removed)
                 {
                     AddAttacker(attacker, attackResult.Damage);
                     AddEncounter(attacker);
@@ -4143,26 +4169,84 @@ namespace Barotrauma
 
         partial void OnAttackedProjSpecific(Character attacker, AttackResult attackResult, float stun);
 
-        public void TryAdjustAttackerSkill(Character attacker, float healthChange)
+        public void TryAdjustAttackerSkill(Character attacker, AttackResult attackResult)
         {
             if (attacker == null) { return; }
-            
+            if (!attacker.IsOnPlayerTeam) { return; }
             bool isEnemy = AIController is EnemyAIController || TeamID != attacker.TeamID;
-            if (isEnemy)
+            if (!isEnemy) { return; }
+            float weaponDamage = 0;
+            float medicalDamage = 0;
+            foreach (var affliction in attackResult.Afflictions)
             {
-                if (healthChange < 0.0f)
+                if (affliction.Prefab.IsBuff) { continue; }
+                if (Params.IsMachine && !affliction.Prefab.AffectMachines) { continue; }
+                if (affliction.Prefab.AfflictionType == "poison" || affliction.Prefab.AfflictionType == "paralysis")
                 {
-                    float attackerSkillLevel = attacker.GetSkillLevel("weapons");
-                    attacker.Info?.IncreaseSkillLevel("weapons".ToIdentifier(),
-                        -healthChange * SkillSettings.Current.SkillIncreasePerHostileDamage / Math.Max(attackerSkillLevel, 1.0f));
+                    if (!Params.Health.PoisonImmunity)
+                    {
+                        float relativeVitality = MaxVitality / 100f;
+                        // Undo the applied modifiers to get the base value. Poison damage is multiplied by max vitality when it's applied.
+                        float dmg = affliction.Strength;
+                        if (relativeVitality > 0)
+                        {
+                            dmg /= relativeVitality;
+                        }
+                        if (PoisonVulnerability > 0)
+                        {
+                            dmg /= PoisonVulnerability;
+                        }
+                        float strength = MaxVitality;
+                        if (Params.AI != null)
+                        {
+                            strength = Params.AI.CombatStrength;
+                        }
+                        // Adjust the skill gain by the strength of the target. Combat strength >= 1000 gives 2x bonus, combat strength < 333 less than 1x.
+                        float vitalityFactor = MathHelper.Lerp(0.5f, 2f, MathUtils.InverseLerp(0, 1000, strength));
+                        dmg *= vitalityFactor;
+                        medicalDamage += dmg * affliction.Prefab.MedicalSkillGain;
+                    }
                 }
+                else
+                {
+                    medicalDamage += affliction.GetVitalityDecrease(null) * affliction.Prefab.MedicalSkillGain;
+                }
+                weaponDamage += affliction.GetVitalityDecrease(null) * affliction.Prefab.WeaponsSkillGain;
             }
-            else if (healthChange > 0.0f)
+            if (medicalDamage > 0)
             {
-                float attackerSkillLevel = attacker.GetSkillLevel("medical");
-                attacker.Info?.IncreaseSkillLevel("medical".ToIdentifier(),
-                    healthChange * SkillSettings.Current.SkillIncreasePerFriendlyHealed / Math.Max(attackerSkillLevel, 1.0f));
+                IncreaseSkillLevel("medical".ToIdentifier(), medicalDamage);
             }
+            if (weaponDamage > 0)
+            {
+                IncreaseSkillLevel("weapons".ToIdentifier(), weaponDamage);
+            }
+
+            void IncreaseSkillLevel(Identifier skill, float damage)
+            {
+                float attackerSkillLevel = attacker.GetSkillLevel(skill);
+                // The formula is too generous on low skill levels, hence the minimum divider.
+                float minSkillDivider = 15f;
+                attacker.Info?.IncreaseSkillLevel(skill, damage * SkillSettings.Current.SkillIncreasePerHostileDamage / Math.Max(attackerSkillLevel, minSkillDivider));
+            }
+        }
+
+        public void TryAdjustHealerSkill(Character healer, float healthChange = 0, Affliction affliction = null)
+        {
+            if (healer == null) { return; }
+            bool isEnemy = AIController is EnemyAIController || TeamID != healer.TeamID;
+            if (isEnemy) { return; }
+            float medicalGain = healthChange;
+            if (affliction?.Prefab is { IsBuff: true } && (!Params.IsMachine || affliction.Prefab.AffectMachines))
+            {
+                medicalGain += affliction.Strength * affliction.Prefab.MedicalSkillGain;
+            }
+            if (medicalGain <= 0) { return; }
+            Identifier skill = new Identifier("medical");
+            float attackerSkillLevel = healer.GetSkillLevel(skill);
+            // The formula is too generous on low skill levels, hence the minimum divider.
+            float minSkillDivider = 15f;
+            healer.Info?.IncreaseSkillLevel(skill, medicalGain * SkillSettings.Current.SkillIncreasePerFriendlyHealed / Math.Max(attackerSkillLevel, minSkillDivider));
         }
 
         /// <summary>
@@ -5240,7 +5324,24 @@ namespace Barotrauma
 
         public bool IsFriendly(Character other) => IsFriendly(this, other);
 
-        public static bool IsFriendly(Character me, Character other) => AIController.IsOnFriendlyTeam(me, other) && IsSameSpeciesOrGroup(me, other);
+        public static bool IsFriendly(Character me, Character other) => IsOnFriendlyTeam(me, other) && IsSameSpeciesOrGroup(me, other);
+
+        public static bool IsOnFriendlyTeam(CharacterTeamType myTeam, CharacterTeamType otherTeam)
+        {
+            if (myTeam == otherTeam) { return true; }
+            return myTeam switch
+            {
+                // NPCs are friendly to the same team and the friendly NPCs
+                CharacterTeamType.None or CharacterTeamType.Team1 or CharacterTeamType.Team2 => otherTeam == CharacterTeamType.FriendlyNPC,
+                // Friendly NPCs are friendly to both player teams
+                CharacterTeamType.FriendlyNPC => otherTeam == CharacterTeamType.Team1 || otherTeam == CharacterTeamType.Team2,
+                _ => true
+            };
+        }
+
+        public static bool IsOnFriendlyTeam(Character me, Character other) => IsOnFriendlyTeam(me.TeamID, other.TeamID);
+        public bool IsOnFriendlyTeam(Character other) => IsOnFriendlyTeam(TeamID, other.TeamID);
+        public bool IsOnFriendlyTeam(CharacterTeamType otherTeam) => IsOnFriendlyTeam(TeamID, otherTeam);
 
         public bool IsSameSpeciesOrGroup(Character other) => IsSameSpeciesOrGroup(this, other);
 

@@ -236,6 +236,16 @@ namespace Barotrauma
             DecorativeSprites = decorativeSprites.ToImmutableArray();
             ContainedSprites = containedSprites.ToImmutableArray();
             DecorativeSpriteGroups = decorativeSpriteGroups.Select(kvp => (kvp.Key, kvp.Value.ToImmutableArray())).ToImmutableDictionary();
+
+#if CLIENT
+            foreach (Item item in Item.ItemList)
+            {
+                if (item.Prefab == this)
+                {
+                    item.InitSpriteStates();
+                }
+            }
+#endif
         }
 
         public bool CanCharacterBuy()

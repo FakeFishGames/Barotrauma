@@ -10,7 +10,7 @@ using Xunit;
 
 namespace TestProject;
 
-public class INetSerializableStructImplementationChecks
+public sealed class INetSerializableStructImplementationChecks
 {
     private delegate bool TryFindBehaviorDelegate(Type type, out NetSerializableProperties.IReadWriteBehavior behavior);
 
@@ -49,7 +49,7 @@ public class INetSerializableStructImplementationChecks
                 viableArguments.AddRange(new[]
                 {
                     typeof(Vector2),
-                    typeof(Point),
+                    typeof(float),
                     typeof(int)
                 });
             }

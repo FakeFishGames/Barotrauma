@@ -11,10 +11,10 @@ namespace Barotrauma.Networking
     {
         private static UInt32 LastIdentifier = 0;
 
-        public bool Expired => ExpirationTime is { } expirationTime && DateTime.Now > expirationTime;
+        public bool Expired => ExpirationTime.TryUnwrap(out var expirationTime) && SerializableDateTime.LocalNow > expirationTime;
         
         public BannedPlayer(
-            string name, Either<Address, AccountId> addressOrAccountId, string reason, DateTime? expirationTime)
+            string name, Either<Address, AccountId> addressOrAccountId, string reason, Option<SerializableDateTime> expirationTime)
         {
             this.Name = name;
             this.AddressOrAccountId = addressOrAccountId;
@@ -39,6 +39,7 @@ namespace Barotrauma.Networking
             {
                 LoadBanList();
             }
+            RemoveExpired();
         }
 
         private void LoadLegacyBanList()
@@ -69,7 +70,7 @@ namespace Barotrauma.Networking
                 {
                     if (DateTime.TryParse(separatedLine[2], out DateTime parsedTime))
                     {
-                        expirationTime = parsedTime;
+                        expirationTime = DateTime.SpecifyKind(parsedTime, DateTimeKind.Local);
                     }
                     else
                     {
@@ -80,15 +81,18 @@ namespace Barotrauma.Networking
                 }
                 string reason = separatedLine.Length > 3 ? string.Join(",", separatedLine.Skip(3)) : "";
 
-                if (expirationTime.HasValue && DateTime.Now > expirationTime.Value) { continue; }
+                var serializableExpirationTime
+                    = expirationTime.HasValue
+                        ? Option<SerializableDateTime>.Some(new SerializableDateTime(expirationTime.Value))
+                        : Option<SerializableDateTime>.None();
 
                 if (AccountId.Parse(endpointStr).TryUnwrap(out var accountId))
                 {
-                    bannedPlayers.Add(new BannedPlayer(name, accountId, reason, expirationTime));
+                    bannedPlayers.Add(new BannedPlayer(name, accountId, reason, serializableExpirationTime));
                 }
                 else if (Address.Parse(endpointStr).TryUnwrap(out var address))
                 {
-                    bannedPlayers.Add(new BannedPlayer(name, address, reason, expirationTime));
+                    bannedPlayers.Add(new BannedPlayer(name, address, reason, serializableExpirationTime));
                 }
             }
             
@@ -109,10 +113,22 @@ namespace Barotrauma.Networking
 
                 var name = element.GetAttributeString("name", "")!;
                 var reason = element.GetAttributeString("reason", "")!;
-                DateTime? expirationTime = DateTime.FromBinary(unchecked((long)element.GetAttributeUInt64("expirationtime", 0)));
-                
-                if (expirationTime < DateTime.Now) { expirationTime = null; }
-                
+                var expirationTime = Option<SerializableDateTime>.None();
+                var expirationTimeStr = element.GetAttributeString("expirationtime", "")!;
+
+                if (UInt64.TryParse(expirationTimeStr, out var binaryDateTime) && binaryDateTime > 0)
+                {
+                    // Backwards compatibility: if expirationtime is stored as an int,
+                    // convert to SerializableDateTime with local timezone because
+                    // banlists used to assume local time
+                    expirationTime = Option<SerializableDateTime>.Some(
+                        new SerializableDateTime(
+                            DateTime.FromBinary((long)binaryDateTime),
+                            SerializableTimeZone.LocalTimeZone));
+                }
+
+                expirationTime = expirationTime.Fallback(SerializableDateTime.Parse(expirationTimeStr));
+
                 if (accountId.IsNone() && address.IsNone()) { return Option<BannedPlayer>.None(); }
 
                 Either<Address, AccountId> addressOrAccountId = accountId.TryUnwrap(out var accId)
@@ -171,14 +187,14 @@ namespace Barotrauma.Networking
 
             string logMsg = "Banned " + name;
             if (!string.IsNullOrEmpty(reason)) { logMsg += ", reason: " + reason; }
-            if (duration.HasValue) { logMsg += ", duration: " + duration.Value.ToString(); }
+            if (duration.HasValue) { logMsg += ", duration: " + duration.Value; }
 
             DebugConsole.Log(logMsg);
 
-            DateTime? expirationTime = null;
+            Option<SerializableDateTime> expirationTime = Option<SerializableDateTime>.None();
             if (duration.HasValue)
             {
-                expirationTime = DateTime.Now + duration.Value;
+                expirationTime = Option<SerializableDateTime>.Some(new SerializableDateTime(DateTime.Now + duration.Value));
             }
 
             bannedPlayers.Add(new BannedPlayer(name, addressOrAccountId, reason, expirationTime));
@@ -232,9 +248,10 @@ namespace Barotrauma.Networking
                 {
                     retVal.SetAttributeValue("address", address.StringRepresentation);
                 }
-                if (bannedPlayer.ExpirationTime is { } expirationTime)
+                if (bannedPlayer.ExpirationTime.TryUnwrap(out var expirationTime))
                 {
-                    retVal.SetAttributeValue("expirationtime", unchecked((ulong)expirationTime.ToBinary()));
+                    #warning TODO: stop writing binary DateTime representation after this gets on main
+                    retVal.SetAttributeValue("expirationtime", expirationTime.ToLocalValue().ToBinary());
                 }
 
                 return retVal;
@@ -269,11 +286,11 @@ namespace Barotrauma.Networking
 
                     outMsg.WriteString(bannedPlayer.Name);
                     outMsg.WriteUInt32(bannedPlayer.UniqueIdentifier);
-                    outMsg.WriteBoolean(bannedPlayer.ExpirationTime != null);
+                    outMsg.WriteBoolean(bannedPlayer.ExpirationTime.IsSome());
                     outMsg.WritePadBits();
-                    if (bannedPlayer.ExpirationTime != null)
+                    if (bannedPlayer.ExpirationTime.TryUnwrap(out var expirationTime))
                     {
-                        double hoursFromNow = (bannedPlayer.ExpirationTime.Value - DateTime.Now).TotalHours;
+                        double hoursFromNow = (expirationTime.ToUtcValue() - DateTime.UtcNow).TotalHours;
                         outMsg.WriteDouble(hoursFromNow);
                     }
 

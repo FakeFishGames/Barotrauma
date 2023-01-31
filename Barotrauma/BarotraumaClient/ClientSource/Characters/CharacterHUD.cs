@@ -724,6 +724,8 @@ namespace Barotrauma
                 }
 
                 bossHealthBar.TopHealthBar.BarSize = bossHealthBar.SideHealthBar.BarSize = health;
+                Color color = bossHealthBar.Character.CharacterHealth.GetAfflictionStrength("poison") > 0 || bossHealthBar.Character.CharacterHealth.GetAfflictionStrength("paralysis") > 0 ? GUIStyle.HealthBarColorPoisoned : GUIStyle.Red;
+                bossHealthBar.TopHealthBar.Color = bossHealthBar.SideHealthBar.Color = color;
 
                 if (bossHealthBar.Character.Removed || !bossHealthBar.Character.Enabled)
                 {

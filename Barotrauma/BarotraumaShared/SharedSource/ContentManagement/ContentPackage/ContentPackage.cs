@@ -42,7 +42,7 @@ namespace Barotrauma
         public readonly Version GameVersion;
         public readonly string ModVersion;
         public Md5Hash Hash { get; private set; }
-        public readonly Option<DateTime> InstallTime;
+        public readonly Option<SerializableDateTime> InstallTime;
 
         public ImmutableArray<ContentFile> Files { get; private set; }
         
@@ -73,7 +73,7 @@ namespace Barotrauma
             
             Steamworks.Ugc.Item? item = await SteamManager.Workshop.GetItem(steamWorkshopId.Value);
             if (item is null) { return true; }
-            return item.Value.LatestUpdateTime <= installTime;
+            return item.Value.LatestUpdateTime <= installTime.ToUtcValue();
         }
 
         public int Index => ContentPackageManager.EnabledPackages.IndexOf(this);
@@ -106,10 +106,7 @@ namespace Barotrauma
 
             GameVersion = rootElement.GetAttributeVersion("gameversion", GameMain.Version);
             ModVersion = rootElement.GetAttributeString("modversion", DefaultModVersion);
-            UInt64 installTimeUnix = rootElement.GetAttributeUInt64("installtime", 0);
-            InstallTime = installTimeUnix != 0
-                ? Option<DateTime>.Some(ToolBox.Epoch.ToDateTime(installTimeUnix))
-                : Option<DateTime>.None();
+            InstallTime = rootElement.GetAttributeDateTime("installtime");
 
             var fileResults = rootElement.Elements()
                 .Select(e => ContentFile.CreateFromXElement(this, e))

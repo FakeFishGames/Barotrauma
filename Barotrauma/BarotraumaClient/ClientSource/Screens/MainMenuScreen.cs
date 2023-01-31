@@ -994,7 +994,7 @@ namespace Barotrauma
                         || item.IsDownloadPending
                         || (item.InstallTime.TryGetValue(out var workshopInstallTime)
                             && pkg.InstallTime.TryUnwrap(out var localInstallTime)
-                            && localInstallTime < workshopInstallTime)));
+                            && localInstallTime.ToUtcValue() < workshopInstallTime)));
 
             modUpdateStatus = (DateTime.Now + ModUpdateInterval, count);
         }

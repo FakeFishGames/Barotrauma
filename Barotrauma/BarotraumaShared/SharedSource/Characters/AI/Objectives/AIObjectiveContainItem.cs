@@ -244,7 +244,8 @@ namespace Barotrauma
 
         public bool IsInTargetSlot(Item item)
         {
-            if (container?.Inventory is ItemInventory inventory && TargetSlot is not null)
+            if (TargetSlot == null) { return true; }
+            if (container?.Inventory is ItemInventory inventory)
             {
                 return inventory.IsInSlot(item, (int)TargetSlot);
             }

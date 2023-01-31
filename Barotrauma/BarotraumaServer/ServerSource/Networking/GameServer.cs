@@ -140,6 +140,7 @@ namespace Barotrauma.Networking
             ServerSettings = new ServerSettings(this, name, port, queryPort, maxPlayers, isPublic, attemptUPnP);
             KarmaManager.SelectPreset(ServerSettings.KarmaPreset);
             ServerSettings.SetPassword(password);
+            ServerSettings.SaveSettings();
 
             Voting = new Voting();
 
@@ -3227,16 +3228,16 @@ namespace Barotrauma.Networking
                             }
 
                             //too far to hear the msg -> don't send
-                            if (string.IsNullOrWhiteSpace(modifiedMessage)) continue;
+                            if (string.IsNullOrWhiteSpace(modifiedMessage)) { continue; }
                         }
                         break;
                     case ChatMessageType.Dead:
                         //character still alive -> don't send
-                        if (client != senderClient && client.Character != null && !client.Character.IsDead) continue;
+                        if (client != senderClient && client.Character != null && !client.Character.IsDead) { continue; }
                         break;
                     case ChatMessageType.Private:
                         //private msg sent to someone else than this client -> don't send
-                        if (client != targetClient && client != senderClient) continue;
+                        if (client != targetClient && client != senderClient) { continue; }
                         break;
                 }
 
@@ -3272,11 +3273,17 @@ namespace Barotrauma.Networking
                     //too far to hear the msg -> don't send
                     if (!client.Character.CanHearCharacter(message.Sender)) { continue; }
                 }
-                SendDirectChatMessage(new OrderChatMessage(message.Order, message.TargetCharacter, message.Sender, isNewOrder: message.IsNewOrder), client);
+                SendDirectChatMessage(new OrderChatMessage(message.Order, message.Text, message.TargetCharacter, message.Sender, isNewOrder: message.IsNewOrder), client);
             }
             if (!string.IsNullOrWhiteSpace(message.Text))
             {
-                AddChatMessage(new OrderChatMessage(message.Order, message.TargetCharacter, message.Sender, isNewOrder: message.IsNewOrder));
+                AddChatMessage(new OrderChatMessage(message.Order, message.Text, message.TargetCharacter, message.Sender, isNewOrder: message.IsNewOrder));
+                if (ChatMessage.CanUseRadio(message.Sender, out var senderRadio))
+                {
+                    //send to chat-linked wifi components
+                    Signal s = new Signal(message.Text, sender: message.Sender, source: senderRadio.Item);
+                    senderRadio.TransmitSignal(s, sentFromChat: true);
+                }
             }
         }
 

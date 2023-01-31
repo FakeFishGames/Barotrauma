@@ -495,7 +495,8 @@ namespace Barotrauma.Steam
                         new XAttribute("corepackage", isCorePackage),
                         new XAttribute("modversion", modVersion),
                         new XAttribute("gameversion", gameVersion),
-                        new XAttribute("installtime", ToolBox.Epoch.FromDateTime(updateTime)));
+                        #warning TODO: stop writing Unix time after this gets on main
+                        new XAttribute("installtime", new SerializableDateTime(updateTime).ToUnixTime()));
                     if ((modPathDirName ?? modName).ToIdentifier() != itemTitle)
                     {
                         root.Add(new XAttribute("altnames", modPathDirName ?? modName));

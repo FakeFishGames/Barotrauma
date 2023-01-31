@@ -615,7 +615,7 @@ namespace Barotrauma
                 listBackground.SetCrop(true);
 
                 GUIFont font = GUIStyle.Font;
-                info.CreateSpecsWindow(specsFrame, font);
+                info.CreateSpecsWindow(specsFrame, font, includeCrushDepth: true);
                 descriptionTextBlock.Text = info.Description;
                 descriptionTextBlock.CalculateHeightFromText();
             }
