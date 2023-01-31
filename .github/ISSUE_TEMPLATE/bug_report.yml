@@ -52,8 +52,9 @@ body:
       label: Version
       description: Which version of the game did the bug happen in? You can see the current version number in the bottom left corner of your screen in the main menu.
       options:      
-        - 0.18.15.1 / 0.18.15.2 on macOS
-        - 0.19.8.0 (unstable)
+        - 0.21.6.0
+        - 0.21.6.0 (Unstable)
+        - Faction/endgame test branch
         - Other
     validations:
       required: true
