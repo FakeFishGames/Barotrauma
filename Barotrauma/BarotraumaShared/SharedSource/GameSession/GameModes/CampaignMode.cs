@@ -428,11 +428,7 @@ namespace Barotrauma
                             var missionPrefabs = MissionPrefab.Prefabs.Where(m => m.Tags.Any(t => t == automaticMission.MissionTag)).OrderBy(m => m.UintIdentifier);
                             if (missionPrefabs.Any())
                             {
-                                var missionPrefab = ToolBox.SelectWeightedRandom(missionPrefabs, p => (float)p.Commonness, rand);     
-                                if (missionPrefab.Type == MissionType.Pirate && Missions.Any(m => m.Prefab.Type == MissionType.Pirate))
-                                {
-                                    continue;                                    
-                                }
+                                var missionPrefab = ToolBox.SelectWeightedRandom(missionPrefabs, p => (float)p.Commonness, rand);
                                 if (automaticMission.LevelType == LevelData.LevelType.Outpost)
                                 {
                                     extraMissions.Add(missionPrefab.Instantiate(new Location[] { currentLocation, currentLocation }, Submarine.MainSub));
