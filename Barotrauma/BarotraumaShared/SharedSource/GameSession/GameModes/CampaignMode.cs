@@ -5,6 +5,7 @@ using FarseerPhysics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -13,13 +14,11 @@ namespace Barotrauma
     abstract partial class CampaignMode : GameMode
     {
         [NetworkSerialize]
-        public struct SaveInfo : INetSerializableStruct
-        {
-            public string FilePath;
-            public int SaveTime;
-            public string SubmarineName;
-            public string[] EnabledContentPackageNames;
-        }
+        public readonly record struct SaveInfo(
+            string FilePath,
+            Option<SerializableDateTime> SaveTime,
+            string SubmarineName,
+            ImmutableArray<string> EnabledContentPackageNames) : INetSerializableStruct;
 
         public const int MaxMoney = int.MaxValue / 2; //about 1 billion
         public const int InitialMoney = 8500;
@@ -84,9 +83,9 @@ namespace Barotrauma
 
         public bool CheatsEnabled;
 
-        public const float HullRepairCostPerDamage = 0.5f, ItemRepairCostPerRepairDuration = 1.0f;
+        public const float HullRepairCostPerDamage = 0.1f, ItemRepairCostPerRepairDuration = 1.0f;
         public const int ShuttleReplaceCost = 1000;
-        public const int MaxHullRepairCost = 2000, MaxItemRepairCost = 2000;
+        public const int MaxHullRepairCost = 600, MaxItemRepairCost = 2000;
 
         protected bool wasDocked;
 
@@ -141,10 +140,19 @@ namespace Barotrauma
         private static bool AnyOneAllowedToManageCampaign(ClientPermissions permissions)
         {
             if (GameMain.NetworkMember == null) { return true; }
-            //allow managing if no-one with permissions is alive
-            return 
-                GameMain.NetworkMember.ConnectedClients.Count == 1 ||
-                GameMain.NetworkMember.ConnectedClients.None(c => c.InGame && c.Character is { IsIncapacitated: false, IsDead: false } && (IsOwner(c) || c.HasPermission(permissions)));
+            if (GameMain.NetworkMember.ConnectedClients.Count == 1) { return true; }
+
+            if (GameMain.NetworkMember.GameStarted)
+            {
+                //allow managing if no-one with permissions is alive and in-game
+                return GameMain.NetworkMember.ConnectedClients.None(c =>
+                    c.InGame && c.Character is { IsIncapacitated: false, IsDead: false } &&
+                    (IsOwner(c) || c.HasPermission(permissions)));
+            }
+            else
+            {
+                return GameMain.NetworkMember.ConnectedClients.None(c => IsOwner(c) || c.HasPermission(permissions));
+            }
         }
 
         protected CampaignMode(GameModePreset preset, CampaignSettings settings)
@@ -163,21 +171,20 @@ namespace Barotrauma
 #if CLIENT
             OnMoneyChanged.RegisterOverwriteExisting(new Identifier("CampaignMoneyChangeNotification"), e =>
             {
-                if (!(e.ChangedData.BalanceChanged is Some<int> { Value: var changed })) { return; }
+                if (!e.ChangedData.BalanceChanged.TryUnwrap(out var changed)) { return; }
 
                 if (changed == 0) { return; }
 
                 bool isGain = changed > 0;
                 Color clr = isGain ? GUIStyle.Yellow : GUIStyle.Red;
 
-                switch (e.Owner)
+                if (e.Owner.TryUnwrap(out var owner))
                 {
-                    case Some<Character> { Value: var owner}:
-                        owner.AddMessage(FormatMessage(), clr, playSound: Character.Controlled == owner, messageIdentifier, changed);
-                        break;
-                    case None<Character> _ when IsSinglePlayer:
-                        Character.Controlled?.AddMessage(FormatMessage(), clr, playSound: true, messageIdentifier, changed);
-                        break;
+                    owner.AddMessage(FormatMessage(), clr, playSound: Character.Controlled == owner, messageIdentifier, changed);
+                }
+                else if (IsSinglePlayer)
+                {
+                    Character.Controlled?.AddMessage(FormatMessage(), clr, playSound: true, messageIdentifier, changed);
                 }
 
                 string FormatMessage() => TextManager.GetWithVariable(isGain ? "moneygainformat" : "moneyloseformat", "[money]", TextManager.FormatCurrency(Math.Abs(changed))).ToString();
@@ -408,14 +415,27 @@ namespace Barotrauma
                 }
                 foreach (Faction faction in factions.OrderBy(f => f.Prefab.MenuOrder))
                 {
-                    if (currentLocation.Faction != faction && currentLocation.SecondaryFaction != faction && 
-                        map.SelectedLocation?.Faction != faction && map.SelectedLocation?.SecondaryFaction != faction)
-                    {
-                        continue;
-                    }
                     foreach (var automaticMission in faction.Prefab.AutomaticMissions)
                     {
                         if (faction.Reputation.Value < automaticMission.MinReputation || faction.Reputation.Value > automaticMission.MaxReputation) { continue; }
+
+                        if (automaticMission.DisallowBetweenOtherFactionOutposts && levelData.Type == LevelData.LevelType.LocationConnection)
+                        {
+                            if (Map.SelectedConnection.Locations.All(l => l.Faction != null && l.Faction != faction))
+                            {
+                                continue;
+                            }
+                        }
+                        if (automaticMission.MaxDistanceFromFactionOutpost < int.MaxValue)
+                        {
+                            if (!Map.LocationOrConnectionWithinDistance(
+                                currentLocation, 
+                                automaticMission.MaxDistanceFromFactionOutpost, 
+                                loc => loc.Faction == faction))
+                            {
+                                continue;
+                            }
+                        }
                         Random rand = new MTRandom(ToolBox.StringToInt(levelData.Seed + TotalPassedLevels));
                         if (levelData.Type != automaticMission.LevelType) { continue; }
                         float probability =
@@ -1012,11 +1032,14 @@ namespace Barotrauma
         public void AssignNPCMenuInteraction(Character character, InteractionType interactionType)
         {
             character.CampaignInteractionType = interactionType;
+
             if (character.CampaignInteractionType == InteractionType.Store &&
                 character.HumanPrefab is { Identifier: var merchantId })
             {
                 character.MerchantIdentifier = merchantId;
+                map.CurrentLocation?.GetStore(merchantId)?.SetMerchantFaction(character.Faction);
             }
+            
             character.DisableHealthWindow =
                 interactionType != InteractionType.None &&
                 interactionType != InteractionType.Examine &&
@@ -1129,7 +1152,7 @@ namespace Barotrauma
             if (npc.TeamID != CharacterTeamType.FriendlyNPC) { return; }
             if (!attacker.IsRemotePlayer && attacker != Character.Controlled) { return; }
 
-            if (npc.HumanPrefab?.Faction != null && Factions.FirstOrDefault(f => f.Prefab.Identifier == npc.HumanPrefab.Faction) is Faction faction)
+            if (npc.Faction != null && Factions.FirstOrDefault(f => f.Prefab.Identifier == npc.Faction) is Faction faction)
             {
                 faction.Reputation?.AddReputation(-attackResult.Damage * Reputation.ReputationLossPerNPCDamage);
             }
@@ -1143,6 +1166,11 @@ namespace Barotrauma
             }
         }
 
+        public Faction GetFaction(Identifier identifier)
+        {
+            return factions.Find(f => f.Prefab.Identifier == identifier);
+        }
+
         public float GetReputation(Identifier factionIdentifier)
         {
             var faction =
@@ -1150,6 +1178,12 @@ namespace Barotrauma
                 factions.Find(f => f == Map?.CurrentLocation?.Faction) :
                 factions.Find(f => f.Prefab.Identifier == factionIdentifier);
             return faction?.Reputation?.Value ?? 0.0f;
+        }
+
+        public FactionAffiliation GetFactionAffiliation(Identifier factionIdentifier)
+        {
+            var faction = GetFaction(factionIdentifier);
+            return Faction.GetPlayerAffiliationStatus(faction);
         }
 
         public abstract void Save(XElement element);
@@ -1267,7 +1301,7 @@ namespace Barotrauma
             var itemsToTransfer = new List<(Item item, Item container)>();
             if (PendingSubmarineSwitch != null)
             {
-                var connectedSubs = currentSub.GetConnectedSubs().Where(s => s.Info.Type == SubmarineType.Player).ToHashSet();
+                var connectedSubs = currentSub.GetConnectedSubs().Where(s => s.Info.Type == SubmarineType.Player);
                 // Remove items from the old sub
                 foreach (Item item in Item.ItemList)
                 {
@@ -1283,7 +1317,6 @@ namespace Barotrauma
                     if (item.Components.None(c => c is Pickable)) { continue; }
                     if (item.Components.Any(c => c is Pickable p && p.IsAttached)) { continue; }
                     if (item.Components.Any(c => c is Wire w && w.Connections.Any(c => c != null))) { continue; }
-                    if (item.Container?.GetComponent<ItemContainer>() is { DrawInventory: false }) { continue; }
                     itemsToTransfer.Add((item, item.Container));
                     item.Submarine = null;
                 }
@@ -1303,15 +1336,29 @@ namespace Barotrauma
             {
                 // Load the new sub
                 var newSub = new Submarine(PendingSubmarineSwitch);
-                var connectedSubs = newSub.GetConnectedSubs().Where(s => s.Info.Type == SubmarineType.Player).ToHashSet();
-                // Move the transferred items
-                List<ItemContainer> availableContainers = Item.ItemList
-                    .Where(it => connectedSubs.Contains(it.Submarine) && it.HasTag("crate") && !it.NonInteractable && !it.NonPlayerTeamInteractable && !it.HiddenInGame && !it.Removed)
-                    .Select(it => it.GetComponent<ItemContainer>())
-                    .Where(c => c != null)
-                    .ToList();
+                var connectedSubs = newSub.GetConnectedSubs().Where(s => s.Info.Type == SubmarineType.Player);
+                WayPoint wp = WayPoint.WayPointList.FirstOrDefault(wp => wp.SpawnType == SpawnType.Cargo && connectedSubs.Contains(wp.Submarine));
+                Hull spawnHull = wp?.CurrentHull ?? Hull.HullList.FirstOrDefault(h => connectedSubs.Contains(h.Submarine) && !h.IsWetRoom);
+                if (spawnHull == null)
+                {
+                    DebugConsole.AddWarning($"Failed to transfer items between subs. No cargo waypoint or dry hulls found in the new sub.");
+                    return;
+                }
+                // First move the cargo containers, so that we can reuse them
+                var cargoContainers = itemsToTransfer.Where(it => it.item.HasTag("crate"));
+                foreach (var (item, oldContainer) in cargoContainers)
+                {
+                    Vector2 simPos = ConvertUnits.ToSimUnits(CargoManager.GetCargoPos(spawnHull, item.Prefab));
+                    item.SetTransform(simPos, 0.0f, findNewHull: false, setPrevTransform: false);
+                    item.CurrentHull = spawnHull;
+                    item.Submarine = spawnHull.Submarine;
+                }
+                // Then move the other items
+                var cargoRooms = CargoManager.FindCargoRooms(newSub);
+                List<ItemContainer> availableContainers = CargoManager.FindReusableCargoContainers(connectedSubs).ToList();
                 foreach (var (item, oldContainer) in itemsToTransfer)
                 {
+                    if (cargoContainers.Contains((item, oldContainer))) { continue; }
                     Item newContainer = null;
                     item.Submarine = newSub;
                     if (item.Container == null)
@@ -1320,25 +1367,16 @@ namespace Barotrauma
                     }
                     if (item.Container == null && (newContainer == null || !newContainer.OwnInventory.TryPutItem(item, user: null, createNetworkEvent: false)))
                     {
-                        WayPoint wp = WayPoint.GetRandom(SpawnType.Cargo, null, newSub);
-                        Hull spawnHull = wp?.CurrentHull ?? Hull.HullList.Where(h => h.Submarine == newSub && !h.IsWetRoom).GetRandomUnsynced();
-                        if (spawnHull == null)
+                        var cargoContainer = CargoManager.GetOrCreateCargoContainerFor(item.Prefab, spawnHull, ref availableContainers);
+                        if (cargoContainer == null || !cargoContainer.Inventory.TryPutItem(item, user: null, createNetworkEvent: false))
                         {
-                            DebugConsole.AddWarning($"Failed to transfer items between subs. No cargo waypoint or dry hulls found in the new sub.");
-                            return;
+                            Vector2 simPos = ConvertUnits.ToSimUnits(CargoManager.GetCargoPos(spawnHull, item.Prefab));
+                            item.SetTransform(simPos, 0.0f, findNewHull: false, setPrevTransform: false);
                         }
-                        if (spawnHull != null)
+                        else if (cargoContainer.Item.Submarine is Submarine containerSub)
                         {
-                            var cargoContainer = CargoManager.GetOrCreateCargoContainerFor(item.Prefab, spawnHull, ref availableContainers);
-                            if (cargoContainer == null || !cargoContainer.Inventory.TryPutItem(item, user: null, createNetworkEvent: false))
-                            {
-                                Vector2 simPos = ConvertUnits.ToSimUnits(CargoManager.GetCargoPos(spawnHull, item.Prefab));
-                                item.SetTransform(simPos, 0.0f, findNewHull: false, setPrevTransform: false);
-                            }
-                        }
-                        else
-                        {
-                            DebugConsole.AddWarning($"Failed to transfer item {item.Prefab.Identifier} ({item.ID}), because no cargo spawn point could be found!");
+                            // Use the item's sub in case the sub consists of multiple linked subs.
+                            item.Submarine = containerSub;
                         }
                     }
                     string newContainerName = newContainer == null ? "(null)" : $"{newContainer.Prefab.Identifier} ({newContainer.Tags})";

@@ -23,15 +23,12 @@ namespace Barotrauma
                 ScrollBarEnabled = false,
                 AllowMouseWheelScroll = false
             };
-            new GUIButton(new RectTransform(new Vector2(0.1f), creditsPlayer.RectTransform, Anchor.BottomRight, maxSize: new Point(300, 50)) { AbsoluteOffset = new Point(GUI.IntScale(20)) },
-                TextManager.Get("close"))
+            creditsPlayer.CloseButton.OnClicked = (btn, userdata) =>
             {
-                OnClicked = (btn, userdata) =>
-                {
-                    creditsPlayer.Scroll = 1.0f;
-                    return true;
-                }
+                creditsPlayer.Scroll = 1.0f;
+                return true;
             };
+
             cam = new Camera();
         }
 
@@ -44,7 +41,16 @@ namespace Barotrauma
             }
             creditsPlayer.Restart();
             creditsPlayer.Visible = false;
-            SteamAchievementManager.UnlockAchievement("campaigncompleted".ToIdentifier(), unlockClients: true);
+            UnlockAchievement("campaigncompleted");
+            UnlockAchievement(
+                GameMain.GameSession is { Campaign.Settings.RadiationEnabled: true } ? 
+                "campaigncompleted_radiationenabled" : 
+                "campaigncompleted_radiationdisabled");
+
+            static void UnlockAchievement(string id)
+            {
+                SteamAchievementManager.UnlockAchievement(id.ToIdentifier(), unlockClients: true);
+            }
         }
 
         public override void Deselect()

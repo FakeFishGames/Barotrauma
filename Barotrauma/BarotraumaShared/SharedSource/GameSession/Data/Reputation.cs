@@ -58,7 +58,7 @@ namespace Barotrauma
             Value = newReputation;
         }
 
-        public void AddReputation(float reputationChange)
+        public float GetReputationChangeMultiplier(float reputationChange)
         {
             if (reputationChange > 0f)
             {
@@ -68,7 +68,7 @@ namespace Barotrauma
                     reputationGainMultiplier *= 1f + character.GetStatValue(StatTypes.ReputationGainMultiplier, includeSaved: false);
                     reputationGainMultiplier *= 1f + character.Info?.GetSavedStatValue(StatTypes.ReputationGainMultiplier, Identifier) ?? 0;
                 }
-                reputationChange *= reputationGainMultiplier;
+                return reputationGainMultiplier;
             }
             else if (reputationChange < 0f)
             {
@@ -78,9 +78,14 @@ namespace Barotrauma
                     reputationLossMultiplier *= 1f + character.GetStatValue(StatTypes.ReputationLossMultiplier, includeSaved: false);
                     reputationLossMultiplier *= 1f + character.Info?.GetSavedStatValue(StatTypes.ReputationLossMultiplier, Identifier) ?? 0;
                 }
-                reputationChange *= reputationLossMultiplier;
+                return reputationLossMultiplier;
             }
-            Value += reputationChange;
+            return 1.0f;
+        }
+
+        public void AddReputation(float reputationChange)
+        {
+            Value += reputationChange * GetReputationChangeMultiplier(reputationChange);
         }
 
         public readonly NamedEvent<Reputation> OnReputationValueChanged = new NamedEvent<Reputation>();

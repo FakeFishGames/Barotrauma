@@ -37,25 +37,30 @@ namespace Barotrauma.Abilities
 
             if (itemPrefab != null)
             {
-                if (category != MapEntityCategory.None)
-                {
-                    if (!itemPrefab.Category.HasFlag(category)) { return false; }
-                }
-
-                if (identifiers.Any())
-                {
-                    if (!identifiers.Any(t => itemPrefab.Identifier == t))
-                    {
-                        return false;
-                    }
-                }
-                return !tags.Any() || tags.Any(t => itemPrefab.Tags.Any(p => t == p));
+                return MatchesItem(itemPrefab);
             }
             else
             {
                 LogAbilityConditionError(abilityObject, typeof(IAbilityItemPrefab));
                 return false;
             }
+        }
+
+        public bool MatchesItem(ItemPrefab itemPrefab)
+        {
+            if (category != MapEntityCategory.None)
+            {
+                if (!itemPrefab.Category.HasFlag(category)) { return false; }
+            }
+
+            if (identifiers.Any())
+            {
+                if (!identifiers.Any(t => itemPrefab.Identifier == t))
+                {
+                    return false;
+                }
+            }
+            return !tags.Any() || tags.Any(t => itemPrefab.Tags.Any(p => t == p));
         }
     }
 }

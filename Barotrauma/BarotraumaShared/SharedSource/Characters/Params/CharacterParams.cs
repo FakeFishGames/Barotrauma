@@ -21,7 +21,7 @@ namespace Barotrauma
         public Identifier SpeciesName { get; private set; }
 
         [Serialize("", IsPropertySaveable.Yes, description: "If the creature is a variant that needs to use a pre-existing translation."), Editable]
-        public string SpeciesTranslationOverride { get; private set; }
+        public Identifier SpeciesTranslationOverride { get; private set; }
 
         [Serialize("", IsPropertySaveable.Yes, description: "If the display name is not defined, the game first tries to find the translated name. If that is not found, the species name will be used."), Editable]
         public string DisplayName { get; private set; }
@@ -112,6 +112,12 @@ namespace Barotrauma
 
         [Serialize(false, IsPropertySaveable.Yes), Editable]
         public bool DrawLast { get; set; }
+
+        [Serialize(1.0f, IsPropertySaveable.Yes, "Tells the bots how much they should prefer targeting this character with submarine weapons. Defaults to 1. Set 0 to tell the bots not to target this character at all. Distance to the target affects the decision making."), Editable]
+        public float AITurretPriority { get; set; }
+
+        [Serialize(1.0f, IsPropertySaveable.Yes, "Tells the bots how much they should prefer targeting this character with submarine weapons tagged as \"slowturret\", like railguns. The tag is arbitrary and can be added to any turrets, just like the priority. Defaults to 1. Not used if AITurretPriority is 0. Distance to the target affects the decision making."), Editable]
+        public float AISlowTurretPriority { get; set; }
 
         public readonly CharacterFile File;
 
@@ -479,7 +485,7 @@ namespace Barotrauma
             [Serialize(true, IsPropertySaveable.Yes), Editable]
             public bool DoesBleed { get; set; }
 
-            [Serialize(float.NegativeInfinity, IsPropertySaveable.Yes), Editable(minValue: float.NegativeInfinity, maxValue: 0)]
+            [Serialize(float.PositiveInfinity, IsPropertySaveable.Yes), Editable(minValue: 0, maxValue: float.PositiveInfinity)]
             public float CrushDepth { get; set; }
 
             // Make editable?
@@ -504,6 +510,9 @@ namespace Barotrauma
             [Serialize(false, IsPropertySaveable.Yes), Editable]
             public bool PoisonImmunity { get; set; }
 
+            [Serialize(1f, IsPropertySaveable.Yes, description: "1 = default, 0 = immune."), Editable(MinValueFloat = 0f, MaxValueFloat = 1000, DecimalCount = 1)]
+            public float PoisonVulnerability { get; set; }
+
             [Serialize(0f, IsPropertySaveable.Yes), Editable]
             public float EmpVulnerability { get; set; }
 
@@ -512,7 +521,20 @@ namespace Barotrauma
 
             // TODO: limbhealths, sprite?
 
-            public HealthParams(ContentXElement element, CharacterParams character) : base(element, character) { }
+            public HealthParams(ContentXElement element, CharacterParams character) : base(element, character) 
+            { 
+                //backwards compatibility
+                if (CrushDepth < 0)
+                {
+                    //invert y, convert to meters, and add 1000 to be on the safe side (previously the value would be from the bottom of the level)
+                    float newCrushDepth = -CrushDepth * Physics.DisplayToRealWorldRatio + 1000;
+                    DebugConsole.AddWarning($"Character \"{character.SpeciesName}\" has a negative crush depth. "+
+                        "Previously the crush depths were defined as display units (e.g. -30000 would correspond to 300 meters below the level), "+
+                        "but now they're in meters (e.g. 3000 would correspond to a depth of 3000 meters displayed on the nav terminal). "+
+                        $"Changing the crush depth from {CrushDepth} to {newCrushDepth}.");
+                    CrushDepth = newCrushDepth;
+                }
+            }
         }
 
         public class InventoryParams : SubParam

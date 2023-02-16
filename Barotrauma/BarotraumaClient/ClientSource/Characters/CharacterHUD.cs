@@ -29,6 +29,10 @@ namespace Barotrauma
 
             public abstract float State { get; }
 
+            public abstract string NumberToDisplay { get; }
+
+            public abstract Color Color { get; }
+
             public BossProgressBar(LocalizedString label)
             {
                 FadeTimer = BossHealthBarDuration;
@@ -46,6 +50,7 @@ namespace Barotrauma
                 {
                     Color = GUIStyle.Red
                 };
+                CreateNumberText(TopHealthBar);
 
                 SideContainer = new GUILayoutGroup(new RectTransform(new Vector2(1.0f, 0.05f), bossHealthContainer.RectTransform)
                 {
@@ -56,12 +61,28 @@ namespace Barotrauma
                 {
                     Color = GUIStyle.Red
                 };
+                CreateNumberText(SideHealthBar);
 
                 TopContainer.Visible = SideContainer.Visible = false;
                 TopContainer.CanBeFocused = false;
                 TopContainer.Children.ForEach(c => c.CanBeFocused = false);
                 SideContainer.CanBeFocused = false;
                 SideContainer.Children.ForEach(c => c.CanBeFocused = false);
+
+                void CreateNumberText(GUIComponent parent)
+                {
+                    new GUITextBlock(new RectTransform(Vector2.One, parent.RectTransform)
+                        { AbsoluteOffset = new Point(2) }, 
+                        string.Empty, textAlignment: Alignment.Center, textColor: GUIStyle.TextColorDark)
+                    {
+                        TextGetter = () => NumberToDisplay
+                    };
+                    new GUITextBlock(new RectTransform(Vector2.One, parent.RectTransform), 
+                        string.Empty, textAlignment: Alignment.Center, textColor: GUIStyle.TextColorBright)
+                    {
+                        TextGetter = () => NumberToDisplay
+                    };
+                }
             }
 
             public abstract bool IsDuplicate(BossProgressBar progressBar);
@@ -76,6 +97,12 @@ namespace Barotrauma
             public override bool Completed => Character.IsDead;
 
             public override bool Interrupted => Character.Removed || !Character.Enabled;
+
+            public override Color Color => 
+                Character.CharacterHealth.GetAfflictionStrength(AfflictionPrefab.PoisonType) > 0 || Character.CharacterHealth.GetAfflictionStrength(AfflictionPrefab.ParalysisType) > 0 ? 
+                    GUIStyle.HealthBarColorPoisoned : GUIStyle.Red;
+
+            public override string NumberToDisplay => string.Empty;
 
             public BossHealthBar(Character character) : base(character.DisplayName)
             {
@@ -96,7 +123,13 @@ namespace Barotrauma
 
             public override bool Completed => Mission.State >= Mission.Prefab.MaxProgressState;
 
-            public override bool Interrupted => Mission.Failed;
+            public override bool Interrupted => Mission.Failed || GameMain.GameSession?.Missions == null || !GameMain.GameSession.Missions.Contains(Mission);
+
+            public override Color Color => GUIStyle.Red;
+
+            public override string NumberToDisplay => Mission.Prefab.ShowProgressInNumbers ?
+                $"{Mission.State}/{Mission.Prefab.MaxProgressState}" :
+                string.Empty;
 
             public MissionProgressBar(Mission mission) : base(mission.Prefab.ProgressBarLabel)
             {
@@ -155,7 +188,7 @@ namespace Barotrauma
             GameMain.GameSession?.Campaign != null && 
             (GameMain.GameSession.Campaign.ShowCampaignUI || GameMain.GameSession.Campaign.ForceMapUI);
 
-        private static bool ShouldDrawInventory(Character character)
+        public static bool ShouldDrawInventory(Character character)
         {
             var controller = character.SelectedItem?.GetComponent<Controller>();
 
@@ -656,7 +689,8 @@ namespace Barotrauma
                 }
             }
 
-            Vector2 startPos = character.DrawPosition + (character.FocusedCharacter.DrawPosition - character.DrawPosition) * 0.7f;
+            float dist = Vector2.Distance(character.FocusedCharacter.DrawPosition, character.DrawPosition);
+            Vector2 startPos = character.DrawPosition + (character.FocusedCharacter.DrawPosition - character.DrawPosition) / dist * Math.Min(dist, Character.MaxDragDistance);
             startPos = cam.WorldToScreen(startPos);
 
             string focusName = character.FocusedCharacter.Info == null ? character.FocusedCharacter.DisplayName : character.FocusedCharacter.Info.DisplayName;
@@ -720,6 +754,11 @@ namespace Barotrauma
         {
             if (mission == null || mission.Completed || mission.Failed) { return; }
             AddBossProgressBar(new MissionProgressBar(mission));
+        }
+
+        public static void ClearBossHealthBars()
+        {
+            bossHealthBars.Clear();
         }
 
         private static void AddBossProgressBar(BossProgressBar progressBar, float damage = 0.0f)
@@ -791,7 +830,7 @@ namespace Barotrauma
                 {
                     foreach (var component in container.GetAllChildren())
                     {
-                        component.Color = new Color(component.Color, (byte)(alpha * 255));
+                        component.Color = new Color(bossHealthBar.Color, (byte)(alpha * 255));
                         if (component is GUITextBlock textBlock)
                         {
                             textBlock.TextColor = new Color(bossHealthBar.Completed ? Color.Gray : textBlock.TextColor, (byte)(alpha * 255));

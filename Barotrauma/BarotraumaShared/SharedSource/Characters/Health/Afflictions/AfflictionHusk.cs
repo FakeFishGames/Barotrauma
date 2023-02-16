@@ -43,6 +43,7 @@ namespace Barotrauma
                     DeactivateHusk();
                     highestStrength = 0;
                 }
+                activeEffectDirty = true;
             }
         }
         private float highestStrength;

@@ -36,7 +36,7 @@ namespace Barotrauma
 
         public static List<MapEntity> CopiedList = new List<MapEntity>();
 
-        private static List<MapEntity> highlightedList = new List<MapEntity>();
+        private static List<MapEntity> highlightedInEditorList = new List<MapEntity>();
 
         private static float highlightTimer;
 
@@ -131,10 +131,7 @@ namespace Barotrauma
                 return;
             }
 
-            foreach (MapEntity e in mapEntityList)
-            {
-                e.isHighlighted = false;
-            }
+            ClearHighlightedEntities();
 
             if (DisableSelect)
             {
@@ -262,11 +259,10 @@ namespace Barotrauma
                             if (i == 0) highLightedEntity = e;
                         }
                     }
-
                     UpdateHighlighting(highlightedEntities);
                 }
 
-                if (highLightedEntity != null) highLightedEntity.isHighlighted = true;
+                if (highLightedEntity != null) { highLightedEntity.IsHighlighted = true; }
             }
 
             if (GUI.KeyboardDispatcher.Subscriber == null)
@@ -288,7 +284,6 @@ namespace Barotrauma
             if (startMovingPos != Vector2.Zero)
             {
                 Item targetContainer = GetPotentialContainer(position, SelectedList);
-
                 if (targetContainer != null) { targetContainer.IsHighlighted = true; }
 
                 if (PlayerInput.PrimaryMouseButtonReleased())
@@ -610,10 +605,10 @@ namespace Barotrauma
             if (highlightedListBox != null)
             {
                 if (GUI.MouseOn == highlightedListBox || highlightedListBox.IsParentOf(GUI.MouseOn)) return;
-                if (highlightedEntities.SequenceEqual(highlightedList)) return;
+                if (highlightedEntities.SequenceEqual(highlightedInEditorList)) return;
             }
 
-            highlightedList = highlightedEntities;
+            highlightedInEditorList = highlightedEntities;
 
             highlightedListBox = new GUIListBox(new RectTransform(new Point(180, highlightedEntities.Count * 18 + 5), GUI.Canvas)
             {
@@ -1096,7 +1091,7 @@ namespace Barotrauma
 
         private void UpdateResizing(Camera cam)
         {
-            isHighlighted = true;
+            IsHighlighted = true;
 
             int startX = ResizeHorizontal ? -1 : 0;
             int StartY = ResizeVertical ? -1 : 0;
@@ -1197,7 +1192,7 @@ namespace Barotrauma
 
         private void DrawResizing(SpriteBatch spriteBatch, Camera cam)
         {
-            isHighlighted = true;
+            IsHighlighted = true;
 
             int startX = ResizeHorizontal ? -1 : 0;
             int StartY = ResizeVertical ? -1 : 0;

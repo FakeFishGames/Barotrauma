@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 
 namespace Barotrauma
 {
@@ -27,28 +28,20 @@ namespace Barotrauma
         /// Get what kind of affiliation this faction has towards the player depending on who they chose to side with via talents
         /// </summary>
         /// <returns></returns>
-        public static FactionAffiliation GetPlayerAffiliationStatus(Faction faction, ImmutableHashSet<Character>? characterList = null)
+        public static FactionAffiliation GetPlayerAffiliationStatus(Faction faction)
         {
             if (GameMain.GameSession?.Campaign?.Factions is not { } factions) { return FactionAffiliation.Neutral; }
 
-            characterList ??= GameSession.GetSessionCrewCharacters(CharacterType.Both);
-
-            foreach (Character character in characterList)
+            bool isHighest = true;
+            foreach (Faction otherFaction in factions)
             {
-                if (character.Info is not { } info) { continue; }
+                if (otherFaction == faction || otherFaction.Reputation.Value < faction.Reputation.Value) { continue; }
 
-                foreach (Faction otherFaction in factions)
-                {
-                    Identifier factionIdentifier = otherFaction.Prefab.Identifier;
-                    if (info.GetSavedStatValue(StatTypes.Affiliation, factionIdentifier) > 0f)
-                    {
-                        return factionIdentifier == faction.Prefab.Identifier
-                            ? FactionAffiliation.Positive
-                            : FactionAffiliation.Negative;
-                    }
-                }
+                isHighest = false;
+                break;
             }
-            return FactionAffiliation.Neutral;
+
+            return isHighest ? FactionAffiliation.Positive : FactionAffiliation.Negative;
         }
 
         public override string ToString()
@@ -88,6 +81,8 @@ namespace Barotrauma
             public readonly LevelData.LevelType LevelType;
             public readonly float MinReputation, MaxReputation;
             public readonly float MinProbability, MaxProbability;
+            public readonly int MaxDistanceFromFactionOutpost;
+            public readonly bool DisallowBetweenOtherFactionOutposts;
 
             public AutomaticMission(ContentXElement element, string parentDebugName)
             {
@@ -102,6 +97,8 @@ namespace Barotrauma
                 float probability = element.GetAttributeFloat("probability", 0.0f);
                 MinProbability = element.GetAttributeFloat("minprobability", probability);
                 MaxProbability = element.GetAttributeFloat("maxprobability", probability);
+                MaxDistanceFromFactionOutpost = element.GetAttributeInt("maxdistance", int.MaxValue);
+                DisallowBetweenOtherFactionOutposts = element.GetAttributeBool(nameof(DisallowBetweenOtherFactionOutposts), false);
             }
         }
 

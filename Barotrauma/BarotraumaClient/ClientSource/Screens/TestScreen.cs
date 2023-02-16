@@ -1,6 +1,5 @@
 #nullable enable
 using System.Linq;
-using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -34,7 +33,7 @@ namespace Barotrauma
                 {
                     BlueprintEffect.Dispose();
                     GameMain.Instance.Content.Unload();
-                    BlueprintEffect = GameMain.Instance.Content.Load<Effect>("Effects/blueprintshader_opengl");
+                    BlueprintEffect = EffectLoader.Load("Effects/blueprintshader");
                     GameMain.GameScreen.BlueprintEffect = BlueprintEffect;
                     return true;
                 }

@@ -6,6 +6,7 @@ using FarseerPhysics.Dynamics.Joints;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Voronoi2;
 
@@ -13,6 +14,21 @@ namespace Barotrauma.Items.Components
 {
     partial class Projectile : ItemComponent, IServerSerializable
     {
+        const int SpreadCounterWrapAround = 256;
+
+        private static readonly ImmutableArray<float> spreadPool;
+        static Projectile()
+        {
+            MTRandom random = new MTRandom(0);
+            spreadPool = Enumerable.Range(0, SpreadCounterWrapAround).Select(f => (float)random.NextDouble() - 0.5f).ToImmutableArray();            
+        }
+
+        public static float GetSpreadFromPool(int seed)
+        {
+            if (seed < 0) { seed = -seed; }
+            return spreadPool[seed % SpreadCounterWrapAround];
+        }
+
         struct HitscanResult
         {
             public Fixture Fixture;
@@ -41,9 +57,13 @@ namespace Barotrauma.Items.Components
             }
         }
 
+        public const float WaterDragCoefficient = 0.1f;
+
         private readonly Queue<Impact> impactQueue = new Queue<Impact>();
 
         private bool removePending;
+
+        public byte SpreadCounter { get; private set; }
 
         //continuous collision detection is used while the projectile is moving faster than this
         const float ContinuousCollisionThreshold = 5.0f;
@@ -112,22 +132,29 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        [Serialize(false, IsPropertySaveable.No, description: "Can the item stick to the character it hits.")]
+        [Serialize(false, IsPropertySaveable.No, description: "Can the projectile stick to characters.")]
         public bool StickToCharacters
         {
             get;
             set;
         }
 
-        [Serialize(false, IsPropertySaveable.No, description: "Can the item stick to the structure it hits.")]
+        [Serialize(false, IsPropertySaveable.No, description: "Can the projectile stick to walls.")]
         public bool StickToStructures
         {
             get;
             set;
         }
 
-        [Serialize(false, IsPropertySaveable.No, description: "Can the item stick to the item it hits.")]
+        [Serialize(false, IsPropertySaveable.No, description: "Can the projectile stick to items.")]
         public bool StickToItems
+        {
+            get;
+            set;
+        }
+
+        [Serialize(false, IsPropertySaveable.No, description: "Can the projectile stick to doors. Caution: may cause issues.")]
+        public bool StickToDoors
         {
             get;
             set;
@@ -273,6 +300,8 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
+            SpreadCounter = (byte)(item.ID % SpreadCounterWrapAround);
+
             InitProjSpecific(element);
         }
         partial void InitProjSpecific(ContentXElement element);
@@ -352,7 +381,7 @@ namespace Barotrauma.Items.Components
             {
 #if SERVER
                 launchRot = rotation;               
-                Item.CreateServerEvent(this, new EventData(launch: true));         
+                Item.CreateServerEvent(this, new EventData(launch: true, spreadCounter: (byte)(SpreadCounter - 1)));         
 #endif
             }
         }
@@ -376,8 +405,9 @@ namespace Barotrauma.Items.Components
                 }
                 else
                 {
-                    launchAngle = item.body.Rotation + MathHelper.ToRadians(Spread * Rand.Range(-0.5f, 0.5f));
+                    launchAngle = item.body.Rotation + MathHelper.ToRadians(Spread * GetSpreadFromPool(SpreadCounter));
                 }
+                SpreadCounter++;
 
                 Vector2 launchDir = new Vector2((float)Math.Cos(launchAngle), (float)Math.Sin(launchAngle));
                 if (Hitscan)
@@ -395,7 +425,6 @@ namespace Barotrauma.Items.Components
                     item.body.SetTransform(item.body.SimPosition, launchAngle);
                     float modifiedLaunchImpulse = (LaunchImpulse + launchImpulseModifier) * (1 + Rand.Range(-ImpulseSpread, ImpulseSpread));
                     DoLaunch(launchDir * modifiedLaunchImpulse);
-                    System.Diagnostics.Debug.WriteLine("launch: " + modifiedLaunchImpulse + "   -   " + item.body.LinearVelocity);
                 }
             }
             User = character;
@@ -416,6 +445,7 @@ namespace Barotrauma.Items.Components
             }
 
             item.Drop(null, createNetworkEvent: false);
+            Item.WaterDragCoefficient = WaterDragCoefficient;
 
             launchPos = item.SimPosition;
 
@@ -450,6 +480,7 @@ namespace Barotrauma.Items.Components
             Vector2 simPositon = item.SimPosition;
             Vector2 rayStartWorld = item.WorldPosition;
             item.Drop(null);
+            Item.WaterDragCoefficient = WaterDragCoefficient;
 
             item.body.Enabled = true;
             //set the velocity of the body because the OnProjectileCollision method
@@ -467,36 +498,36 @@ namespace Barotrauma.Items.Components
             Vector2 rayEndWorld = rayStartWorld + dir * worldDist;
 
             List<HitscanResult> hits = new List<HitscanResult>();
-
             hits.AddRange(DoRayCast(rayStart, rayEnd, submarine: item.Submarine));
 
             if (item.Submarine != null)
             {
                 //shooting indoors, do a hitscan outside as well
                 hits.AddRange(DoRayCast(rayStart + item.Submarine.SimPosition, rayEnd + item.Submarine.SimPosition, submarine: null));
-                //also in the coordinate space of docked subs
-                foreach (Submarine dockedSub in item.Submarine.DockedTo)
-                {
-                    if (dockedSub == item.Submarine) { continue; }
-                    hits.AddRange(DoRayCast(rayStart + item.Submarine.SimPosition - dockedSub.SimPosition, rayEnd + item.Submarine.SimPosition - dockedSub.SimPosition, dockedSub));
-                }
+                //do a hitscan in other subs' coordinate spaces
+                RayCastInOtherSubs(rayStart + item.Submarine.SimPosition, rayEnd + item.Submarine.SimPosition);
             }
             else
+            {
+                RayCastInOtherSubs(rayStart, rayEnd);
+            }
+
+            void RayCastInOtherSubs(Vector2 rayStart, Vector2 rayEnd)
             {
                 //shooting outdoors, see if we can hit anything inside a sub
                 foreach (Submarine submarine in Submarine.Loaded)
                 {
+                    if (submarine == item.Submarine) { continue; }
                     var inSubHits = DoRayCast(rayStart - submarine.SimPosition, rayEnd - submarine.SimPosition, submarine);
                     //transform back to world coordinates
                     for (int i = 0; i < inSubHits.Count; i++)
                     {
                         inSubHits[i] = new HitscanResult(
-                            inSubHits[i].Fixture, 
-                            inSubHits[i].Point + submarine.SimPosition, 
-                            inSubHits[i].Normal, 
+                            inSubHits[i].Fixture,
+                            inSubHits[i].Point + submarine.SimPosition,
+                            inSubHits[i].Normal,
                             inSubHits[i].Fraction);
                     }
-
                     hits.AddRange(inSubHits);
                 }
             }
@@ -508,6 +539,7 @@ namespace Barotrauma.Items.Components
             {
                 var h = hits[i];
                 item.SetTransform(h.Point, rotation);
+                item.UpdateTransform();
                 if (HandleProjectileCollision(h.Fixture, h.Normal, Vector2.Zero))
                 {
                     hitCount++;
@@ -675,6 +707,7 @@ namespace Barotrauma.Items.Components
 
         public override void Drop(Character dropper)
         {
+            Item.ResetWaterDragCoefficient();
             if (dropper != null)
             {
                 DisableProjectileCollisions();
@@ -941,7 +974,7 @@ namespace Barotrauma.Items.Components
                             targetItem.Condition / targetItem.MaxCondition,
                             emptyColor: GUIStyle.HealthBarColorLow,
                             fullColor: GUIStyle.HealthBarColorHigh,
-                            textTag: targetItem.Name);
+                            textTag: targetItem.Prefab.ShowNameInHealthBar ? targetItem.Name : string.Empty);
                     }
 #endif
                 }
@@ -1016,8 +1049,8 @@ namespace Barotrauma.Items.Components
                     }
                     if (GameMain.NetworkMember is { IsServer: true } server)
                     {
-                        server.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(conditionalActionType, this, targetLimb.character, targetLimb, null, item.WorldPosition));
-                        server.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(ActionType.OnImpact, this, targetLimb.character, targetLimb, null, item.WorldPosition));
+                        server.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(conditionalActionType, this, targetLimb.character, targetLimb, useTarget: targetLimb.character, item.WorldPosition));
+                        server.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(ActionType.OnImpact, this, targetLimb.character, targetLimb, useTarget: targetLimb.character, item.WorldPosition));
                     }
                 }
                 else
@@ -1026,8 +1059,8 @@ namespace Barotrauma.Items.Components
                     ApplyStatusEffects(ActionType.OnImpact, 1.0f, useTarget: target.Body.UserData as Entity, user: User);
                     if (GameMain.NetworkMember is { IsServer: true } server)
                     {
-                        server.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(conditionalActionType, this, null, null, target.Body.UserData as Entity, item.WorldPosition));
-                        server.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(ActionType.OnImpact, this, null, null, target.Body.UserData as Entity, item.WorldPosition));
+                        server.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(conditionalActionType, this, useTarget: target.Body.UserData as Entity, worldPosition: item.WorldPosition));
+                        server.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(ActionType.OnImpact, this, useTarget: target.Body.UserData as Entity, worldPosition: item.WorldPosition));
                     }
                 }
             }
@@ -1035,13 +1068,12 @@ namespace Barotrauma.Items.Components
             target.Body.ApplyLinearImpulse(velocity * item.body.Mass);
             target.Body.LinearVelocity = target.Body.LinearVelocity.ClampLength(NetConfig.MaxPhysicsBodyVelocity * 0.5f);
 
-            if (hits.Count() >= MaxTargetsToHit || hits.LastOrDefault()?.UserData is VoronoiCell)
+            if (hits.Count >= MaxTargetsToHit || hits.LastOrDefault()?.UserData is VoronoiCell)
             {
                 DisableProjectileCollisions();
             }
 
-            if (attackResult.AppliedDamageModifiers != null &&
-                (attackResult.AppliedDamageModifiers.Any(dm => dm.DeflectProjectiles) && !StickToDeflective))
+            if (attackResult.AppliedDamageModifiers != null && attackResult.AppliedDamageModifiers.Any(dm => dm.DeflectProjectiles) && !StickToDeflective)
             {
                 item.body.LinearVelocity *= deflectedSpeedMultiplier;
             }
@@ -1051,7 +1083,7 @@ namespace Barotrauma.Items.Components
                         ((StickToLightTargets || target.Body.Mass > item.body.Mass * 0.5f) &&
                         (DoesStick ||
                         (StickToCharacters && (target.Body.UserData is Limb || target.Body.UserData is Character)) ||
-                        (StickToItems && target.Body.UserData is Item))))
+                        (target.Body.UserData is Item i && (i.GetComponent<Door>() != null ? StickToDoors : StickToItems)))))
             {
                 Vector2 dir = new Vector2(
                     (float)Math.Cos(item.body.Rotation),

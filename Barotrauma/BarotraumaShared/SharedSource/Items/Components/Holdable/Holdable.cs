@@ -58,9 +58,6 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        //the angle in which the Character holds the item
-        protected float holdAngle;
-
         public PhysicsBody Body
         {
             get { return item.body ?? body; }
@@ -143,6 +140,7 @@ namespace Barotrauma.Items.Components
             set { aimPos = ConvertUnits.ToSimUnits(value); }
         }
 
+        protected float holdAngle;
 #if DEBUG
         [Editable, Serialize(0.0f, IsPropertySaveable.No, description: "The rotation at which the character holds the item (in degrees, relative to the rotation of the character's hand).")]
 #else
@@ -152,6 +150,18 @@ namespace Barotrauma.Items.Components
         {
             get { return MathHelper.ToDegrees(holdAngle); }
             set { holdAngle = MathHelper.ToRadians(value); }
+        }
+
+        protected float aimAngle;
+#if DEBUG
+        [Editable, Serialize(0.0f, IsPropertySaveable.No, description: "The rotation at which the character holds the item while aiming (in degrees, relative to the rotation of the character's hand).")]
+#else
+        [Serialize(0.0f, IsPropertySaveable.No)] 
+#endif
+        public float AimAngle
+        {
+            get { return MathHelper.ToDegrees(aimAngle); }
+            set { aimAngle = MathHelper.ToRadians(value); }
         }
 
         private Vector2 swingAmount;
@@ -549,10 +559,17 @@ namespace Barotrauma.Items.Components
 
         public override bool OnPicked(Character picker)
         {
+#if CLIENT
             if (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient)
             {
+                if (!picker.Inventory.CanBeAutoMovedToCorrectSlots(item))
+                {
+                    picker.Inventory.FlashAllowedSlots(item, Color.Red);
+                }
                 return false;
             }
+#endif
+            bool wasAttached = IsAttached;
             if (base.OnPicked(picker))
             {
                 DeattachFromWall();
@@ -561,7 +578,7 @@ namespace Barotrauma.Items.Components
                 if (GameMain.Server != null && attachable)
                 {
                     item.CreateServerEvent(this);
-                    if (picker != null)
+                    if (picker != null && wasAttached)
                     {
                         GameServer.Log(GameServer.CharacterLogName(picker) + " detached " + item.Name + " from a wall", ServerLog.MessageType.ItemInteraction);
                     }
@@ -689,16 +706,22 @@ namespace Barotrauma.Items.Components
                     if (maxAttachableCount == 0)
                     {
 #if CLIENT
-                        GUI.AddMessage(TextManager.Get("itemmsgrequiretraining"), Color.Red);
+                        if (character == Character.Controlled)
+                        {
+                            GUI.AddMessage(TextManager.Get("itemmsgrequiretraining"), Color.Red);
+                        }
 #endif
                         return false;
                     }
                     else if (currentlyAttachedCount >= maxAttachableCount)
                     {
 #if CLIENT
-                        GUI.AddMessage($"{TextManager.Get("itemmsgtotalnumberlimited")} ({currentlyAttachedCount}/{maxAttachableCount})", Color.Red);
+                        if (character == Character.Controlled)
+                        {
+                            GUI.AddMessage($"{TextManager.Get("itemmsgtotalnumberlimited")} ({currentlyAttachedCount}/{maxAttachableCount})", Color.Red);
+                        }
 #endif
-                        return false; 
+                        return false;
                     }
                 }
 
@@ -876,9 +899,13 @@ namespace Barotrauma.Items.Components
                 scaledHandlePos[0] = handlePos[0] * item.Scale;
                 scaledHandlePos[1] = handlePos[1] * item.Scale;
                 bool aim = picker.IsKeyDown(InputType.Aim) && aimPos != Vector2.Zero && picker.CanAim;
-                picker.AnimController.HoldItem(deltaTime, item, scaledHandlePos, holdPos + swingPos, aimPos + swingPos, aim, holdAngle);
-                if (!aim)
+                if (aim)
                 {
+                    picker.AnimController.HoldItem(deltaTime, item, scaledHandlePos, holdPos + swingPos, aimPos + swingPos, aim, holdAngle, aimAngle);
+                }
+                else
+                {
+                    picker.AnimController.HoldItem(deltaTime, item, scaledHandlePos, holdPos + swingPos, aimPos + swingPos, aim, holdAngle);
                     var rope = GetRope();
                     if (rope != null && rope.SnapWhenNotAimed && rope.Item.ParentInventory == null)
                     {

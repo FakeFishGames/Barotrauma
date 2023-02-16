@@ -28,13 +28,11 @@ namespace Barotrauma
 
             public SubmarineInfo Sub;
             public bool TransferItems;
-            public int DeliveryFee;
 
-            public SubmarineVote(Client starter, SubmarineInfo subInfo, bool transferItems, int deliveryFee, VoteType voteType)
+            public SubmarineVote(Client starter, SubmarineInfo subInfo, bool transferItems, VoteType voteType)
             {
                 Sub = subInfo;
                 TransferItems = transferItems;
-                DeliveryFee = deliveryFee;
                 VoteType = voteType;
                 State = VoteState.Started;
                 VoteStarter = starter;
@@ -109,7 +107,6 @@ namespace Barotrauma
                 sender,
                 subInfo,
                 transferItems,
-                voteType == VoteType.SwitchSub ? GameMain.GameSession.Map.DistanceToClosestLocationWithOutpost(GameMain.GameSession.Map.CurrentLocation, out Location endLocation) : 0,
                 voteType);
             StartOrEnqueueVote(subVote);
             GameMain.Server.UpdateVoteStatus(checkActiveVote: false);
@@ -117,13 +114,13 @@ namespace Barotrauma
 
         public void StopSubmarineVote(bool passed)
         {
-            if (!(ActiveVote is SubmarineVote)) { return; }
+            if (ActiveVote is not SubmarineVote) { return; }
             StopActiveVote(passed);
         }
 
         public void StopMoneyTransferVote(bool passed)
         {
-            if (!(ActiveVote is TransferVote)) { return; }
+            if (ActiveVote is not TransferVote) { return; }
             StopActiveVote(passed);
         }
 
@@ -155,7 +152,7 @@ namespace Barotrauma
             GameMain.Server.UpdateVoteStatus(checkActiveVote: false);
         }
 
-        private void StartOrEnqueueVote(IVote vote)
+        private static void StartOrEnqueueVote(IVote vote)
         {
             if (ActiveVote == null)
             {
@@ -198,9 +195,9 @@ namespace Barotrauma
             
             ActiveVote.Timer += deltaTime;
 
-            if (ActiveVote.Timer >= GameMain.NetworkMember.ServerSettings.VoteTimeout)
+            var inGameClients = GameMain.Server.ConnectedClients.Where(c => c.InGame);
+            if (ActiveVote.Timer >= GameMain.NetworkMember.ServerSettings.VoteTimeout || inGameClients.Count() == 1)
             {
-                var inGameClients = GameMain.Server.ConnectedClients.Where(c => c.InGame);
                 var eligibleClients = inGameClients.Where(c => c != ActiveVote.VoteStarter);
 
                 // Do not take unanswered into account for total
@@ -216,7 +213,7 @@ namespace Barotrauma
             }
         }
 
-        public void ResetVotes(IEnumerable<Client> connectedClients, bool resetKickVotes)
+        public static void ResetVotes(IEnumerable<Client> connectedClients, bool resetKickVotes)
         {
             foreach (Client client in connectedClients)
             {
@@ -254,7 +251,14 @@ namespace Barotrauma
                     string modeIdentifier = inc.ReadString();
                     GameModePreset mode = GameModePreset.List.Find(gm => gm.Identifier == modeIdentifier);
                     if (mode == null || !mode.Votable) { break; }
+                    var prevHighestVoted = HighestVoted<GameModePreset>(VoteType.Mode, GameMain.Server.ConnectedClients);
                     sender.SetVote(voteType, mode);
+                    var newHighestVoted = HighestVoted<GameModePreset>(VoteType.Mode, GameMain.Server.ConnectedClients);
+                    if (prevHighestVoted != newHighestVoted)
+                    {
+                        GameMain.NetLobbyScreen.SelectedModeIdentifier = mode.Identifier;
+                        GameMain.NetLobbyScreen.LastUpdateID++;
+                    }
                     break;
                 case VoteType.EndRound:
                     if (!sender.HasSpawned) { return; }
@@ -429,7 +433,6 @@ namespace Barotrauma
                                     var subVote = ActiveVote as SubmarineVote;
                                     msg.WriteString(subVote.Sub.Name);
                                     msg.WriteBoolean(subVote.TransferItems);
-                                    msg.WriteInt16((short)subVote.DeliveryFee);
                                     break;
                             }
                             break;

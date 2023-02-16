@@ -170,7 +170,8 @@ namespace Barotrauma
                 TargetHull = character.CurrentHull;
             }
 
-            if (behavior == BehaviorType.StayInHull)
+            bool currentTargetIsInvalid = currentTarget == null || IsForbidden(currentTarget) || (PathSteering.CurrentPath != null && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull)));
+            if (behavior == BehaviorType.StayInHull && !currentTargetIsInvalid)
             {
                 currentTarget = TargetHull;
                 bool stayInHull = character.CurrentHull == currentTarget && IsSteeringFinished() && !character.IsClimbing;
@@ -190,9 +191,6 @@ namespace Barotrauma
             }
             else
             {
-                bool currentTargetIsInvalid = currentTarget == null || IsForbidden(currentTarget) ||
-                    (PathSteering.CurrentPath != null && PathSteering.CurrentPath.Nodes.Any(n => HumanAIController.UnsafeHulls.Contains(n.CurrentHull)));
-
                 if (currentTarget != null && !currentTargetIsInvalid)
                 {
                     if (character.TeamID == CharacterTeamType.FriendlyNPC && !character.IsEscorted)

@@ -1374,7 +1374,7 @@ namespace Barotrauma
                         MultiPlayerCampaign.StartCampaignSetup();
                         return;
                     }
-                    if (!GameMain.Server.StartGame()) { NewMessage("Failed to start a new round", Color.Yellow); }
+                    if (!GameMain.Server.TryStartGame()) { NewMessage("Failed to start a new round", Color.Yellow); }
                 }
             }));
 
@@ -1400,6 +1400,44 @@ namespace Barotrauma
                 GameMain.Server.PrintSenderTransters();
             }));
 
+
+            commands.Add(new Command("forcelocationtypechange", "", (string[] args) =>
+            {
+                if (GameMain.Server == null || GameMain.GameSession?.Campaign == null) { return; }
+
+                if (args.Length < 2)
+                {
+                    ThrowError("Invalid parameters. The command should be formatted as \"forcelocationtypechange [locationname] [locationtype]\". If the names consist of multiple words, you should surround them with quotation marks.");
+                    return;
+                }
+
+                var location = GameMain.GameSession.Campaign.Map.Locations.FirstOrDefault(l => l.Name.Equals(args[0], StringComparison.OrdinalIgnoreCase));
+                if (location == null)
+                {
+                    ThrowError($"Could not find a location with the name {args[0]}.");
+                    return;
+                }
+
+                var locationType = LocationType.Prefabs.FirstOrDefault(lt => 
+                    lt.Name.Equals(args[1], StringComparison.OrdinalIgnoreCase) || lt.Identifier == args[1]);
+                if (location == null)
+                {
+                    ThrowError($"Could not find the location type {args[1]}.");
+                    return;
+                }
+
+                location.ChangeType(GameMain.GameSession.Campaign, locationType);
+            },
+            () =>
+            {
+                if (GameMain.GameSession?.Campaign == null) { return null; }
+
+                return new string[][]
+                {
+                    GameMain.GameSession.Campaign.Map.Locations.Select(l => l.Name).ToArray(),
+                    LocationType.Prefabs.Select(lt => lt.Name.Value).ToArray()
+                };
+            }));
 
             AssignOnExecute("resetcharacternetstate", (string[] args) =>
             {
@@ -1928,7 +1966,7 @@ namespace Barotrauma
                     {
                         GameMain.Server.SendConsoleMessage("Could not find the specified character.", client, Color.Red);
                     }
-                    killedCharacter?.SetAllDamage(200.0f, 0.0f, 0.0f);
+                    killedCharacter?.Kill(CauseOfDeathType.Unknown, causeOfDeathAffliction: null);
                 }
             );
 

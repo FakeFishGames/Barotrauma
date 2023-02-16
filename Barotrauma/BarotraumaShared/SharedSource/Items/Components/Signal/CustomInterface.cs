@@ -304,9 +304,12 @@ namespace Barotrauma.Items.Components
             }
 #if SERVER
             //make sure the clients know about the states of the checkboxes and text fields
-            if (item.Submarine == null || !item.Submarine.Loading)
+            if (customInterfaceElementList.Any())
             {
-                item.CreateServerEvent(this);
+                if (item.Submarine == null || !item.Submarine.Loading)
+                {
+                    item.CreateServerEvent(this);
+                }
             }
 #endif
         }

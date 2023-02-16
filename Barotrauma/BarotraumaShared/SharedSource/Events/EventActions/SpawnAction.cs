@@ -93,7 +93,13 @@ namespace Barotrauma
         {
             ignoreSpawnPointType = element.GetAttribute("spawnpointtype") == null;
             //backwards compatibility
-            TeamID = element.GetAttributeEnum("teamtag", element.GetAttributeEnum<CharacterTeamType>("team", TeamID));
+            TeamID = element.GetAttributeEnum("teamtag", element.GetAttributeEnum("team", TeamID));
+            if (element.GetAttribute("submarinetype") != null)
+            {
+                DebugConsole.ThrowError(
+                    $"Error in even \"{(parentEvent.Prefab?.Identifier.ToString() ?? "unknown")}\". " +
+                    $"The attribute \"submarinetype\" is not valid in {nameof(SpawnAction)}. Did you mean {nameof(SpawnLocation)}?");
+            }
         }
 
         public override bool IsFinished(ref string goTo)
@@ -320,30 +326,24 @@ namespace Barotrauma
         public static WayPoint GetSpawnPos(SpawnLocationType spawnLocation, SpawnType? spawnPointType, IEnumerable<Identifier> moduleFlags = null, IEnumerable<Identifier> spawnpointTags = null, bool asFarAsPossibleFromAirlock = false, bool requireTaggedSpawnPoint = false)
         {
             bool requireHull = spawnLocation == SpawnLocationType.MainSub || spawnLocation == SpawnLocationType.Outpost;
-            List<WayPoint> potentialSpawnPoints = WayPoint.WayPointList.FindAll(wp => IsValidSubmarineType(spawnLocation, wp.Submarine) && (wp.CurrentHull != null || !requireHull));
-            
-            potentialSpawnPoints = potentialSpawnPoints.FindAll(wp => wp.ConnectedDoor == null && wp.Ladders == null && !wp.isObstructed);
-
+            List<WayPoint> potentialSpawnPoints = WayPoint.WayPointList.FindAll(wp => IsValidSubmarineType(spawnLocation, wp.Submarine) && (wp.CurrentHull != null || !requireHull));           
+            potentialSpawnPoints = potentialSpawnPoints.FindAll(wp => wp.ConnectedDoor == null && wp.Ladders == null && wp.IsTraversable);
             if (moduleFlags != null && moduleFlags.Any())
             {
-                List<WayPoint> spawnPoints = potentialSpawnPoints.Where(wp => wp.CurrentHull?.OutpostModuleTags.Any(moduleFlags.Contains) ?? false).ToList();
+                var spawnPoints = potentialSpawnPoints.Where(wp => wp.CurrentHull is Hull h && h.OutpostModuleTags.Any(moduleFlags.Contains));
                 if (spawnPoints.Any())
                 {
-                    potentialSpawnPoints = spawnPoints;
+                    potentialSpawnPoints = spawnPoints.ToList();
                 }
             }
-
             if (spawnpointTags != null && spawnpointTags.Any())
             {
-                var spawnPoints = potentialSpawnPoints
-                    .Where(wp => spawnpointTags.Any(tag => wp.Tags.Contains(tag) && wp.ConnectedDoor == null && !wp.isObstructed));
-
+                var spawnPoints = potentialSpawnPoints.Where(wp => spawnpointTags.Any(tag => wp.Tags.Contains(tag) && wp.ConnectedDoor == null && wp.IsTraversable));
                 if (requireTaggedSpawnPoint || spawnPoints.Any())
                 {
                     potentialSpawnPoints = spawnPoints.ToList();
                 }
             }
-
             if (potentialSpawnPoints.None())
             {
                 if (requireTaggedSpawnPoint && spawnpointTags != null && spawnpointTags.Any())

@@ -555,6 +555,10 @@ namespace Barotrauma
             if (jobIdentifier > 0)
             {
                 jobPrefab = JobPrefab.Prefabs.Find(jp => jp.UintIdentifier == jobIdentifier);
+                if (jobPrefab == null)
+                {
+                    throw new Exception($"Error while reading {nameof(CharacterInfo)} received from the server: could not find a job prefab with the identifier \"{jobIdentifier}\".");
+                }
                 foreach (SkillPrefab skillPrefab in jobPrefab.Skills.OrderBy(s => s.Identifier))
                 {
                     float skillLevel = inc.ReadSingle();
@@ -562,7 +566,6 @@ namespace Barotrauma
                 }
             }
 
-            // TODO: animations
             CharacterInfo ch = new CharacterInfo(speciesName, newName, originalName, jobPrefab, ragdollFile, variant, npcIdentifier: npcId)
             {
                 ID = infoID,
@@ -573,10 +576,7 @@ namespace Barotrauma
             ch.Head.HairColor = hairColor;
             ch.Head.FacialHairColor = facialHairColor;
             ch.SetPersonalityTrait();
-            if (ch.Job != null)
-            {
-                ch.Job.OverrideSkills(skillLevels);
-            }
+            ch.Job?.OverrideSkills(skillLevels);
 
             ch.ExperiencePoints = inc.ReadUInt16();
             ch.AdditionalTalentPoints = inc.ReadRangedInteger(0, MaxAdditionalTalentPoints);

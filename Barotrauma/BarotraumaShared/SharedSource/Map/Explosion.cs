@@ -127,6 +127,7 @@ namespace Barotrauma
                 hull.AddDecal(decal, worldPosition, decalSize, isNetworkEvent: false);
             }
 
+            Attack.DamageMultiplier = 1.0f;
             float displayRange = Attack.Range;
             if (damageSource is Item sourceItem)
             {
@@ -190,6 +191,12 @@ namespace Barotrauma
                     if (item.Repairables.Any())
                     {
                         item.Condition -= item.MaxCondition * EmpStrength * distFactor;
+                    }
+
+                    var lightComponent = item.GetComponent<LightComponent>();
+                    if (lightComponent != null)
+                    {
+                        lightComponent.TemporaryFlickerTimer = Math.Min(EmpStrength * distFactor, 10.0f);
                     }
 
                     //discharge batteries
@@ -264,7 +271,7 @@ namespace Barotrauma
                     if (item.Prefab.DamagedByExplosions && !item.Indestructible)
                     {
                         float distFactor = 1.0f - dist / displayRange;
-                        float damageAmount = Attack.GetItemDamage(1.0f) * item.Prefab.ExplosionDamageMultiplier;
+                        float damageAmount = Attack.GetItemDamage(1.0f, item.Prefab.ExplosionDamageMultiplier);
 
                         Vector2 explosionPos = worldPosition;
                         if (item.Submarine != null) { explosionPos -= item.Submarine.Position; }
@@ -352,7 +359,7 @@ namespace Barotrauma
                         if (affliction.DivideByLimbCount)
                         {
                             float limbCountFactor = distFactors.Count;
-                            if (affliction.Prefab.LimbSpecific && affliction.Prefab.AfflictionType == "damage")
+                            if (affliction.Prefab.LimbSpecific && affliction.Prefab.AfflictionType == AfflictionPrefab.DamageType)
                             {
                                 // Shouldn't go above 15, or the damage can be unexpectedly low -> doesn't break armor
                                 // Effectively this makes large explosions more effective against large creatures (because more limbs are affected), but I don't think that's necessarily a bad thing.

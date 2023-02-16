@@ -208,16 +208,8 @@ namespace Barotrauma
                 AimSpreadRad = MathHelper.ToRadians(element.GetAttributeFloat("aimspread", 0f));
                 Equip = element.GetAttributeBool("equip", false);
 
-                string spawnTypeStr = element.GetAttributeString("spawnposition", "This");
-                if (!Enum.TryParse(spawnTypeStr, ignoreCase: true, out SpawnPosition))
-                {
-                    DebugConsole.ThrowError("Error in StatusEffect config - \"" + spawnTypeStr + "\" is not a valid spawn position.");
-                }
-                string rotationTypeStr = element.GetAttributeString("rotationtype", RotationRad != 0 ? "Fixed" : "Target");
-                if (!Enum.TryParse(rotationTypeStr, ignoreCase: true, out RotationType))
-                {
-                    DebugConsole.ThrowError("Error in StatusEffect config - \"" + rotationTypeStr + "\" is not a valid rotation type.");
-                }
+                SpawnPosition = element.GetAttributeEnum("spawnposition", SpawnPositionType.This);
+                RotationType = element.GetAttributeEnum("rotationtype", RotationRad != 0 ? SpawnRotationType.Fixed : SpawnRotationType.Target);
             }
         }
 
@@ -1466,7 +1458,7 @@ namespace Barotrauma
                             if (targetLimbs != null && !targetLimbs.Contains(limb.type)) { continue; }
                             AttackResult result = limb.character.DamageLimb(position, limb, newAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source, allowStacking: !setValue);
                             limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability, disableDeltaTime ? result.Damage : result.Damage / deltaTime, allowBeheading: true, attacker: affliction.Source);
-                            RegisterTreatmentResults(entity, limb, affliction, result);
+                            RegisterTreatmentResults(user, entity as Item, limb, affliction, result);
                             //only apply non-limb-specific afflictions to the first limb
                             if (!affliction.Prefab.LimbSpecific) { break; }
                         }
@@ -1478,7 +1470,7 @@ namespace Barotrauma
                         newAffliction = GetMultipliedAffliction(affliction, entity, limb.character, deltaTime, multiplyAfflictionsByMaxVitality);
                         AttackResult result = limb.character.DamageLimb(position, limb, newAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: affliction.Source, allowStacking: !setValue);
                         limb.character.TrySeverLimbJoints(limb, SeverLimbsProbability, disableDeltaTime ? result.Damage : result.Damage / deltaTime, allowBeheading: true, attacker: affliction.Source);
-                        RegisterTreatmentResults(entity, limb, affliction, result);
+                        RegisterTreatmentResults(user, entity as Item, limb, affliction, result);
                     }
                 }
                 
@@ -1509,17 +1501,18 @@ namespace Barotrauma
                         {
                             targetCharacter.CharacterHealth.ReduceAfflictionOnAllLimbs(affliction, reduceAmount, treatmentAction: actionType);
                         }
-                        targetCharacter.AIController?.OnHealed(healer: user, targetCharacter.Vitality - prevVitality);
-                        if (user != null && user != targetCharacter)
+                        if (!targetCharacter.IsDead)
                         {
-                            if (!targetCharacter.IsDead)
+                            float healthChange = targetCharacter.Vitality - prevVitality;
+                            targetCharacter.AIController?.OnHealed(healer: user, healthChange);
+                            if (user != null)
                             {
-                                targetCharacter.TryAdjustAttackerSkill(user, targetCharacter.Vitality - prevVitality);
-                            }
-                        };
+                                targetCharacter.TryAdjustHealerSkill(user, healthChange);
 #if SERVER
-                        GameMain.Server.KarmaManager.OnCharacterHealthChanged(targetCharacter, user, prevVitality - targetCharacter.Vitality, 0.0f);
+                                GameMain.Server.KarmaManager.OnCharacterHealthChanged(targetCharacter, user, healthChange, 0.0f);
 #endif
+                            }
+                        }
                     }
                 }
 
@@ -1757,7 +1750,10 @@ namespace Barotrauma
 
                 if (spawnItemRandomly)
                 {
-                    SpawnItem(spawnItems.GetRandomUnsynced());
+                    if (spawnItems.Count > 0)
+                    {
+                        SpawnItem(spawnItems.GetRandomUnsynced());
+                    }
                 }
                 else
                 {
@@ -2096,14 +2092,14 @@ namespace Barotrauma
                             if (character.Removed) { continue; }
                             newAffliction = element.Parent.GetMultipliedAffliction(affliction, element.Entity, character, deltaTime, element.Parent.multiplyAfflictionsByMaxVitality);
                             var result = character.AddDamage(character.WorldPosition, newAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attacker: element.User);
-                            element.Parent.RegisterTreatmentResults(element.Entity, result.HitLimb, affliction, result);
+                            element.Parent.RegisterTreatmentResults(element.Parent.user, element.Entity as Item, result.HitLimb, affliction, result);
                         }
                         else if (target is Limb limb)
                         {
                             if (limb.character.Removed || limb.Removed) { continue; }
                             newAffliction = element.Parent.GetMultipliedAffliction(affliction, element.Entity, limb.character, deltaTime, element.Parent.multiplyAfflictionsByMaxVitality);
                             var result = limb.character.DamageLimb(limb.WorldPosition, limb, newAffliction.ToEnumerable(), stun: 0.0f, playSound: false, attackImpulse: 0.0f, attacker: element.User);
-                            element.Parent.RegisterTreatmentResults(element.Entity, limb, affliction, result);
+                            element.Parent.RegisterTreatmentResults(element.Parent.user, element.Entity as Item, limb, affliction, result);
                         }
                     }
                     
@@ -2134,17 +2130,18 @@ namespace Barotrauma
                             {
                                 targetCharacter.CharacterHealth.ReduceAfflictionOnAllLimbs(affliction, reduceAmount, treatmentAction: actionType);
                             }
-                            if (element.User != null && element.User != targetCharacter)
+                            if (!targetCharacter.IsDead)
                             {
-                                targetCharacter.AIController?.OnHealed(healer: element.User, targetCharacter.Vitality - prevVitality);
-                                if (!targetCharacter.IsDead)
+                                float healthChange = targetCharacter.Vitality - prevVitality;
+                                targetCharacter.AIController?.OnHealed(healer: element.User, healthChange);
+                                if (element.User != null)
                                 {
-                                    targetCharacter.TryAdjustAttackerSkill(element.User, targetCharacter.Vitality - prevVitality);
-                                }
-                            };
+                                    targetCharacter.TryAdjustHealerSkill(element.User, healthChange);
 #if SERVER
-                            GameMain.Server.KarmaManager.OnCharacterHealthChanged(targetCharacter, element.User, prevVitality - targetCharacter.Vitality, 0.0f);
+                                    GameMain.Server.KarmaManager.OnCharacterHealthChanged(targetCharacter, element.User, healthChange, 0.0f);
 #endif
+                                }
+                            }
                         }
                     }
                 }
@@ -2165,18 +2162,23 @@ namespace Barotrauma
 
         private float GetAfflictionMultiplier(Entity entity, Character targetCharacter, float deltaTime)
         {
-            float multiplier = !setValue && !disableDeltaTime ? deltaTime : 1.0f;
-            if (entity is Item sourceItem && sourceItem.HasTag("medical"))
+            float afflictionMultiplier = !setValue && !disableDeltaTime ? deltaTime : 1.0f;
+            if (entity is Item sourceItem)
             {
-                multiplier *= 1 + targetCharacter.GetStatValue(StatTypes.MedicalItemEffectivenessMultiplier);
-
-                if (user is not null)
+                if (sourceItem.HasTag("medical"))
                 {
-                    multiplier *= 1 + user.GetStatValue(StatTypes.MedicalItemApplyingMultiplier);
+                    afflictionMultiplier *= 1 + targetCharacter.GetStatValue(StatTypes.MedicalItemEffectivenessMultiplier);
+                    if (user is not null)
+                    {
+                        afflictionMultiplier *= 1 + user.GetStatValue(StatTypes.MedicalItemApplyingMultiplier);
+                    }
+                }
+                else if (sourceItem.HasTag(AfflictionPrefab.PoisonType) && user is not null)
+                {
+                    afflictionMultiplier *= 1 + user.GetStatValue(StatTypes.PoisonMultiplier);
                 }
             }
-
-            return multiplier * AfflictionMultiplier;
+            return afflictionMultiplier * AfflictionMultiplier;
         }
 
         private Affliction GetMultipliedAffliction(Affliction affliction, Entity entity, Character targetCharacter, float deltaTime, bool? multiplyByMaxVitality)
@@ -2186,19 +2188,17 @@ namespace Barotrauma
             {
                 afflictionMultiplier *= targetCharacter.MaxVitality / 100f;
             }
-
             if (user is not null)
             {
                 if (affliction.Prefab.IsBuff)
                 {
                     afflictionMultiplier *= 1 + user.GetStatValue(StatTypes.MedicalItemDurationMultiplier);
                 }
-                else if (affliction.Prefab.AfflictionType == "poison")
+                else if (affliction.Prefab.Identifier == "organdamage" && targetCharacter.CharacterHealth.GetActiveAfflictionTags().Any(t => t == "poisoned"))
                 {
                     afflictionMultiplier *= 1 + user.GetStatValue(StatTypes.PoisonMultiplier);
                 }
             }
-
             if (!MathUtils.NearlyEqual(afflictionMultiplier, 1.0f))
             {
                 return affliction.CreateMultiplied(afflictionMultiplier, affliction);
@@ -2206,23 +2206,25 @@ namespace Barotrauma
             return affliction;
         }
 
-        private void RegisterTreatmentResults(Entity entity, Limb limb, Affliction affliction, AttackResult result)
+        private void RegisterTreatmentResults(Character user, Item item, Limb limb, Affliction affliction, AttackResult result)
         {
-            if (entity is Item item && item.UseInHealthInterface && limb != null)
+            if (item == null) { return; }
+            if (!item.UseInHealthInterface) { return; }
+            if (limb == null) { return; }
+            foreach (Affliction limbAffliction in limb.character.CharacterHealth.GetAllAfflictions())
             {
-                foreach (Affliction limbAffliction in limb.character.CharacterHealth.GetAllAfflictions())
+                if (result.Afflictions != null && result.Afflictions.Any(a => a.Prefab == limbAffliction.Prefab) &&
+                    (!affliction.Prefab.LimbSpecific || limb.character.CharacterHealth.GetAfflictionLimb(affliction) == limb))
                 {
-                    if (result.Afflictions != null && result.Afflictions.Any(a => a.Prefab == limbAffliction.Prefab) &&
-                       (!affliction.Prefab.LimbSpecific || limb.character.CharacterHealth.GetAfflictionLimb(affliction) == limb))
+                    if (type == ActionType.OnUse || type == ActionType.OnSuccess)
                     {
-                        if (type == ActionType.OnUse || type == ActionType.OnSuccess)
-                        {
-                            limbAffliction.AppliedAsSuccessfulTreatmentTime = Timing.TotalTime;
-                        }
-                        else if (type == ActionType.OnFailure)
-                        {
-                            limbAffliction.AppliedAsFailedTreatmentTime = Timing.TotalTime;
-                        }
+                        limbAffliction.AppliedAsSuccessfulTreatmentTime = Timing.TotalTime;
+                        limb.character.TryAdjustHealerSkill(user, affliction: affliction);
+                    }
+                    else if (type == ActionType.OnFailure)
+                    {
+                        limbAffliction.AppliedAsFailedTreatmentTime = Timing.TotalTime;
+                        limb.character.TryAdjustHealerSkill(user, affliction: affliction);
                     }
                 }
             }

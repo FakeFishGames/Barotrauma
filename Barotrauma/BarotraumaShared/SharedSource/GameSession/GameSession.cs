@@ -306,7 +306,7 @@ namespace Barotrauma
         /// <summary>
         /// Switch to another submarine. The sub is loaded when the next round starts.
         /// </summary>
-        public void SwitchSubmarine(SubmarineInfo newSubmarine, bool transferItems, int cost, Client? client = null)
+        public void SwitchSubmarine(SubmarineInfo newSubmarine, bool transferItems, Client? client = null)
         {
             if (!OwnedSubmarines.Any(s => s.Name == newSubmarine.Name))
             {
@@ -324,11 +324,6 @@ namespace Barotrauma
                     }
                 }
             }
-            if ((GameMain.NetworkMember is null || GameMain.NetworkMember is { IsServer: true }) && cost > 0)
-            {
-                Campaign!.TryPurchase(client, cost);
-            }
-            GameAnalyticsManager.AddMoneySpentEvent(cost, GameAnalyticsManager.MoneySink.SubmarineSwitch, newSubmarine.Name);
             Campaign!.PendingSubmarineSwitch = newSubmarine;
             Campaign!.TransferItemsOnSubSwitch = transferItems;
         }
@@ -586,9 +581,7 @@ namespace Barotrauma
             StatusEffect.StopAll();
 
 #if CLIENT
-#if !DEBUG
-            GameMain.LightManager.LosEnabled = GameMain.Client == null || GameMain.Client.CharacterInfo != null;
-#endif
+            GameMain.LightManager.LosEnabled = (GameMain.Client == null || GameMain.Client.CharacterInfo != null) && !GameMain.DevMode;
             if (GameMain.LightManager.LosEnabled) { GameMain.LightManager.LosAlpha = 1f; }
             if (GameMain.Client == null) { GameMain.LightManager.LosMode = GameSettings.CurrentConfig.Graphics.LosMode; }
 #endif
@@ -652,7 +645,7 @@ namespace Barotrauma
                 }
             }
 
-            CreatureMetrics.Instance.RecentlyEncountered.Clear();
+            CreatureMetrics.RecentlyEncountered.Clear();
 
             GameMain.GameScreen.Cam.Position = Character.Controlled?.WorldPosition ?? Submarine.MainSub.WorldPosition;
             RoundDuration = 0.0f;
@@ -905,6 +898,7 @@ namespace Barotrauma
                 TabMenu.OnRoundEnded();
                 GUIMessageBox.MessageBoxes.RemoveAll(mb => mb.UserData as string == "ConversationAction" || ReadyCheck.IsReadyCheck(mb));
                 ObjectiveManager.ResetUI();
+                CharacterHUD.ClearBossHealthBars();
 #endif
                 SteamAchievementManager.OnRoundEnded(this);
 
@@ -1123,7 +1117,10 @@ namespace Barotrauma
             XDocument doc = new XDocument(new XElement("Gamesession"));
             XElement rootElement = doc.Root ?? throw new NullReferenceException("Game session XML element is invalid: document is null.");
 
-            rootElement.Add(new XAttribute("savetime", ToolBox.Epoch.NowLocal));
+            rootElement.Add(new XAttribute("savetime", SerializableDateTime.UtcNow.ToUnixTime()));
+            #warning TODO: after this gets on main, replace savetime with the commented line
+            //rootElement.Add(new XAttribute("savetime", SerializableDateTime.LocalNow));
+
             rootElement.Add(new XAttribute("version", GameMain.Version));
             if (Submarine?.Info != null && !Submarine.Removed && Campaign != null)
             {

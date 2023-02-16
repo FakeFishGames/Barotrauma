@@ -136,7 +136,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        [Editable(DecimalCount = 3), Serialize(0.01f, IsPropertySaveable.Yes, description: "How fast the objects within the detector's range have to be moving (in m/s).", alwaysUseInstanceValues: true)]
+        [Editable(DecimalCount = 3), Serialize(0.1f, IsPropertySaveable.Yes, description: "How fast the objects within the detector's range have to be moving (in m/s).", alwaysUseInstanceValues: true)]
         public float MinimumVelocity
         {
             get;

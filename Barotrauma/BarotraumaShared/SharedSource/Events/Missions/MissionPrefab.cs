@@ -99,7 +99,13 @@ namespace Barotrauma
 
         public readonly bool RequireWreck, RequireRuin;
 
+        /// <summary>
+        /// If enabled, locations this mission takes place in cannot change their type
+        /// </summary>
+        public readonly bool BlockLocationTypeChanges;
+
         public readonly bool ShowProgressBar;
+        public readonly bool ShowProgressInNumbers;
         public readonly int MaxProgressState;
         public readonly LocalizedString ProgressBarLabel;
 
@@ -178,6 +184,7 @@ namespace Barotrauma
             IsSideObjective = element.GetAttributeBool("sideobjective", false);
             RequireWreck = element.GetAttributeBool("requirewreck", false);
             RequireRuin = element.GetAttributeBool("requireruin", false);
+            BlockLocationTypeChanges = element.GetAttributeBool(nameof(BlockLocationTypeChanges), false);
             Commonness  = element.GetAttributeInt("commonness", 1);
             AllowOtherMissionsInLevel = element.GetAttributeBool("allowothermissionsinlevel", true);
             if (element.GetAttribute("difficulty") != null)
@@ -187,6 +194,7 @@ namespace Barotrauma
             }
 
             ShowProgressBar = element.GetAttributeBool(nameof(ShowProgressBar), false);
+            ShowProgressInNumbers = element.GetAttributeBool(nameof(ShowProgressInNumbers), false);
             MaxProgressState = element.GetAttributeInt(nameof(MaxProgressState), 1);
             string progressBarLabel = element.GetAttributeString(nameof(ProgressBarLabel), "");
             ProgressBarLabel = TextManager.Get(progressBarLabel).Fallback(progressBarLabel);

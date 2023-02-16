@@ -66,7 +66,7 @@ namespace Barotrauma
         /// <summary>
         /// Only affects when ItemContainer.hideItems is false. Doesn't override the value.
         /// </summary>
-        public bool? Hide;
+        public bool Hide;
 
         public float Rotation;
 
@@ -224,9 +224,9 @@ namespace Barotrauma
                 new XAttribute("rotation", Rotation),
                 new XAttribute("setactive", SetActive));
 
-            if (Hide.HasValue)
+            if (Hide)
             {
-                element.Add(new XAttribute(nameof(Hide), Hide.Value));
+                element.Add(new XAttribute(nameof(Hide), true));
             }
             if (ItemPos.HasValue)
             {

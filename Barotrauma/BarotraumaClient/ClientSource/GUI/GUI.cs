@@ -106,6 +106,11 @@ namespace Barotrauma
         public static float VerticalAspectRatio => GameMain.GraphicsHeight / (float)GameMain.GraphicsWidth;
         public static float RelativeHorizontalAspectRatio => HorizontalAspectRatio / (ReferenceResolution.X / ReferenceResolution.Y);
         public static float RelativeVerticalAspectRatio => VerticalAspectRatio / (ReferenceResolution.Y / ReferenceResolution.X);
+        /// <summary>
+        /// A horizontal scaling factor for low aspect ratios (small width relative to height)
+        /// </summary>
+        public static float AspectRatioAdjustment => HorizontalAspectRatio < 1.4f ? (1.0f - (1.4f - HorizontalAspectRatio)) : 1.0f;
+
         public static bool IsUltrawide => HorizontalAspectRatio > 2.0f;
 
         public static int UIWidth
@@ -2586,8 +2591,11 @@ namespace Barotrauma
 
         public static void AddMessage(string message, Color color, float? lifeTime = null, bool playSound = true, GUIFont font = null)
         {
-            if (messages.Any(msg => msg.Text == message)) { return; }
-            messages.Add(new GUIMessage(message, color, lifeTime ?? MathHelper.Clamp(message.Length / 5.0f, 3.0f, 10.0f), font ?? GUIStyle.LargeFont));
+            lock (mutex)
+            {
+                if (messages.Any(msg => msg.Text == message)) { return; }
+                messages.Add(new GUIMessage(message, color, lifeTime ?? MathHelper.Clamp(message.Length / 5.0f, 3.0f, 10.0f), font ?? GUIStyle.LargeFont));
+            }
             if (playSound) { SoundPlayer.PlayUISound(GUISoundType.UIMessage); }
         }
 
@@ -2597,34 +2605,37 @@ namespace Barotrauma
 
             var newMessage = new GUIMessage(message, color, pos, velocity, lifeTime, Alignment.Center, GUIStyle.Font, sub: sub);
             if (playSound) { SoundPlayer.PlayUISound(soundType); }
-            bool overlapFound = true;
-            int tries = 0;
-            while (overlapFound)
-            {
-                overlapFound = false;
-                foreach (var otherMessage in messages)
-                {
-                    float xDiff = otherMessage.Pos.X - newMessage.Pos.X;
-                    if (Math.Abs(xDiff) > (newMessage.Size.X + otherMessage.Size.X) / 2) { continue; }
-                    float yDiff = otherMessage.Pos.Y - newMessage.Pos.Y;
-                    if (Math.Abs(yDiff) > (newMessage.Size.Y + otherMessage.Size.Y) / 2) { continue; }
-                    Vector2 moveDir = -(new Vector2(xDiff, yDiff) + Rand.Vector(1.0f));
-                    if (moveDir.LengthSquared() > 0.0001f)
-                    {
-                        moveDir = Vector2.Normalize(moveDir);
-                    }
-                    else
-                    {
-                        moveDir = Rand.Vector(1.0f);
-                    }
-                    moveDir.Y = -Math.Abs(moveDir.Y);
-                    newMessage.Pos -= Vector2.UnitY * 10;
-                }
-                tries++;
-                if (tries > 20) { break; }
-            }
 
-            messages.Add(newMessage);
+            lock (mutex)
+            {
+                bool overlapFound = true;
+                int tries = 0;
+                while (overlapFound)
+                {
+                    overlapFound = false;
+                    foreach (var otherMessage in messages)
+                    {
+                        float xDiff = otherMessage.Pos.X - newMessage.Pos.X;
+                        if (Math.Abs(xDiff) > (newMessage.Size.X + otherMessage.Size.X) / 2) { continue; }
+                        float yDiff = otherMessage.Pos.Y - newMessage.Pos.Y;
+                        if (Math.Abs(yDiff) > (newMessage.Size.Y + otherMessage.Size.Y) / 2) { continue; }
+                        Vector2 moveDir = -(new Vector2(xDiff, yDiff) + Rand.Vector(1.0f));
+                        if (moveDir.LengthSquared() > 0.0001f)
+                        {
+                            moveDir = Vector2.Normalize(moveDir);
+                        }
+                        else
+                        {
+                            moveDir = Rand.Vector(1.0f);
+                        }
+                        moveDir.Y = -Math.Abs(moveDir.Y);
+                        newMessage.Pos -= Vector2.UnitY * 10;
+                    }
+                    tries++;
+                    if (tries > 20) { break; }
+                }
+                messages.Add(newMessage);
+            }
         }
 
         public static void ClearMessages()

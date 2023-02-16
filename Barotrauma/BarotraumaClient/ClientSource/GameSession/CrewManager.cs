@@ -193,7 +193,7 @@ namespace Barotrauma
                 };
             }
 
-            var reports = OrderPrefab.Prefabs.Where(o => o.IsReport && o.SymbolSprite != null && !o.Hidden).ToArray();
+            var reports = OrderPrefab.Prefabs.Where(o => o.IsReport && o.SymbolSprite != null && !o.Hidden).OrderBy(o => o.Identifier).ToArray();
             if (reports.None())
             {
                 DebugConsole.ThrowError("No valid orders for report buttons found! Cannot create report buttons. The orders for the report buttons must have 'targetallcharacters' attribute enabled and a valid 'symbolsprite' defined.");
@@ -787,7 +787,6 @@ namespace Barotrauma
                     {
                         return;
                     }
-
                     if (ws != null)
                     {
                         hull = Hull.FindHull(ws.WorldPosition);
@@ -801,7 +800,6 @@ namespace Barotrauma
                         hull = Hull.FindHull(se.WorldPosition);
                     }
                 }
-
                 if (IsSinglePlayer)
                 {
                     order.OrderGiver?.Speak(order.GetChatMessage("", hull?.DisplayName?.Value, givingOrderToSelf: character == order.OrderGiver, isNewOrder: isNewOrder), ChatMessageType.Order);
@@ -816,13 +814,13 @@ namespace Barotrauma
             {
                 //can't issue an order if no characters are available
                 if (character == null) { return; }
-
                 var orderGiver = order?.OrderGiver;
                 if (IsSinglePlayer)
                 {
-                    character.SetOrder(order, isNewOrder, speak: orderGiver != character);
-                    string message = order?.GetChatMessage(character.Name, orderGiver?.CurrentHull?.DisplayName?.Value, givingOrderToSelf: character == orderGiver, orderOption: order?.Option ?? Identifier.Empty, isNewOrder: isNewOrder);
-                    orderGiver?.Speak(message);
+                    bool isGivingOrderToSelf = orderGiver == character;
+                    character.SetOrder(order, isNewOrder, speak: !isGivingOrderToSelf);
+                        string message = order?.GetChatMessage(character.Name, orderGiver?.CurrentHull?.DisplayName?.Value, isGivingOrderToSelf, orderOption: order?.Option ?? Identifier.Empty, isNewOrder: isNewOrder);
+                        orderGiver?.Speak(message);
                 }
                 else if (orderGiver != null)
                 {
@@ -1404,8 +1402,7 @@ namespace Barotrauma
                 bool hitDeselect = PlayerInput.KeyHit(InputType.Deselect) &&
                     (!PlayerInput.SecondaryMouseButtonClicked() || (!isMouseOnOptionNode && !isMouseOnShortcutNode));
 
-                bool isBoundToPrimaryMouse = GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Command].MouseButton is MouseButton mouseButton &&
-                    (mouseButton == MouseButton.PrimaryMouse || mouseButton == (PlayerInput.MouseButtonsSwapped() ? MouseButton.RightMouse : MouseButton.LeftMouse));
+                bool isBoundToPrimaryMouse = GameSettings.CurrentConfig.KeyMap.Bindings[InputType.Command].MouseButton == MouseButton.PrimaryMouse;
                 bool canToggleInterface = !isBoundToPrimaryMouse ||
                     (!isMouseOnOptionNode && !isMouseOnShortcutNode && extraOptionNodes.None(n => GUI.IsMouseOn(n)) && !GUI.IsMouseOn(returnNode));
 
@@ -2797,8 +2794,8 @@ namespace Barotrauma
             var orderName = GetOrderNameBasedOnContextuality(order);
             var icon = CreateNodeIcon(Vector2.One, node.RectTransform, order.SymbolSprite, order.Color,
                 tooltip: !showAssignmentTooltip ? orderName : orderName +
-                    "\n" + (!PlayerInput.MouseButtonsSwapped() ? TextManager.Get("input.leftmouse") : TextManager.Get("input.rightmouse")) + ": " + TextManager.Get("commandui.quickassigntooltip") +
-                    "\n" + (!PlayerInput.MouseButtonsSwapped() ? TextManager.Get("input.rightmouse") : TextManager.Get("input.leftmouse")) + ": " + TextManager.Get("commandui.manualassigntooltip"));
+                    "\n" + PlayerInput.PrimaryMouseLabel + ": " + TextManager.Get("commandui.quickassigntooltip") +
+                    "\n" + PlayerInput.SecondaryMouseLabel + ": " + TextManager.Get("commandui.manualassigntooltip"));
             
             if (disableNode)
             {
@@ -3000,8 +2997,8 @@ namespace Barotrauma
                 var showAssignmentTooltip = characterContext == null && !order.MustManuallyAssign && !order.TargetAllCharacters;
                 icon = CreateNodeIcon(Vector2.One, node.RectTransform, sprite, order.Color,
                     tooltip: characterContext != null ? optionName : optionName +
-                        "\n" + (!PlayerInput.MouseButtonsSwapped() ? TextManager.Get("input.leftmouse") : TextManager.Get("input.rightmouse")) + ": " + TextManager.Get("commandui.quickassigntooltip") +
-                        "\n" + (!PlayerInput.MouseButtonsSwapped() ? TextManager.Get("input.rightmouse") : TextManager.Get("input.leftmouse")) + ": " + TextManager.Get("commandui.manualassigntooltip"));
+                        "\n" + PlayerInput.PrimaryMouseLabel + ": " + TextManager.Get("commandui.quickassigntooltip") +
+                        "\n" + PlayerInput.SecondaryMouseLabel + ": " + TextManager.Get("commandui.manualassigntooltip"));
             }
             if (!CanCharacterBeHeard())
             {

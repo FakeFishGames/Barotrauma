@@ -962,25 +962,20 @@ namespace Barotrauma
             foreach (NetWalletTransaction transaction in update.Transactions)
             {
                 WalletInfo info = transaction.Info;
-                switch (transaction.CharacterID)
+                if (transaction.CharacterID.TryUnwrap(out var charID))
                 {
-                    case Some<ushort> { Value: var charID }:
-                    {
-                        Character targetCharacter = Character.CharacterList?.FirstOrDefault(c => c.ID == charID);
-                        if (targetCharacter is null) { break; }
-                        Wallet wallet = targetCharacter.Wallet;
+                    Character targetCharacter = Character.CharacterList?.FirstOrDefault(c => c.ID == charID);
+                    if (targetCharacter is null) { break; }
+                    Wallet wallet = targetCharacter.Wallet;
 
-                        wallet.Balance = info.Balance;
-                        wallet.RewardDistribution = info.RewardDistribution;
-                        TryInvokeEvent(wallet, transaction.ChangedData, info);
-                        break;
-                    }
-                    case None<ushort> _:
-                    {
-                        Bank.Balance = info.Balance;
-                        TryInvokeEvent(Bank, transaction.ChangedData, info);
-                        break;
-                    }
+                    wallet.Balance = info.Balance;
+                    wallet.RewardDistribution = info.RewardDistribution;
+                    TryInvokeEvent(wallet, transaction.ChangedData, info);
+                }
+                else
+                {
+                    Bank.Balance = info.Balance;
+                    TryInvokeEvent(Bank, transaction.ChangedData, info);
                 }
             }
 
@@ -995,7 +990,7 @@ namespace Barotrauma
 
         public override bool TryPurchase(Client client, int price)
         {
-            if (!AllowedToManageCampaign(ClientPermissions.ManageCampaign))
+            if (!AllowedToManageCampaign(ClientPermissions.ManageMoney))
             {
                 return PersonalWallet.TryDeduct(price);
             }

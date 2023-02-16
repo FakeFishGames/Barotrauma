@@ -207,11 +207,12 @@ namespace Barotrauma
             cargoManager.OnItemsInSellFromSubCrateChanged.RegisterOverwriteExisting(refreshStoreId, _ => needsSellingFromSubRefresh = true);
         }
 
-        public void SelectStore(Identifier identifier)
+        public void SelectStore(Character merchant)
         {
+            Identifier storeIdentifier = merchant?.MerchantIdentifier ?? Identifier.Empty;
             if (CurrentLocation?.Stores != null)
             {
-                if (!identifier.IsEmpty && CurrentLocation.GetStore(identifier) is { } store)
+                if (!storeIdentifier.IsEmpty && CurrentLocation.GetStore(storeIdentifier) is { } store)
                 {
                     ActiveStore = store;
                     if (storeNameBlock != null)
@@ -223,12 +224,13 @@ namespace Barotrauma
                         } 
                         storeNameBlock.SetRichText(storeName);
                     }
+                    ActiveStore.SetMerchantFaction(merchant.Faction);
                 }
                 else
                 {
                     ActiveStore = null;
                     string errorId, msg;
-                    if (identifier.IsEmpty)
+                    if (storeIdentifier.IsEmpty)
                     {
                         errorId = "Store.SelectStore:IdentifierEmpty";
                         msg = $"Error selecting store at {CurrentLocation}: identifier is empty.";
@@ -236,7 +238,7 @@ namespace Barotrauma
                     else
                     {
                         errorId = "Store.SelectStore:StoreDoesntExist";
-                        msg = $"Error selecting store with identifier \"{identifier}\" at {CurrentLocation}: store with the identifier doesn't exist at the location.";
+                        msg = $"Error selecting store with identifier \"{storeIdentifier}\" at {CurrentLocation}: store with the identifier doesn't exist at the location.";
                     }
                     DebugConsole.LogError(msg);
                     GameAnalyticsManager.AddErrorEventOnce(errorId, GameAnalyticsManager.ErrorSeverity.Error, msg);
@@ -249,17 +251,17 @@ namespace Barotrauma
                 if (campaignUI.Campaign.Map == null)
                 {
                     errorId = "Store.SelectStore:MapNull";
-                    msg = $"Error selecting store with identifier \"{identifier}\": Map is null.";
+                    msg = $"Error selecting store with identifier \"{storeIdentifier}\": Map is null.";
                 }
                 else if (CurrentLocation == null)
                 {
                     errorId = "Store.SelectStore:CurrentLocationNull";
-                    msg = $"Error selecting store with identifier \"{identifier}\": CurrentLocation is null.";
+                    msg = $"Error selecting store with identifier \"{storeIdentifier}\": CurrentLocation is null.";
                 }
                 else if (CurrentLocation.Stores == null)
                 {
                     errorId = "Store.SelectStore:StoresNull";
-                    msg = $"Error selecting store with identifier \"{identifier}\": CurrentLocation.Stores is null.";
+                    msg = $"Error selecting store with identifier \"{storeIdentifier}\": CurrentLocation.Stores is null.";
                 }
                 if (!msg.IsNullOrEmpty())
                 {
@@ -406,11 +408,11 @@ namespace Barotrauma
                 TextScale = 1.1f,
                 TextGetter = () =>
                 {
-                    if (CurrentLocation != null)
+                    if (ActiveStore is not null)
                     {
                         Color textColor = GUIStyle.ColorReputationNeutral;
                         string sign = "";
-                        int reputationModifier = (int)MathF.Round((CurrentLocation.GetStoreReputationModifier(activeTab == StoreTab.Buy) - 1) * 100);
+                        int reputationModifier = (int)MathF.Round((ActiveStore.GetReputationModifier(activeTab == StoreTab.Buy) - 1) * 100);
                         if (reputationModifier > 0)
                         {
                             textColor = IsBuying ? GUIStyle.ColorReputationLow : GUIStyle.ColorReputationHigh;
@@ -1903,7 +1905,7 @@ namespace Barotrauma
                 LocalizedString toolTip = string.Empty;
                 if (purchasedItem.ItemPrefab != null)
                 {
-                    toolTip = purchasedItem.ItemPrefab.GetTooltip();
+                    toolTip = purchasedItem.ItemPrefab.GetTooltip(Character.Controlled);
                     if (itemQuantity != null)
                     {
                         if (itemQuantity.AllNonEmpty)

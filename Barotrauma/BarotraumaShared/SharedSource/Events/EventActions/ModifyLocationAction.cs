@@ -69,8 +69,8 @@ namespace Barotrauma
                         {
                             DebugConsole.ThrowError($"Error in ModifyLocationAction ({ParentEvent.Prefab.Identifier}): could not find a location type with the identifier \"{Type}\".");
                         }
-                        else
-                        {
+                        else if (!location.LocationTypeChangesBlocked)
+                        {                           
                             location.ChangeType(campaign, locationType);
                         }
                     }

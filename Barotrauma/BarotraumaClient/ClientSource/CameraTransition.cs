@@ -32,6 +32,8 @@ namespace Barotrauma
 
         public bool AllowInterrupt = false;
         public bool RemoveControlFromCharacter = true;
+
+        public bool RunWhilePaused = true;
         
         public CameraTransition(ISpatialEntity targetEntity, Camera cam, Alignment? cameraStartPos, Alignment? cameraEndPos, bool fadeOut = true, bool losFadeIn = false, float waitDuration = 0f, float panDuration = 10.0f, float? startZoom = null, float? endZoom = null)
         {
@@ -75,6 +77,8 @@ namespace Barotrauma
             }
 #endif
         }
+
+        private float DeltaTime => CoroutineManager.Paused && !RunWhilePaused ? 0 : CoroutineManager.DeltaTime;
 
         private IEnumerable<CoroutineStatus> Update(ISpatialEntity targetEntity, Camera cam)
         {
@@ -169,12 +173,15 @@ namespace Barotrauma
                 }
                 if (LosFadeIn && clampedTimer / PanDuration > 0.8f)
                 {
-                    GameMain.LightManager.LosAlpha = ((clampedTimer / PanDuration) - 0.8f) * 5.0f;
+                    if (!GameMain.DevMode)
+                    {
+                        GameMain.LightManager.LosEnabled = true;
+                        GameMain.LightManager.LosAlpha = ((clampedTimer / PanDuration) - 0.8f) * 5.0f;
+                    }
                     Lights.LightManager.ViewTarget = prevControlled ?? (targetEntity as Entity);
-                    GameMain.LightManager.LosEnabled = true;
                 }
 #endif
-                timer += CoroutineManager.DeltaTime;
+                timer += DeltaTime;
 
                 yield return CoroutineStatus.Running;
             }
@@ -184,7 +191,7 @@ namespace Barotrauma
             {
                 cam.Translate(endPos - cam.Position);
                 cam.Zoom = endZoom;
-                endTimer += CoroutineManager.DeltaTime;
+                endTimer += DeltaTime;
                 yield return CoroutineStatus.Running;
             }
 
@@ -192,8 +199,11 @@ namespace Barotrauma
 
 #if CLIENT
             GUI.ScreenOverlayColor = Color.TransparentBlack;
-            GameMain.LightManager.LosEnabled = true;
-            GameMain.LightManager.LosAlpha = 1f;
+            if (!GameMain.DevMode)
+            {
+                GameMain.LightManager.LosEnabled = true;
+                GameMain.LightManager.LosAlpha = 1f;
+            }
 #endif
 
             if (prevControlled != null && !prevControlled.Removed)

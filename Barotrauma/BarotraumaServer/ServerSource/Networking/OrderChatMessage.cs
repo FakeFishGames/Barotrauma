@@ -10,6 +10,7 @@ namespace Barotrauma.Networking
             segmentTable.StartNewSegment(ServerNetSegment.ChatMessage);
             msg.WriteUInt16(NetStateID);
             msg.WriteRangedInteger((int)ChatMessageType.Order, 0, Enum.GetValues(typeof(ChatMessageType)).Length - 1);
+            msg.WriteString(Text);
             msg.WriteString(SenderName);
             msg.WriteBoolean(SenderClient != null);
             if (SenderClient != null)

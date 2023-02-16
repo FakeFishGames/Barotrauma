@@ -352,7 +352,7 @@ namespace Barotrauma
 
                 if (!availableMissions.Any()) { availableMissions.Insert(0, null); }
 
-                availableMissions.AddRange(location.AvailableMissions);
+                availableMissions.AddRange(location.AvailableMissions.Where(m => m.Locations[0] == m.Locations[1]));
 
                 missionList.Content.ClearChildren();
 
@@ -571,7 +571,7 @@ namespace Barotrauma
             //locationInfoPanel?.UpdateAuto(1.0f);
         }
 
-        public void SelectTab(CampaignMode.InteractionType tab, Identifier storeIdentifier = default)
+        public void SelectTab(CampaignMode.InteractionType tab, Character npc = null)
         {
             if (Campaign.ShowCampaignUI || (Campaign.ForceMapUI && tab == CampaignMode.InteractionType.Map))
             {
@@ -592,7 +592,7 @@ namespace Barotrauma
             switch (selectedTab)
             {
                 case CampaignMode.InteractionType.Store:
-                    Store.SelectStore(storeIdentifier);
+                    Store.SelectStore(npc);
                     break;
                 case CampaignMode.InteractionType.Crew:
                     CrewManagement.UpdateCrew();
@@ -602,6 +602,7 @@ namespace Barotrauma
                     submarineSelection.RefreshSubmarineDisplay(true, setTransferOptionToTrue: true);
                     break;
                 case CampaignMode.InteractionType.Map:
+                    GameMain.GameSession?.Map?.ResetPendingSub();
                     //refresh mission rewards (may have been changed by e.g. a pending submarine switch)
                     foreach (GUITextBlock rewardText in missionRewardTexts)
                     {

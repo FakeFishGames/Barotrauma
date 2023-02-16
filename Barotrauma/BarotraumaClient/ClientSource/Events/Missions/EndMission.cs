@@ -21,6 +21,7 @@ namespace Barotrauma
                     {
                         new CameraTransition(boss, GameMain.GameScreen.Cam, null, Alignment.Center, panDuration: 8, fadeOut: false, startZoom: 1.0f, endZoom: 0.3f * GUI.yScale)
                         {
+                            RunWhilePaused = false,
                             EndWaitDuration = 3.0f
                         };
                     }
@@ -40,6 +41,7 @@ namespace Barotrauma
                 {
                     new CameraTransition(boss, GameMain.GameScreen.Cam, null, Alignment.Center, panDuration: 3, fadeOut: false, endZoom: 0.1f * GUI.yScale)
                     {
+                        RunWhilePaused = false,
                         EndWaitDuration = float.PositiveInfinity
                     };
                 }, delay: 3.0f);
@@ -52,6 +54,7 @@ namespace Barotrauma
                 {
                     new CameraTransition(boss, GameMain.GameScreen.Cam, null, Alignment.Center, panDuration: 5.0f, fadeOut: false, losFadeIn: false, startZoom: 1.0f, endZoom: 0.4f * GUI.yScale)
                     {
+                        RunWhilePaused = false,
                         EndWaitDuration = cameraWaitDuration
                     };
                 }

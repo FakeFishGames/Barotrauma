@@ -248,11 +248,27 @@ namespace Barotrauma
             List<WayPoint> spawnWaypoints = null;
             List<WayPoint> mainSubWaypoints = WayPoint.SelectCrewSpawnPoints(characterInfos, Submarine.MainSub).ToList();
 
-            if (Level.IsLoadedOutpost && Submarine.Loaded.Any(s => s.Info.Type == SubmarineType.Outpost && (s.Info.OutpostGenerationParams?.SpawnCrewInsideOutpost ?? false)))
+            bool hostileOutpost = false;
+            if (Level.IsLoadedOutpost)
             {
-                spawnWaypoints = WayPoint.WayPointList.FindAll(wp => 
+                if (Submarine.Loaded.Any(s => s.Info.Type == SubmarineType.Outpost && (s.Info.OutpostGenerationParams?.SpawnCrewInsideOutpost ?? false)))
+                {
+                    hostileOutpost = true;
+                }
+                else if (GameMain.GameSession?.GameMode is CampaignMode campaign)
+                {
+                    var reputation = campaign.Map?.CurrentLocation?.Reputation;
+                    if (reputation != null && reputation.NormalizedValue < Reputation.HostileThreshold)
+                    {
+                        hostileOutpost = true;
+                    }
+                }
+            }
+            if (hostileOutpost)
+            {
+                spawnWaypoints = WayPoint.WayPointList.FindAll(wp =>
                     wp.SpawnType == SpawnType.Human &&
-                    wp.Submarine == Level.Loaded.StartOutpost && 
+                    wp.Submarine == Level.Loaded.StartOutpost &&
                     wp.CurrentHull != null &&
                     wp.CurrentHull.OutpostModuleTags.Contains("airlock".ToIdentifier()));
                 while (spawnWaypoints.Count > characterInfos.Count)
@@ -264,7 +280,6 @@ namespace Barotrauma
                     spawnWaypoints.Add(spawnWaypoints[Rand.Int(spawnWaypoints.Count)]);
                 }
             }
-
             if (spawnWaypoints == null || !spawnWaypoints.Any())
             {
                 spawnWaypoints = mainSubWaypoints;

@@ -1158,7 +1158,7 @@ namespace Barotrauma
                 foreach (MapEntityPrefab ep in entityLists[categoryKey])
                 {
 #if !DEBUG
-                    if (ep.HideInMenus) { continue; }
+                    if (ep.HideInMenus && !GameMain.DebugDraw) { continue; }
 #endif
                     CreateEntityElement(ep, entitiesPerRow, entityListInner.Content);
                 }
@@ -1177,7 +1177,7 @@ namespace Barotrauma
             foreach (MapEntityPrefab ep in MapEntityPrefab.List)
             {
 #if !DEBUG
-                if (ep.HideInMenus) { continue; }
+                if (ep.HideInMenus && !GameMain.DebugDraw) { continue; }
 #endif
                 CreateEntityElement(ep, entitiesPerRow, allEntityList.Content);
             }
@@ -1306,7 +1306,6 @@ namespace Barotrauma
                                 try
                                 {
                                     assemblyPrefab.Delete();
-                                    UpdateEntityList();
                                     OpenEntityMenu(MapEntityCategory.ItemAssembly);
                                 }
                                 catch (Exception e)
@@ -2725,11 +2724,13 @@ namespace Barotrauma
 
             previewImageButtonHolder.RectTransform.MinSize = new Point(0, previewImageButtonHolder.RectTransform.Children.Max(c => c.MinSize.Y));
 
-            var contentPackageTabber = new GUILayoutGroup(new RectTransform((1.0f, 0.06f), rightColumn.RectTransform), isHorizontal: true);
+            var contentPackageTabber = new GUILayoutGroup(new RectTransform((1.0f, 0.075f), rightColumn.RectTransform), isHorizontal: true);
 
             GUIButton createTabberBtn(string labelTag)
             {
                 var btn = new GUIButton(new RectTransform((0.5f, 1.0f), contentPackageTabber.RectTransform, Anchor.BottomCenter, Pivot.BottomCenter), TextManager.Get(labelTag), style: "GUITabButton");
+                btn.TextBlock.Wrap = true;
+                btn.TextBlock.SetTextPos();
                 btn.RectTransform.MaxSize = RectTransform.MaxPoint;
                 btn.Children.ForEach(c => c.RectTransform.MaxSize = RectTransform.MaxPoint);
                 btn.Font = GUIStyle.SmallFont;
@@ -3088,9 +3089,17 @@ namespace Barotrauma
                     string newPackagePath = ContentPackageManager.LocalPackages.SaveRegularMod(modProject);
                     existingContentPackage = ContentPackageManager.LocalPackages.GetRegularModByPath(newPackagePath);
                 }
-                
+
                 XDocument doc = new XDocument(ItemAssemblyPrefab.Save(MapEntity.SelectedList.ToList(), nameBox.Text, descriptionBox.Text, hideInMenus));
-                doc.SaveSafe(filePath);
+                try
+                {
+                    doc.SaveSafe(filePath);
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.ThrowError($"Failed to save the item assembly to \"{filePath}\".", e);
+                    return;
+                }
 
                 var result = ContentPackageManager.ReloadContentPackage(existingContentPackage);
                 if (!result.TryUnwrapSuccess(out var resultPackage))
@@ -3644,6 +3653,8 @@ namespace Barotrauma
 
         private void OpenEntityMenu(MapEntityCategory? entityCategory)
         {
+            UpdateEntityList();
+
             foreach (GUIButton categoryButton in entityCategoryButtons)
             {
                 categoryButton.Selected = entityCategory.HasValue ?
@@ -3771,14 +3782,14 @@ namespace Barotrauma
         {
             if (GUIContextMenu.CurrentContextMenu != null) { return; }
 
-            List<MapEntity> targets = MapEntity.mapEntityList.Any(me => me.IsHighlighted && !MapEntity.SelectedList.Contains(me)) ?
-                MapEntity.mapEntityList.Where(me => me.IsHighlighted).ToList() :
+            List<MapEntity> targets = MapEntity.HighlightedEntities.Any(me => !MapEntity.SelectedList.Contains(me)) ?
+                MapEntity.HighlightedEntities.ToList() :
                 new List<MapEntity>(MapEntity.SelectedList);
 
             Item target = null;
 
             var single = targets.Count == 1 ? targets.Single() : null;
-            if (single is Item item && item.Components.Any(ic => !(ic is ConnectionPanel) && !(ic is Repairable) && ic.GuiFrame != null))
+            if (single is Item item && item.Components.Any(ic => !(ic is ConnectionPanel) && ic is not Repairable && ic.GuiFrame != null))
             {
                 // Do not offer the ability to open the inventory if the inventory should never be drawn
                 var container = item.GetComponent<ItemContainer>();
@@ -4023,7 +4034,7 @@ namespace Barotrauma
                    pickerMutex     = new object(),
                    hexMutex        = new object();
 
-            Vector2 relativeSize = new Vector2(GUI.IsFourByThree() ? 0.4f : 0.3f, 0.3f);
+            Vector2 relativeSize = new Vector2(0.4f * GUI.AspectRatioAdjustment, 0.3f);
 
             GUIMessageBox msgBox = new GUIMessageBox(string.Empty, string.Empty, Array.Empty<LocalizedString>(), relativeSize, type: GUIMessageBox.Type.Vote)
             {
@@ -4062,24 +4073,31 @@ namespace Barotrauma
             GUILayoutGroup sliderLayout = new GUILayoutGroup(new RectTransform(new Vector2(1.0f - colorPicker.RectTransform.RelativeSize.X, 1f), colorLayout.RectTransform), childAnchor: Anchor.TopRight);
 
             float currentHue = colorPicker.SelectedHue / 360f;
-            GUILayoutGroup hueSliderLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.25f), sliderLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
+            GUILayoutGroup hueSliderLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.25f), sliderLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { Stretch = true };
             new GUITextBlock(new RectTransform(new Vector2(0.1f, 0.2f), hueSliderLayout.RectTransform), text: "H:", font: GUIStyle.SubHeadingFont) { Padding = Vector4.Zero, ToolTip = "Hue" };
             GUIScrollBar hueScrollBar = new GUIScrollBar(new RectTransform(new Vector2(0.7f, 1f), hueSliderLayout.RectTransform), style: "GUISlider", barSize: 0.05f) { BarScroll = currentHue };
-            GUINumberInput hueTextBox = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1f), hueSliderLayout.RectTransform), inputType: NumberType.Float) { FloatValue = currentHue, MaxValueFloat = 1f, MinValueFloat = 0f, DecimalsToDisplay = 2 };
+            GUINumberInput hueTextBox = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1f), hueSliderLayout.RectTransform) { MinSize = new Point(GUI.IntScale(100), 0) }, 
+                inputType: NumberType.Float) { FloatValue = currentHue, MaxValueFloat = 1f, MinValueFloat = 0f, DecimalsToDisplay = 2 };
 
-            GUILayoutGroup satSliderLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.2f), sliderLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
+            GUILayoutGroup satSliderLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.2f), sliderLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { Stretch = true };
             new GUITextBlock(new RectTransform(new Vector2(0.1f, 0.2f), satSliderLayout.RectTransform), text: "S:", font: GUIStyle.SubHeadingFont) { Padding = Vector4.Zero, ToolTip = "Saturation"};
             GUIScrollBar satScrollBar = new GUIScrollBar(new RectTransform(new Vector2(0.7f, 1f), satSliderLayout.RectTransform), style: "GUISlider", barSize: 0.05f) { BarScroll = colorPicker.SelectedSaturation };
-            GUINumberInput satTextBox = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1f), satSliderLayout.RectTransform), inputType: NumberType.Float) { FloatValue = colorPicker.SelectedSaturation, MaxValueFloat = 1f, MinValueFloat = 0f, DecimalsToDisplay = 2 };
+            GUINumberInput satTextBox = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1f), satSliderLayout.RectTransform) { MinSize = new Point(GUI.IntScale(100), 0) }, 
+                inputType: NumberType.Float) { FloatValue = colorPicker.SelectedSaturation, MaxValueFloat = 1f, MinValueFloat = 0f, DecimalsToDisplay = 2 };
 
-            GUILayoutGroup valueSliderLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.2f), sliderLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft);
+            GUILayoutGroup valueSliderLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.2f), sliderLayout.RectTransform), isHorizontal: true, childAnchor: Anchor.CenterLeft) { Stretch = true };
             new GUITextBlock(new RectTransform(new Vector2(0.1f, 0.2f), valueSliderLayout.RectTransform), text: "V:", font: GUIStyle.SubHeadingFont) { Padding = Vector4.Zero, ToolTip = "Value"};
             GUIScrollBar valueScrollBar = new GUIScrollBar(new RectTransform(new Vector2(0.7f, 1f), valueSliderLayout.RectTransform), style: "GUISlider", barSize: 0.05f) { BarScroll = colorPicker.SelectedValue };
-            GUINumberInput valueTextBox = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1f), valueSliderLayout.RectTransform), inputType: NumberType.Float) { FloatValue = colorPicker.SelectedValue, MaxValueFloat = 1f, MinValueFloat = 0f, DecimalsToDisplay = 2 };
+            GUINumberInput valueTextBox = new GUINumberInput(new RectTransform(new Vector2(0.2f, 1f), valueSliderLayout.RectTransform) { MinSize = new Point(GUI.IntScale(100), 0) }, 
+                inputType: NumberType.Float) { FloatValue = colorPicker.SelectedValue, MaxValueFloat = 1f, MinValueFloat = 0f, DecimalsToDisplay = 2 };
 
-            GUILayoutGroup colorInfoLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.3f), sliderLayout.RectTransform), childAnchor: Anchor.CenterLeft, isHorizontal: true) { RelativeSpacing = 0.15f };
+            GUILayoutGroup colorInfoLayout = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.3f), sliderLayout.RectTransform), childAnchor: Anchor.CenterLeft, isHorizontal: true) 
+            { 
+                Stretch = true,
+                RelativeSpacing = 0.1f 
+            };
 
-            new GUICustomComponent(new RectTransform(new Vector2(0.4f, 0.8f), colorInfoLayout.RectTransform), (batch, component) =>
+            new GUICustomComponent(new RectTransform(Vector2.One, colorInfoLayout.RectTransform, scaleBasis: ScaleBasis.BothHeight), (batch, component) =>
             {
                 Rectangle rect = component.Rect;
                 Point areaSize = new Point(rect.Width, rect.Height / 2);
@@ -5251,9 +5269,9 @@ namespace Barotrauma
                     {
                         if (dummyCharacter.SelectedItem == null)
                         {
-                            foreach (var entity in MapEntity.mapEntityList)
+                            foreach (var entity in MapEntity.HighlightedEntities)
                             {
-                                if (entity is Item item && entity.IsHighlighted && item.Components.Any(ic => !(ic is ConnectionPanel) && !(ic is Repairable) && ic.GuiFrame != null))
+                                if (entity is Item item && item.Components.Any(ic => ic is not ConnectionPanel && ic is not Repairable && ic.GuiFrame != null))
                                 {
                                     var container = item.GetComponents<ItemContainer>().ToList();
                                     if (!container.Any() || container.Any(ic => ic?.DrawInventory ?? false))

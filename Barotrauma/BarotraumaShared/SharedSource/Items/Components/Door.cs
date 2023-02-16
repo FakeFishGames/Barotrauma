@@ -1,10 +1,10 @@
 ﻿using Barotrauma.Networking;
 using FarseerPhysics;
-using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using FarseerPhysics.Dynamics;
 #if CLIENT
 using Barotrauma.Lights;
 #endif
@@ -173,6 +173,21 @@ namespace Barotrauma.Items.Components
                 OpenState = isOpen ? 1.0f : 0.0f;
             }
         }
+        public bool IsClosed => !IsOpen;
+
+        /// <summary>
+        /// Is the door opening, but not yet fully opened? Returns false both when it's closed and when it's fully open.
+        /// </summary>
+        public bool IsOpening => IsOpen && !IsFullyOpen;
+
+        /// <summary>
+        /// Is the door closing, but not yet fully closed? Returns false both when the door is open and when it's fully closed.
+        /// </summary>
+        public bool IsClosing => IsClosed && !IsFullyClosed;
+
+        public bool IsFullyOpen => IsOpen && OpenState >= 1.0f;
+
+        public bool IsFullyClosed => IsClosed && OpenState <= 0f;
 
         [Serialize(false, IsPropertySaveable.No, description: "If the door has integrated buttons, it can be opened by interacting with it directly (instead of using buttons wired to it).")]
         public bool HasIntegratedButtons { get; private set; }
@@ -211,6 +226,8 @@ namespace Barotrauma.Items.Components
             IsHorizontal = element.GetAttributeBool("horizontal", false);
             canBePicked = element.GetAttributeBool("canbepicked", false);
             autoOrientGap = element.GetAttributeBool("autoorientgap", false);
+
+            allowedSlots.Clear();
             
             foreach (var subElement in element.Elements())
             {
@@ -365,7 +382,10 @@ namespace Barotrauma.Items.Components
             {
                 lastBrokenTime = Timing.TotalTime;
                 //the door has to be restored to 50% health before collision detection on the body is re-enabled
-                if (item.ConditionPercentage / Math.Max(item.MaxRepairConditionMultiplier, 1.0f) > 50.0f && 
+
+                //multiply by MaxRepairConditionMultiplier so the item gets repaired at 50% of the _default max condition_
+                //otherwise increasing the max condition is arguably harmful, as the door needs to be repaired further to re-enable the collider
+                if (item.ConditionPercentage * Math.Max(item.MaxRepairConditionMultiplier, 1.0f) > 50.0f && 
                     (GameMain.NetworkMember == null || GameMain.NetworkMember.IsServer))
                 {
                     IsBroken = false;

@@ -236,7 +236,8 @@ namespace Barotrauma
                         new GUIButton(new RectTransform(new Vector2(0.3f, 0.5f), buttonContainer.RectTransform, Anchor.Center),
                             style: "UIToggleButton")
                         {
-                            OnClicked = Close
+                            OnClicked = Close,
+                            UserData = UIHighlightAction.ElementId.MessageBoxCloseButton
                         }
                     };
                     InputType? closeInput = null;

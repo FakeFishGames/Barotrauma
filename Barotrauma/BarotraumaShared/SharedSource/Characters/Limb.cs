@@ -490,13 +490,9 @@ namespace Barotrauma
 
         public int RefJointIndex => Params.RefJoint;
 
-        private List<WearableSprite> wearingItems;
-        public List<WearableSprite> WearingItems
-        {
-            get { return wearingItems; }
-        }
+        public readonly List<WearableSprite> WearingItems = new List<WearableSprite>();
 
-        public List<WearableSprite> OtherWearables { get; private set; } = new List<WearableSprite>();
+        public readonly List<WearableSprite> OtherWearables = new List<WearableSprite>();
 
         public bool PullJointEnabled
         {
@@ -640,7 +636,6 @@ namespace Barotrauma
             this.ragdoll = ragdoll;
             this.character = character;
             this.Params = limbParams;
-            wearingItems = new List<WearableSprite>();            
             dir = Direction.Right;
             body = new PhysicsBody(limbParams);
             type = limbParams.Type;
@@ -772,7 +767,7 @@ namespace Barotrauma
                         tempModifiers.Add(damageModifier);
                     }
                 }
-                foreach (WearableSprite wearable in wearingItems)
+                foreach (WearableSprite wearable in WearingItems)
                 {
                     foreach (DamageModifier damageModifier in wearable.WearableComponent.DamageModifiers)
                     {
@@ -791,9 +786,14 @@ namespace Barotrauma
                 }
                 if (!foundMatchingModifier && random > affliction.Probability) { continue; }
                 float finalDamageModifier = damageMultiplier;
-                if (affliction.Prefab.AfflictionType == "emp" && character.EmpVulnerability > 0)
+                if (character.EmpVulnerability > 0 && affliction.Prefab.AfflictionType == AfflictionPrefab.EMPType)
                 {
                     finalDamageModifier *= character.EmpVulnerability;
+                }
+                if (!character.Params.Health.PoisonImmunity && 
+                    (affliction.Prefab.AfflictionType == AfflictionPrefab.PoisonType || affliction.Prefab.AfflictionType == AfflictionPrefab.ParalysisType))
+                {
+                    finalDamageModifier *= character.PoisonVulnerability;
                 }
                 foreach (DamageModifier damageModifier in tempModifiers)
                 {

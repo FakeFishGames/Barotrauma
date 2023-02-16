@@ -311,7 +311,6 @@ namespace Barotrauma
                 }
                 var missionDescription = new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform),
                     RichString.Rich(missionMessage), wrap: true);
-                int reward = displayedMission.GetReward(Submarine.MainSub);
                 if (selectedMissions.Contains(displayedMission) && displayedMission.Completed)
                 {
                     RichString reputationText = displayedMission.GetReputationRewardText();
@@ -320,12 +319,13 @@ namespace Barotrauma
                         new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), reputationText);
                     }
 
-                    if (reward > 0)
+                    int totalReward = displayedMission.GetFinalReward(Submarine.MainSub);
+                    if (totalReward > 0)
                     {
                         new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), missionTextContent.RectTransform), RichString.Rich(displayedMission.GetMissionRewardText(Submarine.MainSub)));
                         if (GameMain.IsMultiplayer && Character.Controlled is { } controlled)
                         {
-                            var (share, percentage, _) = Mission.GetRewardShare(controlled.Wallet.RewardDistribution, GameSession.GetSessionCrewCharacters(CharacterType.Player).Where(c => c != controlled), Option<int>.Some(reward));
+                            var (share, percentage, _) = Mission.GetRewardShare(controlled.Wallet.RewardDistribution, GameSession.GetSessionCrewCharacters(CharacterType.Player).Where(c => c != controlled), Option<int>.Some(totalReward));
                             if (share > 0)
                             {
                                 string shareFormatted = string.Format(CultureInfo.InvariantCulture, "{0:N0}", share);
@@ -419,7 +419,7 @@ namespace Barotrauma
                 var factionFrame = CreateReputationElement(
                     reputationList.Content,
                     faction.Prefab.Name,
-                    faction.Reputation.Value, faction.Reputation.NormalizedValue, initialReputation,
+                    faction.Reputation, initialReputation,
                     faction.Prefab.ShortDescription, faction.Prefab.Description,
                     faction.Prefab.Icon, faction.Prefab.BackgroundPortrait, faction.Prefab.IconColor);
                 CreatePathUnlockElement(factionFrame, faction, null);
@@ -685,7 +685,7 @@ namespace Barotrauma
         }
 
         private GUIFrame CreateReputationElement(GUIComponent parent, 
-            LocalizedString name, float reputation, float normalizedReputation, float initialReputation,
+            LocalizedString name, Reputation reputation, float initialReputation,
             LocalizedString shortDescription, LocalizedString fullDescription, Sprite icon, Sprite backgroundPortrait, Color iconColor)
         {
             var factionFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.1f), parent.RectTransform), style: null);
@@ -703,21 +703,22 @@ namespace Barotrauma
                 };
             }
 
-            var factionInfoHorizontal = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), factionFrame.RectTransform, Anchor.Center), childAnchor: Anchor.CenterLeft, isHorizontal: true)
+            var factionInfoHorizontal = new GUILayoutGroup(new RectTransform(new Vector2(0.95f, 0.9f), factionFrame.RectTransform, Anchor.Center), childAnchor: Anchor.CenterRight, isHorizontal: true)
             {
                 AbsoluteSpacing = GUI.IntScale(5),
                 Stretch = true
             };
 
+            var factionIcon = new GUIImage(new RectTransform(Vector2.One * 0.7f, factionInfoHorizontal.RectTransform, scaleBasis: ScaleBasis.Smallest), icon, scaleToFit: true)
+            {
+                Color = iconColor
+            };
             var factionTextContent = new GUILayoutGroup(new RectTransform(Vector2.One, factionInfoHorizontal.RectTransform))
             {
                 AbsoluteSpacing = GUI.IntScale(10),
                 Stretch = true
             };
-            var factionIcon = new GUIImage(new RectTransform(Vector2.One * 0.7f, factionInfoHorizontal.RectTransform, scaleBasis: ScaleBasis.Smallest), icon, scaleToFit: true)
-            {
-                Color = iconColor
-            };
+
             factionInfoHorizontal.Recalculate();
 
             var header = new GUITextBlock(new RectTransform(new Point(factionTextContent.Rect.Width, GUI.IntScale(40)), factionTextContent.RectTransform),
@@ -738,24 +739,30 @@ namespace Barotrauma
             factionTextContent.Recalculate();
             
             new GUICustomComponent(new RectTransform(new Vector2(0.8f, 1.0f), sliderHolder.RectTransform),
-                onDraw: (sb, customComponent) => DrawReputationBar(sb, customComponent.Rect, normalizedReputation));
+                onDraw: (sb, customComponent) => DrawReputationBar(sb, customComponent.Rect, reputation.NormalizedValue));
+                
+            var reputationText = new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), sliderHolder.RectTransform),
+                string.Empty, textAlignment: Alignment.CenterLeft, font: GUIStyle.SubHeadingFont);
+            SetReputationText(reputationText);
+            reputation?.OnReputationValueChanged.RegisterOverwriteExisting("RefreshRoundSummary".ToIdentifier(), _ => 
+            {
+                SetReputationText(reputationText);
+            });
 
-            LocalizedString reputationText = Reputation.GetFormattedReputationText(normalizedReputation, reputation, addColorTags: true);
-            int reputationChange = (int)Math.Round(reputation - initialReputation);
-            if (Math.Abs(reputationChange) > 0)
+            void SetReputationText(GUITextBlock textBlock)
             {
-                string changeText = $"{(reputationChange > 0 ? "+" : "") + reputationChange}";
-                string colorStr = XMLExtensions.ToStringHex(reputationChange > 0 ? GUIStyle.Green : GUIStyle.Red);
-                var richText = RichString.Rich($"{reputationText} (‖color:{colorStr}‖{changeText}‖color:end‖)");
-                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), sliderHolder.RectTransform),
-                    richText,
-                    textAlignment: Alignment.CenterLeft, font: GUIStyle.SubHeadingFont);
-            }
-            else
-            {
-                new GUITextBlock(new RectTransform(new Vector2(0.5f, 1.0f), sliderHolder.RectTransform),
-                    RichString.Rich(reputationText),
-                    textAlignment: Alignment.CenterLeft, font: GUIStyle.SubHeadingFont);
+                LocalizedString reputationText = Reputation.GetFormattedReputationText(reputation.NormalizedValue, reputation.Value, addColorTags: true);
+                int reputationChange = (int)Math.Round(reputation.Value - initialReputation);
+                if (Math.Abs(reputationChange) > 0)
+                {
+                    string changeText = $"{(reputationChange > 0 ? "+" : "") + reputationChange}";
+                    string colorStr = XMLExtensions.ToStringHex(reputationChange > 0 ? GUIStyle.Green : GUIStyle.Red);
+                    textBlock.Text = RichString.Rich($"{reputationText} (‖color:{colorStr}‖{changeText}‖color:end‖)");
+                }
+                else
+                {
+                    textBlock.Text = RichString.Rich(reputationText);
+                }
             }
 
             //spacing

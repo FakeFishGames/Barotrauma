@@ -42,12 +42,20 @@ namespace Barotrauma
             }
         }
 
+        public int TimesAttempted { get; set; }
+
         protected static bool IsClient => GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient;
 
         private readonly CheckDataAction completeCheckDataAction;
 
         public readonly ImmutableArray<LocalizedString> Headers;
         public readonly ImmutableArray<LocalizedString> Messages;
+
+        /// <summary>
+        /// The reward that was actually given from completing the mission, taking any talent bonuses into account 
+        /// (some of which may not be possible to determine in advance)
+        /// </summary>
+        private int? finalReward;
 
         public virtual LocalizedString Name => Prefab.Name;
 
@@ -367,6 +375,8 @@ namespace Barotrauma
                 GiveReward();
             }
 
+            TimesAttempted++;
+
             EndMissionSpecific(completed);
         }
 
@@ -374,6 +384,27 @@ namespace Barotrauma
 
         protected virtual void EndMissionSpecific(bool completed) { }
 
+        /// <summary>
+        /// Get the final reward, taking talent bonuses into account if the mission has concluded and the talents modified the reward accordingly.
+        /// </summary>
+        public int GetFinalReward(Submarine sub)
+        {
+            return finalReward ?? GetReward(sub);
+        }
+
+        /// <summary>
+        /// Calculates the final reward after talent bonuses have been applied. Note that this triggers talent effects of the type OnGainMissionMoney, 
+        /// and should only be called once when the mission is completed!
+        /// </summary>
+        private void CalculateFinalReward(Submarine sub)
+        {
+            int reward = GetReward(sub);
+            IEnumerable<Character> crewCharacters = GameSession.GetSessionCrewCharacters(CharacterType.Both);
+            var missionMoneyGainMultiplier = new AbilityMissionMoneyGainMultiplier(this, 1f);
+            crewCharacters.ForEach(c => c.CheckTalents(AbilityEffectType.OnGainMissionMoney, missionMoneyGainMultiplier));
+            crewCharacters.ForEach(c => missionMoneyGainMultiplier.Value += c.GetStatValue(StatTypes.MissionMoneyGainMultiplier));
+            finalReward = (int)(reward * missionMoneyGainMultiplier.Value);
+        }
 
         private void GiveReward()
         {
@@ -417,38 +448,35 @@ namespace Barotrauma
                 info?.GiveExperience((int)((experienceGain * experienceGainMultiplier.Value) * experienceGainMultiplierIndividual.Value));
             }
 
-            // apply money gains afterwards to prevent them from affecting XP gains
-            var missionMoneyGainMultiplier = new AbilityMissionMoneyGainMultiplier(this, 1f);
-            crewCharacters.ForEach(c => c.CheckTalents(AbilityEffectType.OnGainMissionMoney, missionMoneyGainMultiplier));
-            crewCharacters.ForEach(c => missionMoneyGainMultiplier.Value += c.GetStatValue(StatTypes.MissionMoneyGainMultiplier));
-
-            int totalReward = (int)(reward * missionMoneyGainMultiplier.Value);
-            GameAnalyticsManager.AddMoneyGainedEvent(totalReward, GameAnalyticsManager.MoneySource.MissionReward, Prefab.Identifier.Value);
-
+            CalculateFinalReward(Submarine.MainSub);
 #if SERVER
-            totalReward = DistributeRewardsToCrew(GameSession.GetSessionCrewCharacters(CharacterType.Player), totalReward);
+            finalReward = DistributeRewardsToCrew(GameSession.GetSessionCrewCharacters(CharacterType.Player), finalReward.Value);
 #endif
             bool isSingleplayerOrServer = GameMain.IsSingleplayer || GameMain.NetworkMember is { IsServer: true };
-            if (isSingleplayerOrServer && totalReward > 0)
+            if (isSingleplayerOrServer)
             {
-                campaign.Bank.Give(totalReward);
-            }
-
-            foreach (Character character in crewCharacters)
-            {
-                character.Info.MissionsCompletedSinceDeath++;
-            }
-
-            foreach (KeyValuePair<Identifier, float> reputationReward in ReputationRewards)
-            {
-                if (reputationReward.Key == "location")
+                if (finalReward > 0)
                 {
-                    OriginLocation.Reputation?.AddReputation(reputationReward.Value);
+                    campaign.Bank.Give(finalReward.Value);
                 }
-                else
+
+                foreach (Character character in crewCharacters)
                 {
-                    Faction faction = campaign.Factions.Find(faction1 => faction1.Prefab.Identifier == reputationReward.Key);
-                    if (faction != null) { faction.Reputation.AddReputation(reputationReward.Value); }
+                    character.Info.MissionsCompletedSinceDeath++;
+                }
+
+                foreach (KeyValuePair<Identifier, float> reputationReward in ReputationRewards)
+                {
+                    if (reputationReward.Key == "location")
+                    {
+                        OriginLocation.Reputation?.AddReputation(reputationReward.Value);
+                    }
+                    else
+                    {
+                        Faction faction = campaign.Factions.Find(faction1 => faction1.Prefab.Identifier == reputationReward.Key);
+                           float prevValue = faction.Reputation.Value;
+                        faction?.Reputation.AddReputation(reputationReward.Value);
+                    }
                 }
             }
 
@@ -493,12 +521,9 @@ namespace Barotrauma
             float rewardWeight = sum > 100 ? rewardDistribution / sum : rewardDistribution / 100f;
             int rewardPercentage = (int)(rewardWeight * 100);
 
-            return reward switch
-            {
-                Some<int> { Value: var amount } => ((int)(amount * rewardWeight), rewardPercentage, sum),
-                None<int> _ => (0, rewardPercentage, sum),
-                _ => throw new ArgumentOutOfRangeException()
-            };
+            int amount = reward.TryUnwrap(out var a) ? a : 0;
+
+            return ((int)(amount * rewardWeight), rewardPercentage, sum);
         }
 
         protected void ChangeLocationType(LocationTypeChange change)
@@ -517,6 +542,8 @@ namespace Barotrauma
                 }
                 if (srcIndex == -1) { return; }
                 var location = Locations[srcIndex];
+
+                if (location.LocationTypeChangesBlocked) { return; }
 
                 if (change.RequiredDurationRange.X > 0)
                 {

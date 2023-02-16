@@ -10,8 +10,7 @@ namespace Barotrauma
 
         public override RichString GetMissionRewardText(Submarine sub)
         {
-            LocalizedString rewardText = TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", GetReward(sub)));
-
+            LocalizedString rewardText = GetRewardAmountText(sub);
             LocalizedString retVal;
             if (rewardPerCrate.HasValue)
             {

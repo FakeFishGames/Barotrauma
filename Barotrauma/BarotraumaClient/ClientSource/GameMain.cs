@@ -17,14 +17,19 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using Barotrauma.Extensions;
+using System.Collections.Immutable;
 
 namespace Barotrauma
 {
     class GameMain : Game
     {
-        public static bool ShowFPS = false;
-        public static bool ShowPerf = false;
+        public static bool ShowFPS;
+        public static bool ShowPerf;
         public static bool DebugDraw;
+        /// <summary>
+        /// Doesn't automatically enable los or bot AI or do anything like that. Probably not fully implemented.
+        /// </summary>
+        public static bool DevMode;
         public static bool IsSingleplayer => NetworkMember == null;
         public static bool IsMultiplayer => NetworkMember != null;
 
@@ -227,9 +232,8 @@ namespace Barotrauma
             }
 
             GameSettings.Init();
+            CreatureMetrics.Init();
             
-            Md5Hash.Cache.Load();
-
             ConsoleArguments = args;
 
             try
@@ -397,7 +401,7 @@ namespace Barotrauma
             TextureLoader.Init(GraphicsDevice);
 
             //do this here because we need it for the loading screen
-            WaterRenderer.Instance = new WaterRenderer(base.GraphicsDevice, Content);
+            WaterRenderer.Instance = new WaterRenderer(base.GraphicsDevice);
 
             Quad.Init(GraphicsDevice);
 
@@ -475,6 +479,19 @@ namespace Barotrauma
                 yield return CoroutineStatus.Running;
             }
 
+            var corePackage = ContentPackageManager.EnabledPackages.Core;
+            if (corePackage.EnableError.TryUnwrap(out var error))
+            {
+                if (error.ErrorsOrException.TryGet(out ImmutableArray<string> errorMessages))
+                {
+                    throw new Exception($"Error while loading the core content package \"{corePackage.Name}\": {errorMessages.First()}");
+                }
+                else if (error.ErrorsOrException.TryGet(out Exception exception))
+                {
+                    throw new Exception($"Error while loading the core content package \"{corePackage.Name}\": {exception.Message}", exception);
+                }
+            }
+
             TextManager.VerifyLanguageAvailable();
 
             DebugConsole.Init();
@@ -498,10 +515,10 @@ namespace Barotrauma
             TitleScreen.LoadState = 75.0f;
         yield return CoroutineStatus.Running;
 
-            GameScreen = new GameScreen(GraphicsDeviceManager.GraphicsDevice, Content);
+            GameScreen = new GameScreen(GraphicsDeviceManager.GraphicsDevice);
 
             ParticleManager = new ParticleManager(GameScreen.Cam);
-            LightManager = new Lights.LightManager(base.GraphicsDevice, Content);
+            LightManager = new Lights.LightManager(base.GraphicsDevice);
             
             TitleScreen.LoadState = 80.0f;
         yield return CoroutineStatus.Running;
@@ -729,7 +746,7 @@ namespace Barotrauma
                 }
                 else if (HasLoaded)
                 {
-                    if (ConnectCommand is Some<ConnectCommand> { Value: var connectCommand })
+                    if (ConnectCommand.TryUnwrap(out var connectCommand))
                     {
                         if (Client != null)
                         {
@@ -1051,6 +1068,7 @@ namespace Barotrauma
 
         public static void QuitToMainMenu(bool save)
         {
+            CreatureMetrics.Save();
             if (save)
             {
                 GUI.SetSavingIndicatorState(true);
@@ -1156,6 +1174,7 @@ namespace Barotrauma
         protected override void OnExiting(object sender, EventArgs args)
         {
             exiting = true;
+            CreatureMetrics.Save();
             DebugConsole.NewMessage("Exiting...");
             Client?.Quit();
             SteamManager.ShutDown();

@@ -135,7 +135,9 @@ namespace Barotrauma
             pendingEventSets.Clear();
             selectedEvents.Clear();
             activeEvents.Clear();
-
+#if SERVER
+            MissionAction.ResetMissionsUnlockedThisRound();
+#endif
             pathFinder = new PathFinder(WayPoint.WayPointList, false);
             totalPathLength = 0.0f;
             if (level != null)

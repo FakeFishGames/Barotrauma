@@ -1443,7 +1443,7 @@ namespace Barotrauma
             commands.Add(new Command("kill", "kill [character]: Immediately kills the specified character.", (string[] args) =>
             {
                 Character killedCharacter = (args.Length == 0) ? Character.Controlled : FindMatchingCharacter(args);
-                killedCharacter?.SetAllDamage(200.0f, 0.0f, 0.0f);
+                killedCharacter?.Kill(CauseOfDeathType.Unknown, causeOfDeathAffliction: null);
             },
             () =>
             {
@@ -1887,6 +1887,9 @@ namespace Barotrauma
             commands.Add(new Command("followsub", "Toggle whether the camera should follow the nearest submarine (client-only).", null));
             commands.Add(new Command("toggleaitargets|aitargets", "Toggle the visibility of AI targets (= targets that enemies can detect and attack/escape from) (client-only).", null, isCheat: true));
             commands.Add(new Command("debugai", "Toggle the ai debug mode on/off (works properly only in single player).", null, isCheat: true));
+            commands.Add(new Command("devmode", "Toggle the dev mode on/off (client-only).", null, isCheat: true));
+            commands.Add(new Command("showmonsters", "Permanently unlocks all the monsters in the character editor. Use \"hidemonsters\" to undo.", null, isCheat: true));
+            commands.Add(new Command("hidemonsters", "Permanently hides in the character editor all the monsters that haven't been encountered in the game. Use \"showmonsters\" to undo.", null, isCheat: true));
 
             InitProjectSpecific();
 

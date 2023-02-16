@@ -278,7 +278,7 @@ namespace Barotrauma
             new GUITextBlock(rectT(1, 0, tooltipLayout), string.Empty) { UserData = "moreindicator" };
             ItemInfoFrame.Children.ForEach(c => { c.CanBeFocused = false; c.Children.ForEach(c2 => c2.CanBeFocused = false); });
 
-            GUIFrame paddedLayout = new GUIFrame(rectT(0.95f, GUI.IsFourByThree() ? 0.98f : 0.95f, parent, Anchor.Center), style: null);
+            GUIFrame paddedLayout = new GUIFrame(rectT(0.95f, 0.95f, parent, Anchor.Center), style: null);
             mainStoreLayout = new GUILayoutGroup(rectT(1, 0.9f, paddedLayout, Anchor.BottomLeft), isHorizontal: true) { RelativeSpacing = 0.01f };
             topHeaderLayout = new GUILayoutGroup(rectT(1, 0.1f, paddedLayout, Anchor.TopLeft), isHorizontal: true);
 
@@ -300,8 +300,8 @@ namespace Barotrauma
                     new GUITextBlock(rectT(1.0f, 1, locationLayout), TextManager.Get("UpgradeUI.AllSubmarinesInfo"), font: GUIStyle.SmallFont, wrap: true);                
             
                 categoryButtonLayout = new GUILayoutGroup(rectT(0.4f, 0.3f, leftLayout), isHorizontal: true) { Stretch = true };
-                    GUIButton upgradeButton = new GUIButton(rectT(1, 1f, categoryButtonLayout), TextManager.Get("UICategory.Upgrades"), style: "GUITabButton") { UserData = UpgradeTab.Upgrade, Selected = selectedUpgradeTab == UpgradeTab.Upgrade };
-                    GUIButton repairButton = new GUIButton(rectT(1, 1f, categoryButtonLayout), TextManager.Get("UICategory.Maintenance"), style: "GUITabButton") { UserData = UpgradeTab.Repairs, Selected = selectedUpgradeTab == UpgradeTab.Repairs };
+                    GUIButton upgradeButton = new GUIButton(rectT(0.5f, 1f, categoryButtonLayout), TextManager.Get("UICategory.Upgrades"), style: "GUITabButton") { UserData = UpgradeTab.Upgrade, Selected = selectedUpgradeTab == UpgradeTab.Upgrade };
+                    GUIButton repairButton = new GUIButton(rectT(0.5f, 1f, categoryButtonLayout), TextManager.Get("UICategory.Maintenance"), style: "GUITabButton") { UserData = UpgradeTab.Repairs, Selected = selectedUpgradeTab == UpgradeTab.Repairs };
 
             /*                                         RIGHT HEADER LAYOUT
              * |---------------------------------------------------------------------------------------------------|
@@ -352,11 +352,14 @@ namespace Barotrauma
 
             SelectTab(UpgradeTab.Upgrade);
 
-            var itemSwapPreview = new GUICustomComponent(new RectTransform(new Vector2(0.27f, 0.4f), mainStoreLayout.RectTransform, Anchor.TopLeft) { RelativeOffset = new Vector2(GUI.IsFourByThree() ? 0.5f : 0.47f, 0.0f) }, DrawItemSwapPreview)
+            var itemSwapPreview = new GUICustomComponent(new RectTransform(new Vector2(0.25f, 0.4f), mainStoreLayout.RectTransform, Anchor.TopLeft) 
+                { RelativeOffset = new Vector2(0.52f * GUI.AspectRatioAdjustment, 0.0f) }, DrawItemSwapPreview)
             {
                 IgnoreLayoutGroups = true,
                 CanBeFocused = true
             };
+
+            GUITextBlock.AutoScaleAndNormalize(upgradeButton.TextBlock, repairButton.TextBlock);
 
 #if DEBUG
             // creates a button that re-creates the UI
@@ -730,7 +733,7 @@ namespace Barotrauma
             if (storeLayout == null || mainStoreLayout == null) { return; }
             currentStoreLayout = CreateUpgradeCategoryList(rectT(1.0f, 1.5f, storeLayout));
 
-            selectedUpgradeCategoryLayout = new GUIFrame(rectT(GUI.IsFourByThree() ? 0.3f : 0.25f, 1, mainStoreLayout), style: null) { CanBeFocused = false };
+            selectedUpgradeCategoryLayout = new GUIFrame(rectT(0.3f  * GUI.AspectRatioAdjustment, 1, mainStoreLayout), style: null) { CanBeFocused = false };
 
             RefreshUpgradeList();
 
@@ -961,7 +964,7 @@ namespace Barotrauma
                 bool isUninstallPending = item.Prefab.SwappableItem != null && item.PendingItemSwap?.Identifier == item.Prefab.SwappableItem.ReplacementOnUninstall;
                 if (isUninstallPending) { canUninstall = false; }
 
-                frames.Add(CreateUpgradeEntry(rectT(1f, 0.25f, parent.Content), currentOrPending.UpgradePreviewSprite,
+                frames.Add(CreateUpgradeEntry(rectT(1f, 0.35f, parent.Content), currentOrPending.UpgradePreviewSprite,
                                 item.PendingItemSwap != null ? TextManager.GetWithVariable("upgrades.pendingitem", "[itemname]", name) : TextManager.GetWithVariable("upgrades.installeditem", "[itemname]", nameWithQuantity),
                                 currentOrPending.Description,
                                 0, null, addBuyButton: canUninstall, addProgressBar: false, buttonStyle: "WeaponUninstallButton").Frame);
@@ -1001,7 +1004,7 @@ namespace Barotrauma
 
                 int price = isPurchased || replacement == item.Prefab ? 0 : replacement.SwappableItem.GetPrice(Campaign.Map?.CurrentLocation) * linkedItems.Count();
 
-                frames.Add(CreateUpgradeEntry(rectT(1f, 0.25f, parent.Content), replacement.UpgradePreviewSprite, replacement.Name, replacement.Description,
+                frames.Add(CreateUpgradeEntry(rectT(1f, 0.35f, parent.Content), replacement.UpgradePreviewSprite, replacement.Name, replacement.Description,
                     price, replacement,
                     addBuyButton: true,
                     addProgressBar: false,
@@ -1134,7 +1137,8 @@ namespace Barotrauma
                         GUILayoutGroup imageLayout = new GUILayoutGroup(rectT(new Point(prefabLayout.Rect.Height, prefabLayout.Rect.Height), prefabLayout), childAnchor: Anchor.Center);
                             var icon = new GUIImage(rectT(0.9f, 0.9f, imageLayout, scaleBasis: ScaleBasis.BothHeight), sprite, scaleToFit: true) { CanBeFocused = false };
                         GUILayoutGroup textLayout = new GUILayoutGroup(rectT(1f - imageLayout.RectTransform.RelativeSize.X, 1, prefabLayout));
-                            var name = new GUITextBlock(rectT(1, 0.25f, textLayout), RichString.Rich(title), font: GUIStyle.SubHeadingFont) { AutoScaleHorizontal = true, AutoScaleVertical = true, Padding = Vector4.Zero };
+                            var name = new GUITextBlock(rectT(1, 0.35f, textLayout), RichString.Rich(title), font: GUIStyle.SubHeadingFont) { AutoScaleHorizontal = true, AutoScaleVertical = true, Padding = Vector4.Zero };
+                            //name.RectTransform.MinSize = new Point(0, (int)name.TextSize.Y);
                             GUILayoutGroup descriptionLayout = new GUILayoutGroup(rectT(1, 0.75f - progressBarHeight, textLayout));
                                 var description = new GUITextBlock(rectT(1, 1, descriptionLayout), body, font: GUIStyle.SmallFont, wrap: true, textAlignment: Alignment.TopLeft) { Padding = Vector4.Zero };
                                 GUILayoutGroup? progressLayout = null;
@@ -1176,7 +1180,7 @@ namespace Barotrauma
                 materialCostList.Visible = false;
                 materialCostList.UserData = UpgradeStoreUserData.MaterialCostList;
 
-                var priceText = new GUITextBlock(rectT(0.2f, 1f, buyButtonLayout), formattedPrice)
+                var priceText = new GUITextBlock(rectT(0.2f, 1f, buyButtonLayout), formattedPrice, textAlignment: Alignment.CenterRight)
                 {
                     UserData = UpgradeStoreUserData.PriceLabel,
                     //prices on swappable items are always visible, upgrade prices are enabled in UpdateUpgradeEntry for purchasable upgrades

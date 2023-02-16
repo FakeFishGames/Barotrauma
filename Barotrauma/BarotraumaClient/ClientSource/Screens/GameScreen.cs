@@ -1,7 +1,6 @@
 using Barotrauma.Extensions;
 using Barotrauma.Lights;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Diagnostics;
@@ -28,7 +27,7 @@ namespace Barotrauma
         public Effect ThresholdTintEffect { get; private set; }
         public Effect BlueprintEffect { get; set; }
 
-        public GameScreen(GraphicsDevice graphics, ContentManager content)
+        public GameScreen(GraphicsDevice graphics)
         {
             cam = new Camera();
             cam.Translate(new Vector2(-10.0f, 50.0f));
@@ -39,20 +38,13 @@ namespace Barotrauma
                 CreateRenderTargets(graphics);
             };
 
-            Effect LoadEffect(string path)
-                => content.Load<Effect>(path
-#if LINUX || OSX
-                        +"_opengl"
-#endif
-                );
-
             //var blurEffect = LoadEffect("Effects/blurshader");
-            damageEffect = LoadEffect("Effects/damageshader");
-            PostProcessEffect = LoadEffect("Effects/postprocess");
-            GradientEffect = LoadEffect("Effects/gradientshader");
-            GrainEffect = LoadEffect("Effects/grainshader");
-            ThresholdTintEffect = LoadEffect("Effects/thresholdtint");
-            BlueprintEffect = LoadEffect("Effects/blueprintshader");
+            damageEffect = EffectLoader.Load("Effects/damageshader");
+            PostProcessEffect = EffectLoader.Load("Effects/postprocess");
+            GradientEffect = EffectLoader.Load("Effects/gradientshader");
+            GrainEffect = EffectLoader.Load("Effects/grainshader");
+            ThresholdTintEffect = EffectLoader.Load("Effects/thresholdtint");
+            BlueprintEffect = EffectLoader.Load("Effects/blueprintshader");
 
             damageStencil = TextureLoader.FromFile("Content/Map/walldamage.png");
             damageEffect.Parameters["xStencil"].SetValue(damageStencil);

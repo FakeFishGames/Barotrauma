@@ -298,6 +298,21 @@ namespace Barotrauma
                 {
                     keys[i].SetState();
                 }
+
+                if (CharacterInventory.IsMouseOnInventory && CharacterHUD.ShouldDrawInventory(this))
+                {
+                    ResetInputIfPrimaryMouse(InputType.Use);
+                    ResetInputIfPrimaryMouse(InputType.Shoot);
+                    ResetInputIfPrimaryMouse(InputType.Select);
+                    void ResetInputIfPrimaryMouse(InputType inputType)
+                    {
+                        if (GameSettings.CurrentConfig.KeyMap.Bindings[inputType].MouseButton == MouseButton.PrimaryMouse)
+                        {
+                            keys[(int)inputType].Reset();
+                        }
+                    }
+                }
+
                 //if we were firing (= pressing the aim and shoot keys at the same time)
                 //and the fire key is the same as Select or Use, reset the key to prevent accidentally selecting/using items
                 if (wasFiring && !keys[(int)InputType.Shoot].Held)
@@ -316,8 +331,7 @@ namespace Barotrauma
                 float targetOffsetAmount = 0.0f;
                 if (moveCam)
                 {
-                    if (NeedsAir && !IsProtectedFromPressure() &&
-                        (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure > 0.0f))
+                    if (!IsProtectedFromPressure && (AnimController.CurrentHull == null || AnimController.CurrentHull.LethalPressure > 0.0f))
                     {
                         float pressure = AnimController.CurrentHull == null ? 100.0f : AnimController.CurrentHull.LethalPressure;
                         if (pressure > 0.0f)
@@ -636,7 +650,7 @@ namespace Barotrauma
             return closestItem;
         }
 
-        private Character FindCharacterAtPosition(Vector2 mouseSimPos, float maxDist = 150.0f)
+        private Character FindCharacterAtPosition(Vector2 mouseSimPos, float maxDist = MaxHighlightDistance)
         {
             Character closestCharacter = null;
 
@@ -646,7 +660,7 @@ namespace Barotrauma
             {
                 if (!CanInteractWith(c, checkVisibility: false) || (c.AnimController?.SimplePhysicsEnabled ?? true)) { continue; }
 
-                float dist = Vector2.DistanceSquared(mouseSimPos, c.SimPosition);
+                float dist = c.GetDistanceToClosestLimb(mouseSimPos);
                 if (dist < closestDist || 
                     (c.CampaignInteractionType != CampaignMode.InteractionType.None && closestCharacter?.CampaignInteractionType == CampaignMode.InteractionType.None && dist * 0.9f < closestDist))
                 {

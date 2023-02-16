@@ -368,6 +368,7 @@ namespace Barotrauma
 
             xmlContent.Add($"<Conversations identifier=\"vanillaconversations\" Language=\"{language}\" nowhitespace=\"{nowhitespace}\">");
 
+            conversationClosingIndent.Clear();
             int conversationStart = 1;
 
             xmlContent.Add(string.Empty);
@@ -419,9 +420,9 @@ namespace Barotrauma
                 {
                     string[] nextConversationElement = csvContent[i + 1].Split(separator);
 
-                    if (nextConversationElement[1] != string.Empty)
+                    if (nextConversationElement[3] != string.Empty)
                     {
-                        nextDepth = int.Parse(nextConversationElement[2]);
+                        nextDepth = int.Parse(nextConversationElement[3]);
                         nextIsSubConvo = nextDepth > depthIndex;
                     }
 
@@ -441,7 +442,12 @@ namespace Barotrauma
                 }
                 else
                 {
+                    //end of file, close remaining xml tags
                     xmlContent.Add(element.TrimEnd() + "/>");
+                    for (int j = depthIndex - 1; j >= 0; j--)
+                    {
+                        HandleClosingElements(xmlContent, j);
+                    }
                 }
             }
 
@@ -453,12 +459,12 @@ namespace Barotrauma
 
         private static void HandleClosingElements(List<string> xmlContent, int targetDepth)
         {
-            if (conversationClosingIndent.Count == 0) return;
+            if (conversationClosingIndent.Count == 0) { return; }
 
             for (int k = conversationClosingIndent.Count - 1; k >= 0; k--)
             {
                 int currentIndent = conversationClosingIndent[k];
-                if (currentIndent < targetDepth) break;
+                if (currentIndent < targetDepth) { break; }
                 xmlContent.Add($"{GetIndenting(currentIndent)}</Conversation>");
                 conversationClosingIndent.RemoveAt(k);
             }

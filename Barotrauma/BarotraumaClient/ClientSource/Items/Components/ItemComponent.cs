@@ -505,13 +505,14 @@ namespace Barotrauma.Items.Components
                     }
 
                     ActionType type;
+                    string typeStr = subElement.GetAttributeString("type", "");
                     try
                     {
-                        type = (ActionType)Enum.Parse(typeof(ActionType), subElement.GetAttributeString("type", ""), true);
+                        type = (ActionType)Enum.Parse(typeof(ActionType), typeStr, true);
                     }
                     catch (Exception e)
                     {
-                        DebugConsole.ThrowError("Invalid sound type in " + subElement + "!", e);
+                        DebugConsole.ThrowError($"Invalid sound type \"{typeStr}\" in item \"{item.Prefab.Identifier}\"!", e);
                         break;
                     }
                     

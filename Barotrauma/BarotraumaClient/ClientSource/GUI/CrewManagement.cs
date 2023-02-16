@@ -516,7 +516,7 @@ namespace Barotrauma
                 new GUIButton(new RectTransform(size, frame.RectTransform) { RelativeOffset = new Vector2(0.025f) }, style: null)
                 {
                     Enabled = CanHire(characterInfo),
-                    ToolTip = TextManager.GetWithVariable("campaigncrew.givenicknametooltip", "[mouseprimary]", TextManager.Get($"input.{(PlayerInput.MouseButtonsSwapped() ? "rightmouse" : "leftmouse")}")), 
+                    ToolTip = TextManager.GetWithVariable("campaigncrew.givenicknametooltip", "[mouseprimary]", PlayerInput.PrimaryMouseLabel),
                     UserData = characterInfo,
                     OnClicked = CreateRenamingComponent
                 };

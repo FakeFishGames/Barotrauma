@@ -661,18 +661,36 @@ namespace Barotrauma
                 case NetworkEventType.MISSION:
                     Identifier missionIdentifier = msg.ReadIdentifier();
                     int locationIndex = msg.ReadInt32();
+                    int destinationIndex = msg.ReadInt32();
+
                     string missionName = msg.ReadString();
                     MissionPrefab? prefab = MissionPrefab.Prefabs.Find(mp => mp.Identifier == missionIdentifier);
                     if (prefab != null)
                     {
-                        new GUIMessageBox(string.Empty, TextManager.GetWithVariable("missionunlocked", "[missionname]", missionName), 
+                        new GUIMessageBox(string.Empty, TextManager.GetWithVariable("missionunlocked", "[missionname]", missionName),
                             Array.Empty<LocalizedString>(), type: GUIMessageBox.Type.InGame, icon: prefab.Icon, relativeSize: new Vector2(0.3f, 0.15f), minSize: new Point(512, 128))
                         {
                             IconColor = prefab.IconColor
                         };
-                        if (GameMain.GameSession?.Map is { } map && locationIndex > 0 && locationIndex < map.Locations.Count)
+                        if (GameMain.GameSession?.Map is { } map && locationIndex >= 0 && locationIndex < map.Locations.Count)
                         {
-                            map.Discover(map.Locations[locationIndex], checkTalents: false);
+                            Location location = map.Locations[locationIndex];
+                            map.Discover(location, checkTalents: false);
+
+                            LocationConnection? connection = null;
+                            if (destinationIndex != locationIndex && destinationIndex >= 0 && destinationIndex < map.Locations.Count)
+                            {
+                                Location destination = map.Locations[destinationIndex];
+                                connection = map.Connections.FirstOrDefault(c => c.Locations.Contains(location) && c.Locations.Contains(destination));
+                            }
+                            if (connection != null)
+                            {
+                                location.UnlockMission(prefab, connection);
+                            }
+                            else
+                            {
+                                location.UnlockMission(prefab);
+                            }
                         }
                     }
                     break;

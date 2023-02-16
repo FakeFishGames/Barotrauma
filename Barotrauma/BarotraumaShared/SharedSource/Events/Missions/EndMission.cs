@@ -203,8 +203,11 @@ namespace Barotrauma
                     projectileTimer -= deltaTime;
                     if (projectileTimer <= 0.0f)
                     {
+                        float dist = Vector2.Distance(Submarine.MainSub.WorldPosition, boss.WorldPosition);
+                        float distanceFactor = Math.Min(dist / 10000.0f, 1.0f);
                         int projectileAmount = Rand.Range(3, 6);
-                        float spread = MathHelper.ToRadians(Rand.Range(20.0f, 180.0f));
+                        //more concentrated shots the further the sub is
+                        float spread = MathHelper.ToRadians(Rand.Range(20.0f, 180.0f)) * Math.Max(1.0f - distanceFactor, 0.2f);
                         for (int i = 0; i < projectileAmount; i++)
                         {
                             int index = i;
@@ -218,13 +221,13 @@ namespace Barotrauma
                                 }
                                 it.body.SetTransform(it.SimPosition, angle);
                                 it.UpdateTransform();
-                                projectile.Use();
+                                //faster launch velocity the further the sub is
+                                projectile.Use(launchImpulseModifier: MathHelper.Lerp(0, 5, distanceFactor));
                             });
                         }
 
-                        float dist = Vector2.Distance(Submarine.MainSub.WorldPosition, boss.WorldPosition);
                         //the closer the sub is, more likely it is to shoot frequently
-                        float shortIntervalProbability = MathHelper.Lerp(0.9f, 0.05f, dist / 15000.0f);
+                        float shortIntervalProbability = MathHelper.Lerp(0.9f, 0.05f, distanceFactor);
                         if (Rand.Range(0.0f, 1.0f) < shortIntervalProbability)
                         {
                             projectileTimer = Rand.Range(3.0f, 5.0f);

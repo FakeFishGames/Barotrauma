@@ -27,6 +27,15 @@ namespace Barotrauma
                     turrets.Add(turret);
                     // Set false, because we manage the turrets in the Update method.
                     turret.AutoOperate = false;
+                    // Set to full condition, because items don't work when they are broken.
+                    turret.Item.Condition = turret.Item.MaxCondition;
+                    foreach (MapEntity linkedEntity in turret.Item.linkedTo)
+                    {
+                        if (linkedEntity is Item linkedItem)
+                        {
+                            linkedItem.Condition = linkedItem.MaxCondition;
+                        }
+                    }
                 }
             }
             LoadAllTurrets();
@@ -264,27 +273,52 @@ namespace Barotrauma
                 }
             }
             destroyedOrgans.ForEach(o => spawnOrgans.Remove(o));
-            bool someoneNearby = false;
+            bool isSomeoneNearby = false;
             float minDist = Sonar.DefaultSonarRange * 2.0f;
-            foreach (Submarine submarine in Submarine.Loaded)
+#if SERVER
+            foreach (var client in GameMain.Server.ConnectedClients)
             {
-                if (submarine.Info.Type != SubmarineType.Player) { continue; }
-                if (Vector2.DistanceSquared(submarine.WorldPosition, Submarine.WorldPosition) < minDist * minDist)
+                var spectatePos = client.SpectatePos;
+                if (spectatePos.HasValue)
                 {
-                    someoneNearby = true;
-                    break;
+                    if (IsCloseEnough(spectatePos.Value, minDist))
+                    {
+                        isSomeoneNearby = true;
+                        break;
+                    }
                 }
             }
-            foreach (Character c in Character.CharacterList)
+#else
+            if (IsCloseEnough(GameMain.GameScreen.Cam.Position, minDist))
             {
-                if (c != Character.Controlled && !c.IsRemotePlayer) { continue; }
-                if (Vector2.DistanceSquared(c.WorldPosition, Submarine.WorldPosition) < minDist * minDist)
+                isSomeoneNearby = true;
+            }
+#endif
+            if (!isSomeoneNearby)
+            {
+                foreach (Submarine submarine in Submarine.Loaded)
                 {
-                    someoneNearby = true;
-                    break;
+                    if (submarine.Info.Type != SubmarineType.Player) { continue; }
+                    if (IsCloseEnough(submarine.WorldPosition, minDist))
+                    {
+                        isSomeoneNearby = true;
+                        break;
+                    }
                 }
             }
-            if (!someoneNearby) { return; }
+            if (!isSomeoneNearby)
+            {
+                foreach (Character c in Character.CharacterList)
+                {
+                    if (!c.IsPlayer && !c.IsOnPlayerTeam) { continue; }
+                    if (IsCloseEnough(c.WorldPosition, minDist))
+                    {
+                        isSomeoneNearby = true;
+                        break;
+                    }
+                }
+            }
+            if (!isSomeoneNearby) { return; }
             OperateTurrets(deltaTime, Config.Entity);
             if (!IsClient)
             {
@@ -292,6 +326,7 @@ namespace Barotrauma
                 UpdateReinforcements(deltaTime);
             }
         }
+        private bool IsCloseEnough(Vector2 targetPos, float minDist) => Vector2.DistanceSquared(targetPos, Submarine.WorldPosition) < minDist * minDist;
 
         private void SpawnInitialCells()
         {

@@ -147,10 +147,7 @@ namespace Barotrauma
                     ISpatialEntity spawnPoint = SpawnAction.GetSpawnPos(
                          SpawnAction.SpawnLocationType.Outpost, SpawnType.Human | SpawnType.Enemy,
                          moduleFlags, spawnPointTags, element.GetAttributeBool("asfaraspossible", false));
-                    if (spawnPoint == null)
-                    {
-                        spawnPoint = submarine.GetHulls(alsoFromConnectedSubs: false).GetRandomUnsynced();
-                    }
+                    spawnPoint ??= submarine.GetHulls(alsoFromConnectedSubs: false).GetRandomUnsynced();
                     Vector2 spawnPos = spawnPoint.WorldPosition;
                     if (spawnPoint is WayPoint wp && wp.CurrentHull != null && wp.CurrentHull.Rect.Width > 100)
                     {
@@ -189,7 +186,12 @@ namespace Barotrauma
 
                     if (element.Attribute("identifier") != null && element.Attribute("from") != null)
                     {
-                        HumanPrefab humanPrefab = GetHumanPrefabFromElement(element);
+                        HumanPrefab humanPrefab = GetHumanPrefabFromElement(element); 
+                        if (humanPrefab == null)
+                        {
+                            DebugConsole.ThrowError($"Couldn't spawn a human character for abandoned outpost mission: human prefab \"{element.GetAttributeString("identifier", string.Empty)}\" not found");
+                            continue;
+                        }
                         for (int i = 0; i < count; i++)
                         {
                             LoadHuman(humanPrefab, element, submarine);
@@ -201,7 +203,7 @@ namespace Barotrauma
                         var characterPrefab = CharacterPrefab.FindBySpeciesName(speciesName);
                         if (characterPrefab == null)
                         {
-                            DebugConsole.ThrowError("Couldn't spawn a character for abandoned outpost mission: character prefab \"" + speciesName + "\" not found");
+                            DebugConsole.ThrowError($"Couldn't spawn a character for abandoned outpost mission: character prefab \"{speciesName}\" not found");
                             continue;
                         }
                         for (int i = 0; i < count; i++)
@@ -223,10 +225,7 @@ namespace Barotrauma
                 moduleFlags ?? humanPrefab.GetModuleFlags(),
                 spawnPointTags ?? humanPrefab.GetSpawnPointTags(),
                 element.GetAttributeBool("asfaraspossible", false));
-            if (spawnPos == null)
-            {
-                spawnPos = submarine.GetHulls(alsoFromConnectedSubs: false).GetRandomUnsynced();
-            }
+            spawnPos ??= submarine.GetHulls(alsoFromConnectedSubs: false).GetRandomUnsynced();
 
             bool requiresRescue = element.GetAttributeBool("requirerescue", false);
             var teamId = element.GetAttributeEnum("teamid", requiresRescue ? CharacterTeamType.FriendlyNPC : CharacterTeamType.None);
@@ -255,6 +254,13 @@ namespace Barotrauma
                 }
 #endif
             }
+            else if (TimesAttempted > 0 && spawnedCharacter.AIController is HumanAIController humanAi)
+            {
+                var order = OrderPrefab.Prefabs["fightintruders"]
+                    .CreateInstance(OrderPrefab.OrderTargetType.Entity, orderGiver: spawnedCharacter)
+                    .WithManualPriority(CharacterInfo.HighestManualOrderPriority);
+                spawnedCharacter.SetOrder(order, isNewOrder: true, speak: false);
+            }
 
             if (element.GetAttributeBool("requirekill", false))
             {
@@ -267,10 +273,7 @@ namespace Barotrauma
             Identifier[] moduleFlags = element.GetAttributeIdentifierArray("moduleflags", null);
             Identifier[] spawnPointTags = element.GetAttributeIdentifierArray("spawnpointtags", null);
             ISpatialEntity spawnPos = SpawnAction.GetSpawnPos(SpawnAction.SpawnLocationType.Outpost, SpawnType.Enemy, moduleFlags, spawnPointTags, element.GetAttributeBool("asfaraspossible", false));
-            if (spawnPos == null)
-            {
-                spawnPos = submarine.GetHulls(alsoFromConnectedSubs: false).GetRandomUnsynced();
-            }
+            spawnPos ??= submarine.GetHulls(alsoFromConnectedSubs: false).GetRandomUnsynced();
             Character spawnedCharacter = Character.Create(monsterPrefab.Identifier, spawnPos.WorldPosition, ToolBox.RandomSeed(8), createNetworkEvent: false);
             characters.Add(spawnedCharacter);
             if (element.GetAttributeBool("requirekill", false))

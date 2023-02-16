@@ -32,10 +32,28 @@ namespace Barotrauma
             return ToolBox.GradientLerp(t, GUIStyle.Green, GUIStyle.Orange, GUIStyle.Red);
         }
 
+        /// <summary>
+        /// Returns the amount of marks you get from the reward (e.g. "3,000 mk")
+        /// </summary>
+        protected LocalizedString GetRewardAmountText(Submarine sub)
+        {
+            int baseReward = GetReward(sub);
+            int finalReward = GetFinalReward(sub);
+            string rewardAmountText = string.Format(CultureInfo.InvariantCulture, "{0:N0}", baseReward);
+            if (finalReward > baseReward)
+            {
+                rewardAmountText += $" + {string.Format(CultureInfo.InvariantCulture, "{0:N0}", finalReward - baseReward)}";
+            }
+            return TextManager.GetWithVariable("currencyformat", "[credits]", rewardAmountText);
+        }
+
+        /// <summary>
+        /// Returns the full reward text of the mission (e.g. "Reward: 2,000 mk" or "Reward: 500 mk x 2 (out of max 5) = 1,000 mk")
+        /// </summary>
         public virtual RichString GetMissionRewardText(Submarine sub)
         {
-            LocalizedString rewardText = TextManager.GetWithVariable("currencyformat", "[credits]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", GetReward(sub)));
-            return RichString.Rich(TextManager.GetWithVariable("missionreward", "[reward]", "‖color:gui.orange‖"+rewardText+"‖end‖"));
+            LocalizedString rewardText = GetRewardAmountText(sub);
+            return RichString.Rich(TextManager.GetWithVariable("missionreward", "[reward]", "‖color:gui.orange‖" + rewardText + "‖end‖"));
         }
 
         public RichString GetReputationRewardText()
@@ -43,27 +61,30 @@ namespace Barotrauma
             List<LocalizedString> reputationRewardTexts = new List<LocalizedString>();
             foreach (var reputationReward in ReputationRewards)
             {
-                FactionPrefab targetFaction;
+                FactionPrefab targetFactionPrefab;
                 if (reputationReward.Key == "location" )
                 {
-                    targetFaction = OriginLocation.Faction?.Prefab;
+                    targetFactionPrefab = OriginLocation.Faction?.Prefab;
                 }
                 else
                 {
-                    FactionPrefab.Prefabs.TryGet(reputationReward.Key, out targetFaction);
+                    FactionPrefab.Prefabs.TryGet(reputationReward.Key, out targetFactionPrefab);
+                }         
+                
+                if (targetFactionPrefab == null)
+                {
+                    return string.Empty;
                 }
 
-                LocalizedString name;
-                if (targetFaction != null)
+                float totalReputationChange = reputationReward.Value;
+                if (GameMain.GameSession?.Campaign?.Factions.Find(f => f.Prefab == targetFactionPrefab) is Faction faction)
                 {
-                    name = $"‖color:{XMLExtensions.ToStringHex(targetFaction.IconColor)}‖{targetFaction.Name}‖end‖";
+                    totalReputationChange = reputationReward.Value * faction.Reputation.GetReputationChangeMultiplier(reputationReward.Value);
                 }
-                else
-                {
-                    name = TextManager.Get(reputationReward.Key);
-                }
-                float normalizedValue = MathUtils.InverseLerp(-100.0f, 100.0f, reputationReward.Value);
-                string formattedValue = ((int)reputationReward.Value).ToString("+#;-#;0"); //force plus sign for positive numbers
+
+                LocalizedString name = $"‖color:{XMLExtensions.ToStringHex(targetFactionPrefab.IconColor)}‖{targetFactionPrefab.Name}‖end‖";
+                float normalizedValue = MathUtils.InverseLerp(-100.0f, 100.0f, totalReputationChange);
+                string formattedValue = ((int)Math.Round(totalReputationChange)).ToString("+#;-#;0"); //force plus sign for positive numbers
                 LocalizedString rewardText = TextManager.GetWithVariables(
                     "reputationformat",
                     ("[reputationname]", name),

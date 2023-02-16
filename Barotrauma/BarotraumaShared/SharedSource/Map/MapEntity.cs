@@ -59,7 +59,24 @@ namespace Barotrauma
         //the position and dimensions of the entity
         protected Rectangle rect;
 
-        public bool ExternalHighlight = false;
+        protected static readonly HashSet<MapEntity> highlightedEntities = new HashSet<MapEntity>();
+
+        public static IEnumerable<MapEntity> HighlightedEntities => highlightedEntities;
+
+
+        private bool externalHighlight = false;
+        public bool ExternalHighlight
+        {
+            get { return externalHighlight; }
+            set
+            {
+                if (value != externalHighlight)
+                {
+                    externalHighlight = value;
+                    CheckIsHighlighted();
+                }
+            }
+        }
 
         //is the mouse inside the rect
         private bool isHighlighted;
@@ -67,7 +84,14 @@ namespace Barotrauma
         public bool IsHighlighted
         {
             get { return isHighlighted || ExternalHighlight; }
-            set { isHighlighted = value; }
+            set 
+            { 
+                if (value != IsHighlighted)
+                {
+                    isHighlighted = value; 
+                    CheckIsHighlighted();
+                }
+            }
         }
 
         public virtual Rectangle Rect
@@ -362,6 +386,30 @@ namespace Barotrauma
             return true;
         }
 
+        protected virtual void CheckIsHighlighted()
+        {
+            if (IsHighlighted || ExternalHighlight)
+            {
+                highlightedEntities.Add(this);
+            }
+            else
+            {
+                highlightedEntities.Remove(this);
+            }
+        }
+
+        private static readonly List<MapEntity> tempHighlightedEntities = new List<MapEntity>();
+        public static void ClearHighlightedEntities()
+        {
+            tempHighlightedEntities.Clear();
+            tempHighlightedEntities.AddRange(highlightedEntities);
+            foreach (var entity in tempHighlightedEntities)
+            {
+                entity.IsHighlighted = false;
+            }
+        }
+
+
         public abstract MapEntity Clone();
 
         public static List<MapEntity> Clone(List<MapEntity> entitiesToClone)
@@ -649,6 +697,9 @@ namespace Barotrauma
             List<MapEntity> entities = new List<MapEntity>();
             foreach (var element in parentElement.Elements())
             {
+#if CLIENT
+                GameMain.GameSession?.Campaign?.ThrowIfStartRoundCancellationRequested();
+#endif
                 string typeName = element.Name.ToString();
 
                 Type t;

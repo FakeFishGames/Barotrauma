@@ -343,9 +343,10 @@ namespace Barotrauma
             return (Duration == 0.0f) ? LevelWallDamage : LevelWallDamage * deltaTime;
         }
 
-        public float GetItemDamage(float deltaTime)
+        public float GetItemDamage(float deltaTime, float multiplier = 1)
         {
-            return (Duration == 0.0f) ? ItemDamage : ItemDamage * deltaTime;
+            float dmg = ItemDamage * multiplier;
+            return (Duration == 0.0f) ? dmg : dmg * deltaTime;
         }
 
         public float GetTotalDamage(bool includeStructureDamage = false)

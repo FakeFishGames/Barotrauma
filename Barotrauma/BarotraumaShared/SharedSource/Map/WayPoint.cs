@@ -29,7 +29,32 @@ namespace Barotrauma
 
         private HashSet<Identifier> tags;
 
-        public bool isObstructed;
+        public bool IsObstructed;
+
+        public bool IsInWater => CurrentHull == null || CurrentHull.Surface > Position.Y;
+
+        // Waypoints linked to doors are traversable, unless they are obstructed, because we filter them out in the setter of Gap.Open.
+        // The only way to add the open gaps should be by calling OnGapStateSchanged.
+        public bool IsTraversable => !IsObstructed && (openGaps == null || openGaps.Count == 0 || IsInWater);
+
+        private HashSet<Gap> openGaps;
+        /// <summary>
+        /// Only called by a Gap when the state changes.
+        /// So in practice used like an event callback, although technically just a method
+        /// (It would be cleaner to use an actual event in Gap.cs, but event registering and unregistering might cause an extra hassle)
+        /// </summary>
+        public void OnGapStateChanged(bool open, Gap gap)
+        {
+            openGaps ??= new HashSet<Gap>();
+            if (open)
+            {
+                openGaps.Add(gap);
+            }
+            else
+            {
+                openGaps.Remove(gap);
+            }
+        }
 
         private ushort gapId;
         public Gap ConnectedGap
@@ -989,6 +1014,12 @@ namespace Barotrauma
 
         public override void OnMapLoaded()
         {
+            if (Submarine == null)
+            {
+                // Don't try to connect waypoints that are not linked to any submarines to hulls, stairs, gaps etc.
+                // Used to cause weird pathfinding errors on some outpost modules, because the waypoints of the main path or side path got linked to a hull in the outpost.
+                return;
+            }
             InitializeLinks();
             FindHull();
             FindStairs();

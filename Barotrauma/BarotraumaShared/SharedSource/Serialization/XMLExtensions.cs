@@ -1,15 +1,14 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
-using Microsoft.Xna.Framework;
 using File = Barotrauma.IO.File;
 using FileStream = Barotrauma.IO.FileStream;
 using Path = Barotrauma.IO.Path;
@@ -315,7 +314,7 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError($"Error when reading attribute \"{name}\" from {element}!", e);
+                    LogAttributeError(attribute, element, e);
                 }
             }
 
@@ -357,7 +356,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError($"Error when reading attribute \"{name}\" from {element}!", e);
+                LogAttributeError(attribute, element, e);
             }
 
             return val;
@@ -376,7 +375,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError($"Error when reading attribute \"{name}\" from {element}!", e);
+                LogAttributeError(attribute, element, e);
             }
 
             return val;
@@ -395,10 +394,20 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError($"Error when reading attribute \"{name}\" from {element}!", e);
+                LogAttributeError(attribute, element, e);
             }
 
             return val;
+        }
+
+        public static Option<SerializableDateTime> GetAttributeDateTime(
+            this XElement element, string name)
+        {
+            var attribute = element?.GetAttribute(name);
+            if (attribute == null) { return Option<SerializableDateTime>.None(); }
+
+            string attrVal = attribute.Value;
+            return SerializableDateTime.Parse(attrVal);
         }
 
         public static Version GetAttributeVersion(this XElement element, string name, Version defaultValue)
@@ -414,7 +423,7 @@ namespace Barotrauma
             }
             catch (Exception e)
             {
-                DebugConsole.ThrowError($"Error when reading attribute \"{name}\" from {element}!", e);
+                LogAttributeError(attribute, element, e);
             }
 
             return val;
@@ -439,7 +448,7 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError($"Error when reading attribute \"{name}\" from {element}!", e);
+                    LogAttributeError(attribute, element, e);
                 }
             }
 
@@ -464,7 +473,7 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError($"Error when reading attribute \"{name}\" from {element}!", e);
+                    LogAttributeError(attribute, element, e);
                 }
             }
 
@@ -475,9 +484,18 @@ namespace Barotrauma
         {
             var attr = element?.GetAttribute(name);
             if (attr == null) { return defaultValue; }
-            return Enum.TryParse(attr.Value, true, out T result) ? result :
-                   int.TryParse(attr.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out int resultInt) ? Unsafe.As<int, T>(ref resultInt) :
-                   defaultValue;
+
+            if (Enum.TryParse(attr.Value, true, out T result))
+            {
+                return result;
+            }
+            else if (int.TryParse(attr.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out int resultInt))
+            {
+                return Unsafe.As<int, T>(ref resultInt);
+            }
+            DebugConsole.ThrowError($"Error in {attr}! \"{attr}\" is not a valid {typeof(T).Name} value");
+            return default;
+            
         }
 
         public static bool GetAttributeBool(this XElement element, string name, bool defaultValue)
@@ -566,11 +584,24 @@ namespace Barotrauma
                 }
                 catch (Exception e)
                 {
-                    DebugConsole.ThrowError($"Error when reading attribute \"{name}\" from {element}!", e);
+                    LogAttributeError(attribute, element, e);
                 }
             }
 
             return colorValue;
+        }
+
+        private static void LogAttributeError(XAttribute attribute, XElement element, Exception e)
+        {
+            string elementStr = element.ToString();
+            if (elementStr.Length > 500)
+            {
+                DebugConsole.ThrowError($"Error when reading attribute \"{attribute}\"!", e);
+            }
+            else
+            {
+                DebugConsole.ThrowError($"Error when reading attribute \"{attribute.Name}\" from {elementStr}!", e);
+            }
         }
 
 #if CLIENT
@@ -586,9 +617,17 @@ namespace Barotrauma
                 return mouseButton;
             }
             else if (int.TryParse(strValue, NumberStyles.Any, CultureInfo.InvariantCulture, out int mouseButtonInt) &&
-                     (Enum.GetValues(typeof(MouseButton)) as MouseButton[]).Contains((MouseButton)mouseButtonInt))
+                     Enum.GetValues<MouseButton>().Contains((MouseButton)mouseButtonInt))
             {
                 return (MouseButton)mouseButtonInt;
+            }
+            else if (string.Equals(strValue, "LeftMouse", StringComparison.OrdinalIgnoreCase))
+            {
+                return !PlayerInput.MouseButtonsSwapped() ? MouseButton.PrimaryMouse : MouseButton.SecondaryMouse;
+            }
+            else if (string.Equals(strValue, "RightMouse", StringComparison.OrdinalIgnoreCase))
+            {
+                return !PlayerInput.MouseButtonsSwapped() ? MouseButton.SecondaryMouse : MouseButton.PrimaryMouse;
             }
             return defaultValue;
         }

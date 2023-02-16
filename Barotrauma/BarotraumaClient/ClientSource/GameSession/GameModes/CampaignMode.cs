@@ -33,7 +33,7 @@ namespace Barotrauma
             protected set;
         }
 
-        public static CancellationTokenSource StartRoundCancellationToken { get; private set; }
+        private CancellationTokenSource startRoundCancellationToken;
 
         public bool ForceMapUI
         {
@@ -62,10 +62,19 @@ namespace Barotrauma
                 {
                     chatBox.ToggleOpen = wasChatBoxOpen;
                 }
-                if (!value && CampaignUI?.SelectedTab == InteractionType.PurchaseSub)
+                if (!value)
                 {
-                    SubmarinePreview.Close();
+                    switch (CampaignUI?.SelectedTab)
+                    {
+                        case InteractionType.PurchaseSub:
+                            SubmarinePreview.Close();
+                            break;
+                        case InteractionType.MedicalClinic:
+                            CampaignUI.MedicalClinic?.OnDeselected();
+                            break;
+                    }
                 }
+
                 showCampaignUI = value;
             }
         }
@@ -110,12 +119,7 @@ namespace Barotrauma
 
         public static bool AllowedToManageWallets()
         {
-            if (GameMain.Client == null) { return true; }
-
-            return
-                GameMain.Client.HasPermission(ClientPermissions.ManageMoney) ||
-                GameMain.Client.HasPermission(ClientPermissions.ManageCampaign) ||
-                GameMain.Client.IsServerOwner;
+            return AllowedToManageCampaign(ClientPermissions.ManageMoney);
         }
 
         public override void Draw(SpriteBatch spriteBatch)
@@ -247,11 +251,11 @@ namespace Barotrauma
 
             GUI.ClearCursorWait();
 
-            StartRoundCancellationToken = new CancellationTokenSource();
+            startRoundCancellationToken = new CancellationTokenSource();
             var loadTask = Task.Run(async () =>
             {
                 await Task.Yield();
-                Rand.ThreadId = Thread.CurrentThread.ManagedThreadId;
+                Rand.ThreadId = Environment.CurrentManagedThreadId;
                 try
                 {
                     GameMain.GameSession.StartRound(newLevel, mirrorLevel: mirror, startOutpost: GetPredefinedStartOutpost());
@@ -261,7 +265,8 @@ namespace Barotrauma
                     roundSummaryScreen.LoadException = e;
                 }
                 Rand.ThreadId = 0;
-            }, StartRoundCancellationToken.Token);
+                startRoundCancellationToken = null;
+            }, startRoundCancellationToken.Token);
             TaskPool.Add("AsyncCampaignStartRound", loadTask, (t) =>
             {
                 overlayColor = Color.Transparent;
@@ -269,6 +274,21 @@ namespace Barotrauma
             });
 
             return loadTask;
+        }
+
+        public void CancelStartRound()
+        {
+            startRoundCancellationToken?.Cancel();
+        }
+
+        public void ThrowIfStartRoundCancellationRequested()
+        {
+            if (startRoundCancellationToken != null && 
+                startRoundCancellationToken.Token.IsCancellationRequested)
+            {
+                startRoundCancellationToken.Token.ThrowIfCancellationRequested();
+                startRoundCancellationToken = null;
+            }
         }
 
         protected SubmarineInfo GetPredefinedStartOutpost()
@@ -304,7 +324,7 @@ namespace Barotrauma
                     goto default;
                 default:
                     ShowCampaignUI = true;
-                    CampaignUI.SelectTab(npc.CampaignInteractionType, storeIdentifier: npc.MerchantIdentifier);
+                    CampaignUI.SelectTab(npc.CampaignInteractionType, npc);
                     CampaignUI.UpgradeStore?.RequestRefresh();
                     break;
             }

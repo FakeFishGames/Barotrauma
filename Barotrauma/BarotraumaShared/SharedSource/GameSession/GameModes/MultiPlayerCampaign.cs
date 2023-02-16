@@ -194,7 +194,16 @@ namespace Barotrauma
                         }
                         break;
                     case "metadata":
+                        var prevReputations = Factions.ToDictionary(k => k, v => v.Reputation.Value);
                         CampaignMetadata.Load(subElement);
+                        foreach (var faction in Factions)
+                        {
+                            if (!MathUtils.NearlyEqual(prevReputations[faction], faction.Reputation.Value))
+                            {
+                                faction.Reputation.OnReputationValueChanged?.Invoke(faction.Reputation);
+                                Reputation.OnAnyReputationValueChanged.Invoke(faction.Reputation);
+                            }
+                        }
                         break;
                     case "upgrademanager":
                     case "pendingupgrades":

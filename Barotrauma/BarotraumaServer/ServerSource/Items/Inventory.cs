@@ -1,4 +1,5 @@
-﻿using Barotrauma.Items.Components;
+﻿using Barotrauma.Extensions;
+using Barotrauma.Items.Components;
 using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
@@ -19,7 +20,7 @@ namespace Barotrauma
             bool accessible = c.Character.CanAccessInventory(this);
             if (this is CharacterInventory characterInventory && accessible)
             {
-                if (Owner == null || !(Owner is Character ownerCharacter))
+                if (Owner == null || Owner is not Character ownerCharacter)
                 {
                     accessible = false;
                 }
@@ -39,7 +40,7 @@ namespace Barotrauma
                 {
                     foreach (ushort id in newItemIDs[i])
                     {
-                        if (!(Entity.FindEntityByID(id) is Item item)) { continue; }
+                        if (Entity.FindEntityByID(id) is not Item item) { continue; }
                         item.PositionUpdateInterval = 0.0f;
                         if (item.ParentInventory != null && item.ParentInventory != this)
                         {
@@ -94,7 +95,15 @@ namespace Barotrauma
             {
                 foreach (ushort id in newItemIDs[i])
                 {
-                    if (!(Entity.FindEntityByID(id) is Item item) || slots[i].Contains(item)) { continue; }
+                    if (Entity.FindEntityByID(id) is not Item item || slots[i].Contains(item)) { continue; }
+
+                    if (item.GetComponent<Pickable>() is not Pickable pickable ||
+                        (pickable.IsAttached && !pickable.PickingDone) ||
+                        item.AllowedSlots.None())
+                    {
+                        DebugConsole.AddWarning($"Client {c.Name} tried to pick up a non-pickable item \"{item}\" (parent inventory: {item.ParentInventory?.Owner.ToString() ?? "null"})");
+                        continue;
+                    }
 
                     if (GameMain.Server != null)
                     {
@@ -105,7 +114,7 @@ namespace Barotrauma
                             (c.Character == null || item.PreviousParentInventory == null || !c.Character.CanAccessInventory(item.PreviousParentInventory)))
                         {
     #if DEBUG || UNSTABLE
-                            DebugConsole.NewMessage($"Client {c.Name} failed to pick up item \"{item}\" (parent inventory: {(item.ParentInventory?.Owner.ToString() ?? "null")}). No access.", Color.Yellow);
+                            DebugConsole.NewMessage($"Client {c.Name} failed to pick up item \"{item}\" (parent inventory: {item.ParentInventory?.Owner.ToString() ?? "null"}). No access.", Color.Yellow);
     #endif
                             if (item.body != null && !c.PendingPositionUpdates.Contains(item))
                             {

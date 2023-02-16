@@ -150,10 +150,13 @@ namespace Barotrauma
 
                 selectedModules.Clear();
                 //select which module types the outpost should consist of
-                List<Identifier> pendingModuleFlags  =
-                    onlyEntrance ? 
-                    (generationParams.ModuleCounts.FirstOrDefault()?.Identifier.ToEnumerable() ?? Enumerable.Empty<Identifier>()).ToList() :
-                    SelectModules(outpostModules, location, generationParams);
+                List<Identifier> pendingModuleFlags = new List<Identifier>();
+                if (generationParams.ModuleCounts.Any())
+                {
+                    pendingModuleFlags = onlyEntrance ?
+                        generationParams.ModuleCounts[0].Identifier.ToEnumerable().ToList() :
+                        SelectModules(outpostModules, location, generationParams);
+                }
 
                 foreach (Identifier flag in pendingModuleFlags)
                 {
@@ -1446,6 +1449,16 @@ namespace Barotrauma
                 {
                     me.HiddenInGame = 
                         location?.Faction?.Prefab != FactionPrefab.Prefabs[layerAsIdentifier];
+#if CLIENT
+                    //normally this is handled in LightComponent.OnMapLoaded, but this method is called after that
+                    if (me.HiddenInGame && me is Item item)
+                    {
+                        foreach (var lightComponent in item.GetComponents<LightComponent>())
+                        {
+                            lightComponent.Light.Enabled = false;
+                        }
+                    }
+#endif
                 }
             }            
         }

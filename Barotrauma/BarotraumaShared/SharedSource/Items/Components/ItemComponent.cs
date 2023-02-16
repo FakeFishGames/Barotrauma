@@ -125,8 +125,8 @@ namespace Barotrauma.Items.Components
             get { return drawable; }
             set
             {
-                if (value == drawable) return;
-                if (!(this is IDrawableComponent))
+                if (value == drawable) { return; }
+                if (this is not IDrawableComponent)
                 {
                     DebugConsole.ThrowError("Couldn't make \"" + this + "\" drawable (the component doesn't implement the IDrawableComponent interface)");
                     return;
@@ -236,10 +236,7 @@ namespace Barotrauma.Items.Components
             set;
         }
 
-        /// <summary>
-        /// How useful the item is in combat? Used by AI to decide which item it should use as a weapon. For the sake of clarity, use a value between 0 and 100 (not enforced).
-        /// </summary>
-        [Serialize(0f, IsPropertySaveable.No, description: "How useful the item is in combat? Used by AI to decide which item it should use as a weapon. For the sake of clarity, use a value between 0 and 100 (not enforced).")]
+        [Serialize(0f, IsPropertySaveable.No, description: "How useful the item is in combat? Used by AI to decide which item it should use as a weapon. For the sake of clarity, use a value between 0 and 100 (not enforced). Note that there's also a generic BotPriority for all item prefabs.")]
         public float CombatPriority { get; private set; }
 
         /// <summary>
@@ -690,7 +687,7 @@ namespace Barotrauma.Items.Components
 
         public virtual void FlipY(bool relativeToSub) { }
 
-        public bool IsLoaded(Character user, bool checkContainedItems = true) =>
+        public bool IsNotEmpty(Character user, bool checkContainedItems = true) =>
             HasRequiredContainedItems(user, addMessage: false) &&
             (!checkContainedItems || Item.OwnInventory == null || Item.OwnInventory.AllItems.Any(i => i.Condition > 0));
 

@@ -1212,7 +1212,9 @@ namespace Barotrauma
                 RefreshFloorY(ignoreStairs: Stairs == null);
                 if (currentHull.WaterPercentage > 0.001f)
                 {
-                    float waterSurface = ConvertUnits.ToSimUnits(GetSurfaceY());
+                    (float waterSurfaceDisplayUnits, float ceilingDisplayUnits) = GetWaterSurfaceAndCeilingY();
+                    float waterSurfaceY = ConvertUnits.ToSimUnits(waterSurfaceDisplayUnits);
+                    float ceilingY = ConvertUnits.ToSimUnits(ceilingDisplayUnits);
                     if (targetMovement.Y < 0.0f)
                     {
                         Vector2 colliderBottom = GetColliderBottom();
@@ -1222,13 +1224,21 @@ namespace Barotrauma
                         {
                             //set floorY to the position of the floor in the hull below the character
                             var lowerHull = Hull.FindHull(ConvertUnits.ToDisplayUnits(colliderBottom), useWorldCoordinates: false);
-                            if (lowerHull != null) floorY = ConvertUnits.ToSimUnits(lowerHull.Rect.Y - lowerHull.Rect.Height);
+                            if (lowerHull != null)
+                            {
+                                floorY = ConvertUnits.ToSimUnits(lowerHull.Rect.Y - lowerHull.Rect.Height);
+                            }
                         }
                     }
                     float standHeight = HeadPosition ?? TorsoPosition ?? Collider.GetMaxExtent() * 0.5f;
-                    if (Collider.SimPosition.Y < waterSurface && waterSurface - floorY > standHeight * 0.8f)
+                    if (Collider.SimPosition.Y < waterSurfaceY)
                     {
-                        inWater = true;
+                        //too deep to stand up, or not enough room to stand up
+                        if (waterSurfaceY - floorY > standHeight * 0.8f ||
+                            ceilingY - floorY < standHeight * 0.8f)
+                        {
+                            inWater = true;
+                        }
                     }
                 }
             }
@@ -1663,22 +1673,34 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// Get the position of the surface of water at the position of the character, in display units (taking into account connected hulls above the hull the character is in)
+        /// </summary>
         public float GetSurfaceY()
+        {
+            return GetWaterSurfaceAndCeilingY().WaterSurfaceY;
+        }
+
+        /// <summary>
+        /// Get the position of the surface of water and the ceiling (= upper edge of the hull) at the position of the character, in display units (taking into account connected hulls above the hull the character is in).
+        /// </summary>
+        private (float WaterSurfaceY, float CeilingY) GetWaterSurfaceAndCeilingY()
         {
             //check both hulls: the hull whose coordinate space the ragdoll is in, and the hull whose bounds the character's origin actually is inside
             if (currentHull == null || character.CurrentHull == null)
             {
-                return float.PositiveInfinity;
+                return (float.PositiveInfinity, float.PositiveInfinity);
             }
-            
-            float surfacePos = currentHull.Surface;
+
+            float surfaceY = currentHull.Surface;
+            float ceilingY = currentHull.Rect.Y;
             float surfaceThreshold = ConvertUnits.ToDisplayUnits(Collider.SimPosition.Y + 1.0f);
             //if the hull is almost full of water, check if there's a water-filled hull above it
             //and use its water surface instead of the current hull's 
             if (currentHull.Rect.Y - currentHull.Surface < 5.0f)
-            {
-                GetSurfacePos(currentHull, ref surfacePos);
-                void GetSurfacePos(Hull hull, ref float prevSurfacePos)
+            {                
+                GetSurfacePos(currentHull, ref surfaceY, ref ceilingY);
+                void GetSurfacePos(Hull hull, ref float prevSurfacePos, ref float ceilingPos)
                 {
                     if (prevSurfacePos > surfaceThreshold) { return; }
                     foreach (Gap gap in hull.ConnectedGaps)
@@ -1689,6 +1711,7 @@ namespace Barotrauma
                         //if the gap is above us and leads outside, there's no surface to limit the movement
                         if (!gap.IsRoomToRoom && gap.Position.Y > hull.Position.Y)
                         {
+                            ceilingPos += 100000.0f;
                             prevSurfacePos += 100000.0f;
                             return;
                         }
@@ -1697,15 +1720,16 @@ namespace Barotrauma
                         {
                             if (linkedTo is Hull otherHull && otherHull != hull && otherHull != currentHull)
                             {
-                                prevSurfacePos = Math.Max(surfacePos, otherHull.Surface);
-                                GetSurfacePos(otherHull, ref prevSurfacePos);
+                                prevSurfacePos = Math.Max(surfaceY, otherHull.Surface);
+                                ceilingPos = Math.Max(ceilingPos, otherHull.Rect.Y);
+                                GetSurfacePos(otherHull, ref prevSurfacePos, ref ceilingPos);
                                 break;
                             }
                         }
                     }
                 }
             }
-            return surfacePos;            
+            return (surfaceY, ceilingY);            
         }
 
         public void SetPosition(Vector2 simPosition, bool lerp = false, bool ignorePlatforms = true, bool forceMainLimbToCollider = false, bool detachProjectiles = true)

@@ -836,7 +836,7 @@ namespace Barotrauma
                 Identifier eventIdentifier = new Identifier($"{nameof(CreateWalletCrewFrame)}.{character.ID}");
                 campaign.OnMoneyChanged.RegisterOverwriteExisting(eventIdentifier, e =>
                 {
-                    if (!(e.Owner is Some<Character> { Value: var owner }) || owner != character) { return; }
+                    if (!e.Owner.TryUnwrap(out var owner) || owner != character) { return; }
                     SetWalletText(walletBlock, e.Wallet, icon, largeIcon);
                 });
                 registeredEvents.Add(eventIdentifier);
@@ -1786,7 +1786,10 @@ namespace Barotrauma
                 {
                     CurrentSelectMode = GUIListBox.SelectMode.None
                 };
-                sub.Info.CreateSpecsWindow(specsListBox, GUIStyle.Font, includeTitle: false, includeClass: false, includeDescription: true);
+                sub.Info.CreateSpecsWindow(specsListBox, GUIStyle.Font,
+                    includeTitle: false,
+                    includeClass: false,
+                    includeDescription: true);
             }
         }
 

@@ -223,7 +223,7 @@ namespace Barotrauma.Items.Components
                 {
                     UpdateSwingPos(deltaTime, out Vector2 swingPos);
                     hitPos = MathUtils.WrapAnglePi(Math.Min(hitPos + deltaTime * 3f, MathHelper.PiOver4));
-                    ac.HoldItem(deltaTime, item, handlePos, aimPos + swingPos, Vector2.Zero, aim: false, hitPos, holdAngle + hitPos, aimMelee: true);
+                    ac.HoldItem(deltaTime, item, handlePos, aimPos + swingPos, Vector2.Zero, aim: false, hitPos, holdAngle + hitPos + aimAngle, aimMelee: true);
                     if (ac.InWater)
                     {
                         ac.LockFlipping();
@@ -445,7 +445,7 @@ namespace Barotrauma.Items.Components
                             targetItem.Condition / targetItem.MaxCondition,
                             emptyColor: GUIStyle.HealthBarColorLow,
                             fullColor: GUIStyle.HealthBarColorHigh,
-                            textTag: targetItem.Name);
+                            textTag: targetItem.Prefab.ShowNameInHealthBar ? targetItem.Name : string.Empty);
                     }
 #endif
                 }
@@ -472,8 +472,8 @@ namespace Barotrauma.Items.Components
             }
             if (GameMain.NetworkMember is { IsServer: true } server && targetEntity != null)
             {
-                server.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(conditionalActionType, targetItemComponent: null, targetCharacter, targetLimb, targetEntity));
-                server.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(ActionType.OnUse, targetItemComponent: null, targetCharacter, targetLimb, targetEntity));
+                server.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(conditionalActionType, targetItemComponent: null, targetCharacter, targetLimb, useTarget: targetEntity));
+                server.CreateEntityEvent(item, new Item.ApplyStatusEffectEventData(ActionType.OnUse, targetItemComponent: null, targetCharacter, targetLimb, useTarget: targetEntity));
                 serverLogger ??= new System.Text.StringBuilder();
                 serverLogger.Clear();
                 serverLogger.Append($"{picker?.LogName} used {item.Name}");

@@ -302,6 +302,7 @@ namespace Barotrauma
                 UnlockAchievement(causeOfDeath.Killer, "killclown".ToIdentifier());
             }
 
+            // TODO: should we change this? Morbusine used to be the strongest poison. Now Cyanide is strongest.
             if (character.CharacterHealth?.GetAffliction("morbusinepoisoning") != null)
             {
                 UnlockAchievement(causeOfDeath.Killer, "killpoison".ToIdentifier());
@@ -315,6 +316,7 @@ namespace Barotrauma
                 }
                 else
                 {
+                    // TODO: should we change this? Morbusine used to be the strongest poison. Now Cyanide is strongest.
                     if (item.Prefab.Identifier == "morbusine")
                     {
                         UnlockAchievement(causeOfDeath.Killer, "killpoison".ToIdentifier());

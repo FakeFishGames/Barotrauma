@@ -479,7 +479,6 @@ namespace Barotrauma
             hashTask = new Task(() =>
             {
                 hash = Md5Hash.CalculateForString(doc.ToString(), Md5Hash.StringHashOptions.IgnoreWhitespace);
-                Md5Hash.Cache.Add(FilePath, hash, DateTime.UtcNow);
             });
             hashTask.Start();
         }
@@ -532,11 +531,15 @@ namespace Barotrauma
         /// <summary>
         /// Calculated from <see cref="SubmarineElement"/>. Can be used when the sub hasn't been loaded and we can't access <see cref="Submarine.RealWorldCrushDepth"/>.
         /// </summary>
-        public float GetRealWorldCrushDepth()
+        public bool IsCrushDepthDefinedInStructures(out float realWorldCrushDepth)
         {
-            if (SubmarineElement == null) { return Level.DefaultRealWorldCrushDepth; }
+            if (SubmarineElement == null)
+            {
+                realWorldCrushDepth = Level.DefaultRealWorldCrushDepth;
+                return false;
+            }
             bool structureCrushDepthsDefined = false;
-            float realWorldCrushDepth = float.PositiveInfinity;
+            realWorldCrushDepth = float.PositiveInfinity;
             foreach (var structureElement in SubmarineElement.GetChildElements("structure"))
             {
                 string name = structureElement.Attribute("name")?.Value ?? "";
@@ -554,7 +557,7 @@ namespace Barotrauma
             {
                 realWorldCrushDepth = Level.DefaultRealWorldCrushDepth;
             }
-            return realWorldCrushDepth;
+            return structureCrushDepthsDefined;
         }
         public void AddOutpostNPCIdentifierOrTag(Character npc, Identifier idOrTag)
         {
@@ -595,7 +598,6 @@ namespace Barotrauma
             }
 
             SaveUtil.CompressStringToFile(filePath, doc.ToString());
-            Md5Hash.Cache.Remove(filePath);
         }
 
         public static void AddToSavedSubs(SubmarineInfo subInfo)
@@ -776,7 +778,7 @@ namespace Barotrauma
 
             float price = Price;
 
-            if (location.Faction is { } faction && Faction.GetPlayerAffiliationStatus(faction, characterList) is FactionAffiliation.Positive)
+            if (location.Faction is { } faction && Faction.GetPlayerAffiliationStatus(faction) is FactionAffiliation.Positive)
             {
                 price *= 1f - characterList.Max(static c => c.GetStatValue(StatTypes.ShipyardBuyMultiplierAffiliated));
             }

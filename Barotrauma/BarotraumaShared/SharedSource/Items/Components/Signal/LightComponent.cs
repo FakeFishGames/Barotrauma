@@ -94,7 +94,7 @@ namespace Barotrauma.Items.Components
                 if (isOn == value && IsActive == value) { return; }
 
                 IsActive = isOn = value;
-                SetLightSourceState(value);
+                SetLightSourceState(value, value ? lightBrightness : 0.0f);
                 OnStateChanged();
             }
         }
@@ -187,6 +187,15 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize(true, IsPropertySaveable.No, description: "Should the light sprite be drawn on the item using alpha blending, in addition to being rendered in the light map? Can be used to make the light sprite stand out more.")]
+        public bool AlphaBlend
+        {
+            get;
+            set;
+        }
+
+        public float TemporaryFlickerTimer;
+
         public override void Move(Vector2 amount, bool ignoreContacts = false)
         {
 #if CLIENT
@@ -205,7 +214,7 @@ namespace Barotrauma.Items.Components
             {
                 if (base.IsActive == value) { return; }
                 base.IsActive = isOn = value;
-                SetLightSourceState(value);
+                SetLightSourceState(value, value ? lightBrightness : 0.0f);
             }
         }
 
@@ -239,6 +248,7 @@ namespace Barotrauma.Items.Components
             SetLightSourceState(IsActive);
             turret = item.GetComponent<Turret>();
 #if CLIENT
+            Drawable = AlphaBlend && Light.LightSprite != null;
             if (Screen.Selected.IsEditor)
             {
                 OnMapLoaded();
@@ -311,8 +321,10 @@ namespace Barotrauma.Items.Components
                 return;
             }
 
+            TemporaryFlickerTimer -= deltaTime;
+
             //currPowerConsumption = powerConsumption;
-            if (Rand.Range(0.0f, 1.0f) < 0.05f && Voltage < Rand.Range(0.0f, MinVoltage))
+            if (Rand.Range(0.0f, 1.0f) < 0.05f && (Voltage < Rand.Range(0.0f, MinVoltage) || TemporaryFlickerTimer > 0.0f))
             {
 #if CLIENT
                 if (Voltage > 0.1f)
@@ -364,7 +376,7 @@ namespace Barotrauma.Items.Components
                     {
                         LightColor = XMLExtensions.ParseColor(signal.value, false);
 #if CLIENT
-                        SetLightSourceState(Light.Enabled);
+                        SetLightSourceState(Light.Enabled, lightBrightness);
 #endif
                         prevColorSignal = signal.value;
                     }

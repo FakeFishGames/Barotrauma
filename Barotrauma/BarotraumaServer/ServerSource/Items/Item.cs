@@ -153,25 +153,27 @@ namespace Barotrauma
                     (components[containerIndex] as ItemContainer).Inventory.ServerEventRead(msg, c);
                     break;
                 case EventType.Treatment:
-                    if (c.Character == null || !c.Character.CanInteractWith(this)) return;
+                    if (c.Character == null || !c.Character.CanInteractWith(this)) { return; }
 
                     UInt16 characterID = msg.ReadUInt16();
                     byte limbIndex = msg.ReadByte();
 
-                    Character targetCharacter = FindEntityByID(characterID) as Character;
-                    if (targetCharacter == null) break;
-                    if (targetCharacter != c.Character && c.Character.SelectedCharacter != targetCharacter) break;
+                    if (HealingCooldown.IsOnCooldown(c)) { return; }
+                    if (FindEntityByID(characterID) is not Character targetCharacter) { break; }
+                    if (targetCharacter != c.Character && c.Character.SelectedCharacter != targetCharacter) { break; }
+
+                    HealingCooldown.SetCooldown(c);
 
                     Limb targetLimb = limbIndex < targetCharacter.AnimController.Limbs.Length ? targetCharacter.AnimController.Limbs[limbIndex] : null;
 
-                    if (ContainedItems == null || ContainedItems.All(i => i == null))
+                    if (ContainedItems == null || ContainedItems.All(static i => i == null))
                     {
-                        GameServer.Log(GameServer.CharacterLogName(c.Character) + " used item " + Name, ServerLog.MessageType.ItemInteraction);
+                        GameServer.Log($"{GameServer.CharacterLogName(c.Character)} used item {Name}", ServerLog.MessageType.ItemInteraction);
                     }
                     else
                     {
                         GameServer.Log(
-                            GameServer.CharacterLogName(c.Character) + " used item " + Name + " (contained items: " + string.Join(", ", ContainedItems.Select(i => i.Name)) + ")",
+                            $"{GameServer.CharacterLogName(c.Character)} used item {Name} (contained items: {string.Join(", ", ContainedItems.Select(i => i.Name))})",
                             ServerLog.MessageType.ItemInteraction);
                     }
 

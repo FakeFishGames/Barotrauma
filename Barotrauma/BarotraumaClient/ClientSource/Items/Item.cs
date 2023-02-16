@@ -23,7 +23,21 @@ namespace Barotrauma
 
         private readonly List<SerializableEntityEditor> activeEditors = new List<SerializableEntityEditor>();
 
-        public GUIComponentStyle IconStyle { get; private set; } = null;
+
+        private GUIComponentStyle iconStyle;
+        public GUIComponentStyle IconStyle 
+        { 
+            get { return iconStyle; }
+            private set
+            {
+                if (IconStyle != value)
+                {
+                    iconStyle = value;
+                    CheckIsHighlighted();
+                }
+            }
+        }
+
         partial void AssignCampaignInteractionTypeProjSpecific(CampaignMode.InteractionType interactionType)
         {
             if (interactionType == CampaignMode.InteractionType.None)
@@ -143,6 +157,18 @@ namespace Barotrauma
             return color;
         }
 
+        protected override void CheckIsHighlighted()
+        {
+            if (IsHighlighted || ExternalHighlight || IconStyle != null)
+            {
+                highlightedEntities.Add(this);
+            }
+            else
+            {
+                highlightedEntities.Remove(this);
+            }
+        }
+
         public Color GetInventoryIconColor()
         {
             Color color = InventoryIconColor;
@@ -203,7 +229,7 @@ namespace Barotrauma
             }
         }
 
-        partial void InitProjSpecific()
+        public void InitSpriteStates()
         {
             Prefab.Sprite?.EnsureLazyLoaded();
             Prefab.InventoryIcon?.EnsureLazyLoaded();
@@ -211,7 +237,6 @@ namespace Barotrauma
             {
                 brokenSprite.Sprite.EnsureLazyLoaded();
             }
-
             foreach (var decorativeSprite in Prefab.DecorativeSprites)
             {
                 decorativeSprite.Sprite.EnsureLazyLoaded();
@@ -219,6 +244,11 @@ namespace Barotrauma
             }
             SetActiveSprite();
             UpdateSpriteStates(0.0f);
+        }
+
+        partial void InitProjSpecific()
+        {
+            InitSpriteStates();
         }
 
         private Rectangle? cachedVisibleExtents;
@@ -729,7 +759,7 @@ namespace Barotrauma
             if (!lClick && !rClick) { return; }
 
             Vector2 position = cam.ScreenToWorld(PlayerInput.MousePosition);
-            var otherEntity = mapEntityList.FirstOrDefault(e => e != this && e.IsHighlighted && e.IsMouseOn(position));
+            var otherEntity = highlightedEntities.FirstOrDefault(e => e != this && e.IsMouseOn(position));
             if (otherEntity != null)
             {
                 if (linkedTo.Contains(otherEntity))
@@ -1414,7 +1444,7 @@ namespace Barotrauma
 
                         if (targetComponent == null)
                         {
-                            ApplyStatusEffects(actionType, 1.0f, targetCharacter, targetLimb, useTarget, true, worldPosition: worldPosition);
+                            ApplyStatusEffects(actionType, 1.0f, targetCharacter, targetLimb, useTarget, isNetworkEvent: true, worldPosition: worldPosition);
                         }
                         else
                         {

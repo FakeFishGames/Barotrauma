@@ -234,6 +234,12 @@ namespace Barotrauma
                     if (!string.IsNullOrEmpty(target.ExistingItemTag))
                     {
                         var suitableItems = Item.ItemList.Where(it => it.HasTag(target.ExistingItemTag));
+                        if (GameMain.GameSession?.Missions != null)
+                        {
+                            //don't choose an item that was already chosen as the target for another salvage mission
+                            suitableItems = suitableItems.Where(it =>
+                                GameMain.GameSession.Missions.None(m => m != this && m is SalvageMission salvageMission && salvageMission.targets.Any(t => t.Item == it)));
+                        }
                         switch (target.SpawnPositionType)
                         {
                             case Level.PositionType.Cave:

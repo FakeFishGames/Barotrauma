@@ -41,6 +41,11 @@ namespace Barotrauma
 
         public bool IsEnterable { get; private set; }
 
+        /// <summary>
+        /// Can this location type be used in the random, non-campaign levels that don't take place in any specific zone
+        /// </summary>
+        public bool AllowInRandomLevels { get; private set; }
+
         public bool UsePortraitInRandomLoadingScreens
         {
             get;
@@ -115,6 +120,7 @@ namespace Barotrauma
             UsePortraitInRandomLoadingScreens = element.GetAttributeBool(nameof(UsePortraitInRandomLoadingScreens), true);
             HasOutpost = element.GetAttributeBool("hasoutpost", true);
             IsEnterable = element.GetAttributeBool("isenterable", HasOutpost);
+            AllowInRandomLevels = element.GetAttributeBool(nameof(AllowInRandomLevels), true);
 
             ShowSonarMarker = element.GetAttributeBool("showsonarmarker", true);
 
@@ -263,13 +269,30 @@ namespace Barotrauma
             return names[rand.Next() % names.Length];
         }
 
-        public static LocationType Random(Random rand, int? zone = null, bool requireOutpost = false)
+        public static LocationType Random(Random rand, int? zone = null, bool requireOutpost = false, Func<LocationType, bool> predicate = null)
         {
             Debug.Assert(Prefabs.Any(), "LocationType.list.Count == 0, you probably need to initialize LocationTypes");
 
             LocationType[] allowedLocationTypes =
-                Prefabs.Where(lt => (!zone.HasValue || lt.CommonnessPerZone.ContainsKey(zone.Value)) && (!requireOutpost || lt.HasOutpost))
+                Prefabs.Where(lt =>
+                    (predicate == null || predicate(lt)) && IsValid(lt))
                     .OrderBy(p => p.UintIdentifier).ToArray();
+
+            bool IsValid(LocationType lt)
+            {
+                if (requireOutpost && !lt.HasOutpost) { return false; }
+                if (zone.HasValue)
+                {
+                    if (!lt.CommonnessPerZone.ContainsKey(zone.Value)) { return false; }
+                }
+                //if zone is not defined, this is a "random" (non-campaign) level
+                //-> don't choose location types that aren't allowed in those
+                else if (!lt.AllowInRandomLevels)
+                {
+                    return false;
+                }
+                return true;
+            }
 
             if (allowedLocationTypes.Length == 0)
             {

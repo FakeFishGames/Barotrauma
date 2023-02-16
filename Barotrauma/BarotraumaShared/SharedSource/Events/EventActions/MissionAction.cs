@@ -1,5 +1,4 @@
 using Barotrauma.Extensions;
-using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -8,7 +7,7 @@ using System.Linq;
 
 namespace Barotrauma
 {
-    class MissionAction : EventAction
+    partial class MissionAction : EventAction
     {
         [Serialize("", IsPropertySaveable.Yes)]
         public Identifier MissionIdentifier { get; set; }
@@ -106,7 +105,8 @@ namespace Barotrauma
                             IconColor = unlockedMission.Prefab.IconColor
                         };
 #else
-                        NotifyMissionUnlock(unlockedMission, unlockLocation);
+                        missionsUnlockedThisRound.Add(unlockedMission);
+                        NotifyMissionUnlock(unlockedMission);
 #endif
                     }
                 }
@@ -186,21 +186,5 @@ namespace Barotrauma
         {
             return $"{ToolBox.GetDebugSymbol(isFinished)} {nameof(MissionAction)} -> ({(MissionIdentifier.IsEmpty ? MissionTag : MissionIdentifier)})";
         }
-
-#if SERVER
-        private static void NotifyMissionUnlock(Mission mission, Location unlockLocation)
-        {
-            foreach (Client client in GameMain.Server.ConnectedClients)
-            {
-                IWriteMessage outmsg = new WriteOnlyMessage();
-                outmsg.WriteByte((byte)ServerPacketHeader.EVENTACTION);
-                outmsg.WriteByte((byte)EventManager.NetworkEventType.MISSION);
-                outmsg.WriteIdentifier(mission.Prefab.Identifier);
-                outmsg.WriteInt32(GameMain.GameSession?.Map?.Locations.IndexOf(unlockLocation) ?? -1);
-                outmsg.WriteString(mission.Name.Value);
-                GameMain.Server.ServerPeer.Send(outmsg, client.Connection, DeliveryMethod.Reliable);
-            }
-        }
-#endif
     }
 }

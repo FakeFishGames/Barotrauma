@@ -70,13 +70,13 @@ namespace Barotrauma
         public List<Location> Locations { get; private set; }
 
         private readonly List<Location> locationsDiscovered = new List<Location>();
-        private readonly List<Location> outpostsVisited = new List<Location>();
+        private readonly List<Location> locationsVisited = new List<Location>();
 
         public List<LocationConnection> Connections { get; private set; }
 
         public Radiation Radiation;
 
-        private bool wasLocationDiscoveryOrderTracked = true;
+        private bool trackedLocationDiscoveryAndVisitOrder = true;
 
         public Map(CampaignSettings settings)
         {
@@ -939,6 +939,12 @@ namespace Barotrauma
         
         public void MoveToNextLocation()
         {
+            if (SelectedLocation == null && Level.Loaded?.EndLocation != null)
+            {
+                //force the location at the end of the level to be selected, even if it's been deselect on the map
+                //(e.g. due to returning to an empty location the beginning of the level during the round)
+                SelectLocation(Level.Loaded.EndLocation);
+            }
             if (SelectedConnection == null)
             {
                 if (!endLocations.Contains(CurrentLocation))
@@ -1043,12 +1049,24 @@ namespace Barotrauma
             Location prevSelected = SelectedLocation;
             SelectedLocation = Locations[index];
             var currentDisplayLocation = GameMain.GameSession?.Campaign?.GetCurrentDisplayLocation();
-            SelectedConnection = 
-                Connections.Find(c => c.Locations.Contains(currentDisplayLocation) && c.Locations.Contains(SelectedLocation)) ??
-                Connections.Find(c => c.Locations.Contains(CurrentLocation) && c.Locations.Contains(SelectedLocation));
+            if (currentDisplayLocation == SelectedLocation)
+            {
+                SelectedConnection = Connections.Find(c => c.Locations.Contains(CurrentLocation) && c.Locations.Contains(SelectedLocation));
+            }
+            else
+            {
+                SelectedConnection =
+                    Connections.Find(c => c.Locations.Contains(currentDisplayLocation) && c.Locations.Contains(SelectedLocation)) ??
+                    Connections.Find(c => c.Locations.Contains(CurrentLocation) && c.Locations.Contains(SelectedLocation));
+            }
             if (SelectedConnection?.Locked ?? false)
             {
-                DebugConsole.ThrowError("A locked connection was selected - this should not be possible.\n" + Environment.StackTrace.CleanupStackTrace());
+                string errorMsg =
+                    $"A locked connection was selected ({SelectedConnection.Locations[0].Name} -> {SelectedConnection.Locations[1].Name}." +
+                    $" Current location: {CurrentLocation}, current display location: {currentDisplayLocation}).\n"
+                    + Environment.StackTrace.CleanupStackTrace();
+                GameAnalyticsManager.AddErrorEventOnce("MapSelectLocation:LockedConnectionSelected", GameAnalyticsManager.ErrorSeverity.Error, errorMsg);
+                DebugConsole.ThrowError(errorMsg);
             }
             if (prevSelected != SelectedLocation)
             {
@@ -1266,51 +1284,6 @@ namespace Barotrauma
             return false;
         }
 
-        public int DistanceToClosestLocationWithOutpost(Location startingLocation, out Location endingLocation)
-        {
-            if (startingLocation.Type.HasOutpost)
-            {
-                endingLocation = startingLocation;
-                return 0;
-            }
-
-            int iterations = 0;
-            int distance = 0;
-            endingLocation = null;
-
-            List<Location> testedLocations = new List<Location>();
-            List<Location> locationsToTest = new List<Location> { startingLocation };
-
-            while (endingLocation == null && iterations < 100)
-            {
-                List<Location> nextTestingBatch = new List<Location>();
-                for (int i = 0; i < locationsToTest.Count; i++)
-                {
-                    Location testLocation = locationsToTest[i];
-                    for (int j = 0; j < testLocation.Connections.Count; j++)
-                    {
-                        Location potentialOutpost = testLocation.Connections[j].OtherLocation(testLocation);
-                        if (potentialOutpost.Type.HasOutpost)
-                        {
-                            distance = iterations + 1;
-                            endingLocation = potentialOutpost;
-                        }
-                        else if (!testedLocations.Contains(potentialOutpost))
-                        {
-                            nextTestingBatch.Add(potentialOutpost);
-                        }
-                    }
-
-                    testedLocations.Add(testLocation);
-                }
-
-                locationsToTest = nextTestingBatch;
-                iterations++;
-            }
-
-            return distance;
-        }
-
         private bool ChangeLocationType(CampaignMode campaign, Location location, LocationTypeChange change)
         {
             string prevName = location.Name;
@@ -1320,6 +1293,8 @@ namespace Barotrauma
                 DebugConsole.ThrowError($"Failed to change the type of the location \"{location.Name}\". Location type \"{change.ChangeToType}\" not found.");
                 return false;
             }
+
+            if (location.LocationTypeChangesBlocked) { return false; }
 
             if (newType.OutpostTeam != location.Type.OutpostTeam ||
                 newType.HasOutpost != location.Type.HasOutpost)
@@ -1337,6 +1312,50 @@ namespace Barotrauma
             location.PendingLocationTypeChange = null;
             return true;
         }
+
+        public static bool LocationOrConnectionWithinDistance(Location startLocation, int maxDistance, Func<Location, bool> criteria, Func<LocationConnection, bool> connectionCriteria = null)
+        {
+            return GetDistanceToClosestLocationOrConnection(startLocation, maxDistance, criteria, connectionCriteria) <= maxDistance;
+        }
+
+        /// <summary>
+        /// Get the shortest distance from the start location to another location that satisfies the specified criteria.
+        /// </summary>
+        /// <returns>The distance to a matching location, or int.MaxValue if none are found.</returns>
+        public static int GetDistanceToClosestLocationOrConnection(Location startLocation, int maxDistance, Func<Location, bool> criteria, Func<LocationConnection, bool> connectionCriteria = null)
+        {
+            int distance = 0;
+            var locationsToTest = new List<Location>() { startLocation };
+            var nextBatchToTest = new HashSet<Location>();
+            var checkedLocations = new HashSet<Location>();
+            while (locationsToTest.Any())
+            {
+                foreach (var location in locationsToTest)
+                {
+                    checkedLocations.Add(location);
+                    if (criteria(location)) { return distance; }
+                    foreach (var connection in location.Connections)
+                    {
+                        if (connectionCriteria != null && connectionCriteria(connection))
+                        {
+                            return distance;
+                        }
+                        var otherLocation = connection.OtherLocation(location);
+                        if (!checkedLocations.Contains(otherLocation))
+                        {
+                            nextBatchToTest.Add(otherLocation);
+                        }
+                    }
+                    if (distance > maxDistance) { return int.MaxValue; }
+                }
+                distance++;
+                locationsToTest.Clear();
+                locationsToTest.AddRange(nextBatchToTest);
+                nextBatchToTest.Clear();
+            }
+            return int.MaxValue;
+        }
+
 
         partial void ChangeLocationTypeProjSpecific(Location location, string prevName, LocationTypeChange change);
 
@@ -1356,29 +1375,38 @@ namespace Barotrauma
         public void Visit(Location location)
         {
             if (location is null) { return; }
-            if (!location.HasOutpost()) { return; }
-            if (outpostsVisited.Contains(location)) { return; }
-            outpostsVisited.Add(location);
+            if (locationsVisited.Contains(location)) { return; }
+            locationsVisited.Add(location);
+            RemoveFogOfWarProjSpecific(location);
         }
 
         public void ClearLocationHistory()
         {
             locationsDiscovered.Clear();
-            outpostsVisited.Clear();
+            locationsVisited.Clear();
         }
 
         public int? GetDiscoveryIndex(Location location)
         {
-            if (!wasLocationDiscoveryOrderTracked) { return null; }
+            if (!trackedLocationDiscoveryAndVisitOrder) { return null; }
             if (location is null) { return -1; }
             return locationsDiscovered.IndexOf(location);
         }
 
-        public int? GetVisitIndex(Location location)
+        public int? GetVisitIndex(Location location, bool includeLocationsWithoutOutpost = false)
         {
-            if (!wasLocationDiscoveryOrderTracked) { return null; }
+            if (!trackedLocationDiscoveryAndVisitOrder) { return null; }
             if (location is null) { return -1; }
-            return outpostsVisited.IndexOf(location);
+            int index = locationsVisited.IndexOf(location);
+            if (includeLocationsWithoutOutpost) { return index; }
+            int noOutpostLocations = 0;
+            for (int i = 0; i < index; i++)
+            {
+                if (locationsVisited[i] is not Location l) { continue; }
+                if (l.HasOutpost()) { continue; }
+                noOutpostLocations++;
+            }
+            return index - noOutpostLocations;
         }
 
         public bool IsDiscovered(Location location)
@@ -1386,6 +1414,14 @@ namespace Barotrauma
             if (location is null) { return false; }
             return locationsDiscovered.Contains(location);
         }
+
+        public bool IsVisited(Location location)
+        {
+            if (location is null) { return false; }
+            return locationsVisited.Contains(location);
+        }
+
+        partial void RemoveFogOfWarProjSpecific(Location location);
 
         /// <summary>
         /// Load a previously saved map from an xml element
@@ -1431,11 +1467,13 @@ namespace Barotrauma
                         }
                         location.LoadLocationTypeChange(subElement);
 
-                        // Backwards compatibility
+                        // Backwards compatibility: if the discovery status is defined in the location element,
+                        // the game was saved using when the discovery order still wasn't being tracked
                         if (subElement.GetAttributeBool("discovered", false))
                         {
                             Discover(location);
-                            wasLocationDiscoveryOrderTracked = false;
+                            Visit(location);
+                            trackedLocationDiscoveryAndVisitOrder = false;
                         }
 
                         Identifier locationType = subElement.GetAttributeIdentifier("type", Identifier.Empty);
@@ -1472,32 +1510,45 @@ namespace Barotrauma
                         Radiation = new Radiation(this, generationParams.RadiationParams, subElement);
                         break;
                     case "discovered":
+                        bool trackedVisitedEmptyLocations = subElement.GetAttributeBool("trackedvisitedemptylocations", false);
                         foreach (var childElement in subElement.GetChildElements("location"))
                         {
-                            int index = childElement.GetAttributeInt("i", -1);
-                            if (index < 0) { continue; }
-                            if (Locations[index] is not Location l) { continue; }
-                            Discover(l);
+                            if (GetLocation(childElement) is Location l)
+                            {
+                                Discover(l);
+                                if (!trackedVisitedEmptyLocations)
+                                {
+                                    if (!l.HasOutpost())
+                                    {
+                                        Visit(l);
+                                    }
+                                    trackedLocationDiscoveryAndVisitOrder = false;
+                                }
+                            }
                         }
                         break;
                     case "visited":
                         foreach (var childElement in subElement.GetChildElements("location"))
                         {
-                            int index = childElement.GetAttributeInt("i", -1);
-                            if (index < 0) { continue; }
-                            if (Locations[index] is not Location l) { continue; }
-                            Visit(l);
+                            if (GetLocation(childElement) is Location l)
+                            {
+                                Visit(l);
+                            }
                         }
                         break;
+                }
+
+                Location GetLocation(XElement element)
+                {
+                    int index = element.GetAttributeInt("i", -1);
+                    if (index < 0) { return null; }
+                    return Locations[index];
                 }
             }
 
             void Discover(Location location)
             {
                 this.Discover(location, checkTalents: false);
-#if CLIENT
-                RemoveFogOfWar(location);
-#endif
                 if (furthestDiscoveredLocation == null || location.MapPosition.X > furthestDiscoveredLocation.MapPosition.X)
                 {
                     furthestDiscoveredLocation = location;
@@ -1509,9 +1560,6 @@ namespace Barotrauma
                 location?.InstantiateLoadedMissions(this);
             }
 
-#if RELEASE
-           TODO: MAKE SURE THE VERSION NUMBER BELOW IS CORRECT FOR THE FULL RELEASE (OR WHICHEVER UPDATE WE ADD THE FACTIONS IN)
-#endif
             //backwards compatibility:
             //if the save is from a version prior to the addition of faction-specific outposts, assign factions
             if (version < new Version(1, 0) && Locations.None(l => l.Faction != null || l.SecondaryFaction != null))
@@ -1599,7 +1647,8 @@ namespace Barotrauma
 
             if (locationsDiscovered.Any())
             {
-                var discoveryElement = new XElement("discovered");
+                var discoveryElement = new XElement("discovered",
+                    new XAttribute("trackedvisitedemptylocations", true));
                 foreach (Location location in locationsDiscovered)
                 {
                     int index = Locations.IndexOf(location);
@@ -1609,10 +1658,10 @@ namespace Barotrauma
                 mapElement.Add(discoveryElement);
             }
 
-            if (outpostsVisited.Any())
+            if (locationsVisited.Any())
             {
                 var visitElement = new XElement("visited");
-                foreach (Location location in outpostsVisited)
+                foreach (Location location in locationsVisited)
                 {
                     int index = Locations.IndexOf(location);
                     var locationElement = new XElement("location", new XAttribute("i", index));

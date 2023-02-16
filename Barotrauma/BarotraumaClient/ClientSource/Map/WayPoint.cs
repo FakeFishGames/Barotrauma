@@ -39,7 +39,7 @@ namespace Barotrauma
         {
             Color clr = CurrentHull == null ? Color.DodgerBlue : GUIStyle.Green;
             if (spawnType != SpawnType.Path) { clr = Color.Gray; }
-            if (isObstructed)
+            if (!IsTraversable)
             {
                 clr = Color.Black;
             }
@@ -84,7 +84,7 @@ namespace Barotrauma
                 GUI.DrawLine(spriteBatch,
                     drawPos,
                     new Vector2(e.DrawPosition.X, -e.DrawPosition.Y),
-                    (isObstructed ? Color.Gray : GUIStyle.Green) * 0.7f, width: 5, depth: 0.002f);
+                    (IsTraversable ? GUIStyle.Green : Color.Gray) * 0.7f, width: 5, depth: 0.002f);
             }
             if (ConnectedGap != null)
             {
@@ -175,9 +175,9 @@ namespace Barotrauma
 
                 if (PlayerInput.KeyDown(Keys.Space))
                 {
-                    foreach (MapEntity e in mapEntityList)
+                    foreach (MapEntity e in HighlightedEntities)
                     {
-                        if (!(e is WayPoint) || e == this || !e.IsHighlighted) { continue; }
+                        if (e is not WayPoint || e == this) { continue; }
 
                         if (linkedTo.Contains(e))
                         {

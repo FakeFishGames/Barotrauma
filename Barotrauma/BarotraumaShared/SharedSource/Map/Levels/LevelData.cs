@@ -112,10 +112,9 @@ namespace Barotrauma
                 (int)MathUtils.Round(generationParams.Height, Level.GridCellSize));
         }
 
-        public LevelData(XElement element, float? forceDifficulty = null)
+        public LevelData(XElement element, float? forceDifficulty = null, bool clampDifficultyToBiome = false)
         {
             Seed = element.GetAttributeString("seed", "");
-            Difficulty = forceDifficulty ?? element.GetAttributeFloat("difficulty", 0.0f);
             Size = element.GetAttributePoint("size", new Point(1000));
             Enum.TryParse(element.GetAttributeString("type", "LocationConnection"), out Type);
 
@@ -131,10 +130,7 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError($"Error while loading a level. Could not find level generation params with the ID \"{generationParamsId}\".");
                 GenerationParams = LevelGenerationParams.LevelParams.FirstOrDefault(l => l.Type == Type);
-                if (GenerationParams == null)
-                {
-                    GenerationParams = LevelGenerationParams.LevelParams.First();
-                }
+                GenerationParams ??= LevelGenerationParams.LevelParams.First();
             }
 
             InitialDepth = element.GetAttributeInt("initialdepth", GenerationParams.InitialDepthMin);
@@ -145,6 +141,12 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError($"Error in level data: could not find the biome \"{biomeIdentifier}\".");
                 Biome = Biome.Prefabs.First();
+            }
+
+            Difficulty = forceDifficulty ?? element.GetAttributeFloat("difficulty", 0.0f);
+            if (clampDifficultyToBiome)
+            {
+                Difficulty = MathHelper.Clamp(Difficulty, Biome.MinDifficulty, Biome.AdjustedMaxDifficulty);
             }
 
             string[] prefabNames = element.GetAttributeStringArray("eventhistory", Array.Empty<string>());

@@ -1700,14 +1700,22 @@ namespace Barotrauma
             foreach (VoronoiCell cell in closeCells)
             {
                 bool tooClose = false;
-                foreach (GraphEdge edge in cell.Edges)
-                {                    
-                    if (Vector2.DistanceSquared(edge.Point1, position) < minDistSqr ||
-                        Vector2.DistanceSquared(edge.Point2, position) < minDistSqr ||
-                        MathUtils.LineSegmentToPointDistanceSquared(edge.Point1.ToPoint(), edge.Point2.ToPoint(), position.ToPoint()) < minDistSqr)
+
+                if (cell.IsPointInsideAABB(position, margin: minDistance))
+                {
+                    tooClose = true;
+                }
+                else
+                {
+                    foreach (GraphEdge edge in cell.Edges)
                     {
-                        tooClose = true;
-                        break;
+                        if (Vector2.DistanceSquared(edge.Point1, position) < minDistSqr ||
+                            Vector2.DistanceSquared(edge.Point2, position) < minDistSqr ||
+                            MathUtils.LineSegmentToPointDistanceSquared(edge.Point1.ToPoint(), edge.Point2.ToPoint(), position.ToPoint()) < minDistSqr)
+                        {
+                            tooClose = true;
+                            break;
+                        }
                     }
                 }
                 if (tooClose) { tooCloseCells.Add(cell); }
@@ -3247,7 +3255,8 @@ namespace Barotrauma
             {
                 suitablePositions.RemoveAll(p => !filter(p));
             }
-            if (positionType.HasFlag(PositionType.MainPath) || positionType.HasFlag(PositionType.SidePath))
+            if (positionType.HasFlag(PositionType.MainPath) || positionType.HasFlag(PositionType.SidePath) || positionType.HasFlag(PositionType.Abyss) || 
+                positionType.HasFlag(PositionType.Cave) || positionType.HasFlag(PositionType.AbyssCave))
             {
                 suitablePositions.RemoveAll(p => IsPositionInsideWall(p.Position.ToVector2()));
             }
@@ -3412,8 +3421,7 @@ namespace Barotrauma
                     bool closeEnough = false;
                     foreach (VoronoiCell cell in wall.Cells)
                     {
-                        if (Math.Abs(cell.Center.X - worldPos.X) < (searchDepth + 1) * GridCellSize && 
-                            Math.Abs(cell.Center.Y - worldPos.Y) < (searchDepth + 1) * GridCellSize)
+                        if (cell.IsPointInsideAABB(worldPos, margin: (searchDepth + 1) * GridCellSize / 2))
                         { 
                             closeEnough = true;
                             break;

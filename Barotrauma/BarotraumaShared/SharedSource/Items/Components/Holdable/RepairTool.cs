@@ -100,6 +100,9 @@ namespace Barotrauma.Items.Components
         [Serialize(false, IsPropertySaveable.No, description: "Can the item hit broken doors.")]
         public bool HitBrokenDoors { get; set; }
 
+        [Serialize(false, IsPropertySaveable.No, description: "Should the tool ignore characters? Enabled e.g. for fire extinguisher.")]
+        public bool IgnoreCharacters { get; set; }
+
         [Serialize(0.0f, IsPropertySaveable.No, description: "The probability of starting a fire somewhere along the ray fired from the barrel (for example, 0.1 = 10% chance to start a fire during a second of use).")]
         public float FireProbability { get; set; }
 
@@ -313,7 +316,11 @@ namespace Barotrauma.Items.Components
         private readonly List<FireSource> fireSourcesInRange = new List<FireSource>();
         private void Repair(Vector2 rayStart, Vector2 rayEnd, float deltaTime, Character user, float degreeOfSuccess, List<Body> ignoredBodies)
         {
-            var collisionCategories = Physics.CollisionWall | Physics.CollisionCharacter | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepair;
+            var collisionCategories = Physics.CollisionWall | Physics.CollisionItem | Physics.CollisionLevel | Physics.CollisionRepair;
+            if (!IgnoreCharacters)
+            {
+                collisionCategories |= Physics.CollisionCharacter;
+            }
 
             //if the item can cut off limbs, activate nearby bodies to allow the raycast to hit them
             if (statusEffectLists != null)

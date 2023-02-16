@@ -189,24 +189,10 @@ namespace Barotrauma
                         ("[currencyname]", TextManager.Get("credit").ToLower()));
                     break;
                 case VoteType.SwitchSub:
-                    int deliveryFee = SubmarineSelection.DeliveryFeePerDistanceTravelled * GameMain.GameSession.Map.DistanceToClosestLocationWithOutpost(GameMain.GameSession.Map.CurrentLocation, out Location endLocation);
-                    if (deliveryFee > 0)
-                    {
-                        tag = transferItems ? "submarineswitchwithitemsfeevote" : "submarineswitchfeevote";
-                        text = TextManager.GetWithVariables(tag,
-                            ("[playername]", characterRichString),
-                            ("[submarinename]", submarineRichString),
-                            ("[locationname]", endLocation.Name),
-                            ("[amount]", deliveryFee.ToString()),
-                            ("[currencyname]", TextManager.Get("credit").ToLower()));
-                    }
-                    else
-                    {
-                        tag = transferItems ? "submarineswitchwithitemsnofeevote" : "submarineswitchnofeevote";
-                        text = TextManager.GetWithVariables(tag,
-                            ("[playername]", characterRichString),
-                            ("[submarinename]", submarineRichString));
-                    }
+                    tag = transferItems ? "submarineswitchwithitemsnofeevote" : "submarineswitchnofeevote";
+                    text = TextManager.GetWithVariables(tag,
+                        ("[playername]", characterRichString),
+                        ("[submarinename]", submarineRichString));
                     break;
             }
             votingOnText = RichString.Rich(text);
@@ -241,25 +227,10 @@ namespace Barotrauma
                         ("[novotecount]", noVoteCount.ToString()));
                     break;
                 case VoteType.SwitchSub:
-                    int deliveryFee = SubmarineSelection.DeliveryFeePerDistanceTravelled * GameMain.GameSession.Map.DistanceToClosestLocationWithOutpost(GameMain.GameSession.Map.CurrentLocation, out Location endLocation);
-
-                    if (deliveryFee > 0)
-                    {
-                        result = TextManager.GetWithVariables(votePassed ? "submarineswitchfeevotepassed" : "submarineswitchfeevotefailed",
-                            ("[submarinename]", info.DisplayName),
-                            ("[locationname]", endLocation.Name),
-                            ("[amount]", string.Format(CultureInfo.InvariantCulture, "{0:N0}", deliveryFee)),
-                            ("[currencyname]", TextManager.Get("credit").ToLower()),
-                            ("[yesvotecount]", yesVoteCount.ToString()),
-                            ("[novotecount]", noVoteCount.ToString()));
-                    }
-                    else
-                    {
-                        result = TextManager.GetWithVariables(votePassed ? "submarineswitchnofeevotepassed" : "submarineswitchnofeevotefailed",
-                            ("[submarinename]", info.DisplayName),
-                            ("[yesvotecount]", yesVoteCount.ToString()),
-                            ("[novotecount]", noVoteCount.ToString()));
-                    }
+                    result = TextManager.GetWithVariables(votePassed ? "submarineswitchnofeevotepassed" : "submarineswitchnofeevotefailed",
+                        ("[submarinename]", info.DisplayName),
+                        ("[yesvotecount]", yesVoteCount.ToString()),
+                        ("[novotecount]", noVoteCount.ToString()));
                     break;
                 default:
                     break;

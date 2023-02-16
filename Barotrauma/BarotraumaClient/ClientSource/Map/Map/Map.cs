@@ -69,7 +69,7 @@ namespace Barotrauma
 
         private (Rectangle targetArea, RichString tip)? tooltip;
 
-        private (SubmarineInfo pendingSub, float realWorldCrushDepth) pendingSubInfo;
+        private SubmarineInfo.PendingSubInfo pendingSubInfo;
 
         private RichString beaconStationActiveText, beaconStationInactiveText;
 
@@ -213,11 +213,17 @@ namespace Barotrauma
                 currLocationIndicatorPos = CurrentLocation.MapPosition;
             }
 
-            RemoveFogOfWar(newLocation);
+            if (newLocation.Visited)
+            {
+                RemoveFogOfWar(newLocation);
+            }
         }
+
+        partial void RemoveFogOfWarProjSpecific(Location location) => RemoveFogOfWar(location);
 
         private void RemoveFogOfWar(Location location, bool removeFromAdjacentLocations = true)
         {
+            if (mapTiles == null) { return; }
             if (location == null) { return; }
 
             var mapTile = generationParams.MapTiles.Values.FirstOrDefault().FirstOrDefault();
@@ -453,6 +459,7 @@ namespace Barotrauma
                 };
                 new GUICustomComponent(new RectTransform(new Vector2(0.6f, 1.0f), repBarHolder.RectTransform), onDraw: (sb, component) =>
                 {
+                    if (location.Reputation == null) { return; }
                     RoundSummary.DrawReputationBar(sb, component.Rect, location.Reputation.NormalizedValue);
                 });
 
@@ -681,6 +688,7 @@ namespace Barotrauma
                         Level.Loaded.DebugSetEndLocation(null);
 
                         Discover(CurrentLocation);
+                        Visit(CurrentLocation);
                         OnLocationChanged?.Invoke(new LocationChangeInfo(prevLocation, CurrentLocation));
                         SelectLocation(-1);
                         if (GameMain.Client == null)
@@ -693,12 +701,6 @@ namespace Barotrauma
                         {
                             GameMain.Client.SendCampaignState();
                         }
-                    }
-
-                    if (PlayerInput.KeyDown(Microsoft.Xna.Framework.Input.Keys.LeftShift) && PlayerInput.PrimaryMouseButtonClicked() && HighlightedLocation != null)
-                    {
-                        int distance = DistanceToClosestLocationWithOutpost(HighlightedLocation, out Location foundLocation);
-                        DebugConsole.NewMessage($"Distance to closest outpost from {HighlightedLocation.Name} to {foundLocation?.Name} is {distance}");
                     }
 
                     if (PlayerInput.PrimaryMouseButtonClicked() && HighlightedLocation == null)
@@ -728,6 +730,8 @@ namespace Barotrauma
             Vector2 viewOffset = DrawOffset + drawOffsetNoise;
 
             Vector2 rectCenter = new Vector2(rect.Center.X, rect.Center.Y);
+
+            float missionIconScale = generationParams.MissionIcon != null ? 18.0f / generationParams.MissionIcon.SourceRect.Width : 1.0f;
 
             Rectangle prevScissorRect = GameMain.Instance.GraphicsDevice.ScissorRectangle;
             spriteBatch.End();
@@ -807,10 +811,22 @@ namespace Barotrauma
                     drawRect.X = (int)pos.X - drawRect.Width / 2;
                     drawRect.Y = (int)pos.Y - drawRect.Width / 2;
 
+                    if (drawRect.X > rect.Right - GUI.IntScale(100) && generationParams.MissionIcon != null && location.AvailableMissions.Any())
+                    {
+                        Vector2 offScreenMissionIconPos = new Vector2(rect.Right - GUI.IntScale(50), drawRect.Center.Y);
+                        generationParams.MissionIcon.Draw(spriteBatch,
+                            offScreenMissionIconPos,
+                            generationParams.IndicatorColor, scale: missionIconScale * zoom);
+                        GUI.Arrow.Draw(spriteBatch,
+                            offScreenMissionIconPos + Vector2.UnitX * generationParams.MissionIcon.size.X * missionIconScale * zoom,
+                            generationParams.IndicatorColor, MathHelper.PiOver2, scale: 0.5f);
+                    }
+
+
                     if (!rect.Intersects(drawRect)) { continue; }
 
                     Color color = location.Type.SpriteColor;
-                    if (!location.Discovered) { color = Color.White; }
+                    if (!location.Visited) { color = Color.White; }
                     if (location.Connections.Find(c => c.Locations.Contains(currentDisplayLocation)) == null)
                     {
                         color *= 0.5f;
@@ -890,7 +906,6 @@ namespace Barotrauma
                             location.AvailableMissions.Any(m => m.Locations[0] == m.Locations[1]))
                         {
                             Vector2 missionIconPos = pos + new Vector2(1.35f, 0.35f) * generationParams.LocationIconSize * 0.5f * zoom;
-                            float missionIconScale = 18.0f / generationParams.MissionIcon.SourceRect.Width;
                             generationParams.MissionIcon.Draw(spriteBatch, missionIconPos, generationParams.IndicatorColor, scale: missionIconScale * zoom);
                             if (Vector2.Distance(PlayerInput.MousePosition, missionIconPos) < generationParams.MissionIcon.SourceRect.Width * zoom && IsPreferredTooltip(missionIconPos))
                             {
@@ -908,10 +923,17 @@ namespace Barotrauma
                         Vector2 dPos = pos;
                         if (location == HighlightedLocation)
                         {
-                            dPos.Y += 48;
-                            GUI.DrawString(spriteBatch, dPos + new Vector2(15, 32), "Faction: "+(location.Faction?.Prefab.Name ?? "none"), Color.White, Color.Black, font: GUIStyle.SubHeadingFont);
+                            dPos.Y -= 80;
+                            GUI.DrawString(spriteBatch, dPos + new Vector2(15, 32), "Faction: " + (location.Faction?.Prefab.Name ?? "none"), Color.White, Color.Black, font: GUIStyle.SubHeadingFont);
                             GUI.DrawString(spriteBatch, dPos + new Vector2(15, 50), "Secondary Faction: " + (location.SecondaryFaction?.Prefab.Name ?? "none"), Color.White, Color.Black, font: GUIStyle.SubHeadingFont);
                             dPos.Y += 48;
+
+                            if (PlayerInput.KeyDown(Keys.LeftShift))
+                            {
+                                GUI.DrawString(spriteBatch, new Vector2(150,150), "Dist: " +
+                                    GetDistanceToClosestLocationOrConnection(CurrentLocation, int.MaxValue, loc => loc == location), Color.White, Color.Black, font: GUIStyle.SubHeadingFont);
+
+                            }
                         }
                         dPos.Y += 48;
                         GUI.DrawString(spriteBatch, dPos, $"Difficulty: {location.LevelData.Difficulty.FormatSingleDecimal()}", Color.White, Color.Black * 0.8f, 4, font: GUIStyle.SmallFont);
@@ -1045,7 +1067,7 @@ namespace Barotrauma
                 }
 
                 float a = 1.0f;
-                if (!connection.Locations[0].Discovered && !connection.Locations[1].Discovered)
+                if (!connection.Locations[0].Visited && !connection.Locations[1].Visited)
                 {
                     if (IsInFogOfWar(connection.Locations[0]))
                     {
@@ -1089,39 +1111,8 @@ namespace Barotrauma
                 if (connection.LevelData.HasHuntingGrounds) { iconCount++; }
                 if (connection.Locked) { iconCount++; }
                 string tooltip = null;
-                float subCrushDepth = Level.DefaultRealWorldCrushDepth;
-                var currentOrPendingSub = SubmarineSelection.CurrentOrPendingSubmarine();
-                if (Submarine.MainSub != null && Submarine.MainSub.Info == currentOrPendingSub)
-                {
-                    subCrushDepth = Submarine.MainSub.RealWorldCrushDepth;
-                }
-                else if (currentOrPendingSub != null)
-                {
-                    if (pendingSubInfo.pendingSub != currentOrPendingSub)
-                    {
-                        // Store the real world crush depth for the pending sub so that we don't have to calculate it again every time
-                        pendingSubInfo = (currentOrPendingSub, currentOrPendingSub.GetRealWorldCrushDepth());
-                    }
-                    subCrushDepth = pendingSubInfo.realWorldCrushDepth;
-                }
-                if (GameMain.GameSession?.Campaign?.UpgradeManager != null)
-                {
-                    var hullUpgradePrefab =  UpgradePrefab.Find("increasewallhealth".ToIdentifier());
-                    if (hullUpgradePrefab != null)
-                    {
-                        int pendingLevel = GameMain.GameSession.Campaign.UpgradeManager.GetUpgradeLevel(hullUpgradePrefab, hullUpgradePrefab.UpgradeCategories.First());
-                        int currentLevel = GameMain.GameSession.Campaign.UpgradeManager.GetRealUpgradeLevel(hullUpgradePrefab, hullUpgradePrefab.UpgradeCategories.First());
-                        if (pendingLevel > currentLevel)
-                        {
-                            string updateValueStr = hullUpgradePrefab.SourceElement?.GetChildElement("Structure")?.GetAttributeString("crushdepth", null);
-                            if (!string.IsNullOrEmpty(updateValueStr))
-                            {
-                                subCrushDepth = PropertyReference.CalculateUpgrade(subCrushDepth, pendingLevel - currentLevel, updateValueStr);
-                            }
-                        }
-                    }
-                }
 
+                float subCrushDepth = SubmarineInfo.GetSubCrushDepth(SubmarineSelection.CurrentOrPendingSubmarine(), ref pendingSubInfo);
                 string crushDepthWarningIconStyle = null;
                 if (connection.LevelData.InitialDepth * Physics.DisplayToRealWorldRatio > subCrushDepth)
                 {
@@ -1275,6 +1266,14 @@ namespace Barotrauma
                 }
                 anim.Finished = true;
             }
+        }
+
+        /// <summary>
+        /// Resets <see cref="pendingSubInfo"/> and forces crush depth to be calculated again for icon displaying purposes
+        /// </summary>
+        public void ResetPendingSub()
+        {
+            pendingSubInfo = new SubmarineInfo.PendingSubInfo();
         }
 
         partial void RemoveProjSpecific()

@@ -421,6 +421,7 @@ namespace Barotrauma
                     TotalPassedLevels++;
                     break;
                 case TransitionType.ProgressToNextEmptyLocation:
+                    Map.Visit(Map.CurrentLocation);
                     TotalPassedLevels++;
                     break;
                 case TransitionType.End:
@@ -437,9 +438,9 @@ namespace Barotrauma
             if (transitionType != TransitionType.End)
             {
                 var endTransition = new CameraTransition(Submarine.MainSub, GameMain.GameScreen.Cam, null,
-                transitionType == TransitionType.LeaveLocation ? Alignment.BottomCenter : Alignment.Center,
-                fadeOut: false,
-                panDuration: EndTransitionDuration);
+                    transitionType == TransitionType.LeaveLocation ? Alignment.BottomCenter : Alignment.Center,
+                    fadeOut: false,
+                    panDuration: EndTransitionDuration);
 
                 Location portraitLocation = Map.SelectedLocation ?? Map.CurrentLocation;
                 overlaySprite = portraitLocation.Type.GetPortrait(portraitLocation.PortraitId);

@@ -302,7 +302,7 @@ namespace Barotrauma.Networking
 
         public ServerContentPackage() { }
         
-        public ServerContentPackage(ContentPackage contentPackage, DateTime referenceTime)
+        public ServerContentPackage(ContentPackage contentPackage, SerializableDateTime referenceTime)
         {
             Name = contentPackage.Name;
             Hash = contentPackage.Hash;

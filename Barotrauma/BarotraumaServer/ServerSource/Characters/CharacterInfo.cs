@@ -14,6 +14,13 @@ namespace Barotrauma
         /// </summary>
         public bool Discarded;
 
+        public void ApplyDeathEffects()
+        {
+            RespawnManager.ReduceCharacterSkills(this);
+            RemoveSavedStatValuesOnDeath();
+            CauseOfDeath = null;
+        }
+
         partial void OnSkillChanged(Identifier skillIdentifier, float prevLevel, float newLevel)
         {
             if (Character == null || Character.Removed) { return; }

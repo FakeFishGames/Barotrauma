@@ -96,7 +96,7 @@ namespace Barotrauma
             base.Update(speed);
             float step = 1.0f / 60.0f;
             checkDoorsTimer -= step;
-            if (lastDoor.door == null || !lastDoor.shouldBeOpen || lastDoor.door.IsOpen)
+            if (lastDoor.door == null || !lastDoor.shouldBeOpen || lastDoor.door.IsFullyOpen)
             {
                 buttonPressTimer = 0;
             }
@@ -211,7 +211,7 @@ namespace Barotrauma
                     currentTarget = target;
                     Vector2 currentPos = host.SimPosition;
                     pathFinder.InsideSubmarine = character.Submarine != null && !character.Submarine.Info.IsRuin;
-                    pathFinder.ApplyPenaltyToOutsideNodes = character.Submarine != null && character.PressureProtection <= 0;
+                    pathFinder.ApplyPenaltyToOutsideNodes = character.Submarine != null && !character.IsProtectedFromPressure;
                     var newPath = pathFinder.FindPath(currentPos, target, character.Submarine, "(Character: " + character.Name + ")", minGapSize, startNodeFilter, endNodeFilter, nodeFilter, checkVisibility: checkVisibility);
                     bool useNewPath = needsNewPath || currentPath == null || currentPath.CurrentNode == null || character.Submarine != null && findPathTimer < -1 && Math.Abs(character.AnimController.TargetMovement.Combine()) <= 0;
                     if (!useNewPath && currentPath?.CurrentNode != null && newPath.Nodes.Any() && !newPath.Unreachable)
@@ -342,7 +342,7 @@ namespace Barotrauma
                 CheckDoorsInPath();
                 doorsChecked = true;
             }
-            if (buttonPressTimer > 0 && lastDoor.door != null && lastDoor.shouldBeOpen && !lastDoor.door.IsOpen)
+            if (buttonPressTimer > 0 && lastDoor.door != null && lastDoor.shouldBeOpen && lastDoor.door.IsOpening)
             {
                 // We have pressed the button and are waiting for the door to open -> Hold still until we can press the button again.
                 Reset();
@@ -510,7 +510,7 @@ namespace Barotrauma
         private bool CanAccessDoor(Door door, Func<Controller, bool> buttonFilter = null)
         {
             if (door.IsBroken) { return true; }
-            if (!door.IsOpen)
+            if (door.IsClosed)
             {
                 if (!door.Item.IsInteractable(character)) { return false; }
                 if (!ShouldBreakDoor(door))
@@ -536,7 +536,7 @@ namespace Barotrauma
                 }
                 foreach (var linked in door.Item.linkedTo)
                 {
-                    if (!(linked is Item linkedItem)) { continue; }
+                    if (linked is not Item linkedItem) { continue; }
                     var button = linkedItem.GetComponent<Controller>();
                     if (button == null) { continue; }
                     if (button.HasAccess(character) && (buttonFilter == null || buttonFilter(button)))
@@ -785,7 +785,7 @@ namespace Barotrauma
                 {
                     if (hull.WaterVolume / hull.Rect.Width > 100.0f)
                     {
-                        if (!HumanAIController.HasDivingSuit(character))
+                        if (!HumanAIController.HasDivingSuit(character) && character.CharacterHealth.OxygenLowResistance < 1)
                         {
                             penalty += 500.0f;
                         }
@@ -808,7 +808,7 @@ namespace Barotrauma
 
         private float? GetSingleNodePenalty(PathNode node)
         {
-            if (node.Waypoint.isObstructed) { return null; }
+            if (!node.Waypoint.IsTraversable) { return null; }
             if (node.IsBlocked()) { return null; }
             float penalty = 0.0f;
             if (node.Waypoint.ConnectedGap != null && node.Waypoint.ConnectedGap.Open < 0.9f)

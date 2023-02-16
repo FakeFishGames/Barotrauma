@@ -67,7 +67,7 @@ namespace Barotrauma
             set;
         }
 
-        [Serialize(1.0f, IsPropertySaveable.Yes, "If there are multiple level generation parameters available for a level in a given biome, their commonness determines how likely it is for one to get selected."), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
+        [Serialize(100.0f, IsPropertySaveable.Yes, "If there are multiple level generation parameters available for a level in a given biome, their commonness determines how likely it is for one to get selected."), Editable(MinValueFloat = 0, MaxValueFloat = 100)]
         public float Commonness
         {
             get;

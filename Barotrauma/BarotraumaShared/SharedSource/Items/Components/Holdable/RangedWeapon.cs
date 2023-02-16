@@ -5,9 +5,7 @@ using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -145,7 +143,8 @@ namespace Barotrauma.Items.Components
 
         public override void Equip(Character character)
         {
-            ReloadTimer = Math.Min(reload, 1.0f);
+            //clamp above 1 to prevent rapid-firing by swapping weapons
+            ReloadTimer = Math.Max(Math.Min(reload, 1.0f), ReloadTimer);
             IsActive = true;
         }
 
@@ -261,7 +260,8 @@ namespace Barotrauma.Items.Components
                 {
                     Vector2 barrelPos = TransformedBarrelPos + item.body.SimPosition;
                     float rotation = (Item.body.Dir == 1.0f) ? Item.body.Rotation : Item.body.Rotation - MathHelper.Pi;
-                    float spread = GetSpread(character) * Rand.Range(-0.5f, 0.5f);
+                    float spread = GetSpread(character) * Projectile.GetSpreadFromPool(projectile.SpreadCounter);
+
                     var lastProjectile = LastProjectile;
                     if (lastProjectile != projectile)
                     {
@@ -277,7 +277,7 @@ namespace Barotrauma.Items.Components
                         {
                             Item.body.ApplyLinearImpulse(new Vector2((float)Math.Cos(projectile.Item.body.Rotation), (float)Math.Sin(projectile.Item.body.Rotation)) * Item.body.Mass * -50.0f, maxVelocity: NetConfig.MaxPhysicsBodyVelocity);
                         }
-                        projectile.Item.body.ApplyTorque(projectile.Item.body.Mass * degreeOfFailure * Rand.Range(-10.0f, 10.0f));
+                        projectile.Item.body.ApplyTorque(projectile.Item.body.Mass * degreeOfFailure * 20.0f * Projectile.GetSpreadFromPool(projectile.SpreadCounter));
                     }
                     Item.RemoveContained(projectile.Item);
                 }
