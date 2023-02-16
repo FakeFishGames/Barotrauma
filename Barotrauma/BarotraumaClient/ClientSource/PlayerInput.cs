@@ -92,19 +92,19 @@ namespace Barotrauma
                     if (Key == Keys.None) { return false; }
                     return PlayerInput.KeyHit(Key);
                 case MouseButton.PrimaryMouse:
-                    return PlayerInput.PrimaryMouseButtonClicked();
+                    return PlayerInput.PrimaryMouseButtonDown();
                 case MouseButton.SecondaryMouse:
-                    return PlayerInput.SecondaryMouseButtonClicked();
+                    return PlayerInput.SecondaryMouseButtonDown();
                 case MouseButton.LeftMouse:
-                    return PlayerInput.LeftButtonClicked();
+                    return PlayerInput.LeftButtonDown();
                 case MouseButton.RightMouse:
-                    return PlayerInput.RightButtonClicked();
+                    return PlayerInput.RightButtonDown();
                 case MouseButton.MiddleMouse:
-                    return PlayerInput.MidButtonClicked();
+                    return PlayerInput.MidButtonDown();
                 case MouseButton.MouseButton4:
-                    return PlayerInput.Mouse4ButtonClicked();
+                    return PlayerInput.Mouse4ButtonDown();
                 case MouseButton.MouseButton5:
-                    return PlayerInput.Mouse5ButtonClicked();
+                    return PlayerInput.Mouse5ButtonDown();
                 case MouseButton.MouseWheelUp:
                     return PlayerInput.MouseWheelUpClicked();
                 case MouseButton.MouseWheelDown:
@@ -437,6 +437,24 @@ namespace Barotrauma
                 && mouseState.RightButton == ButtonState.Released);
         }
 
+
+        public static bool MidButtonHeld()
+        {
+            return AllowInput && mouseState.MiddleButton == ButtonState.Pressed;
+        }
+
+        public static bool MidButtonDown()
+        {
+            return AllowInput &&
+                oldMouseState.MiddleButton == ButtonState.Released
+                && mouseState.MiddleButton == ButtonState.Pressed;
+        }
+
+        public static bool MidButtonReleased()
+        {
+            return AllowInput && mouseState.MiddleButton == ButtonState.Released;
+        }
+
         public static bool MidButtonClicked()
         {
             return (AllowInput &&
@@ -444,9 +462,21 @@ namespace Barotrauma
                 && mouseState.MiddleButton == ButtonState.Released);
         }
 
-        public static bool MidButtonHeld()
+        public static bool Mouse4ButtonHeld()
         {
-            return AllowInput && mouseState.MiddleButton == ButtonState.Pressed;
+            return AllowInput && mouseState.XButton1 == ButtonState.Pressed;
+        }
+
+        public static bool Mouse4ButtonDown()
+        {
+            return (AllowInput &&
+                oldMouseState.XButton1 == ButtonState.Released
+                && mouseState.XButton1 == ButtonState.Pressed);
+        }
+
+        public static bool Mouse4ButtonReleased()
+        {
+            return AllowInput && mouseState.XButton1 == ButtonState.Released;
         }
 
         public static bool Mouse4ButtonClicked()
@@ -456,9 +486,21 @@ namespace Barotrauma
                 && mouseState.XButton1 == ButtonState.Released);
         }
 
-        public static bool Mouse4ButtonHeld()
+        public static bool Mouse5ButtonHeld()
         {
-            return AllowInput && mouseState.XButton1 == ButtonState.Pressed;
+            return AllowInput && mouseState.XButton2 == ButtonState.Pressed;
+        }
+
+        public static bool Mouse5ButtonDown()
+        {
+            return (AllowInput &&
+                oldMouseState.XButton2 == ButtonState.Released
+                && mouseState.XButton2 == ButtonState.Pressed);
+        }
+
+        public static bool Mouse5ButtonReleased()
+        {
+            return AllowInput && mouseState.XButton2 == ButtonState.Released;
         }
 
         public static bool Mouse5ButtonClicked()
@@ -466,11 +508,6 @@ namespace Barotrauma
             return (AllowInput &&
                 oldMouseState.XButton2 == ButtonState.Pressed
                 && mouseState.XButton2 == ButtonState.Released);
-        }
-
-        public static bool Mouse5ButtonHeld()
-        {
-            return AllowInput && mouseState.XButton2 == ButtonState.Pressed;
         }
 
         public static bool MouseWheelUpClicked()
