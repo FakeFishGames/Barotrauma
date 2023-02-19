@@ -14,6 +14,9 @@ namespace Barotrauma.Particles
 
         private float angleMin, angleMax;
 
+        [Editable, Serialize("0,0", IsPropertySaveable.Yes)]
+        public Vector2 Position { get; set; }
+
         public float AngleMinRad { get; private set; }
         public float AngleMaxRad { get; private set; }
 
@@ -195,12 +198,14 @@ namespace Barotrauma.Particles
             if (particlePrefab == null) { return; }
 
             Vector2 velocity = Vector2.Zero;
-            if (!MathUtils.NearlyEqual(Prefab.Properties.VelocityMax * velocityMultiplier, 0.0f) || !MathUtils.NearlyEqual(Prefab.Properties.DistanceMax, 0.0f))
+            if (!MathUtils.NearlyEqual(Prefab.Properties.VelocityMax * velocityMultiplier, 0.0f)
+                || !MathUtils.NearlyEqual(Prefab.Properties.DistanceMax + Prefab.Properties.Position.X, 0.0f)
+                || !MathUtils.NearlyEqual(Prefab.Properties.DistanceMax + Prefab.Properties.Position.Y, 0.0f))
             {
                 angle += Rand.Range(Prefab.Properties.AngleMinRad, Prefab.Properties.AngleMaxRad) * (mirrorAngle ? -1 : 1);
                 Vector2 dir = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle));
                 velocity = dir * Rand.Range(Prefab.Properties.VelocityMin, Prefab.Properties.VelocityMax) * velocityMultiplier;
-                position += dir * Rand.Range(Prefab.Properties.DistanceMin, Prefab.Properties.DistanceMax);
+                position += (dir * Rand.Range(Prefab.Properties.DistanceMin, Prefab.Properties.DistanceMax)) + (dir * Prefab.Properties.Position);
             }
 
             var particle = GameMain.ParticleManager.CreateParticle(particlePrefab, position, velocity, particleRotation, hullGuess, Prefab.DrawOnTop, lifeTimeMultiplier: Prefab.Properties.LifeTimeMultiplier, tracerPoints: tracerPoints);
