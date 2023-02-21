@@ -2180,7 +2180,7 @@ namespace Barotrauma
                     }
                 }
                 var rw = item.GetComponent<RangedWeapon>();
-                if (((bool)rw?.HoldTrigger ? IsKeyDown(InputType.Shoot) : IsKeyHit(InputType.Shoot)) && item.IsShootable)
+                if (((rw != null && rw.HoldTrigger) ? IsKeyDown(InputType.Shoot) : IsKeyHit(InputType.Shoot)) && item.IsShootable)
                 {
                     if (!item.RequireAimToUse || IsKeyDown(InputType.Aim))
                     {
