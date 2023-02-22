@@ -43,7 +43,7 @@ namespace Barotrauma.Items.Components
 
         private float range;
 
-        private const float PingFrequency = 0.5f;
+        private float PingFrequency;
 
         private Mode currentMode = Mode.Passive;
 
@@ -91,6 +91,16 @@ namespace Barotrauma.Items.Components
                 {
                     item.AiTarget.MaxSoundRange = range;
                 }
+            }
+        }
+
+        [Serialize(2.0f, IsPropertySaveable.No, description: "The interval between active sonar pings.")]
+        public float PingInterval
+        {
+            get { return 1 / PingFrequency; }
+            set
+            {
+                PingFrequency = MathHelper.Max(1 / value, 0);
             }
         }
 
