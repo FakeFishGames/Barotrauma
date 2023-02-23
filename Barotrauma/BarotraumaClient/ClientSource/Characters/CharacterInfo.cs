@@ -570,7 +570,7 @@ namespace Barotrauma
                 ch.Job.OverrideSkills(skillLevels);
             }
 
-            ch.ExperiencePoints = inc.ReadUInt16();
+            ch.ExperiencePoints = inc.ReadInt32();
             ch.AdditionalTalentPoints = inc.ReadRangedInteger(0, MaxAdditionalTalentPoints);
             return ch;
         }
