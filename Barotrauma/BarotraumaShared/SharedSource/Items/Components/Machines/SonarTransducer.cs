@@ -37,7 +37,7 @@ namespace Barotrauma.Items.Components
                 return 0;
             }
 
-            return PowerConsumption * (ConnectedSonar?.CurrentMode == Sonar.Mode.Active ? 1.0f : Sonar.PassivePowerConsumption);
+            return ConnectedSonar?.CurrentMode == Sonar.Mode.Active ? PowerConsumption : PowerConsumption * ConnectedSonar.PassivePowerConsumptionMultiplier;
         }
     }
 }

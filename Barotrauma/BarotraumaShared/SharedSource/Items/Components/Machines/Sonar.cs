@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -16,8 +15,6 @@ namespace Barotrauma.Items.Components
         };
 
         public const float DefaultSonarRange = 10000.0f;
-
-        public const float PassivePowerConsumption = 0.1f;
 
         class ConnectedTransducer
         {
@@ -34,32 +31,23 @@ namespace Barotrauma.Items.Components
         }
 
         private const float DirectionalPingSector = 30.0f;
-        private static readonly float DirectionalPingDotProduct;
-
-        static Sonar()
-        {
-            DirectionalPingDotProduct = (float)Math.Cos(MathHelper.ToRadians(DirectionalPingSector) * 0.5f);
-        }
 
         private float range;
-
-        private float PingFrequency;
+        private float pingInterval;
+        private float pingTimer;
+        private float pingSpeed;
 
         private Mode currentMode = Mode.Passive;
 
         private class ActivePing
         {
-            public float State;
+            public float Radius;
+            public float PrevRadius;
             public bool IsDirectional;
             public Vector2 Direction;
-            public float PrevPingRadius;
         }
-        // rotating list of currently active pings
-        private ActivePing[] activePings = new ActivePing[8];
-        // total number of currently active pings, range [0, activePings.Length[
-        private int activePingsCount;
-        // currently active ping index on the above list
-        private int currentPingIndex = -1;
+        // List of currently active pings.
+        private readonly List<ActivePing> activePings = new();
 
         private const float MinZoom = 1.0f, MaxZoom = 4.0f;
         private float zoom = 1.0f;
@@ -97,11 +85,22 @@ namespace Barotrauma.Items.Components
         [Serialize(2.0f, IsPropertySaveable.No, description: "The interval between active sonar pings.")]
         public float PingInterval
         {
-            get { return 1 / PingFrequency; }
-            set
-            {
-                PingFrequency = MathHelper.Max(1 / value, 0);
-            }
+            get { return pingInterval; }
+            set { pingInterval = MathHelper.Max(value, 0.01f); }
+        }
+
+        [Serialize(5000f, IsPropertySaveable.No, description: "The speed at which sonar pings travel.")]
+        public float PingSpeed
+        {
+            get { return pingSpeed; }
+            set { pingSpeed = MathHelper.Max(value, 0.01f); }
+        }
+
+        [Serialize(0.1f, IsPropertySaveable.No, description: "The power consumption multiplier when using Passive mode.")]
+        public float PassivePowerConsumptionMultiplier
+        {
+            get;
+            set;
         }
 
         [Serialize(false, IsPropertySaveable.No, description: "Should the sonar display the walls of the submarine it is inside.")]
@@ -193,72 +192,71 @@ namespace Barotrauma.Items.Components
                 connectedTransducers.RemoveAll(t => t.DisconnectTimer <= 0.0f);
             }
 
-            for (var pingIndex = 0; pingIndex < activePingsCount; ++pingIndex)
+            if ((!UseTransducers || connectedTransducers.Count > 0) && (Voltage >= MinVoltage))
             {
-                activePings[pingIndex].State += deltaTime * PingFrequency;
-            }
-
-            if (currentMode == Mode.Active)
-            {
-                if ((Voltage >= MinVoltage) &&
-                    (!UseTransducers || connectedTransducers.Count > 0))
+                if (currentMode == Mode.Active)
                 {
-                    if (currentPingIndex != -1)
+                    if (pingTimer >= 1.0f)
                     {
-                        var activePing = activePings[currentPingIndex];
-                        if (activePing.State > 1.0f)
+                        ActivePing newPing = new()
                         {
-                            aiPingCheckPending = true;
-                            currentPingIndex = -1;
-                        }
-                    }
-                    if (currentPingIndex == -1 && activePingsCount < activePings.Length)
-                    {
-                        currentPingIndex = activePingsCount++;
-                        if (activePings[currentPingIndex] == null)
-                        {
-                            activePings[currentPingIndex] = new ActivePing();
-                        }
-                        activePings[currentPingIndex].IsDirectional = useDirectionalPing;
-                        activePings[currentPingIndex].Direction = pingDirection;
-                        activePings[currentPingIndex].State = 0.0f;
-                        activePings[currentPingIndex].PrevPingRadius = 0.0f;
-                        if (item.AiTarget != null)
-                        {
-                            item.AiTarget.SectorDegrees = useDirectionalPing ? DirectionalPingSector : 360.0f;
-                            item.AiTarget.SectorDir = new Vector2(pingDirection.X, -pingDirection.Y);
-                        }
+                            Radius = 0.0f,
+                            PrevRadius = 0.0f,
+                            IsDirectional = useDirectionalPing,
+                            Direction = pingDirection
+                        };
+                        activePings.Add(newPing);
+
                         item.Use(deltaTime);
+                        pingTimer = 0.0f;
                     }
+
+                    aiPingCheckPending = true;
+                    pingTimer += deltaTime * (1 / PingInterval);
                 }
                 else
                 {
                     aiPingCheckPending = false;
+                    pingTimer = 1.0f;
                 }
             }
-
-            for (var pingIndex = 0; pingIndex < activePingsCount;)
+            else
             {
-                if (item.AiTarget != null)
+                aiPingCheckPending = false;
+                activePings.Clear();
+                pingTimer = 1.0f;
+            }
+
+            if (activePings.Any())
+            {
+                for (var pingIndex = 0; pingIndex < activePings.Count; pingIndex++)
                 {
-                    float range = MathUtils.InverseLerp(item.AiTarget.MinSoundRange, item.AiTarget.MaxSoundRange, Range * activePings[pingIndex].State / zoom);
-                    item.AiTarget.SoundRange = Math.Max(item.AiTarget.SoundRange, MathHelper.Lerp(item.AiTarget.MinSoundRange, item.AiTarget.MaxSoundRange, range));
-                }
-                if (activePings[pingIndex].State > 1.0f)
-                {
-                    var lastIndex = --activePingsCount;
-                    var oldActivePing = activePings[pingIndex];
-                    activePings[pingIndex] = activePings[lastIndex];
-                    activePings[lastIndex] = oldActivePing;
-                    if (currentPingIndex == lastIndex)
+                    ActivePing activePing = activePings[pingIndex];
+                    if (activePing.Radius > Range)
                     {
-                        currentPingIndex = pingIndex;
+                        activePings.RemoveAt(pingIndex);
+                    }
+                    else
+                    {
+                        activePing.Radius += deltaTime * PingSpeed;
+                    }
+
+                    if (item.AiTarget != null)
+                    {
+                        item.AiTarget.SoundRange = Math.Max(item.AiTarget.SoundRange, MathHelper.Lerp(item.AiTarget.MinSoundRange, item.AiTarget.MaxSoundRange, activePing.Radius / Range));
                     }
                 }
-                else
+
+                // TODO: Allow multiple seperated sectors & iterate over each active ping to disallow pinging a sector then moving the ping direction to gain information without aggro'ing enemies.
+                if (item.AiTarget != null)
                 {
-                    ++pingIndex;
+                    item.AiTarget.SectorDegrees = useDirectionalPing ? DirectionalPingSector : 360.0f;
+                    item.AiTarget.SectorDir = new Vector2(pingDirection.X, -pingDirection.Y);
                 }
+            }
+            else
+            {
+                item.AiTarget.SoundRange = 0.0f;
             }
         }
 
@@ -272,19 +270,19 @@ namespace Barotrauma.Items.Components
                 return 0;
             }
 
-            return (currentMode == Mode.Active) ? powerConsumption : powerConsumption * PassivePowerConsumption;
+            return CurrentMode == Mode.Active ? PowerConsumption : PowerConsumption * PassivePowerConsumptionMultiplier;
         }
 
         public override bool Use(float deltaTime, Character character = null)
         {
-            return currentPingIndex != -1 && (character == null || characterUsable);
+            return activePings.Any() && (character == null || characterUsable);
         }
 
         private static readonly Dictionary<string, List<Character>> targetGroups = new Dictionary<string, List<Character>>();
 
         public override bool AIOperate(float deltaTime, Character character, AIObjectiveOperateItem objective)
         {
-            if (currentMode == Mode.Passive || !aiPingCheckPending) { return false; }
+            if (!aiPingCheckPending) { return false; }
 
             foreach (List<Character> targetGroup in targetGroups.Values)
             {
@@ -337,7 +335,7 @@ namespace Barotrauma.Items.Components
             return true;
         }
 
-        private LocalizedString GetDirectionName(Vector2 dir)
+        private static LocalizedString GetDirectionName(Vector2 dir)
         {
             float angle = MathUtils.WrapAngleTwoPi((float)-Math.Atan2(dir.Y, dir.X) + MathHelper.PiOver2);
 

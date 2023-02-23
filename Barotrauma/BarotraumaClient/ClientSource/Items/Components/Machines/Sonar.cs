@@ -6,7 +6,6 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace Barotrauma.Items.Components
 {
@@ -49,6 +48,8 @@ namespace Barotrauma.Items.Components
 
         private Sprite directionalPingBackground;
         private Sprite[] directionalPingButton;
+
+        private static readonly float DirectionalPingDotProduct = (float)Math.Cos(MathHelper.ToRadians(DirectionalPingSector) * 0.5f);
 
         private Sprite pingCircle, directionalPingCircle;
         private Sprite screenOverlay, screenBackground;
@@ -165,7 +166,7 @@ namespace Barotrauma.Items.Components
                         directionalPingBackground = new Sprite(subElement);
                         break;
                     case "directionalpingbutton":
-                        if (directionalPingButton == null) { directionalPingButton = new Sprite[3]; }
+                        directionalPingButton ??= new Sprite[3];
                         int index = subElement.GetAttributeInt("index", 0);
                         directionalPingButton[index] = new Sprite(subElement);
                         break;
@@ -592,10 +593,8 @@ namespace Barotrauma.Items.Components
 
                 List<LevelTrigger> ballastFloraSpores = new List<LevelTrigger>();
                 Dictionary<LevelTrigger, Vector2> levelTriggerFlows = new Dictionary<LevelTrigger, Vector2>();
-                for (var pingIndex = 0; pingIndex < activePingsCount; ++pingIndex)
+                foreach (ActivePing activePing in activePings)
                 {
-                    var activePing = activePings[pingIndex];
-                    float pingRange = range * activePing.State / zoom;
                     foreach (LevelObject levelObject in nearbyObjects)
                     {
                         if (levelObject.Triggers == null) { continue; }
@@ -608,8 +607,7 @@ namespace Barotrauma.Items.Components
                             {
                                 levelTriggerFlows.Add(trigger, flow);
                             }
-                            if (!trigger.InfectIdentifier.IsEmpty && 
-                                Vector2.DistanceSquared(transducerCenter, trigger.WorldPosition) < pingRange / 2 * pingRange / 2)
+                            if (!trigger.InfectIdentifier.IsEmpty && Vector2.DistanceSquared(transducerCenter, trigger.WorldPosition) < (activePing.Radius / 2) * (activePing.Radius / 2))
                             {
                                 ballastFloraSpores.Add(trigger);
                             }
@@ -744,14 +742,11 @@ namespace Barotrauma.Items.Components
             }
             
             disruptionUpdateTimer -= deltaTime;
-            for (var pingIndex = 0; pingIndex < activePingsCount; ++pingIndex)
+            foreach (ActivePing activePing in activePings)
             {
-                var activePing = activePings[pingIndex];
-                float pingRadius = DisplayRadius * activePing.State / zoom;
-                if (disruptionUpdateTimer <= 0.0f) { UpdateDisruptions(transducerCenter, pingRadius / displayScale); }               
-                Ping(transducerCenter, transducerCenter,
-                    pingRadius, activePing.PrevPingRadius, displayScale, range / zoom, passive: false, pingStrength: 2.0f);
-                activePing.PrevPingRadius = pingRadius;
+                if (disruptionUpdateTimer <= 0.0f) { UpdateDisruptions(transducerCenter, activePing.Radius / displayScale); }               
+                Ping(transducerCenter, transducerCenter, activePing.Radius, activePing.PrevRadius, displayScale, range, passive: false, pingStrength: 2.0f);
+                activePing.PrevRadius = activePing.Radius;
             }
             if (disruptionUpdateTimer <= 0.0f)
             {
@@ -793,38 +788,33 @@ namespace Barotrauma.Items.Components
                 longRangeUpdateTimer = LongRangeUpdateInterval;
             }
 
-            if (currentMode == Mode.Active && currentPingIndex != -1)
+            if (currentMode == Mode.Passive)
             {
-                return;
-            }
-
-            float passivePingRadius = (float)(Timing.TotalTime % 1.0f);
-            if (passivePingRadius > 0.0f)
-            {
-                if (activePingsCount == 0) { disruptedDirections.Clear(); }
-                //emit "pings" from nearby sound-emitting AITargets to reveal what's around them
-                foreach (AITarget t in AITarget.List)
+                float passivePingRadius = (float)(Timing.TotalTime % 1.0f);
+                if (passivePingRadius > 0.0f)
                 {
-                    if (t.Entity is Character c && !c.IsUnconscious && c.Params.HideInSonar) { continue; }
-                    if (t.SoundRange <= 0.0f || float.IsNaN(t.SoundRange) || float.IsInfinity(t.SoundRange)) { continue; }
-
-                    float distSqr = Vector2.DistanceSquared(t.WorldPosition, transducerCenter);
-                    if (distSqr > t.SoundRange * t.SoundRange * 2) { continue; }
-
-                    float dist = (float)Math.Sqrt(distSqr);
-                    if (dist > prevPassivePingRadius * Range && dist <= passivePingRadius * Range && Rand.Int(sonarBlips.Count) < 500)
+                    //emit "pings" from nearby sound-emitting AITargets to reveal what's around them
+                    foreach (AITarget t in AITarget.List)
                     {
-                        Ping(t.WorldPosition, transducerCenter,
-                            t.SoundRange * displayScale, 0, displayScale, range,
-                            passive: true, pingStrength: 0.5f, needsToBeInSector: t);
-                        if (t.IsWithinSector(transducerCenter))
+                        if (t.Entity is Character c && !c.IsUnconscious && c.Params.HideInSonar) { continue; }
+                        if (t.SoundRange <= 0.0f || float.IsNaN(t.SoundRange) || float.IsInfinity(t.SoundRange)) { continue; }
+
+                        float distSqr = Vector2.DistanceSquared(t.WorldPosition, transducerCenter);
+                        if (distSqr > t.SoundRange * t.SoundRange * 2) { continue; }
+
+                        float dist = (float)Math.Sqrt(distSqr);
+                        if (dist > prevPassivePingRadius * Range && dist <= passivePingRadius * Range && Rand.Int(sonarBlips.Count) < 500)
                         {
-                            sonarBlips.Add(new SonarBlip(t.WorldPosition, fadeTimer: 1.0f, scale: MathHelper.Clamp(t.SoundRange / 2000, 1.0f, 5.0f)));
+                            Ping(t.WorldPosition, transducerCenter, t.SoundRange * displayScale, 0, displayScale, range, passive: true, pingStrength: 0.5f, needsToBeInSector: t);
+                            if (t.IsWithinSector(transducerCenter))
+                            {
+                                sonarBlips.Add(new SonarBlip(t.WorldPosition, fadeTimer: 1.0f, scale: MathHelper.Clamp(t.SoundRange / 2000, 1.0f, 5.0f)));
+                            }
                         }
                     }
                 }
+                prevPassivePingRadius = passivePingRadius;
             }
-            prevPassivePingRadius = passivePingRadius;
         }
         
         private bool MouseInDirectionalPingRing(Rectangle rect, bool onButton)
@@ -854,7 +844,7 @@ namespace Barotrauma.Items.Components
             displayBorderSize = 0.2f;
             center = rect.Center.ToVector2();
             DisplayRadius = (rect.Width / 2.0f) * (1.0f - displayBorderSize);
-            displayScale = DisplayRadius / range * zoom;
+            displayScale = DisplayRadius / Range * zoom;
 
             screenBackground?.Draw(spriteBatch, center, 0.0f, rect.Width / screenBackground.size.X);
 
@@ -876,18 +866,16 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            if (currentPingIndex != -1)
+            foreach (ActivePing activePing in activePings)
             {
-                var activePing = activePings[currentPingIndex];
+                var pingRatio = (activePing.Radius / Range) * zoom;
                 if (activePing.IsDirectional && directionalPingCircle != null)
                 {
-                    directionalPingCircle.Draw(spriteBatch, center, Color.White * (1.0f - activePing.State),
-                        rotate: MathUtils.VectorToAngle(activePing.Direction),
-                        scale: DisplayRadius / directionalPingCircle.size.X * activePing.State);
+                    directionalPingCircle.Draw(spriteBatch, center, Color.White * (1.0f - pingRatio), rotate: MathUtils.VectorToAngle(activePing.Direction), scale: DisplayRadius / directionalPingCircle.size.X * pingRatio);
                 }
                 else
                 {
-                    pingCircle.Draw(spriteBatch, center, Color.White * (1.0f - activePing.State), 0.0f, (DisplayRadius * 2 / pingCircle.size.X) * activePing.State);
+                    pingCircle.Draw(spriteBatch, center, Color.White * (1.0f - pingRatio), 0.0f, (DisplayRadius * 2 / pingCircle.size.X) * pingRatio);
                 }
             }
 
@@ -1303,31 +1291,28 @@ namespace Barotrauma.Items.Components
             disruptedDirections.Clear();
             if (Level.Loaded == null) { return; }
 
-            for (var pingIndex = 0; pingIndex < activePingsCount; ++pingIndex)
+            foreach (LevelObject levelObject in nearbyObjects)
             {
-                foreach (LevelObject levelObject in nearbyObjects)
-                {
-                    if (levelObject.ActivePrefab?.SonarDisruption <= 0.0f) { continue; }
+                if (levelObject.ActivePrefab?.SonarDisruption <= 0.0f) { continue; }
 
-                    float disruptionStrength = levelObject.ActivePrefab.SonarDisruption;
-                    Vector2 disruptionPos = new Vector2(levelObject.Position.X, levelObject.Position.Y);
+                float disruptionStrength = levelObject.ActivePrefab.SonarDisruption;
+                Vector2 disruptionPos = new Vector2(levelObject.Position.X, levelObject.Position.Y);
 
-                    float disruptionDist = Vector2.Distance(pingSource, disruptionPos);
-                    disruptedDirections.Add(((disruptionPos - pingSource) / disruptionDist, disruptionStrength));
+                float disruptionDist = Vector2.Distance(pingSource, disruptionPos);
+                disruptedDirections.Add(((disruptionPos - pingSource) / disruptionDist, disruptionStrength));
 
-                    CreateBlipsForDisruption(disruptionPos, disruptionStrength);
-                    
-                }
-                foreach (AITarget aiTarget in AITarget.List)
-                {
-                    float disruption = aiTarget.Entity is Character c && !c.IsUnconscious ? c.Params.SonarDisruption : aiTarget.SonarDisruption;
-                    if (disruption <= 0.0f || aiTarget.InDetectable) { continue; }
-                    float distSqr = Vector2.DistanceSquared(aiTarget.WorldPosition, pingSource);
-                    if (distSqr > worldPingRadiusSqr) { continue; }
-                    float disruptionDist = (float)Math.Sqrt(distSqr);
-                    disruptedDirections.Add(((aiTarget.WorldPosition - pingSource) / disruptionDist, aiTarget.SonarDisruption));
-                    CreateBlipsForDisruption(aiTarget.WorldPosition, disruption);
-                }
+                CreateBlipsForDisruption(disruptionPos, disruptionStrength);
+            }
+
+            foreach (AITarget aiTarget in AITarget.List)
+            {
+                float disruption = aiTarget.Entity is Character c && !c.IsUnconscious ? c.Params.SonarDisruption : aiTarget.SonarDisruption;
+                if (disruption <= 0.0f || aiTarget.InDetectable) { continue; }
+                float distSqr = Vector2.DistanceSquared(aiTarget.WorldPosition, pingSource);
+                if (distSqr > worldPingRadiusSqr) { continue; }
+                float disruptionDist = (float)Math.Sqrt(distSqr);
+                disruptedDirections.Add(((aiTarget.WorldPosition - pingSource) / disruptionDist, aiTarget.SonarDisruption));
+                CreateBlipsForDisruption(aiTarget.WorldPosition, disruption);
             }
 
             void CreateBlipsForDisruption(Vector2 disruptionPos, float disruptionStrength)
@@ -1348,8 +1333,7 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private void Ping(Vector2 pingSource, Vector2 transducerPos, float pingRadius, float prevPingRadius, float displayScale, float range, bool passive,
-            float pingStrength = 1.0f, AITarget needsToBeInSector = null)
+        private void Ping(Vector2 pingSource, Vector2 transducerPos, float pingRadius, float prevPingRadius, float displayScale, float range, bool passive, float pingStrength = 1.0f, AITarget needsToBeInSector = null)
         {
             float prevPingRadiusSqr = prevPingRadius * prevPingRadius;
             float pingRadiusSqr = pingRadius * pingRadius;
@@ -1554,9 +1538,8 @@ namespace Barotrauma.Items.Components
 
                 //ignore if the point is not within the ping
                 Vector2 pointDiff = point - pingSource;
-                Vector2 displayPointDiff = pointDiff * displayScale;
-                float displayPointDistSqr = displayPointDiff.LengthSquared();
-                if (displayPointDistSqr < prevPingRadius * prevPingRadius || displayPointDistSqr > pingRadius * pingRadius) { continue; }
+                float pointDistSqr = pointDiff.LengthSquared();
+                if (pointDistSqr < prevPingRadius * prevPingRadius || pointDistSqr > pingRadius * pingRadius) { continue; }
 
                 //ignore if direction is disrupted
                 float transducerDist = transducerDiff.Length();
@@ -1573,7 +1556,7 @@ namespace Barotrauma.Items.Components
                 }
                 if (disrupted) { continue; }
 
-                float displayPointDist = (float)Math.Sqrt(displayPointDistSqr);
+                float displayPointDist = pointDiff.Length() * displayScale;
                 float alpha = pingStrength * Rand.Range(1.5f, 2.0f);
                 for (float z = 0; z < DisplayRadius - transducerDist * displayScale; z += zStep)
                 {
@@ -1621,15 +1604,18 @@ namespace Barotrauma.Items.Components
             }
 
             Vector2 dir = pos / (float)Math.Sqrt(posDistSqr);
-            if (currentPingIndex != -1 && activePings[currentPingIndex].IsDirectional)
+
+            foreach (ActivePing activePing in activePings)
             {
-                if (Vector2.Dot(activePings[currentPingIndex].Direction, dir) < DirectionalPingDotProduct)
+                if (!activePing.IsDirectional) { return true; }
+                if (Vector2.Dot(activePing.Direction, dir) < DirectionalPingDotProduct)
                 {
                     blip.FadeTimer = 0.0f;
-                    return false;
+                    continue;
                 }
+                return true;
             }
-            return true;
+            return false;
         }
 
         /// <summary>
@@ -1642,18 +1628,18 @@ namespace Barotrauma.Items.Components
             {
                 return false;
             }
-            if (currentPingIndex != -1 && activePings[currentPingIndex].IsDirectional)
+
+            var pos = (resourcePos - transducerPos) * displayScale * zoom;
+            pos.Y = -pos.Y;
+            var dir = pos / pos.Length();
+
+            foreach (ActivePing activePing in activePings)
             {
-                var pos = (resourcePos - transducerPos) * displayScale * zoom;
-                pos.Y = -pos.Y;
-                var length = pos.Length();
-                var dir = pos / length;
-                if (Vector2.Dot(activePings[currentPingIndex].Direction, dir) < DirectionalPingDotProduct)
-                {
-                    return false;
-                }
+                if (!activePing.IsDirectional) { return true; }
+                if (Vector2.Dot(activePing.Direction, dir) < DirectionalPingDotProduct) { continue; }
+                return true;
             }
-            return true;
+            return false;
         }
 
         private void DrawBlip(SpriteBatch spriteBatch, SonarBlip blip, Vector2 transducerPos, Vector2 center, float strength, float blipScale)
