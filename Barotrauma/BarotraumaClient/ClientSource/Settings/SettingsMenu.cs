@@ -289,6 +289,11 @@ namespace Barotrauma
             Label(right, TextManager.Get("ParticleLimit"), GUIStyle.SubHeadingFont);
             Slider(right, (100, 1500), 15, v => Round(v).ToString(), unsavedConfig.Graphics.ParticleLimit, v => unsavedConfig.Graphics.ParticleLimit = Round(v));
             Spacer(right);
+
+            Label(right, TextManager.Get("LevelObjectLimit"), GUIStyle.SubHeadingFont);
+            Slider(right, (250, 5250), 20, v => v > 5000 ? TextManager.Get("unlimited").Value : Round(v).ToString(), unsavedConfig.Graphics.LevelObjectLimit,  v => unsavedConfig.Graphics.LevelObjectLimit = v > 5000 ? int.MaxValue : Round(v),
+                TextManager.Get("LevelObjectLimitTooltip"));
+            Spacer(right);
         }
 
         private static string TrimAudioDeviceName(string name)

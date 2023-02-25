@@ -169,6 +169,7 @@ namespace Barotrauma
                         Specularity = true,
                         ChromaticAberration = true,
                         ParticleLimit = 1500,
+                        LevelObjectLimit = 500,
                         LosMode = LosMode.Transparent
                     };
                     gfxSettings.RadialDistortion = true;
@@ -197,6 +198,7 @@ namespace Barotrauma
                 public int FrameLimit;
                 public WindowMode DisplayMode;
                 public int ParticleLimit;
+                public int LevelObjectLimit;
                 public bool Specularity;
                 public bool ChromaticAberration;
                 public LosMode LosMode;

@@ -18,7 +18,7 @@ namespace Barotrauma
 
         //Maximum number of visible objects drawn at once. Should be large enough to not have an effect during normal gameplay, 
         //but small enough to prevent wrecking performance when zooming out very far
-        const int MaxVisibleObjects = 500;
+        private readonly int MaxVisibleObjects = GameSettings.CurrentConfig.Graphics.LevelObjectLimit;
 
         private Rectangle currentGridIndices;
 
