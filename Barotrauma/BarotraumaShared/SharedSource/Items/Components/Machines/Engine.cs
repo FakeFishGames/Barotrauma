@@ -41,13 +41,6 @@ namespace Barotrauma.Items.Components
             set;
         //I don't know how to code but this should work, right?
         }
-        
-        [Editable, Serialize(false, IsPropertySaveable.Yes)]
-        public bool DisablePropellerDamage
-        {
-            get;
-            set;
-        }
 
         [Editable, Serialize("0.0,0.0", IsPropertySaveable.Yes, 
             description: "The position of the propeller as an offset from the item's center (in pixels)."+
