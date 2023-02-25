@@ -33,6 +33,21 @@ namespace Barotrauma.Items.Components
             get => maxForce;
             set => maxForce = Math.Max(0.0f, value);
         }
+        
+        [Editable, Serialize(false, IsPropertySaveable.Yes)]
+        public bool IsVertical
+        {
+            get;
+            set;
+        //I don't know how to code but this should work, right?
+        }
+        
+        [Editable, Serialize(false, IsPropertySaveable.Yes)]
+        public bool DisablePropellerDamage
+        {
+            get;
+            set;
+        }
 
         [Editable, Serialize("0.0,0.0", IsPropertySaveable.Yes, 
             description: "The position of the propeller as an offset from the item's center (in pixels)."+
@@ -137,7 +152,9 @@ namespace Barotrauma.Items.Components
                 //less effective when in a bad condition
                 currForce *= MathHelper.Lerp(0.5f, 2.0f, condition);
                 if (item.Submarine.FlippedX) { currForce *= -1; }
-                Vector2 forceVector = new Vector2(currForce, 0);
+                //I don't know how to code but this should work, right?2
+                if (IsVertical) {Vector2 forceVector = new Vector2(0, currForce);}
+                else {Vector2 forceVector = new Vector2(currForce, 0);}
                 item.Submarine.ApplyForce(forceVector * deltaTime * Timing.FixedUpdateRate);
                 UpdatePropellerDamage(deltaTime);
 #if CLIENT
