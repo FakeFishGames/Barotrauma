@@ -31,7 +31,10 @@ namespace Barotrauma
         public bool Static { get; private set; }
         public bool StaticSound { get; private set; }
         public bool StaticSight { get; private set; }
-        
+
+        /// <summary>
+        /// Set an entity to use the position of for the AITarget
+        /// </summary>        
         public Entity EntityOveride
         {
             get { return entityOveride; }
