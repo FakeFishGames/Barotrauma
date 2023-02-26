@@ -18,7 +18,8 @@ namespace Barotrauma
                 return entity;
             }
         }
-        
+
+        private Entity entityOveride;
         private float soundRange;
         private float sightRange;
 
@@ -31,6 +32,15 @@ namespace Barotrauma
         public bool StaticSound { get; private set; }
         public bool StaticSight { get; private set; }
         
+        public Entity EntityOveride
+        {
+            get { return entityOveride; }
+            set
+            {
+                entityOveride = value;
+            }
+        }
+
         public float SoundRange
         {
             get { return soundRange; }
@@ -161,6 +171,8 @@ namespace Barotrauma
                     return Vector2.Zero;
                 }
 
+                if (entityOveride != null)
+                    return entityOveride.WorldPosition;
                 return entity.WorldPosition;
             }
         }
@@ -180,6 +192,8 @@ namespace Barotrauma
                     return Vector2.Zero;
                 }
 
+                if (entityOveride != null)
+                    return entityOveride.SimPosition;
                 return entity.SimPosition;
             }
         }

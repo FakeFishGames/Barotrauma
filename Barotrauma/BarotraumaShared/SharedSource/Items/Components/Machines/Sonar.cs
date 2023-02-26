@@ -217,6 +217,15 @@ namespace Barotrauma.Items.Components
                         {
                             item.AiTarget.SectorDegrees = useDirectionalPing ? DirectionalPingSector : 360.0f;
                             item.AiTarget.SectorDir = new Vector2(pingDirection.X, -pingDirection.Y);
+                            if (UseTransducers)
+                            {
+                                // TODO: do something to get average position for more than one
+                                item.AiTarget.EntityOveride = connectedTransducers.First().Transducer.Item;
+                            }
+                            else
+                            {
+                                item.AiTarget.EntityOveride = item.Submarine;
+                            }
                         }
                         item.Use(deltaTime);
                     }
