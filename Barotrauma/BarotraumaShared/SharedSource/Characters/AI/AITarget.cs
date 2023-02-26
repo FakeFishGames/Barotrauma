@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
@@ -174,9 +174,7 @@ namespace Barotrauma
                     return Vector2.Zero;
                 }
 
-                if (entityOveride != null)
-                    return entityOveride.WorldPosition;
-                return entity.WorldPosition;
+                return entityOveride == null ? entity.WorldPosition : entityOveride.WorldPosition;
             }
         }
 
@@ -195,9 +193,7 @@ namespace Barotrauma
                     return Vector2.Zero;
                 }
 
-                if (entityOveride != null)
-                    return entityOveride.SimPosition;
-                return entity.SimPosition;
+                return entityOveride == null ? entity.SimPosition : entityOveride.SimPosition;
             }
         }
 
